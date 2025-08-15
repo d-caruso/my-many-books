@@ -33,6 +33,7 @@
     "postinstall": "nx postinstall || exit 0"
   },
   "devDependencies": {
+    "@nx/js": "^21.3.11",
     "@nx/workspace": "^17.0.0",
     "nx": "^17.0.0",
     "typescript": "^5.0.0"
