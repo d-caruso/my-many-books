@@ -15,6 +15,7 @@ export default {
   ],
   coverageDirectory: '../../coverage/apps/web-app',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  setupFiles: ['<rootDir>/src/jest.setup.ts'],
   testEnvironment: 'jsdom',
   moduleNameMapper: {
     '^@my-many-books/shared-types$': '<rootDir>/../../libs/shared-types/src/index.ts',

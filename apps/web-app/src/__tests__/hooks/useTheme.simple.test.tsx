@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { useTheme, ThemeProvider } from '../../contexts/ThemeContext';
+import { useTheme, ThemeProvider } from '../../hooks/../contexts/ThemeContext';
 
 // Simple test component that uses useTheme
 const TestComponent = () => {

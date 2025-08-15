@@ -1,4 +1,4 @@
-import { validateISBN, formatISBN, convertISBN10to13, normalizeISBN } from './isbn';
+import { validateISBN, formatISBN, convertISBN10to13, normalizeISBN } from '../../utils/isbn';
 
 describe('ISBN Utilities', () => {
   describe('validateISBN', () => {
