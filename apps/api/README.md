@@ -1,4 +1,6 @@
-# My Many Books - API Backend
+# API Backend
+
+> **Part of [My Many Books Monorepo](../../README.md)**
 
 A serverless API backend for managing personal book collections with ISBN scanning, reading progress tracking, and automated book information retrieval.
 
@@ -31,6 +33,39 @@ A serverless API backend for managing personal book collections with ISBN scanni
 - `PUT /books/{id}` - Update existing book
 - `DELETE /books/{id}` - Delete book
 - `GET /books/search/title/{title}` - Search by title
+
+## Development
+
+From the monorepo root:
+
+```bash
+# Install dependencies for entire monorepo
+npm install
+
+# Start API development server
+npm run serve:api
+# OR
+nx serve api
+
+# Run tests
+npm run test:api
+# OR
+nx test api
+
+# Build for production
+npm run build:api
+# OR
+nx build api
+
+# Deploy API
+npm run deploy:api
+# OR
+nx run api:deploy
+
+# Deploy to specific stage
+npm run deploy:api:dev
+npm run deploy:api:prod
+```
 
 ## Project Structure
 

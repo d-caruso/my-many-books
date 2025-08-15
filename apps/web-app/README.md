@@ -1,4 +1,6 @@
-# My Many Books - Web Frontend
+# Web App
+
+> **Part of [My Many Books Monorepo](../../README.md)**
 
 A React-based Progressive Web Application for managing personal book collections.
 
@@ -32,20 +34,33 @@ A React-based Progressive Web Application for managing personal book collections
 - Responsive design implementation
 - Configurable color palette system
 
-## Getting Started
+## Development
+
+From the monorepo root:
 
 ```bash
-# Install dependencies
+# Install dependencies for entire monorepo
 npm install
 
-# Start development server
-npm start
+# Start web app development server
+npm run serve:web-app
+# OR
+nx serve web-app
 
 # Run tests
-npm test
+npm run test:web-app
+# OR
+nx test web-app
 
 # Build for production
-npm run build
+npm run build:web-app
+# OR
+nx build web-app
+
+# Lint code
+npm run lint:web-app
+# OR
+nx lint web-app
 ```
 
 ## Branch Structure
