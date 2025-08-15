@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ResponsiveButton } from '../ResponsiveButton';
+import { ResponsiveButton } from '../../../components/UI/ResponsiveButton';
 
 describe('ResponsiveButton', () => {
   test('renders with default props', () => {

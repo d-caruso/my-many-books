@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ResponsiveInput } from '../ResponsiveInput';
+import { ResponsiveInput } from '../../../components/UI/ResponsiveInput';
 
 describe('ResponsiveInput', () => {
   test('renders basic input correctly', () => {
