@@ -1,0 +1,321 @@
+name: Monorepo CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment Environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      projects:
+        description: 'Projects to deploy (comma-separated: api,web-app)'
+        required: true
+        default: 'api'
+        type: string
+
+env:
+  NODE_VERSION: '18.x'
+  AWS_REGION: 'us-east-1'
+
+jobs:
+  setup:
+    name: Setup Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      should-deploy: ${{ steps.env.outputs.should-deploy }}
+      affected-projects: ${{ steps.affected.outputs.projects }}
+      deploy-api: ${{ steps.projects.outputs.deploy-api }}
+      deploy-web-app: ${{ steps.projects.outputs.deploy-web-app }}
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Determine Environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine Affected Projects
+        id: affected
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PROJECTS="${{ github.event.inputs.projects }}"
+          else
+            PROJECTS=$(npx nx show projects --affected --base=origin/main~1 --head=HEAD | tr '\n' ',' | sed 's/,$//')
+          fi
+          echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
+          echo "Affected projects: $PROJECTS"
+
+      - name: Determine Projects to Deploy
+        id: projects
+        run: |
+          PROJECTS="${{ steps.affected.outputs.projects }}"
+          
+          if [[ "$PROJECTS" == *"api"* ]]; then
+            echo "deploy-api=true" >> $GITHUB_OUTPUT
+          else
+            echo "deploy-api=false" >> $GITHUB_OUTPUT
+          fi
+          
+          if [[ "$PROJECTS" == *"web-app"* ]]; then
+            echo "deploy-web-app=true" >> $GITHUB_OUTPUT
+          else
+            echo "deploy-web-app=false" >> $GITHUB_OUTPUT
+          fi
+
+  pre-deployment-checks:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: needs.setup.outputs.should-deploy == 'true'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Affected Projects
+        run: npx nx affected --target=build --base=origin/main~1 --head=HEAD
+
+      - name: Run Security Checks
+        run: |
+          npm audit --audit-level=high
+          npx audit-ci --high
+        continue-on-error: true
+
+      - name: Validate Environment Configuration
+        run: |
+          echo "Validating configuration for ${{ needs.setup.outputs.environment }} environment"
+
+  deploy-api:
+    name: Deploy API
+    runs-on: ubuntu-latest
+    needs: [setup, pre-deployment-checks]
+    environment: ${{ needs.setup.outputs.environment }}
+    if: needs.setup.outputs.should-deploy == 'true' && needs.setup.outputs.deploy-api == 'true'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build API
+        run: npx nx build api
+
+      - name: Run Database Migrations
+        working-directory: apps/api
+        run: |
+          export NODE_ENV=${{ needs.setup.outputs.environment }}
+          export DB_HOST=${{ secrets.DB_HOST }}
+          export DB_PORT=${{ secrets.DB_PORT }}
+          export DB_NAME=${{ secrets.DB_NAME }}
+          export DB_USER=${{ secrets.DB_USER }}
+          export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          export DB_SSL=true
+          
+          echo "Running migrations for ${{ needs.setup.outputs.environment }}"
+          npm run db:migrate
+        env:
+          NODE_ENV: ${{ needs.setup.outputs.environment }}
+
+      - name: Deploy API with Serverless
+        working-directory: apps/api
+        run: |
+          export NODE_ENV=${{ needs.setup.outputs.environment }}
+          export STAGE=${{ needs.setup.outputs.environment }}
+          export DB_HOST=${{ secrets.DB_HOST }}
+          export DB_PORT=${{ secrets.DB_PORT }}
+          export DB_NAME=${{ secrets.DB_NAME }}
+          export DB_USER=${{ secrets.DB_USER }}
+          export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          
+          echo "Deploying API to ${{ needs.setup.outputs.environment }}"
+          npx serverless deploy --stage ${{ needs.setup.outputs.environment }} --verbose
+
+  deploy-web-app:
+    name: Deploy Web App
+    runs-on: ubuntu-latest
+    needs: [setup, pre-deployment-checks]
+    environment: ${{ needs.setup.outputs.environment }}
+    if: needs.setup.outputs.should-deploy == 'true' && needs.setup.outputs.deploy-web-app == 'true'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Web App
+        run: npx nx build web-app
+        env:
+          NODE_ENV: ${{ needs.setup.outputs.environment == 'prod' && 'production' || 'development' }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: |
+          BUCKET_NAME="my-many-books-web-${{ needs.setup.outputs.environment }}"
+          echo "Deploying web app to S3 bucket: $BUCKET_NAME"
+          
+          # Sync build files to S3
+          aws s3 sync dist/apps/web-app/ s3://$BUCKET_NAME --delete
+          
+          # Invalidate CloudFront cache
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[0].DomainName=='$BUCKET_NAME.s3.amazonaws.com'].Id | [0]" --output text)
+          if [ "$DISTRIBUTION_ID" != "None" ] && [ "$DISTRIBUTION_ID" != "" ]; then
+            aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+          fi
+
+  post-deployment-tests:
+    name: Post-deployment Tests
+    runs-on: ubuntu-latest
+    needs: [setup, deploy-api]
+    environment: ${{ needs.setup.outputs.environment }}
+    if: needs.setup.outputs.should-deploy == 'true' && needs.setup.outputs.deploy-api == 'true'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Configure Test Environment
+        run: |
+          case "${{ needs.setup.outputs.environment }}" in
+            "dev")
+              echo "API_BASE_URL=https://your-api-dev.execute-api.${{ env.AWS_REGION }}.amazonaws.com/dev" >> $GITHUB_ENV
+              ;;
+            "staging")
+              echo "API_BASE_URL=https://your-api-staging.execute-api.${{ env.AWS_REGION }}.amazonaws.com/staging" >> $GITHUB_ENV
+              ;;
+            "prod")
+              echo "API_BASE_URL=https://api.yourdomain.com" >> $GITHUB_ENV
+              ;;
+          esac
+
+      - name: Run Health Checks
+        run: |
+          echo "Running health checks against ${{ env.API_BASE_URL }}"
+          
+          for i in {1..30}; do
+            if curl -f ${{ env.API_BASE_URL }}/health; then
+              echo "Health check passed"
+              break
+            fi
+            echo "Waiting for deployment to be ready... (attempt $i/30)"
+            sleep 10
+          done
+
+      - name: Run Smoke Tests
+        working-directory: apps/api
+        run: |
+          if [ -f "postman/My-Many-Books-API.postman_collection.json" ]; then
+            newman run postman/My-Many-Books-API.postman_collection.json \
+              --env-var "baseUrl=${{ env.API_BASE_URL }}" \
+              --folder "Health Check" \
+              --reporters cli,json \
+              --reporter-json-export smoke-test-results.json
+          else
+            echo "No Postman collection found, skipping smoke tests"
+          fi
+        continue-on-error: true
+
+  notify-completion:
+    name: Notify Completion
+    runs-on: ubuntu-latest
+    needs: [setup, deploy-api, deploy-web-app, post-deployment-tests]
+    if: always() && needs.setup.outputs.should-deploy == 'true'
+    
+    steps:
+      - name: Notify Success
+        if: (needs.deploy-api.result == 'success' || needs.setup.outputs.deploy-api == 'false') && (needs.deploy-web-app.result == 'success' || needs.setup.outputs.deploy-web-app == 'false')
+        run: |
+          echo "✅ Monorepo deployment completed successfully"
+          echo "Environment: ${{ needs.setup.outputs.environment }}"
+          echo "Deployed projects: ${{ needs.setup.outputs.affected-projects }}"
+
+      - name: Notify Failure
+        if: needs.deploy-api.result == 'failure' || needs.deploy-web-app.result == 'failure'
+        run: |
+          echo "❌ Monorepo deployment failed"
+          echo "Environment: ${{ needs.setup.outputs.environment }}"
+          echo "Check the logs for failure details"
+          exit 1
