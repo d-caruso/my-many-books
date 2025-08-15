@@ -1,18 +1,19 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+/**
+ * Unified API service using shared-api library
+ * Replaces the old api.ts with modern monorepo architecture
+ */
+
+import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
 import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
 import { BookFormData } from '../components/Book/BookForm';
 
-class ApiService {
-  private api: AxiosInstance;
+// Axios adapter for web platform
+class AxiosHttpClient implements HttpClient {
+  private axios = require('axios').create();
 
   constructor() {
-    this.api = axios.create({
-      baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000',
-      timeout: 10000,
-    });
-
-    // Request interceptor to add auth token
-    this.api.interceptors.request.use((config) => {
+    // Add request interceptor for auth token
+    this.axios.interceptors.request.use((config: any) => {
       const token = localStorage.getItem('authToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -20,10 +21,10 @@ class ApiService {
       return config;
     });
 
-    // Response interceptor to handle errors
-    this.api.interceptors.response.use(
-      (response) => response,
-      (error) => {
+    // Add response interceptor for error handling
+    this.axios.interceptors.response.use(
+      (response: any) => response.data,
+      (error: any) => {
         if (error.response?.status === 401) {
           // Handle unauthorized - redirect to login
           localStorage.removeItem('authToken');
@@ -34,18 +35,44 @@ class ApiService {
     );
   }
 
-  // User methods  
-  async getCurrentUser(): Promise<User> {
-    const response = await this.api.get('/api/users');
-    return response.data;
+  async get<T>(url: string, config?: any): Promise<T> {
+    return this.axios.get(url, config);
   }
 
-  async updateProfile(userData: Partial<User>): Promise<User> {
-    const response = await this.api.put('/api/users', userData);
-    return response.data;
+  async post<T>(url: string, data?: any, config?: any): Promise<T> {
+    return this.axios.post(url, data, config);
   }
 
-  // Mock data for development mode
+  async put<T>(url: string, data?: any, config?: any): Promise<T> {
+    return this.axios.put(url, data, config);
+  }
+
+  async delete<T>(url: string, config?: any): Promise<T> {
+    return this.axios.delete(url, config);
+  }
+}
+
+// Enhanced API service with mock data support for development
+class ApiService {
+  private apiClient: any;
+
+  constructor() {
+    // Create API client configuration
+    const apiConfig: ApiClientConfig = {
+      baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000',
+      timeout: 10000,
+      getAuthToken: () => localStorage.getItem('authToken'),
+      onUnauthorized: () => {
+        localStorage.removeItem('authToken');
+        window.location.href = '/login';
+      },
+    };
+
+    // Create and configure the API client
+    this.apiClient = createApiClient(new AxiosHttpClient(), apiConfig);
+  }
+
+  // Mock data for development mode - preserved from old api.ts
   private getMockBooks(): Promise<PaginatedResponse<Book>> {
     const mockBooks: Book[] = [
       {
@@ -204,27 +231,27 @@ class ApiService {
     });
   }
 
-  // Book methods
+  // User methods
+  async getCurrentUser(): Promise<User> {
+    return this.apiClient.users.getCurrentUser();
+  }
+
+  async updateProfile(userData: Partial<User>): Promise<User> {
+    return this.apiClient.users.updateProfile(userData);
+  }
+
+  // Book methods with development mock data fallback
   async getBooks(filters?: SearchFilters): Promise<PaginatedResponse<Book>> {
-    // In development mode, return mock data
+    // In development mode without API URL, return mock data
     if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_API_BASE_URL) {
       return this.getMockBooks();
     }
     
-    const params = new URLSearchParams();
-    
-    if (filters?.query) params.append('search', filters.query);
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.limit) params.append('limit', filters.limit.toString());
-
-    const response = await this.api.get(`/api/books?${params.toString()}`);
-    return response.data;
+    return this.apiClient.books.getBooks(filters?.page || 1, filters?.limit || 10);
   }
 
   async getBook(id: number): Promise<Book> {
-    const response = await this.api.get(`/api/books/${id}`);
-    return response.data;
+    return this.apiClient.books.getBook(id);
   }
 
   async createBook(bookData: BookFormData): Promise<Book> {
@@ -239,8 +266,7 @@ class ApiService {
       authorIds: bookData.selectedAuthors?.map(author => author.id) || [],
       categoryIds: bookData.selectedCategories || []
     };
-    const response = await this.api.post('/api/books', backendData);
-    return response.data;
+    return this.apiClient.books.createBook(backendData);
   }
 
   async updateBook(id: number, bookData: Partial<BookFormData>): Promise<Book> {
@@ -256,12 +282,11 @@ class ApiService {
       ...(bookData.selectedCategories && { categoryIds: bookData.selectedCategories })
     } : bookData;
     
-    const response = await this.api.put(`/api/books/${id}`, backendData);
-    return response.data;
+    return this.apiClient.books.updateBook(id, backendData);
   }
 
   async deleteBook(id: number): Promise<void> {
-    await this.api.delete(`/api/books/${id}`);
+    return this.apiClient.books.deleteBook(id);
   }
 
   // Search books with enhanced filters
@@ -274,69 +299,56 @@ class ApiService {
     authorId?: number;
     categoryId?: number;
   }): Promise<SearchResult> {
-    // In development mode, return mock data
+    // In development mode without API URL, return mock data
     if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_API_BASE_URL) {
       return this.getMockSearchResults(searchParams);
     }
     
-    const params = new URLSearchParams();
-    
-    // Use search query for title search
-    if (searchParams.q) params.append('search', searchParams.q);
-    if (searchParams.status) params.append('status', searchParams.status);
-    if (searchParams.page) params.append('page', searchParams.page.toString());
-    if (searchParams.limit) params.append('limit', searchParams.limit.toString());
-    
-    // For author/category filtering, we'll need to implement this on the backend
-    // For now, use general search
-    const response = await this.api.get(`/api/books?${params.toString()}`);
-    
-    // Transform response to match SearchResult interface
-    const data = response.data;
-    return {
-      books: data.books || [],
-      total: data.pagination?.totalItems || data.total || 0,
-      hasMore: data.pagination ? data.pagination.currentPage < data.pagination.totalPages : false,
-      page: data.pagination?.currentPage || data.page || 1
+    // Transform parameters for shared API
+    const filters: SearchFilters = {
+      query: searchParams.q,
+      status: searchParams.status as any,
+      sortBy: searchParams.sortBy as any,
+      authorId: searchParams.authorId,
+      categoryId: searchParams.categoryId,
+      page: searchParams.page,
+      limit: searchParams.limit
     };
+    
+    return this.apiClient.books.searchBooks(filters);
   }
 
   // ISBN lookup
   async searchByIsbn(isbn: string): Promise<any> {
-    const response = await this.api.get(`/api/books/search/isbn/${isbn}`);
-    return response.data;
+    return this.apiClient.books.searchByIsbn(isbn);
   }
 
-  // Categories methods
+  // Categories methods with development mock data fallback
   async getCategories(): Promise<Category[]> {
-    // In development mode, return mock data
+    // In development mode without API URL, return mock data
     if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_API_BASE_URL) {
       return this.getMockCategories();
     }
     
-    const response = await this.api.get('/api/categories');
-    return response.data.categories || response.data;
+    return this.apiClient.categories.getCategories();
   }
 
   async getCategory(id: number): Promise<Category> {
-    const response = await this.api.get(`/api/categories/${id}`);
-    return response.data;
+    return this.apiClient.categories.getCategory(id);
   }
 
   async createCategory(categoryData: { name: string }): Promise<Category> {
-    const response = await this.api.post('/api/categories', categoryData);
-    return response.data;
+    return this.apiClient.categories.createCategory(categoryData);
   }
 
-  // Authors methods
+  // Authors methods with development mock data fallback
   async getAuthors(): Promise<Author[]> {
-    // In development mode, return mock data
+    // In development mode without API URL, return mock data
     if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_API_BASE_URL) {
       return this.getMockAuthors();
     }
     
-    const response = await this.api.get('/api/authors');
-    return response.data.authors || response.data;
+    return this.apiClient.authors.getAuthors();
   }
 
   async searchAuthors(searchTerm: string): Promise<Author[]> {
@@ -344,7 +356,7 @@ class ApiService {
       return [];
     }
     
-    // In development mode, return filtered mock data
+    // In development mode without API URL, return filtered mock data
     if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_API_BASE_URL) {
       const mockAuthors = await this.getMockAuthors();
       return mockAuthors.filter(author => 
@@ -353,18 +365,15 @@ class ApiService {
       );
     }
     
-    const response = await this.api.get(`/api/authors?search=${encodeURIComponent(searchTerm.trim())}`);
-    return response.data.authors || response.data;
+    return this.apiClient.authors.searchAuthors(searchTerm.trim());
   }
 
   async getAuthor(id: number): Promise<Author> {
-    const response = await this.api.get(`/api/authors/${id}`);
-    return response.data;
+    return this.apiClient.authors.getAuthor(id);
   }
 
   async createAuthor(authorData: { name: string; surname: string; nationality?: string }): Promise<Author> {
-    const response = await this.api.post('/api/authors', authorData);
-    return response.data;
+    return this.apiClient.authors.createAuthor(authorData);
   }
 
   // Error handler
@@ -381,7 +390,7 @@ class ApiService {
 
 export const apiService = new ApiService();
 
-// Legacy export for compatibility
+// Legacy export for compatibility - ensure all existing imports continue to work
 export const bookAPI = {
   searchBooks: apiService.searchBooks.bind(apiService),
   searchByIsbn: apiService.searchByIsbn.bind(apiService),
@@ -404,3 +413,6 @@ export const authorAPI = {
   getAuthor: apiService.getAuthor.bind(apiService),
   createAuthor: apiService.createAuthor.bind(apiService),
 };
+
+// Also export individual API clients for modern usage
+export const { books: bookAPINew, authors: authorAPINew, categories: categoryAPINew, users: userAPI } = apiService.apiClient;
