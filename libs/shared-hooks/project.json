@@ -1,0 +1,33 @@
+{
+  "name": "shared-hooks",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared-hooks/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/shared-hooks",
+        "main": "libs/shared-hooks/src/index.ts",
+        "tsConfig": "libs/shared-hooks/tsconfig.lib.json",
+        "assets": ["libs/shared-hooks/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/shared-hooks/**/*.{ts,tsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/shared-hooks/jest.config.ts"
+      }
+    }
+  },
+  "tags": ["scope:shared", "type:lib", "framework:react"]
+}

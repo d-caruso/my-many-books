@@ -1,0 +1,33 @@
+{
+  "name": "shared-business",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared-business/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/shared-business",
+        "main": "libs/shared-business/src/index.ts",
+        "tsConfig": "libs/shared-business/tsconfig.lib.json",
+        "assets": ["libs/shared-business/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/shared-business/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/shared-business/jest.config.ts"
+      }
+    }
+  },
+  "tags": ["scope:shared", "type:lib"]
+}
