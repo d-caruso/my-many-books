@@ -35,6 +35,10 @@
     "build": "craco build",
     "test": "craco test",
     "test:coverage": "craco test --coverage --watchAll=false",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "e2e": "start-server-and-test start http://localhost:3000 cypress:run",
+    "e2e:open": "start-server-and-test start http://localhost:3000 cypress:open",
     "test:ci": "craco test --coverage --ci --watchAll=false --testResultsProcessor=jest-sonar-reporter",
     "eject": "react-scripts eject"
   },
@@ -59,8 +63,10 @@
   "devDependencies": {
     "@craco/craco": "^7.1.0",
     "autoprefixer": "^10.4.21",
+    "cypress": "^14.5.4",
     "msw": "^2.10.5",
     "postcss": "^8.5.6",
+    "start-server-and-test": "^2.0.13",
     "tailwindcss": "^4.1.11",
     "whatwg-fetch": "^3.6.20",
     "workbox-webpack-plugin": "^7.3.0",

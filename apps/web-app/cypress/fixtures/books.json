@@ -1,0 +1,38 @@
+{
+  "sampleBooks": [
+    {
+      "id": 1,
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "isbn": "9780743273565",
+      "status": "want-to-read",
+      "category": "Fiction"
+    },
+    {
+      "id": 2,
+      "title": "To Kill a Mockingbird",
+      "author": "Harper Lee",
+      "isbn": "9780060935467",
+      "status": "read",
+      "category": "Fiction"
+    },
+    {
+      "id": 3,
+      "title": "Clean Code",
+      "author": "Robert C. Martin",
+      "isbn": "9780132350884",
+      "status": "reading",
+      "category": "Technology"
+    }
+  ],
+  "testUser": {
+    "username": "testuser",
+    "password": "testpass123",
+    "email": "test@example.com"
+  },
+  "searchQueries": {
+    "fiction": "fiction",
+    "gatsby": "gatsby",
+    "martin": "martin"
+  }
+}
