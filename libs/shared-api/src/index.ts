@@ -15,3 +15,6 @@ export { UserApi } from './user-api';
 // Base client and interfaces
 export { BaseApiClient } from './base-client';
 export type { HttpClient, RequestConfig, ApiClientConfig } from './base-client';
+
+// Test utilities for Jest (only available in test environments)
+export { createMockApiClient, resetApiClientMocks, setupMockResponses } from './test-utils';
