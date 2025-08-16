@@ -52,13 +52,29 @@ class AxiosHttpClient implements HttpClient {
   }
 }
 
-// Enhanced API service with mock data support for development
+// Interface for API service dependencies
+interface ApiServiceDependencies {
+  apiClient?: any;
+  httpClient?: HttpClient;
+  config?: ApiClientConfig;
+}
+
+// Enhanced API service with dependency injection and mock data support
 class ApiService {
   private apiClient: any;
 
-  constructor() {
-    // Create API client configuration
-    const apiConfig: ApiClientConfig = {
+  constructor(dependencies: ApiServiceDependencies = {}) {
+    // Use injected API client if provided (for testing)
+    if (dependencies.apiClient) {
+      this.apiClient = dependencies.apiClient;
+      return;
+    }
+
+    // Create HTTP client (use injected or default)
+    const httpClient = dependencies.httpClient || new AxiosHttpClient();
+
+    // Create API client configuration (use injected or default)
+    const apiConfig: ApiClientConfig = dependencies.config || {
       baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000',
       timeout: 10000,
       getAuthToken: () => localStorage.getItem('authToken'),
@@ -69,7 +85,7 @@ class ApiService {
     };
 
     // Create and configure the API client
-    this.apiClient = createApiClient(new AxiosHttpClient(), apiConfig);
+    this.apiClient = createApiClient(httpClient, apiConfig);
   }
 
   // Mock data for development mode - preserved from old api.ts
@@ -388,7 +404,17 @@ class ApiService {
   }
 }
 
+// Factory function for creating API service with dependencies (useful for testing)
+export const createApiService = (dependencies?: ApiServiceDependencies): ApiService => {
+  return new ApiService(dependencies);
+};
+
+// Default API service instance
 export const apiService = new ApiService();
+
+// Export the class and interface for direct usage in tests
+export { ApiService };
+export type { ApiServiceDependencies };
 
 // Legacy export for compatibility - ensure all existing imports continue to work
 export const bookAPI = {

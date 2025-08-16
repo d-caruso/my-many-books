@@ -9,6 +9,16 @@ module.exports = {
       ],
     },
   },
+  jest: {
+    configure: {
+      setupFilesAfterEnv: ['<rootDir>/src/__tests__/setupTests.ts'],
+      testEnvironment: 'jsdom',
+      globals: {
+        TextEncoder: TextEncoder,
+        TextDecoder: TextDecoder,
+      },
+    },
+  },
   webpack: {
     plugins: {
       add: [
