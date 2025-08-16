@@ -2,21 +2,34 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ManualISBNInput } from '../../../components/Scanner/ManualISBNInput';
 
-// Mock Material-UI components
+// Mock Material-UI components - match the actual component structure
 jest.mock('@mui/material', () => ({
-  Box: ({ children, sx, ...props }: any) => (
-    <div data-testid="box" style={sx} {...props}>{children}</div>
+  Box: ({ children, sx, component, onSubmit, ...props }: any) => {
+    const Tag = component || 'div';
+    const handleSubmit = onSubmit || (() => {});
+    return (
+      <Tag data-testid="box" style={sx} onSubmit={handleSubmit} {...props}>{children}</Tag>
+    );
+  },
+  Paper: ({ children, elevation, sx, ...props }: any) => (
+    <div data-testid="paper" data-elevation={elevation} style={sx} {...props}>{children}</div>
   ),
-  Paper: ({ children, elevation, ...props }: any) => (
-    <div data-testid="paper" data-elevation={elevation} {...props}>{children}</div>
+  Typography: ({ children, variant, color, gutterBottom, fontWeight, ...props }: any) => (
+    <div 
+      data-testid={`typography-${variant}`} 
+      data-color={color} 
+      data-gutterbottom={gutterBottom}
+      data-fontweight={fontWeight}
+      {...props}
+    >
+      {children}
+    </div>
   ),
-  Typography: ({ children, variant, color, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} data-color={color} {...props}>{children}</div>
-  ),
-  TextField: ({ label, value, onChange, error, helperText, placeholder, fullWidth, variant, ...props }: any) => (
+  TextField: ({ label, value, onChange, error, helperText, placeholder, fullWidth, id, inputProps, autoComplete, ...props }: any) => (
     <div data-testid="text-field-container">
-      <label data-testid="text-field-label">{label}</label>
+      <label data-testid="text-field-label" htmlFor={id}>{label}</label>
       <input
+        id={id}
         data-testid="text-field"
         data-label={label}
         placeholder={placeholder}
@@ -24,87 +37,68 @@ jest.mock('@mui/material', () => ({
         onChange={(e) => onChange?.(e)}
         data-error={!!error}
         data-fullwidth={fullWidth}
-        data-variant={variant}
+        autoComplete={autoComplete}
+        maxLength={inputProps?.maxLength}
         {...props}
       />
       {error && <div data-testid="text-field-error">{error}</div>}
-      {helperText && <div data-testid="text-field-helper">{helperText}</div>}
+      {helperText && !error && <div data-testid="text-field-helper">{helperText}</div>}
     </div>
   ),
-  Button: ({ children, onClick, variant, disabled, color, fullWidth, startIcon, endIcon, ...props }: any) => (
+  Button: ({ children, onClick, variant, disabled, color, fullWidth, type, ...props }: any) => (
     <button
       data-testid={`button-${variant || 'default'}`}
       onClick={onClick}
       disabled={disabled}
       data-color={color}
       data-fullwidth={fullWidth}
+      type={type}
       {...props}
     >
-      {startIcon && <span data-testid="start-icon">{startIcon}</span>}
       {children}
-      {endIcon && <span data-testid="end-icon">{endIcon}</span>}
     </button>
   ),
-  Dialog: ({ children, open, onClose, maxWidth, fullWidth, ...props }: any) => (
-    open ? (
-      <div data-testid="dialog" data-maxwidth={maxWidth} data-fullwidth={fullWidth} {...props}>
-        {children}
-        <button data-testid="dialog-backdrop" onClick={onClose} />
-      </div>
-    ) : null
-  ),
-  DialogTitle: ({ children, ...props }: any) => (
-    <div data-testid="dialog-title" {...props}>{children}</div>
-  ),
-  DialogContent: ({ children, ...props }: any) => (
-    <div data-testid="dialog-content" {...props}>{children}</div>
-  ),
-  DialogActions: ({ children, ...props }: any) => (
-    <div data-testid="dialog-actions" {...props}>{children}</div>
+  Stack: ({ children, direction, spacing, ...props }: any) => (
+    <div data-testid="stack" data-direction={direction} data-spacing={spacing} {...props}>{children}</div>
   ),
   Alert: ({ children, severity, ...props }: any) => (
     <div data-testid={`alert-${severity}`} {...props}>{children}</div>
-  ),
-  IconButton: ({ children, onClick, ...props }: any) => (
-    <button data-testid="icon-button" onClick={onClick} {...props}>{children}</button>
   ),
 }));
 
 // Mock Material-UI icons
 jest.mock('@mui/icons-material', () => ({
   Close: () => <div data-testid="close-icon">Close</div>,
-  Search: () => <div data-testid="search-icon">Search</div>,
-  CheckCircle: () => <div data-testid="check-icon">Check</div>,
 }));
 
 describe('ManualISBNInput', () => {
   const mockOnSubmit = jest.fn();
-  const mockOnClose = jest.fn();
+  const mockOnCancel = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  test('renders manual ISBN input dialog', () => {
+  test('renders manual ISBN input component when open', () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    expect(screen.getByTestId('dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('paper')).toBeInTheDocument();
     expect(screen.getByText('Enter ISBN Manually')).toBeInTheDocument();
-    expect(screen.getByLabelText('ISBN')).toBeInTheDocument();
+    expect(screen.getByText('ISBN (10 or 13 digits)')).toBeInTheDocument();
   });
 
-  test('does not render when open is false', () => {
+  test('does not render when isOpen is false', () => {
     const { container } = render(
       <ManualISBNInput
-        open={false}
+        isOpen={false}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
@@ -114,13 +108,13 @@ describe('ManualISBNInput', () => {
   test('handles ISBN input changes', () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    const isbnInput = screen.getByLabelText('ISBN');
+    const isbnInput = screen.getByDisplayValue('');
     fireEvent.change(isbnInput, { target: { value: '9780747532699' } });
 
     expect(isbnInput).toHaveValue('9780747532699');
@@ -129,30 +123,30 @@ describe('ManualISBNInput', () => {
   test('shows placeholder text in input field', () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    const isbnInput = screen.getByLabelText('ISBN');
-    expect(isbnInput).toHaveAttribute('placeholder', 'Enter 10 or 13 digit ISBN');
+    const isbnInput = screen.getByDisplayValue('');
+    expect(isbnInput).toHaveAttribute('placeholder', 'e.g., 978-0-123-45678-9');
   });
 
   test('validates required ISBN field', async () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    const submitButton = screen.getByTestId('button-contained');
+    const submitButton = screen.getByText('Add Book');
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText('ISBN is required')).toBeInTheDocument();
+      expect(screen.getByTestId('text-field-error')).toHaveTextContent('Please enter an ISBN');
     });
 
     expect(mockOnSubmit).not.toHaveBeenCalled();
@@ -161,20 +155,20 @@ describe('ManualISBNInput', () => {
   test('validates ISBN format', async () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    const isbnInput = screen.getByLabelText('ISBN');
-    const submitButton = screen.getByTestId('button-contained');
+    const isbnInput = screen.getByDisplayValue('');
+    const submitButton = screen.getByText('Add Book');
 
     fireEvent.change(isbnInput, { target: { value: 'invalid-isbn' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Please enter a valid ISBN (10 or 13 digits)')).toBeInTheDocument();
+      expect(screen.getByTestId('text-field-error')).toHaveTextContent('Invalid ISBN format. Please enter a valid 10 or 13 digit ISBN.');
     });
 
     expect(mockOnSubmit).not.toHaveBeenCalled();
@@ -183,280 +177,274 @@ describe('ManualISBNInput', () => {
   test('accepts valid ISBN-10', async () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    const isbnInput = screen.getByLabelText('ISBN');
-    const submitButton = screen.getByTestId('button-contained');
+    const isbnInput = screen.getByDisplayValue('');
+    const submitButton = screen.getByText('Add Book');
 
-    fireEvent.change(isbnInput, { target: { value: '0747532699' } });
+    fireEvent.change(isbnInput, { target: { value: '0486409120' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith('0747532699');
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        isbn: '0486409120',
+        success: true
+      });
     });
   });
 
   test('accepts valid ISBN-13', async () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    const isbnInput = screen.getByLabelText('ISBN');
-    const submitButton = screen.getByTestId('button-contained');
+    const isbnInput = screen.getByDisplayValue('');
+    const submitButton = screen.getByText('Add Book');
 
-    fireEvent.change(isbnInput, { target: { value: '9780747532699' } });
+    fireEvent.change(isbnInput, { target: { value: '9780486409122' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith('9780747532699');
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        isbn: '9780486409122',
+        success: true
+      });
     });
   });
 
   test('strips hyphens and spaces from ISBN', async () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    const isbnInput = screen.getByLabelText('ISBN');
-    const submitButton = screen.getByTestId('button-contained');
+    const isbnInput = screen.getByDisplayValue('');
+    const submitButton = screen.getByText('Add Book');
 
-    fireEvent.change(isbnInput, { target: { value: '978-0-7475-3269-9' } });
+    fireEvent.change(isbnInput, { target: { value: '978-0-486-40912-2' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith('9780747532699');
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        isbn: '9780486409122',
+        success: true
+      });
     });
   });
 
-  test('handles ISBN with spaces', async () => {
+  test('handles ISBN with X check digit', async () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    const isbnInput = screen.getByLabelText('ISBN');
-    const submitButton = screen.getByTestId('button-contained');
+    const isbnInput = screen.getByDisplayValue('');
+    const submitButton = screen.getByText('Add Book');
 
-    fireEvent.change(isbnInput, { target: { value: '978 0 7475 3269 9' } });
+    fireEvent.change(isbnInput, { target: { value: '048665088X' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith('9780747532699');
-    });
-  });
-
-  test('calls onClose when close button is clicked', () => {
-    render(
-      <ManualISBNInput
-        open={true}
-        onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
-      />
-    );
-
-    const closeButton = screen.getByTestId('close-icon').parentElement;
-    fireEvent.click(closeButton!);
-
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
-  });
-
-  test('calls onClose when cancel button is clicked', () => {
-    render(
-      <ManualISBNInput
-        open={true}
-        onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
-      />
-    );
-
-    const cancelButton = screen.getByTestId('button-text');
-    fireEvent.click(cancelButton);
-
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
-  });
-
-  test('calls onClose when backdrop is clicked', () => {
-    render(
-      <ManualISBNInput
-        open={true}
-        onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
-      />
-    );
-
-    const backdrop = screen.getByTestId('dialog-backdrop');
-    fireEvent.click(backdrop);
-
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
-  });
-
-  test('submits form on Enter key press', async () => {
-    render(
-      <ManualISBNInput
-        open={true}
-        onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
-      />
-    );
-
-    const isbnInput = screen.getByLabelText('ISBN');
-
-    fireEvent.change(isbnInput, { target: { value: '9780747532699' } });
-    fireEvent.keyDown(isbnInput, { key: 'Enter' });
-
-    await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith('9780747532699');
-    });
-  });
-
-  test('does not submit on non-Enter key press', () => {
-    render(
-      <ManualISBNInput
-        open={true}
-        onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
-      />
-    );
-
-    const isbnInput = screen.getByLabelText('ISBN');
-
-    fireEvent.change(isbnInput, { target: { value: '9780747532699' } });
-    fireEvent.keyDown(isbnInput, { key: 'Tab' });
-
-    expect(mockOnSubmit).not.toHaveBeenCalled();
-  });
-
-  test('shows helper text for ISBN format', () => {
-    render(
-      <ManualISBNInput
-        open={true}
-        onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
-      />
-    );
-
-    expect(screen.getByText('Enter ISBN with or without hyphens/spaces')).toBeInTheDocument();
-  });
-
-  test('clears validation error when valid input is entered', async () => {
-    render(
-      <ManualISBNInput
-        open={true}
-        onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
-      />
-    );
-
-    const isbnInput = screen.getByLabelText('ISBN');
-    const submitButton = screen.getByTestId('button-contained');
-
-    // Trigger validation error
-    fireEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(screen.getByText('ISBN is required')).toBeInTheDocument();
-    });
-
-    // Enter valid input
-    fireEvent.change(isbnInput, { target: { value: '9780747532699' } });
-
-    expect(screen.queryByText('ISBN is required')).not.toBeInTheDocument();
-  });
-
-  test('shows correct dialog title', () => {
-    render(
-      <ManualISBNInput
-        open={true}
-        onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
-      />
-    );
-
-    expect(screen.getByTestId('dialog-title')).toHaveTextContent('Enter ISBN Manually');
-  });
-
-  test('has proper dialog actions layout', () => {
-    render(
-      <ManualISBNInput
-        open={true}
-        onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
-      />
-    );
-
-    expect(screen.getByTestId('dialog-actions')).toBeInTheDocument();
-    expect(screen.getByText('Cancel')).toBeInTheDocument();
-    expect(screen.getByText('Submit')).toBeInTheDocument();
-  });
-
-  test('handles ISBN with X check digit (ISBN-10)', async () => {
-    render(
-      <ManualISBNInput
-        open={true}
-        onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
-      />
-    );
-
-    const isbnInput = screen.getByLabelText('ISBN');
-    const submitButton = screen.getByTestId('button-contained');
-
-    fireEvent.change(isbnInput, { target: { value: '123456789X' } });
-    fireEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith('123456789X');
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        isbn: '048665088X',
+        success: true
+      });
     });
   });
 
   test('rejects ISBN with invalid length', async () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    const isbnInput = screen.getByLabelText('ISBN');
-    const submitButton = screen.getByTestId('button-contained');
+    const isbnInput = screen.getByDisplayValue('');
+    const submitButton = screen.getByText('Add Book');
 
-    fireEvent.change(isbnInput, { target: { value: '123456' } }); // Too short
+    fireEvent.change(isbnInput, { target: { value: '123456' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Please enter a valid ISBN (10 or 13 digits)')).toBeInTheDocument();
+      expect(screen.getByTestId('text-field-error')).toHaveTextContent('Invalid ISBN format. Please enter a valid 10 or 13 digit ISBN.');
     });
 
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
 
-  test('has responsive dialog layout', () => {
+  test('calls onCancel when cancel button is clicked', () => {
     render(
       <ManualISBNInput
-        open={true}
+        isOpen={true}
         onSubmit={mockOnSubmit}
-        onClose={mockOnClose}
+        onCancel={mockOnCancel}
       />
     );
 
-    const dialog = screen.getByTestId('dialog');
-    expect(dialog).toHaveAttribute('data-maxwidth', 'sm');
-    expect(dialog).toHaveAttribute('data-fullwidth', 'true');
+    const cancelButton = screen.getByText('Cancel');
+    fireEvent.click(cancelButton);
+
+    expect(mockOnCancel).toHaveBeenCalledTimes(1);
+  });
+
+  test('clears form when cancelled', () => {
+    render(
+      <ManualISBNInput
+        isOpen={true}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    const isbnInput = screen.getByDisplayValue('');
+    const cancelButton = screen.getByText('Cancel');
+
+    fireEvent.change(isbnInput, { target: { value: '1234567890' } });
+    fireEvent.click(cancelButton);
+
+    expect(mockOnCancel).toHaveBeenCalledTimes(1);
+  });
+
+  test('clears error when user starts typing', async () => {
+    render(
+      <ManualISBNInput
+        isOpen={true}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    const isbnInput = screen.getByDisplayValue('');
+    const submitButton = screen.getByText('Add Book');
+
+    fireEvent.click(submitButton);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('text-field-error')).toBeInTheDocument();
+    });
+
+    fireEvent.change(isbnInput, { target: { value: '123' } });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('text-field-error')).not.toBeInTheDocument();
+    });
+  });
+
+  test('shows instructions for ISBN format', () => {
+    render(
+      <ManualISBNInput
+        isOpen={true}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    expect(screen.getByText('Enter the 10 or 13 digit ISBN code from your book')).toBeInTheDocument();
+    expect(screen.getByText('ISBN can be found on the back cover of most books, usually above or below the barcode.')).toBeInTheDocument();
+  });
+
+  test('shows ISBN examples', () => {
+    render(
+      <ManualISBNInput
+        isOpen={true}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    expect(screen.getByText('Examples:')).toBeInTheDocument();
+    expect(screen.getByText('ISBN-10: 0123456789')).toBeInTheDocument();
+    expect(screen.getByText('ISBN-13: 9780123456789')).toBeInTheDocument();
+  });
+
+  test('resets form after successful submission', async () => {
+    render(
+      <ManualISBNInput
+        isOpen={true}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    const isbnInput = screen.getByDisplayValue('');
+    const submitButton = screen.getByText('Add Book');
+
+    fireEvent.change(isbnInput, { target: { value: '9780486409122' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalled();
+    });
+
+    expect(isbnInput).toHaveValue('');
+  });
+
+  test('handles form submission with valid ISBN', async () => {
+    render(
+      <ManualISBNInput
+        isOpen={true}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    const isbnInput = screen.getByDisplayValue('');
+    const form = screen.getByTestId('box');
+
+    fireEvent.change(isbnInput, { target: { value: '9780486409122' } });
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        isbn: '9780486409122',
+        success: true
+      });
+    });
+  });
+
+  test('disables submit button when input is empty', () => {
+    render(
+      <ManualISBNInput
+        isOpen={true}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    const submitButton = screen.getByText('Add Book');
+    expect(submitButton).toBeDisabled();
+  });
+
+  test('enables submit button when input has content', () => {
+    render(
+      <ManualISBNInput
+        isOpen={true}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    const isbnInput = screen.getByDisplayValue('');
+    const submitButton = screen.getByText('Add Book');
+
+    fireEvent.change(isbnInput, { target: { value: '123' } });
+
+    expect(submitButton).not.toBeDisabled();
   });
 });

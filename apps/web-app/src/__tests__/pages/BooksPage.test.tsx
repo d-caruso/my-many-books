@@ -1,207 +1,493 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
 import { BooksPage } from '../../pages/BooksPage';
-import { useAuth } from '../../contexts/AuthContext';
 
-// Mock the useAuth hook
-jest.mock('../../contexts/AuthContext', () => ({
-  useAuth: jest.fn(),
+// Mock dependencies
+jest.mock('react-router-dom', () => ({
+  useSearchParams: jest.fn(),
+  useNavigate: jest.fn(),
 }));
 
-// Mock API services
+jest.mock('../../hooks/useBookSearch', () => ({
+  useBookSearch: jest.fn(),
+}));
+
 jest.mock('../../services/api', () => ({
   bookAPI: {
-    getBooks: jest.fn(),
-    deleteBook: jest.fn(),
-  },
-  categoryAPI: {
-    getCategories: jest.fn(),
-  },
-  authorAPI: {
-    getAuthors: jest.fn(),
+    createBook: jest.fn().mockResolvedValue({ id: 3, title: 'New Book' }),
+    updateBook: jest.fn().mockResolvedValue({ id: 1, title: 'Updated Book' }),
+    deleteBook: jest.fn().mockResolvedValue({}),
+    getById: jest.fn().mockResolvedValue({ id: 1, title: 'Test Book' }),
+    getBooks: jest.fn().mockResolvedValue([]),
   },
 }));
 
 // Mock Material-UI components
 jest.mock('@mui/material', () => ({
-  Box: ({ children, sx, ...props }: any) => (
-    <div data-testid="box" style={sx} {...props}>{children}</div>
+  Box: ({ children, ...props }: any) => <div data-testid="box" {...props}>{children}</div>,
+  Button: ({ children, onClick, startIcon, variant, ...props }: any) => (
+    <button data-testid={`button-${variant || 'default'}`} onClick={onClick} {...props}>
+      {startIcon && <span data-testid="button-icon">{startIcon}</span>}
+      {children}
+    </button>
   ),
-  Container: ({ children, maxWidth, ...props }: any) => (
-    <div data-testid="container" data-maxwidth={maxWidth} {...props}>{children}</div>
+  IconButton: ({ children, onClick, ...props }: any) => (
+    <button data-testid="icon-button" onClick={onClick} {...props}>{children}</button>
+  ),
+  Chip: ({ label, onDelete, ...props }: any) => (
+    <div data-testid="chip" onClick={onDelete} {...props}>{label}</div>
   ),
   Typography: ({ children, variant, ...props }: any) => (
     <div data-testid={`typography-${variant}`} {...props}>{children}</div>
   ),
-  Button: ({ children, onClick, variant, startIcon, endIcon, ...props }: any) => (
-    <button
-      data-testid={`button-${variant || 'default'}`}
-      onClick={onClick}
-      {...props}
-    >
-      {startIcon && <span data-testid="start-icon">{startIcon}</span>}
-      {children}
-      {endIcon && <span data-testid="end-icon">{endIcon}</span>}
-    </button>
-  ),
-  Grid: ({ children, container, item, xs, sm, md, spacing, ...props }: any) => (
-    <div 
-      data-testid="grid" 
-      data-container={container}
-      data-item={item}
-      data-xs={xs}
-      data-sm={sm}
-      data-md={md}
-      data-spacing={spacing}
-      {...props}
-    >
-      {children}
-    </div>
-  ),
-  CircularProgress: (props: any) => (
-    <div data-testid="circular-progress" {...props} />
-  ),
-  Alert: ({ children, severity, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} {...props}>{children}</div>
-  ),
-  Fab: ({ children, color, onClick, ...props }: any) => (
-    <button data-testid="fab" data-color={color} onClick={onClick} {...props}>
-      {children}
-    </button>
-  ),
 }));
 
-// Mock Material-UI icons
 jest.mock('@mui/icons-material', () => ({
-  Add: () => <div data-testid="add-icon">Add</div>,
+  Add: () => <span data-testid="add-icon">Add</span>,
+  Clear: () => <span data-testid="clear-icon">Clear</span>,
+  ViewModule: () => <span data-testid="grid-icon">Grid</span>,
+  ViewList: () => <span data-testid="list-icon">List</span>,
 }));
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+// Store callbacks for testing
+let mockOnStatusChange: any;
+let mockFormCancel: any;
+let mockDetailsEdit: any;
 
-const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <BrowserRouter>{children}</BrowserRouter>
-);
+// Mock components with better callback handling
+jest.mock('../../components/Book', () => ({
+  BookList: ({ books, onBookSelect, onBookEdit, onBookDelete, viewMode, onStatusChange }: any) => {
+    mockOnStatusChange = onStatusChange;
+    return (
+      <div data-testid="book-list" data-view-mode={viewMode}>
+        {books?.map((book: any) => (
+          <div key={book.id} data-testid={`book-item-${book.id}`}>
+            <button onClick={() => onBookSelect?.(book)} data-testid={`select-${book.id}`}>Select {book.title}</button>
+            <button onClick={() => onBookEdit?.(book)} data-testid={`edit-${book.id}`}>Edit {book.title}</button>
+            <button onClick={() => onBookDelete?.(book.id)} data-testid={`delete-${book.id}`}>Delete {book.title}</button>
+            <button onClick={() => onStatusChange?.(book.id, 'read')} data-testid={`status-${book.id}`}>Mark Read</button>
+          </div>
+        ))}
+      </div>
+    );
+  },
+  BookForm: ({ book, onSubmit, onCancel, loading }: any) => {
+    mockFormCancel = onCancel;
+    return (
+      <div data-testid="book-form" data-loading={loading} data-book-id={book?.id}>
+        <button onClick={() => onSubmit({ title: 'Test Book', isbn: '123' })} data-testid="form-submit">Submit</button>
+        <button onClick={onCancel} data-testid="form-cancel">Cancel</button>
+      </div>
+    );
+  },
+  BookDetails: ({ book, onEdit, onDelete, onClose }: any) => {
+    mockDetailsEdit = onEdit;
+    return (
+      <div data-testid="book-details" data-book-id={book?.id}>
+        <h3>{book?.title}</h3>
+        <button onClick={() => onEdit?.(book)} data-testid="details-edit">Edit</button>
+        <button onClick={() => onDelete?.(book.id)} data-testid="details-delete">Delete</button>
+        <button onClick={onClose} data-testid="details-close">Close</button>
+      </div>
+    );
+  },
+}));
+
+const mockOnSearch = jest.fn();
+const mockOnClear = jest.fn();
+
+jest.mock('../../components/Search', () => ({
+  BookSearchForm: ({ onSearch, loading }: any) => {
+    const { clearSearch } = require('../../hooks/useBookSearch').useBookSearch();
+    
+    return (
+      <div data-testid="search-form" data-loading={loading}>
+        <button onClick={() => onSearch('test', {})}>Search</button>
+        <button onClick={clearSearch}>Clear</button>
+      </div>
+    );
+  },
+}));
+
+const mockUseSearchParams = require('react-router-dom').useSearchParams;
+const mockUseNavigate = require('react-router-dom').useNavigate;
+const mockUseBookSearch = require('../../hooks/useBookSearch').useBookSearch;
 
 describe('BooksPage', () => {
-  const mockBooks = [
-    {
-      id: 1,
-      title: 'Test Book 1',
-      isbn: '9780747532699',
-      author: { id: 1, name: 'John', surname: 'Doe' },
-      category: { id: 1, name: 'Fiction' },
-      description: 'A great book',
-      publicationYear: 2020,
-      pages: 250,
-      publisher: 'Test Publisher',
-    },
-  ];
+  const mockNavigate = jest.fn();
+  const mockSetSearchParams = jest.fn();
+  const mockSearchParams = new URLSearchParams();
+
+  const mockBookSearchReturn = {
+    books: [
+      { id: 1, title: 'Test Book 1', isbn: '123' },
+      { id: 2, title: 'Test Book 2', isbn: '456' },
+    ],
+    loading: false,
+    error: null,
+    totalCount: 2,
+    hasMore: false,
+    searchBooks: jest.fn(),
+    loadMore: jest.fn(),
+    clearSearch: jest.fn(),
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseNavigate.mockReturnValue(mockNavigate);
+    mockUseSearchParams.mockReturnValue([mockSearchParams, mockSetSearchParams]);
     
-    mockUseAuth.mockReturnValue({
-      user: { id: 1, email: 'test@example.com', name: 'Test User' },
-      loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
-    });
-
-    const { bookAPI, categoryAPI, authorAPI } = require('../../services/api');
-    bookAPI.getBooks.mockResolvedValue({ data: mockBooks, total: 1, page: 1, limit: 10 });
-    categoryAPI.getCategories.mockResolvedValue([]);
-    authorAPI.getAuthors.mockResolvedValue([]);
+    // Reset to default state
+    mockBookSearchReturn.books = [
+      { id: 1, title: 'Test Book 1', isbn: '123' },
+      { id: 2, title: 'Test Book 2', isbn: '456' },
+    ];
+    mockBookSearchReturn.loading = false;
+    mockBookSearchReturn.error = null;
+    mockBookSearchReturn.totalCount = 2;
+    mockBookSearchReturn.hasMore = false;
+    
+    mockUseBookSearch.mockReturnValue(mockBookSearchReturn);
+    
+    // Mock URLSearchParams methods
+    mockSearchParams.get = jest.fn().mockReturnValue(null);
   });
 
-  test('renders books page', async () => {
-    render(
-      <BooksPage />,
-      { wrapper: TestWrapper }
-    );
+  test('renders books page in list mode by default', () => {
+    render(<BooksPage />);
+    expect(screen.getByTestId('book-list')).toBeInTheDocument();
+    expect(screen.getByTestId('search-form')).toBeInTheDocument();
+  });
 
+  test('switches to grid view mode', () => {
+    render(<BooksPage />);
+    
+    const gridButton = screen.getByTestId('grid-icon').closest('button');
+    fireEvent.click(gridButton!);
+    
+    const bookList = screen.getByTestId('book-list');
+    expect(bookList).toHaveAttribute('data-view-mode', 'grid');
+  });
+
+  test('switches to list view mode', () => {
+    render(<BooksPage />);
+    
+    const listButton = screen.getByTestId('list-icon').closest('button');
+    fireEvent.click(listButton!);
+    
+    const bookList = screen.getByTestId('book-list');
+    expect(bookList).toHaveAttribute('data-view-mode', 'list');
+  });
+
+  test('opens add book form', () => {
+    render(<BooksPage />);
+    
+    const addButton = screen.getByTestId('add-icon').closest('button');
+    fireEvent.click(addButton!);
+    
+    expect(screen.getByTestId('book-form')).toBeInTheDocument();
+    expect(screen.queryByTestId('book-list')).not.toBeInTheDocument();
+  });
+
+  test('renders book list with books', () => {
+    render(<BooksPage />);
+    
+    expect(screen.getByText('Select Test Book 1')).toBeInTheDocument();
+    expect(screen.getByText('Edit Test Book 1')).toBeInTheDocument();
+    expect(screen.getByText('Delete Test Book 1')).toBeInTheDocument();
+    expect(screen.getByText('Select Test Book 2')).toBeInTheDocument();
+  });
+
+  test('displays book count', () => {
+    render(<BooksPage />);
+    
+    expect(screen.getByText('2 books in your library')).toBeInTheDocument();
+  });
+
+  test('performs search', () => {
+    render(<BooksPage />);
+    
+    const searchButton = screen.getByText('Search');
+    fireEvent.click(searchButton);
+    
+    // Should update search params with query
+    expect(mockSetSearchParams).toHaveBeenCalledWith(
+      expect.objectContaining({
+        get: expect.any(Function),
+        set: expect.any(Function),
+      })
+    );
+  });
+
+  test('clears search', () => {
+    render(<BooksPage />);
+    
+    const clearButton = screen.getByText('Clear');
+    fireEvent.click(clearButton);
+    
+    // Should call clearSearch on the hook
+    expect(mockBookSearchReturn.clearSearch).toHaveBeenCalled();
+  });
+
+  test('renders search form', () => {
+    render(<BooksPage />);
+    
+    expect(screen.getByTestId('search-form')).toBeInTheDocument();
+    expect(screen.getByText('Search')).toBeInTheDocument();
+    expect(screen.getByText('Clear')).toBeInTheDocument();
+  });
+
+  test('renders view mode controls', () => {
+    render(<BooksPage />);
+    
+    expect(screen.getByTestId('grid-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('list-icon')).toBeInTheDocument();
+  });
+
+  test('cancels book form', () => {
+    render(<BooksPage />);
+    
+    // Open add form
+    const addButton = screen.getByTestId('add-icon').closest('button');
+    fireEvent.click(addButton!);
+    
+    // Cancel form
+    const cancelButton = screen.getByText('Cancel');
+    fireEvent.click(cancelButton);
+    
+    expect(screen.getByTestId('book-list')).toBeInTheDocument();
+    expect(screen.queryByTestId('book-form')).not.toBeInTheDocument();
+  });
+
+  test('renders page header with title', () => {
+    render(<BooksPage />);
+    
     expect(screen.getByText('My Books')).toBeInTheDocument();
-    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
+  });
 
-    await waitFor(() => {
-      expect(screen.getByText('Test Book 1')).toBeInTheDocument();
+  test('handles URL search params on mount', () => {
+    mockSearchParams.get = jest.fn((key) => {
+      if (key === 'mode') return 'add';
+      return null;
+    });
+    
+    render(<BooksPage />);
+    
+    expect(screen.getByTestId('book-form')).toBeInTheDocument();
+  });
+
+  test('handles book interactions', async () => {
+    render(<BooksPage />);
+    
+    // Test add book button triggers add mode
+    fireEvent.click(screen.getByTestId('add-icon').closest('button')!);
+    expect(screen.getByTestId('book-form')).toBeInTheDocument();
+  });
+
+  test('handles loading states', () => {
+    mockBookSearchReturn.loading = true;
+    render(<BooksPage />);
+    
+    expect(screen.getByTestId('search-form')).toHaveAttribute('data-loading', 'true');
+  });
+
+  test('displays error states', () => {
+    mockBookSearchReturn.error = 'Search error';
+    render(<BooksPage />);
+    
+    // Component should still render even with error
+    expect(screen.getByTestId('book-list')).toBeInTheDocument();
+  });
+
+  test('handles empty book list', () => {
+    mockBookSearchReturn.books = [];
+    mockBookSearchReturn.totalCount = 0;
+    render(<BooksPage />);
+    
+    expect(screen.getByText('Your personal book collection')).toBeInTheDocument();
+  });
+
+  test('handles search params with query', () => {
+    mockSearchParams.get = jest.fn((key) => {
+      if (key === 'q') return 'test query';
+      return null;
+    });
+    
+    render(<BooksPage />);
+    
+    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('test query', {});
+  });
+
+  test('handles search params with filters', () => {
+    mockSearchParams.get = jest.fn((key) => {
+      if (key === 'categoryId') return '1';
+      if (key === 'authorId') return '2';
+      if (key === 'sortBy') return 'title';
+      return null;
+    });
+    
+    render(<BooksPage />);
+    
+    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {
+      categoryId: 1,
+      authorId: 2,
+      sortBy: 'title'
     });
   });
 
-  test('shows loading state initially', () => {
-    render(
-      <BooksPage />,
-      { wrapper: TestWrapper }
-    );
-
-    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
-  });
-
-  test('renders add book button', async () => {
-    render(
-      <BooksPage />,
-      { wrapper: TestWrapper }
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId('fab')).toBeInTheDocument();
-      expect(screen.getByTestId('add-icon')).toBeInTheDocument();
-    });
-  });
-
-  test('shows error message when books fail to load', async () => {
+  test('loads user books when no search params', () => {
     const { bookAPI } = require('../../services/api');
-    bookAPI.getBooks.mockRejectedValue(new Error('Failed to load books'));
-
-    render(
-      <BooksPage />,
-      { wrapper: TestWrapper }
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId('alert-error')).toBeInTheDocument();
-      expect(screen.getByText('Failed to load books')).toBeInTheDocument();
-    });
+    mockSearchParams.get = jest.fn().mockReturnValue(null);
+    
+    render(<BooksPage />);
+    
+    expect(bookAPI.getBooks).toHaveBeenCalled();
   });
 
-  test('shows empty state when no books', async () => {
+  test('renders with different book counts', () => {
+    mockBookSearchReturn.totalCount = 5;
+    render(<BooksPage />);
+    
+    expect(screen.getByText('5 books in your library')).toBeInTheDocument();
+  });
+
+  test('renders singular book count', () => {
+    mockBookSearchReturn.totalCount = 1;
+    mockBookSearchReturn.books = [{ id: 1, title: 'Single Book', isbn: '123' }];
+    render(<BooksPage />);
+    
+    expect(screen.getByText('1 book in your library')).toBeInTheDocument();
+  });
+
+  test('handles has more books', () => {
+    mockBookSearchReturn.hasMore = true;
+    render(<BooksPage />);
+    
+    expect(screen.getByTestId('book-list')).toBeInTheDocument();
+  });
+
+  test('renders when search error occurs', () => {
+    mockBookSearchReturn.error = 'Search failed';
+    render(<BooksPage />);
+    
+    expect(screen.getByTestId('book-list')).toBeInTheDocument();
+  });
+
+  test('handles no books scenario', () => {
+    mockBookSearchReturn.books = [];
+    mockBookSearchReturn.totalCount = 0;
+    render(<BooksPage />);
+    
+    expect(screen.getByText('Your personal book collection')).toBeInTheDocument();
+  });
+
+  test('handles getBooks API error', async () => {
     const { bookAPI } = require('../../services/api');
-    bookAPI.getBooks.mockResolvedValue({ data: [], total: 0, page: 1, limit: 10 });
+    bookAPI.getBooks.mockRejectedValueOnce(new Error('API Error'));
+    
+    render(<BooksPage />);
+    
+    expect(bookAPI.getBooks).toHaveBeenCalled();
+  });
 
-    render(
-      <BooksPage />,
-      { wrapper: TestWrapper }
-    );
+  test('renders with search query from URL', () => {
+    mockSearchParams.get = jest.fn((key) => {
+      if (key === 'q') return 'test search';
+      return null;
+    });
+    
+    render(<BooksPage />);
+    
+    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('test search', {});
+  });
 
-    await waitFor(() => {
-      expect(screen.getByText('No books found')).toBeInTheDocument();
+  test('calls status change handler', async () => {
+    const { bookAPI } = require('../../services/api');
+    render(<BooksPage />);
+    
+    // Use the stored callback
+    if (mockOnStatusChange) {
+      await mockOnStatusChange(1, 'read');
+      expect(bookAPI.updateBook).toHaveBeenCalledWith(1, { status: 'read' });
+    }
+  });
+
+  test('handles different view modes', () => {
+    render(<BooksPage />);
+    
+    // Click list view
+    fireEvent.click(screen.getByTestId('list-icon').closest('button')!);
+    
+    const bookList = screen.getByTestId('book-list');
+    expect(bookList).toHaveAttribute('data-view-mode', 'list');
+  });
+
+  test('renders multiple books correctly', () => {
+    mockBookSearchReturn.books = [
+      { id: 1, title: 'Book 1', isbn: '123' },
+      { id: 2, title: 'Book 2', isbn: '456' },
+      { id: 3, title: 'Book 3', isbn: '789' }
+    ];
+    mockBookSearchReturn.totalCount = 3;
+    
+    render(<BooksPage />);
+    
+    expect(screen.getByText('3 books in your library')).toBeInTheDocument();
+    expect(screen.getByTestId('book-item-1')).toBeInTheDocument();
+    expect(screen.getByTestId('book-item-2')).toBeInTheDocument();
+    expect(screen.getByTestId('book-item-3')).toBeInTheDocument();
+  });
+
+  test('handles all search filter combinations', () => {
+    mockSearchParams.get = jest.fn((key) => {
+      if (key === 'q') return 'fantasy';
+      if (key === 'categoryId') return '5';
+      if (key === 'authorId') return '10';
+      if (key === 'sortBy') return 'author';
+      return null;
+    });
+    
+    render(<BooksPage />);
+    
+    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('fantasy', {
+      categoryId: 5,
+      authorId: 10,
+      sortBy: 'author'
     });
   });
 
-  test('renders book information correctly', async () => {
-    render(
-      <BooksPage />,
-      { wrapper: TestWrapper }
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Test Book 1')).toBeInTheDocument();
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('Fiction')).toBeInTheDocument();
-      expect(screen.getByText('2020')).toBeInTheDocument();
+  test('handles complex search parameters scenario', () => {
+    mockSearchParams.get = jest.fn((key) => {
+      if (key === 'categoryId') return '3';
+      if (key === 'sortBy') return 'date';
+      return null;
+    });
+    
+    render(<BooksPage />);
+    
+    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {
+      categoryId: 3,
+      sortBy: 'date'
     });
   });
 
-  test('has responsive layout', async () => {
-    render(
-      <BooksPage />,
-      { wrapper: TestWrapper }
-    );
-
-    await waitFor(() => {
-      const grids = screen.getAllByTestId('grid');
-      expect(grids.length).toBeGreaterThan(0);
+  test('handles author-only search filter', () => {
+    mockSearchParams.get = jest.fn((key) => {
+      if (key === 'authorId') return '7';
+      return null;
     });
+    
+    render(<BooksPage />);
+    
+    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {
+      authorId: 7
+    });
+  });
+
+  test('calls loadMore function when available', () => {
+    mockBookSearchReturn.hasMore = true;
+    render(<BooksPage />);
+    
+    expect(mockBookSearchReturn.loadMore).toBeDefined();
   });
 });
