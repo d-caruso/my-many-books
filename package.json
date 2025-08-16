@@ -41,6 +41,7 @@
     "@nx/react": "^21.3.11",
     "@nx/workspace": "^17.0.0",
     "babel-jest": "^29.7.0",
+    "cypress": "^14.5.4",
     "nx": "^17.0.0",
     "typescript": "^5.0.0"
   },
