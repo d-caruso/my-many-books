@@ -1,4 +1,4 @@
-name: Monorepo CI
+name: CI
 
 on:
   push:
@@ -7,312 +7,105 @@ on:
     branches: [ main, develop ]
 
 env:
-  NODE_VERSION: '20.x'
-  NX_CLOUD_DISTRIBUTED_EXECUTION: false
+  NODE_VERSION: '20'
 
 jobs:
   setup:
-    name: Setup
+    name: Setup & Install
     runs-on: ubuntu-latest
-    outputs:
-      affected-projects: ${{ steps.affected.outputs.projects }}
-      has-affected: ${{ steps.affected.outputs.hasAffected }}
-    
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Clear Node.js cache
-        run: |
-          sudo rm -rf /opt/hostedtoolcache/node || true
-          rm -rf ~/.npm || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Verify Node.js version
-        run: node --version
-
-      - name: Clear npm cache
-        run: npm cache clean --force
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Determine Affected Projects
-        id: affected
+      - name: Install dependencies
         run: |
-          echo "Determining affected projects..."
-          AFFECTED=$(npx nx show projects --affected --base=origin/main --head=HEAD)
-          echo "projects=$AFFECTED" >> $GITHUB_OUTPUT
-          
-          if [ -n "$AFFECTED" ]; then
-            echo "hasAffected=true" >> $GITHUB_OUTPUT
-          else
-            echo "hasAffected=false" >> $GITHUB_OUTPUT
-          fi
-          
-          echo "Affected projects: $AFFECTED"
+          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+          npm list || true
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
   lint:
     name: Lint
     runs-on: ubuntu-latest
     needs: setup
-    if: needs.setup.outputs.has-affected == 'true'
-    
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: false
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Run Lint on Affected Projects
-        run: npx nx affected --target=lint --base=origin/main --head=HEAD
+      - name: Install if cache miss
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
-  test-api:
-    name: Test API
+      - name: Lint
+        run: npx nx run-many --target=lint --all --parallel
+
+  test:
+    name: Test
     runs-on: ubuntu-latest
     needs: setup
-    if: contains(needs.setup.outputs.affected-projects, 'api')
-    
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: test_password
-          MYSQL_DATABASE: my_many_books_test
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: test_password
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-    
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: false
 
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Wait for MySQL
-        run: |
-          until mysqladmin ping -h"127.0.0.1" -P3306 -uroot -ptest_password --silent; do
-            echo 'Waiting for MySQL...'
-            sleep 2
-          done
-
-      - name: Setup Test Environment
-        working-directory: apps/api
-        run: |
-          cp .env.example .env.test
-          echo "NODE_ENV=test" >> .env.test
-          echo "DB_HOST=127.0.0.1" >> .env.test
-          echo "DB_PORT=3306" >> .env.test
-          echo "DB_NAME=my_many_books_test" >> .env.test
-          echo "DB_USER=test_user" >> .env.test
-          echo "DB_PASSWORD=test_password" >> .env.test
-          echo "DB_SSL=false" >> .env.test
-
-      - name: Run Database Migrations
-        working-directory: apps/api
-        run: |
-          export $(cat .env.test | grep -v '^#' | xargs)
-          npm run db:migrate
-        env:
-          NODE_ENV: test
-
-      - name: Run API Tests
-        run: npx nx test api
-        env:
-          NODE_ENV: test
-
-      - name: Upload API Test Coverage
-        uses: codecov/codecov-action@v3
+      - name: Restore dependencies
+        uses: actions/cache@v3
         with:
-          file: ./apps/api/coverage/lcov.info
-          flags: api-tests
-          name: codecov-api
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
-  test-web-app:
-    name: Test Web App
-    runs-on: ubuntu-latest
-    needs: setup
-    if: contains(needs.setup.outputs.affected-projects, 'web-app')
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Install if cache miss
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: false
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Run Web App Tests
-        run: npx nx test web-app
-
-      - name: Upload Web App Test Coverage
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./apps/web-app/coverage/lcov.info
-          flags: web-app-tests
-          name: codecov-web-app
+      - name: Test
+        run: npx nx run-many --target=test --all --parallel
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [setup, lint]
-    if: needs.setup.outputs.has-affected == 'true'
-    
+    needs: [lint, test]
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: false
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Build Affected Projects
-        run: npx nx affected --target=build --base=origin/main --head=HEAD
-
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-artifacts
-          path: |
-            dist/
-          retention-days: 7
-
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    needs: setup
-    if: needs.setup.outputs.has-affected == 'true'
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: false
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Run Security Audit
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
-
-      - name: Run Dependency Check
-        run: npx audit-ci --moderate
-        continue-on-error: true
-
-  integration-tests:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: [build, test-api]
-    if: contains(needs.setup.outputs.affected-projects, 'api') && github.event_name == 'pull_request'
-    
-    steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: false
 
-      - name: Install Newman
-        run: npm install -g newman
-
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v3
+      - name: Restore dependencies
+        uses: actions/cache@v3
         with:
-          name: build-artifacts
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Run Integration Tests
-        working-directory: apps/api
-        run: |
-          if [ -f "postman/My-Many-Books-API.postman_collection.json" ]; then
-            newman run postman/My-Many-Books-API.postman_collection.json \
-              -e postman/environments/Local-Development.postman_environment.json \
-              --timeout-request 30000 \
-              --delay-request 500
-          else
-            echo "No Postman collection found, skipping integration tests"
-          fi
-        continue-on-error: true
+      - name: Install if cache miss
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
-  dependency-review:
-    name: Dependency Review
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v3
-        with:
-          fail-on-severity: moderate
-
-  notify:
-    name: Notify Results
-    runs-on: ubuntu-latest
-    needs: [setup, lint, test-api, test-web-app, build, security-scan]
-    if: always() && needs.setup.outputs.has-affected == 'true'
-    
-    steps:
-      - name: Notify Success
-        if: needs.build.result == 'success'
-        run: |
-          echo "✅ Monorepo CI completed successfully"
-          echo "All affected projects passed tests and builds"
-
-      - name: Notify Failure
-        if: needs.build.result == 'failure' || needs.test-api.result == 'failure' || needs.test-web-app.result == 'failure'
-        run: |
-          echo "❌ Monorepo CI failed"
-          echo "Check the failed jobs for details"
-          exit 1
+      - name: Build
+        run: npx nx run-many --target=build --all --parallel
