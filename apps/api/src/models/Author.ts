@@ -2,7 +2,7 @@
 // src/models/Author.ts
 // ================================================================
 
-import { DataTypes, Sequelize } from 'sequelize';
+import { DataTypes, Sequelize, Op } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
 import { AuthorAttributes, AuthorCreationAttributes } from './interfaces/ModelInterfaces';
 import { TABLE_NAMES } from '@/utils/constants';
@@ -110,8 +110,6 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
   }
 
   static async searchByName(searchTerm: string): Promise<Author[]> {
-    const { Op } = require('sequelize');
-
     return await Author.findAll({
       where: {
         [Op.or]: [
@@ -142,7 +140,7 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
       return existingAuthor;
     }
 
-    return await Author.create(authorData as any);
+    return await Author.create(authorData);
   }
 
   static async findOrCreateAuthor(
@@ -154,6 +152,6 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
         surname: authorData.surname,
       },
       defaults: authorData,
-    } as any);
+    });
   }
 }

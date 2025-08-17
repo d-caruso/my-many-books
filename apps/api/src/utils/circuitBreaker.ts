@@ -26,7 +26,8 @@ export class CircuitBreaker {
     if (this.state === CircuitBreakerState.OPEN) {
       if (this.shouldAttemptReset()) {
         this.state = CircuitBreakerState.HALF_OPEN;
-        console.log('Circuit breaker moving to HALF_OPEN state');
+        // TODO: Replace with proper logging
+        // console.log('Circuit breaker moving to HALF_OPEN state');
       } else {
         throw new Error('Circuit breaker is OPEN - operation not allowed');
       }
@@ -51,7 +52,8 @@ export class CircuitBreaker {
       if (this.successCount >= 3) {
         this.state = CircuitBreakerState.CLOSED;
         this.successCount = 0;
-        console.log('Circuit breaker moving to CLOSED state');
+        // TODO: Replace with proper logging
+        // console.log('Circuit breaker moving to CLOSED state');
       }
     }
   }
@@ -64,11 +66,13 @@ export class CircuitBreaker {
     // In HALF_OPEN state, any failure should immediately go back to OPEN
     if (this.state === CircuitBreakerState.HALF_OPEN) {
       this.state = CircuitBreakerState.OPEN;
-      console.log('Circuit breaker moving back to OPEN state from HALF_OPEN');
+      // TODO: Replace with proper logging
+      // console.log('Circuit breaker moving back to OPEN state from HALF_OPEN');
     } else if (this.failureCount >= this.config.failureThreshold) {
       // In CLOSED state, only transition to OPEN after reaching failure threshold
       this.state = CircuitBreakerState.OPEN;
-      console.log('Circuit breaker moving to OPEN state');
+      // TODO: Replace with proper logging
+      // console.log('Circuit breaker moving to OPEN state');
     }
   }
 

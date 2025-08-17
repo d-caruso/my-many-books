@@ -154,7 +154,6 @@ export const routeRequest = async (event: APIGatewayProxyEvent): Promise<APIGate
         method: httpMethod,
       }),
     };
-
   } catch (error) {
     return errorHandler(error as Error);
   }

@@ -17,14 +17,14 @@ router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> 
     const offset = (Number(page) - 1) * Number(limit);
 
     let whereClause: any = {};
-    
+
     if (search) {
       const { Op } = require('sequelize');
       whereClause = {
         [Op.or]: [
           { name: { [Op.iLike]: `%${search}%` } },
-          { surname: { [Op.iLike]: `%${search}%` } }
-        ]
+          { surname: { [Op.iLike]: `%${search}%` } },
+        ],
       };
     }
 
@@ -32,7 +32,10 @@ router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> 
       where: whereClause,
       limit: Number(limit),
       offset,
-      order: [['surname', 'ASC'], ['name', 'ASC']],
+      order: [
+        ['surname', 'ASC'],
+        ['name', 'ASC'],
+      ],
     });
 
     res.status(200).json({
@@ -46,9 +49,9 @@ router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> 
     });
   } catch (error) {
     console.error('Error fetching authors:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -74,9 +77,9 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response): Promise<voi
     res.status(200).json(author.toJSON());
   } catch (error) {
     console.error('Error fetching author:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -93,7 +96,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response): Promise<void>
 
     // Check if author already exists
     const existingAuthor = await Author.findOne({
-      where: { name, surname }
+      where: { name, surname },
     });
 
     if (existingAuthor) {
@@ -104,15 +107,15 @@ router.post('/', async (req: AuthenticatedRequest, res: Response): Promise<void>
     const author = await Author.create({
       name,
       surname,
-      nationality: nationality || null
+      nationality: nationality || null,
     } as any);
 
     res.status(201).json(author.toJSON());
   } catch (error) {
     console.error('Error creating author:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -141,9 +144,9 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response): Promise<voi
     if ((name || surname) && (name !== author.name || surname !== author.surname)) {
       const newName = name || author.name;
       const newSurname = surname || author.surname;
-      
+
       const existingAuthor = await Author.findOne({
-        where: { name: newName, surname: newSurname }
+        where: { name: newName, surname: newSurname },
       });
 
       if (existingAuthor && existingAuthor.id !== author.id) {
@@ -161,9 +164,9 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response): Promise<voi
     res.status(200).json(author.toJSON());
   } catch (error) {
     console.error('Error updating author:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -190,9 +193,9 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: Response): Promise<
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting author:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });

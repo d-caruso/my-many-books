@@ -13,11 +13,13 @@ export interface TransformedBookData {
   publishers?: string[] | undefined;
   pages?: number | undefined;
   language?: string | undefined;
-  coverUrls?: {
-    small?: string | undefined;
-    medium?: string | undefined;
-    large?: string | undefined;
-  } | undefined;
+  coverUrls?:
+    | {
+        small?: string | undefined;
+        medium?: string | undefined;
+        large?: string | undefined;
+      }
+    | undefined;
   description?: string | undefined;
   physicalFormat?: string | undefined;
   weight?: string | undefined;

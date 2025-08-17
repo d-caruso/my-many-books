@@ -3,7 +3,11 @@
 // ================================================================
 
 import { OpenLibraryBook } from '@/types/openLibrary';
-import { TransformedBookData, TransformedAuthorData, TransformedCategoryData } from '@/types/bookData';
+import {
+  TransformedBookData,
+  TransformedAuthorData,
+  TransformedCategoryData,
+} from '@/types/bookData';
 import { normalizeIsbn } from '@/utils/isbn';
 
 export class DataTransformer {
@@ -47,7 +51,7 @@ export class DataTransformer {
     return olBook.authors.map(author => {
       const fullName = author.name.trim();
       const { name, surname } = DataTransformer.parseAuthorName(fullName);
-      
+
       return {
         name,
         surname,
@@ -59,37 +63,37 @@ export class DataTransformer {
 
   private static parseAuthorName(fullName: string): { name: string; surname: string } {
     const parts = fullName.split(' ').filter(part => part.length > 0);
-    
+
     if (parts.length === 0) {
       return { name: 'Unknown', surname: 'Author' };
     }
-    
+
     if (parts.length === 1) {
       return { name: parts[0]!, surname: '' };
     }
-    
+
     // Handle "Last, First" format
     if (fullName.includes(',')) {
-        const splitParts = fullName.split(',');
-        const lastName = splitParts[0];
-        const firstParts = splitParts.slice(1);
-        const firstName = firstParts.join(' ').trim();
-        return {
-            name: firstName || lastName!.trim(),
-            surname: firstName ? lastName!.trim() : '',
-        };
+      const splitParts = fullName.split(',');
+      const lastName = splitParts[0];
+      const firstParts = splitParts.slice(1);
+      const firstName = firstParts.join(' ').trim();
+      return {
+        name: firstName || lastName!.trim(),
+        surname: firstName ? lastName!.trim() : '',
+      };
     }
-    
+
     // Handle "First Last" or "First Middle Last" format
     const surname = parts[parts.length - 1]!;
     const name = parts.slice(0, -1).join(' ');
-    
+
     return { name, surname };
   }
 
   private static extractCategories(olBook: OpenLibraryBook): TransformedCategoryData[] {
     const categories: TransformedCategoryData[] = [];
-    
+
     // Extract subjects
     if (olBook.subjects) {
       olBook.subjects.forEach(subject => {
@@ -101,7 +105,7 @@ export class DataTransformer {
         }
       });
     }
-    
+
     // Extract subject places as topics
     if (olBook.subject_places) {
       olBook.subject_places.forEach(place => {
@@ -113,7 +117,7 @@ export class DataTransformer {
         }
       });
     }
-    
+
     // Extract subject times as topics
     if (olBook.subject_times) {
       olBook.subject_times.forEach(time => {
@@ -125,7 +129,7 @@ export class DataTransformer {
         }
       });
     }
-    
+
     // Remove duplicates and limit to reasonable number
     const uniqueCategories = DataTransformer.deduplicateCategories(categories);
     return uniqueCategories.slice(0, 10); // Limit to 10 categories max
@@ -138,7 +142,9 @@ export class DataTransformer {
       .replace(/\s+/g, ' '); // Normalize whitespace
   }
 
-  private static deduplicateCategories(categories: TransformedCategoryData[]): TransformedCategoryData[] {
+  private static deduplicateCategories(
+    categories: TransformedCategoryData[]
+  ): TransformedCategoryData[] {
     const seen = new Set<string>();
     return categories.filter(category => {
       const key = `${category.name.toLowerCase()}-${category.type}`;
@@ -157,7 +163,7 @@ export class DataTransformer {
     if (editionMatch && editionMatch[1]) {
       return parseInt(editionMatch[1], 10);
     }
-    
+
     return undefined;
   }
 
@@ -165,17 +171,17 @@ export class DataTransformer {
     if (!olBook.publish_date) {
       return undefined;
     }
-    
+
     try {
       // Handle various date formats
       const dateStr = olBook.publish_date.trim();
-      
+
       // Try parsing as full date first
       let date = new Date(dateStr);
       if (!isNaN(date.getTime())) {
         return date;
       }
-      
+
       // Try parsing as year only
       const yearMatch = dateStr.match(/(\d{4})/);
       if (yearMatch && yearMatch[1]) {
@@ -184,7 +190,7 @@ export class DataTransformer {
           return date;
         }
       }
-      
+
       return undefined;
     } catch (error) {
       console.warn(`Failed to parse edition date: ${olBook.publish_date}`, error);
@@ -196,38 +202,42 @@ export class DataTransformer {
     if (!olBook.languages || olBook.languages.length === 0) {
       return undefined;
     }
-    
+
     // Open Library language format: { key: "/languages/eng" }
     const language = olBook.languages[0];
     if (!language) {
-        return undefined;
+      return undefined;
     }
-    
+
     const langKey = language.key;
     const langCode = langKey.split('/').pop();
-    
+
     // Convert common language codes to readable names
     const languageMap: Record<string, string> = {
-      'eng': 'English',
-      'spa': 'Spanish',
-      'fre': 'French',
-      'ger': 'German',
-      'ita': 'Italian',
-      'por': 'Portuguese',
-      'rus': 'Russian',
-      'jpn': 'Japanese',
-      'chi': 'Chinese',
-      'ara': 'Arabic',
+      eng: 'English',
+      spa: 'Spanish',
+      fre: 'French',
+      ger: 'German',
+      ita: 'Italian',
+      por: 'Portuguese',
+      rus: 'Russian',
+      jpn: 'Japanese',
+      chi: 'Chinese',
+      ara: 'Arabic',
     };
-    
+
     return langCode ? languageMap[langCode] || langCode : undefined;
   }
 
-  private static extractCoverUrls(olBook: OpenLibraryBook): { small?: string | undefined; medium?: string | undefined; large?: string | undefined } | undefined {
+  private static extractCoverUrls(
+    olBook: OpenLibraryBook
+  ):
+    | { small?: string | undefined; medium?: string | undefined; large?: string | undefined }
+    | undefined {
     if (!olBook.cover) {
       return undefined;
     }
-    
+
     return {
       small: olBook.cover.small || undefined,
       medium: olBook.cover.medium || undefined,

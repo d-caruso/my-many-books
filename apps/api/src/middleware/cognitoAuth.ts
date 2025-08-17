@@ -63,58 +63,60 @@ export class CognitoAuthenticator {
       return {
         isAuthenticated: false,
         error: 'Authorization token is required',
-        statusCode: 401
+        statusCode: 401,
       };
     }
 
     try {
       const decoded = await this.verifyToken(token);
-      
+
       // Validate token structure
       if (!this.isValidCognitoToken(decoded)) {
         return {
           isAuthenticated: false,
           error: 'Invalid token format',
-          statusCode: 401
+          statusCode: 401,
         };
       }
 
       const user = this.extractUserFromToken(decoded);
-      
+
       // Check required scopes if specified
       if (this.config.requiredScopes && this.config.requiredScopes.length > 0) {
-        const hasRequiredScopes = this.validateScopes(user.scopes || [], this.config.requiredScopes);
+        const hasRequiredScopes = this.validateScopes(
+          user.scopes || [],
+          this.config.requiredScopes
+        );
         if (!hasRequiredScopes) {
           return {
             isAuthenticated: false,
             error: 'Insufficient permissions',
-            statusCode: 403
+            statusCode: 403,
           };
         }
       }
 
       return {
         isAuthenticated: true,
-        user
+        user,
       };
-
     } catch (error) {
       console.error('Token verification failed:', error);
-      
+
       if (error instanceof Error) {
         if (error.message.includes('expired')) {
           return {
             isAuthenticated: false,
             error: 'Token has expired',
-            statusCode: 401
+            statusCode: 401,
           };
         }
-        
+
         if (error.message.includes('signature')) {
           return {
             isAuthenticated: false,
             error: 'Invalid token signature',
-            statusCode: 401
+            statusCode: 401,
           };
         }
       }
@@ -122,14 +124,14 @@ export class CognitoAuthenticator {
       return {
         isAuthenticated: false,
         error: 'Token verification failed',
-        statusCode: 401
+        statusCode: 401,
       };
     }
   }
 
   private extractToken(event: APIGatewayProxyEvent): string | null {
     const authHeader = event.headers.Authorization || event.headers.authorization;
-    
+
     if (!authHeader) {
       return null;
     }
@@ -153,14 +155,14 @@ export class CognitoAuthenticator {
 
     // Get the public key for verification
     const publicKey = await this.getPublicKey(keyId);
-    
+
     // Verify the token
     const verifyPromise = promisify(verify);
-    const payload = await verifyPromise(token, publicKey, {
+    const payload = (await verifyPromise(token, publicKey, {
       issuer: this.config.issuer,
       audience: this.config.clientId,
-      algorithms: this.config.algorithms as any
-    }) as JwtPayload;
+      algorithms: this.config.algorithms as any,
+    })) as JwtPayload;
 
     return payload;
   }
@@ -184,7 +186,7 @@ export class CognitoAuthenticator {
     // In production, fetch from Cognito JWKS endpoint
     // https://cognito-idp.{region}.amazonaws.com/{userPoolId}/.well-known/jwks.json
     const jwksUrl = `https://cognito-idp.${this.config.region}.amazonaws.com/${this.config.userPoolId}/.well-known/jwks.json`;
-    
+
     try {
       // Simulate fetching public key
       // In real implementation, you'd use a JWKS client
@@ -195,7 +197,6 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
       // Cache the key
       this.publicKeys.set(keyId, mockPublicKey);
       return mockPublicKey;
-      
     } catch (error) {
       throw new Error(`Failed to fetch public key for kid: ${keyId}`);
     }
@@ -225,7 +226,7 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
       aud: payload.aud as string,
       iss: payload.iss!,
       exp: payload.exp!,
-      iat: payload.iat!
+      iat: payload.iat!,
     };
   }
 
@@ -234,7 +235,7 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
     if (payload.scope) {
       return payload.scope.split(' ');
     }
-    
+
     if (Array.isArray(payload.scopes)) {
       return payload.scopes;
     }
@@ -272,14 +273,14 @@ export const PERMISSIONS = {
   CATEGORIES_WRITE: 'categories:write',
   CATEGORIES_DELETE: 'categories:delete',
   ISBN_LOOKUP: 'isbn:lookup',
-  ADMIN_ACCESS: 'admin:access'
+  ADMIN_ACCESS: 'admin:access',
 } as const;
 
 // User groups
 export const USER_GROUPS = {
   ADMIN: 'admin',
   EDITOR: 'editor',
-  READER: 'reader'
+  READER: 'reader',
 } as const;
 
 // Middleware wrapper
@@ -290,19 +291,19 @@ export const withCognitoAuth = (
 ) => {
   return async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const authResult = await authenticator.authenticate(event);
-    
+
     if (!authResult.isAuthenticated) {
       return {
         statusCode: authResult.statusCode || 401,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          'Access-Control-Allow-Origin': '*',
         },
         body: JSON.stringify({
           success: false,
           error: authResult.error,
-          code: 'AUTHENTICATION_FAILED'
-        })
+          code: 'AUTHENTICATION_FAILED',
+        }),
       };
     }
 
@@ -317,14 +318,14 @@ export const withCognitoAuth = (
           statusCode: 403,
           headers: {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
+            'Access-Control-Allow-Origin': '*',
           },
           body: JSON.stringify({
             success: false,
             error: 'Insufficient permissions',
             code: 'AUTHORIZATION_FAILED',
-            requiredPermissions
-          })
+            requiredPermissions,
+          }),
         };
       }
     }
@@ -332,7 +333,7 @@ export const withCognitoAuth = (
     // Add auth context to event
     (event as any).authContext = {
       user: authResult.user,
-      isAuthenticated: true
+      isAuthenticated: true,
     };
 
     return handler(event);
@@ -347,7 +348,7 @@ export const createCognitoAuthenticator = (): CognitoAuthenticator => {
     clientId: process.env['COGNITO_CLIENT_ID'] || '',
     region: process.env['AWS_REGION'] || 'us-east-1',
     issuer: `https://cognito-idp.${process.env['AWS_REGION'] || 'us-east-1'}.amazonaws.com/${process.env['COGNITO_USER_POOL_ID'] || ''}`,
-    algorithms: ['RS256']
+    algorithms: ['RS256'],
   };
 
   return new CognitoAuthenticator(config);

@@ -28,10 +28,12 @@ export class DatabaseUtils {
       // Initialize models
       ModelManager.initialize(DatabaseUtils.sequelize);
 
-      console.log('Database initialization completed successfully');
+      // TODO: Replace with proper logging
+      // console.log('Database initialization completed successfully');
       return DatabaseUtils.sequelize;
     } catch (error) {
-      console.error('Database initialization failed:', error);
+      // TODO: Replace with proper logging
+      // console.error('Database initialization failed:', error);
       throw error;
     }
   }
@@ -46,13 +48,15 @@ export class DatabaseUtils {
 
       await DatabaseUtils.sequelize.sync({ force, alter });
 
-      console.log('Database synchronization completed successfully', {
-        force,
-        alter,
-        tablesCreated: force ? 'all recreated' : 'created if not exists',
-      });
+      // TODO: Replace with proper logging
+      // console.log('Database synchronization completed successfully', {
+      //   force,
+      //   alter,
+      //   tablesCreated: force ? 'all recreated' : 'created if not exists',
+      // });
     } catch (error) {
-      console.error('Database synchronization failed:', error);
+      // TODO: Replace with proper logging
+      // console.error('Database synchronization failed:', error);
       throw error;
     }
   }
@@ -63,23 +67,29 @@ export class DatabaseUtils {
     }
 
     try {
-      console.log('Starting database seeding...');
+      // TODO: Replace with proper logging
+      // console.log('Starting database seeding...');
 
       // Seed authors
       const authors = await DatabaseUtils.seedAuthors();
-      console.log(`Seeded ${authors.length} authors`);
+      // TODO: Replace with proper logging
+      // console.log(`Seeded ${authors.length} authors`);
 
       // Seed categories
       const categories = await DatabaseUtils.seedCategories();
-      console.log(`Seeded ${categories.length} categories`);
+      // TODO: Replace with proper logging
+      // console.log(`Seeded ${categories.length} categories`);
 
       // Seed books with associations
-      const books = await DatabaseUtils.seedBooks(authors, categories);
-      console.log(`Seeded ${books.length} books`);
+      await DatabaseUtils.seedBooks(authors, categories);
+      // TODO: Replace with proper logging
+      // console.log(`Seeded books`);
 
-      console.log('Database seeding completed successfully');
+      // TODO: Replace with proper logging
+      // console.log('Database seeding completed successfully');
     } catch (error) {
-      console.error('Database seeding failed:', error);
+      // TODO: Replace with proper logging
+      // console.error('Database seeding failed:', error);
       throw error;
     }
   }
@@ -206,7 +216,8 @@ export class DatabaseUtils {
     }
 
     try {
-      console.log('Resetting database...');
+      // TODO: Replace with proper logging
+      // console.log('Resetting database...');
 
       // Drop all tables and recreate
       await DatabaseUtils.syncDatabase({ force: true });
@@ -214,7 +225,8 @@ export class DatabaseUtils {
       // Reseed with sample data
       await DatabaseUtils.seedDatabase();
 
-      console.log('Database reset completed successfully');
+      // TODO: Replace with proper logging
+      // console.log('Database reset completed successfully');
     } catch (error) {
       console.error('Database reset failed:', error);
       throw error;
@@ -226,7 +238,8 @@ export class DatabaseUtils {
       await ModelManager.close();
       await DatabaseConnection.closeConnection();
       DatabaseUtils.sequelize = null;
-      console.log('Database connection closed');
+      // TODO: Replace with proper logging
+      // console.log('Database connection closed');
     }
   }
 

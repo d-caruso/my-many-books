@@ -26,25 +26,25 @@ export class OpenLibraryClient {
 
   constructor(config: OpenLibraryClientConfig = {}) {
     this.config = {
-        baseUrl: config.baseUrl || 'https://openlibrary.org',
-        timeout: config.timeout || 10000,
-        retries: config.retries || 3,
-        retryDelay: config.retryDelay || 1000,
+      baseUrl: config.baseUrl || 'https://openlibrary.org',
+      timeout: config.timeout || 10000,
+      retries: config.retries || 3,
+      retryDelay: config.retryDelay || 1000,
     };
 
     this.client = axios.create({
-        baseURL: this.config.baseUrl,
-        timeout: this.config.timeout,
-        headers: {
-        'Accept': 'application/json',
+      baseURL: this.config.baseUrl,
+      timeout: this.config.timeout,
+      headers: {
+        Accept: 'application/json',
         'User-Agent': 'My-Many-Books/1.0 (Book Management App)',
-        },
+      },
     });
 
     try {
-        this.setupInterceptors();
+      this.setupInterceptors();
     } catch (error) {
-        console.warn('Could not setup interceptors:', error);
+      console.warn('Could not setup interceptors:', error);
     }
   }
 
@@ -55,56 +55,59 @@ export class OpenLibraryClient {
     // Validate ISBN first
     const validation = validateIsbn(isbn);
     if (!validation.isValid) {
-        return {
+      return {
         success: false,
         error: `Invalid ISBN: ${validation.error}`,
-        };
+      };
     }
 
     const normalizedIsbn = validation.normalizedIsbn!;
 
     try {
-        console.log(`Fetching book data for ISBN: ${normalizedIsbn}`);
-        
-        const response = await this.makeRequest(
+      // TODO: Replace with proper logging
+      // console.log(`Fetching book data for ISBN: ${normalizedIsbn}`);
+
+      const response = await this.makeRequest(
         `/api/books?bibkeys=ISBN:${normalizedIsbn}&format=json&jscmd=data`
-        );
+      );
 
-        const data = response.data as OpenLibraryResponse;
-        const bookKey = `ISBN:${normalizedIsbn}`;
-        const book = data[bookKey];
+      const data = response.data as OpenLibraryResponse;
+      const bookKey = `ISBN:${normalizedIsbn}`;
+      const book = data[bookKey];
 
-        if (!book) {
+      if (!book) {
         return {
-            success: false,
-            error: 'Book not found in Open Library',
-            statusCode: 404,
+          success: false,
+          error: 'Book not found in Open Library',
+          statusCode: 404,
         };
-        }
+      }
 
-        console.log(`Successfully fetched book: ${book.title || 'Unknown Title'}`);
-        
-        return {
+      // TODO: Replace with proper logging
+      // console.log(`Successfully fetched book: ${book.title || 'Unknown Title'}`);
+
+      return {
         success: true,
         book,
-        };
+      };
     } catch (error) {
-        console.error('Error fetching book from Open Library:', error);
-        
-        if (error instanceof AxiosError) {
-        return {
-            success: false,
-            error: this.getErrorMessage(error),
-            statusCode: error.response?.status,
-        };
-        }
+      // TODO: Replace with proper logging
+      // console.error('Error fetching book from Open Library:', error);
 
+      if (error instanceof AxiosError) {
         return {
+          success: false,
+          error: this.getErrorMessage(error),
+          statusCode: error.response?.status,
+        };
+      }
+
+      return {
         success: false,
         error: 'Unknown error occurred while fetching book data',
-        };
+      };
     }
-    }
+  }
 
   /**
    * Fetch multiple books by ISBNs
@@ -158,16 +161,20 @@ export class OpenLibraryClient {
         }
       }
 
-      console.log(`Fetched ${validIsbns.length} books, ${Object.values(results).filter(r => r.success).length} successful`);
-      
+      // TODO: Replace with proper logging
+      // console.log(
+      //   `Fetched ${validIsbns.length} books, ${Object.values(results).filter(r => r.success).length} successful`
+      // );
+
       return results;
     } catch (error) {
       console.error('Error fetching multiple books from Open Library:', error);
-      
+
       // Return error for all valid ISBNs
-      const errorMessage = error instanceof AxiosError 
-        ? this.getErrorMessage(error)
-        : 'Unknown error occurred while fetching book data';
+      const errorMessage =
+        error instanceof AxiosError
+          ? this.getErrorMessage(error)
+          : 'Unknown error occurred while fetching book data';
 
       for (const isbn of validIsbns) {
         if (!results[isbn]) {
@@ -186,7 +193,10 @@ export class OpenLibraryClient {
   /**
    * Search books by title (uses Open Library Search API)
    */
-  async searchBooksByTitle(title: string, limit: number = 10): Promise<{
+  async searchBooksByTitle(
+    title: string,
+    limit: number = 10
+  ): Promise<{
     success: boolean;
     books?: Array<{
       title?: string;
@@ -212,16 +222,18 @@ export class OpenLibraryClient {
 
       return {
         success: true,
-        books: response.data.docs || [],
+        books: (response.data as { docs?: any[] }).docs || [],
       };
     } catch (error) {
-      console.error('Error searching books by title:', error);
-      
+      // TODO: Replace with proper logging
+      // console.error('Error searching books by title:', error);
+
       return {
         success: false,
-        error: error instanceof AxiosError 
-          ? this.getErrorMessage(error)
-          : 'Unknown error occurred while searching books',
+        error:
+          error instanceof AxiosError
+            ? this.getErrorMessage(error)
+            : 'Unknown error occurred while searching books',
       };
     }
   }
@@ -243,11 +255,11 @@ export class OpenLibraryClient {
    */
   async healthCheck(): Promise<{ available: boolean; responseTime?: number; error?: string }> {
     const startTime = Date.now();
-    
+
     try {
       await this.makeRequest('/');
       const responseTime = Date.now() - startTime;
-      
+
       return {
         available: true,
         responseTime,
@@ -255,9 +267,10 @@ export class OpenLibraryClient {
     } catch (error) {
       return {
         available: false,
-        error: error instanceof AxiosError 
-          ? this.getErrorMessage(error)
-          : 'Unknown error during health check',
+        error:
+          error instanceof AxiosError
+            ? this.getErrorMessage(error)
+            : 'Unknown error during health check',
       };
     }
   }
@@ -267,20 +280,22 @@ export class OpenLibraryClient {
    */
   private async makeRequest(url: string, attempt: number = 1): Promise<AxiosResponse> {
     try {
-        console.log(`Making request to: ${url} (Attempt ${attempt})`);
-        const response = await this.client.get(url);
-        return response;
+      // TODO: Replace with proper logging
+      // console.log(`Making request to: ${url} (Attempt ${attempt})`);
+      const response = await this.client.get(url);
+      return response;
     } catch (error) {
-        if (attempt < this.config.retries && this.shouldRetry(error)) {
-        console.log(`Request failed, retrying (${attempt}/${this.config.retries})...`);
+      if (attempt < this.config.retries && this.shouldRetry(error)) {
+        // TODO: Replace with proper logging
+        // console.log(`Request failed, retrying (${attempt}/${this.config.retries})...`);
         await this.delay(this.config.retryDelay * attempt);
         return this.makeRequest(url, attempt + 1);
-        }
-        
-        // Re-throw the original error after all retries exhausted
-        throw error;
+      }
+
+      // Re-throw the original error after all retries exhausted
+      throw error;
     }
-    }
+  }
 
   /**
    * Determine if error should trigger a retry
@@ -305,23 +320,25 @@ export class OpenLibraryClient {
   private setupInterceptors(): void {
     // Request interceptor
     this.client.interceptors.request.use(
-      (config) => {
+      config => {
         return config;
       },
-      (error) => {
-        console.error('Request error:', error);
-        return Promise.reject(error);
+      error => {
+        // TODO: Replace with proper logging
+        // console.error('Request error:', error);
+        return Promise.reject(new Error(error instanceof Error ? error.message : 'Request error'));
       }
     );
 
     // Response interceptor
     this.client.interceptors.response.use(
-      (response) => {
+      response => {
         return response;
       },
-      (error) => {
-        console.error('Response error:', error.message);
-        return Promise.reject(error);
+      error => {
+        // TODO: Replace with proper logging
+        // console.error('Response error:', error.message);
+        return Promise.reject(new Error(error instanceof Error ? error.message : 'Response error'));
       }
     );
   }

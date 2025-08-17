@@ -16,7 +16,6 @@ interface UpdateCategoryRequest {
   name?: string;
 }
 
-
 export class CategoryController extends BaseController {
   private readonly createCategorySchema = Joi.object<CreateCategoryRequest>({
     name: Joi.string().required().max(255).trim(),
@@ -25,7 +24,6 @@ export class CategoryController extends BaseController {
   private readonly updateCategorySchema = Joi.object<UpdateCategoryRequest>({
     name: Joi.string().max(255).trim().optional(),
   });
-
 
   async createCategory(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     return this.handleRequest(event, async () => {
@@ -44,16 +42,14 @@ export class CategoryController extends BaseController {
       // Check if category already exists
       const existingCategory = await Category.findByName(categoryData.name);
       if (existingCategory) {
-        return this.createErrorResponse(
-          'Category with this name already exists',
-          409
-        );
+        return this.createErrorResponse('Category with this name already exists', 409);
       }
 
       // Create category
-      const category = await Category.createCategory({
+      const categoryCreateData: CategoryCreationAttributes = {
         name: categoryData.name,
-      } as CategoryCreationAttributes);
+      };
+      const category = await Category.createCategory(categoryCreateData);
 
       return this.createSuccessResponse(category, 'Category created successfully', undefined, 201);
     });
@@ -123,10 +119,7 @@ export class CategoryController extends BaseController {
       if (categoryData.name && categoryData.name !== category.name) {
         const existingCategory = await Category.findByName(categoryData.name);
         if (existingCategory) {
-          return this.createErrorResponse(
-            'Category with this name already exists',
-            409
-          );
+          return this.createErrorResponse('Category with this name already exists', 409);
         }
       }
 
@@ -189,12 +182,7 @@ export class CategoryController extends BaseController {
       // Delete the category
       await category.destroy();
 
-      return this.createSuccessResponse(
-        null,
-        'Category deleted successfully',
-        undefined,
-        204
-      );
+      return this.createSuccessResponse(null, 'Category deleted successfully', undefined, 204);
     });
   }
 
@@ -228,20 +216,16 @@ export class CategoryController extends BaseController {
 
       const totalPages = Math.ceil(totalCount / limit);
 
-      return this.createSuccessResponse(
-        categories,
-        'Categories retrieved successfully',
-        {
-          pagination: {
-            page,
-            limit,
-            totalCount,
-            totalPages,
-            hasNext: page < totalPages,
-            hasPrev: page > 1,
-          },
-        }
-      );
+      return this.createSuccessResponse(categories, 'Categories retrieved successfully', {
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      });
     });
   }
 

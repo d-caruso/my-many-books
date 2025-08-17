@@ -47,7 +47,8 @@ export abstract class BaseController {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+        'Access-Control-Allow-Headers':
+          'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
         'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
       },
       body: JSON.stringify(response),
@@ -70,7 +71,8 @@ export abstract class BaseController {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+        'Access-Control-Allow-Headers':
+          'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
         'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
       },
       body: JSON.stringify(response),
@@ -105,7 +107,7 @@ export abstract class BaseController {
 
   protected getPaginationParams(event: APIGatewayProxyEvent): PaginationParams {
     const queryParams = event.queryStringParameters || {};
-    
+
     const page = Math.max(1, parseInt(queryParams['page'] || '1', 10));
     const limit = Math.min(
       BaseController.MAX_LIMIT,
@@ -132,11 +134,11 @@ export abstract class BaseController {
       return await handler(event);
     } catch (error) {
       console.error('Controller error:', error);
-      
+
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      
+
       return this.createErrorResponse('Internal server error', 500);
     }
   }

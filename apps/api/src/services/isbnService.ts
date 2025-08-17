@@ -8,11 +8,7 @@ import { FallbackService } from './fallbackService';
 import { CircuitBreaker, CircuitBreakerConfig } from '@/utils/circuitBreaker';
 import { RetryPolicy, RetryConfig } from '@/utils/retryPolicy';
 import { validateIsbn } from '@/utils/isbn';
-import { 
-  IsbnLookupResult, 
-  BatchIsbnLookupResult, 
-  TransformedBookData 
-} from '@/types/bookData';
+import { IsbnLookupResult, BatchIsbnLookupResult, TransformedBookData } from '@/types/bookData';
 
 export interface IsbnServiceConfig {
   enableCache?: boolean;
@@ -113,7 +109,7 @@ export class IsbnService {
     // Try API with resilience features
     try {
       const apiResult = await this.fetchWithResilience(normalizedIsbn);
-      
+
       if (apiResult.success && apiResult.book) {
         // Cache successful result
         if (this.config.enableCache) {
@@ -128,11 +124,19 @@ export class IsbnService {
         };
       } else {
         // API failed, try fallback
-        return this.handleApiFallback(normalizedIsbn, apiResult.error || 'API request failed', startTime);
+        return this.handleApiFallback(
+          normalizedIsbn,
+          apiResult.error || 'API request failed',
+          startTime
+        );
       }
     } catch (error) {
       console.error('Error in resilient ISBN lookup:', error);
-      return this.handleApiFallback(normalizedIsbn, 'Unexpected error during book lookup', startTime);
+      return this.handleApiFallback(
+        normalizedIsbn,
+        'Unexpected error during book lookup',
+        startTime
+      );
     }
   }
 
@@ -144,7 +148,7 @@ export class IsbnService {
     book?: TransformedBookData;
     error?: string;
   }> {
-    const operation = async () => {
+    const operation = async (): Promise<{ success: boolean; book?: any; error?: string }> => {
       if (this.config.enableRetry) {
         const retryResult = await this.retryPolicy.execute(async () => {
           return await this.client.fetchBookByIsbn(isbn);
@@ -166,10 +170,14 @@ export class IsbnService {
     };
 
     try {
-      let apiResult;
-      
+      let apiResult: { success: boolean; book?: any; error?: string };
+
       if (this.config.enableCircuitBreaker) {
-        apiResult = await this.circuitBreaker.execute(operation);
+        apiResult = (await this.circuitBreaker.execute(operation)) as {
+          success: boolean;
+          book?: any;
+          error?: string;
+        };
       } else {
         apiResult = await operation();
       }
@@ -183,7 +191,7 @@ export class IsbnService {
       } else {
         return {
           success: false,
-          error: apiResult.error || 'API request failed',
+          error: (apiResult.error as string) || 'API request failed',
         };
       }
     } catch (error) {
@@ -200,8 +208,9 @@ export class IsbnService {
    */
   private handleApiFallback(isbn: string, error: string, startTime: number): IsbnLookupResult {
     if (this.config.enableFallback) {
-      console.log(`API failed for ISBN ${isbn}, attempting fallback...`);
-      
+      // TODO: Replace with proper logging
+      // console.log(`API failed for ISBN ${isbn}, attempting fallback...`);
+
       const fallbackResult = this.fallbackService.getFallbackBook(isbn);
       if (fallbackResult) {
         return {
@@ -325,42 +334,42 @@ export class IsbnService {
 
         if (apiResults && typeof apiResults === 'object') {
           for (const [isbn, apiResult] of Object.entries(apiResults)) {
-          if (apiResult.success && apiResult.book) {
-            try {
-              const transformedBook = DataTransformer.transformBook(apiResult.book, isbn);
-              
-              // Cache the result
-              if (this.config.enableCache) {
-                this.cacheBook(isbn, transformedBook);
-              }
+            if (apiResult.success && apiResult.book) {
+              try {
+                const transformedBook = DataTransformer.transformBook(apiResult.book, isbn);
 
-              results[isbn] = {
-                success: true,
-                isbn,
-                book: transformedBook,
-                source: 'api',
-              };
-              successCount++;
-            } catch (transformError) {
-              const errorMsg = `Failed to transform book data for ISBN ${isbn}`;
+                // Cache the result
+                if (this.config.enableCache) {
+                  this.cacheBook(isbn, transformedBook);
+                }
+
+                results[isbn] = {
+                  success: true,
+                  isbn,
+                  book: transformedBook,
+                  source: 'api',
+                };
+                successCount++;
+              } catch {
+                const errorMsg = `Failed to transform book data for ISBN ${isbn}`;
+                results[isbn] = {
+                  success: false,
+                  isbn,
+                  error: errorMsg,
+                  source: 'api',
+                };
+                errors.push(errorMsg);
+              }
+            } else {
               results[isbn] = {
                 success: false,
                 isbn,
-                error: errorMsg,
+                error: apiResult.error || 'Unknown API error',
                 source: 'api',
               };
-              errors.push(errorMsg);
+              errors.push(`API error for ISBN ${isbn}: ${apiResult.error}`);
             }
-          } else {
-            results[isbn] = {
-              success: false,
-              isbn,
-              error: apiResult.error || 'Unknown API error',
-              source: 'api',
-            };
-            errors.push(`API error for ISBN ${isbn}: ${apiResult.error}`);
           }
-        }
         } else {
           // Handle case when apiResults is null or invalid
           const errorMsg = 'Invalid API response format';
@@ -377,7 +386,7 @@ export class IsbnService {
       } catch (error) {
         const errorMsg = 'Batch API request failed';
         console.error(errorMsg, error);
-        
+
         // Mark all uncached ISBNs as failed
         for (const isbn of uncachedIsbns) {
           results[isbn] = {
@@ -407,20 +416,25 @@ export class IsbnService {
   /**
    * Search books by title using Open Library search
    */
-  async searchByTitle(title: string, limit: number = 10): Promise<{
+  async searchByTitle(
+    title: string,
+    limit: number = 10
+  ): Promise<{
     success: boolean;
-    books?: Array<{
-      title: string;
-      authors: string[];
-      isbns: string[];
-      publishYear?: number | undefined;
-      coverUrl?: string | undefined;
-    }> | undefined;
+    books?:
+      | Array<{
+          title: string;
+          authors: string[];
+          isbns: string[];
+          publishYear?: number | undefined;
+          coverUrl?: string | undefined;
+        }>
+      | undefined;
     error?: string | undefined;
   }> {
     try {
       const searchResult = await this.client.searchBooksByTitle(title, limit);
-      
+
       if (!searchResult || !searchResult.success) {
         return {
           success: false,
@@ -433,7 +447,9 @@ export class IsbnService {
         authors: book.author_name || [],
         isbns: book.isbn || [],
         publishYear: book.publish_year?.[0],
-        coverUrl: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : undefined,
+        coverUrl: book.cover_i
+          ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
+          : undefined,
       }));
 
       return {
@@ -461,7 +477,7 @@ export class IsbnService {
   } {
     const entries = Array.from(this.cache.values());
     const timestamps = entries.map(entry => entry.timestamp);
-    
+
     return {
       size: this.cache.size,
       maxSize: this.config.maxCacheSize,
@@ -487,7 +503,7 @@ export class IsbnService {
     cacheStats: ReturnType<IsbnService['getCacheStats']>;
   }> {
     const healthCheck = await this.client.healthCheck();
-    
+
     return {
       ...healthCheck,
       cacheStats: this.getCacheStats(),
@@ -533,14 +549,14 @@ export class IsbnService {
   private evictOldestEntries(): void {
     const entries = Array.from(this.cache.entries());
     entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-    
+
     // Remove oldest 20% of entries
     const removeCount = Math.floor(entries.length * 0.2);
     for (let i = 0; i < removeCount; i++) {
       const entry = entries[i];
-        if (entry) {
-            this.cache.delete(entry[0]);
-        }
+      if (entry) {
+        this.cache.delete(entry[0]);
+      }
     }
   }
 }

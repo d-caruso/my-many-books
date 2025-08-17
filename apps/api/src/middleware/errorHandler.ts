@@ -13,7 +13,10 @@ export class ValidationError extends Error implements AppError {
   statusCode = 400;
   isOperational = true;
 
-  constructor(message: string, public details?: any) {
+  constructor(
+    message: string,
+    public details?: any
+  ) {
     super(message);
     this.name = 'ValidationError';
   }
@@ -106,7 +109,8 @@ export const createErrorResponse = (
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+      'Access-Control-Allow-Headers':
+        'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
       'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
     },
     body: JSON.stringify(response),
@@ -126,6 +130,9 @@ export const asyncHandler = (
 };
 
 // Convenience function for error handling
-export const errorHandler = (error: Error | AppError, event?: APIGatewayProxyEvent): APIGatewayProxyResult => {
+export const errorHandler = (
+  error: Error | AppError,
+  event?: APIGatewayProxyEvent
+): APIGatewayProxyResult => {
   return createErrorResponse(error, event);
 };

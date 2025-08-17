@@ -57,7 +57,10 @@ export class IsbnUtils {
 
     return {
       isValid: false,
-      error: ISBN_ERROR_MESSAGES.INVALID_ISBN_LENGTH + `: ${cleanIsbn.length}.` + ISBN_ERROR_MESSAGES.EXPECTED_LENGTH,
+      error:
+        ISBN_ERROR_MESSAGES.INVALID_ISBN_LENGTH +
+        `: ${cleanIsbn.length}.` +
+        ISBN_ERROR_MESSAGES.EXPECTED_LENGTH,
     };
   }
 
@@ -250,8 +253,9 @@ export class IsbnUtils {
 }
 
 // Export convenience functions
-export const validateIsbn = IsbnUtils.validate;
-export const formatIsbn = IsbnUtils.formatForDisplay;
+export const validateIsbn = (isbn: string): ReturnType<typeof IsbnUtils.validate> =>
+  IsbnUtils.validate(isbn);
+export const formatIsbn = (isbn: string): string => IsbnUtils.formatForDisplay(isbn);
 export const isValidIsbn = (isbn: string): boolean => IsbnUtils.validate(isbn).isValid;
 export const normalizeIsbn = (isbn: string): string | null => {
   const result = IsbnUtils.validate(isbn);

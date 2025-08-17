@@ -7,7 +7,9 @@ import { requestLogger } from '../middleware/requestLogger';
 import { corsHandler } from '../middleware/cors';
 import { errorHandler } from '../middleware/errorHandler';
 
-const withMiddleware = (handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>) => {
+const withMiddleware = (
+  handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
+) => {
   return async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
       // Apply CORS first
@@ -27,7 +29,8 @@ const withMiddleware = (handler: (event: APIGatewayProxyEvent) => Promise<APIGat
         headers: {
           ...result.headers,
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+          'Access-Control-Allow-Headers':
+            'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
           'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
         },
       };
@@ -37,79 +40,83 @@ const withMiddleware = (handler: (event: APIGatewayProxyEvent) => Promise<APIGat
   };
 };
 
-export const healthCheck = withMiddleware(async (_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  try {
-    const health = {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      environment: process.env['NODE_ENV'] || 'development',
-      version: process.env['APP_VERSION'] || '1.0.0',
-      uptime: process.uptime(),
-      services: {
-        database: 'healthy', // TODO: Add actual DB health check
-        isbnService: 'healthy', // TODO: Add actual service health check
-      },
-    };
+export const healthCheck = withMiddleware(
+  async (_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    try {
+      const health = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        environment: process.env['NODE_ENV'] || 'development',
+        version: process.env['APP_VERSION'] || '1.0.0',
+        uptime: process.uptime(),
+        services: {
+          database: 'healthy', // TODO: Add actual DB health check
+          isbnService: 'healthy', // TODO: Add actual service health check
+        },
+      };
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        success: true,
-        data: health,
-      }),
-    };
-  } catch (error) {
-    return {
-      statusCode: 503,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        success: false,
-        error: 'Service Unavailable',
-        message: 'Health check failed',
-      }),
-    };
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          success: true,
+          data: health,
+        }),
+      };
+    } catch (error) {
+      return {
+        statusCode: 503,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          success: false,
+          error: 'Service Unavailable',
+          message: 'Health check failed',
+        }),
+      };
+    }
   }
-});
+);
 
-export const readinessCheck = withMiddleware(async (_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  try {
-    // Perform more thorough readiness checks
-    const readiness = {
-      status: 'ready',
-      timestamp: new Date().toISOString(),
-      checks: {
-        database: true, // TODO: Add actual DB connection check
-        isbnService: true, // TODO: Add actual service connectivity check
-        memory: process.memoryUsage(),
-      },
-    };
+export const readinessCheck = withMiddleware(
+  async (_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    try {
+      // Perform more thorough readiness checks
+      const readiness = {
+        status: 'ready',
+        timestamp: new Date().toISOString(),
+        checks: {
+          database: true, // TODO: Add actual DB connection check
+          isbnService: true, // TODO: Add actual service connectivity check
+          memory: process.memoryUsage(),
+        },
+      };
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        success: true,
-        data: readiness,
-      }),
-    };
-  } catch (error) {
-    return {
-      statusCode: 503,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        success: false,
-        error: 'Service Unavailable',
-        message: 'Readiness check failed',
-      }),
-    };
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          success: true,
+          data: readiness,
+        }),
+      };
+    } catch (error) {
+      return {
+        statusCode: 503,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          success: false,
+          error: 'Service Unavailable',
+          message: 'Readiness check failed',
+        }),
+      };
+    }
   }
-});
+);

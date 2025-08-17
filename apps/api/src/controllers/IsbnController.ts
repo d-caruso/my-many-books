@@ -32,9 +32,7 @@ export class IsbnController extends BaseController {
   });
 
   private readonly batchIsbnLookupSchema = Joi.object<BatchIsbnLookupRequest>({
-    isbns: Joi.array().items(
-      Joi.string().custom(this.validateIsbnField)
-    ).min(1).max(50).required(),
+    isbns: Joi.array().items(Joi.string().custom(this.validateIsbnField)).min(1).max(50).required(),
   });
 
   private readonly titleSearchSchema = Joi.object<TitleSearchRequest>({
@@ -58,7 +56,7 @@ export class IsbnController extends BaseController {
   async lookupBook(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     return this.handleRequest(event, async () => {
       const isbn = this.getPathParameter(event, 'isbn') || this.getQueryParameter(event, 'isbn');
-      
+
       if (!isbn) {
         return this.createErrorResponse('ISBN parameter is required', 400);
       }
@@ -137,7 +135,7 @@ export class IsbnController extends BaseController {
     return this.handleRequest(event, async () => {
       const title = this.getQueryParameter(event, 'title');
       const limitParam = this.getQueryParameter(event, 'limit');
-      
+
       if (!title) {
         return this.createErrorResponse('Title parameter is required', 400);
       }
@@ -182,14 +180,19 @@ export class IsbnController extends BaseController {
         const status = healthResult.available ? 'healthy' : 'unhealthy';
         const statusCode = healthResult.available ? 200 : 503;
 
-        return this.createSuccessResponse({
-          status,
-          available: healthResult.available,
-          responseTime: healthResult.responseTime,
-          error: healthResult.error,
-          cacheStats: healthResult.cacheStats,
-          timestamp: new Date().toISOString(),
-        }, undefined, undefined, statusCode);
+        return this.createSuccessResponse(
+          {
+            status,
+            available: healthResult.available,
+            responseTime: healthResult.responseTime,
+            error: healthResult.error,
+            cacheStats: healthResult.cacheStats,
+            timestamp: new Date().toISOString(),
+          },
+          undefined,
+          undefined,
+          statusCode
+        );
       } catch (error) {
         console.error('Health check error:', error);
         return this.createErrorResponse('Health check failed', 503);
@@ -221,10 +224,7 @@ export class IsbnController extends BaseController {
       try {
         isbnService.resetResilience();
 
-        return this.createSuccessResponse(
-          null,
-          'Resilience mechanisms reset successfully'
-        );
+        return this.createSuccessResponse(null, 'Resilience mechanisms reset successfully');
       } catch (error) {
         console.error('Reset resilience error:', error);
         return this.createErrorResponse('Failed to reset resilience mechanisms', 500);
@@ -237,10 +237,7 @@ export class IsbnController extends BaseController {
       try {
         isbnService.clearCache();
 
-        return this.createSuccessResponse(
-          null,
-          'ISBN service cache cleared successfully'
-        );
+        return this.createSuccessResponse(null, 'ISBN service cache cleared successfully');
       } catch (error) {
         console.error('Clear cache error:', error);
         return this.createErrorResponse('Failed to clear cache', 500);
@@ -301,7 +298,7 @@ export class IsbnController extends BaseController {
   async validateIsbn(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     return this.handleRequest(event, async () => {
       const isbn = this.getPathParameter(event, 'isbn') || this.getQueryParameter(event, 'isbn');
-      
+
       if (!isbn) {
         return this.createErrorResponse('ISBN parameter is required', 400);
       }
@@ -317,9 +314,11 @@ export class IsbnController extends BaseController {
           details: {
             length: isbn.length,
             hasCheckDigit: isbn.length >= 10,
-            format: validation.normalizedIsbn ? 
-              (validation.normalizedIsbn.length === 10 ? 'ISBN-10' : 'ISBN-13') : 
-              'unknown',
+            format: validation.normalizedIsbn
+              ? validation.normalizedIsbn.length === 10
+                ? 'ISBN-10'
+                : 'ISBN-13'
+              : 'unknown',
           },
         });
       } catch (error) {
@@ -333,7 +332,7 @@ export class IsbnController extends BaseController {
     return this.handleRequest(event, async () => {
       const isbn = this.getQueryParameter(event, 'isbn');
       const format = this.getQueryParameter(event, 'format') || 'hyphenated';
-      
+
       if (!isbn) {
         return this.createErrorResponse('ISBN parameter is required', 400);
       }
@@ -347,7 +346,7 @@ export class IsbnController extends BaseController {
 
       try {
         const validation = validateIsbn(isbn);
-        
+
         if (!validation.isValid) {
           return this.createErrorResponse(`Invalid ISBN: ${validation.error}`, 400);
         }

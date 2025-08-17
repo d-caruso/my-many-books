@@ -37,7 +37,6 @@ export class RequestLogger {
   }
 
   public logRequest(event: APIGatewayProxyEvent): RequestLogEntry {
-    
     const logEntry: RequestLogEntry = {
       requestId: event.requestContext.requestId,
       method: event.httpMethod,
@@ -82,7 +81,7 @@ export class RequestLogger {
 
     if (this.logLevel !== 'none') {
       const logLevel = this.getLogLevelForStatus(response.statusCode);
-      
+
       console[logLevel]('Request completed:', {
         requestId: logEntry.requestId,
         method: logEntry.method,
@@ -123,14 +122,9 @@ export class RequestLogger {
 
   private sanitizeHeaders(headers: Record<string, string>): Record<string, string> {
     const sanitized = { ...headers };
-    
+
     // Remove or mask sensitive headers
-    const sensitiveHeaders = [
-      'authorization',
-      'x-api-key',
-      'x-amz-security-token',
-      'cookie',
-    ];
+    const sensitiveHeaders = ['authorization', 'x-api-key', 'x-amz-security-token', 'cookie'];
 
     sensitiveHeaders.forEach(header => {
       const lowerHeader = header.toLowerCase();

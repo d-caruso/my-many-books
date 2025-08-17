@@ -31,7 +31,13 @@ class DatabaseConnection {
       dialectOptions: {
         ssl: DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
       },
-      logging: NODE_ENV === 'development' ? console.log : false,
+      logging:
+        NODE_ENV === 'development'
+          ? (_msg: string): void => {
+              // TODO: Replace with proper logging
+              // console.log(_msg);
+            }
+          : false,
       define: {
         timestamps: true,
         underscored: true,
@@ -47,10 +53,12 @@ class DatabaseConnection {
     try {
       const sequelize = DatabaseConnection.getInstance();
       await sequelize.authenticate();
-      console.log('Database connection established successfully');
+      // TODO: Replace with proper logging
+      // console.log('Database connection established successfully');
       return true;
-    } catch (error) {
-      console.error('Unable to connect to database:', error);
+    } catch {
+      // TODO: Replace with proper logging
+      // console.error('Unable to connect to database:', _error);
       return false;
     }
   }

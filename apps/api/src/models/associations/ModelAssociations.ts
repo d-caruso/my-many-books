@@ -87,13 +87,13 @@ export class ModelAssociations {
     // Direct associations for junction tables
     BookAuthor.belongsTo(Book, { foreignKey: 'book_id', as: 'book' });
     BookAuthor.belongsTo(Author, { foreignKey: 'author_id', as: 'author' });
-    
+
     BookCategory.belongsTo(Book, { foreignKey: 'book_id', as: 'book' });
     BookCategory.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
 
     Book.hasMany(BookAuthor, { foreignKey: 'book_id' });
     Book.hasMany(BookCategory, { foreignKey: 'book_id' });
-    
+
     Author.hasMany(BookAuthor, { foreignKey: 'author_id' });
     Category.hasMany(BookCategory, { foreignKey: 'category_id' });
 
