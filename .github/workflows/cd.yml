@@ -76,7 +76,9 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             PROJECTS="${{ github.event.inputs.projects }}"
           else
+            # Get the list of affected projects and remove "my-many-books"
             PROJECTS=$(npx nx show projects --affected --base=origin/main~1 --head=HEAD | tr '\n' ',' | sed 's/,$//')
+            PROJECTS=$(echo "$PROJECTS" | sed 's/my-many-books,//g' | sed 's/,my-many-books//g' | sed 's/my-many-books//g')
           fi
           echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
           echo "Affected projects: $PROJECTS"
@@ -120,15 +122,12 @@ jobs:
         run: npm ci
 
       - name: Build Projects to be Deployed
-        # Changed this step to only build projects with a build target.
-        # It now checks if the 'deploy-api' or 'deploy-web-app' flags are true
-        # and then builds only those specific projects.
         run: |
           BUILD_PROJECTS=""
-          if [ "${{ needs.setup.outputs.deploy-api }}" == "true" ]; then
+          if [[ "${{ needs.setup.outputs.deploy-api }}" == "true" ]]; then
             BUILD_PROJECTS+="api,"
           fi
-          if [ "${{ needs.setup.outputs.deploy-web-app }}" == "true" ]; then
+          if [[ "${{ needs.setup.outputs.deploy-web-app }}" == "true" ]]; then
             BUILD_PROJECTS+="web-app,"
           fi
           
