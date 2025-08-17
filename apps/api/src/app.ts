@@ -22,7 +22,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: process.env.API_VERSION || '1.0.0'
+    version: process.env['API_VERSION'] || '1.0.0'
   });
 });
 
@@ -40,7 +40,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   console.error('Global error handler:', err);
   res.status(500).json({ 
     error: 'Internal server error',
-    details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    details: process.env['NODE_ENV'] === 'development' ? err.message : undefined
   });
 });
 
@@ -55,7 +55,7 @@ const initializeDatabase = async () => {
     ModelManager.initialize(sequelize);
     
     // Sync database (only in development)
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       await ModelManager.syncDatabase(false);
       console.log('Database synchronized');
     }
@@ -69,11 +69,11 @@ const initializeDatabase = async () => {
 const startServer = async () => {
   await initializeDatabase();
   
-  const PORT = process.env.PORT || 3000;
+  const PORT = process.env['PORT'] || 3000;
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Environment: ${process.env['NODE_ENV'] || 'development'}`);
   });
 };
 
