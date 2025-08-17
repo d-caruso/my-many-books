@@ -120,7 +120,7 @@ jobs:
         run: npm ci
 
       - name: Build Affected Projects
-        run: npx nx affected --target=build --base=origin/main~1 --head=HEAD
+        run: npx nx run-many --target=build --projects=${{ needs.setup.outputs.affected-projects }}
 
       - name: Run Security Checks
         run: |
