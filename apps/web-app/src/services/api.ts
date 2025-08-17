@@ -75,7 +75,7 @@ class ApiService {
 
     // Create API client configuration (use injected or default)
     const apiConfig: ApiClientConfig = dependencies.config || {
-      baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000',
+      baseURL: process.env['REACT_APP_API_BASE_URL'] || 'http://localhost:3000',
       timeout: 10000,
       getAuthToken: () => localStorage.getItem('authToken'),
       onUnauthorized: () => {
@@ -259,7 +259,7 @@ class ApiService {
   // Book methods with development mock data fallback
   async getBooks(filters?: SearchFilters): Promise<PaginatedResponse<Book>> {
     // In development mode without API URL, return mock data
-    if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_API_BASE_URL) {
+    if (process.env['NODE_ENV'] === 'development' && !process.env['REACT_APP_API_BASE_URL']) {
       return this.getMockBooks();
     }
     
@@ -316,7 +316,7 @@ class ApiService {
     categoryId?: number;
   }): Promise<SearchResult> {
     // In development mode without API URL, return mock data
-    if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_API_BASE_URL) {
+    if (process.env['NODE_ENV'] === 'development' && !process.env['REACT_APP_API_BASE_URL']) {
       return this.getMockSearchResults(searchParams);
     }
     
@@ -342,7 +342,7 @@ class ApiService {
   // Categories methods with development mock data fallback
   async getCategories(): Promise<Category[]> {
     // In development mode without API URL, return mock data
-    if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_API_BASE_URL) {
+    if (process.env['NODE_ENV'] === 'development' && !process.env['REACT_APP_API_BASE_URL']) {
       return this.getMockCategories();
     }
     
@@ -360,7 +360,7 @@ class ApiService {
   // Authors methods with development mock data fallback
   async getAuthors(): Promise<Author[]> {
     // In development mode without API URL, return mock data
-    if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_API_BASE_URL) {
+    if (process.env['NODE_ENV'] === 'development' && !process.env['REACT_APP_API_BASE_URL']) {
       return this.getMockAuthors();
     }
     
@@ -373,7 +373,7 @@ class ApiService {
     }
     
     // In development mode without API URL, return filtered mock data
-    if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_API_BASE_URL) {
+    if (process.env['NODE_ENV'] === 'development' && !process.env['REACT_APP_API_BASE_URL']) {
       const mockAuthors = await this.getMockAuthors();
       return mockAuthors.filter(author => 
         author.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

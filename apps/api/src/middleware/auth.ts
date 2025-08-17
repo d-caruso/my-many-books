@@ -89,13 +89,13 @@ export class AuthProviderFactory {
     switch (providerType.toLowerCase()) {
       case 'cognito':
         return new CognitoAuthProvider(
-          process.env.AWS_REGION || 'us-east-1',
-          process.env.COGNITO_USER_POOL_ID || ''
+          process.env['AWS_REGION'] || 'us-east-1',
+          process.env['COGNITO_USER_POOL_ID'] || ''
         );
       case 'auth0':
         return new Auth0Provider(
-          process.env.AUTH0_DOMAIN || '',
-          process.env.AUTH0_AUDIENCE || ''
+          process.env['AUTH0_DOMAIN'] || '',
+          process.env['AUTH0_AUDIENCE'] || ''
         );
       default:
         throw new Error(`Unsupported auth provider: ${providerType}`);
@@ -149,7 +149,7 @@ export const authMiddleware = async (
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
     // Get auth provider from environment
-    const providerType = process.env.AUTH_PROVIDER || 'cognito';
+    const providerType = process.env['AUTH_PROVIDER'] || 'cognito';
     const provider = AuthProviderFactory.createProvider(providerType);
 
     // Verify token with auth provider
