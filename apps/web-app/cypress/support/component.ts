@@ -15,6 +15,7 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands'
+import './component-helpers'
 
 import { mount } from 'cypress/react'
 

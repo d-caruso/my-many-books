@@ -30,7 +30,14 @@
     "format": "nx format:write",
     "format:check": "nx format:check",
     "update": "nx migrate latest",
-    "postinstall": "nx postinstall || exit 0"
+    "postinstall": "nx postinstall || exit 0",
+    "cypress:open": "cd apps/web-app && npm run cypress:open",
+    "cypress:run": "cd apps/web-app && npm run cypress:run",
+    "cypress:component": "cd apps/web-app && npm run cypress:component",
+    "cypress:component:open": "cd apps/web-app && npm run cypress:component:open",
+    "e2e": "cd apps/web-app && npm run e2e",
+    "e2e:open": "cd apps/web-app && npm run e2e:open",
+    "test:web-app:all": "cd apps/web-app && npm run test:all"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.28.3",
