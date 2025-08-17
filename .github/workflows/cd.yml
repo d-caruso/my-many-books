@@ -181,8 +181,9 @@ jobs:
         run: npm ci
 
       - name: Build API
-        # Change working directory to the API project before building.
-        run: cd apps/api && npm run build
+        # The working-directory is already set, so a simple npm run build will work.
+        working-directory: apps/api
+        run: npm run build
 
       - name: Run Database Migrations
         working-directory: apps/api
@@ -235,8 +236,9 @@ jobs:
         run: npm ci
 
       - name: Build Web App
-        # Change working directory to the web app project before building.
-        run: cd apps/web-app && npm run build
+        # The working-directory is already set, so a simple npm run build will work.
+        working-directory: apps/web-app
+        run: npm run build
         env:
           NODE_ENV: ${{ needs.setup.outputs.environment == 'prod' && 'production' || 'development' }}
 
