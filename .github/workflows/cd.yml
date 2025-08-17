@@ -122,19 +122,22 @@ jobs:
         run: npm ci
 
       - name: Build Projects to be Deployed
+        # This step is updated to build projects individually to bypass the Nx workspace analysis error.
         run: |
-          BUILD_PROJECTS=""
-          if [[ "${{ needs.setup.outputs.deploy-api }}" == "true" ]]; then
-            BUILD_PROJECTS+="api,"
-          fi
-          if [[ "${{ needs.setup.outputs.deploy-web-app }}" == "true" ]]; then
-            BUILD_PROJECTS+="web-app,"
-          fi
-          
+          BUILD_PROJECTS="${{ needs.setup.outputs.affected-projects }}"
           if [ -n "$BUILD_PROJECTS" ]; then
-            BUILD_PROJECTS=$(echo "$BUILD_PROJECTS" | sed 's/,$//')
-            echo "Building projects: $BUILD_PROJECTS"
-            npx nx run-many --target=build --projects="$BUILD_PROJECTS"
+            IFS=',' read -ra ADDR <<< "$BUILD_PROJECTS"
+            for project in "${ADDR[@]}"; do
+              if [ "$project" == "api" ]; then
+                echo "Building project: $project"
+                npx nx build "$project"
+              elif [ "$project" == "web-app" ]; then
+                echo "Building project: $project"
+                npx nx build "$project"
+              else
+                echo "Skipping non-deployable project: $project"
+              fi
+            done
           else
             echo "No projects to build for deployment."
           fi
