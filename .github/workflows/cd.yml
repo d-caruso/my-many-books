@@ -122,8 +122,8 @@ jobs:
         run: npm ci
 
       - name: Build Projects to be Deployed
-        # This step has been updated to build projects individually using npm
-        # to prevent failures caused by Nx's workspace analysis.
+        # This step has been updated to build projects by changing the working directory
+        # to prevent failures caused by Nx or npm workspace analysis.
         run: |
           BUILD_PROJECTS="${{ needs.setup.outputs.affected-projects }}"
           if [ -n "$BUILD_PROJECTS" ]; then
@@ -131,10 +131,10 @@ jobs:
             for project in "${ADDR[@]}"; do
               if [ "$project" == "api" ]; then
                 echo "Building project: $project"
-                npm run build --workspace=api
+                cd apps/api && npm run build
               elif [ "$project" == "web-app" ]; then
                 echo "Building project: $project"
-                npm run build --workspace=web-app
+                cd apps/web-app && npm run build
               else
                 echo "Skipping non-deployable project: $project"
               fi
@@ -181,7 +181,8 @@ jobs:
         run: npm ci
 
       - name: Build API
-        run: npm run build --workspace=api
+        # Change working directory to the API project before building.
+        run: cd apps/api && npm run build
 
       - name: Run Database Migrations
         working-directory: apps/api
@@ -234,7 +235,8 @@ jobs:
         run: npm ci
 
       - name: Build Web App
-        run: npm run build --workspace=web-app
+        # Change working directory to the web app project before building.
+        run: cd apps/web-app && npm run build
         env:
           NODE_ENV: ${{ needs.setup.outputs.environment == 'prod' && 'production' || 'development' }}
 
