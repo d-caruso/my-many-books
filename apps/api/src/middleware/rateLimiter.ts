@@ -34,13 +34,13 @@ export class RateLimiter {
     const windowStart = now - this.config.windowMs;
 
     let entry = this.store.get(key);
-    
+
     if (!entry || entry.resetTime <= now) {
       // Create new entry or reset expired entry
       entry = {
         count: 0,
         resetTime: now + this.config.windowMs,
-        firstRequestTime: now
+        firstRequestTime: now,
       };
       this.store.set(key, entry);
     }
@@ -52,7 +52,7 @@ export class RateLimiter {
         limit: this.config.maxRequests,
         remaining: 0,
         resetTime: entry.resetTime,
-        retryAfter: Math.ceil((entry.resetTime - now) / 1000)
+        retryAfter: Math.ceil((entry.resetTime - now) / 1000),
       };
     }
 
@@ -61,21 +61,21 @@ export class RateLimiter {
       limit: this.config.maxRequests,
       remaining: this.config.maxRequests - entry.count - 1,
       resetTime: entry.resetTime,
-      retryAfter: 0
+      retryAfter: 0,
     };
   }
 
   public incrementCount(event: APIGatewayProxyEvent): void {
     const key = this.config.keyGenerator(event);
     const entry = this.store.get(key);
-    
+
     if (entry) {
       entry.count++;
     }
   }
 
   public updateAfterResponse(event: APIGatewayProxyEvent, statusCode: number): void {
-    const shouldSkip = 
+    const shouldSkip =
       (this.config.skipSuccessfulRequests && statusCode < 400) ||
       (this.config.skipFailedRequests && statusCode >= 400);
 
@@ -110,7 +110,7 @@ export class RateLimiter {
       totalRequests,
       storeSize: this.store.size,
       windowMs: this.config.windowMs,
-      maxRequests: this.config.maxRequests
+      maxRequests: this.config.maxRequests,
     };
   }
 
@@ -147,9 +147,7 @@ export const keyGenerators = {
 
   // Rate limit by API key
   byApiKey: (event: APIGatewayProxyEvent): string => {
-    const apiKey = event.headers['X-Api-Key'] || 
-                   event.headers['x-api-key'] || 
-                   'anonymous';
+    const apiKey = event.headers['X-Api-Key'] || event.headers['x-api-key'] || 'anonymous';
     return `api:${apiKey}`;
   },
 
@@ -169,11 +167,9 @@ export const keyGenerators = {
   // Composite rate limiting (IP + API key)
   composite: (event: APIGatewayProxyEvent): string => {
     const ip = event.requestContext.identity.sourceIp;
-    const apiKey = event.headers['X-Api-Key'] || 
-                   event.headers['x-api-key'] || 
-                   'anonymous';
+    const apiKey = event.headers['X-Api-Key'] || event.headers['x-api-key'] || 'anonymous';
     return `${ip}:${apiKey}`;
-  }
+  },
 };
 
 // Middleware wrapper
@@ -195,23 +191,23 @@ export const withRateLimit = (
           ...(config.enableHeaders && {
             'X-RateLimit-Limit': limitResult.limit.toString(),
             'X-RateLimit-Remaining': limitResult.remaining.toString(),
-            'X-RateLimit-Reset': new Date(limitResult.resetTime).toISOString()
-          })
+            'X-RateLimit-Reset': new Date(limitResult.resetTime).toISOString(),
+          }),
         },
         body: JSON.stringify({
           success: false,
           error: 'Rate limit exceeded',
           message: `Too many requests. Limit: ${limitResult.limit} per ${config.windowMs / 1000}s`,
           retryAfter: limitResult.retryAfter,
-          code: 'RATE_LIMIT_EXCEEDED'
-        })
+          code: 'RATE_LIMIT_EXCEEDED',
+        }),
       };
       return response;
     }
 
     try {
       const response = await handler(event);
-      
+
       // Update rate limit after successful processing
       rateLimiter.updateAfterResponse(event, response.statusCode);
 
@@ -221,7 +217,7 @@ export const withRateLimit = (
           ...response.headers,
           'X-RateLimit-Limit': limitResult.limit.toString(),
           'X-RateLimit-Remaining': limitResult.remaining.toString(),
-          'X-RateLimit-Reset': new Date(limitResult.resetTime).toISOString()
+          'X-RateLimit-Reset': new Date(limitResult.resetTime).toISOString(),
         };
       }
 
@@ -244,17 +240,17 @@ export const createRateLimiters = () => {
       keyGenerator: keyGenerators.byIp,
       skipSuccessfulRequests: false,
       skipFailedRequests: false,
-      enableHeaders: true
+      enableHeaders: true,
     }),
 
     // API endpoint rate limiter
     apiEndpoint: new RateLimiter({
-      windowMs: 60 * 1000, // 1 minute  
+      windowMs: 60 * 1000, // 1 minute
       maxRequests: 100,
       keyGenerator: keyGenerators.byIpAndEndpoint,
       skipSuccessfulRequests: false,
       skipFailedRequests: true,
-      enableHeaders: true
+      enableHeaders: true,
     }),
 
     // Heavy operations rate limiter (like ISBN lookups)
@@ -264,7 +260,7 @@ export const createRateLimiters = () => {
       keyGenerator: keyGenerators.byIp,
       skipSuccessfulRequests: false,
       skipFailedRequests: false,
-      enableHeaders: true
+      enableHeaders: true,
     }),
 
     // User-specific rate limiter
@@ -274,7 +270,7 @@ export const createRateLimiters = () => {
       keyGenerator: keyGenerators.byUser,
       skipSuccessfulRequests: false,
       skipFailedRequests: false,
-      enableHeaders: true
-    })
+      enableHeaders: true,
+    }),
   };
 };

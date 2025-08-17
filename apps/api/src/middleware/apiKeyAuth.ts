@@ -36,7 +36,7 @@ export class ApiKeyAuthenticator {
       return {
         isAuthenticated: false,
         error: 'API key is required',
-        statusCode: 401
+        statusCode: 401,
       };
     }
 
@@ -44,7 +44,7 @@ export class ApiKeyAuthenticator {
       return {
         isAuthenticated: false,
         error: 'Invalid API key',
-        statusCode: 401
+        statusCode: 401,
       };
     }
 
@@ -53,7 +53,7 @@ export class ApiKeyAuthenticator {
       return {
         isAuthenticated: false,
         error: 'API key tier not found',
-        statusCode: 500
+        statusCode: 500,
       };
     }
 
@@ -64,7 +64,7 @@ export class ApiKeyAuthenticator {
         isAuthenticated: false,
         error: usageCheck.error,
         statusCode: 429,
-        retryAfter: usageCheck.retryAfter
+        retryAfter: usageCheck.retryAfter,
       };
     }
 
@@ -75,40 +75,37 @@ export class ApiKeyAuthenticator {
       isAuthenticated: true,
       tier: tier.name,
       apiKey,
-      permissions: tier.permissions
+      permissions: tier.permissions,
     };
   }
 
   private extractApiKey(event: APIGatewayProxyEvent): string | null {
     const headers = event.headers || {};
     const headerName = this.config.headerName;
-    
+
     // Check both original case and lowercase
-    return headers[headerName] || 
-           headers[headerName.toLowerCase()] ||
-           headers[`x-api-key`] ||
-           null;
+    return headers[headerName] || headers[headerName.toLowerCase()] || headers[`x-api-key`] || null;
   }
 
   private async checkUsageLimits(apiKey: string, tier: ApiKeyTier): Promise<UsageCheckResult> {
     const usage = this.getOrCreateUsage(apiKey);
     const now = Date.now();
-    
+
     // Check rate limit (per minute)
     const minuteWindow = 60 * 1000;
     const minuteStart = now - minuteWindow;
-    
+
     // Clean old requests
     usage.requests = usage.requests.filter(timestamp => timestamp > minuteStart);
-    
+
     if (usage.requests.length >= tier.rateLimit) {
       const oldestRequest = Math.min(...usage.requests);
       const retryAfter = Math.ceil((oldestRequest + minuteWindow - now) / 1000);
-      
+
       return {
         allowed: false,
         error: `Rate limit exceeded. Maximum ${tier.rateLimit} requests per minute.`,
-        retryAfter
+        retryAfter,
       };
     }
 
@@ -116,18 +113,20 @@ export class ApiKeyAuthenticator {
     const monthStart = new Date(now);
     monthStart.setDate(1);
     monthStart.setHours(0, 0, 0, 0);
-    
-    const monthlyRequests = usage.requests.filter(timestamp => timestamp >= monthStart.getTime()).length;
-    
+
+    const monthlyRequests = usage.requests.filter(
+      timestamp => timestamp >= monthStart.getTime()
+    ).length;
+
     if (monthlyRequests >= tier.quotaLimit) {
       const nextMonth = new Date(monthStart);
       nextMonth.setMonth(nextMonth.getMonth() + 1);
       const retryAfter = Math.ceil((nextMonth.getTime() - now) / 1000);
-      
+
       return {
         allowed: false,
         error: `Monthly quota exceeded. Maximum ${tier.quotaLimit} requests per month.`,
-        retryAfter
+        retryAfter,
       };
     }
 
@@ -146,7 +145,7 @@ export class ApiKeyAuthenticator {
         apiKey,
         requests: [],
         lastUsed: new Date(),
-        createdAt: new Date()
+        createdAt: new Date(),
       });
     }
     return this.usageTracker.get(apiKey)!;
@@ -167,7 +166,7 @@ export class ApiKeyAuthenticator {
       requestsLastDay: usage.requests.filter(t => t > now - dayWindow).length,
       requestsLastMonth: usage.requests.filter(t => t > now - monthWindow).length,
       lastUsed: usage.lastUsed,
-      totalRequests: usage.requests.length
+      totalRequests: usage.requests.length,
     };
   }
 }
@@ -211,20 +210,20 @@ export const withApiKeyAuth = (
 ) => {
   return async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const authResult = await authenticator.authenticate(event);
-    
+
     if (!authResult.isAuthenticated) {
       const response: APIGatewayProxyResult = {
         statusCode: authResult.statusCode || 401,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
-          ...(authResult.retryAfter && { 'Retry-After': authResult.retryAfter.toString() })
+          ...(authResult.retryAfter && { 'Retry-After': authResult.retryAfter.toString() }),
         },
         body: JSON.stringify({
           success: false,
           error: authResult.error,
-          code: 'AUTHENTICATION_FAILED'
-        })
+          code: 'AUTHENTICATION_FAILED',
+        }),
       };
       return response;
     }
@@ -233,7 +232,7 @@ export const withApiKeyAuth = (
     (event as any).authContext = {
       tier: authResult.tier,
       apiKey: authResult.apiKey,
-      permissions: authResult.permissions || []
+      permissions: authResult.permissions || [],
     };
 
     return handler(event);

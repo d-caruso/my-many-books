@@ -12,14 +12,16 @@ export interface AuthorAttributes extends IdBaseModelAttributes {
   nationality?: string | null;
 }
 
-export interface AuthorCreationAttributes extends Omit<AuthorAttributes, 'id' | 'creationDate' | 'updateDate'> {}
+export interface AuthorCreationAttributes
+  extends Omit<AuthorAttributes, 'id' | 'creationDate' | 'updateDate'> {}
 
 // Category interfaces
 export interface CategoryAttributes extends IdBaseModelAttributes {
   name: string;
 }
 
-export interface CategoryCreationAttributes extends Omit<CategoryAttributes, 'id' | 'creationDate' | 'updateDate'> {}
+export interface CategoryCreationAttributes
+  extends Omit<CategoryAttributes, 'id' | 'creationDate' | 'updateDate'> {}
 
 // Book interfaces
 export interface BookAttributes extends IdBaseModelAttributes {
@@ -32,9 +34,11 @@ export interface BookAttributes extends IdBaseModelAttributes {
   userId?: number | undefined;
 }
 
-export interface BookCreationAttributes extends Omit<BookAttributes, 'id' | 'creationDate' | 'updateDate'> {}
+export interface BookCreationAttributes
+  extends Omit<BookAttributes, 'id' | 'creationDate' | 'updateDate'> {}
 
-export interface BookUpdateAttributes extends Omit<Partial<BookAttributes>, 'id' | 'creationDate'> {}
+export interface BookUpdateAttributes
+  extends Omit<Partial<BookAttributes>, 'id' | 'creationDate'> {}
 
 // Junction table interfaces
 export interface BookAuthorAttributes extends BaseModelAttributes {
@@ -42,14 +46,16 @@ export interface BookAuthorAttributes extends BaseModelAttributes {
   authorId: number;
 }
 
-export interface BookAuthorCreationAttributes extends Omit<BookAuthorAttributes, 'creationDate' | 'updateDate'> {}
+export interface BookAuthorCreationAttributes
+  extends Omit<BookAuthorAttributes, 'creationDate' | 'updateDate'> {}
 
 export interface BookCategoryAttributes extends BaseModelAttributes {
   bookId: number;
   categoryId: number;
 }
 
-export interface BookCategoryCreationAttributes extends Omit<BookCategoryAttributes, 'creationDate' | 'updateDate'> {}
+export interface BookCategoryCreationAttributes
+  extends Omit<BookCategoryAttributes, 'creationDate' | 'updateDate'> {}
 
 // Enums and types
 export type BookStatus = 'in progress' | 'paused' | 'finished';
@@ -97,15 +103,17 @@ export interface UserAttributes extends IdBaseModelAttributes {
   isActive: boolean;
 }
 
-export interface UserCreationAttributes extends Omit<UserAttributes, 'id' | 'creationDate' | 'updateDate'> {}
+export interface UserCreationAttributes
+  extends Omit<UserAttributes, 'id' | 'creationDate' | 'updateDate'> {}
 
-export interface UserUpdateAttributes extends Omit<Partial<UserAttributes>, 'id' | 'creationDate'> {}
+export interface UserUpdateAttributes
+  extends Omit<Partial<UserAttributes>, 'id' | 'creationDate'> {}
 
 // Authentication interface for middleware context
 export interface AuthUser {
-  userId: number;          // Database user ID (primary key)
-  email: string;           // For logging/debugging
-  provider: string;        // Auth provider used
+  userId: number; // Database user ID (primary key)
+  email: string; // For logging/debugging
+  provider: string; // Auth provider used
   providerUserId?: string; // External auth system ID
-  isNewUser?: boolean;     // Helpful for onboarding flows
+  isNewUser?: boolean; // Helpful for onboarding flows
 }

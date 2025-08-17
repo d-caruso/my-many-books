@@ -17,11 +17,11 @@ router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> 
     const offset = (Number(page) - 1) * Number(limit);
 
     let whereClause: any = {};
-    
+
     if (search) {
       const { Op } = require('sequelize');
       whereClause = {
-        name: { [Op.iLike]: `%${search}%` }
+        name: { [Op.iLike]: `%${search}%` },
       };
     }
 
@@ -43,9 +43,9 @@ router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> 
     });
   } catch (error) {
     console.error('Error fetching categories:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -71,9 +71,9 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response): Promise<voi
     res.status(200).json(category.toJSON());
   } catch (error) {
     console.error('Error fetching category:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -90,7 +90,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response): Promise<void>
 
     // Check if category already exists
     const existingCategory = await Category.findOne({
-      where: { name }
+      where: { name },
     });
 
     if (existingCategory) {
@@ -103,9 +103,9 @@ router.post('/', async (req: AuthenticatedRequest, res: Response): Promise<void>
     res.status(201).json(category.toJSON());
   } catch (error) {
     console.error('Error creating category:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -138,7 +138,7 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response): Promise<voi
     // Check if new name already exists
     if (name !== category.name) {
       const existingCategory = await Category.findOne({
-        where: { name }
+        where: { name },
       });
 
       if (existingCategory) {
@@ -152,9 +152,9 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response): Promise<voi
     res.status(200).json(category.toJSON());
   } catch (error) {
     console.error('Error updating category:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -181,9 +181,9 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: Response): Promise<
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting category:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });

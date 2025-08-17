@@ -41,8 +41,8 @@ export class CognitoAuthProvider implements AuthProvider {
     try {
       // In real implementation, verify JWT with AWS Cognito
       const jwt = require('jsonwebtoken');
-      const decoded = jwt.decode(token) as any;
-      
+      const decoded = jwt.decode(token);
+
       if (!decoded || !decoded.sub || !decoded.email) {
         throw new Error('Invalid token format');
       }
@@ -105,7 +105,10 @@ export class AuthProviderFactory {
 
 // User service for database operations
 export class UserService {
-  static async findOrCreateUser(providerUser: AuthProviderUser, provider: string): Promise<{ user: User; isNewUser: boolean }> {
+  static async findOrCreateUser(
+    providerUser: AuthProviderUser,
+    provider: string
+  ): Promise<{ user: User; isNewUser: boolean }> {
     let user = await User.findOne({ where: { email: providerUser.email } });
     let isNewUser = false;
 
@@ -147,7 +150,7 @@ export const authMiddleware = async (
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    
+
     // Get auth provider from environment
     const providerType = process.env['AUTH_PROVIDER'] || 'cognito';
     const provider = AuthProviderFactory.createProvider(providerType);
@@ -156,7 +159,10 @@ export const authMiddleware = async (
     const providerUser = await provider.verifyToken(token);
 
     // Find or create user in database
-    const { user, isNewUser } = await UserService.findOrCreateUser(providerUser, provider.getProviderName());
+    const { user, isNewUser } = await UserService.findOrCreateUser(
+      providerUser,
+      provider.getProviderName()
+    );
 
     // Check if user is active
     if (!user.isActive) {
@@ -175,13 +181,13 @@ export const authMiddleware = async (
 
     // Attach user to request
     req.user = authUser;
-    
+
     next();
   } catch (error) {
     console.error('Authentication error:', error);
-    res.status(401).json({ 
+    res.status(401).json({
       error: 'Authentication failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 };

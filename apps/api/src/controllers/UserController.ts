@@ -4,10 +4,14 @@
 // ================================================================
 
 import { Response } from 'express';
+import { WhereOptions } from 'sequelize';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { User } from '../models/User';
 import { Book } from '../models/Book';
+import { Author } from '../models/Author';
+import { Category } from '../models/Category';
 import { UserService } from '../middleware/auth';
+import { BookAttributes } from '../models/interfaces/ModelInterfaces';
 
 export class UserController {
   // Get current user profile
@@ -35,10 +39,11 @@ export class UserController {
         updatedAt: user.updateDate,
       });
     } catch (error) {
-      console.error('Error fetching current user:', error);
-      res.status(500).json({ 
+      // TODO: Replace with proper logging
+      // console.error('Error fetching current user:', error);
+      res.status(500).json({
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -88,10 +93,11 @@ export class UserController {
         updatedAt: user.updateDate,
       });
     } catch (error) {
-      console.error('Error updating current user:', error);
-      res.status(500).json({ 
+      // TODO: Replace with proper logging
+      // console.error('Error updating current user:', error);
+      res.status(500).json({
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -107,7 +113,7 @@ export class UserController {
       const { page = 1, limit = 10, status } = req.query;
       const offset = (Number(page) - 1) * Number(limit);
 
-      const whereClause: any = { userId: req.user.userId };
+      const whereClause: WhereOptions<BookAttributes> = { userId: req.user.userId };
       if (status && ['in progress', 'paused', 'finished'].includes(status as string)) {
         whereClause.status = status;
       }
@@ -115,16 +121,16 @@ export class UserController {
       const { count, rows: books } = await Book.findAndCountAll({
         where: whereClause,
         include: [
-          { 
-            model: require('../models/Author').Author, 
+          {
+            model: Author,
             as: 'authors',
-            through: { attributes: [] }
+            through: { attributes: [] },
           },
-          { 
-            model: require('../models/Category').Category, 
+          {
+            model: Category,
             as: 'categories',
-            through: { attributes: [] }
-          }
+            through: { attributes: [] },
+          },
         ],
         limit: Number(limit),
         offset,
@@ -140,16 +146,18 @@ export class UserController {
           editionDate: book.editionDate,
           status: book.status,
           notes: book.notes,
-          authors: book.authors?.map(author => ({
-            id: author.id,
-            name: author.name,
-            surname: author.surname,
-            fullName: `${author.name} ${author.surname}`,
-          })) || [],
-          categories: book.categories?.map(category => ({
-            id: category.id,
-            name: category.name,
-          })) || [],
+          authors:
+            book.authors?.map(author => ({
+              id: author.id,
+              name: author.name,
+              surname: author.surname,
+              fullName: `${author.name} ${author.surname}`,
+            })) || [],
+          categories:
+            book.categories?.map(category => ({
+              id: category.id,
+              name: category.name,
+            })) || [],
           createdAt: book.creationDate,
           updatedAt: book.updateDate,
         })),
@@ -161,10 +169,11 @@ export class UserController {
         },
       });
     } catch (error) {
-      console.error('Error fetching user books:', error);
-      res.status(500).json({ 
+      // TODO: Replace with proper logging
+      // console.error('Error fetching user books:', error);
+      res.status(500).json({
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -180,12 +189,7 @@ export class UserController {
       const userId = req.user.userId;
 
       // Get book counts by status
-      const [
-        totalBooks,
-        inProgressBooks,
-        pausedBooks,
-        finishedBooks,
-      ] = await Promise.all([
+      const [totalBooks, inProgressBooks, pausedBooks, finishedBooks] = await Promise.all([
         Book.count({ where: { userId } }),
         Book.count({ where: { userId, status: 'in progress' } }),
         Book.count({ where: { userId, status: 'paused' } }),
@@ -216,10 +220,11 @@ export class UserController {
         })),
       });
     } catch (error) {
-      console.error('Error fetching user stats:', error);
-      res.status(500).json({ 
+      // TODO: Replace with proper logging
+      // console.error('Error fetching user stats:', error);
+      res.status(500).json({
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -234,15 +239,16 @@ export class UserController {
 
       await UserService.deactivateUser(req.user.userId);
 
-      res.status(200).json({ 
+      res.status(200).json({
         message: 'Account deactivated successfully',
-        note: 'Your books will remain in the system but will no longer be accessible'
+        note: 'Your books will remain in the system but will no longer be accessible',
       });
     } catch (error) {
-      console.error('Error deactivating user account:', error);
-      res.status(500).json({ 
+      // TODO: Replace with proper logging
+      // console.error('Error deactivating user account:', error);
+      res.status(500).json({
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -264,15 +270,16 @@ export class UserController {
       // Note: Books will have their userId set to NULL due to the foreign key constraint
       await user.destroy();
 
-      res.status(200).json({ 
+      res.status(200).json({
         message: 'Account deleted successfully',
-        note: 'All personal data has been removed. Books will remain anonymized in the system.'
+        note: 'All personal data has been removed. Books will remain anonymized in the system.',
       });
     } catch (error) {
-      console.error('Error deleting user account:', error);
-      res.status(500).json({ 
+      // TODO: Replace with proper logging
+      // console.error('Error deleting user account:', error);
+      res.status(500).json({
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }

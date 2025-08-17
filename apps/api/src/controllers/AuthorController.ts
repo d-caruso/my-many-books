@@ -4,15 +4,16 @@
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import Joi from 'joi';
+import { Op, WhereOptions } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book } from '../models';
+import { AuthorAttributes, AuthorCreationAttributes } from '../models/Author';
 
 interface CreateAuthorRequest {
   name: string;
   surname: string;
   nationality?: string;
 }
-
 
 interface AuthorSearchFilters {
   name?: string;
@@ -28,7 +29,9 @@ export class AuthorController extends BaseController {
     nationality: Joi.string().max(255).optional().trim(),
   });
 
-  private readonly updateAuthorSchema = this.createAuthorSchema.fork(['name', 'surname'], (schema) => schema.optional());
+  private readonly updateAuthorSchema = this.createAuthorSchema.fork(['name', 'surname'], schema =>
+    schema.optional()
+  );
 
   private readonly searchFiltersSchema = Joi.object<AuthorSearchFilters>({
     name: Joi.string().max(200).optional().trim(),
@@ -60,18 +63,16 @@ export class AuthorController extends BaseController {
       });
 
       if (existingAuthor) {
-        return this.createErrorResponse(
-          'Author with this name already exists',
-          409
-        );
+        return this.createErrorResponse('Author with this name already exists', 409);
       }
 
       // Create author
-      const author = await Author.create({
+      const authorCreateData: AuthorCreationAttributes = {
         name: authorData.name,
         surname: authorData.surname,
         nationality: authorData.nationality || null,
-      } as any);
+      };
+      const author = await Author.create(authorCreateData);
 
       return this.createSuccessResponse(author, 'Author created successfully', undefined, 201);
     });
@@ -86,15 +87,12 @@ export class AuthorController extends BaseController {
 
       const includeBooks = this.getQueryParameter(event, 'includeBooks') === 'true';
 
-      const includeClause: any[] = [
-        { model: Book, as: 'books' }
-      ];
+      // Query for author with books if requested
+      const includeClause = includeBooks ? [{ model: Book, through: { attributes: [] } }] : [];
 
-      if (includeBooks) {
-        includeClause.push({ model: Book, through: { attributes: [] } });
-      }
-
-      const author = await Author.findByPk(Number(authorId));
+      const author = await Author.findByPk(Number(authorId), {
+        include: includeClause,
+      });
 
       if (!author) {
         return this.createErrorResponse('Author not found', 404);
@@ -129,11 +127,13 @@ export class AuthorController extends BaseController {
       const authorData = validation.value!;
 
       // Check if name is being changed and if it conflicts
-      if ((authorData.name || authorData.surname) && 
-          (authorData.name !== author.name || authorData.surname !== author.surname)) {
+      if (
+        (authorData.name || authorData.surname) &&
+        (authorData.name !== author.name || authorData.surname !== author.surname)
+      ) {
         const name = authorData.name ?? author.name;
         const surname = authorData.surname ?? author.surname;
-        
+
         const existingAuthor = await Author.findOne({
           where: {
             name,
@@ -142,19 +142,18 @@ export class AuthorController extends BaseController {
         });
 
         if (existingAuthor && existingAuthor.id !== author.id) {
-          return this.createErrorResponse(
-            'Author with this name already exists',
-            409
-          );
+          return this.createErrorResponse('Author with this name already exists', 409);
         }
       }
 
       // Update author
-      await author.update({
+      const updateData: Partial<AuthorAttributes> = {
         name: authorData.name ?? author.name,
         surname: authorData.surname ?? author.surname,
-        nationality: authorData.nationality !== undefined ? authorData.nationality : author.nationality,
-      } as any);
+        nationality:
+          authorData.nationality !== undefined ? authorData.nationality : author.nationality,
+      };
+      await author.update(updateData);
 
       return this.createSuccessResponse(author, 'Author updated successfully');
     });
@@ -175,10 +174,12 @@ export class AuthorController extends BaseController {
 
       // Check if author has books by querying the association
       const bookCount = await Book.count({
-        include: [{
-          model: Author,
-          where: { id: Number(authorId) },
-        }],
+        include: [
+          {
+            model: Author,
+            where: { id: Number(authorId) },
+          },
+        ],
       });
 
       if (bookCount > 0) {
@@ -199,11 +200,11 @@ export class AuthorController extends BaseController {
       const pagination = this.getPaginationParams(event);
       const filters = this.getQueryParameter(event, 'filters');
       const includeBooks = this.getQueryParameter(event, 'includeBooks') === 'true';
-      
+
       let searchFilters: AuthorSearchFilters = {};
       if (filters) {
         try {
-          searchFilters = JSON.parse(filters);
+          searchFilters = JSON.parse(filters) as AuthorSearchFilters;
           const filterValidation = this.validateRequest(searchFilters, this.searchFiltersSchema);
           if (!filterValidation.isValid) {
             return this.createErrorResponse('Invalid search filters', 400, filterValidation.errors);
@@ -214,40 +215,45 @@ export class AuthorController extends BaseController {
         }
       }
 
-      const whereClause: any = {};
+      const whereClause: WhereOptions<AuthorAttributes> = {};
 
       // Apply filters
       if (searchFilters.name) {
-        whereClause[require('sequelize').Op.or] = [
-          { name: { [require('sequelize').Op.iLike]: `%${searchFilters.name}%` } },
-          { surname: { [require('sequelize').Op.iLike]: `%${searchFilters.name}%` } },
-        ];
+        const nameFilter = { [Op.iLike]: `%${searchFilters.name}%` };
+        (whereClause as any)[Op.or] = [{ name: nameFilter }, { surname: nameFilter }];
       }
 
       if (searchFilters.nationality) {
-        whereClause.nationality = { [require('sequelize').Op.iLike]: `%${searchFilters.nationality}%` };
-      }
-
-      if (searchFilters.birthYear) {
-        whereClause.birthDate = {
-          [require('sequelize').Op.gte]: new Date(`${searchFilters.birthYear}-01-01`),
-          [require('sequelize').Op.lt]: new Date(`${searchFilters.birthYear + 1}-01-01`),
+        (whereClause as any).nationality = {
+          [Op.iLike]: `%${searchFilters.nationality}%`,
         };
       }
 
-      if (searchFilters.deathYear) {
-        whereClause.deathDate = {
-          [require('sequelize').Op.gte]: new Date(`${searchFilters.deathYear}-01-01`),
-          [require('sequelize').Op.lt]: new Date(`${searchFilters.deathYear + 1}-01-01`),
-        };
-      }
+      // Note: birthDate field not implemented in AuthorAttributes
+      // if (searchFilters.birthYear) {
+      //   (whereClause as any).birthDate = {
+      //     [Op.gte]: new Date(`${searchFilters.birthYear}-01-01`),
+      //     [Op.lt]: new Date(`${searchFilters.birthYear + 1}-01-01`),
+      //   };
+      // }
+
+      // Note: deathDate field not implemented in AuthorAttributes
+      // if (searchFilters.deathYear) {
+      //   (whereClause as any).deathDate = {
+      //     [Op.gte]: new Date(`${searchFilters.deathYear}-01-01`),
+      //     [Op.lt]: new Date(`${searchFilters.deathYear + 1}-01-01`),
+      //   };
+      // }
 
       const { count, rows } = await Author.findAndCountAll({
         where: whereClause,
         include: includeBooks ? [{ model: Book, through: { attributes: [] } }] : [],
         limit: pagination.limit,
         offset: pagination.offset,
-        order: [['surname', 'ASC'], ['name', 'ASC']],
+        order: [
+          ['surname', 'ASC'],
+          ['name', 'ASC'],
+        ],
       });
 
       const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);

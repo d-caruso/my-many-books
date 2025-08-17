@@ -8,7 +8,9 @@ import { requestLogger } from '../middleware/requestLogger';
 import { corsHandler } from '../middleware/cors';
 import { errorHandler } from '../middleware/errorHandler';
 
-const withMiddleware = (handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>) => {
+const withMiddleware = (
+  handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
+) => {
   return async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
       // Apply CORS first
@@ -28,7 +30,8 @@ const withMiddleware = (handler: (event: APIGatewayProxyEvent) => Promise<APIGat
         headers: {
           ...result.headers,
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+          'Access-Control-Allow-Headers':
+            'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
           'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
         },
       };
@@ -38,27 +41,38 @@ const withMiddleware = (handler: (event: APIGatewayProxyEvent) => Promise<APIGat
   };
 };
 
-export const createCategory = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return categoryController.createCategory(event);
-});
+export const createCategory = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return categoryController.createCategory(event);
+  }
+);
 
-export const getCategory = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return categoryController.getCategory(event);
-});
+export const getCategory = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return categoryController.getCategory(event);
+  }
+);
 
-export const updateCategory = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return categoryController.updateCategory(event);
-});
+export const updateCategory = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return categoryController.updateCategory(event);
+  }
+);
 
-export const deleteCategory = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return categoryController.deleteCategory(event);
-});
+export const deleteCategory = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return categoryController.deleteCategory(event);
+  }
+);
 
-export const listCategories = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return categoryController.listCategories(event);
-});
+export const listCategories = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return categoryController.listCategories(event);
+  }
+);
 
-export const getCategoryBooks = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return categoryController.getCategoryBooks(event);
-});
-
+export const getCategoryBooks = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return categoryController.getCategoryBooks(event);
+  }
+);

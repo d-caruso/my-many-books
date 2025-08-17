@@ -8,7 +8,9 @@ import { requestLogger } from '../middleware/requestLogger';
 import { corsHandler } from '../middleware/cors';
 import { errorHandler } from '../middleware/errorHandler';
 
-const withMiddleware = (handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>) => {
+const withMiddleware = (
+  handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
+) => {
   return async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
       // Apply CORS first
@@ -28,7 +30,8 @@ const withMiddleware = (handler: (event: APIGatewayProxyEvent) => Promise<APIGat
         headers: {
           ...result.headers,
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+          'Access-Control-Allow-Headers':
+            'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
           'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
         },
       };
@@ -38,26 +41,38 @@ const withMiddleware = (handler: (event: APIGatewayProxyEvent) => Promise<APIGat
   };
 };
 
-export const createAuthor = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return authorController.createAuthor(event);
-});
+export const createAuthor = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return authorController.createAuthor(event);
+  }
+);
 
-export const getAuthor = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return authorController.getAuthor(event);
-});
+export const getAuthor = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return authorController.getAuthor(event);
+  }
+);
 
-export const updateAuthor = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return authorController.updateAuthor(event);
-});
+export const updateAuthor = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return authorController.updateAuthor(event);
+  }
+);
 
-export const deleteAuthor = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return authorController.deleteAuthor(event);
-});
+export const deleteAuthor = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return authorController.deleteAuthor(event);
+  }
+);
 
-export const listAuthors = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return authorController.listAuthors(event);
-});
+export const listAuthors = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return authorController.listAuthors(event);
+  }
+);
 
-export const getAuthorBooks = withMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  return authorController.getAuthorBooks(event);
-});
+export const getAuthorBooks = withMiddleware(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    return authorController.getAuthorBooks(event);
+  }
+);

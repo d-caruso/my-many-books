@@ -36,12 +36,14 @@ export class RetryPolicy {
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
-        console.log(`Attempt ${attempt}/${this.config.maxAttempts} failed:`, lastError.message);
+
+        // TODO: Replace with proper logging
+        // console.log(`Attempt ${attempt}/${this.config.maxAttempts} failed:`, lastError.message);
 
         if (attempt < this.config.maxAttempts) {
           const delay = this.calculateDelay(attempt);
-          console.log(`Retrying in ${delay}ms...`);
+          // TODO: Replace with proper logging
+          // console.log(`Retrying in ${delay}ms...`);
           await this.delay(delay);
         }
       }
@@ -56,7 +58,8 @@ export class RetryPolicy {
   }
 
   private calculateDelay(attempt: number): number {
-    const exponentialDelay = this.config.baseDelay * Math.pow(this.config.backoffMultiplier, attempt - 1);
+    const exponentialDelay =
+      this.config.baseDelay * Math.pow(this.config.backoffMultiplier, attempt - 1);
     const cappedDelay = Math.min(exponentialDelay, this.config.maxDelay);
 
     if (this.config.jitter) {

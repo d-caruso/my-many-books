@@ -29,7 +29,7 @@ export class FallbackService {
     }
 
     const normalizedIsbn = validation.normalizedIsbn!;
-    
+
     // Check static data first
     const staticData = this.staticBookData.get(normalizedIsbn);
     if (staticData) {

@@ -29,10 +29,10 @@ const DEFAULT_CORS_OPTIONS: CorsOptions = {
 
 export const getCorsHeaders = (options: CorsOptions = {}): Record<string, string> => {
   const config = { ...DEFAULT_CORS_OPTIONS, ...options };
-  
+
   const headers: Record<string, string> = {
-    'Access-Control-Allow-Methods': Array.isArray(config.methods) 
-      ? config.methods.join(',') 
+    'Access-Control-Allow-Methods': Array.isArray(config.methods)
+      ? config.methods.join(',')
       : 'GET,POST,PUT,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': Array.isArray(config.allowedHeaders)
       ? config.allowedHeaders.join(',')
@@ -68,7 +68,7 @@ export const createCorsResponse = (
   corsOptions: CorsOptions = {}
 ): APIGatewayProxyResult => {
   const corsHeaders = getCorsHeaders(corsOptions);
-  
+
   return {
     statusCode,
     headers: {
@@ -89,7 +89,7 @@ export const addCorsToResponse = (
   corsOptions: CorsOptions = {}
 ): APIGatewayProxyResult => {
   const corsHeaders = getCorsHeaders(corsOptions);
-  
+
   return {
     ...response,
     headers: {
