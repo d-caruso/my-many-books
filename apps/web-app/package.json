@@ -68,6 +68,8 @@
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
+    "@nx/eslint": "^21.3.11",
+    "@nx/webpack": "^21.3.11",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.21",
     "babel-loader": "^8.4.1",
