@@ -119,8 +119,26 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build Affected Projects
-        run: npx nx run-many --target=build --projects=${{ needs.setup.outputs.affected-projects }}
+      - name: Build Projects to be Deployed
+        # Changed this step to only build projects with a build target.
+        # It now checks if the 'deploy-api' or 'deploy-web-app' flags are true
+        # and then builds only those specific projects.
+        run: |
+          BUILD_PROJECTS=""
+          if [ "${{ needs.setup.outputs.deploy-api }}" == "true" ]; then
+            BUILD_PROJECTS+="api,"
+          fi
+          if [ "${{ needs.setup.outputs.deploy-web-app }}" == "true" ]; then
+            BUILD_PROJECTS+="web-app,"
+          fi
+          
+          if [ -n "$BUILD_PROJECTS" ]; then
+            BUILD_PROJECTS=$(echo "$BUILD_PROJECTS" | sed 's/,$//')
+            echo "Building projects: $BUILD_PROJECTS"
+            npx nx run-many --target=build --projects="$BUILD_PROJECTS"
+          else
+            echo "No projects to build for deployment."
+          fi
 
       - name: Run Security Checks
         run: |
