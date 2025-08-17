@@ -27,12 +27,12 @@ export interface AuthProviderUser {
 
 // AWS Cognito provider implementation
 export class CognitoAuthProvider implements AuthProvider {
-  private region: string;
-  private userPoolId: string;
+  private _region: string;
+  private _userPoolId: string;
 
   constructor(region: string, userPoolId: string) {
-    this.region = region;
-    this.userPoolId = userPoolId;
+    this._region = region;
+    this._userPoolId = userPoolId;
   }
 
   async verifyToken(token: string): Promise<AuthProviderUser> {
@@ -65,12 +65,12 @@ export class CognitoAuthProvider implements AuthProvider {
 
 // Auth0 provider implementation (placeholder)
 export class Auth0Provider implements AuthProvider {
-  private domain: string;
-  private audience: string;
+  private _domain: string;
+  private _audience: string;
 
   constructor(domain: string, audience: string) {
-    this.domain = domain;
-    this.audience = audience;
+    this._domain = domain;
+    this._audience = audience;
   }
 
   async verifyToken(token: string): Promise<AuthProviderUser> {
