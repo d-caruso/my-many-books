@@ -52,5 +52,10 @@
         "linter": "eslint"
       }
     }
+  },
+  "projects": {
+    "my-many-books": {
+      "version": "0.0.1"
+    }
   }
 }
