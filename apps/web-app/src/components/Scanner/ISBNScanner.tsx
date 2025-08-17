@@ -74,6 +74,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
 
   return (
     <Box
+      data-testid="isbn-scanner-modal"
       sx={{
         position: 'fixed',
         inset: 0,
@@ -104,6 +105,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
             </Typography>
             <IconButton
               onClick={onClose}
+              data-testid="close-scanner"
               sx={{
                 color: 'white',
                 bgcolor: 'rgba(255, 255, 255, 0.1)',
@@ -133,6 +135,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
               <Box
                 component="video"
                 ref={videoRef}
+                data-testid="camera-view"
                 sx={{
                   width: '100%',
                   height: '100%',
@@ -146,6 +149,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
               
               {/* Scanning Overlay */}
               <Box
+                data-testid="scan-overlay"
                 sx={{
                   position: 'absolute',
                   inset: 0,
@@ -240,6 +244,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
                 {/* Instructions */}
                 <Paper
                   elevation={3}
+                  data-testid="scan-instructions"
                   sx={{
                     px: 3,
                     py: 1.5,
@@ -257,6 +262,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
             /* Permission/Error State */
             <Paper
               elevation={6}
+              data-testid="permission-error"
               sx={{
                 p: 4,
                 textAlign: 'center',
@@ -306,6 +312,34 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
                     <CameraIcon sx={{ mr: 1 }} />
                     <Typography variant="button">Request Access</Typography>
                   </IconButton>
+                  
+                  {/* Manual Entry Form */}
+                  <Box data-testid="manual-entry-form" sx={{ mt: 3, width: '100%' }}>
+                    <input 
+                      data-testid="manual-isbn-input" 
+                      placeholder="Enter ISBN manually"
+                      style={{ 
+                        padding: '8px', 
+                        marginRight: '8px', 
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        width: '200px'
+                      }}
+                    />
+                    <button 
+                      data-testid="submit-manual-isbn"
+                      style={{ 
+                        padding: '8px 16px', 
+                        backgroundColor: '#1976d2', 
+                        color: 'white', 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Submit
+                    </button>
+                  </Box>
                 </Stack>
               ) : (
                 <Stack spacing={3} alignItems="center">
@@ -342,6 +376,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
               {devices.length > 1 && (
                 <IconButton
                   onClick={switchCamera}
+                  data-testid="toggle-torch"
                   sx={{
                     color: 'white',
                     bgcolor: 'rgba(255, 255, 255, 0.1)',
@@ -372,6 +407,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
                 onClick={() => {
                   console.log('Manual input not implemented yet');
                 }}
+                data-testid="manual-entry-toggle"
                 sx={{
                   color: 'white',
                   bgcolor: 'rgba(255, 255, 255, 0.1)',

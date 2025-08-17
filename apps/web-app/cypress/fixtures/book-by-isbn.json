@@ -1,0 +1,12 @@
+{
+  "title": "The Hobbit",
+  "author": "J.R.R. Tolkien",
+  "isbn": "9780547928227",
+  "publishedDate": "2012-09-18",
+  "description": "A fantasy novel about the adventures of hobbit Bilbo Baggins",
+  "pageCount": 304,
+  "categories": ["Fantasy", "Adventure"],
+  "thumbnail": "https://example.com/hobbit-cover.jpg",
+  "language": "en",
+  "publisher": "Houghton Mifflin Harcourt"
+}

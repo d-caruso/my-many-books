@@ -24,7 +24,10 @@ export default defineConfig({
   component: {
     devServer: {
       framework: "react",
-      bundler: "webpack",
+      bundler: "vite",
+      viteConfig: require("./vite.config.ts"),
     },
+    specPattern: "cypress/component/**/*.cy.{js,jsx,ts,tsx}",
+    supportFile: "cypress/support/component.ts",
   },
 });

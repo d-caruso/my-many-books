@@ -2,14 +2,15 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Amplify } from 'aws-amplify';
 import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from '@aws-amplify/auth';
 import { User } from '../types';
+import { env } from '../config/env';
 
 // Configure Amplify (this should ideally be done in index.tsx or App.tsx)
 Amplify.configure({
   Auth: {
     Cognito: {
-      userPoolId: process.env.REACT_APP_COGNITO_USER_POOL_ID || '',
-      userPoolClientId: process.env.REACT_APP_COGNITO_USER_POOL_CLIENT_ID || '',
-      identityPoolId: process.env.REACT_APP_COGNITO_IDENTITY_POOL_ID || '', // Required but can be empty
+      userPoolId: env.COGNITO_USER_POOL_ID || '',
+      userPoolClientId: env.COGNITO_USER_POOL_CLIENT_ID || '',
+      identityPoolId: env.COGNITO_IDENTITY_POOL_ID || '', // Required but can be empty
       loginWith: {
         email: true,
       },
