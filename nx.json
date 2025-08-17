@@ -54,6 +54,39 @@
     }
   },
   "projects": {
+    "shared-navigation": {
+      "version": "0.0.1"
+    },
+    "shared-business": {
+      "version": "0.0.1"
+    },
+    "shared-design": {
+      "version": "0.0.1"
+    },
+    "ui-components": {
+      "version": "0.0.1"
+    },
+    "shared-forms": {
+      "version": "0.0.1"
+    },
+    "shared-hooks": {
+      "version": "0.0.1"
+    },
+    "shared-types": {
+      "version": "0.0.1"
+    },
+    "shared-utils": {
+      "version": "0.0.1"
+    },
+    "shared-api": {
+      "version": "0.0.1"
+    },
+    "web-app": {
+      "version": "0.0.1"
+    },
+    "api": {
+      "version": "0.0.1"
+    },
     "my-many-books": {
       "version": "0.0.1"
     }
