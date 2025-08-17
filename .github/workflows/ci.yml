@@ -24,10 +24,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Clear Node.js cache
+        run: |
+          sudo rm -rf /opt/hostedtoolcache/node || true
+          rm -rf ~/.npm || true
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+
+      - name: Verify Node.js version
+        run: node --version
 
       - name: Clear npm cache
         run: npm cache clean --force
@@ -247,6 +255,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: false
 
       - name: Install Newman
         run: npm install -g newman
