@@ -76,9 +76,9 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             PROJECTS="${{ github.event.inputs.projects }}"
           else
-            # Get the list of affected projects and remove "my-many-books"
-            PROJECTS=$(npx nx show projects --affected --base=origin/main~1 --head=HEAD | tr '\n' ',' | sed 's/,$//')
-            PROJECTS=$(echo "$PROJECTS" | sed 's/my-many-books,//g' | sed 's/,my-many-books//g' | sed 's/my-many-books//g')
+            # Get the list of affected projects and filter out "my-many-books" using grep.
+            # This is a more robust method than using sed.
+            PROJECTS=$(npx nx show projects --affected --base=origin/main~1 --head=HEAD | grep -v 'my-many-books' | tr '\n' ',' | sed 's/,$//')
           fi
           echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
           echo "Affected projects: $PROJECTS"
