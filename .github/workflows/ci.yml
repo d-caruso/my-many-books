@@ -43,6 +43,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'  # This is the default, but it's good practice to be explicit.
+          cache-key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
