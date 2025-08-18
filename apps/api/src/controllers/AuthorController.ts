@@ -7,7 +7,7 @@ import Joi from 'joi';
 import { Op, WhereOptions } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book } from '../models';
-import { AuthorAttributes, AuthorCreationAttributes } from '../models/Author';
+import { AuthorAttributes } from '../models/Author';
 
 interface CreateAuthorRequest {
   name: string;
@@ -67,12 +67,11 @@ export class AuthorController extends BaseController {
       }
 
       // Create author
-      const authorCreateData: AuthorCreationAttributes = {
+      const author = await Author.createAuthor({
         name: authorData.name,
         surname: authorData.surname,
         nationality: authorData.nationality || null,
-      };
-      const author = await Author.create(authorCreateData);
+      });
 
       return this.createSuccessResponse(author, 'Author created successfully', undefined, 201);
     });
@@ -147,13 +146,12 @@ export class AuthorController extends BaseController {
       }
 
       // Update author
-      const updateData: Partial<AuthorAttributes> = {
-        name: authorData.name ?? author.name,
-        surname: authorData.surname ?? author.surname,
-        nationality:
-          authorData.nationality !== undefined ? authorData.nationality : author.nationality,
-      };
-      await author.update(updateData);
+      const updateFields: { [key: string]: string | null } = {};
+      if (authorData.name !== undefined) updateFields.name = authorData.name;
+      if (authorData.surname !== undefined) updateFields.surname = authorData.surname;
+      if (authorData.nationality !== undefined) updateFields.nationality = authorData.nationality;
+
+      await author.update(updateFields);
 
       return this.createSuccessResponse(author, 'Author updated successfully');
     });
@@ -220,13 +218,17 @@ export class AuthorController extends BaseController {
       // Apply filters
       if (searchFilters.name) {
         const nameFilter = { [Op.iLike]: `%${searchFilters.name}%` };
-        (whereClause as any)[Op.or] = [{ name: nameFilter }, { surname: nameFilter }];
+        Object.assign(whereClause, {
+          [Op.or]: [{ name: nameFilter }, { surname: nameFilter }],
+        });
       }
 
       if (searchFilters.nationality) {
-        (whereClause as any).nationality = {
-          [Op.iLike]: `%${searchFilters.nationality}%`,
-        };
+        Object.assign(whereClause, {
+          nationality: {
+            [Op.iLike]: `%${searchFilters.nationality}%`,
+          },
+        });
       }
 
       // Note: birthDate field not implemented in AuthorAttributes
@@ -245,16 +247,20 @@ export class AuthorController extends BaseController {
       //   };
       // }
 
-      const { count, rows } = await Author.findAndCountAll({
+      const includeClause = includeBooks ? [{ model: Book, through: { attributes: [] } }] : [];
+
+      const findResult = await Author.findAndCountAll({
         where: whereClause,
-        include: includeBooks ? [{ model: Book, through: { attributes: [] } }] : [],
+        include: includeClause,
         limit: pagination.limit,
         offset: pagination.offset,
         order: [
           ['surname', 'ASC'],
           ['name', 'ASC'],
-        ],
+        ] as const,
       });
+      const count = findResult.count;
+      const rows = findResult.rows;
 
       const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
 
