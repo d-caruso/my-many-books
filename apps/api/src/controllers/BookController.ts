@@ -346,10 +346,12 @@ export class BookController extends BaseController {
 
       // Note: publishedDate field not matching editionDate in BookAttributes
       if (searchFilters.publishedYear) {
-        (whereClause as any).editionDate = {
-          [Op.gte]: new Date(`${searchFilters.publishedYear}-01-01`),
-          [Op.lt]: new Date(`${searchFilters.publishedYear + 1}-01-01`),
-        };
+        Object.assign(whereClause, {
+          editionDate: {
+            [Op.gte]: new Date(`${searchFilters.publishedYear}-01-01`),
+            [Op.lt]: new Date(`${searchFilters.publishedYear + 1}-01-01`),
+          },
+        });
       }
 
       // Author filter
@@ -548,7 +550,7 @@ export class BookController extends BaseController {
       const whereClause: WhereOptions<BookAttributes> = { userId: req.user.userId };
 
       if (status && ['in progress', 'paused', 'finished'].includes(status)) {
-        (whereClause as any).status = status;
+        Object.assign(whereClause, { status });
       }
 
       if (search) {
@@ -602,7 +604,7 @@ export class BookController extends BaseController {
         return;
       }
 
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const bookId = Number(id);
 
       if (!bookId || isNaN(bookId)) {
@@ -657,6 +659,17 @@ export class BookController extends BaseController {
         return;
       }
 
+      const requestBody = req.body as {
+        title?: string;
+        isbnCode?: string;
+        editionNumber?: number;
+        editionDate?: string;
+        status?: string;
+        notes?: string;
+        authorIds?: number[];
+        categoryIds?: number[];
+      };
+
       const {
         title,
         isbnCode,
@@ -666,7 +679,7 @@ export class BookController extends BaseController {
         notes,
         authorIds = [],
         categoryIds = [],
-      } = req.body;
+      } = requestBody;
 
       if (!title) {
         res.status(400).json({ error: 'Title is required' });
@@ -755,7 +768,7 @@ export class BookController extends BaseController {
         return;
       }
 
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const bookId = Number(id);
 
       if (!bookId || isNaN(bookId)) {
@@ -775,7 +788,14 @@ export class BookController extends BaseController {
         return;
       }
 
-      const { title, editionNumber, editionDate, status, notes } = req.body;
+      const updateBody = req.body as {
+        title?: string;
+        editionNumber?: number;
+        editionDate?: string;
+        status?: string;
+        notes?: string;
+      };
+      const { title, editionNumber, editionDate, status, notes } = updateBody;
 
       await book.update({
         ...(title && { title }),
@@ -820,7 +840,7 @@ export class BookController extends BaseController {
         return;
       }
 
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const bookId = Number(id);
 
       if (!bookId || isNaN(bookId)) {
@@ -860,7 +880,7 @@ export class BookController extends BaseController {
         return;
       }
 
-      const { isbn } = req.params;
+      const { isbn } = req.params as { isbn: string };
 
       if (!isbn || !validateIsbn(isbn).isValid) {
         res.status(400).json({ error: 'Invalid ISBN format' });
