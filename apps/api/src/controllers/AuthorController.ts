@@ -213,22 +213,34 @@ export class AuthorController extends BaseController {
         }
       }
 
-      const whereClause: WhereOptions<AuthorAttributes> = {};
+      // Build where clause conditionally
+      let whereClause: WhereOptions<AuthorAttributes> = {};
 
-      // Apply filters
-      if (searchFilters.name) {
+      if (searchFilters.name && searchFilters.nationality) {
         const nameFilter = { [Op.iLike]: `%${searchFilters.name}%` };
-        Object.assign(whereClause, {
+        whereClause = {
+          [Op.and]: [
+            {
+              [Op.or]: [{ name: nameFilter }, { surname: nameFilter }],
+            },
+            {
+              nationality: {
+                [Op.iLike]: `%${searchFilters.nationality}%`,
+              },
+            },
+          ],
+        };
+      } else if (searchFilters.name) {
+        const nameFilter = { [Op.iLike]: `%${searchFilters.name}%` };
+        whereClause = {
           [Op.or]: [{ name: nameFilter }, { surname: nameFilter }],
-        });
-      }
-
-      if (searchFilters.nationality) {
-        Object.assign(whereClause, {
+        };
+      } else if (searchFilters.nationality) {
+        whereClause = {
           nationality: {
             [Op.iLike]: `%${searchFilters.nationality}%`,
           },
-        });
+        };
       }
 
       // Note: birthDate field not implemented in AuthorAttributes
@@ -249,8 +261,10 @@ export class AuthorController extends BaseController {
 
       const includeClause = includeBooks ? [{ model: Book, through: { attributes: [] } }] : [];
 
-      const findResult = await Author.findAndCountAll({
-        where: whereClause,
+      const queryWhere = whereClause as Record<string | symbol, unknown>;
+
+      const authors = await Author.findAll({
+        where: queryWhere,
         include: includeClause,
         limit: pagination.limit,
         offset: pagination.offset,
@@ -259,12 +273,15 @@ export class AuthorController extends BaseController {
           ['name', 'ASC'],
         ] as const,
       });
-      const count = findResult.count;
-      const rows = findResult.rows;
 
-      const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
+      const totalCount = await Author.count({
+        where: queryWhere,
+        include: includeClause,
+      });
 
-      return this.createSuccessResponse(rows, undefined, meta);
+      const meta = this.createPaginationMeta(pagination.page, pagination.limit, totalCount);
+
+      return this.createSuccessResponse(authors, undefined, meta);
     });
   }
 

@@ -5,21 +5,27 @@
 
 import { Router } from 'express';
 import { Response } from 'express';
+import { Op, WhereOptions } from 'sequelize';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { Category } from '../models';
+import { CategoryAttributes } from '../models/interfaces/ModelInterfaces';
 
 const router = Router();
 
 // List all categories with optional search
 router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { search, page = 1, limit = 50 } = req.query;
+    const queryParams = req.query as {
+      search?: string;
+      page?: string;
+      limit?: string;
+    };
+    const { search, page = '1', limit = '50' } = queryParams;
     const offset = (Number(page) - 1) * Number(limit);
 
-    let whereClause: any = {};
+    let whereClause: WhereOptions<CategoryAttributes> = {};
 
     if (search) {
-      const { Op } = require('sequelize');
       whereClause = {
         name: { [Op.iLike]: `%${search}%` },
       };
@@ -53,7 +59,7 @@ router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> 
 // Get category by ID
 router.get('/:id', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const categoryId = Number(id);
 
     if (!categoryId || isNaN(categoryId)) {
@@ -81,7 +87,8 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response): Promise<voi
 // Create new category
 router.post('/', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { name } = req.body;
+    const requestBody = req.body as { name?: string };
+    const { name } = requestBody;
 
     if (!name) {
       res.status(400).json({ error: 'Category name is required' });
@@ -98,7 +105,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response): Promise<void>
       return;
     }
 
-    const category = await Category.create({ name } as any);
+    const category = await Category.create({ name });
 
     res.status(201).json(category.toJSON());
   } catch (error) {
@@ -113,7 +120,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response): Promise<void>
 // Update category
 router.put('/:id', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const categoryId = Number(id);
 
     if (!categoryId || isNaN(categoryId)) {
@@ -128,7 +135,8 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response): Promise<voi
       return;
     }
 
-    const { name } = req.body;
+    const updateBody = req.body as { name?: string };
+    const { name } = updateBody;
 
     if (!name) {
       res.status(400).json({ error: 'Category name is required' });
@@ -162,7 +170,7 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response): Promise<voi
 // Delete category
 router.delete('/:id', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const categoryId = Number(id);
 
     if (!categoryId || isNaN(categoryId)) {

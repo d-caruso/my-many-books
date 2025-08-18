@@ -15,27 +15,21 @@ export class DatabaseUtils {
       return DatabaseUtils.sequelize;
     }
 
-    try {
-      // Get database connection
-      DatabaseUtils.sequelize = DatabaseConnection.getInstance();
+    // Get database connection
+    DatabaseUtils.sequelize = DatabaseConnection.getInstance();
 
-      // Test connection
-      const isConnected = await DatabaseConnection.testConnection();
-      if (!isConnected) {
-        throw new Error('Failed to establish database connection');
-      }
-
-      // Initialize models
-      ModelManager.initialize(DatabaseUtils.sequelize);
-
-      // TODO: Replace with proper logging
-      // console.log('Database initialization completed successfully');
-      return DatabaseUtils.sequelize;
-    } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Database initialization failed:', error);
-      throw error;
+    // Test connection
+    const isConnected = await DatabaseConnection.testConnection();
+    if (!isConnected) {
+      throw new Error('Failed to establish database connection');
     }
+
+    // Initialize models
+    ModelManager.initialize(DatabaseUtils.sequelize);
+
+    // TODO: Replace with proper logging
+    // console.log('Database initialization completed successfully');
+    return DatabaseUtils.sequelize;
   }
 
   static async syncDatabase(options: { force?: boolean; alter?: boolean } = {}): Promise<void> {
@@ -43,22 +37,16 @@ export class DatabaseUtils {
       throw new Error('Database not initialized. Call initialize() first.');
     }
 
-    try {
-      const { force = false, alter = false } = options;
+    const { force = false, alter = false } = options;
 
-      await DatabaseUtils.sequelize.sync({ force, alter });
+    await DatabaseUtils.sequelize.sync({ force, alter });
 
-      // TODO: Replace with proper logging
-      // console.log('Database synchronization completed successfully', {
-      //   force,
-      //   alter,
-      //   tablesCreated: force ? 'all recreated' : 'created if not exists',
-      // });
-    } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Database synchronization failed:', error);
-      throw error;
-    }
+    // TODO: Replace with proper logging
+    // console.log('Database synchronization completed successfully', {
+    //   force,
+    //   alter,
+    //   tablesCreated: force ? 'all recreated' : 'created if not exists',
+    // });
   }
 
   static async seedDatabase(): Promise<void> {
@@ -66,32 +54,26 @@ export class DatabaseUtils {
       throw new Error('Database not initialized. Call initialize() first.');
     }
 
-    try {
-      // TODO: Replace with proper logging
-      // console.log('Starting database seeding...');
+    // TODO: Replace with proper logging
+    // console.log('Starting database seeding...');
 
-      // Seed authors
-      const authors = await DatabaseUtils.seedAuthors();
-      // TODO: Replace with proper logging
-      // console.log(`Seeded ${authors.length} authors`);
+    // Seed authors
+    const authors = await DatabaseUtils.seedAuthors();
+    // TODO: Replace with proper logging
+    // console.log(`Seeded ${authors.length} authors`);
 
-      // Seed categories
-      const categories = await DatabaseUtils.seedCategories();
-      // TODO: Replace with proper logging
-      // console.log(`Seeded ${categories.length} categories`);
+    // Seed categories
+    const categories = await DatabaseUtils.seedCategories();
+    // TODO: Replace with proper logging
+    // console.log(`Seeded ${categories.length} categories`);
 
-      // Seed books with associations
-      await DatabaseUtils.seedBooks(authors, categories);
-      // TODO: Replace with proper logging
-      // console.log(`Seeded books`);
+    // Seed books with associations
+    await DatabaseUtils.seedBooks(authors, categories);
+    // TODO: Replace with proper logging
+    // console.log(`Seeded books`);
 
-      // TODO: Replace with proper logging
-      // console.log('Database seeding completed successfully');
-    } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Database seeding failed:', error);
-      throw error;
-    }
+    // TODO: Replace with proper logging
+    // console.log('Database seeding completed successfully');
   }
 
   private static async seedAuthors(): Promise<Author[]> {

@@ -2,7 +2,7 @@
 // src/services/isbnService.ts
 // ================================================================
 
-import { OpenLibraryClient, openLibraryClient } from './openLibraryClient';
+import { OpenLibraryClient, openLibraryClient, FetchBookResult } from './openLibraryClient';
 import { DataTransformer } from './dataTransformer';
 import { FallbackService } from './fallbackService';
 import { CircuitBreaker, CircuitBreakerConfig } from '@/utils/circuitBreaker';
@@ -148,7 +148,7 @@ export class IsbnService {
     book?: TransformedBookData;
     error?: string;
   }> {
-    const operation = async (): Promise<{ success: boolean; book?: any; error?: string }> => {
+    const operation = async (): Promise<FetchBookResult> => {
       if (this.config.enableRetry) {
         const retryResult = await this.retryPolicy.execute(async () => {
           return await this.client.fetchBookByIsbn(isbn);
@@ -170,14 +170,10 @@ export class IsbnService {
     };
 
     try {
-      let apiResult: { success: boolean; book?: any; error?: string };
+      let apiResult: FetchBookResult;
 
       if (this.config.enableCircuitBreaker) {
-        apiResult = (await this.circuitBreaker.execute(operation)) as {
-          success: boolean;
-          book?: any;
-          error?: string;
-        };
+        apiResult = await this.circuitBreaker.execute(operation);
       } else {
         apiResult = await operation();
       }

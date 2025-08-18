@@ -222,7 +222,19 @@ export class OpenLibraryClient {
 
       return {
         success: true,
-        books: (response.data as { docs?: any[] }).docs || [],
+        books:
+          (
+            response.data as {
+              docs?: Array<{
+                title?: string;
+                author_name?: string[];
+                isbn?: string[];
+                publish_year?: number[];
+                publisher?: string[];
+                cover_i?: number;
+              }>;
+            }
+          ).docs || [],
       };
     } catch (error) {
       // TODO: Replace with proper logging
