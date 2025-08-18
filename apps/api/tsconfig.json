@@ -25,6 +25,7 @@
     "noUncheckedIndexedAccess": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
+    "types": ["node", "jest"],
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],

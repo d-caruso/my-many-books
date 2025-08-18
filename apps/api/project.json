@@ -12,7 +12,7 @@
         "compiler": "tsc",
         "outputPath": "dist/apps/api",
         "main": "apps/api/src/app.ts",
-        "tsConfig": "apps/api/tsconfig.app.json",
+        "tsConfig": "apps/api/tsconfig.json",
         "assets": ["apps/api/src/assets"]
       },
       "configurations": {
@@ -56,6 +56,13 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["apps/api/**/*.ts"]
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "apps/api"
       }
     },
     "deploy": {

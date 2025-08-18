@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
+    "build:check": "tsc --noEmit",
     "dev": "nodemon --exec ts-node src/handlers/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -16,6 +17,8 @@
     "test:all": "npm run test:unit && npm run test:integration",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run lint",
     "format": "prettier --write src/**/*.ts",
     "deploy": "serverless deploy",
     "deploy:dev": "serverless deploy --stage dev",
