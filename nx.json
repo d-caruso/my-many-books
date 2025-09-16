@@ -55,37 +55,37 @@
   },
   "projects": {
     "shared-navigation": {
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     "shared-business": {
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     "shared-design": {
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     "ui-components": {
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     "shared-forms": {
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     "shared-hooks": {
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     "shared-types": {
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     "shared-utils": {
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     "shared-api": {
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     "web-app": {
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     "api": {
-      "version": "1.0.0"
+      "version": "0.1.0"
     }
   }
 }

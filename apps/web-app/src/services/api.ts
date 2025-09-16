@@ -3,9 +3,26 @@
  * Replaces the old api.ts with modern monorepo architecture
  */
 
-import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
+// TODO: Revert to shared-api imports once Nx workspace is properly configured
+// import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
+import { createApiClient } from '../__mocks__/@my-many-books/shared-api';
 import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
 import { BookFormData } from '../components/Book/BookForm';
+
+// Define interfaces locally until Nx workspace configuration is fixed
+interface HttpClient {
+  get<T>(url: string, config?: any): Promise<T>;
+  post<T>(url: string, data?: any, config?: any): Promise<T>;
+  put<T>(url: string, data?: any, config?: any): Promise<T>;
+  delete<T>(url: string, config?: any): Promise<T>;
+}
+
+interface ApiClientConfig {
+  baseURL: string;
+  timeout?: number;
+  getAuthToken?: () => string | null;
+  onUnauthorized?: () => void;
+}
 
 // Axios adapter for web platform
 class AxiosHttpClient implements HttpClient {
@@ -440,5 +457,4 @@ export const authorAPI = {
   createAuthor: apiService.createAuthor.bind(apiService),
 };
 
-// Also export individual API clients for modern usage
-export const { books: bookAPINew, authors: authorAPINew, categories: categoryAPINew, users: userAPI } = apiService.apiClient;
+// Individual API clients are accessed through the main apiService instance

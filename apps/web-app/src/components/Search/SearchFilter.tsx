@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { SearchFilters } from '../../types';
 
 interface SearchFilterProps {
   onSearchChange: (query: string) => void;
-  onFilterChange: (filters: any) => void;
+  onFilterChange: (filters: SearchFilters) => void;
   onSortChange: (sort: { field: string; direction: 'asc' | 'desc' }) => void;
   categories: string[];
   authors: string[];
@@ -21,7 +22,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<any>({});
+  const [filters, setFilters] = useState<SearchFilters>({});
   
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
@@ -34,7 +35,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
     return () => clearTimeout(timeoutId);
   }, [onSearchChange]);
 
-  const handleFilterChange = useCallback((newFilters: any) => {
+  const handleFilterChange = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
     onFilterChange(newFilters);
   }, [onFilterChange]);
@@ -109,46 +110,31 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
             <label className="block text-sm font-medium mb-2">Status</label>
             <select
               data-testid="status-filter"
-              onChange={(e) => handleFilterChange({ ...filters, status: e.target.value })}
+              onChange={(e) => handleFilterChange({ ...filters, status: e.target.value === 'all' ? undefined : e.target.value as 'in progress' | 'paused' | 'finished' })}
               className="w-full px-3 py-2 border rounded"
             >
               <option value="all">All Books</option>
-              <option value="reading">Currently Reading</option>
-              <option value="read">Read</option>
-              <option value="want-to-read">Want to Read</option>
+              <option value="in progress">In Progress</option>
+              <option value="paused">Paused</option>
+              <option value="finished">Finished</option>
             </select>
           </div>
 
           {/* Category Filter */}
           <div>
-            <label className="block text-sm font-medium mb-2">Categories</label>
-            <div data-testid="category-filter" className="space-y-2">
-              {categories.map((category) => (
-                <label key={category} className="flex items-center">
-                  <input
-                    data-testid="category-option"
-                    type="checkbox"
-                    value={category}
-                    onChange={(e) => {
-                      const selectedCategories = filters.categories || [];
-                      if (e.target.checked) {
-                        handleFilterChange({ 
-                          ...filters, 
-                          categories: [...selectedCategories, category] 
-                        });
-                      } else {
-                        handleFilterChange({
-                          ...filters,
-                          categories: selectedCategories.filter((c: string) => c !== category)
-                        });
-                      }
-                    }}
-                    className="mr-2"
-                  />
+            <label className="block text-sm font-medium mb-2">Category</label>
+            <select
+              data-testid="category-filter"
+              onChange={(e) => handleFilterChange({ ...filters, categoryId: e.target.value ? parseInt(e.target.value) : undefined })}
+              className="w-full px-3 py-2 border rounded"
+            >
+              <option value="">All Categories</option>
+              {categories.map((category, index) => (
+                <option key={category} value={index + 1}>
                   {category}
-                </label>
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
           {/* Author Filter */}
@@ -156,32 +142,16 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
             <label className="block text-sm font-medium mb-2">Author</label>
             <select
               data-testid="author-filter"
-              onChange={(e) => handleFilterChange({ ...filters, author: e.target.value })}
+              onChange={(e) => handleFilterChange({ ...filters, authorId: e.target.value ? parseInt(e.target.value) : undefined })}
               className="w-full px-3 py-2 border rounded"
             >
               <option value="">All Authors</option>
-              {authors.map((author) => (
-                <option key={author} value={author}>{author}</option>
+              {authors.map((author, index) => (
+                <option key={author} value={index + 1}>{author}</option>
               ))}
             </select>
           </div>
 
-          {/* Rating Filter */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Minimum Rating</label>
-            <select
-              data-testid="min-rating"
-              onChange={(e) => handleFilterChange({ ...filters, minRating: parseInt(e.target.value) })}
-              className="w-full px-3 py-2 border rounded"
-            >
-              <option value="">Any Rating</option>
-              <option value="1">1+ Stars</option>
-              <option value="2">2+ Stars</option>
-              <option value="3">3+ Stars</option>
-              <option value="4">4+ Stars</option>
-              <option value="5">5 Stars</option>
-            </select>
-          </div>
 
           {/* Clear Filters */}
           <button

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Book } from '../../types';
+import { Book, Author, Category } from '../../types';
 
 interface BookDetailsProps {
   book: Book;
@@ -20,7 +20,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const formatAuthors = (authors?: any[]) => {
+  const formatAuthors = (authors?: Author[]) => {
     if (!authors || authors.length === 0) return 'Unknown Author';
     return authors.map(author => 
       typeof author === 'string' ? author : `${author.name} ${author.surname}`
@@ -193,7 +193,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
               <div>
                 <h3 className="text-sm font-medium text-text-secondary mb-2">Categories</h3>
                 <div className="flex flex-wrap gap-2">
-                  {book.categories.map((category) => (
+                  {book.categories.map((category: Category) => (
                     <span
                       key={category.id}
                       className="px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full"

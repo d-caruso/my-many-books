@@ -1,5 +1,6 @@
 {
   "name": "shared-navigation",
+  "version": "0.1.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/shared-navigation/src",
   "projectType": "library",

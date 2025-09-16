@@ -18,7 +18,7 @@ import {
   Delete as DeleteIcon,
   MenuBook as BookIcon
 } from '@mui/icons-material';
-import { Book } from '../../types';
+import { Book, Author, Category } from '../../types';
 
 interface BookCardProps {
   book: Book;
@@ -39,7 +39,7 @@ export const BookCard: React.FC<BookCardProps> = ({
   showActions = true,
   compact = false
 }) => {
-  const formatAuthors = (authors?: any[]) => {
+  const formatAuthors = (authors?: Author[]) => {
     if (!authors || authors.length === 0) return 'Unknown Author';
     return authors.map(author => 
       typeof author === 'string' ? author : `${author.name} ${author.surname}`
@@ -307,7 +307,7 @@ export const BookCard: React.FC<BookCardProps> = ({
         {book.categories && book.categories.length > 0 && (
           <Box mb={2}>
             <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-              {book.categories.slice(0, 2).map((category) => (
+              {book.categories.slice(0, 2).map((category: Category) => (
                 <Chip
                   key={category.id}
                   label={category.name}
