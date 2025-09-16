@@ -3,6 +3,20 @@ const { InjectManifest } = require('workbox-webpack-plugin');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 
 module.exports = {
+  babel: {
+    loaderOptions: (babelLoaderOptions) => {
+      // Force remove react-refresh plugin in ALL environments
+      if (babelLoaderOptions.plugins) {
+        babelLoaderOptions.plugins = babelLoaderOptions.plugins.filter(plugin => {
+          const pluginName = Array.isArray(plugin) ? plugin[0] : plugin;
+          const isReactRefresh = typeof pluginName === 'string' && 
+            (pluginName.includes('react-refresh') || pluginName.includes('ReactRefresh'));
+          return !isReactRefresh;
+        });
+      }
+      return babelLoaderOptions;
+    },
+  },
   style: {
     postcss: {
       plugins: [
