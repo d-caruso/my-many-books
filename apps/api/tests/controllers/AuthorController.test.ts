@@ -2,31 +2,32 @@
 // tests/controllers/AuthorController.test.ts
 // ================================================================
 
-import { APIGatewayProxyEvent } from 'aws-lambda';
 import { AuthorController } from '../../src/controllers/AuthorController';
 import { Author, Book } from '../../src/models';
+
+// Universal request interface for testing
+interface UniversalRequest {
+  body?: any;
+  queryStringParameters?: { [key: string]: string | undefined };
+  pathParameters?: { [key: string]: string | undefined };
+  user?: { userId: number };
+}
 
 // Mock dependencies
 jest.mock('../../src/models');
 
 describe('AuthorController', () => {
   let authorController: AuthorController;
-  let mockEvent: Partial<APIGatewayProxyEvent>;
+  let mockRequest: UniversalRequest;
 
   beforeEach(() => {
     authorController = new AuthorController();
     jest.clearAllMocks();
 
-    mockEvent = {
-      httpMethod: 'GET',
-      resource: '/authors',
-      pathParameters: null,
-      queryStringParameters: null,
-      headers: {},
-      body: null,
-      requestContext: {
-        requestId: 'test-request-id',
-      } as any,
+    mockRequest = {
+      queryStringParameters: {},
+      pathParameters: {},
+      body: undefined,
     };
   });
 
@@ -43,16 +44,14 @@ describe('AuthorController', () => {
       (Author.findOne as jest.Mock).mockResolvedValue(null);
       (Author.create as jest.Mock).mockResolvedValue(mockAuthor);
 
-      mockEvent.httpMethod = 'POST';
-      mockEvent.body = JSON.stringify(validAuthorData);
+      mockRequest.body = JSON.stringify(validAuthorData);
 
-      const result = await authorController.createAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.createAuthor(mockRequest);
 
       expect(result.statusCode).toBe(201);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(true);
-      expect(body.message).toBe('Author created successfully');
-      expect(body.data).toEqual(mockAuthor);
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Author created successfully');
+      expect(result.data).toEqual(mockAuthor);
     });
 
     it('should create author with name and surname', async () => {
@@ -71,14 +70,12 @@ describe('AuthorController', () => {
       (Author.findOne as jest.Mock).mockResolvedValue(null);
       (Author.create as jest.Mock).mockResolvedValue(expectedAuthor);
 
-      mockEvent.httpMethod = 'POST';
-      mockEvent.body = JSON.stringify(authorData);
+      mockRequest.body = JSON.stringify(authorData);
 
-      const result = await authorController.createAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.createAuthor(mockRequest);
 
       expect(result.statusCode).toBe(201);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(true);
+      expect(result.success).toBe(true);
       expect(Author.create).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Jane',
@@ -88,29 +85,25 @@ describe('AuthorController', () => {
     });
 
     it('should return 400 for missing request body', async () => {
-      mockEvent.httpMethod = 'POST';
-      mockEvent.body = null;
+      mockRequest.body = null;
 
-      const result = await authorController.createAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.createAuthor(mockRequest);
 
       expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe('Request body is required');
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Request body is required');
     });
 
     it('should return 400 for validation errors', async () => {
       const invalidData = { name: 'John' }; // Missing required surname
 
-      mockEvent.httpMethod = 'POST';
-      mockEvent.body = JSON.stringify(invalidData);
+      mockRequest.body = JSON.stringify(invalidData);
 
-      const result = await authorController.createAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.createAuthor(mockRequest);
 
       expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe('Validation failed');
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Validation failed');
     });
 
     it('should return 409 for duplicate author name', async () => {
@@ -120,15 +113,13 @@ describe('AuthorController', () => {
         surname: 'Doe',
       });
 
-      mockEvent.httpMethod = 'POST';
-      mockEvent.body = JSON.stringify(validAuthorData);
+      mockRequest.body = JSON.stringify(validAuthorData);
 
-      const result = await authorController.createAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.createAuthor(mockRequest);
 
       expect(result.statusCode).toBe(409);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe('Author with this name already exists');
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Author with this name already exists');
     });
 
     it('should validate basic author data', async () => {
@@ -138,15 +129,16 @@ describe('AuthorController', () => {
         nationality: 'A'.repeat(300), // Too long
       };
 
-      mockEvent.httpMethod = 'POST';
-      mockEvent.body = JSON.stringify(invalidData);
+      // Mock that author doesn't exist first (validation should happen before duplicate check)
+      (Author.findOne as jest.Mock).mockResolvedValue(null);
 
-      const result = await authorController.createAuthor(mockEvent as APIGatewayProxyEvent);
+      mockRequest.body = JSON.stringify(invalidData);
+
+      const result = await authorController.createAuthor(mockRequest);
 
       expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe('Validation failed');
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Validation failed');
     });
   });
 
@@ -161,14 +153,13 @@ describe('AuthorController', () => {
 
       (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
 
-      mockEvent.pathParameters = { id: '1' };
+      mockRequest.pathParameters = { id: '1' };
 
-      const result = await authorController.getAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.getAuthor(mockRequest);
 
       expect(result.statusCode).toBe(200);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(true);
-      expect(body.data).toEqual(mockAuthor);
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockAuthor);
     });
 
     it('should get author with books when includeBooks=true', async () => {
@@ -181,39 +172,36 @@ describe('AuthorController', () => {
 
       (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
 
-      mockEvent.pathParameters = { id: '1' };
-      mockEvent.queryStringParameters = { includeBooks: 'true' };
+      mockRequest.pathParameters = { id: '1' };
+      mockRequest.queryStringParameters = { includeBooks: 'true' };
 
-      const result = await authorController.getAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.getAuthor(mockRequest);
 
       expect(result.statusCode).toBe(200);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(true);
-      expect(body.data.Books).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.data.Books).toBeDefined();
     });
 
     it('should return 400 for invalid author ID', async () => {
-      mockEvent.pathParameters = { id: 'invalid' };
+      mockRequest.pathParameters = { id: 'invalid' };
 
-      const result = await authorController.getAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.getAuthor(mockRequest);
 
       expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe('Valid author ID is required');
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Valid author ID is required');
     });
 
     it('should return 404 for non-existent author', async () => {
       (Author.findByPk as jest.Mock).mockResolvedValue(null);
 
-      mockEvent.pathParameters = { id: '999' };
+      mockRequest.pathParameters = { id: '999' };
 
-      const result = await authorController.getAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.getAuthor(mockRequest);
 
       expect(result.statusCode).toBe(404);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe('Author not found');
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Author not found');
     });
   });
 
@@ -233,16 +221,15 @@ describe('AuthorController', () => {
 
       (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
 
-      mockEvent.httpMethod = 'PUT';
-      mockEvent.pathParameters = { id: '1' };
-      mockEvent.body = JSON.stringify(updateData);
+      // 'PUT';
+      mockRequest.pathParameters = { id: '1' };
+      mockRequest.body = JSON.stringify(updateData);
 
-      const result = await authorController.updateAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.updateAuthor(mockRequest);
 
       expect(result.statusCode).toBe(200);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(true);
-      expect(body.message).toBe('Author updated successfully');
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Author updated successfully');
       expect(mockAuthor.update).toHaveBeenCalled();
     });
 
@@ -263,11 +250,11 @@ describe('AuthorController', () => {
       (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
       (Author.findOne as jest.Mock).mockResolvedValue(null); // No conflict
 
-      mockEvent.httpMethod = 'PUT';
-      mockEvent.pathParameters = { id: '1' };
-      mockEvent.body = JSON.stringify(nameUpdateData);
+      // 'PUT';
+      mockRequest.pathParameters = { id: '1' };
+      mockRequest.body = JSON.stringify(nameUpdateData);
 
-      const result = await authorController.updateAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.updateAuthor(mockRequest);
 
       expect(result.statusCode).toBe(200);
       expect(mockAuthor.update).toHaveBeenCalledWith(
@@ -281,16 +268,15 @@ describe('AuthorController', () => {
     it('should return 404 for non-existent author', async () => {
       (Author.findByPk as jest.Mock).mockResolvedValue(null);
 
-      mockEvent.httpMethod = 'PUT';
-      mockEvent.pathParameters = { id: '999' };
-      mockEvent.body = JSON.stringify(updateData);
+      // 'PUT';
+      mockRequest.pathParameters = { id: '999' };
+      mockRequest.body = JSON.stringify(updateData);
 
-      const result = await authorController.updateAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.updateAuthor(mockRequest);
 
       expect(result.statusCode).toBe(404);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe('Author not found');
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Author not found');
     });
   });
 
@@ -304,15 +290,14 @@ describe('AuthorController', () => {
       (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
       (Book.count as jest.Mock).mockResolvedValue(0); // No books associated
 
-      mockEvent.httpMethod = 'DELETE';
-      mockEvent.pathParameters = { id: '1' };
+      // 'DELETE';
+      mockRequest.pathParameters = { id: '1' };
 
-      const result = await authorController.deleteAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.deleteAuthor(mockRequest);
 
       expect(result.statusCode).toBe(204);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(true);
-      expect(body.message).toBe('Author deleted successfully');
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Author deleted successfully');
       expect(mockAuthor.destroy).toHaveBeenCalled();
     });
 
@@ -325,15 +310,14 @@ describe('AuthorController', () => {
       (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
       (Book.count as jest.Mock).mockResolvedValue(1); // Author has books
 
-      mockEvent.httpMethod = 'DELETE';
-      mockEvent.pathParameters = { id: '1' };
+      // 'DELETE';
+      mockRequest.pathParameters = { id: '1' };
 
-      const result = await authorController.deleteAuthor(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.deleteAuthor(mockRequest);
 
       expect(result.statusCode).toBe(409);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(false);
-      expect(body.error).toContain('Cannot delete author with associated books');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Cannot delete author with associated books');
       expect(mockAuthor.destroy).not.toHaveBeenCalled();
     });
   });
@@ -350,15 +334,14 @@ describe('AuthorController', () => {
         rows: mockAuthors,
       });
 
-      mockEvent.queryStringParameters = { page: '1', limit: '10' };
+      mockRequest.queryStringParameters = { page: '1', limit: '10' };
 
-      const result = await authorController.listAuthors(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.listAuthors(mockRequest);
 
       expect(result.statusCode).toBe(200);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(true);
-      expect(body.data).toEqual(mockAuthors);
-      expect(body.meta).toEqual({
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockAuthors);
+      expect(result.pagination).toEqual({
         page: 1,
         limit: 10,
         total: 2,
@@ -386,19 +369,18 @@ describe('AuthorController', () => {
         rows: mockBooks,
       });
 
-      mockEvent.pathParameters = { id: '1' };
+      mockRequest.pathParameters = { id: '1' };
 
-      const result = await authorController.getAuthorBooks(mockEvent as APIGatewayProxyEvent);
+      const result = await authorController.getAuthorBooks(mockRequest);
 
       expect(result.statusCode).toBe(200);
-      const body = JSON.parse(result.body);
-      expect(body.success).toBe(true);
-      expect(body.data.author).toEqual({
+      expect(result.success).toBe(true);
+      expect(result.data.author).toEqual({
         id: 1,
         name: 'John',
         surname: 'Doe',
       });
-      expect(body.data.books).toEqual(mockBooks);
+      expect(result.data.books).toEqual(mockBooks);
     });
   });
 });

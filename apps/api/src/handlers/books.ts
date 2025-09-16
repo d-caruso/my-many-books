@@ -7,6 +7,7 @@ import { bookController } from '../controllers/BookController';
 import { requestLogger } from '../middleware/requestLogger';
 import { corsHandler } from '../middleware/cors';
 import { errorHandler } from '../middleware/errorHandler';
+import { lambdaAdapter } from '../adapters/lambdaAdapter';
 
 const withMiddleware = (
   handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
@@ -42,43 +43,29 @@ const withMiddleware = (
 };
 
 export const createBook = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return bookController.createBook(event);
-  }
+  lambdaAdapter(bookController.createBook.bind(bookController))
 );
 
 export const getBook = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return bookController.getBook(event);
-  }
+  lambdaAdapter(bookController.getBook.bind(bookController))
 );
 
 export const updateBook = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return bookController.updateBook(event);
-  }
+  lambdaAdapter(bookController.updateBook.bind(bookController))
 );
 
 export const deleteBook = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return bookController.deleteBook(event);
-  }
+  lambdaAdapter(bookController.deleteBook.bind(bookController))
 );
 
 export const listBooks = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return bookController.listBooks(event);
-  }
+  lambdaAdapter(bookController.listBooks.bind(bookController))
 );
 
 export const searchBooksByIsbn = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return bookController.searchBooksByIsbn(event);
-  }
+  lambdaAdapter(bookController.searchBooksByIsbn.bind(bookController))
 );
 
 export const importBookFromIsbn = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return bookController.importBookFromIsbn(event);
-  }
+  lambdaAdapter(bookController.importBookFromIsbn.bind(bookController))
 );

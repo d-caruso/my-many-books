@@ -266,10 +266,10 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
 
   static async createBook(bookData: BookCreationAttributes): Promise<Book> {
     // Check if book already exists
-    const existingBook = await Book.findByISBN(bookData.isbnCode);
+    const existingBook = await Book.findByISBN(bookData['isbnCode']);
 
     if (existingBook) {
-      throw new Error(`Book with ISBN ${bookData.isbnCode} already exists`);
+      throw new Error(`Book with ISBN ${bookData['isbnCode']} already exists`);
     }
 
     return await Book.create(bookData as any);

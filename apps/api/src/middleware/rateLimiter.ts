@@ -31,7 +31,7 @@ export class RateLimiter {
   public async checkLimit(event: APIGatewayProxyEvent): Promise<RateLimitResult> {
     const key = this.config.keyGenerator(event);
     const now = Date.now();
-    const windowStart = now - this.config.windowMs;
+    const _windowStart = now - this.config.windowMs;
 
     let entry = this.store.get(key);
 
