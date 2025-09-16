@@ -28,6 +28,13 @@ module.exports = {
         plugin => !(plugin instanceof ModuleScopePlugin)
       );
 
+      // Disable React Refresh in production
+      if (process.env.NODE_ENV === 'production') {
+        webpackConfig.plugins = webpackConfig.plugins.filter(
+          plugin => !plugin.constructor.name.includes('ReactRefreshWebpackPlugin')
+        );
+      }
+
       // Add libs to the include path for babel-loader and ts-loader
       const oneOfRule = webpackConfig.module.rules.find(rule => rule.oneOf);
       if (oneOfRule) {
@@ -38,6 +45,23 @@ module.exports = {
             tsRule.include = tsRule.include ? [tsRule.include] : [];
           }
           tsRule.include.push(path.resolve(__dirname, '../../libs'));
+        }
+
+        // Remove React Refresh from babel-loader in production
+        if (process.env.NODE_ENV === 'production') {
+          oneOfRule.oneOf.forEach(rule => {
+            if (rule.use && Array.isArray(rule.use)) {
+              rule.use.forEach(loader => {
+                if (loader.loader && loader.loader.includes('babel-loader')) {
+                  if (loader.options && loader.options.plugins) {
+                    loader.options.plugins = loader.options.plugins.filter(
+                      plugin => !plugin.toString().includes('react-refresh')
+                    );
+                  }
+                }
+              });
+            }
+          });
         }
       }
 
