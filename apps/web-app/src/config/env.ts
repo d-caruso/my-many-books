@@ -11,17 +11,8 @@ interface EnvironmentConfig {
 
 // Helper function to get environment variables with fallbacks
 const getEnvVar = (key: string, fallback: string = ''): string => {
-  // In Vite, use import.meta.env
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env[`VITE_${key}`] || fallback;
-  }
-  
-  // Fallback for Node.js environments (like tests)
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env[`REACT_APP_${key}`] || fallback;
-  }
-  
-  return fallback;
+  // Use Create React App environment variables
+  return process.env[`REACT_APP_${key}`] || fallback;
 };
 
 export const env: EnvironmentConfig = {

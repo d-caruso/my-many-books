@@ -21,7 +21,7 @@ import {
   Cancel as CancelIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
-import { Book, Author } from '../../types';
+import { Book, Author, Category } from '../../types';
 import { useCategories } from '../../hooks/useCategories';
 import { AuthorAutocomplete } from '../Search/AuthorAutocomplete';
 
@@ -75,7 +75,7 @@ export const BookForm: React.FC<BookFormProps> = ({
         status: book.status,
         notes: book.notes || '',
         selectedAuthors: book.authors || [],
-        selectedCategories: book.categories?.map(cat => cat.id) || []
+        selectedCategories: book.categories?.map((cat: Category) => cat.id) || []
       });
     }
   }, [book]);
@@ -115,7 +115,7 @@ export const BookForm: React.FC<BookFormProps> = ({
     }
   };
 
-  const handleInputChange = (field: keyof BookFormData, value: any) => {
+  const handleInputChange = (field: keyof BookFormData, value: string | number | Author[] | number[] | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error for this field

@@ -1,0 +1,1446 @@
+{
+  "graph": {
+    "nodes": {
+      "shared-navigation": {
+        "name": "shared-navigation",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared-navigation",
+          "name": "shared-navigation",
+          "targets": {
+            "nx-release-publish": {
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+              "configurations": {}
+            },
+            "build": {
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ],
+              "executor": "@nx/js:tsc",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "outputPath": "dist/libs/shared-navigation",
+                "main": "libs/shared-navigation/src/index.ts",
+                "tsConfig": "libs/shared-navigation/tsconfig.lib.json"
+              },
+              "configurations": {}
+            }
+          },
+          "sourceRoot": "libs/shared-navigation/src",
+          "projectType": "library",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "shared"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "shared-business": {
+        "name": "shared-business",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared-business",
+          "name": "shared-business",
+          "targets": {
+            "nx-release-publish": {
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+              "configurations": {}
+            },
+            "build": {
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ],
+              "executor": "@nx/js:tsc",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "outputPath": "dist/libs/shared-business",
+                "main": "libs/shared-business/src/index.ts",
+                "tsConfig": "libs/shared-business/tsconfig.lib.json",
+                "assets": [
+                  "libs/shared-business/*.md"
+                ]
+              },
+              "configurations": {}
+            },
+            "test": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                "{workspaceRoot}/jest.preset.js"
+              ],
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "jestConfig": "libs/shared-business/jest.config.ts"
+              },
+              "configurations": {}
+            },
+            "lint": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json"
+              ],
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "libs/shared-business/**/*.ts"
+                ]
+              },
+              "configurations": {}
+            }
+          },
+          "sourceRoot": "libs/shared-business/src",
+          "projectType": "library",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "scope:shared",
+            "type:lib"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "shared-design": {
+        "name": "shared-design",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared-design",
+          "name": "shared-design",
+          "targets": {
+            "nx-release-publish": {
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+              "configurations": {}
+            },
+            "build": {
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ],
+              "executor": "@nx/js:tsc",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "outputPath": "dist/libs/shared-design",
+                "main": "libs/shared-design/src/index.ts",
+                "tsConfig": "libs/shared-design/tsconfig.lib.json",
+                "assets": [
+                  "libs/shared-design/*.md"
+                ]
+              },
+              "configurations": {}
+            },
+            "test": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                "{workspaceRoot}/jest.preset.js"
+              ],
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "jestConfig": "libs/shared-design/jest.config.ts"
+              },
+              "configurations": {}
+            },
+            "lint": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json"
+              ],
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "libs/shared-design/**/*.ts"
+                ]
+              },
+              "configurations": {}
+            }
+          },
+          "sourceRoot": "libs/shared-design/src",
+          "projectType": "library",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "scope:shared",
+            "type:lib"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "ui-components": {
+        "name": "ui-components",
+        "type": "lib",
+        "data": {
+          "root": "libs/ui-components",
+          "name": "ui-components",
+          "targets": {
+            "nx-release-publish": {
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+              "configurations": {}
+            },
+            "build": {
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ],
+              "executor": "@nx/js:tsc",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "outputPath": "dist/libs/ui-components",
+                "main": "libs/ui-components/src/index.ts",
+                "tsConfig": "libs/ui-components/tsconfig.lib.json",
+                "assets": [
+                  "libs/ui-components/*.md"
+                ]
+              },
+              "configurations": {}
+            },
+            "test": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                "{workspaceRoot}/jest.preset.js"
+              ],
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "jestConfig": "libs/ui-components/jest.config.ts"
+              },
+              "configurations": {}
+            },
+            "lint": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json"
+              ],
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "libs/ui-components/**/*.{ts,tsx}"
+                ]
+              },
+              "configurations": {}
+            }
+          },
+          "sourceRoot": "libs/ui-components/src",
+          "projectType": "library",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "scope:shared",
+            "type:lib",
+            "framework:react"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "shared-forms": {
+        "name": "shared-forms",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared-forms",
+          "name": "shared-forms",
+          "targets": {
+            "nx-release-publish": {
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+              "configurations": {}
+            },
+            "build": {
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ],
+              "executor": "@nx/js:tsc",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "outputPath": "dist/libs/shared-forms",
+                "main": "libs/shared-forms/src/index.ts",
+                "tsConfig": "libs/shared-forms/tsconfig.lib.json"
+              },
+              "configurations": {}
+            }
+          },
+          "sourceRoot": "libs/shared-forms/src",
+          "projectType": "library",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "shared"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "shared-hooks": {
+        "name": "shared-hooks",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared-hooks",
+          "name": "shared-hooks",
+          "targets": {
+            "nx-release-publish": {
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+              "configurations": {}
+            },
+            "build": {
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ],
+              "executor": "@nx/js:tsc",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "outputPath": "dist/libs/shared-hooks",
+                "main": "libs/shared-hooks/src/index.ts",
+                "tsConfig": "libs/shared-hooks/tsconfig.lib.json",
+                "assets": [
+                  "libs/shared-hooks/*.md"
+                ]
+              },
+              "configurations": {}
+            },
+            "test": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                "{workspaceRoot}/jest.preset.js"
+              ],
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "jestConfig": "libs/shared-hooks/jest.config.ts"
+              },
+              "configurations": {}
+            },
+            "lint": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json"
+              ],
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "libs/shared-hooks/**/*.{ts,tsx}"
+                ]
+              },
+              "configurations": {}
+            }
+          },
+          "sourceRoot": "libs/shared-hooks/src",
+          "projectType": "library",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "scope:shared",
+            "type:lib",
+            "framework:react"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "shared-types": {
+        "name": "shared-types",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared-types",
+          "name": "shared-types",
+          "targets": {
+            "nx-release-publish": {
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+              "configurations": {}
+            },
+            "build": {
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ],
+              "executor": "@nx/js:tsc",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "outputPath": "dist/libs/shared-types",
+                "main": "libs/shared-types/src/index.ts",
+                "tsConfig": "libs/shared-types/tsconfig.lib.json",
+                "assets": [
+                  "libs/shared-types/*.md"
+                ]
+              },
+              "configurations": {}
+            },
+            "test": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                "{workspaceRoot}/jest.preset.js"
+              ],
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "jestConfig": "libs/shared-types/jest.config.ts"
+              },
+              "configurations": {}
+            },
+            "lint": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json"
+              ],
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "libs/shared-types/**/*.ts"
+                ]
+              },
+              "configurations": {}
+            }
+          },
+          "sourceRoot": "libs/shared-types/src",
+          "projectType": "library",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "scope:shared",
+            "type:lib"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "shared-utils": {
+        "name": "shared-utils",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared-utils",
+          "name": "shared-utils",
+          "targets": {
+            "nx-release-publish": {
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+              "configurations": {}
+            },
+            "build": {
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ],
+              "executor": "@nx/js:tsc",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "outputPath": "dist/libs/shared-utils",
+                "main": "libs/shared-utils/src/index.ts",
+                "tsConfig": "libs/shared-utils/tsconfig.lib.json",
+                "assets": [
+                  "libs/shared-utils/*.md"
+                ]
+              },
+              "configurations": {}
+            },
+            "test": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                "{workspaceRoot}/jest.preset.js"
+              ],
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "jestConfig": "libs/shared-utils/jest.config.ts"
+              },
+              "configurations": {}
+            },
+            "lint": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json"
+              ],
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "libs/shared-utils/**/*.ts"
+                ]
+              },
+              "configurations": {}
+            }
+          },
+          "sourceRoot": "libs/shared-utils/src",
+          "projectType": "library",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "scope:shared",
+            "type:lib"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "shared-api": {
+        "name": "shared-api",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared-api",
+          "name": "shared-api",
+          "targets": {
+            "build": {
+              "executor": "@nx/js:tsc",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "outputPath": "dist/libs/shared-api",
+                "main": "libs/shared-api/src/index.ts",
+                "tsConfig": "libs/shared-api/tsconfig.lib.json",
+                "assets": [
+                  "libs/shared-api/*.md"
+                ]
+              },
+              "configurations": {}
+            },
+            "test": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "jestConfig": "libs/shared-api/jest.config.ts"
+              },
+              "configurations": {}
+            },
+            "lint": {
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "libs/shared-api/**/*.ts"
+                ]
+              },
+              "configurations": {}
+            },
+            "nx-release-publish": {
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+              "configurations": {}
+            }
+          },
+          "sourceRoot": "libs/shared-api/src",
+          "projectType": "library",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "scope:shared",
+            "type:lib"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "web-app": {
+        "name": "web-app",
+        "type": "app",
+        "data": {
+          "root": "apps/web-app",
+          "name": "web-app",
+          "targets": {
+            "start": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "start"
+              },
+              "configurations": {}
+            },
+            "build": {
+              "executor": "@nx/webpack:webpack",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "defaultConfiguration": "production",
+              "options": {
+                "compiler": "babel",
+                "outputPath": "dist/apps/web-app",
+                "index": "apps/web-app/public/index.html",
+                "baseHref": "/",
+                "main": "apps/web-app/src/index.tsx",
+                "polyfills": "apps/web-app/src/polyfills.ts",
+                "tsConfig": "apps/web-app/tsconfig.app.json",
+                "assets": [
+                  "apps/web-app/public/favicon.ico",
+                  "apps/web-app/public/manifest.json"
+                ],
+                "styles": [
+                  "apps/web-app/src/index.css"
+                ],
+                "scripts": [],
+                "webpackConfig": "apps/web-app/webpack.config.js"
+              },
+              "configurations": {
+                "development": {
+                  "extractLicenses": false,
+                  "optimization": false,
+                  "sourceMap": true,
+                  "vendorChunk": true
+                },
+                "production": {
+                  "fileReplacements": [
+                    {
+                      "replace": "apps/web-app/src/environments/environment.ts",
+                      "with": "apps/web-app/src/environments/environment.prod.ts"
+                    }
+                  ],
+                  "optimization": true,
+                  "outputHashing": "all",
+                  "sourceMap": false,
+                  "namedChunks": false,
+                  "extractLicenses": true,
+                  "vendorChunk": false
+                }
+              }
+            },
+            "test": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "jestConfig": "apps/web-app/jest.config.ts"
+              },
+              "configurations": {}
+            },
+            "test:coverage": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:coverage"
+              },
+              "configurations": {}
+            },
+            "test:unit": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:unit"
+              },
+              "configurations": {}
+            },
+            "test:unit:watch": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:unit:watch"
+              },
+              "configurations": {}
+            },
+            "cypress:open": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "cypress:open"
+              },
+              "configurations": {}
+            },
+            "cypress:run": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "cypress:run"
+              },
+              "configurations": {}
+            },
+            "cypress:component": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "cypress:component"
+              },
+              "configurations": {}
+            },
+            "cypress:component:open": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "cypress:component:open"
+              },
+              "configurations": {}
+            },
+            "e2e": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "e2e"
+              },
+              "configurations": {}
+            },
+            "e2e:open": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "e2e:open"
+              },
+              "configurations": {}
+            },
+            "test:ci": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:ci"
+              },
+              "configurations": {}
+            },
+            "test:all": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:all"
+              },
+              "configurations": {}
+            },
+            "test:coverage:full": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:coverage:full"
+              },
+              "configurations": {}
+            },
+            "eject": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "eject"
+              },
+              "configurations": {}
+            },
+            "lint": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json"
+              ],
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "apps/web-app/**/*.{ts,tsx,js,jsx}"
+                ]
+              },
+              "configurations": {}
+            },
+            "serve": {
+              "executor": "@nx/webpack:dev-server",
+              "defaultConfiguration": "development",
+              "options": {
+                "buildTarget": "web-app:build",
+                "hmr": true
+              },
+              "configurations": {
+                "development": {
+                  "buildTarget": "web-app:build:development"
+                },
+                "production": {
+                  "buildTarget": "web-app:build:production",
+                  "hmr": false
+                }
+              }
+            }
+          },
+          "sourceRoot": "apps/web-app/src",
+          "projectType": "application",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "scope:web-app",
+            "type:app"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "api": {
+        "name": "api",
+        "type": "app",
+        "data": {
+          "root": "apps/api",
+          "name": "api",
+          "targets": {
+            "build": {
+              "executor": "@nx/webpack:webpack",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "target": "node",
+                "compiler": "tsc",
+                "outputPath": "dist/apps/api",
+                "main": "apps/api/src/app.ts",
+                "tsConfig": "apps/api/tsconfig.json",
+                "assets": [
+                  "apps/api/src/assets"
+                ]
+              },
+              "configurations": {
+                "production": {
+                  "optimization": true,
+                  "extractLicenses": true,
+                  "inspect": false,
+                  "fileReplacements": [
+                    {
+                      "replace": "apps/api/src/environments/environment.ts",
+                      "with": "apps/api/src/environments/environment.prod.ts"
+                    }
+                  ]
+                }
+              }
+            },
+            "build:watch": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "build:watch"
+              },
+              "configurations": {}
+            },
+            "build:check": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "build:check"
+              },
+              "configurations": {}
+            },
+            "dev": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "dev"
+              },
+              "configurations": {}
+            },
+            "test": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/{projectRoot}"
+              ],
+              "options": {
+                "jestConfig": "apps/api/jest.config.js"
+              },
+              "configurations": {}
+            },
+            "test:watch": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:watch"
+              },
+              "configurations": {}
+            },
+            "test:coverage": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:coverage"
+              },
+              "configurations": {}
+            },
+            "test:integration": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:integration"
+              },
+              "configurations": {}
+            },
+            "test:integration:coverage": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:integration:coverage"
+              },
+              "configurations": {}
+            },
+            "test:unit": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:unit"
+              },
+              "configurations": {}
+            },
+            "test:all": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:all"
+              },
+              "configurations": {}
+            },
+            "lint": {
+              "executor": "@nx/eslint:lint",
+              "outputs": [
+                "{options.outputFile}"
+              ],
+              "options": {
+                "lintFilePatterns": [
+                  "apps/api/**/*.ts"
+                ]
+              },
+              "configurations": {}
+            },
+            "lint:fix": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "lint:fix"
+              },
+              "configurations": {}
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit",
+                "cwd": "apps/api"
+              },
+              "configurations": {}
+            },
+            "check": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "check"
+              },
+              "configurations": {}
+            },
+            "format": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "format"
+              },
+              "configurations": {}
+            },
+            "deploy": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "serverless deploy",
+                "cwd": "apps/api"
+              },
+              "configurations": {}
+            },
+            "deploy:dev": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "deploy:dev"
+              },
+              "configurations": {}
+            },
+            "deploy:prod": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "deploy:prod"
+              },
+              "configurations": {}
+            },
+            "package": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "package"
+              },
+              "configurations": {}
+            },
+            "local": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "local"
+              },
+              "configurations": {}
+            },
+            "remove": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "remove"
+              },
+              "configurations": {}
+            },
+            "db:test": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:test"
+              },
+              "configurations": {}
+            },
+            "db:connect": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:connect"
+              },
+              "configurations": {}
+            },
+            "db:create": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:create"
+              },
+              "configurations": {}
+            },
+            "db:migrate": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:migrate"
+              },
+              "configurations": {}
+            },
+            "db:migrate:undo": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:migrate:undo"
+              },
+              "configurations": {}
+            },
+            "db:migrate:undo:all": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:migrate:undo:all"
+              },
+              "configurations": {}
+            },
+            "db:migrate:status": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:migrate:status"
+              },
+              "configurations": {}
+            },
+            "db:seed": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:seed"
+              },
+              "configurations": {}
+            },
+            "db:seed:undo": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:seed:undo"
+              },
+              "configurations": {}
+            },
+            "db:seed:undo:all": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:seed:undo:all"
+              },
+              "configurations": {}
+            },
+            "db:init": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:init"
+              },
+              "configurations": {}
+            },
+            "db:reset": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:reset"
+              },
+              "configurations": {}
+            },
+            "db:status": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:status"
+              },
+              "configurations": {}
+            },
+            "db:sync": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "db:sync"
+              },
+              "configurations": {}
+            },
+            "migration:generate": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "migration:generate"
+              },
+              "configurations": {}
+            },
+            "seed:generate": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "seed:generate"
+              },
+              "configurations": {}
+            },
+            "test:isbn": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:isbn"
+              },
+              "configurations": {}
+            },
+            "isbn:validate": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "isbn:validate"
+              },
+              "configurations": {}
+            },
+            "isbn:format": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "isbn:format"
+              },
+              "configurations": {}
+            },
+            "test:openlibrary": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:openlibrary"
+              },
+              "configurations": {}
+            },
+            "openlibrary:fetch": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "openlibrary:fetch"
+              },
+              "configurations": {}
+            },
+            "openlibrary:search": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "openlibrary:search"
+              },
+              "configurations": {}
+            },
+            "openlibrary:health": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "openlibrary:health"
+              },
+              "configurations": {}
+            },
+            "test:isbn-service": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:isbn-service"
+              },
+              "configurations": {}
+            },
+            "test:data-transformer": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:data-transformer"
+              },
+              "configurations": {}
+            },
+            "isbn:lookup": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "isbn:lookup"
+              },
+              "configurations": {}
+            },
+            "isbn:search": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "isbn:search"
+              },
+              "configurations": {}
+            },
+            "isbn:health": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "isbn:health"
+              },
+              "configurations": {}
+            },
+            "test:circuit-breaker": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:circuit-breaker"
+              },
+              "configurations": {}
+            },
+            "test:retry-policy": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:retry-policy"
+              },
+              "configurations": {}
+            },
+            "test:fallback": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:fallback"
+              },
+              "configurations": {}
+            },
+            "isbn:resilience": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "isbn:resilience"
+              },
+              "configurations": {}
+            },
+            "isbn:fallback": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "isbn:fallback"
+              },
+              "configurations": {}
+            },
+            "isbn:reset": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "isbn:reset"
+              },
+              "configurations": {}
+            },
+            "generate:api-keys": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "generate:api-keys"
+              },
+              "configurations": {}
+            },
+            "docs:serve": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "docs:serve"
+              },
+              "configurations": {}
+            },
+            "validate:config": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "validate:config"
+              },
+              "configurations": {}
+            },
+            "security:scan": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "security:scan"
+              },
+              "configurations": {}
+            },
+            "nx-release-publish": {
+              "dependsOn": [
+                "^nx-release-publish"
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+              "configurations": {}
+            },
+            "serve": {
+              "executor": "@nx/js:node",
+              "defaultConfiguration": "development",
+              "options": {
+                "buildTarget": "api:build"
+              },
+              "configurations": {
+                "development": {
+                  "buildTarget": "api:build:development"
+                },
+                "production": {
+                  "buildTarget": "api:build:production"
+                }
+              }
+            }
+          },
+          "sourceRoot": "apps/api/src",
+          "projectType": "application",
+          "version": "0.1.0",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "tags": [
+            "scope:api",
+            "type:app"
+          ],
+          "implicitDependencies": []
+        }
+      },
+      "my-many-books": {
+        "name": "my-many-books",
+        "type": "lib",
+        "data": {
+          "root": ".",
+          "targets": {},
+          "sourceRoot": ".",
+          "name": "my-many-books",
+          "projectType": "library",
+          "includedScripts": [],
+          "implicitDependencies": [],
+          "tags": []
+        }
+      }
+    },
+    "dependencies": {
+      "shared-navigation": [],
+      "shared-business": [
+        {
+          "source": "shared-business",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "shared-business",
+          "target": "shared-utils",
+          "type": "static"
+        }
+      ],
+      "shared-design": [
+        {
+          "source": "shared-design",
+          "target": "shared-types",
+          "type": "static"
+        }
+      ],
+      "ui-components": [
+        {
+          "source": "ui-components",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "ui-components",
+          "target": "shared-utils",
+          "type": "static"
+        }
+      ],
+      "shared-forms": [
+        {
+          "source": "shared-forms",
+          "target": "shared-utils",
+          "type": "static"
+        }
+      ],
+      "shared-hooks": [
+        {
+          "source": "shared-hooks",
+          "target": "shared-types",
+          "type": "static"
+        }
+      ],
+      "shared-types": [],
+      "shared-utils": [],
+      "shared-api": [
+        {
+          "source": "shared-api",
+          "target": "shared-types",
+          "type": "static"
+        }
+      ],
+      "web-app": [
+        {
+          "source": "web-app",
+          "target": "shared-api",
+          "type": "static"
+        }
+      ],
+      "api": [],
+      "my-many-books": []
+    }
+  },
+  "affectedProjects": [],
+  "criticalPath": []
+}

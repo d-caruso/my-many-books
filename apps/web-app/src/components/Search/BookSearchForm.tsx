@@ -62,7 +62,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
     onSearch(query, filters);
   };
 
-  const handleFilterChange = (key: keyof SearchFilters, value: any) => {
+  const handleFilterChange = (key: keyof SearchFilters, value: string | number | undefined) => {
     setFilters(prev => ({
       ...prev,
       [key]: value || undefined

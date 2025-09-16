@@ -14,7 +14,7 @@ import {
   Error as ErrorIcon,
   MenuBook as BookIcon
 } from '@mui/icons-material';
-import { Book } from '../../types';
+import { Book, Author, Category } from '../../types';
 
 interface BookSearchResultsProps {
   books: Book[];
@@ -131,7 +131,7 @@ interface BookCardProps {
 }
 
 const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
-  const formatAuthors = (authors?: any[]) => {
+  const formatAuthors = (authors?: Author[]) => {
     if (!authors || authors.length === 0) return 'Unknown Author';
     return authors.map(author => 
       typeof author === 'string' ? author : author.name
@@ -254,7 +254,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
         {book.categories && book.categories.length > 0 && (
           <Box mb={1}>
             <Box display="flex" flexWrap="wrap" gap={0.5}>
-              {book.categories.slice(0, 2).map((category) => (
+              {book.categories.slice(0, 2).map((category: Category) => (
                 <Chip
                   key={category.id}
                   label={category.name}

@@ -1,6 +1,6 @@
 {
   "name": "@my-many-books/shared-api",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "commonjs",
   "description": "Shared API client for My Many Books monorepo",
   "main": "src/index.ts",

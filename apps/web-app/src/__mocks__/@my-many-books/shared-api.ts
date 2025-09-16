@@ -7,40 +7,40 @@
 // if the backend is not available
 const createMockApiClient = () => ({
   books: {
-    getBooks: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    getBook: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    createBook: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    updateBook: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    deleteBook: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    searchBooks: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    searchByIsbn: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
+    getBooks: () => Promise.reject(new Error('API call failed - no backend available')),
+    getBook: () => Promise.reject(new Error('API call failed - no backend available')),
+    createBook: () => Promise.reject(new Error('API call failed - no backend available')),
+    updateBook: () => Promise.reject(new Error('API call failed - no backend available')),
+    deleteBook: () => Promise.reject(new Error('API call failed - no backend available')),
+    searchBooks: () => Promise.reject(new Error('API call failed - no backend available')),
+    searchByIsbn: () => Promise.reject(new Error('API call failed - no backend available')),
   },
   categories: {
-    getCategories: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    getCategory: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    createCategory: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
+    getCategories: () => Promise.reject(new Error('API call failed - no backend available')),
+    getCategory: () => Promise.reject(new Error('API call failed - no backend available')),
+    createCategory: () => Promise.reject(new Error('API call failed - no backend available')),
   },
   authors: {
-    getAuthors: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    getAuthor: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    createAuthor: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    searchAuthors: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
+    getAuthors: () => Promise.reject(new Error('API call failed - no backend available')),
+    getAuthor: () => Promise.reject(new Error('API call failed - no backend available')),
+    createAuthor: () => Promise.reject(new Error('API call failed - no backend available')),
+    searchAuthors: () => Promise.reject(new Error('API call failed - no backend available')),
   },
   users: {
-    getCurrentUser: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
-    updateProfile: jest.fn().mockRejectedValue(new Error('API call failed - no backend available')),
+    getCurrentUser: () => Promise.reject(new Error('API call failed - no backend available')),
+    updateProfile: () => Promise.reject(new Error('API call failed - no backend available')),
   },
 });
 
-export const createApiClient = jest.fn(() => createMockApiClient());
+export const createApiClient = (_httpClient?: any, _config?: any) => createMockApiClient();
 
 // Export other required types and classes for compatibility
-export const ApiClient = jest.fn();
-export const BookApi = jest.fn();
-export const AuthorApi = jest.fn();
-export const CategoryApi = jest.fn();
-export const UserApi = jest.fn();
-export const BaseApiClient = jest.fn();
+export class ApiClient {}
+export class BookApi {}
+export class AuthorApi {}
+export class CategoryApi {}
+export class UserApi {}
+export class BaseApiClient {}
 
 // Export types (these will be ignored by Jest but needed for TypeScript compilation)
 export interface HttpClient {}
