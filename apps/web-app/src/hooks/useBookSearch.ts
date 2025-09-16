@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Book, SearchFilters, SearchResult } from '../types';
+import { Book, SearchFilters } from '../types';
 import { bookAPI } from '../services/api';
 
 interface BookSearchState {
@@ -34,7 +34,12 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     page: number = 1
   ): Promise<void> => {
     if (!query.trim() && !filters.categoryId && !filters.authorId) {
-      clearSearch();
+      setBooks([]);
+      setLoading(false);
+      setError(null);
+      setHasMore(false);
+      setTotalCount(0);
+      setCurrentPage(1);
       return;
     }
 

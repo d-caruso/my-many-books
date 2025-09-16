@@ -4,7 +4,6 @@ import {
   Typography,
   IconButton,
   Paper,
-  Alert,
   CircularProgress,
   Container,
   Stack,
@@ -66,7 +65,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
     return () => {
       stopScanning();
     };
-  }, [isOpen, hasPermission]);
+  }, [isOpen, hasPermission, requestPermission, startScanning, stopScanning]);
 
   if (!isOpen) {
     return null;

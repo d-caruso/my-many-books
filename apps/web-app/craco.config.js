@@ -101,7 +101,7 @@ module.exports = {
           swSrc: './src/sw.ts',
           dontCacheBustURLsMatching: /\.\w{8}\./,
           exclude: [/\.map$/, /manifest$/, /\.htaccess$/],
-          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
         }),
       ],
     },

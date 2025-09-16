@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Box, Button, IconButton, Chip, Typography } from '@mui/material';
+import { Box, Button, IconButton, Chip } from '@mui/material';
 import { Add as AddIcon, Clear as ClearIcon, ViewModule as GridIcon, ViewList as ListIcon } from '@mui/icons-material';
 import { Book } from '../types';
 import { BookList, BookForm, BookDetails, type BookFormData } from '../components/Book';
@@ -13,7 +13,7 @@ type PageMode = 'list' | 'add' | 'edit' | 'details';
 
 export const BooksPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // Commented out as currently unused
   
   const [pageMode, setPageMode] = useState<PageMode>('list');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -31,6 +31,18 @@ export const BooksPage: React.FC = () => {
     loadMore,
     clearSearch
   } = useBookSearch();
+
+  const loadUserBooks = async () => {
+    try {
+      await bookAPI.getBooks();
+      // This would need to be adapted based on your API structure
+      // For now, we'll use the search with empty query to get all books
+      searchBooks('', {});
+    } catch (err: any) {
+      console.error('Failed to load user books:', err);
+      setError('Failed to load your books');
+    }
+  };
 
   // Initialize with user's books or search params
   useEffect(() => {
@@ -60,19 +72,7 @@ export const BooksPage: React.FC = () => {
       // Load user's books by default
       loadUserBooks();
     }
-  }, [searchParams]);
-
-  const loadUserBooks = async () => {
-    try {
-      const response = await bookAPI.getBooks();
-      // This would need to be adapted based on your API structure
-      // For now, we'll use the search with empty query to get all books
-      searchBooks('', {});
-    } catch (err: any) {
-      console.error('Failed to load user books:', err);
-      setError('Failed to load your books');
-    }
-  };
+  }, [searchParams, loadUserBooks, searchBooks, setSearchParams]);
 
   const handleSearch = (query: string, filters: any) => {
     // Update URL params

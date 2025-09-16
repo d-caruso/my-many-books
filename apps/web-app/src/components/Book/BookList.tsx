@@ -1,13 +1,11 @@
 import React from 'react';
 import {
   Box,
-  Grid,
   Stack,
   Typography,
   CircularProgress,
   Alert,
-  AlertTitle,
-  Paper
+  AlertTitle
 } from '@mui/material';
 import {
   Warning as WarningIcon,
