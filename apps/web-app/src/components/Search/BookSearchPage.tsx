@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Box,
-  Typography,
-  Button,
-  Grid,
-  Paper
+  Button
 } from '@mui/material';
 import {
   Close as CloseIcon,

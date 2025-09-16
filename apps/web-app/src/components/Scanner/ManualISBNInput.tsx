@@ -5,10 +5,8 @@ import {
   Button,
   Typography,
   Box,
-  Alert,
   Stack
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
 import { ScanResult } from '../../types';
 
 interface ManualISBNInputProps {
