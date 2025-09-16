@@ -2,11 +2,18 @@
 // src/controllers/CategoryController.ts
 // ================================================================
 
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import Joi from 'joi';
 import { BaseController } from './base/BaseController';
 import { Category, Book } from '../models';
 import { CategoryCreationAttributes } from '../models/interfaces/ModelInterfaces';
+import { ApiResponse } from '../common/ApiResponse';
+
+// A universal request interface to decouple the controller from the framework
+interface UniversalRequest {
+  body?: any;
+  queryStringParameters?: { [key: string]: string | undefined };
+  pathParameters?: { [key: string]: string | undefined };
+}
 
 interface CreateCategoryRequest {
   name: string;
@@ -25,26 +32,26 @@ export class CategoryController extends BaseController {
     name: Joi.string().max(255).trim().optional(),
   });
 
-  async createCategory(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const body = this.parseBody<CreateCategoryRequest>(event);
-      if (!body) {
-        return this.createErrorResponse('Request body is required', 400);
-      }
+  async createCategory(request: UniversalRequest): Promise<ApiResponse> {
+    const body = this.parseBody<CreateCategoryRequest>(request);
+    if (!body) {
+      return this.createErrorResponse('Request body is required', 400);
+    }
 
-      const validation = this.validateRequest(body, this.createCategorySchema);
-      if (!validation.isValid) {
-        return this.createErrorResponse('Validation failed', 400, validation.errors);
-      }
+    const validation = this.validateRequest(body, this.createCategorySchema);
+    if (!validation.isValid) {
+      return this.createErrorResponse('Validation failed', 400, validation.errors);
+    }
 
-      const categoryData = validation.value!;
+    const categoryData = validation.value!;
 
-      // Check if category already exists
-      const existingCategory = await Category.findByName(categoryData.name);
-      if (existingCategory) {
-        return this.createErrorResponse('Category with this name already exists', 409);
-      }
+    // Check if category already exists
+    const existingCategory = await Category.findByName(categoryData.name);
+    if (existingCategory) {
+      return this.createErrorResponse('Category with this name already exists', 409);
+    }
 
+    try {
       // Create category
       const categoryCreateData: CategoryCreationAttributes = {
         name: categoryData.name,
@@ -52,21 +59,23 @@ export class CategoryController extends BaseController {
       const category = await Category.createCategory(categoryCreateData);
 
       return this.createSuccessResponse(category, 'Category created successfully', undefined, 201);
-    });
+    } catch (dbError: any) {
+      return this.createErrorResponse('Failed to create category', 500, dbError.message);
+    }
   }
 
-  async getCategory(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const categoryId = this.getPathParameter(event, 'id');
-      if (!categoryId) {
-        return this.createErrorResponse('Category ID is required', 400);
-      }
+  async getCategory(request: UniversalRequest): Promise<ApiResponse> {
+    const categoryId = this.getPathParameter(request, 'id');
+    if (!categoryId) {
+      return this.createErrorResponse('Category ID is required', 400);
+    }
 
-      const id = parseInt(categoryId, 10);
-      if (isNaN(id)) {
-        return this.createErrorResponse('Invalid category ID', 400);
-      }
+    const id = parseInt(categoryId, 10);
+    if (isNaN(id)) {
+      return this.createErrorResponse('Invalid category ID', 400);
+    }
 
+    try {
       const category = await Category.findByPk(id, {
         include: [
           {
@@ -82,33 +91,35 @@ export class CategoryController extends BaseController {
       }
 
       return this.createSuccessResponse(category, 'Category retrieved successfully');
-    });
+    } catch (dbError: any) {
+      return this.createErrorResponse('Failed to retrieve category', 500, dbError.message);
+    }
   }
 
-  async updateCategory(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const categoryId = this.getPathParameter(event, 'id');
-      if (!categoryId) {
-        return this.createErrorResponse('Category ID is required', 400);
-      }
+  async updateCategory(request: UniversalRequest): Promise<ApiResponse> {
+    const categoryId = this.getPathParameter(request, 'id');
+    if (!categoryId) {
+      return this.createErrorResponse('Category ID is required', 400);
+    }
 
-      const id = parseInt(categoryId, 10);
-      if (isNaN(id)) {
-        return this.createErrorResponse('Invalid category ID', 400);
-      }
+    const id = parseInt(categoryId, 10);
+    if (isNaN(id)) {
+      return this.createErrorResponse('Invalid category ID', 400);
+    }
 
-      const body = this.parseBody<UpdateCategoryRequest>(event);
-      if (!body) {
-        return this.createErrorResponse('Request body is required', 400);
-      }
+    const body = this.parseBody<UpdateCategoryRequest>(request);
+    if (!body) {
+      return this.createErrorResponse('Request body is required', 400);
+    }
 
-      const validation = this.validateRequest(body, this.updateCategorySchema);
-      if (!validation.isValid) {
-        return this.createErrorResponse('Validation failed', 400, validation.errors);
-      }
+    const validation = this.validateRequest(body, this.updateCategorySchema);
+    if (!validation.isValid) {
+      return this.createErrorResponse('Validation failed', 400, validation.errors);
+    }
 
-      const categoryData = validation.value!;
+    const categoryData = validation.value!;
 
+    try {
       // Find the category
       const category = await Category.findByPk(id);
       if (!category) {
@@ -129,23 +140,25 @@ export class CategoryController extends BaseController {
       });
 
       return this.createSuccessResponse(category, 'Category updated successfully');
-    });
+    } catch (dbError: any) {
+      return this.createErrorResponse('Failed to update category', 500, dbError.message);
+    }
   }
 
-  async deleteCategory(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const categoryId = this.getPathParameter(event, 'id');
-      if (!categoryId) {
-        return this.createErrorResponse('Category ID is required', 400);
-      }
+  async deleteCategory(request: UniversalRequest): Promise<ApiResponse> {
+    const categoryId = this.getPathParameter(request, 'id');
+    if (!categoryId) {
+      return this.createErrorResponse('Category ID is required', 400);
+    }
 
-      const id = parseInt(categoryId, 10);
-      if (isNaN(id)) {
-        return this.createErrorResponse('Invalid category ID', 400);
-      }
+    const id = parseInt(categoryId, 10);
+    if (isNaN(id)) {
+      return this.createErrorResponse('Invalid category ID', 400);
+    }
 
-      const force = this.getQueryParameter(event, 'force') === 'true';
+    const force = this.getQueryParameter(request, 'force') === 'true';
 
+    try {
       // Find the category
       const category = await Category.findByPk(id, {
         include: [
@@ -183,15 +196,17 @@ export class CategoryController extends BaseController {
       await category.destroy();
 
       return this.createSuccessResponse(null, 'Category deleted successfully', undefined, 204);
-    });
+    } catch (dbError: any) {
+      return this.createErrorResponse('Failed to delete category', 500, dbError.message);
+    }
   }
 
-  async listCategories(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const page = parseInt(this.getQueryParameter(event, 'page') || '1', 10);
-      const limit = parseInt(this.getQueryParameter(event, 'limit') || '50', 10);
-      const search = this.getQueryParameter(event, 'search');
+  async listCategories(request: UniversalRequest): Promise<ApiResponse> {
+    const page = parseInt(this.getQueryParameter(request, 'page') || '1', 10);
+    const limit = parseInt(this.getQueryParameter(request, 'limit') || '50', 10);
+    const search = this.getQueryParameter(request, 'search');
 
+    try {
       let categories: Category[];
       let totalCount: number;
 
@@ -226,24 +241,26 @@ export class CategoryController extends BaseController {
           hasPrev: page > 1,
         },
       });
-    });
+    } catch (dbError: any) {
+      return this.createErrorResponse('Failed to list categories', 500, dbError.message);
+    }
   }
 
-  async getCategoryBooks(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const categoryId = this.getPathParameter(event, 'id');
-      if (!categoryId) {
-        return this.createErrorResponse('Category ID is required', 400);
-      }
+  async getCategoryBooks(request: UniversalRequest): Promise<ApiResponse> {
+    const categoryId = this.getPathParameter(request, 'id');
+    if (!categoryId) {
+      return this.createErrorResponse('Category ID is required', 400);
+    }
 
-      const id = parseInt(categoryId, 10);
-      if (isNaN(id)) {
-        return this.createErrorResponse('Invalid category ID', 400);
-      }
+    const id = parseInt(categoryId, 10);
+    if (isNaN(id)) {
+      return this.createErrorResponse('Invalid category ID', 400);
+    }
 
-      const page = parseInt(this.getQueryParameter(event, 'page') || '1', 10);
-      const limit = parseInt(this.getQueryParameter(event, 'limit') || '50', 10);
+    const page = parseInt(this.getQueryParameter(request, 'page') || '1', 10);
+    const limit = parseInt(this.getQueryParameter(request, 'limit') || '50', 10);
 
+    try {
       // Check if category exists
       const category = await Category.findByPk(id);
       if (!category) {
@@ -287,7 +304,9 @@ export class CategoryController extends BaseController {
           },
         }
       );
-    });
+    } catch (dbError: any) {
+      return this.createErrorResponse('Failed to retrieve category books', 500, dbError.message);
+    }
   }
 }
 

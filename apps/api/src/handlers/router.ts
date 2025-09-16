@@ -10,6 +10,50 @@ import { isbnController } from '../controllers/IsbnController';
 import { requestLogger } from '../middleware/requestLogger';
 import { corsHandler } from '../middleware/cors';
 import { errorHandler } from '../middleware/errorHandler';
+import { lambdaAdapter } from '../adapters/lambdaAdapter';
+
+// Create lambda-adapted handlers
+const adaptedBookController = {
+  listBooks: lambdaAdapter(bookController.listBooks.bind(bookController)),
+  createBook: lambdaAdapter(bookController.createBook.bind(bookController)),
+  getBook: lambdaAdapter(bookController.getBook.bind(bookController)),
+  updateBook: lambdaAdapter(bookController.updateBook.bind(bookController)),
+  deleteBook: lambdaAdapter(bookController.deleteBook.bind(bookController)),
+  searchBooksByIsbn: lambdaAdapter(bookController.searchBooksByIsbn.bind(bookController)),
+  importBookFromIsbn: lambdaAdapter(bookController.importBookFromIsbn.bind(bookController)),
+};
+
+const adaptedAuthorController = {
+  listAuthors: lambdaAdapter(authorController.listAuthors.bind(authorController)),
+  createAuthor: lambdaAdapter(authorController.createAuthor.bind(authorController)),
+  getAuthor: lambdaAdapter(authorController.getAuthor.bind(authorController)),
+  updateAuthor: lambdaAdapter(authorController.updateAuthor.bind(authorController)),
+  deleteAuthor: lambdaAdapter(authorController.deleteAuthor.bind(authorController)),
+  getAuthorBooks: lambdaAdapter(authorController.getAuthorBooks.bind(authorController)),
+};
+
+const adaptedCategoryController = {
+  listCategories: lambdaAdapter(categoryController.listCategories.bind(categoryController)),
+  createCategory: lambdaAdapter(categoryController.createCategory.bind(categoryController)),
+  getCategory: lambdaAdapter(categoryController.getCategory.bind(categoryController)),
+  updateCategory: lambdaAdapter(categoryController.updateCategory.bind(categoryController)),
+  deleteCategory: lambdaAdapter(categoryController.deleteCategory.bind(categoryController)),
+  getCategoryBooks: lambdaAdapter(categoryController.getCategoryBooks.bind(categoryController)),
+};
+
+const adaptedIsbnController = {
+  lookupBook: lambdaAdapter(isbnController.lookupBook.bind(isbnController)),
+  batchLookupBooks: lambdaAdapter(isbnController.batchLookupBooks.bind(isbnController)),
+  searchByTitle: lambdaAdapter(isbnController.searchByTitle.bind(isbnController)),
+  getServiceHealth: lambdaAdapter(isbnController.getServiceHealth.bind(isbnController)),
+  addFallbackBook: lambdaAdapter(isbnController.addFallbackBook.bind(isbnController)),
+  validateIsbn: lambdaAdapter(isbnController.validateIsbn.bind(isbnController)),
+  formatIsbn: lambdaAdapter(isbnController.formatIsbn.bind(isbnController)),
+  getResilienceStats: lambdaAdapter(isbnController.getResilienceStats.bind(isbnController)),
+  clearCache: lambdaAdapter(isbnController.clearCache.bind(isbnController)),
+  getCacheStats: lambdaAdapter(isbnController.getCacheStats.bind(isbnController)),
+  resetResilience: lambdaAdapter(isbnController.resetResilience.bind(isbnController)),
+};
 
 // Main router function for single Lambda deployment
 export const routeRequest = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -28,19 +72,19 @@ export const routeRequest = async (event: APIGatewayProxyEvent): Promise<APIGate
     if (resource.startsWith('/books')) {
       switch (resource) {
         case '/books':
-          if (httpMethod === 'GET') return await bookController.listBooks(event);
-          if (httpMethod === 'POST') return await bookController.createBook(event);
+          if (httpMethod === 'GET') return await adaptedBookController.listBooks(event);
+          if (httpMethod === 'POST') return await adaptedBookController.createBook(event);
           break;
         case '/books/{id}':
-          if (httpMethod === 'GET') return await bookController.getBook(event);
-          if (httpMethod === 'PUT') return await bookController.updateBook(event);
-          if (httpMethod === 'DELETE') return await bookController.deleteBook(event);
+          if (httpMethod === 'GET') return await adaptedBookController.getBook(event);
+          if (httpMethod === 'PUT') return await adaptedBookController.updateBook(event);
+          if (httpMethod === 'DELETE') return await adaptedBookController.deleteBook(event);
           break;
         case '/books/search/isbn':
-          if (httpMethod === 'GET') return await bookController.searchBooksByIsbn(event);
+          if (httpMethod === 'GET') return await adaptedBookController.searchBooksByIsbn(event);
           break;
         case '/books/import/isbn':
-          if (httpMethod === 'POST') return await bookController.importBookFromIsbn(event);
+          if (httpMethod === 'POST') return await adaptedBookController.importBookFromIsbn(event);
           break;
       }
     }
@@ -49,16 +93,16 @@ export const routeRequest = async (event: APIGatewayProxyEvent): Promise<APIGate
     if (resource.startsWith('/authors')) {
       switch (resource) {
         case '/authors':
-          if (httpMethod === 'GET') return await authorController.listAuthors(event);
-          if (httpMethod === 'POST') return await authorController.createAuthor(event);
+          if (httpMethod === 'GET') return await adaptedAuthorController.listAuthors(event);
+          if (httpMethod === 'POST') return await adaptedAuthorController.createAuthor(event);
           break;
         case '/authors/{id}':
-          if (httpMethod === 'GET') return await authorController.getAuthor(event);
-          if (httpMethod === 'PUT') return await authorController.updateAuthor(event);
-          if (httpMethod === 'DELETE') return await authorController.deleteAuthor(event);
+          if (httpMethod === 'GET') return await adaptedAuthorController.getAuthor(event);
+          if (httpMethod === 'PUT') return await adaptedAuthorController.updateAuthor(event);
+          if (httpMethod === 'DELETE') return await adaptedAuthorController.deleteAuthor(event);
           break;
         case '/authors/{id}/books':
-          if (httpMethod === 'GET') return await authorController.getAuthorBooks(event);
+          if (httpMethod === 'GET') return await adaptedAuthorController.getAuthorBooks(event);
           break;
       }
     }
@@ -67,16 +111,16 @@ export const routeRequest = async (event: APIGatewayProxyEvent): Promise<APIGate
     if (resource.startsWith('/categories')) {
       switch (resource) {
         case '/categories':
-          if (httpMethod === 'GET') return await categoryController.listCategories(event);
-          if (httpMethod === 'POST') return await categoryController.createCategory(event);
+          if (httpMethod === 'GET') return await adaptedCategoryController.listCategories(event);
+          if (httpMethod === 'POST') return await adaptedCategoryController.createCategory(event);
           break;
         case '/categories/{id}':
-          if (httpMethod === 'GET') return await categoryController.getCategory(event);
-          if (httpMethod === 'PUT') return await categoryController.updateCategory(event);
-          if (httpMethod === 'DELETE') return await categoryController.deleteCategory(event);
+          if (httpMethod === 'GET') return await adaptedCategoryController.getCategory(event);
+          if (httpMethod === 'PUT') return await adaptedCategoryController.updateCategory(event);
+          if (httpMethod === 'DELETE') return await adaptedCategoryController.deleteCategory(event);
           break;
         case '/categories/{id}/books':
-          if (httpMethod === 'GET') return await categoryController.getCategoryBooks(event);
+          if (httpMethod === 'GET') return await adaptedCategoryController.getCategoryBooks(event);
           break;
       }
     }
@@ -85,39 +129,39 @@ export const routeRequest = async (event: APIGatewayProxyEvent): Promise<APIGate
     if (resource.startsWith('/isbn')) {
       switch (resource) {
         case '/isbn/lookup/{isbn}':
-          if (httpMethod === 'GET') return await isbnController.lookupBook(event);
+          if (httpMethod === 'GET') return await adaptedIsbnController.lookupBook(event);
           break;
         case '/isbn/lookup':
-          if (httpMethod === 'GET') return await isbnController.lookupBook(event);
-          if (httpMethod === 'POST') return await isbnController.batchLookupBooks(event);
+          if (httpMethod === 'GET') return await adaptedIsbnController.lookupBook(event);
+          if (httpMethod === 'POST') return await adaptedIsbnController.batchLookupBooks(event);
           break;
         case '/isbn/search':
-          if (httpMethod === 'GET') return await isbnController.searchByTitle(event);
+          if (httpMethod === 'GET') return await adaptedIsbnController.searchByTitle(event);
           break;
         case '/isbn/validate/{isbn}':
-          if (httpMethod === 'GET') return await isbnController.validateIsbn(event);
+          if (httpMethod === 'GET') return await adaptedIsbnController.validateIsbn(event);
           break;
         case '/isbn/validate':
-          if (httpMethod === 'GET') return await isbnController.validateIsbn(event);
+          if (httpMethod === 'GET') return await adaptedIsbnController.validateIsbn(event);
           break;
         case '/isbn/format':
-          if (httpMethod === 'GET') return await isbnController.formatIsbn(event);
+          if (httpMethod === 'GET') return await adaptedIsbnController.formatIsbn(event);
           break;
         case '/isbn/health':
-          if (httpMethod === 'GET') return await isbnController.getServiceHealth(event);
+          if (httpMethod === 'GET') return await adaptedIsbnController.getServiceHealth(event);
           break;
         case '/isbn/stats':
-          if (httpMethod === 'GET') return await isbnController.getResilienceStats(event);
+          if (httpMethod === 'GET') return await adaptedIsbnController.getResilienceStats(event);
           break;
         case '/isbn/cache':
-          if (httpMethod === 'DELETE') return await isbnController.clearCache(event);
-          if (httpMethod === 'GET') return await isbnController.getCacheStats(event);
+          if (httpMethod === 'DELETE') return await adaptedIsbnController.clearCache(event);
+          if (httpMethod === 'GET') return await adaptedIsbnController.getCacheStats(event);
           break;
         case '/isbn/resilience':
-          if (httpMethod === 'DELETE') return await isbnController.resetResilience(event);
+          if (httpMethod === 'DELETE') return await adaptedIsbnController.resetResilience(event);
           break;
         case '/isbn/fallback':
-          if (httpMethod === 'POST') return await isbnController.addFallbackBook(event);
+          if (httpMethod === 'POST') return await adaptedIsbnController.addFallbackBook(event);
           break;
       }
     }

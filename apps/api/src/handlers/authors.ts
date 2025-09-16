@@ -7,6 +7,7 @@ import { authorController } from '../controllers/AuthorController';
 import { requestLogger } from '../middleware/requestLogger';
 import { corsHandler } from '../middleware/cors';
 import { errorHandler } from '../middleware/errorHandler';
+import { lambdaAdapter } from '../adapters/lambdaAdapter';
 
 const withMiddleware = (
   handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
@@ -42,37 +43,25 @@ const withMiddleware = (
 };
 
 export const createAuthor = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return authorController.createAuthor(event);
-  }
+  lambdaAdapter(authorController.createAuthor.bind(authorController))
 );
 
 export const getAuthor = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return authorController.getAuthor(event);
-  }
+  lambdaAdapter(authorController.getAuthor.bind(authorController))
 );
 
 export const updateAuthor = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return authorController.updateAuthor(event);
-  }
+  lambdaAdapter(authorController.updateAuthor.bind(authorController))
 );
 
 export const deleteAuthor = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return authorController.deleteAuthor(event);
-  }
+  lambdaAdapter(authorController.deleteAuthor.bind(authorController))
 );
 
 export const listAuthors = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return authorController.listAuthors(event);
-  }
+  lambdaAdapter(authorController.listAuthors.bind(authorController))
 );
 
 export const getAuthorBooks = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return authorController.getAuthorBooks(event);
-  }
+  lambdaAdapter(authorController.getAuthorBooks.bind(authorController))
 );

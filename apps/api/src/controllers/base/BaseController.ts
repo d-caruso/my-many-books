@@ -1,23 +1,18 @@
 // ================================================================
 // src/controllers/base/BaseController.ts
+// Platform-agnostic base controller with reusable helpers
 // ================================================================
 
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import Joi from 'joi';
+import { ApiResponse } from '../../common/ApiResponse';
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-  meta?: {
-    page?: number;
-    limit?: number;
-    total?: number;
-    totalPages?: number;
-  };
+interface UniversalRequest {
+  body?: any;
+  queryStringParameters?: { [key: string]: string | undefined };
+  pathParameters?: { [key: string]: string | undefined };
 }
 
+// Added the PaginationParams interface
 export interface PaginationParams {
   page: number;
   limit: number;
@@ -34,24 +29,13 @@ export abstract class BaseController {
     message?: string,
     meta?: any,
     statusCode: number = 200
-  ): APIGatewayProxyResult {
-    const response: ApiResponse<T> = {
+  ): ApiResponse<T> {
+    return {
+      statusCode,
       success: true,
       data,
       ...(message && { message }),
-      ...(meta && { meta }),
-    };
-
-    return {
-      statusCode,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers':
-          'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-      },
-      body: JSON.stringify(response),
+      ...(meta && { pagination: meta }),
     };
   }
 
@@ -59,33 +43,22 @@ export abstract class BaseController {
     error: string,
     statusCode: number = 400,
     details?: any
-  ): APIGatewayProxyResult {
-    const response: ApiResponse = {
+  ): ApiResponse {
+    return {
+      statusCode,
       success: false,
       error,
       ...(details && { details }),
     };
-
-    return {
-      statusCode,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers':
-          'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-      },
-      body: JSON.stringify(response),
-    };
   }
 
-  protected parseBody<T>(event: APIGatewayProxyEvent): T | null {
-    if (!event.body) {
+  protected parseBody<T>(request: UniversalRequest): T | null {
+    if (!request.body) {
       return null;
     }
 
     try {
-      return JSON.parse(event.body) as T;
+      return JSON.parse(request.body) as T;
     } catch {
       return null;
     }
@@ -105,9 +78,8 @@ export abstract class BaseController {
     return { isValid: true, value: value as T };
   }
 
-  protected getPaginationParams(event: APIGatewayProxyEvent): PaginationParams {
-    const queryParams = event.queryStringParameters || {};
-
+  protected getPaginationParams(request: UniversalRequest): PaginationParams {
+    const queryParams = request.queryStringParameters || {};
     const page = Math.max(1, parseInt(queryParams['page'] || '1', 10));
     const limit = Math.min(
       BaseController.MAX_LIMIT,
@@ -118,29 +90,12 @@ export abstract class BaseController {
     return { page, limit, offset };
   }
 
-  protected getPathParameter(event: APIGatewayProxyEvent, paramName: string): string | null {
-    return event.pathParameters?.[paramName] || null;
+  protected getPathParameter(request: UniversalRequest, paramName: string): string | null {
+    return request.pathParameters?.[paramName] || null;
   }
 
-  protected getQueryParameter(event: APIGatewayProxyEvent, paramName: string): string | null {
-    return event.queryStringParameters?.[paramName] || null;
-  }
-
-  protected async handleRequest(
-    event: APIGatewayProxyEvent,
-    handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
-  ): Promise<APIGatewayProxyResult> {
-    try {
-      return await handler(event);
-    } catch (error) {
-      console.error('Controller error:', error);
-
-      if (error instanceof Error) {
-        return this.createErrorResponse(error.message, 500);
-      }
-
-      return this.createErrorResponse('Internal server error', 500);
-    }
+  protected getQueryParameter(request: UniversalRequest, paramName: string): string | null {
+    return request.queryStringParameters?.[paramName] || null;
   }
 
   protected createPaginationMeta(

@@ -130,7 +130,7 @@ export class CognitoAuthenticator {
   }
 
   private extractToken(event: APIGatewayProxyEvent): string | null {
-    const authHeader = event.headers.Authorization || event.headers.authorization;
+    const authHeader = event.headers['Authorization'] || event.headers['authorization'];
 
     if (!authHeader) {
       return null;
@@ -236,8 +236,8 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
       return payload.scope.split(' ');
     }
 
-    if (Array.isArray(payload.scopes)) {
-      return payload.scopes;
+    if (Array.isArray(payload['scopes'])) {
+      return payload['scopes'];
     }
 
     return [];
@@ -253,7 +253,7 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
   }
 
   public hasPermission(user: CognitoUser, permission: string): boolean {
-    return user.scopes?.includes(permission) || false;
+    return user['scopes']?.includes(permission) || false;
   }
 
   public isInGroup(user: CognitoUser, group: string): boolean {

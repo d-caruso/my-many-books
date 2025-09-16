@@ -4,6 +4,22 @@
 
 import DatabaseConnection from '@/config/database';
 
+// Mock Sequelize to avoid actual database connection
+jest.mock('sequelize', () => {
+  const mockSequelize = {
+    authenticate: jest.fn().mockResolvedValue(true),
+    close: jest.fn().mockResolvedValue(undefined),
+  };
+  
+  const SequelizeMock = jest.fn().mockImplementation(() => mockSequelize);
+  SequelizeMock.prototype = mockSequelize;
+  
+  return {
+    Sequelize: SequelizeMock,
+    DataTypes: {},
+  };
+});
+
 // Mock environment variables
 const mockEnv = {
   DB_HOST: 'localhost',

@@ -2,84 +2,92 @@
 // src/controllers/BookController.ts
 // ================================================================
 
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { Response } from 'express';
 import Joi from 'joi';
 import { Op, WhereOptions } from 'sequelize';
 import { BaseController } from './base/BaseController';
-import { Book, Author, Category } from '../models';
-import { BookAuthor } from '../models/BookAuthor';
-import { BookCategory } from '../models/BookCategory';
-import { isbnService } from '../services/isbnService';
+import { Author, Book, Category } from '../models';
+import { ApiResponse } from '../common/ApiResponse';
+import {
+  BookCreationAttributes,
+  BookAttributes,
+  BookStatus,
+} from '../models/interfaces/ModelInterfaces';
 import { validateIsbn } from '../utils/isbn';
-import { AuthenticatedRequest } from '../middleware/auth';
-import { BookCreationAttributes, BookAttributes } from '../models/interfaces/ModelInterfaces';
+import { isbnService } from '../services/isbnService';
+
+// A universal request interface to decouple the controller from the framework.
+// This supports both Lambda and Express request structures.
+interface UniversalRequest {
+  body?: any;
+  queryStringParameters?: { [key: string]: string | undefined };
+  pathParameters?: { [key: string]: string | undefined };
+  user?: { userId: number };
+}
 
 interface CreateBookRequest {
   title: string;
-  subtitle?: string;
-  isbn?: string;
-  description?: string;
-  publishedDate?: string;
-  pageCount?: number;
-  language?: string;
-  publisher?: string;
-  physicalFormat?: string;
-  weight?: string;
+  isbnCode: string;
+  editionNumber?: number;
+  editionDate?: string;
+  status?: BookStatus;
+  notes?: string;
   authorIds?: number[];
   categoryIds?: number[];
+  userId: number;
 }
 
 interface BookSearchFilters {
   title?: string;
+  isbnCode?: string;
+  editionNumber?: number;
+  editionDate?: string;
+  status?: BookStatus;
+  notes?: string;
   author?: string;
   category?: string;
-  isbn?: string;
-  publisher?: string;
-  language?: string;
-  publishedYear?: number;
+  userId?: number;
 }
 
+/**
+ * Controller for managing Book resources.
+ * This class contains all the business logic for books,
+ * independent of the web framework (Express, Lambda, etc.).
+ */
 export class BookController extends BaseController {
   private readonly createBookSchema = Joi.object<CreateBookRequest>({
     title: Joi.string().required().max(500).trim(),
-    subtitle: Joi.string().optional().max(500).trim(),
-    isbn: Joi.string()
-      .optional()
+    isbnCode: Joi.string()
+      .required()
       .custom((value: string, helpers: Joi.CustomHelpers) =>
         this.validateIsbnField(value, helpers)
       ),
-    description: Joi.string().optional().max(5000).trim(),
-    publishedDate: Joi.date().iso().optional(),
-    pageCount: Joi.number().integer().min(1).max(50000).optional(),
-    language: Joi.string().length(2).optional(),
-    publisher: Joi.string().max(200).optional().trim(),
-    physicalFormat: Joi.string().max(100).optional().trim(),
-    weight: Joi.string().max(50).optional().trim(),
+    editionNumber: Joi.number().integer().min(1).optional(),
+    editionDate: Joi.date().iso().optional().allow(null),
+    status: Joi.string()
+      .valid('in progress', 'finished', 'paused')
+      .optional(),
+    notes: Joi.string().optional().max(5000).trim(),
     authorIds: Joi.array().items(Joi.number().integer().positive()).optional(),
     categoryIds: Joi.array().items(Joi.number().integer().positive()).optional(),
   });
 
-  private readonly updateBookSchema = this.createBookSchema.fork(['title'], schema =>
+  private readonly updateBookSchema = this.createBookSchema.fork(['isbnCode'], schema =>
     schema.optional()
   );
 
   private readonly searchFiltersSchema = Joi.object<BookSearchFilters>({
-    title: Joi.string().max(200).optional().trim(),
-    author: Joi.string().max(200).optional().trim(),
-    category: Joi.string().max(100).optional().trim(),
-    isbn: Joi.string()
-      .optional()
+    title: Joi.string().required().max(200).trim(),
+    isbnCode: Joi.string()
+      .required()
       .custom((value: string, helpers: Joi.CustomHelpers) =>
         this.validateIsbnField(value, helpers)
       ),
-    publisher: Joi.string().max(200).optional().trim(),
-    language: Joi.string().length(2).optional(),
-    publishedYear: Joi.number()
-      .integer()
-      .min(1000)
-      .max(new Date().getFullYear() + 10)
-      .optional(),
+    editionNumber: Joi.number().integer().min(1).optional(),
+    editionDate: Joi.date().iso().optional().allow(null),
+    status: Joi.string().valid('in progress', 'finished', 'paused').optional(),
+    notes: Joi.string().optional().max(5000).trim(),
+    author: Joi.string().max(200).optional().trim(),
+    category: Joi.string().max(100).optional().trim(),
   });
 
   private validateIsbnField(value: string, helpers: Joi.CustomHelpers): string | Joi.ErrorReport {
@@ -87,391 +95,409 @@ export class BookController extends BaseController {
     if (!validation.isValid) {
       return helpers.error('any.invalid', { message: `Invalid ISBN: ${validation.error}` });
     }
-    return validation.normalizedIsbn;
+    return validation.normalizedIsbn as string;
   }
 
-  async createBook(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const body = this.parseBody<CreateBookRequest>(event);
-      if (!body) {
-        return this.createErrorResponse('Request body is required', 400);
-      }
+  /**
+   * Creates a new book.
+   * @param request The universal request object.
+   * @returns An ApiResponse object with the newly created book or an error.
+   */
+  async createBook(request: UniversalRequest): Promise<ApiResponse> {
+    const body = this.parseBody<CreateBookRequest>(request);
+    if (!body) {
+      return this.createErrorResponse('Request body is required', 400);
+    }
 
-      const validation = this.validateRequest(body, this.createBookSchema);
-      if (!validation.isValid) {
-        return this.createErrorResponse('Validation failed', 400, validation.errors);
-      }
+    const validation = this.validateRequest(body, this.createBookSchema);
+    if (!validation.isValid) {
+      return this.createErrorResponse('Validation failed', 400, validation.errors);
+    }
 
-      const bookData = validation.value!;
+    const bookData = validation.value!;
+    const userId = request.user?.userId;
 
-      // Check if book with ISBN already exists
-      if (bookData.isbn) {
-        const existingBook = await Book.findOne({ where: { isbnCode: bookData.isbn } });
-        if (existingBook) {
-          return this.createErrorResponse('Book with this ISBN already exists', 409);
-        }
-      }
+    // Check if book with ISBN already exists
+    const whereClause: WhereOptions<BookAttributes> = {
+      isbnCode: bookData.isbnCode,
+    };
+    if (userId) {
+      Object.assign(whereClause, { userId });
+    }
 
-      // Validate author IDs
-      if (bookData.authorIds && bookData.authorIds.length > 0) {
-        const authors = await Author.findAll({
-          where: { id: bookData.authorIds },
-          attributes: ['id'],
-        });
+    const existingBook = await Book.findOne({ where: whereClause });
+    if (existingBook) {
+      return this.createErrorResponse('Book with this ISBN already exists', 409);
+    }
 
-        if (authors.length !== bookData.authorIds.length) {
-          return this.createErrorResponse('One or more author IDs are invalid', 400);
-        }
-      }
-
-      // Validate category IDs
-      if (bookData.categoryIds && bookData.categoryIds.length > 0) {
-        const categories = await Category.findAll({
-          where: { id: bookData.categoryIds },
-          attributes: ['id'],
-        });
-
-        if (categories.length !== bookData.categoryIds.length) {
-          return this.createErrorResponse('One or more category IDs are invalid', 400);
-        }
-      }
-
-      // Create book
-      const bookCreateData: BookCreationAttributes = {
-        title: bookData.title,
-        isbnCode: bookData.isbn || '',
-        editionDate: bookData.publishedDate ? new Date(bookData.publishedDate) : undefined,
-        notes: bookData.description || undefined,
-      };
-      const book = await Book.create(bookCreateData);
-
-      // Associate authors
-      if (bookData.authorIds && bookData.authorIds.length > 0) {
-        const authors = await Author.findAll({ where: { id: bookData.authorIds } });
-        await book.addAuthors(authors);
-      }
-
-      // Associate categories
-      if (bookData.categoryIds && bookData.categoryIds.length > 0) {
-        const categories = await Category.findAll({ where: { id: bookData.categoryIds } });
-        await book.addCategories(categories);
-      }
-
-      // Fetch complete book with associations
-      const createdBook = await Book.findByPk(book.id, {
-        include: [
-          { model: Author, through: { attributes: [] } },
-          { model: Category, through: { attributes: [] } },
-        ],
+    // Validate and link authors
+    let authors: Author[]  = [];
+    if (bookData.authorIds && bookData.authorIds.length > 0) {
+      authors = await Author.findAll({
+        where: { id: bookData.authorIds },
+        attributes: ['id'],
       });
-
-      return this.createSuccessResponse(createdBook, 'Book created successfully', undefined, 201);
-    });
-  }
-
-  async getBook(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const bookId = this.getPathParameter(event, 'id');
-      if (!bookId || isNaN(Number(bookId))) {
-        return this.createErrorResponse('Valid book ID is required', 400);
+      if (authors.length !== bookData.authorIds.length) {
+        return this.createErrorResponse('One or more author IDs are invalid', 400);
       }
+    }
 
-      const book = await Book.findByPk(Number(bookId), {
-        include: [
-          { model: Author, through: { attributes: [] } },
-          { model: Category, through: { attributes: [] } },
-        ],
+    // Validate and link categories
+    let categories: Category[] = [];
+    if (bookData.categoryIds && bookData.categoryIds.length > 0) {
+      categories = await Category.findAll({
+        where: { id: bookData.categoryIds },
+        attributes: ['id'],
       });
-
-      if (!book) {
-        return this.createErrorResponse('Book not found', 404);
+      if (categories.length !== bookData.categoryIds.length) {
+        return this.createErrorResponse('One or more category IDs are invalid', 400);
       }
+    }
 
-      return this.createSuccessResponse(book);
-    });
+    // Prepare book creation data
+    const bookCreateData: BookCreationAttributes = {
+      title: bookData.title,
+      isbnCode: bookData.isbnCode,
+      editionNumber: bookData.editionNumber,
+      editionDate: bookData.editionDate ? new Date(bookData.editionDate) : undefined,
+      status: bookData.status,
+      notes: bookData.notes,
+      userId,
+    };
+
+    const newBook = await Book.create(bookCreateData as any);
+
+    // Associate authors and categories
+    if (authors.length > 0) {
+      await newBook.addAuthors(authors as Author[]);
+    }
+    if (categories.length > 0) {
+      await newBook.addCategories(categories as Category[]);
+    }
+
+    // Fetch complete book with associations
+    const createdBook = await this.getBookWithAssociations(newBook.id);
+
+    return this.createSuccessResponse(createdBook, 'Book created successfully', undefined, 201);
   }
 
-  async updateBook(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const bookId = this.getPathParameter(event, 'id');
-      if (!bookId || isNaN(Number(bookId))) {
-        return this.createErrorResponse('Valid book ID is required', 400);
-      }
+  /**
+   * Retrieves a single book by its ID.
+   * @param request The universal request object.
+   * @returns An ApiResponse object with the book data or an error.
+   */
+  async getBook(request: UniversalRequest): Promise<ApiResponse> {
+    const bookId = this.getPathParameter(request, 'id');
+    if (!bookId || isNaN(Number(bookId))) {
+      return this.createErrorResponse('Valid book ID is required', 400);
+    }
 
-      const body = this.parseBody<Partial<CreateBookRequest>>(event);
-      if (!body) {
-        return this.createErrorResponse('Request body is required', 400);
-      }
+    const whereClause: WhereOptions<BookAttributes> = {
+      id: Number(bookId),
+    };
+    if (request.user) {
+      Object.assign(whereClause, { userId: request.user.userId });
+    }
 
-      const validation = this.validateRequest(body, this.updateBookSchema);
-      if (!validation.isValid) {
-        return this.createErrorResponse('Validation failed', 400, validation.errors);
-      }
-
-      const book = await Book.findByPk(Number(bookId));
-      if (!book) {
-        return this.createErrorResponse('Book not found', 404);
-      }
-
-      const bookData = validation.value!;
-
-      // Check if ISBN is being changed and if it conflicts
-      if (bookData.isbn && bookData.isbn !== book.isbnCode) {
-        const existingBook = await Book.findOne({ where: { isbnCode: bookData.isbn } });
-        if (existingBook && existingBook.id !== book.id) {
-          return this.createErrorResponse('Book with this ISBN already exists', 409);
-        }
-      }
-
-      // Update book fields
-      await book.update({
-        title: bookData.title ?? book.title,
-        isbnCode: bookData.isbn ?? book.isbnCode,
-        notes: bookData.description ?? book.notes,
-        editionDate: bookData.publishedDate ? new Date(bookData.publishedDate) : book.editionDate,
-      });
-
-      // Update associations if provided
-      if (bookData.authorIds !== undefined) {
-        if (bookData.authorIds.length > 0) {
-          const authors = await Author.findAll({
-            where: { id: bookData.authorIds },
-            attributes: ['id'],
-          });
-
-          if (authors.length !== bookData.authorIds.length) {
-            return this.createErrorResponse('One or more author IDs are invalid', 400);
-          }
-        }
-        // Remove existing authors and add new ones
-        await book.removeAuthors(book.authors || []);
-        if (bookData.authorIds.length > 0) {
-          const authors = await Author.findAll({ where: { id: bookData.authorIds } });
-          await book.addAuthors(authors);
-        }
-      }
-
-      if (bookData.categoryIds !== undefined) {
-        if (bookData.categoryIds.length > 0) {
-          const categories = await Category.findAll({
-            where: { id: bookData.categoryIds },
-            attributes: ['id'],
-          });
-
-          if (categories.length !== bookData.categoryIds.length) {
-            return this.createErrorResponse('One or more category IDs are invalid', 400);
-          }
-        }
-        // Remove existing categories and add new ones
-        await book.removeCategories(book.categories || []);
-        if (bookData.categoryIds.length > 0) {
-          const categories = await Category.findAll({ where: { id: bookData.categoryIds } });
-          await book.addCategories(categories);
-        }
-      }
-
-      // Fetch updated book with associations
-      const updatedBook = await Book.findByPk(book.id, {
-        include: [
-          { model: Author, through: { attributes: [] } },
-          { model: Category, through: { attributes: [] } },
-        ],
-      });
-
-      return this.createSuccessResponse(updatedBook, 'Book updated successfully');
-    });
-  }
-
-  async deleteBook(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const bookId = this.getPathParameter(event, 'id');
-      if (!bookId || isNaN(Number(bookId))) {
-        return this.createErrorResponse('Valid book ID is required', 400);
-      }
-
-      const book = await Book.findByPk(Number(bookId));
-      if (!book) {
-        return this.createErrorResponse('Book not found', 404);
-      }
-
-      await book.destroy();
-
-      return this.createSuccessResponse(null, 'Book deleted successfully', undefined, 204);
-    });
-  }
-
-  async listBooks(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const pagination = this.getPaginationParams(event);
-      const filters = this.getQueryParameter(event, 'filters');
-
-      let searchFilters: BookSearchFilters = {};
-      if (filters) {
-        try {
-          searchFilters = JSON.parse(filters) as BookSearchFilters;
-          const filterValidation = this.validateRequest(searchFilters, this.searchFiltersSchema);
-          if (!filterValidation.isValid) {
-            return this.createErrorResponse('Invalid search filters', 400, filterValidation.errors);
-          }
-          searchFilters = filterValidation.value!;
-        } catch {
-          return this.createErrorResponse('Invalid filters format. Expected JSON string.', 400);
-        }
-      }
-
-      const whereClause: WhereOptions<BookAttributes> = {};
-      const includeClause = [
+    const book = await Book.findOne({
+      where: whereClause,
+      include: [
         { model: Author, through: { attributes: [] } },
         { model: Category, through: { attributes: [] } },
-      ];
-
-      // Apply filters
-      if (searchFilters.title) {
-        whereClause.title = { [Op.iLike]: `%${searchFilters.title}%` };
-      }
-
-      if (searchFilters.isbn) {
-        whereClause.isbnCode = searchFilters.isbn;
-      }
-
-      // Note: publisher field not implemented in BookAttributes
-      // if (searchFilters.publisher) {
-      //   (whereClause as any).publisher = { [Op.iLike]: `%${searchFilters.publisher}%` };
-      // }
-
-      // Note: language field not implemented in BookAttributes
-      // if (searchFilters.language) {
-      //   (whereClause as any).language = searchFilters.language;
-      // }
-
-      // Note: publishedDate field not matching editionDate in BookAttributes
-      if (searchFilters.publishedYear) {
-        Object.assign(whereClause, {
-          editionDate: {
-            [Op.gte]: new Date(`${searchFilters.publishedYear}-01-01`),
-            [Op.lt]: new Date(`${searchFilters.publishedYear + 1}-01-01`),
-          },
-        });
-      }
-
-      // Author filter
-      if (searchFilters.author) {
-        includeClause[0] = {
-          model: Author,
-          through: { attributes: [] },
-          where: {
-            [Op.or]: [
-              { name: { [Op.iLike]: `%${searchFilters.author}%` } },
-              { surname: { [Op.iLike]: `%${searchFilters.author}%` } },
-            ],
-          },
-        };
-      }
-
-      // Category filter
-      if (searchFilters.category) {
-        includeClause[1] = {
-          model: Category,
-          through: { attributes: [] },
-          where: {
-            name: { [Op.iLike]: `%${searchFilters.category}%` },
-          },
-        };
-      }
-
-      const { count, rows } = await Book.findAndCountAll({
-        where: whereClause,
-        include: includeClause,
-        limit: pagination.limit,
-        offset: pagination.offset,
-        order: [['updatedAt', 'DESC']],
-        distinct: true,
-      });
-
-      const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
-
-      return this.createSuccessResponse(rows, undefined, meta);
+      ],
     });
+
+    if (!book) {
+      return this.createErrorResponse('Book not found', 404);
+    }
+
+    return this.createSuccessResponse(book);
   }
 
-  async searchBooksByIsbn(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const isbn = this.getQueryParameter(event, 'isbn');
-      if (!isbn) {
-        return this.createErrorResponse('ISBN parameter is required', 400);
-      }
+  /**
+   * Updates an existing book.
+   * @param request The universal request object.
+   * @returns An ApiResponse object with the updated book or an error.
+   */
+  async updateBook(request: UniversalRequest): Promise<ApiResponse> {
+    const bookId = this.getPathParameter(request, 'id');
+    if (!bookId || isNaN(Number(bookId))) {
+      return this.createErrorResponse('Valid book ID is required', 400);
+    }
 
-      const validation = validateIsbn(isbn);
-      if (!validation.isValid) {
-        return this.createErrorResponse(`Invalid ISBN: ${validation.error}`, 400);
-      }
+    const body = this.parseBody<Partial<CreateBookRequest>>(request);
+    if (!body) {
+      return this.createErrorResponse('Request body is required', 400);
+    }
 
-      // First check local database
-      const localBook = await Book.findOne({
-        where: { isbnCode: validation.normalizedIsbn },
-        include: [
-          { model: Author, through: { attributes: [] } },
-          { model: Category, through: { attributes: [] } },
-        ],
+    const validation = this.validateRequest(body, this.updateBookSchema);
+    if (!validation.isValid) {
+      return this.createErrorResponse('Validation failed', 400, validation.errors);
+    }
+    const bookData = validation.value!;
+
+    const whereClause: WhereOptions<BookAttributes> = {
+      id: Number(bookId),
+    };
+    if (request.user) {
+      Object.assign(whereClause, { userId: request.user.userId });
+    }
+
+    const book = await Book.findOne({ where: whereClause });
+    if (!book) {
+      return this.createErrorResponse('Book not found', 404);
+    }
+
+    const updateData: Partial<BookAttributes> = {
+      title: bookData.title,
+      editionNumber: bookData.editionNumber,
+      editionDate: bookData.editionDate === null
+        ? undefined
+        : (bookData.editionDate ? new Date(bookData.editionDate) : undefined),
+      status: bookData.status,
+      notes: bookData.notes,
+    };
+
+    await book.update(updateData);
+
+    // Update associations if provided
+    if (bookData.authorIds !== undefined) {
+      await this.updateAssociations(book, Author, bookData.authorIds, 'authors', 'setAuthors');
+    }
+
+    if (bookData.categoryIds !== undefined) {
+      await this.updateAssociations(book, Category, bookData.categoryIds, 'categories', 'setCategories');
+    }
+
+    const updatedBook = await this.getBookWithAssociations(book.id);
+
+    return this.createSuccessResponse(updatedBook, 'Book updated successfully');
+  }
+
+  /**
+   * Deletes a book by its ID.
+   * @param request The universal request object.
+   * @returns A success message or an error.
+   */
+  async deleteBook(request: UniversalRequest): Promise<ApiResponse> {
+    const bookId = this.getPathParameter(request, 'id');
+    if (!bookId || isNaN(Number(bookId))) {
+      return this.createErrorResponse('Valid book ID is required', 400);
+    }
+
+    const whereClause: WhereOptions<BookAttributes> = {
+      id: Number(bookId),
+    };
+    if (request.user) {
+      Object.assign(whereClause, { userId: request.user.userId });
+    }
+
+    const book = await Book.findOne({ where: whereClause });
+    if (!book) {
+      return this.createErrorResponse('Book not found', 404);
+    }
+
+    await book.destroy();
+
+    return this.createSuccessResponse(null, 'Book deleted successfully', undefined, 204);
+  }
+
+  /**
+   * Lists all books with pagination and filtering.
+   * @param request The universal request object.
+   * @returns An ApiResponse with a list of books and pagination metadata.
+   */
+  async listBooks(request: UniversalRequest): Promise<ApiResponse> {
+    const pagination = this.getPaginationParams(request);
+    const filters = this.getQueryParameter(request, 'filters');
+    const includeAuthors = this.getQueryParameter(request, 'includeAuthors') === 'true';
+    const includeCategories = this.getQueryParameter(request, 'includeCategories') === 'true';
+
+    let searchFilters: BookSearchFilters = {};
+    if (filters) {
+      try {
+        searchFilters = JSON.parse(filters) as BookSearchFilters;
+        const filterValidation = this.validateRequest(searchFilters, this.searchFiltersSchema);
+        if (!filterValidation.isValid) {
+          return this.createErrorResponse('Invalid search filters', 400, filterValidation.errors);
+        }
+        searchFilters = filterValidation.value!;
+      } catch {
+        return this.createErrorResponse('Invalid filters format. Expected JSON string.', 400);
+      }
+    }
+
+    const whereConditions: WhereOptions<BookAttributes>[] = [];
+    const includeClause = [];
+
+    // Add user ID to the where clause if the user is authenticated
+    if (request.user) {
+      whereConditions.push({ userId: request.user.userId });
+    }
+
+    // Apply title filter
+    if (searchFilters.title) {
+      whereConditions.push({ title: { [Op.iLike]: `%${searchFilters.title}%` } });
+    }
+
+    // Apply ISBN filter
+    if (searchFilters.isbnCode) {
+      whereConditions.push({ isbnCode: searchFilters.isbnCode });
+    }
+
+    // Apply edition number filter
+    if (searchFilters.editionNumber) {
+      whereConditions.push({ editionNumber: searchFilters.editionNumber });
+    }
+
+    // Apply edition date filter
+    if (searchFilters.editionDate) {
+      whereConditions.push({ editionDate: searchFilters.editionDate });
+    }
+
+    // Apply notes filter
+    if (searchFilters.notes) {
+      whereConditions.push({ notes: { [Op.iLike]: `%${searchFilters.notes}%` } });
+    }
+    
+    // Apply status filter
+    if (searchFilters.status) {
+      whereConditions.push({ status: searchFilters.status });
+    }
+
+    // Add author and category filters as includes
+    if (searchFilters.author) {
+      includeClause.push({
+        model: Author,
+        through: { attributes: [] },
+        where: {
+          [Op.or]: [
+            { name: { [Op.iLike]: `%${searchFilters.author}%` } },
+            { surname: { [Op.iLike]: `%${searchFilters.author}%` } },
+          ],
+        },
       });
+    }
 
-      if (localBook) {
-        return this.createSuccessResponse({
-          source: 'local',
-          book: localBook,
-        });
-      }
+    if (searchFilters.category) {
+      includeClause.push({
+        model: Category,
+        through: { attributes: [] },
+        where: {
+          name: { [Op.iLike]: `%${searchFilters.category}%` },
+        },
+      });
+    }
 
-      // If not found locally, try ISBN service
-      const result = await isbnService.lookupBook(validation.normalizedIsbn!);
+    // Include authors and categories if requested
+    if (includeAuthors && !searchFilters.author) {
+      includeClause.push({ model: Author, through: { attributes: [] } });
+    }
+    if (includeCategories && !searchFilters.category) {
+      includeClause.push({ model: Category, through: { attributes: [] } });
+    }
 
+    const whereClause = whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
+
+    const { count, rows: books } = await Book.findAndCountAll({
+      where: whereClause,
+      include: includeClause,
+      limit: pagination.limit,
+      offset: pagination.offset,
+      order: [['title', 'ASC']],
+      distinct: true, // Required for correct counting with includes
+    });
+
+    const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
+
+    return this.createSuccessResponse(books, undefined, meta);
+  }
+
+  /**
+   * Looks up a book by its ISBN from local and external sources.
+   * @param request The universal request object.
+   * @returns An ApiResponse with the book data or an error.
+   */
+  async searchBooksByIsbn(request: UniversalRequest): Promise<ApiResponse> {
+    const isbn = this.getQueryParameter(request, 'isbn');
+    if (!isbn) {
+      return this.createErrorResponse('ISBN parameter is required', 400);
+    }
+
+    const validation = validateIsbn(isbn);
+    if (!validation.isValid) {
+      return this.createErrorResponse(`Invalid ISBN: ${validation.error}`, 400);
+    }
+
+    // Check local database first
+    const localBook = await Book.findOne({
+      where: { isbnCode: validation.normalizedIsbn },
+      include: [
+        { model: Author, through: { attributes: [] } },
+        { model: Category, through: { attributes: [] } },
+      ],
+    });
+
+    if (localBook) {
       return this.createSuccessResponse({
-        source: result.source,
-        book: result.success ? result.book : null,
-        error: result.success ? undefined : result.error,
+        source: 'local',
+        book: localBook,
       });
+    }
+
+    // If not found locally, try ISBN service
+    const result = await isbnService.lookupBook(validation.normalizedIsbn!);
+
+    return this.createSuccessResponse({
+      source: result.source,
+      book: result.success ? result.book : null,
+      error: result.success ? undefined : result.error,
     });
   }
 
-  async importBookFromIsbn(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    return this.handleRequest(event, async () => {
-      const body = this.parseBody<{ isbn: string }>(event);
-      if (!body?.isbn) {
-        return this.createErrorResponse('ISBN is required', 400);
-      }
+  /**
+   * Imports a book from an external ISBN service into the database.
+   * @param request The universal request object.
+   * @returns An ApiResponse with the imported book or an error.
+   */
+  async importBookFromIsbn(request: UniversalRequest): Promise<ApiResponse> {
+    const body = this.parseBody<{ isbn: string }>(request);
+    if (!body?.isbn) {
+      return this.createErrorResponse('ISBN is required', 400);
+    }
+    const userId = request.user?.userId;
 
-      const validation = validateIsbn(body.isbn);
-      if (!validation.isValid) {
-        return this.createErrorResponse(`Invalid ISBN: ${validation.error}`, 400);
-      }
+    const validation = validateIsbn(body.isbn);
+    if (!validation.isValid) {
+      return this.createErrorResponse(`Invalid ISBN: ${validation.error}`, 400);
+    }
 
-      // Check if book already exists
-      const existingBook = await Book.findOne({ where: { isbnCode: validation.normalizedIsbn } });
-      if (existingBook) {
-        return this.createErrorResponse('Book with this ISBN already exists', 409);
-      }
+    // Check if book already exists for this user (if applicable)
+    const whereClause: WhereOptions<BookAttributes> = {
+      isbnCode: validation.normalizedIsbn,
+    };
+    if (userId) {
+      Object.assign(whereClause, { userId });
+    }
+    const existingBook = await Book.findOne({ where: whereClause });
+    if (existingBook) {
+      return this.createErrorResponse('Book with this ISBN already exists', 409);
+    }
 
-      // Lookup book data from ISBN service
-      const result = await isbnService.lookupBook(validation.normalizedIsbn!);
-      if (!result.success || !result.book) {
-        return this.createErrorResponse(result.error || 'Book not found in external sources', 404);
-      }
+    // Lookup book data from ISBN service
+    const result = await isbnService.lookupBook(validation.normalizedIsbn!);
+    if (!result.success || !result.book) {
+      return this.createErrorResponse(result.error || 'Book not found in external sources', 404);
+    }
 
-      const bookData = result.book;
+    const bookData = result.book;
 
-      // Create book from external data
-      const bookCreateData: BookCreationAttributes = {
-        title: bookData.title,
-        isbnCode: bookData.isbnCode,
-        notes: bookData.description || undefined,
-        editionDate: bookData.editionDate || undefined,
-      };
-      const book = await Book.create(bookCreateData);
-
-      // Create authors if they don't exist
-      if (bookData.authors && bookData.authors.length > 0) {
-        const authorPromises = bookData.authors.map(async authorData => {
-          const [author] = await Author.findOrCreate({
+    // Create authors if they don't exist
+    let authors: Author[] = [];
+    if (bookData.authors && bookData.authors.length > 0) {
+      authors = await Promise.all(
+        bookData.authors.map(authorData =>
+          Author.findOrCreate({
             where: {
               name: authorData.name,
               surname: authorData.surname || '',
@@ -479,430 +505,170 @@ export class BookController extends BaseController {
             defaults: {
               name: authorData.name,
               surname: authorData.surname || '',
-              nationality: authorData.nationality || undefined,
-            },
-          });
-          return author;
-        });
-
-        const authors = await Promise.all(authorPromises);
-        await book.addAuthors(authors);
-      }
-
-      // Create categories if they don't exist
-      if (bookData.categories && bookData.categories.length > 0) {
-        const categoryPromises = bookData.categories.map(async categoryData => {
-          const [category] = await Category.findOrCreate({
-            where: { name: categoryData.name },
-            defaults: {
-              name: categoryData.name,
-            },
-          });
-          return category;
-        });
-
-        const categories = await Promise.all(categoryPromises);
-        await book.addCategories(categories);
-      }
-
-      // Fetch complete book with associations
-      const importedBook = await Book.findByPk(book.id, {
-        include: [
-          { model: Author, through: { attributes: [] } },
-          { model: Category, through: { attributes: [] } },
-        ],
-      });
-
-      return this.createSuccessResponse(
-        {
-          book: importedBook,
-          source: result.source,
-          responseTime: result.responseTime,
-        },
-        'Book imported successfully',
-        undefined,
-        201
+              nationality: authorData.nationality || null,
+            } as any,
+          }).then(([author]) => author)
+        )
       );
+    }
+
+    // Create categories if they don't exist
+    let categories: Category[] = [];
+    if (bookData.categories && bookData.categories.length > 0) {
+      categories = await Promise.all(
+        bookData.categories.map(categoryData =>
+          Category.findOrCreate({
+            where: { name: categoryData.name },
+            defaults: { name: categoryData.name } as any,
+          }).then(([category]) => category)
+        )
+      );
+    }
+
+    // Create book from external data
+    const bookCreateData: BookCreationAttributes = {
+      title: bookData.title,
+      isbnCode: bookData.isbnCode,
+      editionNumber: bookData.editionNumber,
+      editionDate: bookData.editionDate,
+      status: (bookData as any).status,
+      notes: (bookData as any).notes,
+      userId, // Associate with user if authenticated
+    };
+    const book = await Book.create(bookCreateData as any);
+
+    // Associate authors and categories with the new book
+    if (authors.length > 0) {
+      await book.addAuthors(authors);
+    }
+    if (categories.length > 0) {
+      await book.addCategories(categories);
+    }
+
+    // Fetch complete book with associations for the response
+    const importedBook = await this.getBookWithAssociations(book.id);
+
+    return this.createSuccessResponse(
+      {
+        book: importedBook,
+        source: result.source,
+        responseTime: result.responseTime,
+      },
+      'Book imported successfully',
+      undefined,
+      201
+    );
+  }
+
+  // --- Helper Methods ---
+
+  /**
+   * Fetches a book by ID with its authors and categories.
+   * @param id The book ID.
+   * @returns The book model instance or null.
+   */
+  private async getBookWithAssociations(id: number): Promise<Book | null> {
+    return Book.findByPk(id, {
+      include: [
+        { model: Author, through: { attributes: [] } },
+        { model: Category, through: { attributes: [] } },
+      ],
     });
   }
 
-  // Express methods for authenticated users
-  static async getUserBooks(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
-        return;
-      }
-
-      const {
-        page = 1,
-        limit = 10,
-        status,
-        search,
-      } = req.query as {
-        page?: string;
-        limit?: string;
-        status?: string;
-        search?: string;
-      };
-      const offset = (Number(page) - 1) * Number(limit);
-
-      const whereClause: WhereOptions<BookAttributes> = { userId: req.user.userId };
-
-      if (status && ['in progress', 'paused', 'finished'].includes(status)) {
-        Object.assign(whereClause, { status });
-      }
-
-      if (search) {
-        whereClause.title = {
-          [Op.iLike]: `%${search}%`,
-        };
-      }
-
-      const { count, rows: books } = await Book.findAndCountAll({
-        where: whereClause,
-        include: [
-          {
-            model: Author,
-            as: 'authors',
-            through: { attributes: [] },
-          },
-          {
-            model: Category,
-            as: 'categories',
-            through: { attributes: [] },
-          },
-        ],
-        limit: Number(limit),
-        offset,
-        order: [['title', 'ASC']],
+  /**
+   * Updates associations for a given book.
+   * @param book The book instance to update.
+   * @param model The target model for the association (e.g., Author, Category).
+   * @param ids An array of IDs to set.
+   * @param associationName The name of the association in the Book model (e.g., 'authors').
+   * @param setMethod The name of the Sequelize set method (e.g., 'setAuthors').
+   */
+  private async updateAssociations(
+    book: Book,
+    model: any,
+    ids: number[],
+    associationName: string,
+    setMethod: string,
+  ): Promise<void> {
+    if (ids.length > 0) {
+      const associatedModels = await model.findAll({
+        where: { id: ids },
+        attributes: ['id'],
       });
 
-      res.status(200).json({
-        books: books.map(book => book.toJSON()),
-        pagination: {
-          currentPage: Number(page),
-          totalPages: Math.ceil(count / Number(limit)),
-          totalItems: count,
-          itemsPerPage: Number(limit),
-        },
-      });
-    } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error fetching user books:', error);
-      res.status(500).json({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+      if (associatedModels.length !== ids.length) {
+        throw new Error(`One or more ${associationName} IDs are invalid`);
+      }
+
+      await (book as any)[setMethod](associatedModels);
+    } else {
+      await (book as any)[setMethod]([]); // Clear all associations
     }
   }
 
-  static async getBookById(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
-        return;
-      }
-
-      const { id } = req.params as { id: string };
-      const bookId = Number(id);
-
-      if (!bookId || isNaN(bookId)) {
-        res.status(400).json({ error: 'Invalid book ID' });
-        return;
-      }
-
-      const book = await Book.findOne({
-        where: {
-          id: bookId,
-          userId: req.user.userId,
-        },
-        include: [
-          {
-            model: Author,
-            as: 'authors',
-            through: { attributes: [] },
-          },
-          {
-            model: Category,
-            as: 'categories',
-            through: { attributes: [] },
-          },
-        ],
-      });
-
-      if (!book) {
-        res.status(404).json({ error: 'Book not found' });
-        return;
-      }
-
-      res.status(200).json(book.toJSON());
-    } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error fetching book:', error);
-      res.status(500).json({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+  // User-specific methods for route compatibility
+  async getUserBooks(request: UniversalRequest): Promise<ApiResponse> {
+    if (!request.user?.userId) {
+      return this.createErrorResponse('User authentication required', 401);
     }
+    
+    const modifiedRequest = {
+      ...request,
+      queryStringParameters: {
+        ...request.queryStringParameters,
+        userId: request.user.userId.toString()
+      }
+    };
+    
+    return this.listBooks(modifiedRequest);
   }
 
-  static async createBookForUser(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
-        return;
-      }
-
-      if (!req.body) {
-        res.status(400).json({ error: 'Request body is required' });
-        return;
-      }
-
-      const requestBody = req.body as {
-        title?: string;
-        isbnCode?: string;
-        editionNumber?: number;
-        editionDate?: string;
-        status?: string;
-        notes?: string;
-        authorIds?: number[];
-        categoryIds?: number[];
-      };
-
-      const {
-        title,
-        isbnCode,
-        editionNumber,
-        editionDate,
-        status,
-        notes,
-        authorIds = [],
-        categoryIds = [],
-      } = requestBody;
-
-      if (!title) {
-        res.status(400).json({ error: 'Title is required' });
-        return;
-      }
-
-      if (!isbnCode) {
-        res.status(400).json({ error: 'ISBN code is required' });
-        return;
-      }
-
-      if (!validateIsbn(isbnCode).isValid) {
-        res.status(400).json({ error: 'Invalid ISBN format' });
-        return;
-      }
-
-      const existingBook = await Book.findOne({
-        where: { isbnCode, userId: req.user.userId },
-      });
-
-      if (existingBook) {
-        res.status(409).json({ error: 'Book with this ISBN already exists in your library' });
-        return;
-      }
-
-      const bookData: BookCreationAttributes = {
-        title,
-        isbnCode,
-        editionNumber: editionNumber || undefined,
-        editionDate: editionDate ? new Date(editionDate) : undefined,
-        status: status || undefined,
-        notes: notes || undefined,
-        userId: req.user.userId,
-      };
-
-      const book = await Book.create(bookData);
-
-      if (authorIds.length > 0) {
-        for (const authorId of authorIds) {
-          await BookAuthor.create({
-            bookId: book.id,
-            authorId: authorId,
-          });
-        }
-      }
-
-      if (categoryIds.length > 0) {
-        for (const categoryId of categoryIds) {
-          await BookCategory.create({
-            bookId: book.id,
-            categoryId: categoryId,
-          });
-        }
-      }
-
-      const createdBook = await Book.findByPk(book.id, {
-        include: [
-          {
-            model: Author,
-            as: 'authors',
-            through: { attributes: [] },
-          },
-          {
-            model: Category,
-            as: 'categories',
-            through: { attributes: [] },
-          },
-        ],
-      });
-
-      res.status(201).json(createdBook?.toJSON());
-    } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error creating book:', error);
-      res.status(500).json({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+  async getBookById(request: UniversalRequest): Promise<ApiResponse> {
+    if (!request.user?.userId) {
+      return this.createErrorResponse('User authentication required', 401);
     }
+    
+    return this.getBook(request);
   }
 
-  static async updateBookForUser(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
-        return;
-      }
-
-      const { id } = req.params as { id: string };
-      const bookId = Number(id);
-
-      if (!bookId || isNaN(bookId)) {
-        res.status(400).json({ error: 'Invalid book ID' });
-        return;
-      }
-
-      const book = await Book.findOne({
-        where: {
-          id: bookId,
-          userId: req.user.userId,
-        },
-      });
-
-      if (!book) {
-        res.status(404).json({ error: 'Book not found' });
-        return;
-      }
-
-      const updateBody = req.body as {
-        title?: string;
-        editionNumber?: number;
-        editionDate?: string;
-        status?: string;
-        notes?: string;
-      };
-      const { title, editionNumber, editionDate, status, notes } = updateBody;
-
-      await book.update({
-        ...(title && { title }),
-        ...(editionNumber !== undefined && { editionNumber }),
-        ...(editionDate !== undefined && {
-          editionDate: editionDate ? new Date(editionDate) : null,
-        }),
-        ...(status !== undefined && { status }),
-        ...(notes !== undefined && { notes }),
-      });
-
-      const updatedBook = await Book.findByPk(book.id, {
-        include: [
-          {
-            model: Author,
-            as: 'authors',
-            through: { attributes: [] },
-          },
-          {
-            model: Category,
-            as: 'categories',
-            through: { attributes: [] },
-          },
-        ],
-      });
-
-      res.status(200).json(updatedBook?.toJSON());
-    } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error updating book:', error);
-      res.status(500).json({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+  async createBookForUser(request: UniversalRequest): Promise<ApiResponse> {
+    if (!request.user?.userId) {
+      return this.createErrorResponse('User authentication required', 401);
     }
+    
+    // Add userId to the request body
+    const body = this.parseBody(request) as any;
+    if (body) {
+      body.userId = request.user.userId;
+      request.body = JSON.stringify(body);
+    }
+    
+    return this.createBook(request);
   }
 
-  static async deleteBookForUser(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
-        return;
-      }
-
-      const { id } = req.params as { id: string };
-      const bookId = Number(id);
-
-      if (!bookId || isNaN(bookId)) {
-        res.status(400).json({ error: 'Invalid book ID' });
-        return;
-      }
-
-      const book = await Book.findOne({
-        where: {
-          id: bookId,
-          userId: req.user.userId,
-        },
-      });
-
-      if (!book) {
-        res.status(404).json({ error: 'Book not found' });
-        return;
-      }
-
-      await book.destroy();
-
-      res.status(204).send();
-    } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error deleting book:', error);
-      res.status(500).json({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+  async updateBookForUser(request: UniversalRequest): Promise<ApiResponse> {
+    if (!request.user?.userId) {
+      return this.createErrorResponse('User authentication required', 401);
     }
+    
+    return this.updateBook(request);
   }
 
-  static async searchByIsbnForUser(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
-        return;
-      }
-
-      const { isbn } = req.params as { isbn: string };
-
-      if (!isbn || !validateIsbn(isbn).isValid) {
-        res.status(400).json({ error: 'Invalid ISBN format' });
-        return;
-      }
-
-      const bookData = await isbnService.lookupBook(isbn);
-
-      if (!bookData.success) {
-        res.status(404).json({ error: 'Book not found in external databases' });
-        return;
-      }
-
-      res.status(200).json(bookData.book);
-    } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error searching book by ISBN:', error);
-      res.status(500).json({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+  async deleteBookForUser(request: UniversalRequest): Promise<ApiResponse> {
+    if (!request.user?.userId) {
+      return this.createErrorResponse('User authentication required', 401);
     }
+    
+    return this.deleteBook(request);
+  }
+
+  async searchByIsbnForUser(request: UniversalRequest): Promise<ApiResponse> {
+    if (!request.user?.userId) {
+      return this.createErrorResponse('User authentication required', 401);
+    }
+    
+    return this.searchBooksByIsbn(request);
   }
 }
 

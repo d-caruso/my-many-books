@@ -6,7 +6,6 @@
 import { Response } from 'express';
 import { WhereOptions } from 'sequelize';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { User } from '../models/User';
 import { Book } from '../models/Book';
 import { Author } from '../models/Author';
 import { Category } from '../models/Category';

@@ -7,6 +7,7 @@ import { isbnController } from '../controllers/IsbnController';
 import { requestLogger } from '../middleware/requestLogger';
 import { corsHandler } from '../middleware/cors';
 import { errorHandler } from '../middleware/errorHandler';
+import { lambdaAdapter } from '../adapters/lambdaAdapter';
 
 const withMiddleware = (
   handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
@@ -42,67 +43,45 @@ const withMiddleware = (
 };
 
 export const lookupBook = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.lookupBook(event);
-  }
+  lambdaAdapter(isbnController.lookupBook.bind(isbnController))
 );
 
 export const batchLookupBooks = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.batchLookupBooks(event);
-  }
+  lambdaAdapter(isbnController.batchLookupBooks.bind(isbnController))
 );
 
 export const searchByTitle = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.searchByTitle(event);
-  }
+  lambdaAdapter(isbnController.searchByTitle.bind(isbnController))
 );
 
 export const getServiceHealth = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.getServiceHealth(event);
-  }
+  lambdaAdapter(isbnController.getServiceHealth.bind(isbnController))
 );
 
 export const getResilienceStats = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.getResilienceStats(event);
-  }
+  lambdaAdapter(isbnController.getResilienceStats.bind(isbnController))
 );
 
 export const resetResilience = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.resetResilience(event);
-  }
+  lambdaAdapter(isbnController.resetResilience.bind(isbnController))
 );
 
 export const clearCache = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.clearCache(event);
-  }
+  lambdaAdapter(isbnController.clearCache.bind(isbnController))
 );
 
 export const getCacheStats = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.getCacheStats(event);
-  }
+  lambdaAdapter(isbnController.getCacheStats.bind(isbnController))
 );
 
 export const addFallbackBook = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.addFallbackBook(event);
-  }
+  lambdaAdapter(isbnController.addFallbackBook.bind(isbnController))
 );
 
 export const validateIsbn = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.validateIsbn(event);
-  }
+  lambdaAdapter(isbnController.validateIsbn.bind(isbnController))
 );
 
 export const formatIsbn = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return isbnController.formatIsbn(event);
-  }
+  lambdaAdapter(isbnController.formatIsbn.bind(isbnController))
 );

@@ -4,196 +4,42 @@
 // ================================================================
 
 import { Router } from 'express';
-import { Response } from 'express';
-import { Op, WhereOptions } from 'sequelize';
+import { categoryController } from '../controllers/CategoryController';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { Category } from '../models';
-import { CategoryAttributes } from '../models/interfaces/ModelInterfaces';
+import { Response } from 'express';
 
 const router = Router();
 
-// List all categories with optional search
-router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const queryParams = req.query as {
-      search?: string;
-      page?: string;
-      limit?: string;
-    };
-    const { search, page = '1', limit = '50' } = queryParams;
-    const offset = (Number(page) - 1) * Number(limit);
-
-    let whereClause: WhereOptions<CategoryAttributes> = {};
-
-    if (search) {
-      whereClause = {
-        name: { [Op.iLike]: `%${search}%` },
-      };
+// A generic handler for Express routes that wraps the controller methods
+const expressRouteWrapper = (controllerMethod: Function) => {
+  return async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      // The controller methods now just return the data and status code
+      const result = await controllerMethod(req, res);
+      res.status(result.statusCode).json(result.body);
+    } catch (error) {
+      console.error('Error in route handler:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
+  };
+};
 
-    const { count, rows: categories } = await Category.findAndCountAll({
-      where: whereClause,
-      limit: Number(limit),
-      offset,
-      order: [['name', 'ASC']],
-    });
-
-    res.status(200).json({
-      categories: categories.map(category => category.toJSON()),
-      pagination: {
-        currentPage: Number(page),
-        totalPages: Math.ceil(count / Number(limit)),
-        totalItems: count,
-        itemsPerPage: Number(limit),
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+// List all categories with optional search
+router.get('/', expressRouteWrapper(categoryController.listCategories));
 
 // Get category by ID
-router.get('/:id', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params as { id: string };
-    const categoryId = Number(id);
-
-    if (!categoryId || isNaN(categoryId)) {
-      res.status(400).json({ error: 'Invalid category ID' });
-      return;
-    }
-
-    const category = await Category.findByPk(categoryId);
-
-    if (!category) {
-      res.status(404).json({ error: 'Category not found' });
-      return;
-    }
-
-    res.status(200).json(category.toJSON());
-  } catch (error) {
-    console.error('Error fetching category:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+router.get('/:id', expressRouteWrapper(categoryController.getCategory));
 
 // Create new category
-router.post('/', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const requestBody = req.body as { name?: string };
-    const { name } = requestBody;
-
-    if (!name) {
-      res.status(400).json({ error: 'Category name is required' });
-      return;
-    }
-
-    // Check if category already exists
-    const existingCategory = await Category.findOne({
-      where: { name },
-    });
-
-    if (existingCategory) {
-      res.status(409).json({ error: 'Category with this name already exists' });
-      return;
-    }
-
-    const category = await Category.create({ name });
-
-    res.status(201).json(category.toJSON());
-  } catch (error) {
-    console.error('Error creating category:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+router.post('/', expressRouteWrapper(categoryController.createCategory));
 
 // Update category
-router.put('/:id', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params as { id: string };
-    const categoryId = Number(id);
-
-    if (!categoryId || isNaN(categoryId)) {
-      res.status(400).json({ error: 'Invalid category ID' });
-      return;
-    }
-
-    const category = await Category.findByPk(categoryId);
-
-    if (!category) {
-      res.status(404).json({ error: 'Category not found' });
-      return;
-    }
-
-    const updateBody = req.body as { name?: string };
-    const { name } = updateBody;
-
-    if (!name) {
-      res.status(400).json({ error: 'Category name is required' });
-      return;
-    }
-
-    // Check if new name already exists
-    if (name !== category.name) {
-      const existingCategory = await Category.findOne({
-        where: { name },
-      });
-
-      if (existingCategory) {
-        res.status(409).json({ error: 'Category with this name already exists' });
-        return;
-      }
-    }
-
-    await category.update({ name });
-
-    res.status(200).json(category.toJSON());
-  } catch (error) {
-    console.error('Error updating category:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+router.put('/:id', expressRouteWrapper(categoryController.updateCategory));
 
 // Delete category
-router.delete('/:id', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params as { id: string };
-    const categoryId = Number(id);
-
-    if (!categoryId || isNaN(categoryId)) {
-      res.status(400).json({ error: 'Invalid category ID' });
-      return;
-    }
-
-    const category = await Category.findByPk(categoryId);
-
-    if (!category) {
-      res.status(404).json({ error: 'Category not found' });
-      return;
-    }
-
-    await category.destroy();
-    res.status(204).send();
-  } catch (error) {
-    console.error('Error deleting category:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+router.delete('/:id', expressRouteWrapper(categoryController.deleteCategory));
 
 export default router;

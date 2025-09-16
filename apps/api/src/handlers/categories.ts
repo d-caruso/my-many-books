@@ -7,6 +7,7 @@ import { categoryController } from '../controllers/CategoryController';
 import { requestLogger } from '../middleware/requestLogger';
 import { corsHandler } from '../middleware/cors';
 import { errorHandler } from '../middleware/errorHandler';
+import { lambdaAdapter } from '../adapters/lambdaAdapter';
 
 const withMiddleware = (
   handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
@@ -42,37 +43,25 @@ const withMiddleware = (
 };
 
 export const createCategory = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return categoryController.createCategory(event);
-  }
+  lambdaAdapter(categoryController.createCategory.bind(categoryController))
 );
 
 export const getCategory = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return categoryController.getCategory(event);
-  }
+  lambdaAdapter(categoryController.getCategory.bind(categoryController))
 );
 
 export const updateCategory = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return categoryController.updateCategory(event);
-  }
+  lambdaAdapter(categoryController.updateCategory.bind(categoryController))
 );
 
 export const deleteCategory = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return categoryController.deleteCategory(event);
-  }
+  lambdaAdapter(categoryController.deleteCategory.bind(categoryController))
 );
 
 export const listCategories = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return categoryController.listCategories(event);
-  }
+  lambdaAdapter(categoryController.listCategories.bind(categoryController))
 );
 
 export const getCategoryBooks = withMiddleware(
-  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    return categoryController.getCategoryBooks(event);
-  }
+  lambdaAdapter(categoryController.getCategoryBooks.bind(categoryController))
 );
