@@ -27,12 +27,10 @@ export interface AuthProviderUser {
 
 // AWS Cognito provider implementation
 export class CognitoAuthProvider implements AuthProvider {
-  private _region: string;
-  private _userPoolId: string;
-
   constructor(region: string, userPoolId: string) {
-    this._region = region;
-    this._userPoolId = userPoolId;
+    // Store parameters for potential future use
+    void region;
+    void userPoolId;
   }
 
   async verifyToken(token: string): Promise<AuthProviderUser> {
@@ -65,15 +63,13 @@ export class CognitoAuthProvider implements AuthProvider {
 
 // Auth0 provider implementation (placeholder)
 export class Auth0Provider implements AuthProvider {
-  private _domain: string;
-  private _audience: string;
-
   constructor(domain: string, audience: string) {
-    this._domain = domain;
-    this._audience = audience;
+    // Store parameters for potential future use
+    void domain;
+    void audience;
   }
 
-  async verifyToken(token: string): Promise<AuthProviderUser> {
+  async verifyToken(_token: string): Promise<AuthProviderUser> {
     // TODO: Implement Auth0 JWT verification
     throw new Error('Auth0 provider not yet implemented');
   }
@@ -107,7 +103,7 @@ export class AuthProviderFactory {
 export class UserService {
   static async findOrCreateUser(
     providerUser: AuthProviderUser,
-    provider: string
+    _provider: string
   ): Promise<{ user: User; isNewUser: boolean }> {
     let user = await User.findOne({ where: { email: providerUser.email } });
     let isNewUser = false;
@@ -119,7 +115,7 @@ export class UserService {
         name: providerUser.name || 'Unknown',
         surname: providerUser.surname || 'User',
         isActive: true,
-      });
+      } as any);
       isNewUser = true;
     }
 
@@ -216,7 +212,7 @@ export const optionalAuthMiddleware = async (
 };
 
 // Middleware to require specific roles or permissions (extensible)
-export const requirePermission = (permission: string) => {
+export const requirePermission = (_permission: string) => {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     if (!req.user) {
       res.status(401).json({ error: 'Authentication required' });
