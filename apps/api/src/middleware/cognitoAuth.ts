@@ -4,7 +4,6 @@
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { verify, JwtPayload } from 'jsonwebtoken';
-import { promisify } from 'util';
 
 export interface CognitoConfig {
   enabled: boolean;
@@ -40,7 +39,6 @@ export interface CognitoAuthResult {
 
 export class CognitoAuthenticator {
   private config: CognitoConfig;
-  private jwksClient: any;
   private publicKeys: Map<string, string> = new Map();
 
   constructor(config: CognitoConfig) {
@@ -137,11 +135,11 @@ export class CognitoAuthenticator {
     }
 
     const parts = authHeader.split(' ');
-    if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+    if (parts.length !== 2 || parts[0]?.toLowerCase() !== 'bearer') {
       return null;
     }
 
-    return parts[1];
+    return parts[1] || null;
   }
 
   private async verifyToken(token: string): Promise<JwtPayload> {
@@ -157,12 +155,11 @@ export class CognitoAuthenticator {
     const publicKey = await this.getPublicKey(keyId);
 
     // Verify the token
-    const verifyPromise = promisify(verify);
-    const payload = (await verifyPromise(token, publicKey, {
+    const payload = verify(token, publicKey, {
       issuer: this.config.issuer,
       audience: this.config.clientId,
       algorithms: this.config.algorithms as any,
-    })) as JwtPayload;
+    }) as JwtPayload;
 
     return payload;
   }
@@ -173,7 +170,7 @@ export class CognitoAuthenticator {
       throw new Error('Invalid token format');
     }
 
-    const header = Buffer.from(parts[0], 'base64url').toString('utf8');
+    const header = Buffer.from(parts[0]!, 'base64url').toString('utf8');
     return JSON.parse(header);
   }
 
@@ -185,7 +182,7 @@ export class CognitoAuthenticator {
 
     // In production, fetch from Cognito JWKS endpoint
     // https://cognito-idp.{region}.amazonaws.com/{userPoolId}/.well-known/jwks.json
-    const jwksUrl = `https://cognito-idp.${this.config.region}.amazonaws.com/${this.config.userPoolId}/.well-known/jwks.json`;
+    void `https://cognito-idp.${this.config.region}.amazonaws.com/${this.config.userPoolId}/.well-known/jwks.json`;
 
     try {
       // Simulate fetching public key
@@ -207,7 +204,7 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
       payload.sub &&
       payload.aud &&
       payload.iss &&
-      payload.token_use &&
+      payload['token_use'] &&
       payload.exp &&
       payload.iat
     );
@@ -216,13 +213,13 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
   private extractUserFromToken(payload: JwtPayload): CognitoUser {
     return {
       sub: payload.sub!,
-      email: payload.email || '',
-      email_verified: payload.email_verified === true,
-      given_name: payload.given_name,
-      family_name: payload.family_name,
+      email: payload['email'] || '',
+      email_verified: payload['email_verified'] === true,
+      given_name: payload['given_name'],
+      family_name: payload['family_name'],
       groups: payload['cognito:groups'] || [],
       scopes: this.extractScopes(payload),
-      token_use: payload.token_use!,
+      token_use: payload['token_use']!,
       aud: payload.aud as string,
       iss: payload.iss!,
       exp: payload.exp!,
@@ -232,8 +229,8 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
 
   private extractScopes(payload: JwtPayload): string[] {
     // Scopes can be in 'scope' (space-separated) or 'scopes' (array)
-    if (payload.scope) {
-      return payload.scope.split(' ');
+    if (payload['scope']) {
+      return payload['scope'].split(' ');
     }
 
     if (Array.isArray(payload['scopes'])) {

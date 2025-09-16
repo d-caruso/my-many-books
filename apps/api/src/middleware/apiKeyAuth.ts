@@ -62,9 +62,9 @@ export class ApiKeyAuthenticator {
     if (!usageCheck.allowed) {
       return {
         isAuthenticated: false,
-        error: usageCheck.error,
+        error: usageCheck.error || 'Usage limit exceeded',
         statusCode: 429,
-        retryAfter: usageCheck.retryAfter,
+        retryAfter: usageCheck.retryAfter || 60,
       };
     }
 
