@@ -321,10 +321,14 @@ jobs:
           # Sync build files to S3
           aws s3 sync build/ s3://$BUCKET_NAME --delete
           
-          # Invalidate CloudFront cache
-          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[0].DomainName=='$BUCKET_NAME.s3.amazonaws.com'].Id | [0]" --output text)
-          if [ "$DISTRIBUTION_ID" != "None" ] && [ "$DISTRIBUTION_ID" != "" ]; then
-            aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+          # Invalidate CloudFront cache (optional - skip if no permissions)
+          if aws cloudfront list-distributions >/dev/null 2>&1; then
+            DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[0].DomainName=='$BUCKET_NAME.s3.amazonaws.com'].Id | [0]" --output text)
+            if [ "$DISTRIBUTION_ID" != "None" ] && [ "$DISTRIBUTION_ID" != "" ]; then
+              aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+            fi
+          else
+            echo "CloudFront permissions not available, skipping cache invalidation"
           fi
 
   post-deployment-tests:
