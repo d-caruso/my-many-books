@@ -98,6 +98,11 @@ custom:
       - redis
     exclude:
       - aws-sdk
+      - sqlite3
+    packagerOptions:
+      scripts:
+        - rm -rf node_modules/sqlite3
+    nativeZip: true
   serverless-offline:
     httpPort: 3000
     port: 3000
