@@ -10,7 +10,7 @@ import { Book } from '../models/Book';
 import { Author } from '../models/Author';
 import { Category } from '../models/Category';
 import { UserService } from '../middleware/auth';
-import { BookAttributes } from '../models/interfaces/ModelInterfaces';
+import { BookAttributes, BookStatus } from '../models/interfaces/ModelInterfaces';
 
 export class UserController {
   // Get current user profile
@@ -113,8 +113,8 @@ export class UserController {
       const offset = (Number(page) - 1) * Number(limit);
 
       const whereClause: WhereOptions<BookAttributes> = { userId: req.user.userId };
-      if (status && ['in progress', 'paused', 'finished'].includes(status as string)) {
-        whereClause.status = status;
+      if (status && typeof status === 'string' && ['in progress', 'paused', 'finished'].includes(status)) {
+        whereClause.status = status as BookStatus;
       }
 
       const { count, rows: books } = await Book.findAndCountAll({
