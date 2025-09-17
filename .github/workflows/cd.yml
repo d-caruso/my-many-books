@@ -310,22 +310,18 @@ jobs:
             
             # Set public read policy
             echo "Setting bucket policy..."
-            cat > bucket-policy.json << EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "PublicReadGetObject",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::${BUCKET_NAME}/*"
-    }
-  ]
-}
-EOF
-            aws s3api put-bucket-policy --bucket "$BUCKET_NAME" --policy file://bucket-policy.json
-            rm bucket-policy.json
+            aws s3api put-bucket-policy --bucket "$BUCKET_NAME" --policy "{
+              \"Version\": \"2012-10-17\",
+              \"Statement\": [
+                {
+                  \"Sid\": \"PublicReadGetObject\",
+                  \"Effect\": \"Allow\",
+                  \"Principal\": \"*\",
+                  \"Action\": \"s3:GetObject\",
+                  \"Resource\": \"arn:aws:s3:::${BUCKET_NAME}/*\"
+                }
+              ]
+            }"
           fi
           
           # Sync build files to S3
