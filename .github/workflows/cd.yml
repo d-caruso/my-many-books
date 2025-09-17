@@ -125,7 +125,13 @@ jobs:
           check-latest: true
 
       - name: Install Dependencies
-        run: npm ci
+        run: |
+          # Use lockfile if compatible, otherwise regenerate
+          if ! npm ci 2>/dev/null; then
+            echo "Lockfile incompatible, regenerating..."
+            rm -f package-lock.json
+            npm install
+          fi
 
       - name: Build Projects to be Deployed
         # This step has been updated to build projects by changing the working directory
@@ -184,7 +190,13 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Install Dependencies
-        run: npm ci
+        run: |
+          # Use lockfile if compatible, otherwise regenerate
+          if ! npm ci 2>/dev/null; then
+            echo "Lockfile incompatible, regenerating..."
+            rm -f package-lock.json
+            npm install
+          fi
 
       - name: Build API
         # The working-directory is already set, so a simple npm run build will work.
@@ -239,7 +251,13 @@ jobs:
           check-latest: true
 
       - name: Install Dependencies
-        run: npm ci
+        run: |
+          # Use lockfile if compatible, otherwise regenerate
+          if ! npm ci 2>/dev/null; then
+            echo "Lockfile incompatible, regenerating..."
+            rm -f package-lock.json
+            npm install
+          fi
 
       - name: Build Web App
         # The working-directory is already set, so a simple npm run build will work.
