@@ -44,58 +44,7 @@ provider:
 
   # API Gateway configuration
   apiGateway:
-    restApiId: !Ref ApiGatewayRestApi
-    restApiRootResourceId: !GetAtt ApiGatewayRestApi.RootResourceId
     description: My Many Books API - Personal library management system
-    
-    # Request/response logging
-    accessLogging: true
-    executionLogging: true
-    fullExecutionData: true
-    
-    # Request validation
-    request:
-      schemas:
-        book-request-model:
-          name: BookRequest
-          description: Request model for book operations
-          schema: ${file(config/schemas/book-request.json)}
-        author-request-model:
-          name: AuthorRequest  
-          description: Request model for author operations
-          schema: ${file(config/schemas/author-request.json)}
-        category-request-model:
-          name: CategoryRequest
-          description: Request model for category operations
-          schema: ${file(config/schemas/category-request.json)}
-    
-    # API documentation
-    documentation: ${file(config/api-gateway.yml):apiGateway.documentation}
-    
-    # Usage plans
-    usagePlan:
-      - basic:
-          quota:
-            limit: 10000
-            offset: 0
-            period: MONTH
-          throttle:
-            burstLimit: 100
-            rateLimit: 50
-          apiStages:
-            - api: !Ref ApiGatewayRestApi
-              stage: ${self:provider.stage}
-      - premium:
-          quota:
-            limit: 100000
-            offset: 0
-            period: MONTH
-          throttle:
-            burstLimit: 500
-            rateLimit: 200
-          apiStages:
-            - api: !Ref ApiGatewayRestApi
-              stage: ${self:provider.stage}
 
   # IAM permissions
   iam:
@@ -138,6 +87,15 @@ custom:
     target: node18
     external:
       - pg-native
+      - pg-hstore
+      - pg
+      - sqlite3
+      - mysql
+      - mariasql
+      - mssql
+      - oracle
+      - oracledb
+      - redis
     exclude:
       - aws-sdk
   serverless-offline:
