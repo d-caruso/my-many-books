@@ -236,6 +236,10 @@ jobs:
           export DB_USER=${{ secrets.DB_USER }}
           export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
           
+          # Disable Serverless Framework telemetry and authentication
+          export SLS_TELEMETRY_DISABLED=1
+          export SERVERLESS_ACCESS_KEY=""
+          
           echo "Deploying API to ${{ needs.setup.outputs.environment }}"
           npx serverless deploy --stage ${{ needs.setup.outputs.environment }} --verbose
 
@@ -289,6 +293,12 @@ jobs:
           if ! aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
             echo "Creating S3 bucket: $BUCKET_NAME"
             aws s3 mb s3://$BUCKET_NAME
+            
+            # Disable public access block to allow public website
+            aws s3api put-public-access-block \
+              --bucket "$BUCKET_NAME" \
+              --public-access-block-configuration \
+              "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
             
             # Enable static website hosting
             aws s3 website s3://$BUCKET_NAME --index-document index.html --error-document error.html
