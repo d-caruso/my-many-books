@@ -130,7 +130,7 @@ jobs:
           if ! npm ci 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
-            npm install
+            npm install --legacy-peer-deps
           fi
 
       - name: Build Projects to be Deployed
@@ -195,7 +195,7 @@ jobs:
           if ! npm ci 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
-            npm install
+            npm install --legacy-peer-deps
           fi
 
       - name: Build API
@@ -266,7 +266,7 @@ jobs:
           if ! npm ci 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
-            npm install
+            npm install --legacy-peer-deps
           fi
 
       - name: Build Web App
