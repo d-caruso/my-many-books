@@ -8,6 +8,7 @@
 import { createApiClient } from '../__mocks__/@my-many-books/shared-api';
 import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
 import { BookFormData } from '../components/Book/BookForm';
+import axios from 'axios';
 
 // Define interfaces locally until Nx workspace configuration is fixed
 interface HttpClient {
@@ -26,7 +27,7 @@ interface ApiClientConfig {
 
 // Axios adapter for web platform
 class AxiosHttpClient implements HttpClient {
-  private axios = require('axios').create();
+  private axios = axios.create();
 
   constructor() {
     // Add request interceptor for auth token
