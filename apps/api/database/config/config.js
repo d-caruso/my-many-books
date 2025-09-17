@@ -49,6 +49,18 @@ module.exports = {
     }
   },
   
+  dev: {
+    ...baseConfig,
+    database: process.env.DB_NAME || 'my_many_books_dev',
+    logging: console.log,
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
+  },
+  
   test: {
     ...baseConfig,
     database: process.env.DB_NAME_TEST || 'my_many_books_test',
@@ -74,6 +86,25 @@ module.exports = {
   },
   
   production: {
+    ...baseConfig,
+    database: process.env.DB_NAME || 'my_many_books',
+    logging: false,
+    dialectOptions: {
+      ...baseConfig.dialectOptions,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
+    pool: {
+      max: 20,
+      min: 5,
+      acquire: 60000,
+      idle: 300000
+    }
+  },
+  
+  prod: {
     ...baseConfig,
     database: process.env.DB_NAME || 'my_many_books',
     logging: false,
