@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Book, SearchFilters } from '../types';
 import { bookAPI } from '../services/api';
 
@@ -27,6 +27,9 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
   const [currentPage, setCurrentPage] = useState(1);
   const [lastQuery, setLastQuery] = useState<string>('');
   const [lastFilters, setLastFilters] = useState<SearchFilters>({});
+  
+  // Use ref to store the latest searchBooks function to avoid circular dependencies
+  const searchBooksRef = useRef<((query: string, filters?: SearchFilters, page?: number) => Promise<void>) | null>(null);
 
   const searchBooks = useCallback(async (
     query: string, 
@@ -82,6 +85,9 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     }
   }, []);
 
+  // Update the ref with the latest searchBooks function
+  searchBooksRef.current = searchBooks;
+
   const searchByISBN = useCallback(async (isbn: string): Promise<Book | null> => {
     if (!isbn.trim()) {
       return null;
@@ -103,12 +109,12 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
   }, []);
 
   const loadMore = useCallback(async (): Promise<void> => {
-    if (!hasMore || loading) {
+    if (!hasMore || loading || !searchBooksRef.current) {
       return;
     }
 
-    await searchBooks(lastQuery, lastFilters, currentPage + 1);
-  }, [hasMore, loading, lastQuery, lastFilters, currentPage, searchBooks]);
+    await searchBooksRef.current(lastQuery, lastFilters, currentPage + 1);
+  }, [hasMore, loading, lastQuery, lastFilters, currentPage]);
 
   const clearSearch = useCallback((): void => {
     setBooks([]);
