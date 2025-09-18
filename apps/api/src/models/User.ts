@@ -26,6 +26,10 @@ export class User extends IdBaseModel<UserAttributes> implements UserAttributes 
     return `${this.name} ${this.surname}`;
   }
 
+  static override getTableName(): string {
+    return 'users';
+  }
+
   public static initialize(sequelize: any): typeof User {
     User.init(
       {

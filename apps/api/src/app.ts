@@ -31,7 +31,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/books', bookRoutes);
 
 // 404 handler
-app.use('*', (_req, res): void => {
+app.use((_req, res): void => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 

@@ -2,7 +2,7 @@
 // src/utils/constants.ts (add database constants)
 // ================================================================
 
-export const HTTP_STATUS = {
+export const HTTP_STATUS = Object.freeze({
   OK: 200,
   CREATED: 201,
   NO_CONTENT: 204,
@@ -12,9 +12,9 @@ export const HTTP_STATUS = {
   NOT_FOUND: 404,
   CONFLICT: 409,
   INTERNAL_SERVER_ERROR: 500,
-} as const;
+} as const);
 
-export const ERROR_MESSAGES = {
+export const ERROR_MESSAGES = Object.freeze({
   BOOK_NOT_FOUND: 'Book not found',
   BOOK_ALREADY_EXISTS: 'Book with this ISBN already exists',
   INVALID_REQUEST_BODY: 'Invalid request body',
@@ -23,81 +23,81 @@ export const ERROR_MESSAGES = {
   INVALID_BOOK_STATUS: 'Invalid book status',
   CONNECTION_ERROR: 'Database connection failed',
   MISSING_REQUIRED_FIELDS: 'Missing required fields',
-} as const;
+} as const);
 
-export const BOOK_STATUS = {
+export const BOOK_STATUS = Object.freeze({
   IN_PROGRESS: 'in progress',
   PAUSED: 'paused',
   FINISHED: 'finished',
-} as const;
+} as const);
 
-export const API_ENDPOINTS = {
+export const API_ENDPOINTS = Object.freeze({
   OPEN_LIBRARY: 'https://openlibrary.org/api/books',
-} as const;
+} as const);
 
-export const DATABASE_CONFIG = {
+export const DATABASE_CONFIG = Object.freeze({
   DIALECT: 'mysql' as const,
   TIMEZONE: '+00:00',
-  POOL: {
+  POOL: Object.freeze({
     max: 5,
     min: 0,
     acquire: 30000,
     idle: 10000,
-  },
-} as const;
+  }),
+} as const);
 
-export const PAGINATION_DEFAULTS = {
+export const PAGINATION_DEFAULTS = Object.freeze({
   PAGE: 1,
   LIMIT: 20,
   MAX_LIMIT: 100,
-} as const;
+} as const);
 
 // Database table names
-export const TABLE_NAMES = {
+export const TABLE_NAMES = Object.freeze({
   BOOKS: 'books',
   AUTHORS: 'authors',
   CATEGORIES: 'categories',
   BOOK_AUTHORS: 'book_authors',
   BOOK_CATEGORIES: 'book_categories',
-} as const;
+} as const);
 
 // Validation constants
-export const VALIDATION_RULES = {
-  ISBN: {
+export const VALIDATION_RULES = Object.freeze({
+  ISBN: Object.freeze({
     MIN_LENGTH: 10,
     MAX_LENGTH: 13,
-  },
-  TITLE: {
+  }),
+  TITLE: Object.freeze({
     MIN_LENGTH: 1,
     MAX_LENGTH: 255,
-  },
-  AUTHOR_NAME: {
+  }),
+  AUTHOR_NAME: Object.freeze({
     MIN_LENGTH: 1,
     MAX_LENGTH: 255,
-  },
-  CATEGORY_NAME: {
+  }),
+  CATEGORY_NAME: Object.freeze({
     MIN_LENGTH: 1,
     MAX_LENGTH: 255,
-  },
-  NOTES: {
+  }),
+  NOTES: Object.freeze({
     MAX_LENGTH: 2000,
-  },
-} as const;
+  }),
+} as const);
 
-export const ISBN_CONSTANTS = {
+export const ISBN_CONSTANTS = Object.freeze({
   ISBN_10_LENGTH: 10,
   ISBN_13_LENGTH: 13,
-  VALID_PREFIXES: ['978', '979'],
-  REGEX: {
+  VALID_PREFIXES: Object.freeze(['978', '979']),
+  REGEX: Object.freeze({
     DIGITS_ONLY: /^\d+$/,
     ISBN_10: /^\d{9}[\dX]$/i,
     ISBN_13: /^\d{13}$/,
     EXTRACT_13: /\b\d{13}\b/g,
     EXTRACT_10: /\b\d{9}[\dX]\b/gi,
-  },
-} as const;
+  }),
+} as const);
 
-export const ISBN_ERROR_MESSAGES = {
+export const ISBN_ERROR_MESSAGES = Object.freeze({
   INVALID_ISBN_LENGTH: 'Invalid ISBN length',
   NO_VALID_ISBN_FOUND: 'No valid ISBN found',
   EXPECTED_LENGTH: 'Expected 10 or 13 digits',
@@ -110,4 +110,4 @@ export const ISBN_ERROR_MESSAGES = {
   ISBN_13_DIGITS_ONLY: 'ISBN-13 must contain only digits',
   ISBN_10_INVALID_CHECKSUM: 'Invalid ISBN-10 checksum',
   ISBN_13_INVALID_CHECKSUM: 'Invalid ISBN-13 checksum',
-} as const;
+} as const);

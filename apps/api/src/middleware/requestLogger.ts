@@ -44,9 +44,9 @@ export class RequestLogger {
       path: event.path,
       queryStringParameters: event.queryStringParameters as Record<string, string> | null,
       pathParameters: event.pathParameters as Record<string, string> | null,
-      headers: this.sanitizeHeaders(event.headers as Record<string, string>),
+      headers: this.sanitizeHeaders((event.headers || {}) as Record<string, string>),
       sourceIp: event.requestContext.identity.sourceIp,
-      userAgent: event.headers['User-Agent'] || event.headers['user-agent'] || 'Unknown',
+      userAgent: (event.headers && (event.headers['User-Agent'] || event.headers['user-agent'])) || 'Unknown',
       timestamp: new Date().toISOString(),
     };
 
