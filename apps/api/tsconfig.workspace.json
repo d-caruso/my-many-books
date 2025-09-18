@@ -3,16 +3,11 @@
     "target": "ES2020",
     "module": "commonjs",
     "lib": ["ES2020"],
-    "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "removeComments": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
@@ -34,11 +29,13 @@
       "@/services/*": ["src/services/*"],
       "@/controllers/*": ["src/controllers/*"],
       "@/handlers/*": ["src/handlers/*"]
-    }
+    },
+    "noEmit": true
   },
   "include": [
     "src/**/*",
-    "tests/**/*"
+    "tests/**/*",
+    "**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
