@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Box, Button, IconButton, Chip } from '@mui/material';
 import { Add as AddIcon, Clear as ClearIcon, ViewModule as GridIcon, ViewList as ListIcon } from '@mui/icons-material';
@@ -32,17 +32,25 @@ export const BooksPage: React.FC = () => {
     clearSearch
   } = useBookSearch();
 
-  const loadUserBooks = async () => {
+  // Use refs to store the latest functions to avoid dependency issues
+  const searchBooksRef = useRef(searchBooks);
+  const loadUserBooksRef = useRef<() => Promise<void>>();
+
+  searchBooksRef.current = searchBooks;
+
+  const loadUserBooks = useCallback(async () => {
     try {
       await bookAPI.getBooks();
       // This would need to be adapted based on your API structure
       // For now, we'll use the search with empty query to get all books
-      searchBooks('', {});
+      searchBooksRef.current('', {});
     } catch (err: any) {
       console.error('Failed to load user books:', err);
       setError('Failed to load your books');
     }
-  };
+  }, []);
+
+  loadUserBooksRef.current = loadUserBooks;
 
   // Initialize with user's books or search params
   useEffect(() => {
@@ -67,12 +75,12 @@ export const BooksPage: React.FC = () => {
       if (categoryId) filters.categoryId = parseInt(categoryId);
       if (authorId) filters.authorId = parseInt(authorId);
       if (sortBy) filters.sortBy = sortBy;
-      searchBooks(query || '', filters);
+      searchBooksRef.current(query || '', filters);
     } else {
       // Load user's books by default
-      loadUserBooks();
+      loadUserBooksRef.current?.();
     }
-  }, [searchParams, loadUserBooks, searchBooks, setSearchParams]);
+  }, [searchParams, setSearchParams]);
 
   const handleSearch = (query: string, filters: any) => {
     // Update URL params
@@ -302,12 +310,12 @@ export const BooksPage: React.FC = () => {
               onClick={() => {
                 setSearchParams({});
                 clearSearch();
-                loadUserBooks();
+                loadUserBooksRef.current?.();
               }}
               onDelete={() => {
                 setSearchParams({});
                 clearSearch();
-                loadUserBooks();
+                loadUserBooksRef.current?.();
               }}
               color="secondary"
               variant="outlined"
