@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Box, Button, IconButton, Chip } from '@mui/material';
 import { Add as AddIcon, Clear as ClearIcon, ViewModule as GridIcon, ViewList as ListIcon } from '@mui/icons-material';
 import { Book } from '../types';
@@ -34,7 +34,7 @@ export const BooksPage: React.FC = () => {
 
   // Use refs to store the latest functions to avoid dependency issues
   const searchBooksRef = useRef(searchBooks);
-  const loadUserBooksRef = useRef<() => Promise<void>>();
+  const loadUserBooksRef = useRef<(() => Promise<void>) | null>(null);
 
   searchBooksRef.current = searchBooks;
 
