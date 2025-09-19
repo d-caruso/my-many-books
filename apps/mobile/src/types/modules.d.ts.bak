@@ -1,0 +1,197 @@
+// Module declarations for better TypeScript support
+
+declare module '*.png' {
+  const value: number;
+  export = value;
+}
+
+declare module '*.jpg' {
+  const value: number;
+  export = value;
+}
+
+declare module '*.jpeg' {
+  const value: number;
+  export = value;
+}
+
+declare module '*.gif' {
+  const value: number;
+  export = value;
+}
+
+declare module '*.svg' {
+  const value: number;
+  export = value;
+}
+
+// Expo Router module augmentation
+declare module 'expo-router' {
+  export interface RouterType {
+    push: (href: string, options?: any) => void;
+    replace: (href: string, options?: any) => void;
+    back: () => void;
+    canGoBack: () => boolean;
+  }
+  
+  export const router: RouterType;
+  export const Stack: any;
+  export const Tabs: any;
+  export const Redirect: any;
+  export function useLocalSearchParams<T = any>(): T;
+}
+
+// React Native Paper types
+declare module 'react-native-paper' {
+  export interface MD3Colors {
+    primary: string;
+    onPrimary: string;
+    primaryContainer: string;
+    onPrimaryContainer: string;
+    secondary: string;
+    onSecondary: string;
+    secondaryContainer: string;
+    onSecondaryContainer: string;
+    tertiary: string;
+    onTertiary: string;
+    tertiaryContainer: string;
+    onTertiaryContainer: string;
+    error: string;
+    onError: string;
+    errorContainer: string;
+    onErrorContainer: string;
+    background: string;
+    onBackground: string;
+    surface: string;
+    onSurface: string;
+    surfaceVariant: string;
+    onSurfaceVariant: string;
+    outline: string;
+    outlineVariant: string;
+    shadow: string;
+    scrim: string;
+    inverseSurface: string;
+    inverseOnSurface: string;
+    inversePrimary: string;
+    elevation: {
+      level0: string;
+      level1: string;
+      level2: string;
+      level3: string;
+      level4: string;
+      level5: string;
+    };
+    surfaceDisabled: string;
+    onSurfaceDisabled: string;
+    backdrop: string;
+  }
+
+  export interface MD3Theme {
+    dark: boolean;
+    mode?: 'adaptive' | 'exact';
+    roundness: number;
+    colors: MD3Colors;
+    fonts: any;
+    animation: any;
+  }
+
+  export const MD3LightTheme: MD3Theme;
+  export const MD3DarkTheme: MD3Theme;
+}
+
+// AsyncStorage module
+declare module '@react-native-async-storage/async-storage' {
+  export interface AsyncStorageStatic {
+    getItem(key: string): Promise<string | null>;
+    setItem(key: string, value: string): Promise<void>;
+    removeItem(key: string): Promise<void>;
+    multiGet(keys: string[]): Promise<[string, string | null][]>;
+    multiSet(keyValuePairs: [string, string][]): Promise<void>;
+    multiRemove(keys: string[]): Promise<void>;
+    clear(): Promise<void>;
+    getAllKeys(): Promise<string[]>;
+  }
+
+  const AsyncStorage: AsyncStorageStatic;
+  export default AsyncStorage;
+}
+
+// Expo Camera module
+declare module 'expo-camera' {
+  export interface CameraPermissionResponse {
+    status: 'granted' | 'denied' | 'undetermined';
+    expires: string;
+    canAskAgain: boolean;
+    granted: boolean;
+  }
+
+  export class Camera {
+    static requestCameraPermissionsAsync(): Promise<CameraPermissionResponse>;
+    static getCameraPermissionsAsync(): Promise<CameraPermissionResponse>;
+  }
+}
+
+// Expo Barcode Scanner module
+declare module 'expo-barcode-scanner' {
+  export interface BarCodeEvent {
+    type: string;
+    data: string;
+  }
+
+  export interface BarCodeScannerProps {
+    onBarCodeScanned?: (data: BarCodeEvent) => void;
+    style?: any;
+  }
+
+  export class BarCodeScanner extends React.Component<BarCodeScannerProps> {
+    static requestPermissionsAsync(): Promise<CameraPermissionResponse>;
+    static getPermissionsAsync(): Promise<CameraPermissionResponse>;
+  }
+}
+
+// React module declaration to resolve React import warnings
+declare module 'react' {
+  // React is already properly typed by @types/react
+  // This declaration helps with import resolution
+}
+
+// React JSX Runtime
+declare module 'react/jsx-runtime' {
+  export default any;
+  export const jsx: any;
+  export const jsxs: any;
+  export const Fragment: any;
+}
+
+// Expo Vector Icons
+declare module '@expo/vector-icons' {
+  export const MaterialIcons: any;
+  export const Ionicons: any;
+  export const FontAwesome: any;
+  export const AntDesign: any;
+  export const Feather: any;
+}
+
+// React Native Safe Area Context
+declare module 'react-native-safe-area-context' {
+  export const SafeAreaProvider: React.ComponentType<{ children: React.ReactNode }>;
+  export const SafeAreaView: React.ComponentType<any>;
+  export const useSafeAreaInsets: () => any;
+}
+
+// Workspace package type declarations
+declare module '@my-many-books/shared-types' {
+  export * from '../../../libs/shared-types/src/index';
+}
+
+declare module '@my-many-books/shared-api' {
+  export * from '../../../libs/shared-api/src/index';
+}
+
+declare module '@my-many-books/shared-utils' {
+  export * from '../../../libs/shared-utils/src/index';
+}
+
+declare module '@my-many-books/shared-business' {
+  export * from '../../../libs/shared-business/src/index';
+}
