@@ -16,7 +16,7 @@
     "isolatedModules": true,
     "noFallthroughCasesInSwitch": true,
     "jsx": "react-jsx",
-    "types": [],
+    "types": ["node", "jest"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],

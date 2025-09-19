@@ -386,6 +386,39 @@ declare module 'react-native-safe-area-context' {
   export const useSafeAreaInsets: () => any;
 }
 
+// Node.js globals
+declare var require: {
+  (id: string): any;
+};
+
+declare var process: {
+  env: {
+    [key: string]: string | undefined;
+  };
+};
+
+declare var global: any;
+declare var __dirname: string;
+declare var __filename: string;
+
+// Jest globals
+declare var jest: {
+  fn: (implementation?: any) => any;
+  mock: (moduleName: string, factory?: () => any) => any;
+  unmock: (moduleName: string) => any;
+  doMock: (moduleName: string, factory?: () => any) => any;
+  dontMock: (moduleName: string) => any;
+};
+
+declare var describe: (name: string, fn: () => void) => void;
+declare var it: (name: string, fn: () => void) => void;
+declare var test: (name: string, fn: () => void) => void;
+declare var expect: (actual: any) => any;
+declare var beforeAll: (fn: () => void) => void;
+declare var afterAll: (fn: () => void) => void;
+declare var beforeEach: (fn: () => void) => void;
+declare var afterEach: (fn: () => void) => void;
+
 // Workspace package type declarations
 declare module '@my-many-books/shared-types' {
   export * from '../../../libs/shared-types/src/index';
