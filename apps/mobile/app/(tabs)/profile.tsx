@@ -1,0 +1,190 @@
+import React from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { List, Text, Avatar, Button, Card, Switch } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
+
+import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
+
+export default function ProfileScreen() {
+  const { user, logout } = useAuth();
+  const { themeMode, setThemeMode, isDark } = useTheme();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Failed to logout:', error);
+    }
+  };
+
+  const handleThemeToggle = async () => {
+    const newMode = isDark ? 'light' : 'dark';
+    await setThemeMode(newMode);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        <Card style={styles.profileCard}>
+          <Card.Content style={styles.profileContent}>
+            <Avatar.Text 
+              size={80} 
+              label={user?.name?.charAt(0).toUpperCase() || 'U'}
+              style={styles.avatar}
+            />
+            <Text variant="headlineSmall" style={styles.userName}>
+              {user?.name || 'User'}
+            </Text>
+            <Text variant="bodyMedium" style={styles.userEmail}>
+              {user?.email}
+            </Text>
+          </Card.Content>
+        </Card>
+
+        <Card style={styles.settingsCard}>
+          <Card.Content>
+            <Text variant="titleMedium" style={styles.sectionTitle}>
+              Settings
+            </Text>
+            
+            <List.Item
+              title="Dark Mode"
+              description="Toggle dark theme"
+              left={() => <List.Icon icon="theme-light-dark" />}
+              right={() => (
+                <Switch
+                  value={isDark}
+                  onValueChange={handleThemeToggle}
+                />
+              )}
+            />
+            
+            <List.Item
+              title="Notifications"
+              description="Push notification settings"
+              left={() => <List.Icon icon="bell" />}
+              right={() => <List.Icon icon="chevron-right" />}
+              onPress={() => {}}
+            />
+            
+            <List.Item
+              title="Storage"
+              description="Manage offline data"
+              left={() => <List.Icon icon="database" />}
+              right={() => <List.Icon icon="chevron-right" />}
+              onPress={() => {}}
+            />
+            
+            <List.Item
+              title="Export Data"
+              description="Export your book collection"
+              left={() => <List.Icon icon="export" />}
+              right={() => <List.Icon icon="chevron-right" />}
+              onPress={() => {}}
+            />
+          </Card.Content>
+        </Card>
+
+        <Card style={styles.aboutCard}>
+          <Card.Content>
+            <Text variant="titleMedium" style={styles.sectionTitle}>
+              About
+            </Text>
+            
+            <List.Item
+              title="Help & Support"
+              description="Get help and contact support"
+              left={() => <List.Icon icon="help-circle" />}
+              right={() => <List.Icon icon="chevron-right" />}
+              onPress={() => {}}
+            />
+            
+            <List.Item
+              title="Privacy Policy"
+              description="Read our privacy policy"
+              left={() => <List.Icon icon="shield-account" />}
+              right={() => <List.Icon icon="chevron-right" />}
+              onPress={() => {}}
+            />
+            
+            <List.Item
+              title="Terms of Service"
+              description="Read our terms of service"
+              left={() => <List.Icon icon="file-document" />}
+              right={() => <List.Icon icon="chevron-right" />}
+              onPress={() => {}}
+            />
+            
+            <List.Item
+              title="App Version"
+              description="1.0.0"
+              left={() => <List.Icon icon="information" />}
+            />
+          </Card.Content>
+        </Card>
+
+        <View style={styles.logoutContainer}>
+          <Button
+            mode="outlined"
+            onPress={handleLogout}
+            icon="logout"
+            style={styles.logoutButton}
+          >
+            Logout
+          </Button>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  profileCard: {
+    margin: 16,
+    marginBottom: 8,
+  },
+  profileContent: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  avatar: {
+    marginBottom: 16,
+  },
+  userName: {
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  userEmail: {
+    opacity: 0.7,
+  },
+  settingsCard: {
+    margin: 16,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  aboutCard: {
+    margin: 16,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  logoutContainer: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  logoutButton: {
+    borderColor: '#f44336',
+  },
+});
