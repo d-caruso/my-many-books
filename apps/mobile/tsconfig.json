@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "lib": ["dom", "esnext"],
+    "lib": [
+      "dom",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -16,25 +19,41 @@
     "isolatedModules": true,
     "noFallthroughCasesInSwitch": true,
     "jsx": "react-jsx",
-    "types": ["node", "jest"],
+    "types": [
+      "node",
+      "jest"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@my-many-books/shared-types": ["../../libs/shared-types/src"],
-      "@my-many-books/shared-api": ["../../libs/shared-api/src"],
-      "@my-many-books/shared-utils": ["../../libs/shared-utils/src"],
-      "@my-many-books/shared-business": ["../../libs/shared-business/src"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@my-many-books/shared-types": [
+        "../../libs/shared-types/src"
+      ],
+      "@my-many-books/shared-api": [
+        "../../libs/shared-api/src"
+      ],
+      "@my-many-books/shared-utils": [
+        "../../libs/shared-utils/src"
+      ],
+      "@my-many-books/shared-business": [
+        "../../libs/shared-business/src"
+      ]
     }
   },
   "include": [
     "src/**/*",
     "src/types/modules.d.ts",
     "*.ts",
-    "*.tsx"
+    "*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ],
   "exclude": [
     "node_modules",
     "babel.config.js",
     "metro.config.js"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }
