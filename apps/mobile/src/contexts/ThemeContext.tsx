@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 
