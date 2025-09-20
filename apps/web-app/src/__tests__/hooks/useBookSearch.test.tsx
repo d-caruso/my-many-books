@@ -6,7 +6,7 @@ import { Book, SearchFilters } from '../../hooks/../types';
 jest.mock('../../services/api', () => ({
   bookAPI: {
     searchBooks: jest.fn(),
-    searchByISBN: jest.fn(),
+    searchByIsbn: jest.fn(),
   },
 }));
 
@@ -51,9 +51,8 @@ describe('useBookSearch', () => {
     test('searches books with query', async () => {
       const mockResponse = {
         books: mockBooks,
-        totalCount: 2,
+        total: 2,
         page: 1,
-        limit: 10,
         hasMore: false,
       };
 
@@ -65,7 +64,11 @@ describe('useBookSearch', () => {
         await result.current.searchBooks('test query');
       });
 
-      expect(mockBookAPI.searchBooks).toHaveBeenCalledWith('test query', {}, 1);
+      expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
+        q: 'test query',
+        page: 1,
+        limit: 20,
+      });
       expect(result.current.books).toEqual(mockBooks);
       expect(result.current.totalCount).toBe(2);
       expect(result.current.hasMore).toBe(false);
@@ -82,9 +85,8 @@ describe('useBookSearch', () => {
 
       const mockResponse = {
         books: mockBooks,
-        totalCount: 2,
+        total: 2,
         page: 1,
-        limit: 10,
         hasMore: false,
       };
 
@@ -96,7 +98,14 @@ describe('useBookSearch', () => {
         await result.current.searchBooks('test', filters);
       });
 
-      expect(mockBookAPI.searchBooks).toHaveBeenCalledWith('test', filters, 1);
+      expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
+        q: 'test',
+        page: 1,
+        limit: 20,
+        categoryId: 1,
+        authorId: 2,
+        status: 'finished',
+      });
       expect(result.current.books).toEqual(mockBooks);
     });
 
@@ -128,7 +137,7 @@ describe('useBookSearch', () => {
         await result.current.searchBooks('test query');
       });
 
-      expect(result.current.error).toBe('Search failed');
+      expect(result.current.error).toBe('Failed to search books');
       expect(result.current.loading).toBe(false);
       expect(result.current.books).toEqual([]);
     });
@@ -152,9 +161,8 @@ describe('useBookSearch', () => {
       await act(async () => {
         resolvePromise!({
           books: mockBooks,
-          totalCount: 2,
+          total: 2,
           page: 1,
-          limit: 10,
           hasMore: false,
         });
         await promise;
@@ -166,9 +174,8 @@ describe('useBookSearch', () => {
     test('handles pagination correctly', async () => {
       const mockResponse = {
         books: mockBooks,
-        totalCount: 20,
+        total: 20,
         page: 1,
-        limit: 10,
         hasMore: true,
       };
 
@@ -188,7 +195,7 @@ describe('useBookSearch', () => {
   describe('searchByISBN', () => {
     test('searches book by ISBN successfully', async () => {
       const mockBook = mockBooks[0];
-      mockBookAPI.searchByISBN.mockResolvedValue(mockBook);
+      mockBookAPI.searchByIsbn.mockResolvedValue({ book: mockBook });
 
       const { result } = renderHook(() => useBookSearch());
 
@@ -197,14 +204,14 @@ describe('useBookSearch', () => {
         searchResult = await result.current.searchByISBN('9781234567890');
       });
 
-      expect(mockBookAPI.searchByISBN).toHaveBeenCalledWith('9781234567890');
+      expect(mockBookAPI.searchByIsbn).toHaveBeenCalledWith('9781234567890');
       expect(searchResult).toBe(mockBook);
       expect(result.current.error).toBe(null);
     });
 
     test('handles ISBN search errors', async () => {
       const error = new Error('ISBN search failed');
-      mockBookAPI.searchByISBN.mockRejectedValue(error);
+      mockBookAPI.searchByIsbn.mockRejectedValue(error);
 
       const { result } = renderHook(() => useBookSearch());
 
@@ -213,12 +220,12 @@ describe('useBookSearch', () => {
         searchResult = await result.current.searchByISBN('9781234567890');
       });
 
-      expect(result.current.error).toBe('ISBN search failed');
+      expect(result.current.error).toBe('Book not found');
       expect(searchResult).toBe(null);
     });
 
     test('returns null when no book found by ISBN', async () => {
-      mockBookAPI.searchByISBN.mockResolvedValue(null);
+      mockBookAPI.searchByIsbn.mockResolvedValue({ book: null });
 
       const { result } = renderHook(() => useBookSearch());
 
@@ -236,9 +243,8 @@ describe('useBookSearch', () => {
     test('clears all search state', async () => {
       const mockResponse = {
         books: mockBooks,
-        totalCount: 2,
+        total: 2,
         page: 1,
-        limit: 10,
         hasMore: false,
       };
 
@@ -271,18 +277,16 @@ describe('useBookSearch', () => {
       // Initial search response
       const firstResponse = {
         books: [mockBooks[0]],
-        totalCount: 20,
+        total: 20,
         page: 1,
-        limit: 10,
         hasMore: true,
       };
 
       // Load more response
       const secondResponse = {
         books: [mockBooks[1]],
-        totalCount: 20,
+        total: 20,
         page: 2,
-        limit: 10,
         hasMore: false,
       };
 
@@ -306,7 +310,11 @@ describe('useBookSearch', () => {
       });
 
       expect(mockBookAPI.searchBooks).toHaveBeenCalledTimes(2);
-      expect(mockBookAPI.searchBooks).toHaveBeenLastCalledWith('test query', {}, 2);
+      expect(mockBookAPI.searchBooks).toHaveBeenLastCalledWith({
+        q: 'test query',
+        page: 2,
+        limit: 20,
+      });
       expect(result.current.books).toHaveLength(2);
       expect(result.current.hasMore).toBe(false);
       expect(result.current.currentPage).toBe(2);
@@ -315,9 +323,8 @@ describe('useBookSearch', () => {
     test('does not load more when hasMore is false', async () => {
       const mockResponse = {
         books: mockBooks,
-        totalCount: 2,
+        total: 2,
         page: 1,
-        limit: 10,
         hasMore: false,
       };
 
@@ -344,9 +351,8 @@ describe('useBookSearch', () => {
     test('handles load more errors', async () => {
       const firstResponse = {
         books: [mockBooks[0]],
-        totalCount: 20,
+        total: 20,
         page: 1,
-        limit: 10,
         hasMore: true,
       };
 
@@ -366,7 +372,7 @@ describe('useBookSearch', () => {
         await result.current.loadMore();
       });
 
-      expect(result.current.error).toBe('Load more failed');
+      expect(result.current.error).toBe('Failed to search books');
       expect(result.current.books).toHaveLength(1); // Original books should remain
     });
   });
@@ -386,17 +392,15 @@ describe('useBookSearch', () => {
     test('handles concurrent searches', async () => {
       const firstResponse = {
         books: [mockBooks[0]],
-        totalCount: 1,
+        total: 1,
         page: 1,
-        limit: 10,
         hasMore: false,
       };
 
       const secondResponse = {
         books: mockBooks,
-        totalCount: 2,
+        total: 2,
         page: 1,
-        limit: 10,
         hasMore: false,
       };
 
