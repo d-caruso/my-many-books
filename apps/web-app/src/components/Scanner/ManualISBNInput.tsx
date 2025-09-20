@@ -183,7 +183,6 @@ export const ManualISBNInput: React.FC<ManualISBNInputProps> = ({
             </Button>
             <Button
               type="submit"
-              disabled={!isbn.trim()}
               variant="contained"
               fullWidth
             >
