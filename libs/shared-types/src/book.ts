@@ -2,6 +2,9 @@
  * Book-related type definitions
  */
 
+import { Author } from './author';
+import { Category } from './category';
+
 export interface Book {
   id: number;
   isbnCode: string;
