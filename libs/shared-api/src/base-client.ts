@@ -87,4 +87,8 @@ export class BaseApiClient {
   protected delete<T>(endpoint: string, config?: RequestConfig): Promise<T> {
     return this.request<T>('DELETE', endpoint, config);
   }
+
+  public setBaseURL(baseURL: string): void {
+    this.config.baseURL = baseURL;
+  }
 }
