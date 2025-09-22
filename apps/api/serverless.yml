@@ -28,9 +28,9 @@ provider:
     
     # Security settings
     API_KEYS_ENABLED: ${env:API_KEYS_ENABLED, 'false'}
-    COGNITO_ENABLED: ${env:COGNITO_ENABLED, 'false'}
-    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID, ''}
-    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID, ''}
+    COGNITO_ENABLED: ${env:COGNITO_ENABLED, 'true'}
+    COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+    COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
     
     # External service settings
     OPEN_LIBRARY_BASE_URL: ${env:OPEN_LIBRARY_BASE_URL, 'https://openlibrary.org'}
@@ -245,5 +245,160 @@ functions:
           method: get
           cors: true
 
-# Resources section removed - CORS is handled automatically by Serverless Framework
-# when cors: true is specified in function events
+# CloudFormation Resources
+resources:
+  Resources:
+    # Cognito User Pool
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-user-pool-${self:provider.stage}
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+            RequireUppercase: true
+        VerificationMessageTemplate:
+          DefaultEmailOption: CONFIRM_WITH_LINK
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+        UserAttributeUpdateSettings:
+          AttributesRequireVerificationBeforeUpdate:
+            - email
+        AdminCreateUserConfig:
+          AllowAdminCreateUserOnly: false
+        UserPoolTags:
+          Project: my-many-books
+          Environment: ${self:provider.stage}
+          Service: auth
+          CreatedBy: serverless
+
+    # Cognito User Pool Client
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:service}-client-${self:provider.stage}
+        UserPoolId: !Ref CognitoUserPool
+        GenerateSecret: false
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthFlows:
+          - code
+          - implicit
+        AllowedOAuthScopes:
+          - email
+          - openid
+          - profile
+        SupportedIdentityProviders:
+          - COGNITO
+        CallbackURLs:
+          - http://localhost:3000
+          - https://localhost:3000
+          - https://${self:service}-web-${self:provider.stage}.s3-website-${self:provider.region}.amazonaws.com
+        LogoutURLs:
+          - http://localhost:3000
+          - https://localhost:3000
+          - https://${self:service}-web-${self:provider.stage}.s3-website-${self:provider.region}.amazonaws.com
+        AccessTokenValidity: 24
+        IdTokenValidity: 24
+        RefreshTokenValidity: 30
+        TokenValidityUnits:
+          AccessToken: hours
+          IdToken: hours
+          RefreshToken: days
+
+    # Cognito Identity Pool
+    CognitoIdentityPool:
+      Type: AWS::Cognito::IdentityPool
+      Properties:
+        IdentityPoolName: ${self:service}-identity-pool-${self:provider.stage}
+        AllowUnauthenticatedIdentities: false
+        CognitoIdentityProviders:
+          - ClientId: !Ref CognitoUserPoolClient
+            ProviderName: !GetAtt CognitoUserPool.ProviderName
+            ServerSideTokenCheck: false
+
+    # IAM Role for authenticated users
+    CognitoAuthRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:service}-authenticated-role-${self:provider.stage}
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Federated: cognito-identity.amazonaws.com
+              Action: sts:AssumeRoleWithWebIdentity
+              Condition:
+                StringEquals:
+                  cognito-identity.amazonaws.com:aud: !Ref CognitoIdentityPool
+                ForAnyValue:StringLike:
+                  cognito-identity.amazonaws.com:amr: authenticated
+        Policies:
+          - PolicyName: CognitoAuthenticatedPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - mobileanalytics:PutEvents
+                    - cognito-sync:*
+                    - cognito-identity:*
+                  Resource: '*'
+        Tags:
+          - Key: Project
+            Value: my-many-books
+          - Key: Environment
+            Value: ${self:provider.stage}
+          - Key: Service
+            Value: auth
+          - Key: CreatedBy
+            Value: serverless
+
+    # Attach role to identity pool
+    CognitoIdentityPoolRoleAttachment:
+      Type: AWS::Cognito::IdentityPoolRoleAttachment
+      Properties:
+        IdentityPoolId: !Ref CognitoIdentityPool
+        Roles:
+          authenticated: !GetAtt CognitoAuthRole.Arn
+
+  # CloudFormation Outputs
+  Outputs:
+    CognitoUserPoolId:
+      Description: Cognito User Pool ID
+      Value: !Ref CognitoUserPool
+      Export:
+        Name: ${self:service}-${self:provider.stage}-CognitoUserPoolId
+
+    CognitoUserPoolClientId:
+      Description: Cognito User Pool Client ID
+      Value: !Ref CognitoUserPoolClient
+      Export:
+        Name: ${self:service}-${self:provider.stage}-CognitoUserPoolClientId
+
+    CognitoIdentityPoolId:
+      Description: Cognito Identity Pool ID
+      Value: !Ref CognitoIdentityPool
+      Export:
+        Name: ${self:service}-${self:provider.stage}-CognitoIdentityPoolId
+
+    CognitoUserPoolArn:
+      Description: Cognito User Pool ARN
+      Value: !GetAtt CognitoUserPool.Arn
+      Export:
+        Name: ${self:service}-${self:provider.stage}-CognitoUserPoolArn
+
+    AwsRegion:
+      Description: AWS Region
+      Value: ${self:provider.region}
+      Export:
+        Name: ${self:service}-${self:provider.stage}-AwsRegion
