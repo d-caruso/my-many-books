@@ -1,34 +1,42 @@
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
-export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, process.cwd(), '');
-  
-  return {
+export default defineConfig({
   plugins: [react()],
+  root: '.',
+  publicDir: 'public',
   resolve: {
     alias: {
+      '@my-many-books/shared-types': path.resolve(__dirname, '../../libs/shared-types/src'),
+      '@my-many-books/shared-api': path.resolve(__dirname, '../../libs/shared-api/src'),
+      '@my-many-books/shared-utils': path.resolve(__dirname, '../../libs/shared-utils/src'),
+      '@my-many-books/ui-components': path.resolve(__dirname, '../../libs/ui-components/src'),
+      '@my-many-books/shared-hooks': path.resolve(__dirname, '../../libs/shared-hooks/src'),
+      '@my-many-books/shared-business': path.resolve(__dirname, '../../libs/shared-business/src'),
+      '@my-many-books/shared-design': path.resolve(__dirname, '../../libs/shared-design/src'),
+      '@my-many-books/shared-navigation': path.resolve(__dirname, '../../libs/shared-navigation/src'),
+      '@my-many-books/shared-forms': path.resolve(__dirname, '../../libs/shared-forms/src'),
       '@': path.resolve(__dirname, './src'),
+      buffer: 'buffer',
+      process: 'process/browser',
+      stream: 'stream-browserify',
+      util: 'util',
     },
   },
   define: {
     global: 'globalThis',
-    // Define both process.env and import.meta.env for compatibility
-    'process.env.NODE_ENV': '"test"',
-    'process.env.REACT_APP_COGNITO_USER_POOL_ID': '""',
-    'process.env.REACT_APP_COGNITO_USER_POOL_CLIENT_ID': '""',
-    'process.env.REACT_APP_COGNITO_IDENTITY_POOL_ID': '""',
-    'process.env.REACT_APP_API_URL': '"http://localhost:3001"',
   },
-  envPrefix: ['VITE_', 'REACT_APP_'],
-  envDir: '.',
   optimizeDeps: {
-    include: ['react', 'react-dom'],
+    include: ['buffer', 'process', 'stream-browserify', 'util'],
+  },
+  build: {
+    outDir: 'build',
   },
   server: {
-    port: 5173,
+    port: 3000,
   },
-  };
-});
+  css: {
+    postcss: './postcss.config.js',
+  },
+})

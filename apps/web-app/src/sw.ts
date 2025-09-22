@@ -32,12 +32,12 @@ registerRoute(
     }
     return true;
   },
-  createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
+  createHandlerBoundToURL('/index.html')
 );
 
 // Cache API responses
 registerRoute(
-  ({ url }) => url.origin === process.env.REACT_APP_API_BASE_URL,
+  ({ url }) => url.origin === import.meta.env.VITE_API_BASE_URL,
   new NetworkFirst({
     cacheName: 'api-cache',
     plugins: [
