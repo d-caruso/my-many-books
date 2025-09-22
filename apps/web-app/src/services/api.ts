@@ -3,27 +3,11 @@
  * Replaces the old api.ts with modern monorepo architecture
  */
 
-// TODO: Revert to shared-api imports once Nx workspace is properly configured
-// import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
-import { createApiClient } from '../__mocks__/@my-many-books/shared-api';
+import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
 import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
 import { BookFormData } from '../components/Book/BookForm';
 import axios from 'axios';
 
-// Define interfaces locally until Nx workspace configuration is fixed
-interface HttpClient {
-  get<T>(url: string, config?: any): Promise<T>;
-  post<T>(url: string, data?: any, config?: any): Promise<T>;
-  put<T>(url: string, data?: any, config?: any): Promise<T>;
-  delete<T>(url: string, config?: any): Promise<T>;
-}
-
-interface ApiClientConfig {
-  baseURL: string;
-  timeout?: number;
-  getAuthToken?: () => string | null;
-  onUnauthorized?: () => void;
-}
 
 // Axios adapter for web platform
 class AxiosHttpClient implements HttpClient {
@@ -93,7 +77,7 @@ class ApiService {
 
     // Create API client configuration (use injected or default)
     const apiConfig: ApiClientConfig = dependencies.config || {
-      baseURL: process.env['REACT_APP_API_BASE_URL'] || 'http://localhost:3000',
+      baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
       timeout: 10000,
       getAuthToken: () => localStorage.getItem('authToken'),
       onUnauthorized: () => {
@@ -277,7 +261,7 @@ class ApiService {
   // Book methods with development mock data fallback
   async getBooks(filters?: SearchFilters): Promise<PaginatedResponse<Book>> {
     // In development mode without API URL, return mock data
-    if (process.env['NODE_ENV'] === 'development' && !process.env['REACT_APP_API_BASE_URL']) {
+    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
       return this.getMockBooks();
     }
     
@@ -334,7 +318,7 @@ class ApiService {
     categoryId?: number;
   }): Promise<SearchResult> {
     // In development mode without API URL, return mock data
-    if (process.env['NODE_ENV'] === 'development' && !process.env['REACT_APP_API_BASE_URL']) {
+    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
       return this.getMockSearchResults(searchParams);
     }
     
@@ -360,7 +344,7 @@ class ApiService {
   // Categories methods with development mock data fallback
   async getCategories(): Promise<Category[]> {
     // In development mode without API URL, return mock data
-    if (process.env['NODE_ENV'] === 'development' && !process.env['REACT_APP_API_BASE_URL']) {
+    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
       return this.getMockCategories();
     }
     
@@ -378,7 +362,7 @@ class ApiService {
   // Authors methods with development mock data fallback
   async getAuthors(): Promise<Author[]> {
     // In development mode without API URL, return mock data
-    if (process.env['NODE_ENV'] === 'development' && !process.env['REACT_APP_API_BASE_URL']) {
+    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
       return this.getMockAuthors();
     }
     
@@ -391,7 +375,7 @@ class ApiService {
     }
     
     // In development mode without API URL, return filtered mock data
-    if (process.env['NODE_ENV'] === 'development' && !process.env['REACT_APP_API_BASE_URL']) {
+    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
       const mockAuthors = await this.getMockAuthors();
       return mockAuthors.filter(author => 
         author.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

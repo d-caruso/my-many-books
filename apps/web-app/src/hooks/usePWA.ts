@@ -31,7 +31,7 @@ export const usePWA = (): PWAState & PWAActions => {
     }
 
     // Register service worker
-    if ('serviceWorker' in navigator && process.env['NODE_ENV'] === 'production') {
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
       const workbox = new Workbox('/sw.js');
       setWb(workbox);
 
