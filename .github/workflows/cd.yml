@@ -271,6 +271,13 @@ jobs:
             npm install --legacy-peer-deps
           fi
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Get Cognito Configuration
         id: cognito-config
         run: |
@@ -296,13 +303,6 @@ jobs:
           VITE_COGNITO_IDENTITY_POOL_ID: ${{ steps.cognito-config.outputs.identity-pool-id }}
           VITE_AWS_REGION: ${{ env.AWS_REGION }}
           VITE_API_BASE_URL: ${{ steps.cognito-config.outputs.api-endpoint }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
 
       - name: Deploy to S3
         working-directory: apps/web-app
