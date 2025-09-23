@@ -17,11 +17,11 @@ provider:
   # Environment variables
   environment:
     NODE_ENV: ${self:provider.stage}
-    DB_HOST: ${env:DB_HOST}
-    DB_PORT: ${env:DB_PORT, '5432'}
-    DB_NAME: ${env:DB_NAME}
-    DB_USER: ${env:DB_USER}
-    DB_PASSWORD: ${env:DB_PASSWORD}
+    DB_HOST: ${ssm:/my-many-books-infrastructure-${self:provider.stage}/database/host, ''}
+    DB_PORT: ${ssm:/my-many-books-infrastructure-${self:provider.stage}/database/port, '3306'}
+    DB_NAME: ${env:DB_NAME, 'my_many_books'}
+    DB_USER: ${env:DB_USER, 'admin'}
+    DB_PASSWORD: ${ssm:/aws/reference/secretsmanager/my-many-books-infrastructure-${self:provider.stage}-db-credentials~false~password, ''}
     DB_SSL: ${env:DB_SSL, 'true'}
     API_VERSION: ${env:API_VERSION, '1.0.0'}
     LOG_LEVEL: ${env:LOG_LEVEL, 'info'}
@@ -67,6 +67,15 @@ provider:
           Action:
             - execute-api:Invoke
           Resource: 'arn:aws:execute-api:*:*:*'
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - ssm:GetParameters
+          Resource: 'arn:aws:ssm:*:*:parameter/my-many-books-infrastructure-*'
+        - Effect: Allow
+          Action:
+            - secretsmanager:GetSecretValue
+          Resource: 'arn:aws:secretsmanager:*:*:secret:my-many-books-infrastructure-*'
 
   # Tags for resource management  
   tags:
@@ -109,11 +118,31 @@ functions:
       - http:
           path: /{proxy+}
           method: ANY
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Requested-With
+            allowCredentials: true
       - http:
           path: /
           method: ANY
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Requested-With
+            allowCredentials: true
 
   # Separate function deployments (alternative approach)
   # Uncomment below if you prefer separate Lambda functions per resource
@@ -229,7 +258,17 @@ functions:
       - http:
           path: /health
           method: get
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Requested-With
+            allowCredentials: true
 
   readiness:
     handler: src/handlers/health.readinessCheck
@@ -237,7 +276,17 @@ functions:
       - http:
           path: /readiness
           method: get
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Requested-With
+            allowCredentials: true
 
 # CloudFormation Resources
 resources:
@@ -258,8 +307,12 @@ resources:
             RequireNumbers: true
             RequireSymbols: false
             RequireUppercase: true
+        EmailConfiguration:
+          EmailSendingAccount: COGNITO_DEFAULT
         VerificationMessageTemplate:
           DefaultEmailOption: CONFIRM_WITH_LINK
+          EmailSubject: "Verify your My Many Books account"
+          EmailMessage: "Please click the link below to verify your email address for My Many Books: {####}"
         AccountRecoverySetting:
           RecoveryMechanisms:
             - Name: verified_email
@@ -307,6 +360,13 @@ resources:
           AccessToken: hours
           IdToken: hours
           RefreshToken: days
+
+    # Cognito User Pool Domain
+    CognitoUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: ${self:service}-auth-${self:provider.stage}
+        UserPoolId: !Ref CognitoUserPool
 
     # Cognito Identity Pool
     CognitoIdentityPool:
@@ -390,6 +450,12 @@ resources:
       Value: !GetAtt CognitoUserPool.Arn
       Export:
         Name: ${self:service}-${self:provider.stage}-CognitoUserPoolArn
+
+    CognitoUserPoolDomain:
+      Description: Cognito User Pool Domain
+      Value: !Ref CognitoUserPoolDomain
+      Export:
+        Name: ${self:service}-${self:provider.stage}-CognitoUserPoolDomain
 
     AwsRegion:
       Description: AWS Region

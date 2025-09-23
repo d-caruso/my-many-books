@@ -165,10 +165,140 @@ jobs:
         run: |
           echo "Validating configuration for ${{ needs.setup.outputs.environment }} environment"
 
+  deploy-infrastructure:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    needs: [setup, pre-deployment-checks]
+    environment: ${{ needs.setup.outputs.environment }}
+    if: needs.setup.outputs.should-deploy == 'true' && needs.setup.outputs.deploy-api == 'true'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy Infrastructure Stack
+        run: |
+          STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
+          TEMPLATE_FILE="apps/api/deployment/cloudformation/infrastructure.yml"
+          
+          # Set parameters based on environment
+          PARAMETERS="ParameterKey=Environment,ParameterValue=${{ needs.setup.outputs.environment }}"
+          
+          case "${{ needs.setup.outputs.environment }}" in
+            "prod")
+              PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.small"
+              PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=50"
+              PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=true"
+              ;;
+            "staging")
+              PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.micro"
+              PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=20"
+              PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=false"
+              ;;
+            "dev")
+              PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.micro"
+              PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=20"
+              PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=false"
+              ;;
+          esac
+          
+          # Check if stack exists
+          if aws cloudformation describe-stacks --stack-name "$STACK_NAME" >/dev/null 2>&1; then
+            echo "Updating existing infrastructure stack: $STACK_NAME"
+            aws cloudformation update-stack \
+              --stack-name "$STACK_NAME" \
+              --template-body "file://$TEMPLATE_FILE" \
+              --parameters $PARAMETERS \
+              --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM || {
+                exit_code=$?
+                if [ $exit_code -eq 255 ]; then
+                  echo "No updates to perform for infrastructure stack"
+                else
+                  echo "Failed to update infrastructure stack"
+                  exit $exit_code
+                fi
+              }
+            
+            echo "Waiting for stack update to complete..."
+            aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
+          else
+            echo "Creating new infrastructure stack: $STACK_NAME"
+            aws cloudformation create-stack \
+              --stack-name "$STACK_NAME" \
+              --template-body "file://$TEMPLATE_FILE" \
+              --parameters $PARAMETERS \
+              --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+            
+            echo "Waiting for stack creation to complete..."
+            aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
+          fi
+          
+          echo "Infrastructure deployment completed successfully"
+
+      - name: Run Database Migrations
+        working-directory: apps/api
+        run: |
+          # Install dependencies if needed
+          if [ ! -d "node_modules" ]; then
+            npm ci
+          fi
+          
+          # Get database connection details from CloudFormation stack
+          STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
+          
+          DB_ENDPOINT=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query 'Stacks[0].Outputs[?OutputKey==`DatabaseEndpoint`].OutputValue' \
+            --output text)
+          
+          DB_PORT=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query 'Stacks[0].Outputs[?OutputKey==`DatabasePort`].OutputValue' \
+            --output text)
+          
+          if [ -z "$DB_ENDPOINT" ] || [ -z "$DB_PORT" ]; then
+            echo "Could not retrieve database connection details from CloudFormation"
+            exit 1
+          fi
+          
+          # Set environment variables for database connection
+          export NODE_ENV="${{ needs.setup.outputs.environment }}"
+          export DB_HOST="$DB_ENDPOINT"
+          export DB_PORT="$DB_PORT"
+          export DB_NAME="my_many_books"
+          export DB_SSL="true"
+          
+          # Get database credentials from Secrets Manager
+          SECRET_ARN=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query 'Stacks[0].Outputs[?OutputKey==`DatabaseSecretArn`].OutputValue' \
+            --output text)
+          
+          DB_CREDENTIALS=$(aws secretsmanager get-secret-value \
+            --secret-id "$SECRET_ARN" \
+            --query 'SecretString' \
+            --output text)
+          
+          export DB_USER=$(echo "$DB_CREDENTIALS" | jq -r '.username')
+          export DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
+          
+          echo "Running database migrations..."
+          npm run db:migrate
+          
+          echo "Running database seeders..."
+          npm run db:seed
+
   deploy-api:
     name: Deploy API
     runs-on: ubuntu-latest
-    needs: [setup, pre-deployment-checks]
+    needs: [setup, pre-deployment-checks, deploy-infrastructure]
     environment: ${{ needs.setup.outputs.environment }}
     if: needs.setup.outputs.should-deploy == 'true' && needs.setup.outputs.deploy-api == 'true'
     
@@ -202,28 +332,6 @@ jobs:
         # The working-directory is already set, so a simple npm run build will work.
         working-directory: apps/api
         run: npm run build
-
-      - name: Run Database Migrations
-        working-directory: apps/api
-        run: |
-          export NODE_ENV=${{ needs.setup.outputs.environment }}
-          export DB_HOST=${{ secrets.DB_HOST }}
-          export DB_PORT=${{ secrets.DB_PORT }}
-          export DB_NAME=${{ secrets.DB_NAME }}
-          export DB_USER=${{ secrets.DB_USER }}
-          export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          export DB_SSL=true
-          
-          # Skip migrations if no database configured
-          if [ -z "$DB_HOST" ]; then
-            echo "No database configured, skipping migrations"
-            exit 0
-          fi
-          
-          echo "Running migrations for ${{ needs.setup.outputs.environment }}"
-          npm run db:migrate
-        env:
-          NODE_ENV: ${{ needs.setup.outputs.environment }}
 
       - name: Deploy API with Serverless
         working-directory: apps/api
