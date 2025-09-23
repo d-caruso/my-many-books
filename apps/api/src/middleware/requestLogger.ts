@@ -54,6 +54,7 @@ export class RequestLogger {
     };
 
     if (this.logLevel !== 'none') {
+      // eslint-disable-next-line no-console
       console.log('Incoming request:', {
         requestId: logEntry.requestId,
         method: logEntry.method,
@@ -85,6 +86,7 @@ export class RequestLogger {
     if (this.logLevel !== 'none') {
       const logLevel = this.getLogLevelForStatus(response.statusCode);
 
+      // eslint-disable-next-line no-console
       console[logLevel]('Request completed:', {
         requestId: logEntry.requestId,
         method: logEntry.method,

@@ -98,14 +98,16 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
     }
 
     try {
+      // eslint-disable-next-line no-console
       console.log('Creating category with data:', { ...categoryData, name: normalizedName });
+      // eslint-disable-next-line no-console
       console.log('Category model initialized:', !!Category.sequelize);
 
       return await Category.create({
-        ...categoryData,
         name: normalizedName,
-      });
+      } as any);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Category.create failed:', error);
       throw error;
     }
@@ -121,9 +123,8 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
         name: normalizedName,
       },
       defaults: {
-        ...categoryData,
         name: normalizedName,
-      },
+      } as any,
     });
   }
 }

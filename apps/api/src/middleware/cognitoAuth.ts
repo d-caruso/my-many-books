@@ -3,7 +3,7 @@
 // ================================================================
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { verify, JwtPayload } from 'jsonwebtoken';
+import { verify, JwtPayload, Algorithm } from 'jsonwebtoken';
 
 export interface CognitoConfig {
   enabled: boolean;
@@ -11,7 +11,7 @@ export interface CognitoConfig {
   clientId: string;
   region: string;
   issuer: string;
-  algorithms: string[];
+  algorithms: Algorithm[];
   requiredScopes?: string[];
 }
 
@@ -19,8 +19,8 @@ export interface CognitoUser {
   sub: string; // User ID
   email: string;
   email_verified: boolean;
-  given_name?: string;
-  family_name?: string;
+  given_name: string | undefined;
+  family_name: string | undefined;
   groups?: string[];
   scopes?: string[];
   token_use: string;
@@ -37,7 +37,7 @@ interface JwtHeader {
 }
 
 interface AuthContext {
-  user?: CognitoUser;
+  user: CognitoUser | undefined;
   isAuthenticated: boolean;
 }
 
@@ -230,8 +230,8 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
       sub: payload.sub!,
       email: (payload['email'] as string) || '',
       email_verified: payload['email_verified'] === true,
-      given_name: payload['given_name'] as string | undefined,
-      family_name: payload['family_name'] as string | undefined,
+      given_name: (payload['given_name'] as string) || undefined,
+      family_name: (payload['family_name'] as string) || undefined,
       groups: (payload['cognito:groups'] as string[]) || [],
       scopes: this.extractScopes(payload),
       token_use: payload['token_use'] as string,
@@ -363,7 +363,7 @@ export const createCognitoAuthenticator = (): CognitoAuthenticator => {
     clientId: process.env['COGNITO_CLIENT_ID'] || '',
     region: process.env['AWS_REGION'] || 'us-east-1',
     issuer: `https://cognito-idp.${process.env['AWS_REGION'] || 'us-east-1'}.amazonaws.com/${process.env['COGNITO_USER_POOL_ID'] || ''}`,
-    algorithms: ['RS256'],
+    algorithms: ['RS256' as Algorithm],
   };
 
   return new CognitoAuthenticator(config);
