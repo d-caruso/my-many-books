@@ -242,7 +242,7 @@ jobs:
           
           echo "Deploying API to ${{ needs.setup.outputs.environment }}"
           echo "Using Serverless Framework $(npx serverless --version)"
-          npx serverless deploy --stage ${{ needs.setup.outputs.environment }} --verbose
+          npx serverless deploy --stage ${{ needs.setup.outputs.environment }} --verbose --skip-auth
 
   deploy-web-app:
     name: Deploy Web App
