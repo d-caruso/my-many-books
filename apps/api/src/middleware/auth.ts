@@ -33,13 +33,19 @@ export class CognitoAuthProvider implements AuthProvider {
     void userPoolId;
   }
 
-  async verifyToken(token: string): Promise<AuthProviderUser> {
+  verifyToken(token: string): AuthProviderUser {
     // TODO: Implement AWS Cognito JWT verification
     // This is a placeholder implementation
     try {
       // In real implementation, verify JWT with AWS Cognito
-      const jwt = require('jsonwebtoken');
-      const decoded = jwt.decode(token);
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const jwt = require('jsonwebtoken') as { decode: (token: string) => unknown };
+      const decoded = jwt.decode(token) as {
+        sub?: string;
+        email?: string;
+        given_name?: string;
+        family_name?: string;
+      } | null;
 
       if (!decoded || !decoded.sub || !decoded.email) {
         throw new Error('Invalid token format');
@@ -51,7 +57,7 @@ export class CognitoAuthProvider implements AuthProvider {
         name: decoded.given_name,
         surname: decoded.family_name,
       };
-    } catch (error) {
+    } catch {
       throw new Error('Token verification failed');
     }
   }
@@ -69,7 +75,7 @@ export class Auth0Provider implements AuthProvider {
     void audience;
   }
 
-  async verifyToken(_token: string): Promise<AuthProviderUser> {
+  verifyToken(_token: string): AuthProviderUser {
     // TODO: Implement Auth0 JWT verification
     throw new Error('Auth0 provider not yet implemented');
   }
@@ -115,7 +121,7 @@ export class UserService {
         name: providerUser.name || 'Unknown',
         surname: providerUser.surname || 'User',
         isActive: true,
-      } as any);
+      });
       isNewUser = true;
     }
 
@@ -213,7 +219,7 @@ export const optionalAuthMiddleware = async (
 
 // Middleware to require specific roles or permissions (extensible)
 export const requirePermission = (_permission: string) => {
-  return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ error: 'Authentication required' });
       return;

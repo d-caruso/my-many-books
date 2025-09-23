@@ -67,7 +67,8 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
   }
 
   static async searchByName(searchTerm: string): Promise<Category[]> {
-    const { Op } = require('sequelize');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Op } = require('sequelize') as { Op: { like: symbol } };
 
     return await Category.findAll({
       where: {
@@ -96,10 +97,18 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
       return existingCategory;
     }
 
-    return await Category.create({
-      ...categoryData,
-      name: normalizedName,
-    } as any);
+    try {
+      console.log('Creating category with data:', { ...categoryData, name: normalizedName });
+      console.log('Category model initialized:', !!Category.sequelize);
+
+      return await Category.create({
+        ...categoryData,
+        name: normalizedName,
+      });
+    } catch (error) {
+      console.error('Category.create failed:', error);
+      throw error;
+    }
   }
 
   static async findOrCreateCategory(
@@ -115,6 +124,6 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
         ...categoryData,
         name: normalizedName,
       },
-    } as any);
+    });
   }
 }

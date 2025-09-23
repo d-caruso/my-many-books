@@ -10,7 +10,7 @@ import { ApiResponse } from '../common/ApiResponse';
 
 // A universal request interface to decouple the controller from the framework
 interface UniversalRequest {
-  body?: any;
+  body?: unknown;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
 }
@@ -35,11 +35,15 @@ interface AddFallbackBookRequest {
 
 export class IsbnController extends BaseController {
   private readonly isbnLookupSchema = Joi.object<IsbnLookupRequest>({
-    isbn: Joi.string().required().custom(this.validateIsbnField),
+    isbn: Joi.string().required().custom(this.validateIsbnField.bind(this)),
   });
 
   private readonly batchIsbnLookupSchema = Joi.object<BatchIsbnLookupRequest>({
-    isbns: Joi.array().items(Joi.string().custom(this.validateIsbnField)).min(1).max(50).required(),
+    isbns: Joi.array()
+      .items(Joi.string().custom(this.validateIsbnField.bind(this)))
+      .min(1)
+      .max(50)
+      .required(),
   });
 
   private readonly titleSearchSchema = Joi.object<TitleSearchRequest>({
@@ -48,11 +52,11 @@ export class IsbnController extends BaseController {
   });
 
   private readonly addFallbackBookSchema = Joi.object<AddFallbackBookRequest>({
-    isbn: Joi.string().required().custom(this.validateIsbnField),
+    isbn: Joi.string().required().custom(this.validateIsbnField.bind(this)),
     title: Joi.string().required().min(1).max(500).trim(),
   });
 
-  private validateIsbnField(value: string, helpers: Joi.CustomHelpers) {
+  private validateIsbnField(value: string, helpers: Joi.CustomHelpers): unknown {
     const validation = validateIsbn(value);
     if (!validation.isValid) {
       return helpers.error('any.invalid', { message: `Invalid ISBN: ${validation.error}` });
@@ -62,7 +66,8 @@ export class IsbnController extends BaseController {
 
   async lookupBook(request: UniversalRequest): Promise<ApiResponse> {
     try {
-      const isbn = this.getPathParameter(request, 'isbn') || this.getQueryParameter(request, 'isbn');
+      const isbn =
+        this.getPathParameter(request, 'isbn') || this.getQueryParameter(request, 'isbn');
 
       if (!isbn) {
         return this.createErrorResponse('ISBN parameter is required', 400);
@@ -199,7 +204,7 @@ export class IsbnController extends BaseController {
     }
   }
 
-  async getResilienceStats(_request: UniversalRequest): Promise<ApiResponse> {
+  getResilienceStats(_request: UniversalRequest): ApiResponse {
     try {
       const stats = isbnService.getResilienceStats();
 
@@ -216,7 +221,7 @@ export class IsbnController extends BaseController {
     }
   }
 
-  async resetResilience(_request: UniversalRequest): Promise<ApiResponse> {
+  resetResilience(_request: UniversalRequest): ApiResponse {
     try {
       isbnService.resetResilience();
 
@@ -227,7 +232,7 @@ export class IsbnController extends BaseController {
     }
   }
 
-  async clearCache(_request: UniversalRequest): Promise<ApiResponse> {
+  clearCache(_request: UniversalRequest): ApiResponse {
     try {
       isbnService.clearCache();
 
@@ -238,7 +243,7 @@ export class IsbnController extends BaseController {
     }
   }
 
-  async getCacheStats(_request: UniversalRequest): Promise<ApiResponse> {
+  getCacheStats(_request: UniversalRequest): ApiResponse {
     try {
       const cacheStats = isbnService.getCacheStats();
 
@@ -252,7 +257,7 @@ export class IsbnController extends BaseController {
     }
   }
 
-  async addFallbackBook(request: UniversalRequest): Promise<ApiResponse> {
+  addFallbackBook(request: UniversalRequest): ApiResponse {
     try {
       const body = this.parseBody<AddFallbackBookRequest>(request);
       if (!body) {
@@ -284,9 +289,10 @@ export class IsbnController extends BaseController {
     }
   }
 
-  async validateIsbn(request: UniversalRequest): Promise<ApiResponse> {
+  validateIsbn(request: UniversalRequest): ApiResponse {
     try {
-      const isbn = this.getPathParameter(request, 'isbn') || this.getQueryParameter(request, 'isbn');
+      const isbn =
+        this.getPathParameter(request, 'isbn') || this.getQueryParameter(request, 'isbn');
 
       if (!isbn) {
         return this.createErrorResponse('ISBN parameter is required', 400);
@@ -315,7 +321,7 @@ export class IsbnController extends BaseController {
     }
   }
 
-  async formatIsbn(request: UniversalRequest): Promise<ApiResponse> {
+  formatIsbn(request: UniversalRequest): ApiResponse {
     try {
       const isbn = this.getQueryParameter(request, 'isbn');
       const format = this.getQueryParameter(request, 'format') || 'hyphenated';

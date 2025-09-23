@@ -26,7 +26,8 @@ export class RequestLogger {
   private logLevel: 'none' | 'basic' | 'detailed';
 
   private constructor() {
-    this.logLevel = (process.env['LOG_LEVEL'] as any) || 'basic';
+    const envLogLevel = process.env['LOG_LEVEL'] as 'none' | 'basic' | 'detailed' | undefined;
+    this.logLevel = envLogLevel || 'basic';
   }
 
   public static getInstance(): RequestLogger {
@@ -46,7 +47,9 @@ export class RequestLogger {
       pathParameters: event.pathParameters as Record<string, string> | null,
       headers: this.sanitizeHeaders((event.headers || {}) as Record<string, string>),
       sourceIp: event.requestContext.identity.sourceIp,
-      userAgent: (event.headers && (event.headers['User-Agent'] || event.headers['user-agent'])) || 'Unknown',
+      userAgent:
+        (event.headers && (event.headers['User-Agent'] || event.headers['user-agent'])) ||
+        'Unknown',
       timestamp: new Date().toISOString(),
     };
 

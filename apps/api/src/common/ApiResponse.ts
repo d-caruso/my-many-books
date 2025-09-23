@@ -1,6 +1,6 @@
 // src/common/ApiResponse.ts
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   statusCode: number;
   success: boolean;
   data?: T;

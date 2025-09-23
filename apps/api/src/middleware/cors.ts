@@ -100,6 +100,9 @@ export const addCorsToResponse = (
 };
 
 // Convenience function for CORS handler
-export const corsHandler = (_event: any, corsOptions: CorsOptions = {}): APIGatewayProxyResult => {
+export const corsHandler = (
+  _event: unknown,
+  corsOptions: CorsOptions = {}
+): APIGatewayProxyResult => {
   return handleOptionsRequest(corsOptions);
 };
