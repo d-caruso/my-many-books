@@ -9,11 +9,13 @@ import { validateIsbn } from '../utils/isbn';
 import { ApiResponse } from '../common/ApiResponse';
 
 // A universal request interface to decouple the controller from the framework
-interface UniversalRequest {
+import { UniversalRequest } from '../types';
+
+/*interface UniversalRequest {
   body?: unknown;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
-}
+}*/
 
 interface IsbnLookupRequest {
   isbn: string;
@@ -204,7 +206,8 @@ export class IsbnController extends BaseController {
     }
   }
 
-  getResilienceStats(_request: UniversalRequest): ApiResponse {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async getResilienceStats(_request: UniversalRequest): Promise<ApiResponse> {
     try {
       const stats = isbnService.getResilienceStats();
 
@@ -221,7 +224,8 @@ export class IsbnController extends BaseController {
     }
   }
 
-  resetResilience(_request: UniversalRequest): ApiResponse {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async resetResilience(_request: UniversalRequest): Promise<ApiResponse> {
     try {
       isbnService.resetResilience();
 
@@ -232,7 +236,8 @@ export class IsbnController extends BaseController {
     }
   }
 
-  clearCache(_request: UniversalRequest): ApiResponse {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async clearCache(_request: UniversalRequest): Promise<ApiResponse> {
     try {
       isbnService.clearCache();
 
@@ -243,7 +248,8 @@ export class IsbnController extends BaseController {
     }
   }
 
-  getCacheStats(_request: UniversalRequest): ApiResponse {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async getCacheStats(_request: UniversalRequest): Promise<ApiResponse> {
     try {
       const cacheStats = isbnService.getCacheStats();
 
@@ -257,7 +263,8 @@ export class IsbnController extends BaseController {
     }
   }
 
-  addFallbackBook(request: UniversalRequest): ApiResponse {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async addFallbackBook(request: UniversalRequest): Promise<ApiResponse> {
     try {
       const body = this.parseBody<AddFallbackBookRequest>(request);
       if (!body) {
@@ -289,7 +296,8 @@ export class IsbnController extends BaseController {
     }
   }
 
-  validateIsbn(request: UniversalRequest): ApiResponse {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async validateIsbn(request: UniversalRequest): Promise<ApiResponse> {
     try {
       const isbn =
         this.getPathParameter(request, 'isbn') || this.getQueryParameter(request, 'isbn');
@@ -321,7 +329,8 @@ export class IsbnController extends BaseController {
     }
   }
 
-  formatIsbn(request: UniversalRequest): ApiResponse {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async formatIsbn(request: UniversalRequest): Promise<ApiResponse> {
     try {
       const isbn = this.getQueryParameter(request, 'isbn');
       const format = this.getQueryParameter(request, 'format') || 'hyphenated';

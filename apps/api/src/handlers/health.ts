@@ -40,47 +40,51 @@ const withMiddleware = (
   };
 };
 
-export const healthCheck = withMiddleware((_event: APIGatewayProxyEvent): APIGatewayProxyResult => {
-  try {
-    const health = {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      environment: process.env['NODE_ENV'] || 'development',
-      version: process.env['APP_VERSION'] || '1.0.0',
-      uptime: process.uptime(),
-      services: {
-        database: 'healthy', // TODO: Add actual DB health check
-        isbnService: 'healthy', // TODO: Add actual service health check
-      },
-    };
+export const healthCheck = withMiddleware(
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async (_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    try {
+      const health = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        environment: process.env['NODE_ENV'] || 'development',
+        version: process.env['APP_VERSION'] || '1.0.0',
+        uptime: process.uptime(),
+        services: {
+          database: 'healthy', // TODO: Add actual DB health check
+          isbnService: 'healthy', // TODO: Add actual service health check
+        },
+      };
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        success: true,
-        data: health,
-      }),
-    };
-  } catch {
-    return {
-      statusCode: 503,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        success: false,
-        error: 'Service Unavailable',
-        message: 'Health check failed',
-      }),
-    };
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          success: true,
+          data: health,
+        }),
+      };
+    } catch {
+      return {
+        statusCode: 503,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          success: false,
+          error: 'Service Unavailable',
+          message: 'Health check failed',
+        }),
+      };
+    }
   }
-});
+);
 
 export const readinessCheck = withMiddleware(
-  (_event: APIGatewayProxyEvent): APIGatewayProxyResult => {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async (_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
       // Perform more thorough readiness checks
       const readiness = {

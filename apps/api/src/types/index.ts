@@ -76,6 +76,14 @@ export interface LambdaResponse {
   body: string;
 }
 
+// Universal Request interface for platform-agnostic controllers
+export interface UniversalRequest {
+  body?: unknown;
+  queryStringParameters?: { [key: string]: string | undefined } | undefined;
+  pathParameters?: { [key: string]: string | undefined } | undefined;
+  user?: { userId: number } | undefined;
+}
+
 // Database operation types
 export interface BookSearchParams {
   isbn?: string;

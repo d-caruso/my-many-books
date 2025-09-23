@@ -5,15 +5,8 @@
 import Joi from 'joi';
 import { BaseController } from './base/BaseController';
 import { Category, Book } from '../models';
-import { CategoryCreationAttributes } from '../models/interfaces/ModelInterfaces';
 import { ApiResponse } from '../common/ApiResponse';
-
-// A universal request interface to decouple the controller from the framework
-interface UniversalRequest {
-  body?: unknown;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-}
+import { UniversalRequest } from '../types';
 
 interface CreateCategoryRequest {
   name: string;
@@ -53,7 +46,7 @@ export class CategoryController extends BaseController {
 
     try {
       // Create category
-      const categoryCreateData: CategoryCreationAttributes = {
+      const categoryCreateData = {
         name: categoryData.name,
       };
       const category = await Category.createCategory(categoryCreateData);

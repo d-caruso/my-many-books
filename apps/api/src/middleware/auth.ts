@@ -21,8 +21,8 @@ export interface AuthProvider {
 export interface AuthProviderUser {
   id: string;
   email: string;
-  name?: string;
-  surname?: string;
+  name: string | undefined;
+  surname: string | undefined;
 }
 
 // AWS Cognito provider implementation
@@ -33,7 +33,8 @@ export class CognitoAuthProvider implements AuthProvider {
     void userPoolId;
   }
 
-  verifyToken(token: string): AuthProviderUser {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async verifyToken(token: string): Promise<AuthProviderUser> {
     // TODO: Implement AWS Cognito JWT verification
     // This is a placeholder implementation
     try {
@@ -54,8 +55,8 @@ export class CognitoAuthProvider implements AuthProvider {
       return {
         id: decoded.sub,
         email: decoded.email,
-        name: decoded.given_name,
-        surname: decoded.family_name,
+        name: decoded.given_name || undefined,
+        surname: decoded.family_name || undefined,
       };
     } catch {
       throw new Error('Token verification failed');
@@ -75,7 +76,8 @@ export class Auth0Provider implements AuthProvider {
     void audience;
   }
 
-  verifyToken(_token: string): AuthProviderUser {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async verifyToken(_token: string): Promise<AuthProviderUser> {
     // TODO: Implement Auth0 JWT verification
     throw new Error('Auth0 provider not yet implemented');
   }
@@ -121,7 +123,7 @@ export class UserService {
         name: providerUser.name || 'Unknown',
         surname: providerUser.surname || 'User',
         isActive: true,
-      });
+      } as any);
       isNewUser = true;
     }
 

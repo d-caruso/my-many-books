@@ -12,16 +12,20 @@ export interface AuthorAttributes extends IdBaseModelAttributes {
   nationality?: string | null;
 }
 
-export interface AuthorCreationAttributes
-  extends Omit<AuthorAttributes, 'id' | 'creationDate' | 'updateDate'> {}
+export interface AuthorCreationAttributes {
+  name: string;
+  surname: string;
+  nationality?: string | null;
+}
 
 // Category interfaces
 export interface CategoryAttributes extends IdBaseModelAttributes {
   name: string;
 }
 
-export interface CategoryCreationAttributes
-  extends Omit<CategoryAttributes, 'id' | 'creationDate' | 'updateDate'> {}
+export interface CategoryCreationAttributes {
+  name: string;
+}
 
 // Book interfaces
 export interface BookAttributes extends IdBaseModelAttributes {
@@ -34,8 +38,15 @@ export interface BookAttributes extends IdBaseModelAttributes {
   userId?: number | undefined;
 }
 
-export interface BookCreationAttributes
-  extends Omit<BookAttributes, 'id' | 'creationDate' | 'updateDate'> {}
+export interface BookCreationAttributes {
+  isbnCode: string;
+  title: string;
+  editionNumber?: number | undefined;
+  editionDate?: Date | undefined;
+  status?: BookStatus | undefined;
+  notes?: string | undefined;
+  userId?: number | undefined;
+}
 
 export interface BookUpdateAttributes
   extends Omit<Partial<BookAttributes>, 'id' | 'creationDate'> {}

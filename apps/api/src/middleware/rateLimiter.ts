@@ -231,7 +231,7 @@ export const withRateLimit = (
 };
 
 // Factory functions for common rate limiting scenarios
-export const createRateLimiters = () => {
+export const createRateLimiters = (): Record<string, RateLimiter> => {
   return {
     // Global rate limiter (by IP)
     global: new RateLimiter({
