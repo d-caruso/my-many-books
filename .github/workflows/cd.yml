@@ -225,6 +225,12 @@ jobs:
         env:
           NODE_ENV: ${{ needs.setup.outputs.environment }}
 
+      - name: Install Serverless Framework v4
+        working-directory: apps/api
+        run: |
+          echo "Installing Serverless Framework v4.19.1 to match local development"
+          npm install serverless@4.19.1
+
       - name: Deploy API with Serverless
         working-directory: apps/api
         run: |
