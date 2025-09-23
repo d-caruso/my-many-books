@@ -4,7 +4,7 @@
 
 service: my-many-books-api
 
-frameworkVersion: '>=3.0.0'
+frameworkVersion: '4.19.1'
 
 provider:
   name: aws
@@ -76,10 +76,9 @@ provider:
     CreatedBy: serverless
 
 plugins:
-  - serverless-esbuild
   - serverless-offline
 
-custom:
+build:
   esbuild:
     bundle: true
     minify: false
@@ -96,13 +95,8 @@ custom:
       - oracle
       - oracledb
       - redis
-    exclude:
-      - aws-sdk
-      - sqlite3
-    packagerOptions:
-      scripts:
-        - rm -rf node_modules/sqlite3
-    nativeZip: true
+
+custom:
   serverless-offline:
     httpPort: 3000
     port: 3000

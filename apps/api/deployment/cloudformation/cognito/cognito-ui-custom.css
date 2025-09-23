@@ -1,0 +1,167 @@
+/* Custom CSS for AWS Cognito Hosted UI */
+/* My Many Books - Brand Customization */
+
+/* Add logo to the top of the page */
+.banner-customizable {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px 8px 0 0;
+}
+
+.banner-customizable::before {
+    content: "📚 My Many Books";
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.banner-customizable::after {
+    content: "Your Personal Library Management";
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    display: block;
+}
+
+/* Style the main container */
+.modal-content {
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Customize the success message area */
+.submitButton-customizable {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 6px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.submitButton-customizable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Add navigation links after successful confirmation */
+.modal-body::after {
+    content: "";
+    display: block;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* Style for confirmation page specifically */
+.confirm-customizable {
+    text-align: center;
+}
+
+.confirm-customizable::after {
+    content: "🎉 Welcome to My Many Books! ✨ Ready to sign in? 👉 Sign In | 🏠 Go to Home";
+    display: block;
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Add clickable links styling */
+.redirect-customizable {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.redirect-customizable::before {
+    content: "🎯 Quick Actions:";
+    display: block;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.redirect-customizable::after {
+    content: "👉 Sign In to Your Account | 🏠 Return to Home Page";
+    display: block;
+    font-size: 16px;
+    line-height: 2;
+}
+
+/* Enhanced styling for better UX */
+.textDescription-customizable {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.panel-default {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.panel-body {
+    padding: 30px;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .banner-customizable::before {
+        font-size: 24px;
+    }
+    
+    .modal-content {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .panel-body {
+        padding: 20px;
+    }
+}
+
+/* Success page specific styling */
+body.cognito-success-page {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Add custom navigation buttons */
+.custom-nav-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.custom-nav-button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.custom-nav-button.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.custom-nav-button.secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.custom-nav-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
