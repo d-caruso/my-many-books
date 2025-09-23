@@ -102,15 +102,15 @@ export const createErrorResponse = (
   };
 
   if (error instanceof ValidationError && error.details) {
-    response.details = error.details;
+    response['details'] = error.details;
   }
 
   if (event?.requestContext?.requestId) {
-    response.requestId = event.requestContext.requestId;
+    response['requestId'] = event.requestContext.requestId;
   }
 
   if (!isProduction && !isOperational && error.stack) {
-    response.stack = error.stack;
+    response['stack'] = error.stack;
   }
 
   return {

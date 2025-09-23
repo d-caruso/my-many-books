@@ -52,6 +52,7 @@ export class ModelManager {
     ModelAssociations.defineAssociations();
 
     ModelManager.initialized = true;
+    // eslint-disable-next-line no-console
     console.log('Model manager initialized with all models and associations');
   }
 
@@ -82,7 +83,14 @@ export class ModelManager {
     }
   }
 
-  static getModels() {
+  static getModels(): {
+    User: typeof User;
+    Author: typeof Author;
+    Category: typeof Category;
+    Book: typeof Book;
+    BookAuthor: typeof BookAuthor;
+    BookCategory: typeof BookCategory;
+  } {
     return {
       User,
       Author,
