@@ -210,8 +210,23 @@ Resources:
         - IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
-          DestinationSecurityGroupId: !Ref DatabaseSecurityGroup
-          Description: MySQL to RDS
+          CidrIp: !Select [2, !Cidr [!Ref VpcCidr, 6, 8]]
+          Description: MySQL to RDS in private subnet 1
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: !Select [3, !Cidr [!Ref VpcCidr, 6, 8]]
+          Description: MySQL to RDS in private subnet 2
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          CidrIp: !Select [2, !Cidr [!Ref VpcCidr, 6, 8]]
+          Description: Redis to ElastiCache in private subnet 1
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          CidrIp: !Select [3, !Cidr [!Ref VpcCidr, 6, 8]]
+          Description: Redis to ElastiCache in private subnet 2
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-lambda-sg'
