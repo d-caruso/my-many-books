@@ -238,11 +238,12 @@ jobs:
           
           # Disable Serverless Framework telemetry and authentication
           export SLS_TELEMETRY_DISABLED=1
+          export SLS_INTERACTIVE_SETUP_ENABLE=false
           export SERVERLESS_ACCESS_KEY=""
           
           echo "Deploying API to ${{ needs.setup.outputs.environment }}"
           echo "Using Serverless Framework $(npx serverless --version)"
-          npx serverless deploy --stage ${{ needs.setup.outputs.environment }} --verbose --skip-auth
+          npx serverless deploy --stage ${{ needs.setup.outputs.environment }} --verbose
 
   deploy-web-app:
     name: Deploy Web App
