@@ -11,8 +11,13 @@ import { Response } from 'express';
 const router = Router();
 
 // A generic handler for Express routes that wraps the controller methods
-const expressRouteWrapper = (controllerMethod: Function) => {
-  return async (req: AuthenticatedRequest, res: Response) => {
+const expressRouteWrapper = (
+  controllerMethod: (
+    req: AuthenticatedRequest,
+    res: Response
+  ) => Promise<{ statusCode: number; body: unknown }>
+) => {
+  return async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       // The controller methods now just return the data and status code
       const result = await controllerMethod(req, res);
@@ -28,18 +33,21 @@ const expressRouteWrapper = (controllerMethod: Function) => {
 };
 
 // List all categories with optional search
-router.get('/', expressRouteWrapper(categoryController.listCategories));
+router.get('/', expressRouteWrapper(categoryController.listCategories.bind(categoryController)));
 
 // Get category by ID
-router.get('/:id', expressRouteWrapper(categoryController.getCategory));
+router.get('/:id', expressRouteWrapper(categoryController.getCategory.bind(categoryController)));
 
 // Create new category
-router.post('/', expressRouteWrapper(categoryController.createCategory));
+router.post('/', expressRouteWrapper(categoryController.createCategory.bind(categoryController)));
 
 // Update category
-router.put('/:id', expressRouteWrapper(categoryController.updateCategory));
+router.put('/:id', expressRouteWrapper(categoryController.updateCategory.bind(categoryController)));
 
 // Delete category
-router.delete('/:id', expressRouteWrapper(categoryController.deleteCategory));
+router.delete(
+  '/:id',
+  expressRouteWrapper(categoryController.deleteCategory.bind(categoryController))
+);
 
 export default router;

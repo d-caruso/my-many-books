@@ -3,7 +3,7 @@
 // User model for managing application users
 // ================================================================
 
-import { DataTypes, Association } from 'sequelize';
+import { DataTypes, Association, Sequelize } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
 import { UserAttributes } from './interfaces/ModelInterfaces';
 import { Book } from './Book';
@@ -30,7 +30,7 @@ export class User extends IdBaseModel<UserAttributes> implements UserAttributes 
     return 'users';
   }
 
-  public static initialize(sequelize: any): typeof User {
+  public static initialize(sequelize: Sequelize): typeof User {
     User.init(
       {
         id: {

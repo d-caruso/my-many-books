@@ -25,7 +25,13 @@ class AxiosHttpClient implements HttpClient {
 
     // Add response interceptor for error handling
     this.axios.interceptors.response.use(
-      (response: any) => response.data,
+      (response: any) => {
+        // Extract data field from API response structure
+        if (response.data && response.data.success && response.data.data !== undefined) {
+          return response.data.data;
+        }
+        return response.data;
+      },
       (error: any) => {
         if (error.response?.status === 401) {
           // Handle unauthorized - redirect to login

@@ -207,7 +207,8 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
   }
 
   static async searchByTitle(searchTerm: string): Promise<Book[]> {
-    const { Op } = require('sequelize');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Op } = require('sequelize') as { Op: { like: symbol } };
 
     return await Book.findAll({
       where: {
@@ -272,11 +273,14 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
       throw new Error(`Book with ISBN ${bookData['isbnCode']} already exists`);
     }
 
-    return await Book.create(bookData as any);
+    return await Book.create(bookData);
   }
 
   public async addAuthors(authors: Author[]): Promise<void> {
-    const { BookAuthor } = require('./BookAuthor');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { BookAuthor } = require('./BookAuthor') as {
+      BookAuthor: typeof import('./BookAuthor').BookAuthor;
+    };
 
     for (const author of authors) {
       await BookAuthor.addAuthorToBook(this.id, author.id);
@@ -288,7 +292,10 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
   }
 
   public async addCategories(categories: Category[]): Promise<void> {
-    const { BookCategory } = require('./BookCategory');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { BookCategory } = require('./BookCategory') as {
+      BookCategory: typeof import('./BookCategory').BookCategory;
+    };
 
     for (const category of categories) {
       await BookCategory.addCategoryToBook(this.id, category.id);
@@ -300,7 +307,10 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
   }
 
   public async removeAuthors(authors: Author[]): Promise<void> {
-    const { BookAuthor } = require('./BookAuthor');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { BookAuthor } = require('./BookAuthor') as {
+      BookAuthor: typeof import('./BookAuthor').BookAuthor;
+    };
 
     for (const author of authors) {
       await BookAuthor.removeAuthorFromBook(this.id, author.id);
@@ -308,7 +318,10 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
   }
 
   public async removeCategories(categories: Category[]): Promise<void> {
-    const { BookCategory } = require('./BookCategory');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { BookCategory } = require('./BookCategory') as {
+      BookCategory: typeof import('./BookCategory').BookCategory;
+    };
 
     for (const category of categories) {
       await BookCategory.removeCategoryFromBook(this.id, category.id);

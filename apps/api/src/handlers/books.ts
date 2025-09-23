@@ -46,9 +46,7 @@ export const createBook = withMiddleware(
   lambdaAdapter(bookController.createBook.bind(bookController))
 );
 
-export const getBook = withMiddleware(
-  lambdaAdapter(bookController.getBook.bind(bookController))
-);
+export const getBook = withMiddleware(lambdaAdapter(bookController.getBook.bind(bookController)));
 
 export const updateBook = withMiddleware(
   lambdaAdapter(bookController.updateBook.bind(bookController))

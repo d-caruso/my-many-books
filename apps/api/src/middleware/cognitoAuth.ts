@@ -30,6 +30,21 @@ export interface CognitoUser {
   iat: number; // Issued at
 }
 
+interface JwtHeader {
+  kid?: string;
+  alg?: string;
+  typ?: string;
+}
+
+interface AuthContext {
+  user?: CognitoUser;
+  isAuthenticated: boolean;
+}
+
+interface EventWithAuthContext extends APIGatewayProxyEvent {
+  authContext?: AuthContext;
+}
+
 export interface CognitoAuthResult {
   isAuthenticated: boolean;
   user?: CognitoUser;
@@ -51,7 +66,7 @@ export class CognitoAuthenticator {
     // For now, we'll simulate the key retrieval
   }
 
-  public async authenticate(event: APIGatewayProxyEvent): Promise<CognitoAuthResult> {
+  public authenticate(event: APIGatewayProxyEvent): CognitoAuthResult {
     if (!this.config.enabled) {
       return { isAuthenticated: true };
     }
@@ -66,7 +81,7 @@ export class CognitoAuthenticator {
     }
 
     try {
-      const decoded = await this.verifyToken(token);
+      const decoded = this.verifyToken(token);
 
       // Validate token structure
       if (!this.isValidCognitoToken(decoded)) {
@@ -142,7 +157,7 @@ export class CognitoAuthenticator {
     return parts[1] || null;
   }
 
-  private async verifyToken(token: string): Promise<JwtPayload> {
+  private verifyToken(token: string): JwtPayload {
     // Extract the key ID from token header
     const decoded = this.decodeTokenHeader(token);
     const keyId = decoded.kid;
@@ -152,29 +167,29 @@ export class CognitoAuthenticator {
     }
 
     // Get the public key for verification
-    const publicKey = await this.getPublicKey(keyId);
+    const publicKey = this.getPublicKey(keyId);
 
     // Verify the token
     const payload = verify(token, publicKey, {
       issuer: this.config.issuer,
       audience: this.config.clientId,
-      algorithms: this.config.algorithms as any,
+      algorithms: this.config.algorithms,
     }) as JwtPayload;
 
     return payload;
   }
 
-  private decodeTokenHeader(token: string): any {
+  private decodeTokenHeader(token: string): JwtHeader {
     const parts = token.split('.');
     if (parts.length !== 3) {
       throw new Error('Invalid token format');
     }
 
     const header = Buffer.from(parts[0]!, 'base64url').toString('utf8');
-    return JSON.parse(header);
+    return JSON.parse(header) as JwtHeader;
   }
 
-  private async getPublicKey(keyId: string): Promise<string> {
+  private getPublicKey(keyId: string): string {
     // Check cache first
     if (this.publicKeys.has(keyId)) {
       return this.publicKeys.get(keyId)!;
@@ -194,7 +209,7 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
       // Cache the key
       this.publicKeys.set(keyId, mockPublicKey);
       return mockPublicKey;
-    } catch (error) {
+    } catch {
       throw new Error(`Failed to fetch public key for kid: ${keyId}`);
     }
   }
@@ -213,13 +228,13 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
   private extractUserFromToken(payload: JwtPayload): CognitoUser {
     return {
       sub: payload.sub!,
-      email: payload['email'] || '',
+      email: (payload['email'] as string) || '',
       email_verified: payload['email_verified'] === true,
-      given_name: payload['given_name'],
-      family_name: payload['family_name'],
-      groups: payload['cognito:groups'] || [],
+      given_name: payload['given_name'] as string | undefined,
+      family_name: payload['family_name'] as string | undefined,
+      groups: (payload['cognito:groups'] as string[]) || [],
       scopes: this.extractScopes(payload),
-      token_use: payload['token_use']!,
+      token_use: payload['token_use'] as string,
       aud: payload.aud as string,
       iss: payload.iss!,
       exp: payload.exp!,
@@ -229,12 +244,14 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
 
   private extractScopes(payload: JwtPayload): string[] {
     // Scopes can be in 'scope' (space-separated) or 'scopes' (array)
-    if (payload['scope']) {
-      return payload['scope'].split(' ');
+    const scope = payload['scope'] as unknown;
+    if (typeof scope === 'string') {
+      return scope.split(' ');
     }
 
-    if (Array.isArray(payload['scopes'])) {
-      return payload['scopes'];
+    const scopes = payload['scopes'] as unknown;
+    if (Array.isArray(scopes)) {
+      return scopes.filter((s): s is string => typeof s === 'string');
     }
 
     return [];
@@ -245,8 +262,8 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
   }
 
   public extractUserContext(event: APIGatewayProxyEvent): CognitoUser | null {
-    const context = (event as any).authContext;
-    return context?.user || null;
+    const eventWithContext = event as EventWithAuthContext;
+    return eventWithContext.authContext?.user || null;
   }
 
   public hasPermission(user: CognitoUser, permission: string): boolean {
@@ -287,7 +304,7 @@ export const withCognitoAuth = (
   requiredPermissions?: string[]
 ) => {
   return async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const authResult = await authenticator.authenticate(event);
+    const authResult = authenticator.authenticate(event);
 
     if (!authResult.isAuthenticated) {
       return {
@@ -328,7 +345,8 @@ export const withCognitoAuth = (
     }
 
     // Add auth context to event
-    (event as any).authContext = {
+    const eventWithContext = event as EventWithAuthContext;
+    eventWithContext.authContext = {
       user: authResult.user,
       isAuthenticated: true,
     };
