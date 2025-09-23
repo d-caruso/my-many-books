@@ -5,14 +5,7 @@
 
 import { Response, Request, NextFunction } from 'express';
 import { ApiResponse } from '../common/ApiResponse';
-
-// A universal request interface to decouple the controller from the framework
-interface UniversalRequest {
-  body?: unknown;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-  user?: { userId: number };
-}
+import { UniversalRequest } from '../types';
 
 // Define a generic type for a controller method
 // It should accept a universal request and return a Promise that resolves to an ApiResponse
@@ -32,7 +25,7 @@ export const expressRouteWrapper = (controllerMethod: ControllerMethod) => {
         body: req.body ? JSON.stringify(req.body) : undefined,
         queryStringParameters: req.query as { [key: string]: string | undefined },
         pathParameters: req.params as { [key: string]: string | undefined },
-        user: (req as Request & { user?: { userId: number } }).user, // From auth middleware
+        user: (req as Request & { user?: { userId: number } }).user || undefined, // From auth middleware
       };
 
       // The controller method executes the core logic

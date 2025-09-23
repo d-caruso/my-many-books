@@ -3,7 +3,7 @@
 // ================================================================
 
 import Joi from 'joi';
-import { Op, WhereOptions } from 'sequelize';
+import { Op, WhereOptions, Model, ModelStatic } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book, Category } from '../models';
 import { ApiResponse } from '../common/ApiResponse';
@@ -14,15 +14,7 @@ import {
 } from '../models/interfaces/ModelInterfaces';
 import { validateIsbn } from '../utils/isbn';
 import { isbnService } from '../services/isbnService';
-
-// A universal request interface to decouple the controller from the framework.
-// This supports both Lambda and Express request structures.
-interface UniversalRequest {
-  body?: unknown;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-  user?: { userId: number };
-}
+import { UniversalRequest } from '../types';
 
 interface CreateBookRequest {
   title: string;
@@ -163,7 +155,7 @@ export class BookController extends BaseController {
       userId,
     };
 
-    const newBook = await Book.create(bookCreateData);
+    const newBook = await Book.create(bookCreateData as any);
 
     // Associate authors and categories
     if (authors.length > 0) {
@@ -513,7 +505,7 @@ export class BookController extends BaseController {
               name: authorData.name,
               surname: authorData.surname || '',
               nationality: authorData.nationality || null,
-            } as const,
+            } as any,
           }).then(([author]) => author)
         )
       );
@@ -526,7 +518,7 @@ export class BookController extends BaseController {
         bookData.categories.map(categoryData =>
           Category.findOrCreate({
             where: { name: categoryData.name },
-            defaults: { name: categoryData.name },
+            defaults: { name: categoryData.name } as any,
           }).then(([category]) => category)
         )
       );
@@ -538,11 +530,11 @@ export class BookController extends BaseController {
       isbnCode: bookData.isbnCode,
       editionNumber: bookData.editionNumber,
       editionDate: bookData.editionDate,
-      status: (bookData as Record<string, unknown>).status as BookStatus,
-      notes: (bookData as Record<string, unknown>).notes as string,
+      status: (bookData as any).status,
+      notes: (bookData as any).notes,
       userId, // Associate with user if authenticated
     };
-    const book = await Book.create(bookCreateData);
+    const book = await Book.create(bookCreateData as any);
 
     // Associate authors and categories with the new book
     if (authors.length > 0) {
@@ -593,7 +585,7 @@ export class BookController extends BaseController {
    */
   private async updateAssociations(
     book: Book,
-    model: typeof Book | typeof Author | typeof Category,
+    model: ModelStatic<Model>,
     ids: number[],
     associationName: string,
     setMethod: string
@@ -608,13 +600,9 @@ export class BookController extends BaseController {
         throw new Error(`One or more ${associationName} IDs are invalid`);
       }
 
-      await (book as Book & Record<string, (...args: unknown[]) => Promise<unknown>>)[setMethod](
-        associatedModels
-      );
+      await (book as any)[setMethod](associatedModels);
     } else {
-      await (book as Book & Record<string, (...args: unknown[]) => Promise<unknown>>)[setMethod](
-        []
-      ); // Clear all associations
+      await (book as any)[setMethod]([]); // Clear all associations
     }
   }
 
@@ -649,7 +637,7 @@ export class BookController extends BaseController {
     }
 
     // Add userId to the request body
-    const body = this.parseBody(request);
+    const body = this.parseBody(request) as any;
     if (body) {
       body.userId = request.user.userId;
       request.body = JSON.stringify(body);

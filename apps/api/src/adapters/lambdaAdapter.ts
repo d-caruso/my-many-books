@@ -2,14 +2,7 @@
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ApiResponse } from '../common/ApiResponse';
-
-// A universal request interface to decouple the controller from the framework
-interface UniversalRequest {
-  body?: unknown;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-  user?: { userId: number };
-}
+import { UniversalRequest } from '../types';
 
 type ControllerMethod = (request: UniversalRequest) => Promise<ApiResponse>;
 
@@ -26,13 +19,14 @@ export const lambdaAdapter = (controllerMethod: ControllerMethod) => {
 
       const universalRequest: UniversalRequest = {
         body: parsedBody,
-        queryStringParameters: event.queryStringParameters ?? undefined,
-        pathParameters: event.pathParameters ?? undefined,
-        user: (
-          event as APIGatewayProxyEvent & {
-            requestContext: { authorizer?: { user?: { userId: number } } };
-          }
-        ).requestContext?.authorizer?.user,
+        queryStringParameters: event.queryStringParameters || undefined,
+        pathParameters: event.pathParameters || undefined,
+        user:
+          (
+            event as APIGatewayProxyEvent & {
+              requestContext: { authorizer?: { user?: { userId: number } } };
+            }
+          ).requestContext?.authorizer?.user || undefined,
       };
 
       const apiResponse = await controllerMethod(universalRequest);

@@ -3,18 +3,12 @@
 // ================================================================
 
 import Joi from 'joi';
-import { Op, WhereOptions } from 'sequelize';
+import { Op, WhereOptions, Order } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book } from '../models';
 import { ApiResponse } from '../common/ApiResponse';
 import { AuthorAttributes } from '../models/interfaces/ModelInterfaces';
-
-// A universal request interface to decouple the controller from the framework
-interface UniversalRequest {
-  body?: unknown;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-}
+import { UniversalRequest } from '../types';
 
 interface CreateAuthorRequest {
   name: string;
@@ -82,7 +76,7 @@ export class AuthorController extends BaseController {
 
     try {
       // Create author
-      const newAuthor = await Author.create(authorData as Partial<AuthorAttributes>);
+      const newAuthor = await Author.create(authorData as any);
       return this.createSuccessResponse(newAuthor, 'Author created successfully', undefined, 201);
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
@@ -273,7 +267,7 @@ export class AuthorController extends BaseController {
       order: [
         ['surname', 'ASC'],
         ['name', 'ASC'],
-      ] as const,
+      ] as Order,
     };
 
     const { count, rows: authors } = await Author.findAndCountAll(queryOptions);

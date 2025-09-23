@@ -5,12 +5,7 @@
 
 import Joi from 'joi';
 import { ApiResponse } from '../../common/ApiResponse';
-
-interface UniversalRequest {
-  body?: any;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-}
+import { UniversalRequest } from '../../types';
 
 // Added the PaginationParams interface
 export interface PaginationParams {
@@ -64,7 +59,7 @@ export abstract class BaseController {
 
     // If body is string, try to parse it
     try {
-      return JSON.parse(request.body) as T;
+      return JSON.parse(request.body as string) as T;
     } catch {
       return null;
     }
