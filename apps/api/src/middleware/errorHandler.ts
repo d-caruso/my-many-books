@@ -15,7 +15,7 @@ export class ValidationError extends Error implements AppError {
 
   constructor(
     message: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'ValidationError';
@@ -96,13 +96,22 @@ export const createErrorResponse = (
   const isProduction = process.env['NODE_ENV'] === 'production';
   const errorMessage = isOperational || !isProduction ? error.message : 'Internal server error';
 
-  const response = {
+  const response: Record<string, unknown> = {
     success: false,
     error: errorMessage,
-    ...(error instanceof ValidationError && error.details && { details: error.details }),
-    ...(event?.requestContext?.requestId && { requestId: event.requestContext.requestId }),
-    ...(!isProduction && !isOperational && { stack: error.stack }),
   };
+
+  if (error instanceof ValidationError && error.details) {
+    response.details = error.details;
+  }
+
+  if (event?.requestContext?.requestId) {
+    response.requestId = event.requestContext.requestId;
+  }
+
+  if (!isProduction && !isOperational && error.stack) {
+    response.stack = error.stack;
+  }
 
   return {
     statusCode,

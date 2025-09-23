@@ -105,7 +105,7 @@ export class BookAuthor
     return await BookAuthor.create({
       bookId,
       authorId,
-    } as any);
+    });
   }
 
   static async removeAuthorFromBook(bookId: number, authorId: number): Promise<boolean> {

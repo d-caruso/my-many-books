@@ -11,7 +11,7 @@ import { AuthorAttributes } from '../models/interfaces/ModelInterfaces';
 
 // A universal request interface to decouple the controller from the framework
 interface UniversalRequest {
-  body?: any;
+  body?: unknown;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
 }
@@ -82,10 +82,11 @@ export class AuthorController extends BaseController {
 
     try {
       // Create author
-      const newAuthor = await Author.create(authorData as any);
+      const newAuthor = await Author.create(authorData as Partial<AuthorAttributes>);
       return this.createSuccessResponse(newAuthor, 'Author created successfully', undefined, 201);
-    } catch (dbError: any) {
-      return this.createErrorResponse('Failed to create author', 500, dbError.message);
+    } catch (dbError: unknown) {
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return this.createErrorResponse('Failed to create author', 500, errorMessage);
     }
   }
 
@@ -165,8 +166,9 @@ export class AuthorController extends BaseController {
     try {
       await author.update(authorData);
       return this.createSuccessResponse(author, 'Author updated successfully');
-    } catch (dbError: any) {
-      return this.createErrorResponse('Failed to update author', 500, dbError.message);
+    } catch (dbError: unknown) {
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return this.createErrorResponse('Failed to update author', 500, errorMessage);
     }
   }
 
@@ -208,8 +210,9 @@ export class AuthorController extends BaseController {
       await author.destroy();
       // Return a 204 No Content status for successful deletion
       return this.createSuccessResponse(null, 'Author deleted successfully', undefined, 204);
-    } catch (dbError: any) {
-      return this.createErrorResponse('Failed to delete author', 500, dbError.message);
+    } catch (dbError: unknown) {
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return this.createErrorResponse('Failed to delete author', 500, errorMessage);
     }
   }
 
@@ -239,7 +242,7 @@ export class AuthorController extends BaseController {
 
     // Build the where clause dynamically
     const whereConditions: WhereOptions<AuthorAttributes>[] = [];
-    
+
     if (searchFilters.name && searchFilters.surname) {
       whereConditions.push({ name: { [Op.iLike]: `%${searchFilters.name}%` } });
       whereConditions.push({ surname: { [Op.iLike]: `%${searchFilters.surname}%` } });
@@ -247,8 +250,8 @@ export class AuthorController extends BaseController {
       whereConditions.push({
         [Op.or]: [
           { name: { [Op.iLike]: `%${searchFilters.name}%` } },
-          { surname: { [Op.iLike]: `%${searchFilters.name}%` } }
-        ]
+          { surname: { [Op.iLike]: `%${searchFilters.name}%` } },
+        ],
       });
     } else if (searchFilters.surname) {
       whereConditions.push({ surname: { [Op.iLike]: `%${searchFilters.surname}%` } });
@@ -259,7 +262,7 @@ export class AuthorController extends BaseController {
     }
 
     const whereClause = whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
-    
+
     const includeClause = includeBooks ? [{ model: Book, through: { attributes: [] } }] : [];
 
     const queryOptions = {
@@ -270,7 +273,7 @@ export class AuthorController extends BaseController {
       order: [
         ['surname', 'ASC'],
         ['name', 'ASC'],
-      ] as any,
+      ] as const,
     };
 
     const { count, rows: authors } = await Author.findAndCountAll(queryOptions);

@@ -57,6 +57,12 @@ export abstract class BaseController {
       return null;
     }
 
+    // If body is already parsed (object), return it directly
+    if (typeof request.body === 'object') {
+      return request.body as T;
+    }
+
+    // If body is string, try to parse it
     try {
       return JSON.parse(request.body) as T;
     } catch {

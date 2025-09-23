@@ -108,7 +108,7 @@ export class BookCategory
     return await BookCategory.create({
       bookId,
       categoryId,
-    } as any);
+    });
   }
 
   static async removeCategoryFromBook(bookId: number, categoryId: number): Promise<boolean> {

@@ -18,7 +18,7 @@ import { isbnService } from '../services/isbnService';
 // A universal request interface to decouple the controller from the framework.
 // This supports both Lambda and Express request structures.
 interface UniversalRequest {
-  body?: any;
+  body?: unknown;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
   user?: { userId: number };
@@ -63,9 +63,7 @@ export class BookController extends BaseController {
       ),
     editionNumber: Joi.number().integer().min(1).optional(),
     editionDate: Joi.date().iso().optional().allow(null),
-    status: Joi.string()
-      .valid('in progress', 'finished', 'paused')
-      .optional(),
+    status: Joi.string().valid('in progress', 'finished', 'paused').optional(),
     notes: Joi.string().optional().max(5000).trim(),
     authorIds: Joi.array().items(Joi.number().integer().positive()).optional(),
     categoryIds: Joi.array().items(Joi.number().integer().positive()).optional(),
@@ -131,7 +129,7 @@ export class BookController extends BaseController {
     }
 
     // Validate and link authors
-    let authors: Author[]  = [];
+    let authors: Author[] = [];
     if (bookData.authorIds && bookData.authorIds.length > 0) {
       authors = await Author.findAll({
         where: { id: bookData.authorIds },
@@ -165,14 +163,14 @@ export class BookController extends BaseController {
       userId,
     };
 
-    const newBook = await Book.create(bookCreateData as any);
+    const newBook = await Book.create(bookCreateData);
 
     // Associate authors and categories
     if (authors.length > 0) {
-      await newBook.addAuthors(authors as Author[]);
+      await newBook.addAuthors(authors);
     }
     if (categories.length > 0) {
-      await newBook.addCategories(categories as Category[]);
+      await newBook.addCategories(categories);
     }
 
     // Fetch complete book with associations
@@ -251,9 +249,12 @@ export class BookController extends BaseController {
     const updateData: Partial<BookAttributes> = {
       title: bookData.title,
       editionNumber: bookData.editionNumber,
-      editionDate: bookData.editionDate === null
-        ? undefined
-        : (bookData.editionDate ? new Date(bookData.editionDate) : undefined),
+      editionDate:
+        bookData.editionDate === null
+          ? undefined
+          : bookData.editionDate
+            ? new Date(bookData.editionDate)
+            : undefined,
       status: bookData.status,
       notes: bookData.notes,
     };
@@ -266,7 +267,13 @@ export class BookController extends BaseController {
     }
 
     if (bookData.categoryIds !== undefined) {
-      await this.updateAssociations(book, Category, bookData.categoryIds, 'categories', 'setCategories');
+      await this.updateAssociations(
+        book,
+        Category,
+        bookData.categoryIds,
+        'categories',
+        'setCategories'
+      );
     }
 
     const updatedBook = await this.getBookWithAssociations(book.id);
@@ -359,7 +366,7 @@ export class BookController extends BaseController {
     if (searchFilters.notes) {
       whereConditions.push({ notes: { [Op.iLike]: `%${searchFilters.notes}%` } });
     }
-    
+
     // Apply status filter
     if (searchFilters.status) {
       whereConditions.push({ status: searchFilters.status });
@@ -506,7 +513,7 @@ export class BookController extends BaseController {
               name: authorData.name,
               surname: authorData.surname || '',
               nationality: authorData.nationality || null,
-            } as any,
+            } as const,
           }).then(([author]) => author)
         )
       );
@@ -519,7 +526,7 @@ export class BookController extends BaseController {
         bookData.categories.map(categoryData =>
           Category.findOrCreate({
             where: { name: categoryData.name },
-            defaults: { name: categoryData.name } as any,
+            defaults: { name: categoryData.name },
           }).then(([category]) => category)
         )
       );
@@ -531,11 +538,11 @@ export class BookController extends BaseController {
       isbnCode: bookData.isbnCode,
       editionNumber: bookData.editionNumber,
       editionDate: bookData.editionDate,
-      status: (bookData as any).status,
-      notes: (bookData as any).notes,
+      status: (bookData as Record<string, unknown>).status as BookStatus,
+      notes: (bookData as Record<string, unknown>).notes as string,
       userId, // Associate with user if authenticated
     };
-    const book = await Book.create(bookCreateData as any);
+    const book = await Book.create(bookCreateData);
 
     // Associate authors and categories with the new book
     if (authors.length > 0) {
@@ -586,10 +593,10 @@ export class BookController extends BaseController {
    */
   private async updateAssociations(
     book: Book,
-    model: any,
+    model: typeof Book | typeof Author | typeof Category,
     ids: number[],
     associationName: string,
-    setMethod: string,
+    setMethod: string
   ): Promise<void> {
     if (ids.length > 0) {
       const associatedModels = await model.findAll({
@@ -601,9 +608,13 @@ export class BookController extends BaseController {
         throw new Error(`One or more ${associationName} IDs are invalid`);
       }
 
-      await (book as any)[setMethod](associatedModels);
+      await (book as Book & Record<string, (...args: unknown[]) => Promise<unknown>>)[setMethod](
+        associatedModels
+      );
     } else {
-      await (book as any)[setMethod]([]); // Clear all associations
+      await (book as Book & Record<string, (...args: unknown[]) => Promise<unknown>>)[setMethod](
+        []
+      ); // Clear all associations
     }
   }
 
@@ -612,15 +623,15 @@ export class BookController extends BaseController {
     if (!request.user?.userId) {
       return this.createErrorResponse('User authentication required', 401);
     }
-    
+
     const modifiedRequest = {
       ...request,
       queryStringParameters: {
         ...request.queryStringParameters,
-        userId: request.user.userId.toString()
-      }
+        userId: request.user.userId.toString(),
+      },
     };
-    
+
     return this.listBooks(modifiedRequest);
   }
 
@@ -628,7 +639,7 @@ export class BookController extends BaseController {
     if (!request.user?.userId) {
       return this.createErrorResponse('User authentication required', 401);
     }
-    
+
     return this.getBook(request);
   }
 
@@ -636,14 +647,14 @@ export class BookController extends BaseController {
     if (!request.user?.userId) {
       return this.createErrorResponse('User authentication required', 401);
     }
-    
+
     // Add userId to the request body
-    const body = this.parseBody(request) as any;
+    const body = this.parseBody(request);
     if (body) {
       body.userId = request.user.userId;
       request.body = JSON.stringify(body);
     }
-    
+
     return this.createBook(request);
   }
 
@@ -651,7 +662,7 @@ export class BookController extends BaseController {
     if (!request.user?.userId) {
       return this.createErrorResponse('User authentication required', 401);
     }
-    
+
     return this.updateBook(request);
   }
 
@@ -659,7 +670,7 @@ export class BookController extends BaseController {
     if (!request.user?.userId) {
       return this.createErrorResponse('User authentication required', 401);
     }
-    
+
     return this.deleteBook(request);
   }
 
@@ -667,7 +678,7 @@ export class BookController extends BaseController {
     if (!request.user?.userId) {
       return this.createErrorResponse('User authentication required', 401);
     }
-    
+
     return this.searchBooksByIsbn(request);
   }
 }
