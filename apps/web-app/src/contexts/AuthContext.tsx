@@ -1,41 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Amplify } from 'aws-amplify';
-import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from '@aws-amplify/auth';
+import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 import { User } from '../types';
 import { env } from '../config/env';
 
-// Configure Amplify (this should ideally be done in index.tsx or App.tsx)
-Amplify.configure({
-  Auth: {
-    Cognito: {
-      userPoolId: env.COGNITO_USER_POOL_ID || '',
-      userPoolClientId: env.COGNITO_USER_POOL_CLIENT_ID || '',
-      identityPoolId: env.COGNITO_IDENTITY_POOL_ID || '', // Required but can be empty
-      loginWith: {
-        email: true,
-      },
-      signUpVerificationMethod: 'code',
-      userAttributes: {
-        email: {
-          required: true,
-        },
-        given_name: {
-          required: true,
-        },
-        family_name: {
-          required: true,
-        },
-      },
-      allowGuestAccess: false,
-      passwordFormat: {
-        minLength: 8,
-        requireLowercase: true,
-        requireUppercase: true,
-        requireNumbers: true,
-      },
-    }
-  }
-});
+// Check if Amplify should be configured
+const isAmplifyConfigured = env.COGNITO_USER_POOL_ID && env.COGNITO_USER_POOL_CLIENT_ID;
 
 interface AuthContextType {
   user: User | null;
@@ -72,32 +41,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuthState = async () => {
     try {
-      // Check if we're in development mode without Cognito config
-      const isDevelopment = process.env.NODE_ENV === 'development' && 
-                          !process.env.REACT_APP_COGNITO_USER_POOL_ID;
-      
-      if (isDevelopment) {
-        // Create a mock user for local development
-        const mockUser: User = {
-          id: 1,
-          email: 'demo@example.com',
-          name: 'Demo',
-          surname: 'User',
-          isActive: true,
-          creationDate: new Date().toISOString(),
-          updateDate: new Date().toISOString()
-        };
-        
-        setUser(mockUser);
-        setToken('mock-dev-token');
+      if (!isAmplifyConfigured) {
+        console.log('Amplify not configured - skipping auth check');
         setLoading(false);
         return;
       }
-      
+
       const currentUser = await getCurrentUser();
       const session = await fetchAuthSession();
       
-      if (currentUser && session.tokens?.accessToken) {
+      if (currentUser && session?.tokens?.accessToken) {
         const userData: User = {
           id: parseInt(currentUser.userId),
           email: currentUser.signInDetails?.loginId || '',
@@ -112,29 +65,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setToken(session.tokens.accessToken.toString());
       }
     } catch (error) {
+      // This is expected when user is not authenticated
       console.log('User not authenticated:', error);
-      
-      // In development without Cognito, create mock user after auth failure
-      if (process.env.NODE_ENV === 'development') {
-        const mockUser: User = {
-          id: 1,
-          email: 'demo@example.com',
-          name: 'Demo',
-          surname: 'User',
-          isActive: true,
-          creationDate: new Date().toISOString(),
-          updateDate: new Date().toISOString()
-        };
-        
-        setUser(mockUser);
-        setToken('mock-dev-token');
-      }
     } finally {
       setLoading(false);
     }
   };
 
   const login = async (email: string, password: string) => {
+    if (!isAmplifyConfigured) {
+      throw new Error('Authentication not configured');
+    }
+
     try {
       setLoading(true);
       const signInOutput = await signIn({
@@ -142,10 +84,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password: password,
       });
 
+      console.log('Sign in output:', signInOutput);
+
       if (signInOutput.isSignedIn) {
         await checkAuthState();
       } else {
-        throw new Error('Sign in incomplete');
+        // Handle different sign-in states
+        const nextStep = signInOutput.nextStep;
+        console.log('Next step required:', nextStep);
+        
+        switch (nextStep.signInStep) {
+          case 'CONFIRM_SIGN_UP':
+            throw new Error('Please verify your email address before signing in');
+          case 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED':
+            throw new Error('New password required');
+          case 'CONFIRM_SIGN_IN_WITH_SMS_MFA':
+            throw new Error('SMS verification required');
+          case 'CONFIRM_SIGN_IN_WITH_TOTP_MFA':
+            throw new Error('TOTP verification required');
+          case 'CONTINUE_SIGN_IN_WITH_MFA_SELECTION':
+            throw new Error('MFA method selection required');
+          default:
+            throw new Error(`Sign in incomplete: ${nextStep.signInStep}`);
+        }
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -156,6 +117,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = async (userData: { email: string; password: string; name: string; surname: string }) => {
+    if (!isAmplifyConfigured) {
+      throw new Error('Authentication not configured');
+    }
+
     try {
       setLoading(true);
       const signUpOutput = await signUp({
@@ -170,13 +135,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
 
+      console.log('Sign up output:', signUpOutput);
+
       if (signUpOutput.isSignUpComplete) {
         // Auto sign in after successful registration
         await login(userData.email, userData.password);
       } else {
-        // Handle confirmation required case
-        throw new Error('Email confirmation required');
+        // Handle confirmation required case - this is expected for email verification
+        const nextStep = signUpOutput.nextStep;
+        console.log('Next step required:', nextStep);
+        
+        if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
+          // Return success but indicate email verification is needed
+          return {
+            success: true,
+            requiresVerification: true,
+            message: 'Account created successfully! Please check your email and click the verification link to activate your account.',
+            email: userData.email
+          };
+        } else {
+          throw new Error(`Registration incomplete: ${nextStep.signUpStep}`);
+        }
       }
+      
+      return {
+        success: true,
+        requiresVerification: false,
+        message: 'Account created and verified successfully!'
+      };
     } catch (error: any) {
       console.error('Registration error:', error);
       throw new Error(error.message || 'Registration failed');

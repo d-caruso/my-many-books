@@ -7,22 +7,22 @@ import { Category } from '@my-many-books/shared-types';
 
 export class CategoryApi extends BaseApiClient {
   async getCategories(): Promise<Category[]> {
-    return this.get<Category[]>('/api/categories');
+    return this.get<Category[]>('/categories');
   }
 
   async getCategory(id: number): Promise<Category> {
-    return this.get<Category>(`/api/categories/${id}`);
+    return this.get<Category>(`/categories/${id}`);
   }
 
   async createCategory(categoryData: Omit<Category, 'id' | 'creationDate' | 'updateDate'>): Promise<Category> {
-    return this.post<Category>('/api/categories', categoryData);
+    return this.post<Category>('/categories', categoryData);
   }
 
   async updateCategory(id: number, categoryData: Partial<Omit<Category, 'id' | 'creationDate' | 'updateDate'>>): Promise<Category> {
-    return this.put<Category>(`/api/categories/${id}`, categoryData);
+    return this.put<Category>(`/categories/${id}`, categoryData);
   }
 
   async deleteCategory(id: number): Promise<void> {
-    return this.delete<void>(`/api/categories/${id}`);
+    return this.delete<void>(`/categories/${id}`);
   }
 }
