@@ -271,12 +271,31 @@ jobs:
             npm install --legacy-peer-deps
           fi
 
+      - name: Get Cognito Configuration
+        id: cognito-config
+        run: |
+          # Get Cognito resource IDs from deployed API stack
+          STACK_NAME="my-many-books-api-${{ needs.setup.outputs.environment }}"
+          USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='CognitoUserPoolId'].OutputValue" --output text)
+          CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='CognitoUserPoolClientId'].OutputValue" --output text)
+          IDENTITY_POOL_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='CognitoIdentityPoolId'].OutputValue" --output text)
+          API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ServiceEndpoint'].OutputValue" --output text)
+          
+          echo "user-pool-id=$USER_POOL_ID" >> $GITHUB_OUTPUT
+          echo "client-id=$CLIENT_ID" >> $GITHUB_OUTPUT
+          echo "identity-pool-id=$IDENTITY_POOL_ID" >> $GITHUB_OUTPUT
+          echo "api-endpoint=$API_ENDPOINT" >> $GITHUB_OUTPUT
+
       - name: Build Web App
-        # The working-directory is already set, so a simple npm run build will work.
         working-directory: apps/web-app
         run: npm run build
         env:
           NODE_ENV: ${{ needs.setup.outputs.environment == 'prod' && 'production' || 'development' }}
+          VITE_COGNITO_USER_POOL_ID: ${{ steps.cognito-config.outputs.user-pool-id }}
+          VITE_COGNITO_USER_POOL_CLIENT_ID: ${{ steps.cognito-config.outputs.client-id }}
+          VITE_COGNITO_IDENTITY_POOL_ID: ${{ steps.cognito-config.outputs.identity-pool-id }}
+          VITE_AWS_REGION: ${{ env.AWS_REGION }}
+          VITE_API_BASE_URL: ${{ steps.cognito-config.outputs.api-endpoint }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
