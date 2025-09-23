@@ -2,14 +2,18 @@
 // src/models/interfaces/ModelInterfaces.ts
 // ================================================================
 
+import { CreationOptional } from 'sequelize';
 import { BaseModelAttributes } from '../base/BaseModel';
 import { IdBaseModelAttributes } from '../base/IdBaseModel';
 
 // Author interfaces
-export interface AuthorAttributes extends IdBaseModelAttributes {
+export interface AuthorAttributes extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
+  id: CreationOptional<number>;
   name: string;
   surname: string;
   nationality?: string | null;
+  creationDate: CreationOptional<Date>;
+  updateDate?: CreationOptional<Date | undefined>;
 }
 
 export interface AuthorCreationAttributes {
@@ -19,8 +23,11 @@ export interface AuthorCreationAttributes {
 }
 
 // Category interfaces
-export interface CategoryAttributes extends IdBaseModelAttributes {
+export interface CategoryAttributes extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
+  id: CreationOptional<number>;
   name: string;
+  creationDate: CreationOptional<Date>;
+  updateDate?: CreationOptional<Date | undefined>;
 }
 
 export interface CategoryCreationAttributes {
@@ -28,7 +35,8 @@ export interface CategoryCreationAttributes {
 }
 
 // Book interfaces
-export interface BookAttributes extends IdBaseModelAttributes {
+export interface BookAttributes extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
+  id: CreationOptional<number>;
   isbnCode: string;
   title: string;
   editionNumber?: number | undefined;
@@ -36,6 +44,8 @@ export interface BookAttributes extends IdBaseModelAttributes {
   status?: BookStatus | undefined;
   notes?: string | undefined;
   userId?: number | undefined;
+  creationDate: CreationOptional<Date>;
+  updateDate?: CreationOptional<Date | undefined>;
 }
 
 export interface BookCreationAttributes {

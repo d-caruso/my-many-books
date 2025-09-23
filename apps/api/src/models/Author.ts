@@ -140,7 +140,7 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
       return existingAuthor;
     }
 
-    return await Author.create(authorData);
+    return await Author.create(authorData as any);
   }
 
   static async findOrCreateAuthor(
@@ -151,7 +151,7 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
         name: authorData.name,
         surname: authorData.surname,
       },
-      defaults: authorData,
+      defaults: authorData as any,
     });
   }
 }
