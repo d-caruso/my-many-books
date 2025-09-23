@@ -13,25 +13,25 @@ import {
 
 export class BookApi extends BaseApiClient {
   async getBooks(page: number = 1, limit: number = 10): Promise<PaginatedResponse<Book>> {
-    return this.get<PaginatedResponse<Book>>('/api/books', {
+    return this.get<PaginatedResponse<Book>>('/books', {
       params: { page, limit }
     });
   }
 
   async getBook(id: number): Promise<Book> {
-    return this.get<Book>(`/api/books/${id}`);
+    return this.get<Book>(`/books/${id}`);
   }
 
   async createBook(bookData: BookFormData): Promise<Book> {
-    return this.post<Book>('/api/books', bookData);
+    return this.post<Book>('/books', bookData);
   }
 
   async updateBook(id: number, bookData: Partial<BookFormData>): Promise<Book> {
-    return this.put<Book>(`/api/books/${id}`, bookData);
+    return this.put<Book>(`/books/${id}`, bookData);
   }
 
   async deleteBook(id: number): Promise<void> {
-    return this.delete<void>(`/api/books/${id}`);
+    return this.delete<void>(`/books/${id}`);
   }
 
   async searchBooks(filters: SearchFilters): Promise<SearchResult> {
@@ -45,12 +45,12 @@ export class BookApi extends BaseApiClient {
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
 
-    return this.get<SearchResult>(`/api/books/search?${params.toString()}`);
+    return this.get<SearchResult>(`/books/search?${params.toString()}`);
   }
 
   async searchByISBN(isbn: string): Promise<Book | null> {
     try {
-      return await this.get<Book>(`/api/books/search/${isbn}`);
+      return await this.get<Book>(`/books/search/${isbn}`);
     } catch (error: any) {
       if (error.status === 404) {
         return null;
@@ -60,6 +60,6 @@ export class BookApi extends BaseApiClient {
   }
 
   async updateBookStatus(id: number, status: Book['status']): Promise<Book> {
-    return this.put<Book>(`/api/books/${id}/status`, { status });
+    return this.put<Book>(`/books/${id}/status`, { status });
   }
 }

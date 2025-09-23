@@ -66,108 +66,100 @@ export const routeRequest = async (event: APIGatewayProxyEvent): Promise<APIGate
     // Log request
     requestLogger(event);
 
-    const { httpMethod, resource } = event;
+    const { httpMethod, path } = event;
+    const pathSegments = path.split('/').filter(segment => segment.length > 0);
 
     // Book routes
-    if (resource.startsWith('/books')) {
-      switch (resource) {
-        case '/books':
-          if (httpMethod === 'GET') return await adaptedBookController.listBooks(event);
-          if (httpMethod === 'POST') return await adaptedBookController.createBook(event);
-          break;
-        case '/books/{id}':
-          if (httpMethod === 'GET') return await adaptedBookController.getBook(event);
-          if (httpMethod === 'PUT') return await adaptedBookController.updateBook(event);
-          if (httpMethod === 'DELETE') return await adaptedBookController.deleteBook(event);
-          break;
-        case '/books/search/isbn':
-          if (httpMethod === 'GET') return await adaptedBookController.searchBooksByIsbn(event);
-          break;
-        case '/books/import/isbn':
-          if (httpMethod === 'POST') return await adaptedBookController.importBookFromIsbn(event);
-          break;
+    if (pathSegments[0] === 'books') {
+      if (pathSegments.length === 1) {
+        // /books
+        if (httpMethod === 'GET') return await adaptedBookController.listBooks(event);
+        if (httpMethod === 'POST') return await adaptedBookController.createBook(event);
+      } else if (pathSegments.length === 2) {
+        // /books/{id}
+        if (httpMethod === 'GET') return await adaptedBookController.getBook(event);
+        if (httpMethod === 'PUT') return await adaptedBookController.updateBook(event);
+        if (httpMethod === 'DELETE') return await adaptedBookController.deleteBook(event);
+      } else if (pathSegments.length === 3 && pathSegments[1] === 'search' && pathSegments[2] === 'isbn') {
+        // /books/search/isbn
+        if (httpMethod === 'GET') return await adaptedBookController.searchBooksByIsbn(event);
+      } else if (pathSegments.length === 3 && pathSegments[1] === 'import' && pathSegments[2] === 'isbn') {
+        // /books/import/isbn
+        if (httpMethod === 'POST') return await adaptedBookController.importBookFromIsbn(event);
       }
     }
 
     // Author routes
-    if (resource.startsWith('/authors')) {
-      switch (resource) {
-        case '/authors':
-          if (httpMethod === 'GET') return await adaptedAuthorController.listAuthors(event);
-          if (httpMethod === 'POST') return await adaptedAuthorController.createAuthor(event);
-          break;
-        case '/authors/{id}':
-          if (httpMethod === 'GET') return await adaptedAuthorController.getAuthor(event);
-          if (httpMethod === 'PUT') return await adaptedAuthorController.updateAuthor(event);
-          if (httpMethod === 'DELETE') return await adaptedAuthorController.deleteAuthor(event);
-          break;
-        case '/authors/{id}/books':
-          if (httpMethod === 'GET') return await adaptedAuthorController.getAuthorBooks(event);
-          break;
+    if (pathSegments[0] === 'authors') {
+      if (pathSegments.length === 1) {
+        // /authors
+        if (httpMethod === 'GET') return await adaptedAuthorController.listAuthors(event);
+        if (httpMethod === 'POST') return await adaptedAuthorController.createAuthor(event);
+      } else if (pathSegments.length === 2) {
+        // /authors/{id}
+        if (httpMethod === 'GET') return await adaptedAuthorController.getAuthor(event);
+        if (httpMethod === 'PUT') return await adaptedAuthorController.updateAuthor(event);
+        if (httpMethod === 'DELETE') return await adaptedAuthorController.deleteAuthor(event);
+      } else if (pathSegments.length === 3 && pathSegments[2] === 'books') {
+        // /authors/{id}/books
+        if (httpMethod === 'GET') return await adaptedAuthorController.getAuthorBooks(event);
       }
     }
 
     // Category routes
-    if (resource.startsWith('/categories')) {
-      switch (resource) {
-        case '/categories':
-          if (httpMethod === 'GET') return await adaptedCategoryController.listCategories(event);
-          if (httpMethod === 'POST') return await adaptedCategoryController.createCategory(event);
-          break;
-        case '/categories/{id}':
-          if (httpMethod === 'GET') return await adaptedCategoryController.getCategory(event);
-          if (httpMethod === 'PUT') return await adaptedCategoryController.updateCategory(event);
-          if (httpMethod === 'DELETE') return await adaptedCategoryController.deleteCategory(event);
-          break;
-        case '/categories/{id}/books':
-          if (httpMethod === 'GET') return await adaptedCategoryController.getCategoryBooks(event);
-          break;
+    if (pathSegments[0] === 'categories') {
+      if (pathSegments.length === 1) {
+        // /categories
+        if (httpMethod === 'GET') return await adaptedCategoryController.listCategories(event);
+        if (httpMethod === 'POST') return await adaptedCategoryController.createCategory(event);
+      } else if (pathSegments.length === 2) {
+        // /categories/{id}
+        if (httpMethod === 'GET') return await adaptedCategoryController.getCategory(event);
+        if (httpMethod === 'PUT') return await adaptedCategoryController.updateCategory(event);
+        if (httpMethod === 'DELETE') return await adaptedCategoryController.deleteCategory(event);
+      } else if (pathSegments.length === 3 && pathSegments[2] === 'books') {
+        // /categories/{id}/books
+        if (httpMethod === 'GET') return await adaptedCategoryController.getCategoryBooks(event);
       }
     }
 
     // ISBN service routes
-    if (resource.startsWith('/isbn')) {
-      switch (resource) {
-        case '/isbn/lookup/{isbn}':
-          if (httpMethod === 'GET') return await adaptedIsbnController.lookupBook(event);
-          break;
-        case '/isbn/lookup':
+    if (pathSegments[0] === 'isbn') {
+      if (pathSegments.length === 2) {
+        if (pathSegments[1] === 'lookup') {
           if (httpMethod === 'GET') return await adaptedIsbnController.lookupBook(event);
           if (httpMethod === 'POST') return await adaptedIsbnController.batchLookupBooks(event);
-          break;
-        case '/isbn/search':
+        } else if (pathSegments[1] === 'search') {
           if (httpMethod === 'GET') return await adaptedIsbnController.searchByTitle(event);
-          break;
-        case '/isbn/validate/{isbn}':
+        } else if (pathSegments[1] === 'validate') {
           if (httpMethod === 'GET') return await adaptedIsbnController.validateIsbn(event);
-          break;
-        case '/isbn/validate':
-          if (httpMethod === 'GET') return await adaptedIsbnController.validateIsbn(event);
-          break;
-        case '/isbn/format':
+        } else if (pathSegments[1] === 'format') {
           if (httpMethod === 'GET') return await adaptedIsbnController.formatIsbn(event);
-          break;
-        case '/isbn/health':
+        } else if (pathSegments[1] === 'health') {
           if (httpMethod === 'GET') return await adaptedIsbnController.getServiceHealth(event);
-          break;
-        case '/isbn/stats':
+        } else if (pathSegments[1] === 'stats') {
           if (httpMethod === 'GET') return await adaptedIsbnController.getResilienceStats(event);
-          break;
-        case '/isbn/cache':
+        } else if (pathSegments[1] === 'cache') {
           if (httpMethod === 'DELETE') return await adaptedIsbnController.clearCache(event);
           if (httpMethod === 'GET') return await adaptedIsbnController.getCacheStats(event);
-          break;
-        case '/isbn/resilience':
+        } else if (pathSegments[1] === 'resilience') {
           if (httpMethod === 'DELETE') return await adaptedIsbnController.resetResilience(event);
-          break;
-        case '/isbn/fallback':
+        } else if (pathSegments[1] === 'fallback') {
           if (httpMethod === 'POST') return await adaptedIsbnController.addFallbackBook(event);
-          break;
+        }
+      } else if (pathSegments.length === 3) {
+        if (pathSegments[1] === 'lookup') {
+          // /isbn/lookup/{isbn}
+          if (httpMethod === 'GET') return await adaptedIsbnController.lookupBook(event);
+        } else if (pathSegments[1] === 'validate') {
+          // /isbn/validate/{isbn}
+          if (httpMethod === 'GET') return await adaptedIsbnController.validateIsbn(event);
+        }
       }
     }
 
     // Health check route
-    if (resource === '/health' && httpMethod === 'GET') {
+    if (pathSegments[0] === 'health' && pathSegments.length === 1 && httpMethod === 'GET') {
       return {
         statusCode: 200,
         headers: {
@@ -194,7 +186,7 @@ export const routeRequest = async (event: APIGatewayProxyEvent): Promise<APIGate
       body: JSON.stringify({
         success: false,
         error: 'Route not found',
-        resource,
+        path,
         method: httpMethod,
       }),
     };
