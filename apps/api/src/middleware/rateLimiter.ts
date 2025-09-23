@@ -28,7 +28,7 @@ export class RateLimiter {
     this.cleanupInterval = setInterval(() => this.cleanup(), 60 * 1000);
   }
 
-  public async checkLimit(event: APIGatewayProxyEvent): Promise<RateLimitResult> {
+  public checkLimit(event: APIGatewayProxyEvent): RateLimitResult {
     const key = this.config.keyGenerator(event);
     const now = Date.now();
 
@@ -152,7 +152,8 @@ export const keyGenerators = {
 
   // Rate limit by user (from auth context)
   byUser: (event: APIGatewayProxyEvent): string => {
-    const userId = (event as any).authContext?.userId || 'anonymous';
+    const eventWithContext = event as { authContext?: { user?: { sub?: string } } };
+    const userId = eventWithContext.authContext?.user?.sub || 'anonymous';
     return `user:${userId}`;
   },
 
@@ -178,7 +179,7 @@ export const withRateLimit = (
   config: RateLimitConfig
 ) => {
   return async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const limitResult = await rateLimiter.checkLimit(event);
+    const limitResult = rateLimiter.checkLimit(event);
 
     if (!limitResult.allowed) {
       const response: APIGatewayProxyResult = {

@@ -55,7 +55,7 @@ export class UserController {
         return;
       }
 
-      const { name, surname } = req.body;
+      const { name, surname } = req.body as { name?: string; surname?: string };
 
       // Validate input
       if (!name || !surname) {
@@ -113,7 +113,11 @@ export class UserController {
       const offset = (Number(page) - 1) * Number(limit);
 
       const whereClause: WhereOptions<BookAttributes> = { userId: req.user.userId };
-      if (status && typeof status === 'string' && ['in progress', 'paused', 'finished'].includes(status)) {
+      if (
+        status &&
+        typeof status === 'string' &&
+        ['in progress', 'paused', 'finished'].includes(status)
+      ) {
         whereClause.status = status as BookStatus;
       }
 

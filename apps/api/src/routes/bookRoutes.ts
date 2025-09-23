@@ -16,13 +16,16 @@ router.use(authMiddleware);
 
 // Book CRUD operations
 // Now, we call the methods on the `bookController` instance
-router.get('/', expressRouteWrapper(bookController.getUserBooks));
-router.get('/:id', expressRouteWrapper(bookController.getBookById));
-router.post('/', expressRouteWrapper(bookController.createBookForUser));
-router.put('/:id', expressRouteWrapper(bookController.updateBookForUser));
-router.delete('/:id', expressRouteWrapper(bookController.deleteBookForUser));
+router.get('/', expressRouteWrapper(bookController.getUserBooks.bind(bookController)));
+router.get('/:id', expressRouteWrapper(bookController.getBookById.bind(bookController)));
+router.post('/', expressRouteWrapper(bookController.createBookForUser.bind(bookController)));
+router.put('/:id', expressRouteWrapper(bookController.updateBookForUser.bind(bookController)));
+router.delete('/:id', expressRouteWrapper(bookController.deleteBookForUser.bind(bookController)));
 
 // Book search operations
-router.get('/search/isbn/:isbn', expressRouteWrapper(bookController.searchByIsbnForUser));
+router.get(
+  '/search/isbn/:isbn',
+  expressRouteWrapper(bookController.searchByIsbnForUser.bind(bookController))
+);
 
 export default router;

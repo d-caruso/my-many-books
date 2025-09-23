@@ -10,7 +10,7 @@ import { ApiResponse } from '../common/ApiResponse';
 
 // A universal request interface to decouple the controller from the framework
 interface UniversalRequest {
-  body?: any;
+  body?: unknown;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
 }
@@ -59,8 +59,9 @@ export class CategoryController extends BaseController {
       const category = await Category.createCategory(categoryCreateData);
 
       return this.createSuccessResponse(category, 'Category created successfully', undefined, 201);
-    } catch (dbError: any) {
-      return this.createErrorResponse('Failed to create category', 500, dbError.message);
+    } catch (dbError: unknown) {
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return this.createErrorResponse('Failed to create category', 500, errorMessage);
     }
   }
 
@@ -91,8 +92,9 @@ export class CategoryController extends BaseController {
       }
 
       return this.createSuccessResponse(category, 'Category retrieved successfully');
-    } catch (dbError: any) {
-      return this.createErrorResponse('Failed to retrieve category', 500, dbError.message);
+    } catch (dbError: unknown) {
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return this.createErrorResponse('Failed to retrieve category', 500, errorMessage);
     }
   }
 
@@ -140,8 +142,9 @@ export class CategoryController extends BaseController {
       });
 
       return this.createSuccessResponse(category, 'Category updated successfully');
-    } catch (dbError: any) {
-      return this.createErrorResponse('Failed to update category', 500, dbError.message);
+    } catch (dbError: unknown) {
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return this.createErrorResponse('Failed to update category', 500, errorMessage);
     }
   }
 
@@ -196,8 +199,9 @@ export class CategoryController extends BaseController {
       await category.destroy();
 
       return this.createSuccessResponse(null, 'Category deleted successfully', undefined, 204);
-    } catch (dbError: any) {
-      return this.createErrorResponse('Failed to delete category', 500, dbError.message);
+    } catch (dbError: unknown) {
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return this.createErrorResponse('Failed to delete category', 500, errorMessage);
     }
   }
 
@@ -241,8 +245,9 @@ export class CategoryController extends BaseController {
           hasPrev: page > 1,
         },
       });
-    } catch (dbError: any) {
-      return this.createErrorResponse('Failed to list categories', 500, dbError.message);
+    } catch (dbError: unknown) {
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return this.createErrorResponse('Failed to list categories', 500, errorMessage);
     }
   }
 
@@ -304,8 +309,9 @@ export class CategoryController extends BaseController {
           },
         }
       );
-    } catch (dbError: any) {
-      return this.createErrorResponse('Failed to retrieve category books', 500, dbError.message);
+    } catch (dbError: unknown) {
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return this.createErrorResponse('Failed to retrieve category books', 500, errorMessage);
     }
   }
 }

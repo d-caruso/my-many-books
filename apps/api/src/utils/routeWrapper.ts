@@ -8,7 +8,7 @@ import { ApiResponse } from '../common/ApiResponse';
 
 // A universal request interface to decouple the controller from the framework
 interface UniversalRequest {
-  body?: any;
+  body?: unknown;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
   user?: { userId: number };
@@ -32,12 +32,12 @@ export const expressRouteWrapper = (controllerMethod: ControllerMethod) => {
         body: req.body ? JSON.stringify(req.body) : undefined,
         queryStringParameters: req.query as { [key: string]: string | undefined },
         pathParameters: req.params as { [key: string]: string | undefined },
-        user: (req as any).user // From auth middleware
+        user: (req as Request & { user?: { userId: number } }).user, // From auth middleware
       };
 
       // The controller method executes the core logic
       const result = await controllerMethod(universalRequest);
-      
+
       // Standardize the response based on the controller's result
       if (result.statusCode === 204) {
         res.status(204).send();
@@ -47,7 +47,7 @@ export const expressRouteWrapper = (controllerMethod: ControllerMethod) => {
           data: result.data,
           ...(result.error && { error: result.error }),
           ...(result.message && { message: result.message }),
-          ...(result.meta && { meta: result.meta })
+          ...(result.meta && { meta: result.meta }),
         });
       }
     } catch (error) {

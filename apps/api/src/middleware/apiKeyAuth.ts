@@ -26,7 +26,7 @@ export class ApiKeyAuthenticator {
     this.config = config;
   }
 
-  public async authenticate(event: APIGatewayProxyEvent): Promise<AuthenticationResult> {
+  public authenticate(event: APIGatewayProxyEvent): AuthenticationResult {
     if (!this.config.enabled) {
       return { isAuthenticated: true, tier: 'none' };
     }
@@ -58,7 +58,7 @@ export class ApiKeyAuthenticator {
     }
 
     // Check rate limits and quotas
-    const usageCheck = await this.checkUsageLimits(apiKey, tier);
+    const usageCheck = this.checkUsageLimits(apiKey, tier);
     if (!usageCheck.allowed) {
       return {
         isAuthenticated: false,
@@ -69,7 +69,7 @@ export class ApiKeyAuthenticator {
     }
 
     // Update usage
-    await this.updateUsage(apiKey);
+    this.updateUsage(apiKey);
 
     return {
       isAuthenticated: true,
@@ -87,7 +87,7 @@ export class ApiKeyAuthenticator {
     return headers[headerName] || headers[headerName.toLowerCase()] || headers[`x-api-key`] || null;
   }
 
-  private async checkUsageLimits(apiKey: string, tier: ApiKeyTier): Promise<UsageCheckResult> {
+  private checkUsageLimits(apiKey: string, tier: ApiKeyTier): UsageCheckResult {
     const usage = this.getOrCreateUsage(apiKey);
     const now = Date.now();
 
@@ -133,7 +133,7 @@ export class ApiKeyAuthenticator {
     return { allowed: true };
   }
 
-  private async updateUsage(apiKey: string): Promise<void> {
+  private updateUsage(apiKey: string): void {
     const usage = this.getOrCreateUsage(apiKey);
     usage.requests.push(Date.now());
     usage.lastUsed = new Date();
@@ -209,7 +209,7 @@ export const withApiKeyAuth = (
   authenticator: ApiKeyAuthenticator
 ) => {
   return async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const authResult = await authenticator.authenticate(event);
+    const authResult = authenticator.authenticate(event);
 
     if (!authResult.isAuthenticated) {
       const response: APIGatewayProxyResult = {
@@ -229,7 +229,7 @@ export const withApiKeyAuth = (
     }
 
     // Add authentication context to event
-    (event as any).authContext = {
+    (event as APIGatewayProxyEvent & { authContext: unknown }).authContext = {
       tier: authResult.tier,
       apiKey: authResult.apiKey,
       permissions: authResult.permissions || [],

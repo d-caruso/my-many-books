@@ -5,7 +5,7 @@ import { ApiResponse } from '../common/ApiResponse';
 
 // A universal request interface to decouple the controller from the framework
 interface UniversalRequest {
-  body?: any;
+  body?: unknown;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
   user?: { userId: number };
@@ -17,31 +17,58 @@ export const lambdaAdapter = (controllerMethod: ControllerMethod) => {
   return async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
       // Convert APIGatewayProxyEvent to UniversalRequest
+      let parsedBody: unknown;
+      try {
+        parsedBody = event.body ? JSON.parse(event.body) : undefined;
+      } catch {
+        parsedBody = event.body; // If parsing fails, use original body
+      }
+
       const universalRequest: UniversalRequest = {
-        body: event.body,
-        queryStringParameters: event.queryStringParameters as { [key: string]: string | undefined },
-        pathParameters: event.pathParameters as { [key: string]: string | undefined },
-        user: (event as any).requestContext?.authorizer?.user // From auth context
+        body: parsedBody,
+        queryStringParameters: event.queryStringParameters ?? undefined,
+        pathParameters: event.pathParameters ?? undefined,
+        user: (
+          event as APIGatewayProxyEvent & {
+            requestContext: { authorizer?: { user?: { userId: number } } };
+          }
+        ).requestContext?.authorizer?.user,
       };
 
       const apiResponse = await controllerMethod(universalRequest);
       return {
         statusCode: apiResponse.statusCode,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers':
+            'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent, X-Requested-With',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Credentials': 'true',
+        },
         body: JSON.stringify({
           success: apiResponse.success,
           data: apiResponse.data,
           ...(apiResponse.error && { error: apiResponse.error }),
           ...(apiResponse.message && { message: apiResponse.message }),
-          ...(apiResponse.meta && { meta: apiResponse.meta })
-        }),
+          ...(apiResponse.meta && { meta: apiResponse.meta }),
+        } as const),
       };
     } catch (error) {
       return {
         statusCode: 500,
-        body: JSON.stringify({ 
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers':
+            'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent, X-Requested-With',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Credentials': 'true',
+        },
+        body: JSON.stringify({
           success: false,
           error: 'Internal server error',
-          details: error instanceof Error ? error.message : 'Unknown error'
+          details: error instanceof Error ? error.message : 'Unknown error',
         }),
       };
     }
