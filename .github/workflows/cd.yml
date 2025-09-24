@@ -50,13 +50,11 @@ jobs:
       - name: Install Dependencies
         run: |
           # Generate lockfile with correct Node version if needed
-          if ! npm ci 2>/dev/null; then
+          if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
-            npm install
+            npm install --ignore-scripts
           fi
-          # Rebuild native modules for Linux platform
-          npm rebuild
 
       - name: Determine Environment
         id: env
@@ -126,14 +124,12 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Use lockfile if compatible, otherwise regenerate
-          if ! npm ci 2>/dev/null; then
+          # Use lockfile if compatible, otherwise regenerate  
+          if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
-            npm install --legacy-peer-deps
+            npm install --legacy-peer-deps --ignore-scripts
           fi
-          # Rebuild native modules for Linux platform
-          npm rebuild
 
       - name: Build Projects to be Deployed
         # This step has been updated to build projects by changing the working directory
@@ -322,14 +318,12 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Use lockfile if compatible, otherwise regenerate
-          if ! npm ci 2>/dev/null; then
+          # Use lockfile if compatible, otherwise regenerate  
+          if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
-            npm install --legacy-peer-deps
+            npm install --legacy-peer-deps --ignore-scripts
           fi
-          # Rebuild native modules for Linux platform
-          npm rebuild
 
       - name: Build API
         # The working-directory is already set, so a simple npm run build will work.
@@ -374,14 +368,12 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Use lockfile if compatible, otherwise regenerate
-          if ! npm ci 2>/dev/null; then
+          # Use lockfile if compatible, otherwise regenerate  
+          if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
-            npm install --legacy-peer-deps
+            npm install --legacy-peer-deps --ignore-scripts
           fi
-          # Rebuild native modules for Linux platform
-          npm rebuild
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4

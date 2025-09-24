@@ -26,9 +26,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Force rebuild of native modules for Linux platform
-          npm ci --legacy-peer-deps
-          npm rebuild
+          # Skip Nx post-install scripts since we don't use Nx commands in CI
+          npm ci --legacy-peer-deps --ignore-scripts
+          npm rebuild --ignore-scripts
 
   lint:
     name: Lint
@@ -45,9 +45,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Force rebuild of native modules for Linux platform
-          npm ci --legacy-peer-deps
-          npm rebuild
+          # Skip Nx post-install scripts since we don't use Nx commands in CI
+          npm ci --legacy-peer-deps --ignore-scripts
+          npm rebuild --ignore-scripts
 
       - name: Lint
         run: npx nx run-many --target=lint --all --parallel
@@ -72,7 +72,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install if cache miss
-        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps --ignore-scripts || npm install --legacy-peer-deps --ignore-scripts
 
       - name: Test
         run: npx nx run-many --target=test --all --parallel
@@ -97,7 +97,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install if cache miss
-        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps --ignore-scripts || npm install --legacy-peer-deps --ignore-scripts
 
       - name: Build
         run: npx nx run-many --target=build --all --parallel
