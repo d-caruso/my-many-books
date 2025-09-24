@@ -513,7 +513,8 @@ describe('UserService', () => {
       const providerUser: AuthProviderUser = {
         id: 'provider123',
         email: 'minimal@example.com',
-        // name and surname are optional
+        name: undefined,
+        surname: undefined,
       };
 
       await UserService.findOrCreateUser(providerUser, 'cognito');

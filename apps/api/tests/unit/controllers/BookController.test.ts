@@ -614,9 +614,9 @@ describe('BookController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.source).toBe('api');
-      expect(result.data.book).toBe(null);
-      expect(result.data.error).toBe('External service error');
+      expect((result.data as { source: string; book: unknown; error: string }).source).toBe('api');
+      expect((result.data as { source: string; book: unknown; error: string }).book).toBe(null);
+      expect((result.data as { source: string; book: unknown; error: string }).error).toBe('External service error');
     });
   });
 

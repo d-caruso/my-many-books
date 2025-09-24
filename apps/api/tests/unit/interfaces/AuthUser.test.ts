@@ -4,7 +4,7 @@
 // ================================================================
 
 import { AuthUser } from '../../../src/models/interfaces/ModelInterfaces';
-import { UserService } from '../../../src/middleware/auth';
+import { UserService, AuthProviderUser } from '../../../src/middleware/auth';
 import { User } from '../../../src/models/User';
 
 // Mock dependencies
@@ -296,10 +296,11 @@ describe('UserService Extended Tests', () => {
       mockUser.findOne.mockResolvedValue(null);
       mockUser.create.mockResolvedValue({ id: 1 } as any);
 
-      const providerUser = {
+      const providerUser: AuthProviderUser = {
         id: 'provider123',
         email: 'minimal@example.com',
-        // No name or surname provided
+        name: undefined,
+        surname: undefined,
       };
 
       await UserService.findOrCreateUser(providerUser, 'cognito');

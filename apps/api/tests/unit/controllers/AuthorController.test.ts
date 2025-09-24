@@ -179,7 +179,7 @@ describe('AuthorController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.Books).toBeDefined();
+      expect((result.data as { Books: unknown }).Books).toBeDefined();
     });
 
     it('should return 400 for invalid author ID', async () => {
@@ -375,12 +375,12 @@ describe('AuthorController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.author).toEqual({
+      expect((result.data as { author: unknown; books: unknown }).author).toEqual({
         id: 1,
         name: 'John',
         surname: 'Doe',
       });
-      expect(result.data.books).toEqual(mockBooks);
+      expect((result.data as { author: unknown; books: unknown }).books).toEqual(mockBooks);
     });
   });
 });
