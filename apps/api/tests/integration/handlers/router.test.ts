@@ -6,7 +6,26 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { routeRequest } from '../../../src/handlers/router';
 
+// Mock the database connection to avoid requiring a real database for route tests
+jest.mock('../../../src/config/database', () => ({
+  default: {
+    getInstance: jest.fn(() => ({
+      authenticate: jest.fn().mockResolvedValue(undefined),
+      sync: jest.fn().mockResolvedValue(undefined),
+    })),
+  },
+}));
+
+// Mock the ModelManager from models index to avoid database requirements
+jest.mock('../../../src/models', () => ({
+  ModelManager: {
+    initialize: jest.fn(),
+    syncDatabase: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 describe('Router Handler Integration', () => {
+
   // Helper function to create mock API Gateway event
   const createMockEvent = (overrides: Partial<APIGatewayProxyEvent> = {}): APIGatewayProxyEvent => ({
     httpMethod: 'GET',
@@ -79,6 +98,7 @@ describe('Router Handler Integration', () => {
       const event = createMockEvent({
         httpMethod: 'GET',
         resource: '/unknown-route',
+        path: '/unknown-route',
       });
 
       const result = await routeRequest(event);
@@ -92,7 +112,7 @@ describe('Router Handler Integration', () => {
       const responseBody = JSON.parse(result.body);
       expect(responseBody.success).toBe(false);
       expect(responseBody.error).toBe('Route not found');
-      expect(responseBody.resource).toBe('/unknown-route');
+      expect(responseBody.path).toBe('/unknown-route');
       expect(responseBody.method).toBe('GET');
     });
 
@@ -147,6 +167,7 @@ describe('Router Handler Integration', () => {
       const event = createMockEvent({
         httpMethod: 'GET',
         resource: '/invalid/route/with/multiple/parts',
+        path: '/invalid/route/with/multiple/parts',
       });
 
       const result = await routeRequest(event);
