@@ -81,9 +81,9 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             PROJECTS="${{ github.event.inputs.projects }}"
           else
-            # Get the list of affected projects and filter out "my-many-books" using grep.
-            # This is a more robust method than using sed.
-            PROJECTS=$(npx nx show projects --affected --base=origin/main~1 --head=HEAD | grep -v 'my-many-books' | tr '\n' ',' | sed 's/,$//')
+            # Since Nx binary is not available, deploy all projects for develop/main branches
+            # This ensures all changes are deployed when pushing to main branches
+            PROJECTS="api,web-app"
           fi
           echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
           echo "Affected projects: $PROJECTS"
