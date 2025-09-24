@@ -25,7 +25,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: |
+          # Force rebuild of native modules for Linux platform
+          npm ci --legacy-peer-deps
+          npm rebuild
 
   lint:
     name: Lint
@@ -41,7 +44,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: |
+          # Force rebuild of native modules for Linux platform
+          npm ci --legacy-peer-deps
+          npm rebuild
 
       - name: Lint
         run: npx nx run-many --target=lint --all --parallel

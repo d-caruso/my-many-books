@@ -55,6 +55,8 @@ jobs:
             rm -f package-lock.json
             npm install
           fi
+          # Rebuild native modules for Linux platform
+          npm rebuild
 
       - name: Determine Environment
         id: env
@@ -130,6 +132,8 @@ jobs:
             rm -f package-lock.json
             npm install --legacy-peer-deps
           fi
+          # Rebuild native modules for Linux platform
+          npm rebuild
 
       - name: Build Projects to be Deployed
         # This step has been updated to build projects by changing the working directory
@@ -324,6 +328,8 @@ jobs:
             rm -f package-lock.json
             npm install --legacy-peer-deps
           fi
+          # Rebuild native modules for Linux platform
+          npm rebuild
 
       - name: Build API
         # The working-directory is already set, so a simple npm run build will work.
@@ -374,6 +380,8 @@ jobs:
             rm -f package-lock.json
             npm install --legacy-peer-deps
           fi
+          # Rebuild native modules for Linux platform
+          npm rebuild
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
