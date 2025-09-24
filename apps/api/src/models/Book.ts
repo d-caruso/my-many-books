@@ -8,6 +8,7 @@ import { BookAttributes, BookCreationAttributes, BookStatus } from './interfaces
 import { TABLE_NAMES, BOOK_STATUS } from '@/utils/constants';
 import { Author } from './Author';
 import { Category } from './Category';
+import { createModel } from '../utils/sequelize-helpers';
 
 export class Book extends IdBaseModel<BookAttributes> implements BookAttributes {
   public isbnCode!: string;
@@ -273,7 +274,7 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
       throw new Error(`Book with ISBN ${bookData['isbnCode']} already exists`);
     }
 
-    return await Book.create(bookData);
+    return await createModel(Book, bookData);
   }
 
   public async addAuthors(authors: Author[]): Promise<void> {

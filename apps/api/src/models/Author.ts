@@ -6,6 +6,7 @@ import { DataTypes, Sequelize, Op } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
 import { AuthorAttributes, AuthorCreationAttributes } from './interfaces/ModelInterfaces';
 import { TABLE_NAMES } from '@/utils/constants';
+import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
 
 export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttributes {
   public name!: string;
@@ -140,13 +141,13 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
       return existingAuthor;
     }
 
-    return await Author.create(authorData);
+    return await createModel(Author, authorData);
   }
 
   static async findOrCreateAuthor(
     authorData: AuthorCreationAttributes
   ): Promise<[Author, boolean]> {
-    return await Author.findOrCreate({
+    return await findOrCreateModel(Author, {
       where: {
         name: authorData.name,
         surname: authorData.surname,

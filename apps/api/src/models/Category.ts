@@ -5,6 +5,7 @@ import { DataTypes, Sequelize } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
 import { CategoryAttributes, CategoryCreationAttributes } from './interfaces/ModelInterfaces';
 import { TABLE_NAMES } from '@/utils/constants';
+import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
 
 export class Category extends IdBaseModel<CategoryAttributes> implements CategoryAttributes {
   public name!: string;
@@ -103,9 +104,9 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
       // eslint-disable-next-line no-console
       console.log('Category model initialized:', !!Category.sequelize);
 
-      return await Category.create({
+      return await createModel(Category, {
         name: normalizedName,
-      } as CategoryCreationAttributes);
+      });
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Category.create failed:', error);
@@ -118,13 +119,13 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
   ): Promise<[Category, boolean]> {
     const normalizedName = categoryData.name.trim();
 
-    return await Category.findOrCreate({
+    return await findOrCreateModel(Category, {
       where: {
         name: normalizedName,
       },
       defaults: {
         name: normalizedName,
-      } as CategoryCreationAttributes,
+      },
     });
   }
 }

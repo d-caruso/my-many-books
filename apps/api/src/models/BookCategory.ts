@@ -11,6 +11,7 @@ import {
 import { TABLE_NAMES } from '@/utils/constants';
 import { Book } from './Book';
 import { Category } from './Category';
+import { createModel } from '../utils/sequelize-helpers';
 
 export class BookCategory
   extends Model<BookCategoryAttributes, BookCategoryCreationAttributes>
@@ -105,7 +106,7 @@ export class BookCategory
   }
 
   static async addCategoryToBook(bookId: number, categoryId: number): Promise<BookCategory> {
-    return await BookCategory.create({
+    return await createModel(BookCategory, {
       bookId,
       categoryId,
     });
