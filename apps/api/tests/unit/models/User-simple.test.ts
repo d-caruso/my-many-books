@@ -49,7 +49,7 @@ describe('User Model - Simple Coverage', () => {
       it('should initialize User model', () => {
         const mockSequelize = {
           define: jest.fn(),
-        };
+        } as any;
 
         // Mock the User.init method
         User.init = jest.fn().mockReturnValue(User);
@@ -61,7 +61,7 @@ describe('User Model - Simple Coverage', () => {
       });
 
       it('should call init with correct parameters', () => {
-        const mockSequelize = { test: 'sequelize' };
+        const mockSequelize = { test: 'sequelize' } as any;
         User.init = jest.fn().mockReturnValue(User);
 
         User.initialize(mockSequelize);
@@ -113,7 +113,7 @@ describe('User Model - Simple Coverage', () => {
 
   describe('Model configuration', () => {
     it('should have correct field types in initialization', () => {
-      const mockSequelize = {};
+      const mockSequelize = {} as any;
       User.init = jest.fn().mockReturnValue(User);
 
       User.initialize(mockSequelize);
@@ -147,7 +147,7 @@ describe('User Model - Simple Coverage', () => {
     });
 
     it('should have correct indexes configuration', () => {
-      const mockSequelize = {};
+      const mockSequelize = {} as any;
       User.init = jest.fn().mockReturnValue(User);
 
       User.initialize(mockSequelize);

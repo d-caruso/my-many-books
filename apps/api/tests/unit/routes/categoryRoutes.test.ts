@@ -10,53 +10,43 @@ import categoryRoutes from '../../../src/routes/categoryRoutes';
 // Mock the CategoryController
 jest.mock('../../../src/controllers/CategoryController', () => ({
   categoryController: {
-    listCategories: jest.fn(async (_req, _res) => ({
+    listCategories: jest.fn(async (_req) => ({
       statusCode: 200,
-      body: {
-        success: true,
-        data: [
-          { id: 1, name: 'Fiction' },
-          { id: 2, name: 'Science Fiction' },
-          { id: 3, name: 'Biography' }
-        ],
-        pagination: { page: 1, limit: 10, total: 3, totalPages: 1 }
+      success: true,
+      data: [
+        { id: 1, name: 'Fiction' },
+        { id: 2, name: 'Science Fiction' },
+        { id: 3, name: 'Biography' }
+      ],
+      meta: { pagination: { page: 1, limit: 10, total: 3, totalPages: 1 } }
+    })),
+    getCategory: jest.fn(async (req) => ({
+      statusCode: 200,
+      success: true,
+      data: { 
+        id: parseInt(req.pathParameters?.id || '1'), 
+        name: 'Fiction' 
       }
     })),
-    getCategory: jest.fn(async (req, _res) => ({
-      statusCode: 200,
-      body: {
-        success: true,
-        data: { 
-          id: parseInt(req.params?.id || '1'), 
-          name: 'Fiction' 
-        }
-      }
-    })),
-    createCategory: jest.fn(async (_req, _res) => ({
+    createCategory: jest.fn(async (_req) => ({
       statusCode: 201,
-      body: {
-        success: true,
-        data: { id: 1, name: 'New Category' },
-        message: 'Category created successfully'
-      }
+      success: true,
+      data: { id: 1, name: 'New Category' },
+      message: 'Category created successfully'
     })),
-    updateCategory: jest.fn(async (req, _res) => ({
+    updateCategory: jest.fn(async (req) => ({
       statusCode: 200,
-      body: {
-        success: true,
-        data: { 
-          id: parseInt(req.params?.id || '1'), 
-          name: 'Updated Category' 
-        },
-        message: 'Category updated successfully'
-      }
+      success: true,
+      data: { 
+        id: parseInt(req.pathParameters?.id || '1'), 
+        name: 'Updated Category' 
+      },
+      message: 'Category updated successfully'
     })),
-    deleteCategory: jest.fn(async (_req, _res) => ({
+    deleteCategory: jest.fn(async (_req) => ({
       statusCode: 204,
-      body: {
-        success: true,
-        message: 'Category deleted successfully'
-      }
+      success: true,
+      message: 'Category deleted successfully'
     }))
   }
 }));
@@ -83,7 +73,7 @@ describe('Category Routes', () => {
           { id: 2, name: 'Science Fiction' },
           { id: 3, name: 'Biography' }
         ],
-        pagination: { page: 1, limit: 10, total: 3, totalPages: 1 }
+        meta: { pagination: { page: 1, limit: 10, total: 3, totalPages: 1 } }
       });
     });
 
@@ -120,10 +110,8 @@ describe('Category Routes', () => {
       const { categoryController } = require('../../../src/controllers/CategoryController');
       categoryController.getCategory.mockResolvedValueOnce({
         statusCode: 404,
-        body: {
-          success: false,
-          error: 'Category not found'
-        }
+        success: false,
+        error: 'Category not found'
       });
 
       const response = await request(app)
@@ -159,10 +147,8 @@ describe('Category Routes', () => {
       const { categoryController } = require('../../../src/controllers/CategoryController');
       categoryController.createCategory.mockResolvedValueOnce({
         statusCode: 400,
-        body: {
-          success: false,
-          error: 'Category name is required'
-        }
+        success: false,
+        error: 'Category name is required'
       });
 
       const response = await request(app)
@@ -180,10 +166,8 @@ describe('Category Routes', () => {
       const { categoryController } = require('../../../src/controllers/CategoryController');
       categoryController.createCategory.mockResolvedValueOnce({
         statusCode: 409,
-        body: {
-          success: false,
-          error: 'Category with this name already exists'
-        }
+        success: false,
+        error: 'Category with this name already exists'
       });
 
       const response = await request(app)
@@ -220,10 +204,8 @@ describe('Category Routes', () => {
       const { categoryController } = require('../../../src/controllers/CategoryController');
       categoryController.updateCategory.mockResolvedValueOnce({
         statusCode: 404,
-        body: {
-          success: false,
-          error: 'Category not found'
-        }
+        success: false,
+        error: 'Category not found'
       });
 
       const response = await request(app)
@@ -241,10 +223,8 @@ describe('Category Routes', () => {
       const { categoryController } = require('../../../src/controllers/CategoryController');
       categoryController.updateCategory.mockResolvedValueOnce({
         statusCode: 400,
-        body: {
-          success: false,
-          error: 'Category name cannot be empty'
-        }
+        success: false,
+        error: 'Category name cannot be empty'
       });
 
       const response = await request(app)
@@ -272,10 +252,8 @@ describe('Category Routes', () => {
       const { categoryController } = require('../../../src/controllers/CategoryController');
       categoryController.deleteCategory.mockResolvedValueOnce({
         statusCode: 404,
-        body: {
-          success: false,
-          error: 'Category not found'
-        }
+        success: false,
+        error: 'Category not found'
       });
 
       const response = await request(app)
@@ -292,10 +270,8 @@ describe('Category Routes', () => {
       const { categoryController } = require('../../../src/controllers/CategoryController');
       categoryController.deleteCategory.mockResolvedValueOnce({
         statusCode: 409,
-        body: {
-          success: false,
-          error: 'Cannot delete category with associated books'
-        }
+        success: false,
+        error: 'Cannot delete category with associated books'
       });
 
       const response = await request(app)
@@ -319,6 +295,7 @@ describe('Category Routes', () => {
         .expect(500);
 
       expect(response.body).toEqual({
+        success: false,
         error: 'Internal server error',
         details: 'Database connection failed'
       });
@@ -333,6 +310,7 @@ describe('Category Routes', () => {
         .expect(500);
 
       expect(response.body).toEqual({
+        success: false,
         error: 'Internal server error',
         details: 'Unknown error'
       });
