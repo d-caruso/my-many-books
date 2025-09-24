@@ -4,7 +4,7 @@
 // ================================================================
 
 import { Request, Response, NextFunction } from 'express';
-import { AuthUser } from '../models/interfaces/ModelInterfaces';
+import { AuthUser, UserCreationAttributes } from '../models/interfaces/ModelInterfaces';
 import { User } from '../models/User';
 
 // Extended Request interface to include authenticated user
@@ -123,7 +123,7 @@ export class UserService {
         name: providerUser.name || 'Unknown',
         surname: providerUser.surname || 'User',
         isActive: true,
-      } as any);
+      } as UserCreationAttributes);
       isNewUser = true;
     }
 

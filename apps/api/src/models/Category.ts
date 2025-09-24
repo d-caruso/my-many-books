@@ -105,7 +105,7 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
 
       return await Category.create({
         name: normalizedName,
-      } as any);
+      } as CategoryCreationAttributes);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Category.create failed:', error);
@@ -124,7 +124,7 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
       },
       defaults: {
         name: normalizedName,
-      } as any,
+      } as CategoryCreationAttributes,
     });
   }
 }
