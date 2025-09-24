@@ -86,6 +86,8 @@ jobs:
             rm -f package-lock.json
             npm install --legacy-peer-deps --ignore-scripts
           fi
+          # Rebuild SQLite3 native bindings for test environment
+          npm rebuild sqlite3 --silent
           npm run test
           cd ../web-app
           if ! npm ci --ignore-scripts 2>/dev/null; then
