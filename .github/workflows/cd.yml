@@ -132,8 +132,7 @@ jobs:
           fi
 
       - name: Build Projects to be Deployed
-        # This step has been updated to build projects by changing the working directory
-        # to prevent failures caused by Nx or npm workspace analysis.
+        # Install dependencies and build each project individually to avoid native binary issues
         run: |
           BUILD_PROJECTS="${{ needs.setup.outputs.affected-projects }}"
           if [ -n "$BUILD_PROJECTS" ]; then
@@ -142,11 +141,23 @@ jobs:
               if [ "$project" == "api" ]; then
                 echo "Building project: $project"
                 cd apps/api
+                # Install dependencies individually for this project
+                if ! npm ci --ignore-scripts 2>/dev/null; then
+                  echo "Lockfile incompatible for $project, regenerating..."
+                  rm -f package-lock.json
+                  npm install --ignore-scripts
+                fi
                 npm run build
                 cd ../..
               elif [ "$project" == "web-app" ]; then
                 echo "Building project: $project"
-                cd apps/web-app  
+                cd apps/web-app
+                # Install dependencies individually for this project  
+                if ! npm ci --ignore-scripts 2>/dev/null; then
+                  echo "Lockfile incompatible for $project, regenerating..."
+                  rm -f package-lock.json
+                  npm install --ignore-scripts
+                fi
                 npm run build
                 cd ../..
               else
