@@ -165,8 +165,8 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.books).toHaveLength(2);
-      expect(result.data.summary).toEqual(mockResult.summary);
+      expect((result.data as { books: unknown; summary: unknown }).books).toHaveLength(2);
+      expect((result.data as { books: unknown; summary: unknown }).summary).toEqual(mockResult.summary);
     });
 
     it('should return 400 for missing request body', async () => {
@@ -217,9 +217,9 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.title).toBe('Test Book');
-      expect(result.data.books).toEqual(mockResult.books);
-      expect(result.data.limit).toBe(5);
+      expect((result.data as { title: string; books: unknown; limit: number }).title).toBe('Test Book');
+      expect((result.data as { title: string; books: unknown; limit: number }).books).toEqual(mockResult.books);
+      expect((result.data as { title: string; books: unknown; limit: number }).limit).toBe(5);
     });
 
     it('should return 400 when title parameter is missing', async () => {
@@ -243,7 +243,7 @@ describe('IsbnController', () => {
       const result = await isbnController.searchByTitle(mockRequest);
 
       expect(result.statusCode).toBe(200);
-      expect(result.data.limit).toBe(10); // Default limit
+      expect((result.data as { limit: number }).limit).toBe(10); // Default limit
     });
   });
 
@@ -261,9 +261,9 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.status).toBe('healthy');
-      expect(result.data.available).toBe(true);
-      expect(result.data.responseTime).toBe(150);
+      expect((result.data as { status: string; available: boolean; responseTime: number }).status).toBe('healthy');
+      expect((result.data as { status: string; available: boolean; responseTime: number }).available).toBe(true);
+      expect((result.data as { status: string; available: boolean; responseTime: number }).responseTime).toBe(150);
     });
 
     it('should return unhealthy status', async () => {
@@ -279,9 +279,9 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(503);
       expect(result.success).toBe(true);
-      expect(result.data.status).toBe('unhealthy');
-      expect(result.data.available).toBe(false);
-      expect(result.data.error).toBe('Service unavailable');
+      expect((result.data as { status: string; available: boolean; error: string }).status).toBe('unhealthy');
+      expect((result.data as { status: string; available: boolean; error: string }).available).toBe(false);
+      expect((result.data as { status: string; available: boolean; error: string }).error).toBe('Service unavailable');
     });
   });
 
@@ -300,8 +300,8 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.circuitBreaker).toEqual(mockStats.circuitBreaker);
-      expect(result.data.config).toEqual(mockStats.config);
+      expect((result.data as { circuitBreaker: unknown; config: unknown }).circuitBreaker).toEqual(mockStats.circuitBreaker);
+      expect((result.data as { circuitBreaker: unknown; config: unknown }).config).toEqual(mockStats.config);
     });
   });
 
@@ -345,8 +345,8 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.size).toBe(50);
-      expect(result.data.maxSize).toBe(100);
+      expect((result.data as { size: number; maxSize: number }).size).toBe(50);
+      expect((result.data as { size: number; maxSize: number }).maxSize).toBe(100);
     });
   });
 
@@ -399,9 +399,9 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.isValid).toBe(true);
-      expect(result.data.normalizedIsbn).toBe('9780140449136');
-      expect(result.data.details.format).toBe('ISBN-13');
+      expect((result.data as { isValid: boolean; normalizedIsbn: string; details: { format: string } }).isValid).toBe(true);
+      expect((result.data as { isValid: boolean; normalizedIsbn: string; details: { format: string } }).normalizedIsbn).toBe('9780140449136');
+      expect((result.data as { isValid: boolean; normalizedIsbn: string; details: { format: string } }).details.format).toBe('ISBN-13');
     });
 
     it('should handle invalid ISBN', async () => {
@@ -416,8 +416,8 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.isValid).toBe(false);
-      expect(result.data.error).toBe('Invalid format');
+      expect((result.data as { isValid: boolean; error: string }).isValid).toBe(false);
+      expect((result.data as { isValid: boolean; error: string }).error).toBe('Invalid format');
     });
   });
 
@@ -437,8 +437,8 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.format).toBe('hyphenated');
-      expect(result.data.formattedIsbn).toMatch(/\d{3}-\d-\d{2}-\d{6}-\d/);
+      expect((result.data as { format: string; formattedIsbn: string }).format).toBe('hyphenated');
+      expect((result.data as { format: string; formattedIsbn: string }).formattedIsbn).toMatch(/\d{3}-\d-\d{2}-\d{6}-\d/);
     });
 
     it('should convert ISBN-13 to ISBN-10', async () => {
@@ -456,8 +456,8 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.format).toBe('isbn10');
-      expect(result.data.formattedIsbn).toHaveLength(10);
+      expect((result.data as { format: string; formattedIsbn: string }).format).toBe('isbn10');
+      expect((result.data as { format: string; formattedIsbn: string }).formattedIsbn).toHaveLength(10);
     });
 
     it('should return 400 for invalid format', async () => {
