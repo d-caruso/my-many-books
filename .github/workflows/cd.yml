@@ -141,10 +141,14 @@ jobs:
             for project in "${ADDR[@]}"; do
               if [ "$project" == "api" ]; then
                 echo "Building project: $project"
-                cd apps/api && npm run build
+                cd apps/api
+                npm run build
+                cd ../..
               elif [ "$project" == "web-app" ]; then
                 echo "Building project: $project"
-                cd apps/web-app && npm run build
+                cd apps/web-app  
+                npm run build
+                cd ../..
               else
                 echo "Skipping non-deployable project: $project"
               fi
