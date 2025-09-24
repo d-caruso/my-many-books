@@ -84,14 +84,14 @@ jobs:
           if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible for api, regenerating..."
             rm -f package-lock.json
-            npm install --ignore-scripts
+            npm install --legacy-peer-deps --ignore-scripts
           fi
           npm run test
           cd ../web-app
           if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible for web-app, regenerating..."
             rm -f package-lock.json
-            npm install --ignore-scripts
+            npm install --legacy-peer-deps --ignore-scripts
           fi
           npm run test
 
@@ -124,13 +124,13 @@ jobs:
           if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible for api, regenerating..."
             rm -f package-lock.json
-            npm install --ignore-scripts
+            npm install --legacy-peer-deps --ignore-scripts
           fi
           npm run build
           cd ../web-app
           if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible for web-app, regenerating..."
             rm -f package-lock.json
-            npm install --ignore-scripts
+            npm install --legacy-peer-deps --ignore-scripts
           fi
           npm run build
