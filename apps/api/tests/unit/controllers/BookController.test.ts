@@ -280,8 +280,8 @@ describe('BookController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.source).toBe('local');
-      expect(result.data.book).toEqual(mockBook);
+      expect((result.data as { source: string; book: unknown }).source).toBe('local');
+      expect((result.data as { source: string; book: unknown }).book).toEqual(mockBook);
     });
 
     it('should search external service when not found locally', async () => {
@@ -300,8 +300,8 @@ describe('BookController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data.source).toBe('api');
-      expect(result.data.book).toEqual(mockExternalResult.book);
+      expect((result.data as { source: string; book: unknown }).source).toBe('api');
+      expect((result.data as { source: string; book: unknown }).book).toEqual(mockExternalResult.book);
     });
   });
 
