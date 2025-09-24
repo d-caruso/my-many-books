@@ -20,6 +20,7 @@ export interface AuthorCreationAttributes {
   name: string;
   surname: string;
   nationality?: string | null;
+  updateDate?: Date | undefined;
 }
 
 // Category interfaces
@@ -32,6 +33,7 @@ export interface CategoryAttributes extends Omit<IdBaseModelAttributes, 'id' | '
 
 export interface CategoryCreationAttributes {
   name: string;
+  updateDate?: Date | undefined;
 }
 
 // Book interfaces
@@ -56,6 +58,7 @@ export interface BookCreationAttributes {
   status?: BookStatus | undefined;
   notes?: string | undefined;
   userId?: number | undefined;
+  updateDate?: Date | undefined;
 }
 
 export interface BookUpdateAttributes
@@ -124,8 +127,13 @@ export interface UserAttributes extends IdBaseModelAttributes {
   isActive: boolean;
 }
 
-export interface UserCreationAttributes
-  extends Omit<UserAttributes, 'id' | 'creationDate' | 'updateDate'> {}
+export interface UserCreationAttributes {
+  email: string;
+  name: string;
+  surname: string;
+  isActive: boolean;
+  updateDate?: Date | undefined;
+}
 
 export interface UserUpdateAttributes
   extends Omit<Partial<UserAttributes>, 'id' | 'creationDate'> {}

@@ -12,11 +12,11 @@ import {
   BookAttributes,
   BookStatus,
   AuthorCreationAttributes,
-  CategoryCreationAttributes,
 } from '../models/interfaces/ModelInterfaces';
 import { validateIsbn } from '../utils/isbn';
 import { isbnService } from '../services/isbnService';
 import { UniversalRequest } from '../types';
+import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
 
 interface CreateBookRequest {
   title: string;
@@ -157,7 +157,7 @@ export class BookController extends BaseController {
       userId,
     };
 
-    const newBook = await Book.create(bookCreateData);
+    const newBook = await createModel(Book, bookCreateData);
 
     // Associate authors and categories
     if (authors.length > 0) {
@@ -498,7 +498,7 @@ export class BookController extends BaseController {
     if (bookData.authors && bookData.authors.length > 0) {
       authors = await Promise.all(
         bookData.authors.map(authorData =>
-          Author.findOrCreate({
+          findOrCreateModel(Author, {
             where: {
               name: authorData.name,
               surname: authorData.surname || '',
@@ -518,9 +518,9 @@ export class BookController extends BaseController {
     if (bookData.categories && bookData.categories.length > 0) {
       categories = await Promise.all(
         bookData.categories.map(categoryData =>
-          Category.findOrCreate({
+          findOrCreateModel(Category, {
             where: { name: categoryData.name },
-            defaults: { name: categoryData.name } as CategoryCreationAttributes,
+            defaults: { name: categoryData.name },
           }).then(([category]) => category)
         )
       );
@@ -536,7 +536,7 @@ export class BookController extends BaseController {
       notes: (bookData as BookCreationAttributes).notes,
       userId, // Associate with user if authenticated
     };
-    const book = await Book.create(bookCreateData);
+    const book = await createModel(Book, bookCreateData);
 
     // Associate authors and categories with the new book
     if (authors.length > 0) {
@@ -602,11 +602,19 @@ export class BookController extends BaseController {
         throw new Error(`One or more ${associationName} IDs are invalid`);
       }
 
-      await (book as Book & Record<string, (models: unknown[]) => Promise<void>>)[setMethod](
-        associatedModels
-      );
+      const method = (book as Book & Record<string, (models: unknown[]) => Promise<void>>)[
+        setMethod
+      ];
+      if (method) {
+        await method(associatedModels);
+      }
     } else {
-      await (book as Book & Record<string, (models: unknown[]) => Promise<void>>)[setMethod]([]); // Clear all associations
+      const method = (book as Book & Record<string, (models: unknown[]) => Promise<void>>)[
+        setMethod
+      ];
+      if (method) {
+        await method([]); // Clear all associations
+      }
     }
   }
 
@@ -643,7 +651,7 @@ export class BookController extends BaseController {
     // Add userId to the request body
     const body = this.parseBody(request) as Record<string, unknown>;
     if (body) {
-      body.userId = request.user.userId;
+      body['userId'] = request.user.userId;
       request.body = JSON.stringify(body);
     }
 

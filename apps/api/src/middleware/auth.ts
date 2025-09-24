@@ -4,8 +4,9 @@
 // ================================================================
 
 import { Request, Response, NextFunction } from 'express';
-import { AuthUser, UserCreationAttributes } from '../models/interfaces/ModelInterfaces';
+import { AuthUser } from '../models/interfaces/ModelInterfaces';
 import { User } from '../models/User';
+import { createModel } from '../utils/sequelize-helpers';
 
 // Extended Request interface to include authenticated user
 export interface AuthenticatedRequest extends Request {
@@ -118,12 +119,12 @@ export class UserService {
 
     if (!user) {
       // Create new user
-      user = await User.create({
+      user = await createModel(User, {
         email: providerUser.email,
         name: providerUser.name || 'Unknown',
         surname: providerUser.surname || 'User',
         isActive: true,
-      } as UserCreationAttributes);
+      });
       isNewUser = true;
     }
 

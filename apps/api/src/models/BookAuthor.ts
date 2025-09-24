@@ -8,6 +8,7 @@ import { BookAuthorAttributes, BookAuthorCreationAttributes } from './interfaces
 import { TABLE_NAMES } from '@/utils/constants';
 import { Book } from './Book';
 import { Author } from './Author';
+import { createModel } from '../utils/sequelize-helpers';
 
 export class BookAuthor
   extends Model<BookAuthorAttributes, BookAuthorCreationAttributes>
@@ -102,7 +103,7 @@ export class BookAuthor
   }
 
   static async addAuthorToBook(bookId: number, authorId: number): Promise<BookAuthor> {
-    return await BookAuthor.create({
+    return await createModel(BookAuthor, {
       bookId,
       authorId,
     });

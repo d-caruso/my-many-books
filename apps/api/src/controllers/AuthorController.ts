@@ -7,8 +7,9 @@ import { Op, WhereOptions, Order } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book } from '../models';
 import { ApiResponse } from '../common/ApiResponse';
-import { AuthorAttributes, AuthorCreationAttributes } from '../models/interfaces/ModelInterfaces';
+import { AuthorAttributes } from '../models/interfaces/ModelInterfaces';
 import { UniversalRequest } from '../types';
+import { createModel } from '../utils/sequelize-helpers';
 
 interface CreateAuthorRequest {
   name: string;
@@ -76,7 +77,7 @@ export class AuthorController extends BaseController {
 
     try {
       // Create author
-      const newAuthor = await Author.create(authorData as AuthorCreationAttributes);
+      const newAuthor = await createModel(Author, authorData);
       return this.createSuccessResponse(newAuthor, 'Author created successfully', undefined, 201);
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
