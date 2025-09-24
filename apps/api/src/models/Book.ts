@@ -273,7 +273,7 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
       throw new Error(`Book with ISBN ${bookData['isbnCode']} already exists`);
     }
 
-    return await Book.create(bookData as any);
+    return await Book.create(bookData as BookCreationAttributes);
   }
 
   public async addAuthors(authors: Author[]): Promise<void> {
