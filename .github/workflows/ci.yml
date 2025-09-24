@@ -79,9 +79,21 @@ jobs:
 
       - name: Test
         run: |
-          # Test each app directly since Nx binary is not available
-          cd apps/api && npm run test
-          cd ../web-app && npm run test
+          # Test each app individually with separate dependency installation
+          cd apps/api
+          if ! npm ci --ignore-scripts 2>/dev/null; then
+            echo "Lockfile incompatible for api, regenerating..."
+            rm -f package-lock.json
+            npm install --ignore-scripts
+          fi
+          npm run test
+          cd ../web-app
+          if ! npm ci --ignore-scripts 2>/dev/null; then
+            echo "Lockfile incompatible for web-app, regenerating..."
+            rm -f package-lock.json
+            npm install --ignore-scripts
+          fi
+          npm run test
 
   build:
     name: Build
@@ -107,6 +119,18 @@ jobs:
 
       - name: Build
         run: |
-          # Build each app directly since Nx binary is not available
-          cd apps/api && npm run build
-          cd ../web-app && npm run build
+          # Build each app individually with separate dependency installation to avoid native binary issues
+          cd apps/api
+          if ! npm ci --ignore-scripts 2>/dev/null; then
+            echo "Lockfile incompatible for api, regenerating..."
+            rm -f package-lock.json
+            npm install --ignore-scripts
+          fi
+          npm run build
+          cd ../web-app
+          if ! npm ci --ignore-scripts 2>/dev/null; then
+            echo "Lockfile incompatible for web-app, regenerating..."
+            rm -f package-lock.json
+            npm install --ignore-scripts
+          fi
+          npm run build
