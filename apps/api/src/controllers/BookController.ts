@@ -157,7 +157,7 @@ export class BookController extends BaseController {
       userId,
     };
 
-    const newBook = await Book.create(bookCreateData as BookCreationAttributes);
+    const newBook = await Book.create(bookCreateData);
 
     // Associate authors and categories
     if (authors.length > 0) {
@@ -536,7 +536,7 @@ export class BookController extends BaseController {
       notes: (bookData as BookCreationAttributes).notes,
       userId, // Associate with user if authenticated
     };
-    const book = await Book.create(bookCreateData as BookCreationAttributes);
+    const book = await Book.create(bookCreateData);
 
     // Associate authors and categories with the new book
     if (authors.length > 0) {
@@ -602,9 +602,11 @@ export class BookController extends BaseController {
         throw new Error(`One or more ${associationName} IDs are invalid`);
       }
 
-      await (book as Book & Record<string, (models: any[]) => Promise<void>>)[setMethod](associatedModels);
+      await (book as Book & Record<string, (models: unknown[]) => Promise<void>>)[setMethod](
+        associatedModels
+      );
     } else {
-      await (book as Book & Record<string, (models: any[]) => Promise<void>>)[setMethod]([]); // Clear all associations
+      await (book as Book & Record<string, (models: unknown[]) => Promise<void>>)[setMethod]([]); // Clear all associations
     }
   }
 
