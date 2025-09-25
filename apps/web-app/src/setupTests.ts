@@ -3,29 +3,28 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
   })),
 });
 
 // Mock localStorage
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
 };
 global.localStorage = localStorageMock as any;
 
@@ -47,35 +46,35 @@ global.IntersectionObserver = class IntersectionObserver {
 Object.defineProperty(navigator, 'mediaDevices', {
   writable: true,
   value: {
-    getUserMedia: vi.fn(() => Promise.resolve({
-      getTracks: () => [{ stop: vi.fn() }]
+    getUserMedia: jest.fn(() => Promise.resolve({
+      getTracks: () => [{ stop: jest.fn() }]
     })),
   },
 });
 
 // Mock ZXing library
-vi.mock('@zxing/library', () => ({
-  BrowserMultiFormatReader: vi.fn().mockImplementation(() => ({
-    decodeFromVideoDevice: vi.fn(),
-    reset: vi.fn(),
-    getVideoInputDevices: vi.fn(() => Promise.resolve([])),
+jest.mock('@zxing/library', () => ({
+  BrowserMultiFormatReader: jest.fn().mockImplementation(() => ({
+    decodeFromVideoDevice: jest.fn(),
+    reset: jest.fn(),
+    getVideoInputDevices: jest.fn(() => Promise.resolve([])),
   })),
   NotFoundException: class NotFoundException extends Error {},
 }));
 
 // Mock AWS Amplify Auth
-vi.mock('@aws-amplify/auth', () => ({
-  signIn: vi.fn(),
-  signUp: vi.fn(),
-  signOut: vi.fn(),
-  getCurrentUser: vi.fn(),
-  confirmSignUp: vi.fn(),
-  fetchAuthSession: vi.fn(() => Promise.resolve(null)),
+jest.mock('@aws-amplify/auth', () => ({
+  signIn: jest.fn(),
+  signUp: jest.fn(),
+  signOut: jest.fn(),
+  getCurrentUser: jest.fn(),
+  confirmSignUp: jest.fn(),
+  fetchAuthSession: jest.fn(() => Promise.resolve(null)),
 }));
 
 // Mock AWS Amplify
-vi.mock('aws-amplify', () => ({
+jest.mock('aws-amplify', () => ({
   Amplify: {
-    configure: vi.fn(),
+    configure: jest.fn(),
   },
 }));

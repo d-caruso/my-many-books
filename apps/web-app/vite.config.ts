@@ -39,18 +39,4 @@ export default defineConfig({
   css: {
     postcss: './postcss.config.js',
   },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['src/setupTests.ts'],
-    testTimeout: 30000, // 30 second timeout per test
-    hookTimeout: 30000, // 30 second timeout for hooks
-    teardownTimeout: 30000, // 30 second timeout for teardown
-    pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true // Prevent race conditions in tests
-      }
-    }
-  },
 })
