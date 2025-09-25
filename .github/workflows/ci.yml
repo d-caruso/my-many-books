@@ -91,11 +91,11 @@ jobs:
           npm run test
           cd ../web-app
           echo "=== Starting web-app dependency installation ==="
-          if ! timeout 300 npm ci 2>/dev/null; then
+          if ! timeout 300 npm ci --ignore-scripts 2>/dev/null; then
             echo "npm ci failed or timed out, trying fallback installation..."
             rm -f package-lock.json
-            echo "Installing dependencies with --legacy-peer-deps and timeout..."
-            timeout 600 npm install --legacy-peer-deps || {
+            echo "Installing dependencies with --legacy-peer-deps --ignore-scripts and timeout..."
+            timeout 600 npm install --legacy-peer-deps --ignore-scripts || {
               echo "ERROR: npm install timed out after 10 minutes"
               exit 1
             }
@@ -142,11 +142,11 @@ jobs:
           npm run build
           cd ../web-app
           echo "=== Starting web-app dependency installation for build ==="
-          if ! timeout 300 npm ci 2>/dev/null; then
+          if ! timeout 300 npm ci --ignore-scripts 2>/dev/null; then
             echo "npm ci failed or timed out, trying fallback installation..."
             rm -f package-lock.json
-            echo "Installing dependencies with --legacy-peer-deps and timeout..."
-            timeout 600 npm install --legacy-peer-deps || {
+            echo "Installing dependencies with --legacy-peer-deps --ignore-scripts and timeout..."
+            timeout 600 npm install --legacy-peer-deps --ignore-scripts || {
               echo "ERROR: npm install timed out after 10 minutes"
               exit 1
             }
