@@ -91,15 +91,20 @@ jobs:
           npm run test
           cd ../web-app
           echo "=== Starting web-app dependency installation ==="
-          if ! npm ci 2>/dev/null; then
-            echo "Lockfile incompatible for web-app, regenerating..."
+          if ! timeout 300 npm ci 2>/dev/null; then
+            echo "npm ci failed or timed out, trying fallback installation..."
             rm -f package-lock.json
-            echo "Installing dependencies with --legacy-peer-deps..."
-            npm install --legacy-peer-deps
+            echo "Installing dependencies with --legacy-peer-deps and timeout..."
+            timeout 600 npm install --legacy-peer-deps || {
+              echo "ERROR: npm install timed out after 10 minutes"
+              exit 1
+            }
           fi
           echo "=== Rebuilding native dependencies ==="
           # Rebuild native dependencies for the correct platform
-          npm rebuild
+          timeout 300 npm rebuild || {
+            echo "WARNING: npm rebuild timed out after 5 minutes, continuing..."
+          }
           echo "=== Starting web-app tests ==="
           npm run test
 
@@ -137,14 +142,19 @@ jobs:
           npm run build
           cd ../web-app
           echo "=== Starting web-app dependency installation for build ==="
-          if ! npm ci 2>/dev/null; then
-            echo "Lockfile incompatible for web-app, regenerating..."
+          if ! timeout 300 npm ci 2>/dev/null; then
+            echo "npm ci failed or timed out, trying fallback installation..."
             rm -f package-lock.json
-            echo "Installing dependencies with --legacy-peer-deps..."
-            npm install --legacy-peer-deps
+            echo "Installing dependencies with --legacy-peer-deps and timeout..."
+            timeout 600 npm install --legacy-peer-deps || {
+              echo "ERROR: npm install timed out after 10 minutes"
+              exit 1
+            }
           fi
           echo "=== Rebuilding native dependencies for build ==="
           # Rebuild native dependencies for the correct platform
-          npm rebuild
+          timeout 300 npm rebuild || {
+            echo "WARNING: npm rebuild timed out after 5 minutes, continuing..."
+          }
           echo "=== Starting web-app build ==="
           npm run build
