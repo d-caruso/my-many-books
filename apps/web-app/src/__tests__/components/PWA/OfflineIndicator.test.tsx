@@ -4,12 +4,12 @@ import { OfflineIndicator } from '../../../components/PWA/OfflineIndicator';
 import { usePWA } from '../../../hooks/usePWA';
 
 // Mock the usePWA hook
-jest.mock('../../../hooks/usePWA', () => ({
-  usePWA: jest.fn(),
+vi.mock('../../../hooks/usePWA', () => ({
+  usePWA: vi.fn(),
 }));
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Alert: ({ children, severity, action, variant, onClose, ...props }: any) => (
     <div data-testid={`alert-${severity}`} data-variant={variant} {...props}>
       {children}
@@ -54,7 +54,7 @@ jest.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   WifiOff: () => <div data-testid="wifi-off-icon">Offline</div>,
   Wifi: () => <div data-testid="wifi-icon">Online</div>,
   CloudOff: () => <div data-testid="cloud-off-icon">Cloud Off</div>,
@@ -62,7 +62,7 @@ jest.mock('@mui/icons-material', () => ({
   Close: () => <div data-testid="close-icon">Close</div>,
 }));
 
-const mockUsePWA = usePWA as jest.MockedFunction<typeof usePWA>;
+const mockUsePWA = usePWA as MockedFunction<typeof usePWA>;
 
 describe('OfflineIndicator', () => {
   const mockPWAState = {
@@ -71,13 +71,13 @@ describe('OfflineIndicator', () => {
     isInstallable: false,
     updateAvailable: false,
     registration: null,
-    installApp: jest.fn(),
-    updateApp: jest.fn(),
-    dismissUpdate: jest.fn(),
+    installApp: vi.fn(),
+    updateApp: vi.fn(),
+    dismissUpdate: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUsePWA.mockReturnValue(mockPWAState);
   });
 
@@ -140,7 +140,7 @@ describe('OfflineIndicator', () => {
   });
 
   test('handles retry action', () => {
-    const mockOnRetry = jest.fn();
+    const mockOnRetry = vi.fn();
     mockUsePWA.mockReturnValue({
       ...mockPWAState,
       isOffline: true,
@@ -166,7 +166,7 @@ describe('OfflineIndicator', () => {
   });
 
   test('handles dismiss action', () => {
-    const mockOnDismiss = jest.fn();
+    const mockOnDismiss = vi.fn();
     mockUsePWA.mockReturnValue({
       ...mockPWAState,
       isOffline: true,

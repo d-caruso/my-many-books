@@ -4,12 +4,12 @@ import { BookSearchForm } from '../../../components/Search/BookSearchForm';
 import { useCategories } from '../../../hooks/useCategories';
 
 // Mock the useCategories hook
-jest.mock('../../../hooks/useCategories', () => ({
-  useCategories: jest.fn(),
+vi.mock('../../../hooks/useCategories', () => ({
+  useCategories: vi.fn(),
 }));
 
 // Mock AuthorAutocomplete component
-jest.mock('../../../components/Search/AuthorAutocomplete', () => ({
+vi.mock('../../../components/Search/AuthorAutocomplete', () => ({
   AuthorAutocomplete: ({ value, onChange, placeholder, disabled, size }: any) => (
     <div data-testid="author-autocomplete">
       <input
@@ -25,7 +25,7 @@ jest.mock('../../../components/Search/AuthorAutocomplete', () => ({
 }));
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Paper: ({ children, sx, ...props }: any) => (
     <div data-testid="paper" style={sx} {...props}>{children}</div>
   ),
@@ -149,14 +149,14 @@ jest.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   Search: () => <div data-testid="search-icon">Search</div>,
   ExpandMore: () => <div data-testid="expand-more-icon">Expand</div>,
   Clear: () => <div data-testid="clear-icon">Clear</div>,
   Warning: () => <div data-testid="warning-icon">Warning</div>,
 }));
 
-const mockUseCategories = useCategories as jest.MockedFunction<typeof useCategories>;
+const mockUseCategories = useCategories as MockedFunction<typeof useCategories>;
 
 const mockCategories = [
   { id: 1, name: 'Fiction' },
@@ -165,14 +165,14 @@ const mockCategories = [
 ];
 
 describe('BookSearchForm', () => {
-  const mockOnSearch = jest.fn();
+  const mockOnSearch = vi.fn();
 
   const defaultProps = {
     onSearch: mockOnSearch,
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseCategories.mockReturnValue({
       categories: mockCategories,
       loading: false,

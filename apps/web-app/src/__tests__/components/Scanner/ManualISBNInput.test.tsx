@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ManualISBNInput } from '../../../components/Scanner/ManualISBNInput';
 
 // Mock Material-UI components - match the actual component structure
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Box: ({ children, sx, component, onSubmit, ...props }: any) => {
     const Tag = component || 'div';
     const handleSubmit = onSubmit || (() => {});
@@ -67,16 +67,16 @@ jest.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   Close: () => <div data-testid="close-icon">Close</div>,
 }));
 
 describe('ManualISBNInput', () => {
-  const mockOnSubmit = jest.fn();
-  const mockOnCancel = jest.fn();
+  const mockOnSubmit = vi.fn();
+  const mockOnCancel = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders manual ISBN input component when open', () => {

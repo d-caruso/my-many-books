@@ -1,4 +1,4 @@
-// Jest setup file for additional globals and polyfills
+// Vitest setup file for additional globals and polyfills
 
 // Add TextEncoder/TextDecoder for Node.js environment
 import { TextEncoder, TextDecoder } from 'util';
@@ -17,9 +17,9 @@ const mockLocation = {
   pathname: '/',
   search: '',
   hash: '',
-  assign: jest.fn(),
-  replace: jest.fn(),
-  reload: jest.fn(),
+  assign: vi.fn(),
+  replace: vi.fn(),
+  reload: vi.fn(),
 };
 
 Object.defineProperty(window, 'location', {

@@ -152,12 +152,25 @@ jobs:
               elif [ "$project" == "web-app" ]; then
                 echo "Building project: $project"
                 cd apps/web-app
-                # Install dependencies individually for this project  
-                if ! npm ci --ignore-scripts 2>/dev/null; then
-                  echo "Lockfile incompatible for $project, regenerating..."
+                echo "=== Starting web-app dependency installation for build ==="
+                if ! timeout 300 npm ci --ignore-scripts 2>/dev/null; then
+                  echo "npm ci failed or timed out, trying fallback installation..."
                   rm -f package-lock.json
-                  npm install --legacy-peer-deps --ignore-scripts
+                  echo "Installing dependencies with --legacy-peer-deps --ignore-scripts and timeout..."
+                  timeout 600 npm install --legacy-peer-deps --ignore-scripts || {
+                    echo "ERROR: npm install timed out after 10 minutes"
+                    exit 1
+                  }
                 fi
+                echo "=== Rebuilding native dependencies for build ==="
+                timeout 300 npm rebuild || {
+                  echo "WARNING: npm rebuild timed out after 5 minutes, continuing..."
+                }
+                echo "=== Installing Rollup native binary specifically for build ==="
+                timeout 180 npm install @rollup/rollup-linux-x64-gnu --no-save || {
+                  echo "WARNING: Could not install Rollup native binary, continuing..."
+                }
+                echo "=== Starting web-app build ==="
                 npm run build
                 cd ../..
               else
@@ -414,7 +427,26 @@ jobs:
 
       - name: Build Web App
         working-directory: apps/web-app
-        run: npm run build
+        run: |
+          echo "=== Installing web-app dependencies for build ==="
+          if ! timeout 300 npm ci --ignore-scripts 2>/dev/null; then
+            echo "npm ci failed or timed out, trying fallback installation..."
+            rm -f package-lock.json
+            timeout 600 npm install --legacy-peer-deps --ignore-scripts || {
+              echo "ERROR: npm install timed out after 10 minutes"
+              exit 1
+            }
+          fi
+          echo "=== Rebuilding native dependencies ==="
+          timeout 300 npm rebuild || {
+            echo "WARNING: npm rebuild timed out, continuing..."
+          }
+          echo "=== Installing Rollup native binary ==="
+          timeout 180 npm install @rollup/rollup-linux-x64-gnu --no-save || {
+            echo "WARNING: Could not install Rollup native binary, continuing..."
+          }
+          echo "=== Building web-app ==="
+          npm run build
         env:
           NODE_ENV: ${{ needs.setup.outputs.environment == 'prod' && 'production' || 'development' }}
           VITE_COGNITO_USER_POOL_ID: ${{ steps.cognito-config.outputs.user-pool-id }}

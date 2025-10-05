@@ -5,20 +5,20 @@ import { Navbar } from '../../../components/Navigation/Navbar';
 import { useAuth } from '../../contexts/AuthContext';
 
 // Mock the useAuth hook
-jest.mock('../../../contexts/AuthContext', () => ({
-  useAuth: jest.fn(),
+vi.mock('../../../contexts/AuthContext', () => ({
+  useAuth: vi.fn(),
 }));
 
 // Mock React Router hooks
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useLocation: () => ({ pathname: '/books' }),
 }));
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   AppBar: ({ children, ...props }: any) => <div data-testid="app-bar" {...props}>{children}</div>,
   Toolbar: ({ children, ...props }: any) => <div data-testid="toolbar" {...props}>{children}</div>,
   Typography: ({ children, variant, ...props }: any) => (
@@ -44,13 +44,13 @@ jest.mock('@mui/material', () => ({
   ),
 }));
 
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   MenuBook: () => <span data-testid="menu-book-icon">📚</span>,
   Menu: () => <span data-testid="menu-icon">☰</span>,
   ExpandMore: () => <span data-testid="expand-more-icon">▼</span>,
 }));
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockUseAuth = useAuth as MockedFunction<typeof useAuth>;
 
 // Test wrapper with Router context
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -59,16 +59,16 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 describe('Navbar', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders navbar with logo and app name', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -83,9 +83,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -104,9 +104,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -127,9 +127,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -149,9 +149,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -179,9 +179,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -199,7 +199,7 @@ describe('Navbar', () => {
   });
 
   test('handles logout correctly', async () => {
-    const mockLogout = jest.fn().mockResolvedValue(undefined);
+    const mockLogout = vi.fn().mockResolvedValue(undefined);
     const mockUser = {
       userId: 1,
       email: 'test@example.com',
@@ -209,9 +209,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       loading: false,
-      login: jest.fn(),
+      login: vi.fn(),
       logout: mockLogout,
-      signup: jest.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -234,9 +234,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -250,9 +250,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -272,9 +272,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -302,9 +302,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -322,9 +322,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -338,9 +338,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -355,9 +355,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: true,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });
@@ -377,9 +377,9 @@ describe('Navbar', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      signup: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
     });
 
     render(<Navbar />, { wrapper: TestWrapper });

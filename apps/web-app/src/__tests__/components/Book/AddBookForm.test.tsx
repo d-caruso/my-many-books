@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AddBookForm } from '../../../components/Book/AddBookForm';
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Box: ({ children, sx, ...props }: any) => (
     <div data-testid="box" style={sx} {...props}>{children}</div>
   ),
@@ -89,8 +89,8 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 describe('AddBookForm', () => {
-  const mockOnSubmit = jest.fn();
-  const mockOnCancel = jest.fn();
+  const mockOnSubmit = vi.fn();
+  const mockOnCancel = vi.fn();
 
   const mockCategories = [
     { id: 1, name: 'Fiction' },
@@ -104,7 +104,7 @@ describe('AddBookForm', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders form elements', () => {

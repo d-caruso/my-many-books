@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ScannerModal } from '../../../components/Scanner/ScannerModal';
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Box: ({ children, sx, mb, mt, display, alignItems, justifyContent, textAlign, ...props }: any) => (
     <div 
       data-testid="box" 
@@ -43,13 +43,13 @@ jest.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   Edit: () => <span data-testid="edit-icon">Edit</span>,
   ArrowBack: () => <span data-testid="arrow-back-icon">ArrowBack</span>,
 }));
 
 // Mock child components
-jest.mock('../../../components/Scanner/ISBNScanner', () => ({
+vi.mock('../../../components/Scanner/ISBNScanner', () => ({
   ISBNScanner: ({ isOpen, onScanSuccess, onScanError, onClose }: any) => (
     <div data-testid="isbn-scanner" data-is-open={isOpen}>
       <button data-testid="scan-success-trigger" onClick={() => onScanSuccess({ isbn: '1234567890', success: true })}>
@@ -65,7 +65,7 @@ jest.mock('../../../components/Scanner/ISBNScanner', () => ({
   )
 }));
 
-jest.mock('../../../components/Scanner/ManualISBNInput', () => ({
+vi.mock('../../../components/Scanner/ManualISBNInput', () => ({
   ManualISBNInput: ({ isOpen, onSubmit, onCancel }: any) => (
     <div data-testid="manual-isbn-input" data-is-open={isOpen}>
       <button data-testid="manual-submit-trigger" onClick={() => onSubmit({ isbn: '9876543210', success: true })}>
@@ -79,12 +79,12 @@ jest.mock('../../../components/Scanner/ManualISBNInput', () => ({
 }));
 
 describe('ScannerModal', () => {
-  const mockOnScanSuccess = jest.fn();
-  const mockOnClose = jest.fn();
-  const mockOnScanError = jest.fn();
+  const mockOnScanSuccess = vi.fn();
+  const mockOnClose = vi.fn();
+  const mockOnScanError = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders scanner modal when open', () => {

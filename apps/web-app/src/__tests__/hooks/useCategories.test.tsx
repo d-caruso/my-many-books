@@ -3,19 +3,19 @@ import { useCategories } from '../../hooks/useCategories';
 import { Category } from '../../hooks/../types';
 
 // Mock the API service
-jest.mock('../../services/api', () => ({
+vi.mock('../../services/api', () => ({
   categoryAPI: {
-    getCategories: jest.fn(),
-    createCategory: jest.fn(),
+    getCategories: vi.fn(),
+    createCategory: vi.fn(),
   },
 }));
 
 import { categoryAPI } from '../../hooks/../services/api';
 
-const mockCategoryAPI = categoryAPI as jest.Mocked<typeof categoryAPI>;
+const mockCategoryAPI = categoryAPI as Mocked<typeof categoryAPI>;
 
 // Mock console.error to keep tests clean
-const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 const mockCategories: Category[] = [
   { id: 1, name: 'Fiction' },
@@ -25,7 +25,7 @@ const mockCategories: Category[] = [
 
 describe('useCategories', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(() => {

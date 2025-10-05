@@ -47,7 +47,7 @@ describe('ResponsiveInput', () => {
   });
 
   test('handles input changes', () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(<ResponsiveInput onChange={onChange} />);
     
     const input = screen.getByRole('textbox');

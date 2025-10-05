@@ -3,27 +3,27 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BooksPage } from '../../pages/BooksPage';
 
 // Mock dependencies
-jest.mock('react-router-dom', () => ({
-  useSearchParams: jest.fn(),
-  useNavigate: jest.fn(),
+vi.mock('react-router-dom', () => ({
+  useSearchParams: vi.fn(),
+  useNavigate: vi.fn(),
 }));
 
-jest.mock('../../hooks/useBookSearch', () => ({
-  useBookSearch: jest.fn(),
+vi.mock('../../hooks/useBookSearch', () => ({
+  useBookSearch: vi.fn(),
 }));
 
-jest.mock('../../services/api', () => ({
+vi.mock('../../services/api', () => ({
   bookAPI: {
-    createBook: jest.fn().mockResolvedValue({ id: 3, title: 'New Book' }),
-    updateBook: jest.fn().mockResolvedValue({ id: 1, title: 'Updated Book' }),
-    deleteBook: jest.fn().mockResolvedValue({}),
-    getById: jest.fn().mockResolvedValue({ id: 1, title: 'Test Book' }),
-    getBooks: jest.fn().mockResolvedValue([]),
+    createBook: vi.fn().mockResolvedValue({ id: 3, title: 'New Book' }),
+    updateBook: vi.fn().mockResolvedValue({ id: 1, title: 'Updated Book' }),
+    deleteBook: vi.fn().mockResolvedValue({}),
+    getById: vi.fn().mockResolvedValue({ id: 1, title: 'Test Book' }),
+    getBooks: vi.fn().mockResolvedValue([]),
   },
 }));
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Box: ({ children, ...props }: any) => <div data-testid="box" {...props}>{children}</div>,
   Button: ({ children, onClick, startIcon, variant, ...props }: any) => (
     <button data-testid={`button-${variant || 'default'}`} onClick={onClick} {...props}>
@@ -42,7 +42,7 @@ jest.mock('@mui/material', () => ({
   ),
 }));
 
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   Add: () => <span data-testid="add-icon">Add</span>,
   Clear: () => <span data-testid="clear-icon">Clear</span>,
   ViewModule: () => <span data-testid="grid-icon">Grid</span>,
@@ -55,7 +55,7 @@ let mockFormCancel: any;
 let mockDetailsEdit: any;
 
 // Mock components with better callback handling
-jest.mock('../../components/Book', () => ({
+vi.mock('../../components/Book', () => ({
   BookList: ({ books, onBookSelect, onBookEdit, onBookDelete, viewMode, onStatusChange }: any) => {
     mockOnStatusChange = onStatusChange;
     return (
@@ -93,10 +93,10 @@ jest.mock('../../components/Book', () => ({
   },
 }));
 
-const mockOnSearch = jest.fn();
-const mockOnClear = jest.fn();
+const mockOnSearch = vi.fn();
+const mockOnClear = vi.fn();
 
-jest.mock('../../components/Search', () => ({
+vi.mock('../../components/Search', () => ({
   BookSearchForm: ({ onSearch, loading }: any) => {
     const { clearSearch } = require('../../hooks/useBookSearch').useBookSearch();
     
@@ -114,8 +114,8 @@ const mockUseNavigate = require('react-router-dom').useNavigate;
 const mockUseBookSearch = require('../../hooks/useBookSearch').useBookSearch;
 
 describe('BooksPage', () => {
-  const mockNavigate = jest.fn();
-  const mockSetSearchParams = jest.fn();
+  const mockNavigate = vi.fn();
+  const mockSetSearchParams = vi.fn();
   const mockSearchParams = new URLSearchParams();
 
   const mockBookSearchReturn = {
@@ -127,13 +127,13 @@ describe('BooksPage', () => {
     error: null,
     totalCount: 2,
     hasMore: false,
-    searchBooks: jest.fn(),
-    loadMore: jest.fn(),
-    clearSearch: jest.fn(),
+    searchBooks: vi.fn(),
+    loadMore: vi.fn(),
+    clearSearch: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseNavigate.mockReturnValue(mockNavigate);
     mockUseSearchParams.mockReturnValue([mockSearchParams, mockSetSearchParams]);
     
@@ -150,7 +150,7 @@ describe('BooksPage', () => {
     mockUseBookSearch.mockReturnValue(mockBookSearchReturn);
     
     // Mock URLSearchParams methods
-    mockSearchParams.get = jest.fn().mockReturnValue(null);
+    mockSearchParams.get = vi.fn().mockReturnValue(null);
   });
 
   test('renders books page in list mode by default', () => {
@@ -337,7 +337,7 @@ describe('BooksPage', () => {
 
   test('loads user books when no search params', () => {
     const { bookAPI } = require('../../services/api');
-    mockSearchParams.get = jest.fn().mockReturnValue(null);
+    mockSearchParams.get = vi.fn().mockReturnValue(null);
     
     render(<BooksPage />);
     

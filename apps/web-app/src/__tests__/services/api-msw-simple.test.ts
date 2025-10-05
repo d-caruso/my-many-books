@@ -4,15 +4,15 @@
  */
 
 // Mock axios before importing the API service
-jest.mock('axios', () => ({
-  create: jest.fn(() => ({
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
+vi.mock('axios', () => ({
+  create: vi.fn(() => ({
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
     interceptors: {
-      request: { use: jest.fn() },
-      response: { use: jest.fn() },
+      request: { use: vi.fn() },
+      response: { use: vi.fn() },
     },
   })),
 }));
@@ -20,25 +20,25 @@ jest.mock('axios', () => ({
 import { createApiService } from '../../services/api';
 import axios from 'axios';
 
-const mockAxios = axios as jest.Mocked<typeof axios>;
+const mockAxios = axios as Mocked<typeof axios>;
 const mockAxiosInstance = {
-  get: jest.fn(),
-  post: jest.fn(),
-  put: jest.fn(),
-  delete: jest.fn(),
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
   interceptors: {
-    request: { use: jest.fn() },
-    response: { use: jest.fn() },
+    request: { use: vi.fn() },
+    response: { use: vi.fn() },
   },
 };
 
-const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
+const mockFetch = global.fetch as MockedFunction<typeof fetch>;
 
 describe('API Service with HTTP Layer Mocking Concept', () => {
   let apiService: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Setup axios mock to return our mock instance
     mockAxios.create.mockReturnValue(mockAxiosInstance as any);

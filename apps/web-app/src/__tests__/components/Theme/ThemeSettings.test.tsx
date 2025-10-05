@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ThemeSettings } from '../../../components/Theme/ThemeSettings';
 
 // Mock ThemeSelector component
-jest.mock('../../../components/Theme/ThemeSelector', () => ({
+vi.mock('../../../components/Theme/ThemeSelector', () => ({
   ThemeSelector: ({ variant, showLabels }: any) => (
     <div data-testid="theme-selector" data-variant={variant} data-show-labels={showLabels}>
       Theme Selector
@@ -12,20 +12,20 @@ jest.mock('../../../components/Theme/ThemeSelector', () => ({
 }));
 
 // Mock useTheme context
-const mockSetAutoTheme = jest.fn();
+const mockSetAutoTheme = vi.fn();
 const mockUseTheme = {
   currentTheme: 'light',
   autoTheme: false,
   setAutoTheme: mockSetAutoTheme
 };
 
-jest.mock('../../../contexts/ThemeContext', () => ({
+vi.mock('../../../contexts/ThemeContext', () => ({
   useTheme: () => mockUseTheme
 }));
 
 describe('ThemeSettings', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders theme settings component', () => {

@@ -4,7 +4,7 @@ import { BookCard } from '../../../components/Book/BookCard';
 import { Book } from '../../types';
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Card: ({ children, onClick, sx }: any) => (
     <div data-testid="card" onClick={onClick} style={sx}>
       {children}
@@ -83,7 +83,7 @@ jest.mock('@mui/material', () => ({
   ),
 }));
 
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   Edit: () => <span data-testid="edit-icon">Edit</span>,
   Delete: () => <span data-testid="delete-icon">Delete</span>,
   MenuBook: () => <span data-testid="book-icon">Book</span>,
@@ -92,7 +92,7 @@ jest.mock('@mui/icons-material', () => ({
 // Mock window.confirm
 Object.defineProperty(window, 'confirm', {
   writable: true,
-  value: jest.fn(),
+  value: vi.fn(),
 });
 
 const mockBook: Book = {
@@ -113,7 +113,7 @@ const mockBook: Book = {
 
 describe('BookCard', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     (window.confirm as jest.Mock).mockReturnValue(true);
   });
 
@@ -152,7 +152,7 @@ describe('BookCard', () => {
   });
 
   test('calls onClick when card is clicked', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(<BookCard book={mockBook} onClick={handleClick} />);
 
     fireEvent.click(screen.getByTestId('card'));
@@ -160,7 +160,7 @@ describe('BookCard', () => {
   });
 
   test('calls onEdit when edit button is clicked', () => {
-    const handleEdit = jest.fn();
+    const handleEdit = vi.fn();
     render(<BookCard book={mockBook} onEdit={handleEdit} />);
 
     fireEvent.click(screen.getByTitle('Edit book'));
@@ -168,7 +168,7 @@ describe('BookCard', () => {
   });
 
   test('calls onDelete when delete button is clicked and confirmed', () => {
-    const handleDelete = jest.fn();
+    const handleDelete = vi.fn();
     render(<BookCard book={mockBook} onDelete={handleDelete} />);
 
     fireEvent.click(screen.getByTitle('Delete book'));
@@ -178,7 +178,7 @@ describe('BookCard', () => {
 
   test('does not call onDelete when deletion is not confirmed', () => {
     (window.confirm as jest.Mock).mockReturnValue(false);
-    const handleDelete = jest.fn();
+    const handleDelete = vi.fn();
     render(<BookCard book={mockBook} onDelete={handleDelete} />);
 
     fireEvent.click(screen.getByTitle('Delete book'));
@@ -187,7 +187,7 @@ describe('BookCard', () => {
   });
 
   test('calls onStatusChange when status is changed', () => {
-    const handleStatusChange = jest.fn();
+    const handleStatusChange = vi.fn();
     render(<BookCard book={mockBook} onStatusChange={handleStatusChange} />);
 
     fireEvent.change(screen.getByTestId('select'), { target: { value: 'finished' } });
@@ -195,7 +195,7 @@ describe('BookCard', () => {
   });
 
   test('hides actions when showActions is false', () => {
-    render(<BookCard book={mockBook} onEdit={jest.fn()} onDelete={jest.fn()} showActions={false} />);
+    render(<BookCard book={mockBook} onEdit={vi.fn()} onDelete={vi.fn()} showActions={false} />);
 
     expect(screen.queryByTitle('Edit book')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Delete book')).not.toBeInTheDocument();
@@ -238,9 +238,9 @@ describe('BookCard', () => {
   });
 
   test('stops propagation on action button clicks', () => {
-    const handleClick = jest.fn();
-    const handleEdit = jest.fn();
-    const handleDelete = jest.fn();
+    const handleClick = vi.fn();
+    const handleEdit = vi.fn();
+    const handleDelete = vi.fn();
 
     render(
       <BookCard
@@ -253,7 +253,7 @@ describe('BookCard', () => {
 
     // Create a mock event with stopPropagation
     const mockEvent = {
-      stopPropagation: jest.fn(),
+      stopPropagation: vi.fn(),
       target: { value: 'finished' },
     };
 
@@ -270,7 +270,7 @@ describe('BookCard', () => {
   });
 
   test('handles status change with empty value', () => {
-    const handleStatusChange = jest.fn();
+    const handleStatusChange = vi.fn();
     render(<BookCard book={mockBook} onStatusChange={handleStatusChange} />);
 
     fireEvent.change(screen.getByTestId('select'), { target: { value: '' } });

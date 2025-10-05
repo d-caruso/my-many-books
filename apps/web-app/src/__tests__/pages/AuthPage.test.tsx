@@ -3,11 +3,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { AuthPage } from '../../pages/AuthPage';
 
 // Mock the auth context and components
-jest.mock('../../contexts/AuthContext', () => ({
-  useAuth: jest.fn(),
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: vi.fn(),
 }));
 
-jest.mock('../../components/Auth', () => ({
+vi.mock('../../components/Auth', () => ({
   LoginForm: ({ onSwitchToRegister }: any) => (
     <div data-testid="login-form">
       Login Form
@@ -26,7 +26,7 @@ jest.mock('../../components/Auth', () => ({
   ),
 }));
 
-jest.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', () => ({
   Navigate: ({ to, replace }: { to: string; replace?: boolean }) => (
     <div data-testid="navigate" data-to={to} data-replace={replace}>
       Navigate to {to}
