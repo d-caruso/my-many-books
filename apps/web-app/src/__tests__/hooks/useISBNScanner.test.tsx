@@ -29,8 +29,8 @@ Object.defineProperty(navigator, 'mediaDevices', {
 const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 describe('useISBNScanner', () => {
-  let mockOnScanSuccess: jest.Mock;
-  let mockOnScanError: jest.Mock;
+  let mockOnScanSuccess: ReturnType<typeof vi.fn>;
+  let mockOnScanError: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();

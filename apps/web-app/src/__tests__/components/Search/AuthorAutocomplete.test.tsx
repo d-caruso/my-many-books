@@ -128,12 +128,12 @@ describe('AuthorAutocomplete', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     mockAuthorAPI.searchAuthors.mockResolvedValue([]);
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('renders with default props', () => {
@@ -227,7 +227,7 @@ describe('AuthorAutocomplete', () => {
 
     // Advance timers to trigger debounce
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -243,7 +243,7 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'J' } });
 
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     expect(mockAuthorAPI.searchAuthors).not.toHaveBeenCalled();
@@ -265,7 +265,7 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -292,7 +292,7 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'author' } });
 
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -314,7 +314,7 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -338,7 +338,7 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -361,7 +361,7 @@ describe('AuthorAutocomplete', () => {
     // First search
     fireEvent.change(input, { target: { value: 'Jane' } });
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -399,7 +399,7 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -424,7 +424,7 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => {
@@ -458,13 +458,13 @@ describe('AuthorAutocomplete', () => {
     // First search
     fireEvent.change(input, { target: { value: 'Jane' } });
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     // Second search before first completes
     fireEvent.change(input, { target: { value: 'Charles' } });
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     // Resolve first search (should be ignored)
@@ -508,7 +508,7 @@ describe('AuthorAutocomplete', () => {
 
     // Only the last search should be executed after debounce
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     expect(mockAuthorAPI.searchAuthors).toHaveBeenCalledTimes(1);
@@ -541,7 +541,7 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     act(() => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => {

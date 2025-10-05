@@ -12,7 +12,7 @@ vi.mock('../../../contexts/AuthContext', () => ({
 // Mock React Router hooks
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+  ...vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useLocation: () => ({ pathname: '/books' }),
 }));
@@ -50,7 +50,7 @@ vi.mock('@mui/icons-material', () => ({
   ExpandMore: () => <span data-testid="expand-more-icon">▼</span>,
 }));
 
-const mockUseAuth = useAuth as MockedFunction<typeof useAuth>;
+const mockUseAuth = useAuth as ReturnType<typeof vi.fn>;
 
 // Test wrapper with Router context
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
