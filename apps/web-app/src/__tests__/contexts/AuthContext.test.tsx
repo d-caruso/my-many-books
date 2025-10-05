@@ -105,7 +105,7 @@ describe('AuthContext', () => {
       provider: 'local',
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ user: mockUser, token: 'mock-token' }),
     });
@@ -127,7 +127,7 @@ describe('AuthContext', () => {
   });
 
   test('login handles API errors', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: false,
       status: 401,
     });
@@ -182,7 +182,7 @@ describe('AuthContext', () => {
       provider: 'local',
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ user: mockUser, token: 'mock-token' }),
     });
@@ -219,7 +219,7 @@ describe('AuthContext', () => {
       resolvePromise = resolve;
     });
 
-    (global.fetch as jest.Mock).mockReturnValueOnce(promise);
+    (global.fetch as any).mockReturnValueOnce(promise);
 
     render(
       <AuthProvider>

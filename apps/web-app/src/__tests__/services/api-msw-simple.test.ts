@@ -32,7 +32,7 @@ const mockAxiosInstance = {
   },
 };
 
-const mockFetch = global.fetch as MockedFunction<typeof fetch>;
+const mockFetch = global.fetch as ReturnType<typeof vi.fn>;
 
 describe('API Service with HTTP Layer Mocking Concept', () => {
   let apiService: any;

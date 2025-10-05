@@ -63,7 +63,7 @@ vi.mock('@mui/icons-material', () => ({
   Timer: () => <span data-testid="timer-icon">Timer</span>,
 }));
 
-const mockUseISBNScanner = useISBNScanner as MockedFunction<typeof useISBNScanner>;
+const mockUseISBNScanner = useISBNScanner as ReturnType<typeof vi.fn>;
 
 describe('ISBNScanner', () => {
   const mockOnScan = vi.fn();
