@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ThemeSelector } from '../../../components/Theme/ThemeSelector';
 
 // Mock everything the component needs
-const mockSetTheme = jest.fn();
+const mockSetTheme = vi.fn();
 const mockUseTheme = {
   theme: 'default',
   setTheme: mockSetTheme,
@@ -18,12 +18,12 @@ const mockUseTheme = {
   }
 };
 
-jest.mock('../../../contexts/ThemeContext', () => ({
+vi.mock('../../../contexts/ThemeContext', () => ({
   useTheme: () => mockUseTheme
 }));
 
 // Mock ResponsiveButton
-jest.mock('../../../components/UI/ResponsiveButton', () => ({
+vi.mock('../../../components/UI/ResponsiveButton', () => ({
   ResponsiveButton: ({ children, onClick, variant, size }: any) => (
     <button data-testid={`responsive-button-${variant}-${size}`} onClick={onClick}>{children}</button>
   )
@@ -31,7 +31,7 @@ jest.mock('../../../components/UI/ResponsiveButton', () => ({
 
 describe('ThemeSelector', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders theme selector with basic props', () => {

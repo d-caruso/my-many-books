@@ -4,7 +4,7 @@ import { BookSearchResults } from '../../../components/Search/BookSearchResults'
 import { Book } from '../../../types';
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Box: ({ children, sx, ...props }: any) => (
     <div data-testid="box" style={sx} {...props}>{children}</div>
   ),
@@ -69,7 +69,7 @@ jest.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   Error: () => <div data-testid="error-icon">Error</div>,
   MenuBook: () => <div data-testid="menu-book-icon">Book</div>,
 }));
@@ -121,8 +121,8 @@ const mockBooks: Book[] = [
 ];
 
 describe('BookSearchResults', () => {
-  const mockOnLoadMore = jest.fn();
-  const mockOnBookSelect = jest.fn();
+  const mockOnLoadMore = vi.fn();
+  const mockOnBookSelect = vi.fn();
 
   const defaultProps = {
     books: [],
@@ -135,7 +135,7 @@ describe('BookSearchResults', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders error state', () => {

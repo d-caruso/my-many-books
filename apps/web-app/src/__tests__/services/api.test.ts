@@ -1,72 +1,72 @@
 import { Book, Author, Category, User, SearchResult, PaginatedResponse } from '../../types';
 
 // Mock the shared-api library using industry standard approach
-jest.mock('@my-many-books/shared-api', () => ({
+vi.mock('@my-many-books/shared-api', () => ({
   createApiClient: jest.fn(() => ({
     books: {
-      getBooks: jest.fn(),
-      getBook: jest.fn(),
-      createBook: jest.fn(),
-      updateBook: jest.fn(),
-      deleteBook: jest.fn(),
-      searchBooks: jest.fn(),
-      searchByIsbn: jest.fn(),
+      getBooks: vi.fn(),
+      getBook: vi.fn(),
+      createBook: vi.fn(),
+      updateBook: vi.fn(),
+      deleteBook: vi.fn(),
+      searchBooks: vi.fn(),
+      searchByIsbn: vi.fn(),
     },
     categories: {
-      getCategories: jest.fn(),
-      getCategory: jest.fn(),
-      createCategory: jest.fn(),
+      getCategories: vi.fn(),
+      getCategory: vi.fn(),
+      createCategory: vi.fn(),
     },
     authors: {
-      getAuthors: jest.fn(),
-      getAuthor: jest.fn(),
-      createAuthor: jest.fn(),
-      searchAuthors: jest.fn(),
+      getAuthors: vi.fn(),
+      getAuthor: vi.fn(),
+      createAuthor: vi.fn(),
+      searchAuthors: vi.fn(),
     },
     users: {
-      getCurrentUser: jest.fn(),
-      updateProfile: jest.fn(),
+      getCurrentUser: vi.fn(),
+      updateProfile: vi.fn(),
     },
   })),
   createMockApiClient: () => ({
     books: {
-      getBooks: jest.fn(),
-      getBook: jest.fn(),
-      createBook: jest.fn(),
-      updateBook: jest.fn(),
-      deleteBook: jest.fn(),
-      searchBooks: jest.fn(),
-      searchByIsbn: jest.fn(),
+      getBooks: vi.fn(),
+      getBook: vi.fn(),
+      createBook: vi.fn(),
+      updateBook: vi.fn(),
+      deleteBook: vi.fn(),
+      searchBooks: vi.fn(),
+      searchByIsbn: vi.fn(),
     },
     categories: {
-      getCategories: jest.fn(),
-      getCategory: jest.fn(),
-      createCategory: jest.fn(),
+      getCategories: vi.fn(),
+      getCategory: vi.fn(),
+      createCategory: vi.fn(),
     },
     authors: {
-      getAuthors: jest.fn(),
-      getAuthor: jest.fn(),
-      createAuthor: jest.fn(),
-      searchAuthors: jest.fn(),
+      getAuthors: vi.fn(),
+      getAuthor: vi.fn(),
+      createAuthor: vi.fn(),
+      searchAuthors: vi.fn(),
     },
     users: {
-      getCurrentUser: jest.fn(),
-      updateProfile: jest.fn(),
+      getCurrentUser: vi.fn(),
+      updateProfile: vi.fn(),
     },
   }),
-  resetApiClientMocks: jest.fn(),
+  resetApiClientMocks: vi.fn(),
 }));
 
 // Mock axios for the AxiosHttpClient
-jest.mock('axios', () => ({
+vi.mock('axios', () => ({
   create: jest.fn(() => ({
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
     interceptors: {
-      request: { use: jest.fn() },
-      response: { use: jest.fn() },
+      request: { use: vi.fn() },
+      response: { use: vi.fn() },
     },
   })),
 }));
@@ -77,10 +77,10 @@ import { createApiClient, createMockApiClient } from '@my-many-books/shared-api'
 
 // Mock localStorage
 const mockLocalStorage = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 };
 Object.defineProperty(window, 'localStorage', {
   value: mockLocalStorage,
@@ -101,7 +101,7 @@ describe('ApiService with Industry Standard Testing', () => {
   let testApiService: ApiService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLocalStorage.getItem.mockClear();
     mockLocalStorage.removeItem.mockClear();
     process.env = { ...originalEnv };
@@ -724,17 +724,17 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('createApiService with custom httpClient and config', () => {
       const mockHttpClient = {
-        get: jest.fn(),
-        post: jest.fn(),
-        put: jest.fn(),
-        delete: jest.fn(),
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        delete: vi.fn(),
       };
 
       const customConfig = {
         baseURL: 'https://custom-api.com',
         timeout: 5000,
         getAuthToken: () => 'custom-token',
-        onUnauthorized: jest.fn(),
+        onUnauthorized: vi.fn(),
       };
 
       const customApiService = createApiService({ 

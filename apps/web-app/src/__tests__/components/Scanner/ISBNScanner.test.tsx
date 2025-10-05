@@ -4,12 +4,12 @@ import { ISBNScanner } from '../../../components/Scanner/ISBNScanner';
 import { useISBNScanner } from '../../../hooks/useISBNScanner';
 
 // Mock the useISBNScanner hook
-jest.mock('../../../hooks/useISBNScanner', () => ({
-  useISBNScanner: jest.fn(),
+vi.mock('../../../hooks/useISBNScanner', () => ({
+  useISBNScanner: vi.fn(),
 }));
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Box: ({ children, sx, component, ref, playsInline, muted, autoPlay, ...props }: any) => {
     const Tag = component || 'div';
     const cleanProps = { ...props };
@@ -54,7 +54,7 @@ jest.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   Close: () => <span data-testid="close-icon">Close</span>,
   SwapHoriz: () => <span data-testid="swap-icon">Swap</span>,
   Edit: () => <span data-testid="edit-icon">Edit</span>,
@@ -63,27 +63,27 @@ jest.mock('@mui/icons-material', () => ({
   Timer: () => <span data-testid="timer-icon">Timer</span>,
 }));
 
-const mockUseISBNScanner = useISBNScanner as jest.MockedFunction<typeof useISBNScanner>;
+const mockUseISBNScanner = useISBNScanner as MockedFunction<typeof useISBNScanner>;
 
 describe('ISBNScanner', () => {
-  const mockOnScan = jest.fn();
-  const mockOnClose = jest.fn();
-  const mockOnScanError = jest.fn();
+  const mockOnScan = vi.fn();
+  const mockOnClose = vi.fn();
+  const mockOnScanError = vi.fn();
 
   const mockScannerState = {
     isScanning: false,
     hasPermission: true,
     error: null,
     devices: [],
-    startScanning: jest.fn(),
-    stopScanning: jest.fn(),
-    switchCamera: jest.fn(),
-    requestPermission: jest.fn(),
-    setVideoElement: jest.fn(),
+    startScanning: vi.fn(),
+    stopScanning: vi.fn(),
+    switchCamera: vi.fn(),
+    requestPermission: vi.fn(),
+    setVideoElement: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseISBNScanner.mockReturnValue(mockScannerState);
   });
 
@@ -132,7 +132,7 @@ describe('ISBNScanner', () => {
   });
 
   test('requests permission when permission button is clicked', () => {
-    const mockRequestPermission = jest.fn();
+    const mockRequestPermission = vi.fn();
     mockUseISBNScanner.mockReturnValue({
       ...mockScannerState,
       hasPermission: false,
@@ -237,7 +237,7 @@ describe('ISBNScanner', () => {
   });
 
   test('switches camera when flip camera button is clicked', () => {
-    const mockSwitchCamera = jest.fn();
+    const mockSwitchCamera = vi.fn();
     mockUseISBNScanner.mockReturnValue({
       ...mockScannerState,
       hasPermission: true,
@@ -304,7 +304,7 @@ describe('ISBNScanner', () => {
   });
 
   test('calls setVideoElement when video ref is available', () => {
-    const mockSetVideoElement = jest.fn();
+    const mockSetVideoElement = vi.fn();
     mockUseISBNScanner.mockReturnValue({
       ...mockScannerState,
       hasPermission: true,

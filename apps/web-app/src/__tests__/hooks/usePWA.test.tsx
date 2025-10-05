@@ -5,9 +5,9 @@ import { usePWA } from '../../hooks/usePWA';
 // Mock service worker registration
 const mockRegistration = {
   waiting: null,
-  update: jest.fn(),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
+  update: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
 };
 
 // Mock navigator.serviceWorker
@@ -15,14 +15,14 @@ Object.defineProperty(navigator, 'serviceWorker', {
   writable: true,
   value: {
     ready: Promise.resolve(mockRegistration),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
   },
 });
 
 // Mock window.addEventListener for beforeinstallprompt
-const mockAddEventListener = jest.fn();
-const mockRemoveEventListener = jest.fn();
+const mockAddEventListener = vi.fn();
+const mockRemoveEventListener = vi.fn();
 Object.defineProperty(window, 'addEventListener', {
   writable: true,
   value: mockAddEventListener,
@@ -35,16 +35,16 @@ Object.defineProperty(window, 'removeEventListener', {
 // Mock window.location.reload
 Object.defineProperty(window.location, 'reload', {
   writable: true,
-  value: jest.fn(),
+  value: vi.fn(),
 });
 
 // Mock console methods
-const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 describe('usePWA', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockRegistration.waiting = null;
     
     // Reset online/offline status
@@ -88,15 +88,15 @@ describe('usePWA', () => {
     // Mock display mode
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
-      value: jest.fn().mockImplementation(query => ({
+      value: vi.fn().mockImplementation(query => ({
         matches: query === '(display-mode: standalone)',
         media: query,
         onchange: null,
-        addListener: jest.fn(),
-        removeListener: jest.fn(),
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
       })),
     });
 
@@ -116,7 +116,7 @@ describe('usePWA', () => {
 
     // Simulate the beforeinstallprompt event
     const mockEvent = {
-      preventDefault: jest.fn(),
+      preventDefault: vi.fn(),
     };
 
     act(() => {

@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Footer } from '../../../components/Layout/Footer';
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Box: ({ children, sx, ...props }: any) => (
     <div data-testid="box" style={sx} {...props}>{children}</div>
   ),
@@ -65,7 +65,7 @@ jest.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   GitHub: () => <div data-testid="github-icon">GitHub</div>,
   LinkedIn: () => <div data-testid="linkedin-icon">LinkedIn</div>,
   Twitter: () => <div data-testid="twitter-icon">Twitter</div>,

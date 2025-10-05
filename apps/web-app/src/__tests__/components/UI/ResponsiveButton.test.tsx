@@ -85,7 +85,7 @@ describe('ResponsiveButton', () => {
   });
 
   test('handles click events', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     
     render(
       <ResponsiveButton onClick={handleClick}>Click me</ResponsiveButton>
@@ -96,7 +96,7 @@ describe('ResponsiveButton', () => {
   });
 
   test('does not trigger click when disabled', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     
     render(
       <ResponsiveButton onClick={handleClick} disabled>
@@ -112,7 +112,7 @@ describe('ResponsiveButton', () => {
   });
 
   test('does not trigger click when loading', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     
     render(
       <ResponsiveButton onClick={handleClick} loading>

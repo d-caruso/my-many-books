@@ -4,20 +4,20 @@ import { ScanResult } from '../../hooks/../types';
 
 // Mock ZXing library
 const mockCodeReader = {
-  decodeFromVideoDevice: jest.fn(),
-  reset: jest.fn(),
-  getVideoInputDevices: jest.fn(),
+  decodeFromVideoDevice: vi.fn(),
+  reset: vi.fn(),
+  getVideoInputDevices: vi.fn(),
 };
 
-jest.mock('@zxing/library', () => ({
+vi.mock('@zxing/library', () => ({
   BrowserMultiFormatReader: jest.fn(() => mockCodeReader),
-  NotFoundException: jest.fn(),
+  NotFoundException: vi.fn(),
 }));
 
 // Mock navigator.mediaDevices
 const mockMediaDevices = {
-  enumerateDevices: jest.fn(),
-  getUserMedia: jest.fn(),
+  enumerateDevices: vi.fn(),
+  getUserMedia: vi.fn(),
 };
 
 Object.defineProperty(navigator, 'mediaDevices', {
@@ -26,16 +26,16 @@ Object.defineProperty(navigator, 'mediaDevices', {
 });
 
 // Mock console.error to keep tests clean
-const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 describe('useISBNScanner', () => {
   let mockOnScanSuccess: jest.Mock;
   let mockOnScanError: jest.Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockOnScanSuccess = jest.fn();
-    mockOnScanError = jest.fn();
+    vi.clearAllMocks();
+    mockOnScanSuccess = vi.fn();
+    mockOnScanError = vi.fn();
 
     // Default mock implementations
     mockMediaDevices.enumerateDevices.mockResolvedValue([
@@ -45,7 +45,7 @@ describe('useISBNScanner', () => {
     ]);
 
     mockMediaDevices.getUserMedia.mockResolvedValue({
-      getTracks: () => [{ stop: jest.fn() }],
+      getTracks: () => [{ stop: vi.fn() }],
     });
 
     mockCodeReader.getVideoInputDevices.mockResolvedValue([
@@ -461,7 +461,7 @@ describe('useISBNScanner', () => {
 
       // Second call succeeds
       mockMediaDevices.getUserMedia.mockResolvedValue({
-        getTracks: () => [{ stop: jest.fn() }],
+        getTracks: () => [{ stop: vi.fn() }],
       });
 
       await act(async () => {

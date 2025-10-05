@@ -3,16 +3,16 @@ import { useBookSearch } from '../../hooks/useBookSearch';
 import { Book, SearchFilters } from '../../hooks/../types';
 
 // Mock the API service
-jest.mock('../../services/api', () => ({
+vi.mock('../../services/api', () => ({
   bookAPI: {
-    searchBooks: jest.fn(),
-    searchByIsbn: jest.fn(),
+    searchBooks: vi.fn(),
+    searchByIsbn: vi.fn(),
   },
 }));
 
 import { bookAPI } from '../../hooks/../services/api';
 
-const mockBookAPI = bookAPI as jest.Mocked<typeof bookAPI>;
+const mockBookAPI = bookAPI as Mocked<typeof bookAPI>;
 
 const mockBooks: Book[] = [
   {
@@ -29,7 +29,7 @@ const mockBooks: Book[] = [
 
 describe('useBookSearch', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('initializes with empty state', () => {

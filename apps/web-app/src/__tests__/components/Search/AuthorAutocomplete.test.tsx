@@ -5,14 +5,14 @@ import { authorAPI } from '../../../services/api';
 import { Author } from '../../../types';
 
 // Mock the API service
-jest.mock('../../../services/api', () => ({
+vi.mock('../../../services/api', () => ({
   authorAPI: {
-    searchAuthors: jest.fn(),
+    searchAuthors: vi.fn(),
   },
 }));
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Autocomplete: ({ 
     value,
     onChange,
@@ -96,7 +96,7 @@ jest.mock('@mui/material', () => ({
   ),
 }));
 
-const mockAuthorAPI = authorAPI as jest.Mocked<typeof authorAPI>;
+const mockAuthorAPI = authorAPI as Mocked<typeof authorAPI>;
 
 const mockAuthors: Author[] = [
   {
@@ -120,14 +120,14 @@ const mockAuthors: Author[] = [
 ];
 
 describe('AuthorAutocomplete', () => {
-  const mockOnChange = jest.fn();
+  const mockOnChange = vi.fn();
 
   const defaultProps = {
     onChange: mockOnChange,
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     jest.useFakeTimers();
     mockAuthorAPI.searchAuthors.mockResolvedValue([]);
   });
@@ -328,7 +328,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('handles search errors gracefully', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
     mockAuthorAPI.searchAuthors.mockRejectedValue(new Error('Search failed'));
 
     render(<AuthorAutocomplete {...defaultProps} />);

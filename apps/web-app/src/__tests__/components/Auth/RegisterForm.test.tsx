@@ -5,12 +5,12 @@ import { RegisterForm } from '../../../components/Auth/RegisterForm';
 import { useAuth } from '../../../contexts/AuthContext';
 
 // Mock the useAuth hook
-jest.mock('../../../contexts/AuthContext', () => ({
-  useAuth: jest.fn(),
+vi.mock('../../../contexts/AuthContext', () => ({
+  useAuth: vi.fn(),
 }));
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Box: ({ children, sx, ...props }: any) => (
     <div data-testid="box" style={sx} {...props}>{children}</div>
   ),
@@ -57,23 +57,23 @@ jest.mock('@mui/material', () => ({
   ),
 }));
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockUseAuth = useAuth as MockedFunction<typeof useAuth>;
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <BrowserRouter>{children}</BrowserRouter>
 );
 
 describe('RegisterForm', () => {
-  const mockSignup = jest.fn();
-  const mockOnSwitchToLogin = jest.fn();
+  const mockSignup = vi.fn();
+  const mockOnSwitchToLogin = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
       signup: mockSignup,
     });
   });
@@ -266,8 +266,8 @@ describe('RegisterForm', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: true,
-      login: jest.fn(),
-      logout: jest.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
       signup: mockSignup,
     });
 

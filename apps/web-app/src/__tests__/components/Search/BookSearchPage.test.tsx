@@ -6,12 +6,12 @@ import { useBookSearch } from '../../../hooks/useBookSearch';
 import { Book } from '../../../types';
 
 // Mock the useBookSearch hook
-jest.mock('../../../hooks/useBookSearch', () => ({
-  useBookSearch: jest.fn(),
+vi.mock('../../../hooks/useBookSearch', () => ({
+  useBookSearch: vi.fn(),
 }));
 
 // Mock child components
-jest.mock('../../../components/Search/BookSearchForm', () => ({
+vi.mock('../../../components/Search/BookSearchForm', () => ({
   BookSearchForm: ({ onSearch, loading, initialQuery }: any) => (
     <div data-testid="book-search-form">
       <input
@@ -26,7 +26,7 @@ jest.mock('../../../components/Search/BookSearchForm', () => ({
   ),
 }));
 
-jest.mock('../../../components/Search/BookSearchResults', () => ({
+vi.mock('../../../components/Search/BookSearchResults', () => ({
   BookSearchResults: ({
     books,
     loading,
@@ -59,7 +59,7 @@ jest.mock('../../../components/Search/BookSearchResults', () => ({
 }));
 
 // Mock Material-UI components
-jest.mock('@mui/material', () => ({
+vi.mock('@mui/material', () => ({
   Box: ({ children, ...props }: any) => (
     <div data-testid="box" {...props}>{children}</div>
   ),
@@ -86,7 +86,7 @@ jest.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-jest.mock('@mui/icons-material', () => ({
+vi.mock('@mui/icons-material', () => ({
   Close: () => <div data-testid="close-icon">Close</div>,
   Add: () => <div data-testid="add-icon">Add</div>,
   Search: () => <div data-testid="search-icon">Search</div>,
@@ -95,7 +95,7 @@ jest.mock('@mui/icons-material', () => ({
   FilterList: () => <div data-testid="filter-icon">Filter</div>,
 }));
 
-const mockUseBookSearch = useBookSearch as jest.MockedFunction<typeof useBookSearch>;
+const mockUseBookSearch = useBookSearch as MockedFunction<typeof useBookSearch>;
 
 const mockBooks: Book[] = [
   {
@@ -116,22 +116,22 @@ const mockBooks: Book[] = [
   },
 ];
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
 // Mock react-router-dom
-jest.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useSearchParams: () => [
     new URLSearchParams(),
-    jest.fn(),
+    vi.fn(),
   ],
 }));
 
 describe('BookSearchPage', () => {
-  const mockSearchBooks = jest.fn();
-  const mockClearSearch = jest.fn();
-  const mockLoadMore = jest.fn();
+  const mockSearchBooks = vi.fn();
+  const mockClearSearch = vi.fn();
+  const mockLoadMore = vi.fn();
 
   const defaultHookState = {
     books: [],
@@ -145,7 +145,7 @@ describe('BookSearchPage', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseBookSearch.mockReturnValue(defaultHookState);
   });
 
@@ -310,7 +310,7 @@ describe('BookSearchPage', () => {
   });
 
   test('handles initial query from URL parameters', () => {
-    const mockSetSearchParams = jest.fn();
+    const mockSetSearchParams = vi.fn();
     const mockSearchParams = new URLSearchParams('q=initial+query&categoryId=1&sortBy=title');
     
     jest.doMock('react-router-dom', () => ({
@@ -336,7 +336,7 @@ describe('BookSearchPage', () => {
   });
 
   test('updates URL params when search is performed', () => {
-    const mockSetSearchParams = jest.fn();
+    const mockSetSearchParams = vi.fn();
     
     jest.doMock('react-router-dom', () => ({
       ...jest.requireActual('react-router-dom'),
@@ -355,7 +355,7 @@ describe('BookSearchPage', () => {
   });
 
   test('clears URL params when clearing search', () => {
-    const mockSetSearchParams = jest.fn();
+    const mockSetSearchParams = vi.fn();
     
     jest.doMock('react-router-dom', () => ({
       ...jest.requireActual('react-router-dom'),
