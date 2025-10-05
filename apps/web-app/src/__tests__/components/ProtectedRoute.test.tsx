@@ -15,7 +15,7 @@ vi.mock('react-router-dom', () => ({
   MemoryRouter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-const mockUseAuth = useAuth as MockedFunction<typeof useAuth>;
+const mockUseAuth = useAuth as ReturnType<typeof vi.fn>;
 
 const TestComponent = () => <div data-testid="protected-content">Protected Content</div>;
 
