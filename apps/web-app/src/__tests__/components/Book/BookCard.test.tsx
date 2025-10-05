@@ -114,7 +114,7 @@ const mockBook: Book = {
 describe('BookCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (window.confirm as jest.Mock).mockReturnValue(true);
+    (window.confirm as any).mockReturnValue(true);
   });
 
   test('renders book information correctly', () => {
@@ -177,7 +177,7 @@ describe('BookCard', () => {
   });
 
   test('does not call onDelete when deletion is not confirmed', () => {
-    (window.confirm as jest.Mock).mockReturnValue(false);
+    (window.confirm as any).mockReturnValue(false);
     const handleDelete = vi.fn();
     render(<BookCard book={mockBook} onDelete={handleDelete} />);
 
