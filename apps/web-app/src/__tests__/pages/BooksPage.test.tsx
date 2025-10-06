@@ -22,6 +22,10 @@ vi.mock('../../services/api', () => ({
   },
 }));
 
+// Import mocked modules
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useBookSearch } from '../../hooks/useBookSearch';
+
 // Mock Material-UI components
 vi.mock('@mui/material', () => ({
   Box: ({ children, ...props }: any) => <div data-testid="box" {...props}>{children}</div>,
@@ -109,11 +113,11 @@ vi.mock('../../components/Search', () => ({
   },
 }));
 
-const mockUseSearchParams = require('react-router-dom').useSearchParams;
-const mockUseNavigate = require('react-router-dom').useNavigate;
-const mockUseBookSearch = require('../../hooks/useBookSearch').useBookSearch;
-
 describe('BooksPage', () => {
+  // Get mocked functions
+  const mockUseSearchParams = vi.mocked(useSearchParams);
+  const mockUseNavigate = vi.mocked(useNavigate);
+  const mockUseBookSearch = vi.mocked(useBookSearch);
   const mockNavigate = vi.fn();
   const mockSetSearchParams = vi.fn();
   const mockSearchParams = new URLSearchParams();
