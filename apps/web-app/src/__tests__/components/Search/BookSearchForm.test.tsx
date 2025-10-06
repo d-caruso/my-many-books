@@ -185,7 +185,8 @@ describe('BookSearchForm', () => {
     expect(screen.getByTestId('paper')).toBeInTheDocument();
     expect(screen.getByTestId('search-input')).toBeInTheDocument();
     expect(screen.getByTestId('button-contained')).toBeInTheDocument();
-    expect(screen.getByText('Search')).toBeInTheDocument();
+    // "Search" appears twice: once in the icon and once in the button
+    expect(screen.getAllByText('Search').length).toBe(2);
     expect(screen.getByText('Advanced Filters')).toBeInTheDocument();
   });
 
@@ -206,27 +207,29 @@ describe('BookSearchForm', () => {
   });
 
   test('calls onSearch when form is submitted with valid query', () => {
-    render(<BookSearchForm {...defaultProps} />);
+    const { container } = render(<BookSearchForm {...defaultProps} />);
 
     const searchInput = screen.getByTestId('search-input');
-    const searchButton = screen.getByTestId('button-contained');
+    const form = container.querySelector('form');
 
     fireEvent.change(searchInput, { target: { value: 'Test Book' } });
-    fireEvent.click(searchButton);
+    fireEvent.submit(form!);
 
     expect(mockOnSearch).toHaveBeenCalledWith('Test Book', {});
   });
 
-  test('prevents submission with query shorter than 2 characters', () => {
-    render(<BookSearchForm {...defaultProps} />);
+  test('prevents submission with query shorter than 2 characters', async () => {
+    const { container } = render(<BookSearchForm {...defaultProps} />);
 
     const searchInput = screen.getByTestId('search-input');
-    const searchButton = screen.getByTestId('button-contained');
+    const form = container.querySelector('form');
 
     fireEvent.change(searchInput, { target: { value: 'T' } });
-    fireEvent.click(searchButton);
+    fireEvent.submit(form!);
 
-    expect(screen.getByText('Please enter at least 2 characters in the search box or select an advanced filter.')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Please enter at least 2 characters/i)).toBeInTheDocument();
+    });
     expect(mockOnSearch).not.toHaveBeenCalled();
   });
 
