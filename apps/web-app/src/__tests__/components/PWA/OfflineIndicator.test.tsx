@@ -62,7 +62,7 @@ vi.mock('@mui/icons-material', () => ({
   Close: () => <div data-testid="close-icon">Close</div>,
 }));
 
-const mockUsePWA = usePWA as ReturnType<typeof vi.fn>;
+const mockUsePWA = vi.mocked(usePWA);
 
 describe('OfflineIndicator', () => {
   const mockPWAState = {

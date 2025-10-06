@@ -5,16 +5,18 @@
 
 // Mock axios before importing the API service
 vi.mock('axios', () => ({
-  create: vi.fn(() => ({
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-    interceptors: {
-      request: { use: vi.fn() },
-      response: { use: vi.fn() },
-    },
-  })),
+  default: {
+    create: vi.fn(() => ({
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      interceptors: {
+        request: { use: vi.fn() },
+        response: { use: vi.fn() },
+      },
+    })),
+  },
 }));
 
 import { createApiService } from '../../services/api';
@@ -32,7 +34,7 @@ const mockAxiosInstance = {
   },
 };
 
-const mockFetch = global.fetch as ReturnType<typeof vi.fn>;
+// global.fetch is mocked via vi.fn()
 
 describe('API Service with HTTP Layer Mocking Concept', () => {
   let apiService: any;
