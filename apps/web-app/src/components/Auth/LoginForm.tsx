@@ -15,9 +15,34 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{email?: string; password?: string}>({});
+
+  const validateForm = (): boolean => {
+    const errors: {email?: string; password?: string} = {};
+
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -35,6 +60,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (error) setError(null);
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: undefined }));
+    }
   };
 
   return (
@@ -46,32 +74,42 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
 
       <form onSubmit={handleSubmit} className="p-6 space-y-4">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3" data-testid="alert-error">
             <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
 
-        <ResponsiveInput
-          type="email"
-          id="email"
-          label="Email"
-          value={formData.email}
-          onChange={(e) => handleInputChange('email', e.target.value)}
-          placeholder="Enter your email"
-          required
-          disabled={loading}
-        />
+        <div className="space-y-1">
+          <ResponsiveInput
+            type="email"
+            id="email"
+            label="Email"
+            value={formData.email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            placeholder="Enter your email"
+            required
+            disabled={loading}
+          />
+          {validationErrors.email && (
+            <p className="text-red-600 text-sm">{validationErrors.email}</p>
+          )}
+        </div>
 
-        <ResponsiveInput
-          type="password"
-          id="password"
-          label="Password"
-          value={formData.password}
-          onChange={(e) => handleInputChange('password', e.target.value)}
-          placeholder="Enter your password"
-          required
-          disabled={loading}
-        />
+        <div className="space-y-1">
+          <ResponsiveInput
+            type="password"
+            id="password"
+            label="Password"
+            value={formData.password}
+            onChange={(e) => handleInputChange('password', e.target.value)}
+            placeholder="Enter your password"
+            required
+            disabled={loading}
+          />
+          {validationErrors.password && (
+            <p className="text-red-600 text-sm">{validationErrors.password}</p>
+          )}
+        </div>
 
         <ResponsiveButton
           type="submit"
