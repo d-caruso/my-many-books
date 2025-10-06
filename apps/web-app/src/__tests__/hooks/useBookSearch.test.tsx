@@ -6,7 +6,7 @@ import { Book, SearchFilters } from '../../hooks/../types';
 vi.mock('../../services/api', () => ({
   bookAPI: {
     searchBooks: vi.fn(),
-    searchByIsbn: vi.fn(),
+    searchByISBN: vi.fn(),
   },
 }));
 
@@ -195,7 +195,7 @@ describe('useBookSearch', () => {
   describe('searchByISBN', () => {
     test('searches book by ISBN successfully', async () => {
       const mockBook = mockBooks[0];
-      mockBookAPI.searchByIsbn.mockResolvedValue({ book: mockBook });
+      mockBookAPI.searchByISBN.mockResolvedValue({ book: mockBook });
 
       const { result } = renderHook(() => useBookSearch());
 
@@ -204,14 +204,14 @@ describe('useBookSearch', () => {
         searchResult = await result.current.searchByISBN('9781234567890');
       });
 
-      expect(mockBookAPI.searchByIsbn).toHaveBeenCalledWith('9781234567890');
+      expect(mockBookAPI.searchByISBN).toHaveBeenCalledWith('9781234567890');
       expect(searchResult).toBe(mockBook);
       expect(result.current.error).toBe(null);
     });
 
     test('handles ISBN search errors', async () => {
       const error = new Error('ISBN search failed');
-      mockBookAPI.searchByIsbn.mockRejectedValue(error);
+      mockBookAPI.searchByISBN.mockRejectedValue(error);
 
       const { result } = renderHook(() => useBookSearch());
 

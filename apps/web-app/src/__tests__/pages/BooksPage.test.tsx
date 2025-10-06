@@ -31,6 +31,7 @@ vi.mock('../../services/api', () => ({
 import { BooksPage } from '../../pages/BooksPage';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useBookSearch } from '../../hooks/useBookSearch';
+import { bookAPI } from '../../services/api';
 
 // Mock Material-UI components
 vi.mock('@mui/material', () => ({
@@ -343,7 +344,6 @@ describe('BooksPage', () => {
   });
 
   test('loads user books when no search params', () => {
-    const { bookAPI } = require('../../services/api');
     mockSearchParams.get = vi.fn().mockReturnValue(null);
     
     render(<BooksPage />);
@@ -389,7 +389,6 @@ describe('BooksPage', () => {
   });
 
   test('handles getBooks API error', async () => {
-    const { bookAPI } = require('../../services/api');
     bookAPI.getBooks.mockRejectedValueOnce(new Error('API Error'));
     
     render(<BooksPage />);
@@ -409,7 +408,6 @@ describe('BooksPage', () => {
   });
 
   test('calls status change handler', async () => {
-    const { bookAPI } = require('../../services/api');
     render(<BooksPage />);
     
     // Use the stored callback

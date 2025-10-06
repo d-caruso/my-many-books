@@ -13,7 +13,7 @@ const createMockApiClient = () => ({
     updateBook: () => Promise.reject(new Error('API call failed - no backend available')),
     deleteBook: () => Promise.reject(new Error('API call failed - no backend available')),
     searchBooks: () => Promise.reject(new Error('API call failed - no backend available')),
-    searchByIsbn: () => Promise.reject(new Error('API call failed - no backend available')),
+    searchByISBN: () => Promise.reject(new Error('API call failed - no backend available')),
   },
   categories: {
     getCategories: () => Promise.reject(new Error('API call failed - no backend available')),

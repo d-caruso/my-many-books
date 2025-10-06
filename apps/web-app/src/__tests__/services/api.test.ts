@@ -10,7 +10,7 @@ vi.mock('@my-many-books/shared-api', () => ({
       updateBook: vi.fn(),
       deleteBook: vi.fn(),
       searchBooks: vi.fn(),
-      searchByIsbn: vi.fn(),
+      searchByISBN: vi.fn(),
     },
     categories: {
       getCategories: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock('@my-many-books/shared-api', () => ({
       updateBook: vi.fn(),
       deleteBook: vi.fn(),
       searchBooks: vi.fn(),
-      searchByIsbn: vi.fn(),
+      searchByISBN: vi.fn(),
     },
     categories: {
       getCategories: vi.fn(),
@@ -529,15 +529,15 @@ describe('ApiService with Industry Standard Testing', () => {
         expect(mockApiClient.books.deleteBook).toHaveBeenCalledTimes(1);
       });
 
-      test('searchByIsbn delegates to API client with correct parameters', async () => {
+      test('searchByISBN delegates to API client with correct parameters', async () => {
         const isbn = '9780743273565';
         const mockResult = { title: 'Book Title', isbn };
-        mockApiClient.books.searchByIsbn.mockResolvedValue(mockResult);
+        mockApiClient.books.searchByISBN.mockResolvedValue(mockResult);
 
-        const result = await testApiService.searchByIsbn(isbn);
+        const result = await testApiService.searchByISBN(isbn);
 
-        expect(mockApiClient.books.searchByIsbn).toHaveBeenCalledWith(isbn);
-        expect(mockApiClient.books.searchByIsbn).toHaveBeenCalledTimes(1);
+        expect(mockApiClient.books.searchByISBN).toHaveBeenCalledWith(isbn);
+        expect(mockApiClient.books.searchByISBN).toHaveBeenCalledTimes(1);
         expect(result).toEqual(mockResult);
       });
     });

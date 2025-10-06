@@ -1,17 +1,6 @@
 import axios from 'axios';
 
-// Mock axios before importing the API
-vi.mock('axios', () => ({
-  default: {
-    create: vi.fn(),
-  },
-}));
-
-import * as apiModule from '../../services/api';
-
-const mockedAxios = axios as Mocked<typeof axios>;
-
-// Mock localStorage
+// Mock localStorage before everything
 const mockLocalStorage = {
   getItem: vi.fn(),
   setItem: vi.fn(),
@@ -22,24 +11,32 @@ Object.defineProperty(window, 'localStorage', {
   value: mockLocalStorage,
 });
 
-describe('API Service Simple Tests', () => {
-  let mockAxiosInstance: any;
+// Create mock axios instance
+const mockAxiosInstance = {
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
+  interceptors: {
+    request: { use: vi.fn() },
+    response: { use: vi.fn() },
+  },
+};
 
+// Mock axios before importing the API
+vi.mock('axios', () => ({
+  default: {
+    create: vi.fn(() => mockAxiosInstance),
+  },
+}));
+
+import * as apiModule from '../../services/api';
+
+const mockedAxios = axios as Mocked<typeof axios>;
+
+describe('API Service Simple Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    mockAxiosInstance = {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-      interceptors: {
-        request: { use: vi.fn() },
-        response: { use: vi.fn() },
-      },
-    };
-
-    mockedAxios.create.mockReturnValue(mockAxiosInstance);
     mockLocalStorage.getItem.mockReturnValue(null);
   });
 

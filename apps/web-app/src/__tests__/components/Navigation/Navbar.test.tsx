@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { Navbar } from '../../../components/Navigation/Navbar';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 // Mock the useAuth hook
 vi.mock('../../../contexts/AuthContext', () => ({

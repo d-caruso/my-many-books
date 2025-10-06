@@ -357,7 +357,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
       }
     });
 
-    test('searchByIsbn makes HTTP request to ISBN endpoint', async () => {
+    test('searchByISBN makes HTTP request to ISBN endpoint', async () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
       process.env.REACT_APP_API_BASE_URL = 'http://localhost:3000';
@@ -376,7 +376,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
       );
 
       try {
-        const result = await apiService.searchByIsbn(isbn);
+        const result = await apiService.searchByISBN(isbn);
         
         expect(result.title).toBe('The Great Gatsby');
         expect(result.isbn).toBe(isbn);
