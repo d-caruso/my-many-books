@@ -1,6 +1,19 @@
 // Testing Library DOM matchers
 import '@testing-library/jest-dom';
 
+// MSW (Mock Service Worker) setup for HTTP layer mocking
+// This is test infrastructure, not application code mocks
+import { server } from './__tests__/mocks/server';
+
+// Start MSW server before all tests
+beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+
+// Reset handlers after each test to ensure test isolation
+afterEach(() => server.resetHandlers());
+
+// Clean up after all tests
+afterAll(() => server.close());
+
 // Browser API polyfills for jsdom environment
 // These are global browser APIs that don't exist in Node/jsdom
 
