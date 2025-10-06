@@ -1,15 +1,20 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BooksPage } from '../../pages/BooksPage';
 
-// Mock dependencies
+// Mock dependencies - using vi.hoisted to ensure mocks are set up before imports
+const { mockUseSearchParams, mockUseNavigate, mockUseBookSearch } = vi.hoisted(() => ({
+  mockUseSearchParams: vi.fn(),
+  mockUseNavigate: vi.fn(),
+  mockUseBookSearch: vi.fn(),
+}));
+
 vi.mock('react-router-dom', () => ({
-  useSearchParams: vi.fn(),
-  useNavigate: vi.fn(),
+  useSearchParams: mockUseSearchParams,
+  useNavigate: mockUseNavigate,
 }));
 
 vi.mock('../../hooks/useBookSearch', () => ({
-  useBookSearch: vi.fn(),
+  useBookSearch: mockUseBookSearch,
 }));
 
 vi.mock('../../services/api', () => ({
@@ -22,7 +27,8 @@ vi.mock('../../services/api', () => ({
   },
 }));
 
-// Import mocked modules
+// Import after mocks
+import { BooksPage } from '../../pages/BooksPage';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useBookSearch } from '../../hooks/useBookSearch';
 
@@ -97,20 +103,17 @@ vi.mock('../../components/Book', () => ({
   },
 }));
 
+// Mock callback references for BookSearchForm
 const mockOnSearch = vi.fn();
 const mockOnClear = vi.fn();
 
 vi.mock('../../components/Search', () => ({
-  BookSearchForm: ({ onSearch, loading }: any) => {
-    const { clearSearch } = require('../../hooks/useBookSearch').useBookSearch();
-    
-    return (
-      <div data-testid="search-form" data-loading={loading}>
-        <button onClick={() => onSearch('test', {})}>Search</button>
-        <button onClick={clearSearch}>Clear</button>
-      </div>
-    );
-  },
+  BookSearchForm: ({ onSearch, loading }: any) => (
+    <div data-testid="search-form" data-loading={loading}>
+      <button onClick={() => onSearch('test', {})}>Search</button>
+      <button onClick={mockOnClear}>Clear</button>
+    </div>
+  ),
 }));
 
 describe('BooksPage', () => {
