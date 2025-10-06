@@ -57,7 +57,7 @@ vi.mock('@mui/material', () => ({
   ),
 }));
 
-const mockUseAuth = useAuth as ReturnType<typeof vi.fn>;
+const mockUseAuth = vi.mocked(useAuth);
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <BrowserRouter>{children}</BrowserRouter>

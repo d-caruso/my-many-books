@@ -77,7 +77,7 @@ vi.mock('@mui/icons-material', () => ({
   CheckCircle: () => <div data-testid="check-icon">Check</div>,
 }));
 
-const mockUsePWA = usePWA as ReturnType<typeof vi.fn>;
+const mockUsePWA = vi.mocked(usePWA);
 
 describe('UpdatePrompt', () => {
   const mockUpdateApp = vi.fn();

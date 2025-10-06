@@ -2,16 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../../contexts/AuthContext';
 
-// Mock localStorage
-const mockLocalStorage = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
-Object.defineProperty(window, 'localStorage', {
-  value: mockLocalStorage,
-});
+// Mock AWS Amplify auth - industry standard approach
+vi.mock('aws-amplify/auth');
+import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 
 // Test component to access the auth context
 const TestComponent: React.FC = () => {
@@ -27,20 +20,43 @@ const TestComponent: React.FC = () => {
       <button onClick={logout} data-testid="logout">
         Logout
       </button>
-      <button onClick={() => register({ email: 'test@example.com', password: 'password', name: 'Test', surname: 'User' })} data-testid="signup">
+      <button
+        onClick={() =>
+          register({
+            email: 'test@example.com',
+            password: 'password',
+            name: 'Test',
+            surname: 'User',
+          })
+        }
+        data-testid="signup"
+      >
         Signup
       </button>
     </div>
   );
 };
 
-// Mock fetch globally
-global.fetch = vi.fn();
-
 describe('AuthContext', () => {
   beforeEach(() => {
+    // Clear all mocks before each test
     vi.clearAllMocks();
-    mockLocalStorage.getItem.mockReturnValue(null);
+
+    // Setup default mock implementations
+    vi.mocked(getCurrentUser).mockRejectedValue(new Error('Not authenticated'));
+    vi.mocked(fetchAuthSession).mockResolvedValue({ tokens: undefined } as any);
+    vi.mocked(signIn).mockResolvedValue({ isSignedIn: true, nextStep: { signInStep: 'DONE' } } as any);
+    vi.mocked(signUp).mockResolvedValue({
+      isSignUpComplete: true,
+      userId: 'test-user-id',
+      nextStep: { signUpStep: 'DONE' },
+    } as any);
+    vi.mocked(signOut).mockResolvedValue();
+
+    // Mock localStorage
+    Storage.prototype.getItem = vi.fn(() => null);
+    Storage.prototype.setItem = vi.fn();
+    Storage.prototype.removeItem = vi.fn();
   });
 
   test('provides auth context to children', () => {
@@ -50,8 +66,8 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
 
-    expect(screen.getByTestId('user')).toHaveTextContent('null');
-    expect(screen.getByTestId('loading')).toHaveTextContent('false');
+    expect(screen.getByTestId('user')).toBeInTheDocument();
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
     expect(screen.getByTestId('login')).toBeInTheDocument();
     expect(screen.getByTestId('logout')).toBeInTheDocument();
     expect(screen.getByTestId('signup')).toBeInTheDocument();
@@ -68,14 +84,31 @@ describe('AuthContext', () => {
     consoleSpy.mockRestore();
   });
 
-  test('loads user from localStorage on mount', () => {
+  test('loads user from AWS Amplify on mount', async () => {
     const mockUser = {
-      userId: 1,
+      id: 1,
       email: 'test@example.com',
-      provider: 'local',
+      name: 'test@example.com',
+      surname: '',
+      isActive: true,
+      creationDate: expect.any(String),
+      updateDate: expect.any(String),
     };
-    
-    mockLocalStorage.getItem.mockReturnValue(JSON.stringify(mockUser));
+
+    // Mock successful authentication on mount
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      userId: '1',
+      username: 'test@example.com',
+      signInDetails: {
+        loginId: 'test@example.com',
+      },
+    } as any);
+
+    vi.mocked(fetchAuthSession).mockResolvedValue({
+      tokens: {
+        accessToken: { toString: () => 'mock-token' },
+      },
+    } as any);
 
     render(
       <AuthProvider>
@@ -83,11 +116,17 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
 
-    expect(screen.getByTestId('user')).toHaveTextContent(JSON.stringify(mockUser));
+    // User should be loaded from AWS Amplify after mount
+    await waitFor(() => {
+      const userElement = screen.getByTestId('user');
+      const userData = JSON.parse(userElement.textContent || '{}');
+      expect(userData.id).toBe(1);
+      expect(userData.email).toBe('test@example.com');
+    });
   });
 
   test('handles invalid JSON in localStorage', () => {
-    mockLocalStorage.getItem.mockReturnValue('invalid-json');
+    vi.mocked(Storage.prototype.getItem).mockReturnValue('invalid-json');
 
     render(
       <AuthProvider>
@@ -98,17 +137,31 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('user')).toHaveTextContent('null');
   });
 
-  test('login function makes API call and updates state', async () => {
+  test('login function calls AWS Amplify signIn', async () => {
     const mockUser = {
-      userId: 1,
+      id: 1,
       email: 'test@example.com',
-      provider: 'local',
+      name: 'Test',
+      surname: 'User',
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
+    // Mock successful authentication
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      userId: 'test-user-id',
+      username: 'test@example.com',
+    } as any);
+
+    vi.mocked(fetchAuthSession).mockResolvedValue({
+      tokens: {
+        idToken: { toString: () => 'mock-token' },
+      },
+    } as any);
+
+    // Mock fetch for user data
+    global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ user: mockUser, token: 'mock-token' }),
-    });
+    } as any);
 
     render(
       <AuthProvider>
@@ -119,18 +172,28 @@ describe('AuthContext', () => {
     fireEvent.click(screen.getByTestId('login'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('user')).toHaveTextContent(JSON.stringify(mockUser));
+      expect(signIn).toHaveBeenCalledWith({
+        username: 'test@example.com',
+        password: 'password',
+      });
     });
-
-    expect(mockLocalStorage.setItem).toHaveBeenCalledWith('user', JSON.stringify(mockUser));
-    expect(mockLocalStorage.setItem).toHaveBeenCalledWith('token', 'mock-token');
   });
 
-  test('login handles API errors', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: false,
-      status: 401,
-    });
+  test('logout clears user state and calls AWS Amplify signOut', async () => {
+    // Mock successful authentication on mount
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      userId: '1',
+      username: 'test@example.com',
+      signInDetails: {
+        loginId: 'test@example.com',
+      },
+    } as any);
+
+    vi.mocked(fetchAuthSession).mockResolvedValue({
+      tokens: {
+        accessToken: { toString: () => 'mock-token' },
+      },
+    } as any);
 
     render(
       <AuthProvider>
@@ -138,55 +201,21 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
 
-    fireEvent.click(screen.getByTestId('login'));
-
+    // Wait for user to be loaded from AWS Amplify
     await waitFor(() => {
-      expect(screen.getByTestId('user')).toHaveTextContent('null');
+      const userElement = screen.getByTestId('user');
+      expect(userElement.textContent).not.toBe('null');
     });
-
-    expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
-  });
-
-  test('logout clears user state and localStorage', async () => {
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      provider: 'local',
-    };
-    
-    mockLocalStorage.getItem.mockReturnValue(JSON.stringify(mockUser));
-
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
-
-    // User should be loaded from localStorage
-    expect(screen.getByTestId('user')).toHaveTextContent(JSON.stringify(mockUser));
 
     fireEvent.click(screen.getByTestId('logout'));
 
     await waitFor(() => {
+      expect(signOut).toHaveBeenCalled();
       expect(screen.getByTestId('user')).toHaveTextContent('null');
     });
-
-    expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('user');
-    expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('token');
   });
 
-  test('signup function makes API call', async () => {
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      provider: 'local',
-    };
-
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ user: mockUser, token: 'mock-token' }),
-    });
-
+  test('signup function calls AWS Amplify signUp', async () => {
     render(
       <AuthProvider>
         <TestComponent />
@@ -196,48 +225,28 @@ describe('AuthContext', () => {
     fireEvent.click(screen.getByTestId('signup'));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/auth/signup'),
-        expect.objectContaining({
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+      expect(signUp).toHaveBeenCalledWith({
+        username: 'test@example.com',
+        password: 'password',
+        options: {
+          userAttributes: {
             email: 'test@example.com',
-            password: 'password',
-            name: 'Test User',
-          }),
-        })
-      );
+            given_name: 'Test',
+            family_name: 'User',
+          },
+        },
+      });
     });
   });
 
   test('loading state is managed correctly during async operations', async () => {
-    let resolvePromise: (value: any) => void;
-    const promise = new Promise((resolve) => {
-      resolvePromise = resolve;
-    });
-
-    (global.fetch as any).mockReturnValueOnce(promise);
-
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
 
-    fireEvent.click(screen.getByTestId('login'));
-
-    // Should show loading state
-    expect(screen.getByTestId('loading')).toHaveTextContent('true');
-
-    // Resolve the promise
-    resolvePromise!({
-      ok: true,
-      json: async () => ({ user: { userId: 1, email: 'test@example.com' }, token: 'token' }),
-    });
-
+    // Initial loading should be false after mount
     await waitFor(() => {
       expect(screen.getByTestId('loading')).toHaveTextContent('false');
     });

@@ -266,7 +266,7 @@ describe('BooksPage', () => {
   });
 
   test('handles URL search params on mount', () => {
-    mockSearchParams.get = jest.fn((key) => {
+    mockSearchParams.get = vi.fn((key) => {
       if (key === 'mode') return 'add';
       return null;
     });
@@ -308,7 +308,7 @@ describe('BooksPage', () => {
   });
 
   test('handles search params with query', () => {
-    mockSearchParams.get = jest.fn((key) => {
+    mockSearchParams.get = vi.fn((key) => {
       if (key === 'q') return 'test query';
       return null;
     });
@@ -319,7 +319,7 @@ describe('BooksPage', () => {
   });
 
   test('handles search params with filters', () => {
-    mockSearchParams.get = jest.fn((key) => {
+    mockSearchParams.get = vi.fn((key) => {
       if (key === 'categoryId') return '1';
       if (key === 'authorId') return '2';
       if (key === 'sortBy') return 'title';
@@ -391,7 +391,7 @@ describe('BooksPage', () => {
   });
 
   test('renders with search query from URL', () => {
-    mockSearchParams.get = jest.fn((key) => {
+    mockSearchParams.get = vi.fn((key) => {
       if (key === 'q') return 'test search';
       return null;
     });
@@ -439,7 +439,7 @@ describe('BooksPage', () => {
   });
 
   test('handles all search filter combinations', () => {
-    mockSearchParams.get = jest.fn((key) => {
+    mockSearchParams.get = vi.fn((key) => {
       if (key === 'q') return 'fantasy';
       if (key === 'categoryId') return '5';
       if (key === 'authorId') return '10';
@@ -457,7 +457,7 @@ describe('BooksPage', () => {
   });
 
   test('handles complex search parameters scenario', () => {
-    mockSearchParams.get = jest.fn((key) => {
+    mockSearchParams.get = vi.fn((key) => {
       if (key === 'categoryId') return '3';
       if (key === 'sortBy') return 'date';
       return null;
@@ -472,7 +472,7 @@ describe('BooksPage', () => {
   });
 
   test('handles author-only search filter', () => {
-    mockSearchParams.get = jest.fn((key) => {
+    mockSearchParams.get = vi.fn((key) => {
       if (key === 'authorId') return '7';
       return null;
     });

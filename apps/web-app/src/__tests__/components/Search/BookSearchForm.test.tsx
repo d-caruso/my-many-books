@@ -156,7 +156,7 @@ vi.mock('@mui/icons-material', () => ({
   Warning: () => <div data-testid="warning-icon">Warning</div>,
 }));
 
-const mockUseCategories = useCategories as ReturnType<typeof vi.fn>;
+const mockUseCategories = vi.mocked(useCategories);
 
 const mockCategories = [
   { id: 1, name: 'Fiction' },
