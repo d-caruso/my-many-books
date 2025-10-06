@@ -10,7 +10,7 @@ const mockCodeReader = {
 };
 
 vi.mock('@zxing/library', () => ({
-  BrowserMultiFormatReader: jest.fn(() => mockCodeReader),
+  BrowserMultiFormatReader: vi.fn(() => mockCodeReader),
   NotFoundException: vi.fn(),
 }));
 
@@ -29,8 +29,8 @@ Object.defineProperty(navigator, 'mediaDevices', {
 const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 describe('useISBNScanner', () => {
-  let mockOnScanSuccess: ReturnType<typeof vi.fn>;
-  let mockOnScanError: ReturnType<typeof vi.fn>;
+  let mockOnScanSuccess: any;
+  let mockOnScanError: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -74,12 +74,12 @@ describe('useISBNScanner', () => {
     expect(typeof result.current.videoRef).toBe('function');
   });
 
-  test('initializes BrowserMultiFormatReader on mount', () => {
-    const { BrowserMultiFormatReader } = require('@zxing/library');
-    
+  test('initializes BrowserMultiFormatReader on mount', async () => {
+    const { BrowserMultiFormatReader } = await import('@zxing/library');
+
     renderHook(() => useISBNScanner(mockOnScanSuccess));
 
-    expect(BrowserMultiFormatReader).toHaveBeenCalled();
+    expect(vi.mocked(BrowserMultiFormatReader)).toHaveBeenCalled();
   });
 
   test('cleans up code reader on unmount', () => {
