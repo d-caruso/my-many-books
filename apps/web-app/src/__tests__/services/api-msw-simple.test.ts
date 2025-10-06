@@ -96,7 +96,12 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
     const result = await apiService.getBooks({ page: 1, limit: 10 });
 
     // Verify the HTTP request was made with correct parameters
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith(1, 10);
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+      'http://localhost:3000/books',
+      expect.objectContaining({
+        params: { page: 1, limit: 10 }
+      })
+    );
 
     // Verify the response structure
     expect(result).toEqual(mockResponse);
@@ -132,16 +137,20 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
     const result = await apiService.createBook(bookData);
 
     // Verify POST request was made with correct transformed data
-    expect(mockAxiosInstance.post).toHaveBeenCalledWith({
-      title: 'New Book',
-      isbnCode: '987654321',
-      editionNumber: 1,
-      editionDate: '2024-01-01',
-      status: 'unread',
-      notes: 'Test notes',
-      authorIds: [],
-      categoryIds: [],
-    });
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+      'http://localhost:3000/books',
+      {
+        title: 'New Book',
+        isbnCode: '987654321',
+        editionNumber: 1,
+        editionDate: '2024-01-01',
+        status: 'unread',
+        notes: 'Test notes',
+        authorIds: [],
+        categoryIds: [],
+      },
+      expect.any(Object)
+    );
 
     expect(result).toEqual(mockCreatedBook);
   });
@@ -154,7 +163,10 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
     // This triggers error handling in the API service
     await expect(apiService.getBook(999)).rejects.toThrow();
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith(999);
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+      'http://localhost:3000/books/999',
+      expect.any(Object)
+    );
   });
 
   test('demonstrates network error handling', async () => {
@@ -163,7 +175,12 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
 
     await expect(apiService.getBooks()).rejects.toThrow('Network Error');
 
-    expect(mockAxiosInstance.get).toHaveBeenCalledWith(1, 10);
+    expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+      'http://localhost:3000/books',
+      expect.objectContaining({
+        params: { page: 1, limit: 10 }
+      })
+    );
   });
 });
 
