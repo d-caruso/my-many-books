@@ -11,9 +11,13 @@ import axios from 'axios';
 
 // Axios adapter for web platform
 class AxiosHttpClient implements HttpClient {
-  private axios = axios.create();
+  private axios;
 
-  constructor() {
+  constructor(baseURL?: string, timeout?: number) {
+    this.axios = axios.create({
+      baseURL,
+      timeout,
+    });
     // Add request interceptor for auth token
     this.axios.interceptors.request.use((config: any) => {
       const token = localStorage.getItem('authToken');
@@ -78,9 +82,6 @@ class ApiService {
       return;
     }
 
-    // Create HTTP client (use injected or default)
-    const httpClient = dependencies.httpClient || new AxiosHttpClient();
-
     // Create API client configuration (use injected or default)
     const apiConfig: ApiClientConfig = dependencies.config || {
       baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
@@ -91,6 +92,9 @@ class ApiService {
         window.location.href = '/login';
       },
     };
+
+    // Create HTTP client (use injected or default)
+    const httpClient = dependencies.httpClient || new AxiosHttpClient(apiConfig.baseURL, apiConfig.timeout);
 
     // Create and configure the API client
     this.apiClient = createApiClient(httpClient, apiConfig);

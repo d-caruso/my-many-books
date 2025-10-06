@@ -1,7 +1,14 @@
 import axios from 'axios';
 
 // Mock axios before importing the API
-vi.mock('axios');
+vi.mock('axios', () => ({
+  default: {
+    create: vi.fn(),
+  },
+}));
+
+import * as apiModule from '../../services/api';
+
 const mockedAxios = axios as Mocked<typeof axios>;
 
 // Mock localStorage
@@ -37,7 +44,7 @@ describe('API Service Simple Tests', () => {
   });
 
   test('API module loads correctly', () => {
-    const api = require('../../services/api');
+    const api = apiModule;
     
     expect(api.userAPI).toBeDefined();
     expect(api.bookAPI).toBeDefined();
@@ -56,7 +63,7 @@ describe('API Service Simple Tests', () => {
   });
 
   test('API methods exist', async () => {
-    const { userAPI, bookAPI, categoryAPI, authorAPI } = require('../../services/api');
+    const { userAPI, bookAPI, categoryAPI, authorAPI } = apiModule;
 
     // Test that API methods exist
     expect(typeof userAPI.getCurrentUser).toBe('function');
@@ -80,7 +87,7 @@ describe('API Service Simple Tests', () => {
   });
 
   test('userAPI.getCurrentUser calls correct endpoint', async () => {
-    const { userAPI } = require('../../services/api');
+    const { userAPI } = apiModule;
     const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
     
     mockAxiosInstance.get.mockResolvedValue({ data: mockUser });
@@ -92,7 +99,7 @@ describe('API Service Simple Tests', () => {
   });
 
   test('bookAPI.getBooks calls correct endpoint', async () => {
-    const { bookAPI } = require('../../services/api');
+    const { bookAPI } = apiModule;
     const mockResponse = { data: [], total: 0, page: 1, limit: 10 };
     
     mockAxiosInstance.get.mockResolvedValue({ data: mockResponse });
@@ -104,7 +111,7 @@ describe('API Service Simple Tests', () => {
   });
 
   test('categoryAPI.getCategories calls correct endpoint', async () => {
-    const { categoryAPI } = require('../../services/api');
+    const { categoryAPI } = apiModule;
     const mockCategories = [{ id: 1, name: 'Fiction' }];
     
     mockAxiosInstance.get.mockResolvedValue({ data: mockCategories });
@@ -116,7 +123,7 @@ describe('API Service Simple Tests', () => {
   });
 
   test('authorAPI.getAuthors calls correct endpoint', async () => {
-    const { authorAPI } = require('../../services/api');
+    const { authorAPI } = apiModule;
     const mockAuthors = [{ id: 1, name: 'John', surname: 'Doe' }];
     
     mockAxiosInstance.get.mockResolvedValue({ data: mockAuthors });
@@ -128,7 +135,7 @@ describe('API Service Simple Tests', () => {
   });
 
   test('request interceptor adds auth token', () => {
-    require('../../services/api');
+    apiModule;
     mockLocalStorage.getItem.mockReturnValue('test-token');
     
     // Get the request interceptor function
@@ -142,7 +149,7 @@ describe('API Service Simple Tests', () => {
   });
 
   test('response interceptor handles 401 errors', () => {
-    require('../../services/api');
+    apiModule;
     
     const errorInterceptor = mockAxiosInstance.interceptors.response.use.mock.calls[0][1];
     

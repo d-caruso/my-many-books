@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Header } from '../../../components/Layout/Header';
-import { ThemeProvider } from '../../contexts/ThemeContext';
+import { ThemeProvider } from '../../../contexts/ThemeContext';
 
 // Test wrapper with ThemeProvider
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
