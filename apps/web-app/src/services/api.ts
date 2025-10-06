@@ -271,10 +271,13 @@ class ApiService {
   // Book methods with development mock data fallback
   async getBooks(filters?: SearchFilters): Promise<PaginatedResponse<Book>> {
     // In development mode without API URL, return mock data
-    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
+    const isDevelopment = import.meta.env.MODE === 'development' || process.env.NODE_ENV === 'development';
+    const hasNoApiUrl = !import.meta.env.VITE_API_BASE_URL && !process.env.REACT_APP_API_BASE_URL;
+
+    if (isDevelopment && hasNoApiUrl) {
       return this.getMockBooks();
     }
-    
+
     return this.apiClient.books.getBooks(filters?.page || 1, filters?.limit || 10);
   }
 
@@ -328,10 +331,13 @@ class ApiService {
     categoryId?: number;
   }): Promise<SearchResult> {
     // In development mode without API URL, return mock data
-    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
+    const isDevelopment = import.meta.env.MODE === 'development' || process.env.NODE_ENV === 'development';
+    const hasNoApiUrl = !import.meta.env.VITE_API_BASE_URL && !process.env.REACT_APP_API_BASE_URL;
+
+    if (isDevelopment && hasNoApiUrl) {
       return this.getMockSearchResults(searchParams);
     }
-    
+
     // Transform parameters for shared API
     const filters: SearchFilters = {
       query: searchParams.q,
@@ -342,7 +348,7 @@ class ApiService {
       page: searchParams.page,
       limit: searchParams.limit
     };
-    
+
     return this.apiClient.books.searchBooks(filters);
   }
 
@@ -354,10 +360,13 @@ class ApiService {
   // Categories methods with development mock data fallback
   async getCategories(): Promise<Category[]> {
     // In development mode without API URL, return mock data
-    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
+    const isDevelopment = import.meta.env.MODE === 'development' || process.env.NODE_ENV === 'development';
+    const hasNoApiUrl = !import.meta.env.VITE_API_BASE_URL && !process.env.REACT_APP_API_BASE_URL;
+
+    if (isDevelopment && hasNoApiUrl) {
       return this.getMockCategories();
     }
-    
+
     return this.apiClient.categories.getCategories();
   }
 
@@ -372,10 +381,13 @@ class ApiService {
   // Authors methods with development mock data fallback
   async getAuthors(): Promise<Author[]> {
     // In development mode without API URL, return mock data
-    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
+    const isDevelopment = import.meta.env.MODE === 'development' || process.env.NODE_ENV === 'development';
+    const hasNoApiUrl = !import.meta.env.VITE_API_BASE_URL && !process.env.REACT_APP_API_BASE_URL;
+
+    if (isDevelopment && hasNoApiUrl) {
       return this.getMockAuthors();
     }
-    
+
     return this.apiClient.authors.getAuthors();
   }
 
@@ -383,16 +395,19 @@ class ApiService {
     if (!searchTerm.trim()) {
       return [];
     }
-    
+
     // In development mode without API URL, return filtered mock data
-    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
+    const isDevelopment = import.meta.env.MODE === 'development' || process.env.NODE_ENV === 'development';
+    const hasNoApiUrl = !import.meta.env.VITE_API_BASE_URL && !process.env.REACT_APP_API_BASE_URL;
+
+    if (isDevelopment && hasNoApiUrl) {
       const mockAuthors = await this.getMockAuthors();
-      return mockAuthors.filter(author => 
+      return mockAuthors.filter(author =>
         author.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         author.surname.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     return this.apiClient.authors.searchAuthors(searchTerm.trim());
   }
 
