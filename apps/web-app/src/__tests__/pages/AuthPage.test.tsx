@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AuthPage } from '../../pages/AuthPage';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Mock the auth context and components
 vi.mock('../../contexts/AuthContext', () => ({
@@ -34,11 +35,11 @@ vi.mock('react-router-dom', () => ({
   ),
 }));
 
-const { useAuth } = require('../../contexts/AuthContext');
+const mockUseAuth = useAuth as ReturnType<typeof vi.fn>;
 
 describe('AuthPage', () => {
   beforeEach(() => {
-    useAuth.mockReturnValue({ user: null });
+    mockUseAuth.mockReturnValue({ user: null });
   });
 
   test('renders login form by default', () => {
@@ -70,7 +71,7 @@ describe('AuthPage', () => {
   });
 
   test('redirects to home when user is authenticated', () => {
-    useAuth.mockReturnValue({ user: { id: 1, name: 'Test User' } });
+    mockUseAuth.mockReturnValue({ user: { id: 1, name: 'Test User' } });
     
     render(<AuthPage />);
     
