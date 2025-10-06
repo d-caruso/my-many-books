@@ -121,8 +121,13 @@ describe('ApiService with Industry Standard Testing', () => {
 
   describe('Mock Data Methods (Development Mode)', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'development';
-      delete process.env.REACT_APP_API_BASE_URL;
+      // Mock import.meta.env using Vitest's env stubbing
+      vi.stubEnv('MODE', 'development');
+      vi.stubEnv('VITE_API_BASE_URL', '');
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
     });
 
     test('getMockBooks returns expected structure', async () => {
@@ -314,8 +319,13 @@ describe('ApiService with Industry Standard Testing', () => {
 
   describe('Production Mode - Industry Standard API Client Testing', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'production';
-      process.env.REACT_APP_API_BASE_URL = 'https://api.example.com';
+      // Mock import.meta.env for production with API URL
+      vi.stubEnv('MODE', 'production');
+      vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.com');
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
     });
 
     describe('User Methods', () => {
@@ -751,8 +761,9 @@ describe('ApiService with Industry Standard Testing', () => {
 
   describe('Integration Tests', () => {
     test('development mode uses mock data and does not call API client', async () => {
-      process.env.NODE_ENV = 'development';
-      delete process.env.REACT_APP_API_BASE_URL;
+      // Mock import.meta.env for development mode
+      vi.stubEnv('MODE', 'development');
+      vi.stubEnv('VITE_API_BASE_URL', '');
 
       const result = await testApiService.getBooks();
 
@@ -760,15 +771,18 @@ describe('ApiService with Industry Standard Testing', () => {
       expect(result).toHaveProperty('books');
       expect(result).toHaveProperty('pagination');
       expect(Array.isArray(result.books)).toBe(true);
-      
+
       // Should not call the API client
       expect(mockApiClient.books.getBooks).not.toHaveBeenCalled();
+
+      vi.unstubAllEnvs();
     });
 
     test('production mode calls API client with correct parameters', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.REACT_APP_API_BASE_URL = 'https://api.example.com';
-      
+      // Mock import.meta.env for production mode
+      vi.stubEnv('MODE', 'production');
+      vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.com');
+
       const mockResponse = {
         books: [],
         pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 }
@@ -781,6 +795,8 @@ describe('ApiService with Industry Standard Testing', () => {
       expect(mockApiClient.books.getBooks).toHaveBeenCalledWith(2, 5);
       expect(mockApiClient.books.getBooks).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockResponse);
+
+      vi.unstubAllEnvs();
     });
   });
 });
