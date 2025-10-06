@@ -73,7 +73,7 @@ export const BookCard: React.FC<BookCardProps> = ({
   };
 
   const handleStatusChange = (newStatus: Book['status']) => {
-    if (onStatusChange && newStatus) {
+    if (onStatusChange) {
       onStatusChange(book.id, newStatus);
     }
   };
