@@ -50,7 +50,7 @@ vi.mock('@mui/icons-material', () => ({
   ExpandMore: () => <span data-testid="expand-more-icon">▼</span>,
 }));
 
-const mockUseAuth = useAuth as ReturnType<typeof vi.fn>;
+const mockUseAuth = vi.mocked(useAuth);
 
 // Test wrapper with Router context
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (

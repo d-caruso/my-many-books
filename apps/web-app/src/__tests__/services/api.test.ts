@@ -2,7 +2,7 @@ import { Book, Author, Category, User, SearchResult, PaginatedResponse } from '.
 
 // Mock the shared-api library using industry standard approach
 vi.mock('@my-many-books/shared-api', () => ({
-  createApiClient: jest.fn(() => ({
+  createApiClient: vi.fn(() => ({
     books: {
       getBooks: vi.fn(),
       getBook: vi.fn(),
@@ -59,16 +59,18 @@ vi.mock('@my-many-books/shared-api', () => ({
 
 // Mock axios for the AxiosHttpClient
 vi.mock('axios', () => ({
-  create: jest.fn(() => ({
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-    interceptors: {
-      request: { use: vi.fn() },
-      response: { use: vi.fn() },
-    },
-  })),
+  default: {
+    create: vi.fn(() => ({
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      interceptors: {
+        request: { use: vi.fn() },
+        response: { use: vi.fn() },
+      },
+    })),
+  },
 }));
 
 // Import after mocks are set up (avoid importing default instance to prevent axios creation)

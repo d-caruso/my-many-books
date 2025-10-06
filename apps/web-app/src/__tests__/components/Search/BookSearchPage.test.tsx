@@ -95,7 +95,7 @@ vi.mock('@mui/icons-material', () => ({
   FilterList: () => <div data-testid="filter-icon">Filter</div>,
 }));
 
-const mockUseBookSearch = useBookSearch as ReturnType<typeof vi.fn>;
+const mockUseBookSearch = vi.mocked(useBookSearch);
 
 const mockBooks: Book[] = [
   {
@@ -313,7 +313,7 @@ describe('BookSearchPage', () => {
     const mockSetSearchParams = vi.fn();
     const mockSearchParams = new URLSearchParams('q=initial+query&categoryId=1&sortBy=title');
     
-    jest.doMock('react-router-dom', () => ({
+    vi.doMock('react-router-dom', () => ({
       ...vi.importActual('react-router-dom'),
       useNavigate: () => mockNavigate,
       useSearchParams: () => [mockSearchParams, mockSetSearchParams],
@@ -338,7 +338,7 @@ describe('BookSearchPage', () => {
   test('updates URL params when search is performed', () => {
     const mockSetSearchParams = vi.fn();
     
-    jest.doMock('react-router-dom', () => ({
+    vi.doMock('react-router-dom', () => ({
       ...vi.importActual('react-router-dom'),
       useNavigate: () => mockNavigate,
       useSearchParams: () => [new URLSearchParams(), mockSetSearchParams],
@@ -357,7 +357,7 @@ describe('BookSearchPage', () => {
   test('clears URL params when clearing search', () => {
     const mockSetSearchParams = vi.fn();
     
-    jest.doMock('react-router-dom', () => ({
+    vi.doMock('react-router-dom', () => ({
       ...vi.importActual('react-router-dom'),
       useNavigate: () => mockNavigate,
       useSearchParams: () => [new URLSearchParams('q=test'), mockSetSearchParams],
