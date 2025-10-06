@@ -8,7 +8,7 @@ interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
-  const { login } = useAuth();
+  const { login, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -16,6 +16,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<{email?: string; password?: string}>({});
+
+  const isLoading = authLoading || loading;
 
   const validateForm = (): boolean => {
     const errors: {email?: string; password?: string} = {};
@@ -72,7 +74,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         <p className="text-text-secondary text-sm">Welcome back to My Many Books</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate aria-label="form">
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3" data-testid="alert-error">
             <p className="text-red-600 text-sm">{error}</p>
@@ -87,8 +89,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
             placeholder="Enter your email"
-            required
-            disabled={loading}
+            disabled={isLoading}
           />
           {validationErrors.email && (
             <p className="text-red-600 text-sm">{validationErrors.email}</p>
@@ -102,9 +103,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             label="Password"
             value={formData.password}
             onChange={(e) => handleInputChange('password', e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSubmit(e as any);
+              }
+            }}
             placeholder="Enter your password"
-            required
-            disabled={loading}
+            disabled={isLoading}
           />
           {validationErrors.password && (
             <p className="text-red-600 text-sm">{validationErrors.password}</p>
@@ -115,11 +120,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           type="submit"
           variant="primary"
           size="lg"
-          disabled={loading}
-          loading={loading}
+          disabled={isLoading}
+          loading={isLoading}
           className="w-full"
         >
-          {loading ? 'Signing In...' : 'Sign In'}
+          {isLoading ? 'Signing In...' : 'Sign In'}
         </ResponsiveButton>
 
         <div className="text-center pt-4 border-t border-secondary-200">
@@ -129,7 +134,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
               type="button"
               onClick={onSwitchToRegister}
               className="text-primary-500 hover:text-primary-600 font-medium"
-              disabled={loading}
+              disabled={isLoading}
             >
               Sign up
             </button>

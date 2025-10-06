@@ -209,7 +209,7 @@ describe('LoginForm', () => {
       { wrapper: TestWrapper }
     );
 
-    const submitButton = screen.getByRole('button', { name: /sign in/i });
+    const submitButton = screen.getByRole('button', { name: /signing in/i });
     expect(submitButton).toBeDisabled();
     expect(screen.getByText('Signing In...')).toBeInTheDocument();
   });
