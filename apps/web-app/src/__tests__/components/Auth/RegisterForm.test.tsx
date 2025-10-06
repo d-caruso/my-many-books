@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { RegisterForm } from '../../../components/Auth/RegisterForm';
 import { useAuth } from '../../../contexts/AuthContext';
 

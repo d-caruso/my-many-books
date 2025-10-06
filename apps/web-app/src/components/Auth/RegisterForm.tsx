@@ -165,6 +165,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           label="Confirm Password"
           value={formData.confirmPassword}
           onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSubmit(e as any);
+            }
+          }}
           placeholder="Confirm your password"
           required
           disabled={loading}
