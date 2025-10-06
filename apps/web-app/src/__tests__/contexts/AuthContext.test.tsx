@@ -15,7 +15,7 @@ Object.defineProperty(window, 'localStorage', {
 
 // Test component to access the auth context
 const TestComponent: React.FC = () => {
-  const { user, loading, login, logout, signup } = useAuth();
+  const { user, loading, login, logout, register } = useAuth();
 
   return (
     <div>
@@ -27,7 +27,7 @@ const TestComponent: React.FC = () => {
       <button onClick={logout} data-testid="logout">
         Logout
       </button>
-      <button onClick={() => signup('test@example.com', 'password', 'Test User')} data-testid="signup">
+      <button onClick={() => register({ email: 'test@example.com', password: 'password', name: 'Test', surname: 'User' })} data-testid="signup">
         Signup
       </button>
     </div>

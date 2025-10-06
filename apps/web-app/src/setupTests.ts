@@ -62,7 +62,7 @@ vi.mock('@zxing/library', () => ({
   NotFoundException: class NotFoundException extends Error {},
 }));
 
-// Mock AWS Amplify Auth
+// Mock AWS Amplify Auth (old import path)
 vi.mock('@aws-amplify/auth', () => ({
   signIn: vi.fn(),
   signUp: vi.fn(),
@@ -70,6 +70,16 @@ vi.mock('@aws-amplify/auth', () => ({
   getCurrentUser: vi.fn(),
   confirmSignUp: vi.fn(),
   fetchAuthSession: vi.fn(() => Promise.resolve(null)),
+}));
+
+// Mock AWS Amplify Auth (new import path)
+vi.mock('aws-amplify/auth', () => ({
+  signIn: vi.fn(() => Promise.resolve({ isSignedIn: true })),
+  signUp: vi.fn(() => Promise.resolve({ isSignUpComplete: true, userId: 'test-user-id' })),
+  signOut: vi.fn(() => Promise.resolve()),
+  getCurrentUser: vi.fn(() => Promise.reject(new Error('Auth UserPool not configured'))),
+  confirmSignUp: vi.fn(() => Promise.resolve({ isSignUpComplete: true })),
+  fetchAuthSession: vi.fn(() => Promise.resolve({ tokens: { idToken: { toString: () => 'mock-token' } } })),
 }));
 
 // Mock AWS Amplify
