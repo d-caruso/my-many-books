@@ -347,8 +347,8 @@ class ApiService {
   }
 
   // ISBN lookup
-  async searchByIsbn(isbn: string): Promise<any> {
-    return this.apiClient.books.searchByIsbn(isbn);
+  async searchByISBN(isbn: string): Promise<any> {
+    return this.apiClient.books.searchByISBN(isbn);
   }
 
   // Categories methods with development mock data fallback
@@ -431,7 +431,7 @@ export type { ApiServiceDependencies };
 // Legacy export for compatibility - ensure all existing imports continue to work
 export const bookAPI = {
   searchBooks: apiService.searchBooks.bind(apiService),
-  searchByIsbn: apiService.searchByIsbn.bind(apiService),
+  searchByISBN: apiService.searchByISBN.bind(apiService),
   getBooks: apiService.getBooks.bind(apiService),
   getBook: apiService.getBook.bind(apiService),
   createBook: apiService.createBook.bind(apiService),

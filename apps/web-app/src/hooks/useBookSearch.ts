@@ -97,7 +97,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     setError(null);
 
     try {
-      const response = await bookAPI.searchByIsbn(isbn);
+      const response = await bookAPI.searchByISBN(isbn);
       return response.book || null;
     } catch (err: any) {
       console.error('ISBN search failed:', err);
