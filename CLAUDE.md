@@ -2,6 +2,20 @@
 
 This file provides comprehensive guidance to Claude Code.
 
+## BEFORE STARTING ANY WORK - MANDATORY CHECKLIST
+  - [ ] Am I on develop or main? If YES -> STOP and create a branch
+  - [ ] Have I created a feature/fix/refactor/* branch?
+  - [ ] Branch name format: feature/*, fix/*, refactor/*, docs/*
+
+## ⚠️ CRITICAL - BRANCH WORKFLOW (VIOLATION = FAILURE)
+
+**YOU MUST NEVER COMMIT DIRECTLY TO `develop` OR `main`**
+Before typing ANY git command:
+  1. Run `git branch` - check current branch
+  2. If on `develop` or `main` -> CREATE A NEW BRANCH IMMEDIATELY
+  3. ALL work must be on feature/fix/refactor/* branches
+  4. Only merge to develop via explicit merge command
+
 ## Core Development Philosophy
 
 ### KISS (Keep It Simple, Stupid)
