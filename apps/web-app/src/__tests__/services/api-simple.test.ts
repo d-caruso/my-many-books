@@ -20,30 +20,31 @@ Object.defineProperty(window, 'localStorage', {
 const { mockAxiosInstance, requestInterceptors, responseInterceptors } = vi.hoisted(() => {
   const requestInterceptors: any[] = [];
   const responseInterceptors: any[] = [];
+  const mockAxiosInstance = {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    interceptors: {
+      request: {
+        use: vi.fn((onFulfilled, onRejected) => {
+          requestInterceptors.push({ onFulfilled, onRejected });
+          return requestInterceptors.length - 1;
+        })
+      },
+      response: {
+        use: vi.fn((onFulfilled, onRejected) => {
+          responseInterceptors.push({ onFulfilled, onRejected });
+          return responseInterceptors.length - 1;
+        })
+      },
+    },
+  };
 
   return {
     requestInterceptors,
     responseInterceptors,
-    mockAxiosInstance: {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-      interceptors: {
-        request: {
-          use: vi.fn((onFulfilled, onRejected) => {
-            requestInterceptors.push({ onFulfilled, onRejected });
-            return requestInterceptors.length - 1;
-          })
-        },
-        response: {
-          use: vi.fn((onFulfilled, onRejected) => {
-            responseInterceptors.push({ onFulfilled, onRejected });
-            return responseInterceptors.length - 1;
-          })
-        },
-      },
-    },
+    mockAxiosInstance,
   };
 });
 

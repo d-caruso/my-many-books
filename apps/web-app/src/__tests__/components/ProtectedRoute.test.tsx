@@ -10,11 +10,14 @@ vi.mock('../../contexts/AuthContext', () => ({
   useAuth: vi.fn(),
 }));
 
-// Mock react-router-dom Navigate component
-vi.mock('react-router-dom', () => ({
-  Navigate: ({ to }: { to: string }) => <div data-testid="navigate-to">{to}</div>,
-  MemoryRouter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
+// Mock react-router-dom Navigate component but keep real MemoryRouter
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    ...actual,
+    Navigate: ({ to }: { to: string }) => <div data-testid="navigate-to">{to}</div>,
+  };
+});
 
 const mockUseAuth = vi.mocked(useAuth);
 

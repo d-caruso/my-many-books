@@ -263,9 +263,13 @@ describe('AuthorAutocomplete', () => {
 
     fireEvent.change(input, { target: { value: 'Jane' } });
 
+    // Advance timers for debounce
     await act(async () => {
-      await vi.runAllTimersAsync();
+      vi.advanceTimersByTime(300);
     });
+
+    // Use real timers for waitFor
+    vi.useRealTimers();
 
     await waitFor(() => {
       expect(screen.getByTestId('loading-state')).toHaveTextContent('loading');
@@ -279,6 +283,9 @@ describe('AuthorAutocomplete', () => {
     await waitFor(() => {
       expect(screen.getByTestId('loading-state')).toHaveTextContent('not-loading');
     });
+
+    // Restore fake timers for cleanup
+    vi.useFakeTimers();
   });
 
   test('displays search results', async () => {
@@ -290,9 +297,13 @@ describe('AuthorAutocomplete', () => {
 
     fireEvent.change(input, { target: { value: 'author' } });
 
+    // Advance timers for debounce
     await act(async () => {
-      await vi.runAllTimersAsync();
+      vi.advanceTimersByTime(300);
     });
+
+    // Use real timers for waitFor
+    vi.useRealTimers();
 
     await waitFor(() => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
@@ -301,6 +312,8 @@ describe('AuthorAutocomplete', () => {
     expect(screen.getByText('Jane Austen')).toBeInTheDocument();
     expect(screen.getByText('Charles Dickens')).toBeInTheDocument();
     expect(screen.getByText('Ernest Hemingway')).toBeInTheDocument();
+
+    vi.useFakeTimers();
   });
 
   test('calls onChange when author is selected', async () => {
@@ -313,8 +326,10 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     await act(async () => {
-      await vi.runAllTimersAsync();
+      vi.advanceTimersByTime(300);
     });
+
+    vi.useRealTimers();
 
     await waitFor(() => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
@@ -324,6 +339,8 @@ describe('AuthorAutocomplete', () => {
     fireEvent.click(firstOption);
 
     expect(mockOnChange).toHaveBeenCalledWith(mockAuthors[0]);
+
+    vi.useFakeTimers();
   });
 
   test('handles search errors gracefully', async () => {
@@ -337,8 +354,10 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     await act(async () => {
-      await vi.runAllTimersAsync();
+      vi.advanceTimersByTime(300);
     });
+
+    vi.useRealTimers();
 
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith('Author search failed:', expect.any(Error));
@@ -348,6 +367,7 @@ describe('AuthorAutocomplete', () => {
     expect(screen.getByTestId('loading-state')).toHaveTextContent('not-loading');
 
     consoleErrorSpy.mockRestore();
+    vi.useFakeTimers();
   });
 
   test('clears search results when input is cleared', async () => {
@@ -356,16 +376,20 @@ describe('AuthorAutocomplete', () => {
     render(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
-    
+
     // First search
     fireEvent.change(input, { target: { value: 'Jane' } });
     await act(async () => {
-      await vi.runAllTimersAsync();
+      vi.advanceTimersByTime(300);
     });
+
+    vi.useRealTimers();
 
     await waitFor(() => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
     });
+
+    vi.useFakeTimers();
 
     // Clear input
     fireEvent.change(input, { target: { value: '' } });
@@ -398,8 +422,10 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     await act(async () => {
-      await vi.runAllTimersAsync();
+      vi.advanceTimersByTime(300);
     });
+
+    vi.useRealTimers();
 
     await waitFor(() => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
@@ -407,6 +433,8 @@ describe('AuthorAutocomplete', () => {
 
     expect(screen.getByText('Jane Austen')).toBeInTheDocument();
     expect(screen.getByText('British')).toBeInTheDocument();
+
+    vi.useFakeTimers();
   });
 
   test('renders author options without nationality', async () => {
@@ -423,8 +451,10 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     await act(async () => {
-      await vi.runAllTimersAsync();
+      vi.advanceTimersByTime(300);
     });
+
+    vi.useRealTimers();
 
     await waitFor(() => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
@@ -432,16 +462,18 @@ describe('AuthorAutocomplete', () => {
 
     expect(screen.getByText('Jane Austen')).toBeInTheDocument();
     expect(screen.queryByText('British')).not.toBeInTheDocument();
+
+    vi.useFakeTimers();
   });
 
   test('cancels previous search when new search is initiated', async () => {
     let resolveFirstSearch: (value: Author[]) => void;
     let resolveSecondSearch: (value: Author[]) => void;
-    
+
     const firstSearchPromise = new Promise<Author[]>((resolve) => {
       resolveFirstSearch = resolve;
     });
-    
+
     const secondSearchPromise = new Promise<Author[]>((resolve) => {
       resolveSecondSearch = resolve;
     });
@@ -453,18 +485,20 @@ describe('AuthorAutocomplete', () => {
     render(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
-    
+
     // First search
     fireEvent.change(input, { target: { value: 'Jane' } });
     await act(async () => {
-      await vi.runAllTimersAsync();
+      vi.advanceTimersByTime(300);
     });
 
     // Second search before first completes
     fireEvent.change(input, { target: { value: 'Charles' } });
     await act(async () => {
-      await vi.runAllTimersAsync();
+      vi.advanceTimersByTime(300);
     });
+
+    vi.useRealTimers();
 
     // Resolve first search (should be ignored)
     act(() => {
@@ -481,6 +515,8 @@ describe('AuthorAutocomplete', () => {
     });
 
     expect(screen.queryByText('Jane Austen')).not.toBeInTheDocument();
+
+    vi.useFakeTimers();
   });
 
   test('cleans up timeout on unmount', () => {
@@ -540,8 +576,10 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     await act(async () => {
-      await vi.runAllTimersAsync();
+      vi.advanceTimersByTime(300);
     });
+
+    vi.useRealTimers();
 
     await waitFor(() => {
       expect(screen.getByTestId('input-adornment')).toBeInTheDocument();
@@ -555,5 +593,7 @@ describe('AuthorAutocomplete', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('circular-progress')).not.toBeInTheDocument();
     });
+
+    vi.useFakeTimers();
   });
 });
