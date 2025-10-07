@@ -7,7 +7,7 @@ import {
   Typography
 } from '@mui/material';
 import { Author } from '../../types';
-import { authorAPI } from '../../services/api';
+import { useApi } from '../../contexts/ApiContext';
 
 interface AuthorAutocompleteProps {
   value?: Author | null;
@@ -24,12 +24,13 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   disabled = false,
   size = 'medium'
 }) => {
+  const { authorAPI } = useApi();
   const [searchTerm, setSearchTerm] = useState('');
   const [authors, setAuthors] = useState<Author[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  
+
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update search term when value changes externally
@@ -62,7 +63,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authorAPI]);
 
 
 

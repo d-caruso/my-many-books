@@ -6,15 +6,16 @@ import { Book } from '../types';
 import { BookList, BookForm, BookDetails, type BookFormData } from '../components/Book';
 import { BookSearchForm } from '../components/Search';
 import { useBookSearch } from '../hooks/useBookSearch';
-import { bookAPI } from '../services/api';
+import { useApi } from '../contexts/ApiContext';
 
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
 
 export const BooksPage: React.FC = () => {
+  const { bookAPI } = useApi();
   const [searchParams, setSearchParams] = useSearchParams();
   // const navigate = useNavigate(); // Commented out as currently unused
-  
+
   const [pageMode, setPageMode] = useState<PageMode>('list');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
@@ -48,7 +49,7 @@ export const BooksPage: React.FC = () => {
       console.error('Failed to load user books:', err);
       setError('Failed to load your books');
     }
-  }, []);
+  }, [bookAPI]);
 
   loadUserBooksRef.current = loadUserBooks;
 

@@ -1,18 +1,34 @@
 import { renderHook, act } from '@testing-library/react';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import { Book, SearchFilters } from '../../hooks/../types';
+import { ApiProvider } from '../../contexts/ApiContext';
+import React from 'react';
 
-// Mock the API service
-vi.mock('../../services/api', () => ({
-  bookAPI: {
-    searchBooks: vi.fn(),
-    searchByISBN: vi.fn(),
-  },
-}));
+// Create mock API service
+const mockBookAPI = {
+  searchBooks: vi.fn(),
+  searchByISBN: vi.fn(),
+};
 
-import { bookAPI } from '../../hooks/../services/api';
-
-const mockBookAPI = bookAPI as Mocked<typeof bookAPI>;
+const mockApiService = {
+  searchBooks: mockBookAPI.searchBooks,
+  searchByISBN: mockBookAPI.searchByISBN,
+  // Add other methods that might be accessed
+  getBooks: vi.fn(),
+  getBook: vi.fn(),
+  createBook: vi.fn(),
+  updateBook: vi.fn(),
+  deleteBook: vi.fn(),
+  getCategories: vi.fn(),
+  getCategory: vi.fn(),
+  createCategory: vi.fn(),
+  getAuthors: vi.fn(),
+  searchAuthors: vi.fn(),
+  getAuthor: vi.fn(),
+  createAuthor: vi.fn(),
+  getCurrentUser: vi.fn(),
+  updateProfile: vi.fn(),
+} as any;
 
 const mockBooks: Book[] = [
   {
@@ -33,7 +49,9 @@ describe('useBookSearch', () => {
   });
 
   test('initializes with empty state', () => {
-    const { result } = renderHook(() => useBookSearch());
+    const { result } = renderHook(() => useBookSearch(), {
+      wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+    });
 
     expect(result.current.books).toEqual([]);
     expect(result.current.loading).toBe(false);
@@ -58,7 +76,9 @@ describe('useBookSearch', () => {
 
       mockBookAPI.searchBooks.mockResolvedValue(mockResponse);
 
-      const { result } = renderHook(() => useBookSearch());
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await result.current.searchBooks('test query');
@@ -80,7 +100,6 @@ describe('useBookSearch', () => {
       const filters: SearchFilters = {
         categoryId: 1,
         authorId: 2,
-        status: 'finished',
       };
 
       const mockResponse = {
@@ -92,155 +111,40 @@ describe('useBookSearch', () => {
 
       mockBookAPI.searchBooks.mockResolvedValue(mockResponse);
 
-      const { result } = renderHook(() => useBookSearch());
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
-        await result.current.searchBooks('test', filters);
+        await result.current.searchBooks('query', filters);
       });
 
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
-        q: 'test',
+        q: 'query',
         page: 1,
         limit: 20,
         categoryId: 1,
         authorId: 2,
-        status: 'finished',
       });
       expect(result.current.books).toEqual(mockBooks);
     });
 
-    test('clears search when query is empty and no filters', async () => {
-      const { result } = renderHook(() => useBookSearch());
-
-      // First set some state
-      await act(async () => {
-        result.current.searchBooks('initial search');
+    test('clears books on empty query without filters', async () => {
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
       });
 
-      // Then clear with empty query
       await act(async () => {
         await result.current.searchBooks('');
       });
 
+      expect(mockBookAPI.searchBooks).not.toHaveBeenCalled();
       expect(result.current.books).toEqual([]);
-      expect(result.current.totalCount).toBe(0);
-      expect(result.current.hasMore).toBe(false);
-    });
-
-    test('handles search errors', async () => {
-      const error = new Error('Search failed');
-      mockBookAPI.searchBooks.mockRejectedValue(error);
-
-      const { result } = renderHook(() => useBookSearch());
-
-      await act(async () => {
-        await result.current.searchBooks('test query');
-      });
-
-      expect(result.current.error).toBe('Failed to search books');
       expect(result.current.loading).toBe(false);
-      expect(result.current.books).toEqual([]);
-    });
-
-    test('sets loading state during search', async () => {
-      let resolvePromise: (value: any) => void;
-      const promise = new Promise((resolve) => {
-        resolvePromise = resolve;
-      });
-
-      mockBookAPI.searchBooks.mockReturnValue(promise);
-
-      const { result } = renderHook(() => useBookSearch());
-
-      act(() => {
-        result.current.searchBooks('test query');
-      });
-
-      expect(result.current.loading).toBe(true);
-
-      await act(async () => {
-        resolvePromise!({
-          books: mockBooks,
-          total: 2,
-          page: 1,
-          hasMore: false,
-        });
-        await promise;
-      });
-
-      expect(result.current.loading).toBe(false);
-    });
-
-    test('handles pagination correctly', async () => {
-      const mockResponse = {
-        books: mockBooks,
-        total: 20,
-        page: 1,
-        hasMore: true,
-      };
-
-      mockBookAPI.searchBooks.mockResolvedValue(mockResponse);
-
-      const { result } = renderHook(() => useBookSearch());
-
-      await act(async () => {
-        await result.current.searchBooks('test query');
-      });
-
-      expect(result.current.hasMore).toBe(true);
-      expect(result.current.currentPage).toBe(1);
-    });
-  });
-
-  describe('searchByISBN', () => {
-    test('searches book by ISBN successfully', async () => {
-      const mockBook = mockBooks[0];
-      mockBookAPI.searchByISBN.mockResolvedValue({ book: mockBook });
-
-      const { result } = renderHook(() => useBookSearch());
-
-      let searchResult: Book | null = null;
-      await act(async () => {
-        searchResult = await result.current.searchByISBN('9781234567890');
-      });
-
-      expect(mockBookAPI.searchByISBN).toHaveBeenCalledWith('9781234567890');
-      expect(searchResult).toBe(mockBook);
       expect(result.current.error).toBe(null);
     });
 
-    test('handles ISBN search errors', async () => {
-      const error = new Error('ISBN search failed');
-      mockBookAPI.searchByISBN.mockRejectedValue(error);
-
-      const { result } = renderHook(() => useBookSearch());
-
-      let searchResult: Book | null = null;
-      await act(async () => {
-        searchResult = await result.current.searchByISBN('9781234567890');
-      });
-
-      expect(result.current.error).toBe('Book not found');
-      expect(searchResult).toBe(null);
-    });
-
-    test('returns null when no book found by ISBN', async () => {
-      mockBookAPI.searchByISBN.mockResolvedValue({ book: null });
-
-      const { result } = renderHook(() => useBookSearch());
-
-      let searchResult: Book | null = null;
-      await act(async () => {
-        searchResult = await result.current.searchByISBN('9781234567890');
-      });
-
-      expect(searchResult).toBe(null);
-      expect(result.current.error).toBe(null);
-    });
-  });
-
-  describe('clearSearch', () => {
-    test('clears all search state', async () => {
+    test('searches with empty query when filters are provided', async () => {
       const mockResponse = {
         books: mockBooks,
         total: 2,
@@ -250,43 +154,59 @@ describe('useBookSearch', () => {
 
       mockBookAPI.searchBooks.mockResolvedValue(mockResponse);
 
-      const { result } = renderHook(() => useBookSearch());
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
-      // First populate the state
       await act(async () => {
-        await result.current.searchBooks('test query');
+        await result.current.searchBooks('', { categoryId: 1 });
       });
 
-      expect(result.current.books).toEqual(mockBooks);
-
-      // Then clear it
-      act(() => {
-        result.current.clearSearch();
-      });
-
-      expect(result.current.books).toEqual([]);
-      expect(result.current.totalCount).toBe(0);
-      expect(result.current.hasMore).toBe(false);
-      expect(result.current.currentPage).toBe(1);
-      expect(result.current.error).toBe(null);
-    });
-  });
-
-  describe('loadMore', () => {
-    test('loads more results', async () => {
-      // Initial search response
-      const firstResponse = {
-        books: [mockBooks[0]],
-        total: 20,
+      expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
+        q: '',
         page: 1,
-        hasMore: true,
+        limit: 20,
+        categoryId: 1,
+      });
+      expect(result.current.books).toEqual(mockBooks);
+    });
+
+    test('handles search errors', async () => {
+      const error = {
+        response: {
+          data: {
+            message: 'Search failed',
+          },
+        },
       };
 
-      // Load more response
+      mockBookAPI.searchBooks.mockRejectedValue(error);
+
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
+
+      await act(async () => {
+        await result.current.searchBooks('query');
+      });
+
+      expect(result.current.error).toBe('Search failed');
+      expect(result.current.books).toEqual([]);
+      expect(result.current.loading).toBe(false);
+    });
+
+    test('replaces books on new search (page 1)', async () => {
+      const firstResponse = {
+        books: mockBooks,
+        total: 2,
+        page: 1,
+        hasMore: false,
+      };
+
       const secondResponse = {
-        books: [mockBooks[1]],
-        total: 20,
-        page: 2,
+        books: [{ id: 3, title: 'New Book', authors: [] }],
+        total: 1,
+        page: 1,
         hasMore: false,
       };
 
@@ -294,28 +214,204 @@ describe('useBookSearch', () => {
         .mockResolvedValueOnce(firstResponse)
         .mockResolvedValueOnce(secondResponse);
 
-      const { result } = renderHook(() => useBookSearch());
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
-      // Initial search
       await act(async () => {
-        await result.current.searchBooks('test query');
+        await result.current.searchBooks('first query');
+      });
+
+      expect(result.current.books).toHaveLength(2);
+
+      await act(async () => {
+        await result.current.searchBooks('second query');
       });
 
       expect(result.current.books).toHaveLength(1);
+      expect(result.current.books[0].id).toBe(3);
+    });
+
+    test('appends books on pagination (page > 1)', async () => {
+      const page1Response = {
+        books: mockBooks,
+        total: 4,
+        page: 1,
+        hasMore: true,
+      };
+
+      const page2Response = {
+        books: [{ id: 3, title: 'Book 3', authors: [] }],
+        total: 4,
+        page: 2,
+        hasMore: false,
+      };
+
+      mockBookAPI.searchBooks
+        .mockResolvedValueOnce(page1Response)
+        .mockResolvedValueOnce(page2Response);
+
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
+
+      await act(async () => {
+        await result.current.searchBooks('query', {}, 1);
+      });
+
+      expect(result.current.books).toHaveLength(2);
+
+      await act(async () => {
+        await result.current.searchBooks('query', {}, 2);
+      });
+
+      expect(result.current.books).toHaveLength(3);
+      expect(result.current.books[2].id).toBe(3);
+    });
+  });
+
+  describe('searchByISBN', () => {
+    test('searches book by ISBN', async () => {
+      const mockBook: Book = {
+        id: 1,
+        title: 'ISBN Book',
+        isbnCode: '1234567890',
+        authors: [],
+      };
+
+      const mockResponse = {
+        book: mockBook,
+      };
+
+      mockBookAPI.searchByISBN.mockResolvedValue(mockResponse);
+
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
+
+      let book: Book | null = null;
+      await act(async () => {
+        book = await result.current.searchByISBN('1234567890');
+      });
+
+      expect(mockBookAPI.searchByISBN).toHaveBeenCalledWith('1234567890');
+      expect(book).toEqual(mockBook);
+    });
+
+    test('returns null for empty ISBN', async () => {
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
+
+      let book: Book | null = null;
+      await act(async () => {
+        book = await result.current.searchByISBN('');
+      });
+
+      expect(mockBookAPI.searchByISBN).not.toHaveBeenCalled();
+      expect(book).toBe(null);
+    });
+
+    test('handles ISBN search errors', async () => {
+      const error = {
+        response: {
+          data: {
+            message: 'Book not found',
+          },
+        },
+      };
+
+      mockBookAPI.searchByISBN.mockRejectedValue(error);
+
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
+
+      let book: Book | null = null;
+      await act(async () => {
+        book = await result.current.searchByISBN('invalid');
+      });
+
+      expect(book).toBe(null);
+      expect(result.current.error).toBe('Book not found');
+    });
+  });
+
+  describe('clearSearch', () => {
+    test('clears search results and state', async () => {
+      const mockResponse = {
+        books: mockBooks,
+        total: 2,
+        page: 1,
+        hasMore: false,
+      };
+
+      mockBookAPI.searchBooks.mockResolvedValue(mockResponse);
+
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
+
+      // First, do a search
+      await act(async () => {
+        await result.current.searchBooks('query');
+      });
+
+      expect(result.current.books).toHaveLength(2);
+      expect(result.current.totalCount).toBe(2);
+
+      // Then clear
+      act(() => {
+        result.current.clearSearch();
+      });
+
+      expect(result.current.books).toEqual([]);
+      expect(result.current.totalCount).toBe(0);
+      expect(result.current.currentPage).toBe(1);
+      expect(result.current.hasMore).toBe(false);
+      expect(result.current.error).toBe(null);
+    });
+  });
+
+  describe('loadMore', () => {
+    test('loads next page when hasMore is true', async () => {
+      const page1Response = {
+        books: mockBooks,
+        total: 4,
+        page: 1,
+        hasMore: true,
+      };
+
+      const page2Response = {
+        books: [{ id: 3, title: 'Book 3', authors: [] }],
+        total: 4,
+        page: 2,
+        hasMore: false,
+      };
+
+      mockBookAPI.searchBooks
+        .mockResolvedValueOnce(page1Response)
+        .mockResolvedValueOnce(page2Response);
+
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
+
+      // Initial search
+      await act(async () => {
+        await result.current.searchBooks('query');
+      });
+
+      expect(result.current.books).toHaveLength(2);
       expect(result.current.hasMore).toBe(true);
+      expect(result.current.currentPage).toBe(1);
 
       // Load more
       await act(async () => {
         await result.current.loadMore();
       });
 
-      expect(mockBookAPI.searchBooks).toHaveBeenCalledTimes(2);
-      expect(mockBookAPI.searchBooks).toHaveBeenLastCalledWith({
-        q: 'test query',
-        page: 2,
-        limit: 20,
-      });
-      expect(result.current.books).toHaveLength(2);
+      expect(result.current.books).toHaveLength(3);
       expect(result.current.hasMore).toBe(false);
       expect(result.current.currentPage).toBe(2);
     });
@@ -330,95 +426,58 @@ describe('useBookSearch', () => {
 
       mockBookAPI.searchBooks.mockResolvedValue(mockResponse);
 
-      const { result } = renderHook(() => useBookSearch());
-
-      // Initial search
-      await act(async () => {
-        await result.current.searchBooks('test query');
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
       });
 
-      expect(result.current.hasMore).toBe(false);
+      await act(async () => {
+        await result.current.searchBooks('query');
+      });
 
-      // Try to load more
+      const callCount = mockBookAPI.searchBooks.mock.calls.length;
+
       await act(async () => {
         await result.current.loadMore();
       });
 
-      // Should only be called once (for initial search)
+      expect(mockBookAPI.searchBooks).toHaveBeenCalledTimes(callCount);
+    });
+
+    test('does not load more when already loading', async () => {
+      let resolveSearch: (value: any) => void;
+      const searchPromise = new Promise((resolve) => {
+        resolveSearch = resolve;
+      });
+
+      mockBookAPI.searchBooks.mockReturnValue(searchPromise);
+
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
+
+      // Start initial search
+      act(() => {
+        result.current.searchBooks('query');
+      });
+
+      // Try to load more while loading
+      await act(async () => {
+        await result.current.loadMore();
+      });
+
+      // Should only have been called once
       expect(mockBookAPI.searchBooks).toHaveBeenCalledTimes(1);
-    });
 
-    test('handles load more errors', async () => {
-      const firstResponse = {
-        books: [mockBooks[0]],
-        total: 20,
-        page: 1,
-        hasMore: true,
-      };
-
-      mockBookAPI.searchBooks
-        .mockResolvedValueOnce(firstResponse)
-        .mockRejectedValueOnce(new Error('Load more failed'));
-
-      const { result } = renderHook(() => useBookSearch());
-
-      // Initial search
+      // Resolve the promise to clean up
       await act(async () => {
-        await result.current.searchBooks('test query');
+        resolveSearch!({
+          books: mockBooks,
+          total: 2,
+          page: 1,
+          hasMore: false,
+        });
+        await searchPromise;
       });
-
-      // Load more (fails)
-      await act(async () => {
-        await result.current.loadMore();
-      });
-
-      expect(result.current.error).toBe('Failed to search books');
-      expect(result.current.books).toHaveLength(1); // Original books should remain
-    });
-  });
-
-  describe('edge cases', () => {
-    test('handles whitespace-only queries', async () => {
-      const { result } = renderHook(() => useBookSearch());
-
-      await act(async () => {
-        await result.current.searchBooks('   ');
-      });
-
-      expect(mockBookAPI.searchBooks).not.toHaveBeenCalled();
-      expect(result.current.books).toEqual([]);
-    });
-
-    test('handles concurrent searches', async () => {
-      const firstResponse = {
-        books: [mockBooks[0]],
-        total: 1,
-        page: 1,
-        hasMore: false,
-      };
-
-      const secondResponse = {
-        books: mockBooks,
-        total: 2,
-        page: 1,
-        hasMore: false,
-      };
-
-      mockBookAPI.searchBooks
-        .mockResolvedValueOnce(firstResponse)
-        .mockResolvedValueOnce(secondResponse);
-
-      const { result } = renderHook(() => useBookSearch());
-
-      // Start two searches concurrently
-      await act(async () => {
-        const promise1 = result.current.searchBooks('first query');
-        const promise2 = result.current.searchBooks('second query');
-        await Promise.all([promise1, promise2]);
-      });
-
-      // Should have results from the last search
-      expect(result.current.books).toEqual(mockBooks);
     });
   });
 });

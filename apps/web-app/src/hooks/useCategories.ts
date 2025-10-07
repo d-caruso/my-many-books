@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Category } from '../types';
-import { categoryAPI } from '../services/api';
+import { useApi } from '../contexts/ApiContext';
 
 interface CategoriesState {
   categories: Category[];
@@ -14,6 +14,7 @@ interface CategoriesActions {
 }
 
 export const useCategories = (): CategoriesState & CategoriesActions => {
+  const { categoryAPI } = useApi();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +38,7 @@ export const useCategories = (): CategoriesState & CategoriesActions => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [categoryAPI]);
 
   const createCategory = useCallback(async (name: string): Promise<Category | null> => {
     if (!name.trim()) {
@@ -53,7 +54,7 @@ export const useCategories = (): CategoriesState & CategoriesActions => {
       setError(err.response?.data?.message || 'Failed to create category');
       return null;
     }
-  }, []);
+  }, [categoryAPI]);
 
   // Load categories on mount
   useEffect(() => {

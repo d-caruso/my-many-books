@@ -1,18 +1,34 @@
 import { renderHook, act } from '@testing-library/react';
 import { useCategories } from '../../hooks/useCategories';
 import { Category } from '../../hooks/../types';
+import { ApiProvider } from '../../contexts/ApiContext';
+import React from 'react';
 
-// Mock the API service
-vi.mock('../../services/api', () => ({
-  categoryAPI: {
-    getCategories: vi.fn(),
-    createCategory: vi.fn(),
-  },
-}));
+// Create mock API service
+const mockCategoryAPI = {
+  getCategories: vi.fn(),
+  createCategory: vi.fn(),
+};
 
-import { categoryAPI } from '../../hooks/../services/api';
-
-const mockCategoryAPI = categoryAPI as Mocked<typeof categoryAPI>;
+const mockApiService = {
+  getCategories: mockCategoryAPI.getCategories,
+  createCategory: mockCategoryAPI.createCategory,
+  // Add other methods that might be accessed
+  searchBooks: vi.fn(),
+  searchByISBN: vi.fn(),
+  getBooks: vi.fn(),
+  getBook: vi.fn(),
+  createBook: vi.fn(),
+  updateBook: vi.fn(),
+  deleteBook: vi.fn(),
+  getCategory: vi.fn(),
+  getAuthors: vi.fn(),
+  searchAuthors: vi.fn(),
+  getAuthor: vi.fn(),
+  createAuthor: vi.fn(),
+  getCurrentUser: vi.fn(),
+  updateProfile: vi.fn(),
+} as any;
 
 // Mock console.error to keep tests clean
 const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -35,7 +51,9 @@ describe('useCategories', () => {
   test('initializes with empty state and loads categories on mount', async () => {
     mockCategoryAPI.getCategories.mockResolvedValue(mockCategories);
 
-    const { result } = renderHook(() => useCategories());
+    const { result } = renderHook(() => useCategories(), {
+      wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+    });
 
     // Initial state
     expect(result.current.categories).toEqual([]);
@@ -70,7 +88,9 @@ describe('useCategories', () => {
 
       mockCategoryAPI.getCategories.mockResolvedValue(unsortedCategories);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await result.current.loadCategories();
@@ -97,7 +117,9 @@ describe('useCategories', () => {
 
       mockCategoryAPI.getCategories.mockRejectedValue(apiError);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await result.current.loadCategories();
@@ -114,7 +136,9 @@ describe('useCategories', () => {
 
       mockCategoryAPI.getCategories.mockRejectedValue(genericError);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await result.current.loadCategories();
@@ -133,7 +157,9 @@ describe('useCategories', () => {
 
       mockCategoryAPI.getCategories.mockReturnValue(promise);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       // Should start loading immediately on mount
       expect(result.current.loading).toBe(true);
@@ -150,7 +176,9 @@ describe('useCategories', () => {
       // First call fails
       mockCategoryAPI.getCategories.mockRejectedValueOnce(new Error('First error'));
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -181,7 +209,9 @@ describe('useCategories', () => {
       const newCategory: Category = { id: 2, name: 'Adventure' };
       mockCategoryAPI.createCategory.mockResolvedValue(newCategory);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       // Wait for initial load
       await act(async () => {
@@ -209,7 +239,9 @@ describe('useCategories', () => {
       const newCategory: Category = { id: 1, name: 'Trimmed' };
       mockCategoryAPI.createCategory.mockResolvedValue(newCategory);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -225,7 +257,9 @@ describe('useCategories', () => {
     test('returns null for empty category name', async () => {
       mockCategoryAPI.getCategories.mockResolvedValue([]);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -243,7 +277,9 @@ describe('useCategories', () => {
     test('returns null for whitespace-only category name', async () => {
       mockCategoryAPI.getCategories.mockResolvedValue([]);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -271,7 +307,9 @@ describe('useCategories', () => {
 
       mockCategoryAPI.createCategory.mockRejectedValue(apiError);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -293,7 +331,9 @@ describe('useCategories', () => {
       const genericError = new Error('Network error');
       mockCategoryAPI.createCategory.mockRejectedValue(genericError);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -313,7 +353,9 @@ describe('useCategories', () => {
         { id: 1, name: 'Fiction' },
       ]);
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -352,7 +394,9 @@ describe('useCategories', () => {
       mockCategoryAPI.getCategories.mockResolvedValue(existingCategories);
       mockCategoryAPI.createCategory.mockRejectedValue(new Error('Create failed'));
 
-      const { result } = renderHook(() => useCategories());
+      const { result } = renderHook(() => useCategories(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
 
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 0));

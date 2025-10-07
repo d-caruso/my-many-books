@@ -14,10 +14,10 @@ class AxiosHttpClient implements HttpClient {
   private axios;
 
   constructor(baseURL?: string, timeout?: number) {
-    // baseURL is kept in axios config for MSW interceptor compatibility
-    // even though shared-api constructs full URLs
+    // NOTE: We don't pass baseURL to axios.create() because shared-api's BaseApiClient
+    // constructs full URLs by prepending baseURL to endpoints. Axios should receive
+    // complete URLs, not relative paths. This is the industry standard for layered APIs.
     this.axios = axios.create({
-      baseURL,
       timeout,
     });
     // Add request interceptor for auth token

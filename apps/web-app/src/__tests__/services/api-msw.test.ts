@@ -1,36 +1,70 @@
 /**
  * API Service tests using MSW for HTTP layer mocking
  * Industry standard approach - mocks at the HTTP layer instead of API client layer
+ *
+ * NOTE: We mock import.meta.env at the module level to ensure the API service
+ * initializes with the correct baseURL. This is necessary because import.meta.env
+ * is evaluated at module load time, before Vitest's test.env configuration takes effect.
  */
 
 import { describe, test, expect, beforeEach, beforeAll, vi } from 'vitest';
-
-// Mock environment variables using Vitest - MUST be before API import
-vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000');
-vi.stubEnv('MODE', 'test');
-
-// Import MSW and types
 import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
 import { Book, Category, Author, User, PaginatedResponse } from '../../types';
 
-// Declare API service variables - will be dynamically imported after env is set
-let bookAPI: any, categoryAPI: any, authorAPI: any, userAPI: any;
+// Mock import.meta.env BEFORE importing the API service
+vi.stubGlobal('import', {
+  meta: {
+    env: {
+      VITE_API_BASE_URL: 'http://localhost:3000',
+      MODE: 'test',
+    },
+  },
+});
 
-describe.skip('API Service with MSW HTTP Layer Mocking', () => {
-  beforeAll(async () => {
-    // Invalidate module cache to force fresh import with stubbed environment
-    vi.resetModules();
+// Import API service after environment is mocked
+import { createApiService } from '../../services/api';
 
-    // Dynamically import API service AFTER environment variables are stubbed
-    // This ensures the ApiService constructor reads the correct environment variable
-    const apiModule = await import('../../services/api');
-    bookAPI = apiModule.bookAPI;
-    categoryAPI = apiModule.categoryAPI;
-    authorAPI = apiModule.authorAPI;
-    userAPI = apiModule.userAPI;
-  });
+// Create API instances with explicit baseURL configuration
+// NOTE: BaseURL must include /api prefix to match MSW handlers
+const apiService = createApiService({
+  config: {
+    baseURL: 'http://localhost:3000/api',
+    timeout: 10000,
+    getAuthToken: () => null,
+    onUnauthorized: () => {},
+  },
+});
 
+const bookAPI = {
+  searchBooks: apiService.searchBooks.bind(apiService),
+  searchByISBN: apiService.searchByISBN.bind(apiService),
+  getBooks: apiService.getBooks.bind(apiService),
+  getBook: apiService.getBook.bind(apiService),
+  createBook: apiService.createBook.bind(apiService),
+  updateBook: apiService.updateBook.bind(apiService),
+  deleteBook: apiService.deleteBook.bind(apiService),
+};
+
+const categoryAPI = {
+  getCategories: apiService.getCategories.bind(apiService),
+  getCategory: apiService.getCategory.bind(apiService),
+  createCategory: apiService.createCategory.bind(apiService),
+};
+
+const authorAPI = {
+  getAuthors: apiService.getAuthors.bind(apiService),
+  searchAuthors: apiService.searchAuthors.bind(apiService),
+  getAuthor: apiService.getAuthor.bind(apiService),
+  createAuthor: apiService.createAuthor.bind(apiService),
+};
+
+const userAPI = {
+  getCurrentUser: apiService.getCurrentUser.bind(apiService),
+  updateProfile: apiService.updateProfile.bind(apiService),
+};
+
+describe('API Service with MSW HTTP Layer Mocking', () => {
   beforeEach(() => {
     // Reset any custom handlers before each test
     server.resetHandlers();
