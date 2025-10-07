@@ -259,7 +259,20 @@ jobs:
                 --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 
               echo "Waiting for stack creation to complete..."
-              aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
+              # Wait with error handling to display stack events on failure
+              if ! aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME" 2>&1; then
+                echo "Stack creation failed. Retrieving stack events..."
+                aws cloudformation describe-stack-events \
+                  --stack-name "$STACK_NAME" \
+                  --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`ROLLBACK_IN_PROGRESS` || ResourceStatus==`ROLLBACK_COMPLETE`].[LogicalResourceId,ResourceStatus,ResourceStatusReason]' \
+                  --output table
+                echo "Full stack status:"
+                aws cloudformation describe-stacks \
+                  --stack-name "$STACK_NAME" \
+                  --query 'Stacks[0].[StackStatus,StackStatusReason]' \
+                  --output table
+                exit 1
+              fi
             else
               echo "Updating existing infrastructure stack: $STACK_NAME"
               aws cloudformation update-stack \
@@ -288,7 +301,20 @@ jobs:
               --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 
             echo "Waiting for stack creation to complete..."
-            aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
+            # Wait with error handling to display stack events on failure
+            if ! aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME" 2>&1; then
+              echo "Stack creation failed. Retrieving stack events..."
+              aws cloudformation describe-stack-events \
+                --stack-name "$STACK_NAME" \
+                --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`ROLLBACK_IN_PROGRESS` || ResourceStatus==`ROLLBACK_COMPLETE`].[LogicalResourceId,ResourceStatus,ResourceStatusReason]' \
+                --output table
+              echo "Full stack status:"
+              aws cloudformation describe-stacks \
+                --stack-name "$STACK_NAME" \
+                --query 'Stacks[0].[StackStatus,StackStatusReason]' \
+                --output table
+              exit 1
+            fi
           fi
           
           echo "Infrastructure deployment completed successfully"
