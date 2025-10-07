@@ -1,4 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useISBNScanner } from '../../hooks/useISBNScanner';
 import { ScanResult } from '../../hooks/../types';
 
