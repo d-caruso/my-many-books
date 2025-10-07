@@ -452,4 +452,9 @@ export const authorAPI = {
   createAuthor: apiService.createAuthor.bind(apiService),
 };
 
+export const userAPI = {
+  getCurrentUser: apiService.getCurrentUser.bind(apiService),
+  updateProfile: apiService.updateProfile.bind(apiService),
+};
+
 // Individual API clients are accessed through the main apiService instance
