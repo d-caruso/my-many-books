@@ -134,20 +134,9 @@ export const handlers = [
     return HttpResponse.json(newCategory);
   }),
 
-  // Authors endpoints
-  http.get('*/api/authors', ({ request }) => {
-    const url = new URL(request.url);
-    const search = url.searchParams.get('search');
-    
-    let filteredAuthors = mockAuthors;
-    if (search) {
-      filteredAuthors = mockAuthors.filter(a => 
-        a.name.toLowerCase().includes(search.toLowerCase()) ||
-        a.surname.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    
-    return HttpResponse.json(filteredAuthors);
+  // Authors endpoints - matches shared-api endpoint /authors (get all)
+  http.get('*/api/authors', () => {
+    return HttpResponse.json(mockAuthors);
   }),
 
   http.get('*/api/authors/:id', ({ params }) => {
@@ -184,32 +173,53 @@ export const handlers = [
     return HttpResponse.json(updatedUser);
   }),
 
-  // ISBN search
-  http.get('*/api/books/search/isbn/:isbn', ({ params }) => {
-    return HttpResponse.json({
-      title: 'Test Book from ISBN',
-      isbn: params.isbn
-    });
+  // ISBN search - matches shared-api endpoint /books/search/{isbn}
+  http.get('*/api/books/search/:isbn', ({ params }) => {
+    const book = mockBooks.find(b => b.isbnCode === params.isbn);
+    if (!book) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json(book);
   }),
 
-  // Search endpoints
-  http.get('*/api/books', ({ request }) => {
+  // Search endpoints - matches shared-api endpoint /books/search?q=...
+  http.get('*/api/books/search', ({ request }) => {
     const url = new URL(request.url);
-    const search = url.searchParams.get('search');
-    
+    const q = url.searchParams.get('q');
+    const status = url.searchParams.get('status');
+
     let filteredBooks = mockBooks;
-    if (search) {
-      filteredBooks = mockBooks.filter(book => 
-        book.title.toLowerCase().includes(search.toLowerCase())
+    if (q) {
+      filteredBooks = filteredBooks.filter(book =>
+        book.title.toLowerCase().includes(q.toLowerCase())
       );
     }
-    
+    if (status) {
+      filteredBooks = filteredBooks.filter(book => book.status === status);
+    }
+
     return HttpResponse.json({
       books: filteredBooks,
       total: filteredBooks.length,
       hasMore: false,
       page: 1
     });
+  }),
+
+  // Authors search - matches shared-api endpoint /authors/search?q=...
+  http.get('*/api/authors/search', ({ request }) => {
+    const url = new URL(request.url);
+    const q = url.searchParams.get('q');
+
+    let filteredAuthors = mockAuthors;
+    if (q) {
+      filteredAuthors = mockAuthors.filter(a =>
+        a.name.toLowerCase().includes(q.toLowerCase()) ||
+        a.surname.toLowerCase().includes(q.toLowerCase())
+      );
+    }
+
+    return HttpResponse.json(filteredAuthors);
   })
 ];
 
