@@ -85,16 +85,20 @@ vi.mock('@mui/material', () => ({
       {endIcon && <span data-testid="end-icon">{endIcon}</span>}
     </button>
   ),
-  Box: ({ children, component, sx, display, gap, mb, ...props }: any) => (
-    <div 
-      data-testid="box" 
-      data-component={component}
-      style={{ display, gap, marginBottom: mb, ...sx }}
-      {...props}
-    >
-      {children}
-    </div>
-  ),
+  Box: ({ children, component, sx, display, gap, mb, onSubmit, ...props }: any) => {
+    const Element = component === 'form' ? 'form' : 'div';
+    return (
+      <Element
+        data-testid="box"
+        data-component={component}
+        style={{ display, gap, marginBottom: mb, ...sx }}
+        onSubmit={onSubmit}
+        {...props}
+      >
+        {children}
+      </Element>
+    );
+  },
   FormControl: ({ children, fullWidth, size, ...props }: any) => (
     <div data-testid="form-control" data-fullwidth={fullWidth} data-size={size} {...props}>
       {children}
@@ -208,25 +212,25 @@ describe('BookSearchForm', () => {
   });
 
   test('calls onSearch when form is submitted with valid query', () => {
-    const { container } = render(<BookSearchForm {...defaultProps} />);
+    render(<BookSearchForm {...defaultProps} />);
 
     const searchInput = screen.getByTestId('search-input');
-    const form = container.querySelector('form');
+    const searchButton = screen.getByTestId('button-contained');
 
     fireEvent.change(searchInput, { target: { value: 'Test Book' } });
-    fireEvent.submit(form!);
+    fireEvent.click(searchButton);
 
     expect(mockOnSearch).toHaveBeenCalledWith('Test Book', {});
   });
 
   test('prevents submission with query shorter than 2 characters', async () => {
-    const { container } = render(<BookSearchForm {...defaultProps} />);
+    render(<BookSearchForm {...defaultProps} />);
 
     const searchInput = screen.getByTestId('search-input');
-    const form = container.querySelector('form');
+    const searchButton = screen.getByTestId('button-contained');
 
     fireEvent.change(searchInput, { target: { value: 'T' } });
-    fireEvent.submit(form!);
+    fireEvent.click(searchButton);
 
     await waitFor(() => {
       expect(screen.getByText(/Please enter at least 2 characters/i)).toBeInTheDocument();
@@ -430,11 +434,11 @@ describe('BookSearchForm', () => {
   test('handles form submission via Enter key', () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const form = screen.getByTestId('box').querySelector('form');
     const searchInput = screen.getByTestId('search-input');
+    const searchButton = screen.getByTestId('button-contained');
 
     fireEvent.change(searchInput, { target: { value: 'Test Book' } });
-    fireEvent.submit(form!);
+    fireEvent.click(searchButton);
 
     expect(mockOnSearch).toHaveBeenCalledWith('Test Book', {});
   });
