@@ -3,6 +3,7 @@
  * Industry standard approach - mocks at the HTTP layer instead of API client layer
  */
 
+import { describe, test, expect, beforeEach } from 'vitest';
 import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
 import { createApiService } from '../../services/api';
