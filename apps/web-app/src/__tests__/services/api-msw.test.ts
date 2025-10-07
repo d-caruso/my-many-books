@@ -12,7 +12,7 @@ import { Book, Category, Author, User, PaginatedResponse } from '../../types';
 // Create API service with real implementation (no mocks)
 const apiService = createApiService({
   config: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3000/api',
     timeout: 10000,
     getAuthToken: () => 'test-token',
     onUnauthorized: () => {},
@@ -27,23 +27,14 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
 
   describe('Books API', () => {
     test('getBooks makes HTTP request and returns data', async () => {
-      // Set environment to production to ensure API calls are made
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
-      process.env.REACT_APP_API_BASE_URL = 'http://localhost:3000';
+      const result = await apiService.getBooks({ page: 1, limit: 10 });
 
-      try {
-        const result = await apiService.getBooks({ page: 1, limit: 10 });
-
-        expect(result).toHaveProperty('books');
-        expect(result).toHaveProperty('pagination');
-        expect(Array.isArray(result.books)).toBe(true);
-        expect(result.books.length).toBeGreaterThan(0);
-        expect(result.books[0]).toHaveProperty('title');
-        expect(result.books[0]).toHaveProperty('isbnCode');
-      } finally {
-        process.env.NODE_ENV = originalEnv;
-      }
+      expect(result).toHaveProperty('books');
+      expect(result).toHaveProperty('pagination');
+      expect(Array.isArray(result.books)).toBe(true);
+      expect(result.books.length).toBeGreaterThan(0);
+      expect(result.books[0]).toHaveProperty('title');
+      expect(result.books[0]).toHaveProperty('isbnCode');
     });
 
     test('getBooks with custom pagination parameters', async () => {
