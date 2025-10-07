@@ -138,6 +138,10 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
 
       const result = await bookAPI.getBooks({ page: 2, limit: 5 });
 
+      // Check if result exists and has the expected structure
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('pagination');
+      expect(result.pagination).toHaveProperty('currentPage');
       expect(result.pagination.currentPage).toBe(2);
       expect(result.pagination.itemsPerPage).toBe(5);
     });
@@ -264,9 +268,13 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
 
       const result = await authorAPI.searchAuthors('fitzgerald');
 
+      // Check if result exists and is an array
+      expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBe(1);
-      expect(result[0].surname).toBe('Fitzgerald');
+      if (Array.isArray(result)) {
+        expect(result.length).toBe(1);
+        expect(result[0].surname).toBe('Fitzgerald');
+      }
     });
   });
 
