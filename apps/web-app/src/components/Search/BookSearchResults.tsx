@@ -133,8 +133,8 @@ interface BookCardProps {
 const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
   const formatAuthors = (authors?: Author[]) => {
     if (!authors || authors.length === 0) return 'Unknown Author';
-    return authors.map(author => 
-      typeof author === 'string' ? author : author.name
+    return authors.map(author =>
+      typeof author === 'string' ? author : `${author.name} ${author.surname}`
     ).join(', ');
   };
 
