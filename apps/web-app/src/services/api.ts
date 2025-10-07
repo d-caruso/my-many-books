@@ -14,8 +14,8 @@ class AxiosHttpClient implements HttpClient {
   private axios;
 
   constructor(baseURL?: string, timeout?: number) {
+    // Note: baseURL is intentionally not used here because shared-api constructs full URLs
     this.axios = axios.create({
-      baseURL,
       timeout,
     });
     // Add request interceptor for auth token
