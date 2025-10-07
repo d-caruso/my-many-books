@@ -80,7 +80,7 @@ describe('Navbar', () => {
     expect(screen.getByText('My Many Books')).toBeInTheDocument();
   });
 
-  test('shows login and register buttons when user is not authenticated', () => {
+  test('shows mobile menu icon when user is not authenticated', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
@@ -91,15 +91,18 @@ describe('Navbar', () => {
 
     render(<Navbar />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('Login')).toBeInTheDocument();
-    expect(screen.getByText('Register')).toBeInTheDocument();
+    // Should show menu icon for mobile
+    expect(screen.getByTestId('menu-icon')).toBeInTheDocument();
+    // Should not show user-specific elements
+    expect(screen.queryByTestId('avatar')).not.toBeInTheDocument();
   });
 
   test('shows user menu when user is authenticated', () => {
     const mockUser = {
       userId: 1,
       email: 'test@example.com',
-      name: 'Test User',
+      name: 'Test',
+      surname: 'User',
     };
 
     mockUseAuth.mockReturnValue({
@@ -114,15 +117,15 @@ describe('Navbar', () => {
 
     expect(screen.getByText('Test User')).toBeInTheDocument();
     expect(screen.getByTestId('avatar')).toBeInTheDocument();
-    expect(screen.queryByText('Login')).not.toBeInTheDocument();
-    expect(screen.queryByText('Register')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('menu-icon')).not.toBeInTheDocument();
   });
 
   test('shows navigation buttons for authenticated user', () => {
     const mockUser = {
       userId: 1,
       email: 'test@example.com',
-      name: 'Test User',
+      name: 'Test',
+      surname: 'User',
     };
 
     mockUseAuth.mockReturnValue({
@@ -135,16 +138,17 @@ describe('Navbar', () => {
 
     render(<Navbar />, { wrapper: TestWrapper });
 
-    expect(screen.getByText('Books')).toBeInTheDocument();
+    expect(screen.getByText('My Books')).toBeInTheDocument();
     expect(screen.getByText('Search')).toBeInTheDocument();
-    expect(screen.getByText('Categories')).toBeInTheDocument();
+    expect(screen.getByText('Scanner')).toBeInTheDocument();
   });
 
   test('opens user menu when user button is clicked', () => {
     const mockUser = {
       userId: 1,
       email: 'test@example.com',
-      name: 'Test User',
+      name: 'Test',
+      surname: 'User',
     };
 
     mockUseAuth.mockReturnValue({
@@ -165,16 +169,15 @@ describe('Navbar', () => {
 
     // Menu should now be visible
     expect(screen.getByTestId('menu')).toBeInTheDocument();
-    expect(screen.getByText('Profile')).toBeInTheDocument();
-    expect(screen.getByText('Settings')).toBeInTheDocument();
-    expect(screen.getByText('Logout')).toBeInTheDocument();
+    expect(screen.getByText('Sign out')).toBeInTheDocument();
   });
 
   test('closes menu when menu item is clicked', () => {
     const mockUser = {
       userId: 1,
       email: 'test@example.com',
-      name: 'Test User',
+      name: 'Test',
+      surname: 'User',
     };
 
     mockUseAuth.mockReturnValue({
@@ -191,12 +194,13 @@ describe('Navbar', () => {
     fireEvent.click(screen.getByTestId('icon-button'));
     expect(screen.getByTestId('menu')).toBeInTheDocument();
 
-    // Click on Profile menu item
-    fireEvent.click(screen.getByText('Profile'));
+    // Click on My Books menu item (get all menu items and click the first one)
+    const menuItems = screen.getAllByTestId('menu-item');
+    fireEvent.click(menuItems[0]); // First menu item is "My Books"
 
     // Menu should be closed and navigation should occur
     expect(screen.queryByTestId('menu')).not.toBeInTheDocument();
-    expect(mockNavigate).toHaveBeenCalledWith('/profile');
+    expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 
   test('handles logout correctly', async () => {
@@ -204,7 +208,8 @@ describe('Navbar', () => {
     const mockUser = {
       userId: 1,
       email: 'test@example.com',
-      name: 'Test User',
+      name: 'Test',
+      surname: 'User',
     };
 
     mockUseAuth.mockReturnValue({
@@ -220,8 +225,8 @@ describe('Navbar', () => {
     // Open menu
     fireEvent.click(screen.getByTestId('icon-button'));
 
-    // Click logout
-    fireEvent.click(screen.getByText('Logout'));
+    // Click sign out
+    fireEvent.click(screen.getByText('Sign out'));
 
     await waitFor(() => {
       expect(mockLogout).toHaveBeenCalled();
@@ -231,7 +236,7 @@ describe('Navbar', () => {
     expect(screen.queryByTestId('menu')).not.toBeInTheDocument();
   });
 
-  test('navigates to login page when login button is clicked', () => {
+  test('clicking logo navigates to home page', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
@@ -242,32 +247,17 @@ describe('Navbar', () => {
 
     render(<Navbar />, { wrapper: TestWrapper });
 
-    fireEvent.click(screen.getByText('Login'));
+    fireEvent.click(screen.getByText('My Many Books'));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/auth');
-  });
-
-  test('navigates to register page when register button is clicked', () => {
-    mockUseAuth.mockReturnValue({
-      user: null,
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      signup: vi.fn(),
-    });
-
-    render(<Navbar />, { wrapper: TestWrapper });
-
-    fireEvent.click(screen.getByText('Register'));
-
-    expect(mockNavigate).toHaveBeenCalledWith('/auth');
+    expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 
   test('navigation buttons navigate to correct paths', () => {
     const mockUser = {
       userId: 1,
       email: 'test@example.com',
-      name: 'Test User',
+      name: 'Test',
+      surname: 'User',
     };
 
     mockUseAuth.mockReturnValue({
@@ -280,24 +270,25 @@ describe('Navbar', () => {
 
     render(<Navbar />, { wrapper: TestWrapper });
 
-    // Test Books navigation
-    fireEvent.click(screen.getByText('Books'));
-    expect(mockNavigate).toHaveBeenCalledWith('/books');
+    // Test My Books navigation
+    fireEvent.click(screen.getByText('My Books'));
+    expect(mockNavigate).toHaveBeenCalledWith('/');
 
     // Test Search navigation
     fireEvent.click(screen.getByText('Search'));
     expect(mockNavigate).toHaveBeenCalledWith('/search');
 
-    // Test Categories navigation
-    fireEvent.click(screen.getByText('Categories'));
-    expect(mockNavigate).toHaveBeenCalledWith('/categories');
+    // Test Scanner navigation
+    fireEvent.click(screen.getByText('Scanner'));
+    expect(mockNavigate).toHaveBeenCalledWith('/scanner');
   });
 
   test('shows user avatar with first letter of name', () => {
     const mockUser = {
       userId: 1,
       email: 'test@example.com',
-      name: 'John Doe',
+      name: 'John',
+      surname: 'Doe',
     };
 
     mockUseAuth.mockReturnValue({
@@ -313,11 +304,12 @@ describe('Navbar', () => {
     expect(screen.getByText('J')).toBeInTheDocument();
   });
 
-  test('handles user without name', () => {
+  test('handles user without name gracefully', () => {
     const mockUser = {
       userId: 1,
       email: 'test@example.com',
-      name: '',
+      name: undefined,
+      surname: undefined,
     };
 
     mockUseAuth.mockReturnValue({
@@ -330,9 +322,8 @@ describe('Navbar', () => {
 
     render(<Navbar />, { wrapper: TestWrapper });
 
-    // Should show email instead of name
-    expect(screen.getByText('test@example.com')).toBeInTheDocument();
-    expect(screen.getByText('T')).toBeInTheDocument(); // First letter of email
+    // Should still render without error
+    expect(screen.getByTestId('avatar')).toBeInTheDocument();
   });
 
   test('has correct styling and layout', () => {
@@ -372,7 +363,8 @@ describe('Navbar', () => {
     const mockUser = {
       userId: 1,
       email: 'test@example.com',
-      name: 'Test User',
+      name: 'Test',
+      surname: 'User',
     };
 
     mockUseAuth.mockReturnValue({

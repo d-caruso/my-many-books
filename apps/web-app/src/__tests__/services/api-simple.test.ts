@@ -185,7 +185,7 @@ describe('API Service Simple Tests', () => {
     expect(result.headers.Authorization).toBe('Bearer test-token');
   });
 
-  test('response interceptor handles 401 errors', () => {
+  test('response interceptor handles 401 errors', async () => {
     apiModule;
 
     // Get the error interceptor function from the captured interceptors
@@ -199,7 +199,12 @@ describe('API Service Simple Tests', () => {
       writable: true,
     });
 
-    errorInterceptor(error);
+    // Error interceptor re-throws the error, so we need to catch it
+    try {
+      await errorInterceptor(error);
+    } catch (e) {
+      // Expected to throw
+    }
 
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('authToken');
     expect(window.location.href).toBe('/login');
