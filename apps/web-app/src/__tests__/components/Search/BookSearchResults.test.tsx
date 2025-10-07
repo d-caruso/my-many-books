@@ -365,9 +365,13 @@ describe('BookSearchResults', () => {
       />
     );
 
-    // Should render without category chips
+    // Should render without category chips (status chip will still be there)
     expect(screen.getByText('Book Without Authors')).toBeInTheDocument();
-    expect(screen.queryByTestId('chip')).not.toBeInTheDocument();
+    // Book has status 'paused' so status chip should exist
+    expect(screen.getByText('Paused')).toBeInTheDocument();
+    // But no category chips (Fiction, Classic, etc.)
+    expect(screen.queryByText('Fiction')).not.toBeInTheDocument();
+    expect(screen.queryByText('Classic')).not.toBeInTheDocument();
   });
 
   test('handles books without edition info', () => {
@@ -439,10 +443,13 @@ describe('BookSearchResults', () => {
       />
     );
 
-    const gridContainer = screen.getByTestId('box');
-    expect(gridContainer).toHaveStyle({
-      display: 'grid',
-    });
+    // Get all Box components and check that at least one has grid display
+    const boxes = screen.getAllByTestId('box');
+    const hasGridLayout = boxes.some(box =>
+      box.style.display === 'grid' ||
+      (box.style as any).display === 'grid'
+    );
+    expect(hasGridLayout).toBe(true);
   });
 
   test('handles component mount and unmount cleanly', () => {
@@ -477,9 +484,11 @@ describe('BookSearchResults', () => {
       />
     );
 
-    expect(screen.getByText('custom-status')).toBeInTheDocument();
-    
-    const statusChip = screen.getByTestId('chip');
+    // Check that custom status is rendered
+    const statusChip = screen.getByText('custom-status');
+    expect(statusChip).toBeInTheDocument();
+
+    // Check that it has default color (since status is unknown)
     expect(statusChip).toHaveAttribute('data-color', 'default');
   });
 });
