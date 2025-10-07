@@ -33,10 +33,6 @@ class AxiosHttpClient implements HttpClient {
     this.axios.interceptors.response.use(
       (response: any) => {
         // Extract data field from API response structure
-        // In test mode with MSW, response.data is already the actual data
-        if (import.meta.env.MODE === 'test') {
-          return response.data;
-        }
         // In production, unwrap nested success response if present
         if (response.data && response.data.success && response.data.data !== undefined) {
           return response.data.data;
@@ -47,7 +43,10 @@ class AxiosHttpClient implements HttpClient {
         if (error.response?.status === 401) {
           // Handle unauthorized - redirect to login
           localStorage.removeItem('authToken');
-          window.location.href = '/login';
+          // Don't redirect in test environment
+          if (typeof window !== 'undefined' && import.meta.env.MODE !== 'test') {
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(error);
       }

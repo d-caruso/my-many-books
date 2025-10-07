@@ -1,33 +1,61 @@
 /**
  * API Service tests using MSW for HTTP layer mocking
  * Industry standard approach - mocks at the HTTP layer instead of API client layer
- *
- * NOTE: We mock import.meta.env at the module level to ensure the API service
- * initializes with the correct baseURL. This is necessary because import.meta.env
- * is evaluated at module load time, before Vitest's test.env configuration takes effect.
  */
 
-import { describe, test, expect, beforeEach, beforeAll, vi } from 'vitest';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
 import { Book, Category, Author, User, PaginatedResponse } from '../../types';
-
-// Mock import.meta.env BEFORE importing the API service
-vi.stubGlobal('import', {
-  meta: {
-    env: {
-      VITE_API_BASE_URL: 'http://localhost:3000',
-      MODE: 'test',
-    },
-  },
-});
-
-// Import API service after environment is mocked
 import { createApiService } from '../../services/api';
+import type { HttpClient, RequestConfig } from '@my-many-books/shared-api';
 
-// Create API instances with explicit baseURL configuration
-// NOTE: BaseURL must include /api prefix to match MSW handlers
+// Create a clean HttpClient for testing with MSW using fetch
+class TestHttpClient implements HttpClient {
+  async get<T>(url: string, config?: RequestConfig): Promise<T> {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: config?.headers as any,
+    });
+    return response.json();
+  }
+
+  async post<T>(url: string, data?: any, config?: RequestConfig): Promise<T> {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...config?.headers,
+      } as any,
+      body: JSON.stringify(data),
+    });
+    return response.json();
+  }
+
+  async put<T>(url: string, data?: any, config?: RequestConfig): Promise<T> {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...config?.headers,
+      } as any,
+      body: JSON.stringify(data),
+    });
+    return response.json();
+  }
+
+  async delete<T>(url: string, config?: RequestConfig): Promise<T> {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: config?.headers as any,
+    });
+    return response.json();
+  }
+}
+
+// Create API service with test HTTP client and explicit baseURL
 const apiService = createApiService({
+  httpClient: new TestHttpClient(),
   config: {
     baseURL: 'http://localhost:3000/api',
     timeout: 10000,
