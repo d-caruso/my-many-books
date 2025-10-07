@@ -305,7 +305,7 @@ Resources:
       StorageType: gp2
       StorageEncrypted: true
       MultiAZ: !If [IsProduction, true, !Ref EnableMultiAZ]
-      DatabaseName: my_many_books
+      DBName: my_many_books
       MasterUsername: admin
       MasterUserPassword: !Sub '{{resolve:secretsmanager:${DatabaseSecret}:SecretString:password}}'
       VPCSecurityGroups:
