@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { BookSearchPage } from '../../../components/Search/BookSearchPage';
 import { useBookSearch } from '../../../hooks/useBookSearch';
@@ -119,8 +120,8 @@ const mockBooks: Book[] = [
 const mockNavigate = vi.fn();
 
 // Mock react-router-dom
-vi.mock('react-router-dom', () => ({
-  ...vi.importActual('react-router-dom'),
+vi.mock('react-router-dom', async () => ({
+  ...await vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useSearchParams: () => [
     new URLSearchParams(),
