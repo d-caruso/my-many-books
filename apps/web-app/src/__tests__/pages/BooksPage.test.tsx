@@ -17,21 +17,11 @@ vi.mock('../../hooks/useBookSearch', () => ({
   useBookSearch: mockUseBookSearch,
 }));
 
-vi.mock('../../services/api', () => ({
-  bookAPI: {
-    createBook: vi.fn().mockResolvedValue({ id: 3, title: 'New Book' }),
-    updateBook: vi.fn().mockResolvedValue({ id: 1, title: 'Updated Book' }),
-    deleteBook: vi.fn().mockResolvedValue({}),
-    getById: vi.fn().mockResolvedValue({ id: 1, title: 'Test Book' }),
-    getBooks: vi.fn().mockResolvedValue([]),
-  },
-}));
-
 // Import after mocks
 import { BooksPage } from '../../pages/BooksPage';
+import { ApiProvider } from '../../contexts/ApiContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useBookSearch } from '../../hooks/useBookSearch';
-import { bookAPI } from '../../services/api';
 
 // Mock Material-UI components
 vi.mock('@mui/material', () => ({
@@ -117,6 +107,32 @@ vi.mock('../../components/Search', () => ({
   ),
 }));
 
+// Create mock API service
+const mockApiService = {
+  createBook: vi.fn().mockResolvedValue({ id: 3, title: 'New Book' }),
+  updateBook: vi.fn().mockResolvedValue({ id: 1, title: 'Updated Book' }),
+  deleteBook: vi.fn().mockResolvedValue({}),
+  getBook: vi.fn().mockResolvedValue({ id: 1, title: 'Test Book' }),
+  getBooks: vi.fn().mockResolvedValue([]),
+  searchBooks: vi.fn(),
+  searchByISBN: vi.fn(),
+  getCategories: vi.fn(),
+  getCategory: vi.fn(),
+  createCategory: vi.fn(),
+  updateCategory: vi.fn(),
+  deleteCategory: vi.fn(),
+  getAuthors: vi.fn(),
+  getAuthor: vi.fn(),
+  createAuthor: vi.fn(),
+  updateAuthor: vi.fn(),
+  deleteAuthor: vi.fn(),
+  searchAuthors: vi.fn(),
+  login: vi.fn(),
+  register: vi.fn(),
+  getCurrentUser: vi.fn(),
+  logout: vi.fn(),
+} as any;
+
 describe('BooksPage', () => {
   // Get mocked functions
   const mockUseSearchParams = vi.mocked(useSearchParams);
@@ -138,6 +154,15 @@ describe('BooksPage', () => {
     searchBooks: vi.fn(),
     loadMore: vi.fn(),
     clearSearch: vi.fn(),
+  };
+
+  // Helper to render with ApiProvider
+  const renderWithProvider = (ui: React.ReactElement) => {
+    return render(
+      <ApiProvider apiService={mockApiService}>
+        {ui}
+      </ApiProvider>
+    );
   };
 
   beforeEach(() => {
@@ -162,13 +187,13 @@ describe('BooksPage', () => {
   });
 
   test('renders books page in list mode by default', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     expect(screen.getByTestId('book-list')).toBeInTheDocument();
     expect(screen.getByTestId('search-form')).toBeInTheDocument();
   });
 
   test('switches to grid view mode', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     const gridButton = screen.getByTestId('grid-icon').closest('button');
     fireEvent.click(gridButton!);
@@ -178,7 +203,7 @@ describe('BooksPage', () => {
   });
 
   test('switches to list view mode', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     const listButton = screen.getByTestId('list-icon').closest('button');
     fireEvent.click(listButton!);
@@ -188,7 +213,7 @@ describe('BooksPage', () => {
   });
 
   test('opens add book form', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     const addButton = screen.getByTestId('add-icon').closest('button');
     fireEvent.click(addButton!);
@@ -198,7 +223,7 @@ describe('BooksPage', () => {
   });
 
   test('renders book list with books', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByText('Select Test Book 1')).toBeInTheDocument();
     expect(screen.getByText('Edit Test Book 1')).toBeInTheDocument();
@@ -207,13 +232,13 @@ describe('BooksPage', () => {
   });
 
   test('displays book count', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByText('2 books in your library')).toBeInTheDocument();
   });
 
   test('performs search', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     const searchButton = screen.getByText('Search');
     fireEvent.click(searchButton);
@@ -233,7 +258,7 @@ describe('BooksPage', () => {
     searchParamsWithQuery.set('q', 'test query');
     mockUseSearchParams.mockReturnValue([searchParamsWithQuery, mockSetSearchParams]);
 
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
 
     // Click the "Clear search" chip
     const clearChip = screen.getByText('Clear search');
@@ -246,7 +271,7 @@ describe('BooksPage', () => {
   });
 
   test('renders search form', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByTestId('search-form')).toBeInTheDocument();
     expect(screen.getByText('Search')).toBeInTheDocument();
@@ -254,14 +279,14 @@ describe('BooksPage', () => {
   });
 
   test('renders view mode controls', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByTestId('grid-icon')).toBeInTheDocument();
     expect(screen.getByTestId('list-icon')).toBeInTheDocument();
   });
 
   test('cancels book form', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     // Open add form
     const addButton = screen.getByTestId('add-icon').closest('button');
@@ -276,7 +301,7 @@ describe('BooksPage', () => {
   });
 
   test('renders page header with title', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByText('My Books')).toBeInTheDocument();
   });
@@ -287,13 +312,13 @@ describe('BooksPage', () => {
       return null;
     });
     
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByTestId('book-form')).toBeInTheDocument();
   });
 
   test('handles book interactions', async () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     // Test add book button triggers add mode
     fireEvent.click(screen.getByTestId('add-icon').closest('button')!);
@@ -302,14 +327,14 @@ describe('BooksPage', () => {
 
   test('handles loading states', () => {
     mockBookSearchReturn.loading = true;
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByTestId('search-form')).toHaveAttribute('data-loading', 'true');
   });
 
   test('displays error states', () => {
     mockBookSearchReturn.error = 'Search error';
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     // Component should still render even with error
     expect(screen.getByTestId('book-list')).toBeInTheDocument();
@@ -318,7 +343,7 @@ describe('BooksPage', () => {
   test('handles empty book list', () => {
     mockBookSearchReturn.books = [];
     mockBookSearchReturn.totalCount = 0;
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByText('Your personal book collection')).toBeInTheDocument();
   });
@@ -329,7 +354,7 @@ describe('BooksPage', () => {
       return null;
     });
     
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('test query', {});
   });
@@ -342,7 +367,7 @@ describe('BooksPage', () => {
       return null;
     });
     
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {
       categoryId: 1,
@@ -354,14 +379,14 @@ describe('BooksPage', () => {
   test('loads user books when no search params', () => {
     mockSearchParams.get = vi.fn().mockReturnValue(null);
     
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
-    expect(bookAPI.getBooks).toHaveBeenCalled();
+    expect(mockApiService.getBooks).toHaveBeenCalled();
   });
 
   test('renders with different book counts', () => {
     mockBookSearchReturn.totalCount = 5;
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByText('5 books in your library')).toBeInTheDocument();
   });
@@ -369,21 +394,21 @@ describe('BooksPage', () => {
   test('renders singular book count', () => {
     mockBookSearchReturn.totalCount = 1;
     mockBookSearchReturn.books = [{ id: 1, title: 'Single Book', isbn: '123' }];
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByText('1 book in your library')).toBeInTheDocument();
   });
 
   test('handles has more books', () => {
     mockBookSearchReturn.hasMore = true;
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByTestId('book-list')).toBeInTheDocument();
   });
 
   test('renders when search error occurs', () => {
     mockBookSearchReturn.error = 'Search failed';
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByTestId('book-list')).toBeInTheDocument();
   });
@@ -391,17 +416,17 @@ describe('BooksPage', () => {
   test('handles no books scenario', () => {
     mockBookSearchReturn.books = [];
     mockBookSearchReturn.totalCount = 0;
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByText('Your personal book collection')).toBeInTheDocument();
   });
 
   test('handles getBooks API error', async () => {
-    bookAPI.getBooks.mockRejectedValueOnce(new Error('API Error'));
+    mockApiService.getBooks.mockRejectedValueOnce(new Error('API Error'));
     
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
-    expect(bookAPI.getBooks).toHaveBeenCalled();
+    expect(mockApiService.getBooks).toHaveBeenCalled();
   });
 
   test('renders with search query from URL', () => {
@@ -410,23 +435,23 @@ describe('BooksPage', () => {
       return null;
     });
     
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('test search', {});
   });
 
   test('calls status change handler', async () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     // Use the stored callback
     if (mockOnStatusChange) {
       await mockOnStatusChange(1, 'read');
-      expect(bookAPI.updateBook).toHaveBeenCalledWith(1, { status: 'read' });
+      expect(mockApiService.updateBook).toHaveBeenCalledWith(1, { status: 'read' });
     }
   });
 
   test('handles different view modes', () => {
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     // Click list view
     fireEvent.click(screen.getByTestId('list-icon').closest('button')!);
@@ -443,7 +468,7 @@ describe('BooksPage', () => {
     ];
     mockBookSearchReturn.totalCount = 3;
     
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(screen.getByText('3 books in your library')).toBeInTheDocument();
     expect(screen.getByTestId('book-item-1')).toBeInTheDocument();
@@ -460,7 +485,7 @@ describe('BooksPage', () => {
       return null;
     });
     
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('fantasy', {
       categoryId: 5,
@@ -476,7 +501,7 @@ describe('BooksPage', () => {
       return null;
     });
     
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {
       categoryId: 3,
@@ -490,7 +515,7 @@ describe('BooksPage', () => {
       return null;
     });
     
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {
       authorId: 7
@@ -499,7 +524,7 @@ describe('BooksPage', () => {
 
   test('calls loadMore function when available', () => {
     mockBookSearchReturn.hasMore = true;
-    render(<BooksPage />);
+    renderWithProvider(<BooksPage />);
     
     expect(mockBookSearchReturn.loadMore).toBeDefined();
   });

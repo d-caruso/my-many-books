@@ -2,15 +2,13 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AuthorAutocomplete } from '../../../components/Search/AuthorAutocomplete';
-import { authorAPI } from '../../../services/api';
+import { ApiProvider } from '../../../contexts/ApiContext';
 import { Author } from '../../../types';
 
-// Mock the API service
-vi.mock('../../../services/api', () => ({
-  authorAPI: {
-    searchAuthors: vi.fn(),
-  },
-}));
+// Create mock API service
+const mockAuthorAPI = {
+  searchAuthors: vi.fn(),
+};
 
 // Mock Material-UI components
 vi.mock('@mui/material', () => ({
@@ -97,7 +95,31 @@ vi.mock('@mui/material', () => ({
   ),
 }));
 
-const mockAuthorAPI = authorAPI as Mocked<typeof authorAPI>;
+// Create mock API service instance
+const mockApiService = {
+  searchAuthors: mockAuthorAPI.searchAuthors,
+  getBooks: vi.fn(),
+  getBook: vi.fn(),
+  createBook: vi.fn(),
+  updateBook: vi.fn(),
+  deleteBook: vi.fn(),
+  searchBooks: vi.fn(),
+  searchByISBN: vi.fn(),
+  getCategories: vi.fn(),
+  getCategory: vi.fn(),
+  createCategory: vi.fn(),
+  updateCategory: vi.fn(),
+  deleteCategory: vi.fn(),
+  getAuthors: vi.fn(),
+  getAuthor: vi.fn(),
+  createAuthor: vi.fn(),
+  updateAuthor: vi.fn(),
+  deleteAuthor: vi.fn(),
+  login: vi.fn(),
+  register: vi.fn(),
+  getCurrentUser: vi.fn(),
+  logout: vi.fn(),
+} as any;
 
 const mockAuthors: Author[] = [
   {
@@ -127,6 +149,15 @@ describe('AuthorAutocomplete', () => {
     onChange: mockOnChange,
   };
 
+  // Helper to render with ApiProvider
+  const renderWithProvider = (ui: React.ReactElement) => {
+    return render(
+      <ApiProvider apiService={mockApiService}>
+        {ui}
+      </ApiProvider>
+    );
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
@@ -138,7 +169,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('renders with default props', () => {
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     expect(screen.getByTestId('autocomplete')).toBeInTheDocument();
     expect(screen.getByTestId('text-field')).toBeInTheDocument();
@@ -146,7 +177,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('renders with custom placeholder', () => {
-    render(
+    renderWithProvider(
       <AuthorAutocomplete
         {...defaultProps}
         placeholder="Custom placeholder"
@@ -157,7 +188,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('renders with custom size', () => {
-    render(
+    renderWithProvider(
       <AuthorAutocomplete
         {...defaultProps}
         size="small"
@@ -169,7 +200,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('can be disabled', () => {
-    render(
+    renderWithProvider(
       <AuthorAutocomplete
         {...defaultProps}
         disabled={true}
@@ -181,7 +212,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('displays current value', () => {
-    render(
+    renderWithProvider(
       <AuthorAutocomplete
         {...defaultProps}
         value={mockAuthors[0]}
@@ -193,7 +224,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('clears input when value is null', () => {
-    const { rerender } = render(
+    const { rerender } = renderWithProvider(
       <AuthorAutocomplete
         {...defaultProps}
         value={mockAuthors[0]}
@@ -204,10 +235,12 @@ describe('AuthorAutocomplete', () => {
     expect(input).toHaveValue('Jane Austen');
 
     rerender(
-      <AuthorAutocomplete
-        {...defaultProps}
-        value={null}
-      />
+      <ApiProvider apiService={mockApiService}>
+        <AuthorAutocomplete
+          {...defaultProps}
+          value={null}
+        />
+      </ApiProvider>
     );
 
     input = screen.getByTestId('autocomplete-input');
@@ -217,7 +250,7 @@ describe('AuthorAutocomplete', () => {
   test('performs search with debounce', async () => {
     mockAuthorAPI.searchAuthors.mockResolvedValue(mockAuthors);
 
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
@@ -235,7 +268,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('does not search for terms shorter than 2 characters', async () => {
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
     
@@ -257,7 +290,7 @@ describe('AuthorAutocomplete', () => {
     });
     mockAuthorAPI.searchAuthors.mockReturnValue(searchPromise);
 
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
@@ -291,7 +324,7 @@ describe('AuthorAutocomplete', () => {
   test('displays search results', async () => {
     mockAuthorAPI.searchAuthors.mockResolvedValue(mockAuthors);
 
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
@@ -319,7 +352,7 @@ describe('AuthorAutocomplete', () => {
   test('calls onChange when author is selected', async () => {
     mockAuthorAPI.searchAuthors.mockResolvedValue(mockAuthors);
 
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
@@ -347,7 +380,7 @@ describe('AuthorAutocomplete', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
     mockAuthorAPI.searchAuthors.mockRejectedValue(new Error('Search failed'));
 
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
@@ -373,7 +406,7 @@ describe('AuthorAutocomplete', () => {
   test('clears search results when input is cleared', async () => {
     mockAuthorAPI.searchAuthors.mockResolvedValue(mockAuthors);
 
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
@@ -398,7 +431,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('shows correct no options text based on search term length', () => {
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     // Short search term
     const input = screen.getByTestId('autocomplete-input');
@@ -415,7 +448,7 @@ describe('AuthorAutocomplete', () => {
   test('renders author options with nationality', async () => {
     mockAuthorAPI.searchAuthors.mockResolvedValue([mockAuthors[0]]);
 
-    const { container } = render(<AuthorAutocomplete {...defaultProps} />);
+    const { container } = renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
@@ -444,7 +477,7 @@ describe('AuthorAutocomplete', () => {
     };
     mockAuthorAPI.searchAuthors.mockResolvedValue([authorWithoutNationality]);
 
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
@@ -482,7 +515,7 @@ describe('AuthorAutocomplete', () => {
       .mockReturnValueOnce(firstSearchPromise)
       .mockReturnValueOnce(secondSearchPromise);
 
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
@@ -520,7 +553,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('cleans up timeout on unmount', () => {
-    const { unmount } = render(<AuthorAutocomplete {...defaultProps} />);
+    const { unmount } = renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
     fireEvent.change(input, { target: { value: 'Jane' } });
@@ -531,7 +564,7 @@ describe('AuthorAutocomplete', () => {
   test('handles rapid typing correctly', async () => {
     mockAuthorAPI.searchAuthors.mockResolvedValue(mockAuthors);
 
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
     
@@ -551,7 +584,7 @@ describe('AuthorAutocomplete', () => {
   });
 
   test('maintains focus state correctly', () => {
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
     
@@ -569,7 +602,7 @@ describe('AuthorAutocomplete', () => {
     });
     mockAuthorAPI.searchAuthors.mockReturnValue(searchPromise);
 
-    render(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
