@@ -226,13 +226,11 @@ describe('AuthorAutocomplete', () => {
     expect(mockAuthorAPI.searchAuthors).not.toHaveBeenCalled();
 
     // Advance timers to trigger debounce
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
-    await waitFor(() => {
-      expect(mockAuthorAPI.searchAuthors).toHaveBeenCalledWith('Jane');
-    });
+    expect(mockAuthorAPI.searchAuthors).toHaveBeenCalledWith('Jane');
   });
 
   test('does not search for terms shorter than 2 characters', async () => {
@@ -261,11 +259,11 @@ describe('AuthorAutocomplete', () => {
     render(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
-    
+
     fireEvent.change(input, { target: { value: 'Jane' } });
 
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     await waitFor(() => {
@@ -288,11 +286,11 @@ describe('AuthorAutocomplete', () => {
     render(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
-    
+
     fireEvent.change(input, { target: { value: 'author' } });
 
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     await waitFor(() => {
@@ -310,11 +308,11 @@ describe('AuthorAutocomplete', () => {
     render(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
-    
+
     fireEvent.change(input, { target: { value: 'Jane' } });
 
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     await waitFor(() => {
@@ -334,11 +332,11 @@ describe('AuthorAutocomplete', () => {
     render(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
-    
+
     fireEvent.change(input, { target: { value: 'Jane' } });
 
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     await waitFor(() => {
@@ -360,8 +358,8 @@ describe('AuthorAutocomplete', () => {
     
     // First search
     fireEvent.change(input, { target: { value: 'Jane' } });
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     await waitFor(() => {
@@ -395,11 +393,11 @@ describe('AuthorAutocomplete', () => {
     const { container } = render(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
-    
+
     fireEvent.change(input, { target: { value: 'Jane' } });
 
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     await waitFor(() => {
@@ -420,11 +418,11 @@ describe('AuthorAutocomplete', () => {
     render(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
-    
+
     fireEvent.change(input, { target: { value: 'Jane' } });
 
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     await waitFor(() => {
@@ -457,14 +455,14 @@ describe('AuthorAutocomplete', () => {
     
     // First search
     fireEvent.change(input, { target: { value: 'Jane' } });
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     // Second search before first completes
     fireEvent.change(input, { target: { value: 'Charles' } });
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     // Resolve first search (should be ignored)
@@ -507,8 +505,8 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     // Only the last search should be executed after debounce
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     expect(mockAuthorAPI.searchAuthors).toHaveBeenCalledTimes(1);
@@ -537,11 +535,11 @@ describe('AuthorAutocomplete', () => {
     render(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
-    
+
     fireEvent.change(input, { target: { value: 'Jane' } });
 
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
     await waitFor(() => {
