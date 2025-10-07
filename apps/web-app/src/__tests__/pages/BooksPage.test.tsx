@@ -228,13 +228,21 @@ describe('BooksPage', () => {
   });
 
   test('clears search', () => {
+    // Set up search params with a query so the clear chip appears
+    const searchParamsWithQuery = new URLSearchParams();
+    searchParamsWithQuery.set('q', 'test query');
+    mockUseSearchParams.mockReturnValue([searchParamsWithQuery, mockSetSearchParams]);
+
     render(<BooksPage />);
-    
-    const clearButton = screen.getByText('Clear');
-    fireEvent.click(clearButton);
-    
+
+    // Click the "Clear search" chip
+    const clearChip = screen.getByText('Clear search');
+    fireEvent.click(clearChip);
+
     // Should call clearSearch on the hook
     expect(mockBookSearchReturn.clearSearch).toHaveBeenCalled();
+    // Should clear search params
+    expect(mockSetSearchParams).toHaveBeenCalledWith({});
   });
 
   test('renders search form', () => {
