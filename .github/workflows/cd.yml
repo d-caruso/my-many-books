@@ -235,25 +235,50 @@ jobs:
               ;;
           esac
           
-          # Check if stack exists
+          # Check if stack exists and get its status
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" >/dev/null 2>&1; then
-            echo "Updating existing infrastructure stack: $STACK_NAME"
-            aws cloudformation update-stack \
+            STACK_STATUS=$(aws cloudformation describe-stacks \
               --stack-name "$STACK_NAME" \
-              --template-body "file://$TEMPLATE_FILE" \
-              --parameters $PARAMETERS \
-              --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM || {
-                exit_code=$?
-                if [ $exit_code -eq 255 ]; then
-                  echo "No updates to perform for infrastructure stack"
-                else
-                  echo "Failed to update infrastructure stack"
-                  exit $exit_code
-                fi
-              }
-            
-            echo "Waiting for stack update to complete..."
-            aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
+              --query 'Stacks[0].StackStatus' \
+              --output text)
+
+            echo "Stack exists with status: $STACK_STATUS"
+
+            # If stack is in ROLLBACK_COMPLETE state, it must be deleted first
+            if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ]; then
+              echo "Stack is in ROLLBACK_COMPLETE state, deleting it first..."
+              aws cloudformation delete-stack --stack-name "$STACK_NAME"
+              echo "Waiting for stack deletion to complete..."
+              aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+
+              echo "Creating new infrastructure stack: $STACK_NAME"
+              aws cloudformation create-stack \
+                --stack-name "$STACK_NAME" \
+                --template-body "file://$TEMPLATE_FILE" \
+                --parameters $PARAMETERS \
+                --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+
+              echo "Waiting for stack creation to complete..."
+              aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
+            else
+              echo "Updating existing infrastructure stack: $STACK_NAME"
+              aws cloudformation update-stack \
+                --stack-name "$STACK_NAME" \
+                --template-body "file://$TEMPLATE_FILE" \
+                --parameters $PARAMETERS \
+                --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM || {
+                  exit_code=$?
+                  if [ $exit_code -eq 255 ]; then
+                    echo "No updates to perform for infrastructure stack"
+                  else
+                    echo "Failed to update infrastructure stack"
+                    exit $exit_code
+                  fi
+                }
+
+              echo "Waiting for stack update to complete..."
+              aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
+            fi
           else
             echo "Creating new infrastructure stack: $STACK_NAME"
             aws cloudformation create-stack \
@@ -261,7 +286,7 @@ jobs:
               --template-body "file://$TEMPLATE_FILE" \
               --parameters $PARAMETERS \
               --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
-            
+
             echo "Waiting for stack creation to complete..."
             aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
           fi
