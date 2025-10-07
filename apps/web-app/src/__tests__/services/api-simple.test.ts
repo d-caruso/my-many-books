@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, vi, type Mocked } from 'vitest';
 import axios from 'axios';
 
 // Mock localStorage before everything
