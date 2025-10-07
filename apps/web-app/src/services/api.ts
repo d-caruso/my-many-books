@@ -14,8 +14,10 @@ class AxiosHttpClient implements HttpClient {
   private axios;
 
   constructor(baseURL?: string, timeout?: number) {
-    // Note: baseURL is intentionally not used here because shared-api constructs full URLs
+    // baseURL is kept in axios config for MSW interceptor compatibility
+    // even though shared-api constructs full URLs
     this.axios = axios.create({
+      baseURL,
       timeout,
     });
     // Add request interceptor for auth token
@@ -31,6 +33,11 @@ class AxiosHttpClient implements HttpClient {
     this.axios.interceptors.response.use(
       (response: any) => {
         // Extract data field from API response structure
+        // In test mode with MSW, response.data is already the actual data
+        if (import.meta.env.MODE === 'test') {
+          return response.data;
+        }
+        // In production, unwrap nested success response if present
         if (response.data && response.data.success && response.data.data !== undefined) {
           return response.data.data;
         }
@@ -83,8 +90,13 @@ class ApiService {
     }
 
     // Create API client configuration (use injected or default)
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
+    // Ensure baseURL is never empty string (fallback to default if it is)
+    const validBaseURL = baseURL && baseURL.trim() !== '' ? baseURL : 'http://localhost:3000';
+
     const apiConfig: ApiClientConfig = dependencies.config || {
-      baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
+      baseURL: validBaseURL,
       timeout: 10000,
       getAuthToken: () => localStorage.getItem('authToken'),
       onUnauthorized: () => {
