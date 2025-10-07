@@ -14,19 +14,32 @@ import type { HttpClient, RequestConfig } from '@my-many-books/shared-api';
 class TestHttpClient implements HttpClient {
   constructor(private baseURL: string = 'http://localhost:3000/api') {}
 
-  private getFullUrl(url: string): string {
-    // If URL is already absolute, return as is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
+  private getFullUrl(url: string, params?: Record<string, any>): string {
+    // If URL is already absolute, use it; otherwise prepend baseURL
+    let fullUrl = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      const cleanBase = this.baseURL.endsWith('/') ? this.baseURL.slice(0, -1) : this.baseURL;
+      const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+      fullUrl = `${cleanBase}${cleanUrl}`;
     }
-    // Otherwise, prepend baseURL
-    const cleanBase = this.baseURL.endsWith('/') ? this.baseURL.slice(0, -1) : this.baseURL;
-    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-    return `${cleanBase}${cleanUrl}`;
+
+    // Append query params if provided
+    if (params && Object.keys(params).length > 0) {
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value));
+        }
+      });
+      const queryString = searchParams.toString();
+      fullUrl = `${fullUrl}?${queryString}`;
+    }
+
+    return fullUrl;
   }
 
   async get<T>(url: string, config?: RequestConfig): Promise<T> {
-    const response = await fetch(this.getFullUrl(url), {
+    const response = await fetch(this.getFullUrl(url, config?.params), {
       method: 'GET',
       headers: config?.headers as any,
     });
