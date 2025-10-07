@@ -225,7 +225,7 @@ describe('useBookSearch', () => {
     });
 
     test('returns null when no book found by ISBN', async () => {
-      mockBookAPI.searchByIsbn.mockResolvedValue({ book: null });
+      mockBookAPI.searchByISBN.mockResolvedValue({ book: null });
 
       const { result } = renderHook(() => useBookSearch());
 
