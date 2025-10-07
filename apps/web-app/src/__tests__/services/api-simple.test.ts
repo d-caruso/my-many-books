@@ -12,17 +12,19 @@ Object.defineProperty(window, 'localStorage', {
   value: mockLocalStorage,
 });
 
-// Create mock axios instance
-const mockAxiosInstance = {
-  get: vi.fn(),
-  post: vi.fn(),
-  put: vi.fn(),
-  delete: vi.fn(),
-  interceptors: {
-    request: { use: vi.fn() },
-    response: { use: vi.fn() },
+// Create mock axios instance using vi.hoisted to avoid scope issues
+const { mockAxiosInstance } = vi.hoisted(() => ({
+  mockAxiosInstance: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    interceptors: {
+      request: { use: vi.fn() },
+      response: { use: vi.fn() },
+    },
   },
-};
+}));
 
 // Mock axios before importing the API
 vi.mock('axios', () => ({
