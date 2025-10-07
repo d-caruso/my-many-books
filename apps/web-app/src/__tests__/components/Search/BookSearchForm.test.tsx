@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BookSearchForm } from '../../../components/Search/BookSearchForm';
 import { useCategories } from '../../../hooks/useCategories';
 
