@@ -12,8 +12,21 @@ import type { HttpClient, RequestConfig } from '@my-many-books/shared-api';
 
 // Create a clean HttpClient for testing with MSW using fetch
 class TestHttpClient implements HttpClient {
+  constructor(private baseURL: string = 'http://localhost:3000/api') {}
+
+  private getFullUrl(url: string): string {
+    // If URL is already absolute, return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    // Otherwise, prepend baseURL
+    const cleanBase = this.baseURL.endsWith('/') ? this.baseURL.slice(0, -1) : this.baseURL;
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    return `${cleanBase}${cleanUrl}`;
+  }
+
   async get<T>(url: string, config?: RequestConfig): Promise<T> {
-    const response = await fetch(url, {
+    const response = await fetch(this.getFullUrl(url), {
       method: 'GET',
       headers: config?.headers as any,
     });
@@ -21,7 +34,7 @@ class TestHttpClient implements HttpClient {
   }
 
   async post<T>(url: string, data?: any, config?: RequestConfig): Promise<T> {
-    const response = await fetch(url, {
+    const response = await fetch(this.getFullUrl(url), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -33,7 +46,7 @@ class TestHttpClient implements HttpClient {
   }
 
   async put<T>(url: string, data?: any, config?: RequestConfig): Promise<T> {
-    const response = await fetch(url, {
+    const response = await fetch(this.getFullUrl(url), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -45,7 +58,7 @@ class TestHttpClient implements HttpClient {
   }
 
   async delete<T>(url: string, config?: RequestConfig): Promise<T> {
-    const response = await fetch(url, {
+    const response = await fetch(this.getFullUrl(url), {
       method: 'DELETE',
       headers: config?.headers as any,
     });
