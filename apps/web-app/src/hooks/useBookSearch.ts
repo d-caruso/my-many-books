@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { Book, SearchFilters } from '../types';
-import { bookAPI } from '../services/api';
+import { useApi } from '../contexts/ApiContext';
 
 interface BookSearchState {
   books: Book[];
@@ -19,6 +19,7 @@ interface BookSearchActions {
 }
 
 export const useBookSearch = (): BookSearchState & BookSearchActions => {
+  const { bookAPI } = useApi();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +28,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
   const [currentPage, setCurrentPage] = useState(1);
   const [lastQuery, setLastQuery] = useState<string>('');
   const [lastFilters, setLastFilters] = useState<SearchFilters>({});
-  
+
   // Use ref to store the latest searchBooks function to avoid circular dependencies
   const searchBooksRef = useRef<((query: string, filters?: SearchFilters, page?: number) => Promise<void>) | null>(null);
 
@@ -74,7 +75,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     } catch (err: any) {
       console.error('Book search failed:', err);
       setError(err.response?.data?.message || 'Failed to search books');
-      
+
       if (page === 1) {
         setBooks([]);
         setTotalCount(0);
@@ -83,7 +84,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [bookAPI]);
 
   // Update the ref with the latest searchBooks function
   searchBooksRef.current = searchBooks;
@@ -106,7 +107,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [bookAPI]);
 
   const loadMore = useCallback(async (): Promise<void> => {
     if (!hasMore || loading || !searchBooksRef.current) {

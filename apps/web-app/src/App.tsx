@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
+import { ApiProvider } from './contexts/ApiContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navbar } from './components/Navigation';
 import { InstallPrompt, UpdatePrompt, OfflineIndicator } from './components/PWA';
@@ -31,8 +32,9 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AuthProvider>
-        <Router>
+      <ApiProvider>
+        <AuthProvider>
+          <Router>
           <div className="min-h-screen">
             <OfflineIndicator />
             <UpdatePrompt />
@@ -62,8 +64,9 @@ function App() {
             
             <InstallPrompt />
           </div>
-        </Router>
-      </AuthProvider>
+          </Router>
+        </AuthProvider>
+      </ApiProvider>
     </ThemeProvider>
   );
 }
