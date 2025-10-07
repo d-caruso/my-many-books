@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AuthorAutocomplete } from '../../../components/Search/AuthorAutocomplete';
 import { authorAPI } from '../../../services/api';
 import { Author } from '../../../types';
@@ -219,20 +220,18 @@ describe('AuthorAutocomplete', () => {
     render(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
-    
+
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     // Should not search immediately
     expect(mockAuthorAPI.searchAuthors).not.toHaveBeenCalled();
 
     // Advance timers to trigger debounce
-    act(() => {
-      vi.advanceTimersByTime(300);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
 
-    await waitFor(() => {
-      expect(mockAuthorAPI.searchAuthors).toHaveBeenCalledWith('Jane');
-    });
+    expect(mockAuthorAPI.searchAuthors).toHaveBeenCalledWith('Jane');
   });
 
   test('does not search for terms shorter than 2 characters', async () => {
