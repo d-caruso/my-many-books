@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { Navbar } from '../../../components/Navigation/Navbar';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -11,8 +12,8 @@ vi.mock('../../../contexts/AuthContext', () => ({
 
 // Mock React Router hooks
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', () => ({
-  ...vi.importActual('react-router-dom'),
+vi.mock('react-router-dom', async () => ({
+  ...await vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useLocation: () => ({ pathname: '/books' }),
 }));
