@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { ISBNScanner } from '../../../components/Scanner/ISBNScanner';
 import { useISBNScanner } from '../../../hooks/useISBNScanner';
 
@@ -151,9 +152,9 @@ describe('ISBNScanner', () => {
     // Clear any calls from useEffect (component mount may trigger requestPermission)
     mockRequestPermission.mockClear();
 
-    const permissionButtons = screen.getAllByTestId('icon-button');
-    // The second button should be the permission request button (first is close)
-    fireEvent.click(permissionButtons[1]);
+    // Find the permission button by its accessible name
+    const permissionButton = screen.getByRole('button', { name: /camera request access/i });
+    fireEvent.click(permissionButton);
 
     expect(mockRequestPermission).toHaveBeenCalledTimes(1);
   });
