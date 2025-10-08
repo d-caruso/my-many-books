@@ -361,7 +361,7 @@ Resources:
   ElastiCacheCluster:
     Type: AWS::ElastiCache::CacheCluster
     Properties:
-      CacheClusterName: !Sub '${AWS::StackName}-redis'
+      ClusterName: !Sub '${AWS::StackName}-redis'
       Engine: redis
       EngineVersion: '7.0'
       CacheNodeType: cache.t3.micro
