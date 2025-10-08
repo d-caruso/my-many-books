@@ -244,6 +244,15 @@ jobs:
 
             echo "Stack exists with status: $STACK_STATUS"
 
+            # Handle ROLLBACK_IN_PROGRESS - wait for it to complete
+            if [ "$STACK_STATUS" = "ROLLBACK_IN_PROGRESS" ]; then
+              echo "Stack is in ROLLBACK_IN_PROGRESS state, waiting for rollback to complete..."
+              aws cloudformation wait stack-rollback-complete --stack-name "$STACK_NAME" || true
+              # After rollback completes, status will be ROLLBACK_COMPLETE
+              STACK_STATUS="ROLLBACK_COMPLETE"
+              echo "Rollback completed, stack is now in ROLLBACK_COMPLETE state"
+            fi
+
             # If stack is in ROLLBACK_COMPLETE state, it must be deleted first
             if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ]; then
               echo "Stack is in ROLLBACK_COMPLETE state, deleting it first..."
