@@ -217,16 +217,6 @@ Resources:
           ToPort: 3306
           CidrIp: !Select [3, !Cidr [!Ref VpcCidr, 6, 8]]
           Description: MySQL to RDS in private subnet 2
-        - IpProtocol: tcp
-          FromPort: 6379
-          ToPort: 6379
-          CidrIp: !Select [2, !Cidr [!Ref VpcCidr, 6, 8]]
-          Description: Redis to ElastiCache in private subnet 1
-        - IpProtocol: tcp
-          FromPort: 6379
-          ToPort: 6379
-          CidrIp: !Select [3, !Cidr [!Ref VpcCidr, 6, 8]]
-          Description: Redis to ElastiCache in private subnet 2
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-lambda-sg'
@@ -246,22 +236,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-db-sg'
-
-  ElastiCacheSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub '${AWS::StackName}-elasticache-sg'
-      GroupDescription: Security group for ElastiCache Redis
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 6379
-          ToPort: 6379
-          SourceSecurityGroupId: !Ref LambdaSecurityGroup
-          Description: Redis from Lambda
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-elasticache-sg'
 
   # RDS Subnet Group
   DatabaseSubnetGroup:
@@ -347,31 +321,6 @@ Resources:
       SecretId: !Ref DatabaseSecret
       TargetId: !Ref Database
       TargetType: AWS::RDS::DBInstance
-
-  # ElastiCache Subnet Group
-  ElastiCacheSubnetGroup:
-    Type: AWS::ElastiCache::SubnetGroup
-    Properties:
-      Description: Subnet group for ElastiCache
-      SubnetIds:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
-
-  # ElastiCache Redis
-  ElastiCacheCluster:
-    Type: AWS::ElastiCache::CacheCluster
-    Properties:
-      ClusterName: !Sub '${AWS::StackName}-redis'
-      Engine: redis
-      EngineVersion: '7.0'
-      CacheNodeType: cache.t3.micro
-      NumCacheNodes: 1
-      VpcSecurityGroupIds:
-        - !Ref ElastiCacheSecurityGroup
-      CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-redis'
 
   # Lambda IAM Role
   LambdaExecutionRole:
@@ -489,22 +438,6 @@ Resources:
       Value: !GetAtt Database.Endpoint.Port
       Description: Database port
 
-  RedisHostParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub '/${AWS::StackName}/redis/host'
-      Type: String
-      Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Address
-      Description: Redis host endpoint
-
-  RedisPortParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub '/${AWS::StackName}/redis/port'
-      Type: String
-      Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Port
-      Description: Redis port
-
 Outputs:
   VPCId:
     Description: VPC ID
@@ -547,18 +480,6 @@ Outputs:
     Value: !Ref DatabaseSecret
     Export:
       Name: !Sub '${AWS::StackName}-Database-Secret-ARN'
-
-  RedisEndpoint:
-    Description: Redis Endpoint
-    Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Address
-    Export:
-      Name: !Sub '${AWS::StackName}-Redis-Endpoint'
-
-  RedisPort:
-    Description: Redis Port
-    Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Port
-    Export:
-      Name: !Sub '${AWS::StackName}-Redis-Port'
 
   LambdaExecutionRoleArn:
     Description: Lambda Execution Role ARN
