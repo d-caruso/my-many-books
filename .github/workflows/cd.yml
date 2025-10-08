@@ -257,8 +257,33 @@ jobs:
             if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ]; then
               echo "Stack is in ROLLBACK_COMPLETE state, deleting it first..."
               aws cloudformation delete-stack --stack-name "$STACK_NAME"
-              echo "Waiting for stack deletion to complete..."
-              aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+              echo "Waiting for stack deletion to complete (this may take several minutes)..."
+
+              # Custom wait loop with longer timeout (20 minutes max)
+              MAX_WAIT_TIME=1200  # 20 minutes in seconds
+              WAIT_INTERVAL=30     # Check every 30 seconds
+              ELAPSED_TIME=0
+
+              while [ $ELAPSED_TIME -lt $MAX_WAIT_TIME ]; do
+                STACK_STATUS=$(aws cloudformation describe-stacks \
+                  --stack-name "$STACK_NAME" \
+                  --query 'Stacks[0].StackStatus' \
+                  --output text 2>&1 || echo "DELETED")
+
+                if [ "$STACK_STATUS" = "DELETED" ] || echo "$STACK_STATUS" | grep -q "does not exist"; then
+                  echo "Stack successfully deleted"
+                  break
+                fi
+
+                echo "Stack status: $STACK_STATUS (waited ${ELAPSED_TIME}s / ${MAX_WAIT_TIME}s)"
+                sleep $WAIT_INTERVAL
+                ELAPSED_TIME=$((ELAPSED_TIME + WAIT_INTERVAL))
+              done
+
+              if [ $ELAPSED_TIME -ge $MAX_WAIT_TIME ]; then
+                echo "Stack deletion timeout after ${MAX_WAIT_TIME}s. Current status: $STACK_STATUS"
+                exit 1
+              fi
 
               echo "Creating new infrastructure stack: $STACK_NAME"
               aws cloudformation create-stack \
