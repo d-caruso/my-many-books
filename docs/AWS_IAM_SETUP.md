@@ -19,33 +19,29 @@ The following AWS managed policies must be attached to the IAM user:
    - Required for: RDS database instance creation and management
    - Resources: MySQL database, parameter groups, subnet groups
 
-4. **AmazonElastiCacheFullAccess**
-   - Required for: ElastiCache Redis cluster management
-   - Resources: Redis cache cluster
-
-5. **SecretsManagerReadWrite**
+4. **SecretsManagerReadWrite**
    - Required for: Database credentials management
    - Resources: RDS master password storage
 
 ### Application Deployment
-6. **IAMFullAccess**
+5. **IAMFullAccess**
    - Required for: Creating Lambda execution roles and policies
    - Resources: Lambda IAM roles, RDS monitoring role
 
-7. **AmazonAPIGatewayAdministrator**
+6. **AmazonAPIGatewayAdministrator**
    - Required for: API Gateway management via Serverless Framework
    - Resources: API endpoints, stages, deployments
 
-8. **AmazonS3FullAccess**
+7. **AmazonS3FullAccess**
    - Required for: Deployment artifacts and web app hosting
    - Resources: Lambda code bundles, static web assets, deployment bucket
 
-9. **CloudWatchLogsFullAccess**
+8. **CloudWatchLogsFullAccess**
    - Required for: Application logging
    - Resources: Lambda logs, RDS logs, API Gateway logs
 
 ### Custom Policies
-10. **S3BucketWebsiteAndPolicyManagement** (Custom)
+9. **S3BucketWebsiteAndPolicyManagement** (Custom)
     - Required for: S3 static website configuration
     - Resources: Web app bucket configuration
 
@@ -63,9 +59,6 @@ aws iam attach-user-policy --user-name my-many-books-lambda-developer \
 
 aws iam attach-user-policy --user-name my-many-books-lambda-developer \
   --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
-
-aws iam attach-user-policy --user-name my-many-books-lambda-developer \
-  --policy-arn arn:aws:iam::aws:policy/AmazonElastiCacheFullAccess
 
 aws iam attach-user-policy --user-name my-many-books-lambda-developer \
   --policy-arn arn:aws:iam::aws:policy/SecretsManagerReadWrite
@@ -107,9 +100,8 @@ The infrastructure stack creates:
 - VPC with public and private subnets (2 AZs)
 - Internet Gateway and NAT Gateway
 - RDS MySQL database (db.t3.micro)
-- ElastiCache Redis cluster (cache.t3.micro)
-- Security groups for Lambda, RDS, and ElastiCache
+- Security groups for Lambda and RDS
 - S3 bucket for deployment artifacts
 - CloudWatch log groups
 - Secrets Manager secret for database credentials
-- SSM parameters for database and Redis endpoints
+- SSM parameters for database endpoints
