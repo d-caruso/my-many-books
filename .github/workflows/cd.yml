@@ -360,18 +360,14 @@ jobs:
 
       - name: Run Database Migrations
         run: |
-          # Install workspace dependencies from root first
+          # Install all workspace dependencies from root
           echo "Installing workspace dependencies..."
-          if [ ! -d "node_modules" ]; then
-            npm ci
-          fi
+          npm ci
 
-          # Install api workspace dependencies
+          # Install api workspace dependencies explicitly
           echo "Installing api workspace dependencies..."
           cd apps/api
-          if [ ! -d "node_modules" ]; then
-            npm ci
-          fi
+          npm ci
           cd ../..
 
           # Get database connection details from CloudFormation stack
