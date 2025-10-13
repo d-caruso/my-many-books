@@ -1,13 +1,14 @@
 import * as React from 'react';
+import type { ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '@/types';
-import { userAPI } from '@/services/api';
+import { userAPI, updateAuthToken } from '@/services/api';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (email: string, password: string, name: string, surname: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -30,9 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
-        // Set the token in the API client
-        userAPI.setAuthToken(token);
-        
+        // Token is automatically retrieved by apiConfig.getAuthToken
         // Verify the token and get user info
         const userData = await userAPI.getCurrentUser();
         setUser(userData);
@@ -48,15 +47,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const response = await userAPI.login({ email, password });
-      
+      const response = await userAPI.login(email, password);
+
       // Store token
-      await AsyncStorage.setItem('authToken', response.token);
-      
-      // Set token in API client
-      userAPI.setAuthToken(response.token);
-      
-      setUser(response.user);
+      await updateAuthToken(response.token);
+
+      setUser(response.user as any);
     } catch (error) {
       throw error;
     } finally {
@@ -64,18 +60,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, password: string, name: string, surname: string) => {
     try {
       setIsLoading(true);
-      const response = await userAPI.register({ email, password, name });
-      
+      const response = await userAPI.register({ email, password, name, surname });
+
       // Store token
-      await AsyncStorage.setItem('authToken', response.token);
-      
-      // Set token in API client
-      userAPI.setAuthToken(response.token);
-      
-      setUser(response.user);
+      await updateAuthToken(response.token);
+
+      setUser(response.user as any);
     } catch (error) {
       throw error;
     } finally {
@@ -85,8 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem('authToken');
-      userAPI.clearAuthToken();
+      await updateAuthToken(null);
       setUser(null);
     } catch (error) {
       console.error('Failed to logout:', error);
