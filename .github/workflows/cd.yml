@@ -360,15 +360,9 @@ jobs:
 
       - name: Run Database Migrations
         run: |
-          # Install all workspace dependencies from root
+          # Install all workspace dependencies from root (includes all workspace packages)
           echo "Installing workspace dependencies..."
           npm ci
-
-          # Install api workspace dependencies explicitly
-          echo "Installing api workspace dependencies..."
-          cd apps/api
-          npm ci
-          cd ../..
 
           # Get database connection details from CloudFormation stack
           STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
