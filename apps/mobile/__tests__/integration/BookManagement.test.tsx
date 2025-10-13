@@ -20,7 +20,10 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 
 jest.mock('@/services/api', () => ({
   bookAPI: {
+    searchBooks: jest.fn(),
+    searchByISBN: jest.fn(),
     getBooks: jest.fn(),
+    getBook: jest.fn(),
     createBook: jest.fn(),
     updateBook: jest.fn(),
     deleteBook: jest.fn(),

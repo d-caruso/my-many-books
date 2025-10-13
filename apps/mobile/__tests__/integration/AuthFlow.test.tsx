@@ -22,7 +22,10 @@ jest.mock('@/services/api', () => ({
     login: jest.fn(),
     register: jest.fn(),
     getCurrentUser: jest.fn(),
-    setAuthToken: jest.fn(),
+    logout: jest.fn(),
+    refreshToken: jest.fn(),
+    updateProfile: jest.fn(),
+    deleteAccount: jest.fn(),
   },
 }));
 
@@ -69,10 +72,6 @@ describe('Auth Integration Flow', () => {
     // Test token storage
     await mockAsyncStorage.setItem('authToken', loginResult.token);
     expect(mockAsyncStorage.setItem).toHaveBeenCalledWith('authToken', 'auth-token');
-    
-    // Test API token setting
-    mockUserAPI.setAuthToken(loginResult.token);
-    expect(mockUserAPI.setAuthToken).toHaveBeenCalledWith('auth-token');
 
     // Test logout flow
     await mockAsyncStorage.removeItem('authToken');
@@ -119,10 +118,7 @@ describe('Auth Integration Flow', () => {
     // Test token restoration flow
     const storedToken = await mockAsyncStorage.getItem('authToken');
     expect(storedToken).toBe('stored-token');
-    
-    mockUserAPI.setAuthToken(storedToken);
-    expect(mockUserAPI.setAuthToken).toHaveBeenCalledWith('stored-token');
-    
+
     const userData = await mockUserAPI.getCurrentUser();
     expect(userData).toEqual(mockUser);
     expect(mockUserAPI.getCurrentUser).toHaveBeenCalled();
@@ -138,9 +134,7 @@ describe('Auth Integration Flow', () => {
     // Test expired token handling
     const storedToken = await mockAsyncStorage.getItem('authToken');
     expect(storedToken).toBe('expired-token');
-    
-    mockUserAPI.setAuthToken(storedToken);
-    
+
     try {
       await mockUserAPI.getCurrentUser();
     } catch (error) {
