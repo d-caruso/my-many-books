@@ -251,6 +251,7 @@ Resources:
   Database:
     Type: AWS::RDS::DBInstance
     DeletionPolicy: !If [IsProduction, Snapshot, Delete]
+    UpdateReplacePolicy: Snapshot
     Properties:
       DBInstanceIdentifier: !Sub '${AWS::StackName}-db'
       DBInstanceClass: !Ref DatabaseInstanceClass
