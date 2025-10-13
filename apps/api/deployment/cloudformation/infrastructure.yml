@@ -406,25 +406,6 @@ Resources:
       LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-api'
       RetentionInDays: !If [IsProduction, 30, 7]
 
-  # Systems Manager Parameters for configuration
-  DatabaseHostParameter:
-    Type: AWS::SSM::Parameter
-    DependsOn: Database
-    Properties:
-      Name: !Sub '/${AWS::StackName}/database/host'
-      Type: String
-      Value: !GetAtt Database.Endpoint.Address
-      Description: Database host endpoint
-
-  DatabasePortParameter:
-    Type: AWS::SSM::Parameter
-    DependsOn: Database
-    Properties:
-      Name: !Sub '/${AWS::StackName}/database/port'
-      Type: String
-      Value: !GetAtt Database.Endpoint.Port
-      Description: Database port
-
 Outputs:
   VPCId:
     Description: VPC ID

@@ -17,8 +17,8 @@ provider:
   # Environment variables
   environment:
     NODE_ENV: ${self:provider.stage}
-    DB_HOST: ${ssm:/my-many-books-infrastructure-${self:provider.stage}/database/host, ''}
-    DB_PORT: ${ssm:/my-many-books-infrastructure-${self:provider.stage}/database/port, '3306'}
+    DB_HOST: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabaseHost, ''}
+    DB_PORT: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabasePort, '3306'}
     DB_NAME: ${env:DB_NAME, 'my_many_books'}
     DB_USER: ${env:DB_USER, 'admin'}
     DB_PASSWORD: ${ssm:/aws/reference/secretsmanager/my-many-books-infrastructure-${self:provider.stage}-db-credentials~false~password, ''}
@@ -67,11 +67,6 @@ provider:
           Action:
             - execute-api:Invoke
           Resource: 'arn:aws:execute-api:*:*:*'
-        - Effect: Allow
-          Action:
-            - ssm:GetParameter
-            - ssm:GetParameters
-          Resource: 'arn:aws:ssm:*:*:parameter/my-many-books-infrastructure-*'
         - Effect: Allow
           Action:
             - secretsmanager:GetSecretValue
