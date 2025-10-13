@@ -98,10 +98,12 @@ aws iam list-attached-user-policies --user-name my-many-books-lambda-developer
 
 The infrastructure stack creates:
 - VPC with public and private subnets (2 AZs)
-- Internet Gateway and NAT Gateway
-- RDS MySQL database (db.t3.micro)
-- Security groups for Lambda and RDS
+- Internet Gateway (no NAT Gateway - cost optimization)
+- RDS MySQL database (db.t3.micro, publicly accessible with security group)
+- Security groups for RDS
 - S3 bucket for deployment artifacts
 - CloudWatch log groups
 - Secrets Manager secret for database credentials
 - SSM parameters for database endpoints
+
+**Cost Optimization**: Lambda functions run outside VPC to eliminate NAT Gateway costs (~$32/month savings). RDS is publicly accessible but protected by security group restrictions.
