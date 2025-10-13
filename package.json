@@ -30,7 +30,6 @@
     "format": "nx format:write",
     "format:check": "nx format:check",
     "update": "nx migrate latest",
-    "postinstall": "nx postinstall || exit 0",
     "cypress:open": "cd apps/web-app && npm run cypress:open",
     "cypress:run": "cd apps/web-app && npm run cypress:run",
     "cypress:component": "cd apps/web-app && npm run cypress:component",
