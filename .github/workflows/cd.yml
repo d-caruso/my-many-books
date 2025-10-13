@@ -396,9 +396,6 @@ jobs:
           DB_USER=$(echo "$DB_CREDENTIALS" | jq -r '.username')
           DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
 
-          # Change to API directory and run migrations/seeds with environment variables
-          cd apps/api
-
           echo "Running database migrations..."
           NODE_ENV="${{ needs.setup.outputs.environment }}" \
           DB_HOST="$DB_ENDPOINT" \
@@ -407,7 +404,7 @@ jobs:
           DB_USER="$DB_USER" \
           DB_PASSWORD="$DB_PASSWORD" \
           DB_SSL="true" \
-          npm run db:migrate
+          npm run -w my-many-books-api db:migrate
 
           echo "Running database seeders..."
           NODE_ENV="${{ needs.setup.outputs.environment }}" \
@@ -417,7 +414,7 @@ jobs:
           DB_USER="$DB_USER" \
           DB_PASSWORD="$DB_PASSWORD" \
           DB_SSL="true" \
-          npm run db:seed
+          npm run -w my-many-books-api db:seed
 
   deploy-api:
     name: Deploy API
