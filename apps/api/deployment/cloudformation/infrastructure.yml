@@ -149,19 +149,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet2
 
-  # NAT Gateways for private subnets
-  NatGateway1EIP:
-    Type: AWS::EC2::EIP
-    DependsOn: InternetGatewayAttachment
-    Properties:
-      Domain: vpc
-
-  NatGateway1:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt NatGateway1EIP.AllocationId
-      SubnetId: !Ref PublicSubnet1
-
+  # Private route table (no NAT Gateway - cost optimization)
   PrivateRouteTable1:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -169,13 +157,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-private-rt-1'
-
-  DefaultPrivateRoute1:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable1
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGateway1
 
   PrivateSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -231,8 +212,8 @@ Resources:
         - IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
-          SourceSecurityGroupId: !Ref LambdaSecurityGroup
-          Description: MySQL from Lambda
+          CidrIp: 0.0.0.0/0
+          Description: MySQL from internet (Lambda without VPC + development access)
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-db-sg'
@@ -274,7 +255,7 @@ Resources:
       DBInstanceIdentifier: !Sub '${AWS::StackName}-db'
       DBInstanceClass: !Ref DatabaseInstanceClass
       Engine: mysql
-      EngineVersion: '8.0.35'
+      EngineVersion: '8.0.43'
       AllocatedStorage: !Ref DatabaseAllocatedStorage
       StorageType: gp2
       StorageEncrypted: true
@@ -282,6 +263,7 @@ Resources:
       DBName: my_many_books
       MasterUsername: admin
       MasterUserPassword: !Sub '{{resolve:secretsmanager:${DatabaseSecret}:SecretString:password}}'
+      PubliclyAccessible: true
       VPCSecurityGroups:
         - !Ref DatabaseSecurityGroup
       DBSubnetGroupName: !Ref DatabaseSubnetGroup
