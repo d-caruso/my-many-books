@@ -14,6 +14,6 @@ export { UserApi } from './user-api';
 
 // Base client and interfaces
 export { BaseApiClient } from './base-client';
-// Types are available through direct imports from './base-client'
+export type { HttpClient, ApiClientConfig, RequestConfig } from './base-client';
 
 // Test utilities are available in __mocks__ directory
