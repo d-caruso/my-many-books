@@ -9,7 +9,7 @@ describe('Author Model', () => {
   let sequelize: Sequelize;
 
   beforeAll(async () => {
-    sequelize = new Sequelize('sqlite://memory:', { 
+    sequelize = new Sequelize('sqlite::memory:', {
       logging: false,
       define: {
         timestamps: true,
