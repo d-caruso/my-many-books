@@ -481,9 +481,9 @@ jobs:
   deploy-web-app:
     name: Deploy Web App
     runs-on: ubuntu-latest
-    needs: [setup, pre-deployment-checks]
+    needs: [setup, pre-deployment-checks, deploy-api]
     environment: ${{ needs.setup.outputs.environment }}
-    if: needs.setup.outputs.should-deploy == 'true' && needs.setup.outputs.deploy-web-app == 'true'
+    if: needs.setup.outputs.should-deploy == 'true' && needs.setup.outputs.deploy-web-app == 'true' && always() && (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
     
     steps:
       - name: Checkout Code
