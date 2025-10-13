@@ -225,8 +225,8 @@ Resources:
       DBSubnetGroupName: !Sub '${AWS::StackName}-db-subnet-group'
       DBSubnetGroupDescription: Subnet group for RDS database
       SubnetIds:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-db-subnet-group'
