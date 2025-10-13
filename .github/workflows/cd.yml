@@ -309,20 +309,25 @@ jobs:
               fi
             else
               echo "Updating existing infrastructure stack: $STACK_NAME"
-              aws cloudformation update-stack \
+
+              # Capture output and check for "No updates" message
+              UPDATE_OUTPUT=$(aws cloudformation update-stack \
                 --stack-name "$STACK_NAME" \
                 --template-body "file://$TEMPLATE_FILE" \
                 --parameters $PARAMETERS \
-                --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM || {
+                --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM 2>&1) || {
                   exit_code=$?
-                  if [ $exit_code -eq 255 ]; then
-                    echo "No updates to perform for infrastructure stack"
+                  if echo "$UPDATE_OUTPUT" | grep -q "No updates are to be performed"; then
+                    echo "No updates needed - infrastructure stack is already up-to-date"
+                    exit 0
                   else
                     echo "Failed to update infrastructure stack"
+                    echo "$UPDATE_OUTPUT"
                     exit $exit_code
                   fi
                 }
 
+              echo "Stack update initiated successfully"
               echo "Waiting for stack update to complete..."
               aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
             fi
