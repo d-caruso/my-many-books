@@ -359,56 +359,66 @@ jobs:
           echo "Infrastructure deployment completed successfully"
 
       - name: Run Database Migrations
-        working-directory: apps/api
         run: |
-          # Install dependencies if needed
+          # Install workspace dependencies from root first
+          echo "Installing workspace dependencies..."
           if [ ! -d "node_modules" ]; then
             npm ci
           fi
-          
+
           # Get database connection details from CloudFormation stack
           STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
-          
+
           DB_ENDPOINT=$(aws cloudformation describe-stacks \
             --stack-name "$STACK_NAME" \
             --query 'Stacks[0].Outputs[?OutputKey==`DatabaseEndpoint`].OutputValue' \
             --output text)
-          
+
           DB_PORT=$(aws cloudformation describe-stacks \
             --stack-name "$STACK_NAME" \
             --query 'Stacks[0].Outputs[?OutputKey==`DatabasePort`].OutputValue' \
             --output text)
-          
+
           if [ -z "$DB_ENDPOINT" ] || [ -z "$DB_PORT" ]; then
             echo "Could not retrieve database connection details from CloudFormation"
             exit 1
           fi
-          
-          # Set environment variables for database connection
-          export NODE_ENV="${{ needs.setup.outputs.environment }}"
-          export DB_HOST="$DB_ENDPOINT"
-          export DB_PORT="$DB_PORT"
-          export DB_NAME="my_many_books"
-          export DB_SSL="true"
-          
+
           # Get database credentials from Secrets Manager
           SECRET_ARN=$(aws cloudformation describe-stacks \
             --stack-name "$STACK_NAME" \
             --query 'Stacks[0].Outputs[?OutputKey==`DatabaseSecretArn`].OutputValue' \
             --output text)
-          
+
           DB_CREDENTIALS=$(aws secretsmanager get-secret-value \
             --secret-id "$SECRET_ARN" \
             --query 'SecretString' \
             --output text)
-          
-          export DB_USER=$(echo "$DB_CREDENTIALS" | jq -r '.username')
-          export DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
-          
+
+          DB_USER=$(echo "$DB_CREDENTIALS" | jq -r '.username')
+          DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
+
+          # Change to API directory and run migrations/seeds with environment variables
+          cd apps/api
+
           echo "Running database migrations..."
+          NODE_ENV="${{ needs.setup.outputs.environment }}" \
+          DB_HOST="$DB_ENDPOINT" \
+          DB_PORT="$DB_PORT" \
+          DB_NAME="my_many_books" \
+          DB_USER="$DB_USER" \
+          DB_PASSWORD="$DB_PASSWORD" \
+          DB_SSL="true" \
           npm run db:migrate
-          
+
           echo "Running database seeders..."
+          NODE_ENV="${{ needs.setup.outputs.environment }}" \
+          DB_HOST="$DB_ENDPOINT" \
+          DB_PORT="$DB_PORT" \
+          DB_NAME="my_many_books" \
+          DB_USER="$DB_USER" \
+          DB_PASSWORD="$DB_PASSWORD" \
+          DB_SSL="true" \
           npm run db:seed
 
   deploy-api:
