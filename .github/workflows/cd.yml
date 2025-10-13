@@ -366,6 +366,14 @@ jobs:
             npm ci
           fi
 
+          # Install api workspace dependencies
+          echo "Installing api workspace dependencies..."
+          cd apps/api
+          if [ ! -d "node_modules" ]; then
+            npm ci
+          fi
+          cd ../..
+
           # Get database connection details from CloudFormation stack
           STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
 
