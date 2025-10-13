@@ -307,6 +307,9 @@ Resources:
   # Lambda IAM Role
   LambdaExecutionRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - DatabaseSecret
+      - Database
     Properties:
       RoleName: !Sub '${AWS::StackName}-lambda-role'
       AssumeRolePolicyDocument:
@@ -317,7 +320,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: DatabaseAccess
           PolicyDocument:
@@ -406,6 +409,7 @@ Resources:
   # Systems Manager Parameters for configuration
   DatabaseHostParameter:
     Type: AWS::SSM::Parameter
+    DependsOn: Database
     Properties:
       Name: !Sub '/${AWS::StackName}/database/host'
       Type: String
@@ -414,6 +418,7 @@ Resources:
 
   DatabasePortParameter:
     Type: AWS::SSM::Parameter
+    DependsOn: Database
     Properties:
       Name: !Sub '/${AWS::StackName}/database/port'
       Type: String
