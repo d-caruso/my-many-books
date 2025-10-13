@@ -1,0 +1,3214 @@
+{
+  "version": "6.0",
+  "nxVersion": "21.6.3",
+  "pathMappings": {
+    "@my-many-books/shared-types": [
+      "libs/shared-types/src/index.ts"
+    ],
+    "@my-many-books/shared-api": [
+      "libs/shared-api/src/index.ts"
+    ],
+    "@my-many-books/ui-components": [
+      "libs/ui-components/src/index.ts"
+    ],
+    "@my-many-books/shared-utils": [
+      "libs/shared-utils/src/index.ts"
+    ],
+    "@my-many-books/shared-hooks": [
+      "libs/shared-hooks/src/index.ts"
+    ],
+    "@my-many-books/shared-business": [
+      "libs/shared-business/src/index.ts"
+    ],
+    "@my-many-books/shared-design": [
+      "libs/shared-design/src/index.ts"
+    ],
+    "@my-many-books/shared-navigation": [
+      "libs/shared-navigation/src/index.ts"
+    ],
+    "@my-many-books/shared-forms": [
+      "libs/shared-forms/src/index.ts"
+    ]
+  },
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "nonProjectFiles": [],
+    "projectFileMap": {
+      "shared-design": [
+        {
+          "file": "libs/shared-design/package.json",
+          "hash": "8117072519292295382"
+        },
+        {
+          "file": "libs/shared-design/project.json",
+          "hash": "16160927988095485935"
+        },
+        {
+          "file": "libs/shared-design/src/components.ts",
+          "hash": "14183701065910366303"
+        },
+        {
+          "file": "libs/shared-design/src/index.ts",
+          "hash": "1904318141700899077"
+        },
+        {
+          "file": "libs/shared-design/src/themes.ts",
+          "hash": "18388580232114120615",
+          "deps": [
+            "shared-types"
+          ]
+        },
+        {
+          "file": "libs/shared-design/src/tokens.ts",
+          "hash": "6930653014705885168"
+        },
+        {
+          "file": "libs/shared-design/tsconfig.json",
+          "hash": "3886482657624185382"
+        },
+        {
+          "file": "libs/shared-design/tsconfig.lib.json",
+          "hash": "3415584374787409438"
+        }
+      ],
+      "shared-types": [
+        {
+          "file": "libs/shared-types/package.json",
+          "hash": "12253898049950654226"
+        },
+        {
+          "file": "libs/shared-types/project.json",
+          "hash": "5839820820361176699"
+        },
+        {
+          "file": "libs/shared-types/src/api.ts",
+          "hash": "13851076988540066540"
+        },
+        {
+          "file": "libs/shared-types/src/author.ts",
+          "hash": "7798680837680199876"
+        },
+        {
+          "file": "libs/shared-types/src/book.ts",
+          "hash": "8645073545413694570"
+        },
+        {
+          "file": "libs/shared-types/src/category.ts",
+          "hash": "16251114171672930633"
+        },
+        {
+          "file": "libs/shared-types/src/index.ts",
+          "hash": "7199383918301075866"
+        },
+        {
+          "file": "libs/shared-types/src/theme.ts",
+          "hash": "13379940152195891171"
+        },
+        {
+          "file": "libs/shared-types/src/user.ts",
+          "hash": "2384298880327618622"
+        },
+        {
+          "file": "libs/shared-types/tsconfig.json",
+          "hash": "3886482657624185382"
+        },
+        {
+          "file": "libs/shared-types/tsconfig.lib.json",
+          "hash": "17938492694101881404"
+        }
+      ],
+      "ui-components": [
+        {
+          "file": "libs/ui-components/package.json",
+          "hash": "7602694950205945966",
+          "deps": [
+            "npm:react",
+            "npm:react-dom"
+          ]
+        },
+        {
+          "file": "libs/ui-components/project.json",
+          "hash": "1871111474540721233"
+        },
+        {
+          "file": "libs/ui-components/src/BookCard/BookCard.logic.ts",
+          "hash": "11246002627468849816",
+          "deps": [
+            "shared-types",
+            "shared-utils"
+          ]
+        },
+        {
+          "file": "libs/ui-components/src/BookCard/BookCard.tsx",
+          "hash": "15396937810225069086",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "libs/ui-components/src/BookCard/BookCard.types.ts",
+          "hash": "6285582525406844906",
+          "deps": [
+            "shared-types"
+          ]
+        },
+        {
+          "file": "libs/ui-components/src/Button/Button.styles.ts",
+          "hash": "5128127915427781051"
+        },
+        {
+          "file": "libs/ui-components/src/Button/Button.tsx",
+          "hash": "11791629577099159137",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "libs/ui-components/src/Button/Button.types.ts",
+          "hash": "8569553622933231878"
+        },
+        {
+          "file": "libs/ui-components/src/LoadingSpinner/LoadingSpinner.tsx",
+          "hash": "10289628997815141720",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "libs/ui-components/src/TextInput/TextInput.tsx",
+          "hash": "14981993170431191897",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "libs/ui-components/src/TextInput/TextInput.types.ts",
+          "hash": "10410810751612126096"
+        },
+        {
+          "file": "libs/ui-components/src/index.ts",
+          "hash": "252879149928518357"
+        },
+        {
+          "file": "libs/ui-components/tsconfig.json",
+          "hash": "3886482657624185382"
+        },
+        {
+          "file": "libs/ui-components/tsconfig.lib.json",
+          "hash": "11567763933210962718"
+        }
+      ],
+      "shared-api": [
+        {
+          "file": "libs/shared-api/README.md",
+          "hash": "3986072927825794997"
+        },
+        {
+          "file": "libs/shared-api/package.json",
+          "hash": "15917575637753349400",
+          "deps": [
+            "npm:@types/jest",
+            "npm:jest",
+            "npm:typescript@4.9.5"
+          ]
+        },
+        {
+          "file": "libs/shared-api/project.json",
+          "hash": "8821916779965195081"
+        },
+        {
+          "file": "libs/shared-api/src/__mocks__/index.ts",
+          "hash": "10200305710204558757"
+        },
+        {
+          "file": "libs/shared-api/src/api-client.ts",
+          "hash": "4688737418429148200"
+        },
+        {
+          "file": "libs/shared-api/src/author-api.ts",
+          "hash": "17657708528940022917",
+          "deps": [
+            "shared-types"
+          ]
+        },
+        {
+          "file": "libs/shared-api/src/base-client.ts",
+          "hash": "6395653460386245771"
+        },
+        {
+          "file": "libs/shared-api/src/book-api.ts",
+          "hash": "15476809381488033923",
+          "deps": [
+            "shared-types"
+          ]
+        },
+        {
+          "file": "libs/shared-api/src/category-api.ts",
+          "hash": "16365251199385601390",
+          "deps": [
+            "shared-types"
+          ]
+        },
+        {
+          "file": "libs/shared-api/src/index.ts",
+          "hash": "15051100435012321743"
+        },
+        {
+          "file": "libs/shared-api/src/user-api.ts",
+          "hash": "10701053833029415094",
+          "deps": [
+            "shared-types"
+          ]
+        },
+        {
+          "file": "libs/shared-api/tsconfig.json",
+          "hash": "3886482657624185382"
+        },
+        {
+          "file": "libs/shared-api/tsconfig.lib.json",
+          "hash": "7875923389073095054"
+        }
+      ],
+      "my-many-books": [
+        {
+          "file": ".claude/commands/primer.md",
+          "hash": "15031830246671253370"
+        },
+        {
+          "file": ".github/workflows/cd.yml",
+          "hash": "4099020991702967579"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "hash": "12909305505579319735"
+        },
+        {
+          "file": ".gitignore",
+          "hash": "10033411243977838305"
+        },
+        {
+          "file": "CLAUDE.md",
+          "hash": "11918609699849328735"
+        },
+        {
+          "file": "README.md",
+          "hash": "7231844710121916496"
+        },
+        {
+          "file": "docs/AWS_IAM_SETUP.md",
+          "hash": "14797445806239960202"
+        },
+        {
+          "file": "docs/marketplace-publishing.md",
+          "hash": "8022471775519416921"
+        },
+        {
+          "file": "docs/mobile-testing.md",
+          "hash": "12688844449120351118"
+        },
+        {
+          "file": "docs/project-improvements.md",
+          "hash": "4819140810160011083"
+        },
+        {
+          "file": "graph.json",
+          "hash": "11280852034578360057"
+        },
+        {
+          "file": "jest.preset.js",
+          "hash": "16918685885527483323",
+          "deps": [
+            "npm:@nx/jest"
+          ]
+        },
+        {
+          "file": "nx.json",
+          "hash": "11104850671270371214"
+        },
+        {
+          "file": "package-lock.json",
+          "hash": "2328613586699491707"
+        },
+        {
+          "file": "package.json",
+          "hash": "6476941432745884334",
+          "deps": [
+            "npm:@babel/preset-env",
+            "npm:@babel/preset-react",
+            "npm:@babel/preset-typescript",
+            "npm:@nx/eslint",
+            "npm:@nx/jest",
+            "npm:@nx/js",
+            "npm:@nx/react",
+            "npm:@nx/webpack",
+            "npm:@nx/workspace",
+            "npm:babel-jest",
+            "npm:cypress",
+            "npm:mysql2",
+            "npm:nx",
+            "npm:sequelize-cli",
+            "npm:typescript"
+          ]
+        },
+        {
+          "file": "tsconfig.base.json",
+          "hash": "13932475521659426758"
+        }
+      ],
+      "shared-utils": [
+        {
+          "file": "libs/shared-utils/package.json",
+          "hash": "17939179838452858053"
+        },
+        {
+          "file": "libs/shared-utils/project.json",
+          "hash": "14448929180087625405"
+        },
+        {
+          "file": "libs/shared-utils/src/formatting.ts",
+          "hash": "14313142681817355710"
+        },
+        {
+          "file": "libs/shared-utils/src/index.ts",
+          "hash": "9963843129090720856"
+        },
+        {
+          "file": "libs/shared-utils/src/isbn.ts",
+          "hash": "15092681053667624764"
+        },
+        {
+          "file": "libs/shared-utils/src/validation.ts",
+          "hash": "12066411050689086401"
+        },
+        {
+          "file": "libs/shared-utils/tsconfig.json",
+          "hash": "3886482657624185382"
+        },
+        {
+          "file": "libs/shared-utils/tsconfig.lib.json",
+          "hash": "11043615832811343305"
+        }
+      ],
+      "api": [
+        {
+          "file": "apps/api/.env.example",
+          "hash": "1524679042632389407"
+        },
+        {
+          "file": "apps/api/.eslintrc.js",
+          "hash": "5620084471903214284"
+        },
+        {
+          "file": "apps/api/.gitignore",
+          "hash": "17590408095419140350"
+        },
+        {
+          "file": "apps/api/.prettierrc",
+          "hash": "14429128325842901341"
+        },
+        {
+          "file": "apps/api/.sequelizerc",
+          "hash": "12003925764349349117"
+        },
+        {
+          "file": "apps/api/DEPLOYMENT.md",
+          "hash": "9755838628145399457"
+        },
+        {
+          "file": "apps/api/README.md",
+          "hash": "8391491811069211793"
+        },
+        {
+          "file": "apps/api/config/api-gateway.yml",
+          "hash": "15815672218892868617"
+        },
+        {
+          "file": "apps/api/config/cors.yml",
+          "hash": "17204972842947427266"
+        },
+        {
+          "file": "apps/api/config/schemas/author-request.json",
+          "hash": "13276852110248463584"
+        },
+        {
+          "file": "apps/api/config/schemas/book-request.json",
+          "hash": "18243901206275561322"
+        },
+        {
+          "file": "apps/api/config/schemas/category-request.json",
+          "hash": "10789786590182514312"
+        },
+        {
+          "file": "apps/api/config/security.yml",
+          "hash": "3956180263872431188"
+        },
+        {
+          "file": "apps/api/database/config/config.js",
+          "hash": "15842496910820220976",
+          "deps": [
+            "npm:dotenv"
+          ]
+        },
+        {
+          "file": "apps/api/database/migrations/20250813104635-create-initial-schema.js",
+          "hash": "14147181824381804318"
+        },
+        {
+          "file": "apps/api/database/seeders/20250813105134-demo-authors.js",
+          "hash": "5064826198082769993"
+        },
+        {
+          "file": "apps/api/database/seeders/20250813105139-demo-categories.js",
+          "hash": "7755926030692469675"
+        },
+        {
+          "file": "apps/api/database/seeders/20250813105143-demo-books.js",
+          "hash": "8082805505521557074"
+        },
+        {
+          "file": "apps/api/deployment/README.md",
+          "hash": "622816214525539664"
+        },
+        {
+          "file": "apps/api/deployment/cloudformation/api-gateway.yml",
+          "hash": "11482921472944563560"
+        },
+        {
+          "file": "apps/api/deployment/cloudformation/cognito/cognito-ui-custom.css",
+          "hash": "16960921241348578834"
+        },
+        {
+          "file": "apps/api/deployment/cloudformation/infrastructure.yml",
+          "hash": "6062465895386596348"
+        },
+        {
+          "file": "apps/api/deployment/docker/.dockerignore",
+          "hash": "10721277341091810936"
+        },
+        {
+          "file": "apps/api/deployment/docker/Dockerfile",
+          "hash": "12394304009511958739"
+        },
+        {
+          "file": "apps/api/deployment/docker/docker-compose.prod.yml",
+          "hash": "8453529154700125983"
+        },
+        {
+          "file": "apps/api/deployment/docker/docker-compose.yml",
+          "hash": "7975792596235387572"
+        },
+        {
+          "file": "apps/api/deployment/docker/mysql/init.sql",
+          "hash": "12349183875803010094"
+        },
+        {
+          "file": "apps/api/deployment/docker/mysql/my.cnf",
+          "hash": "1995821075560058068"
+        },
+        {
+          "file": "apps/api/deployment/docker/redis/redis.conf",
+          "hash": "5067404456877867508"
+        },
+        {
+          "file": "apps/api/deployment/iam/cognito-policy.json",
+          "hash": "9976174301917607995"
+        },
+        {
+          "file": "apps/api/deployment/monitoring/cloudwatch-alarms.yml",
+          "hash": "10413834607671471066"
+        },
+        {
+          "file": "apps/api/deployment/monitoring/cloudwatch-dashboard.json",
+          "hash": "9995587912142556166"
+        },
+        {
+          "file": "apps/api/deployment/monitoring/setup-monitoring.sh",
+          "hash": "18270219021276352061"
+        },
+        {
+          "file": "apps/api/deployment/scripts/backup.sh",
+          "hash": "12788352558806031851"
+        },
+        {
+          "file": "apps/api/deployment/scripts/deploy-cognito-ui.js",
+          "hash": "16770890221017012388",
+          "deps": [
+            "npm:aws-sdk"
+          ]
+        },
+        {
+          "file": "apps/api/deployment/scripts/deploy.sh",
+          "hash": "16134345727839323333"
+        },
+        {
+          "file": "apps/api/deployment/scripts/rollback.sh",
+          "hash": "4969582928305909373"
+        },
+        {
+          "file": "apps/api/deployment/scripts/setup-cognito-permissions.sh",
+          "hash": "9495240605348847196"
+        },
+        {
+          "file": "apps/api/docs/API_GATEWAY_GUIDE.md",
+          "hash": "6475300783703493222"
+        },
+        {
+          "file": "apps/api/docs/api-specification.yml",
+          "hash": "16616806079620877830"
+        },
+        {
+          "file": "apps/api/jest.config.js",
+          "hash": "4683837012666476339"
+        },
+        {
+          "file": "apps/api/memory",
+          "hash": "8824180541331673129"
+        },
+        {
+          "file": "apps/api/migrations/20250813000001-create-users-table.js",
+          "hash": "4305368479731345837"
+        },
+        {
+          "file": "apps/api/migrations/20250813000002-add-user-id-to-books.js",
+          "hash": "16529870954619093667"
+        },
+        {
+          "file": "apps/api/npm-validate.sh",
+          "hash": "696750446335437953"
+        },
+        {
+          "file": "apps/api/package.json",
+          "hash": "12075777231771025942",
+          "deps": [
+            "npm:@types/aws-lambda",
+            "npm:@types/cors@2.8.19",
+            "npm:@types/express@5.0.3",
+            "npm:@types/jest",
+            "npm:@types/jsonwebtoken@9.0.10",
+            "npm:@types/node@20.19.10",
+            "npm:@types/supertest",
+            "npm:@types/uuid",
+            "npm:@typescript-eslint/eslint-plugin@8.39.1",
+            "npm:@typescript-eslint/parser@8.39.1",
+            "npm:eslint",
+            "npm:eslint-config-prettier",
+            "npm:eslint-plugin-prettier@5.5.4",
+            "npm:jest",
+            "npm:nodemon",
+            "npm:prettier@3.6.2",
+            "npm:serverless",
+            "npm:serverless-esbuild@1.55.1",
+            "npm:serverless-offline",
+            "npm:sqlite3",
+            "npm:supertest",
+            "npm:ts-jest@29.4.1",
+            "npm:ts-node@10.9.2",
+            "npm:tsconfig-paths",
+            "npm:typescript",
+            "npm:@aws-amplify/ui-react",
+            "npm:aws-amplify",
+            "npm:aws-sdk",
+            "npm:axios",
+            "npm:cors",
+            "npm:dotenv",
+            "npm:express@5.1.0",
+            "npm:joi",
+            "npm:jsonwebtoken@9.0.2",
+            "npm:mysql2",
+            "npm:sequelize",
+            "npm:sequelize-cli",
+            "npm:uuid"
+          ]
+        },
+        {
+          "file": "apps/api/postman/My-Many-Books-API.postman_collection.json",
+          "hash": "8055834789403594231"
+        },
+        {
+          "file": "apps/api/postman/README.md",
+          "hash": "14806151045776267120"
+        },
+        {
+          "file": "apps/api/postman/environments/AWS-Development.postman_environment.json",
+          "hash": "11821945510305543222"
+        },
+        {
+          "file": "apps/api/postman/environments/AWS-Production.postman_environment.json",
+          "hash": "15199290853985822906"
+        },
+        {
+          "file": "apps/api/postman/environments/Local-Development.postman_environment.json",
+          "hash": "11810465236802160066"
+        },
+        {
+          "file": "apps/api/postman/scripts/authentication-helper.js",
+          "hash": "3539323110221890234"
+        },
+        {
+          "file": "apps/api/postman/scripts/test-data-generator.js",
+          "hash": "6317829272039551694"
+        },
+        {
+          "file": "apps/api/postman/scripts/validation-helpers.js",
+          "hash": "16972682974475178421"
+        },
+        {
+          "file": "apps/api/project.json",
+          "hash": "4319678567729752592"
+        },
+        {
+          "file": "apps/api/scripts/db-status.ts",
+          "hash": "4586672839335604784",
+          "deps": [
+            "npm:dotenv"
+          ]
+        },
+        {
+          "file": "apps/api/scripts/generate-api-keys.ts",
+          "hash": "15587781135433025462"
+        },
+        {
+          "file": "apps/api/scripts/init-database.ts",
+          "hash": "8011805471722903590",
+          "deps": [
+            "npm:dotenv"
+          ]
+        },
+        {
+          "file": "apps/api/scripts/reset-database.ts",
+          "hash": "1932462877685531318",
+          "deps": [
+            "npm:dotenv"
+          ]
+        },
+        {
+          "file": "apps/api/serverless.yml",
+          "hash": "645720319965356673"
+        },
+        {
+          "file": "apps/api/src/adapters/lambdaAdapter.ts",
+          "hash": "8143378027545304791",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/app.ts",
+          "hash": "17044254403560216726",
+          "deps": [
+            "npm:express@5.1.0",
+            "npm:cors"
+          ]
+        },
+        {
+          "file": "apps/api/src/common/ApiResponse.ts",
+          "hash": "10667071504814276543"
+        },
+        {
+          "file": "apps/api/src/config/database.ts",
+          "hash": "12171387516186699415",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/config/index.ts",
+          "hash": "12145774842722992925"
+        },
+        {
+          "file": "apps/api/src/controllers/AuthorController.ts",
+          "hash": "14890351806957964484",
+          "deps": [
+            "npm:joi",
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/controllers/BookController.ts",
+          "hash": "5517201168171835094",
+          "deps": [
+            "npm:joi",
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/controllers/CategoryController.ts",
+          "hash": "2017552962898665954",
+          "deps": [
+            "npm:joi"
+          ]
+        },
+        {
+          "file": "apps/api/src/controllers/IsbnController.ts",
+          "hash": "14805885524427810066",
+          "deps": [
+            "npm:joi"
+          ]
+        },
+        {
+          "file": "apps/api/src/controllers/UserController.ts",
+          "hash": "9978829766914938069",
+          "deps": [
+            "npm:express@5.1.0",
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/controllers/base/BaseController.ts",
+          "hash": "18076120613657047123",
+          "deps": [
+            "npm:joi"
+          ]
+        },
+        {
+          "file": "apps/api/src/handlers/authors.ts",
+          "hash": "7333190947055753168",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/handlers/books.ts",
+          "hash": "3958801307515882536",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/handlers/categories.ts",
+          "hash": "5171509573689280803",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/handlers/health.ts",
+          "hash": "8845031715037555134",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/handlers/index.ts",
+          "hash": "406206158982799804"
+        },
+        {
+          "file": "apps/api/src/handlers/isbn.ts",
+          "hash": "3037723429995076398",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/handlers/router.ts",
+          "hash": "6045915319421589512",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/middleware/apiKeyAuth.ts",
+          "hash": "13876692021062572480",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/middleware/auth.ts",
+          "hash": "9476493795161354610",
+          "deps": [
+            "npm:express@5.1.0",
+            [
+              "npm:jsonwebtoken@9.0.2",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/api/src/middleware/cognitoAuth.ts",
+          "hash": "11932859210650329950",
+          "deps": [
+            "npm:@types/aws-lambda",
+            "npm:jsonwebtoken@9.0.2"
+          ]
+        },
+        {
+          "file": "apps/api/src/middleware/cors.ts",
+          "hash": "8847044416395352222",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/middleware/errorHandler.ts",
+          "hash": "15789466472686505518",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/middleware/index.ts",
+          "hash": "4982131302672184554"
+        },
+        {
+          "file": "apps/api/src/middleware/rateLimiter.ts",
+          "hash": "10062701278072620969",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/middleware/requestLogger.ts",
+          "hash": "8200268174456299721",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/src/models/Author.ts",
+          "hash": "2487307615850674341",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/models/Book.ts",
+          "hash": "18235931677674502533",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/models/BookAuthor.ts",
+          "hash": "18229163987354740303",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/models/BookCategory.ts",
+          "hash": "6870493773961809519",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/models/Category.ts",
+          "hash": "14110247297669282829",
+          "deps": [
+            "npm:sequelize",
+            [
+              "npm:sequelize",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/api/src/models/User.ts",
+          "hash": "13618255387725009043",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/models/associations/ModelAssociations.ts",
+          "hash": "14179464416550581311",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/models/base/BaseModel.ts",
+          "hash": "4511449631481400080",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/models/base/IdBaseModel.ts",
+          "hash": "5555589712202898511",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/models/index.ts",
+          "hash": "9362940454876005453",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/models/interfaces/ModelInterfaces.ts",
+          "hash": "14105664198673161971",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/authorRoutes.ts",
+          "hash": "10800180595777918411",
+          "deps": [
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/bookRoutes.ts",
+          "hash": "12052695604750122693",
+          "deps": [
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/categoryRoutes.ts",
+          "hash": "10011799890211432230",
+          "deps": [
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/userRoutes.ts",
+          "hash": "1801245765718512856",
+          "deps": [
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/src/services/dataTransformer.ts",
+          "hash": "8692967417290163171"
+        },
+        {
+          "file": "apps/api/src/services/fallbackService.ts",
+          "hash": "17916188653280983327"
+        },
+        {
+          "file": "apps/api/src/services/isbnService.ts",
+          "hash": "15831626748542788709"
+        },
+        {
+          "file": "apps/api/src/services/openLibraryClient.ts",
+          "hash": "3432727850155821364",
+          "deps": [
+            "npm:axios"
+          ]
+        },
+        {
+          "file": "apps/api/src/types/bookData.ts",
+          "hash": "17952960084693216249"
+        },
+        {
+          "file": "apps/api/src/types/index.ts",
+          "hash": "10748522783667629789"
+        },
+        {
+          "file": "apps/api/src/types/openLibrary.ts",
+          "hash": "6610090084362677414"
+        },
+        {
+          "file": "apps/api/src/utils/circuitBreaker.ts",
+          "hash": "8628612140960622813"
+        },
+        {
+          "file": "apps/api/src/utils/constants.ts",
+          "hash": "11595512454698342214"
+        },
+        {
+          "file": "apps/api/src/utils/database.ts",
+          "hash": "13536712627221339110",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/utils/isbn.ts",
+          "hash": "40745607943991486"
+        },
+        {
+          "file": "apps/api/src/utils/retryPolicy.ts",
+          "hash": "17268793967823930179"
+        },
+        {
+          "file": "apps/api/src/utils/routeWrapper.ts",
+          "hash": "3490308415408899226",
+          "deps": [
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/src/utils/sequelize-helpers.ts",
+          "hash": "4180870322038747987",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/src/utils/validation.ts",
+          "hash": "17488403103119463372",
+          "deps": [
+            "npm:joi"
+          ]
+        },
+        {
+          "file": "apps/api/tests/integration/app.test.ts",
+          "hash": "15328903343287384524",
+          "deps": [
+            "npm:supertest"
+          ]
+        },
+        {
+          "file": "apps/api/tests/integration/handlers/authors.test.ts",
+          "hash": "11880430103234882476",
+          "deps": [
+            "npm:@types/aws-lambda",
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/integration/handlers/books.test.ts",
+          "hash": "1049316917977708805",
+          "deps": [
+            "npm:@types/aws-lambda",
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/integration/handlers/categories.test.ts",
+          "hash": "6543383114881294341",
+          "deps": [
+            "npm:@types/aws-lambda",
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/integration/handlers/health.test.ts",
+          "hash": "15463865836631060885",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/tests/integration/handlers/index.test.ts",
+          "hash": "9743899936025027849"
+        },
+        {
+          "file": "apps/api/tests/integration/handlers/isbn.test.ts",
+          "hash": "1941047583544358095",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/tests/integration/handlers/router.test.ts",
+          "hash": "14856172680473047424",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/tests/jest-globals.test.ts",
+          "hash": "9333362403378281265"
+        },
+        {
+          "file": "apps/api/tests/jest.d.ts",
+          "hash": "9018682207763279556"
+        },
+        {
+          "file": "apps/api/tests/setup.ts",
+          "hash": "7903623853229383975",
+          "deps": [
+            "npm:dotenv"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/config/database.test.ts",
+          "hash": "4292729153285004562",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/controllers/AuthorController.test.ts",
+          "hash": "14002916986520921268"
+        },
+        {
+          "file": "apps/api/tests/unit/controllers/BookController.test.ts",
+          "hash": "4328327820686660988"
+        },
+        {
+          "file": "apps/api/tests/unit/controllers/BookController.user-methods.test.ts",
+          "hash": "14455433084646425808"
+        },
+        {
+          "file": "apps/api/tests/unit/controllers/CategoryController.test.ts",
+          "hash": "11807247346409590606"
+        },
+        {
+          "file": "apps/api/tests/unit/controllers/IsbnController.test.ts",
+          "hash": "4167572714379679091"
+        },
+        {
+          "file": "apps/api/tests/unit/controllers/UserController.test.ts",
+          "hash": "7915099618067310266",
+          "deps": [
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/interfaces/AuthUser.test.ts",
+          "hash": "3221758977049695889"
+        },
+        {
+          "file": "apps/api/tests/unit/middleware/auth.test.ts",
+          "hash": "5444371601148214378",
+          "deps": [
+            "npm:express@5.1.0",
+            [
+              "npm:jsonwebtoken@9.0.2",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/middleware/cors.test.ts",
+          "hash": "9213233498757303960",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/middleware/errorHandler.test.ts",
+          "hash": "12738009571216705201",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/middleware/requestLogger.test.ts",
+          "hash": "1911003651779473977",
+          "deps": [
+            "npm:@types/aws-lambda"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/models/Author.test.ts",
+          "hash": "11471297416559793349",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/models/Book-simple.test.ts",
+          "hash": "12560462796690461182"
+        },
+        {
+          "file": "apps/api/tests/unit/models/Book.test.ts",
+          "hash": "12270860163564830294",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/models/BookAuthor.test.ts",
+          "hash": "2091788651067305983",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/models/BookCategory.test.ts",
+          "hash": "8965693073732406868",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/models/Category.test.ts",
+          "hash": "3370838342606137868",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/models/ModelManager.test.ts",
+          "hash": "9597718603360206950"
+        },
+        {
+          "file": "apps/api/tests/unit/models/User-simple.test.ts",
+          "hash": "1775247925287359828"
+        },
+        {
+          "file": "apps/api/tests/unit/models/User.test.ts",
+          "hash": "12454158503291608268",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/models/associations/ModelAssociations.test.ts",
+          "hash": "13754302003701713683",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/models/base/BaseModel.test.ts",
+          "hash": "9764945905298762369",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/models/base/IdBaseModel.test.ts",
+          "hash": "10409143853953116113",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/routes/authorRoutes.test.ts",
+          "hash": "8719229853742912672",
+          "deps": [
+            "npm:supertest",
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/routes/bookRoutes.test.ts",
+          "hash": "1794155367985513882",
+          "deps": [
+            "npm:supertest",
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/routes/categoryRoutes.test.ts",
+          "hash": "7880971528495533849",
+          "deps": [
+            "npm:supertest",
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/routes/userRoutes.test.ts",
+          "hash": "5982059464391268069",
+          "deps": [
+            "npm:supertest",
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/services/dataTransformer.test.ts",
+          "hash": "6278577675107141663"
+        },
+        {
+          "file": "apps/api/tests/unit/services/fallbackService-simple.test.ts",
+          "hash": "17105922898679436146"
+        },
+        {
+          "file": "apps/api/tests/unit/services/fallbackService.test.ts",
+          "hash": "8602359429951473176"
+        },
+        {
+          "file": "apps/api/tests/unit/services/isbnService.test.ts",
+          "hash": "16978013076853665074"
+        },
+        {
+          "file": "apps/api/tests/unit/services/openLibraryClient.test.ts",
+          "hash": "125072170186800133",
+          "deps": [
+            "npm:axios"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/utils/circuitBreaker.test.ts",
+          "hash": "18003409015544477212"
+        },
+        {
+          "file": "apps/api/tests/unit/utils/constants.test.ts",
+          "hash": "14446464952534722912"
+        },
+        {
+          "file": "apps/api/tests/unit/utils/database.test.ts",
+          "hash": "6918104156634861830",
+          "deps": [
+            "npm:sequelize"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/utils/isbn.test.ts",
+          "hash": "12464839492069897380"
+        },
+        {
+          "file": "apps/api/tests/unit/utils/retryPolicy.test.ts",
+          "hash": "989745323943028567"
+        },
+        {
+          "file": "apps/api/tests/unit/utils/routeWrapper.test.ts",
+          "hash": "1465412512304655023",
+          "deps": [
+            "npm:express@5.1.0"
+          ]
+        },
+        {
+          "file": "apps/api/tests/unit/utils/validation.test.ts",
+          "hash": "12938550222258215125"
+        },
+        {
+          "file": "apps/api/tsconfig.build.json",
+          "hash": "3125244875777926908"
+        },
+        {
+          "file": "apps/api/tsconfig.json",
+          "hash": "16209480738115914270"
+        },
+        {
+          "file": "apps/api/tsconfig.test.json",
+          "hash": "18158365191460326937"
+        },
+        {
+          "file": "apps/api/tsconfig.workspace.json",
+          "hash": "13310426869461150265"
+        }
+      ],
+      "shared-forms": [
+        {
+          "file": "libs/shared-forms/package.json",
+          "hash": "3607192655345261675"
+        },
+        {
+          "file": "libs/shared-forms/project.json",
+          "hash": "5529088757502216772"
+        },
+        {
+          "file": "libs/shared-forms/src/FormManager.ts",
+          "hash": "10513041895038310374"
+        },
+        {
+          "file": "libs/shared-forms/src/FormValidator.ts",
+          "hash": "7996883296601582702",
+          "deps": [
+            "shared-utils"
+          ]
+        },
+        {
+          "file": "libs/shared-forms/src/hooks.ts",
+          "hash": "9842154786600227850",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "libs/shared-forms/src/index.ts",
+          "hash": "7992332054849130191"
+        },
+        {
+          "file": "libs/shared-forms/src/schemas.ts",
+          "hash": "1942003363291086039"
+        },
+        {
+          "file": "libs/shared-forms/src/types.ts",
+          "hash": "4338072381698662229"
+        },
+        {
+          "file": "libs/shared-forms/tsconfig.json",
+          "hash": "3886482657624185382"
+        },
+        {
+          "file": "libs/shared-forms/tsconfig.lib.json",
+          "hash": "15669064845570446998"
+        }
+      ],
+      "shared-hooks": [
+        {
+          "file": "libs/shared-hooks/package.json",
+          "hash": "10362524968797047631",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "libs/shared-hooks/project.json",
+          "hash": "14054535386321341533"
+        },
+        {
+          "file": "libs/shared-hooks/src/index.ts",
+          "hash": "11019802513060211483"
+        },
+        {
+          "file": "libs/shared-hooks/src/useAsyncOperation.ts",
+          "hash": "12815531256403161506",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "libs/shared-hooks/src/useBookSearch.ts",
+          "hash": "18279740768737423354",
+          "deps": [
+            "npm:react",
+            "shared-types"
+          ]
+        },
+        {
+          "file": "libs/shared-hooks/src/useBooks.ts",
+          "hash": "16454282913411624917",
+          "deps": [
+            "npm:react",
+            "shared-types"
+          ]
+        },
+        {
+          "file": "libs/shared-hooks/src/useCategories.ts",
+          "hash": "3116029331979009776",
+          "deps": [
+            "npm:react",
+            "shared-types"
+          ]
+        },
+        {
+          "file": "libs/shared-hooks/src/useDebounce.ts",
+          "hash": "10486480065079412732",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "libs/shared-hooks/src/useLocalStorage.ts",
+          "hash": "186471114870132710",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "libs/shared-hooks/tsconfig.json",
+          "hash": "3886482657624185382"
+        },
+        {
+          "file": "libs/shared-hooks/tsconfig.lib.json",
+          "hash": "3448326451290312353"
+        }
+      ],
+      "shared-business": [
+        {
+          "file": "libs/shared-business/package.json",
+          "hash": "9865772715282844985"
+        },
+        {
+          "file": "libs/shared-business/project.json",
+          "hash": "13410791658504497971"
+        },
+        {
+          "file": "libs/shared-business/src/AuthManager.ts",
+          "hash": "14740423874878567131",
+          "deps": [
+            "shared-types",
+            "shared-utils"
+          ]
+        },
+        {
+          "file": "libs/shared-business/src/BookManager.ts",
+          "hash": "5203516002968811897",
+          "deps": [
+            "shared-types",
+            "shared-utils"
+          ]
+        },
+        {
+          "file": "libs/shared-business/src/SearchManager.ts",
+          "hash": "6530228409782105059",
+          "deps": [
+            "shared-types",
+            "shared-utils"
+          ]
+        },
+        {
+          "file": "libs/shared-business/src/index.ts",
+          "hash": "1234652490412770308"
+        },
+        {
+          "file": "libs/shared-business/tsconfig.json",
+          "hash": "3886482657624185382"
+        },
+        {
+          "file": "libs/shared-business/tsconfig.lib.json",
+          "hash": "14846318430136162521"
+        }
+      ],
+      "my-many-books-mobile": [
+        {
+          "file": "apps/mobile/.eslintrc.js",
+          "hash": "10652951869784146696"
+        },
+        {
+          "file": "apps/mobile/.gitignore",
+          "hash": "15733906610864610494"
+        },
+        {
+          "file": "apps/mobile/README.md",
+          "hash": "2876302193806204656"
+        },
+        {
+          "file": "apps/mobile/__mocks__/@/components/BookCard.tsx",
+          "hash": "2905118527384347201",
+          "deps": [
+            "npm:react@18.2.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/__mocks__/@expo/vector-icons.js",
+          "hash": "6459131622006136371"
+        },
+        {
+          "file": "apps/mobile/__mocks__/@react-native-async-storage/async-storage.js",
+          "hash": "4932683012115003777"
+        },
+        {
+          "file": "apps/mobile/__mocks__/expo-barcode-scanner.js",
+          "hash": "302919329871423257"
+        },
+        {
+          "file": "apps/mobile/__mocks__/expo-camera.js",
+          "hash": "13591361760190431873"
+        },
+        {
+          "file": "apps/mobile/__mocks__/expo-router.js",
+          "hash": "6166994376644556412"
+        },
+        {
+          "file": "apps/mobile/__mocks__/react-native-paper.js",
+          "hash": "12157122655978599177"
+        },
+        {
+          "file": "apps/mobile/__mocks__/react-native-safe-area-context.js",
+          "hash": "12991690731765611816",
+          "deps": [
+            "npm:react@18.2.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/__mocks__/react-native.js",
+          "hash": "14318285255124377026",
+          "deps": [
+            "npm:react@18.2.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/components/BookCard.test.tsx",
+          "hash": "16564239362339328829",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-test-renderer@18.2.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/components/EmptyState.test.tsx",
+          "hash": "9561672110733032393"
+        },
+        {
+          "file": "apps/mobile/__tests__/components/LoadingSpinner.test.tsx",
+          "hash": "14141888719181741869",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-test-renderer@18.2.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/hooks/useBarcodeScanner.test.ts",
+          "hash": "3079371738425270835",
+          "deps": [
+            [
+              "npm:react@18.2.0",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/hooks/useBookSearch.test.ts",
+          "hash": "1778775200381914583",
+          "deps": [
+            [
+              "npm:react@18.2.0",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/hooks/useBooks.test.ts",
+          "hash": "3111480881438207250",
+          "deps": [
+            [
+              "npm:react@18.2.0",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/integration/AuthFlow.test.tsx",
+          "hash": "4347094139779917429",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-test-renderer@18.2.0",
+            "npm:@react-native-async-storage/async-storage@1.24.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/integration/BookManagement.test.tsx",
+          "hash": "14251396133533866406",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-test-renderer@18.2.0",
+            "npm:@react-native-async-storage/async-storage@1.24.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/screens/AddBookScreen.test.tsx",
+          "hash": "252984499282808597",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-test-renderer@18.2.0",
+            "npm:expo-router@3.5.24"
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/screens/BooksScreen.test.tsx",
+          "hash": "5111228947252595543",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-test-renderer@18.2.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/services/api.test.ts",
+          "hash": "14184530491944373382"
+        },
+        {
+          "file": "apps/mobile/__tests__/setup/componentTestUtils.tsx",
+          "hash": "5551994863273291595"
+        },
+        {
+          "file": "apps/mobile/__tests__/setup/setupTests.ts",
+          "hash": "407126875407935692",
+          "deps": [
+            "npm:react-native-gesture-handler@2.16.2",
+            "npm:@testing-library/jest-dom",
+            [
+              "npm:react@18.2.0",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/mobile/__tests__/setup/timers.js",
+          "hash": "1112854638486553552"
+        },
+        {
+          "file": "apps/mobile/__tests__/utils/helpers.test.ts",
+          "hash": "13173962266349917470"
+        },
+        {
+          "file": "apps/mobile/app.json",
+          "hash": "6518334311658829055"
+        },
+        {
+          "file": "apps/mobile/app/(tabs)/_layout.tsx",
+          "hash": "6256854905669755992",
+          "deps": [
+            "npm:expo-router@3.5.24",
+            "npm:@expo/vector-icons@14.1.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/app/(tabs)/index.tsx",
+          "hash": "4891512547333264982",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-native@0.74.5",
+            "npm:react-native-paper@5.14.5",
+            "npm:expo-router@3.5.24",
+            "npm:react-native-safe-area-context@4.10.5"
+          ]
+        },
+        {
+          "file": "apps/mobile/app/(tabs)/profile.tsx",
+          "hash": "3836059320076092961",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-native@0.74.5",
+            "npm:react-native-paper@5.14.5",
+            "npm:react-native-safe-area-context@4.10.5",
+            "npm:@expo/vector-icons@14.1.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/app/(tabs)/scanner.tsx",
+          "hash": "1477663807698798130",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-native@0.74.5",
+            "npm:react-native-paper@5.14.5",
+            "npm:expo-barcode-scanner",
+            "npm:expo-router@3.5.24",
+            "npm:react-native-safe-area-context@4.10.5",
+            "shared-types"
+          ]
+        },
+        {
+          "file": "apps/mobile/app/(tabs)/search.tsx",
+          "hash": "14020293624999577844",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-native@0.74.5",
+            "npm:react-native-paper@5.14.5",
+            "npm:react-native-safe-area-context@4.10.5",
+            "shared-types"
+          ]
+        },
+        {
+          "file": "apps/mobile/app/_layout.tsx",
+          "hash": "12986350119312937524",
+          "deps": [
+            "npm:expo-router@3.5.24",
+            "npm:react-native-paper@5.14.5",
+            "npm:react-native-safe-area-context@4.10.5",
+            "npm:expo-status-bar"
+          ]
+        },
+        {
+          "file": "apps/mobile/app/auth.tsx",
+          "hash": "7536407297514975235",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-native@0.74.5",
+            "npm:react-native-paper@5.14.5",
+            "npm:react-native-safe-area-context@4.10.5",
+            "npm:expo-router@3.5.24"
+          ]
+        },
+        {
+          "file": "apps/mobile/app/book/add.tsx",
+          "hash": "15394797165207999138",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-native@0.74.5",
+            "npm:react-native-paper@5.14.5",
+            "npm:react-native-safe-area-context@4.10.5",
+            "npm:expo-router@3.5.24"
+          ]
+        },
+        {
+          "file": "apps/mobile/assets/README.md",
+          "hash": "11952337410928176929"
+        },
+        {
+          "file": "apps/mobile/babel.config.js",
+          "hash": "15434628365784497034"
+        },
+        {
+          "file": "apps/mobile/jest-environment.js",
+          "hash": "5476521992257447477",
+          "deps": [
+            "npm:jest-environment-jsdom"
+          ]
+        },
+        {
+          "file": "apps/mobile/jest-setup.ts",
+          "hash": "14861207479757450051"
+        },
+        {
+          "file": "apps/mobile/jest.config.js",
+          "hash": "14009781589104137451"
+        },
+        {
+          "file": "apps/mobile/metro.config.js",
+          "hash": "82256590243651522",
+          "deps": [
+            "npm:expo"
+          ]
+        },
+        {
+          "file": "apps/mobile/package.json",
+          "hash": "8241172168260054157",
+          "deps": [
+            "npm:@babel/core",
+            "npm:@testing-library/jest-native@5.4.3",
+            "npm:@testing-library/react-native@12.9.0",
+            "npm:@types/jest",
+            "npm:@types/node@20.19.17",
+            "npm:@types/react",
+            "npm:@types/react-native",
+            "npm:@typescript-eslint/eslint-plugin",
+            "npm:@typescript-eslint/parser",
+            "npm:babel-plugin-module-resolver",
+            "npm:eslint",
+            "npm:eslint-plugin-react",
+            "npm:eslint-plugin-react-hooks",
+            "npm:eslint-plugin-react-native",
+            "npm:jest",
+            "npm:jest-expo",
+            "npm:react-test-renderer@18.2.0",
+            "npm:typescript@5.3.3",
+            "npm:@expo/vector-icons@14.1.0",
+            "shared-api",
+            "shared-business",
+            "shared-types",
+            "shared-utils",
+            "npm:@react-native-async-storage/async-storage@1.24.0",
+            "npm:@react-native-camera-roll/camera-roll@7.10.2",
+            "npm:@react-navigation/bottom-tabs@6.6.1",
+            "npm:@react-navigation/native@6.1.18",
+            "npm:@react-navigation/native-stack@6.11.0",
+            "npm:expo",
+            "npm:expo-barcode-scanner",
+            "npm:expo-camera",
+            "npm:expo-constants",
+            "npm:expo-linear-gradient",
+            "npm:expo-router@3.5.24",
+            "npm:expo-status-bar",
+            "npm:react@18.2.0",
+            "npm:react-native@0.74.5",
+            "npm:react-native-gesture-handler@2.16.2",
+            "npm:react-native-paper@5.14.5",
+            "npm:react-native-reanimated@3.10.1",
+            "npm:react-native-safe-area-context@4.10.5",
+            "npm:react-native-screens@3.31.1",
+            "npm:react-native-vector-icons"
+          ]
+        },
+        {
+          "file": "apps/mobile/restart-ts.md",
+          "hash": "3241014084893293323"
+        },
+        {
+          "file": "apps/mobile/src/components/BookCard.tsx",
+          "hash": "5770550598867523241",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-native@0.74.5",
+            "npm:react-native-paper@5.14.5"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/components/EmptyState.tsx",
+          "hash": "1729820118325240786",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-native@0.74.5",
+            "npm:react-native-paper@5.14.5",
+            "npm:@expo/vector-icons@14.1.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/components/LoadingSpinner.tsx",
+          "hash": "6475870078573557888",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:react-native@0.74.5",
+            "npm:react-native-paper@5.14.5"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/contexts/AuthContext.tsx",
+          "hash": "10670359709795685939",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:@react-native-async-storage/async-storage@1.24.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/contexts/ThemeContext.tsx",
+          "hash": "16511024361843545708",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:@react-native-async-storage/async-storage@1.24.0",
+            "npm:react-native-paper@5.14.5"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/hooks/useAuth.ts",
+          "hash": "134286182546619607"
+        },
+        {
+          "file": "apps/mobile/src/hooks/useBarcodeScanner.ts",
+          "hash": "10555382374285074817",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:expo-camera",
+            "npm:expo-barcode-scanner"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/hooks/useBookSearch.ts",
+          "hash": "7134336441220830172",
+          "deps": [
+            "npm:react@18.2.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/hooks/useBooks.ts",
+          "hash": "13914875049961677201",
+          "deps": [
+            "npm:react@18.2.0",
+            "npm:@react-native-async-storage/async-storage@1.24.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/services/api.ts",
+          "hash": "12606266147287934827",
+          "deps": [
+            "shared-api"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/types/environment.d.ts",
+          "hash": "13576602964506139108",
+          "deps": [
+            "npm:react@18.2.0"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/types/globals.d.ts",
+          "hash": "4697745311217526665"
+        },
+        {
+          "file": "apps/mobile/src/types/index.ts",
+          "hash": "14364972987430010307",
+          "deps": [
+            "shared-types"
+          ]
+        },
+        {
+          "file": "apps/mobile/src/types/modules.d.ts",
+          "hash": "15431224559386026244"
+        },
+        {
+          "file": "apps/mobile/src/types/modules.d.ts.bak",
+          "hash": "2452326541157920358"
+        },
+        {
+          "file": "apps/mobile/src/types/navigation.ts",
+          "hash": "6971339526784863619"
+        },
+        {
+          "file": "apps/mobile/src/utils/helpers.ts",
+          "hash": "9917972904448296032"
+        },
+        {
+          "file": "apps/mobile/tsconfig.json",
+          "hash": "10931088874879226453"
+        },
+        {
+          "file": "apps/mobile/tsconfig.test.json",
+          "hash": "4196465422452222844"
+        }
+      ],
+      "shared-navigation": [
+        {
+          "file": "libs/shared-navigation/package.json",
+          "hash": "20060527718467258"
+        },
+        {
+          "file": "libs/shared-navigation/project.json",
+          "hash": "4907506736239852937"
+        },
+        {
+          "file": "libs/shared-navigation/src/NavigationManager.ts",
+          "hash": "16516624558116972595"
+        },
+        {
+          "file": "libs/shared-navigation/src/hooks.ts",
+          "hash": "5710104055785067619",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "libs/shared-navigation/src/index.ts",
+          "hash": "6687379873133691453"
+        },
+        {
+          "file": "libs/shared-navigation/src/routes.ts",
+          "hash": "14969829755884946932"
+        },
+        {
+          "file": "libs/shared-navigation/src/types.ts",
+          "hash": "14091478705620306915"
+        },
+        {
+          "file": "libs/shared-navigation/tsconfig.json",
+          "hash": "3886482657624185382"
+        },
+        {
+          "file": "libs/shared-navigation/tsconfig.lib.json",
+          "hash": "5542261604485587128"
+        }
+      ],
+      "web-app": [
+        {
+          "file": "apps/web-app/.env.example",
+          "hash": "1198391091648115908"
+        },
+        {
+          "file": "apps/web-app/.env.test",
+          "hash": "3845686657802441443"
+        },
+        {
+          "file": "apps/web-app/.gitignore",
+          "hash": "5403484524555424706"
+        },
+        {
+          "file": "apps/web-app/README.md",
+          "hash": "17837020290133236978"
+        },
+        {
+          "file": "apps/web-app/cypress.config.ts",
+          "hash": "9728524075778606960",
+          "deps": [
+            "npm:cypress"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/component/AuthForm.cy.tsx",
+          "hash": "12559784421437125399",
+          "deps": [
+            "npm:cypress",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/component/BasicTest.cy.tsx",
+          "hash": "5893345970425023690",
+          "deps": [
+            "npm:cypress",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/component/BookCard.cy.tsx",
+          "hash": "16293665752077289100",
+          "deps": [
+            "npm:cypress",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/component/BookForm.cy.tsx",
+          "hash": "6453025302605399445",
+          "deps": [
+            "npm:cypress",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/component/Components.cy.tsx",
+          "hash": "13039516375947530708",
+          "deps": [
+            "npm:cypress",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/component/EnvironmentConfig.cy.tsx",
+          "hash": "12808742040442208685",
+          "deps": [
+            "npm:cypress",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/component/ISBNScanner.cy.tsx",
+          "hash": "10685609848126141023",
+          "deps": [
+            "npm:cypress",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/component/LoginForm.cy.tsx",
+          "hash": "13017365036231502418",
+          "deps": [
+            "npm:cypress",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/component/SearchFilter.cy.tsx",
+          "hash": "4560916537611838595",
+          "deps": [
+            "npm:cypress",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/component/ThemeProvider.cy.tsx",
+          "hash": "4447085418991228704",
+          "deps": [
+            "npm:react",
+            "npm:cypress"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/e2e/auth.cy.ts",
+          "hash": "15567366172305625973"
+        },
+        {
+          "file": "apps/web-app/cypress/e2e/books.cy.ts",
+          "hash": "17393010471585334152"
+        },
+        {
+          "file": "apps/web-app/cypress/e2e/isbn-scanner.cy.ts",
+          "hash": "2604834832367091197"
+        },
+        {
+          "file": "apps/web-app/cypress/e2e/navigation.cy.ts",
+          "hash": "16515703801426196489"
+        },
+        {
+          "file": "apps/web-app/cypress/fixtures/book-by-isbn.json",
+          "hash": "1627424028286032738"
+        },
+        {
+          "file": "apps/web-app/cypress/fixtures/books.json",
+          "hash": "3724410998876981381"
+        },
+        {
+          "file": "apps/web-app/cypress/fixtures/categories.json",
+          "hash": "14852862971522100809"
+        },
+        {
+          "file": "apps/web-app/cypress/support/commands.ts",
+          "hash": "1288631209736804696"
+        },
+        {
+          "file": "apps/web-app/cypress/support/component-helpers.tsx",
+          "hash": "15373215158795820295",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/support/component-index.html",
+          "hash": "17020623191569979315"
+        },
+        {
+          "file": "apps/web-app/cypress/support/component.ts",
+          "hash": "9045828198028801110",
+          "deps": [
+            "npm:cypress"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/support/e2e.ts",
+          "hash": "142690413370262375"
+        },
+        {
+          "file": "apps/web-app/cypress/support/mocks/handlers.ts",
+          "hash": "4532516389223554266",
+          "deps": [
+            "npm:msw"
+          ]
+        },
+        {
+          "file": "apps/web-app/cypress/webpack.config.js",
+          "hash": "11413790565211688064",
+          "deps": [
+            "npm:webpack",
+            [
+              "npm:stream-browserify",
+              "dynamic"
+            ],
+            [
+              "npm:crypto-browserify@3.12.1",
+              "dynamic"
+            ],
+            [
+              "npm:path-browserify@1.0.1",
+              "dynamic"
+            ],
+            [
+              "npm:os-browserify@0.3.0",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/web-app/index.html",
+          "hash": "17351639987871576681"
+        },
+        {
+          "file": "apps/web-app/jest.config.ts",
+          "hash": "11873220589197662286"
+        },
+        {
+          "file": "apps/web-app/package.json",
+          "hash": "3394362936165211255",
+          "deps": [
+            "npm:@nx/eslint",
+            "npm:@nx/webpack",
+            "npm:@types/node",
+            "npm:@vitejs/plugin-react@5.0.3",
+            "npm:@vitest/ui",
+            "npm:autoprefixer",
+            "npm:buffer",
+            "npm:crypto-browserify@3.12.1",
+            "npm:cypress",
+            "npm:jsdom",
+            "npm:leven@4.1.0",
+            "npm:msw",
+            "npm:os-browserify@0.3.0",
+            "npm:path-browserify@1.0.1",
+            "npm:postcss",
+            "npm:process",
+            "npm:start-server-and-test@2.0.13",
+            "npm:stream-browserify",
+            "npm:tailwindcss@3.4.17",
+            "npm:util",
+            "npm:vite",
+            "npm:vitest",
+            "npm:whatwg-fetch",
+            "npm:workbox-window",
+            "npm:@aws-amplify/auth@6.16.0",
+            "npm:@aws-amplify/ui-react",
+            "npm:@emotion/react",
+            "npm:@emotion/styled",
+            "npm:@heroicons/react@2.2.0",
+            "npm:@mui/icons-material",
+            "npm:@mui/material",
+            "npm:@mui/system",
+            "npm:@testing-library/dom",
+            "npm:@testing-library/jest-dom",
+            "npm:@testing-library/react@16.3.0",
+            "npm:@testing-library/user-event",
+            "npm:@types/jest@27.5.2",
+            "npm:@types/react@19.1.13",
+            "npm:@types/react-dom@19.1.9",
+            "npm:@types/react-router-dom@5.3.3",
+            "npm:@zxing/browser",
+            "npm:@zxing/library",
+            "npm:aws-amplify",
+            "npm:axios",
+            "npm:react",
+            "npm:react-dom",
+            "npm:react-router-dom@7.8.1",
+            "npm:typescript@4.9.5",
+            "npm:web-vitals@2.1.4"
+          ]
+        },
+        {
+          "file": "apps/web-app/postcss.config.js",
+          "hash": "16184055370042735541",
+          "deps": [
+            "npm:tailwindcss@3.4.17",
+            "npm:autoprefixer"
+          ]
+        },
+        {
+          "file": "apps/web-app/project.json",
+          "hash": "6654639262240084299"
+        },
+        {
+          "file": "apps/web-app/public/browserconfig.xml",
+          "hash": "3278505605481302864"
+        },
+        {
+          "file": "apps/web-app/public/favicon.ico",
+          "hash": "2949791817221603359"
+        },
+        {
+          "file": "apps/web-app/public/index.html",
+          "hash": "10974909090242933485"
+        },
+        {
+          "file": "apps/web-app/public/logo192.png",
+          "hash": "7585273181698778288"
+        },
+        {
+          "file": "apps/web-app/public/logo512.png",
+          "hash": "9339365414554387981"
+        },
+        {
+          "file": "apps/web-app/public/manifest.json",
+          "hash": "14597794439536680932"
+        },
+        {
+          "file": "apps/web-app/public/robots.txt",
+          "hash": "2790380794362165217"
+        },
+        {
+          "file": "apps/web-app/seed-categories.js",
+          "hash": "18366021264708643070",
+          "deps": [
+            "npm:axios"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/App.tsx",
+          "hash": "873493638513107647",
+          "deps": [
+            "npm:react",
+            "npm:react-router-dom@7.8.1",
+            "npm:@mui/material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__mocks__/@mui/icons-material.ts",
+          "hash": "2253838156908024462",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__mocks__/@mui/material.ts",
+          "hash": "9996027365391455905",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__mocks__/@my-many-books/shared-api.ts",
+          "hash": "14190225237933374668"
+        },
+        {
+          "file": "apps/web-app/src/__mocks__/axios.js",
+          "hash": "13083158223818563982"
+        },
+        {
+          "file": "apps/web-app/src/__mocks__/react-router-dom.js",
+          "hash": "17326192007557533130",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Auth/LoginForm.test.tsx",
+          "hash": "598421767082920318",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:react-router-dom@7.8.1"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Auth/RegisterForm.test.tsx",
+          "hash": "12114573279023613607",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:react-router-dom@7.8.1",
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Book/BookCard.test.tsx",
+          "hash": "11153463344788196096",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Layout/Header.test.tsx",
+          "hash": "15250009184085747241",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Navigation/Navbar.test.tsx",
+          "hash": "10120412738447515507",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:vitest",
+            "npm:react-router-dom@7.8.1"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/PWA/OfflineIndicator.test.tsx",
+          "hash": "8107205496507659791",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/PWA/UpdatePrompt.test.tsx",
+          "hash": "11622209893800585261",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/ProtectedRoute.test.tsx",
+          "hash": "9603091765420877804",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:vitest",
+            "npm:react-router-dom@7.8.1"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Scanner/ISBNScanner.test.tsx",
+          "hash": "17214331496873647680",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Scanner/ManualISBNInput.test.tsx",
+          "hash": "1703635034349593810",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Scanner/ScannerModal.test.tsx",
+          "hash": "15829249252462479126",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Search/AuthorAutocomplete.test.tsx",
+          "hash": "15700444975817827839",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Search/BookSearchForm.test.tsx",
+          "hash": "14536410340268157821",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Search/BookSearchPage.test.tsx",
+          "hash": "14439576497866754497",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:vitest",
+            "npm:react-router-dom@7.8.1"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Search/BookSearchResults.test.tsx",
+          "hash": "7700949897899347530",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Theme/ThemeSelector.test.tsx",
+          "hash": "2822060624352026448",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/Theme/ThemeSettings.test.tsx",
+          "hash": "4001112424871519304",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/UI/ResponsiveButton.test.tsx",
+          "hash": "7644087700476009012",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/UI/ResponsiveInput.test.tsx",
+          "hash": "8728478066839672710",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/components/UI/ResponsiveSelect.test.tsx",
+          "hash": "13602334130786279389",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/contexts/AuthContext.test.tsx",
+          "hash": "14046611672431161758",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:aws-amplify"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/hooks/useBookSearch.test.tsx",
+          "hash": "1805852613955297447",
+          "deps": [
+            "npm:@testing-library/react@16.3.0",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/hooks/useCategories.test.tsx",
+          "hash": "4270908318471879567",
+          "deps": [
+            "npm:@testing-library/react@16.3.0",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/hooks/useISBNScanner.test.tsx",
+          "hash": "16295642796390378615",
+          "deps": [
+            "npm:@testing-library/react@16.3.0",
+            "npm:vitest",
+            [
+              "npm:@zxing/library",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/hooks/usePWA.test.tsx",
+          "hash": "4582428015694067186",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/hooks/useTheme.simple.test.tsx",
+          "hash": "11536598778961432534",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/mocks/server.ts",
+          "hash": "17376250309123634496",
+          "deps": [
+            "npm:msw"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/pages/AuthPage.test.tsx",
+          "hash": "8924546935492287392",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:react-router-dom@7.8.1"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/pages/BooksPage.test.tsx",
+          "hash": "835799571819201296",
+          "deps": [
+            "npm:react",
+            "npm:@testing-library/react@16.3.0",
+            "npm:react-router-dom@7.8.1"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/services/api-msw-simple.test.ts",
+          "hash": "13668733044536472598",
+          "deps": [
+            "npm:axios"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/services/api-msw.test.ts",
+          "hash": "17030635022072822406",
+          "deps": [
+            "npm:vitest",
+            "npm:msw",
+            "shared-api"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/services/api-simple.test.ts",
+          "hash": "6947487446828729674",
+          "deps": [
+            "npm:vitest",
+            "npm:axios"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/services/api.test.ts",
+          "hash": "16951117494531898888",
+          "deps": [
+            "shared-api"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/__tests__/services/msw-documentation.md",
+          "hash": "1729917094814500980"
+        },
+        {
+          "file": "apps/web-app/src/__tests__/types/index.test.ts",
+          "hash": "4903930270109143493"
+        },
+        {
+          "file": "apps/web-app/src/__tests__/utils/index.test.ts",
+          "hash": "9616824899514517837"
+        },
+        {
+          "file": "apps/web-app/src/__tests__/utils/isbn.test.ts",
+          "hash": "12765377249446149397"
+        },
+        {
+          "file": "apps/web-app/src/components/Auth/LoginForm.tsx",
+          "hash": "6396279140854142149",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Auth/LoginForm.tsx.bak",
+          "hash": "10471285413660337236"
+        },
+        {
+          "file": "apps/web-app/src/components/Auth/RegisterForm.tsx",
+          "hash": "4587426994320393892",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Auth/RegisterForm.tsx.bak",
+          "hash": "14258209951397197603"
+        },
+        {
+          "file": "apps/web-app/src/components/Auth/index.ts",
+          "hash": "4807168619213896023"
+        },
+        {
+          "file": "apps/web-app/src/components/Book/BookCard.tsx",
+          "hash": "6313959513708212414",
+          "deps": [
+            "npm:react",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Book/BookCard.tsx.bak",
+          "hash": "17034305315549825809"
+        },
+        {
+          "file": "apps/web-app/src/components/Book/BookDetails.tsx",
+          "hash": "2615068276175316561",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Book/BookDetails.tsx.bak",
+          "hash": "13335388561070516640"
+        },
+        {
+          "file": "apps/web-app/src/components/Book/BookForm.tsx",
+          "hash": "10259425261199088601",
+          "deps": [
+            "npm:react",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Book/BookForm.tsx.bak",
+          "hash": "18025194871501472363"
+        },
+        {
+          "file": "apps/web-app/src/components/Book/BookList.tsx",
+          "hash": "3536596683447353458",
+          "deps": [
+            "npm:react",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Book/BookList.tsx.bak",
+          "hash": "5284291493735940135"
+        },
+        {
+          "file": "apps/web-app/src/components/Book/index.ts",
+          "hash": "12724340908979488309"
+        },
+        {
+          "file": "apps/web-app/src/components/Layout/Header.tsx",
+          "hash": "16740915975702265203",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Layout/Header.tsx.bak",
+          "hash": "16740915975702265203"
+        },
+        {
+          "file": "apps/web-app/src/components/Navigation/Navbar.tsx",
+          "hash": "8174448356233829657",
+          "deps": [
+            "npm:react",
+            "npm:react-router-dom@7.8.1",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Navigation/Navbar.tsx.bak",
+          "hash": "16857397046321599467"
+        },
+        {
+          "file": "apps/web-app/src/components/Navigation/index.ts",
+          "hash": "5522350972036576804"
+        },
+        {
+          "file": "apps/web-app/src/components/PWA/InstallPrompt.tsx",
+          "hash": "5274696905664673882",
+          "deps": [
+            "npm:react",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/PWA/InstallPrompt.tsx.bak",
+          "hash": "9985853177577756090"
+        },
+        {
+          "file": "apps/web-app/src/components/PWA/OfflineIndicator.tsx",
+          "hash": "3105629479964105112",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/PWA/OfflineIndicator.tsx.bak",
+          "hash": "4322268508332976009"
+        },
+        {
+          "file": "apps/web-app/src/components/PWA/UpdatePrompt.tsx",
+          "hash": "2241783853636515698",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/PWA/UpdatePrompt.tsx.bak",
+          "hash": "6212807480281760876"
+        },
+        {
+          "file": "apps/web-app/src/components/PWA/index.ts",
+          "hash": "4416269246224912763"
+        },
+        {
+          "file": "apps/web-app/src/components/ProtectedRoute.tsx",
+          "hash": "11993299187373334243",
+          "deps": [
+            "npm:react",
+            "npm:react-router-dom@7.8.1",
+            "npm:@mui/material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/ProtectedRoute.tsx.bak",
+          "hash": "10651954660527949755"
+        },
+        {
+          "file": "apps/web-app/src/components/Scanner/ISBNScanner.tsx",
+          "hash": "10366531764960158946",
+          "deps": [
+            "npm:react",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Scanner/ISBNScanner.tsx.bak",
+          "hash": "8820657741386412297"
+        },
+        {
+          "file": "apps/web-app/src/components/Scanner/ManualISBNInput.tsx",
+          "hash": "13447620184921861035",
+          "deps": [
+            "npm:react",
+            "npm:@mui/material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Scanner/ManualISBNInput.tsx.bak",
+          "hash": "9416422134452790818"
+        },
+        {
+          "file": "apps/web-app/src/components/Scanner/ScannerModal.tsx",
+          "hash": "3954401075235410340",
+          "deps": [
+            "npm:react",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Scanner/ScannerModal.tsx.bak",
+          "hash": "14059575553732821857"
+        },
+        {
+          "file": "apps/web-app/src/components/Scanner/index.ts",
+          "hash": "188581335539684795"
+        },
+        {
+          "file": "apps/web-app/src/components/Search/AuthorAutocomplete.tsx",
+          "hash": "8579860371153522795",
+          "deps": [
+            "npm:react",
+            "npm:@mui/material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Search/AuthorAutocomplete.tsx.bak",
+          "hash": "14158638897424241089"
+        },
+        {
+          "file": "apps/web-app/src/components/Search/BookSearchForm.tsx",
+          "hash": "16095698181126339124",
+          "deps": [
+            "npm:react",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Search/BookSearchForm.tsx.bak",
+          "hash": "5367025643105134455"
+        },
+        {
+          "file": "apps/web-app/src/components/Search/BookSearchPage.tsx",
+          "hash": "4484880508416599414",
+          "deps": [
+            "npm:react",
+            "npm:react-router-dom@7.8.1",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Search/BookSearchPage.tsx.bak",
+          "hash": "1207744240014052243"
+        },
+        {
+          "file": "apps/web-app/src/components/Search/BookSearchResults.tsx",
+          "hash": "5736080121538627803",
+          "deps": [
+            "npm:react",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Search/BookSearchResults.tsx.bak",
+          "hash": "10723874446217907797"
+        },
+        {
+          "file": "apps/web-app/src/components/Search/SearchFilter.tsx",
+          "hash": "8553955411678202226",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Search/index.ts",
+          "hash": "11281361923020494361"
+        },
+        {
+          "file": "apps/web-app/src/components/Theme/ThemeProvider.tsx",
+          "hash": "9063750896898362665",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Theme/ThemeSelector.tsx",
+          "hash": "1575474527037367834",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Theme/ThemeSelector.tsx.bak",
+          "hash": "1575474527037367834"
+        },
+        {
+          "file": "apps/web-app/src/components/Theme/ThemeSettings.tsx",
+          "hash": "10961533632740161210",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Theme/ThemeSettings.tsx.bak",
+          "hash": "10961533632740161210"
+        },
+        {
+          "file": "apps/web-app/src/components/Theme/ThemeToggle.tsx",
+          "hash": "145187800635803969",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/Theme/__tests__/ThemeSelector.test.tsx.bak",
+          "hash": "16662012878481533881"
+        },
+        {
+          "file": "apps/web-app/src/components/UI/ResponsiveButton.tsx",
+          "hash": "16615577166055612758",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/UI/ResponsiveButton.tsx.bak",
+          "hash": "16615577166055612758"
+        },
+        {
+          "file": "apps/web-app/src/components/UI/ResponsiveInput.tsx",
+          "hash": "4311800560837500699",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/UI/ResponsiveInput.tsx.bak",
+          "hash": "4311800560837500699"
+        },
+        {
+          "file": "apps/web-app/src/components/UI/ResponsiveSelect.tsx",
+          "hash": "8542429637490087794",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/components/UI/ResponsiveSelect.tsx.bak",
+          "hash": "8542429637490087794"
+        },
+        {
+          "file": "apps/web-app/src/components/UI/__tests__/ResponsiveButton.test.tsx.bak",
+          "hash": "17158463876807598614"
+        },
+        {
+          "file": "apps/web-app/src/components/UI/__tests__/ResponsiveInput.test.tsx.bak",
+          "hash": "3566697421065956938"
+        },
+        {
+          "file": "apps/web-app/src/config/amplify.ts",
+          "hash": "7369434395757867067",
+          "deps": [
+            "npm:aws-amplify"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/config/env.ts",
+          "hash": "2508568294799418327"
+        },
+        {
+          "file": "apps/web-app/src/contexts/ApiContext.tsx",
+          "hash": "9398719309436020134",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/contexts/AuthContext.tsx",
+          "hash": "1583288718238629179",
+          "deps": [
+            "npm:react",
+            "npm:aws-amplify"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/contexts/ThemeContext.tsx",
+          "hash": "6559446886329624406",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/hooks/useBookSearch.ts",
+          "hash": "6210788436558142430",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/hooks/useCategories.ts",
+          "hash": "4466849437387032245",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/hooks/useISBNScanner.ts",
+          "hash": "12354579795088261549",
+          "deps": [
+            "npm:react",
+            "npm:@zxing/library"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/hooks/usePWA.ts",
+          "hash": "10159676137502979787",
+          "deps": [
+            "npm:react",
+            "npm:workbox-window"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/index.css",
+          "hash": "11228000051464515893"
+        },
+        {
+          "file": "apps/web-app/src/index.tsx",
+          "hash": "17529352891353115871",
+          "deps": [
+            "npm:react",
+            "npm:react-dom"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/jest.setup.ts",
+          "hash": "2853828364592071971"
+        },
+        {
+          "file": "apps/web-app/src/pages/AuthPage.tsx",
+          "hash": "11620627826104684498",
+          "deps": [
+            "npm:react",
+            "npm:react-router-dom@7.8.1"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/pages/BooksPage.tsx",
+          "hash": "4602452689283770383",
+          "deps": [
+            "npm:react",
+            "npm:react-router-dom@7.8.1",
+            "npm:@mui/material",
+            "npm:@mui/icons-material"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/react-app-env.d.ts",
+          "hash": "3195158367843515590"
+        },
+        {
+          "file": "apps/web-app/src/reportWebVitals.ts",
+          "hash": "4905365886999342103",
+          "deps": [
+            "npm:web-vitals@2.1.4",
+            [
+              "npm:web-vitals@2.1.4",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/web-app/src/services/api.ts",
+          "hash": "14443861506105125648",
+          "deps": [
+            "shared-api",
+            "npm:axios"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/setupTests.ts",
+          "hash": "15195662616045757453",
+          "deps": [
+            "npm:@testing-library/jest-dom"
+          ]
+        },
+        {
+          "file": "apps/web-app/src/sw.ts",
+          "hash": "7481234354680112556"
+        },
+        {
+          "file": "apps/web-app/src/types/index.ts",
+          "hash": "7200797501112741357"
+        },
+        {
+          "file": "apps/web-app/src/utils/index.ts",
+          "hash": "12156983110995017574"
+        },
+        {
+          "file": "apps/web-app/src/utils/isbn.ts",
+          "hash": "11922448919623375495"
+        },
+        {
+          "file": "apps/web-app/src/vite-env.d.ts",
+          "hash": "6370324556523869370"
+        },
+        {
+          "file": "apps/web-app/tailwind.config.js",
+          "hash": "1860173911150382502"
+        },
+        {
+          "file": "apps/web-app/tsconfig.app.json",
+          "hash": "534701796595680446"
+        },
+        {
+          "file": "apps/web-app/tsconfig.json",
+          "hash": "5800389905844754546"
+        },
+        {
+          "file": "apps/web-app/vite.config.ts",
+          "hash": "16911474543663748181",
+          "deps": [
+            "npm:vite",
+            "npm:@vitejs/plugin-react@5.0.3"
+          ]
+        },
+        {
+          "file": "apps/web-app/vitest.config.ts",
+          "hash": "3000810104143514350",
+          "deps": [
+            "npm:vitest",
+            "npm:@vitejs/plugin-react@5.0.3"
+          ]
+        },
+        {
+          "file": "apps/web-app/webpack.config.js",
+          "hash": "7112564318671327679",
+          "deps": [
+            "npm:@nx/webpack",
+            "npm:@nx/react"
+          ]
+        }
+      ]
+    }
+  },
+  "externalNodesHash": "778032048894359161"
+}

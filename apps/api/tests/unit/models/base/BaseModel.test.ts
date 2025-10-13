@@ -5,7 +5,7 @@ describe('BaseModel', () => {
   let sequelize: Sequelize;
 
   beforeAll(() => {
-    sequelize = new Sequelize('sqlite://memory:', { logging: false });
+    sequelize = new Sequelize('sqlite::memory:', { logging: false });
   });
 
   afterAll(async () => {
