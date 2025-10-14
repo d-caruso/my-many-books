@@ -1,6 +1,6 @@
 {
   "name": "my-many-books-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Serverless API for My Many Books - Personal library management system",
   "main": "dist/handlers/index.js",
   "scripts": {
