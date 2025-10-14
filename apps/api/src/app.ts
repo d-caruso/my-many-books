@@ -121,7 +121,8 @@ const initializeDatabase = async (): Promise<void> => {
 };
 
 // Initialize database on module load (Lambda cold start)
-initializeDatabase().catch(console.error);
+// Export the promise so Lambda handler can wait for it
+export const initPromise = initializeDatabase();
 
 // Start server
 const startServer = async (): Promise<void> => {
