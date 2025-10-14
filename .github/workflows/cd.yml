@@ -24,6 +24,8 @@ on:
 env:
   NODE_VERSION: '22.x'
   AWS_REGION: 'us-east-1'
+  API_PREFIX: '/api'
+  API_ROUTE_VERSION: 'v1'
 
 jobs:
   setup:
@@ -556,7 +558,7 @@ jobs:
           VITE_COGNITO_USER_POOL_CLIENT_ID: ${{ steps.cognito-config.outputs.client-id }}
           VITE_COGNITO_IDENTITY_POOL_ID: ${{ steps.cognito-config.outputs.identity-pool-id }}
           VITE_AWS_REGION: ${{ env.AWS_REGION }}
-          VITE_API_BASE_URL: ${{ steps.cognito-config.outputs.api-endpoint }}
+          VITE_API_BASE_URL: ${{ steps.cognito-config.outputs.api-endpoint }}${{ env.API_PREFIX }}/${{ env.API_ROUTE_VERSION }}
 
       - name: Deploy to S3
         working-directory: apps/web-app
