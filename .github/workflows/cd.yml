@@ -513,13 +513,16 @@ jobs:
       - name: Get Cognito Configuration
         id: cognito-config
         run: |
-          # Get Cognito resource IDs from deployed API stack
-          STACK_NAME="my-many-books-api-${{ needs.setup.outputs.environment }}"
-          USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='CognitoUserPoolId'].OutputValue" --output text)
-          CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='CognitoUserPoolClientId'].OutputValue" --output text)
-          IDENTITY_POOL_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='CognitoIdentityPoolId'].OutputValue" --output text)
-          API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ServiceEndpoint'].OutputValue" --output text)
-          
+          # Get Cognito resource IDs from deployed Cognito stack
+          COGNITO_STACK="my-many-books-cognito-${{ needs.setup.outputs.environment }}"
+          USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK --query "Stacks[0].Outputs[?OutputKey=='CognitoUserPoolId'].OutputValue" --output text)
+          CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK --query "Stacks[0].Outputs[?OutputKey=='CognitoUserPoolClientId'].OutputValue" --output text)
+          IDENTITY_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK --query "Stacks[0].Outputs[?OutputKey=='CognitoIdentityPoolId'].OutputValue" --output text)
+
+          # Get API endpoint from API stack
+          API_STACK="my-many-books-api-${{ needs.setup.outputs.environment }}"
+          API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $API_STACK --query "Stacks[0].Outputs[?OutputKey=='ServiceEndpoint'].OutputValue" --output text)
+
           echo "user-pool-id=$USER_POOL_ID" >> $GITHUB_OUTPUT
           echo "client-id=$CLIENT_ID" >> $GITHUB_OUTPUT
           echo "identity-pool-id=$IDENTITY_POOL_ID" >> $GITHUB_OUTPUT
