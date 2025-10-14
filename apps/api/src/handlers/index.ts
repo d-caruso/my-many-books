@@ -1,10 +1,10 @@
 // ================================================================
 // src/handlers/index.ts
+// Lambda handler using serverless-http to wrap Express app
 // ================================================================
 
-// Export all Lambda handlers for easy import
-export * from './books';
-export * from './authors';
-export * from './categories';
-export * from './isbn';
-export * from './health';
+import serverless from 'serverless-http';
+import app from '../app';
+
+// Wrap Express app for Lambda
+export const handler = serverless(app);
