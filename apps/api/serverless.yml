@@ -24,6 +24,8 @@ provider:
     DB_PASSWORD: ${ssm:/aws/reference/secretsmanager/my-many-books-infrastructure-${self:provider.stage}-db-credentials~false~password, ''}
     DB_SSL: ${env:DB_SSL, 'true'}
     API_VERSION: ${env:API_VERSION, '1.0.0'}
+    API_PREFIX: ${env:API_PREFIX, '/api'}
+    API_ROUTE_VERSION: ${env:API_ROUTE_VERSION, 'v1'}
     LOG_LEVEL: ${env:LOG_LEVEL, 'info'}
     
     # Security settings
@@ -106,9 +108,9 @@ custom:
     port: 3000
 
 functions:
-  # Single function deployment (recommended for API Gateway)
+  # Single function deployment using serverless-http
   api:
-    handler: src/handlers/router.handler
+    handler: src/handlers/index.handler
     events:
       - http:
           path: /{proxy+}
@@ -127,150 +129,6 @@ functions:
       - http:
           path: /
           method: ANY
-          cors:
-            origin: '*'
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - X-Requested-With
-            allowCredentials: true
-
-  # Separate function deployments (alternative approach)
-  # Uncomment below if you prefer separate Lambda functions per resource
-
-  # books-create:
-  #   handler: src/handlers/books.createBook
-  #   events:
-  #     - http:
-  #         path: /books
-  #         method: post
-  #         cors: true
-
-  # books-get:
-  #   handler: src/handlers/books.getBook
-  #   events:
-  #     - http:
-  #         path: /books/{id}
-  #         method: get
-  #         cors: true
-
-  # books-update:
-  #   handler: src/handlers/books.updateBook
-  #   events:
-  #     - http:
-  #         path: /books/{id}
-  #         method: put
-  #         cors: true
-
-  # books-delete:
-  #   handler: src/handlers/books.deleteBook
-  #   events:
-  #     - http:
-  #         path: /books/{id}
-  #         method: delete
-  #         cors: true
-
-  # books-list:
-  #   handler: src/handlers/books.listBooks
-  #   events:
-  #     - http:
-  #         path: /books
-  #         method: get
-  #         cors: true
-
-  # books-search-isbn:
-  #   handler: src/handlers/books.searchBooksByIsbn
-  #   events:
-  #     - http:
-  #         path: /books/search/isbn
-  #         method: get
-  #         cors: true
-
-  # books-import-isbn:
-  #   handler: src/handlers/books.importBookFromIsbn
-  #   events:
-  #     - http:
-  #         path: /books/import/isbn
-  #         method: post
-  #         cors: true
-
-  # authors-create:
-  #   handler: src/handlers/authors.createAuthor
-  #   events:
-  #     - http:
-  #         path: /authors
-  #         method: post
-  #         cors: true
-
-  # authors-get:
-  #   handler: src/handlers/authors.getAuthor
-  #   events:
-  #     - http:
-  #         path: /authors/{id}
-  #         method: get
-  #         cors: true
-
-  # authors-update:
-  #   handler: src/handlers/authors.updateAuthor
-  #   events:
-  #     - http:
-  #         path: /authors/{id}
-  #         method: put
-  #         cors: true
-
-  # authors-delete:
-  #   handler: src/handlers/authors.deleteAuthor
-  #   events:
-  #     - http:
-  #         path: /authors/{id}
-  #         method: delete
-  #         cors: true
-
-  # authors-list:
-  #   handler: src/handlers/authors.listAuthors
-  #   events:
-  #     - http:
-  #         path: /authors
-  #         method: get
-  #         cors: true
-
-  # authors-books:
-  #   handler: src/handlers/authors.getAuthorBooks
-  #   events:
-  #     - http:
-  #         path: /authors/{id}/books
-  #         method: get
-  #         cors: true
-
-  # Health check
-  health:
-    handler: src/handlers/health.healthCheck
-    events:
-      - http:
-          path: /health
-          method: get
-          cors:
-            origin: '*'
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - X-Requested-With
-            allowCredentials: true
-
-  readiness:
-    handler: src/handlers/health.readinessCheck
-    events:
-      - http:
-          path: /readiness
-          method: get
           cors:
             origin: '*'
             headers:
