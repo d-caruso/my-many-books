@@ -17,12 +17,12 @@ provider:
   # Environment variables
   environment:
     NODE_ENV: ${self:provider.stage}
-    DB_HOST: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabaseHost, ''}
+    DB_HOST: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabaseEndpoint, ''}
     DB_PORT: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabasePort, '3306'}
-    DB_NAME: ${env:DB_NAME, 'my_many_books'}
-    DB_USER: ${env:DB_USER, 'admin'}
+    DB_NAME: my_many_books
+    DB_USER: admin
     DB_PASSWORD: ${env:DB_PASSWORD, ''}
-    DB_SSL: ${env:DB_SSL, 'true'}
+    DB_SSL: 'true'
     API_VERSION: ${env:API_VERSION, '1.0.0'}
     API_PREFIX: ${env:API_PREFIX, '/api'}
     API_ROUTE_VERSION: ${env:API_ROUTE_VERSION, 'v1'}
