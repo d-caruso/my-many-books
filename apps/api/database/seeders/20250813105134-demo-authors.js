@@ -10,71 +10,71 @@ module.exports = {
         name: 'George',
         surname: 'Orwell',
         nationality: 'British',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Jane',
-        surname: 'Austen', 
+        surname: 'Austen',
         nationality: 'British',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Mark',
         surname: 'Twain',
         nationality: 'American',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Gabriel',
         surname: 'García Márquez',
         nationality: 'Colombian',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Virginia',
         surname: 'Woolf',
         nationality: 'British',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Franz',
         surname: 'Kafka',
         nationality: 'Czech',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Ernest',
         surname: 'Hemingway',
         nationality: 'American',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Toni',
         surname: 'Morrison',
         nationality: 'American',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Haruki',
         surname: 'Murakami',
         nationality: 'Japanese',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Isabel',
         surname: 'Allende',
         nationality: 'Chilean',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       }
     ], {
       ignoreDuplicates: true
