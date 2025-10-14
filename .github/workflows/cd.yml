@@ -460,16 +460,30 @@ jobs:
         working-directory: apps/api
         run: npm run build
 
+      - name: Get Database Credentials
+        id: db-credentials
+        run: |
+          STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
+          SECRET_ARN=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query 'Stacks[0].Outputs[?OutputKey==`DatabaseSecretArn`].OutputValue' \
+            --output text)
+
+          DB_CREDENTIALS=$(aws secretsmanager get-secret-value \
+            --secret-id "$SECRET_ARN" \
+            --query 'SecretString' \
+            --output text)
+
+          DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
+          echo "db-password=$DB_PASSWORD" >> $GITHUB_OUTPUT
+          echo "Database credentials retrieved from Secrets Manager"
+
       - name: Deploy API with Serverless
         working-directory: apps/api
         run: |
           export NODE_ENV=${{ needs.setup.outputs.environment }}
           export STAGE=${{ needs.setup.outputs.environment }}
-          export DB_HOST=${{ secrets.DB_HOST }}
-          export DB_PORT=${{ secrets.DB_PORT }}
-          export DB_NAME=${{ secrets.DB_NAME }}
-          export DB_USER=${{ secrets.DB_USER }}
-          export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          export DB_PASSWORD="${{ steps.db-credentials.outputs.db-password }}"
 
           # Serverless Framework authentication
           export SERVERLESS_ACCESS_KEY=${{ secrets.SERVERLESS_ACCESS_KEY }}
