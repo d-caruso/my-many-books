@@ -96,11 +96,14 @@ build:
       - pg
       - sqlite3
       - mysql
+      - mysql2
       - mariasql
       - mssql
       - oracle
       - oracledb
       - redis
+      - sequelize
+      - aws-sdk
 
 custom:
   serverless-offline:
