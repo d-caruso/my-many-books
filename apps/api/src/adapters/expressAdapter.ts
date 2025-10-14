@@ -28,13 +28,22 @@ export const expressAdapter = (controller: ControllerMethod) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Convert Express request to Lambda event format
+      // Build event object conditionally to satisfy exactOptionalPropertyTypes
       const event: LambdaRequest = {
-        body: req.body ? JSON.stringify(req.body) : undefined,
         queryStringParameters: req.query as { [key: string]: string | undefined },
         pathParameters: req.params,
-        user: (req as any).user, // from auth middleware
         headers: req.headers as { [key: string]: string | undefined },
       };
+
+      // Only add body if it exists (for exactOptionalPropertyTypes)
+      if (req.body) {
+        event.body = JSON.stringify(req.body);
+      }
+
+      // Only add user if it exists (for exactOptionalPropertyTypes)
+      if ((req as any).user) {
+        event.user = (req as any).user;
+      }
 
       const response = await controller(event);
 
