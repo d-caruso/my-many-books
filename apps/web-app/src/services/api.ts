@@ -317,17 +317,27 @@ class ApiService {
   }
 
   async updateBook(id: number, bookData: Partial<BookFormData>): Promise<Book> {
-    // Transform frontend format to backend format if it includes form data
-    const backendData = bookData.selectedAuthors || bookData.selectedCategories ? {
-      ...(bookData.title && { title: bookData.title }),
-      ...(bookData.isbnCode && { isbnCode: bookData.isbnCode }),
-      ...(bookData.editionNumber && { editionNumber: bookData.editionNumber }),
-      ...(bookData.editionDate && { editionDate: bookData.editionDate }),
-      ...(bookData.status && { status: bookData.status }),
-      ...(bookData.notes && { notes: bookData.notes }),
-      ...(bookData.selectedAuthors && { authorIds: bookData.selectedAuthors.map(author => author.id) }),
-      ...(bookData.selectedCategories && { categoryIds: bookData.selectedCategories })
-    } : bookData;
+    // Transform frontend format to backend format, filtering out empty values
+    const backendData: any = {};
+
+    if (bookData.title) backendData.title = bookData.title;
+    if (bookData.isbnCode) backendData.isbnCode = bookData.isbnCode;
+    if (bookData.editionNumber) backendData.editionNumber = bookData.editionNumber;
+    if (bookData.editionDate) backendData.editionDate = bookData.editionDate;
+    if (bookData.status !== undefined && bookData.status !== null && bookData.status !== '') {
+      backendData.status = bookData.status;
+    }
+    if (bookData.notes !== undefined) backendData.notes = bookData.notes;
+
+    // Handle authors
+    if (bookData.selectedAuthors) {
+      backendData.authorIds = bookData.selectedAuthors.map(author => author.id);
+    }
+
+    // Handle categories
+    if (bookData.selectedCategories !== undefined) {
+      backendData.categoryIds = bookData.selectedCategories;
+    }
 
     return this.apiClient.books.updateBook(id, backendData);
   }
