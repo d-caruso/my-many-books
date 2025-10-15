@@ -38,14 +38,8 @@ export class CategoryController extends BaseController {
 
     const categoryData = validation.value!;
 
-    // Check if category already exists
-    const existingCategory = await Category.findByName(categoryData.name);
-    if (existingCategory) {
-      return this.createErrorResponse('Category with this name already exists', 409);
-    }
-
     try {
-      // Create category
+      // Create category (model returns existing if duplicate)
       const categoryCreateData = {
         name: categoryData.name,
       };
