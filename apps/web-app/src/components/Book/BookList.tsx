@@ -62,7 +62,7 @@ export const BookList: React.FC<BookListProps> = ({
     );
   }
 
-  if (books.length === 0) {
+  if (!books || books.length === 0) {
     return (
       <Box display="flex" flexDirection="column" alignItems="center" py={6}>
         <BookIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
