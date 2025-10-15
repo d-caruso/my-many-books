@@ -194,8 +194,8 @@ export class BookController extends BaseController {
     const book = await Book.findOne({
       where: whereClause,
       include: [
-        { model: Author, through: { attributes: [] } },
-        { model: Category, through: { attributes: [] } },
+        { model: Author, as: 'authors', through: { attributes: [] } },
+        { model: Category, as: 'categories', through: { attributes: [] } },
       ],
     });
 
@@ -564,8 +564,8 @@ export class BookController extends BaseController {
     const localBook = await Book.findOne({
       where: { isbnCode: validation.normalizedIsbn },
       include: [
-        { model: Author, through: { attributes: [] } },
-        { model: Category, through: { attributes: [] } },
+        { model: Author, as: 'authors', through: { attributes: [] } },
+        { model: Category, as: 'categories', through: { attributes: [] } },
       ],
     });
 
@@ -701,8 +701,8 @@ export class BookController extends BaseController {
   private async getBookWithAssociations(id: number): Promise<Book | null> {
     return Book.findByPk(id, {
       include: [
-        { model: Author, through: { attributes: [] } },
-        { model: Category, through: { attributes: [] } },
+        { model: Author, as: 'authors', through: { attributes: [] } },
+        { model: Category, as: 'categories', through: { attributes: [] } },
       ],
     });
   }
