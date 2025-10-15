@@ -307,9 +307,9 @@ class ApiService {
       title: bookData.title,
       isbnCode: bookData.isbnCode,
       ...(bookData.editionNumber && { editionNumber: bookData.editionNumber }),
-      ...(bookData.editionDate && { editionDate: bookData.editionDate }),
-      ...(bookData.status && { status: bookData.status }),
-      ...(bookData.notes && { notes: bookData.notes }),
+      ...(bookData.editionDate && bookData.editionDate.trim() && { editionDate: bookData.editionDate }),
+      ...(bookData.status && bookData.status.trim() && { status: bookData.status }),
+      ...(bookData.notes && bookData.notes.trim() && { notes: bookData.notes }),
       ...(authorIds && { authorIds }),
       ...(categoryIds && { categoryIds })
     };

@@ -259,7 +259,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   labelId="status-label"
                   id="status"
                   value={formData.status || ''}
-                  onChange={(e) => handleInputChange('status', e.target.value as Book['status'] || undefined)}
+                  onChange={(e) => handleInputChange('status', e.target.value === '' ? undefined : e.target.value as Book['status'])}
                   disabled={loading}
                   label="Reading Status"
                 >
