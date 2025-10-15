@@ -8,78 +8,78 @@ module.exports = {
     return queryInterface.bulkInsert('categories', [
       {
         name: 'Fiction',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Classic Literature',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Dystopian Fiction',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Romance',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Adventure',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Magical Realism',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Modernist Literature',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Existential Fiction',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'War Fiction',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Contemporary Fiction',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Science Fiction',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Mystery',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Historical Fiction',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Biography',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       },
       {
         name: 'Non-Fiction',
-        creationDate: now,
-        updateDate: now
+        creation_date: now,
+        update_date: now
       }
     ], {
       ignoreDuplicates: true

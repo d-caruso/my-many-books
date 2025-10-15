@@ -24,6 +24,8 @@ on:
 env:
   NODE_VERSION: '22.x'
   AWS_REGION: 'us-east-1'
+  API_PREFIX: '/api'
+  API_ROUTE_VERSION: 'v1'
 
 jobs:
   setup:
@@ -458,22 +460,34 @@ jobs:
         working-directory: apps/api
         run: npm run build
 
+      - name: Get Database Credentials
+        id: db-credentials
+        run: |
+          STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
+          SECRET_ARN=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query 'Stacks[0].Outputs[?OutputKey==`DatabaseSecretArn`].OutputValue' \
+            --output text)
+
+          DB_CREDENTIALS=$(aws secretsmanager get-secret-value \
+            --secret-id "$SECRET_ARN" \
+            --query 'SecretString' \
+            --output text)
+
+          DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
+          echo "db-password=$DB_PASSWORD" >> $GITHUB_OUTPUT
+          echo "Database credentials retrieved from Secrets Manager"
+
       - name: Deploy API with Serverless
         working-directory: apps/api
         run: |
           export NODE_ENV=${{ needs.setup.outputs.environment }}
           export STAGE=${{ needs.setup.outputs.environment }}
-          export DB_HOST=${{ secrets.DB_HOST }}
-          export DB_PORT=${{ secrets.DB_PORT }}
-          export DB_NAME=${{ secrets.DB_NAME }}
-          export DB_USER=${{ secrets.DB_USER }}
-          export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          
-          # Disable Serverless Framework telemetry and authentication
-          export SLS_TELEMETRY_DISABLED=1
-          export SLS_INTERACTIVE_SETUP_ENABLE=false
-          export SERVERLESS_ACCESS_KEY=""
-          
+          export DB_PASSWORD="${{ steps.db-credentials.outputs.db-password }}"
+
+          # Serverless Framework authentication
+          export SERVERLESS_ACCESS_KEY=${{ secrets.SERVERLESS_ACCESS_KEY }}
+
           echo "Deploying API to ${{ needs.setup.outputs.environment }}"
           echo "Using Serverless Framework $(npx serverless --version)"
           npx serverless deploy --stage ${{ needs.setup.outputs.environment }} --verbose
@@ -556,7 +570,7 @@ jobs:
           VITE_COGNITO_USER_POOL_CLIENT_ID: ${{ steps.cognito-config.outputs.client-id }}
           VITE_COGNITO_IDENTITY_POOL_ID: ${{ steps.cognito-config.outputs.identity-pool-id }}
           VITE_AWS_REGION: ${{ env.AWS_REGION }}
-          VITE_API_BASE_URL: ${{ steps.cognito-config.outputs.api-endpoint }}
+          VITE_API_BASE_URL: ${{ steps.cognito-config.outputs.api-endpoint }}${{ env.API_PREFIX }}/${{ env.API_ROUTE_VERSION }}
 
       - name: Deploy to S3
         working-directory: apps/web-app
