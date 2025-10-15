@@ -246,22 +246,29 @@ export const BookForm: React.FC<BookFormProps> = ({
             </Box>
 
             {/* Status */}
-            <FormControl fullWidth>
-              <InputLabel id="status-label">Reading Status</InputLabel>
-              <Select
-                labelId="status-label"
-                id="status"
-                value={formData.status || ''}
-                onChange={(e) => handleInputChange('status', e.target.value as Book['status'] || undefined)}
-                disabled={loading}
-                label="Reading Status"
-              >
-                <MenuItem value="">No Status</MenuItem>
-                <MenuItem value="in progress">In Progress</MenuItem>
-                <MenuItem value="paused">Paused</MenuItem>
-                <MenuItem value="finished">Finished</MenuItem>
-              </Select>
-            </FormControl>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, height: '28px' }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Reading Status
+                </Typography>
+              </Box>
+              <FormControl fullWidth>
+                <InputLabel id="status-label">Reading Status</InputLabel>
+                <Select
+                  labelId="status-label"
+                  id="status"
+                  value={formData.status || ''}
+                  onChange={(e) => handleInputChange('status', e.target.value as Book['status'] || undefined)}
+                  disabled={loading}
+                  label="Reading Status"
+                >
+                  <MenuItem value="">No Status</MenuItem>
+                  <MenuItem value="in progress">In Progress</MenuItem>
+                  <MenuItem value="paused">Paused</MenuItem>
+                  <MenuItem value="finished">Finished</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
           </Box>
 
           {/* Selected Authors Display */}

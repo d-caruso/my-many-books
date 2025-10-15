@@ -119,7 +119,7 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
 
             <TextField
               fullWidth
-              label="Nationality (optional)"
+              label="Nationality"
               value={formData.nationality}
               onChange={(e) => handleChange('nationality', e.target.value)}
               error={!!errors.nationality}
