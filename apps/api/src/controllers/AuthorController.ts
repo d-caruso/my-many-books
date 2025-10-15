@@ -278,6 +278,38 @@ export class AuthorController extends BaseController {
   }
 
   /**
+   * Searches authors by name or surname (for autocomplete).
+   * @param request The universal request object.
+   * @returns An ApiResponse with a list of matching authors.
+   */
+  async searchAuthors(request: UniversalRequest): Promise<ApiResponse> {
+    const query = this.getQueryParameter(request, 'q');
+
+    if (!query || query.trim().length < 2) {
+      return this.createErrorResponse('Search query must be at least 2 characters', 400);
+    }
+
+    const searchTerm = query.trim();
+
+    // Search across name and surname fields using MySQL-compatible LIKE
+    const authors = await Author.findAll({
+      where: {
+        [Op.or]: [
+          { name: { [Op.like]: `%${searchTerm}%` } },
+          { surname: { [Op.like]: `%${searchTerm}%` } },
+        ],
+      },
+      order: [
+        ['surname', 'ASC'],
+        ['name', 'ASC'],
+      ],
+      limit: 20, // Limit results for autocomplete
+    });
+
+    return this.createSuccessResponse(authors);
+  }
+
+  /**
    * Retrieves books for a specific author with pagination.
    * @param request The universal request object.
    * @returns An ApiResponse with a list of books and pagination metadata.
