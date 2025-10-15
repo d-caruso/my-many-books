@@ -295,6 +295,14 @@ class ApiService {
 
   async createBook(bookData: BookFormData): Promise<Book> {
     // Transform frontend format to backend format
+    const authorIds = bookData.selectedAuthors && bookData.selectedAuthors.length > 0
+      ? bookData.selectedAuthors.map(author => author.id)
+      : undefined;
+
+    const categoryIds = bookData.selectedCategories && bookData.selectedCategories.length > 0
+      ? bookData.selectedCategories
+      : undefined;
+
     const backendData = {
       title: bookData.title,
       isbnCode: bookData.isbnCode,
@@ -302,8 +310,8 @@ class ApiService {
       editionDate: bookData.editionDate,
       status: bookData.status,
       notes: bookData.notes,
-      authorIds: bookData.selectedAuthors?.map(author => author.id) || [],
-      categoryIds: bookData.selectedCategories || []
+      ...(authorIds && { authorIds }),
+      ...(categoryIds && { categoryIds })
     };
     return this.apiClient.books.createBook(backendData);
   }
