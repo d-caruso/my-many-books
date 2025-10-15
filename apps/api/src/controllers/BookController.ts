@@ -539,9 +539,15 @@ export class BookController extends BaseController {
       distinct: true,
     });
 
-    const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
+    // Return SearchResult format expected by frontend
+    const searchResult = {
+      books,
+      total: count,
+      hasMore: (pagination.page * pagination.limit) < count,
+      page: pagination.page
+    };
 
-    return this.createSuccessResponse(books, undefined, meta);
+    return this.createSuccessResponse(searchResult);
   }
 
   /**
