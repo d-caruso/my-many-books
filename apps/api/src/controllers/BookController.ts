@@ -444,8 +444,8 @@ export class BookController extends BaseController {
     if (query) {
       whereConditions.push({
         [Op.or]: [
-          { title: { [Op.iLike]: `%${query}%` } },
-          { isbnCode: { [Op.iLike]: `%${query}%` } },
+          { title: { [Op.like]: `%${query}%` } },
+          { isbnCode: { [Op.like]: `%${query}%` } },
         ],
       });
     }
@@ -464,6 +464,7 @@ export class BookController extends BaseController {
     if (authorId) {
       includeClause.push({
         model: Author,
+        as: 'authors',
         through: { attributes: [] },
         where: { id: Number(authorId) },
         required: true, // INNER JOIN to filter by author
@@ -472,11 +473,12 @@ export class BookController extends BaseController {
       // If searching by text but not filtering by specific author, search in author names
       includeClause.push({
         model: Author,
+        as: 'authors',
         through: { attributes: [] },
         where: {
           [Op.or]: [
-            { name: { [Op.iLike]: `%${query}%` } },
-            { surname: { [Op.iLike]: `%${query}%` } },
+            { name: { [Op.like]: `%${query}%` } },
+            { surname: { [Op.like]: `%${query}%` } },
           ],
         },
         required: false, // LEFT JOIN so we also get books without matching authors
@@ -485,6 +487,7 @@ export class BookController extends BaseController {
       // No author filter, just include all authors
       includeClause.push({
         model: Author,
+        as: 'authors',
         through: { attributes: [] },
       });
     }
@@ -493,6 +496,7 @@ export class BookController extends BaseController {
     if (categoryId) {
       includeClause.push({
         model: Category,
+        as: 'categories',
         through: { attributes: [] },
         where: { id: Number(categoryId) },
         required: true, // INNER JOIN to filter by category
@@ -501,6 +505,7 @@ export class BookController extends BaseController {
       // No category filter, just include all categories
       includeClause.push({
         model: Category,
+        as: 'categories',
         through: { attributes: [] },
       });
     }
