@@ -48,8 +48,10 @@ app.put(`${BASE_PATH}/books/:id`, expressAdapter(bookController.updateBook.bind(
 app.delete(`${BASE_PATH}/books/:id`, expressAdapter(bookController.deleteBook.bind(bookController)));
 
 // ===== AUTHOR ROUTES =====
+// NOTE: Specific routes must come BEFORE parameterized routes (:id)
 app.get(`${BASE_PATH}/authors`, expressAdapter(authorController.listAuthors.bind(authorController)));
 app.post(`${BASE_PATH}/authors`, expressAdapter(authorController.createAuthor.bind(authorController)));
+app.get(`${BASE_PATH}/authors/search`, expressAdapter(authorController.searchAuthors.bind(authorController)));
 app.get(`${BASE_PATH}/authors/:id`, expressAdapter(authorController.getAuthor.bind(authorController)));
 app.put(`${BASE_PATH}/authors/:id`, expressAdapter(authorController.updateAuthor.bind(authorController)));
 app.delete(`${BASE_PATH}/authors/:id`, expressAdapter(authorController.deleteAuthor.bind(authorController)));
