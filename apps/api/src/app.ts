@@ -37,14 +37,15 @@ app.get(`${BASE_PATH}/health`, (_req, res): void => {
 });
 
 // ===== BOOK ROUTES =====
+// NOTE: Specific routes must come BEFORE parameterized routes (:id)
 app.get(`${BASE_PATH}/books`, expressAdapter(bookController.listBooks.bind(bookController)));
 app.post(`${BASE_PATH}/books`, expressAdapter(bookController.createBook.bind(bookController)));
-app.get(`${BASE_PATH}/books/:id`, expressAdapter(bookController.getBook.bind(bookController)));
-app.put(`${BASE_PATH}/books/:id`, expressAdapter(bookController.updateBook.bind(bookController)));
-app.delete(`${BASE_PATH}/books/:id`, expressAdapter(bookController.deleteBook.bind(bookController)));
 app.get(`${BASE_PATH}/books/search`, expressAdapter(bookController.searchBooks.bind(bookController)));
 app.get(`${BASE_PATH}/books/search/isbn`, expressAdapter(bookController.searchBooksByIsbn.bind(bookController)));
 app.post(`${BASE_PATH}/books/import/isbn`, expressAdapter(bookController.importBookFromIsbn.bind(bookController)));
+app.get(`${BASE_PATH}/books/:id`, expressAdapter(bookController.getBook.bind(bookController)));
+app.put(`${BASE_PATH}/books/:id`, expressAdapter(bookController.updateBook.bind(bookController)));
+app.delete(`${BASE_PATH}/books/:id`, expressAdapter(bookController.deleteBook.bind(bookController)));
 
 // ===== AUTHOR ROUTES =====
 app.get(`${BASE_PATH}/authors`, expressAdapter(authorController.listAuthors.bind(authorController)));
