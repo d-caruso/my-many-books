@@ -306,10 +306,10 @@ class ApiService {
     const backendData = {
       title: bookData.title,
       isbnCode: bookData.isbnCode,
-      editionNumber: bookData.editionNumber,
-      editionDate: bookData.editionDate,
-      status: bookData.status,
-      notes: bookData.notes,
+      ...(bookData.editionNumber && { editionNumber: bookData.editionNumber }),
+      ...(bookData.editionDate && { editionDate: bookData.editionDate }),
+      ...(bookData.status && { status: bookData.status }),
+      ...(bookData.notes && { notes: bookData.notes }),
       ...(authorIds && { authorIds }),
       ...(categoryIds && { categoryIds })
     };
@@ -319,16 +319,16 @@ class ApiService {
   async updateBook(id: number, bookData: Partial<BookFormData>): Promise<Book> {
     // Transform frontend format to backend format if it includes form data
     const backendData = bookData.selectedAuthors || bookData.selectedCategories ? {
-      title: bookData.title,
-      isbnCode: bookData.isbnCode,
-      editionNumber: bookData.editionNumber,
-      editionDate: bookData.editionDate,
-      status: bookData.status,
-      notes: bookData.notes,
+      ...(bookData.title && { title: bookData.title }),
+      ...(bookData.isbnCode && { isbnCode: bookData.isbnCode }),
+      ...(bookData.editionNumber && { editionNumber: bookData.editionNumber }),
+      ...(bookData.editionDate && { editionDate: bookData.editionDate }),
+      ...(bookData.status && { status: bookData.status }),
+      ...(bookData.notes && { notes: bookData.notes }),
       ...(bookData.selectedAuthors && { authorIds: bookData.selectedAuthors.map(author => author.id) }),
       ...(bookData.selectedCategories && { categoryIds: bookData.selectedCategories })
     } : bookData;
-    
+
     return this.apiClient.books.updateBook(id, backendData);
   }
 

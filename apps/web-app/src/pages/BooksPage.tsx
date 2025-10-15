@@ -215,9 +215,18 @@ export const BooksPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to save book:', err);
       console.error('Error response data:', err.response?.data);
-      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to save book');
+      const errorData = err.response?.data;
+      const errorMessage = errorData?.error || errorData?.message || 'Failed to save book';
+      const errorDetails = errorData?.details || [];
+
+      // Combine error message with details for display
+      const fullError = errorDetails.length > 0
+        ? `${errorMessage}:\n${errorDetails.join('\n')}`
+        : errorMessage;
+
+      setError(fullError);
       throw err; // Re-throw to keep form open
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -239,7 +248,7 @@ export const BooksPage: React.FC = () => {
         />
         {error && (
           <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600">{error}</p>
+            <p className="text-red-600" style={{ whiteSpace: 'pre-line' }}>{error}</p>
           </div>
         )}
       </div>
@@ -259,7 +268,7 @@ export const BooksPage: React.FC = () => {
         />
         {error && (
           <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600">{error}</p>
+            <p className="text-red-600" style={{ whiteSpace: 'pre-line' }}>{error}</p>
           </div>
         )}
       </div>
