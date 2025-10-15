@@ -116,8 +116,9 @@ export const BookForm: React.FC<BookFormProps> = ({
 
     try {
       await onSubmit(formData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Form submission error:', error);
+      console.error('Error response:', error?.response?.data);
     }
   };
 
