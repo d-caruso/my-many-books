@@ -60,9 +60,10 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
 
       onCategoryCreated(newCategory);
       handleClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create category:', error);
-      setError('Failed to create category. Please try again.');
+      const errorMessage = error?.response?.data?.error || 'Failed to create category. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
