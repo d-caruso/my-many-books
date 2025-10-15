@@ -214,9 +214,10 @@ export const BooksPage: React.FC = () => {
       setSelectedBook(null);
     } catch (err: any) {
       console.error('Failed to save book:', err);
-      setError(err.response?.data?.message || 'Failed to save book');
+      console.error('Error response data:', err.response?.data);
+      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to save book');
       throw err; // Re-throw to keep form open
-    } finally {
+    } finally{
       setLoading(false);
     }
   };
