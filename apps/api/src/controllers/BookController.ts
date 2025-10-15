@@ -415,57 +415,122 @@ export class BookController extends BaseController {
   }
 
   /**
-   * Searches books by query string (title, author, or ISBN).
+   * Searches books by query string (title, author, or ISBN) with advanced filters.
    * @param request The universal request object.
    * @returns An ApiResponse with matching books.
    */
   async searchBooks(request: UniversalRequest): Promise<ApiResponse> {
     const query = this.getQueryParameter(request, 'q');
+    const status = this.getQueryParameter(request, 'status');
+    const authorId = this.getQueryParameter(request, 'authorId');
+    const categoryId = this.getQueryParameter(request, 'categoryId');
+    const sortBy = this.getQueryParameter(request, 'sortBy') || 'title';
     const pagination = this.getPaginationParams(request);
 
-    if (!query) {
-      return this.createErrorResponse('Search query (q) is required', 400);
-    }
-
-    if (query.length < 2) {
+    // Validate query length if provided
+    if (query && query.length < 2) {
       return this.createErrorResponse('Search query must be at least 2 characters', 400);
     }
 
-    // Build search conditions - search in title, ISBN, author name, and author surname
-    const whereConditions: WhereOptions<BookAttributes> = {
-      [Op.or]: [
-        { title: { [Op.iLike]: `%${query}%` } },
-        { isbnCode: { [Op.iLike]: `%${query}%` } },
-      ],
-    };
+    // Build base where conditions
+    const whereConditions: WhereOptions<BookAttributes>[] = [];
 
     // Add user ID filter if authenticated
     if (request.user) {
-      Object.assign(whereConditions, { userId: request.user.userId });
+      whereConditions.push({ userId: request.user.userId });
+    }
+
+    // Add text search conditions (title and ISBN)
+    if (query) {
+      whereConditions.push({
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${query}%` } },
+          { isbnCode: { [Op.iLike]: `%${query}%` } },
+        ],
+      });
+    }
+
+    // Add status filter
+    if (status) {
+      whereConditions.push({ status: status as BookStatus });
+    }
+
+    const whereClause = whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
+
+    // Build include clause for associations
+    const includeClause: any[] = [];
+
+    // Add author filter/include
+    if (authorId) {
+      includeClause.push({
+        model: Author,
+        through: { attributes: [] },
+        where: { id: Number(authorId) },
+        required: true, // INNER JOIN to filter by author
+      });
+    } else if (query) {
+      // If searching by text but not filtering by specific author, search in author names
+      includeClause.push({
+        model: Author,
+        through: { attributes: [] },
+        where: {
+          [Op.or]: [
+            { name: { [Op.iLike]: `%${query}%` } },
+            { surname: { [Op.iLike]: `%${query}%` } },
+          ],
+        },
+        required: false, // LEFT JOIN so we also get books without matching authors
+      });
+    } else {
+      // No author filter, just include all authors
+      includeClause.push({
+        model: Author,
+        through: { attributes: [] },
+      });
+    }
+
+    // Add category filter/include
+    if (categoryId) {
+      includeClause.push({
+        model: Category,
+        through: { attributes: [] },
+        where: { id: Number(categoryId) },
+        required: true, // INNER JOIN to filter by category
+      });
+    } else {
+      // No category filter, just include all categories
+      includeClause.push({
+        model: Category,
+        through: { attributes: [] },
+      });
+    }
+
+    // Determine sort order
+    let orderClause: [string, string][] = [['title', 'ASC']];
+    switch (sortBy) {
+      case 'creationDate':
+      case 'createdAt':
+        orderClause = [['creationDate', 'DESC']];
+        break;
+      case 'updateDate':
+      case 'updatedAt':
+        orderClause = [['updateDate', 'DESC']];
+        break;
+      case 'status':
+        orderClause = [['status', 'ASC'], ['title', 'ASC']];
+        break;
+      case 'title':
+      default:
+        orderClause = [['title', 'ASC']];
+        break;
     }
 
     const { count, rows: books } = await Book.findAndCountAll({
-      where: whereConditions,
-      include: [
-        {
-          model: Author,
-          through: { attributes: [] },
-          where: {
-            [Op.or]: [
-              { name: { [Op.iLike]: `%${query}%` } },
-              { surname: { [Op.iLike]: `%${query}%` } },
-            ],
-          },
-          required: false, // LEFT JOIN so we also get books without matching authors
-        },
-        {
-          model: Category,
-          through: { attributes: [] },
-        },
-      ],
+      where: whereClause,
+      include: includeClause,
       limit: pagination.limit,
       offset: pagination.offset,
-      order: [['title', 'ASC']],
+      order: orderClause,
       distinct: true,
     });
 
