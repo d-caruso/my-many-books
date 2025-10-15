@@ -415,6 +415,66 @@ export class BookController extends BaseController {
   }
 
   /**
+   * Searches books by query string (title, author, or ISBN).
+   * @param request The universal request object.
+   * @returns An ApiResponse with matching books.
+   */
+  async searchBooks(request: UniversalRequest): Promise<ApiResponse> {
+    const query = this.getQueryParameter(request, 'q');
+    const pagination = this.getPaginationParams(request);
+
+    if (!query) {
+      return this.createErrorResponse('Search query (q) is required', 400);
+    }
+
+    if (query.length < 2) {
+      return this.createErrorResponse('Search query must be at least 2 characters', 400);
+    }
+
+    // Build search conditions - search in title, ISBN, author name, and author surname
+    const whereConditions: WhereOptions<BookAttributes> = {
+      [Op.or]: [
+        { title: { [Op.iLike]: `%${query}%` } },
+        { isbnCode: { [Op.iLike]: `%${query}%` } },
+      ],
+    };
+
+    // Add user ID filter if authenticated
+    if (request.user) {
+      Object.assign(whereConditions, { userId: request.user.userId });
+    }
+
+    const { count, rows: books } = await Book.findAndCountAll({
+      where: whereConditions,
+      include: [
+        {
+          model: Author,
+          through: { attributes: [] },
+          where: {
+            [Op.or]: [
+              { name: { [Op.iLike]: `%${query}%` } },
+              { surname: { [Op.iLike]: `%${query}%` } },
+            ],
+          },
+          required: false, // LEFT JOIN so we also get books without matching authors
+        },
+        {
+          model: Category,
+          through: { attributes: [] },
+        },
+      ],
+      limit: pagination.limit,
+      offset: pagination.offset,
+      order: [['title', 'ASC']],
+      distinct: true,
+    });
+
+    const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
+
+    return this.createSuccessResponse(books, undefined, meta);
+  }
+
+  /**
    * Looks up a book by its ISBN from local and external sources.
    * @param request The universal request object.
    * @returns An ApiResponse with the book data or an error.
