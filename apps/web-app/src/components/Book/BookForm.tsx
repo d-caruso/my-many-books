@@ -14,16 +14,20 @@ import {
   Checkbox,
   CircularProgress,
   Stack,
-  Divider
+  Divider,
+  IconButton
 } from '@mui/material';
 import {
   Save as SaveIcon,
   Cancel as CancelIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Add as AddIcon
 } from '@mui/icons-material';
 import { Book, Author, Category } from '../../types';
 import { useCategories } from '../../hooks/useCategories';
 import { AuthorAutocomplete } from '../Search/AuthorAutocomplete';
+import { AddAuthorDialog } from '../Author/AddAuthorDialog';
+import { AddCategoryDialog } from '../Category/AddCategoryDialog';
 
 interface BookFormProps {
   book?: Book | null;
@@ -51,7 +55,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   loading = false,
   title = book ? 'Edit Book' : 'Add New Book'
 }) => {
-  const { categories, loading: categoriesLoading } = useCategories();
+  const { categories, loading: categoriesLoading, loadCategories } = useCategories();
   const [formData, setFormData] = useState<BookFormData>({
     title: '',
     isbnCode: '',
@@ -63,6 +67,8 @@ export const BookForm: React.FC<BookFormProps> = ({
     selectedCategories: []
   });
   const [errors, setErrors] = useState<Partial<Record<keyof BookFormData, string>>>({});
+  const [addAuthorDialogOpen, setAddAuthorDialogOpen] = useState(false);
+  const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
 
   // Initialize form with book data
   useEffect(() => {
@@ -140,10 +146,22 @@ export const BookForm: React.FC<BookFormProps> = ({
     if (checked) {
       handleInputChange('selectedCategories', [...formData.selectedCategories, categoryId]);
     } else {
-      handleInputChange('selectedCategories', 
+      handleInputChange('selectedCategories',
         formData.selectedCategories.filter(id => id !== categoryId)
       );
     }
+  };
+
+  const handleAuthorCreated = (author: Author) => {
+    // Add the newly created author to the selected authors list
+    handleInputChange('selectedAuthors', [...formData.selectedAuthors, author]);
+  };
+
+  const handleCategoryCreated = (category: Category) => {
+    // Reload categories to update the list
+    loadCategories();
+    // Automatically select the newly created category
+    handleInputChange('selectedCategories', [...formData.selectedCategories, category.id]);
   };
 
   return (
@@ -205,6 +223,20 @@ export const BookForm: React.FC<BookFormProps> = ({
           >
             {/* Authors */}
             <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Authors
+                </Typography>
+                <Button
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() => setAddAuthorDialogOpen(true)}
+                  disabled={loading}
+                  sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
+                >
+                  Add
+                </Button>
+              </Box>
               <AuthorAutocomplete
                 value={null}
                 onChange={handleAuthorAdd}
@@ -253,10 +285,21 @@ export const BookForm: React.FC<BookFormProps> = ({
 
           {/* Categories */}
           <Box>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              Categories
-            </Typography>
-            
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Categories
+              </Typography>
+              <Button
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() => setAddCategoryDialogOpen(true)}
+                disabled={loading}
+                sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
+              >
+                Add
+              </Button>
+            </Box>
+
             {categoriesLoading ? (
               <Box display="flex" alignItems="center" gap={1}>
                 <CircularProgress size={16} />
@@ -397,6 +440,19 @@ export const BookForm: React.FC<BookFormProps> = ({
           </Box>
         </Stack>
       </Box>
+
+      {/* Dialogs */}
+      <AddAuthorDialog
+        open={addAuthorDialogOpen}
+        onClose={() => setAddAuthorDialogOpen(false)}
+        onAuthorCreated={handleAuthorCreated}
+      />
+
+      <AddCategoryDialog
+        open={addCategoryDialogOpen}
+        onClose={() => setAddCategoryDialogOpen(false)}
+        onCategoryCreated={handleCategoryCreated}
+      />
     </Paper>
   );
 };
