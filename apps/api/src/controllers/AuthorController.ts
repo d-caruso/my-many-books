@@ -292,7 +292,6 @@ export class AuthorController extends BaseController {
     const searchTerm = query.trim();
 
     // Search across name and surname fields using MySQL-compatible LIKE
-    // Using Op.and with Op.or to create: (name LIKE '%term%' OR surname LIKE '%term%')
     const authors = await Author.findAll({
       where: {
         [Op.or]: [
@@ -306,8 +305,6 @@ export class AuthorController extends BaseController {
         ['name', 'ASC'],
       ],
       limit: 20, // Limit results for autocomplete
-      distinct: true, // Ensure no duplicates
-      raw: false, // Return model instances
     });
 
     return this.createSuccessResponse(authors);
