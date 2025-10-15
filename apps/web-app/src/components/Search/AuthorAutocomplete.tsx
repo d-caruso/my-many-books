@@ -106,20 +106,23 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
       }}
       options={authors}
       getOptionLabel={(option) => `${option.name} ${option.surname}`}
-      renderOption={(props, option) => (
-        <Box component="li" {...props}>
-          <Box>
-            <Typography variant="body2" fontWeight="medium">
-              {option.name} {option.surname}
-            </Typography>
-            {option.nationality && (
-              <Typography variant="caption" color="text.secondary">
-                {option.nationality}
+      renderOption={(props, option) => {
+        const { key, ...otherProps } = props;
+        return (
+          <Box component="li" key={key} {...otherProps}>
+            <Box>
+              <Typography variant="body2" fontWeight="medium">
+                {option.name} {option.surname}
               </Typography>
-            )}
+              {option.nationality && (
+                <Typography variant="caption" color="text.secondary">
+                  {option.nationality}
+                </Typography>
+              )}
+            </Box>
           </Box>
-        </Box>
-      )}
+        );
+      }}
       renderInput={(params) => (
         <TextField
           {...params}
