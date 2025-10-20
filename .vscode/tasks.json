@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "typescript",
+      "tsconfig": "tsconfig.json",
+      "option": "watch", // Use "watch" for continuous building during development
+      "problemMatcher": ["$tsc-watch"],
+      "group": "build",
+      "label": "tsc: watch"
+    },
+    {
+      "type": "typescript",
+      "tsconfig": "tsconfig.json",
+      // This is the task referenced by "preLaunchTask" in launch.json
+      "group": "build",
+      "label": "tsc: build - tsconfig.json" 
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node", 
+      "request": "launch",
+      "name": "Debug Nx API (Launch)",
+      
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "serve", "api"], 
+      
+      "cwd": "${workspaceFolder}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": ["<node_internals>/**"],
+      
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/dist/apps/api/main.js"],
+
+      // ADD THE FIX: Force path resolution 
+      "sourceMapPathOverrides": {
+        // Intercept any path starting with a forward slash (/) or relative path (./)
+        // and map it to a path relative to the workspace folder.
+        "/*": "${workspaceFolder}/*",
+        "./*": "${workspaceFolder}/*"
+      }
+    }
+  ]
+}

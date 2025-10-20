@@ -2,7 +2,6 @@
   "name": "api",
   "version": "0.1.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/api/src",
   "projectType": "application",
   "targets": {
     "build": {
@@ -12,9 +11,10 @@
         "target": "node",
         "compiler": "tsc",
         "outputPath": "dist/apps/api",
+        "outputFileName": "main.js",
         "main": "apps/api/src/app.ts",
         "tsConfig": "apps/api/tsconfig.json",
-        "assets": ["apps/api/src/assets"]
+        "webpackConfig": "apps/api/webpack.config.js"
       },
       "configurations": {
         "production": {
@@ -34,7 +34,10 @@
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "api:build"
+        "buildTarget": "api:build",
+        "inspect": true,
+        "port": 9229,
+        "args": ["--inspect-brk"]
       },
       "configurations": {
         "development": {
