@@ -738,18 +738,16 @@ export class BookController extends BaseController {
         throw new Error(`One or more ${associationName} IDs are invalid`);
       }
 
-      const method = (book as Book & Record<string, (models: unknown[]) => Promise<void>>)[
-        setMethod
-      ];
-      if (method) {
-        await method(associatedModels);
+      // Call the method with proper context binding
+      const method = (book as any)[setMethod];
+      if (typeof method === 'function') {
+        await method.call(book, associatedModels);
       }
     } else {
-      const method = (book as Book & Record<string, (models: unknown[]) => Promise<void>>)[
-        setMethod
-      ];
-      if (method) {
-        await method([]); // Clear all associations
+      // Call the method with proper context binding to clear associations
+      const method = (book as any)[setMethod];
+      if (typeof method === 'function') {
+        await method.call(book, []); // Clear all associations
       }
     }
   }
