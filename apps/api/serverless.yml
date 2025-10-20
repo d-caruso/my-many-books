@@ -286,37 +286,6 @@ resources:
         Roles:
           authenticated: !GetAtt CognitoAuthRole.Arn
 
-    # Serverless deployment bucket
-    ServerlessDeploymentBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: my-many-books-serverless-deployments-${self:provider.region}-${self:provider.stage}
-        BucketEncryption:
-          ServerSideEncryptionConfiguration:
-            - ServerSideEncryptionByDefault:
-                SSEAlgorithm: AES256
-        PublicAccessBlockConfiguration:
-          BlockPublicAcls: true
-          BlockPublicPolicy: true
-          IgnorePublicAcls: true
-          RestrictPublicBuckets: true
-        VersioningConfiguration:
-          Status: Enabled
-        LifecycleConfiguration:
-          Rules:
-            - Id: DeleteOldDeployments
-              Status: Enabled
-              ExpirationInDays: 90
-        Tags:
-          - Key: Project
-            Value: my-many-books
-          - Key: Environment
-            Value: ${self:provider.stage}
-          - Key: Purpose
-            Value: serverless-deployments
-          - Key: CreatedBy
-            Value: serverless
-
   # CloudFormation Outputs
   Outputs:
     CognitoUserPoolId:
