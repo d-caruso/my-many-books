@@ -286,7 +286,12 @@ class ApiService {
       return this.getMockBooks();
     }
 
-    return this.apiClient.books.getBooks(filters?.page || 1, filters?.limit || 10);
+    return this.apiClient.books.getBooks(
+      filters?.page || 1,
+      filters?.limit || 10,
+      true, // includeAuthors
+      true  // includeCategories
+    );
   }
 
   async getBook(id: number): Promise<Book> {
