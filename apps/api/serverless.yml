@@ -9,7 +9,7 @@ frameworkVersion: '4.19.1'
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ${opt:region, 'us-east-1'}
+  region: ${opt:region, 'us-west-2'}
   stage: ${opt:stage, 'dev'}
   memorySize: 512
   timeout: 30
