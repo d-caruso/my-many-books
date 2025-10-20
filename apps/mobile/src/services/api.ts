@@ -1,5 +1,5 @@
 // Create API services from shared libraries with mobile-specific configurations
-import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
+import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api/';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configure API base URL for mobile
