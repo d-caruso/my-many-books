@@ -12,9 +12,19 @@ import {
 } from '@my-many-books/shared-types';
 
 export class BookApi extends BaseApiClient {
-  async getBooks(page: number = 1, limit: number = 10): Promise<PaginatedResponse<Book>> {
+  async getBooks(
+    page: number = 1,
+    limit: number = 10,
+    includeAuthors: boolean = true,
+    includeCategories: boolean = true
+  ): Promise<PaginatedResponse<Book>> {
     return this.get<PaginatedResponse<Book>>('/books', {
-      params: { page, limit }
+      params: {
+        page,
+        limit,
+        includeAuthors: includeAuthors.toString(),
+        includeCategories: includeCategories.toString()
+      }
     });
   }
 
