@@ -16,16 +16,20 @@ interface LambdaRequest {
 interface LambdaResponse {
   statusCode: number;
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
   message?: string;
-  pagination?: any;
+  pagination?: Record<string, unknown>;
+}
+
+interface RequestWithUser extends Request {
+  user?: { userId: number };
 }
 
 type ControllerMethod = (event: LambdaRequest) => Promise<LambdaResponse>;
 
 export const expressAdapter = (controller: ControllerMethod) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Convert Express request to Lambda event format
       // Build event object conditionally to satisfy exactOptionalPropertyTypes
@@ -41,8 +45,9 @@ export const expressAdapter = (controller: ControllerMethod) => {
       }
 
       // Only add user if it exists (for exactOptionalPropertyTypes)
-      if ((req as any).user) {
-        event.user = (req as any).user;
+      const reqWithUser = req as RequestWithUser;
+      if (reqWithUser.user) {
+        event.user = reqWithUser.user;
       }
 
       const response = await controller(event);

@@ -458,7 +458,7 @@ export class BookController extends BaseController {
     const whereClause = whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
 
     // Build include clause for associations
-    const includeClause: any[] = [];
+    const includeClause: Array<Record<string, unknown>> = [];
 
     // Add author filter/include
     if (authorId) {
@@ -522,7 +522,10 @@ export class BookController extends BaseController {
         orderClause = [['updateDate', 'DESC']];
         break;
       case 'status':
-        orderClause = [['status', 'ASC'], ['title', 'ASC']];
+        orderClause = [
+          ['status', 'ASC'],
+          ['title', 'ASC'],
+        ];
         break;
       case 'title':
       default:
@@ -543,8 +546,8 @@ export class BookController extends BaseController {
     const searchResult = {
       books,
       total: count,
-      hasMore: (pagination.page * pagination.limit) < count,
-      page: pagination.page
+      hasMore: pagination.page * pagination.limit < count,
+      page: pagination.page,
     };
 
     return this.createSuccessResponse(searchResult);
@@ -739,15 +742,17 @@ export class BookController extends BaseController {
       }
 
       // Call the method with proper context binding
-      const method = (book as any)[setMethod];
+      const bookWithMethods = book as Book & Record<string, unknown>;
+      const method = bookWithMethods[setMethod];
       if (typeof method === 'function') {
-        await method.call(book, associatedModels);
+        await (method as (models: Model[]) => Promise<void>).call(book, associatedModels);
       }
     } else {
       // Call the method with proper context binding to clear associations
-      const method = (book as any)[setMethod];
+      const bookWithMethods = book as Book & Record<string, unknown>;
+      const method = bookWithMethods[setMethod];
       if (typeof method === 'function') {
-        await method.call(book, []); // Clear all associations
+        await (method as (models: Model[]) => Promise<void>).call(book, []); // Clear all associations
       }
     }
   }

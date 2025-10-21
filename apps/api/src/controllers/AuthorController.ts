@@ -72,7 +72,12 @@ export class AuthorController extends BaseController {
     });
 
     if (existingAuthor) {
-      return this.createSuccessResponse(existingAuthor, 'Author created successfully', undefined, 201);
+      return this.createSuccessResponse(
+        existingAuthor,
+        'Author created successfully',
+        undefined,
+        201
+      );
     }
 
     try {
