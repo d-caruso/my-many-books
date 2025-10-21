@@ -100,7 +100,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 // Database initialization (for both local and Lambda cold start)
 const initializeDatabase = async (): Promise<void> => {
   try {
-    const sequelize = await DatabaseConnection.initializeAsync();
+    const sequelize = DatabaseConnection.getInstance();
     await sequelize.authenticate();
     console.log('Database connection established successfully');
 
