@@ -163,9 +163,9 @@ describe('User Model - Simple Coverage', () => {
         fields: ['email']
       });
 
-      // IsActive index  
+      // IsActive index
       expect(indexes[1]).toEqual({
-        fields: ['isActive']
+        fields: ['is_active']
       });
 
       // Name and surname compound index

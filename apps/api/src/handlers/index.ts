@@ -18,3 +18,10 @@ export const handler = async (
   await initPromise;
   return serverlessHandler(event, context) as Promise<APIGatewayProxyResult>;
 };
+
+// Re-export individual handlers for testing
+export * from './books';
+export * from './authors';
+export * from './categories';
+export * from './isbn';
+export * from './health';

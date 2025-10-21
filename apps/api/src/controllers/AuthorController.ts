@@ -72,12 +72,7 @@ export class AuthorController extends BaseController {
     });
 
     if (existingAuthor) {
-      return this.createSuccessResponse(
-        existingAuthor,
-        'Author created successfully',
-        undefined,
-        201
-      );
+      return this.createErrorResponse('Author with this name already exists', 409);
     }
 
     try {

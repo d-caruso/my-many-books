@@ -10,7 +10,7 @@ describe('Express App Integration', () => {
   describe('Health endpoint', () => {
     it('should respond to health check', async () => {
       const response = await request(app)
-        .get('/health')
+        .get('/api/v1/health')
         .expect(200);
 
       expect(response.body).toHaveProperty('status', 'healthy');
@@ -23,7 +23,7 @@ describe('Express App Integration', () => {
   describe('CORS configuration', () => {
     it('should have CORS enabled', async () => {
       const response = await request(app)
-        .get('/health')
+        .get('/api/v1/health')
         .expect(200);
 
       expect(response.headers['access-control-allow-origin']).toBeDefined();
@@ -31,7 +31,7 @@ describe('Express App Integration', () => {
 
     it('should handle OPTIONS requests', async () => {
       await request(app)
-        .options('/health')
+        .options('/api/v1/health')
         .expect(204);
     });
   });
@@ -41,7 +41,7 @@ describe('Express App Integration', () => {
       // Test that the app can handle JSON payloads
       // We'll use the health endpoint for this test since it exists
       const response = await request(app)
-        .get('/health')
+        .get('/api/v1/health')
         .set('Content-Type', 'application/json')
         .expect(200);
 
@@ -58,7 +58,7 @@ describe('Express App Integration', () => {
 
     it('should handle invalid JSON gracefully', async () => {
       const response = await request(app)
-        .post('/health')
+        .post('/api/v1/health')
         .set('Content-Type', 'application/json')
         .send('invalid json')
         .expect(500); // Current implementation returns 500 for invalid JSON
@@ -71,7 +71,7 @@ describe('Express App Integration', () => {
     it('should handle URL encoded data', async () => {
       // Test that urlencoded middleware is configured
       const response = await request(app)
-        .get('/health')
+        .get('/api/v1/health')
         .expect(200);
 
       expect(response.body.status).toBe('healthy');
@@ -80,9 +80,9 @@ describe('Express App Integration', () => {
     it('should limit request size appropriately', async () => {
       // Test with a large but acceptable JSON payload
       const largeButAcceptableData = { data: 'x'.repeat(1000) };
-      
+
       const response = await request(app)
-        .post('/health')
+        .post('/api/v1/health')
         .send(largeButAcceptableData)
         .expect(404); // POST to health returns 404, but JSON was parsed
 
