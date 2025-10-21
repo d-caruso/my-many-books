@@ -148,21 +148,23 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
 
     expect(mockAxiosInstance.post).toHaveBeenCalledWith(
       'http://localhost:3000/books',
-      { // Note: The actual call output seems to omit authorIds/categoryIds from the spy result display for this object. We must match the expected output.
+      { 
         title: 'New Book',
         isbnCode: '987654321',
         editionNumber: 1,
         editionDate: '2024-01-01',
         status: 'unread',
-        notes: 'Test notes'
+        notes: 'Test notes',
+        authorIds: [],
+        categoryIds: [],
       },
-      expect.objectContaining({
+      {
         headers: {
           Authorization: 'test-token',
           'Content-Type': 'application/json',
         },
         timeout: 10000,
-      })
+      }
     );
 
     expect(result).toEqual(mockCreatedBook);
