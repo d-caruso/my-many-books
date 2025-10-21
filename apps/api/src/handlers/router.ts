@@ -64,7 +64,7 @@ const initializeDatabase = async (): Promise<void> => {
   if (databaseInitialized) return;
 
   try {
-    const sequelize = DatabaseConnection.getInstance();
+    const sequelize = await DatabaseConnection.initializeAsync();
     await sequelize.authenticate();
 
     // Initialize models
