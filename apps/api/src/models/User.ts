@@ -94,7 +94,7 @@ export class User extends IdBaseModel<UserAttributes> implements UserAttributes 
             fields: ['email'],
           },
           {
-            fields: ['isActive'],
+            fields: ['is_active'],
           },
           {
             fields: ['name', 'surname'],
