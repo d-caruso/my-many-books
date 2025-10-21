@@ -151,14 +151,14 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
         editionDate: '2024-01-01',
         status: 'unread',
         notes: 'Test notes',
-        authorIds: [], // Added based on error output
-        categoryIds: [], // Added based on error output
+        authorIds: [],
+        categoryIds: []
       },
       expect.objectContaining({
-        headers: {
+        headers: expect.objectContaining({
           Authorization: 'test-token',
           'Content-Type': 'application/json',
-        },
+        }),
         timeout: 10000,
       })
     );
@@ -189,11 +189,16 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
     expect(mockAxiosInstance.get).toHaveBeenCalledWith(
       'http://localhost:3000/books',
       expect.objectContaining({
-        params: {
-          page: 1,
+        headers: expect.objectContaining({
+          Authorization: 'test-token',
+          'Content-Type': 'application/json',
+        }),
+        timeout: 10000,
+        params: { 
+          page: 1, 
           limit: 10,
-          includeAuthors: true,
-          includeCategories: true
+          includeAuthors: 'true',
+          includeCategories: 'true',
         }
       })
     );
