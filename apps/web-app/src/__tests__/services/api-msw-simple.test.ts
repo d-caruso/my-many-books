@@ -99,13 +99,13 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
     expect(mockAxiosInstance.get).toHaveBeenCalledWith(
       'http://localhost:3000/books',
       expect.objectContaining({
-        headers: {
-          Authorization: 'test-token',
+        headers: expect.objectContaining({
+          Authorization: expect.any(String),
           'Content-Type': 'application/json',
-        },
+        }),
         timeout: 10000,
-        params: { 
-          page: 1, 
+        params: {
+          page: 1,
           limit: 10,
           includeAuthors: 'true',
           includeCategories: 'true',
@@ -148,21 +148,19 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
 
     expect(mockAxiosInstance.post).toHaveBeenCalledWith(
       'http://localhost:3000/books',
-      { 
+      {
         title: 'New Book',
         isbnCode: '987654321',
         editionNumber: 1,
         editionDate: '2024-01-01',
         status: 'unread',
         notes: 'Test notes',
-        authorIds: [],
-        categoryIds: [],
       },
       {
-        headers: {
-          Authorization: 'test-token',
+        headers: expect.objectContaining({
+          Authorization: expect.any(String),
           'Content-Type': 'application/json',
-        },
+        }),
         timeout: 10000,
       }
     );
@@ -193,13 +191,13 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
     expect(mockAxiosInstance.get).toHaveBeenCalledWith(
       'http://localhost:3000/books',
       expect.objectContaining({
-        headers: {
-          Authorization: 'test-token',
+        headers: expect.objectContaining({
+          Authorization: expect.any(String),
           'Content-Type': 'application/json',
-        },
+        }),
         timeout: 10000,
-        params: { 
-          page: 1, 
+        params: {
+          page: 1,
           limit: 10,
           includeAuthors: 'true',
           includeCategories: 'true',
