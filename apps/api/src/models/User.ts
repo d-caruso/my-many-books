@@ -68,6 +68,7 @@ export class User extends IdBaseModel<UserAttributes> implements UserAttributes 
           type: DataTypes.BOOLEAN,
           allowNull: false,
           defaultValue: true,
+          field: 'is_active',
         },
         creationDate: {
           type: DataTypes.DATE,
