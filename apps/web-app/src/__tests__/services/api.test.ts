@@ -376,7 +376,7 @@ describe('ApiService with Industry Standard Testing', () => {
 
         const result = await testApiService.getBooks({ page: 1, limit: 10 });
 
-        expect(mockApiClient.books.getBooks).toHaveBeenCalledWith(1, 10);
+        expect(mockApiClient.books.getBooks).toHaveBeenCalledWith(1, 10, true, true);
         expect(mockApiClient.books.getBooks).toHaveBeenCalledTimes(1);
         expect(result).toEqual(mockResponse);
       });
@@ -792,7 +792,7 @@ describe('ApiService with Industry Standard Testing', () => {
       const result = await testApiService.getBooks({ page: 2, limit: 5 });
 
       // Should call API client with correct parameters
-      expect(mockApiClient.books.getBooks).toHaveBeenCalledWith(2, 5);
+      expect(mockApiClient.books.getBooks).toHaveBeenCalledWith(2, 5, true, true);
       expect(mockApiClient.books.getBooks).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockResponse);
 
