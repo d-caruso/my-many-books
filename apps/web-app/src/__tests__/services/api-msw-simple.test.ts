@@ -103,8 +103,8 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
         params: {
           page: 1,
           limit: 10,
-          includeAuthors: 'true', // Added based on error output
-          includeCategories: 'true', // Added based on error output
+          includeAuthors: 'true',
+          includeCategories: 'true'
         }
       })
     );
@@ -192,8 +192,8 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
         params: {
           page: 1,
           limit: 10,
-          includeAuthors: 'true', // Added based on error output
-          includeCategories: 'true', // Added based on error output
+          includeAuthors: true,
+          includeCategories: true
         }
       })
     );
