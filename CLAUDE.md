@@ -67,5 +67,6 @@ Avoid building functionality on speculation. Implement features only when they a
 - **Always verify file paths and module names** before use
 - **Test your code** - No feature is complete without tests
 - **Document your decisions** - Future developers (including yourself) will thank you
+- **No multiple node tests** - Do not run new node tests until the previous test process is finished, unless otherwise asked.
 
 ---
