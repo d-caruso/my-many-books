@@ -155,10 +155,10 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
         categoryIds: []
       },
       expect.objectContaining({
-        headers: expect.objectContaining({
+        headers: {
           Authorization: 'test-token',
           'Content-Type': 'application/json',
-        }),
+        },
         timeout: 10000,
       })
     );
