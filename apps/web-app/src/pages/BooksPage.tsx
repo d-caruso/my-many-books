@@ -196,8 +196,8 @@ export const BooksPage: React.FC = () => {
         editionDate: formData.editionDate,
         status: formData.status,
         notes: formData.notes,
-        authorIds: formData.selectedAuthors.map(author => author.id),
-        categoryIds: formData.selectedCategories
+        selectedAuthors: formData.selectedAuthors,
+        selectedCategories: formData.selectedCategories
       };
 
       if (selectedBook) {
