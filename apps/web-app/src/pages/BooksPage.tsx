@@ -188,10 +188,22 @@ export const BooksPage: React.FC = () => {
     setError(null);
 
     try {
+      // Transform the form data to API format
+      const apiData = {
+        title: formData.title,
+        isbnCode: formData.isbnCode,
+        editionNumber: formData.editionNumber,
+        editionDate: formData.editionDate,
+        status: formData.status,
+        notes: formData.notes,
+        authorIds: formData.selectedAuthors.map(author => author.id),
+        categoryIds: formData.selectedCategories
+      };
+
       if (selectedBook) {
-        await bookAPI.updateBook(selectedBook.id, formData);
+        await bookAPI.updateBook(selectedBook.id, apiData);
       } else {
-        await bookAPI.createBook(formData);
+        await bookAPI.createBook(apiData);
       }
 
       // Refresh the book list
