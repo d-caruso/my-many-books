@@ -7,6 +7,55 @@ This guide covers deployment options for the My Many Books API Lambda handlers.
 1. AWS CLI configured with appropriate credentials
 2. Node.js 18+ installed
 3. Environment variables set (copy `.env.example` to `.env`)
+4. **Required:** Deployment permissions set up (see below)
+
+## Initial Setup: Deployment Permissions
+
+**⚠️ IMPORTANT:** Before deploying for the first time, you must grant your AWS user/role the necessary permissions to deploy the serverless application.
+
+### One-Time Permission Setup
+
+Run this command once before your first deployment:
+
+```bash
+npm run setup:deployment-permissions
+```
+
+This script will:
+- Create an IAM policy with all required deployment permissions
+- Attach the policy to your current AWS user/role
+- Verify that you can access Secrets Manager and SSM Parameter Store
+- Test connectivity to required AWS services
+
+The policy grants permissions for:
+- CloudFormation (stack creation/updates)
+- Lambda (function deployment)
+- API Gateway (REST API management)
+- S3 (deployment artifacts)
+- IAM (role management for Lambda)
+- Cognito (user pool management)
+- Secrets Manager & SSM Parameter Store (credentials access)
+- CloudWatch Logs (logging)
+
+### Troubleshooting
+
+If deployment fails with permission errors:
+1. Re-run the setup script: `npm run setup:deployment-permissions`
+2. Check your AWS region is set to `us-west-2` (default region for this project)
+3. Verify your AWS credentials: `aws sts get-caller-identity`
+4. Ensure you have permissions to attach IAM policies (may require admin access)
+
+### Manual Setup (Alternative)
+
+If you prefer manual setup or the script fails:
+
+1. Create the IAM policy from: `deployment/iam/serverless-deployment-policy.json`
+2. Attach it to your IAM user/role via AWS Console or CLI:
+```bash
+aws iam attach-user-policy \
+  --user-name YOUR_USERNAME \
+  --policy-arn arn:aws:iam::YOUR_ACCOUNT_ID:policy/MyManyBooksServerlessDeploymentPolicy
+```
 
 ## Deployment Options
 

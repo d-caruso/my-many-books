@@ -23,6 +23,7 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run lint",
     "format": "prettier --write src/**/*.ts",
+    "setup:deployment-permissions": "bash deployment/scripts/setup-deployment-permissions.sh",
     "deploy": "serverless deploy",
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:prod": "serverless deploy --stage prod",
