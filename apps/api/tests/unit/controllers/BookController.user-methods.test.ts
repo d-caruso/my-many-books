@@ -10,6 +10,7 @@ import { BookCategory } from '../../../src/models/BookCategory';
 import { validateIsbn, IsbnValidationResult } from '../../../src/utils/isbn';
 import { isbnService } from '../../../src/services/isbnService';
 import { IsbnLookupResult } from '../../../src/types/bookData';
+import { BOOK_STATUS } from '../../../src/utils/constants';
 
 // Mock dependencies
 jest.mock('../../../src/models/Book');
@@ -201,7 +202,7 @@ describe('BookController User Methods', () => {
       mockRequest.pathParameters = { id: '1' };
       mockRequest.body = JSON.stringify({
         title: 'Updated Book',
-        status: 'finished',
+        status: BOOK_STATUS.FINISHED,
       });
 
       (Book.findOne as jest.Mock).mockResolvedValue(mockBook);

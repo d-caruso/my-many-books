@@ -5,6 +5,7 @@
 import { Sequelize, Op } from 'sequelize';
 import { Book } from '../../../src/models/Book';
 import { ModelManager } from '../../../src/models';
+import { BOOK_STATUS } from '../../../src/utils/constants';
 
 // Create an in-memory SQLite database for testing
 let sequelize: Sequelize;
@@ -51,7 +52,7 @@ describe('Book Model', () => {
       title: 'Test Book',
       editionNumber: 1,
       editionDate: new Date('2023-01-01'),
-      status: 'reading',
+      status: BOOK_STATUS.READING,
       notes: 'Test notes',
     } as any;
 
@@ -175,7 +176,7 @@ describe('Book Model', () => {
     });
 
     it('should accept valid status values', async () => {
-      const validStatuses = ['reading', 'finished', 'paused'];
+      const validStatuses = [BOOK_STATUS.READING, BOOK_STATUS.FINISHED, BOOK_STATUS.PAUSED];
 
       for (const status of validStatuses) {
         const bookData = {
@@ -217,17 +218,17 @@ describe('Book Model', () => {
         {
           isbnCode: '9780140449136',
           title: 'First Book',
-          status: 'finished',
+          status: BOOK_STATUS.FINISHED,
         },
         {
           isbnCode: '9780140449143',
           title: 'Second Book',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
         },
         {
           isbnCode: '9780140449150',
           title: 'Third Book',
-          status: 'paused',
+          status: BOOK_STATUS.PAUSED,
         },
       ] as any[];
       
@@ -236,7 +237,7 @@ describe('Book Model', () => {
 
     it('should find books by status', async () => {
       const finishedBooks = await Book.findAll({
-        where: { status: 'finished' },
+        where: { status: BOOK_STATUS.FINISHED },
       });
 
       expect(finishedBooks).toHaveLength(1);
@@ -245,7 +246,7 @@ describe('Book Model', () => {
 
     it('should find books by status pattern', async () => {
       const progressBooks = await Book.findAll({
-        where: { status: 'reading' },
+        where: { status: BOOK_STATUS.READING },
       });
 
       expect(progressBooks).toHaveLength(1);
@@ -283,7 +284,7 @@ describe('Book Model', () => {
 
     it('should count books with conditions', async () => {
       const count = await Book.count({
-        where: { status: 'reading' },
+        where: { status: BOOK_STATUS.READING },
       });
       expect(count).toBe(1);
     });
