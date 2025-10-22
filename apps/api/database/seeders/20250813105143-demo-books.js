@@ -11,7 +11,7 @@ module.exports = {
         title: '1984',
         edition_number: 1,
         edition_date: '1949-06-08',
-        status: 'available',
+        status: 'finished',
         notes: 'A powerful dystopian novel about totalitarianism and surveillance',
         creation_date: now,
         update_date: now
@@ -31,7 +31,7 @@ module.exports = {
         title: 'The Adventures of Huckleberry Finn',
         edition_number: 1,
         edition_date: '1884-12-10',
-        status: 'available',
+        status: 'finished',
         notes: 'American classic about friendship and adventure along the Mississippi',
         creation_date: now,
         update_date: now
@@ -41,7 +41,7 @@ module.exports = {
         title: 'One Hundred Years of Solitude',
         edition_number: 1,
         edition_date: '1967-06-05',
-        status: 'wishlist',
+        status: 'paused',
         notes: 'Magical realism masterpiece about the Buendía family',
         creation_date: now,
         update_date: now
@@ -51,7 +51,7 @@ module.exports = {
         title: 'To the Lighthouse',
         edition_number: 1,
         edition_date: '1927-05-05',
-        status: 'available',
+        status: 'finished',
         notes: 'Modernist novel exploring consciousness and time',
         creation_date: now,
         update_date: now
@@ -61,7 +61,7 @@ module.exports = {
         title: 'The Trial',
         edition_number: 1,
         edition_date: '1925-04-26',
-        status: 'read',
+        status: 'finished',
         notes: 'Kafka\'s existential masterpiece about bureaucracy and alienation',
         creation_date: now,
         update_date: now
@@ -71,7 +71,7 @@ module.exports = {
         title: 'The Old Man and the Sea',
         edition_number: 1,
         edition_date: '1952-09-01',
-        status: 'read',
+        status: 'finished',
         notes: 'Hemingway\'s Nobel Prize-winning novella',
         creation_date: now,
         update_date: now
@@ -81,7 +81,7 @@ module.exports = {
         title: 'Beloved',
         edition_number: 1,
         edition_date: '1987-09-16',
-        status: 'available',
+        status: 'finished',
         notes: 'Powerful novel about slavery and its lasting impact',
         creation_date: now,
         update_date: now
@@ -101,7 +101,7 @@ module.exports = {
         title: 'The House of the Spirits',
         edition_number: 1,
         edition_date: '1982-01-01',
-        status: 'available',
+        status: 'finished',
         notes: 'Multi-generational saga with magical realism elements',
         creation_date: now,
         update_date: now

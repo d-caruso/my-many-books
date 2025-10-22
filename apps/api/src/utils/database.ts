@@ -5,7 +5,6 @@
 import { Sequelize } from 'sequelize';
 import DatabaseConnection from '@/config/database';
 import { ModelManager } from '@/models';
-import { Author, Category, Book } from '@/models';
 
 export class DatabaseUtils {
   private static sequelize: Sequelize | null = null;
@@ -49,149 +48,6 @@ export class DatabaseUtils {
     // });
   }
 
-  static async seedDatabase(): Promise<void> {
-    if (!DatabaseUtils.sequelize) {
-      throw new Error('Database not initialized. Call initialize() first.');
-    }
-
-    // TODO: Replace with proper logging
-    // console.log('Starting database seeding...');
-
-    // Seed authors
-    const authors = await DatabaseUtils.seedAuthors();
-    // TODO: Replace with proper logging
-    // console.log(`Seeded ${authors.length} authors`);
-
-    // Seed categories
-    const categories = await DatabaseUtils.seedCategories();
-    // TODO: Replace with proper logging
-    // console.log(`Seeded ${categories.length} categories`);
-
-    // Seed books with associations
-    await DatabaseUtils.seedBooks(authors, categories);
-    // TODO: Replace with proper logging
-    // console.log(`Seeded books`);
-
-    // TODO: Replace with proper logging
-    // console.log('Database seeding completed successfully');
-  }
-
-  private static async seedAuthors(): Promise<Author[]> {
-    const authorsData = [
-      { name: 'George', surname: 'Orwell', nationality: 'British' },
-      { name: 'Jane', surname: 'Austen', nationality: 'British' },
-      { name: 'Mark', surname: 'Twain', nationality: 'American' },
-      { name: 'Gabriel', surname: 'García Márquez', nationality: 'Colombian' },
-      { name: 'Virginia', surname: 'Woolf', nationality: 'British' },
-      { name: 'Franz', surname: 'Kafka', nationality: 'Czech' },
-      { name: 'Ernest', surname: 'Hemingway', nationality: 'American' },
-      { name: 'Toni', surname: 'Morrison', nationality: 'American' },
-    ];
-
-    const authors: Author[] = [];
-    for (const authorData of authorsData) {
-      const [author] = await Author.findOrCreateAuthor(authorData);
-      authors.push(author);
-    }
-
-    return authors;
-  }
-
-  private static async seedCategories(): Promise<Category[]> {
-    const categoriesData = [
-      { name: 'Fiction' },
-      { name: 'Classic Literature' },
-      { name: 'Dystopian Fiction' },
-      { name: 'Romance' },
-      { name: 'Adventure' },
-      { name: 'Magical Realism' },
-      { name: 'Modernist Literature' },
-      { name: 'Existential Fiction' },
-      { name: 'War Fiction' },
-      { name: 'Contemporary Fiction' },
-    ];
-
-    const categories: Category[] = [];
-    for (const categoryData of categoriesData) {
-      const [category] = await Category.findOrCreateCategory(categoryData);
-      categories.push(category);
-    }
-
-    return categories;
-  }
-
-  private static async seedBooks(authors: Author[], categories: Category[]): Promise<Book[]> {
-    const booksData = [
-      {
-        isbnCode: '9780451524935',
-        title: '1984',
-        status: 'finished' as const,
-        notes: 'A powerful dystopian novel about totalitarianism',
-        authorNames: ['George Orwell'],
-        categoryNames: ['Fiction', 'Dystopian Fiction', 'Classic Literature'],
-      },
-      {
-        isbnCode: '9780486284736',
-        title: 'Pride and Prejudice',
-        status: 'reading' as const,
-        notes: 'Classic romance novel with wit and social commentary',
-        authorNames: ['Jane Austen'],
-        categoryNames: ['Fiction', 'Romance', 'Classic Literature'],
-      },
-      {
-        isbnCode: '9780486400778',
-        title: 'The Adventures of Huckleberry Finn',
-        editionNumber: 1,
-        editionDate: new Date('1884-12-10'),
-        authorNames: ['Mark Twain'],
-        categoryNames: ['Fiction', 'Adventure', 'Classic Literature'],
-      },
-      {
-        isbnCode: '9780060883287',
-        title: 'One Hundred Years of Solitude',
-        status: 'paused' as const,
-        notes: 'Magical realism masterpiece',
-        authorNames: ['Gabriel García Márquez'],
-        categoryNames: ['Fiction', 'Magical Realism', 'Classic Literature'],
-      },
-      {
-        isbnCode: '9780156907392',
-        title: 'To the Lighthouse',
-        authorNames: ['Virginia Woolf'],
-        categoryNames: ['Fiction', 'Modernist Literature', 'Classic Literature'],
-      },
-    ];
-
-    const books: Book[] = [];
-    for (const bookData of booksData) {
-      const { authorNames, categoryNames, ...bookAttributes } = bookData;
-
-      // Create book
-      const book = await Book.createBook(bookAttributes);
-
-      // Add authors
-      if (authorNames) {
-        for (const authorName of authorNames) {
-          const [firstName, lastName] = authorName.split(' ');
-          const author = authors.find(a => a.name === firstName && a.surname === lastName);
-          if (author) {
-            await book.addAuthors([author]);
-          }
-        }
-      }
-
-      // Add categories
-      if (categoryNames) {
-        const bookCategories = categories.filter(c => categoryNames.includes(c.name));
-        await book.addCategories(bookCategories);
-      }
-
-      books.push(book);
-    }
-
-    return books;
-  }
-
   static async resetDatabase(): Promise<void> {
     if (!DatabaseUtils.sequelize) {
       throw new Error('Database not initialized. Call initialize() first.');
@@ -204,8 +60,7 @@ export class DatabaseUtils {
       // Drop all tables and recreate
       await DatabaseUtils.syncDatabase({ force: true });
 
-      // Reseed with sample data
-      await DatabaseUtils.seedDatabase();
+      // Note: Run 'npx sequelize-cli db:seed:all' separately to seed data
 
       // TODO: Replace with proper logging
       // console.log('Database reset completed successfully');
