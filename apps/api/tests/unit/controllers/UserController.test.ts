@@ -256,14 +256,14 @@ describe('UserController', () => {
     });
 
     it('should filter books by status', async () => {
-      req.query = { status: 'in progress' };
+      req.query = { status: 'reading' };
       (mockBook.findAndCountAll as jest.Mock).mockResolvedValue({ count: 0, rows: [] });
 
       await UserController.getUserBooks(req as AuthenticatedRequest, res as Response);
 
       expect(mockBook.findAndCountAll).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { userId: 1, status: 'in progress' },
+          where: { userId: 1, status: 'reading' },
         })
       );
     });
@@ -287,7 +287,7 @@ describe('UserController', () => {
 
       mockBook.count
         .mockResolvedValueOnce(10) // totalBooks
-        .mockResolvedValueOnce(3)  // inProgressBooks
+        .mockResolvedValueOnce(3)  // readingBooks
         .mockResolvedValueOnce(2)  // pausedBooks
         .mockResolvedValueOnce(4); // finishedBooks
 
@@ -300,7 +300,7 @@ describe('UserController', () => {
       expect(res.json).toHaveBeenCalledWith({
         totalBooks: 10,
         booksByStatus: {
-          inProgress: 3,
+          reading: 3,
           paused: 2,
           finished: 4,
           unspecified: 1, // 10 - 3 - 2 - 4

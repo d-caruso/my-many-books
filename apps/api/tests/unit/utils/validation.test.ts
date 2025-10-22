@@ -68,7 +68,7 @@ describe('Validation Utils', () => {
       const bookData = {
         isbnCode: '9780415127394',
         title: 'Test Book',
-        status: 'in progress',
+        status: 'reading',
       };
 
       const result = validateBook(bookData);

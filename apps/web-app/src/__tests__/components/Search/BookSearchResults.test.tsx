@@ -94,7 +94,7 @@ const mockBooks: Book[] = [
     title: 'To Kill a Mockingbird',
     authors: [{ id: 2, name: 'Harper', surname: 'Lee' }],
     isbnCode: '9780061120084',
-    status: 'in progress',
+    status: 'reading',
     categories: [
       { id: 1, name: 'Fiction' },
       { id: 3, name: 'Drama' },
@@ -283,7 +283,7 @@ describe('BookSearchResults', () => {
     );
 
     expect(screen.getByText('Finished')).toBeInTheDocument();
-    expect(screen.getByText('In Progress')).toBeInTheDocument();
+    expect(screen.getByText('Reading')).toBeInTheDocument();
     expect(screen.getByText('Paused')).toBeInTheDocument();
   });
 
@@ -404,11 +404,11 @@ describe('BookSearchResults', () => {
 
     const statusChips = screen.getAllByTestId('chip');
     const finishedChip = statusChips.find(chip => chip.textContent === 'Finished');
-    const inProgressChip = statusChips.find(chip => chip.textContent === 'In Progress');
+    const readingChip = statusChips.find(chip => chip.textContent === 'Reading');
     const pausedChip = statusChips.find(chip => chip.textContent === 'Paused');
 
     expect(finishedChip).toHaveAttribute('data-color', 'success');
-    expect(inProgressChip).toHaveAttribute('data-color', 'primary');
+    expect(readingChip).toHaveAttribute('data-color', 'primary');
     expect(pausedChip).toHaveAttribute('data-color', 'warning');
   });
 

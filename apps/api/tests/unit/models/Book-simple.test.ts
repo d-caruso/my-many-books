@@ -35,7 +35,7 @@ describe('Book Model - Simple Coverage', () => {
       mockBook.isbnCode = '9780140449136';
       mockBook.title = 'Test Book';
       mockBook.editionNumber = 2;
-      mockBook.status = BOOK_STATUS.IN_PROGRESS;
+      mockBook.status = BOOK_STATUS.READING;
       mockBook.notes = 'Test notes';
       mockBook.userId = 1;
       Object.defineProperty(mockBook, 'creationDate', { value: new Date(), writable: true });
@@ -51,7 +51,7 @@ describe('Book Model - Simple Coverage', () => {
           isbnCode: '9780140449136',
           title: 'Test Book',
           editionNumber: 2,
-          status: BOOK_STATUS.IN_PROGRESS,
+          status: BOOK_STATUS.READING,
           notes: 'Test notes',
           userId: 1,
           creationDate: mockBook.creationDate,
@@ -124,18 +124,18 @@ describe('Book Model - Simple Coverage', () => {
       });
 
       it('should return false for isCompleted when status is not finished', () => {
-        mockBook.status = BOOK_STATUS.IN_PROGRESS;
+        mockBook.status = BOOK_STATUS.READING;
         expect(mockBook.isCompleted()).toBe(false);
       });
 
-      it('should return true for isInProgress when status is in progress', () => {
-        mockBook.status = BOOK_STATUS.IN_PROGRESS;
-        expect(mockBook.isInProgress()).toBe(true);
+      it('should return true for isReading when status is reading', () => {
+        mockBook.status = BOOK_STATUS.READING;
+        expect(mockBook.isReading()).toBe(true);
       });
 
-      it('should return false for isInProgress when status is not in progress', () => {
+      it('should return false for isReading when status is not reading', () => {
         mockBook.status = BOOK_STATUS.FINISHED;
-        expect(mockBook.isInProgress()).toBe(false);
+        expect(mockBook.isReading()).toBe(false);
       });
 
       it('should return true for isPaused when status is paused', () => {
@@ -144,7 +144,7 @@ describe('Book Model - Simple Coverage', () => {
       });
 
       it('should return false for isPaused when status is not paused', () => {
-        mockBook.status = BOOK_STATUS.IN_PROGRESS;
+        mockBook.status = BOOK_STATUS.READING;
         expect(mockBook.isPaused()).toBe(false);
       });
     });
@@ -262,13 +262,13 @@ describe('Book Model - Simple Coverage', () => {
 
     describe('findByStatus', () => {
       it('should find books by status', async () => {
-        const mockBooks = [{ id: 1, status: BOOK_STATUS.IN_PROGRESS }];
+        const mockBooks = [{ id: 1, status: BOOK_STATUS.READING }];
         (Book.findAll as jest.Mock).mockResolvedValue(mockBooks);
 
-        const result = await Book.findByStatus(BOOK_STATUS.IN_PROGRESS);
+        const result = await Book.findByStatus(BOOK_STATUS.READING);
 
         expect(Book.findAll).toHaveBeenCalledWith({
-          where: { status: BOOK_STATUS.IN_PROGRESS },
+          where: { status: BOOK_STATUS.READING },
           include: [
             { model: Author, as: 'authors' },
             { model: Category, as: 'categories' }

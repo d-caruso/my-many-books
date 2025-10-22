@@ -34,7 +34,7 @@ describe('BookController', () => {
       isbnCode: '9780140449136',
       editionNumber: 1,
       editionDate: '2023-01-01',
-      status: 'in progress',
+      status: 'reading',
       notes: 'Test notes',
       authorIds: [1],
       categoryIds: [1],

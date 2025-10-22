@@ -126,7 +126,7 @@ const mockBooks: Book[] = [
     title: 'Test Book 2',
     authors: [{ id: 2, name: 'Author', surname: 'Two' }],
     isbnCode: '0987654321',
-    status: 'in progress',
+    status: 'reading',
     categories: [],
   },
 ];
