@@ -40,6 +40,10 @@ export class BookApi extends BaseApiClient {
     return this.put<Book>(`/books/${id}`, bookData);
   }
 
+  async patchBook(id: number, bookData: Partial<BookFormData>): Promise<Book> {
+    return this.patch<Book>(`/books/${id}`, bookData);
+  }
+
   async deleteBook(id: number): Promise<void> {
     return this.delete<void>(`/books/${id}`);
   }

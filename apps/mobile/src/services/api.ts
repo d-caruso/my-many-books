@@ -75,6 +75,17 @@ class FetchHttpClient implements HttpClient {
     });
   }
 
+  async patch<T>(url: string, data?: any, config?: any): Promise<T> {
+    return this.fetchWithTimeout<T>(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...config?.headers,
+      },
+      body: JSON.stringify(data),
+    });
+  }
+
   async delete<T>(url: string, config?: any): Promise<T> {
     return this.fetchWithTimeout<T>(url, {
       method: 'DELETE',

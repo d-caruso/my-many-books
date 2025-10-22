@@ -49,13 +49,15 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
       case 'finished':
         return 'Finished';
       default:
-        return 'No Status';
+        return ' ';
     }
   };
 
-  const handleStatusChange = (newStatus: Book['status']) => {
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (onStatusChange) {
-      onStatusChange(book.id, newStatus);
+      const value = e.target.value;
+      const status = value === '' ? null : (value as Book['status']);
+      onStatusChange(book.id, status as any);
     }
   };
 
@@ -211,11 +213,11 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                 <h3 className="text-sm font-medium text-text-secondary mb-2">Update Reading Status</h3>
                 <select
                   value={book.status || ''}
-                  onChange={(e) => handleStatusChange(e.target.value as Book['status'])}
+                  onChange={handleStatusChange}
                   className="px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-background text-text-primary"
                   disabled={loading}
                 >
-                  <option value="">No Status</option>
+                  <option value="">&nbsp;</option>
                   <option value="reading">Reading</option>
                   <option value="paused">Paused</option>
                   <option value="finished">Finished</option>

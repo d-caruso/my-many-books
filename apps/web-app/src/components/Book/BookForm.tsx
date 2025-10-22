@@ -263,7 +263,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   disabled={loading}
                   label="Reading Status"
                 >
-                  <MenuItem value="">No Status</MenuItem>
+                  <MenuItem value="">&nbsp;</MenuItem>
                   <MenuItem value="reading">Reading</MenuItem>
                   <MenuItem value="paused">Paused</MenuItem>
                   <MenuItem value="finished">Finished</MenuItem>

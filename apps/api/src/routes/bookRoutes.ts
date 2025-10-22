@@ -20,6 +20,7 @@ router.get('/', expressRouteWrapper(bookController.getUserBooks.bind(bookControl
 router.get('/:id', expressRouteWrapper(bookController.getBookById.bind(bookController)));
 router.post('/', expressRouteWrapper(bookController.createBookForUser.bind(bookController)));
 router.put('/:id', expressRouteWrapper(bookController.updateBookForUser.bind(bookController)));
+router.patch('/:id', expressRouteWrapper(bookController.patchBookForUser.bind(bookController)));
 router.delete('/:id', expressRouteWrapper(bookController.deleteBookForUser.bind(bookController)));
 
 // Book search operations

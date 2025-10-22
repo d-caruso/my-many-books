@@ -7,6 +7,7 @@ export interface HttpClient {
   get<T>(url: string, config?: RequestConfig): Promise<T>;
   post<T>(url: string, data?: any, config?: RequestConfig): Promise<T>;
   put<T>(url: string, data?: any, config?: RequestConfig): Promise<T>;
+  patch<T>(url: string, data?: any, config?: RequestConfig): Promise<T>;
   delete<T>(url: string, config?: RequestConfig): Promise<T>;
 }
 
@@ -30,7 +31,7 @@ export class BaseApiClient {
   ) {}
 
   protected async request<T>(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     endpoint: string,
     data?: any,
     config?: RequestConfig
@@ -59,6 +60,8 @@ export class BaseApiClient {
           return await this.httpClient.post<T>(url, data, requestConfig);
         case 'PUT':
           return await this.httpClient.put<T>(url, data, requestConfig);
+        case 'PATCH':
+          return await this.httpClient.patch<T>(url, data, requestConfig);
         case 'DELETE':
           return await this.httpClient.delete<T>(url, requestConfig);
         default:
@@ -82,6 +85,10 @@ export class BaseApiClient {
 
   protected put<T>(endpoint: string, data?: any, config?: RequestConfig): Promise<T> {
     return this.request<T>('PUT', endpoint, data, config);
+  }
+
+  protected patch<T>(endpoint: string, data?: any, config?: RequestConfig): Promise<T> {
+    return this.request<T>('PATCH', endpoint, data, config);
   }
 
   protected delete<T>(endpoint: string, config?: RequestConfig): Promise<T> {
