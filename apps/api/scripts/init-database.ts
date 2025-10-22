@@ -18,14 +18,16 @@ async function initializeDatabase(): Promise<void> {
     // Sync database schema
     await DatabaseUtils.syncDatabase({ alter: true });
 
-    // Seed with sample data
-    await DatabaseUtils.seedDatabase();
-
     console.log('Database initialization completed successfully!');
-    
+
     // Show status
     const status = await DatabaseUtils.getStatus();
     console.log('Database Status:', JSON.stringify(status, null, 2));
+
+    console.log('\n========================================');
+    console.log('To seed the database with sample data:');
+    console.log('  npx sequelize-cli db:seed:all');
+    console.log('========================================\n');
 
     process.exit(0);
   } catch (error) {

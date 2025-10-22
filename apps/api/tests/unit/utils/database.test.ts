@@ -5,27 +5,20 @@
 import { DatabaseUtils } from '../../../src/utils/database';
 import DatabaseConnection from '../../../src/config/database';
 import { ModelManager } from '../../../src/models';
-import { Author, Category, Book } from '../../../src/models';
 import { Sequelize } from 'sequelize';
 
 // Mock dependencies
 jest.mock('../../../src/config/database');
 jest.mock('../../../src/models');
-jest.mock('../../../src/models/Author');
-jest.mock('../../../src/models/Category');
-jest.mock('../../../src/models/Book');
 
 describe('DatabaseUtils', () => {
   let mockSequelize: jest.Mocked<Sequelize>;
   let mockDatabaseConnection: jest.Mocked<typeof DatabaseConnection>;
   let mockModelManager: jest.Mocked<typeof ModelManager>;
-  let mockAuthor: jest.Mocked<typeof Author>;
-  let mockCategory: jest.Mocked<typeof Category>;
-  let mockBook: jest.Mocked<typeof Book>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock Sequelize instance
     mockSequelize = {
       sync: jest.fn(),
@@ -44,31 +37,12 @@ describe('DatabaseUtils', () => {
     mockModelManager.isInitialized.mockReturnValue(true);
     mockModelManager.getModels.mockReturnValue({
       User: { count: jest.fn().mockResolvedValue(1) } as any,
-      Author: Author as any,
-      Category: Category as any,
-      Book: Book as any,
+      Author: { count: jest.fn().mockResolvedValue(5) } as any,
+      Category: { count: jest.fn().mockResolvedValue(3) } as any,
+      Book: { count: jest.fn().mockResolvedValue(2) } as any,
       BookAuthor: { count: jest.fn().mockResolvedValue(0) } as any,
       BookCategory: { count: jest.fn().mockResolvedValue(0) } as any,
     });
-
-    // Mock Author model
-    mockAuthor = Author as jest.Mocked<typeof Author>;
-    mockAuthor.findOrCreateAuthor.mockResolvedValue([{ id: 1, name: 'Test', surname: 'Author' } as any, true]);
-    mockAuthor.count.mockResolvedValue(5);
-
-    // Mock Category model
-    mockCategory = Category as jest.Mocked<typeof Category>;
-    mockCategory.findOrCreateCategory.mockResolvedValue([{ id: 1, name: 'Test Category' } as any, true]);
-    mockCategory.count.mockResolvedValue(3);
-
-    // Mock Book model
-    mockBook = Book as jest.Mocked<typeof Book>;
-    mockBook.createBook.mockResolvedValue({
-      id: 1,
-      addAuthors: jest.fn(),
-      addCategories: jest.fn(),
-    } as any);
-    mockBook.count.mockResolvedValue(2);
 
     // Clear any static state
     (DatabaseUtils as any).sequelize = null;
@@ -143,67 +117,6 @@ describe('DatabaseUtils', () => {
     });
   });
 
-  describe('seedDatabase', () => {
-    beforeEach(async () => {
-      await DatabaseUtils.initialize();
-    });
-
-    it('should seed database successfully', async () => {
-      const mockAuthors = [
-        { id: 1, name: 'George', surname: 'Orwell' },
-        { id: 2, name: 'Jane', surname: 'Austen' },
-      ];
-      const mockCategories = [
-        { id: 1, name: 'Fiction' },
-        { id: 2, name: 'Classic Literature' },
-      ];
-
-      mockAuthor.findOrCreateAuthor
-        .mockResolvedValueOnce([mockAuthors[0] as any, true])
-        .mockResolvedValueOnce([mockAuthors[1] as any, true]);
-
-      mockCategory.findOrCreateCategory
-        .mockResolvedValueOnce([mockCategories[0] as any, true])
-        .mockResolvedValueOnce([mockCategories[1] as any, true]);
-
-      await DatabaseUtils.seedDatabase();
-
-      // Verify authors were seeded
-      expect(mockAuthor.findOrCreateAuthor).toHaveBeenCalledTimes(8); // 8 authors in seed data
-
-      // Verify categories were seeded
-      expect(mockCategory.findOrCreateCategory).toHaveBeenCalledTimes(10); // 10 categories in seed data
-
-      // Verify books were seeded
-      expect(mockBook.createBook).toHaveBeenCalledTimes(5); // 5 books in seed data
-    });
-
-    it('should throw error if database not initialized', async () => {
-      (DatabaseUtils as any).sequelize = null;
-
-      await expect(DatabaseUtils.seedDatabase()).rejects.toThrow('Database not initialized. Call initialize() first.');
-    });
-
-    it('should handle book creation with associations', async () => {
-      const mockAuthor = { id: 1, name: 'George', surname: 'Orwell' };
-      const mockCategory = { id: 1, name: 'Fiction' };
-      const mockBookInstance = {
-        id: 1,
-        addAuthors: jest.fn(),
-        addCategories: jest.fn(),
-      };
-
-      (Author.findOrCreateAuthor as jest.Mock).mockResolvedValue([mockAuthor as any, true]);
-      (Category.findOrCreateCategory as jest.Mock).mockResolvedValue([mockCategory as any, true]);
-      (Book.createBook as jest.Mock).mockResolvedValue(mockBookInstance as any);
-
-      await DatabaseUtils.seedDatabase();
-
-      expect(mockBookInstance.addAuthors).toHaveBeenCalled();
-      expect(mockBookInstance.addCategories).toHaveBeenCalled();
-    });
-  });
-
   describe('resetDatabase', () => {
     beforeEach(async () => {
       await DatabaseUtils.initialize();
@@ -211,12 +124,10 @@ describe('DatabaseUtils', () => {
 
     it('should reset database successfully', async () => {
       jest.spyOn(DatabaseUtils, 'syncDatabase').mockResolvedValue(undefined);
-      jest.spyOn(DatabaseUtils, 'seedDatabase').mockResolvedValue(undefined);
 
       await DatabaseUtils.resetDatabase();
 
       expect(DatabaseUtils.syncDatabase).toHaveBeenCalledWith({ force: true });
-      expect(DatabaseUtils.seedDatabase).toHaveBeenCalled();
     });
 
     it('should throw error if database not initialized', async () => {
@@ -228,12 +139,12 @@ describe('DatabaseUtils', () => {
     it('should handle reset errors', async () => {
       const error = new Error('Reset failed');
       jest.spyOn(DatabaseUtils, 'syncDatabase').mockRejectedValue(error);
-      
+
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
       await expect(DatabaseUtils.resetDatabase()).rejects.toThrow('Reset failed');
       expect(consoleSpy).toHaveBeenCalledWith('Database reset failed:', error);
-      
+
       consoleSpy.mockRestore();
     });
   });
