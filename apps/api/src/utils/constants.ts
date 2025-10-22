@@ -26,7 +26,7 @@ export const ERROR_MESSAGES = Object.freeze({
 } as const);
 
 export const BOOK_STATUS = Object.freeze({
-  IN_PROGRESS: 'in progress',
+  READING: 'reading',
   PAUSED: 'paused',
   FINISHED: 'finished',
 } as const);

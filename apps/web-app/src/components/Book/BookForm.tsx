@@ -264,7 +264,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   label="Reading Status"
                 >
                   <MenuItem value="">No Status</MenuItem>
-                  <MenuItem value="in progress">In Progress</MenuItem>
+                  <MenuItem value="reading">Reading</MenuItem>
                   <MenuItem value="paused">Paused</MenuItem>
                   <MenuItem value="finished">Finished</MenuItem>
                 </Select>

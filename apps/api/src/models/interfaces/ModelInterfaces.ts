@@ -82,7 +82,7 @@ export interface BookCategoryCreationAttributes
   extends Omit<BookCategoryAttributes, 'creationDate' | 'updateDate'> {}
 
 // Enums and types
-export type BookStatus = 'in progress' | 'paused' | 'finished';
+export type BookStatus = 'reading' | 'paused' | 'finished';
 
 // Response interfaces with associations
 export interface BookWithAssociations extends BookAttributes {

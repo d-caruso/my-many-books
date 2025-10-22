@@ -134,7 +134,7 @@ class ApiService {
         isbnCode: "9780061120084",
         editionNumber: 1,
         editionDate: "2006-05-23",
-        status: "in progress",
+        status: "reading",
         notes: "Powerful story about justice and morality",
         userId: 1,
         authors: [{ id: 2, name: "Harper", surname: "Lee", nationality: "American", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }],

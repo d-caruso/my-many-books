@@ -29,7 +29,7 @@ export interface Category {
   updateDate?: Date;
 }
 
-export type BookStatus = 'in progress' | 'paused' | 'finished';
+export type BookStatus = 'reading' | 'paused' | 'finished';
 
 // API Response types
 export interface ApiResponse<T = unknown> {
