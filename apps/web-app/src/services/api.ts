@@ -65,6 +65,10 @@ class AxiosHttpClient implements HttpClient {
     return this.axios.put(url, data, config);
   }
 
+  async patch<T>(url: string, data?: any, config?: any): Promise<T> {
+    return this.axios.patch(url, data, config);
+  }
+
   async delete<T>(url: string, config?: any): Promise<T> {
     return this.axios.delete(url, config);
   }
@@ -329,9 +333,12 @@ class ApiService {
     if (bookData.isbnCode) backendData.isbnCode = bookData.isbnCode;
     if (bookData.editionNumber) backendData.editionNumber = bookData.editionNumber;
     if (bookData.editionDate) backendData.editionDate = bookData.editionDate;
-    if (bookData.status !== undefined && bookData.status !== null && bookData.status !== '') {
-      backendData.status = bookData.status;
+
+    // Handle status explicitly - allow empty string to clear status
+    if (bookData.status !== undefined && bookData.status !== null) {
+      backendData.status = bookData.status === '' ? null : bookData.status;
     }
+
     if (bookData.notes !== undefined) backendData.notes = bookData.notes;
 
     // Handle authors
@@ -344,7 +351,17 @@ class ApiService {
       backendData.categoryIds = bookData.selectedCategories;
     }
 
-    return this.apiClient.books.updateBook(id, backendData);
+    // Detect if this is a partial update (e.g., status-only) or full update
+    // If only status is being updated (no title, no authors, no categories), use PATCH
+    const isPartialUpdate = Object.keys(backendData).length === 1 && backendData.status !== undefined;
+
+    if (isPartialUpdate) {
+      // Use PATCH for partial updates (e.g., status-only changes)
+      return this.apiClient.books.patchBook(id, backendData);
+    } else {
+      // Use PUT for full updates from the form
+      return this.apiClient.books.updateBook(id, backendData);
+    }
   }
 
   async deleteBook(id: number): Promise<void> {

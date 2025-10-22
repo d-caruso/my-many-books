@@ -45,6 +45,7 @@ app.get(`${BASE_PATH}/books/search/isbn`, expressAdapter(bookController.searchBo
 app.post(`${BASE_PATH}/books/import/isbn`, expressAdapter(bookController.importBookFromIsbn.bind(bookController)));
 app.get(`${BASE_PATH}/books/:id`, expressAdapter(bookController.getBook.bind(bookController)));
 app.put(`${BASE_PATH}/books/:id`, expressAdapter(bookController.updateBook.bind(bookController)));
+app.patch(`${BASE_PATH}/books/:id`, expressAdapter(bookController.patchBook.bind(bookController)));
 app.delete(`${BASE_PATH}/books/:id`, expressAdapter(bookController.deleteBook.bind(bookController)));
 
 // ===== AUTHOR ROUTES =====

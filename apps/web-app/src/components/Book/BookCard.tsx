@@ -72,9 +72,11 @@ export const BookCard: React.FC<BookCardProps> = ({
     }
   };
 
-  const handleStatusChange = (newStatus: Book['status']) => {
+  const handleStatusChange = (event: any) => {
     if (onStatusChange) {
-      onStatusChange(book.id, newStatus);
+      const value = event.target.value;
+      const status = value === '' ? null : (value as Book['status']);
+      onStatusChange(book.id, status as any);
     }
   };
 
@@ -359,12 +361,11 @@ export const BookCard: React.FC<BookCardProps> = ({
             <FormControl size="small" sx={{ minWidth: 120, flexGrow: 1 }}>
               <Select
                 value={book.status || ''}
-                onChange={(e) => handleStatusChange(e.target.value as Book['status'])}
+                onChange={handleStatusChange}
                 onClick={(e) => e.stopPropagation()}
-                displayEmpty
                 sx={{ fontSize: '0.875rem' }}
               >
-                <MenuItem value="">No Status</MenuItem>
+                <MenuItem value="">&nbsp;</MenuItem>
                 <MenuItem value="reading">Reading</MenuItem>
                 <MenuItem value="paused">Paused</MenuItem>
                 <MenuItem value="finished">Finished</MenuItem>

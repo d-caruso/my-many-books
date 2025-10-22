@@ -3,7 +3,7 @@
 // ================================================================
 
 import Joi from 'joi';
-import { Op, WhereOptions} from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book, Category } from '../models';
 import { ApiResponse } from '../common/ApiResponse';
@@ -66,7 +66,13 @@ export class BookController extends BaseController {
     categoryIds: Joi.array().items(Joi.number().integer().positive()).optional(),
   });
 
-  private readonly updateBookSchema = this.createBookSchema.fork(['isbnCode'], schema =>
+  // PUT schema: Full update requires title (ISBN can't be changed)
+  private readonly putBookSchema = this.createBookSchema.fork(['isbnCode'], schema =>
+    schema.optional()
+  );
+
+  // PATCH schema: Partial update - all fields optional
+  private readonly patchBookSchema = this.createBookSchema.fork(['isbnCode', 'title'], schema =>
     schema.optional()
   );
 
@@ -228,7 +234,7 @@ export class BookController extends BaseController {
       return this.createErrorResponse('Request body is required', 400);
     }
 
-    const validation = this.validateRequest(body, this.updateBookSchema);
+    const validation = this.validateRequest(body, this.putBookSchema);
     if (!validation.isValid) {
       return this.createErrorResponse('Validation failed', 400, validation.errors);
     }
@@ -291,6 +297,85 @@ export class BookController extends BaseController {
       }
 
       // Use setCategories to replace all associations
+      await book.setCategories(categories);
+    }
+
+    const updatedBook = await this.getBookWithAssociations(book.id);
+
+    return this.createSuccessResponse(updatedBook, 'Book updated successfully');
+  }
+
+  /**
+   * Partially updates an existing book (PATCH).
+   * @param request The universal request object.
+   * @returns An ApiResponse object with the updated book or an error.
+   */
+  async patchBook(request: UniversalRequest): Promise<ApiResponse> {
+    const bookId = this.getPathParameter(request, 'id');
+    if (!bookId || isNaN(Number(bookId))) {
+      return this.createErrorResponse('Valid book ID is required', 400);
+    }
+
+    const body = this.parseBody<Partial<CreateBookRequest>>(request);
+    if (!body) {
+      return this.createErrorResponse('Request body is required', 400);
+    }
+
+    const validation = this.validateRequest(body, this.patchBookSchema);
+    if (!validation.isValid) {
+      return this.createErrorResponse('Validation failed', 400, validation.errors);
+    }
+    const bookData = validation.value!;
+
+    const whereClause: WhereOptions<BookAttributes> = {
+      id: Number(bookId),
+    };
+    if (request.user) {
+      Object.assign(whereClause, { userId: request.user.userId });
+    }
+
+    const book = await Book.findOne({ where: whereClause });
+    if (!book) {
+      return this.createErrorResponse('Book not found', 404);
+    }
+
+    // Only update fields that are provided
+    const updateData: Partial<BookAttributes> = {};
+    if (bookData.title !== undefined) updateData.title = bookData.title;
+    if (bookData.editionNumber !== undefined) updateData.editionNumber = bookData.editionNumber;
+    if (bookData.editionDate !== undefined) {
+      updateData.editionDate =
+        bookData.editionDate === null ? undefined : new Date(bookData.editionDate);
+    }
+    if (bookData.status !== undefined) updateData.status = bookData.status;
+    if (bookData.notes !== undefined) updateData.notes = bookData.notes;
+
+    await book.update(updateData);
+
+    // Update associations only if provided
+    if (bookData.authorIds !== undefined) {
+      let authors: Author[] = [];
+      if (bookData.authorIds.length > 0) {
+        authors = await Author.findAll({
+          where: { id: bookData.authorIds },
+        });
+        if (authors.length !== bookData.authorIds.length) {
+          return this.createErrorResponse('One or more author IDs are invalid', 400);
+        }
+      }
+      await book.setAuthors(authors);
+    }
+
+    if (bookData.categoryIds !== undefined) {
+      let categories: Category[] = [];
+      if (bookData.categoryIds.length > 0) {
+        categories = await Category.findAll({
+          where: { id: bookData.categoryIds },
+        });
+        if (categories.length !== bookData.categoryIds.length) {
+          return this.createErrorResponse('One or more category IDs are invalid', 400);
+        }
+      }
       await book.setCategories(categories);
     }
 
@@ -786,6 +871,14 @@ export class BookController extends BaseController {
     }
 
     return this.updateBook(request);
+  }
+
+  async patchBookForUser(request: UniversalRequest): Promise<ApiResponse> {
+    if (!request.user?.userId) {
+      return this.createErrorResponse('User authentication required', 401);
+    }
+
+    return this.patchBook(request);
   }
 
   async deleteBookForUser(request: UniversalRequest): Promise<ApiResponse> {
