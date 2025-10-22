@@ -58,7 +58,9 @@ export class BookController extends BaseController {
       ),
     editionNumber: Joi.number().integer().min(1).optional(),
     editionDate: Joi.date().iso().optional().allow(null),
-    status: Joi.string().valid(...Object.values(BOOK_STATUS)).optional(),
+    status: Joi.string()
+      .valid(...Object.values(BOOK_STATUS))
+      .optional(),
     notes: Joi.string().optional().max(5000).trim(),
     authorIds: Joi.array().items(Joi.number().integer().positive()).optional(),
     categoryIds: Joi.array().items(Joi.number().integer().positive()).optional(),
@@ -77,7 +79,9 @@ export class BookController extends BaseController {
       ),
     editionNumber: Joi.number().integer().min(1).optional(),
     editionDate: Joi.date().iso().optional().allow(null),
-    status: Joi.string().valid(...Object.values(BOOK_STATUS)).optional(),
+    status: Joi.string()
+      .valid(...Object.values(BOOK_STATUS))
+      .optional(),
     notes: Joi.string().optional().max(5000).trim(),
     author: Joi.string().max(200).optional().trim(),
     category: Joi.string().max(100).optional().trim(),

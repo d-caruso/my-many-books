@@ -8,6 +8,7 @@ import {
   validateBook,
   validatePagination,
 } from '@/utils/validation';
+import { BOOK_STATUS } from '@/utils/constants';
 
 describe('Validation Utils', () => {
   describe('validateAuthor', () => {
@@ -68,7 +69,7 @@ describe('Validation Utils', () => {
       const bookData = {
         isbnCode: '9780415127394',
         title: 'Test Book',
-        status: 'reading',
+        status: BOOK_STATUS.READING,
       };
 
       const result = validateBook(bookData);

@@ -5,6 +5,7 @@
 import { BookController } from '../../../src/controllers/BookController';
 import { Book, Author, Category } from '../../../src/models';
 import { isbnService } from '../../../src/services/isbnService';
+import { BOOK_STATUS } from '../../../src/utils/constants';
 
 // Mock dependencies
 jest.mock('../../../src/models');
@@ -34,7 +35,7 @@ describe('BookController', () => {
       isbnCode: '9780140449136',
       editionNumber: 1,
       editionDate: '2023-01-01',
-      status: 'reading',
+      status: BOOK_STATUS.READING,
       notes: 'Test notes',
       authorIds: [1],
       categoryIds: [1],
