@@ -544,9 +544,12 @@ export class BookController extends BaseController {
       distinct: true,
     });
 
+    // Convert Sequelize models to plain objects to ensure associations are serialized
+    const plainBooks = books.map(book => book.get({ plain: true }));
+
     // Return SearchResult format expected by frontend
     const searchResult = {
-      books,
+      books: plainBooks,
       total: count,
       hasMore: pagination.page * pagination.limit < count,
       page: pagination.page,
