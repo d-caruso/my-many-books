@@ -54,7 +54,7 @@ describe('Constants', () => {
 
   describe('BOOK_STATUS', () => {
     it('should have correct book status values', () => {
-      expect(BOOK_STATUS.IN_PROGRESS).toBe('in progress');
+      expect(BOOK_STATUS.READING).toBe('reading');
       expect(BOOK_STATUS.PAUSED).toBe('paused');
       expect(BOOK_STATUS.FINISHED).toBe('finished');
     });
@@ -223,7 +223,7 @@ describe('Constants', () => {
 
     it('should have all book status values', () => {
       const statuses = Object.values(BOOK_STATUS);
-      expect(statuses).toContain('in progress');
+      expect(statuses).toContain('reading');
       expect(statuses).toContain('paused');
       expect(statuses).toContain('finished');
       expect(statuses).toHaveLength(3);

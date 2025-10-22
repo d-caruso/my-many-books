@@ -116,7 +116,7 @@ export class UserController {
       if (
         status &&
         typeof status === 'string' &&
-        ['in progress', 'paused', 'finished'].includes(status)
+        ['reading', 'paused', 'finished'].includes(status)
       ) {
         whereClause.status = status as BookStatus;
       }
@@ -192,9 +192,9 @@ export class UserController {
       const userId = req.user.userId;
 
       // Get book counts by status
-      const [totalBooks, inProgressBooks, pausedBooks, finishedBooks] = await Promise.all([
+      const [totalBooks, readingBooks, pausedBooks, finishedBooks] = await Promise.all([
         Book.count({ where: { userId } }),
-        Book.count({ where: { userId, status: 'in progress' } }),
+        Book.count({ where: { userId, status: 'reading' } }),
         Book.count({ where: { userId, status: 'paused' } }),
         Book.count({ where: { userId, status: 'finished' } }),
       ]);
@@ -210,10 +210,10 @@ export class UserController {
       res.status(200).json({
         totalBooks,
         booksByStatus: {
-          inProgress: inProgressBooks,
+          reading: readingBooks,
           paused: pausedBooks,
           finished: finishedBooks,
-          unspecified: totalBooks - inProgressBooks - pausedBooks - finishedBooks,
+          unspecified: totalBooks - readingBooks - pausedBooks - finishedBooks,
         },
         completionRate: totalBooks > 0 ? Math.round((finishedBooks / totalBooks) * 100) : 0,
         recentBooks: recentBooks.map(book => ({

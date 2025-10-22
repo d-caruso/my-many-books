@@ -133,7 +133,7 @@ export class DatabaseUtils {
       {
         isbnCode: '9780486284736',
         title: 'Pride and Prejudice',
-        status: 'in progress' as const,
+        status: 'reading' as const,
         notes: 'Classic romance novel with wit and social commentary',
         authorNames: ['Jane Austen'],
         categoryNames: ['Fiction', 'Romance', 'Classic Literature'],

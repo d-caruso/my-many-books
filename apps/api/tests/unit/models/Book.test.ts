@@ -51,7 +51,7 @@ describe('Book Model', () => {
       title: 'Test Book',
       editionNumber: 1,
       editionDate: new Date('2023-01-01'),
-      status: 'in progress',
+      status: 'reading',
       notes: 'Test notes',
     } as any;
 
@@ -175,7 +175,7 @@ describe('Book Model', () => {
     });
 
     it('should accept valid status values', async () => {
-      const validStatuses = ['in progress', 'finished', 'paused'];
+      const validStatuses = ['reading', 'finished', 'paused'];
 
       for (const status of validStatuses) {
         const bookData = {
@@ -222,7 +222,7 @@ describe('Book Model', () => {
         {
           isbnCode: '9780140449143',
           title: 'Second Book',
-          status: 'in progress',
+          status: 'reading',
         },
         {
           isbnCode: '9780140449150',
@@ -245,7 +245,7 @@ describe('Book Model', () => {
 
     it('should find books by status pattern', async () => {
       const progressBooks = await Book.findAll({
-        where: { status: 'in progress' },
+        where: { status: 'reading' },
       });
 
       expect(progressBooks).toHaveLength(1);
@@ -283,7 +283,7 @@ describe('Book Model', () => {
 
     it('should count books with conditions', async () => {
       const count = await Book.count({
-        where: { status: 'in progress' },
+        where: { status: 'reading' },
       });
       expect(count).toBe(1);
     });

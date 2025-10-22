@@ -99,7 +99,7 @@ const mockBook: Book = {
   id: 1,
   title: 'Test Book',
   authors: [{ name: 'John', surname: 'Doe' }],
-  status: 'in progress',
+  status: 'reading',
   isbnCode: '978-0123456789',
   editionNumber: 1,
   editionDate: '2023-01-01',
@@ -122,7 +122,7 @@ describe('BookCard', () => {
 
     expect(screen.getByText('Test Book')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('In Progress')).toBeInTheDocument();
+    expect(screen.getByText('Reading')).toBeInTheDocument();
     expect(screen.getByText('ISBN: 978-0123456789')).toBeInTheDocument();
     expect(screen.getByText('Edition 1')).toBeInTheDocument();
     expect(screen.getByText('2023')).toBeInTheDocument();
@@ -207,7 +207,7 @@ describe('BookCard', () => {
     // In compact mode, we should still have the basic information
     expect(screen.getByText('Test Book')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('In Progress')).toBeInTheDocument();
+    expect(screen.getByText('Reading')).toBeInTheDocument();
   });
 
   test('renders without optional fields', () => {
