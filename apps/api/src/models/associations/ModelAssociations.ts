@@ -57,45 +57,45 @@ export class ModelAssociations {
     // Book - Author many-to-many relationship
     Book.belongsToMany(Author, {
       through: BookAuthor,
-      foreignKey: 'book_id',
-      otherKey: 'author_id',
+      foreignKey: 'bookId',
+      otherKey: 'authorId',
       as: 'authors',
     });
 
     Author.belongsToMany(Book, {
       through: BookAuthor,
-      foreignKey: 'author_id',
-      otherKey: 'book_id',
+      foreignKey: 'authorId',
+      otherKey: 'bookId',
       as: 'books',
     });
 
     // Book - Category many-to-many relationship
     Book.belongsToMany(Category, {
       through: BookCategory,
-      foreignKey: 'book_id',
-      otherKey: 'category_id',
+      foreignKey: 'bookId',
+      otherKey: 'categoryId',
       as: 'categories',
     });
 
     Category.belongsToMany(Book, {
       through: BookCategory,
-      foreignKey: 'category_id',
-      otherKey: 'book_id',
+      foreignKey: 'categoryId',
+      otherKey: 'bookId',
       as: 'books',
     });
 
     // Direct associations for junction tables
-    BookAuthor.belongsTo(Book, { foreignKey: 'book_id', as: 'book' });
-    BookAuthor.belongsTo(Author, { foreignKey: 'author_id', as: 'author' });
+    BookAuthor.belongsTo(Book, { foreignKey: 'bookId', as: 'book' });
+    BookAuthor.belongsTo(Author, { foreignKey: 'authorId', as: 'author' });
 
-    BookCategory.belongsTo(Book, { foreignKey: 'book_id', as: 'book' });
-    BookCategory.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
+    BookCategory.belongsTo(Book, { foreignKey: 'bookId', as: 'book' });
+    BookCategory.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
 
-    Book.hasMany(BookAuthor, { foreignKey: 'book_id' });
-    Book.hasMany(BookCategory, { foreignKey: 'book_id' });
+    Book.hasMany(BookAuthor, { foreignKey: 'bookId' });
+    Book.hasMany(BookCategory, { foreignKey: 'bookId' });
 
-    Author.hasMany(BookAuthor, { foreignKey: 'author_id' });
-    Category.hasMany(BookCategory, { foreignKey: 'category_id' });
+    Author.hasMany(BookAuthor, { foreignKey: 'authorId' });
+    Category.hasMany(BookCategory, { foreignKey: 'categoryId' });
 
     console.log('Model associations defined successfully');
   }
