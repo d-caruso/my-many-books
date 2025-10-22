@@ -370,6 +370,7 @@ export class BookController extends BaseController {
     if (searchFilters.author) {
       includeClause.push({
         model: Author,
+        as: 'authors',
         through: { attributes: [] },
         where: {
           [Op.or]: [
@@ -383,6 +384,7 @@ export class BookController extends BaseController {
     if (searchFilters.category) {
       includeClause.push({
         model: Category,
+        as: 'categories',
         through: { attributes: [] },
         where: {
           name: { [Op.iLike]: `%${searchFilters.category}%` },
@@ -392,10 +394,10 @@ export class BookController extends BaseController {
 
     // Include authors and categories if requested
     if (includeAuthors && !searchFilters.author) {
-      includeClause.push({ model: Author, through: { attributes: [] } });
+      includeClause.push({ model: Author, as: 'authors', through: { attributes: [] } });
     }
     if (includeCategories && !searchFilters.category) {
-      includeClause.push({ model: Category, through: { attributes: [] } });
+      includeClause.push({ model: Category, as: 'categories', through: { attributes: [] } });
     }
 
     const whereClause = whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
