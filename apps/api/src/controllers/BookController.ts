@@ -263,17 +263,51 @@ export class BookController extends BaseController {
 
     // Update associations if provided
     if (bookData.authorIds !== undefined) {
-      await this.updateAssociations(book, Author, bookData.authorIds, 'authors', 'setAuthors');
+      // Validate author IDs
+      let authors: Author[] = [];
+      if (bookData.authorIds.length > 0) {
+        authors = await Author.findAll({
+          where: { id: bookData.authorIds },
+        });
+        if (authors.length !== bookData.authorIds.length) {
+          return this.createErrorResponse('One or more author IDs are invalid', 400);
+        }
+      }
+
+      // Remove all existing authors first
+      const existingAuthors = await book.$get('authors');
+      if (existingAuthors && existingAuthors.length > 0) {
+        await book.removeAuthors(existingAuthors);
+      }
+
+      // Add new authors
+      if (authors.length > 0) {
+        await book.addAuthors(authors);
+      }
     }
 
     if (bookData.categoryIds !== undefined) {
-      await this.updateAssociations(
-        book,
-        Category,
-        bookData.categoryIds,
-        'categories',
-        'setCategories'
-      );
+      // Validate category IDs
+      let categories: Category[] = [];
+      if (bookData.categoryIds.length > 0) {
+        categories = await Category.findAll({
+          where: { id: bookData.categoryIds },
+        });
+        if (categories.length !== bookData.categoryIds.length) {
+          return this.createErrorResponse('One or more category IDs are invalid', 400);
+        }
+      }
+
+      // Remove all existing categories first
+      const existingCategories = await book.$get('categories');
+      if (existingCategories && existingCategories.length > 0) {
+        await book.removeCategories(existingCategories);
+      }
+
+      // Add new categories
+      if (categories.length > 0) {
+        await book.addCategories(categories);
+      }
     }
 
     const updatedBook = await this.getBookWithAssociations(book.id);
