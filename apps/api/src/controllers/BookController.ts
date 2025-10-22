@@ -710,12 +710,18 @@ export class BookController extends BaseController {
    * @returns The book model instance or null.
    */
   private async getBookWithAssociations(id: number): Promise<Book | null> {
-    return Book.findByPk(id, {
+    const book = await Book.findByPk(id, {
       include: [
         { model: Author, as: 'authors', through: { attributes: [] } },
         { model: Category, as: 'categories', through: { attributes: [] } },
       ],
     });
+
+    // Ensure the book data includes associations in JSON serialization
+    if (book) {
+      return book.get({ plain: true }) as unknown as Book;
+    }
+    return null;
   }
 
   /**
