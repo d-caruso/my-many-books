@@ -334,9 +334,9 @@ class ApiService {
     if (bookData.editionNumber) backendData.editionNumber = bookData.editionNumber;
     if (bookData.editionDate) backendData.editionDate = bookData.editionDate;
 
-    // Handle status explicitly - allow empty string to clear status
-    if (bookData.status !== undefined && bookData.status !== null) {
-      backendData.status = bookData.status === '' ? null : bookData.status;
+    // Handle status explicitly - allow null to clear status
+    if ('status' in bookData) {
+      backendData.status = (bookData.status === '' || bookData.status === null) ? null : bookData.status;
     }
 
     if (bookData.notes !== undefined) backendData.notes = bookData.notes;
