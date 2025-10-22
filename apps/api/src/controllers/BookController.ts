@@ -3,7 +3,7 @@
 // ================================================================
 
 import Joi from 'joi';
-import { Op, WhereOptions, Model, ModelStatic } from 'sequelize';
+import { Op, WhereOptions} from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book, Category } from '../models';
 import { ApiResponse } from '../common/ApiResponse';
@@ -274,16 +274,8 @@ export class BookController extends BaseController {
         }
       }
 
-      // Remove all existing authors first
-      const existingAuthors = await book.$get('authors');
-      if (existingAuthors && existingAuthors.length > 0) {
-        await book.removeAuthors(existingAuthors);
-      }
-
-      // Add new authors
-      if (authors.length > 0) {
-        await book.addAuthors(authors);
-      }
+      // Use setAuthors to replace all associations
+      await book.setAuthors(authors);
     }
 
     if (bookData.categoryIds !== undefined) {
@@ -298,16 +290,8 @@ export class BookController extends BaseController {
         }
       }
 
-      // Remove all existing categories first
-      const existingCategories = await book.$get('categories');
-      if (existingCategories && existingCategories.length > 0) {
-        await book.removeCategories(existingCategories);
-      }
-
-      // Add new categories
-      if (categories.length > 0) {
-        await book.addCategories(categories);
-      }
+      // Use setCategories to replace all associations
+      await book.setCategories(categories);
     }
 
     const updatedBook = await this.getBookWithAssociations(book.id);
@@ -754,47 +738,6 @@ export class BookController extends BaseController {
       return book.get({ plain: true }) as unknown as Book;
     }
     return null;
-  }
-
-  /**
-   * Updates associations for a given book.
-   * @param book The book instance to update.
-   * @param model The target model for the association (e.g., Author, Category).
-   * @param ids An array of IDs to set.
-   * @param associationName The name of the association in the Book model (e.g., 'authors').
-   * @param setMethod The name of the Sequelize set method (e.g., 'setAuthors').
-   */
-  private async updateAssociations(
-    book: Book,
-    model: ModelStatic<Model>,
-    ids: number[],
-    associationName: string,
-    setMethod: string
-  ): Promise<void> {
-    if (ids.length > 0) {
-      const associatedModels = await model.findAll({
-        where: { id: ids },
-        attributes: ['id'],
-      });
-
-      if (associatedModels.length !== ids.length) {
-        throw new Error(`One or more ${associationName} IDs are invalid`);
-      }
-
-      // Call the method with proper context binding
-      const bookWithMethods = book as Book & Record<string, unknown>;
-      const method = bookWithMethods[setMethod];
-      if (typeof method === 'function') {
-        await (method as (models: Model[]) => Promise<void>).call(book, associatedModels);
-      }
-    } else {
-      // Call the method with proper context binding to clear associations
-      const bookWithMethods = book as Book & Record<string, unknown>;
-      const method = bookWithMethods[setMethod];
-      if (typeof method === 'function') {
-        await (method as (models: Model[]) => Promise<void>).call(book, []); // Clear all associations
-      }
-    }
   }
 
   // User-specific methods for route compatibility
