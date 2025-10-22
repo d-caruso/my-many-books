@@ -480,22 +480,8 @@ export class BookController extends BaseController {
         where: { id: Number(authorId) },
         required: true, // INNER JOIN to filter by author
       });
-    } else if (query) {
-      // If searching by text but not filtering by specific author, search in author names
-      includeClause.push({
-        model: Author,
-        as: 'authors',
-        through: { attributes: [] },
-        where: {
-          [Op.or]: [
-            { name: { [Op.like]: `%${query}%` } },
-            { surname: { [Op.like]: `%${query}%` } },
-          ],
-        },
-        required: false, // LEFT JOIN so we also get books without matching authors
-      });
     } else {
-      // No author filter, just include all authors
+      // Always include all authors for each book
       includeClause.push({
         model: Author,
         as: 'authors',
@@ -513,7 +499,7 @@ export class BookController extends BaseController {
         required: true, // INNER JOIN to filter by category
       });
     } else {
-      // No category filter, just include all categories
+      // Always include all categories for each book
       includeClause.push({
         model: Category,
         as: 'categories',
