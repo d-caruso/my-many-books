@@ -20,7 +20,7 @@ export interface Book {
   updateDate: string;
 }
 
-export type BookStatus = 'in progress' | 'paused' | 'finished';
+export type BookStatus = 'reading' | 'paused' | 'finished';
 
 export interface BookFormData {
   title: string;

@@ -224,7 +224,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                     label="Reading Status"
                   >
                     <MenuItem value="">Any Status</MenuItem>
-                    <MenuItem value="in progress">In Progress</MenuItem>
+                    <MenuItem value="reading">Reading</MenuItem>
                     <MenuItem value="paused">Paused</MenuItem>
                     <MenuItem value="finished">Finished</MenuItem>
                   </Select>

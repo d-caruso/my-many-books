@@ -50,7 +50,7 @@ export const BookCard: React.FC<BookCardProps> = ({
     switch (status) {
       case 'finished':
         return 'success';
-      case 'in progress':
+      case 'reading':
         return 'primary';
       case 'paused':
         return 'warning';
@@ -61,8 +61,8 @@ export const BookCard: React.FC<BookCardProps> = ({
 
   const formatStatus = (status: string) => {
     switch (status) {
-      case 'in progress':
-        return 'In Progress';
+      case 'reading':
+        return 'Reading';
       case 'paused':
         return 'Paused';
       case 'finished':
@@ -365,7 +365,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                 sx={{ fontSize: '0.875rem' }}
               >
                 <MenuItem value="">No Status</MenuItem>
-                <MenuItem value="in progress">In Progress</MenuItem>
+                <MenuItem value="reading">Reading</MenuItem>
                 <MenuItem value="paused">Paused</MenuItem>
                 <MenuItem value="finished">Finished</MenuItem>
               </Select>

@@ -142,7 +142,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
     switch (status) {
       case 'finished':
         return 'success';
-      case 'in progress':
+      case 'reading':
         return 'primary';
       case 'paused':
         return 'warning';
@@ -153,8 +153,8 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
 
   const formatStatus = (status: string) => {
     switch (status) {
-      case 'in progress':
-        return 'In Progress';
+      case 'reading':
+        return 'Reading';
       case 'paused':
         return 'Paused';
       case 'finished':

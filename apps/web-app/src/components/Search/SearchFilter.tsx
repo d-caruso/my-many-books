@@ -110,11 +110,11 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
             <label className="block text-sm font-medium mb-2">Status</label>
             <select
               data-testid="status-filter"
-              onChange={(e) => handleFilterChange({ ...filters, status: e.target.value === 'all' ? undefined : e.target.value as 'in progress' | 'paused' | 'finished' })}
+              onChange={(e) => handleFilterChange({ ...filters, status: e.target.value === 'all' ? undefined : e.target.value as 'reading' | 'paused' | 'finished' })}
               className="w-full px-3 py-2 border rounded"
             >
               <option value="all">All Books</option>
-              <option value="in progress">In Progress</option>
+              <option value="reading">Reading</option>
               <option value="paused">Paused</option>
               <option value="finished">Finished</option>
             </select>

@@ -186,8 +186,8 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
     return this.status === BOOK_STATUS.FINISHED;
   }
 
-  public isInProgress(): boolean {
-    return this.status === BOOK_STATUS.IN_PROGRESS;
+  public isReading(): boolean {
+    return this.status === BOOK_STATUS.READING;
   }
 
   public isPaused(): boolean {
