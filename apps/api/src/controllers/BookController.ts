@@ -203,7 +203,8 @@ export class BookController extends BaseController {
       return this.createErrorResponse('Book not found', 404);
     }
 
-    return this.createSuccessResponse(book);
+    // Convert Sequelize model to plain object to ensure associations are serialized
+    return this.createSuccessResponse(book.get({ plain: true }));
   }
 
   /**
@@ -411,9 +412,12 @@ export class BookController extends BaseController {
       distinct: true, // Required for correct counting with includes
     });
 
+    // Convert Sequelize models to plain objects to ensure associations are serialized
+    const plainBooks = books.map(book => book.get({ plain: true }));
+
     const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
 
-    return this.createSuccessResponse(books, undefined, meta);
+    return this.createSuccessResponse(plainBooks, undefined, meta);
   }
 
   /**
