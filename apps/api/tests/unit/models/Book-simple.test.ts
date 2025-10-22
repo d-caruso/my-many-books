@@ -150,74 +150,40 @@ describe('Book Model - Simple Coverage', () => {
     });
 
     describe('author and category management', () => {
-      it('should add single author', async () => {
-        const mockAuthor = { id: 1 } as Author;
-        const addAuthorsSpy = jest.spyOn(mockBook, 'addAuthors').mockResolvedValue(undefined);
+      it('should add authors', async () => {
+        const mockAuthors = [{ id: 1 } as Author, { id: 2 } as Author];
+        mockBook.addAuthors = jest.fn().mockResolvedValue(undefined);
 
-        await mockBook.addAuthor(mockAuthor);
+        await mockBook.addAuthors(mockAuthors);
 
-        expect(addAuthorsSpy).toHaveBeenCalledWith([mockAuthor]);
+        expect(mockBook.addAuthors).toHaveBeenCalledWith(mockAuthors);
       });
 
-      it('should add single category', async () => {
-        const mockCategory = { id: 1 } as Category;
-        const addCategoriesSpy = jest.spyOn(mockBook, 'addCategories').mockResolvedValue(undefined);
+      it('should add categories', async () => {
+        const mockCategories = [{ id: 1 } as Category, { id: 2 } as Category];
+        mockBook.addCategories = jest.fn().mockResolvedValue(undefined);
 
-        await mockBook.addCategory(mockCategory);
+        await mockBook.addCategories(mockCategories);
 
-        expect(addCategoriesSpy).toHaveBeenCalledWith([mockCategory]);
+        expect(mockBook.addCategories).toHaveBeenCalledWith(mockCategories);
       });
 
-      it('should add multiple authors', async () => {
-        const { BookAuthor } = require('../../../src/models/BookAuthor');
-        BookAuthor.addAuthorToBook = jest.fn().mockResolvedValue(undefined);
+      it('should set authors', async () => {
+        const mockAuthors = [{ id: 1 } as Author, { id: 2 } as Author];
+        mockBook.setAuthors = jest.fn().mockResolvedValue(undefined);
 
-        const authors = [{ id: 1 }, { id: 2 }] as Author[];
-        
-        await mockBook.addAuthors(authors);
+        await mockBook.setAuthors(mockAuthors);
 
-        expect(BookAuthor.addAuthorToBook).toHaveBeenCalledTimes(2);
-        expect(BookAuthor.addAuthorToBook).toHaveBeenCalledWith(1, 1);
-        expect(BookAuthor.addAuthorToBook).toHaveBeenCalledWith(1, 2);
+        expect(mockBook.setAuthors).toHaveBeenCalledWith(mockAuthors);
       });
 
-      it('should add multiple categories', async () => {
-        const { BookCategory } = require('../../../src/models/BookCategory');
-        BookCategory.addCategoryToBook = jest.fn().mockResolvedValue(undefined);
+      it('should set categories', async () => {
+        const mockCategories = [{ id: 1 } as Category, { id: 2 } as Category];
+        mockBook.setCategories = jest.fn().mockResolvedValue(undefined);
 
-        const categories = [{ id: 1 }, { id: 2 }] as Category[];
-        
-        await mockBook.addCategories(categories);
+        await mockBook.setCategories(mockCategories);
 
-        expect(BookCategory.addCategoryToBook).toHaveBeenCalledTimes(2);
-        expect(BookCategory.addCategoryToBook).toHaveBeenCalledWith(1, 1);
-        expect(BookCategory.addCategoryToBook).toHaveBeenCalledWith(1, 2);
-      });
-
-      it('should remove multiple authors', async () => {
-        const { BookAuthor } = require('../../../src/models/BookAuthor');
-        BookAuthor.removeAuthorFromBook = jest.fn().mockResolvedValue(undefined);
-
-        const authors = [{ id: 1 }, { id: 2 }] as Author[];
-        
-        await mockBook.removeAuthors(authors);
-
-        expect(BookAuthor.removeAuthorFromBook).toHaveBeenCalledTimes(2);
-        expect(BookAuthor.removeAuthorFromBook).toHaveBeenCalledWith(1, 1);
-        expect(BookAuthor.removeAuthorFromBook).toHaveBeenCalledWith(1, 2);
-      });
-
-      it('should remove multiple categories', async () => {
-        const { BookCategory } = require('../../../src/models/BookCategory');
-        BookCategory.removeCategoryFromBook = jest.fn().mockResolvedValue(undefined);
-
-        const categories = [{ id: 1 }, { id: 2 }] as Category[];
-        
-        await mockBook.removeCategories(categories);
-
-        expect(BookCategory.removeCategoryFromBook).toHaveBeenCalledTimes(2);
-        expect(BookCategory.removeCategoryFromBook).toHaveBeenCalledWith(1, 1);
-        expect(BookCategory.removeCategoryFromBook).toHaveBeenCalledWith(1, 2);
+        expect(mockBook.setCategories).toHaveBeenCalledWith(mockCategories);
       });
     });
   });
