@@ -226,7 +226,7 @@ export const BookForm: React.FC<BookFormProps> = ({
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="subtitle2" color="text.secondary">
-                  Authors
+                  Author
                 </Typography>
                 <Button
                   size="small"
@@ -249,9 +249,6 @@ export const BookForm: React.FC<BookFormProps> = ({
             {/* Status */}
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, height: '28px' }}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Reading Status
-                </Typography>
               </Box>
               <FormControl fullWidth>
                 <InputLabel id="status-label">Reading Status</InputLabel>
@@ -260,8 +257,6 @@ export const BookForm: React.FC<BookFormProps> = ({
                   id="status"
                   value={formData.status || ''}
                   onChange={(e) => handleInputChange('status', e.target.value === '' ? undefined : e.target.value as Book['status'])}
-                  disabled={loading}
-                  label="Reading Status"
                 >
                   <MenuItem value="">&nbsp;</MenuItem>
                   <MenuItem value="reading">Reading</MenuItem>

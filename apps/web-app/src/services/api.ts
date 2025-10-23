@@ -336,7 +336,7 @@ class ApiService {
 
     // Handle status explicitly - allow null to clear status
     if ('status' in bookData) {
-      backendData.status = (bookData.status === '' || bookData.status === null) ? null : bookData.status;
+      backendData.status = (bookData.status === '' || bookData.status === null || bookData.status === undefined) ? null : bookData.status;
     }
 
     if (bookData.notes !== undefined) backendData.notes = bookData.notes;
