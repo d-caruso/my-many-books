@@ -60,7 +60,8 @@ export class BookController extends BaseController {
     editionDate: Joi.date().iso().optional().allow(null),
     status: Joi.string()
       .valid(...Object.values(BOOK_STATUS))
-      .optional().allow(null),
+      .optional()
+      .allow(null),
     notes: Joi.string().optional().max(5000).trim(),
     authorIds: Joi.array().items(Joi.number().integer().positive()).optional(),
     categoryIds: Joi.array().items(Joi.number().integer().positive()).optional(),
@@ -72,8 +73,9 @@ export class BookController extends BaseController {
   );
 
   // PATCH schema: Partial update - all fields optional
-  private readonly patchBookSchema = this.createBookSchema
-    .fork(['isbnCode', 'title'], schema => schema.optional());
+  private readonly patchBookSchema = this.createBookSchema.fork(['isbnCode', 'title'], schema =>
+    schema.optional()
+  );
 
   private readonly searchFiltersSchema = Joi.object<BookSearchFilters>({
     title: Joi.string().required().max(200).trim(),
