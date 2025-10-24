@@ -138,30 +138,30 @@ describe('ModelAssociations', () => {
       // Verify Book - Author many-to-many relationships
       expect(mockBook.belongsToMany).toHaveBeenCalledWith(mockAuthor, {
         through: mockBookAuthor,
-        foreignKey: 'book_id',
-        otherKey: 'author_id',
+        foreignKey: 'bookId',
+        otherKey: 'authorId',
         as: 'authors',
       });
 
       expect(mockAuthor.belongsToMany).toHaveBeenCalledWith(mockBook, {
         through: mockBookAuthor,
-        foreignKey: 'author_id',
-        otherKey: 'book_id',
+        foreignKey: 'authorId',
+        otherKey: 'bookId',
         as: 'books',
       });
 
       // Verify Book - Category many-to-many relationships
       expect(mockBook.belongsToMany).toHaveBeenCalledWith(mockCategory, {
         through: mockBookCategory,
-        foreignKey: 'book_id',
-        otherKey: 'category_id',
+        foreignKey: 'bookId',
+        otherKey: 'categoryId',
         as: 'categories',
       });
 
       expect(mockCategory.belongsToMany).toHaveBeenCalledWith(mockBook, {
         through: mockBookCategory,
-        foreignKey: 'category_id',
-        otherKey: 'book_id',
+        foreignKey: 'categoryId',
+        otherKey: 'bookId',
         as: 'books',
       });
 
@@ -173,29 +173,29 @@ describe('ModelAssociations', () => {
 
       // Verify BookAuthor associations
       expect(mockBookAuthor.belongsTo).toHaveBeenCalledWith(mockBook, { 
-        foreignKey: 'book_id', 
+        foreignKey: 'bookId', 
         as: 'book' 
       });
       expect(mockBookAuthor.belongsTo).toHaveBeenCalledWith(mockAuthor, { 
-        foreignKey: 'author_id', 
+        foreignKey: 'authorId', 
         as: 'author' 
       });
 
       // Verify BookCategory associations
       expect(mockBookCategory.belongsTo).toHaveBeenCalledWith(mockBook, { 
-        foreignKey: 'book_id', 
+        foreignKey: 'bookId', 
         as: 'book' 
       });
       expect(mockBookCategory.belongsTo).toHaveBeenCalledWith(mockCategory, { 
-        foreignKey: 'category_id', 
-        as: 'category' 
+        foreignKey: 'categoryId', 
+        as: 'category'
       });
 
       // Verify reverse hasMany associations
-      expect(mockBook.hasMany).toHaveBeenCalledWith(mockBookAuthor, { foreignKey: 'book_id' });
-      expect(mockBook.hasMany).toHaveBeenCalledWith(mockBookCategory, { foreignKey: 'book_id' });
-      expect(mockAuthor.hasMany).toHaveBeenCalledWith(mockBookAuthor, { foreignKey: 'author_id' });
-      expect(mockCategory.hasMany).toHaveBeenCalledWith(mockBookCategory, { foreignKey: 'category_id' });
+      expect(mockBook.hasMany).toHaveBeenCalledWith(mockBookAuthor, { foreignKey: 'bookId' });
+      expect(mockBook.hasMany).toHaveBeenCalledWith(mockBookCategory, { foreignKey: 'bookId' });
+      expect(mockAuthor.hasMany).toHaveBeenCalledWith(mockBookAuthor, { foreignKey: 'authorId' });
+      expect(mockCategory.hasMany).toHaveBeenCalledWith(mockBookCategory, { foreignKey: 'categoryId' });
     });
 
     it('should throw error when models are missing', () => {
