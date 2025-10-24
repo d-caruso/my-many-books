@@ -31,6 +31,11 @@ jest.mock('../../../src/controllers/BookController', () => ({
       success: true,
       data: { id: parseInt(req.pathParameters?.id || '1'), title: 'Updated Book' }
     })),
+    patchBookForUser: jest.fn(async (req) => ({
+      statusCode: 200,
+      success: true,
+      data: { id: parseInt(req.pathParameters?.id || '1'), title: 'Patched Book' }
+    })),
     deleteBookForUser: jest.fn(async (_req) => ({
       statusCode: 204,
       success: true
