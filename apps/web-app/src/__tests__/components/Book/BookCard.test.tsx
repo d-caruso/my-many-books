@@ -274,7 +274,7 @@ describe('BookCard', () => {
     render(<BookCard book={mockBook} onStatusChange={handleStatusChange} />);
 
     fireEvent.change(screen.getByTestId('select'), { target: { value: '' } });
-    expect(handleStatusChange).toHaveBeenCalledWith(mockBook.id, '');
+    expect(handleStatusChange).toHaveBeenCalledWith(mockBook.id, null);
   });
 
   test('does not render status change select when onStatusChange is not provided', () => {
