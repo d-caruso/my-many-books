@@ -24,7 +24,6 @@ module.exports = {
     '^react-native-paper$': '<rootDir>/__mocks__/react-native-paper.js',
     '^react-native-safe-area-context$': '<rootDir>/__mocks__/react-native-safe-area-context.js',
     '^expo-camera$': '<rootDir>/__mocks__/expo-camera.js',
-    '^expo-barcode-scanner$': '<rootDir>/__mocks__/expo-barcode-scanner.js',
     '^@expo/vector-icons$': '<rootDir>/__mocks__/@expo/vector-icons.js',
     '^expo-router$': '<rootDir>/__mocks__/expo-router.js',
     // Remove testing library mocks - use real library with proper setup

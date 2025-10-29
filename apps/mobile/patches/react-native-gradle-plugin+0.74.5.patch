@@ -1,0 +1,21 @@
+diff --git a/node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts b/node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts
+index 1234567..abcdefg 100644
+--- a/node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts
++++ b/node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts
+@@ -7,7 +7,6 @@
+
+ import org.gradle.api.internal.classpath.ModuleRegistry
+ import org.gradle.configurationcache.extensions.capitalized
+-import org.gradle.configurationcache.extensions.serviceOf
+ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+ plugins {
+@@ -51,7 +50,7 @@ class ReactNativeGradlePlugin : Plugin<Project> {
+   override fun apply(project: Project) {
+     with(project) {
+       val extension = extensions.create("react", ReactExtension::class.java, this)
+-      val moduleRegistry = serviceOf<ModuleRegistry>()
++      val moduleRegistry = project.gradle.sharedServices.registrations.getByName("moduleRegistry").service.get() as ModuleRegistry
+       val buildService =
+           gradle.sharedServices.registerIfAbsent(
+               ReactNativeCodegenBuildService.NAME, ReactNativeCodegenBuildService::class.java) {

@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { Camera } from 'expo-camera';
-import { BarCodeScanner } from 'expo-barcode-scanner';
 
 interface BarcodeScannerState {
   hasPermission: boolean | null;

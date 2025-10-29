@@ -209,28 +209,25 @@ declare module 'expo-camera' {
     granted: boolean;
   }
 
-  export class Camera {
-    static requestCameraPermissionsAsync(): Promise<CameraPermissionResponse>;
-    static getCameraPermissionsAsync(): Promise<CameraPermissionResponse>;
-  }
-}
-
-// Expo Barcode Scanner module
-declare module 'expo-barcode-scanner' {
-  export interface BarCodeEvent {
+  export interface BarcodeScanningResult {
     type: string;
     data: string;
   }
 
-  export interface BarCodeScannerProps {
-    onBarCodeScanned?: (data: BarCodeEvent) => void;
+  export interface CameraViewProps {
+    onBarcodeScanned?: (result: BarcodeScanningResult) => void;
+    barcodeScannerSettings?: {
+      barcodeTypes?: string[];
+    };
     style?: any;
   }
 
-  export class BarCodeScanner extends React.Component<BarCodeScannerProps> {
-    static requestPermissionsAsync(): Promise<CameraPermissionResponse>;
-    static getPermissionsAsync(): Promise<CameraPermissionResponse>;
+  export class Camera {
+    static requestCameraPermissionsAsync(): Promise<CameraPermissionResponse>;
+    static getCameraPermissionsAsync(): Promise<CameraPermissionResponse>;
   }
+
+  export const CameraView: React.ComponentType<CameraViewProps>;
 }
 
 // React Native module declaration
