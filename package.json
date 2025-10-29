@@ -63,6 +63,7 @@
     "includedScripts": []
   },
   "dependencies": {
-    "serverless-http": "^4.0.0"
+    "serverless-http": "^4.0.0",
+    "whatwg-fetch": "^3.6.20"
   }
 }
