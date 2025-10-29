@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, Dialog, Portal } from 'react-native-paper';
-import { BarCodeScanner } from 'expo-barcode-scanner';
+import { CameraView, BarcodeScanningResult } from 'expo-camera';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -52,7 +52,7 @@ export default function ScannerScreen() {
     }
   };
 
-  const handleBarCodeScan = ({ data }: { data: string }) => {
+  const handleBarCodeScan = ({ data }: BarcodeScanningResult) => {
     handleBarCodeScanned(data);
   };
 
@@ -117,11 +117,14 @@ export default function ScannerScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <BarCodeScanner
-        onBarCodeScanned={scanned ? undefined : handleBarCodeScan}
+      <CameraView
+        onBarcodeScanned={scanned ? undefined : handleBarCodeScan}
+        barcodeScannerSettings={{
+          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'],
+        }}
         style={styles.scanner}
       />
-      
+
       <View style={styles.overlay}>
         <View style={styles.scanArea} />
         <Text variant="titleMedium" style={styles.instructionText}>

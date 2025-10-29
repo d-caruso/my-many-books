@@ -199,18 +199,11 @@ jest.mock('react-native-paper', () => {
 // Mock Expo modules
 jest.mock('expo-camera', () => ({
   Camera: {
-    requestCameraPermissionsAsync: jest.fn(() => 
+    requestCameraPermissionsAsync: jest.fn(() =>
       Promise.resolve({ status: 'granted' })
     ),
   },
-}));
-
-jest.mock('expo-barcode-scanner', () => ({
-  BarCodeScanner: {
-    requestPermissionsAsync: jest.fn(() => 
-      Promise.resolve({ status: 'granted' })
-    ),
-  },
+  CameraView: jest.fn(({ children }) => children),
 }));
 
 jest.mock('@expo/vector-icons', () => ({
