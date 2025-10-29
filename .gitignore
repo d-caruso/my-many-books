@@ -55,3 +55,7 @@ dist/
 # Logs
 logs
 *.log
+
+# docs
+apps/mobile/MOBILE_APP_GUIDE.md
+i18n-implementation-guide.MD
