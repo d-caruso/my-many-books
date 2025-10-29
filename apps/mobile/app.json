@@ -2,6 +2,7 @@
   "expo": {
     "name": "My Many Books",
     "slug": "my-many-books-mobile",
+    "owner": "the.dokk",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -17,7 +18,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mycompany.mymanybooks",
-      "buildNumber": "1.0.0"
+      "buildNumber": "1.0.0",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -29,7 +33,9 @@
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -43,17 +49,20 @@
         {
           "cameraPermission": "Allow My Many Books to access your camera to scan book barcodes."
         }
-      ],
-      [
-        "expo-barcode-scanner",
-        {
-          "cameraPermission": "Allow My Many Books to access your camera to scan book barcodes."
-        }
       ]
     ],
     "scheme": "my-many-books",
     "experiments": {
       "typedRoutes": true
+    },
+    "newArchEnabled": false,
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ef793752-4f39-4851-8a15-46ff4501fbfa"
+      }
     }
   }
 }
