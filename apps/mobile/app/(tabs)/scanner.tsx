@@ -145,7 +145,7 @@ export default function ScannerScreen() {
       )}
 
       <Portal>
-        <Dialog visible={showBookDialog} onDismiss={() => setShowBookDialog(false)} accessibilityRole="alertdialog" accessibilityLabel="Book Found Dialog">
+        <Dialog visible={showBookDialog} onDismiss={() => setShowBookDialog(false)} accessibilityRole="alertdialog" accessibilityLabel="Book Found Dialog" accessibilityViewIsModal={true}>
           <Dialog.Title accessibilityRole="header">Book Found!</Dialog.Title>
           <Dialog.Content>
             {foundBook && (
