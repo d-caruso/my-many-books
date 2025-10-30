@@ -34,7 +34,12 @@ export class CategoryController extends BaseController {
 
     const validation = this.validateRequest(body, this.createCategorySchema);
     if (!validation.isValid) {
-      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+      return this.createErrorResponseI18n(
+        'errors:validation_failed',
+        400,
+        undefined,
+        validation.errors
+      );
     }
 
     const categoryData = validation.value!;
@@ -42,7 +47,10 @@ export class CategoryController extends BaseController {
     // Check for duplicate category name
     const existingCategory = await Category.findByName(categoryData.name);
     if (existingCategory) {
-      return this.createErrorResponseI18n('errors:resource_exists', 409, { resource: 'Category', field: 'name' });
+      return this.createErrorResponseI18n('errors:resource_exists', 409, {
+        resource: 'Category',
+        field: 'name',
+      });
     }
 
     try {
@@ -55,7 +63,12 @@ export class CategoryController extends BaseController {
       return this.createSuccessResponse(category, 'Category created successfully', undefined, 201);
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n('errors:create_failed', 500, { resource: 'category' }, errorMessage);
+      return this.createErrorResponseI18n(
+        'errors:create_failed',
+        500,
+        { resource: 'category' },
+        errorMessage
+      );
     }
   }
 
@@ -63,7 +76,9 @@ export class CategoryController extends BaseController {
     await this.initializeI18n(request);
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId) {
-      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, {
+        resource: 'category',
+      });
     }
 
     const id = parseInt(categoryId, 10);
@@ -89,7 +104,12 @@ export class CategoryController extends BaseController {
       return this.createSuccessResponse(category, 'Category retrieved successfully');
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n('errors:internal_server_error', 500, undefined, errorMessage);
+      return this.createErrorResponseI18n(
+        'errors:internal_server_error',
+        500,
+        undefined,
+        errorMessage
+      );
     }
   }
 
@@ -97,7 +117,9 @@ export class CategoryController extends BaseController {
     await this.initializeI18n(request);
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId) {
-      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, {
+        resource: 'category',
+      });
     }
 
     const id = parseInt(categoryId, 10);
@@ -112,7 +134,12 @@ export class CategoryController extends BaseController {
 
     const validation = this.validateRequest(body, this.updateCategorySchema);
     if (!validation.isValid) {
-      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+      return this.createErrorResponseI18n(
+        'errors:validation_failed',
+        400,
+        undefined,
+        validation.errors
+      );
     }
 
     const categoryData = validation.value!;
@@ -128,7 +155,10 @@ export class CategoryController extends BaseController {
       if (categoryData.name && categoryData.name !== category.name) {
         const existingCategory = await Category.findByName(categoryData.name);
         if (existingCategory) {
-          return this.createErrorResponseI18n('errors:resource_exists', 409, { resource: 'Category', field: 'name' });
+          return this.createErrorResponseI18n('errors:resource_exists', 409, {
+            resource: 'Category',
+            field: 'name',
+          });
         }
       }
 
@@ -140,7 +170,12 @@ export class CategoryController extends BaseController {
       return this.createSuccessResponse(category, 'Category updated successfully');
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n('errors:update_failed', 500, { resource: 'category' }, errorMessage);
+      return this.createErrorResponseI18n(
+        'errors:update_failed',
+        500,
+        { resource: 'category' },
+        errorMessage
+      );
     }
   }
 
@@ -148,7 +183,9 @@ export class CategoryController extends BaseController {
     await this.initializeI18n(request);
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId) {
-      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, {
+        resource: 'category',
+      });
     }
 
     const id = parseInt(categoryId, 10);
@@ -195,7 +232,12 @@ export class CategoryController extends BaseController {
       return this.createSuccessResponse(null, 'Category deleted successfully', undefined, 204);
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n('errors:delete_failed', 500, { resource: 'category' }, errorMessage);
+      return this.createErrorResponseI18n(
+        'errors:delete_failed',
+        500,
+        { resource: 'category' },
+        errorMessage
+      );
     }
   }
 
@@ -242,7 +284,12 @@ export class CategoryController extends BaseController {
       });
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n('errors:internal_server_error', 500, undefined, errorMessage);
+      return this.createErrorResponseI18n(
+        'errors:internal_server_error',
+        500,
+        undefined,
+        errorMessage
+      );
     }
   }
 
@@ -250,7 +297,9 @@ export class CategoryController extends BaseController {
     await this.initializeI18n(request);
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId) {
-      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, {
+        resource: 'category',
+      });
     }
 
     const id = parseInt(categoryId, 10);
@@ -307,7 +356,12 @@ export class CategoryController extends BaseController {
       );
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n('errors:internal_server_error', 500, undefined, errorMessage);
+      return this.createErrorResponseI18n(
+        'errors:internal_server_error',
+        500,
+        undefined,
+        errorMessage
+      );
     }
   }
 }

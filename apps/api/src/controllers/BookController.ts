@@ -116,7 +116,12 @@ export class BookController extends BaseController {
 
     const validation = this.validateRequest(body, this.createBookSchema);
     if (!validation.isValid) {
-      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+      return this.createErrorResponseI18n(
+        'errors:validation_failed',
+        400,
+        undefined,
+        validation.errors
+      );
     }
 
     const bookData = validation.value!;
@@ -240,7 +245,12 @@ export class BookController extends BaseController {
 
     const validation = this.validateRequest(body, this.putBookSchema);
     if (!validation.isValid) {
-      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+      return this.createErrorResponseI18n(
+        'errors:validation_failed',
+        400,
+        undefined,
+        validation.errors
+      );
     }
     const bookData = validation.value!;
 
@@ -328,7 +338,12 @@ export class BookController extends BaseController {
 
     const validation = this.validateRequest(body, this.patchBookSchema);
     if (!validation.isValid) {
-      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+      return this.createErrorResponseI18n(
+        'errors:validation_failed',
+        400,
+        undefined,
+        validation.errors
+      );
     }
     const bookData = validation.value!;
 
@@ -436,7 +451,12 @@ export class BookController extends BaseController {
         searchFilters = JSON.parse(filters) as BookSearchFilters;
         const filterValidation = this.validateRequest(searchFilters, this.searchFiltersSchema);
         if (!filterValidation.isValid) {
-          return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, filterValidation.errors);
+          return this.createErrorResponseI18n(
+            'errors:validation_failed',
+            400,
+            undefined,
+            filterValidation.errors
+          );
         }
         searchFilters = filterValidation.value!;
       } catch {
@@ -734,7 +754,9 @@ export class BookController extends BaseController {
     }
     const existingBook = await Book.findOne({ where: whereClause });
     if (existingBook) {
-      return this.createErrorResponseI18n('errors:isbn_exists', 409, { isbn: validation.normalizedIsbn });
+      return this.createErrorResponseI18n('errors:isbn_exists', 409, {
+        isbn: validation.normalizedIsbn,
+      });
     }
 
     // Lookup book data from ISBN service

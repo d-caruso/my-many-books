@@ -78,7 +78,12 @@ export class IsbnController extends BaseController {
 
       const validation = this.validateRequest({ isbn }, this.isbnLookupSchema);
       if (!validation.isValid) {
-        return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+        return this.createErrorResponseI18n(
+          'errors:validation_failed',
+          400,
+          undefined,
+          validation.errors
+        );
       }
 
       const normalizedIsbn = validation.value!.isbn;
@@ -115,7 +120,12 @@ export class IsbnController extends BaseController {
 
       const validation = this.validateRequest(body, this.batchIsbnLookupSchema);
       if (!validation.isValid) {
-        return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+        return this.createErrorResponseI18n(
+          'errors:validation_failed',
+          400,
+          undefined,
+          validation.errors
+        );
       }
 
       const { isbns } = validation.value!;
@@ -160,7 +170,12 @@ export class IsbnController extends BaseController {
 
       const validation = this.validateRequest(searchData, this.titleSearchSchema);
       if (!validation.isValid) {
-        return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+        return this.createErrorResponseI18n(
+          'errors:validation_failed',
+          400,
+          undefined,
+          validation.errors
+        );
       }
 
       const { title: searchTitle, limit } = validation.value!;
@@ -282,7 +297,12 @@ export class IsbnController extends BaseController {
 
       const validation = this.validateRequest(body, this.addFallbackBookSchema);
       if (!validation.isValid) {
-        return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+        return this.createErrorResponseI18n(
+          'errors:validation_failed',
+          400,
+          undefined,
+          validation.errors
+        );
       }
 
       const { isbn, title } = validation.value!;
@@ -351,13 +371,17 @@ export class IsbnController extends BaseController {
       }
 
       if (!['hyphenated', 'clean', 'isbn10', 'isbn13'].includes(format)) {
-        return this.createErrorResponseI18n('errors:invalid_service_name', 400, { services: 'hyphenated, clean, isbn10, isbn13' });
+        return this.createErrorResponseI18n('errors:invalid_service_name', 400, {
+          services: 'hyphenated, clean, isbn10, isbn13',
+        });
       }
 
       const validation = validateIsbn(isbn);
 
       if (!validation.isValid) {
-        return this.createErrorResponseI18n('errors:invalid_isbn', 400, { error: validation.error });
+        return this.createErrorResponseI18n('errors:invalid_isbn', 400, {
+          error: validation.error,
+        });
       }
 
       const normalizedIsbn = validation.normalizedIsbn!;

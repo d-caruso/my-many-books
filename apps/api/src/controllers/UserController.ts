@@ -21,13 +21,14 @@ export class UserController {
   }
 
   private static parseLanguageCode(acceptLanguage: string): string {
-    const primaryLang = acceptLanguage?.split(',')[0]?.split('-')[0]?.split(';')[0]?.trim()?.toLowerCase() || 'en';
+    const primaryLang =
+      acceptLanguage?.split(',')[0]?.split('-')[0]?.split(';')[0]?.trim()?.toLowerCase() || 'en';
     const supportedLanguages = ['en', 'it'];
     return supportedLanguages.includes(primaryLang) ? primaryLang : 'en';
   }
 
   private static t(key: string, interpolation?: object): string {
-    return i18n.t(key, interpolation as any) as string;
+    return i18n.t(key, interpolation);
   }
   // Get current user profile
   static async getCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
