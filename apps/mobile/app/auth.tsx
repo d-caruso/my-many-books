@@ -74,7 +74,7 @@ export default function AuthScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.header}>
-            <Text variant="displaySmall" style={styles.title}>
+            <Text variant="displaySmall" style={styles.title} accessibilityRole="header">
               My Many Books
             </Text>
             <Text variant="bodyLarge" style={styles.subtitle}>
@@ -92,11 +92,12 @@ export default function AuthScreen() {
                   { value: 'register', label: 'Register' },
                 ]}
                 style={styles.segmentedButtons}
+                accessibilityLabel="Select authentication mode"
               />
 
               {error && (
                 <View style={styles.errorContainer}>
-                  <Text variant="bodyMedium" style={styles.errorText}>
+                  <Text variant="bodyMedium" style={styles.errorText} accessibilityLiveRegion="assertive">
                     {error}
                   </Text>
                 </View>
@@ -151,6 +152,7 @@ export default function AuthScreen() {
                 loading={loading}
                 disabled={loading}
                 style={styles.submitButton}
+                accessibilityLabel={authMode === 'login' ? 'Login' : 'Create Account'}
               >
                 {authMode === 'login' ? 'Login' : 'Create Account'}
               </Button>

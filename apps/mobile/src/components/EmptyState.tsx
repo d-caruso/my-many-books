@@ -20,15 +20,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <MaterialIcons name={icon} size={64} color="#bdbdbd" style={styles.icon} />
-      <Text variant="headlineSmall" style={styles.title}>
+      <MaterialIcons name={icon} size={64} color="#bdbdbd" style={styles.icon} accessibilityLabel={`${title} icon`} />
+      <Text variant="headlineSmall" style={styles.title} accessibilityRole="header">
         {title}
       </Text>
       <Text variant="bodyMedium" style={styles.description}>
         {description}
       </Text>
       {actionText && onAction && (
-        <Button mode="contained" onPress={onAction} style={styles.action}>
+        <Button mode="contained" onPress={onAction} style={styles.action} accessibilityLabel={actionText}>
           {actionText}
         </Button>
       )}
