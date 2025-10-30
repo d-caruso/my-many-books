@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { ResponsiveInput } from '../UI/ResponsiveInput';
 import { ResponsiveButton } from '../UI/ResponsiveButton';
@@ -8,6 +9,7 @@ interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
+  const { t } = useTranslation(['common']);
   const { login, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -23,15 +25,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
     const errors: {email?: string; password?: string} = {};
 
     if (!formData.email) {
-      errors.email = 'Email is required';
+      errors.email = t('common:email_required');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = t('common:email_invalid');
     }
 
     if (!formData.password) {
-      errors.password = 'Password is required';
+      errors.password = t('common:password_required');
     } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+      errors.password = t('common:password_min_length');
     }
 
     setValidationErrors(errors);
@@ -53,7 +55,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       // Authentication success will be handled by AuthContext
     } catch (err: unknown) {
       console.error('Login error:', err);
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : t('common:login_failed'));
     } finally {
       setLoading(false);
     }
@@ -70,8 +72,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   return (
     <div className="max-w-md mx-auto bg-surface rounded-lg shadow-lg border border-secondary-200 overflow-hidden">
       <div className="px-6 py-4 bg-primary-50 border-b border-secondary-200">
-        <h2 className="text-xl font-semibold text-text-primary">Sign In</h2>
-        <p className="text-text-secondary text-sm">Welcome back to My Many Books</p>
+        <h2 className="text-xl font-semibold text-text-primary">{t('common:sign_in')}</h2>
+        <p className="text-text-secondary text-sm">{t('common:welcome_back')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate aria-label="form">
@@ -85,10 +87,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           <ResponsiveInput
             type="email"
             id="email"
-            label="Email"
+            label={t('common:email')}
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder="Enter your email"
+            placeholder={t('common:enter_email')}
             disabled={isLoading}
           />
           {validationErrors.email && (
@@ -100,7 +102,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           <ResponsiveInput
             type="password"
             id="password"
-            label="Password"
+            label={t('common:password')}
             value={formData.password}
             onChange={(e) => handleInputChange('password', e.target.value)}
             onKeyDown={(e) => {
@@ -108,7 +110,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
                 handleSubmit(e as any);
               }
             }}
-            placeholder="Enter your password"
+            placeholder={t('common:enter_password')}
             disabled={isLoading}
           />
           {validationErrors.password && (
@@ -124,19 +126,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           loading={isLoading}
           className="w-full"
         >
-          {isLoading ? 'Signing In...' : 'Sign In'}
+          {isLoading ? t('common:signing_in') : t('common:sign_in')}
         </ResponsiveButton>
 
         <div className="text-center pt-4 border-t border-secondary-200">
           <p className="text-text-secondary text-sm">
-            Don't have an account?{' '}
+            {t('common:dont_have_account')}{' '}
             <button
               type="button"
               onClick={onSwitchToRegister}
               className="text-primary-500 hover:text-primary-600 font-medium"
               disabled={isLoading}
             >
-              Sign up
+              {t('common:sign_up')}
             </button>
           </p>
         </div>

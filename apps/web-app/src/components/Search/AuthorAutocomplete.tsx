@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Autocomplete,
   TextField,
@@ -20,10 +21,11 @@ interface AuthorAutocompleteProps {
 export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   value,
   onChange,
-  placeholder = "Search by author name...",
+  placeholder,
   disabled = false,
   size = 'medium'
 }) => {
+  const { t } = useTranslation(['books', 'common']);
   const { authorAPI } = useApi();
   const [searchTerm, setSearchTerm] = useState('');
   const [authors, setAuthors] = useState<Author[]>([]);
@@ -126,8 +128,8 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
       renderInput={(params) => (
         <TextField
           {...params}
-          label="Author"
-          placeholder={placeholder}
+          label={t('books:author')}
+          placeholder={placeholder || t('books:search_by_author_placeholder')}
           disabled={disabled}
           size={size}
           InputProps={{
@@ -142,7 +144,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
         />
       )}
       loading={loading}
-      noOptionsText={searchTerm.length < 2 ? "Type to search authors..." : `No authors found for "${searchTerm}"`}
+      noOptionsText={searchTerm.length < 2 ? t('books:type_to_search_authors') : t('books:no_authors_found', { term: searchTerm })}
       open={showDropdown}
       onOpen={() => setShowDropdown(true)}
       onClose={() => setShowDropdown(false)}
