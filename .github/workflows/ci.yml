@@ -26,9 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Skip Nx post-install scripts since we don't use Nx commands in CI
-          npm ci --legacy-peer-deps --ignore-scripts
-          npm rebuild --ignore-scripts
+          npm ci
 
   lint:
     name: Lint
@@ -45,9 +43,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Skip Nx post-install scripts since we don't use Nx commands in CI
-          npm ci --legacy-peer-deps --ignore-scripts
-          npm rebuild --ignore-scripts
+          npm ci
 
       - name: Lint
         run: |
@@ -75,42 +71,17 @@ jobs:
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install if cache miss
-        run: npm ci --legacy-peer-deps --ignore-scripts || npm install --legacy-peer-deps --ignore-scripts
+        run: npm ci || npm install
 
       - name: Test
         run: |
-          # Test each app individually with separate dependency installation
-          cd apps/api
-          if ! npm ci --ignore-scripts 2>/dev/null; then
-            echo "Lockfile incompatible for api, regenerating..."
-            rm -f package-lock.json
-            npm install --legacy-peer-deps --ignore-scripts
-          fi
+          # Test API using root-level node_modules (monorepo pattern)
           # Rebuild SQLite3 native bindings for test environment
           npm rebuild sqlite3 --silent
+          cd apps/api
           npm run test
           cd ../web-app
-          echo "=== Starting web-app dependency installation ==="
-          if ! timeout 300 npm ci --ignore-scripts 2>/dev/null; then
-            echo "npm ci failed or timed out, trying fallback installation..."
-            rm -f package-lock.json
-            echo "Installing dependencies with --legacy-peer-deps --ignore-scripts and timeout..."
-            timeout 600 npm install --legacy-peer-deps --ignore-scripts || {
-              echo "ERROR: npm install timed out after 10 minutes"
-              exit 1
-            }
-          fi
-          echo "=== Rebuilding native dependencies ==="
-          # Rebuild native dependencies for the correct platform
-          timeout 300 npm rebuild || {
-            echo "WARNING: npm rebuild timed out after 5 minutes, continuing..."
-          }
-          echo "=== Installing Rollup native binary specifically ==="
-          # Install the specific Rollup native binary needed for Linux x64
-          timeout 180 npm install @rollup/rollup-linux-x64-gnu --no-save || {
-            echo "WARNING: Could not install Rollup native binary, continuing..."
-          }
-          echo "=== Starting web-app tests ==="
+          # Test web-app using root-level node_modules (monorepo pattern)
           npm run test
 
   build:
@@ -133,38 +104,12 @@ jobs:
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install if cache miss
-        run: npm ci --legacy-peer-deps --ignore-scripts || npm install --legacy-peer-deps --ignore-scripts
+        run: npm ci || npm install
 
       - name: Build
         run: |
-          # Build each app individually with separate dependency installation to avoid native binary issues
+          # Build each app using root-level node_modules (monorepo pattern)
           cd apps/api
-          if ! npm ci --ignore-scripts 2>/dev/null; then
-            echo "Lockfile incompatible for api, regenerating..."
-            rm -f package-lock.json
-            npm install --legacy-peer-deps --ignore-scripts
-          fi
           npm run build
           cd ../web-app
-          echo "=== Starting web-app dependency installation for build ==="
-          if ! timeout 300 npm ci --ignore-scripts 2>/dev/null; then
-            echo "npm ci failed or timed out, trying fallback installation..."
-            rm -f package-lock.json
-            echo "Installing dependencies with --legacy-peer-deps --ignore-scripts and timeout..."
-            timeout 600 npm install --legacy-peer-deps --ignore-scripts || {
-              echo "ERROR: npm install timed out after 10 minutes"
-              exit 1
-            }
-          fi
-          echo "=== Rebuilding native dependencies for build ==="
-          # Rebuild native dependencies for the correct platform
-          timeout 300 npm rebuild || {
-            echo "WARNING: npm rebuild timed out after 5 minutes, continuing..."
-          }
-          echo "=== Installing Rollup native binary specifically for build ==="
-          # Install the specific Rollup native binary needed for Linux x64
-          timeout 180 npm install @rollup/rollup-linux-x64-gnu --no-save || {
-            echo "WARNING: Could not install Rollup native binary, continuing..."
-          }
-          echo "=== Starting web-app build ==="
           npm run build
