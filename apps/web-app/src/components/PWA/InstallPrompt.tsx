@@ -37,7 +37,7 @@ export const InstallPrompt: React.FC = () => {
     >
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Box flex={1} pr={2}>
-          <Box component="span" variant="subtitle2" fontWeight="600">
+          <Box component="div" variant="subtitle2" fontWeight="600">
             Install App
           </Box>
           <Typography variant="caption" color="white">
