@@ -40,8 +40,12 @@ export const InstallPrompt: React.FC = () => {
           <Box component="div" variant="subtitle2" fontWeight="600">
             Install App
           </Box>
-          <Typography variant="caption" color="white">
-            Add My Many Books to your home screen for quick access
+          <Typography variant="caption" color="black">
+            Add{' '}
+            <strong>
+              My Many Books
+            </strong>{' '}
+            to your home screen for quick access
           </Typography>
         </Box>
         <Button
@@ -51,7 +55,7 @@ export const InstallPrompt: React.FC = () => {
           startIcon={<InstallIcon />}
           sx={{
             bgcolor: 'background.paper',
-            color: 'primary.dark',
+            color: 'black',
             '&:hover': {
               bgcolor: 'grey.100'
             }
