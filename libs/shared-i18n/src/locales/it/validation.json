@@ -9,5 +9,21 @@
   "password_too_short": "La password deve contenere almeno 8 caratteri",
   "passwords_dont_match": "Le password non corrispondono",
   "min_length": "La lunghezza minima è di {{min}} caratteri",
-  "max_length": "La lunghezza massima è di {{max}} caratteri"
+  "max_length": "La lunghezza massima è di {{max}} caratteri",
+  "string_empty": "{{label}} non può essere vuoto",
+  "string_min": "{{label}} deve contenere almeno {{limit}} caratteri",
+  "string_max": "{{label}} deve contenere al massimo {{limit}} caratteri",
+  "string_email": "{{label}} deve essere un indirizzo email valido",
+  "number_base": "{{label}} deve essere un numero",
+  "number_min": "{{label}} deve essere maggiore o uguale a {{limit}}",
+  "number_max": "{{label}} deve essere minore o uguale a {{limit}}",
+  "array_min": "{{label}} deve contenere almeno {{limit}} elementi",
+  "array_max": "{{label}} deve contenere al massimo {{limit}} elementi",
+  "boolean_base": "{{label}} deve essere un booleano",
+  "object_base": "{{label}} deve essere un oggetto",
+  "any_required": "{{label}} è obbligatorio",
+  "any_only": "{{label}} deve essere uno di {{valids}}",
+  "date_base": "{{label}} deve essere una data valida",
+  "title_min_length": "Il titolo deve contenere almeno {{min}} caratteri",
+  "title_max_length": "Il titolo deve contenere al massimo {{max}} caratteri"
 }

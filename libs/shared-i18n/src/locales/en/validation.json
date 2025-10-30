@@ -9,5 +9,21 @@
   "password_too_short": "Password must be at least 8 characters",
   "passwords_dont_match": "Passwords do not match",
   "min_length": "Minimum length is {{min}} characters",
-  "max_length": "Maximum length is {{max}} characters"
+  "max_length": "Maximum length is {{max}} characters",
+  "string_empty": "{{label}} cannot be empty",
+  "string_min": "{{label}} must be at least {{limit}} characters long",
+  "string_max": "{{label}} must be at most {{limit}} characters long",
+  "string_email": "{{label}} must be a valid email address",
+  "number_base": "{{label}} must be a number",
+  "number_min": "{{label}} must be greater than or equal to {{limit}}",
+  "number_max": "{{label}} must be less than or equal to {{limit}}",
+  "array_min": "{{label}} must contain at least {{limit}} items",
+  "array_max": "{{label}} must contain at most {{limit}} items",
+  "boolean_base": "{{label}} must be a boolean",
+  "object_base": "{{label}} must be an object",
+  "any_required": "{{label}} is required",
+  "any_only": "{{label}} must be one of {{valids}}",
+  "date_base": "{{label}} must be a valid date",
+  "title_min_length": "Title must be at least {{min}} characters",
+  "title_max_length": "Title must be at most {{max}} characters"
 }
