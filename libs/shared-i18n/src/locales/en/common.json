@@ -1,0 +1,21 @@
+{
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "add": "Add",
+  "search": "Search",
+  "filter": "Filter",
+  "loading": "Loading...",
+  "language": "Language",
+  "settings": "Settings",
+  "yes": "Yes",
+  "no": "No",
+  "ok": "OK",
+  "close": "Close",
+  "back": "Back",
+  "next": "Next",
+  "previous": "Previous",
+  "submit": "Submit",
+  "confirm": "Confirm"
+}
