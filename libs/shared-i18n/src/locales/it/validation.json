@@ -1,0 +1,13 @@
+{
+  "required": "Questo campo è obbligatorio",
+  "field_required": "{{field}} è obbligatorio",
+  "isbn_required": "ISBN è obbligatorio",
+  "isbn_invalid": "Formato ISBN non valido",
+  "title_required": "Il titolo è obbligatorio",
+  "author_required": "Almeno un autore è obbligatorio",
+  "email_invalid": "Indirizzo email non valido",
+  "password_too_short": "La password deve contenere almeno 8 caratteri",
+  "passwords_dont_match": "Le password non corrispondono",
+  "min_length": "La lunghezza minima è di {{min}} caratteri",
+  "max_length": "La lunghezza massima è di {{max}} caratteri"
+}
