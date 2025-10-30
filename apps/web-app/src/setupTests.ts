@@ -1,6 +1,9 @@
 // Testing Library DOM matchers
 import '@testing-library/jest-dom';
 
+// i18n setup for tests
+import './i18n';
+
 // MSW (Mock Service Worker) setup for HTTP layer mocking
 // This is test infrastructure, not application code mocks
 import { server } from './__tests__/mocks/server';
