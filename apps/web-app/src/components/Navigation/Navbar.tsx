@@ -1,28 +1,31 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  IconButton, 
-  Menu, 
-  MenuItem, 
+import { useTranslation } from 'react-i18next';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
   Box,
   Avatar
 } from '@mui/material';
-import { 
-  MenuBook as MenuBookIcon, 
-  Menu as MenuIcon, 
-  ExpandMore as ExpandMoreIcon 
+import {
+  MenuBook as MenuBookIcon,
+  Menu as MenuIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { LanguageSelector } from './LanguageSelector';
 
 export const Navbar: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation(['common', 'books']);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -48,12 +51,12 @@ export const Navbar: React.FC = () => {
         {/* Logo */}
         <Box sx={{ display: 'flex', alignItems: 'center', mr: 4 }}>
           <MenuBookIcon sx={{ mr: 1, fontSize: 32 }} color="primary" />
-          <Typography 
-            variant="h6" 
+          <Typography
+            variant="h6"
             component="button"
             onClick={() => navigate('/')}
-            sx={{ 
-              textDecoration: 'none', 
+            sx={{
+              textDecoration: 'none',
               color: 'inherit',
               fontWeight: 'bold',
               background: 'none',
@@ -61,31 +64,34 @@ export const Navbar: React.FC = () => {
               cursor: 'pointer'
             }}
           >
-            My Many Books
+            {t('common:app_name')}
           </Typography>
         </Box>
 
         {/* Navigation Items - Desktop */}
         <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 2 }}>
-          <Button 
+          <Button
             color={location.pathname === '/' ? 'primary' : 'inherit'}
             onClick={() => navigate('/')}
           >
-            My Books
+            {t('books:my_books')}
           </Button>
-          <Button 
+          <Button
             color={location.pathname === '/search' ? 'primary' : 'inherit'}
             onClick={() => navigate('/search')}
           >
-            Search
+            {t('common:search')}
           </Button>
-          <Button 
+          <Button
             color={location.pathname === '/scanner' ? 'primary' : 'inherit'}
             onClick={() => navigate('/scanner')}
           >
-            Scanner
+            {t('common:scanner')}
           </Button>
         </Box>
+
+        {/* Language Selector */}
+        <LanguageSelector />
 
         {/* User Menu */}
         {user && (
@@ -120,12 +126,12 @@ export const Navbar: React.FC = () => {
             >
               {/* Mobile Navigation Items */}
               <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-                <MenuItem onClick={() => handleNavigation('/')}>My Books</MenuItem>
-                <MenuItem onClick={() => handleNavigation('/search')}>Search</MenuItem>
-                <MenuItem onClick={() => handleNavigation('/scanner')}>Scanner</MenuItem>
+                <MenuItem onClick={() => handleNavigation('/')}>{t('books:my_books')}</MenuItem>
+                <MenuItem onClick={() => handleNavigation('/search')}>{t('common:search')}</MenuItem>
+                <MenuItem onClick={() => handleNavigation('/scanner')}>{t('common:scanner')}</MenuItem>
               </Box>
-              
-              <MenuItem onClick={handleLogout}>Sign out</MenuItem>
+
+              <MenuItem onClick={handleLogout}>{t('common:sign_out')}</MenuItem>
             </Menu>
           </Box>
         )}
