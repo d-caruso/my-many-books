@@ -83,13 +83,13 @@ export default function ScannerScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContent}>
-          <Text variant="headlineSmall" style={styles.errorTitle}>
+          <Text variant="headlineSmall" style={styles.errorTitle} accessibilityRole="header">
             Camera Access Required
           </Text>
           <Text variant="bodyMedium" style={styles.errorDescription}>
             Camera permission is needed to scan book barcodes.
           </Text>
-          <Button mode="contained" onPress={requestPermission} style={styles.button}>
+          <Button mode="contained" onPress={requestPermission} style={styles.button} accessibilityLabel="Grant Camera Permission">
             Grant Permission
           </Button>
         </View>
@@ -101,13 +101,13 @@ export default function ScannerScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContent}>
-          <Text variant="headlineSmall" style={styles.errorTitle}>
+          <Text variant="headlineSmall" style={styles.errorTitle} accessibilityRole="header">
             Scanner Error
           </Text>
           <Text variant="bodyMedium" style={styles.errorDescription}>
             {error}
           </Text>
-          <Button mode="contained" onPress={resetScanner} style={styles.button}>
+          <Button mode="contained" onPress={resetScanner} style={styles.button} accessibilityLabel="Try scanning again">
             Try Again
           </Button>
         </View>
@@ -123,33 +123,34 @@ export default function ScannerScreen() {
           barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'],
         }}
         style={styles.scanner}
+        accessibilityLabel="Camera view for scanning barcodes"
       />
 
       <View style={styles.overlay}>
-        <View style={styles.scanArea} />
-        <Text variant="titleMedium" style={styles.instructionText}>
+        <View style={styles.scanArea} accessible={false} />
+        <Text variant="titleMedium" style={styles.instructionText} accessibilityLiveRegion="polite">
           Point your camera at a book barcode
         </Text>
       </View>
 
       {scanned && (
         <View style={styles.scannedContainer}>
-          <Text variant="bodyLarge" style={styles.scannedText}>
+          <Text variant="bodyLarge" style={styles.scannedText} accessibilityLiveRegion="polite">
             Barcode scanned: {scannedData}
           </Text>
-          <Button mode="outlined" onPress={resetScanner} style={styles.button}>
+          <Button mode="outlined" onPress={resetScanner} style={styles.button} accessibilityLabel="Scan another barcode">
             Scan Another
           </Button>
         </View>
       )}
 
       <Portal>
-        <Dialog visible={showBookDialog} onDismiss={() => setShowBookDialog(false)}>
-          <Dialog.Title>Book Found!</Dialog.Title>
+        <Dialog visible={showBookDialog} onDismiss={() => setShowBookDialog(false)} accessibilityRole="alertdialog" accessibilityLabel="Book Found Dialog" accessibilityViewIsModal={true}>
+          <Dialog.Title accessibilityRole="header">Book Found!</Dialog.Title>
           <Dialog.Content>
             {foundBook && (
               <>
-                <Text variant="titleMedium">{foundBook.title}</Text>
+                <Text variant="titleMedium" accessibilityRole="header">{foundBook.title}</Text>
                 <Text variant="bodyMedium">
                   by {foundBook.authors?.map(a => a.name).join(', ')}
                 </Text>
@@ -160,8 +161,8 @@ export default function ScannerScreen() {
             )}
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={handleScanAnother}>Scan Another</Button>
-            <Button mode="contained" onPress={handleAddFoundBook}>
+            <Button onPress={handleScanAnother} accessibilityLabel="Scan another book">Scan Another</Button>
+            <Button mode="contained" onPress={handleAddFoundBook} accessibilityLabel="Add book to library">
               Add to Library
             </Button>
           </Dialog.Actions>

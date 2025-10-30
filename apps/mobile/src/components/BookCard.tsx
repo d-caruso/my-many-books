@@ -54,15 +54,20 @@ export const BookCard: React.FC<BookCardProps> = ({
   const [menuVisible, setMenuVisible] = React.useState(false);
 
   return (
-    <Card style={styles.card} onPress={onPress}>
+    <Card
+      style={styles.card}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`View details for ${book.title} by ${book.authors?.map(a => a.name).join(', ') || 'Unknown Author'}`}
+    >
       <Card.Content style={styles.content}>
         <View style={styles.bookInfo}>
           {book.thumbnail && (
-            <Image source={{ uri: book.thumbnail }} style={styles.thumbnail} />
+            <Image source={{ uri: book.thumbnail }} style={styles.thumbnail} accessibilityLabel={`${book.title} thumbnail`} />
           )}
           
           <View style={styles.textContent}>
-            <Text variant="titleMedium" style={styles.title} numberOfLines={2} testID="book-title">
+            <Text variant="titleMedium" style={styles.title} numberOfLines={2} testID="book-title" accessibilityRole="header">
               {book.title}
             </Text>
             
@@ -97,6 +102,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                   icon="dots-vertical"
                   onPress={() => setMenuVisible(true)}
                   testID="book-menu-button"
+                  accessibilityLabel={`More options for ${book.title}`}
                 />
               }
             >

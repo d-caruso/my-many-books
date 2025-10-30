@@ -93,13 +93,13 @@ export default function AddBookScreen() {
         <ScrollView style={styles.scrollView}>
           <Card style={styles.card}>
             <Card.Content>
-              <Text variant="headlineSmall" style={styles.title}>
+              <Text variant="headlineSmall" style={styles.title} accessibilityRole="header">
                 Add New Book
               </Text>
 
               {error && (
                 <View style={styles.errorContainer}>
-                  <Text variant="bodyMedium" style={styles.errorText}>
+                  <Text variant="bodyMedium" style={styles.errorText} accessibilityLiveRegion="assertive" nativeID="addBookError">
                     {error}
                   </Text>
                 </View>
@@ -119,6 +119,7 @@ export default function AddBookScreen() {
                   onPress={handleISBNLookup}
                   disabled={loading || !isbnCode.trim()}
                   style={styles.lookupButton}
+                  accessibilityLabel="Lookup book by ISBN"
                 >
                   Lookup
                 </Button>
@@ -130,6 +131,8 @@ export default function AddBookScreen() {
                 onChangeText={setTitle}
                 style={styles.input}
                 autoCapitalize="words"
+                accessibilityInvalid={!!error}
+                accessibilityErrorMessage={error}
               />
 
               <TextInput
@@ -140,7 +143,7 @@ export default function AddBookScreen() {
                 autoCapitalize="words"
               />
 
-              <Text variant="titleSmall" style={styles.sectionTitle}>
+              <Text variant="titleSmall" style={styles.sectionTitle} accessibilityRole="header">
                 Reading Status
               </Text>
               <SegmentedButtons
@@ -152,6 +155,7 @@ export default function AddBookScreen() {
                   { value: 'completed', label: 'Completed' },
                 ]}
                 style={styles.segmentedButtons}
+                accessibilityLabel="Select reading status"
               />
 
               <TextInput
@@ -170,6 +174,7 @@ export default function AddBookScreen() {
                   onPress={() => router.back()}
                   style={styles.button}
                   disabled={loading}
+                  accessibilityLabel="Cancel adding book"
                 >
                   Cancel
                 </Button>
@@ -179,6 +184,7 @@ export default function AddBookScreen() {
                   style={styles.button}
                   loading={loading}
                   disabled={loading}
+                  accessibilityLabel="Add book to library"
                 >
                   Add Book
                 </Button>

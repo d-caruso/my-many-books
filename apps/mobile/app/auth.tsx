@@ -74,7 +74,7 @@ export default function AuthScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.header}>
-            <Text variant="displaySmall" style={styles.title}>
+            <Text variant="displaySmall" style={styles.title} accessibilityRole="header">
               My Many Books
             </Text>
             <Text variant="bodyLarge" style={styles.subtitle}>
@@ -92,11 +92,12 @@ export default function AuthScreen() {
                   { value: 'register', label: 'Register' },
                 ]}
                 style={styles.segmentedButtons}
+                accessibilityLabel="Select authentication mode"
               />
 
               {error && (
                 <View style={styles.errorContainer}>
-                  <Text variant="bodyMedium" style={styles.errorText}>
+                  <Text variant="bodyMedium" style={styles.errorText} accessibilityLiveRegion="assertive" nativeID="authError">
                     {error}
                   </Text>
                 </View>
@@ -110,6 +111,7 @@ export default function AuthScreen() {
                   style={styles.input}
                   autoCapitalize="words"
                   autoComplete="name"
+                  accessibilityInvalid={!!error}
                 />
               )}
 
@@ -121,6 +123,7 @@ export default function AuthScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
+                accessibilityInvalid={!!error}
               />
 
               <TextInput
@@ -131,6 +134,7 @@ export default function AuthScreen() {
                 secureTextEntry
                 autoCapitalize="none"
                 autoComplete={authMode === 'login' ? 'password' : 'new-password'}
+                accessibilityInvalid={!!error}
               />
 
               {authMode === 'register' && (
@@ -142,6 +146,7 @@ export default function AuthScreen() {
                   secureTextEntry
                   autoCapitalize="none"
                   autoComplete="new-password"
+                  accessibilityInvalid={!!error}
                 />
               )}
 
@@ -151,6 +156,7 @@ export default function AuthScreen() {
                 loading={loading}
                 disabled={loading}
                 style={styles.submitButton}
+                accessibilityLabel={authMode === 'login' ? 'Login' : 'Create Account'}
               >
                 {authMode === 'login' ? 'Login' : 'Create Account'}
               </Button>
