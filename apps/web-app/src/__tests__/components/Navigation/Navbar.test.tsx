@@ -43,12 +43,16 @@ vi.mock('@mui/material', () => ({
   Avatar: ({ children, ...props }: any) => (
     <div data-testid="avatar" {...props}>{children}</div>
   ),
+  Select: ({ children, value, onChange, ...props }: any) => (
+    <select data-testid="language-select" value={value} onChange={onChange} {...props}>{children}</select>
+  ),
 }));
 
 vi.mock('@mui/icons-material', () => ({
   MenuBook: () => <span data-testid="menu-book-icon">📚</span>,
   Menu: () => <span data-testid="menu-icon">☰</span>,
   ExpandMore: () => <span data-testid="expand-more-icon">▼</span>,
+  Language: () => <span data-testid="language-icon">🌐</span>,
 }));
 
 const mockUseAuth = vi.mocked(useAuth);
