@@ -37,10 +37,10 @@ export const InstallPrompt: React.FC = () => {
     >
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Box flex={1} pr={2}>
-          <Typography variant="subtitle2" fontWeight="600">
+          <Box component="span" variant="subtitle2" fontWeight="600">
             Install App
-          </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.9 }}>
+          </Box>
+          <Typography variant="caption" color="white">
             Add My Many Books to your home screen for quick access
           </Typography>
         </Box>
@@ -51,7 +51,7 @@ export const InstallPrompt: React.FC = () => {
           startIcon={<InstallIcon />}
           sx={{
             bgcolor: 'background.paper',
-            color: 'primary.main',
+            color: 'primary.dark',
             '&:hover': {
               bgcolor: 'grey.100'
             }
