@@ -78,7 +78,7 @@ describe('UserController', () => {
       await UserController.getCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
       expect(mockUserService.getUserById).not.toHaveBeenCalled();
     });
 
@@ -146,7 +146,7 @@ describe('UserController', () => {
       await UserController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
     });
 
     it('should return 400 when name is missing', async () => {
@@ -274,7 +274,7 @@ describe('UserController', () => {
       await UserController.getUserBooks(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
     });
   });
 
@@ -337,7 +337,7 @@ describe('UserController', () => {
       await UserController.getUserStats(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
     });
   });
 
@@ -361,7 +361,7 @@ describe('UserController', () => {
       await UserController.deactivateAccount(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
       expect(mockUserService.deactivateUser).not.toHaveBeenCalled();
     });
 
@@ -405,7 +405,7 @@ describe('UserController', () => {
       await UserController.deleteAccount(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
     });
 
     it('should return 404 when user is not found', async () => {

@@ -24,6 +24,7 @@ interface UniversalRequest {
   body?: any;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
+  headers?: { [key: string]: string | undefined };
 }
 
 describe('CategoryController', () => {
@@ -33,7 +34,9 @@ describe('CategoryController', () => {
   beforeEach(() => {
     categoryController = new CategoryController();
     jest.clearAllMocks();
-    mockRequest = {};
+    mockRequest = {
+      headers: { 'accept-language': 'en' },
+    };
   });
 
   describe('createCategory', () => {
@@ -155,7 +158,7 @@ describe('CategoryController', () => {
 
       expect(result.statusCode).toBe(500);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to retrieve category');
+      expect(result.error).toBe('Internal server error');
     });
   });
 
@@ -359,7 +362,7 @@ describe('CategoryController', () => {
 
       expect(result.statusCode).toBe(500);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to list categories');
+      expect(result.error).toBe('Internal server error');
     });
   });
 
@@ -448,7 +451,7 @@ describe('CategoryController', () => {
 
       expect(result.statusCode).toBe(500);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to retrieve category books');
+      expect(result.error).toBe('Internal server error');
     });
   });
 
@@ -470,7 +473,7 @@ describe('CategoryController', () => {
 
       expect(result.statusCode).toBe(400);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Category ID is required');
+      expect(result.error).toBe('Valid category ID is required');
     });
 
     it('should handle missing path parameters', async () => {
@@ -480,7 +483,7 @@ describe('CategoryController', () => {
 
       expect(result.statusCode).toBe(400);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Category ID is required');
+      expect(result.error).toBe('Valid category ID is required');
     });
 
     it('should handle very long category names', async () => {

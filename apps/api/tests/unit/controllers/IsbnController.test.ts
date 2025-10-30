@@ -19,6 +19,7 @@ interface UniversalRequest {
   body?: any;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
+  headers?: { [key: string]: string | undefined };
   user?: { userId: number };
 }
 
@@ -30,7 +31,9 @@ describe('IsbnController', () => {
     isbnController = new IsbnController();
     jest.clearAllMocks();
 
-    mockRequest = {};
+    mockRequest = {
+      headers: { 'accept-language': 'en' },
+    };
 
     // Default mock for validateIsbn
     (validateIsbn as jest.Mock).mockReturnValue({
@@ -227,7 +230,7 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(400);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Title parameter is required');
+      expect(result.error).toBe('Title query parameter is required');
     });
 
     it('should use default limit when not provided', async () => {
@@ -382,7 +385,7 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(400);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to add fallback book');
+      expect(result.error).toBe('Internal server error');
     });
   });
 
@@ -470,7 +473,7 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(400);
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Format must be one of');
+      expect(result.error).toContain('Invalid service name. Must be one of');
     });
   });
 });

@@ -10,6 +10,7 @@ interface UniversalRequest {
   body?: any;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
+  headers?: { [key: string]: string | undefined };
   user?: { userId: number };
 }
 
@@ -27,6 +28,7 @@ describe('AuthorController', () => {
     mockRequest = {
       queryStringParameters: {},
       pathParameters: {},
+      headers: { 'accept-language': 'en' },
       body: undefined,
     };
   });
