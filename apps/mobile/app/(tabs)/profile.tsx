@@ -33,8 +33,9 @@ export default function ProfileScreen() {
               size={80} 
               label={user?.name?.charAt(0).toUpperCase() || 'U'}
               style={styles.avatar}
+              accessibilityLabel={`User profile picture for ${user?.name || 'User'}`}
             />
-            <Text variant="headlineSmall" style={styles.userName}>
+            <Text variant="headlineSmall" style={styles.userName} accessibilityRole="header">
               {user?.name || 'User'}
             </Text>
             <Text variant="bodyMedium" style={styles.userEmail}>
@@ -45,82 +46,98 @@ export default function ProfileScreen() {
 
         <Card style={styles.settingsCard}>
           <Card.Content>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
+            <Text variant="titleMedium" style={styles.sectionTitle} accessibilityRole="header">
               Settings
             </Text>
             
             <List.Item
               title="Dark Mode"
               description="Toggle dark theme"
-              left={() => <List.Icon icon="theme-light-dark" />}
+              left={() => <List.Icon icon="theme-light-dark" accessible={false} />}
               right={() => (
                 <Switch
                   value={isDark}
                   onValueChange={handleThemeToggle}
+                  accessibilityLabel="Toggle dark theme"
                 />
               )}
+              accessibilityRole="menuitem"
             />
             
             <List.Item
               title="Notifications"
               description="Push notification settings"
-              left={() => <List.Icon icon="bell" />}
-              right={() => <List.Icon icon="chevron-right" />}
+              left={() => <List.Icon icon="bell" accessible={false} />}
+              right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
+              accessibilityRole="button"
+              accessibilityLabel="Notifications, Push notification settings"
             />
             
             <List.Item
               title="Storage"
               description="Manage offline data"
-              left={() => <List.Icon icon="database" />}
-              right={() => <List.Icon icon="chevron-right" />}
+              left={() => <List.Icon icon="database" accessible={false} />}
+              right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
+              accessibilityRole="button"
+              accessibilityLabel="Storage, Manage offline data"
             />
             
             <List.Item
               title="Export Data"
               description="Export your book collection"
-              left={() => <List.Icon icon="export" />}
-              right={() => <List.Icon icon="chevron-right" />}
+              left={() => <List.Icon icon="export" accessible={false} />}
+              right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
+              accessibilityRole="button"
+              accessibilityLabel="Export Data, Export your book collection"
             />
           </Card.Content>
         </Card>
 
         <Card style={styles.aboutCard}>
           <Card.Content>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
+            <Text variant="titleMedium" style={styles.sectionTitle} accessibilityRole="header">
               About
             </Text>
             
             <List.Item
               title="Help & Support"
               description="Get help and contact support"
-              left={() => <List.Icon icon="help-circle" />}
-              right={() => <List.Icon icon="chevron-right" />}
+              left={() => <List.Icon icon="help-circle" accessible={false} />}
+              right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
+              accessibilityRole="button"
+              accessibilityLabel="Help & Support, Get help and contact support"
             />
             
             <List.Item
               title="Privacy Policy"
               description="Read our privacy policy"
-              left={() => <List.Icon icon="shield-account" />}
-              right={() => <List.Icon icon="chevron-right" />}
+              left={() => <List.Icon icon="shield-account" accessible={false} />}
+              right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
+              accessibilityRole="button"
+              accessibilityLabel="Privacy Policy, Read our privacy policy"
             />
             
             <List.Item
               title="Terms of Service"
               description="Read our terms of service"
-              left={() => <List.Icon icon="file-document" />}
-              right={() => <List.Icon icon="chevron-right" />}
+              left={() => <List.Icon icon="file-document" accessible={false} />}
+              right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
+              accessibilityRole="button"
+              accessibilityLabel="Terms of Service, Read our terms of service"
             />
             
             <List.Item
               title="App Version"
               description="1.0.0"
-              left={() => <List.Icon icon="information" />}
+              left={() => <List.Icon icon="information" accessible={false} />}
+              accessible={true}
+              accessibilityLabel="App Version 1.0.0"
             />
           </Card.Content>
         </Card>
@@ -131,6 +148,7 @@ export default function ProfileScreen() {
             onPress={handleLogout}
             icon="logout"
             style={styles.logoutButton}
+            accessibilityLabel="Logout"
           >
             Logout
           </Button>

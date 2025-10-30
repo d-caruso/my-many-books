@@ -91,7 +91,7 @@ export default function BooksScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.title}>
+        <Text variant="headlineMedium" style={styles.title} accessibilityRole="header">
           My Books
         </Text>
         <Searchbar
@@ -99,6 +99,7 @@ export default function BooksScreen() {
           onChangeText={handleSearch}
           value={searchQuery}
           style={styles.searchbar}
+          accessibilityLabel="Search books"
         />
         {isSearching && (
           <View style={styles.chipContainer}>
@@ -106,6 +107,7 @@ export default function BooksScreen() {
               icon="close"
               onPress={handleClearSearch}
               style={styles.chip}
+              accessibilityLabel="Clear search results"
             >
               Clear search
             </Chip>
@@ -151,6 +153,7 @@ export default function BooksScreen() {
         icon="plus"
         style={styles.fab}
         onPress={() => router.push('/book/add')}
+        accessibilityLabel="Add new book"
       />
     </SafeAreaView>
   );

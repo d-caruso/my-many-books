@@ -56,7 +56,7 @@ export default function SearchScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.title}>
+        <Text variant="headlineMedium" style={styles.title} accessibilityRole="header">
           Search Books
         </Text>
         
@@ -69,6 +69,7 @@ export default function SearchScreen() {
             { value: 'isbn', label: 'ISBN' },
           ]}
           style={styles.segmentedButtons}
+          accessibilityLabel="Select search type"
         />
         
         <Searchbar
@@ -76,6 +77,7 @@ export default function SearchScreen() {
           onChangeText={handleSearch}
           value={searchQuery}
           style={styles.searchbar}
+          accessibilityLabel="Search books by title, author, or ISBN"
         />
       </View>
 

@@ -29,6 +29,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="library-books" size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: 'My Books tab',
         }}
       />
       <Tabs.Screen
@@ -38,6 +39,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="search" size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Search tab',
         }}
       />
       <Tabs.Screen
@@ -47,6 +49,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="qr-code-scanner" size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Scan tab',
         }}
       />
       <Tabs.Screen
@@ -56,6 +59,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="person" size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Profile tab',
         }}
       />
     </Tabs>
