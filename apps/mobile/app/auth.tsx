@@ -97,7 +97,7 @@ export default function AuthScreen() {
 
               {error && (
                 <View style={styles.errorContainer}>
-                  <Text variant="bodyMedium" style={styles.errorText} accessibilityLiveRegion="assertive">
+                  <Text variant="bodyMedium" style={styles.errorText} accessibilityLiveRegion="assertive" nativeID="authError">
                     {error}
                   </Text>
                 </View>
@@ -111,6 +111,7 @@ export default function AuthScreen() {
                   style={styles.input}
                   autoCapitalize="words"
                   autoComplete="name"
+                  accessibilityInvalid={!!error}
                 />
               )}
 
@@ -122,6 +123,7 @@ export default function AuthScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
+                accessibilityInvalid={!!error}
               />
 
               <TextInput
@@ -132,6 +134,7 @@ export default function AuthScreen() {
                 secureTextEntry
                 autoCapitalize="none"
                 autoComplete={authMode === 'login' ? 'password' : 'new-password'}
+                accessibilityInvalid={!!error}
               />
 
               {authMode === 'register' && (
@@ -143,6 +146,7 @@ export default function AuthScreen() {
                   secureTextEntry
                   autoCapitalize="none"
                   autoComplete="new-password"
+                  accessibilityInvalid={!!error}
                 />
               )}
 

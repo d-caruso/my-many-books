@@ -11,8 +11,8 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" style={styles.spinner} testID="loading" />
-      <Text variant="bodyMedium" style={styles.message}>
+      <ActivityIndicator size="large" style={styles.spinner} testID="loading" accessibilityLabel="Loading" />
+      <Text variant="bodyMedium" style={styles.message} accessibilityLiveRegion="polite">
         {message}
       </Text>
     </View>

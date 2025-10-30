@@ -99,7 +99,7 @@ export default function AddBookScreen() {
 
               {error && (
                 <View style={styles.errorContainer}>
-                  <Text variant="bodyMedium" style={styles.errorText} accessibilityLiveRegion="assertive">
+                  <Text variant="bodyMedium" style={styles.errorText} accessibilityLiveRegion="assertive" nativeID="addBookError">
                     {error}
                   </Text>
                 </View>
@@ -131,6 +131,8 @@ export default function AddBookScreen() {
                 onChangeText={setTitle}
                 style={styles.input}
                 autoCapitalize="words"
+                accessibilityInvalid={!!error}
+                accessibilityErrorMessage={error}
               />
 
               <TextInput
