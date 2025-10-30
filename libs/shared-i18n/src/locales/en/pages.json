@@ -1,0 +1,20 @@
+{
+  "books": {
+    "title": "My Books",
+    "description": "Your personal book collection",
+    "description_with_count": "{{count}} books in your library",
+    "add_book": "Add Book",
+    "add": "Add",
+    "clear_search": "Clear search",
+    "grid_view": "Grid view",
+    "list_view": "List view",
+    "no_books_search": "No books found matching your search",
+    "no_books_empty": "No books in your library yet",
+    "loading": "Loading...",
+    "load_more": "Load More Books",
+    "error_load_books": "Failed to load your books"
+  },
+  "protected_route": {
+    "loading": "Loading..."
+  }
+}

@@ -10,6 +10,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { Author } from '../../types';
 import { useApi } from '../../contexts/ApiContext';
 
@@ -24,6 +25,7 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
   onClose,
   onAuthorCreated
 }) => {
+  const { t } = useTranslation();
   const { authorAPI } = useApi();
   const [formData, setFormData] = useState({
     name: '',
@@ -45,11 +47,11 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
     const newErrors: Partial<Record<keyof typeof formData, string>> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = t('dialogs:author.name_required');
     }
 
     if (!formData.surname.trim()) {
-      newErrors.surname = 'Surname is required';
+      newErrors.surname = t('dialogs:author.surname_required');
     }
 
     setErrors(newErrors);
@@ -75,7 +77,7 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
       handleClose();
     } catch (error) {
       console.error('Failed to create author:', error);
-      setErrors({ name: 'Failed to create author. Please try again.' });
+      setErrors({ name: t('dialogs:author.create_failed') });
     } finally {
       setLoading(false);
     }
@@ -90,7 +92,7 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add New Author</DialogTitle>
+      <DialogTitle>{t('dialogs:author.add_title')}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
@@ -98,7 +100,7 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
               autoFocus
               fullWidth
               required
-              label="Name"
+              label={t('dialogs:author.name_label')}
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               error={!!errors.name}
@@ -109,7 +111,7 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
             <TextField
               fullWidth
               required
-              label="Surname"
+              label={t('dialogs:author.surname_label')}
               value={formData.surname}
               onChange={(e) => handleChange('surname', e.target.value)}
               error={!!errors.surname}
@@ -119,13 +121,13 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
 
             <TextField
               fullWidth
-              label="Nationality"
+              label={t('dialogs:author.nationality_label')}
               value={formData.nationality}
               onChange={(e) => handleChange('nationality', e.target.value)}
               error={!!errors.nationality}
               helperText={errors.nationality}
               disabled={loading}
-              placeholder="e.g., Italian, American, British"
+              placeholder={t('dialogs:author.nationality_placeholder')}
             />
           </Stack>
         </DialogContent>
@@ -136,7 +138,7 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
             disabled={loading}
             startIcon={<CloseIcon />}
           >
-            Cancel
+            {t('common:cancel')}
           </Button>
           <Button
             type="submit"
@@ -144,7 +146,7 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
             disabled={loading}
             startIcon={loading ? <CircularProgress size={16} /> : <AddIcon />}
           >
-            {loading ? 'Creating...' : 'Create Author'}
+            {loading ? t('dialogs:author.creating') : t('dialogs:author.create_button')}
           </Button>
         </DialogActions>
       </form>

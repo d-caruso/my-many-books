@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Box, Button, IconButton, Chip } from '@mui/material';
 import { Add as AddIcon, Clear as ClearIcon, ViewModule as GridIcon, ViewList as ListIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { Book } from '../types';
 import { BookList, BookForm, BookDetails, type BookFormData } from '../components/Book';
 import { BookSearchForm } from '../components/Search';
@@ -12,6 +13,7 @@ type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
 
 export const BooksPage: React.FC = () => {
+  const { t } = useTranslation('pages');
   const { bookAPI } = useApi();
   const [searchParams, setSearchParams] = useSearchParams();
   // const navigate = useNavigate(); // Commented out as currently unused
@@ -47,9 +49,9 @@ export const BooksPage: React.FC = () => {
       searchBooksRef.current('', {});
     } catch (err: any) {
       console.error('Failed to load user books:', err);
-      setError('Failed to load your books');
+      setError(t('books.error_load_books'));
     }
-  }, [bookAPI]);
+  }, [bookAPI, t]);
 
   loadUserBooksRef.current = loadUserBooks;
 
@@ -293,12 +295,12 @@ export const BooksPage: React.FC = () => {
       {/* Page header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">My Books</h1>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">{t('pages:books.title')}</h1>
           <p className="text-lg text-text-secondary">
-            {totalCount > 0 ? `${totalCount} book${totalCount !== 1 ? 's' : ''} in your library` : 'Your personal book collection'}
+            {totalCount > 0 ? t('pages:books.description_with_count', { count: totalCount }) : t('pages:books.description')}
           </p>
         </div>
-        
+
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -306,10 +308,10 @@ export const BooksPage: React.FC = () => {
           size="large"
         >
           <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-            Add Book
+            {t('pages:books.add_book')}
           </Box>
           <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-            Add
+            {t('pages:books.add')}
           </Box>
         </Button>
       </div>
@@ -329,7 +331,7 @@ export const BooksPage: React.FC = () => {
           {searchParams.get('q') && (
             <Chip
               icon={<ClearIcon />}
-              label="Clear search"
+              label={t('pages:books.clear_search')}
               onClick={() => {
                 setSearchParams({});
                 clearSearch();
@@ -351,16 +353,16 @@ export const BooksPage: React.FC = () => {
           <IconButton
             onClick={() => setViewMode('grid')}
             color={viewMode === 'grid' ? 'primary' : 'default'}
-            title="Grid view"
+            title={t('pages:books.grid_view')}
             size="small"
           >
             <GridIcon />
           </IconButton>
-          
+
           <IconButton
             onClick={() => setViewMode('list')}
             color={viewMode === 'list' ? 'primary' : 'default'}
-            title="List view" 
+            title={t('pages:books.list_view')}
             size="small"
           >
             <ListIcon />
@@ -378,7 +380,7 @@ export const BooksPage: React.FC = () => {
         onDelete={handleDeleteBook}
         onStatusChange={handleStatusChange}
         onBookClick={handleViewDetails}
-        emptyMessage={searchParams.get('q') ? 'No books found matching your search' : 'No books in your library yet'}
+        emptyMessage={searchParams.get('q') ? t('pages:books.no_books_search') : t('pages:books.no_books_empty')}
       />
 
       {/* Load more */}
@@ -390,7 +392,7 @@ export const BooksPage: React.FC = () => {
             disabled={searchLoading}
             size="large"
           >
-            {searchLoading ? 'Loading...' : 'Load More Books'}
+            {searchLoading ? t('pages:books.loading') : t('pages:books.load_more')}
           </Button>
         </Box>
       )}

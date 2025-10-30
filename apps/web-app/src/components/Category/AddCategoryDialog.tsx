@@ -10,6 +10,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { Category } from '../../types';
 import { useApi } from '../../contexts/ApiContext';
 
@@ -24,6 +25,7 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
   onClose,
   onCategoryCreated
 }) => {
+  const { t } = useTranslation();
   const { categoryAPI } = useApi();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,7 +41,7 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
 
   const validateForm = (): boolean => {
     if (!name.trim()) {
-      setError('Category name is required');
+      setError(t('dialogs:category.name_required'));
       return false;
     }
     return true;
@@ -62,7 +64,7 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
       handleClose();
     } catch (error) {
       console.error('Failed to create category:', error);
-      setError('Failed to create category. Please try again.');
+      setError(t('dialogs:category.create_failed'));
     } finally {
       setLoading(false);
     }
@@ -77,7 +79,7 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add New Category</DialogTitle>
+      <DialogTitle>{t('dialogs:category.add_title')}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
@@ -85,13 +87,13 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
               autoFocus
               fullWidth
               required
-              label="Category Name"
+              label={t('dialogs:category.name_label')}
               value={name}
               onChange={(e) => handleChange(e.target.value)}
               error={!!error}
               helperText={error}
               disabled={loading}
-              placeholder="e.g., Science Fiction, Mystery, Biography"
+              placeholder={t('dialogs:category.name_placeholder')}
             />
           </Stack>
         </DialogContent>
@@ -102,7 +104,7 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
             disabled={loading}
             startIcon={<CloseIcon />}
           >
-            Cancel
+            {t('common:cancel')}
           </Button>
           <Button
             type="submit"
@@ -110,7 +112,7 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
             disabled={loading}
             startIcon={loading ? <CircularProgress size={16} /> : <AddIcon />}
           >
-            {loading ? 'Creating...' : 'Create Category'}
+            {loading ? t('dialogs:category.creating') : t('dialogs:category.create_button')}
           </Button>
         </DialogActions>
       </form>

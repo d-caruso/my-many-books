@@ -46,4 +46,10 @@ export enum TranslationNamespace {
   ERRORS = 'errors',
   BOOKS = 'books',
   AUTH = 'auth',
+  SCANNER = 'scanner',
+  PWA = 'pwa',
+  DIALOGS = 'dialogs',
+  PAGES = 'pages',
+  THEME = 'theme',
+  SEARCH = 'search',
 }

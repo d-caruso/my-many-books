@@ -35,6 +35,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
   loading = false,
   initialQuery = ''
 }) => {
+  const { t } = useTranslation('search');
   const [query, setQuery] = useState(initialQuery);
   const [filters, setFilters] = useState<SearchFilters>({});
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -54,7 +55,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
     const hasFilters = Object.values(filters).some(value => value !== undefined && value !== '' && value !== null);
     
     if (!hasValidQuery && !hasFilters) {
-      setValidationError('Please enter at least 2 characters in the search box or select an advanced filter.');
+      setValidationError(t('form.validation_error'));
       return;
     }
     
@@ -103,7 +104,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
             id="search"
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="Search by title, author, ISBN..."
+            placeholder={t('form.placeholder')}
             disabled={loading}
             error={!!validationError}
             InputProps={{
@@ -114,7 +115,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
               ),
             }}
           />
-          
+
           <Button
             type="submit"
             variant="contained"
@@ -122,7 +123,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
             disabled={loading}
             sx={{ minWidth: 120 }}
           >
-            {loading ? 'Searching...' : 'Search'}
+            {loading ? t('form.searching') : t('form.search_button')}
           </Button>
         </Box>
 
@@ -151,7 +152,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
               />
             }
           >
-            Advanced Filters
+            {t('form.advanced_filters')}
           </Button>
 
           {(Object.keys(filters).length > 0 || query || selectedAuthor) && (
@@ -162,7 +163,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
               color="inherit"
               startIcon={<ClearIcon />}
             >
-              Clear all
+              {t('form.clear_all')}
             </Button>
           )}
         </Box>
@@ -187,24 +188,24 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                 <AuthorAutocomplete
                   value={selectedAuthor}
                   onChange={handleAuthorChange}
-                  placeholder="Search by author name..."
+                  placeholder={t('form.author_placeholder')}
                   disabled={loading}
                   size="small"
                 />
 
                 {/* Category filter */}
                 <FormControl fullWidth size="small">
-                  <InputLabel id="category-label">Category</InputLabel>
+                  <InputLabel id="category-label">{t('form.category_label')}</InputLabel>
                   <Select
                     labelId="category-label"
                     id="categoryId"
                     value={filters.categoryId || ''}
                     onChange={(e) => handleFilterChange('categoryId', e.target.value ? parseInt(e.target.value as unknown as string) : undefined)}
                     disabled={categoriesLoading}
-                    label="Category"
+                    label={t('form.category_label')}
                   >
                     <MenuItem value="">
-                      {categoriesLoading ? 'Loading categories...' : 'All Categories'}
+                      {categoriesLoading ? t('form.category_loading') : t('form.category_all')}
                     </MenuItem>
                     {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map((category) => (
                       <MenuItem key={category.id} value={category.id}>
@@ -216,18 +217,18 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
 
                 {/* Book status */}
                 <FormControl fullWidth size="small">
-                  <InputLabel id="status-label">Reading Status</InputLabel>
+                  <InputLabel id="status-label">{t('form.status_label')}</InputLabel>
                   <Select
                     labelId="status-label"
                     id="status"
                     value={filters.status || ''}
                     onChange={(e) => handleFilterChange('status', e.target.value)}
-                    label="Reading Status"
+                    label={t('form.status_label')}
                   >
-                    <MenuItem value="">Any Status</MenuItem>
-                    <MenuItem value="reading">Reading</MenuItem>
-                    <MenuItem value="paused">Paused</MenuItem>
-                    <MenuItem value="finished">Finished</MenuItem>
+                    <MenuItem value="">{t('form.status_any')}</MenuItem>
+                    <MenuItem value="reading">{t('form.status_reading')}</MenuItem>
+                    <MenuItem value="paused">{t('form.status_paused')}</MenuItem>
+                    <MenuItem value="finished">{t('form.status_finished')}</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
@@ -235,17 +236,17 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
               {/* Second row - Sort By */}
               <Box sx={{ maxWidth: { xs: '100%', sm: '300px' } }}>
                 <FormControl fullWidth size="small">
-                  <InputLabel id="sortBy-label">Sort By</InputLabel>
+                  <InputLabel id="sortBy-label">{t('form.sort_label')}</InputLabel>
                   <Select
                     labelId="sortBy-label"
                     id="sortBy"
                     value={filters.sortBy || 'title'}
                     onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                    label="Sort By"
+                    label={t('form.sort_label')}
                   >
-                    <MenuItem value="title">Title (A-Z)</MenuItem>
-                    <MenuItem value="author">Author (A-Z)</MenuItem>
-                    <MenuItem value="date-added">Recently Added</MenuItem>
+                    <MenuItem value="title">{t('form.sort_title')}</MenuItem>
+                    <MenuItem value="author">{t('form.sort_author')}</MenuItem>
+                    <MenuItem value="date-added">{t('form.sort_date')}</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
