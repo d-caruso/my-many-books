@@ -23,6 +23,7 @@ import {
   Close as CloseIcon,
   Add as AddIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { Book, Author, Category } from '../../types';
 import { useCategories } from '../../hooks/useCategories';
 import { AuthorAutocomplete } from '../Search/AuthorAutocomplete';
@@ -53,9 +54,11 @@ export const BookForm: React.FC<BookFormProps> = ({
   onSubmit,
   onCancel,
   loading = false,
-  title = book ? 'Edit Book' : 'Add New Book'
+  title
 }) => {
+  const { t } = useTranslation(['books', 'common']);
   const { categories, loading: categoriesLoading, loadCategories } = useCategories();
+  const defaultTitle = book ? t('books:edit_book_form') : t('books:add_new_book');
   const [formData, setFormData] = useState<BookFormData>({
     title: '',
     isbnCode: '',
@@ -90,17 +93,17 @@ export const BookForm: React.FC<BookFormProps> = ({
     const newErrors: Partial<Record<keyof BookFormData, string>> = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
+      newErrors.title = t('books:title_required');
     }
 
     if (!formData.isbnCode.trim()) {
-      newErrors.isbnCode = 'ISBN is required';
+      newErrors.isbnCode = t('books:isbn_required');
     } else if (!/^[\d\-X]{10,17}$/.test(formData.isbnCode.replace(/\s/g, ''))) {
-      newErrors.isbnCode = 'Invalid ISBN format';
+      newErrors.isbnCode = t('books:isbn_invalid');
     }
 
     if (formData.editionNumber !== undefined && formData.editionNumber < 1) {
-      newErrors.editionNumber = 'Edition number must be at least 1';
+      newErrors.editionNumber = t('books:edition_number_min');
     }
 
     setErrors(newErrors);
@@ -169,7 +172,7 @@ export const BookForm: React.FC<BookFormProps> = ({
     <Paper elevation={3} sx={{ overflow: 'hidden' }}>
       <Box sx={{ px: 3, py: 2, bgcolor: 'primary.50', borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography variant="h5" fontWeight="600" color="text.primary">
-          {title}
+          {title || defaultTitle}
         </Typography>
         <Button
           onClick={onCancel}
@@ -178,7 +181,7 @@ export const BookForm: React.FC<BookFormProps> = ({
           size="small"
           sx={{ minWidth: 'auto' }}
         >
-          Close
+          {t('common:close')}
         </Button>
       </Box>
 
@@ -189,10 +192,10 @@ export const BookForm: React.FC<BookFormProps> = ({
             fullWidth
             required
             id="title"
-            label="Title"
+            label={t('books:title')}
             value={formData.title}
             onChange={(e) => handleInputChange('title', e.target.value)}
-            placeholder="Enter book title"
+            placeholder={t('books:enter_book_title')}
             disabled={loading}
             error={!!errors.title}
             helperText={errors.title}
@@ -203,10 +206,10 @@ export const BookForm: React.FC<BookFormProps> = ({
             fullWidth
             required
             id="isbnCode"
-            label="ISBN"
+            label={t('books:isbn')}
             value={formData.isbnCode}
             onChange={(e) => handleInputChange('isbnCode', e.target.value)}
-            placeholder="e.g., 978-0-123-45678-9"
+            placeholder={t('books:isbn_placeholder')}
             disabled={loading}
             error={!!errors.isbnCode}
             helperText={errors.isbnCode}
@@ -226,7 +229,7 @@ export const BookForm: React.FC<BookFormProps> = ({
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="subtitle2" color="text.secondary">
-                  Author
+                  {t('books:author')}
                 </Typography>
                 <Button
                   size="small"
@@ -235,13 +238,13 @@ export const BookForm: React.FC<BookFormProps> = ({
                   disabled={loading}
                   sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
                 >
-                  Add
+                  {t('common:add')}
                 </Button>
               </Box>
               <AuthorAutocomplete
                 value={null}
                 onChange={handleAuthorAdd}
-                placeholder="Search and add authors..."
+                placeholder={t('books:search_add_authors')}
                 disabled={loading}
               />
             </Box>
@@ -251,7 +254,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, height: '28px' }}>
               </Box>
               <FormControl fullWidth>
-                <InputLabel id="status-label">Reading Status</InputLabel>
+                <InputLabel id="status-label">{t('books:reading_status')}</InputLabel>
                 <Select
                   labelId="status-label"
                   id="status"
@@ -259,9 +262,9 @@ export const BookForm: React.FC<BookFormProps> = ({
                   onChange={(e) => handleInputChange('status', e.target.value === '' ? undefined : e.target.value as Book['status'])}
                 >
                   <MenuItem value="">&nbsp;</MenuItem>
-                  <MenuItem value="reading">Reading</MenuItem>
-                  <MenuItem value="paused">Paused</MenuItem>
-                  <MenuItem value="finished">Finished</MenuItem>
+                  <MenuItem value="reading">{t('books:reading')}</MenuItem>
+                  <MenuItem value="paused">{t('books:paused')}</MenuItem>
+                  <MenuItem value="finished">{t('books:finished')}</MenuItem>
                 </Select>
               </FormControl>
             </Box>
@@ -290,7 +293,7 @@ export const BookForm: React.FC<BookFormProps> = ({
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="subtitle2" color="text.secondary">
-                Categories
+                {t('books:categories')}
               </Typography>
               <Button
                 size="small"
@@ -299,7 +302,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                 disabled={loading}
                 sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
               >
-                Add
+                {t('common:add')}
               </Button>
             </Box>
 
@@ -307,7 +310,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               <Box display="flex" alignItems="center" gap={1}>
                 <CircularProgress size={16} />
                 <Typography variant="body2" color="text.secondary">
-                  Loading categories...
+                  {t('books:loading_categories')}
                 </Typography>
               </Box>
             ) : (
@@ -359,12 +362,12 @@ export const BookForm: React.FC<BookFormProps> = ({
               fullWidth
               type="number"
               id="editionNumber"
-              label="Edition Number"
+              label={t('books:edition_number')}
               value={formData.editionNumber || ''}
-              onChange={(e) => handleInputChange('editionNumber', 
+              onChange={(e) => handleInputChange('editionNumber',
                 e.target.value ? parseInt(e.target.value) : undefined
               )}
-              placeholder="e.g., 1"
+              placeholder={t('books:edition_number_placeholder')}
               inputProps={{ min: 1 }}
               disabled={loading}
               error={!!errors.editionNumber}
@@ -376,7 +379,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               fullWidth
               type="date"
               id="editionDate"
-              label="Edition Date"
+              label={t('books:edition_date')}
               value={formData.editionDate}
               onChange={(e) => handleInputChange('editionDate', e.target.value)}
               disabled={loading}
@@ -392,10 +395,10 @@ export const BookForm: React.FC<BookFormProps> = ({
             multiline
             rows={4}
             id="notes"
-            label="Notes"
+            label={t('books:notes')}
             value={formData.notes}
             onChange={(e) => handleInputChange('notes', e.target.value)}
-            placeholder="Add any notes about this book..."
+            placeholder={t('books:add_notes_placeholder')}
             disabled={loading}
           />
 
@@ -422,23 +425,23 @@ export const BookForm: React.FC<BookFormProps> = ({
               startIcon={<CancelIcon />}
               sx={{ minWidth: 120, order: { xs: 2, sm: 1 } }}
             >
-              Cancel
+              {t('common:cancel')}
             </Button>
-            
+
             <Button
               type="submit"
               variant="contained"
               size="large"
               disabled={loading}
               startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
-              sx={{ 
-                minWidth: 160, 
+              sx={{
+                minWidth: 160,
                 order: { xs: 1, sm: 2 },
                 bgcolor: 'primary.main',
                 '&:hover': { bgcolor: 'primary.dark' }
               }}
             >
-              {loading ? 'Saving...' : book ? 'Update Book' : 'Save Book'}
+              {loading ? t('books:saving') : book ? t('books:update_book') : t('books:save_book')}
             </Button>
           </Box>
         </Stack>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Book, Author, Category } from '../../types';
 
 interface BookDetailsProps {
@@ -18,11 +19,12 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
   onClose,
   loading = false
 }) => {
+  const { t } = useTranslation(['books', 'common']);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const formatAuthors = (authors?: Author[]) => {
-    if (!authors || authors.length === 0) return 'Unknown Author';
-    return authors.map(author => 
+    if (!authors || authors.length === 0) return t('books:unknown_author');
+    return authors.map(author =>
       typeof author === 'string' ? author : `${author.name} ${author.surname}`
     ).join(', ');
   };
@@ -43,11 +45,11 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
   const formatStatus = (status: string) => {
     switch (status) {
       case 'reading':
-        return 'Reading';
+        return t('books:reading');
       case 'paused':
-        return 'Paused';
+        return t('books:paused');
       case 'finished':
-        return 'Finished';
+        return t('books:finished');
       default:
         return ' ';
     }
@@ -80,14 +82,14 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
     <div className="bg-surface rounded-lg shadow-lg border border-secondary-200 overflow-hidden">
       {/* Header */}
       <div className="px-6 py-4 bg-primary-50 border-b border-secondary-200 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-text-primary">Book Details</h2>
-        
+        <h2 className="text-xl font-semibold text-text-primary">{t('books:book_details')}</h2>
+
         <div className="flex items-center space-x-2">
           {onEdit && (
             <button
               onClick={() => onEdit(book)}
               className="p-2 text-text-muted hover:text-primary-500 transition-colors"
-              title="Edit book"
+              title={t('books:edit_book_title')}
               disabled={loading}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,12 +97,12 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
               </svg>
             </button>
           )}
-          
+
           {onDelete && (
             <button
               onClick={() => setShowDeleteConfirm(true)}
               className="p-2 text-text-muted hover:text-semantic-error transition-colors"
-              title="Delete book"
+              title={t('books:delete_book_title')}
               disabled={loading}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,12 +110,12 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
               </svg>
             </button>
           )}
-          
+
           {onClose && (
             <button
               onClick={onClose}
               className="p-2 text-text-muted hover:text-text-secondary transition-colors"
-              title="Close"
+              title={t('common:close')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -155,14 +157,14 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ISBN */}
               <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-1">ISBN</h3>
+                <h3 className="text-sm font-medium text-text-secondary mb-1">{t('books:isbn')}</h3>
                 <p className="text-text-primary font-mono">{book.isbnCode}</p>
               </div>
 
               {/* Edition */}
               {book.editionNumber && (
                 <div>
-                  <h3 className="text-sm font-medium text-text-secondary mb-1">Edition</h3>
+                  <h3 className="text-sm font-medium text-text-secondary mb-1">{t('books:edition')}</h3>
                   <p className="text-text-primary">{book.editionNumber}</p>
                 </div>
               )}
@@ -170,21 +172,21 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
               {/* Edition Date */}
               {book.editionDate && (
                 <div>
-                  <h3 className="text-sm font-medium text-text-secondary mb-1">Edition Date</h3>
+                  <h3 className="text-sm font-medium text-text-secondary mb-1">{t('books:edition_date')}</h3>
                   <p className="text-text-primary">{formatDate(book.editionDate)}</p>
                 </div>
               )}
 
               {/* Added Date */}
               <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-1">Added</h3>
+                <h3 className="text-sm font-medium text-text-secondary mb-1">{t('books:added')}</h3>
                 <p className="text-text-primary">{formatDate(book.creationDate)}</p>
               </div>
 
               {/* Last Updated */}
               {book.updateDate !== book.creationDate && (
                 <div>
-                  <h3 className="text-sm font-medium text-text-secondary mb-1">Last Updated</h3>
+                  <h3 className="text-sm font-medium text-text-secondary mb-1">{t('books:last_updated')}</h3>
                   <p className="text-text-primary">{formatDate(book.updateDate)}</p>
                 </div>
               )}
@@ -193,7 +195,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
             {/* Categories */}
             {book.categories && book.categories.length > 0 && (
               <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-2">Categories</h3>
+                <h3 className="text-sm font-medium text-text-secondary mb-2">{t('books:categories')}</h3>
                 <div className="flex flex-wrap gap-2">
                   {book.categories.map((category: Category) => (
                     <span
@@ -210,7 +212,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
             {/* Status Change */}
             {onStatusChange && (
               <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-2">Update Reading Status</h3>
+                <h3 className="text-sm font-medium text-text-secondary mb-2">{t('books:update_reading_status')}</h3>
                 <select
                   value={book.status || ''}
                   onChange={handleStatusChange}
@@ -218,9 +220,9 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                   disabled={loading}
                 >
                   <option value="">&nbsp;</option>
-                  <option value="reading">Reading</option>
-                  <option value="paused">Paused</option>
-                  <option value="finished">Finished</option>
+                  <option value="reading">{t('books:reading')}</option>
+                  <option value="paused">{t('books:paused')}</option>
+                  <option value="finished">{t('books:finished')}</option>
                 </select>
               </div>
             )}
@@ -228,7 +230,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
             {/* Notes */}
             {book.notes && (
               <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-2">Notes</h3>
+                <h3 className="text-sm font-medium text-text-secondary mb-2">{t('books:notes')}</h3>
                 <div className="bg-secondary-50 rounded-lg p-4">
                   <p className="text-text-primary whitespace-pre-wrap">{book.notes}</p>
                 </div>
@@ -250,25 +252,25 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-text-primary">Delete Book</h3>
-                  <p className="text-text-secondary">Are you sure you want to delete "{book.title}"? This action cannot be undone.</p>
+                  <h3 className="text-lg font-medium text-text-primary">{t('books:delete_book')}</h3>
+                  <p className="text-text-secondary">{t('books:delete_confirm_message', { title: book.title })}</p>
                 </div>
               </div>
-              
+
               <div className="flex space-x-3 justify-end">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
                   className="px-4 py-2 border border-secondary-300 text-text-secondary rounded-lg hover:bg-secondary-50 transition-colors"
                   disabled={loading}
                 >
-                  Cancel
+                  {t('common:cancel')}
                 </button>
                 <button
                   onClick={handleDelete}
                   className="px-4 py-2 bg-semantic-error text-white rounded-lg hover:bg-red-600 transition-colors"
                   disabled={loading}
                 >
-                  {loading ? 'Deleting...' : 'Delete Book'}
+                  {loading ? t('books:deleting') : t('books:delete_book')}
                 </button>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { ResponsiveInput } from '../UI/ResponsiveInput';
 import { ResponsiveButton } from '../UI/ResponsiveButton';
@@ -8,6 +9,7 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
+  const { t } = useTranslation(['common']);
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -27,13 +29,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     setError(null);
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('common:passwords_no_match'));
       setLoading(false);
       return;
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long and contain uppercase, lowercase and numbers');
+      setError(t('common:password_requirements'));
       setLoading(false);
       return;
     }
@@ -65,7 +67,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       // If no result, registration success will be handled by AuthContext (auto-login)
     } catch (err: unknown) {
       console.error('Registration error:', err);
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : t('common:registration_failed'));
       setSuccess(null);
     } finally {
       setLoading(false);
@@ -81,8 +83,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   return (
     <div className="max-w-md mx-auto bg-surface rounded-lg shadow-lg border border-secondary-200 overflow-hidden">
       <div className="px-6 py-4 bg-primary-50 border-b border-secondary-200">
-        <h2 className="text-xl font-semibold text-text-primary">Create Account</h2>
-        <p className="text-text-secondary text-sm">Join My Many Books today</p>
+        <h2 className="text-xl font-semibold text-text-primary">{t('common:create_account')}</h2>
+        <p className="text-text-secondary text-sm">{t('common:join_app')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -104,7 +106,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 <p className="text-green-800 text-sm font-medium">{success}</p>
                 {requiresVerification && (
                   <p className="text-green-700 text-xs mt-1">
-                    After clicking the verification link, you can return here to sign in.
+                    {t('common:verification_link_instruction')}
                   </p>
                 )}
               </div>
@@ -116,10 +118,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           <ResponsiveInput
             type="text"
             id="name"
-            label="First Name"
+            label={t('common:first_name')}
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="First name"
+            placeholder={t('common:first_name_placeholder')}
             required
             disabled={loading}
           />
@@ -127,10 +129,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           <ResponsiveInput
             type="text"
             id="surname"
-            label="Last Name"
+            label={t('common:last_name')}
             value={formData.surname}
             onChange={(e) => handleInputChange('surname', e.target.value)}
-            placeholder="Last name"
+            placeholder={t('common:last_name_placeholder')}
             required
             disabled={loading}
           />

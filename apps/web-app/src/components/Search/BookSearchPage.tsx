@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button
@@ -18,6 +19,7 @@ import { useBookSearch } from '../../hooks/useBookSearch';
 import { Book, SearchFilters } from '../../types';
 
 export const BookSearchPage: React.FC = () => {
+  const { t } = useTranslation(['books', 'common']);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const {
@@ -84,10 +86,10 @@ export const BookSearchPage: React.FC = () => {
       {/* Page header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-text-primary mb-2">
-          Search Books
+          {t('books:search_books')}
         </h1>
         <p className="text-lg text-text-secondary">
-          Find books in your library or discover new ones to add
+          {t('books:find_books_description')}
         </p>
       </div>
 
@@ -110,7 +112,7 @@ export const BookSearchPage: React.FC = () => {
               size="small"
               startIcon={<CloseIcon />}
             >
-              Clear search
+              {t('books:clear_search')}
             </Button>
           </div>
 
@@ -120,7 +122,7 @@ export const BookSearchPage: React.FC = () => {
               variant="contained"
               startIcon={<AddIcon />}
             >
-              Add New Book
+              {t('books:add_new_book')}
             </Button>
           </div>
         </div>
@@ -144,10 +146,10 @@ export const BookSearchPage: React.FC = () => {
             <SearchIcon sx={{ fontSize: 96, mx: 'auto', mb: 2, display: 'block' }} />
           </Box>
           <h2 className="text-2xl font-semibold text-text-primary mb-4">
-            Search Your Library
+            {t('books:search_your_library')}
           </h2>
           <p className="text-text-secondary mb-8 max-w-md mx-auto">
-            Use the search form above to find books in your collection, or discover new books to add to your library.
+            {t('books:use_search_form')}
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
@@ -155,24 +157,24 @@ export const BookSearchPage: React.FC = () => {
               <Box color="primary.main" mb={2} textAlign="center">
                 <BookIcon sx={{ fontSize: 32 }} />
               </Box>
-              <h3 className="font-medium text-text-primary mb-2">Search by Title</h3>
-              <p className="text-sm text-text-secondary">Find books by their title or keywords</p>
+              <h3 className="font-medium text-text-primary mb-2">{t('books:search_by_title')}</h3>
+              <p className="text-sm text-text-secondary">{t('books:find_by_title')}</p>
             </div>
 
             <div className="bg-surface p-6 rounded-lg border border-secondary-200">
               <Box color="primary.main" mb={2} textAlign="center">
                 <PersonIcon sx={{ fontSize: 32 }} />
               </Box>
-              <h3 className="font-medium text-text-primary mb-2">Search by Author</h3>
-              <p className="text-sm text-text-secondary">Discover all books by your favorite authors</p>
+              <h3 className="font-medium text-text-primary mb-2">{t('books:search_by_author_heading')}</h3>
+              <p className="text-sm text-text-secondary">{t('books:discover_books_by_author')}</p>
             </div>
 
             <div className="bg-surface p-6 rounded-lg border border-secondary-200">
               <Box color="primary.main" mb={2} textAlign="center">
                 <FilterIcon sx={{ fontSize: 32 }} />
               </Box>
-              <h3 className="font-medium text-text-primary mb-2">Advanced Filters</h3>
-              <p className="text-sm text-text-secondary">Filter by genre, year, status, and more</p>
+              <h3 className="font-medium text-text-primary mb-2">{t('books:advanced_filters_heading')}</h3>
+              <p className="text-sm text-text-secondary">{t('books:filter_by_genre')}</p>
             </div>
           </div>
         </div>

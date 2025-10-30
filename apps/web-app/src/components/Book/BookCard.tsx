@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   CardContent,
@@ -39,9 +40,11 @@ export const BookCard: React.FC<BookCardProps> = ({
   showActions = true,
   compact = false
 }) => {
+  const { t } = useTranslation(['books', 'common']);
+
   const formatAuthors = (authors?: Author[]) => {
-    if (!authors || authors.length === 0) return 'Unknown Author';
-    return authors.map(author => 
+    if (!authors || authors.length === 0) return t('books:unknown_author');
+    return authors.map(author =>
       typeof author === 'string' ? author : `${author.name} ${author.surname}`
     ).join(', ');
   };
@@ -62,11 +65,11 @@ export const BookCard: React.FC<BookCardProps> = ({
   const formatStatus = (status: string) => {
     switch (status) {
       case 'reading':
-        return 'Reading';
+        return t('books:reading');
       case 'paused':
-        return 'Paused';
+        return t('books:paused');
       case 'finished':
-        return 'Finished';
+        return t('books:finished');
       default:
         return status;
     }
@@ -130,22 +133,22 @@ export const BookCard: React.FC<BookCardProps> = ({
                       e.stopPropagation();
                       onEdit(book);
                     }}
-                    title="Edit book"
+                    title={t('books:edit_book_title')}
                   >
                     <EditIcon fontSize="small" />
                   </IconButton>
                 )}
-                
+
                 {onDelete && (
                   <IconButton
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (window.confirm(`Are you sure you want to delete "${book.title}"?`)) {
+                      if (window.confirm(t('books:delete_confirm', { title: book.title }))) {
                         onDelete(book.id);
                       }
                     }}
-                    title="Delete book"
+                    title={t('books:delete_book_title')}
                     color="error"
                   >
                     <DeleteIcon fontSize="small" />
@@ -225,18 +228,18 @@ export const BookCard: React.FC<BookCardProps> = ({
                       bgcolor: 'rgba(0,0,0,0.7)'
                     }
                   }}
-                  title="Edit book"
+                  title={t('books:edit_book_title')}
                 >
                   <EditIcon fontSize="small" />
                 </IconButton>
               )}
-              
+
               {onDelete && (
                 <IconButton
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (window.confirm(`Are you sure you want to delete "${book.title}"?`)) {
+                    if (window.confirm(t('books:delete_confirm', { title: book.title }))) {
                       onDelete(book.id);
                     }
                   }}
@@ -247,7 +250,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                       bgcolor: 'error.main'
                     }
                   }}
-                  title="Delete book"
+                  title={t('books:delete_book_title')}
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
@@ -295,7 +298,7 @@ export const BookCard: React.FC<BookCardProps> = ({
         <Box display="flex" justifyContent="space-between" mb={1}>
           {book.editionNumber && (
             <Typography variant="caption" color="text.disabled">
-              Edition {book.editionNumber}
+              {t('books:edition')} {book.editionNumber}
             </Typography>
           )}
           {book.editionDate && (
@@ -321,7 +324,7 @@ export const BookCard: React.FC<BookCardProps> = ({
               ))}
               {book.categories.length > 2 && (
                 <Typography variant="caption" color="text.disabled">
-                  +{book.categories.length - 2} more
+                  +{book.categories.length - 2} {t('books:more')}
                 </Typography>
               )}
             </Stack>
@@ -366,9 +369,9 @@ export const BookCard: React.FC<BookCardProps> = ({
                 sx={{ fontSize: '0.875rem' }}
               >
                 <MenuItem value="">&nbsp;</MenuItem>
-                <MenuItem value="reading">Reading</MenuItem>
-                <MenuItem value="paused">Paused</MenuItem>
-                <MenuItem value="finished">Finished</MenuItem>
+                <MenuItem value="reading">{t('books:reading')}</MenuItem>
+                <MenuItem value="paused">{t('books:paused')}</MenuItem>
+                <MenuItem value="finished">{t('books:finished')}</MenuItem>
               </Select>
             </FormControl>
           )}
