@@ -59,7 +59,12 @@ export class AuthorController extends BaseController {
 
     const validation = this.validateRequest(body, this.createAuthorSchema);
     if (!validation.isValid) {
-      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+      return this.createErrorResponseI18n(
+        'errors:validation_failed',
+        400,
+        undefined,
+        validation.errors
+      );
     }
 
     const authorData = validation.value!;
@@ -73,7 +78,10 @@ export class AuthorController extends BaseController {
     });
 
     if (existingAuthor) {
-      return this.createErrorResponseI18n('errors:resource_exists', 409, { resource: 'Author', field: 'name' });
+      return this.createErrorResponseI18n('errors:resource_exists', 409, {
+        resource: 'Author',
+        field: 'name',
+      });
     }
 
     try {
@@ -82,7 +90,12 @@ export class AuthorController extends BaseController {
       return this.createSuccessResponse(newAuthor, 'Author created successfully', undefined, 201);
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n('errors:create_failed', 500, { resource: 'author' }, errorMessage);
+      return this.createErrorResponseI18n(
+        'errors:create_failed',
+        500,
+        { resource: 'author' },
+        errorMessage
+      );
     }
   }
 
@@ -131,7 +144,12 @@ export class AuthorController extends BaseController {
 
     const validation = this.validateRequest(body, this.updateAuthorSchema);
     if (!validation.isValid) {
-      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
+      return this.createErrorResponseI18n(
+        'errors:validation_failed',
+        400,
+        undefined,
+        validation.errors
+      );
     }
 
     const author = await Author.findByPk(Number(authorId));
@@ -157,7 +175,10 @@ export class AuthorController extends BaseController {
       });
 
       if (existingAuthor && existingAuthor.id !== author.id) {
-        return this.createErrorResponseI18n('errors:resource_exists', 409, { resource: 'Author', field: 'name' });
+        return this.createErrorResponseI18n('errors:resource_exists', 409, {
+          resource: 'Author',
+          field: 'name',
+        });
       }
     }
 
@@ -166,7 +187,12 @@ export class AuthorController extends BaseController {
       return this.createSuccessResponse(author, 'Author updated successfully');
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n('errors:update_failed', 500, { resource: 'author' }, errorMessage);
+      return this.createErrorResponseI18n(
+        'errors:update_failed',
+        500,
+        { resource: 'author' },
+        errorMessage
+      );
     }
   }
 
@@ -208,7 +234,12 @@ export class AuthorController extends BaseController {
       return this.createSuccessResponse(null, 'Author deleted successfully', undefined, 204);
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n('errors:delete_failed', 500, { resource: 'author' }, errorMessage);
+      return this.createErrorResponseI18n(
+        'errors:delete_failed',
+        500,
+        { resource: 'author' },
+        errorMessage
+      );
     }
   }
 
@@ -229,7 +260,12 @@ export class AuthorController extends BaseController {
         searchFilters = JSON.parse(filters) as AuthorSearchFilters;
         const filterValidation = this.validateRequest(searchFilters, this.searchFiltersSchema);
         if (!filterValidation.isValid) {
-          return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, filterValidation.errors);
+          return this.createErrorResponseI18n(
+            'errors:validation_failed',
+            400,
+            undefined,
+            filterValidation.errors
+          );
         }
         searchFilters = filterValidation.value!;
       } catch {
