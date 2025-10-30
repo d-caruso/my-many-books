@@ -17,6 +17,7 @@ import {
   Warning as WarningIcon,
   Timer as TimerIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { useISBNScanner } from '../../hooks/useISBNScanner';
 import { ScanResult } from '../../types';
 
@@ -33,8 +34,9 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
   onClose,
   isOpen
 }) => {
+  const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
-  
+
   const {
     isScanning,
     hasPermission,
@@ -100,7 +102,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
         >
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Typography variant="h6" fontWeight="600" color="white">
-              Scan ISBN Barcode
+              {t('scanner:scan_barcode')}
             </Typography>
             <IconButton
               onClick={onClose}
@@ -252,7 +254,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
                   }}
                 >
                   <Typography variant="body2" color="white" textAlign="center">
-                    Position the ISBN barcode within the frame
+                    {t('scanner:position_barcode')}
                   </Typography>
                 </Paper>
               </Box>
@@ -290,7 +292,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
                   
                   <Box>
                     <Typography variant="h6" fontWeight="600" gutterBottom>
-                      Camera Access Required
+                      {t('scanner:camera_access_required')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" mb={3}>
                       {error}
@@ -309,47 +311,47 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
                     }}
                   >
                     <CameraIcon sx={{ mr: 1 }} />
-                    <Typography variant="button">Request Access</Typography>
+                    <Typography variant="button">{t('scanner:request_access')}</Typography>
                   </IconButton>
                   
                   {/* Manual Entry Form */}
                   <Box data-testid="manual-entry-form" sx={{ mt: 3, width: '100%' }}>
-                    <input 
-                      data-testid="manual-isbn-input" 
-                      placeholder="Enter ISBN manually"
-                      style={{ 
-                        padding: '8px', 
-                        marginRight: '8px', 
+                    <input
+                      data-testid="manual-isbn-input"
+                      placeholder={t('scanner:enter_isbn_placeholder')}
+                      style={{
+                        padding: '8px',
+                        marginRight: '8px',
                         border: '1px solid #ccc',
                         borderRadius: '4px',
                         width: '200px'
                       }}
                     />
-                    <button 
+                    <button
                       data-testid="submit-manual-isbn"
-                      style={{ 
-                        padding: '8px 16px', 
-                        backgroundColor: '#1976d2', 
-                        color: 'white', 
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#1976d2',
+                        color: 'white',
                         border: 'none',
                         borderRadius: '4px',
                         cursor: 'pointer'
                       }}
                     >
-                      Submit
+                      {t('scanner:submit')}
                     </button>
                   </Box>
                 </Stack>
               ) : (
                 <Stack spacing={3} alignItems="center">
                   <CircularProgress size={64} thickness={4} />
-                  
+
                   <Box>
                     <Typography variant="h6" fontWeight="600" gutterBottom>
-                      Initializing Camera
+                      {t('scanner:initializing_camera')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Please wait while we prepare the scanner...
+                      {t('scanner:initializing_message')}
                     </Typography>
                   </Box>
                 </Stack>
@@ -382,7 +384,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
                     '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.2)' },
                     p: 2
                   }}
-                  title="Switch Camera"
+                  title={t('scanner:switch_camera')}
                 >
                   <SwapIcon />
                 </IconButton>
@@ -391,7 +393,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
               {/* Status Indicator */}
               <Chip
                 icon={isScanning ? <TimerIcon /> : <CameraIcon />}
-                label={isScanning ? 'Scanning...' : 'Ready'}
+                label={isScanning ? t('scanner:scanning_status') : t('scanner:ready_status')}
                 variant="filled"
                 sx={{
                   bgcolor: isScanning ? 'success.main' : 'grey.600',
@@ -413,7 +415,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
                   '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.2)' },
                   p: 2
                 }}
-                title="Enter ISBN Manually"
+                title={t('scanner:enter_manually_button')}
               >
                 <EditIcon />
               </IconButton>

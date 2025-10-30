@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import { ThemeName } from '../../types';
 import { ResponsiveButton } from '../UI/ResponsiveButton';
@@ -14,6 +15,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   variant = 'dropdown',
   className = ''
 }) => {
+  const { t } = useTranslation();
   const { theme, setTheme, themes } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [previewTheme, setPreviewTheme] = useState<ThemeName | null>(null);
@@ -223,16 +225,16 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                 onClick={() => handlePreview(themeKey)}
                 className={previewTheme === themeKey ? 'bg-secondary-100' : ''}
               >
-                {previewTheme === themeKey ? 'Previewing...' : 'Preview'}
+                {previewTheme === themeKey ? t('theme:selector.previewing') : t('theme:selector.preview')}
               </ResponsiveButton>
-              
+
               <ResponsiveButton
                 variant={theme === themeKey ? 'primary' : 'secondary'}
                 size="sm"
                 onClick={() => handleThemeChange(themeKey)}
                 disabled={theme === themeKey}
               >
-                {theme === themeKey ? 'Active' : 'Select'}
+                {theme === themeKey ? t('theme:selector.active') : t('theme:selector.select')}
               </ResponsiveButton>
             </div>
           </div>

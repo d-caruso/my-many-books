@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePWA } from '../../hooks/usePWA';
 
 interface OfflineIndicatorProps {
@@ -16,9 +17,11 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   onRetry,
   dismissible = false,
   onDismiss,
-  message = 'You are currently offline'
+  message
 }) => {
+  const { t } = useTranslation();
   const { isOffline } = usePWA();
+  const displayMessage = message || t('pwa:offline_indicator.you_are_offline');
 
   if (!isOffline) {
     return null;
@@ -33,16 +36,16 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
               data-testid="wifi-off-icon"
               className="w-2 h-2 bg-white rounded-full animate-pulse"
             />
-            <span>{message}</span>
+            <span>{displayMessage}</span>
           </div>
           <div className="flex items-center space-x-2">
             {showRetry && (
-              <button 
+              <button
                 data-testid="alert-action"
                 onClick={onRetry}
                 className="text-white underline hover:no-underline"
               >
-                Retry
+                {t('pwa:offline_indicator.retry')}
               </button>
             )}
             {dismissible && (
@@ -71,16 +74,16 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
           className="w-2 h-2 bg-white rounded-full animate-pulse"
         />
         <div className="flex items-center space-x-1">
-          <span>{message}</span>
-          <span>Some features may be limited</span>
+          <span>{displayMessage}</span>
+          <span>{t('pwa:offline_indicator.features_limited')}</span>
         </div>
         {showRetry && (
-          <button 
+          <button
             data-testid="alert-action"
             onClick={onRetry}
             className="ml-4 text-white underline hover:no-underline"
           >
-            Retry
+            {t('pwa:offline_indicator.retry')}
           </button>
         )}
         {dismissible && (

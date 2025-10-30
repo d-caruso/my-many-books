@@ -58,8 +58,7 @@ export const BookList: React.FC<BookListProps> = ({
       <Alert severity="error" sx={{ textAlign: 'center', py: 3 }}>
         <Box display="flex" flexDirection="column" alignItems="center">
           <WarningIcon sx={{ fontSize: 32, mb: 1 }} />
-          <AlertTitle>{t('books:error_loading_books')}</AlertTitle>
-          {error}
+          <AlertTitle>{error}</AlertTitle>
         </Box>
       </Alert>
     );

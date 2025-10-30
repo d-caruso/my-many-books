@@ -24,7 +24,6 @@
   "paused": "In Pausa",
   "finished": "Finito",
   "loading_books": "Caricamento libri...",
-  "error_loading_books": "Errore nel Caricamento dei Libri",
   "no_books_found": "Nessun libro trovato",
   "start_building_library": "Inizia a costruire la tua biblioteca aggiungendo il tuo primo libro",
   "search_placeholder": "Cerca per titolo, autore, ISBN...",

@@ -77,7 +77,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
           aria-label="Toggle filters"
           className="px-4 py-2 border rounded"
         >
-          Filters
+          {t('search:filter.title')}
           {Object.keys(filters).length > 0 && (
             <span data-testid="filter-count" className="ml-2 bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
               {Object.keys(filters).length}
@@ -95,12 +95,12 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
           aria-label="Sort books"
           className="px-4 py-2 border rounded"
         >
-          <option value="title-asc">Title A-Z</option>
-          <option value="title-desc">Title Z-A</option>
-          <option value="author-asc">Author A-Z</option>
-          <option value="author-desc">Author Z-A</option>
-          <option value="dateAdded-desc">Date Added (Newest)</option>
-          <option value="rating-desc">Rating (Highest)</option>
+          <option value="title-asc">{t('search:filter.sort.title_asc')}</option>
+          <option value="title-desc">{t('search:filter.sort.title_desc')}</option>
+          <option value="author-asc">{t('search:filter.sort.author_asc')}</option>
+          <option value="author-desc">{t('search:filter.sort.author_desc')}</option>
+          <option value="dateAdded-desc">{t('search:filter.sort.date_newest')}</option>
+          <option value="rating-desc">{t('search:filter.sort.rating_highest')}</option>
         </select>
       </div>
 
@@ -109,28 +109,28 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
         <div data-testid="filter-panel" className="border rounded-lg p-4 space-y-4">
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium mb-2">Status</label>
+            <label className="block text-sm font-medium mb-2">{t('search:filter.status.label')}</label>
             <select
               data-testid="status-filter"
               onChange={(e) => handleFilterChange({ ...filters, status: e.target.value === 'all' ? undefined : e.target.value as 'reading' | 'paused' | 'finished' })}
               className="w-full px-3 py-2 border rounded"
             >
-              <option value="all">All Books</option>
-              <option value="reading">Reading</option>
-              <option value="paused">Paused</option>
-              <option value="finished">Finished</option>
+              <option value="all">{t('search:filter.status.all')}</option>
+              <option value="reading">{t('search:filter.status.reading')}</option>
+              <option value="paused">{t('search:filter.status.paused')}</option>
+              <option value="finished">{t('search:filter.status.finished')}</option>
             </select>
           </div>
 
           {/* Category Filter */}
           <div>
-            <label className="block text-sm font-medium mb-2">Category</label>
+            <label className="block text-sm font-medium mb-2">{t('search:filter.category.label')}</label>
             <select
               data-testid="category-filter"
               onChange={(e) => handleFilterChange({ ...filters, categoryId: e.target.value ? parseInt(e.target.value) : undefined })}
               className="w-full px-3 py-2 border rounded"
             >
-              <option value="">All Categories</option>
+              <option value="">{t('search:filter.category.all')}</option>
               {categories.map((category, index) => (
                 <option key={category} value={index + 1}>
                   {category}
@@ -141,13 +141,13 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
 
           {/* Author Filter */}
           <div>
-            <label className="block text-sm font-medium mb-2">Author</label>
+            <label className="block text-sm font-medium mb-2">{t('search:filter.author.label')}</label>
             <select
               data-testid="author-filter"
               onChange={(e) => handleFilterChange({ ...filters, authorId: e.target.value ? parseInt(e.target.value) : undefined })}
               className="w-full px-3 py-2 border rounded"
             >
-              <option value="">All Authors</option>
+              <option value="">{t('search:filter.author.all')}</option>
               {authors.map((author, index) => (
                 <option key={author} value={index + 1}>{author}</option>
               ))}
@@ -164,22 +164,22 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
             }}
             className="px-4 py-2 text-red-600 border border-red-600 rounded hover:bg-red-50"
           >
-            Clear All Filters
+            {t('search:filter.clear_all')}
           </button>
         </div>
       )}
 
       {/* Results Count */}
       <div data-testid="results-count" className="text-sm text-gray-600">
-        {filteredCount !== undefined 
-          ? `${filteredCount} of ${totalBooks} books`
-          : `${totalBooks} books`
+        {filteredCount !== undefined
+          ? t('search:filter.results_count', { filtered: filteredCount, total: totalBooks })
+          : t('search:filter.results_total', { total: totalBooks })
         }
       </div>
 
       {totalBooks === 0 && (
         <div data-testid="no-results" className="text-center py-8 text-gray-500">
-          No books found
+          {t('search:filter.no_books')}
         </div>
       )}
     </div>

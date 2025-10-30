@@ -24,7 +24,6 @@
   "paused": "Paused",
   "finished": "Finished",
   "loading_books": "Loading books...",
-  "error_loading_books": "Error Loading Books",
   "no_books_found": "No books found",
   "start_building_library": "Start building your library by adding your first book",
   "search_placeholder": "Search by title, author, ISBN...",

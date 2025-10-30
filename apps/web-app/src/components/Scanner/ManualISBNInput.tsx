@@ -7,6 +7,7 @@ import {
   Box,
   Stack
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { ScanResult } from '../../types';
 
 interface ManualISBNInputProps {
@@ -20,6 +21,7 @@ export const ManualISBNInput: React.FC<ManualISBNInputProps> = ({
   onCancel,
   isOpen
 }) => {
+  const { t } = useTranslation();
   const [isbn, setIsbn] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -75,14 +77,14 @@ export const ManualISBNInput: React.FC<ManualISBNInputProps> = ({
     e.preventDefault();
     
     const cleanIsbn = isbn.replace(/[^0-9X]/gi, '');
-    
+
     if (!cleanIsbn) {
-      setError('Please enter an ISBN');
+      setError(t('scanner:isbn_required'));
       return;
     }
-    
+
     if (!validateISBN(cleanIsbn)) {
-      setError('Invalid ISBN format. Please enter a valid 10 or 13 digit ISBN.');
+      setError(t('scanner:isbn_invalid'));
       return;
     }
     
@@ -133,10 +135,10 @@ export const ManualISBNInput: React.FC<ManualISBNInputProps> = ({
     <Paper elevation={3} sx={{ p: 3, maxWidth: 500, mx: 'auto' }}>
       <Box mb={3}>
         <Typography variant="h5" fontWeight="600" gutterBottom>
-          Enter ISBN Manually
+          {t('scanner:manual_input_title')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Enter the 10 or 13 digit ISBN code from your book
+          {t('scanner:manual_input_description')}
         </Typography>
       </Box>
 
@@ -145,10 +147,10 @@ export const ManualISBNInput: React.FC<ManualISBNInputProps> = ({
           <TextField
             fullWidth
             id="isbn"
-            label="ISBN (10 or 13 digits)"
+            label={t('scanner:isbn_label')}
             value={isbn}
             onChange={handleInputChange}
-            placeholder="e.g., 978-0-123-45678-9"
+            placeholder={t('scanner:isbn_placeholder')}
             error={!!error}
             helperText={error}
             inputProps={{ maxLength: 17 }}
@@ -157,17 +159,17 @@ export const ManualISBNInput: React.FC<ManualISBNInputProps> = ({
 
           <Box>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              ISBN can be found on the back cover of most books, usually above or below the barcode.
+              {t('scanner:isbn_help_text')}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Examples:
+              {t('scanner:isbn_examples')}
             </Typography>
             <Box component="ul" sx={{ pl: 2, m: 0 }}>
               <Typography component="li" variant="body2" color="text.secondary">
-                ISBN-10: 0123456789
+                {t('scanner:isbn_example_10')}
               </Typography>
               <Typography component="li" variant="body2" color="text.secondary">
-                ISBN-13: 9780123456789
+                {t('scanner:isbn_example_13')}
               </Typography>
             </Box>
           </Box>
@@ -179,14 +181,14 @@ export const ManualISBNInput: React.FC<ManualISBNInputProps> = ({
               variant="outlined"
               fullWidth
             >
-              Cancel
+              {t('scanner:cancel')}
             </Button>
             <Button
               type="submit"
               variant="contained"
               fullWidth
             >
-              Add Book
+              {t('scanner:add_book')}
             </Button>
           </Stack>
         </Stack>

@@ -1,12 +1,15 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface HeaderProps {
   title?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title = 'My Many Books' }) => {
+export const Header: React.FC<HeaderProps> = ({ title }) => {
+  const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
+  const displayTitle = title || t('theme:header.title');
 
   const getThemeIcon = () => {
     switch (theme) {
@@ -25,15 +28,15 @@ export const Header: React.FC<HeaderProps> = ({ title = 'My Many Books' }) => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <h1 className="text-xl font-semibold text-text-primary">
-              {title}
+              {displayTitle}
             </h1>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <button
               onClick={toggleTheme}
               className="p-2 rounded-md hover:bg-secondary-100 transition-colors"
-              title="Toggle theme"
+              title={t('theme:settings.toggle_theme')}
             >
               <span className="text-lg">{getThemeIcon()}</span>
             </button>
