@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
+import { initializeI18n } from '@my-many-books/shared-i18n';
 
 // Load test environment variables
 config({ path: '.env.test' });
@@ -17,7 +18,8 @@ jest.mock('aws-sdk', () => ({
 
 // Global test setup
 beforeAll(async () => {
-  // Setup test database connection if needed
+  // Initialize i18n with English for tests
+  await initializeI18n('en');
 });
 
 afterAll(async () => {

@@ -33,7 +33,7 @@ describe('Router Handler Integration', () => {
     pathParameters: null,
     queryStringParameters: null,
     body: null,
-    headers: {},
+    headers: { 'accept-language': 'en' },
     requestContext: {
       requestId: 'test-request-id',
       requestTime: '09/Apr/2015:12:34:56 +0000',

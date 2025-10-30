@@ -21,6 +21,7 @@ export const lambdaAdapter = (controllerMethod: ControllerMethod) => {
         body: parsedBody,
         queryStringParameters: event.queryStringParameters || undefined,
         pathParameters: event.pathParameters || undefined,
+        headers: event.headers || undefined,
         user:
           (
             event as APIGatewayProxyEvent & {

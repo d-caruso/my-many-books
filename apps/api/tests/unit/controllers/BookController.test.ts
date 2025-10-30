@@ -11,6 +11,7 @@ interface UniversalRequest {
   body?: any;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
+  headers?: { [key: string]: string | undefined };
   user?: { userId: number };
 }
 
@@ -61,7 +62,9 @@ describe('BookController', () => {
     bookController = new BookController();
     jest.clearAllMocks();
 
-    mockRequest = {};
+    mockRequest = {
+      headers: { 'accept-language': 'en' },
+    };
   });
 
   describe('createBook', () => {
@@ -260,7 +263,7 @@ describe('BookController', () => {
 
       expect(result.statusCode).toBe(400);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('ISBN is required');
+      expect(result.error).toBe('ISBN must be provided');
     });
   });
 
