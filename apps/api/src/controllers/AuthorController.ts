@@ -51,14 +51,15 @@ export class AuthorController extends BaseController {
    * @returns An ApiResponse object with the newly created author or an error.
    */
   async createAuthor(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const body = this.parseBody<CreateAuthorRequest>(request);
     if (!body) {
-      return this.createErrorResponse('Request body is required', 400);
+      return this.createErrorResponseI18n('errors:request_body_required', 400);
     }
 
     const validation = this.validateRequest(body, this.createAuthorSchema);
     if (!validation.isValid) {
-      return this.createErrorResponse('Validation failed', 400, validation.errors);
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
     }
 
     const authorData = validation.value!;
@@ -72,7 +73,7 @@ export class AuthorController extends BaseController {
     });
 
     if (existingAuthor) {
-      return this.createErrorResponse('Author with this name already exists', 409);
+      return this.createErrorResponseI18n('errors:resource_exists', 409, { resource: 'Author', field: 'name' });
     }
 
     try {
@@ -81,7 +82,7 @@ export class AuthorController extends BaseController {
       return this.createSuccessResponse(newAuthor, 'Author created successfully', undefined, 201);
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponse('Failed to create author', 500, errorMessage);
+      return this.createErrorResponseI18n('errors:create_failed', 500, { resource: 'author' }, errorMessage);
     }
   }
 
@@ -91,9 +92,10 @@ export class AuthorController extends BaseController {
    * @returns An ApiResponse object with the author data or an error.
    */
   async getAuthor(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const authorId = this.getPathParameter(request, 'id');
     if (!authorId || isNaN(Number(authorId))) {
-      return this.createErrorResponse('Valid author ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'author' });
     }
 
     const includeBooks = this.getQueryParameter(request, 'includeBooks') === 'true';
@@ -104,7 +106,7 @@ export class AuthorController extends BaseController {
     });
 
     if (!author) {
-      return this.createErrorResponse('Author not found', 404);
+      return this.createErrorResponseI18n('errors:author_not_found', 404);
     }
 
     return this.createSuccessResponse(author);
@@ -116,24 +118,25 @@ export class AuthorController extends BaseController {
    * @returns An ApiResponse object with the updated author or an error.
    */
   async updateAuthor(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const authorId = this.getPathParameter(request, 'id');
     if (!authorId || isNaN(Number(authorId))) {
-      return this.createErrorResponse('Valid author ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'author' });
     }
 
     const body = this.parseBody<Partial<CreateAuthorRequest>>(request);
     if (!body) {
-      return this.createErrorResponse('Request body is required', 400);
+      return this.createErrorResponseI18n('errors:request_body_required', 400);
     }
 
     const validation = this.validateRequest(body, this.updateAuthorSchema);
     if (!validation.isValid) {
-      return this.createErrorResponse('Validation failed', 400, validation.errors);
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
     }
 
     const author = await Author.findByPk(Number(authorId));
     if (!author) {
-      return this.createErrorResponse('Author not found', 404);
+      return this.createErrorResponseI18n('errors:author_not_found', 404);
     }
 
     const authorData = validation.value!;
@@ -154,7 +157,7 @@ export class AuthorController extends BaseController {
       });
 
       if (existingAuthor && existingAuthor.id !== author.id) {
-        return this.createErrorResponse('Author with this name already exists', 409);
+        return this.createErrorResponseI18n('errors:resource_exists', 409, { resource: 'Author', field: 'name' });
       }
     }
 
@@ -163,7 +166,7 @@ export class AuthorController extends BaseController {
       return this.createSuccessResponse(author, 'Author updated successfully');
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponse('Failed to update author', 500, errorMessage);
+      return this.createErrorResponseI18n('errors:update_failed', 500, { resource: 'author' }, errorMessage);
     }
   }
 
@@ -173,15 +176,16 @@ export class AuthorController extends BaseController {
    * @returns A success message or an error.
    */
   async deleteAuthor(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const authorId = this.getPathParameter(request, 'id');
     if (!authorId || isNaN(Number(authorId))) {
-      return this.createErrorResponse('Valid author ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'author' });
     }
 
     const author = await Author.findByPk(Number(authorId));
 
     if (!author) {
-      return this.createErrorResponse('Author not found', 404);
+      return this.createErrorResponseI18n('errors:author_not_found', 404);
     }
 
     // Check if author has books before deletion
@@ -195,10 +199,7 @@ export class AuthorController extends BaseController {
     });
 
     if (bookCount > 0) {
-      return this.createErrorResponse(
-        'Cannot delete author with associated books. Remove book associations first.',
-        409
-      );
+      return this.createErrorResponseI18n('errors:author_has_books', 409);
     }
 
     try {
@@ -207,7 +208,7 @@ export class AuthorController extends BaseController {
       return this.createSuccessResponse(null, 'Author deleted successfully', undefined, 204);
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponse('Failed to delete author', 500, errorMessage);
+      return this.createErrorResponseI18n('errors:delete_failed', 500, { resource: 'author' }, errorMessage);
     }
   }
 
@@ -217,6 +218,7 @@ export class AuthorController extends BaseController {
    * @returns An ApiResponse with a list of authors and pagination metadata.
    */
   async listAuthors(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const pagination = this.getPaginationParams(request);
     const filters = this.getQueryParameter(request, 'filters');
     const includeBooks = this.getQueryParameter(request, 'includeBooks') === 'true';
@@ -227,11 +229,11 @@ export class AuthorController extends BaseController {
         searchFilters = JSON.parse(filters) as AuthorSearchFilters;
         const filterValidation = this.validateRequest(searchFilters, this.searchFiltersSchema);
         if (!filterValidation.isValid) {
-          return this.createErrorResponse('Invalid search filters', 400, filterValidation.errors);
+          return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, filterValidation.errors);
         }
         searchFilters = filterValidation.value!;
       } catch {
-        return this.createErrorResponse('Invalid filters format. Expected JSON string.', 400);
+        return this.createErrorResponseI18n('errors:invalid_filters', 400);
       }
     }
 
@@ -283,10 +285,11 @@ export class AuthorController extends BaseController {
    * @returns An ApiResponse with a list of matching authors.
    */
   async searchAuthors(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const query = this.getQueryParameter(request, 'q');
 
     if (!query || query.trim().length < 2) {
-      return this.createErrorResponse('Search query must be at least 2 characters', 400);
+      return this.createErrorResponseI18n('errors:search_query_min_length', 400, { min: 2 });
     }
 
     const searchTerm = query.trim();
@@ -316,16 +319,17 @@ export class AuthorController extends BaseController {
    * @returns An ApiResponse with a list of books and pagination metadata.
    */
   async getAuthorBooks(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const authorId = this.getPathParameter(request, 'id');
     if (!authorId || isNaN(Number(authorId))) {
-      return this.createErrorResponse('Valid author ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'author' });
     }
 
     const pagination = this.getPaginationParams(request);
 
     const author = await Author.findByPk(Number(authorId));
     if (!author) {
-      return this.createErrorResponse('Author not found', 404);
+      return this.createErrorResponseI18n('errors:author_not_found', 404);
     }
 
     const { count, rows } = await Book.findAndCountAll({
