@@ -1,0 +1,14 @@
+{
+  "book_not_found": "Libro non trovato",
+  "isbn_exists": "Libro con ISBN {{isbn}} esiste già",
+  "validation_failed": "Validazione fallita",
+  "auth_required": "Autenticazione utente richiesta",
+  "invalid_author_ids": "Uno o più ID autore non sono validi",
+  "invalid_category_ids": "Uno o più ID categoria non sono validi",
+  "request_body_required": "Il corpo della richiesta è obbligatorio",
+  "internal_server_error": "Errore interno del server",
+  "network_error": "Si è verificato un errore di rete",
+  "not_found": "Risorsa non trovata",
+  "unauthorized": "Accesso non autorizzato",
+  "forbidden": "Accesso negato"
+}
