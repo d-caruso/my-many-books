@@ -11,6 +11,7 @@ import { AuthPage } from './pages/AuthPage';
 import { BooksPage } from './pages/BooksPage';
 import { BookSearchPage } from './components/Search/BookSearchPage';
 import { ScannerModal } from './components/Scanner';
+import './i18n';
 
 // Create MUI theme
 const theme = createTheme({

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Stack,
@@ -31,7 +32,7 @@ export const BookList: React.FC<BookListProps> = ({
   books,
   loading = false,
   error = null,
-  emptyMessage = 'No books found',
+  emptyMessage,
   onEdit,
   onDelete,
   onStatusChange,
@@ -39,12 +40,14 @@ export const BookList: React.FC<BookListProps> = ({
   viewMode = 'grid',
   showActions = true
 }) => {
+  const { t } = useTranslation(['books', 'common']);
+
   if (loading) {
     return (
       <Box display="flex" flexDirection="column" alignItems="center" py={6}>
         <CircularProgress size={32} sx={{ mb: 2 }} />
         <Typography variant="body2" color="text.secondary">
-          Loading books...
+          {t('books:loading_books')}
         </Typography>
       </Box>
     );
@@ -55,7 +58,7 @@ export const BookList: React.FC<BookListProps> = ({
       <Alert severity="error" sx={{ textAlign: 'center', py: 3 }}>
         <Box display="flex" flexDirection="column" alignItems="center">
           <WarningIcon sx={{ fontSize: 32, mb: 1 }} />
-          <AlertTitle>Error Loading Books</AlertTitle>
+          <AlertTitle>{t('books:error_loading_books')}</AlertTitle>
           {error}
         </Box>
       </Alert>
@@ -67,10 +70,10 @@ export const BookList: React.FC<BookListProps> = ({
       <Box display="flex" flexDirection="column" alignItems="center" py={6}>
         <BookIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
         <Typography variant="h6" color="text.primary" gutterBottom>
-          {emptyMessage}
+          {emptyMessage || t('books:no_books_found')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Start building your library by adding your first book
+          {t('books:start_building_library')}
         </Typography>
       </Box>
     );
