@@ -67,17 +67,18 @@ export class IsbnController extends BaseController {
   }
 
   async lookupBook(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       const isbn =
         this.getPathParameter(request, 'isbn') || this.getQueryParameter(request, 'isbn');
 
       if (!isbn) {
-        return this.createErrorResponse('ISBN parameter is required', 400);
+        return this.createErrorResponseI18n('errors:isbn_parameter_required', 400);
       }
 
       const validation = this.validateRequest({ isbn }, this.isbnLookupSchema);
       if (!validation.isValid) {
-        return this.createErrorResponse('Validation failed', 400, validation.errors);
+        return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
       }
 
       const normalizedIsbn = validation.value!.isbn;
@@ -100,20 +101,21 @@ export class IsbnController extends BaseController {
       }
     } catch (error) {
       console.error('ISBN lookup error:', error);
-      return this.createErrorResponse('Internal server error during ISBN lookup', 500);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 
   async batchLookupBooks(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       const body = this.parseBody<BatchIsbnLookupRequest>(request);
       if (!body) {
-        return this.createErrorResponse('Request body is required', 400);
+        return this.createErrorResponseI18n('errors:request_body_required', 400);
       }
 
       const validation = this.validateRequest(body, this.batchIsbnLookupSchema);
       if (!validation.isValid) {
-        return this.createErrorResponse('Validation failed', 400, validation.errors);
+        return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
       }
 
       const { isbns } = validation.value!;
@@ -137,17 +139,18 @@ export class IsbnController extends BaseController {
       });
     } catch (error) {
       console.error('Batch ISBN lookup error:', error);
-      return this.createErrorResponse('Internal server error during batch ISBN lookup', 500);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 
   async searchByTitle(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       const title = this.getQueryParameter(request, 'title');
       const limitParam = this.getQueryParameter(request, 'limit');
 
       if (!title) {
-        return this.createErrorResponse('Title parameter is required', 400);
+        return this.createErrorResponseI18n('errors:title_query_required', 400);
       }
 
       const searchData: TitleSearchRequest = {
@@ -157,7 +160,7 @@ export class IsbnController extends BaseController {
 
       const validation = this.validateRequest(searchData, this.titleSearchSchema);
       if (!validation.isValid) {
-        return this.createErrorResponse('Validation failed', 400, validation.errors);
+        return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
       }
 
       const { title: searchTitle, limit } = validation.value!;
@@ -172,15 +175,16 @@ export class IsbnController extends BaseController {
           limit,
         });
       } else {
-        return this.createErrorResponse(result.error || 'Search failed', 400);
+        return this.createErrorResponseI18n('errors:internal_server_error', 400);
       }
     } catch (error) {
       console.error('Title search error:', error);
-      return this.createErrorResponse('Internal server error during title search', 500);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 
-  async getServiceHealth(_request: UniversalRequest): Promise<ApiResponse> {
+  async getServiceHealth(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       const healthResult = await isbnService.checkServiceHealth();
 
@@ -202,12 +206,13 @@ export class IsbnController extends BaseController {
       );
     } catch (error) {
       console.error('Health check error:', error);
-      return this.createErrorResponse('Health check failed', 503);
+      return this.createErrorResponseI18n('errors:internal_server_error', 503);
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async getResilienceStats(_request: UniversalRequest): Promise<ApiResponse> {
+  async getResilienceStats(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       const stats = isbnService.getResilienceStats();
 
@@ -220,36 +225,39 @@ export class IsbnController extends BaseController {
       });
     } catch (error) {
       console.error('Resilience stats error:', error);
-      return this.createErrorResponse('Failed to get resilience statistics', 500);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async resetResilience(_request: UniversalRequest): Promise<ApiResponse> {
+  async resetResilience(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       isbnService.resetResilience();
 
       return this.createSuccessResponse(null, 'Resilience mechanisms reset successfully');
     } catch (error) {
       console.error('Reset resilience error:', error);
-      return this.createErrorResponse('Failed to reset resilience mechanisms', 500);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async clearCache(_request: UniversalRequest): Promise<ApiResponse> {
+  async clearCache(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       isbnService.clearCache();
 
       return this.createSuccessResponse(null, 'ISBN service cache cleared successfully');
     } catch (error) {
       console.error('Clear cache error:', error);
-      return this.createErrorResponse('Failed to clear cache', 500);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async getCacheStats(_request: UniversalRequest): Promise<ApiResponse> {
+  async getCacheStats(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       const cacheStats = isbnService.getCacheStats();
 
@@ -259,21 +267,22 @@ export class IsbnController extends BaseController {
       });
     } catch (error) {
       console.error('Cache stats error:', error);
-      return this.createErrorResponse('Failed to get cache statistics', 500);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async addFallbackBook(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       const body = this.parseBody<AddFallbackBookRequest>(request);
       if (!body) {
-        return this.createErrorResponse('Request body is required', 400);
+        return this.createErrorResponseI18n('errors:request_body_required', 400);
       }
 
       const validation = this.validateRequest(body, this.addFallbackBookSchema);
       if (!validation.isValid) {
-        return this.createErrorResponse('Validation failed', 400, validation.errors);
+        return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
       }
 
       const { isbn, title } = validation.value!;
@@ -288,22 +297,23 @@ export class IsbnController extends BaseController {
           201
         );
       } else {
-        return this.createErrorResponse('Failed to add fallback book', 400);
+        return this.createErrorResponseI18n('errors:internal_server_error', 400);
       }
     } catch (error) {
       console.error('Add fallback book error:', error);
-      return this.createErrorResponse('Internal server error while adding fallback book', 500);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async validateIsbn(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       const isbn =
         this.getPathParameter(request, 'isbn') || this.getQueryParameter(request, 'isbn');
 
       if (!isbn) {
-        return this.createErrorResponse('ISBN parameter is required', 400);
+        return this.createErrorResponseI18n('errors:isbn_parameter_required', 400);
       }
 
       const validation = validateIsbn(isbn);
@@ -325,31 +335,29 @@ export class IsbnController extends BaseController {
       });
     } catch (error) {
       console.error('ISBN validation error:', error);
-      return this.createErrorResponse('Internal server error during ISBN validation', 500);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async formatIsbn(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     try {
       const isbn = this.getQueryParameter(request, 'isbn');
       const format = this.getQueryParameter(request, 'format') || 'hyphenated';
 
       if (!isbn) {
-        return this.createErrorResponse('ISBN parameter is required', 400);
+        return this.createErrorResponseI18n('errors:isbn_parameter_required', 400);
       }
 
       if (!['hyphenated', 'clean', 'isbn10', 'isbn13'].includes(format)) {
-        return this.createErrorResponse(
-          'Format must be one of: hyphenated, clean, isbn10, isbn13',
-          400
-        );
+        return this.createErrorResponseI18n('errors:invalid_service_name', 400, { services: 'hyphenated, clean, isbn10, isbn13' });
       }
 
       const validation = validateIsbn(isbn);
 
       if (!validation.isValid) {
-        return this.createErrorResponse(`Invalid ISBN: ${validation.error}`, 400);
+        return this.createErrorResponseI18n('errors:invalid_isbn', 400, { error: validation.error });
       }
 
       const normalizedIsbn = validation.normalizedIsbn!;
@@ -381,7 +389,7 @@ export class IsbnController extends BaseController {
           } else if (normalizedIsbn.length === 10) {
             formattedIsbn = normalizedIsbn;
           } else {
-            return this.createErrorResponse('Cannot convert this ISBN to ISBN-10 format', 400);
+            return this.createErrorResponseI18n('errors:invalid_isbn_format', 400);
           }
           break;
         case 'isbn13':
@@ -410,7 +418,7 @@ export class IsbnController extends BaseController {
       });
     } catch (error) {
       console.error('ISBN formatting error:', error);
-      return this.createErrorResponse('Internal server error during ISBN formatting', 500);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 }

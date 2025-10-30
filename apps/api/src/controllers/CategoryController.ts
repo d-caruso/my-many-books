@@ -26,14 +26,15 @@ export class CategoryController extends BaseController {
   });
 
   async createCategory(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const body = this.parseBody<CreateCategoryRequest>(request);
     if (!body) {
-      return this.createErrorResponse('Request body is required', 400);
+      return this.createErrorResponseI18n('errors:request_body_required', 400);
     }
 
     const validation = this.validateRequest(body, this.createCategorySchema);
     if (!validation.isValid) {
-      return this.createErrorResponse('Validation failed', 400, validation.errors);
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
     }
 
     const categoryData = validation.value!;
@@ -41,7 +42,7 @@ export class CategoryController extends BaseController {
     // Check for duplicate category name
     const existingCategory = await Category.findByName(categoryData.name);
     if (existingCategory) {
-      return this.createErrorResponse('Category with this name already exists', 409);
+      return this.createErrorResponseI18n('errors:resource_exists', 409, { resource: 'Category', field: 'name' });
     }
 
     try {
@@ -54,19 +55,20 @@ export class CategoryController extends BaseController {
       return this.createSuccessResponse(category, 'Category created successfully', undefined, 201);
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponse('Failed to create category', 500, errorMessage);
+      return this.createErrorResponseI18n('errors:create_failed', 500, { resource: 'category' }, errorMessage);
     }
   }
 
   async getCategory(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId) {
-      return this.createErrorResponse('Category ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
     }
 
     const id = parseInt(categoryId, 10);
     if (isNaN(id)) {
-      return this.createErrorResponse('Invalid category ID', 400);
+      return this.createErrorResponseI18n('errors:invalid_id', 400, { resource: 'category' });
     }
 
     try {
@@ -81,35 +83,36 @@ export class CategoryController extends BaseController {
       });
 
       if (!category) {
-        return this.createErrorResponse('Category not found', 404);
+        return this.createErrorResponseI18n('errors:category_not_found', 404);
       }
 
       return this.createSuccessResponse(category, 'Category retrieved successfully');
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponse('Failed to retrieve category', 500, errorMessage);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500, undefined, errorMessage);
     }
   }
 
   async updateCategory(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId) {
-      return this.createErrorResponse('Category ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
     }
 
     const id = parseInt(categoryId, 10);
     if (isNaN(id)) {
-      return this.createErrorResponse('Invalid category ID', 400);
+      return this.createErrorResponseI18n('errors:invalid_id', 400, { resource: 'category' });
     }
 
     const body = this.parseBody<UpdateCategoryRequest>(request);
     if (!body) {
-      return this.createErrorResponse('Request body is required', 400);
+      return this.createErrorResponseI18n('errors:request_body_required', 400);
     }
 
     const validation = this.validateRequest(body, this.updateCategorySchema);
     if (!validation.isValid) {
-      return this.createErrorResponse('Validation failed', 400, validation.errors);
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
     }
 
     const categoryData = validation.value!;
@@ -118,14 +121,14 @@ export class CategoryController extends BaseController {
       // Find the category
       const category = await Category.findByPk(id);
       if (!category) {
-        return this.createErrorResponse('Category not found', 404);
+        return this.createErrorResponseI18n('errors:category_not_found', 404);
       }
 
       // Check if new name already exists (if name is being changed)
       if (categoryData.name && categoryData.name !== category.name) {
         const existingCategory = await Category.findByName(categoryData.name);
         if (existingCategory) {
-          return this.createErrorResponse('Category with this name already exists', 409);
+          return this.createErrorResponseI18n('errors:resource_exists', 409, { resource: 'Category', field: 'name' });
         }
       }
 
@@ -137,19 +140,20 @@ export class CategoryController extends BaseController {
       return this.createSuccessResponse(category, 'Category updated successfully');
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponse('Failed to update category', 500, errorMessage);
+      return this.createErrorResponseI18n('errors:update_failed', 500, { resource: 'category' }, errorMessage);
     }
   }
 
   async deleteCategory(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId) {
-      return this.createErrorResponse('Category ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
     }
 
     const id = parseInt(categoryId, 10);
     if (isNaN(id)) {
-      return this.createErrorResponse('Invalid category ID', 400);
+      return this.createErrorResponseI18n('errors:invalid_id', 400, { resource: 'category' });
     }
 
     const force = this.getQueryParameter(request, 'force') === 'true';
@@ -167,7 +171,7 @@ export class CategoryController extends BaseController {
       });
 
       if (!category) {
-        return this.createErrorResponse('Category not found', 404);
+        return this.createErrorResponseI18n('errors:category_not_found', 404);
       }
 
       // Check if category has associated books
@@ -182,10 +186,7 @@ export class CategoryController extends BaseController {
       });
 
       if (hasBooks > 0 && !force) {
-        return this.createErrorResponse(
-          'Cannot delete category that has associated books. Use force=true to delete anyway.',
-          400
-        );
+        return this.createErrorResponseI18n('errors:category_has_books', 400);
       }
 
       // Delete the category
@@ -194,11 +195,12 @@ export class CategoryController extends BaseController {
       return this.createSuccessResponse(null, 'Category deleted successfully', undefined, 204);
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponse('Failed to delete category', 500, errorMessage);
+      return this.createErrorResponseI18n('errors:delete_failed', 500, { resource: 'category' }, errorMessage);
     }
   }
 
   async listCategories(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const page = parseInt(this.getQueryParameter(request, 'page') || '1', 10);
     const limit = parseInt(this.getQueryParameter(request, 'limit') || '50', 10);
     const search = this.getQueryParameter(request, 'search');
@@ -240,19 +242,20 @@ export class CategoryController extends BaseController {
       });
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponse('Failed to list categories', 500, errorMessage);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500, undefined, errorMessage);
     }
   }
 
   async getCategoryBooks(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId) {
-      return this.createErrorResponse('Category ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
     }
 
     const id = parseInt(categoryId, 10);
     if (isNaN(id)) {
-      return this.createErrorResponse('Invalid category ID', 400);
+      return this.createErrorResponseI18n('errors:invalid_id', 400, { resource: 'category' });
     }
 
     const page = parseInt(this.getQueryParameter(request, 'page') || '1', 10);
@@ -262,7 +265,7 @@ export class CategoryController extends BaseController {
       // Check if category exists
       const category = await Category.findByPk(id);
       if (!category) {
-        return this.createErrorResponse('Category not found', 404);
+        return this.createErrorResponseI18n('errors:category_not_found', 404);
       }
 
       // Get books in this category
@@ -304,7 +307,7 @@ export class CategoryController extends BaseController {
       );
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponse('Failed to retrieve category books', 500, errorMessage);
+      return this.createErrorResponseI18n('errors:internal_server_error', 500, undefined, errorMessage);
     }
   }
 }

@@ -11,19 +11,36 @@ import { Author } from '../models/Author';
 import { Category } from '../models/Category';
 import { UserService } from '../middleware/auth';
 import { BookAttributes, BookStatus } from '../models/interfaces/ModelInterfaces';
+import { i18n } from '@my-many-books/shared-i18n';
 
 export class UserController {
+  private static async initializeI18n(req: AuthenticatedRequest): Promise<void> {
+    const acceptLanguage = req.headers?.['accept-language'] || 'en';
+    const language = this.parseLanguageCode(acceptLanguage);
+    await i18n.changeLanguage(language);
+  }
+
+  private static parseLanguageCode(acceptLanguage: string): string {
+    const primaryLang = acceptLanguage?.split(',')[0]?.split('-')[0]?.split(';')[0]?.trim()?.toLowerCase() || 'en';
+    const supportedLanguages = ['en', 'it'];
+    return supportedLanguages.includes(primaryLang) ? primaryLang : 'en';
+  }
+
+  private static t(key: string, interpolation?: object): string {
+    return i18n.t(key, interpolation as any) as string;
+  }
   // Get current user profile
   static async getCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(req);
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
       const user = await UserService.getUserById(req.user.userId);
       if (!user) {
-        res.status(404).json({ error: 'User not found' });
+        res.status(404).json({ error: this.t('errors:user_not_found') });
         return;
       }
 
@@ -41,7 +58,7 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error fetching current user:', error);
       res.status(500).json({
-        error: 'Internal server error',
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -49,9 +66,10 @@ export class UserController {
 
   // Update current user profile
   static async updateCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(req);
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
@@ -59,23 +77,23 @@ export class UserController {
 
       // Validate input
       if (!name || !surname) {
-        res.status(400).json({ error: 'Name and surname are required' });
+        res.status(400).json({ error: this.t('errors:name_surname_required') });
         return;
       }
 
       if (typeof name !== 'string' || typeof surname !== 'string') {
-        res.status(400).json({ error: 'Name and surname must be strings' });
+        res.status(400).json({ error: this.t('errors:name_surname_strings') });
         return;
       }
 
       if (name.length > 100 || surname.length > 100) {
-        res.status(400).json({ error: 'Name and surname must be 100 characters or less' });
+        res.status(400).json({ error: this.t('errors:name_surname_max_length', { max: 100 }) });
         return;
       }
 
       const user = await UserService.getUserById(req.user.userId);
       if (!user) {
-        res.status(404).json({ error: 'User not found' });
+        res.status(404).json({ error: this.t('errors:user_not_found') });
         return;
       }
 
@@ -95,7 +113,7 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error updating current user:', error);
       res.status(500).json({
-        error: 'Internal server error',
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -103,9 +121,10 @@ export class UserController {
 
   // Get user's books
   static async getUserBooks(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(req);
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
@@ -175,7 +194,7 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error fetching user books:', error);
       res.status(500).json({
-        error: 'Internal server error',
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -183,9 +202,10 @@ export class UserController {
 
   // Get user statistics
   static async getUserStats(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(req);
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
@@ -226,7 +246,7 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error fetching user stats:', error);
       res.status(500).json({
-        error: 'Internal server error',
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -234,9 +254,10 @@ export class UserController {
 
   // Deactivate user account
   static async deactivateAccount(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(req);
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
@@ -250,7 +271,7 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error deactivating user account:', error);
       res.status(500).json({
-        error: 'Internal server error',
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -258,15 +279,16 @@ export class UserController {
 
   // Delete user account (hard delete)
   static async deleteAccount(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(req);
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
       const user = await UserService.getUserById(req.user.userId);
       if (!user) {
-        res.status(404).json({ error: 'User not found' });
+        res.status(404).json({ error: this.t('errors:user_not_found') });
         return;
       }
 
@@ -281,7 +303,7 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error deleting user account:', error);
       res.status(500).json({
-        error: 'Internal server error',
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }

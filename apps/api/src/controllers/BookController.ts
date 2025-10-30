@@ -108,14 +108,15 @@ export class BookController extends BaseController {
    * @returns An ApiResponse object with the newly created book or an error.
    */
   async createBook(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const body = this.parseBody<CreateBookRequest>(request);
     if (!body) {
-      return this.createErrorResponse('Request body is required', 400);
+      return this.createErrorResponseI18n('errors:request_body_required', 400);
     }
 
     const validation = this.validateRequest(body, this.createBookSchema);
     if (!validation.isValid) {
-      return this.createErrorResponse('Validation failed', 400, validation.errors);
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
     }
 
     const bookData = validation.value!;
@@ -131,7 +132,7 @@ export class BookController extends BaseController {
 
     const existingBook = await Book.findOne({ where: whereClause });
     if (existingBook) {
-      return this.createErrorResponse('Book with this ISBN already exists', 409);
+      return this.createErrorResponseI18n('errors:isbn_exists', 409, { isbn: bookData.isbnCode });
     }
 
     // Validate and link authors
@@ -142,7 +143,7 @@ export class BookController extends BaseController {
         attributes: ['id'],
       });
       if (authors.length !== bookData.authorIds.length) {
-        return this.createErrorResponse('One or more author IDs are invalid', 400);
+        return this.createErrorResponseI18n('errors:invalid_author_ids', 400);
       }
     }
 
@@ -154,7 +155,7 @@ export class BookController extends BaseController {
         attributes: ['id'],
       });
       if (categories.length !== bookData.categoryIds.length) {
-        return this.createErrorResponse('One or more category IDs are invalid', 400);
+        return this.createErrorResponseI18n('errors:invalid_category_ids', 400);
       }
     }
 
@@ -191,9 +192,10 @@ export class BookController extends BaseController {
    * @returns An ApiResponse object with the book data or an error.
    */
   async getBook(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const bookId = this.getPathParameter(request, 'id');
     if (!bookId || isNaN(Number(bookId))) {
-      return this.createErrorResponse('Valid book ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'book' });
     }
 
     const whereClause: WhereOptions<BookAttributes> = {
@@ -212,7 +214,7 @@ export class BookController extends BaseController {
     });
 
     if (!book) {
-      return this.createErrorResponse('Book not found', 404);
+      return this.createErrorResponseI18n('errors:book_not_found', 404);
     }
 
     // Convert Sequelize model to plain object to ensure associations are serialized
@@ -225,19 +227,20 @@ export class BookController extends BaseController {
    * @returns An ApiResponse object with the updated book or an error.
    */
   async updateBook(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const bookId = this.getPathParameter(request, 'id');
     if (!bookId || isNaN(Number(bookId))) {
-      return this.createErrorResponse('Valid book ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'book' });
     }
 
     const body = this.parseBody<Partial<CreateBookRequest>>(request);
     if (!body) {
-      return this.createErrorResponse('Request body is required', 400);
+      return this.createErrorResponseI18n('errors:request_body_required', 400);
     }
 
     const validation = this.validateRequest(body, this.putBookSchema);
     if (!validation.isValid) {
-      return this.createErrorResponse('Validation failed', 400, validation.errors);
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
     }
     const bookData = validation.value!;
 
@@ -250,7 +253,7 @@ export class BookController extends BaseController {
 
     const book = await Book.findOne({ where: whereClause });
     if (!book) {
-      return this.createErrorResponse('Book not found', 404);
+      return this.createErrorResponseI18n('errors:book_not_found', 404);
     }
 
     const updateData: Partial<BookAttributes> = {
@@ -277,7 +280,7 @@ export class BookController extends BaseController {
           where: { id: bookData.authorIds },
         });
         if (authors.length !== bookData.authorIds.length) {
-          return this.createErrorResponse('One or more author IDs are invalid', 400);
+          return this.createErrorResponseI18n('errors:invalid_author_ids', 400);
         }
       }
 
@@ -293,7 +296,7 @@ export class BookController extends BaseController {
           where: { id: bookData.categoryIds },
         });
         if (categories.length !== bookData.categoryIds.length) {
-          return this.createErrorResponse('One or more category IDs are invalid', 400);
+          return this.createErrorResponseI18n('errors:invalid_category_ids', 400);
         }
       }
 
@@ -312,19 +315,20 @@ export class BookController extends BaseController {
    * @returns An ApiResponse object with the updated book or an error.
    */
   async patchBook(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const bookId = this.getPathParameter(request, 'id');
     if (!bookId || isNaN(Number(bookId))) {
-      return this.createErrorResponse('Valid book ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'book' });
     }
 
     const body = this.parseBody<Partial<CreateBookRequest>>(request);
     if (!body) {
-      return this.createErrorResponse('Request body is required', 400);
+      return this.createErrorResponseI18n('errors:request_body_required', 400);
     }
 
     const validation = this.validateRequest(body, this.patchBookSchema);
     if (!validation.isValid) {
-      return this.createErrorResponse('Validation failed', 400, validation.errors);
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors);
     }
     const bookData = validation.value!;
 
@@ -337,7 +341,7 @@ export class BookController extends BaseController {
 
     const book = await Book.findOne({ where: whereClause });
     if (!book) {
-      return this.createErrorResponse('Book not found', 404);
+      return this.createErrorResponseI18n('errors:book_not_found', 404);
     }
 
     // Only update fields that are provided
@@ -361,7 +365,7 @@ export class BookController extends BaseController {
           where: { id: bookData.authorIds },
         });
         if (authors.length !== bookData.authorIds.length) {
-          return this.createErrorResponse('One or more author IDs are invalid', 400);
+          return this.createErrorResponseI18n('errors:invalid_author_ids', 400);
         }
       }
       await book.setAuthors(authors);
@@ -374,7 +378,7 @@ export class BookController extends BaseController {
           where: { id: bookData.categoryIds },
         });
         if (categories.length !== bookData.categoryIds.length) {
-          return this.createErrorResponse('One or more category IDs are invalid', 400);
+          return this.createErrorResponseI18n('errors:invalid_category_ids', 400);
         }
       }
       await book.setCategories(categories);
@@ -391,9 +395,10 @@ export class BookController extends BaseController {
    * @returns A success message or an error.
    */
   async deleteBook(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const bookId = this.getPathParameter(request, 'id');
     if (!bookId || isNaN(Number(bookId))) {
-      return this.createErrorResponse('Valid book ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'book' });
     }
 
     const whereClause: WhereOptions<BookAttributes> = {
@@ -405,7 +410,7 @@ export class BookController extends BaseController {
 
     const book = await Book.findOne({ where: whereClause });
     if (!book) {
-      return this.createErrorResponse('Book not found', 404);
+      return this.createErrorResponseI18n('errors:book_not_found', 404);
     }
 
     await book.destroy();
@@ -419,6 +424,7 @@ export class BookController extends BaseController {
    * @returns An ApiResponse with a list of books and pagination metadata.
    */
   async listBooks(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const pagination = this.getPaginationParams(request);
     const filters = this.getQueryParameter(request, 'filters');
     const includeAuthors = this.getQueryParameter(request, 'includeAuthors') === 'true';
@@ -430,11 +436,11 @@ export class BookController extends BaseController {
         searchFilters = JSON.parse(filters) as BookSearchFilters;
         const filterValidation = this.validateRequest(searchFilters, this.searchFiltersSchema);
         if (!filterValidation.isValid) {
-          return this.createErrorResponse('Invalid search filters', 400, filterValidation.errors);
+          return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, filterValidation.errors);
         }
         searchFilters = filterValidation.value!;
       } catch {
-        return this.createErrorResponse('Invalid filters format. Expected JSON string.', 400);
+        return this.createErrorResponseI18n('errors:invalid_filters', 400);
       }
     }
 
@@ -535,6 +541,7 @@ export class BookController extends BaseController {
    * @returns An ApiResponse with matching books.
    */
   async searchBooks(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const query = this.getQueryParameter(request, 'q');
     const status = this.getQueryParameter(request, 'status');
     const authorId = this.getQueryParameter(request, 'authorId');
@@ -544,7 +551,7 @@ export class BookController extends BaseController {
 
     // Validate query length if provided
     if (query && query.length < 2) {
-      return this.createErrorResponse('Search query must be at least 2 characters', 400);
+      return this.createErrorResponseI18n('errors:search_query_min_length', 400, { min: 2 });
     }
 
     // Build base where conditions
@@ -663,14 +670,15 @@ export class BookController extends BaseController {
    * @returns An ApiResponse with the book data or an error.
    */
   async searchBooksByIsbn(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const isbn = this.getQueryParameter(request, 'isbn');
     if (!isbn) {
-      return this.createErrorResponse('ISBN parameter is required', 400);
+      return this.createErrorResponseI18n('errors:isbn_parameter_required', 400);
     }
 
     const validation = validateIsbn(isbn);
     if (!validation.isValid) {
-      return this.createErrorResponse(`Invalid ISBN: ${validation.error}`, 400);
+      return this.createErrorResponseI18n('errors:invalid_isbn', 400, { error: validation.error });
     }
 
     // Check local database first
@@ -705,15 +713,16 @@ export class BookController extends BaseController {
    * @returns An ApiResponse with the imported book or an error.
    */
   async importBookFromIsbn(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     const body = this.parseBody<{ isbn: string }>(request);
     if (!body?.isbn) {
-      return this.createErrorResponse('ISBN is required', 400);
+      return this.createErrorResponseI18n('errors:isbn_not_provided', 400);
     }
     const userId = request.user?.userId;
 
     const validation = validateIsbn(body.isbn);
     if (!validation.isValid) {
-      return this.createErrorResponse(`Invalid ISBN: ${validation.error}`, 400);
+      return this.createErrorResponseI18n('errors:invalid_isbn', 400, { error: validation.error });
     }
 
     // Check if book already exists for this user (if applicable)
@@ -725,13 +734,13 @@ export class BookController extends BaseController {
     }
     const existingBook = await Book.findOne({ where: whereClause });
     if (existingBook) {
-      return this.createErrorResponse('Book with this ISBN already exists', 409);
+      return this.createErrorResponseI18n('errors:isbn_exists', 409, { isbn: validation.normalizedIsbn });
     }
 
     // Lookup book data from ISBN service
     const result = await isbnService.lookupBook(validation.normalizedIsbn!);
     if (!result.success || !result.book) {
-      return this.createErrorResponse(result.error || 'Book not found in external sources', 404);
+      return this.createErrorResponseI18n('errors:not_found', 404);
     }
 
     const bookData = result.book;
@@ -828,8 +837,9 @@ export class BookController extends BaseController {
 
   // User-specific methods for route compatibility
   async getUserBooks(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     if (!request.user?.userId) {
-      return this.createErrorResponse('User authentication required', 401);
+      return this.createErrorResponseI18n('errors:auth_required', 401);
     }
 
     const modifiedRequest = {
@@ -844,16 +854,18 @@ export class BookController extends BaseController {
   }
 
   async getBookById(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     if (!request.user?.userId) {
-      return this.createErrorResponse('User authentication required', 401);
+      return this.createErrorResponseI18n('errors:auth_required', 401);
     }
 
     return this.getBook(request);
   }
 
   async createBookForUser(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     if (!request.user?.userId) {
-      return this.createErrorResponse('User authentication required', 401);
+      return this.createErrorResponseI18n('errors:auth_required', 401);
     }
 
     // Add userId to the request body
@@ -867,32 +879,36 @@ export class BookController extends BaseController {
   }
 
   async updateBookForUser(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     if (!request.user?.userId) {
-      return this.createErrorResponse('User authentication required', 401);
+      return this.createErrorResponseI18n('errors:auth_required', 401);
     }
 
     return this.updateBook(request);
   }
 
   async patchBookForUser(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     if (!request.user?.userId) {
-      return this.createErrorResponse('User authentication required', 401);
+      return this.createErrorResponseI18n('errors:auth_required', 401);
     }
 
     return this.patchBook(request);
   }
 
   async deleteBookForUser(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     if (!request.user?.userId) {
-      return this.createErrorResponse('User authentication required', 401);
+      return this.createErrorResponseI18n('errors:auth_required', 401);
     }
 
     return this.deleteBook(request);
   }
 
   async searchByIsbnForUser(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
     if (!request.user?.userId) {
-      return this.createErrorResponse('User authentication required', 401);
+      return this.createErrorResponseI18n('errors:auth_required', 401);
     }
 
     return this.searchBooksByIsbn(request);
