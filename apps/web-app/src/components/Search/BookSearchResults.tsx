@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -35,13 +36,15 @@ export const BookSearchResults: React.FC<BookSearchResultsProps> = ({
   onLoadMore,
   onBookSelect
 }) => {
+  const { t } = useTranslation(['books', 'common']);
+
   if (error) {
     return (
       <Alert severity="error" sx={{ textAlign: 'center', py: 3 }}>
         <Box display="flex" flexDirection="column" alignItems="center">
           <ErrorIcon sx={{ fontSize: 32, mb: 1 }} />
           <Typography variant="h6" fontWeight="medium" gutterBottom>
-            Search Error
+            {t('books:search_error')}
           </Typography>
           <Typography variant="body2">{error}</Typography>
         </Box>
@@ -54,10 +57,10 @@ export const BookSearchResults: React.FC<BookSearchResultsProps> = ({
       <Box textAlign="center" py={6}>
         <BookIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
         <Typography variant="h6" fontWeight="medium" color="text.primary" gutterBottom>
-          No books found
+          {t('books:no_books_found')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Try adjusting your search terms or filters
+          {t('books:try_adjusting')}
         </Typography>
       </Box>
     );
@@ -69,7 +72,7 @@ export const BookSearchResults: React.FC<BookSearchResultsProps> = ({
       {totalCount > 0 && (
         <Box mb={3}>
           <Typography variant="body2" color="text.secondary">
-            Showing {books.length} of {totalCount} book{totalCount !== 1 ? 's' : ''}
+            {t('books:showing_results', { current: books.length, total: totalCount, count: totalCount })}
           </Typography>
         </Box>
       )}
@@ -107,7 +110,7 @@ export const BookSearchResults: React.FC<BookSearchResultsProps> = ({
             size="large"
             startIcon={loading ? <CircularProgress size={20} /> : undefined}
           >
-            {loading ? 'Loading...' : 'Load More Books'}
+            {loading ? t('common:loading') : t('books:load_more_books')}
           </Button>
         </Box>
       )}
@@ -117,7 +120,7 @@ export const BookSearchResults: React.FC<BookSearchResultsProps> = ({
         <Box textAlign="center" py={6}>
           <CircularProgress size={32} sx={{ mb: 2 }} />
           <Typography variant="body2" color="text.secondary">
-            Searching for books...
+            {t('books:searching_for_books')}
           </Typography>
         </Box>
       )}
@@ -131,8 +134,10 @@ interface BookCardProps {
 }
 
 const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
+  const { t } = useTranslation(['books', 'common']);
+
   const formatAuthors = (authors?: Author[]) => {
-    if (!authors || authors.length === 0) return 'Unknown Author';
+    if (!authors || authors.length === 0) return t('books:unknown_author');
     return authors.map(author =>
       typeof author === 'string' ? author : `${author.name} ${author.surname}`
     ).join(', ');
@@ -154,11 +159,11 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
   const formatStatus = (status: string) => {
     switch (status) {
       case 'reading':
-        return 'Reading';
+        return t('books:reading');
       case 'paused':
-        return 'Paused';
+        return t('books:paused');
       case 'finished':
-        return 'Finished';
+        return t('books:finished');
       default:
         return status;
     }
@@ -240,7 +245,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
         <Box display="flex" justifyContent="space-between" mb={1}>
           {book.editionNumber && (
             <Typography variant="caption" color="text.disabled">
-              Edition {book.editionNumber}
+              {t('books:edition')} {book.editionNumber}
             </Typography>
           )}
           {book.editionDate && (
@@ -266,7 +271,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
               ))}
               {book.categories.length > 2 && (
                 <Typography variant="caption" color="text.disabled">
-                  +{book.categories.length - 2} more
+                  +{book.categories.length - 2} {t('books:more')}
                 </Typography>
               )}
             </Box>

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SearchFilters } from '../../types';
 
 interface SearchFilterProps {
@@ -20,6 +21,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
   totalBooks,
   filteredCount
 }) => {
+  const { t } = useTranslation(['books', 'common']);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({});
@@ -49,8 +51,8 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
           type="text"
           value={searchQuery}
           onChange={handleSearchChange}
-          placeholder="Search books..."
-          aria-label="Search books"
+          placeholder={t('books:search_books_placeholder')}
+          aria-label={t('books:search_books')}
           className="w-full px-4 py-2 border rounded-lg"
         />
         {searchQuery && (
