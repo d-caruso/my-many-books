@@ -27,7 +27,7 @@ export const ResponsiveButton: React.FC<ResponsiveButtonProps> = ({
 
   const variantClasses = {
     primary: `
-      bg-primary-500 text-white 
+      bg-primary-500 text-black 
       hover:bg-primary-600 active:bg-primary-700
       focus:ring-primary-500
       disabled:bg-secondary-300 disabled:text-text-muted
