@@ -27,9 +27,15 @@ export class UserController {
     return supportedLanguages.includes(primaryLang) ? primaryLang : 'en';
   }
 
+  /**
+   * Translate a key using i18n
+   * @param key - Translation key with namespace (e.g., "errors:book_not_found")
+   * @param interpolation - Optional interpolation values
+   */
   private static t(key: string, interpolation?: object): string {
-    return i18n.t(key, interpolation);
+    return i18n.t(key, interpolation as any) as string;
   }
+
   // Get current user profile
   static async getCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
     await this.initializeI18n(req);
