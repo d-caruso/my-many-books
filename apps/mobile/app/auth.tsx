@@ -4,11 +4,13 @@ import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-pa
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 
 type AuthMode = 'login' | 'register';
 
 export default function AuthScreen() {
+  const { t } = useTranslation();
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,18 +28,18 @@ export default function AuthScreen() {
     try {
       // Basic validation
       if (!email || !password) {
-        throw new Error('Email and password are required');
+        throw new Error(t('common:email_password_required'));
       }
 
       if (authMode === 'register') {
         if (!name) {
-          throw new Error('Name is required');
+          throw new Error(t('common:name_required'));
         }
         if (password !== confirmPassword) {
-          throw new Error('Passwords do not match');
+          throw new Error(t('common:passwords_no_match'));
         }
         if (password.length < 6) {
-          throw new Error('Password must be at least 6 characters');
+          throw new Error(t('common:password_min_length', { length: 6 }));
         }
         await register(email, password, name);
       } else {
@@ -47,7 +49,7 @@ export default function AuthScreen() {
       // Navigation is handled by the auth context
       router.replace('/(tabs)');
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      setError(err.message || t('common:auth_failed'));
     } finally {
       setLoading(false);
     }
@@ -75,10 +77,10 @@ export default function AuthScreen() {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.header}>
             <Text variant="displaySmall" style={styles.title} accessibilityRole="header">
-              My Many Books
+              {t('common:app_title')}
             </Text>
             <Text variant="bodyLarge" style={styles.subtitle}>
-              Your personal library in your pocket
+              {t('common:app_subtitle')}
             </Text>
           </View>
 
@@ -88,11 +90,11 @@ export default function AuthScreen() {
                 value={authMode}
                 onValueChange={handleModeChange}
                 buttons={[
-                  { value: 'login', label: 'Login' },
-                  { value: 'register', label: 'Register' },
+                  { value: 'login', label: t('common:login') },
+                  { value: 'register', label: t('common:register') },
                 ]}
                 style={styles.segmentedButtons}
-                accessibilityLabel="Select authentication mode"
+                accessibilityLabel={t('common:select_auth_mode')}
               />
 
               {error && (
@@ -105,7 +107,7 @@ export default function AuthScreen() {
 
               {authMode === 'register' && (
                 <TextInput
-                  label="Name"
+                  label={t('common:name')}
                   value={name}
                   onChangeText={setName}
                   style={styles.input}
@@ -116,7 +118,7 @@ export default function AuthScreen() {
               )}
 
               <TextInput
-                label="Email"
+                label={t('common:email')}
                 value={email}
                 onChangeText={setEmail}
                 style={styles.input}
@@ -127,7 +129,7 @@ export default function AuthScreen() {
               />
 
               <TextInput
-                label="Password"
+                label={t('common:password')}
                 value={password}
                 onChangeText={setPassword}
                 style={styles.input}
@@ -139,7 +141,7 @@ export default function AuthScreen() {
 
               {authMode === 'register' && (
                 <TextInput
-                  label="Confirm Password"
+                  label={t('common:confirm_password')}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   style={styles.input}
@@ -156,16 +158,16 @@ export default function AuthScreen() {
                 loading={loading}
                 disabled={loading}
                 style={styles.submitButton}
-                accessibilityLabel={authMode === 'login' ? 'Login' : 'Create Account'}
+                accessibilityLabel={authMode === 'login' ? t('common:login') : t('common:create_account')}
               >
-                {authMode === 'login' ? 'Login' : 'Create Account'}
+                {authMode === 'login' ? t('common:login') : t('common:create_account')}
               </Button>
             </Card.Content>
           </Card>
 
           <View style={styles.footer}>
             <Text variant="bodySmall" style={styles.footerText}>
-              By continuing, you agree to our Terms of Service and Privacy Policy
+              {t('common:terms_of_service')}
             </Text>
           </View>
         </ScrollView>
