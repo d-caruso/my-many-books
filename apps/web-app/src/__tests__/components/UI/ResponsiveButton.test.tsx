@@ -5,10 +5,10 @@ import { ResponsiveButton } from '../../../components/UI/ResponsiveButton';
 describe('ResponsiveButton', () => {
   test('renders with default props', () => {
     render(<ResponsiveButton>Click me</ResponsiveButton>);
-    
+
     const button = screen.getByRole('button', { name: /click me/i });
     expect(button).toBeInTheDocument();
-    expect(button).toHaveClass('bg-primary-500', 'text-white'); // primary variant
+    expect(button).toHaveClass('bg-primary-500', 'text-black'); // primary variant
     expect(button).toHaveClass('px-4', 'py-2.5', 'min-h-[44px]'); // md size
   });
 

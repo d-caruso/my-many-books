@@ -1,5 +1,8 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent, waitFor } from '@testing-library/react';
+import { I18nextProvider } from 'react-i18next';
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
 
 // Mock dependencies - using vi.hoisted to ensure mocks are set up before imports
 const { mockUseSearchParams, mockUseNavigate, mockUseBookSearch } = vi.hoisted(() => ({
@@ -156,12 +159,40 @@ describe('BooksPage', () => {
     clearSearch: vi.fn(),
   };
 
-  // Helper to render with ApiProvider
+  // Create test i18n instance
+  const testI18n = i18n.createInstance();
+  testI18n.use(initReactI18next).init({
+    lng: 'en',
+    fallbackLng: 'en',
+    ns: ['common', 'pages'],
+    defaultNS: 'common',
+    resources: {
+      en: {
+        common: {},
+        pages: {
+          books: {
+            title: 'My Books',
+            description: 'Your personal book collection',
+            description_with_count_one: '{{count}} book in your library',
+            description_with_count_other: '{{count}} books in your library',
+            clear_search: 'Clear search',
+          },
+        },
+      },
+    },
+    interpolation: {
+      escapeValue: false,
+    },
+  });
+
+  // Helper to render with ApiProvider and I18nextProvider
   const renderWithProvider = (ui: React.ReactElement) => {
-    return render(
-      <ApiProvider apiService={mockApiService}>
-        {ui}
-      </ApiProvider>
+    return rtlRender(
+      <I18nextProvider i18n={testI18n}>
+        <ApiProvider apiService={mockApiService}>
+          {ui}
+        </ApiProvider>
+      </I18nextProvider>
     );
   };
 
