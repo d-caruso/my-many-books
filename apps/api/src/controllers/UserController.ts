@@ -33,7 +33,7 @@ export class UserController {
    * @param interpolation - Optional interpolation values
    */
   private static t(key: string, interpolation?: Record<string, unknown>): string {
-    return i18n.t(key, interpolation);
+    return interpolation ? i18n.t(key, interpolation) : i18n.t(key);
   }
 
   // Get current user profile
