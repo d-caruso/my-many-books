@@ -25,11 +25,21 @@ export abstract class BaseController {
    * Falls back to English if header is missing or invalid
    */
   protected async initializeI18n(request: UniversalRequest): Promise<void> {
-    const acceptLanguage = request.headers?.['accept-language'] ||
-                          request.headers?.['Accept-Language'] ||
-                          'en';
-    const language = this.parseLanguageCode(acceptLanguage);
-    await i18n.changeLanguage(language);
+    try {
+      const acceptLanguage = request.headers?.['accept-language'] ||
+                            request.headers?.['Accept-Language'] ||
+                            'en';
+      const language = this.parseLanguageCode(acceptLanguage);
+
+      // Only change language if i18n is properly initialized
+      if (i18n && i18n.isInitialized) {
+        await i18n.changeLanguage(language);
+      }
+    } catch (error) {
+      // Silently fail if i18n is not properly configured
+      // This allows the API to work without i18n
+      console.warn('i18n initialization failed:', error);
+    }
   }
 
   /**
