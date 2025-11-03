@@ -7,16 +7,17 @@ import '@testing-library/jest-dom';
 jest.useFakeTimers();
 
 // Mock React Native core modules that cause issues
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper', () => ({
-  default: {
-    addWhitelistedStyleProp: jest.fn(),
-    addWhitelistedTransformProp: jest.fn(),
-    validateStyles: jest.fn(),
-    validateTransform: jest.fn(),
-  },
-}));
+// Note: These mocks are commented out as the modules don't exist in the current React Native version
+// jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper', () => ({
+//   default: {
+//     addWhitelistedStyleProp: jest.fn(),
+//     addWhitelistedTransformProp: jest.fn(),
+//     validateStyles: jest.fn(),
+//     validateTransform: jest.fn(),
+//   },
+// }));
 
-jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter');
+// jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter');
 
 // Mock global fetch
 global.fetch = jest.fn();
