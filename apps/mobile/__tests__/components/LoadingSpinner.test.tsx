@@ -5,20 +5,32 @@ import React from 'react';
 import renderer from 'react-test-renderer';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
+// Mock the translation function to return actual translations
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'loading': 'Loading...',
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 describe('LoadingSpinner', () => {
   it('should render with default message', () => {
     const tree = renderer.create(<LoadingSpinner />);
     const instance = tree.getInstance();
-    
+
     expect(tree.toJSON()).toBeTruthy();
-    
+
     // Check for the presence of key elements
     const testInstance = tree.root;
     const textElements = testInstance.findAllByType('RCTText');
     expect(textElements.length).toBeGreaterThan(0);
-    
-    // Find the text that contains 'Loading...'
-    const loadingText = textElements.find(element => 
+
+    // Find the text that contains translated 'Loading...'
+    const loadingText = textElements.find(element =>
       element.props.children === 'Loading...'
     );
     expect(loadingText).toBeTruthy();
