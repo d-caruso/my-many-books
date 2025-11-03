@@ -5,7 +5,7 @@
 
 import { DataTypes, Association, Sequelize } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
-import { UserAttributes } from './interfaces/ModelInterfaces';
+import { UserAttributes, UserRole } from './interfaces/ModelInterfaces';
 import { Book } from './Book';
 
 export class User extends IdBaseModel<UserAttributes> implements UserAttributes {
@@ -13,6 +13,7 @@ export class User extends IdBaseModel<UserAttributes> implements UserAttributes 
   public name!: string;
   public surname!: string;
   public isActive!: boolean;
+  public role!: UserRole;
 
   // Associations
   public books?: Book[];
@@ -24,6 +25,10 @@ export class User extends IdBaseModel<UserAttributes> implements UserAttributes 
 
   public getFullName(): string {
     return `${this.name} ${this.surname}`;
+  }
+
+  public isAdmin(): boolean {
+    return this.role === 'admin';
   }
 
   static override getTableName(): string {
@@ -69,6 +74,14 @@ export class User extends IdBaseModel<UserAttributes> implements UserAttributes 
           allowNull: false,
           defaultValue: true,
           field: 'is_active',
+        },
+        role: {
+          type: DataTypes.STRING(50),
+          allowNull: false,
+          defaultValue: 'user',
+          validate: {
+            isIn: [['user', 'admin']],
+          },
         },
         creationDate: {
           type: DataTypes.DATE,
