@@ -17,6 +17,9 @@ node_modules
 .settings/
 *.sublime-workspace
 
+# claude
+.claude/commands/primer.md
+
 # IDE - VSCode
 .vscode/*
 !.vscode/settings.json
@@ -58,7 +61,7 @@ logs
 
 # docs
 apps/mobile/MOBILE_APP_GUIDE.md
-i18n-implementation-guide.md
-i18n-implementation-plan.md
-apps/lighthouse-report.json
-accessibility-report.md
+docs/
+
+# bak files
+*.bak
