@@ -4,23 +4,12 @@ A modern monorepo for managing personal book collections with web frontend and s
 
 ## Architecture
 
-This monorepo follows industry-standard practices used by companies like Google, Facebook, and Microsoft, utilizing Nx for efficient build orchestration and dependency management.
+This project is built with a modern and scalable architecture that offers several benefits:
 
-### Structure
-
-```
-my-many-books/
-├── apps/
-│   ├── web-app/           # React frontend (Progressive Web App)
-│   ├── api/               # Node.js/TypeScript serverless API
-│   └── mobile-app/        # Future React Native mobile app
-├── libs/
-│   ├── shared-types/      # Shared TypeScript interfaces
-│   ├── shared-api/        # API client logic
-│   ├── ui-components/     # Shared React components
-│   └── shared-utils/      # Business logic utilities
-└── tools/                 # Build and deployment scripts
-```
+- **Code Sharing**: A monorepo structure allows for sharing code between the web and mobile apps, reducing duplication and improving consistency.
+- **Type Safety**: The entire codebase is written in TypeScript, providing end-to-end type safety and reducing bugs.
+- **Build Efficiency**: The build system is optimized to only rebuild what has changed, resulting in faster development cycles.
+- **Scalability**: The architecture is designed to be scalable, making it easy to add new features and applications in the future.
 
 ## Quick Start
 
@@ -40,6 +29,15 @@ npm run test
 # Lint all projects
 npm run lint
 ```
+
+## Features
+
+- **Book Management**: Add, edit, and delete books from your collection.
+- **ISBN Scanning**: Easily add books by scanning their ISBN barcode.
+- **Book Search**: Search your collection by title, author, or ISBN.
+- **Reading Status**: Track the status of your books (e.g., To Read, Reading, Completed).
+- **Offline Support**: Access your book collection even when you're offline (PWA feature).
+- **Multi-language Support**: Available in English and Italian.
 
 ## Applications
 
@@ -69,41 +67,31 @@ Reusable React components shared between web and future mobile applications.
 ### `@my-many-books/shared-utils`
 Business logic utilities and helper functions.
 
-## Development Workflow
+## Internationalization (i18n)
 
-### Working with Nx
+This project uses `i18next` and `react-i18next` for internationalization. The configuration is located in the `libs/shared-i18n` library.
 
-```bash
-# Run affected builds (only changed projects)
-nx affected --target=build
+### How to use i18n in components
 
-# Run affected tests
-nx affected --target=test
+```typescript
+import { useTranslation } from 'react-i18next';
 
-# Visualize project dependencies
-nx graph
+const MyComponent = () => {
+  const { t } = useTranslation();
 
-# Generate a new library
-nx g @nx/js:lib my-new-lib
-
-# Generate a new React component
-nx g @nx/react:component my-component --project=ui-components
+  return <p>{t('common:my_key')}</p>;
+};
 ```
 
-### Code Organization
+### How to add new translation keys
 
-- **Feature-based**: Code is organized by business domain (books, users, auth)
-- **Shared libraries**: Common functionality extracted to reusable libraries
-- **Type safety**: Full TypeScript support with shared interfaces
-- **Dependency management**: Nx ensures proper build order and caching
+1.  Add the new key to `libs/shared-i18n/src/locales/en/common.json` (or the relevant namespace file).
+2.  Add the corresponding translation to `libs/shared-i18n/src/locales/it/common.json`.
 
-## Migration Information
+### Language Detection
 
-This monorepo was created by migrating from separate repositories:
-- **Frontend**: [my-many-books-web](https://github.com/d-caruso/my-many-books-web) *(now in maintenance mode)*
-- **Backend**: [my-many-books-api](https://github.com/d-caruso/my-many-books-api) *(now in maintenance mode)*
-
-All Git history has been preserved using subtree merges.
+-   **Web-App**: The language is detected from the browser settings, with a fallback to English. The user can also select a language from the language switcher in the header.
+-   **API**: The language is detected from the `Accept-Language` header.
 
 ## Contributing
 
