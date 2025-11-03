@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { List, Text, Avatar, Button, Card, Switch, Snackbar, RadioButton } from 'react-native-paper';
+import { List, Text, Avatar, Button, Card, Switch, Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { changeLanguage } from '@/i18n';
-import { SUPPORTED_LANGUAGES } from '@my-many-books/shared-i18n';
+import LanguageSelector from '@/components/LanguageSelector';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -121,26 +121,12 @@ export default function ProfileScreen() {
               Language / Lingua
             </Text>
 
-            {SUPPORTED_LANGUAGES.map((lang) => (
-              <List.Item
-                key={lang.code}
-                title={lang.nativeName}
-                description={lang.name}
-                left={() => <List.Icon icon="translate" accessible={false} />}
-                right={() => (
-                  <RadioButton
-                    value={lang.code}
-                    status={i18n.language === lang.code ? 'checked' : 'unchecked'}
-                    onPress={() => handleLanguageChange(lang.code)}
-                    accessibilityLabel={`Select ${lang.nativeName}`}
-                  />
-                )}
-                onPress={() => handleLanguageChange(lang.code)}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: i18n.language === lang.code }}
-                accessibilityLabel={`${lang.nativeName}, ${i18n.language === lang.code ? 'selected' : 'not selected'}`}
+            <View style={styles.languageSelectorContainer}>
+              <LanguageSelector
+                value={i18n.language}
+                onLanguageChange={handleLanguageChange}
               />
-            ))}
+            </View>
           </Card.Content>
         </Card>
 
@@ -262,6 +248,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontWeight: 'bold',
     marginBottom: 8,
+  },
+  languageSelectorContainer: {
+    marginTop: 8,
   },
   logoutContainer: {
     padding: 16,
