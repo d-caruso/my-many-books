@@ -32,8 +32,8 @@ export class UserController {
    * @param key - Translation key with namespace (e.g., "errors:book_not_found")
    * @param interpolation - Optional interpolation values
    */
-  private static t(key: string, interpolation?: object): string {
-    return i18n.t(key, interpolation as any) as string;
+  private static t(key: string, interpolation?: Record<string, unknown>): string {
+    return i18n.t(key, interpolation);
   }
 
   // Get current user profile
