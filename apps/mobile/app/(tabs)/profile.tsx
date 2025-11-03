@@ -1,15 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { List, Text, Avatar, Button, Card, Switch } from 'react-native-paper';
+import { List, Text, Avatar, Button, Card, Switch, Snackbar, RadioButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
+import { changeLanguage } from '@/i18n';
+import { SUPPORTED_LANGUAGES } from '@my-many-books/shared-i18n';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { themeMode, setThemeMode, isDark } = useTheme();
+  const { i18n } = useTranslation();
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const handleLogout = async () => {
     try {
@@ -22,6 +28,19 @@ export default function ProfileScreen() {
   const handleThemeToggle = async () => {
     const newMode = isDark ? 'light' : 'dark';
     await setThemeMode(newMode);
+  };
+
+  const handleLanguageChange = async (languageCode: string) => {
+    try {
+      await changeLanguage(languageCode);
+      const message = languageCode === 'en'
+        ? 'Language changed successfully'
+        : 'Lingua cambiata con successo';
+      setSnackbarMessage(message);
+      setSnackbarVisible(true);
+    } catch (error) {
+      console.error('Failed to change language:', error);
+    }
   };
 
   return (
@@ -96,6 +115,35 @@ export default function ProfileScreen() {
           </Card.Content>
         </Card>
 
+        <Card style={styles.languageCard}>
+          <Card.Content>
+            <Text variant="titleMedium" style={styles.sectionTitle} accessibilityRole="header">
+              Language / Lingua
+            </Text>
+
+            {SUPPORTED_LANGUAGES.map((lang) => (
+              <List.Item
+                key={lang.code}
+                title={lang.nativeName}
+                description={lang.name}
+                left={() => <List.Icon icon="translate" accessible={false} />}
+                right={() => (
+                  <RadioButton
+                    value={lang.code}
+                    status={i18n.language === lang.code ? 'checked' : 'unchecked'}
+                    onPress={() => handleLanguageChange(lang.code)}
+                    accessibilityLabel={`Select ${lang.nativeName}`}
+                  />
+                )}
+                onPress={() => handleLanguageChange(lang.code)}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: i18n.language === lang.code }}
+                accessibilityLabel={`${lang.nativeName}, ${i18n.language === lang.code ? 'selected' : 'not selected'}`}
+              />
+            ))}
+          </Card.Content>
+        </Card>
+
         <Card style={styles.aboutCard}>
           <Card.Content>
             <Text variant="titleMedium" style={styles.sectionTitle} accessibilityRole="header">
@@ -154,6 +202,18 @@ export default function ProfileScreen() {
           </Button>
         </View>
       </ScrollView>
+
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+        action={{
+          label: 'OK',
+          onPress: () => setSnackbarVisible(false),
+        }}
+      >
+        {snackbarMessage}
+      </Snackbar>
     </SafeAreaView>
   );
 }
@@ -185,6 +245,11 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   settingsCard: {
+    margin: 16,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  languageCard: {
     margin: 16,
     marginTop: 8,
     marginBottom: 8,
