@@ -11,6 +11,7 @@ import { AuthPage } from './pages/AuthPage';
 import { BooksPage } from './pages/BooksPage';
 import { BookSearchPage } from './components/Search/BookSearchPage';
 import { ScannerModal } from './components/Scanner';
+import { AdminDashboardPage } from './pages/Admin';
 import './i18n';
 
 // Create MUI theme
@@ -43,7 +44,17 @@ function App() {
             <Routes>
               {/* Public route */}
               <Route path="/auth" element={<AuthPage />} />
-              
+
+              {/* Admin routes - require admin role */}
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Protected routes */}
               <Route
                 path="/*"
