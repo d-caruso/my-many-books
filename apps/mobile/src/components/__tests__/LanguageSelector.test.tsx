@@ -10,6 +10,14 @@
 import React from 'react';
 import LanguageSelector from '../LanguageSelector';
 
+// Mock process.env for environment variables
+jest.mock('process', () => ({
+  env: {
+    ...jest.requireActual('process').env,
+    EXPO_PUBLIC_SHOW_LANGUAGE_SELECTOR: 'true',
+  },
+}));
+
 // Mock i18next
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
