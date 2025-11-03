@@ -3,12 +3,14 @@ import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 're
 import { Text, TextInput, Button, Card, Chip, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { Book } from '@/types';
 
 export default function AddBookScreen() {
+  const { t } = useTranslation();
   const { isbn, bookData } = useLocalSearchParams<{ isbn?: string; bookData?: string }>();
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
@@ -36,7 +38,7 @@ export default function AddBookScreen() {
 
   const handleSubmit = async () => {
     if (!title.trim()) {
-      setError('Title is required');
+      setError(t('books:title_required'));
       return;
     }
 
@@ -62,7 +64,7 @@ export default function AddBookScreen() {
 
   const handleISBNLookup = async () => {
     if (!isbnCode.trim()) {
-      setError('Please enter an ISBN first');
+      setError(t('books:please_enter_isbn_first'));
       return;
     }
 
@@ -75,10 +77,10 @@ export default function AddBookScreen() {
         setTitle(book.title || '');
         setAuthor(book.authors?.map(a => a.name).join(', ') || '');
       } else {
-        setError('Book not found for this ISBN');
+        setError(t('books:book_not_found_for_isbn'));
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to lookup book');
+      setError(err.message || t('books:failed_to_lookup_book'));
     } finally {
       setLoading(false);
     }
@@ -94,7 +96,7 @@ export default function AddBookScreen() {
           <Card style={styles.card}>
             <Card.Content>
               <Text variant="headlineSmall" style={styles.title} accessibilityRole="header">
-                Add New Book
+                {t('books:add_new_book')}
               </Text>
 
               {error && (
@@ -107,7 +109,7 @@ export default function AddBookScreen() {
 
               <View style={styles.isbnSection}>
                 <TextInput
-                  label="ISBN (Optional)"
+                  label={t('books:isbn_optional')}
                   value={isbnCode}
                   onChangeText={setIsbnCode}
                   style={styles.input}
@@ -121,12 +123,12 @@ export default function AddBookScreen() {
                   style={styles.lookupButton}
                   accessibilityLabel="Lookup book by ISBN"
                 >
-                  Lookup
+                  {t('books:lookup')}
                 </Button>
               </View>
 
               <TextInput
-                label="Title *"
+                label={t('books:title_required_field')}
                 value={title}
                 onChangeText={setTitle}
                 style={styles.input}
@@ -136,7 +138,7 @@ export default function AddBookScreen() {
               />
 
               <TextInput
-                label="Author"
+                label={t('books:author_field')}
                 value={author}
                 onChangeText={setAuthor}
                 style={styles.input}
@@ -144,22 +146,22 @@ export default function AddBookScreen() {
               />
 
               <Text variant="titleSmall" style={styles.sectionTitle} accessibilityRole="header">
-                Reading Status
+                {t('books:reading_status')}
               </Text>
               <SegmentedButtons
                 value={status}
                 onValueChange={(value) => setStatus(value as Book['status'])}
                 buttons={[
-                  { value: 'want-to-read', label: 'Want to Read' },
-                  { value: 'reading', label: 'Reading' },
-                  { value: 'completed', label: 'Completed' },
+                  { value: 'want-to-read', label: t('books:want_to_read') },
+                  { value: 'reading', label: t('books:reading') },
+                  { value: 'completed', label: t('books:completed') },
                 ]}
                 style={styles.segmentedButtons}
                 accessibilityLabel="Select reading status"
               />
 
               <TextInput
-                label="Notes (Optional)"
+                label={t('books:notes_optional')}
                 value={notes}
                 onChangeText={setNotes}
                 style={styles.input}
@@ -176,7 +178,7 @@ export default function AddBookScreen() {
                   disabled={loading}
                   accessibilityLabel="Cancel adding book"
                 >
-                  Cancel
+                  {t('cancel')}
                 </Button>
                 <Button
                   mode="contained"
@@ -186,7 +188,7 @@ export default function AddBookScreen() {
                   disabled={loading}
                   accessibilityLabel="Add book to library"
                 >
-                  Add Book
+                  {t('books:add_book')}
                 </Button>
               </View>
             </Card.Content>

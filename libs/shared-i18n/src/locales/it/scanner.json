@@ -28,5 +28,14 @@
   "cancel": "Annulla",
   "add_book": "Aggiungi Libro",
   "isbn_required": "Inserisci un ISBN",
-  "isbn_invalid": "Formato ISBN non valido. Inserisci un ISBN valido di 10 o 13 cifre."
+  "isbn_invalid": "Formato ISBN non valido. Inserisci un ISBN valido di 10 o 13 cifre.",
+  "requesting_camera_permission": "Richiesta permesso fotocamera...",
+  "grant_permission": "Concedi Permesso",
+  "scanner_error": "Errore Scanner",
+  "point_camera_at_barcode": "Punta la fotocamera su un codice a barre del libro",
+  "barcode_scanned": "Codice a barre scansionato: {{isbn}}",
+  "scan_another": "Scansiona un Altro",
+  "book_found": "Libro Trovato!",
+  "isbn_colon": "ISBN: {{isbn}}",
+  "add_to_library": "Aggiungi alla Libreria"
 }

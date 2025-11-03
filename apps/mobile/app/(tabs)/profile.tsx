@@ -13,7 +13,7 @@ import LanguageSelector from '@/components/LanguageSelector';
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { themeMode, setThemeMode, isDark } = useTheme();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
@@ -33,10 +33,7 @@ export default function ProfileScreen() {
   const handleLanguageChange = async (languageCode: string) => {
     try {
       await changeLanguage(languageCode);
-      const message = languageCode === 'en'
-        ? 'Language changed successfully'
-        : 'Lingua cambiata con successo';
-      setSnackbarMessage(message);
+      setSnackbarMessage(t('language_changed_successfully'));
       setSnackbarVisible(true);
     } catch (error) {
       console.error('Failed to change language:', error);
@@ -48,14 +45,14 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollView}>
         <Card style={styles.profileCard}>
           <Card.Content style={styles.profileContent}>
-            <Avatar.Text 
-              size={80} 
+            <Avatar.Text
+              size={80}
               label={user?.name?.charAt(0).toUpperCase() || 'U'}
               style={styles.avatar}
-              accessibilityLabel={`User profile picture for ${user?.name || 'User'}`}
+              accessibilityLabel={`${t('user')} ${user?.name || t('user')}`}
             />
             <Text variant="headlineSmall" style={styles.userName} accessibilityRole="header">
-              {user?.name || 'User'}
+              {user?.name || t('user')}
             </Text>
             <Text variant="bodyMedium" style={styles.userEmail}>
               {user?.email}
@@ -66,51 +63,51 @@ export default function ProfileScreen() {
         <Card style={styles.settingsCard}>
           <Card.Content>
             <Text variant="titleMedium" style={styles.sectionTitle} accessibilityRole="header">
-              Settings
+              {t('settings')}
             </Text>
-            
+
             <List.Item
-              title="Dark Mode"
-              description="Toggle dark theme"
+              title={t('dark_mode')}
+              description={t('toggle_dark_theme')}
               left={() => <List.Icon icon="theme-light-dark" accessible={false} />}
               right={() => (
                 <Switch
                   value={isDark}
                   onValueChange={handleThemeToggle}
-                  accessibilityLabel="Toggle dark theme"
+                  accessibilityLabel={t('toggle_dark_theme')}
                 />
               )}
               accessibilityRole="menuitem"
             />
-            
+
             <List.Item
-              title="Notifications"
-              description="Push notification settings"
+              title={t('notifications')}
+              description={t('push_notification_settings')}
               left={() => <List.Icon icon="bell" accessible={false} />}
               right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
               accessibilityRole="button"
-              accessibilityLabel="Notifications, Push notification settings"
+              accessibilityLabel={`${t('notifications')}, ${t('push_notification_settings')}`}
             />
-            
+
             <List.Item
-              title="Storage"
-              description="Manage offline data"
+              title={t('storage')}
+              description={t('manage_offline_data')}
               left={() => <List.Icon icon="database" accessible={false} />}
               right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
               accessibilityRole="button"
-              accessibilityLabel="Storage, Manage offline data"
+              accessibilityLabel={`${t('storage')}, ${t('manage_offline_data')}`}
             />
-            
+
             <List.Item
-              title="Export Data"
-              description="Export your book collection"
+              title={t('export_data')}
+              description={t('export_your_book_collection')}
               left={() => <List.Icon icon="export" accessible={false} />}
               right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
               accessibilityRole="button"
-              accessibilityLabel="Export Data, Export your book collection"
+              accessibilityLabel={`${t('export_data')}, ${t('export_your_book_collection')}`}
             />
           </Card.Content>
         </Card>
@@ -118,7 +115,7 @@ export default function ProfileScreen() {
         <Card style={styles.languageCard}>
           <Card.Content>
             <Text variant="titleMedium" style={styles.sectionTitle} accessibilityRole="header">
-              Language / Lingua
+              {t('language')}
             </Text>
 
             <View style={styles.languageSelectorContainer}>
@@ -133,45 +130,45 @@ export default function ProfileScreen() {
         <Card style={styles.aboutCard}>
           <Card.Content>
             <Text variant="titleMedium" style={styles.sectionTitle} accessibilityRole="header">
-              About
+              {t('about')}
             </Text>
-            
+
             <List.Item
-              title="Help & Support"
-              description="Get help and contact support"
+              title={t('help_and_support')}
+              description={t('get_help_and_contact_support')}
               left={() => <List.Icon icon="help-circle" accessible={false} />}
               right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
               accessibilityRole="button"
-              accessibilityLabel="Help & Support, Get help and contact support"
+              accessibilityLabel={`${t('help_and_support')}, ${t('get_help_and_contact_support')}`}
             />
-            
+
             <List.Item
-              title="Privacy Policy"
-              description="Read our privacy policy"
+              title={t('privacy_policy')}
+              description={t('read_our_privacy_policy')}
               left={() => <List.Icon icon="shield-account" accessible={false} />}
               right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
               accessibilityRole="button"
-              accessibilityLabel="Privacy Policy, Read our privacy policy"
+              accessibilityLabel={`${t('privacy_policy')}, ${t('read_our_privacy_policy')}`}
             />
-            
+
             <List.Item
-              title="Terms of Service"
-              description="Read our terms of service"
+              title={t('terms_of_service')}
+              description={t('read_our_terms_of_service')}
               left={() => <List.Icon icon="file-document" accessible={false} />}
               right={() => <List.Icon icon="chevron-right" accessible={false} />}
               onPress={() => {}}
               accessibilityRole="button"
-              accessibilityLabel="Terms of Service, Read our terms of service"
+              accessibilityLabel={`${t('terms_of_service')}, ${t('read_our_terms_of_service')}`}
             />
-            
+
             <List.Item
-              title="App Version"
+              title={t('app_version')}
               description="1.0.0"
               left={() => <List.Icon icon="information" accessible={false} />}
               accessible={true}
-              accessibilityLabel="App Version 1.0.0"
+              accessibilityLabel={`${t('app_version')} 1.0.0`}
             />
           </Card.Content>
         </Card>
@@ -182,9 +179,9 @@ export default function ProfileScreen() {
             onPress={handleLogout}
             icon="logout"
             style={styles.logoutButton}
-            accessibilityLabel="Logout"
+            accessibilityLabel={t('logout')}
           >
-            Logout
+            {t('logout')}
           </Button>
         </View>
       </ScrollView>
@@ -194,7 +191,7 @@ export default function ProfileScreen() {
         onDismiss={() => setSnackbarVisible(false)}
         duration={3000}
         action={{
-          label: 'OK',
+          label: t('ok'),
           onPress: () => setSnackbarVisible(false),
         }}
       >

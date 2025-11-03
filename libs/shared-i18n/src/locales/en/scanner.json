@@ -28,5 +28,14 @@
   "cancel": "Cancel",
   "add_book": "Add Book",
   "isbn_required": "Please enter an ISBN",
-  "isbn_invalid": "Invalid ISBN format. Please enter a valid 10 or 13 digit ISBN."
+  "isbn_invalid": "Invalid ISBN format. Please enter a valid 10 or 13 digit ISBN.",
+  "requesting_camera_permission": "Requesting camera permission...",
+  "grant_permission": "Grant Permission",
+  "scanner_error": "Scanner Error",
+  "point_camera_at_barcode": "Point your camera at a book barcode",
+  "barcode_scanned": "Barcode scanned: {{isbn}}",
+  "scan_another": "Scan Another",
+  "book_found": "Book Found!",
+  "isbn_colon": "ISBN: {{isbn}}",
+  "add_to_library": "Add to Library"
 }

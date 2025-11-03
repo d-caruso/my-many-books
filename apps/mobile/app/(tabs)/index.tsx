@@ -4,6 +4,7 @@ import { FAB, Searchbar, Chip, Text } from 'react-native-paper';
 import { router } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { BookCard } from '@/components/BookCard';
 import { EmptyState } from '@/components/EmptyState';
@@ -13,6 +14,7 @@ import { useBookSearch } from '@/hooks/useBookSearch';
 import { Book } from '@/types';
 
 export default function BooksScreen() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   
@@ -92,10 +94,10 @@ export default function BooksScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text variant="headlineMedium" style={styles.title} accessibilityRole="header">
-          My Books
+          {t('books:my_books')}
         </Text>
         <Searchbar
-          placeholder="Search books..."
+          placeholder={t('books:search_books_placeholder')}
           onChangeText={handleSearch}
           value={searchQuery}
           style={styles.searchbar}
@@ -109,7 +111,7 @@ export default function BooksScreen() {
               style={styles.chip}
               accessibilityLabel="Clear search results"
             >
-              Clear search
+              {t('books:clear_search')}
             </Chip>
           </View>
         )}
@@ -137,13 +139,13 @@ export default function BooksScreen() {
         ListEmptyComponent={
           <EmptyState
             icon="book"
-            title={isSearching ? "No books found" : "No books yet"}
+            title={isSearching ? t('books:no_books_found') : t('books:no_books_yet')}
             description={
-              isSearching 
-                ? "Try a different search term"
-                : "Add your first book to get started"
+              isSearching
+                ? t('books:try_different_search')
+                : t('books:add_your_first_book')
             }
-            actionText={isSearching ? undefined : "Add Book"}
+            actionText={isSearching ? undefined : t('books:add_book')}
             onAction={isSearching ? undefined : () => router.push('/book/add')}
           />
         }
