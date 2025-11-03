@@ -17,10 +17,31 @@ const createTestI18n = () => {
       defaultNS: 'common',
       resources: {
         en: {
-          common: {},
+          common: {
+            app_name: 'My Many Books',
+            search: 'Search',
+            scanner: 'Scanner',
+            sign_out: 'Sign out',
+            loading: 'Loading...',
+          },
           validation: {},
           errors: {},
-          books: {},
+          books: {
+            my_books: 'My Books',
+            search_error: 'Search Error',
+            no_books_found: 'No books found',
+            try_adjusting: 'Try adjusting your search terms or filters',
+            showing_results_one: 'Showing {{current}} of {{total}} book',
+            showing_results_other: 'Showing {{current}} of {{total}} books',
+            load_more_books: 'Load More Books',
+            searching_for_books: 'Searching for books...',
+            unknown_author: 'Unknown Author',
+            reading: 'Reading',
+            paused: 'Paused',
+            finished: 'Finished',
+            edition: 'Edition',
+            more: 'more',
+          },
           scanner: {
             manual: {
               title: 'Enter ISBN',
@@ -74,7 +95,8 @@ const createTestI18n = () => {
             books: {
               title: 'My Books',
               description: 'Your personal book collection',
-              description_with_count: '{{count}} books in your library',
+              description_with_count_one: '{{count}} book in your library',
+              description_with_count_other: '{{count}} books in your library',
               add_book: 'Add Book',
               add: 'Add',
               clear_search: 'Clear search',
@@ -122,6 +144,10 @@ const createTestI18n = () => {
               sort_title: 'Title (A-Z)',
               sort_author: 'Author (A-Z)',
               sort_date: 'Recently Added',
+            },
+            results: {
+              showing_count_one: 'Showing {{count}} of {{total}} book',
+              showing_count_other: 'Showing {{count}} of {{total}} books',
             },
             filter: {
               title: 'Filters',
