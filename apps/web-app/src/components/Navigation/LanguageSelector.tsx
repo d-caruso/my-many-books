@@ -13,6 +13,10 @@ export const LanguageSelector: React.FC = () => {
     localStorage.setItem('preferred-language', newLanguage);
   };
 
+  if (import.meta.env.VITE_SHOW_LANGUAGE_SELECTOR !== 'true') {
+    return null;
+  }
+
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
       <LanguageIcon sx={{ mr: 1, color: 'action.active' }} />
