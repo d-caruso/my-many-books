@@ -141,10 +141,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         <ResponsiveInput
           type="email"
           id="email"
-          label="Email"
+          label={t('common:email')}
           value={formData.email}
           onChange={(e) => handleInputChange('email', e.target.value)}
-          placeholder="Enter your email"
+          placeholder={t('common:enter_email')}
           required
           disabled={loading}
         />
@@ -152,10 +152,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         <ResponsiveInput
           type="password"
           id="password"
-          label="Password"
+          label={t('common:password')}
           value={formData.password}
           onChange={(e) => handleInputChange('password', e.target.value)}
-          placeholder="Create a password"
+          placeholder={t('common:create_password')}
           required
           disabled={loading}
           minLength={6}
@@ -164,7 +164,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         <ResponsiveInput
           type="password"
           id="confirmPassword"
-          label="Confirm Password"
+          label={t('common:confirm_password')}
           value={formData.confirmPassword}
           onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
           onKeyDown={(e) => {
@@ -172,7 +172,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               handleSubmit(e as any);
             }
           }}
-          placeholder="Confirm your password"
+          placeholder={t('common:confirm_your_password')}
           required
           disabled={loading}
         />
@@ -185,19 +185,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           loading={loading}
           className="w-full"
         >
-          {loading ? 'Creating Account...' : 'Create Account'}
+          {loading ? t('common:creating_account') : t('common:create_account')}
         </ResponsiveButton>
 
         <div className="text-center pt-4 border-t border-secondary-200">
           <p className="text-text-secondary text-sm">
-            Already have an account?{' '}
+            {t('common:already_have_account')}{' '}
             <button
               type="button"
               onClick={onSwitchToLogin}
               className="text-primary-500 hover:text-primary-600 font-medium"
               disabled={loading}
             >
-              Sign in
+              {t('common:sign_in')}
             </button>
           </p>
         </div>

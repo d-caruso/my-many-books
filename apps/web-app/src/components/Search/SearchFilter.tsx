@@ -74,7 +74,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
         <button
           data-testid="filter-toggle"
           onClick={() => setShowFilters(!showFilters)}
-          aria-label="Toggle filters"
+          aria-label={t('search:filter.toggle_filters')}
           className="px-4 py-2 border rounded"
         >
           {t('search:filter.title')}
@@ -92,7 +92,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
             const [field, direction] = e.target.value.split('-');
             onSortChange({ field, direction: direction as 'asc' | 'desc' });
           }}
-          aria-label="Sort books"
+          aria-label={t('search:filter.sort_books')}
           className="px-4 py-2 border rounded"
         >
           <option value="title-asc">{t('search:filter.sort.title_asc')}</option>
