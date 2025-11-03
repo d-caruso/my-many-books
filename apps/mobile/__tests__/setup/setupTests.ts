@@ -40,6 +40,76 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   clear: jest.fn(() => Promise.resolve()),
 }));
 
+// Mock i18next for internationalization with actual translations
+jest.mock('react-i18next', () => ({
+  useTranslation: (namespace?: string) => ({
+    t: (key: string, params?: any) => {
+      // Map of translation keys to actual English translations for testing
+      const translations: Record<string, string> = {
+        // Common
+        'loading': 'Loading...',
+        'save': 'Save',
+        'cancel': 'Cancel',
+        'delete': 'Delete',
+        'search': 'Search',
+        'settings': 'Settings',
+        'ok': 'OK',
+        'logout': 'Logout',
+        'profile': 'Profile',
+        'user': 'User',
+        'scan': 'Scan',
+        'dark_mode': 'Dark Mode',
+        'toggle_dark_theme': 'Toggle dark theme',
+        'language': 'Language',
+        'language_changed_successfully': 'Language changed successfully',
+        // Books namespace
+        'books:my_books': 'My Books',
+        'books:add_book': 'Add Book',
+        'books:search_books': 'Search Books',
+        'books:no_books_found': 'No books found',
+        'books:unknown_author': 'Unknown Author',
+        'books:reading': 'Reading',
+        'books:completed': 'Completed',
+        'books:want_to_read': 'Want to Read',
+        // Scanner namespace
+        'scanner:scan_barcode': 'Scan ISBN Barcode',
+        'scanner:book_found': 'Book Found!',
+      };
+
+      // Handle namespace prefix (e.g., 'books:my_books')
+      let translationKey = key;
+      if (namespace && !key.includes(':')) {
+        translationKey = `${namespace}:${key}`;
+      }
+
+      let result = translations[translationKey] || key;
+
+      // Interpolate params if provided
+      if (params && typeof params === 'object') {
+        Object.keys(params).forEach(param => {
+          result = result.replace(`{{${param}}}`, String(params[param]));
+        });
+      }
+
+      return result;
+    },
+    i18n: {
+      language: 'en',
+      changeLanguage: jest.fn(() => Promise.resolve()),
+    },
+  }),
+  Trans: ({ children }: any) => children,
+  initReactI18next: {
+    type: '3rdParty',
+    init: jest.fn(),
+  },
+}));
+
+// Mock expo-localization
+jest.mock('expo-localization', () => ({
+  getLocales: jest.fn(() => [{ languageCode: 'en', regionCode: 'US' }]),
+}));
+
 // Mock React Native Paper with proper React components compatible with Testing Library
 jest.mock('react-native-paper', () => {
   const React = require('react');
