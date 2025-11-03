@@ -2,12 +2,14 @@ import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { Redirect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 export default function TabLayout() {
   const { user, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   if (isLoading) {
-    return null; // Show loading screen
+    return null;
   }
 
   if (!user) {
@@ -25,41 +27,41 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'My Books',
+          title: t('books:my_books'),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="library-books" size={size} color={color} />
           ),
-          tabBarAccessibilityLabel: 'My Books tab',
+          tabBarAccessibilityLabel: `${t('books:my_books')} tab`,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
-          title: 'Search',
-          tabBarIcon: ({ color, size }) => (
+          title: t('search'),
+          tabBarIcon: ({ color, size}) => (
             <MaterialIcons name="search" size={size} color={color} />
           ),
-          tabBarAccessibilityLabel: 'Search tab',
+          tabBarAccessibilityLabel: `${t('search')} tab`,
         }}
       />
       <Tabs.Screen
         name="scanner"
         options={{
-          title: 'Scan',
+          title: t('scan'),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="qr-code-scanner" size={size} color={color} />
           ),
-          tabBarAccessibilityLabel: 'Scan tab',
+          tabBarAccessibilityLabel: `${t('scan')} tab`,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('profile'),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="person" size={size} color={color} />
           ),
-          tabBarAccessibilityLabel: 'Profile tab',
+          tabBarAccessibilityLabel: `${t('profile')} tab`,
         }}
       />
     </Tabs>

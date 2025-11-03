@@ -4,15 +4,17 @@ import { Text, Button, Dialog, Portal } from 'react-native-paper';
 import { CameraView, BarcodeScanningResult } from 'expo-camera';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { Book } from '@my-many-books/shared-types';
 
 export default function ScannerScreen() {
+  const { t } = useTranslation('scanner');
   const [showBookDialog, setShowBookDialog] = useState(false);
   const [foundBook, setFoundBook] = useState<Book | null>(null);
-  
+
   const {
     hasPermission,
     scanned,
@@ -73,7 +75,7 @@ export default function ScannerScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContent}>
-          <Text variant="bodyLarge">Requesting camera permission...</Text>
+          <Text variant="bodyLarge">{t('requesting_camera_permission')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -84,13 +86,13 @@ export default function ScannerScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContent}>
           <Text variant="headlineSmall" style={styles.errorTitle} accessibilityRole="header">
-            Camera Access Required
+            {t('camera_access_required')}
           </Text>
           <Text variant="bodyMedium" style={styles.errorDescription}>
-            Camera permission is needed to scan book barcodes.
+            {t('camera_permission_needed')}
           </Text>
           <Button mode="contained" onPress={requestPermission} style={styles.button} accessibilityLabel="Grant Camera Permission">
-            Grant Permission
+            {t('grant_permission')}
           </Button>
         </View>
       </SafeAreaView>
@@ -102,13 +104,13 @@ export default function ScannerScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContent}>
           <Text variant="headlineSmall" style={styles.errorTitle} accessibilityRole="header">
-            Scanner Error
+            {t('scanner_error')}
           </Text>
           <Text variant="bodyMedium" style={styles.errorDescription}>
             {error}
           </Text>
           <Button mode="contained" onPress={resetScanner} style={styles.button} accessibilityLabel="Try scanning again">
-            Try Again
+            {t('try_again')}
           </Button>
         </View>
       </SafeAreaView>
@@ -129,24 +131,24 @@ export default function ScannerScreen() {
       <View style={styles.overlay}>
         <View style={styles.scanArea} accessible={false} />
         <Text variant="titleMedium" style={styles.instructionText} accessibilityLiveRegion="polite">
-          Point your camera at a book barcode
+          {t('point_camera_at_barcode')}
         </Text>
       </View>
 
       {scanned && (
         <View style={styles.scannedContainer}>
           <Text variant="bodyLarge" style={styles.scannedText} accessibilityLiveRegion="polite">
-            Barcode scanned: {scannedData}
+            {t('barcode_scanned', { isbn: scannedData })}
           </Text>
           <Button mode="outlined" onPress={resetScanner} style={styles.button} accessibilityLabel="Scan another barcode">
-            Scan Another
+            {t('scan_another')}
           </Button>
         </View>
       )}
 
       <Portal>
         <Dialog visible={showBookDialog} onDismiss={() => setShowBookDialog(false)} accessibilityRole="alertdialog" accessibilityLabel="Book Found Dialog" accessibilityViewIsModal={true}>
-          <Dialog.Title accessibilityRole="header">Book Found!</Dialog.Title>
+          <Dialog.Title accessibilityRole="header">{t('book_found')}</Dialog.Title>
           <Dialog.Content>
             {foundBook && (
               <>
@@ -155,15 +157,15 @@ export default function ScannerScreen() {
                   by {foundBook.authors?.map(a => a.name).join(', ')}
                 </Text>
                 <Text variant="bodySmall" style={styles.isbn}>
-                  ISBN: {foundBook.isbnCode}
+                  {t('isbn_colon', { isbn: foundBook.isbnCode })}
                 </Text>
               </>
             )}
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={handleScanAnother} accessibilityLabel="Scan another book">Scan Another</Button>
+            <Button onPress={handleScanAnother} accessibilityLabel="Scan another book">{t('scan_another')}</Button>
             <Button mode="contained" onPress={handleAddFoundBook} accessibilityLabel="Add book to library">
-              Add to Library
+              {t('add_to_library')}
             </Button>
           </Dialog.Actions>
         </Dialog>

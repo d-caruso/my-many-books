@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { View, StyleSheet, Image } from 'react-native';
 import { Card, Text, IconButton, Menu, Chip } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { Book } from '@/types';
 
 // Move utility functions back for direct coverage tracking
@@ -19,16 +20,28 @@ export function getStatusColor(status: Book['status']) {
   }
 }
 
-export function getStatusLabel(status: Book['status']) {
+export function getStatusLabel(status: Book['status'], t?: (key: string) => string) {
+  // If t function is not provided, this shouldn't be called
+  // This is kept for backward compatibility but should use t() from the component
+  if (!t) {
+    const statusMap: Record<Book['status'], string> = {
+      'reading': 'Reading',
+      'completed': 'Completed',
+      'want-to-read': 'Want to Read',
+      'paused': 'Paused',
+    };
+    return statusMap[status] || status;
+  }
+
   switch (status) {
     case 'reading':
-      return 'Reading';
+      return t('books:reading');
     case 'completed':
-      return 'Completed';
+      return t('books:completed');
     case 'want-to-read':
-      return 'Want to Read';
+      return t('books:want_to_read');
     case 'paused':
-      return 'Paused';
+      return t('books:paused');
     default:
       return status;
   }
@@ -51,6 +64,7 @@ export const BookCard: React.FC<BookCardProps> = ({
   onDelete,
   showActions = true,
 }) => {
+  const { t } = useTranslation();
   const [menuVisible, setMenuVisible] = React.useState(false);
 
   return (
@@ -58,7 +72,7 @@ export const BookCard: React.FC<BookCardProps> = ({
       style={styles.card}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`View details for ${book.title} by ${book.authors?.map(a => a.name).join(', ') || 'Unknown Author'}`}
+      accessibilityLabel={`View details for ${book.title} by ${book.authors?.map(a => a.name).join(', ') || t('books:unknown_author')}`}
     >
       <Card.Content style={styles.content}>
         <View style={styles.bookInfo}>
@@ -72,12 +86,12 @@ export const BookCard: React.FC<BookCardProps> = ({
             </Text>
             
             <Text variant="bodyMedium" style={styles.author} numberOfLines={1} testID="book-author">
-              {book.authors?.map(a => a.name).join(', ') || 'Unknown Author'}
+              {book.authors?.map(a => a.name).join(', ') || t('books:unknown_author')}
             </Text>
             
             {book.publishedDate && (
               <Text variant="bodySmall" style={styles.publishedDate}>
-                Published: {new Date(book.publishedDate).getFullYear()}
+                {t('books:published_label', { date: new Date(book.publishedDate).getFullYear() })}
               </Text>
             )}
             
@@ -87,7 +101,7 @@ export const BookCard: React.FC<BookCardProps> = ({
               compact
               testID="book-status"
             >
-              {getStatusLabel(book.status)}
+              {getStatusLabel(book.status, t)}
             </Chip>
           </View>
         </View>
@@ -113,7 +127,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                     onStatusChange?.(status);
                     setMenuVisible(false);
                   }}
-                  title={`Mark as ${getStatusLabel(status)}`}
+                  title={t('books:mark_as_status', { status: getStatusLabel(status, t) })}
                 />
               ))}
               <Menu.Item
@@ -121,7 +135,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                   onDelete?.();
                   setMenuVisible(false);
                 }}
-                title="Delete"
+                title={t('delete')}
                 titleStyle={{ color: '#f44336' }}
               />
             </Menu>

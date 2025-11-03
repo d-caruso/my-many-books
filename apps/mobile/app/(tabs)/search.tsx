@@ -3,6 +3,7 @@ import { View, FlatList } from 'react-native';
 import { Searchbar, Text, SegmentedButtons } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { BookCard } from '@/components/BookCard';
 import { EmptyState } from '@/components/EmptyState';
@@ -13,9 +14,10 @@ import { Book } from '@my-many-books/shared-types';
 type SearchMode = 'title' | 'author' | 'isbn';
 
 export default function SearchScreen() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMode, setSearchMode] = useState<SearchMode>('title');
-  
+
   const {
     books,
     loading,
@@ -57,23 +59,23 @@ export default function SearchScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text variant="headlineMedium" style={styles.title} accessibilityRole="header">
-          Search Books
+          {t('books:search_books')}
         </Text>
-        
+
         <SegmentedButtons
           value={searchMode}
           onValueChange={(value) => setSearchMode(value as SearchMode)}
           buttons={[
-            { value: 'title', label: 'Title' },
-            { value: 'author', label: 'Author' },
-            { value: 'isbn', label: 'ISBN' },
+            { value: 'title', label: t('books:search_by_title_tab') },
+            { value: 'author', label: t('books:search_by_author_tab') },
+            { value: 'isbn', label: t('books:search_by_isbn_tab') },
           ]}
           style={styles.segmentedButtons}
           accessibilityLabel="Select search type"
         />
-        
+
         <Searchbar
-          placeholder={`Search by ${searchMode}...`}
+          placeholder={t('books:search_by_placeholder', { mode: searchMode.toLowerCase() })}
           onChangeText={handleSearch}
           value={searchQuery}
           style={styles.searchbar}
@@ -100,14 +102,14 @@ export default function SearchScreen() {
           !loading && searchQuery.trim() ? (
             <EmptyState
               icon="magnify"
-              title="No books found"
-              description="Try adjusting your search terms"
+              title={t('books:no_books_found')}
+              description={t('books:try_different_search')}
             />
           ) : !loading ? (
             <EmptyState
               icon="magnify"
-              title="Start searching"
-              description="Enter a book title, author, or ISBN to begin"
+              title={t('books:start_searching')}
+              description={t('books:enter_title_author_isbn_to_begin')}
             />
           ) : null
         }
