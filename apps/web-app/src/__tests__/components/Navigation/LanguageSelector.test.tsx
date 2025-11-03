@@ -6,6 +6,11 @@ import i18n from '../../../i18n';
 
 describe('LanguageSelector', () => {
   beforeEach(() => {
+    // Mock the environment variable for testing
+    Object.defineProperty(import.meta.env, 'VITE_SHOW_LANGUAGE_SELECTOR', {
+      value: 'true',
+      writable: true,
+    });
     // Clear localStorage before each test
     localStorage.clear();
     // Reset language to English
