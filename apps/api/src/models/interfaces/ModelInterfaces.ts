@@ -120,11 +120,14 @@ export interface UpdateBookWithAssociations {
 }
 
 // User interfaces
+export type UserRole = 'user' | 'admin';
+
 export interface UserAttributes extends IdBaseModelAttributes {
   email: string;
   name: string;
   surname: string;
   isActive: boolean;
+  role: UserRole;
 }
 
 export interface UserCreationAttributes {
@@ -132,6 +135,7 @@ export interface UserCreationAttributes {
   name: string;
   surname: string;
   isActive: boolean;
+  role?: UserRole;
   updateDate?: Date | undefined;
 }
 
