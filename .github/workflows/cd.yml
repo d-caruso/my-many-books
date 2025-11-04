@@ -2,7 +2,7 @@ name: Monorepo CD
 
 on:
   push:
-    branches: [ main, develop, feature/admin-dashboard ]
+    branches: [ main, develop, feature/admin-dashboard, feature/error-boundaries ]
     tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
