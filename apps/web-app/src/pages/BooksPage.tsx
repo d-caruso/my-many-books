@@ -188,6 +188,9 @@ export const BooksPage: React.FC = () => {
     setError(null);
 
     try {
+      console.log('BooksPage handleFormSubmit formData:', formData);
+      console.log('BooksPage formData keys:', Object.keys(formData));
+
       // Transform the form data to API format
       const apiData = {
         title: formData.title,
@@ -199,6 +202,9 @@ export const BooksPage: React.FC = () => {
         selectedAuthors: formData.selectedAuthors,
         selectedCategories: formData.selectedCategories
       };
+
+      console.log('BooksPage apiData:', apiData);
+      console.log('BooksPage apiData keys:', Object.keys(apiData));
 
       if (selectedBook) {
         await bookAPI.updateBook(selectedBook.id, apiData);
