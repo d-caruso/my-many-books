@@ -144,6 +144,16 @@ export const userAPI = {
   refreshToken: apiClient.users.refreshToken.bind(apiClient.users),
 };
 
+export const adminAPI = {
+  getAdminStats: apiClient.admin.getAdminStats.bind(apiClient.admin),
+  getAdminUsers: apiClient.admin.getAdminUsers.bind(apiClient.admin),
+  updateAdminUser: apiClient.admin.updateAdminUser.bind(apiClient.admin),
+  deleteAdminUser: apiClient.admin.deleteAdminUser.bind(apiClient.admin),
+  getAdminBooks: apiClient.admin.getAdminBooks.bind(apiClient.admin),
+  updateAdminBook: apiClient.admin.updateAdminBook.bind(apiClient.admin),
+  deleteAdminBook: apiClient.admin.deleteAdminBook.bind(apiClient.admin),
+};
+
 // Mobile-specific API utilities
 export const apiUtils = {
   isOnline: () => {

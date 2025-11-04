@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { Text, Card, ActivityIndicator, Button } from 'react-native-paper';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { adminAPI } from '@/services/api';
 
 interface DashboardStats {
   totalUsers: number;
@@ -17,15 +18,22 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const loadStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await adminAPI.getAdminStats();
+      setStats(data);
+    } catch (err: any) {
+      console.error('Failed to fetch admin stats:', err);
+      setError(err.message || 'Failed to load statistics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // API call will be implemented in 6.2
-    setLoading(false);
-    setStats({
-      totalUsers: 0,
-      activeUsers: 0,
-      adminUsers: 0,
-      totalBooks: 0
-    });
+    loadStats();
   }, []);
 
   if (loading) {

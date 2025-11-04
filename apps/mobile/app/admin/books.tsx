@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Text, Card, ActivityIndicator, Searchbar, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
+import { adminAPI } from '@/services/api';
 
 interface Book {
   id: number;
@@ -19,11 +20,18 @@ export default function BookManagement() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
 
   const loadBooks = async () => {
-    // API call will be implemented in 6.2
-    setLoading(false);
-    setBooks([]);
+    try {
+      setLoading(true);
+      const response = await adminAPI.getAdminBooks(page, 50, searchQuery || undefined);
+      setBooks(response.books);
+    } catch (err: any) {
+      console.error('Failed to fetch books:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
