@@ -31,6 +31,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
 import { useApi } from '../../contexts/ApiContext';
+import { DataGridErrorBoundary } from '../../components/ErrorBoundary';
 
 interface Book {
   id: number;
@@ -287,17 +288,19 @@ export const BookManagementPage: React.FC = () => {
 
         {/* Data Grid */}
         <Box sx={{ height: 600, width: '100%' }}>
-          <DataGrid
-            rows={books}
-            columns={columns}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25, 50]}
-            rowCount={totalRows}
-            paginationMode="server"
-            loading={loading}
+          <DataGridErrorBoundary>
+            <DataGrid
+              rows={books}
+              columns={columns}
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              pageSizeOptions={[5, 10, 25, 50]}
+              rowCount={totalRows}
+              paginationMode="server"
+              loading={loading}
             disableRowSelectionOnClick
           />
+          </DataGridErrorBoundary>
         </Box>
 
         {/* Edit Dialog */}
