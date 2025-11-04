@@ -6,3 +6,5 @@ export { DataGridErrorBoundary } from './DataGridErrorBoundary';
 export { DataGridErrorFallback } from './DataGridErrorFallback';
 export { AdminErrorBoundary } from './AdminErrorBoundary';
 export { AdminErrorFallback } from './AdminErrorFallback';
+export { AuthErrorBoundary } from './AuthErrorBoundary';
+export { AuthErrorFallback } from './AuthErrorFallback';

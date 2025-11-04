@@ -15,7 +15,7 @@ import { AdminDashboardPage } from './pages/Admin';
 import { UserManagementPage } from './pages/Admin/UserManagementPage';
 import { BookManagementPage } from './pages/Admin/BookManagementPage';
 import { AdminSettingsPage } from './pages/Admin/AdminSettingsPage';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { ErrorBoundary, AuthErrorBoundary } from './components/ErrorBoundary';
 import { RootErrorFallback } from './components/ErrorBoundary/RootErrorFallback';
 import './i18n';
 
@@ -41,8 +41,9 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <ApiProvider>
-          <AuthProvider>
-            <Router>
+          <AuthErrorBoundary>
+            <AuthProvider>
+              <Router>
           <div className="min-h-screen">
             <OfflineIndicator />
             <UpdatePrompt />
@@ -107,7 +108,8 @@ function App() {
             <InstallPrompt />
           </div>
           </Router>
-        </AuthProvider>
+            </AuthProvider>
+          </AuthErrorBoundary>
       </ApiProvider>
     </ThemeProvider>
     </ErrorBoundary>
