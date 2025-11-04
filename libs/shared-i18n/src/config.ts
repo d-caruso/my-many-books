@@ -6,11 +6,13 @@ import enCommon from './locales/en/common.json';
 import enValidation from './locales/en/validation.json';
 import enErrors from './locales/en/errors.json';
 import enBooks from './locales/en/books.json';
+import enAdmin from './locales/en/admin.json';
 
 import itCommon from './locales/it/common.json';
 import itValidation from './locales/it/validation.json';
 import itErrors from './locales/it/errors.json';
 import itBooks from './locales/it/books.json';
+import itAdmin from './locales/it/admin.json';
 
 /**
  * Initialize i18next with all translations
@@ -28,6 +30,7 @@ export const initializeI18n = async (language?: string) => {
       TranslationNamespace.VALIDATION,
       TranslationNamespace.ERRORS,
       TranslationNamespace.BOOKS,
+      TranslationNamespace.ADMIN,
     ],
     defaultNS: TranslationNamespace.COMMON,
 
@@ -38,12 +41,14 @@ export const initializeI18n = async (language?: string) => {
         [TranslationNamespace.VALIDATION]: enValidation,
         [TranslationNamespace.ERRORS]: enErrors,
         [TranslationNamespace.BOOKS]: enBooks,
+        [TranslationNamespace.ADMIN]: enAdmin,
       },
       it: {
         [TranslationNamespace.COMMON]: itCommon,
         [TranslationNamespace.VALIDATION]: itValidation,
         [TranslationNamespace.ERRORS]: itErrors,
         [TranslationNamespace.BOOKS]: itBooks,
+        [TranslationNamespace.ADMIN]: itAdmin,
       },
     },
 
