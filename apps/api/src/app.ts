@@ -13,6 +13,7 @@ import userRoutes from './routes/userRoutes';
 import authorRoutes from './routes/authorRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import isbnRoutes from './routes/isbnRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 import { initializeI18n } from '@my-many-books/shared-i18n';
 
@@ -44,6 +45,7 @@ app.use(`${BASE_PATH}/users`, userRoutes);
 app.use(`${BASE_PATH}/authors`, authorRoutes);
 app.use(`${BASE_PATH}/categories`, categoryRoutes);
 app.use(`${BASE_PATH}/isbn`, isbnRoutes);
+app.use(`${BASE_PATH}/admin`, adminRoutes);
 
 // ===== 404 HANDLER =====
 app.use((_req, res): void => {
