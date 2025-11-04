@@ -37,8 +37,7 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:validation_failed',
         400,
-        undefined,
-        validation.errors
+        undefined, validation.errors ? { errors: validation.errors } : undefined
       );
     }
 
@@ -66,8 +65,7 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:create_failed',
         500,
-        { resource: 'category' },
-        errorMessage
+        { resource: 'category' }, { message: errorMessage }
       );
     }
   }
@@ -107,8 +105,7 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:internal_server_error',
         500,
-        undefined,
-        errorMessage
+        undefined, { message: errorMessage }
       );
     }
   }
@@ -137,8 +134,7 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:validation_failed',
         400,
-        undefined,
-        validation.errors
+        undefined, validation.errors ? { errors: validation.errors } : undefined
       );
     }
 
@@ -173,8 +169,7 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:update_failed',
         500,
-        { resource: 'category' },
-        errorMessage
+        { resource: 'category' }, { message: errorMessage }
       );
     }
   }
@@ -235,8 +230,7 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:delete_failed',
         500,
-        { resource: 'category' },
-        errorMessage
+        { resource: 'category' }, { message: errorMessage }
       );
     }
   }
@@ -287,8 +281,7 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:internal_server_error',
         500,
-        undefined,
-        errorMessage
+        undefined, { message: errorMessage }
       );
     }
   }
@@ -359,8 +352,7 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:internal_server_error',
         500,
-        undefined,
-        errorMessage
+        undefined, { message: errorMessage }
       );
     }
   }

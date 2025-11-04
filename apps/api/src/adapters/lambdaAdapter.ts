@@ -46,7 +46,7 @@ export const lambdaAdapter = (controllerMethod: ControllerMethod) => {
           data: apiResponse.data,
           ...(apiResponse.error && { error: apiResponse.error }),
           ...(apiResponse.message && { message: apiResponse.message }),
-          ...(apiResponse.meta && { meta: apiResponse.meta }),
+          ...(apiResponse.pagination && { pagination: apiResponse.pagination }),
         } as const),
       };
     } catch (error) {

@@ -96,7 +96,7 @@ export abstract class BaseController {
    * @param errorKey - Translation key (e.g., "errors:book_not_found")
    * @param statusCode - HTTP status code
    * @param interpolation - Optional interpolation values for translation
-   * @param details - Optional additional error details
+   * @param details - Optional additional error details as a Record
    */
   protected createErrorResponseI18n(
     errorKey: string,

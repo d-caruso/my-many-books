@@ -4,7 +4,7 @@
 // ================================================================
 
 import Joi from 'joi';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
@@ -45,6 +45,9 @@ export class AdminUserController extends BaseController {
           { email: { [Op.like]: `%${search}%` } },
           { name: { [Op.like]: `%${search}%` } },
           { surname: { [Op.like]: `%${search}%` } },
+          Sequelize.where(Sequelize.fn('concat', Sequelize.col('name'), ' ', Sequelize.col('surname')), {
+            [Op.like]: `%${search}%`
+          })
         ];
       }
 
@@ -68,11 +71,12 @@ export class AdminUserController extends BaseController {
         updatedAt: user.updateDate,
       }));
 
-      return this.createSuccessResponse(
-        { users: userData },
-        undefined,
-        this.createPaginationMeta(page, limit, count)
-      );
+      const pagination = this.createPaginationMeta(page, limit, count);
+
+      return this.createSuccessResponse({
+        users: userData,
+        pagination: { ...pagination, pageSize: pagination.limit },
+      });
     } catch (error) {
       console.error('Get all users error:', error);
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
@@ -141,8 +145,7 @@ export class AdminUserController extends BaseController {
       if (!validation.isValid) {
         return this.createErrorResponse(
           this.t('errors:validation_failed'),
-          400,
-          validation.errors
+          400, validation.errors ? { errors: validation.errors } : undefined
         );
       }
 
