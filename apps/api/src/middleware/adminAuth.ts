@@ -65,11 +65,7 @@ export const requireAdmin = async (
  * router.get('/admin/stats', authMiddleware, requireRole('admin'), StatsController.getStats);
  */
 export const requireRole = (allowedRole: 'user' | 'admin') => {
-  return async (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Check if user is authenticated
       if (!req.user) {

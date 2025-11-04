@@ -26,9 +26,8 @@ export abstract class BaseController {
    */
   protected async initializeI18n(request: UniversalRequest): Promise<void> {
     try {
-      const acceptLanguage = request.headers?.['accept-language'] ||
-                            request.headers?.['Accept-Language'] ||
-                            'en';
+      const acceptLanguage =
+        request.headers?.['accept-language'] || request.headers?.['Accept-Language'] || 'en';
       const language = this.parseLanguageCode(acceptLanguage);
 
       // Only change language if i18n is properly initialized
@@ -49,7 +48,8 @@ export abstract class BaseController {
    *           "fr" -> "en" (fallback if not supported)
    */
   protected parseLanguageCode(acceptLanguage: string): string {
-    const primaryLang = acceptLanguage?.split(',')[0]?.split('-')[0]?.split(';')[0]?.trim()?.toLowerCase() || 'en';
+    const primaryLang =
+      acceptLanguage?.split(',')[0]?.split('-')[0]?.split(';')[0]?.trim()?.toLowerCase() || 'en';
     const supportedLanguages = ['en', 'it'];
     return supportedLanguages.includes(primaryLang) ? primaryLang : 'en';
   }
@@ -60,13 +60,13 @@ export abstract class BaseController {
    * @param interpolation - Optional interpolation values
    */
   protected t(key: string, interpolation?: object): string {
-    return i18n.t(key, interpolation as any) as string;
+    return i18n.t(key, interpolation as Record<string, unknown>);
   }
 
   protected createSuccessResponse<T>(
     data: T,
     message?: string,
-    meta?: any,
+    meta?: Record<string, unknown>,
     statusCode: number = 200
   ): ApiResponse<T> {
     return {
@@ -81,7 +81,7 @@ export abstract class BaseController {
   protected createErrorResponse(
     error: string,
     statusCode: number = 400,
-    details?: any
+    details?: Record<string, unknown>
   ): ApiResponse {
     return {
       statusCode,
@@ -102,7 +102,7 @@ export abstract class BaseController {
     errorKey: string,
     statusCode: number = 400,
     interpolation?: object,
-    details?: any
+    details?: Record<string, unknown>
   ): ApiResponse {
     const errorMessage = this.t(errorKey, interpolation);
     return this.createErrorResponse(errorMessage, statusCode, details);
@@ -127,16 +127,17 @@ export abstract class BaseController {
   }
 
   protected validateRequest<T>(
-    data: any,
+    data: unknown,
     schema: Joi.ObjectSchema<T>
   ): { isValid: boolean; value?: T; errors?: string[] } {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { error, value } = schema.validate(data, { abortEarly: false });
 
     if (error) {
       const errors = error.details.map(detail => {
         // Check if the message is a translation key (contains ":")
         if (detail.message.includes(':')) {
-          return this.t(detail.message, detail.context);
+          return this.t(detail.message, detail.context as object | undefined);
         }
         // Otherwise return the message as-is (for backward compatibility)
         return detail.message;
@@ -144,7 +145,7 @@ export abstract class BaseController {
       return { isValid: false, errors };
     }
 
-    return { isValid: true, value: value as T };
+    return { isValid: true, value: value };
   }
 
   protected getPaginationParams(request: UniversalRequest): PaginationParams {

@@ -7,7 +7,8 @@ import { BaseModelAttributes } from '../base/BaseModel';
 import { IdBaseModelAttributes } from '../base/IdBaseModel';
 
 // Author interfaces
-export interface AuthorAttributes extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
+export interface AuthorAttributes
+  extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
   id: CreationOptional<number>;
   name: string;
   surname: string;
@@ -24,7 +25,8 @@ export interface AuthorCreationAttributes {
 }
 
 // Category interfaces
-export interface CategoryAttributes extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
+export interface CategoryAttributes
+  extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
   id: CreationOptional<number>;
   name: string;
   creationDate: CreationOptional<Date>;
@@ -37,7 +39,8 @@ export interface CategoryCreationAttributes {
 }
 
 // Book interfaces
-export interface BookAttributes extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
+export interface BookAttributes
+  extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
   id: CreationOptional<number>;
   isbnCode: string;
   title: string;
@@ -61,6 +64,7 @@ export interface BookCreationAttributes {
   updateDate?: Date | undefined;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface BookUpdateAttributes
   extends Omit<Partial<BookAttributes>, 'id' | 'creationDate'> {}
 
@@ -70,6 +74,7 @@ export interface BookAuthorAttributes extends BaseModelAttributes {
   authorId: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface BookAuthorCreationAttributes
   extends Omit<BookAuthorAttributes, 'creationDate' | 'updateDate'> {}
 
@@ -78,6 +83,7 @@ export interface BookCategoryAttributes extends BaseModelAttributes {
   categoryId: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface BookCategoryCreationAttributes
   extends Omit<BookCategoryAttributes, 'creationDate' | 'updateDate'> {}
 
@@ -139,6 +145,7 @@ export interface UserCreationAttributes {
   updateDate?: Date | undefined;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UserUpdateAttributes
   extends Omit<Partial<UserAttributes>, 'id' | 'creationDate'> {}
 

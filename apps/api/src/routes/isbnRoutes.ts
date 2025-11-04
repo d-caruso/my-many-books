@@ -39,7 +39,10 @@ router.get('/cache', expressRouteWrapper(isbnController.getCacheStats.bind(isbnC
 router.delete('/cache', expressRouteWrapper(isbnController.clearCache.bind(isbnController)));
 
 // Resilience management
-router.delete('/resilience', expressRouteWrapper(isbnController.resetResilience.bind(isbnController)));
+router.delete(
+  '/resilience',
+  expressRouteWrapper(isbnController.resetResilience.bind(isbnController))
+);
 
 // Fallback book management
 router.post('/fallback', expressRouteWrapper(isbnController.addFallbackBook.bind(isbnController)));
