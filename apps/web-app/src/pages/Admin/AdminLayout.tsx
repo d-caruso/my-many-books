@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { AdminErrorBoundary } from '../../components/ErrorBoundary';
 
 const drawerWidth = 240;
 
@@ -136,7 +137,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         }}
       >
         <Toolbar /> {/* Spacing for AppBar */}
-        {children}
+        <AdminErrorBoundary>
+          {children}
+        </AdminErrorBoundary>
       </Box>
     </Box>
   );
