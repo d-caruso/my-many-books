@@ -98,7 +98,7 @@ export const UserManagementPage: React.FC = () => {
       );
 
       setUsers(response.users);
-      setTotalRows(response.pagination.total);
+      setTotalRows(response.pagination?.total || 0);
     } catch (err: any) {
       console.error('Failed to fetch users:', err);
       setError(err.message || 'Failed to load users');

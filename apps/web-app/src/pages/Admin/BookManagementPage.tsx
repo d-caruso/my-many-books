@@ -100,7 +100,7 @@ export const BookManagementPage: React.FC = () => {
       );
 
       setBooks(response.books);
-      setTotalRows(response.pagination.total);
+      setTotalRows(response.pagination?.total || 0);
     } catch (err: any) {
       console.error('Failed to fetch books:', err);
       setError(err.message || 'Failed to load books');
@@ -201,9 +201,13 @@ export const BookManagementPage: React.FC = () => {
     {
       field: 'userName',
       headerName: t('pages:admin.books.user', 'User'),
-      width: 180,
+      width: 200,
       renderCell: (params: GridRenderCellParams) => (
-        params.value ? <Typography variant="body2">{params.value}</Typography> : <Typography variant="body2" color="textSecondary">-</Typography>
+        params.value ? (
+          <Typography variant="body2">{params.value}</Typography>
+        ) : (
+          <Typography variant="body2" color="textSecondary">No owner</Typography>
+        )
       ),
     },
     {
