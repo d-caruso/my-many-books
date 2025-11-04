@@ -16,5 +16,74 @@
   },
   "protected_route": {
     "loading": "Caricamento in corso..."
+  },
+  "admin": {
+    "menu": {
+      "dashboard": "Dashboard",
+      "users": "Utenti",
+      "books": "Libri",
+      "settings": "Impostazioni"
+    },
+    "back_to_app": "Torna all'applicazione",
+    "title": "Pannello Admin",
+    "sidebar_title": "Amministrazione",
+    "users": {
+      "title": "Gestione Utenti",
+      "name": "Nome",
+      "email": "Email",
+      "role": "Ruolo",
+      "role_user": "Utente",
+      "role_admin": "Admin",
+      "status": "Stato",
+      "active": "Attivo",
+      "inactive": "Inattivo",
+      "created": "Creato",
+      "actions": "Azioni",
+      "search_placeholder": "Cerca per nome o email...",
+      "search": "Cerca",
+      "edit": "Modifica utente",
+      "delete": "Elimina utente",
+      "edit_user": "Modifica Utente",
+      "first_name": "Nome",
+      "last_name": "Cognome",
+      "delete_confirmation_title": "Elimina Utente",
+      "delete_confirmation_message": "Sei sicuro di voler eliminare l'utente {{name}}? Questa azione non può essere annullata."
+    },
+    "books": {
+      "page_title": "Gestione Libri",
+      "title": "Titolo",
+      "isbn": "ISBN",
+      "authors": "Autori",
+      "user": "Utente",
+      "status": "Stato",
+      "no_status": "Nessuno",
+      "reading": "In lettura",
+      "paused": "In pausa",
+      "finished": "Completato",
+      "created": "Creato",
+      "actions": "Azioni",
+      "search_placeholder": "Cerca per titolo, ISBN o autore...",
+      "search": "Cerca",
+      "edit": "Modifica libro",
+      "delete": "Elimina libro",
+      "edit_book": "Modifica Libro",
+      "edition_number": "Numero Edizione",
+      "edition_date": "Data Edizione",
+      "notes": "Note",
+      "delete_confirmation_title": "Elimina Libro",
+      "delete_confirmation_message": "Sei sicuro di voler eliminare \"{{title}}\"? Questa azione non può essere annullata."
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "total_users": "Utenti Totali",
+      "total_books": "Libri Totali",
+      "active_users": "Utenti Attivi",
+      "admin_users": "Utenti Admin",
+      "welcome_title": "Benvenuto nel Pannello Admin",
+      "welcome_message": "Questa è la base per il dashboard admin. Usa la barra laterale per navigare tra le diverse sezioni admin.",
+      "phase_info": "Fase 1: Fondamenta Admin - Completata ✓",
+      "phase_2_info": "Fase 2: Dashboard Admin - Completata ✓",
+      "next_phase": "Prossimo: La Fase 3 aggiungerà funzionalità di gestione utenti."
+    }
   }
 }

@@ -6,13 +6,13 @@ import enCommon from './locales/en/common.json';
 import enValidation from './locales/en/validation.json';
 import enErrors from './locales/en/errors.json';
 import enBooks from './locales/en/books.json';
-import enAdmin from './locales/en/admin.json';
+import enAdmin from './locales/en/pages.json';
 
 import itCommon from './locales/it/common.json';
 import itValidation from './locales/it/validation.json';
 import itErrors from './locales/it/errors.json';
 import itBooks from './locales/it/books.json';
-import itAdmin from './locales/it/admin.json';
+import itAdmin from './locales/it/pages.json';
 
 /**
  * Initialize i18next with all translations
