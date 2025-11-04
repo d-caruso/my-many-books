@@ -28,7 +28,7 @@ interface CreateBookRequest {
   notes?: string;
   authorIds?: number[];
   categoryIds?: number[];
-  userId: number;
+  userId?: number; // Stripped by validation, never used
 }
 
 interface BookSearchFilters {
@@ -65,6 +65,7 @@ export class BookController extends BaseController {
     notes: Joi.string().optional().max(5000).trim(),
     authorIds: Joi.array().items(Joi.number().integer().positive()).optional(),
     categoryIds: Joi.array().items(Joi.number().integer().positive()).optional(),
+    userId: Joi.any().strip(),
   });
 
   // PUT schema: Full update requires title (ISBN can't be changed)
@@ -116,12 +117,8 @@ export class BookController extends BaseController {
 
     const validation = this.validateRequest(body, this.createBookSchema);
     if (!validation.isValid) {
-      return this.createErrorResponseI18n(
-        'errors:validation_failed',
-        400,
-        undefined,
-        validation.errors
-      );
+      const errorMessage = validation.errors?.[0] || this.t('errors:validation_failed');
+      return this.createErrorResponse(errorMessage, 400, validation.errors);
     }
 
     const bookData = validation.value!;

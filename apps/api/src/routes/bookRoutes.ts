@@ -14,19 +14,19 @@ const bookController = new BookController();
 // All book routes require authentication
 router.use(authMiddleware);
 
+// Book search operations (must come before /:id to avoid matching 'search' as an ID)
+router.get('/search', expressRouteWrapper(bookController.searchBooks.bind(bookController)));
+router.get(
+  '/search/isbn/:isbn',
+  expressRouteWrapper(bookController.searchByIsbnForUser.bind(bookController))
+);
+
 // Book CRUD operations
-// Now, we call the methods on the `bookController` instance
 router.get('/', expressRouteWrapper(bookController.getUserBooks.bind(bookController)));
 router.get('/:id', expressRouteWrapper(bookController.getBookById.bind(bookController)));
 router.post('/', expressRouteWrapper(bookController.createBookForUser.bind(bookController)));
 router.put('/:id', expressRouteWrapper(bookController.updateBookForUser.bind(bookController)));
 router.patch('/:id', expressRouteWrapper(bookController.patchBookForUser.bind(bookController)));
 router.delete('/:id', expressRouteWrapper(bookController.deleteBookForUser.bind(bookController)));
-
-// Book search operations
-router.get(
-  '/search/isbn/:isbn',
-  expressRouteWrapper(bookController.searchByIsbnForUser.bind(bookController))
-);
 
 export default router;

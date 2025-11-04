@@ -4,7 +4,17 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     const now = new Date();
-    
+
+    const users = await queryInterface.sequelize.query(
+      'SELECT id FROM users WHERE email = ?',
+      {
+        replacements: ['demo@example.com'],
+        type: queryInterface.sequelize.QueryTypes.SELECT
+      }
+    );
+
+    const demoUserId = users.length > 0 ? users[0].id : null;
+
     const books = await queryInterface.bulkInsert('books', [
       {
         isbn_code: '9780451524935',
@@ -13,6 +23,7 @@ module.exports = {
         edition_date: '1949-06-08',
         status: 'finished',
         notes: 'A powerful dystopian novel about totalitarianism and surveillance',
+        user_id: demoUserId,
         creation_date: now,
         update_date: now
       },
@@ -23,6 +34,7 @@ module.exports = {
         edition_date: '1813-01-28',
         status: 'reading',
         notes: 'Classic romance novel with wit and social commentary',
+        user_id: demoUserId,
         creation_date: now,
         update_date: now
       },
@@ -33,6 +45,7 @@ module.exports = {
         edition_date: '1884-12-10',
         status: 'finished',
         notes: 'American classic about friendship and adventure along the Mississippi',
+        user_id: demoUserId,
         creation_date: now,
         update_date: now
       },
@@ -43,6 +56,7 @@ module.exports = {
         edition_date: '1967-06-05',
         status: 'paused',
         notes: 'Magical realism masterpiece about the Buendía family',
+        user_id: demoUserId,
         creation_date: now,
         update_date: now
       },
@@ -53,6 +67,7 @@ module.exports = {
         edition_date: '1927-05-05',
         status: 'finished',
         notes: 'Modernist novel exploring consciousness and time',
+        user_id: demoUserId,
         creation_date: now,
         update_date: now
       },
@@ -63,6 +78,7 @@ module.exports = {
         edition_date: '1925-04-26',
         status: 'finished',
         notes: 'Kafka\'s existential masterpiece about bureaucracy and alienation',
+        user_id: demoUserId,
         creation_date: now,
         update_date: now
       },
@@ -73,6 +89,7 @@ module.exports = {
         edition_date: '1952-09-01',
         status: 'finished',
         notes: 'Hemingway\'s Nobel Prize-winning novella',
+        user_id: demoUserId,
         creation_date: now,
         update_date: now
       },
@@ -83,6 +100,7 @@ module.exports = {
         edition_date: '1987-09-16',
         status: 'finished',
         notes: 'Powerful novel about slavery and its lasting impact',
+        user_id: demoUserId,
         creation_date: now,
         update_date: now
       },
@@ -93,6 +111,7 @@ module.exports = {
         edition_date: '1987-08-04',
         status: 'reading',
         notes: 'Coming-of-age story set in 1960s Tokyo',
+        user_id: demoUserId,
         creation_date: now,
         update_date: now
       },
@@ -103,6 +122,7 @@ module.exports = {
         edition_date: '1982-01-01',
         status: 'finished',
         notes: 'Multi-generational saga with magical realism elements',
+        user_id: demoUserId,
         creation_date: now,
         update_date: now
       }

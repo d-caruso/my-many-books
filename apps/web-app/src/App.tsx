@@ -14,6 +14,7 @@ import { ScannerModal } from './components/Scanner';
 import { AdminDashboardPage } from './pages/Admin';
 import { UserManagementPage } from './pages/Admin/UserManagementPage';
 import { BookManagementPage } from './pages/Admin/BookManagementPage';
+import { AdminSettingsPage } from './pages/Admin/AdminSettingsPage';
 import './i18n';
 
 // Create MUI theme
@@ -76,7 +77,7 @@ function App() {
                 path="/admin/settings"
                 element={
                   <ProtectedRoute requireAdmin>
-                    <AdminDashboardPage />
+                    <AdminSettingsPage />
                   </ProtectedRoute>
                 }
               />
