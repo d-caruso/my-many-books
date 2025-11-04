@@ -15,6 +15,8 @@ import { AdminDashboardPage } from './pages/Admin';
 import { UserManagementPage } from './pages/Admin/UserManagementPage';
 import { BookManagementPage } from './pages/Admin/BookManagementPage';
 import { AdminSettingsPage } from './pages/Admin/AdminSettingsPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { RootErrorFallback } from './components/ErrorBoundary/RootErrorFallback';
 import './i18n';
 
 // Create MUI theme
@@ -35,11 +37,12 @@ const theme = createTheme({
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <ApiProvider>
-        <AuthProvider>
-          <Router>
+    <ErrorBoundary fallback={(error, reset) => <RootErrorFallback error={error} reset={reset} />}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <ApiProvider>
+          <AuthProvider>
+            <Router>
           <div className="min-h-screen">
             <OfflineIndicator />
             <UpdatePrompt />
@@ -107,6 +110,7 @@ function App() {
         </AuthProvider>
       </ApiProvider>
     </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
