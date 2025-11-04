@@ -52,19 +52,21 @@ app.use((_req, res): void => {
   res.status(404).json({
     success: false,
     error: 'Endpoint not found',
-    availableRoutes: BASE_PATH
+    availableRoutes: BASE_PATH,
   });
 });
 
 // ===== GLOBAL ERROR HANDLER =====
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction): void => {
-  console.error('Global error handler:', err);
-  res.status(500).json({
-    success: false,
-    error: 'Internal server error',
-    details: process.env['NODE_ENV'] === 'development' ? err.message : undefined,
-  });
-});
+app.use(
+  (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction): void => {
+    console.error('Global error handler:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      details: process.env['NODE_ENV'] === 'development' ? err.message : undefined,
+    });
+  }
+);
 
 // Database initialization (for both local and Lambda cold start)
 const initializeDatabase = async (): Promise<void> => {
@@ -111,16 +113,20 @@ const startServer = async (): Promise<void> => {
 };
 
 // Handle graceful shutdown
-process.on('SIGTERM', async (): Promise<void> => {
-  console.log('SIGTERM received, shutting down gracefully');
-  await ModelManager.close();
-  process.exit(0);
+process.on('SIGTERM', (): void => {
+  void (async (): Promise<void> => {
+    console.log('SIGTERM received, shutting down gracefully');
+    await ModelManager.close();
+    process.exit(0);
+  })();
 });
 
-process.on('SIGINT', async (): Promise<void> => {
-  console.log('SIGINT received, shutting down gracefully');
-  await ModelManager.close();
-  process.exit(0);
+process.on('SIGINT', (): void => {
+  void (async (): Promise<void> => {
+    console.log('SIGINT received, shutting down gracefully');
+    await ModelManager.close();
+    process.exit(0);
+  })();
 });
 
 if (require.main === module) {
