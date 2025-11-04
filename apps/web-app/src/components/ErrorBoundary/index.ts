@@ -4,3 +4,5 @@ export { ScannerErrorBoundary } from './ScannerErrorBoundary';
 export { ScannerErrorFallback } from './ScannerErrorFallback';
 export { DataGridErrorBoundary } from './DataGridErrorBoundary';
 export { DataGridErrorFallback } from './DataGridErrorFallback';
+export { AdminErrorBoundary } from './AdminErrorBoundary';
+export { AdminErrorFallback } from './AdminErrorFallback';
