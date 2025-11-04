@@ -114,11 +114,12 @@ export class AdminBookController extends BaseController {
         })
       );
 
-      return this.createSuccessResponse(
-        { books: booksWithUsers },
-        undefined,
-        this.createPaginationMeta(page, limit, count)
-      );
+      const pagination = this.createPaginationMeta(page, limit, count);
+
+      return this.createSuccessResponse({
+        books: booksWithUsers,
+        pagination: { ...pagination, pageSize: pagination.limit },
+      });
     } catch (error) {
       console.error('Get all books error:', error);
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
@@ -220,8 +221,7 @@ export class AdminBookController extends BaseController {
       if (!validation.isValid) {
         return this.createErrorResponse(
           this.t('errors:validation_failed'),
-          400,
-          validation.errors
+          400, validation.errors ? { errors: validation.errors } : undefined
         );
       }
 

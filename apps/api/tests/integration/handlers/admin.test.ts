@@ -137,11 +137,13 @@ describe('Admin Handler Integration', () => {
       await Book.create({
         title: 'Test Book 1',
         userId: regularUser.id,
+        isbnCode: '1234567890',
       } as any);
 
       await Book.create({
         title: 'Test Book 2',
         userId: regularUser.id,
+        isbnCode: '1234567891',
       } as any);
     });
 
@@ -427,7 +429,7 @@ describe('Admin Handler Integration', () => {
       for (let i = 1; i <= 3; i++) {
         await Book.create({
           title: `Book ${i}`,
-          isbnCode: `ISBN${i}`,
+          isbnCode: `123456789${i}`,
           userId: regularUser.id,
         } as any);
       }
@@ -500,7 +502,7 @@ describe('Admin Handler Integration', () => {
     beforeEach(async () => {
       testBook = await Book.create({
         title: 'Book to Delete',
-        isbnCode: 'ISBN123',
+        isbnCode: '1234567893',
         userId: regularUser.id,
       } as any);
     });

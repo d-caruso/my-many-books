@@ -12,10 +12,12 @@ import { corsHandler } from '../middleware/cors';
 import { errorHandler } from '../middleware/errorHandler';
 import { lambdaAdapter } from '../adapters/lambdaAdapter';
 
+import { authAdminMiddleware } from '../middleware/authAdmin';
+
 const withMiddleware = (
   handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
 ) => {
-  return async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  return authAdminMiddleware(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
       // Apply CORS first
       if (event.httpMethod === 'OPTIONS') {
@@ -42,7 +44,7 @@ const withMiddleware = (
     } catch (error) {
       return errorHandler(error as Error);
     }
-  };
+  });
 };
 
 // ===== STATS ENDPOINTS =====
