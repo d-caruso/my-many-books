@@ -15,7 +15,7 @@ import { AdminDashboardPage } from './pages/Admin';
 import { UserManagementPage } from './pages/Admin/UserManagementPage';
 import { BookManagementPage } from './pages/Admin/BookManagementPage';
 import { AdminSettingsPage } from './pages/Admin/AdminSettingsPage';
-import { ErrorBoundary, AuthErrorBoundary } from './components/ErrorBoundary';
+import { ErrorBoundary, AuthErrorBoundary, PageErrorBoundary } from './components/ErrorBoundary';
 import { RootErrorFallback } from './components/ErrorBoundary/RootErrorFallback';
 import './i18n';
 
@@ -94,8 +94,8 @@ function App() {
                     <Navbar />
                     <main>
                       <Routes>
-                        <Route path="/" element={<BooksPage />} />
-                        <Route path="/search" element={<BookSearchPage />} />
+                        <Route path="/" element={<PageErrorBoundary pageName="Books"><BooksPage /></PageErrorBoundary>} />
+                        <Route path="/search" element={<PageErrorBoundary pageName="Book Search"><BookSearchPage /></PageErrorBoundary>} />
                         <Route path="/scanner" element={<ScannerModal isOpen={true} onClose={() => window.history.back()} onScanSuccess={() => {}} onScanError={() => {}} />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
                       </Routes>
