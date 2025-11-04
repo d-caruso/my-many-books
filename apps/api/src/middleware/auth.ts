@@ -36,32 +36,28 @@ export class CognitoAuthProvider implements AuthProvider {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async verifyToken(token: string): Promise<AuthProviderUser> {
-    // TODO: Implement AWS Cognito JWT verification
-    // This is a placeholder implementation
-    try {
-      // In real implementation, verify JWT with AWS Cognito
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const jwt = require('jsonwebtoken') as { decode: (token: string) => unknown };
-      const decoded = jwt.decode(token) as {
-        sub?: string;
-        email?: string;
-        given_name?: string;
-        family_name?: string;
-      } | null;
+    // TODO: Implement proper AWS Cognito JWT verification
+    // For now, we will just decode the token for debugging purposes.
+    // This is NOT a secure solution for production.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const jwt = require('jsonwebtoken') as { decode: (token: string) => unknown };
+    const decoded = jwt.decode(token) as {
+      sub?: string;
+      email?: string;
+      given_name?: string;
+      family_name?: string;
+    } | null;
 
-      if (!decoded || !decoded.sub || !decoded.email) {
-        throw new Error('Invalid token format');
-      }
-
-      return {
-        id: decoded.sub,
-        email: decoded.email,
-        name: decoded.given_name || undefined,
-        surname: decoded.family_name || undefined,
-      };
-    } catch {
+    if (!decoded || !decoded.sub || !decoded.email) {
       throw new Error('Token verification failed');
     }
+
+    return {
+      id: decoded.sub,
+      email: decoded.email,
+      name: decoded.given_name || undefined,
+      surname: decoded.family_name || undefined,
+    };
   }
 
   getProviderName(): string {
@@ -189,7 +185,7 @@ export const authMiddleware = async (
 
     next();
   } catch (error) {
-    console.error('Authentication error:', error);
+    console.error('AuthMiddleware: Authentication error:', error);
     res.status(401).json({
       error: 'Authentication failed',
       details: error instanceof Error ? error.message : 'Unknown error',

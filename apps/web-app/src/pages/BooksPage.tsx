@@ -43,15 +43,13 @@ export const BooksPage: React.FC = () => {
 
   const loadUserBooks = useCallback(async () => {
     try {
-      await bookAPI.getBooks();
-      // This would need to be adapted based on your API structure
       // For now, we'll use the search with empty query to get all books
       searchBooksRef.current('', {});
     } catch (err: any) {
       console.error('Failed to load user books:', err);
       setError(t('books.error_load_books'));
     }
-  }, [bookAPI, t]);
+  }, [t]);
 
   loadUserBooksRef.current = loadUserBooks;
 

@@ -58,6 +58,7 @@ export class UserController {
         surname: user.surname,
         fullName: user.getFullName(),
         isActive: user.isActive,
+        role: user.role, // Include user role
         createdAt: user.creationDate,
         updatedAt: user.updateDate,
       });
