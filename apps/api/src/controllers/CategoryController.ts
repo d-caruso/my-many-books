@@ -37,7 +37,8 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:validation_failed',
         400,
-        undefined, validation.errors ? { errors: validation.errors } : undefined
+        undefined,
+        validation.errors ? { errors: validation.errors } : undefined
       );
     }
 
@@ -65,7 +66,8 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:create_failed',
         500,
-        { resource: 'category' }, { message: errorMessage }
+        { resource: 'category' },
+        { message: errorMessage }
       );
     }
   }
@@ -102,11 +104,9 @@ export class CategoryController extends BaseController {
       return this.createSuccessResponse(category, 'Category retrieved successfully');
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n(
-        'errors:internal_server_error',
-        500,
-        undefined, { message: errorMessage }
-      );
+      return this.createErrorResponseI18n('errors:internal_server_error', 500, undefined, {
+        message: errorMessage,
+      });
     }
   }
 
@@ -134,7 +134,8 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:validation_failed',
         400,
-        undefined, validation.errors ? { errors: validation.errors } : undefined
+        undefined,
+        validation.errors ? { errors: validation.errors } : undefined
       );
     }
 
@@ -169,7 +170,8 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:update_failed',
         500,
-        { resource: 'category' }, { message: errorMessage }
+        { resource: 'category' },
+        { message: errorMessage }
       );
     }
   }
@@ -230,7 +232,8 @@ export class CategoryController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:delete_failed',
         500,
-        { resource: 'category' }, { message: errorMessage }
+        { resource: 'category' },
+        { message: errorMessage }
       );
     }
   }
@@ -278,11 +281,9 @@ export class CategoryController extends BaseController {
       });
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n(
-        'errors:internal_server_error',
-        500,
-        undefined, { message: errorMessage }
-      );
+      return this.createErrorResponseI18n('errors:internal_server_error', 500, undefined, {
+        message: errorMessage,
+      });
     }
   }
 
@@ -349,11 +350,9 @@ export class CategoryController extends BaseController {
       );
     } catch (dbError: unknown) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n(
-        'errors:internal_server_error',
-        500,
-        undefined, { message: errorMessage }
-      );
+      return this.createErrorResponseI18n('errors:internal_server_error', 500, undefined, {
+        message: errorMessage,
+      });
     }
   }
 }

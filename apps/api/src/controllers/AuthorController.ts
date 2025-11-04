@@ -62,7 +62,8 @@ export class AuthorController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:validation_failed',
         400,
-        undefined, validation.errors ? { errors: validation.errors } : undefined
+        undefined,
+        validation.errors ? { errors: validation.errors } : undefined
       );
     }
 
@@ -92,7 +93,8 @@ export class AuthorController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:create_failed',
         500,
-        { resource: 'author' }, { message: errorMessage }
+        { resource: 'author' },
+        { message: errorMessage }
       );
     }
   }
@@ -145,7 +147,8 @@ export class AuthorController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:validation_failed',
         400,
-        undefined, validation.errors ? { errors: validation.errors } : undefined
+        undefined,
+        validation.errors ? { errors: validation.errors } : undefined
       );
     }
 
@@ -187,7 +190,8 @@ export class AuthorController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:update_failed',
         500,
-        { resource: 'author' }, { message: errorMessage }
+        { resource: 'author' },
+        { message: errorMessage }
       );
     }
   }
@@ -233,7 +237,8 @@ export class AuthorController extends BaseController {
       return this.createErrorResponseI18n(
         'errors:delete_failed',
         500,
-        { resource: 'author' }, { message: errorMessage }
+        { resource: 'author' },
+        { message: errorMessage }
       );
     }
   }
@@ -258,7 +263,8 @@ export class AuthorController extends BaseController {
           return this.createErrorResponseI18n(
             'errors:validation_failed',
             400,
-            undefined, filterValidation.errors ? { errors: filterValidation.errors } : undefined
+            undefined,
+            filterValidation.errors ? { errors: filterValidation.errors } : undefined
           );
         }
         searchFilters = filterValidation.value!;

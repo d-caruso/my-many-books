@@ -77,7 +77,7 @@ export class AdminBookController extends BaseController {
 
       // Fetch user info for each book
       const booksWithUsers = await Promise.all(
-        books.map(async (book) => {
+        books.map(async book => {
           let userName = null;
           if (book.userId) {
             const user = await User.findByPk(book.userId, {
@@ -98,28 +98,29 @@ export class AdminBookController extends BaseController {
             notes: book.notes,
             userId: book.userId,
             userName,
-            authors: book.authors?.map(author => ({
-              id: author.id,
-              name: author.name,
-              surname: author.surname,
-              fullName: `${author.name} ${author.surname}`,
-            })) || [],
-            categories: book.categories?.map(category => ({
-              id: category.id,
-              name: category.name,
-            })) || [],
+            authors:
+              book.authors?.map(author => ({
+                id: author.id,
+                name: author.name,
+                surname: author.surname,
+                fullName: `${author.name} ${author.surname}`,
+              })) || [],
+            categories:
+              book.categories?.map(category => ({
+                id: category.id,
+                name: category.name,
+              })) || [],
             createdAt: book.creationDate,
             updatedAt: book.updateDate,
           };
         })
       );
 
-      const pagination = this.createPaginationMeta(page, limit, count);
-
-      return this.createSuccessResponse({
-        books: booksWithUsers,
-        pagination: { ...pagination, pageSize: pagination.limit },
-      });
+      return this.createSuccessResponse(
+        { books: booksWithUsers },
+        undefined,
+        this.createPaginationMeta(page, limit, count)
+      );
     } catch (error) {
       console.error('Get all books error:', error);
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
@@ -178,16 +179,18 @@ export class AdminBookController extends BaseController {
         notes: book.notes,
         userId: book.userId,
         userName,
-        authors: book.authors?.map(author => ({
-          id: author.id,
-          name: author.name,
-          surname: author.surname,
-          fullName: `${author.name} ${author.surname}`,
-        })) || [],
-        categories: book.categories?.map(category => ({
-          id: category.id,
-          name: category.name,
-        })) || [],
+        authors:
+          book.authors?.map(author => ({
+            id: author.id,
+            name: author.name,
+            surname: author.surname,
+            fullName: `${author.name} ${author.surname}`,
+          })) ?? [],
+        categories:
+          book.categories?.map(category => ({
+            id: category.id,
+            name: category.name,
+          })) ?? [],
         createdAt: book.creationDate,
         updatedAt: book.updateDate,
       });
@@ -221,7 +224,8 @@ export class AdminBookController extends BaseController {
       if (!validation.isValid) {
         return this.createErrorResponse(
           this.t('errors:validation_failed'),
-          400, validation.errors ? { errors: validation.errors } : undefined
+          400,
+          validation.errors ? { errors: validation.errors } : undefined
         );
       }
 
@@ -269,16 +273,18 @@ export class AdminBookController extends BaseController {
         notes: book.notes,
         userId: book.userId,
         userName,
-        authors: book.authors?.map(author => ({
-          id: author.id,
-          name: author.name,
-          surname: author.surname,
-          fullName: `${author.name} ${author.surname}`,
-        })) || [],
-        categories: book.categories?.map(category => ({
-          id: category.id,
-          name: category.name,
-        })) || [],
+        authors:
+          book.authors?.map(author => ({
+            id: author.id,
+            name: author.name,
+            surname: author.surname,
+            fullName: `${author.name} ${author.surname}`,
+          })) ?? [],
+        categories:
+          book.categories?.map(category => ({
+            id: category.id,
+            name: category.name,
+          })) ?? [],
         createdAt: book.creationDate,
         updatedAt: book.updateDate,
       });

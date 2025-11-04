@@ -117,7 +117,12 @@ export class BookController extends BaseController {
 
     const validation = this.validateRequest(body, this.createBookSchema);
     if (!validation.isValid) {
-      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors ? { errors: validation.errors } : undefined);
+      return this.createErrorResponseI18n(
+        'errors:validation_failed',
+        400,
+        undefined,
+        validation.errors ? { errors: validation.errors } : undefined
+      );
     }
 
     const bookData = validation.value!;

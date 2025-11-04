@@ -45,9 +45,12 @@ export class AdminUserController extends BaseController {
           { email: { [Op.like]: `%${search}%` } },
           { name: { [Op.like]: `%${search}%` } },
           { surname: { [Op.like]: `%${search}%` } },
-          Sequelize.where(Sequelize.fn('concat', Sequelize.col('name'), ' ', Sequelize.col('surname')), {
-            [Op.like]: `%${search}%`
-          })
+          Sequelize.where(
+            Sequelize.fn('concat', Sequelize.col('name'), ' ', Sequelize.col('surname')),
+            {
+              [Op.like]: `%${search}%`,
+            },
+          ),
         ];
       }
 
@@ -56,7 +59,16 @@ export class AdminUserController extends BaseController {
         limit,
         offset,
         order: [['creationDate', 'DESC']],
-        attributes: ['id', 'email', 'name', 'surname', 'isActive', 'role', 'creationDate', 'updateDate'],
+        attributes: [
+          'id',
+          'email',
+          'name',
+          'surname',
+          'isActive',
+          'role',
+          'creationDate',
+          'updateDate',
+        ],
       });
 
       const userData = users.map(user => ({
@@ -71,11 +83,11 @@ export class AdminUserController extends BaseController {
         updatedAt: user.updateDate,
       }));
 
-      const pagination = this.createPaginationMeta(page, limit, count);
+      const { limit: limitFromMeta, ...pagination } = this.createPaginationMeta(page, limit, count);
 
       return this.createSuccessResponse({
         users: userData,
-        pagination: { ...pagination, pageSize: pagination.limit },
+        pagination: { ...pagination, pageSize: limit },
       });
     } catch (error) {
       console.error('Get all users error:', error);
@@ -206,10 +218,7 @@ export class AdminUserController extends BaseController {
       if (user.isAdmin()) {
         const adminCount = await User.count({ where: { role: 'admin' } });
         if (adminCount <= 1) {
-          return this.createErrorResponse(
-            this.t('errors:cannot_delete_last_admin'),
-            400
-          );
+          return this.createErrorResponse(this.t('errors:cannot_delete_last_admin'), 400);
         }
       }
 
