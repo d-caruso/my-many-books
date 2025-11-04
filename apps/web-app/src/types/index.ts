@@ -41,6 +41,7 @@ export interface User {
   name: string;
   surname: string;
   isActive: boolean;
+  role: 'user' | 'admin';
   creationDate: string;
   updateDate: string;
 }
