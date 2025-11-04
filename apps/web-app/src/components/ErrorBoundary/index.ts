@@ -2,3 +2,5 @@ export { ErrorBoundary } from './ErrorBoundary';
 export { RootErrorFallback } from './RootErrorFallback';
 export { ScannerErrorBoundary } from './ScannerErrorBoundary';
 export { ScannerErrorFallback } from './ScannerErrorFallback';
+export { DataGridErrorBoundary } from './DataGridErrorBoundary';
+export { DataGridErrorFallback } from './DataGridErrorFallback';
