@@ -4,6 +4,7 @@ import { List, Text, Avatar, Button, Card, Switch, Snackbar } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -65,6 +66,17 @@ export default function ProfileScreen() {
             <Text variant="titleMedium" style={styles.sectionTitle} accessibilityRole="header">
               {t('settings')}
             </Text>
+
+            {user?.role === 'admin' && (
+              <List.Item
+                title={t('pages:admin.title', 'Admin Panel')}
+                description={t('pages:admin.menu.access', 'Access admin features')}
+                left={() => <List.Icon icon="shield-account" accessible={false} />}
+                right={() => <List.Icon icon="chevron-right" accessible={false} />}
+                onPress={() => router.push('/admin')}
+                accessibilityRole="button"
+              />
+            )}
 
             <List.Item
               title={t('dark_mode')}

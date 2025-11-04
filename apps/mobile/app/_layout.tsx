@@ -46,12 +46,18 @@ export default function RootLayout() {
                   presentation: 'card'
                 }} 
               />
-              <Stack.Screen 
-                name="scanner" 
-                options={{ 
+              <Stack.Screen
+                name="scanner"
+                options={{
                   title: 'Scan Barcode',
                   presentation: 'card'
-                }} 
+                }}
+              />
+              <Stack.Screen
+                name="admin"
+                options={{
+                  headerShown: false
+                }}
               />
             </Stack>
           </AuthProvider>
