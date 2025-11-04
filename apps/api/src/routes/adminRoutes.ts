@@ -5,16 +5,16 @@
 
 import { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
-import { StatsController } from '../controllers/admin/StatsController';
-import { AdminUserController } from '../controllers/admin/AdminUserController';
-import { AdminBookController } from '../controllers/admin/AdminBookController';
+import { statsController } from '../controllers/admin/StatsController';
+import { adminUserController } from '../controllers/admin/AdminUserController';
+import { adminBookController } from '../controllers/admin/AdminBookController';
 import { authMiddleware } from '../middleware/auth';
 import { requireAdmin } from '../middleware/adminAuth';
 
 const router = Router();
-const statsController = new StatsController();
-const adminUserController = new AdminUserController();
-const adminBookController = new AdminBookController();
+//const statsController = new StatsController();
+//const adminUserController = new AdminUserController();
+//const adminBookController = new AdminBookController();
 
 // All admin routes require authentication AND admin role
 router.use(authMiddleware);

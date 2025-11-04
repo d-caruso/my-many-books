@@ -84,6 +84,10 @@
       "phase_info": "Fase 1: Fondamenta Admin - Completata ✓",
       "phase_2_info": "Fase 2: Dashboard Admin - Completata ✓",
       "next_phase": "Prossimo: La Fase 3 aggiungerà funzionalità di gestione utenti."
+    },
+    "settings": {
+      "coming_soon": "Coming soon...",
+      "page_title": "Settings"
     }
   }
 }

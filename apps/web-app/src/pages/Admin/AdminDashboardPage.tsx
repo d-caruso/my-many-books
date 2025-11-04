@@ -81,7 +81,6 @@ export const AdminDashboardPage: React.FC = () => {
         setError(null);
         console.log('Fetching admin stats...');
         const data = await apiService.getAdminStats();
-        console.log('Admin stats response:', data);
         setStats(data);
       } catch (err: any) {
         console.error('Failed to fetch admin stats:', err);
