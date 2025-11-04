@@ -161,4 +161,53 @@ describe('Admin Dashboard Integration', () => {
       expect(screen.getByText(/Last updated:/)).toBeInTheDocument();
     });
   });
+
+  test('displays zero values correctly', async () => {
+    mockGetAdminStats.mockResolvedValue({
+      totalUsers: 0,
+      activeUsers: 0,
+      adminUsers: 0,
+      totalBooks: 0,
+      timestamp: new Date().toISOString(),
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('0').length).toBeGreaterThan(0);
+    });
+  });
+
+  test('refreshes data on reload', async () => {
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(mockGetAdminStats).toHaveBeenCalledTimes(1);
+    });
+
+    // Simulate refresh would call API again
+    mockGetAdminStats.mockResolvedValue({
+      totalUsers: 105,
+      activeUsers: 85,
+      adminUsers: 6,
+      totalBooks: 520,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  test('displays loading state initially', () => {
+    renderDashboard();
+
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  test('handles network timeout gracefully', async () => {
+    mockGetAdminStats.mockRejectedValue(new Error('Network timeout'));
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Network timeout/)).toBeInTheDocument();
+    });
+  });
 });

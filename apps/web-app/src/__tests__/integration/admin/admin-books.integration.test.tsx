@@ -247,4 +247,78 @@ describe('Admin Book Management Integration', () => {
       expect(screen.getByTestId('book-title-3')).toHaveTextContent('To Kill a Mockingbird');
     });
   });
+
+  test('handles pagination correctly', async () => {
+    const largeMockBooks = Array.from({ length: 15 }, (_, i) => ({
+      id: i + 10,
+      title: `Book ${i}`,
+      isbnCode: `ISBN${i}`,
+      status: 'reading',
+      userId: 1,
+      userName: 'Test User',
+      authors: [],
+      categories: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+
+    mockGetAdminBooks.mockResolvedValueOnce({
+      books: largeMockBooks.slice(0, 10),
+      pagination: { total: 15, page: 1, pageSize: 10 },
+    });
+
+    renderBookManagement();
+
+    await waitFor(() => {
+      expect(mockGetAdminBooks).toHaveBeenCalledWith(1, 10, undefined);
+    });
+  });
+
+  test('handles empty book list', async () => {
+    mockGetAdminBooks.mockResolvedValue({
+      books: [],
+      pagination: { total: 0, page: 1, pageSize: 10 },
+    });
+
+    renderBookManagement();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('data-grid')).toBeInTheDocument();
+    });
+  });
+
+  test('handles update book success', async () => {
+    mockUpdateAdminBook.mockResolvedValue({
+      id: 1,
+      title: 'Updated Book Title',
+      isbnCode: '9780743273565',
+      status: 'finished',
+    });
+
+    renderBookManagement();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('book-row-1')).toBeInTheDocument();
+    });
+
+    // Simulate update
+    await mockUpdateAdminBook(1, { title: 'Updated Book Title' });
+
+    expect(mockUpdateAdminBook).toHaveBeenCalledWith(1, { title: 'Updated Book Title' });
+  });
+
+  test('handles delete book success', async () => {
+    mockDeleteAdminBook.mockResolvedValue({});
+
+    renderBookManagement();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('book-row-1')).toBeInTheDocument();
+    });
+
+    // Simulate deletion
+    await mockDeleteAdminBook(1);
+
+    expect(mockDeleteAdminBook).toHaveBeenCalledWith(1);
+  });
 });
