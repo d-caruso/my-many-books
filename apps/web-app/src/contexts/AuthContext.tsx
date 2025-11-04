@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 import { User } from '../types';
 import { env } from '../config/env';
+import { apiService } from '../services/api';
+import { useApi } from '../contexts/ApiContext';
 
 // Check if Amplify should be configured
 const isAmplifyConfigured = env.COGNITO_USER_POOL_ID && env.COGNITO_USER_POOL_CLIENT_ID;
@@ -34,6 +36,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { userAPI } = useApi(); // Get userAPI from context
 
   useEffect(() => {
     checkAuthState();
@@ -42,7 +45,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkAuthState = async () => {
     try {
       if (!isAmplifyConfigured) {
-        console.log('Amplify not configured - skipping auth check');
         setLoading(false);
         return;
       }
@@ -50,23 +52,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const currentUser = await getCurrentUser();
       const session = await fetchAuthSession();
       
-      if (currentUser && session?.tokens?.accessToken) {
+      if (currentUser && session?.tokens?.idToken) {
+        const idToken = session.tokens.idToken.toString();
+        // Store token in localStorage for API client
+        localStorage.setItem('authToken', idToken);
+
+        // Fetch full user profile from backend to get role and other details
+        const backendUser = await userAPI.getCurrentUser();
+
         const userData: User = {
-          id: parseInt(currentUser.userId),
-          email: currentUser.signInDetails?.loginId || '',
-          name: currentUser.signInDetails?.loginId || '', // Will be updated when we get user attributes
-          surname: '',
-          isActive: true,
-          creationDate: new Date().toISOString(),
-          updateDate: new Date().toISOString()
+          id: backendUser.id,
+          email: backendUser.email,
+          name: backendUser.name,
+          surname: backendUser.surname,
+          isActive: backendUser.isActive,
+          role: backendUser.role,
+          creationDate: backendUser.creationDate,
+          updateDate: backendUser.updateDate
         };
 
         setUser(userData);
-        setToken(session.tokens.accessToken.toString());
+        setToken(idToken);
+      } else {
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem('authToken');
       }
     } catch (error) {
-      // This is expected when user is not authenticated
-      console.log('User not authenticated:', error);
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('authToken');
     } finally {
       setLoading(false);
     }
@@ -84,14 +99,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password: password,
       });
 
-      console.log('Sign in output:', signInOutput);
-
       if (signInOutput.isSignedIn) {
+        const session = await fetchAuthSession();
+        const idToken = session.tokens?.idToken?.toString();
+        if (idToken) {
+          localStorage.setItem('authToken', idToken);
+        }
         await checkAuthState();
       } else {
         // Handle different sign-in states
         const nextStep = signInOutput.nextStep;
-        console.log('Next step required:', nextStep);
         
         switch (nextStep.signInStep) {
           case 'CONFIRM_SIGN_UP':
@@ -135,15 +152,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
 
-      console.log('Sign up output:', signUpOutput);
-
       if (signUpOutput.isSignUpComplete) {
         // Auto sign in after successful registration
         await login(userData.email, userData.password);
       } else {
         // Handle confirmation required case - this is expected for email verification
         const nextStep = signUpOutput.nextStep;
-        console.log('Next step required:', nextStep);
         
         if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
           // Return success but indicate email verification is needed
@@ -176,11 +190,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await signOut();
       setUser(null);
       setToken(null);
+      localStorage.removeItem('authToken');
     } catch (error) {
       console.error('Logout error:', error);
       // Clear local state even if logout fails
       setUser(null);
       setToken(null);
+      localStorage.removeItem('authToken');
     }
   };
 

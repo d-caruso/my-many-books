@@ -37,15 +37,10 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     filters: SearchFilters = {}, 
     page: number = 1
   ): Promise<void> => {
-    if (!query.trim() && !filters.categoryId && !filters.authorId) {
-      setBooks([]);
-      setLoading(false);
-      setError(null);
-      setHasMore(false);
-      setTotalCount(0);
-      setCurrentPage(1);
-      return;
-    }
+    // If no query or filters, fetch all books (or handle as per API design)
+    // The API's searchBooks endpoint should handle empty query/filters by returning all books
+    // If the API requires a specific endpoint for 'all books', this logic would need adjustment.
+    // For now, we assume bookAPI.searchBooks with empty params returns all books.
 
     setLoading(true);
     setError(null);
