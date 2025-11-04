@@ -7,12 +7,14 @@ import { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { StatsController } from '../controllers/admin/StatsController';
 import { AdminUserController } from '../controllers/admin/AdminUserController';
+import { AdminBookController } from '../controllers/admin/AdminBookController';
 import { authMiddleware } from '../middleware/auth';
 import { requireAdmin } from '../middleware/adminAuth';
 
 const router = Router();
 const statsController = new StatsController();
 const adminUserController = new AdminUserController();
+const adminBookController = new AdminBookController();
 
 // All admin routes require authentication AND admin role
 router.use(authMiddleware);
@@ -56,10 +58,24 @@ router.delete('/users/:id',
 );
 
 // ===== BOOK MANAGEMENT ENDPOINTS (Phase 4) =====
-// TODO: Add book management routes
-// router.get('/books', ...)
-// router.get('/books/:id', ...)
-// router.put('/books/:id', ...)
-// router.delete('/books/:id', ...)
+// Get all books with pagination and search
+router.get('/books',
+  expressRouteWrapper(adminBookController.getAllBooks.bind(adminBookController))
+);
+
+// Get single book by ID
+router.get('/books/:id',
+  expressRouteWrapper(adminBookController.getBookById.bind(adminBookController))
+);
+
+// Update book details
+router.put('/books/:id',
+  expressRouteWrapper(adminBookController.updateBook.bind(adminBookController))
+);
+
+// Delete book
+router.delete('/books/:id',
+  expressRouteWrapper(adminBookController.deleteBook.bind(adminBookController))
+);
 
 export default router;
