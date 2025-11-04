@@ -61,9 +61,9 @@ describe('AdminUserController', () => {
       expect((result.data as any).users).toHaveLength(2);
       expect(result.pagination).toEqual({
         page: 1,
-        limit: 10,
         total: 2,
         totalPages: 1,
+        limit: 10,
       });
       expect(User.findAndCountAll).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -77,7 +77,17 @@ describe('AdminUserController', () => {
 
     it('should return a filtered list of users based on search query', async () => {
       const mockUsers = [
-        { id: 1, email: 'john@example.com', name: 'John', surname: 'Doe', isActive: true, role: 'user', creationDate: new Date(), updateDate: new Date(), getFullName: () => 'John Doe' },
+        {
+          id: 1,
+          email: 'john@example.com',
+          name: 'John',
+          surname: 'Doe',
+          isActive: true,
+          role: 'user',
+          creationDate: new Date(),
+          updateDate: new Date(),
+          getFullName: () => 'John Doe'
+        },
       ];
 
       (User.findAndCountAll as jest.Mock).mockResolvedValue({
@@ -92,16 +102,17 @@ describe('AdminUserController', () => {
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
       expect((result.data as any).users).toHaveLength(1);
-      expect(User.findAndCountAll).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            [Op.or]: [
-              { email: { [Op.like]: '%john%' } },
-              { name: { [Op.like]: '%john%' } },
-              { surname: { [Op.like]: '%john%' } },
-            ],
-          },
-        })
+
+      // Verify search is applied to email, name, surname, and full name (concat)
+      const callArgs = (User.findAndCountAll as jest.Mock).mock.calls[0][0];
+      expect(callArgs.where[Op.or]).toHaveLength(4);
+      expect(callArgs.where[Op.or]).toEqual(
+        expect.arrayContaining([
+          { email: { [Op.like]: '%john%' } },
+          { name: { [Op.like]: '%john%' } },
+          { surname: { [Op.like]: '%john%' } },
+          expect.any(Object), // The concat condition
+        ])
       );
     });
 
