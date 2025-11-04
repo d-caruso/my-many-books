@@ -8,3 +8,5 @@ export { AdminErrorBoundary } from './AdminErrorBoundary';
 export { AdminErrorFallback } from './AdminErrorFallback';
 export { AuthErrorBoundary } from './AuthErrorBoundary';
 export { AuthErrorFallback } from './AuthErrorFallback';
+export { PageErrorBoundary } from './PageErrorBoundary';
+export { PageErrorFallback } from './PageErrorFallback';
