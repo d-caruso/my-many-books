@@ -49,7 +49,7 @@ export class AdminUserController extends BaseController {
             Sequelize.fn('concat', Sequelize.col('name'), ' ', Sequelize.col('surname')),
             {
               [Op.like]: `%${search}%`,
-            },
+            }
           ),
         ];
       }
@@ -109,7 +109,16 @@ export class AdminUserController extends BaseController {
       }
 
       const user = await User.findByPk(parseInt(userId, 10), {
-        attributes: ['id', 'email', 'name', 'surname', 'isActive', 'role', 'creationDate', 'updateDate'],
+        attributes: [
+          'id',
+          'email',
+          'name',
+          'surname',
+          'isActive',
+          'role',
+          'creationDate',
+          'updateDate',
+        ],
       });
 
       if (!user) {
@@ -157,7 +166,8 @@ export class AdminUserController extends BaseController {
       if (!validation.isValid) {
         return this.createErrorResponse(
           this.t('errors:validation_failed'),
-          400, validation.errors ? { errors: validation.errors } : undefined
+          400,
+          validation.errors ? { errors: validation.errors } : undefined
         );
       }
 
