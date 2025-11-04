@@ -6,11 +6,13 @@
 import { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { StatsController } from '../controllers/admin/StatsController';
+import { AdminUserController } from '../controllers/admin/AdminUserController';
 import { authMiddleware } from '../middleware/auth';
 import { requireAdmin } from '../middleware/adminAuth';
 
 const router = Router();
 const statsController = new StatsController();
+const adminUserController = new AdminUserController();
 
 // All admin routes require authentication AND admin role
 router.use(authMiddleware);
@@ -33,11 +35,25 @@ router.get('/stats/books',
 );
 
 // ===== USER MANAGEMENT ENDPOINTS (Phase 3) =====
-// TODO: Add user management routes
-// router.get('/users', ...)
-// router.get('/users/:id', ...)
-// router.put('/users/:id', ...)
-// router.delete('/users/:id', ...)
+// Get all users with pagination and search
+router.get('/users',
+  expressRouteWrapper(adminUserController.getAllUsers.bind(adminUserController))
+);
+
+// Get single user by ID
+router.get('/users/:id',
+  expressRouteWrapper(adminUserController.getUserById.bind(adminUserController))
+);
+
+// Update user details
+router.put('/users/:id',
+  expressRouteWrapper(adminUserController.updateUser.bind(adminUserController))
+);
+
+// Delete user
+router.delete('/users/:id',
+  expressRouteWrapper(adminUserController.deleteUser.bind(adminUserController))
+);
 
 // ===== BOOK MANAGEMENT ENDPOINTS (Phase 4) =====
 // TODO: Add book management routes
