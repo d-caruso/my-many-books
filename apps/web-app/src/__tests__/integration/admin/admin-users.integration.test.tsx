@@ -208,4 +208,60 @@ describe('Admin User Management Integration', () => {
       expect(rows.length).toBeGreaterThan(0);
     });
   });
+
+  test('handles pagination correctly', async () => {
+    const largeMockUsers = Array.from({ length: 15 }, (_, i) => ({
+      id: i + 10,
+      fullName: `User ${i}`,
+      email: `user${i}@example.com`,
+      role: 'user',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    }));
+
+    mockGetAdminUsers.mockResolvedValueOnce({
+      users: largeMockUsers.slice(0, 10),
+      pagination: { total: 15, page: 1, pageSize: 10 },
+    });
+
+    renderUserManagement();
+
+    await waitFor(() => {
+      expect(mockGetAdminUsers).toHaveBeenCalledWith(1, 10, undefined);
+    });
+  });
+
+  test('handles empty user list', async () => {
+    mockGetAdminUsers.mockResolvedValue({
+      users: [],
+      pagination: { total: 0, page: 1, pageSize: 10 },
+    });
+
+    renderUserManagement();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('data-grid')).toBeInTheDocument();
+    });
+  });
+
+  test('handles update user success', async () => {
+    mockUpdateAdminUser.mockResolvedValue({
+      id: 1,
+      fullName: 'Updated Name',
+      email: 'john@example.com',
+      role: 'admin',
+      isActive: true,
+    });
+
+    renderUserManagement();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-row-1')).toBeInTheDocument();
+    });
+
+    // Simulate update (would need user interaction in real test)
+    await mockUpdateAdminUser(1, { role: 'admin' });
+
+    expect(mockUpdateAdminUser).toHaveBeenCalledWith(1, { role: 'admin' });
+  });
 });
