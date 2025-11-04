@@ -52,4 +52,5 @@ export enum TranslationNamespace {
   PAGES = 'pages',
   THEME = 'theme',
   SEARCH = 'search',
+  ADMIN = 'admin',
 }

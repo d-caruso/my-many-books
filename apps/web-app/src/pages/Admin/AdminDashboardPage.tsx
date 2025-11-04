@@ -173,24 +173,6 @@ export const AdminDashboardPage: React.FC = () => {
               )}
             </Typography>
             <Box sx={{ mt: 3 }}>
-              <Typography variant="body2" color="textSecondary">
-                {t(
-                  'pages:admin.dashboard.phase_info',
-                  'Phase 1: Admin Foundation - Complete ✓'
-                )}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {t(
-                  'pages:admin.dashboard.phase_2_info',
-                  'Phase 2: Admin Dashboard - Complete ✓'
-                )}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {t(
-                  'pages:admin.dashboard.next_phase',
-                  'Next: Phase 3 will add user management features.'
-                )}
-              </Typography>
               {stats?.timestamp && (
                 <Typography variant="caption" color="textSecondary" sx={{ mt: 2, display: 'block' }}>
                   Last updated: {new Date(stats.timestamp).toLocaleString()}
