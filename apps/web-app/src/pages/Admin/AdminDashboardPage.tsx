@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Grid,
   Paper,
   Typography,
   Card,
-  CardContent
+  CardContent,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -15,6 +17,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
+import { useApi } from '../../contexts/ApiContext';
 
 interface StatCardProps {
   title: string;
@@ -56,8 +59,47 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
   );
 };
 
+interface DashboardStats {
+  totalUsers: number;
+  activeUsers: number;
+  adminUsers: number;
+  totalBooks: number;
+  timestamp?: string;
+}
+
 export const AdminDashboardPage: React.FC = () => {
   const { t } = useTranslation();
+  const { apiService } = useApi();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        console.log('Fetching admin stats...');
+        const data = await apiService.getAdminStats();
+        console.log('Admin stats response:', data);
+        setStats(data);
+      } catch (err: any) {
+        console.error('Failed to fetch admin stats:', err);
+        console.error('Error details:', err.response?.data);
+        console.error('Error status:', err.response?.status);
+
+        const errorMessage = err.response?.data?.error
+          || err.response?.data?.message
+          || err.message
+          || 'Failed to load dashboard statistics';
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [apiService]);
 
   return (
     <AdminLayout>
@@ -66,68 +108,97 @@ export const AdminDashboardPage: React.FC = () => {
           {t('pages:admin.dashboard.title', 'Dashboard')}
         </Typography>
 
+        {/* Error Alert */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+            <CircularProgress />
+          </Box>
+        )}
+
         {/* Stats Grid */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title={t('pages:admin.dashboard.total_users', 'Total Users')}
-              value="--"
-              icon={<PeopleIcon />}
-              color="#1976d2"
-            />
+        {!loading && stats && (
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                title={t('pages:admin.dashboard.total_users', 'Total Users')}
+                value={stats.totalUsers}
+                icon={<PeopleIcon />}
+                color="#1976d2"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                title={t('pages:admin.dashboard.total_books', 'Total Books')}
+                value={stats.totalBooks}
+                icon={<BookIcon />}
+                color="#2e7d32"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                title={t('pages:admin.dashboard.active_users', 'Active Users')}
+                value={stats.activeUsers}
+                icon={<TrendingUpIcon />}
+                color="#ed6c02"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCard
+                title={t('pages:admin.dashboard.admin_users', 'Admin Users')}
+                value={stats.adminUsers}
+                icon={<DashboardIcon />}
+                color="#9c27b0"
+              />
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title={t('pages:admin.dashboard.total_books', 'Total Books')}
-              value="--"
-              icon={<BookIcon />}
-              color="#2e7d32"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title={t('pages:admin.dashboard.active_users', 'Active Users')}
-              value="--"
-              icon={<TrendingUpIcon />}
-              color="#ed6c02"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title={t('pages:admin.dashboard.admin_users', 'Admin Users')}
-              value="--"
-              icon={<DashboardIcon />}
-              color="#9c27b0"
-            />
-          </Grid>
-        </Grid>
+        )}
 
         {/* Welcome Message */}
-        <Paper sx={{ p: 4 }}>
-          <Typography variant="h5" gutterBottom>
-            {t('pages:admin.dashboard.welcome_title', 'Welcome to the Admin Panel')}
-          </Typography>
-          <Typography variant="body1" color="textSecondary">
-            {t(
-              'pages:admin.dashboard.welcome_message',
-              'This is the foundation for the admin dashboard. Use the sidebar to navigate to different admin sections.'
-            )}
-          </Typography>
-          <Box sx={{ mt: 3 }}>
-            <Typography variant="body2" color="textSecondary">
+        {!loading && (
+          <Paper sx={{ p: 4 }}>
+            <Typography variant="h5" gutterBottom>
+              {t('pages:admin.dashboard.welcome_title', 'Welcome to the Admin Panel')}
+            </Typography>
+            <Typography variant="body1" color="textSecondary">
               {t(
-                'pages:admin.dashboard.phase_info',
-                'Phase 1: Admin Foundation - Complete ✓'
+                'pages:admin.dashboard.welcome_message',
+                'This is the foundation for the admin dashboard. Use the sidebar to navigate to different admin sections.'
               )}
             </Typography>
-            <Typography variant="body2" color="textSecondary">
-              {t(
-                'pages:admin.dashboard.next_phase',
-                'Next: Phase 2 will add user management and statistics.'
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="body2" color="textSecondary">
+                {t(
+                  'pages:admin.dashboard.phase_info',
+                  'Phase 1: Admin Foundation - Complete ✓'
+                )}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                {t(
+                  'pages:admin.dashboard.phase_2_info',
+                  'Phase 2: Admin Dashboard - Complete ✓'
+                )}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                {t(
+                  'pages:admin.dashboard.next_phase',
+                  'Next: Phase 3 will add user management features.'
+                )}
+              </Typography>
+              {stats?.timestamp && (
+                <Typography variant="caption" color="textSecondary" sx={{ mt: 2, display: 'block' }}>
+                  Last updated: {new Date(stats.timestamp).toLocaleString()}
+                </Typography>
               )}
-            </Typography>
-          </Box>
-        </Paper>
+            </Box>
+          </Paper>
+        )}
       </Box>
     </AdminLayout>
   );

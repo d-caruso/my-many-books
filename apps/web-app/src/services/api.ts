@@ -283,6 +283,38 @@ class ApiService {
     return this.apiClient.users.updateProfile(userData);
   }
 
+  // Admin methods
+  async getAdminStats(): Promise<any> {
+    // Make a direct HTTP request for admin stats
+    // The apiClient is from shared-api library, so we use its HTTP client directly
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const token = localStorage.getItem('authToken');
+
+    // Remove trailing slash from baseURL if present
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+    // Construct the full URL - baseURL should already include /api/v1
+    const url = cleanBaseURL.endsWith('/api/v1')
+      ? `${cleanBaseURL}/admin/stats/summary`
+      : `${cleanBaseURL}/api/v1/admin/stats/summary`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    // Handle both {success: true, data: {...}} and direct {...} formats
+    return data.data || data;
+  }
+
   // Book methods with development mock data fallback
   async getBooks(filters?: SearchFilters): Promise<PaginatedResponse<Book>> {
     // In development mode without API URL, return mock data
