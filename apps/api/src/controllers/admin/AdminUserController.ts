@@ -83,12 +83,11 @@ export class AdminUserController extends BaseController {
         updatedAt: user.updateDate,
       }));
 
-      const { limit: limitFromMeta, ...pagination } = this.createPaginationMeta(page, limit, count);
-
-      return this.createSuccessResponse({
-        users: userData,
-        pagination: { ...pagination, pageSize: limit },
-      });
+      return this.createSuccessResponse(
+        { users: userData },
+        undefined,
+        this.createPaginationMeta(page, limit, count)
+      );
     } catch (error) {
       console.error('Get all users error:', error);
       return this.createErrorResponseI18n('errors:internal_server_error', 500);

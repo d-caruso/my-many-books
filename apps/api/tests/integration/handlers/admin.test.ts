@@ -232,12 +232,12 @@ describe('Admin Handler Integration', () => {
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
       expect(body.data).toHaveProperty('users');
-      expect(body.data).toHaveProperty('pagination');
+      expect(body).toHaveProperty('pagination');
       expect(Array.isArray(body.data.users)).toBe(true);
       expect(body.data.users.length).toBeGreaterThan(0);
-      expect(body.data.pagination).toHaveProperty('total');
-      expect(body.data.pagination).toHaveProperty('page');
-      expect(body.data.pagination).toHaveProperty('pageSize');
+      expect(body.pagination).toHaveProperty('total');
+      expect(body.pagination).toHaveProperty('page');
+      expect(body.pagination).toHaveProperty('limit');
     });
 
     test('should support search by name or email', async () => {
@@ -452,7 +452,7 @@ describe('Admin Handler Integration', () => {
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
       expect(body.data).toHaveProperty('books');
-      expect(body.data).toHaveProperty('pagination');
+      expect(body).toHaveProperty('pagination');
       expect(Array.isArray(body.data.books)).toBe(true);
       expect(body.data.books.length).toBe(3);
     });
