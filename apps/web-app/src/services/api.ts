@@ -315,6 +315,119 @@ class ApiService {
     return data.data || data;
   }
 
+  async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const token = localStorage.getItem('authToken');
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (search) {
+      queryParams.append('search', search);
+    }
+
+    const url = cleanBaseURL.endsWith('/api/v1')
+      ? `${cleanBaseURL}/admin/users?${queryParams}`
+      : `${cleanBaseURL}/api/v1/admin/users?${queryParams}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  }
+
+  async getAdminUser(id: number): Promise<any> {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const token = localStorage.getItem('authToken');
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+
+    const url = cleanBaseURL.endsWith('/api/v1')
+      ? `${cleanBaseURL}/admin/users/${id}`
+      : `${cleanBaseURL}/api/v1/admin/users/${id}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  }
+
+  async updateAdminUser(id: number, userData: any): Promise<any> {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const token = localStorage.getItem('authToken');
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+
+    const url = cleanBaseURL.endsWith('/api/v1')
+      ? `${cleanBaseURL}/admin/users/${id}`
+      : `${cleanBaseURL}/api/v1/admin/users/${id}`;
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  }
+
+  async deleteAdminUser(id: number): Promise<any> {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const token = localStorage.getItem('authToken');
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+
+    const url = cleanBaseURL.endsWith('/api/v1')
+      ? `${cleanBaseURL}/admin/users/${id}`
+      : `${cleanBaseURL}/api/v1/admin/users/${id}`;
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  }
+
   // Book methods with development mock data fallback
   async getBooks(filters?: SearchFilters): Promise<PaginatedResponse<Book>> {
     // In development mode without API URL, return mock data
