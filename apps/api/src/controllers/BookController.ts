@@ -117,8 +117,7 @@ export class BookController extends BaseController {
 
     const validation = this.validateRequest(body, this.createBookSchema);
     if (!validation.isValid) {
-      const errorMessage = validation.errors?.[0] || this.t('errors:validation_failed');
-      return this.createErrorResponse(errorMessage, 400, validation.errors);
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, validation.errors ? { errors: validation.errors } : undefined);
     }
 
     const bookData = validation.value!;
@@ -246,7 +245,7 @@ export class BookController extends BaseController {
         'errors:validation_failed',
         400,
         undefined,
-        validation.errors
+        validation.errors ? { errors: validation.errors } : undefined
       );
     }
     const bookData = validation.value!;
@@ -339,7 +338,7 @@ export class BookController extends BaseController {
         'errors:validation_failed',
         400,
         undefined,
-        validation.errors
+        validation.errors ? { errors: validation.errors } : undefined
       );
     }
     const bookData = validation.value!;
@@ -452,7 +451,7 @@ export class BookController extends BaseController {
             'errors:validation_failed',
             400,
             undefined,
-            filterValidation.errors
+            filterValidation.errors ? { errors: filterValidation.errors } : undefined
           );
         }
         searchFilters = filterValidation.value!;

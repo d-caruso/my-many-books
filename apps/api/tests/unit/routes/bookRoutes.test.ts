@@ -45,6 +45,16 @@ jest.mock('../../../src/controllers/BookController', () => ({
       success: true,
       data: { isbn: req.pathParameters?.isbn, title: 'ISBN Book' }
     })),
+    searchBooks: jest.fn(async (_req) => ({
+      statusCode: 200,
+      success: true,
+      data: {
+        books: [],
+        total: 0,
+        hasMore: false,
+        page: 1
+      }
+    })),
   }))
 }));
 
