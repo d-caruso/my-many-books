@@ -75,9 +75,10 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
 
       onAuthorCreated(newAuthor);
       handleClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create author:', error);
-      setErrors({ name: t('dialogs:author.create_failed') });
+      const errorMessage = error?.response?.data?.error || t('dialogs:author.create_failed');
+      setErrors({ name: errorMessage });
     } finally {
       setLoading(false);
     }
