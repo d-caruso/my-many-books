@@ -428,6 +428,122 @@ class ApiService {
     return data.data || data;
   }
 
+  async getAdminBooks(page: number = 1, limit: number = 10, search?: string, userId?: number): Promise<any> {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const token = localStorage.getItem('authToken');
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (search) {
+      queryParams.append('search', search);
+    }
+    if (userId) {
+      queryParams.append('userId', userId.toString());
+    }
+
+    const url = cleanBaseURL.endsWith('/api/v1')
+      ? `${cleanBaseURL}/admin/books?${queryParams}`
+      : `${cleanBaseURL}/api/v1/admin/books?${queryParams}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  }
+
+  async getAdminBook(id: number): Promise<any> {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const token = localStorage.getItem('authToken');
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+
+    const url = cleanBaseURL.endsWith('/api/v1')
+      ? `${cleanBaseURL}/admin/books/${id}`
+      : `${cleanBaseURL}/api/v1/admin/books/${id}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  }
+
+  async updateAdminBook(id: number, bookData: any): Promise<any> {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const token = localStorage.getItem('authToken');
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+
+    const url = cleanBaseURL.endsWith('/api/v1')
+      ? `${cleanBaseURL}/admin/books/${id}`
+      : `${cleanBaseURL}/api/v1/admin/books/${id}`;
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(bookData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  }
+
+  async deleteAdminBook(id: number): Promise<any> {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const token = localStorage.getItem('authToken');
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+
+    const url = cleanBaseURL.endsWith('/api/v1')
+      ? `${cleanBaseURL}/admin/books/${id}`
+      : `${cleanBaseURL}/api/v1/admin/books/${id}`;
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  }
+
   // Book methods with development mock data fallback
   async getBooks(filters?: SearchFilters): Promise<PaginatedResponse<Book>> {
     // In development mode without API URL, return mock data
