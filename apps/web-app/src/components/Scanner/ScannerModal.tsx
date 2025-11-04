@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { ISBNScanner } from './ISBNScanner';
 import { ManualISBNInput } from './ManualISBNInput';
 import { ScanResult } from '../../types';
+import { ScannerErrorBoundary } from '../ErrorBoundary';
 
 interface ScannerModalProps {
   isOpen: boolean;
@@ -70,12 +71,14 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
             </Button>
           </Box>
           
-          <ISBNScanner
-            isOpen={isOpen}
-            onScanSuccess={handleScanSuccess}
-            onScanError={onScanError}
-            onClose={handleClose}
-          />
+          <ScannerErrorBoundary onClose={handleClose}>
+            <ISBNScanner
+              isOpen={isOpen}
+              onScanSuccess={handleScanSuccess}
+              onScanError={onScanError}
+              onClose={handleClose}
+            />
+          </ScannerErrorBoundary>
           
           {/* Manual Input Button */}
           <Box mt={3} textAlign="center">
