@@ -81,7 +81,8 @@ export class IsbnController extends BaseController {
         return this.createErrorResponseI18n(
           'errors:validation_failed',
           400,
-          undefined, validation.errors ? { errors: validation.errors } : undefined
+          undefined,
+          validation.errors ? { errors: validation.errors } : undefined
         );
       }
 
@@ -122,7 +123,8 @@ export class IsbnController extends BaseController {
         return this.createErrorResponseI18n(
           'errors:validation_failed',
           400,
-          undefined, validation.errors ? { errors: validation.errors } : undefined
+          undefined,
+          validation.errors ? { errors: validation.errors } : undefined
         );
       }
 
@@ -171,7 +173,8 @@ export class IsbnController extends BaseController {
         return this.createErrorResponseI18n(
           'errors:validation_failed',
           400,
-          undefined, validation.errors ? { errors: validation.errors } : undefined
+          undefined,
+          validation.errors ? { errors: validation.errors } : undefined
         );
       }
 
@@ -297,7 +300,8 @@ export class IsbnController extends BaseController {
         return this.createErrorResponseI18n(
           'errors:validation_failed',
           400,
-          undefined, validation.errors ? { errors: validation.errors } : undefined
+          undefined,
+          validation.errors ? { errors: validation.errors } : undefined
         );
       }
 

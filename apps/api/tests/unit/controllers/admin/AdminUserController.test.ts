@@ -91,7 +91,6 @@ describe('AdminUserController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      console.log(result);
       expect((result.data as any).users).toHaveLength(1);
       expect(User.findAndCountAll).toHaveBeenCalledWith(
         expect.objectContaining({
