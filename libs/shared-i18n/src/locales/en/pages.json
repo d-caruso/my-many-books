@@ -84,6 +84,10 @@
       "phase_info": "Phase 1: Admin Foundation - Complete ✓",
       "phase_2_info": "Phase 2: Admin Dashboard - Complete ✓",
       "next_phase": "Next: Phase 3 will add user management features."
+    },
+    "settings": {
+      "coming_soon": "Coming soon...",
+      "page_title": "Settings"
     }
   }
 }
