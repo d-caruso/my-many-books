@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/error-boundaries ]
+    branches: [ main, develop, feature/error-boundaries, feature/api-rate-limiting ]
   pull_request:
     branches: [ main, develop ]
   workflow_dispatch:
