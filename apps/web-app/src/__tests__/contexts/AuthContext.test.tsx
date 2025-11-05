@@ -1,10 +1,31 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../../contexts/AuthContext';
+import { ApiProvider } from '../../contexts/ApiContext';
 
 // Mock AWS Amplify auth - industry standard approach
 vi.mock('aws-amplify/auth');
 import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
+
+// Mock API service
+const mockApiService = {
+  getCurrentUser: vi.fn(),
+  updateProfile: vi.fn(),
+  getBooks: vi.fn(),
+  getBook: vi.fn(),
+  createBook: vi.fn(),
+  updateBook: vi.fn(),
+  deleteBook: vi.fn(),
+  searchBooks: vi.fn(),
+  searchByISBN: vi.fn(),
+  getCategories: vi.fn(),
+  getCategory: vi.fn(),
+  createCategory: vi.fn(),
+  getAuthors: vi.fn(),
+  getAuthor: vi.fn(),
+  createAuthor: vi.fn(),
+  searchAuthors: vi.fn(),
+} as any;
 
 // Test component to access the auth context
 const TestComponent: React.FC = () => {
@@ -61,9 +82,11 @@ describe('AuthContext', () => {
 
   test('provides auth context to children', () => {
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <ApiProvider apiService={mockApiService}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </ApiProvider>
     );
 
     expect(screen.getByTestId('user')).toBeInTheDocument();
@@ -91,8 +114,8 @@ describe('AuthContext', () => {
       name: 'test@example.com',
       surname: '',
       isActive: true,
-      creationDate: expect.any(String),
-      updateDate: expect.any(String),
+      creationDate: new Date().toISOString(),
+      updateDate: new Date().toISOString(),
     };
 
     // Mock successful authentication on mount
@@ -110,10 +133,15 @@ describe('AuthContext', () => {
       },
     } as any);
 
+    // Mock API service getCurrentUser
+    mockApiService.getCurrentUser.mockResolvedValue(mockUser);
+
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <ApiProvider apiService={mockApiService}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </ApiProvider>
     );
 
     // User should be loaded from AWS Amplify after mount
@@ -129,9 +157,11 @@ describe('AuthContext', () => {
     vi.mocked(Storage.prototype.getItem).mockReturnValue('invalid-json');
 
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <ApiProvider apiService={mockApiService}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </ApiProvider>
     );
 
     expect(screen.getByTestId('user')).toHaveTextContent('null');
@@ -164,9 +194,11 @@ describe('AuthContext', () => {
     } as any);
 
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <ApiProvider apiService={mockApiService}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </ApiProvider>
     );
 
     fireEvent.click(screen.getByTestId('login'));
@@ -180,6 +212,16 @@ describe('AuthContext', () => {
   });
 
   test('logout clears user state and calls AWS Amplify signOut', async () => {
+    const mockUser = {
+      id: 1,
+      email: 'test@example.com',
+      name: 'test@example.com',
+      surname: '',
+      isActive: true,
+      creationDate: new Date().toISOString(),
+      updateDate: new Date().toISOString(),
+    };
+
     // Mock successful authentication on mount
     vi.mocked(getCurrentUser).mockResolvedValue({
       userId: '1',
@@ -195,10 +237,15 @@ describe('AuthContext', () => {
       },
     } as any);
 
+    // Mock API service getCurrentUser
+    mockApiService.getCurrentUser.mockResolvedValue(mockUser);
+
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <ApiProvider apiService={mockApiService}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </ApiProvider>
     );
 
     // Wait for user to be loaded from AWS Amplify
@@ -217,9 +264,11 @@ describe('AuthContext', () => {
 
   test('signup function calls AWS Amplify signUp', async () => {
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <ApiProvider apiService={mockApiService}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </ApiProvider>
     );
 
     fireEvent.click(screen.getByTestId('signup'));
