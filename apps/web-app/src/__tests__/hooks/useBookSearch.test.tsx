@@ -134,11 +134,22 @@ describe('useBookSearch', () => {
         wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
       });
 
+      mockBookAPI.searchBooks.mockResolvedValue({
+        books: [],
+        total: 0,
+        hasMore: false,
+        page: 1,
+      });
+
       await act(async () => {
         await result.current.searchBooks('');
       });
 
-      expect(mockBookAPI.searchBooks).not.toHaveBeenCalled();
+      expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
+        q: '',
+        page: 1,
+        limit: 20,
+      });
       expect(result.current.books).toEqual([]);
       expect(result.current.loading).toBe(false);
       expect(result.current.error).toBe(null);

@@ -409,10 +409,10 @@ describe('BooksPage', () => {
 
   test('loads user books when no search params', () => {
     mockSearchParams.get = vi.fn().mockReturnValue(null);
-    
+
     renderWithProvider(<BooksPage />);
-    
-    expect(mockApiService.getBooks).toHaveBeenCalled();
+
+    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {});
   });
 
   test('renders with different book counts', () => {
@@ -453,11 +453,11 @@ describe('BooksPage', () => {
   });
 
   test('handles getBooks API error', async () => {
-    mockApiService.getBooks.mockRejectedValueOnce(new Error('API Error'));
-    
+    mockBookSearchReturn.searchBooks.mockRejectedValueOnce(new Error('API Error'));
+
     renderWithProvider(<BooksPage />);
-    
-    expect(mockApiService.getBooks).toHaveBeenCalled();
+
+    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {});
   });
 
   test('renders with search query from URL', () => {
