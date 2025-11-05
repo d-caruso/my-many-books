@@ -9,7 +9,13 @@ import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
 import { i18n } from '@my-many-books/shared-i18n';
 
-// Extend Express Request to include validated data
+/**
+ * Extend Express Request to include validated data
+ *
+ * Note: req.body is mutated with validated values (writeable)
+ * req.query and req.params are read-only, so validated values
+ * are stored in req.validated.query and req.validated.params
+ */
 declare global {
   namespace Express {
     interface Request {
@@ -81,10 +87,18 @@ function formatValidationErrors(error: Joi.ValidationError): Array<{
  *   body: Joi.object({
  *     title: Joi.string().required(),
  *     isbn: Joi.string().isbn().required()
+ *   }),
+ *   query: Joi.object({
+ *     page: Joi.number().default(1)
  *   })
  * };
  *
- * router.post('/books', validate(createBookSchema), createBookHandler);
+ * router.post('/books', validate(createBookSchema), (req, res) => {
+ *   // req.body contains validated body (mutated)
+ *   // req.validated.query contains validated query params
+ *   const { title, isbn } = req.body;
+ *   const { page } = req.validated.query;
+ * });
  * ```
  */
 export function validate(schema: ValidationSchema, options: ValidationOptions = {}) {
@@ -115,7 +129,6 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
       if (result.error) {
         errors.push(...formatValidationErrors(result.error));
       } else if (result.value) {
-        req.query = result.value;
         req.validated.query = result.value;
       }
     }
@@ -127,7 +140,6 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
       if (result.error) {
         errors.push(...formatValidationErrors(result.error));
       } else if (result.value) {
-        req.params = result.value;
         req.validated.params = result.value;
       }
     }
