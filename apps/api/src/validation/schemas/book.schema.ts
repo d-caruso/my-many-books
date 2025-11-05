@@ -56,7 +56,7 @@ export const patchBookSchema = Joi.object({
  * Search books query schema
  */
 export const searchBooksQuerySchema = Joi.object({
-  q: Joi.string().min(1).max(255).trim().required(),
+  q: Joi.string().min(1).max(255).trim().optional(),
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
   sortBy: Joi.string().optional(),

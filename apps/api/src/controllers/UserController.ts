@@ -81,7 +81,8 @@ export class UserController {
         return;
       }
 
-      const { name, surname } = req.body as { name?: string; surname?: string };
+      const body = req.validated?.body ?? req.body;
+      const { name, surname } = body as { name?: string; surname?: string };
 
       // Validate input
       if (!name || !surname) {
@@ -136,7 +137,8 @@ export class UserController {
         return;
       }
 
-      const { page = 1, limit = 10, status } = req.query;
+      const query = req.validated?.query ?? req.query;
+      const { page = 1, limit = 10, status } = query;
       const offset = (Number(page) - 1) * Number(limit);
 
       const whereClause: WhereOptions<BookAttributes> = { userId: req.user.userId };

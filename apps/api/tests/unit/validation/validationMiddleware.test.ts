@@ -94,7 +94,7 @@ describe('Validation Middleware', () => {
       const middleware = validate(schema, { stripUnknown: true });
       middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockRequest.body).toEqual({ name: 'John' });
+      expect(mockRequest.validated?.body).toEqual({ name: 'John' });
       expect(mockNext).toHaveBeenCalled();
     });
 
@@ -110,7 +110,7 @@ describe('Validation Middleware', () => {
       const middleware = validate(schema);
       middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockRequest.body.age).toBe(30); // Coerced to number
+      expect(mockRequest.validated?.body.age).toBe(30); // Coerced to number
       expect(mockNext).toHaveBeenCalled();
     });
   });
@@ -130,7 +130,7 @@ describe('Validation Middleware', () => {
       middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
-      expect(mockRequest.query).toEqual({ page: 2, limit: 50 }); // Coerced to numbers
+      expect(mockRequest.validated?.query).toEqual({ page: 2, limit: 50 }); // Coerced to numbers
     });
 
     it('should apply defaults for missing query parameters', () => {
@@ -147,7 +147,7 @@ describe('Validation Middleware', () => {
       middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
-      expect(mockRequest.query).toEqual({ page: 1, limit: 20 }); // Applied defaults
+      expect(mockRequest.validated?.query).toEqual({ page: 1, limit: 20 }); // Applied defaults
     });
 
     it('should fail validation with invalid query parameters', () => {
@@ -217,9 +217,9 @@ describe('Validation Middleware', () => {
       middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
-      expect(mockRequest.body).toEqual({ name: 'John' });
+      expect(mockRequest.validated?.body).toEqual({ name: 'John' });
       expect(mockRequest.query).toEqual({ page: 1 });
-      expect(mockRequest.params).toEqual({ id: 123 });
+      expect(mockRequest.validated?.params).toEqual({ id: 123 });
     });
 
     it('should return all validation errors from multiple sources', () => {

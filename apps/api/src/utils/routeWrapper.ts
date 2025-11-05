@@ -20,11 +20,16 @@ type ControllerMethod = (request: UniversalRequest) => Promise<ApiResponse>;
 export const expressRouteWrapper = (controllerMethod: ControllerMethod) => {
   return async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     try {
+      // Use validated data if available, otherwise use originals
+      const body = req.validated?.body ?? req.body;
+      const query = req.validated?.query ?? req.query;
+      const params = req.validated?.params ?? req.params;
+
       // Convert Express request to UniversalRequest
       const universalRequest: UniversalRequest = {
-        body: req.body ? JSON.stringify(req.body) : undefined,
-        queryStringParameters: req.query as { [key: string]: string | undefined },
-        pathParameters: req.params as { [key: string]: string | undefined },
+        body: body ? JSON.stringify(body) : undefined,
+        queryStringParameters: query as { [key: string]: string | undefined },
+        pathParameters: params as { [key: string]: string | undefined },
         user: (req as Request & { user?: { userId: number } }).user || undefined, // From auth middleware
       };
 
