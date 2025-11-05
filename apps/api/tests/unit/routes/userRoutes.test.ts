@@ -78,6 +78,14 @@ jest.mock('../../../src/middleware/auth', () => ({
   })
 }));
 
+jest.mock('../../../src/validation', () => ({
+  validateQuery: jest.fn(() => (_req: any, _res: any, next: any) => next()),
+  validateBody: jest.fn(() => (_req: any, _res: any, next: any) => next()),
+  validateParams: jest.fn(() => (_req: any, _res: any, next: any) => next()),
+  updateUserSchema: {},
+  getUserBooksQuerySchema: {},
+}));
+
 describe('User Routes', () => {
   let app: express.Application;
 
