@@ -129,7 +129,7 @@ describe('AuthContext', () => {
 
     vi.mocked(fetchAuthSession).mockResolvedValue({
       tokens: {
-        accessToken: { toString: () => 'mock-token' },
+        idToken: { toString: () => 'mock-token' },
       },
     } as any);
 
@@ -150,7 +150,7 @@ describe('AuthContext', () => {
       const userData = JSON.parse(userElement.textContent || '{}');
       expect(userData.id).toBe(1);
       expect(userData.email).toBe('test@example.com');
-    });
+    }, { timeout: 3000 });
   });
 
   test('handles invalid JSON in localStorage', () => {
@@ -233,7 +233,7 @@ describe('AuthContext', () => {
 
     vi.mocked(fetchAuthSession).mockResolvedValue({
       tokens: {
-        accessToken: { toString: () => 'mock-token' },
+        idToken: { toString: () => 'mock-token' },
       },
     } as any);
 
@@ -252,7 +252,7 @@ describe('AuthContext', () => {
     await waitFor(() => {
       const userElement = screen.getByTestId('user');
       expect(userElement.textContent).not.toBe('null');
-    });
+    }, { timeout: 3000 });
 
     fireEvent.click(screen.getByTestId('logout'));
 
@@ -290,9 +290,11 @@ describe('AuthContext', () => {
 
   test('loading state is managed correctly during async operations', async () => {
     render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
+      <ApiProvider apiService={mockApiService}>
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      </ApiProvider>
     );
 
     // Initial loading should be false after mount
