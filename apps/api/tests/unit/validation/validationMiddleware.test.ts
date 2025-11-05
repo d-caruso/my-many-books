@@ -181,7 +181,7 @@ describe('Validation Middleware', () => {
       middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
-      expect(mockRequest.params['id']).toBe(123); // Coerced to number
+      expect(mockRequest.validated?.params).toEqual({ id: 123 });
     });
 
     it('should fail validation with invalid path parameters', () => {
@@ -218,7 +218,7 @@ describe('Validation Middleware', () => {
 
       expect(mockNext).toHaveBeenCalled();
       expect(mockRequest.validated?.body).toEqual({ name: 'John' });
-      expect(mockRequest.query).toEqual({ page: 1 });
+      expect(mockRequest.validated?.query).toEqual({ page: 1 });
       expect(mockRequest.validated?.params).toEqual({ id: 123 });
     });
 
@@ -289,7 +289,7 @@ describe('Validation Middleware', () => {
       middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
-      expect(mockRequest.params['id']).toBe(456);
+      expect(mockRequest.validated?.params).toEqual({ id: 456 });
     });
   });
 
