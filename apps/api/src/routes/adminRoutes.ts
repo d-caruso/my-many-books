@@ -24,71 +24,102 @@ import {
 import { adminLimiter, readLimiter, writeLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
-//const statsController = new StatsController();
-//const adminUserController = new AdminUserController();
-//const adminBookController = new AdminBookController();
 
 // All admin routes require authentication AND admin role
 router.use(authMiddleware);
 router.use(requireAdmin);
 
-// ===== STATS ENDPOINTS =====
+// Apply base admin rate limiting to all admin routes
+router.use(adminLimiter);
+
+// ===== STATS ENDPOINTS (READ-ONLY) =====
 // Dashboard summary statistics
-router.get('/stats/summary', expressRouteWrapper(statsController.getSummary.bind(statsController)));
+router.get(
+  '/stats/summary',
+  readLimiter,
+  validateQuery(adminStatsQuerySchema),
+  expressRouteWrapper(statsController.getSummary.bind(statsController))
+);
 
 // Detailed user statistics (future)
-router.get('/stats/users', expressRouteWrapper(statsController.getUserStats.bind(statsController)));
+router.get(
+  '/stats/users',
+  readLimiter,
+  validateQuery(adminStatsQuerySchema),
+  expressRouteWrapper(statsController.getUserStats.bind(statsController))
+);
 
 // Detailed book statistics (future)
-router.get('/stats/books', expressRouteWrapper(statsController.getBookStats.bind(statsController)));
+router.get(
+  '/stats/books',
+  readLimiter,
+  validateQuery(adminStatsQuerySchema),
+  expressRouteWrapper(statsController.getBookStats.bind(statsController))
+);
 
-// ===== USER MANAGEMENT ENDPOINTS (Phase 3) =====
+// ===== USER MANAGEMENT ENDPOINTS =====
 // Get all users with pagination and search
 router.get(
   '/users',
+  validateQuery(adminGetUsersQuerySchema),
   expressRouteWrapper(adminUserController.getAllUsers.bind(adminUserController))
 );
 
 // Get single user by ID
 router.get(
   '/users/:id',
+  validateQuery(adminStatsQuerySchema),
   expressRouteWrapper(adminUserController.getUserById.bind(adminUserController))
 );
 
-// Update user details
+// Update user details (WRITE)
 router.put(
   '/users/:id',
+  writeLimiter,
+  validateParams(adminIdParamSchema),
+  validateBody(adminUpdateUserSchema),
   expressRouteWrapper(adminUserController.updateUser.bind(adminUserController))
 );
 
-// Delete user
+// Delete user (WRITE)
 router.delete(
   '/users/:id',
+  writeLimiter,
+  validateParams(adminIdParamSchema),
   expressRouteWrapper(adminUserController.deleteUser.bind(adminUserController))
 );
 
-// ===== BOOK MANAGEMENT ENDPOINTS (Phase 4) =====
-// Get all books with pagination and search
+// ===== BOOK MANAGEMENT ENDPOINTS =====
+// Get all books with pagination and search (READ)
 router.get(
   '/books',
+  readLimiter,
+  validateQuery(adminGetBooksQuerySchema),
   expressRouteWrapper(adminBookController.getAllBooks.bind(adminBookController))
 );
 
-// Get single book by ID
+// Get single book by ID (READ)
 router.get(
   '/books/:id',
+  readLimiter,
+  validateParams(adminIdParamSchema),
   expressRouteWrapper(adminBookController.getBookById.bind(adminBookController))
 );
 
-// Update book details
+// Update book details (WRITE)
 router.put(
   '/books/:id',
+  writeLimiter,
+  validateParams(adminIdParamSchema),
+  validateBody(adminUpdateBookSchema),
   expressRouteWrapper(adminBookController.updateBook.bind(adminBookController))
 );
 
-// Delete book
+// Delete book (WRITE)
 router.delete(
   '/books/:id',
+  writeLimiter,
+  validateParams(adminIdParamSchema),
   expressRouteWrapper(adminBookController.deleteBook.bind(adminBookController))
 );
 

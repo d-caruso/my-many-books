@@ -8,13 +8,13 @@
 import { i18n } from '@my-many-books/shared-i18n';
 
 export interface RateLimitConfig {
-  windowMs: number;  // Time window in milliseconds
-  max: number;       // Max requests per window
-  message: string;  // Custom error message
-  standardHeaders: boolean;  // Return rate limit info in RateLimit-* headers
-  legacyHeaders: boolean;    // Return rate limit info in X-RateLimit-* headers
-  skipSuccessfulRequests: boolean;  // Don't count successful requests
-  skipFailedRequests: boolean;      // Don't count failed requests
+  windowMs: number; // Time window in milliseconds
+  max: number; // Max requests per window
+  message: string; // Custom error message
+  standardHeaders: boolean; // Return rate limit info in RateLimit-* headers
+  legacyHeaders: boolean; // Return rate limit info in X-RateLimit-* headers
+  skipSuccessfulRequests: boolean; // Don't count successful requests
+  skipFailedRequests: boolean; // Don't count failed requests
 }
 
 /**
@@ -37,7 +37,7 @@ export const rateLimitConfigs = {
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
-    skipFailedRequests: false
+    skipFailedRequests: false,
   },
 
   /**
@@ -51,7 +51,7 @@ export const rateLimitConfigs = {
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
-    skipFailedRequests: false
+    skipFailedRequests: false,
   },
 
   /**
@@ -65,7 +65,7 @@ export const rateLimitConfigs = {
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
-    skipFailedRequests: false
+    skipFailedRequests: false,
   },
 
   /**
@@ -79,7 +79,7 @@ export const rateLimitConfigs = {
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
-    skipFailedRequests: false
+    skipFailedRequests: false,
   },
 
   /**
@@ -93,7 +93,7 @@ export const rateLimitConfigs = {
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
-    skipFailedRequests: false
+    skipFailedRequests: false,
   },
 
   /**
@@ -107,7 +107,7 @@ export const rateLimitConfigs = {
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
-    skipFailedRequests: false
+    skipFailedRequests: false,
   },
 
   /**
@@ -121,8 +121,8 @@ export const rateLimitConfigs = {
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
-    skipFailedRequests: false
-  }
+    skipFailedRequests: false,
+  },
 };
 
 /**

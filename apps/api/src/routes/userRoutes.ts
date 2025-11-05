@@ -25,11 +25,15 @@ router.use(standardLimiter);
 // User profile endpoints (without "profile" in URI)
 // Apply granular rate limiting: separate limits for read vs write operations
 router.get('/', readLimiter, (req, res) => UserController.getCurrentUser(req, res)); // GET user info
-router.put('/', writeLimiter, validateBody(updateUserSchema), (req, res) => UserController.updateCurrentUser(req, res)); // PUT to update user info
+router.put('/', writeLimiter, validateBody(updateUserSchema), (req, res) =>
+  UserController.updateCurrentUser(req, res)
+); // PUT to update user info
 router.delete('/', writeLimiter, (req, res) => UserController.deleteAccount(req, res)); // DELETE to delete account (no "delete" in URI)
 
 // User books endpoints (READ)
-router.get('/books', readLimiter, validateQuery(getUserBooksQuerySchema), (req, res) => UserController.getUserBooks(req, res));
+router.get('/books', readLimiter, validateQuery(getUserBooksQuerySchema), (req, res) =>
+  UserController.getUserBooks(req, res)
+);
 
 // User statistics (READ)
 router.get('/stats', readLimiter, (req, res) => UserController.getUserStats(req, res));

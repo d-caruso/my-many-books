@@ -20,9 +20,9 @@ export const authLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.auth.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.auth.skipFailedRequests,
   // Use IP address as key
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     return req.ip || 'unknown';
-  }
+  },
 });
 
 /**
@@ -38,10 +38,10 @@ export const standardLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.standard.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.standard.skipFailedRequests,
   // Use user ID if authenticated, otherwise IP
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     const userId = (req as any).user?.id || (req as any).userId;
     return userId || req.ip || 'unknown';
-  }
+  },
 });
 
 /**
@@ -57,10 +57,10 @@ export const adminLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.admin.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.admin.skipFailedRequests,
   // Use user ID for admin endpoints
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     const userId = (req as any).user?.id || (req as any).userId;
     return userId || req.ip || 'unknown';
-  }
+  },
 });
 
 /**
@@ -76,9 +76,9 @@ export const publicLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.public.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.public.skipFailedRequests,
   // Use IP address for public endpoints
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     return req.ip || 'unknown';
-  }
+  },
 });
 
 /**
@@ -94,10 +94,10 @@ export const searchLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.search.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.search.skipFailedRequests,
   // Use user ID if authenticated, otherwise IP
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     const userId = (req as any).user?.id || (req as any).userId;
     return userId || req.ip || 'unknown';
-  }
+  },
 });
 
 /**
@@ -113,10 +113,10 @@ export const writeLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.write.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.write.skipFailedRequests,
   // Use user ID if authenticated, otherwise IP
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     const userId = (req as any).user?.id || (req as any).userId;
     return userId || req.ip || 'unknown';
-  }
+  },
 });
 
 /**
@@ -132,8 +132,8 @@ export const readLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.read.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.read.skipFailedRequests,
   // Use user ID if authenticated, otherwise IP
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     const userId = (req as any).user?.id || (req as any).userId;
     return userId || req.ip || 'unknown';
-  }
+  },
 });

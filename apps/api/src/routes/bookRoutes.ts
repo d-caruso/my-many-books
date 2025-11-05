@@ -7,7 +7,12 @@ import { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { BookController } from '../controllers/BookController';
 import { authMiddleware } from '../middleware/auth';
-import { standardLimiter, searchLimiter, readLimiter, writeLimiter } from '../middleware/rateLimiters';
+import {
+  standardLimiter,
+  searchLimiter,
+  readLimiter,
+  writeLimiter,
+} from '../middleware/rateLimiters';
 import {
   validateQuery,
   validateBody,
@@ -47,11 +52,26 @@ router.get(
 router.use(standardLimiter);
 
 // Apply granular rate limiting: separate limits for read vs write operations
-router.get('/', readLimiter, validateQuery(getBooksQuerySchema), expressRouteWrapper(bookController.getUserBooks.bind(bookController)));
+router.get(
+  '/',
+  readLimiter,
+  validateQuery(getBooksQuerySchema),
+  expressRouteWrapper(bookController.getUserBooks.bind(bookController))
+);
 
-router.get('/:id', readLimiter, validateParams(bookIdParamSchema), expressRouteWrapper(bookController.getBookById.bind(bookController)));
+router.get(
+  '/:id',
+  readLimiter,
+  validateParams(bookIdParamSchema),
+  expressRouteWrapper(bookController.getBookById.bind(bookController))
+);
 
-router.post('/', writeLimiter, validateBody(createBookSchema), expressRouteWrapper(bookController.createBookForUser.bind(bookController)));
+router.post(
+  '/',
+  writeLimiter,
+  validateBody(createBookSchema),
+  expressRouteWrapper(bookController.createBookForUser.bind(bookController))
+);
 
 // Allineamento standard (multi-line se ci sono molti middleware)
 router.put(
@@ -70,6 +90,11 @@ router.patch(
   expressRouteWrapper(bookController.patchBookForUser.bind(bookController))
 );
 
-router.delete('/:id', writeLimiter, validateParams(bookIdParamSchema), expressRouteWrapper(bookController.deleteBookForUser.bind(bookController)));
+router.delete(
+  '/:id',
+  writeLimiter,
+  validateParams(bookIdParamSchema),
+  expressRouteWrapper(bookController.deleteBookForUser.bind(bookController))
+);
 
 export default router;
