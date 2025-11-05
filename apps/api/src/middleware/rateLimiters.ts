@@ -4,7 +4,7 @@
  * Creates express-rate-limit middleware instances for different endpoint types.
  */
 
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { rateLimitConfigs } from '../config/rateLimits';
 
 /**
@@ -19,10 +19,6 @@ export const authLimiter = rateLimit({
   legacyHeaders: rateLimitConfigs.auth.legacyHeaders,
   skipSuccessfulRequests: rateLimitConfigs.auth.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.auth.skipFailedRequests,
-  // Use IP address as key
-  keyGenerator: req => {
-    return req.ip || 'unknown';
-  },
 });
 
 /**
@@ -37,10 +33,10 @@ export const standardLimiter = rateLimit({
   legacyHeaders: rateLimitConfigs.standard.legacyHeaders,
   skipSuccessfulRequests: rateLimitConfigs.standard.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.standard.skipFailedRequests,
-  // Use user ID if authenticated, otherwise IP
   keyGenerator: req => {
     const userId = (req as any).user?.id || (req as any).userId;
-    return userId || req.ip || 'unknown';
+    if (userId) return userId;
+    return ipKeyGenerator(req.ip || '');
   },
 });
 
@@ -56,10 +52,10 @@ export const adminLimiter = rateLimit({
   legacyHeaders: rateLimitConfigs.admin.legacyHeaders,
   skipSuccessfulRequests: rateLimitConfigs.admin.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.admin.skipFailedRequests,
-  // Use user ID for admin endpoints
   keyGenerator: req => {
     const userId = (req as any).user?.id || (req as any).userId;
-    return userId || req.ip || 'unknown';
+    if (userId) return userId;
+    return ipKeyGenerator(req.ip || '');
   },
 });
 
@@ -75,10 +71,6 @@ export const publicLimiter = rateLimit({
   legacyHeaders: rateLimitConfigs.public.legacyHeaders,
   skipSuccessfulRequests: rateLimitConfigs.public.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.public.skipFailedRequests,
-  // Use IP address for public endpoints
-  keyGenerator: req => {
-    return req.ip || 'unknown';
-  },
 });
 
 /**
@@ -93,10 +85,10 @@ export const searchLimiter = rateLimit({
   legacyHeaders: rateLimitConfigs.search.legacyHeaders,
   skipSuccessfulRequests: rateLimitConfigs.search.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.search.skipFailedRequests,
-  // Use user ID if authenticated, otherwise IP
   keyGenerator: req => {
     const userId = (req as any).user?.id || (req as any).userId;
-    return userId || req.ip || 'unknown';
+    if (userId) return userId;
+    return ipKeyGenerator(req.ip || '');
   },
 });
 
@@ -112,10 +104,10 @@ export const writeLimiter = rateLimit({
   legacyHeaders: rateLimitConfigs.write.legacyHeaders,
   skipSuccessfulRequests: rateLimitConfigs.write.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.write.skipFailedRequests,
-  // Use user ID if authenticated, otherwise IP
   keyGenerator: req => {
     const userId = (req as any).user?.id || (req as any).userId;
-    return userId || req.ip || 'unknown';
+    if (userId) return userId;
+    return ipKeyGenerator(req.ip || '');
   },
 });
 
@@ -131,9 +123,9 @@ export const readLimiter = rateLimit({
   legacyHeaders: rateLimitConfigs.read.legacyHeaders,
   skipSuccessfulRequests: rateLimitConfigs.read.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.read.skipFailedRequests,
-  // Use user ID if authenticated, otherwise IP
   keyGenerator: req => {
     const userId = (req as any).user?.id || (req as any).userId;
-    return userId || req.ip || 'unknown';
+    if (userId) return userId;
+    return ipKeyGenerator(req.ip || '');
   },
 });
