@@ -87,7 +87,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: 'test query',
         page: 1,
-        limit: 20,
+        limit: 10,
       });
       expect(result.current.books).toEqual(mockBooks);
       expect(result.current.totalCount).toBe(2);
@@ -122,7 +122,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: 'query',
         page: 1,
-        limit: 20,
+        limit: 10,
         categoryId: 1,
         authorId: 2,
       });
@@ -148,7 +148,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: '',
         page: 1,
-        limit: 20,
+        limit: 10,
       });
       expect(result.current.books).toEqual([]);
       expect(result.current.loading).toBe(false);
@@ -176,7 +176,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: '',
         page: 1,
-        limit: 20,
+        limit: 10,
         categoryId: 1,
       });
       expect(result.current.books).toEqual(mockBooks);
