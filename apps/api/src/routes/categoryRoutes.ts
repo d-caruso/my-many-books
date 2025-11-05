@@ -23,9 +23,11 @@ const expressRouteWrapper = (
   return async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       // Use validated data if available, otherwise use originals
-      const body = req.validated?.body ?? req.body;
-      const query = req.validated?.query ?? req.query;
-      const params = req.validated?.params ?? req.params;
+      const body: unknown = req.validated?.body ?? req.body;
+      const query: Record<string, unknown> =
+        req.validated?.query ?? (req.query as Record<string, unknown>);
+      const params: Record<string, unknown> =
+        req.validated?.params ?? (req.params as Record<string, unknown>);
 
       // Convert Express request to UniversalRequest
       const universalRequest: UniversalRequest = {

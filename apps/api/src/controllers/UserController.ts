@@ -81,7 +81,7 @@ export class UserController {
         return;
       }
 
-      const body = req.validated?.body ?? req.body;
+      const body: unknown = req.validated?.body ?? req.body;
       const { name, surname } = body as { name?: string; surname?: string };
 
       // Validate input
@@ -137,7 +137,8 @@ export class UserController {
         return;
       }
 
-      const query = req.validated?.query ?? req.query;
+      const query: Record<string, unknown> =
+        req.validated?.query ?? (req.query as Record<string, unknown>);
       const { page = 1, limit = 10, status } = query;
       const offset = (Number(page) - 1) * Number(limit);
 

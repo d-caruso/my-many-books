@@ -17,12 +17,13 @@ import { i18n } from '@my-many-books/shared-i18n';
  * are stored in req.validated.query and req.validated.params
  */
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       validated?: {
-        body?: any;
-        query?: any;
-        params?: any;
+        body?: unknown;
+        query?: Record<string, unknown>;
+        params?: Record<string, unknown>;
       };
     }
   }
@@ -117,8 +118,8 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
       if (result.error) {
         errors.push(...formatValidationErrors(result.error));
       } else if (result.value) {
-        req.body = result.value;
-        req.validated.body = result.value;
+        req.body = result.value as Record<string, unknown>;
+        req.validated.body = result.value as unknown;
       }
     }
 
@@ -129,7 +130,7 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
       if (result.error) {
         errors.push(...formatValidationErrors(result.error));
       } else if (result.value) {
-        req.validated.query = result.value;
+        req.validated.query = result.value as Record<string, unknown>;
       }
     }
 
@@ -140,7 +141,7 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
       if (result.error) {
         errors.push(...formatValidationErrors(result.error));
       } else if (result.value) {
-        req.validated.params = result.value;
+        req.validated.params = result.value as Record<string, unknown>;
       }
     }
 

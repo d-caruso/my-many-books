@@ -33,14 +33,16 @@ export const expressAdapter = (controller: ControllerMethod) => {
     try {
       // Convert Express request to Lambda event format
       // Use validated data if available, otherwise use originals
-      const body = req.validated?.body ?? req.body;
-      const query = req.validated?.query ?? req.query;
-      const params = req.validated?.params ?? req.params;
+      const body: unknown = req.validated?.body ?? req.body;
+      const query: Record<string, unknown> =
+        req.validated?.query ?? (req.query as Record<string, unknown>);
+      const params: Record<string, unknown> =
+        req.validated?.params ?? (req.params as Record<string, unknown>);
 
       // Build event object conditionally to satisfy exactOptionalPropertyTypes
       const event: LambdaRequest = {
         queryStringParameters: query as { [key: string]: string | undefined },
-        pathParameters: params,
+        pathParameters: params as { [key: string]: string | undefined },
         headers: req.headers as { [key: string]: string | undefined },
       };
 

@@ -110,7 +110,7 @@ describe('Validation Middleware', () => {
       const middleware = validate(schema);
       middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockRequest.validated?.body.age).toBe(30); // Coerced to number
+      expect((mockRequest.validated?.body as { age: number })?.age).toBe(30);
       expect(mockNext).toHaveBeenCalled();
     });
   });
