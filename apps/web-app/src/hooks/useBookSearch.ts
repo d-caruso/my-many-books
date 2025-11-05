@@ -45,11 +45,13 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     setLoading(true);
     setError(null);
 
+    const defaultLimit = parseInt(import.meta.env.VITE_BOOKS_PAGINATION_DEFAULT || '10', 10);
+
     try {
       const searchParams = {
         q: query.trim(),
         page,
-        limit: 20,
+        limit: defaultLimit,
         ...filters
       };
 
