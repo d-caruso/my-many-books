@@ -14,6 +14,7 @@ import authorRoutes from './routes/authorRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import isbnRoutes from './routes/isbnRoutes';
 import adminRoutes from './routes/adminRoutes';
+import { publicLimiter } from './middleware/rateLimiters';
 
 import { initializeI18n } from '@my-many-books/shared-i18n';
 
@@ -30,7 +31,8 @@ const API_ROUTE_VERSION = process.env['API_ROUTE_VERSION'] || 'v1';
 const BASE_PATH = `${API_PREFIX}/${API_ROUTE_VERSION}`;
 
 // ===== HEALTH CHECK =====
-app.get(`${BASE_PATH}/health`, (_req, res): void => {
+// Apply public rate limiter to health check
+app.get(`${BASE_PATH}/health`, publicLimiter, (_req, res): void => {
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),

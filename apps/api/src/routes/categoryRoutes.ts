@@ -9,8 +9,12 @@ import { AuthenticatedRequest } from '../middleware/auth';
 import { Response } from 'express';
 import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
+import { standardLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
+
+// Apply rate limiting to category routes
+router.use(standardLimiter);
 
 // A generic handler for Express routes that wraps the controller methods
 const expressRouteWrapper = (

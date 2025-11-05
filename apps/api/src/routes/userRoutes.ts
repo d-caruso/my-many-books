@@ -6,11 +6,15 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
 import { authMiddleware } from '../middleware/auth';
+import { standardLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
 
 // All user routes require authentication
 router.use(authMiddleware);
+
+// Apply rate limiting to user routes
+router.use(standardLimiter);
 
 // User profile endpoints (without "profile" in URI)
 router.get('/', (req, res) => UserController.getCurrentUser(req, res)); // GET user info
