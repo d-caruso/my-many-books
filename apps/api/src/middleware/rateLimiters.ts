@@ -21,7 +21,7 @@ export const authLimiter = rateLimit({
   skipFailedRequests: rateLimitConfigs.auth.skipFailedRequests,
   // Use IP address as key
   keyGenerator: (req) => {
-    return req.ip || req.socket.remoteAddress || 'unknown';
+    return req.ip || 'unknown';
   }
 });
 
@@ -40,7 +40,7 @@ export const standardLimiter = rateLimit({
   // Use user ID if authenticated, otherwise IP
   keyGenerator: (req) => {
     const userId = (req as any).user?.id || (req as any).userId;
-    return userId || req.ip || req.socket.remoteAddress || 'unknown';
+    return userId || req.ip || 'unknown';
   }
 });
 
@@ -59,7 +59,7 @@ export const adminLimiter = rateLimit({
   // Use user ID for admin endpoints
   keyGenerator: (req) => {
     const userId = (req as any).user?.id || (req as any).userId;
-    return userId || req.ip || req.socket.remoteAddress || 'unknown';
+    return userId || req.ip || 'unknown';
   }
 });
 
@@ -77,7 +77,7 @@ export const publicLimiter = rateLimit({
   skipFailedRequests: rateLimitConfigs.public.skipFailedRequests,
   // Use IP address for public endpoints
   keyGenerator: (req) => {
-    return req.ip || req.socket.remoteAddress || 'unknown';
+    return req.ip || 'unknown';
   }
 });
 
@@ -96,6 +96,6 @@ export const searchLimiter = rateLimit({
   // Use user ID if authenticated, otherwise IP
   keyGenerator: (req) => {
     const userId = (req as any).user?.id || (req as any).userId;
-    return userId || req.ip || req.socket.remoteAddress || 'unknown';
+    return userId || req.ip || 'unknown';
   }
 });

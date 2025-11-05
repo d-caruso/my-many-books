@@ -7,11 +7,15 @@ import { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { authorController } from '../controllers/AuthorController';
 import { authMiddleware } from '../middleware/auth';
+import { standardLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
 
 // Apply authentication middleware to all author routes
 router.use(authMiddleware);
+
+// Apply rate limiting to author routes
+router.use(standardLimiter);
 
 // Map the routes to the controller methods using the wrapper
 router.get('/', expressRouteWrapper(authorController.listAuthors.bind(authorController)));

@@ -5,21 +5,22 @@
  * Uses express-rate-limit library.
  */
 
+import { i18n } from '@my-many-books/shared-i18n';
+
 export interface RateLimitConfig {
   windowMs: number;  // Time window in milliseconds
   max: number;       // Max requests per window
-  message?: string;  // Custom error message
-  standardHeaders?: boolean;  // Return rate limit info in RateLimit-* headers
-  legacyHeaders?: boolean;    // Return rate limit info in X-RateLimit-* headers
-  skipSuccessfulRequests?: boolean;  // Don't count successful requests
-  skipFailedRequests?: boolean;      // Don't count failed requests
+  message: string;  // Custom error message
+  standardHeaders: boolean;  // Return rate limit info in RateLimit-* headers
+  legacyHeaders: boolean;    // Return rate limit info in X-RateLimit-* headers
+  skipSuccessfulRequests: boolean;  // Don't count successful requests
+  skipFailedRequests: boolean;      // Don't count failed requests
 }
 
 /**
  * Environment-based configuration
  */
-const isProduction = process.env.NODE_ENV === 'production';
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = process.env['NODE_ENV'] === 'development';
 
 /**
  * Rate limit configurations for different endpoint types
@@ -32,15 +33,12 @@ export const rateLimitConfigs = {
   auth: {
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: isDevelopment ? 100 : 5, // 5 requests per 15min in prod, 100 in dev
-    message: {
-      error: 'Too many authentication attempts. Please try again later.',
-      retryAfter: '15 minutes'
-    },
+    message: i18n.t('errors.rate_limit_auth'),
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
     skipFailedRequests: false
-  } as RateLimitConfig,
+  },
 
   /**
    * Standard API endpoints (authenticated users)
@@ -49,15 +47,12 @@ export const rateLimitConfigs = {
   standard: {
     windowMs: 60 * 60 * 1000, // 1 hour
     max: isDevelopment ? 10000 : 1000, // 1000 requests per hour in prod
-    message: {
-      error: 'Too many requests. Please try again later.',
-      retryAfter: '1 hour'
-    },
+    message: i18n.t('errors.rate_limit_standard'),
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
     skipFailedRequests: false
-  } as RateLimitConfig,
+  },
 
   /**
    * Admin endpoints
@@ -66,15 +61,12 @@ export const rateLimitConfigs = {
   admin: {
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: isDevelopment ? 1000 : 100, // 100 requests per 15min in prod
-    message: {
-      error: 'Too many admin requests. Please try again later.',
-      retryAfter: '15 minutes'
-    },
+    message: i18n.t('errors.rate_limit_admin'),
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
     skipFailedRequests: false
-  } as RateLimitConfig,
+  },
 
   /**
    * Public/unauthenticated endpoints
@@ -83,15 +75,12 @@ export const rateLimitConfigs = {
   public: {
     windowMs: 60 * 60 * 1000, // 1 hour
     max: isDevelopment ? 1000 : 100, // 100 requests per hour in prod
-    message: {
-      error: 'Too many requests from this IP. Please try again later.',
-      retryAfter: '1 hour'
-    },
+    message: i18n.t('errors.rate_limit_public'),
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
     skipFailedRequests: false
-  } as RateLimitConfig,
+  },
 
   /**
    * Search endpoints
@@ -100,15 +89,12 @@ export const rateLimitConfigs = {
   search: {
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: isDevelopment ? 1000 : 100, // 100 searches per 15min in prod
-    message: {
-      error: 'Too many search requests. Please try again later.',
-      retryAfter: '15 minutes'
-    },
+    message: i18n.t('errors.rate_limit_search'),
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
     skipFailedRequests: false
-  } as RateLimitConfig
+  }
 };
 
 /**

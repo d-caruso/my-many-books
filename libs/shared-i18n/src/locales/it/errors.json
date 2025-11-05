@@ -48,5 +48,10 @@
   "missing_required_field": "Campo obbligatorio mancante: {{field}}",
   "duplicate_entry": "Voce duplicata per {{field}}",
   "invalid_search_params": "Parametri di ricerca non validi",
-  "pagination_error": "Parametri di paginazione non validi"
+  "pagination_error": "Parametri di paginazione non validi",
+  "rate_limit_auth": "Troppi tentativi di autenticazione. Riprova tra 15 minuti",
+  "rate_limit_standard": "Troppe richieste. Riprova tra 1 ora",
+  "rate_limit_admin": "Troppe richieste amministrative. Riprova tra 15 minuti",
+  "rate_limit_public": "Troppe richieste da questo IP. Riprova tra 1 ora",
+  "rate_limit_search": "Troppe richieste di ricerca. Riprova tra 15 minuti"
 }

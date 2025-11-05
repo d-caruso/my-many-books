@@ -48,5 +48,10 @@
   "missing_required_field": "Missing required field: {{field}}",
   "duplicate_entry": "Duplicate entry for {{field}}",
   "invalid_search_params": "Invalid search parameters",
-  "pagination_error": "Invalid pagination parameters"
+  "pagination_error": "Invalid pagination parameters",
+  "rate_limit_auth": "Too many authentication attempts. Please try again in 15 minutes",
+  "rate_limit_standard": "Too many requests. Please try again in 1 hour",
+  "rate_limit_admin": "Too many admin requests. Please try again in 15 minutes",
+  "rate_limit_public": "Too many requests from this IP. Please try again in 1 hour",
+  "rate_limit_search": "Too many search requests. Please try again in 15 minutes"
 }

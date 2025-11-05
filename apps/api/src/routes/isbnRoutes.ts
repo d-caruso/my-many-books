@@ -6,12 +6,15 @@
 import { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { IsbnController } from '../controllers/IsbnController';
+import { publicLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
 const isbnController = new IsbnController();
 
 // Public ISBN service routes (no authentication required for lookups)
 // These routes allow external systems and apps to validate and lookup ISBNs
+// Apply public rate limiter (more restrictive for unauthenticated access)
+router.use(publicLimiter);
 
 // ISBN lookup endpoint - GET with query param or path param
 router.get('/lookup', expressRouteWrapper(isbnController.lookupBook.bind(isbnController)));

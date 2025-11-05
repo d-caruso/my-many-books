@@ -10,6 +10,7 @@ import { adminUserController } from '../controllers/admin/AdminUserController';
 import { adminBookController } from '../controllers/admin/AdminBookController';
 import { authMiddleware } from '../middleware/auth';
 import { requireAdmin } from '../middleware/adminAuth';
+import { adminLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
 //const statsController = new StatsController();
@@ -19,6 +20,9 @@ const router = Router();
 // All admin routes require authentication AND admin role
 router.use(authMiddleware);
 router.use(requireAdmin);
+
+// Apply rate limiting to admin routes
+router.use(adminLimiter);
 
 // ===== STATS ENDPOINTS =====
 // Dashboard summary statistics
