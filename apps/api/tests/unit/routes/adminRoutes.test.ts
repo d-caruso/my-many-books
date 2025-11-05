@@ -34,6 +34,17 @@ jest.mock('../../../src/controllers/admin/AdminBookController', () => ({
 }));
 jest.mock('../../../src/middleware/auth');
 jest.mock('../../../src/middleware/adminAuth');
+jest.mock('../../../src/validation', () => ({
+  validateQuery: jest.fn(() => (_req: any, _res: any, next: any) => next()),
+  validateBody: jest.fn(() => (_req: any, _res: any, next: any) => next()),
+  validateParams: jest.fn(() => (_req: any, _res: any, next: any) => next()),
+  adminGetUsersQuerySchema: {},
+  adminUpdateUserSchema: {},
+  adminGetBooksQuerySchema: {},
+  adminUpdateBookSchema: {},
+  adminIdParamSchema: {},
+  adminStatsQuerySchema: {},
+}));
 
 const app = express();
 app.use(express.json());
