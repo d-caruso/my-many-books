@@ -9,6 +9,19 @@ import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
 import { i18n } from '@my-many-books/shared-i18n';
 
+// Extend Express Request to include validated data
+declare global {
+  namespace Express {
+    interface Request {
+      validated?: {
+        body?: any;
+        query?: any;
+        params?: any;
+      };
+    }
+  }
+}
+
 /**
  * Validation target options
  */
@@ -80,6 +93,9 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
   return (req: Request, res: Response, next: NextFunction): void => {
     const errors: Array<{ field: string; message: string }> = [];
 
+    // Initialize validated object
+    req.validated = {};
+
     // Validate body
     if (schema.body) {
       const result = schema.body.validate(req.body, validationOptions);
@@ -87,8 +103,8 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
       if (result.error) {
         errors.push(...formatValidationErrors(result.error));
       } else if (result.value) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        req.body = result.value; // Use sanitized/coerced value
+        req.body = result.value;
+        req.validated.body = result.value;
       }
     }
 
@@ -99,8 +115,8 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
       if (result.error) {
         errors.push(...formatValidationErrors(result.error));
       } else if (result.value) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        req.query = result.value; // Use sanitized/coerced value
+        req.query = result.value;
+        req.validated.query = result.value;
       }
     }
 
@@ -111,8 +127,8 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
       if (result.error) {
         errors.push(...formatValidationErrors(result.error));
       } else if (result.value) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        req.params = result.value; // Use sanitized/coerced value
+        req.params = result.value;
+        req.validated.params = result.value;
       }
     }
 
