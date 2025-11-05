@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi } from 'vitest';
 import { ErrorBoundary } from './ErrorBoundary';
 
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
@@ -11,11 +12,11 @@ const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
 
 describe('ErrorBoundary', () => {
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('renders children when there is no error', () => {
@@ -69,7 +70,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('calls onError callback when error is caught', () => {
-    const onError = jest.fn();
+    const onError = vi.fn();
 
     render(
       <ErrorBoundary onError={onError}>
@@ -82,23 +83,29 @@ describe('ErrorBoundary', () => {
   });
 
   it('resets error state when reset is called', () => {
-    const { rerender } = render(
+    let shouldThrow = true;
+    const TestComponent = () => {
+      if (shouldThrow) {
+        throw new Error('Test error');
+      }
+      return <div>No error</div>;
+    };
+
+    render(
       <ErrorBoundary>
-        <ThrowError shouldThrow={true} />
+        <TestComponent />
       </ErrorBoundary>
     );
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
 
+    // Fix the error condition before clicking reset
+    shouldThrow = false;
+
     const tryAgainButton = screen.getByText('Try again');
     fireEvent.click(tryAgainButton);
 
-    rerender(
-      <ErrorBoundary>
-        <ThrowError shouldThrow={false} />
-      </ErrorBoundary>
-    );
-
+    // After reset with fixed component, error should be gone
     expect(screen.getByText('No error')).toBeInTheDocument();
   });
 });
