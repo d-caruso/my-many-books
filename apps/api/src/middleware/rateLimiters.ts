@@ -99,3 +99,41 @@ export const searchLimiter = rateLimit({
     return userId || req.ip || 'unknown';
   }
 });
+
+/**
+ * Write operations rate limiter (POST, PUT, PATCH, DELETE)
+ * More restrictive: 500 operations per hour
+ */
+export const writeLimiter = rateLimit({
+  windowMs: rateLimitConfigs.write.windowMs,
+  max: rateLimitConfigs.write.max,
+  message: rateLimitConfigs.write.message,
+  standardHeaders: rateLimitConfigs.write.standardHeaders,
+  legacyHeaders: rateLimitConfigs.write.legacyHeaders,
+  skipSuccessfulRequests: rateLimitConfigs.write.skipSuccessfulRequests,
+  skipFailedRequests: rateLimitConfigs.write.skipFailedRequests,
+  // Use user ID if authenticated, otherwise IP
+  keyGenerator: (req) => {
+    const userId = (req as any).user?.id || (req as any).userId;
+    return userId || req.ip || 'unknown';
+  }
+});
+
+/**
+ * Read operations rate limiter (GET)
+ * More permissive: 2000 operations per hour
+ */
+export const readLimiter = rateLimit({
+  windowMs: rateLimitConfigs.read.windowMs,
+  max: rateLimitConfigs.read.max,
+  message: rateLimitConfigs.read.message,
+  standardHeaders: rateLimitConfigs.read.standardHeaders,
+  legacyHeaders: rateLimitConfigs.read.legacyHeaders,
+  skipSuccessfulRequests: rateLimitConfigs.read.skipSuccessfulRequests,
+  skipFailedRequests: rateLimitConfigs.read.skipFailedRequests,
+  // Use user ID if authenticated, otherwise IP
+  keyGenerator: (req) => {
+    const userId = (req as any).user?.id || (req as any).userId;
+    return userId || req.ip || 'unknown';
+  }
+});

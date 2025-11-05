@@ -6,28 +6,29 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
 import { authMiddleware } from '../middleware/auth';
-import { standardLimiter } from '../middleware/rateLimiters';
+import { standardLimiter, readLimiter, writeLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
 
 // All user routes require authentication
 router.use(authMiddleware);
 
-// Apply rate limiting to user routes
+// Apply standard rate limiting to user routes for backwards compatibility
 router.use(standardLimiter);
 
 // User profile endpoints (without "profile" in URI)
-router.get('/', (req, res) => UserController.getCurrentUser(req, res)); // GET user info
-router.put('/', (req, res) => UserController.updateCurrentUser(req, res)); // PUT to update user info
-router.delete('/', (req, res) => UserController.deleteAccount(req, res)); // DELETE to delete account (no "delete" in URI)
+// Apply granular rate limiting: separate limits for read vs write operations
+router.get('/', readLimiter, (req, res) => UserController.getCurrentUser(req, res)); // GET user info
+router.put('/', writeLimiter, (req, res) => UserController.updateCurrentUser(req, res)); // PUT to update user info
+router.delete('/', writeLimiter, (req, res) => UserController.deleteAccount(req, res)); // DELETE to delete account (no "delete" in URI)
 
-// User books endpoints
-router.get('/books', (req, res) => UserController.getUserBooks(req, res));
+// User books endpoints (READ)
+router.get('/books', readLimiter, (req, res) => UserController.getUserBooks(req, res));
 
-// User statistics
-router.get('/stats', (req, res) => UserController.getUserStats(req, res));
+// User statistics (READ)
+router.get('/stats', readLimiter, (req, res) => UserController.getUserStats(req, res));
 
-// Account deactivation (PUT without "deactivate" in URI - but needs different route to avoid conflict)
-router.patch('/', (req, res) => UserController.deactivateAccount(req, res)); // PATCH to deactivate account (no "deactivate" in URI)
+// Account deactivation (WRITE)
+router.patch('/', writeLimiter, (req, res) => UserController.deactivateAccount(req, res)); // PATCH to deactivate account (no "deactivate" in URI)
 
 export default router;

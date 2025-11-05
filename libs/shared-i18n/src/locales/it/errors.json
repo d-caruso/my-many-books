@@ -53,5 +53,7 @@
   "rate_limit_standard": "Troppe richieste. Riprova tra 1 ora",
   "rate_limit_admin": "Troppe richieste amministrative. Riprova tra 15 minuti",
   "rate_limit_public": "Troppe richieste da questo IP. Riprova tra 1 ora",
-  "rate_limit_search": "Troppe richieste di ricerca. Riprova tra 15 minuti"
+  "rate_limit_search": "Troppe richieste di ricerca. Riprova tra 15 minuti",
+  "rate_limit_write": "Troppe operazioni di scrittura. Riprova tra 1 ora",
+  "rate_limit_read": "Troppe operazioni di lettura. Riprova tra 1 ora"
 }
