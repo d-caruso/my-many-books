@@ -7,7 +7,7 @@ import { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { BookController } from '../controllers/BookController';
 import { authMiddleware } from '../middleware/auth';
-import { standardLimiter, searchLimiter } from '../middleware/rateLimiters';
+import { standardLimiter, searchLimiter, readLimiter, writeLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
 const bookController = new BookController();
@@ -24,14 +24,15 @@ router.get(
   expressRouteWrapper(bookController.searchByIsbnForUser.bind(bookController))
 );
 
-// Book CRUD operations - apply standard rate limiting
+// Book CRUD operations - apply standard rate limiting for backwards compatibility
 router.use(standardLimiter);
 
-router.get('/', expressRouteWrapper(bookController.getUserBooks.bind(bookController)));
-router.get('/:id', expressRouteWrapper(bookController.getBookById.bind(bookController)));
-router.post('/', expressRouteWrapper(bookController.createBookForUser.bind(bookController)));
-router.put('/:id', expressRouteWrapper(bookController.updateBookForUser.bind(bookController)));
-router.patch('/:id', expressRouteWrapper(bookController.patchBookForUser.bind(bookController)));
-router.delete('/:id', expressRouteWrapper(bookController.deleteBookForUser.bind(bookController)));
+// Apply granular rate limiting: separate limits for read vs write operations
+router.get('/', readLimiter, expressRouteWrapper(bookController.getUserBooks.bind(bookController)));
+router.get('/:id', readLimiter, expressRouteWrapper(bookController.getBookById.bind(bookController)));
+router.post('/', writeLimiter, expressRouteWrapper(bookController.createBookForUser.bind(bookController)));
+router.put('/:id', writeLimiter, expressRouteWrapper(bookController.updateBookForUser.bind(bookController)));
+router.patch('/:id', writeLimiter, expressRouteWrapper(bookController.patchBookForUser.bind(bookController)));
+router.delete('/:id', writeLimiter, expressRouteWrapper(bookController.deleteBookForUser.bind(bookController)));
 
 export default router;

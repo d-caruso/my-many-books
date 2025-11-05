@@ -94,6 +94,34 @@ export const rateLimitConfigs = {
     legacyHeaders: false,
     skipSuccessfulRequests: false,
     skipFailedRequests: false
+  },
+
+  /**
+   * Write operations (POST, PUT, PATCH, DELETE)
+   * More restrictive than read operations
+   */
+  write: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: isDevelopment ? 5000 : 500, // 500 write operations per hour in prod
+    message: i18n.t('errors.rate_limit_write'),
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: false,
+    skipFailedRequests: false
+  },
+
+  /**
+   * Read operations (GET)
+   * More permissive than write operations
+   */
+  read: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: isDevelopment ? 20000 : 2000, // 2000 read operations per hour in prod
+    message: i18n.t('errors.rate_limit_read'),
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: false,
+    skipFailedRequests: false
   }
 };
 
