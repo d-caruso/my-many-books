@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text } from 'react-native';
 
 // Industry standard approach: Use react-test-renderer for React Native integration tests
 // when Testing Library has compatibility issues
@@ -35,20 +36,27 @@ jest.mock('@/hooks/useBooks', () => ({
   useBooks: jest.fn(),
 }));
 
-// Simple test component that renders all expected elements using RCT* components
+// react-test-renderer ha bisogno di sapere cosa sono 'View' e 'Text'.
+jest.mock('react-native', () => ({
+  View: 'View',
+  Text: 'Text',
+}));
+
 const TestBookComponent = () => {
-  return React.createElement('RCTView', {}, [
-    React.createElement('RCTText', { key: 'loading', testID: 'loading' }, 'Loading...'),
-    React.createElement('RCTText', { key: 'error', testID: 'error' }, 'Error message'),
-    React.createElement('RCTText', { key: 'book-count', testID: 'book-count' }, '2'),
-    React.createElement('RCTText', { key: 'book-1', testID: 'book-1' }, 'Test Book 1 - reading'),
-    React.createElement('RCTText', { key: 'book-2', testID: 'book-2' }, 'Test Book 2 - completed'),
-    React.createElement('RCTText', { key: 'create', testID: 'create-book' }, 'Create Book'),
-    React.createElement('RCTText', { key: 'update', testID: 'update-book' }, 'Update Book'),
-    React.createElement('RCTText', { key: 'delete', testID: 'delete-book' }, 'Delete Book'),
-    React.createElement('RCTText', { key: 'status', testID: 'update-status' }, 'Update Status'),
-    React.createElement('RCTText', { key: 'refresh', testID: 'refresh-books' }, 'Refresh')
-  ]);
+  return (
+    <View>
+      <Text testID="loading">Loading...</Text>
+      <Text testID="error">Error message</Text>
+      <Text testID="book-count">2</Text>
+      <Text testID="book-1">Test Book 1 - reading</Text>
+      <Text testID="book-2">Test Book 2 - completed</Text>
+      <Text testID="create-book">Create Book</Text>
+      <Text testID="update-book">Update Book</Text>
+      <Text testID="delete-book">Delete Book</Text>
+      <Text testID="update-status">Update Status</Text>
+      <Text testID="refresh-books">Refresh</Text>
+    </View>
+  );
 };
 
 describe('Book Management Integration', () => {
@@ -98,8 +106,11 @@ describe('Book Management Integration', () => {
     mockBookAPI.updateBook.mockResolvedValue({ ...newBook, title: 'Updated Book' });
     mockBookAPI.deleteBook.mockResolvedValue();
 
-    const tree = renderer.create(React.createElement(TestBookComponent));
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<TestBookComponent />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     // Component should render book management elements
     const bookCountElement = testInstance.findByProps({ testID: 'book-count' });
@@ -108,7 +119,7 @@ describe('Book Management Integration', () => {
     expect(createBookElement).toBeTruthy();
 
     // Test book lifecycle integration
-    
+
     // 1. Load books
     const books = await mockBookAPI.getBooks();
     expect(books).toEqual(mockBooks);
@@ -141,14 +152,17 @@ describe('Book Management Integration', () => {
     const cachedBooks = JSON.stringify(mockBooks);
     mockAsyncStorage.getItem.mockResolvedValue(cachedBooks);
 
-    const tree = renderer.create(React.createElement(TestBookComponent));
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<TestBookComponent />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     // Test offline caching integration
     const storedBooks = await mockAsyncStorage.getItem('cached_books');
     expect(storedBooks).toBe(cachedBooks);
-    
-    const parsedBooks = JSON.parse(storedBooks);
+
+    const parsedBooks = JSON.parse(storedBooks as string); // Aggiunto 'as string' per sicurezza
     expect(parsedBooks).toEqual(mockBooks);
 
     // Verify cache storage
@@ -163,8 +177,11 @@ describe('Book Management Integration', () => {
     const errorMessage = 'Network error';
     mockBookAPI.getBooks.mockRejectedValue(new Error(errorMessage));
 
-    const tree = renderer.create(React.createElement(TestBookComponent));
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<TestBookComponent />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     // Test error handling integration
     try {
@@ -197,8 +214,11 @@ describe('Book Management Integration', () => {
 
     mockBookAPI.getBooks.mockResolvedValue(refreshedBooks);
 
-    const tree = renderer.create(React.createElement(TestBookComponent));
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<TestBookComponent />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     // Test refresh integration
     const books = await mockBookAPI.getBooks();
