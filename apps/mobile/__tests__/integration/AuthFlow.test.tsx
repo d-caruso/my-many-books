@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text } from 'react-native';
 
 // Industry standard approach: Use react-test-renderer for React Native integration tests
 // when Testing Library has compatibility issues
@@ -29,17 +30,23 @@ jest.mock('@/services/api', () => ({
   },
 }));
 
-// Simple test component that renders all expected elements using RCT* components
+jest.mock('react-native', () => ({
+  View: 'View',
+  Text: 'Text',
+}));
+
 const TestAuthComponent = () => {
-  return React.createElement('RCTView', {}, [
-    React.createElement('RCTText', { key: 'not-auth', testID: 'not-authenticated' }, 'Not authenticated'),
-    React.createElement('RCTText', { key: 'login', testID: 'login-button' }, 'Login'),
-    React.createElement('RCTText', { key: 'register', testID: 'register-button' }, 'Register'),
-    React.createElement('RCTText', { key: 'loading', testID: 'loading' }, 'Loading...'),
-    React.createElement('RCTText', { key: 'user-name', testID: 'user-name' }, 'Test User'),
-    React.createElement('RCTText', { key: 'user-email', testID: 'user-email' }, 'test@example.com'),
-    React.createElement('RCTText', { key: 'logout', testID: 'logout-button' }, 'Logout')
-  ]);
+  return (
+    <View>
+      <Text testID="not-authenticated">Not authenticated</Text>
+      <Text testID="login-button">Login</Text>
+      <Text testID="register-button">Register</Text>
+      <Text testID="loading">Loading...</Text>
+      <Text testID="user-name">Test User</Text>
+      <Text testID="user-email">test@example.com</Text>
+      <Text testID="logout-button">Logout</Text>
+    </View>
+  );
 };
 
 describe('Auth Integration Flow', () => {
@@ -53,11 +60,14 @@ describe('Auth Integration Flow', () => {
   it('should complete full authentication flow', async () => {
     const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
     const mockLoginResponse = { token: 'auth-token', user: mockUser };
-    
+
     mockUserAPI.login.mockResolvedValue(mockLoginResponse as any);
 
-    const tree = renderer.create(React.createElement(TestAuthComponent));
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<TestAuthComponent />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     // Component should render all expected elements
     const notAuthElement = testInstance.findByProps({ testID: 'not-authenticated' });
@@ -68,7 +78,7 @@ describe('Auth Integration Flow', () => {
     // Test authentication integration flow
     const loginResult = await mockUserAPI.login('test@example.com', 'password123');
     expect(loginResult).toEqual(mockLoginResponse);
-    
+
     // Test token storage
     await mockAsyncStorage.setItem('authToken', loginResult.token);
     expect(mockAsyncStorage.setItem).toHaveBeenCalledWith('authToken', 'auth-token');
@@ -81,11 +91,14 @@ describe('Auth Integration Flow', () => {
   it('should handle registration flow', async () => {
     const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
     const mockRegisterResponse = { token: 'reg-token', user: mockUser };
-    
+
     mockUserAPI.register.mockResolvedValue(mockRegisterResponse as any);
 
-    const tree = renderer.create(React.createElement(TestAuthComponent));
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<TestAuthComponent />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     // Component should render registration elements
     const registerElement = testInstance.findByProps({ testID: 'register-button' });
@@ -94,22 +107,25 @@ describe('Auth Integration Flow', () => {
     // Test registration integration flow
     const registerResult = await mockUserAPI.register('test@example.com', 'password123', 'Test User');
     expect(registerResult).toEqual(mockRegisterResponse);
-    
+
     expect(mockUserAPI.register).toHaveBeenCalledWith(
       'test@example.com',
-      'password123', 
+      'password123',
       'Test User'
     );
   });
 
   it('should restore authentication from stored token', async () => {
     const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
-    
+
     mockAsyncStorage.getItem.mockResolvedValue('stored-token');
     mockUserAPI.getCurrentUser.mockResolvedValue(mockUser as any);
 
-    const tree = renderer.create(React.createElement(TestAuthComponent));
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<TestAuthComponent />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     // Component should render loading state
     const loadingElement = testInstance.findByProps({ testID: 'loading' });
@@ -128,8 +144,11 @@ describe('Auth Integration Flow', () => {
     mockAsyncStorage.getItem.mockResolvedValue('expired-token');
     mockUserAPI.getCurrentUser.mockRejectedValue(new Error('Unauthorized'));
 
-    const tree = renderer.create(React.createElement(TestAuthComponent));
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<TestAuthComponent />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     // Test expired token handling
     const storedToken = await mockAsyncStorage.getItem('authToken');
