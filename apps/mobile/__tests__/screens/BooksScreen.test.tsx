@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 
 // Industry standard approach: Use react-test-renderer for React Native screens
 // when Testing Library has compatibility issues
@@ -36,14 +37,14 @@ const BooksScreen = () => {
   };
 
   if (booksHook.loading) {
-    return React.createElement('RCTView', {}, [
-      React.createElement('RCTText', { key: 'loading', testID: 'loading' }, 'Loading...')
+    return React.createElement(View, {}, [
+      React.createElement(Text, { key: 'loading', testID: 'loading' }, 'Loading...')
     ]);
   }
 
   if (booksHook.error) {
-    return React.createElement('RCTView', {}, [
-      React.createElement('RCTText', { key: 'error' }, 'Failed to load books')
+    return React.createElement(View, {}, [
+      React.createElement(Text, { key: 'error' }, 'Failed to load books')
     ]);
   }
 
@@ -52,51 +53,51 @@ const BooksScreen = () => {
   
   // Build the component elements
   const elements = [
-    React.createElement('RCTTextInput', { 
+    React.createElement(TextInput, { 
       key: 'search', 
       testID: 'searchbar',
       onChangeText: handleSearchChange,
       value: booksScreenState.searchQuery
     }),
-    React.createElement('RCTTouchableOpacity', { 
+    React.createElement(TouchableOpacity, { 
       key: 'fab', 
       testID: 'fab', 
       onPress: () => {} 
-    }, React.createElement('RCTText', {}, '+'))
+    }, React.createElement(Text, {}, '+'))
   ];
 
   // Add clear search chip if searching
   if (booksScreenState.isSearching) {
-    elements.push(React.createElement('RCTTouchableOpacity', {
+    elements.push(React.createElement(TouchableOpacity, {
       key: 'clear-search',
       onPress: handleClearSearch
-    }, React.createElement('RCTText', {}, 'Clear search')));
+    }, React.createElement(Text, {}, 'Clear search')));
   }
 
   // Handle different states
   if (booksToShow.length === 0) {
     if (booksScreenState.isSearching) {
       // Search empty state
-      elements.push(React.createElement('RCTText', { key: 'empty-search' }, 'No books found'));
-      elements.push(React.createElement('RCTText', { key: 'empty-search-help' }, 'Try a different search term'));
+      elements.push(React.createElement(Text, { key: 'empty-search' }, 'No books found'));
+      elements.push(React.createElement(Text, { key: 'empty-search-help' }, 'Try a different search term'));
     } else {
       // No books empty state
-      elements.push(React.createElement('RCTText', { key: 'empty-books' }, 'No books yet'));
-      elements.push(React.createElement('RCTText', { key: 'empty-books-help' }, 'Add your first book to get started'));
+      elements.push(React.createElement(Text, { key: 'empty-books' }, 'No books yet'));
+      elements.push(React.createElement(Text, { key: 'empty-books-help' }, 'Add your first book to get started'));
     }
   } else {
     // Show books list
     if (!booksScreenState.isSearching) {
-      elements.unshift(React.createElement('RCTText', { key: 'title' }, 'My Books'));
+      elements.unshift(React.createElement(Text, { key: 'title' }, 'My Books'));
     }
     
     // Add books
     booksToShow.forEach((book: any) => {
-      elements.push(React.createElement('RCTText', { key: `book-${book.id}` }, book.title));
+      elements.push(React.createElement(Text, { key: `book-${book.id}` }, book.title));
     });
   }
 
-  return React.createElement('RCTView', {}, elements);
+  return React.createElement(View, {}, elements);
 };
 
 // Mock the hooks
@@ -174,7 +175,7 @@ describe('BooksScreen', () => {
     const tree = renderer.create(<BooksScreen />);
     const testInstance = tree.root;
 
-    const textElements = testInstance.findAllByType('RCTText');
+    const textElements = testInstance.findAllByType(Text);
     
     const myBooksTitle = textElements.find(element => element.props.children === 'My Books');
     const book1 = textElements.find(element => element.props.children === 'Test Book 1');
@@ -258,7 +259,7 @@ describe('BooksScreen', () => {
     // Re-render to get search results
     tree.update(<BooksScreen />);
 
-    const textElements = testInstance.findAllByType('RCTText');
+    const textElements = testInstance.findAllByType(Text);
     const searchResult = textElements.find(element => element.props.children === 'Search Result');
     expect(searchResult).toBeTruthy();
   });
@@ -287,7 +288,7 @@ describe('BooksScreen', () => {
     // Re-render to show clear search chip
     tree.update(<BooksScreen />);
 
-    const textElements = testInstance.findAllByType('RCTText');
+    const textElements = testInstance.findAllByType(Text);
     const clearSearchText = textElements.find(element => element.props.children === 'Clear search');
     expect(clearSearchText).toBeTruthy();
   });
@@ -316,9 +317,9 @@ describe('BooksScreen', () => {
     // Re-render to show clear search chip
     tree.update(<BooksScreen />);
 
-    const touchableElements = testInstance.findAllByType('RCTTouchableOpacity');
+    const touchableElements = testInstance.findAllByType(TouchableOpacity);
     const clearChip = touchableElements.find(element => {
-      const textChildren = element.findAllByType('RCTText');
+      const textChildren = element.findAllByType(Text);
       return textChildren.some(text => text.props.children === 'Clear search');
     });
 
@@ -368,7 +369,7 @@ describe('BooksScreen', () => {
     const tree = renderer.create(<BooksScreen />);
     const testInstance = tree.root;
 
-    const textElements = testInstance.findAllByType('RCTText');
+    const textElements = testInstance.findAllByType(Text);
     const errorText = textElements.find(element => element.props.children === errorMessage);
     expect(errorText).toBeTruthy();
   });
@@ -390,7 +391,7 @@ describe('BooksScreen', () => {
     const tree = renderer.create(<BooksScreen />);
     const testInstance = tree.root;
 
-    const textElements = testInstance.findAllByType('RCTText');
+    const textElements = testInstance.findAllByType(Text);
     const noBooksText = textElements.find(element => element.props.children === 'No books yet');
     const helpText = textElements.find(element => element.props.children === 'Add your first book to get started');
 
@@ -422,7 +423,7 @@ describe('BooksScreen', () => {
     // Re-render to show search empty state
     tree.update(<BooksScreen />);
 
-    const textElements = testInstance.findAllByType('RCTText');
+    const textElements = testInstance.findAllByType(Text);
     const noResultsText = textElements.find(element => element.props.children === 'No books found');
     const helpText = textElements.find(element => element.props.children === 'Try a different search term');
 
