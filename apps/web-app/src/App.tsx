@@ -1,23 +1,39 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
+import { CssBaseline, CircularProgress, Box } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
 import { ApiProvider } from './contexts/ApiContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navbar } from './components/Navigation';
 import { InstallPrompt, UpdatePrompt, OfflineIndicator } from './components/PWA';
-import { AuthPage } from './pages/AuthPage';
-import { BooksPage } from './pages/BooksPage';
-import { BookSearchPage } from './components/Search/BookSearchPage';
-import { ScannerModal } from './components/Scanner';
-import { AdminDashboardPage } from './pages/Admin';
-import { UserManagementPage } from './pages/Admin/UserManagementPage';
-import { BookManagementPage } from './pages/Admin/BookManagementPage';
-import { AdminSettingsPage } from './pages/Admin/AdminSettingsPage';
 import { ErrorBoundary, AuthErrorBoundary, PageErrorBoundary } from './components/ErrorBoundary';
 import { RootErrorFallback } from './components/ErrorBoundary/RootErrorFallback';
 import './i18n';
+
+// Lazy load all pages for route-based code splitting
+const AuthPage = lazy(() => import('./pages/AuthPage'));
+const BooksPage = lazy(() => import('./pages/BooksPage'));
+const BookSearchPage = lazy(() => import('./components/Search/BookSearchPage'));
+const ScannerModal = lazy(() => import('./components/Scanner'));
+
+// Admin pages - only loaded for admin users
+const AdminDashboardPage = lazy(() => import('./pages/Admin'));
+const UserManagementPage = lazy(() => import('./pages/Admin/UserManagementPage'));
+const BookManagementPage = lazy(() => import('./pages/Admin/BookManagementPage'));
+const AdminSettingsPage = lazy(() => import('./pages/Admin/AdminSettingsPage'));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <Box
+    display="flex"
+    justifyContent="center"
+    alignItems="center"
+    minHeight="100vh"
+  >
+    <CircularProgress />
+  </Box>
+);
 
 // Create MUI theme
 const theme = createTheme({
@@ -76,8 +92,9 @@ function App() {
 
             <OfflineIndicator />
             <UpdatePrompt />
-            
-            <Routes>
+
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
               {/* Public route */}
               <Route path="/auth" element={<AuthPage />} />
 
@@ -133,7 +150,8 @@ function App() {
                 }
               />
             </Routes>
-            
+            </Suspense>
+
             <InstallPrompt />
           </div>
           </Router>
