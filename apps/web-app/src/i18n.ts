@@ -14,6 +14,7 @@ import enDialogs from '@my-many-books/shared-i18n/src/locales/en/dialogs.json';
 import enPages from '@my-many-books/shared-i18n/src/locales/en/pages.json';
 import enTheme from '@my-many-books/shared-i18n/src/locales/en/theme.json';
 import enSearch from '@my-many-books/shared-i18n/src/locales/en/search.json';
+import enAccessibility from '@my-many-books/shared-i18n/src/locales/en/accessibility.json';
 
 import itCommon from '@my-many-books/shared-i18n/src/locales/it/common.json';
 import itValidation from '@my-many-books/shared-i18n/src/locales/it/validation.json';
@@ -25,6 +26,7 @@ import itDialogs from '@my-many-books/shared-i18n/src/locales/it/dialogs.json';
 import itPages from '@my-many-books/shared-i18n/src/locales/it/pages.json';
 import itTheme from '@my-many-books/shared-i18n/src/locales/it/theme.json';
 import itSearch from '@my-many-books/shared-i18n/src/locales/it/search.json';
+import itAccessibility from '@my-many-books/shared-i18n/src/locales/it/accessibility.json';
 
 i18n
   .use(LanguageDetector)
@@ -42,6 +44,7 @@ i18n
         pages: enPages,
         theme: enTheme,
         search: enSearch,
+        accessibility: enAccessibility,
       },
       it: {
         common: itCommon,
@@ -54,6 +57,7 @@ i18n
         pages: itPages,
         theme: itTheme,
         search: itSearch,
+        accessibility: itAccessibility,
       },
     },
     fallbackLng: DEFAULT_LANGUAGE,
@@ -63,7 +67,7 @@ i18n
       caches: ['localStorage'],
       lookupLocalStorage: 'preferred-language',
     },
-    ns: ['common', 'validation', 'errors', 'books', 'scanner', 'pwa', 'dialogs', 'pages', 'theme', 'search'],
+    ns: ['common', 'validation', 'errors', 'books', 'scanner', 'pwa', 'dialogs', 'pages', 'theme', 'search', 'accessibility'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false, // React already escapes values
