@@ -76,9 +76,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         <p className="text-text-secondary text-sm">{t('common:welcome_back')}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate aria-label="form">
+      <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate aria-label="Login form">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3" data-testid="alert-error">
+          <div
+            className="bg-red-50 border border-red-200 rounded-lg p-3"
+            data-testid="alert-error"
+            role="alert"
+            aria-live="assertive"
+          >
             <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
@@ -92,9 +97,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             onChange={(e) => handleInputChange('email', e.target.value)}
             placeholder={t('common:enter_email')}
             disabled={isLoading}
+            aria-invalid={!!validationErrors.email}
+            aria-describedby={validationErrors.email ? 'email-error' : undefined}
           />
           {validationErrors.email && (
-            <p className="text-red-600 text-sm">{validationErrors.email}</p>
+            <p id="email-error" className="text-red-600 text-sm" role="alert">{validationErrors.email}</p>
           )}
         </div>
 
@@ -112,9 +119,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             }}
             placeholder={t('common:enter_password')}
             disabled={isLoading}
+            aria-invalid={!!validationErrors.password}
+            aria-describedby={validationErrors.password ? 'password-error' : undefined}
           />
           {validationErrors.password && (
-            <p className="text-red-600 text-sm">{validationErrors.password}</p>
+            <p id="password-error" className="text-red-600 text-sm" role="alert">{validationErrors.password}</p>
           )}
         </div>
 
@@ -135,7 +144,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             <button
               type="button"
               onClick={onSwitchToRegister}
-              className="text-black hover:text-primary-600 font-medium"
+              className="text-primary-700 hover:text-primary-800 font-medium"
               disabled={isLoading}
             >
               {t('common:sign_up')}
