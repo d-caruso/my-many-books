@@ -30,7 +30,7 @@ const theme = createTheme({
       main: '#64748b',
     },
     warning: {
-      main: '#b45309', // Darker orange for better contrast (WCAG AA compliant)
+      main: '#BA580D', // Darker orange for better contrast (WCAG AA compliant)
     },
     text: {
       primary: '#111827',
@@ -45,7 +45,7 @@ const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         colorWarning: {
-          backgroundColor: '#b45309', // Dark amber for WCAG AA compliance
+          backgroundColor: '#BA580D', // Dark amber for WCAG AA compliance
           color: '#ffffff', // White text for maximum contrast
           '&:hover': {
             backgroundColor: '#92400e', // Darker on hover
