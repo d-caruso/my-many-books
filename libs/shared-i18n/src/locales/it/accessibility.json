@@ -24,5 +24,6 @@
   "skip_to_main": "Salta al contenuto principale",
   "main_navigation": "Navigazione principale",
   "admin_navigation": "Navigazione amministratore",
-  "access_denied_message": "Accesso negato. Non hai i permessi per accedere a quest'area."
+  "access_denied_message": "Accesso negato. Non hai i permessi per accedere a quest'area.",
+  "change_reading_status": "Cambia stato di lettura"
 }

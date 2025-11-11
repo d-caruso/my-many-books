@@ -373,6 +373,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                 onChange={handleStatusChange}
                 onClick={(e) => e.stopPropagation()}
                 sx={{ fontSize: '0.875rem' }}
+                aria-label={t('accessibility:change_reading_status')}
               >
                 <MenuItem value="">&nbsp;</MenuItem>
                 <MenuItem value="reading">{t('books:reading')}</MenuItem>
