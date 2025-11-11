@@ -22,90 +22,80 @@ vi.mock('react-router-dom', async () => ({
 }));
 
 // Mock Material-UI components with proper accessibility
-// We need to use i18n in mocks, so we'll use a factory function
-const createMockComponents = () => {
-  let i18nInstance: any = null;
-
-  return {
-    setI18n: (instance: any) => { i18nInstance = instance; },
-    AppBar: ({ children, position, ...props }: any) => (
-      <header data-testid="app-bar" data-position={position} {...props}>{children}</header>
-    ),
-    Toolbar: ({ children, ...props }: any) => (
-      <div data-testid="toolbar" role="toolbar" {...props}>{children}</div>
-    ),
-    Typography: ({ children, variant, component, ...props }: any) => {
-      const Component = component || 'div';
-      return <Component data-testid={`typography-${variant}`} {...props}>{children}</Component>;
-    },
-    Button: ({ children, onClick, 'aria-label': ariaLabel, ...props }: any) => (
-      <button data-testid="nav-button" onClick={onClick} aria-label={ariaLabel} {...props}>
+vi.mock('@mui/material', () => ({
+  AppBar: ({ children, position, ...props }: any) => (
+    <header data-testid="app-bar" data-position={position} {...props}>{children}</header>
+  ),
+  Toolbar: ({ children, ...props }: any) => (
+    <div data-testid="toolbar" role="toolbar" {...props}>{children}</div>
+  ),
+  Typography: ({ children, variant, component, ...props }: any) => {
+    const Component = component || 'div';
+    return <Component data-testid={`typography-${variant}`} {...props}>{children}</Component>;
+  },
+  Button: ({ children, onClick, 'aria-label': ariaLabel, ...props }: any) => (
+    <button data-testid="nav-button" onClick={onClick} aria-label={ariaLabel} {...props}>
+      {children}
+    </button>
+  ),
+  IconButton: ({ children, onClick, 'aria-label': ariaLabel, 'aria-expanded': ariaExpanded, 'aria-haspopup': ariaHaspopup, ...props }: any) => (
+    <button
+      data-testid="icon-button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      aria-expanded={ariaExpanded}
+      aria-haspopup={ariaHaspopup}
+      {...props}
+    >
+      {children}
+    </button>
+  ),
+  Menu: ({ children, open, anchorEl, onClose, ...props }: any) => {
+    return open ? (
+      <ul data-testid="menu" role="menu" {...props}>{children}</ul>
+    ) : null;
+  },
+  MenuItem: ({ children, onClick, value, ...props }: any) => {
+    // For menu items in Menu component
+    if (onClick) {
+      return (
+        <li data-testid="menu-item" role="menuitem" onClick={onClick} {...props}>
+          {children}
+        </li>
+      );
+    }
+    // For select options
+    return (
+      <option data-testid="menu-item" value={value} {...props}>
         {children}
-      </button>
-    ),
-    IconButton: ({ children, onClick, 'aria-label': ariaLabel, 'aria-expanded': ariaExpanded, 'aria-haspopup': ariaHaspopup, ...props }: any) => (
-      <button
-        data-testid="icon-button"
-        onClick={onClick}
-        aria-label={ariaLabel}
-        aria-expanded={ariaExpanded}
-        aria-haspopup={ariaHaspopup}
+      </option>
+    );
+  },
+  Box: ({ children, sx, component, ...props }: any) => {
+    const Component = component || 'div';
+    return <Component data-testid="box" style={sx} {...props}>{children}</Component>;
+  },
+  Avatar: ({ children, alt, ...props }: any) => {
+    const label = alt || 'User avatar';
+    return (
+      <div data-testid="avatar" role="img" aria-label={label} {...props}>{children}</div>
+    );
+  },
+  Select: ({ children, value, onChange, 'aria-label': ariaLabel, ...props }: any) => {
+    const label = ariaLabel || 'Select language';
+    return (
+      <select
+        data-testid="language-select"
+        value={value}
+        onChange={onChange}
+        aria-label={label}
         {...props}
       >
         {children}
-      </button>
-    ),
-    Menu: ({ children, open, anchorEl, onClose, ...props }: any) => {
-      return open ? (
-        <ul data-testid="menu" role="menu" {...props}>{children}</ul>
-      ) : null;
-    },
-    MenuItem: ({ children, onClick, value, ...props }: any) => {
-      // For menu items in Menu component
-      if (onClick) {
-        return (
-          <li data-testid="menu-item" role="menuitem" onClick={onClick} {...props}>
-            {children}
-          </li>
-        );
-      }
-      // For select options
-      return (
-        <option data-testid="menu-item" value={value} {...props}>
-          {children}
-        </option>
-      );
-    },
-    Box: ({ children, sx, component, ...props }: any) => {
-      const Component = component || 'div';
-      return <Component data-testid="box" style={sx} {...props}>{children}</Component>;
-    },
-    Avatar: ({ children, alt, ...props }: any) => {
-      const label = alt || (i18nInstance ? i18nInstance.t('accessibility:user_avatar') : 'User avatar');
-      return (
-        <div data-testid="avatar" role="img" aria-label={label} {...props}>{children}</div>
-      );
-    },
-    Select: ({ children, value, onChange, 'aria-label': ariaLabel, ...props }: any) => {
-      const label = ariaLabel || (i18nInstance ? i18nInstance.t('accessibility:select_language') : 'Select language');
-      return (
-        <select
-          data-testid="language-select"
-          value={value}
-          onChange={onChange}
-          aria-label={label}
-          {...props}
-        >
-          {children}
-        </select>
-      );
-    },
-  };
-};
-
-const mockComponents = createMockComponents();
-
-vi.mock('@mui/material', () => mockComponents);
+      </select>
+    );
+  },
+}));
 
 vi.mock('@mui/icons-material', () => ({
   MenuBook: () => <span data-testid="menu-book-icon" aria-hidden="true">📚</span>,
@@ -148,7 +138,6 @@ testI18n.use(initReactI18next).init({
 describe('Navbar Accessibility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockComponents.setI18n(testI18n);
   });
 
   it('should not have any accessibility violations when user is not authenticated', async () => {

@@ -141,6 +141,7 @@ export const Navbar: React.FC = () => {
           <IconButton
             onClick={handleMenuOpen}
             sx={{ display: { xs: 'flex', md: 'none' } }}
+            aria-label={t('common:menu')}
           >
             <MenuIcon />
           </IconButton>
