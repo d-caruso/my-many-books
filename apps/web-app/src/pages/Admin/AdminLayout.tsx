@@ -13,13 +13,11 @@ import {
   IconButton,
   Divider
 } from '@mui/material';
-import {
-  Dashboard as DashboardIcon,
-  People as PeopleIcon,
-  Book as BookIcon,
-  Settings as SettingsIcon,
-  ArrowBack as ArrowBackIcon
-} from '@mui/icons-material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import PeopleIcon from '@mui/icons-material/People';
+import BookIcon from '@mui/icons-material/Book';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AdminErrorBoundary } from '../../components/ErrorBoundary';

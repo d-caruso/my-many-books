@@ -9,7 +9,8 @@ import {
   Stack,
   CircularProgress
 } from '@mui/material';
-import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import { Author } from '../../types';
 import { useApi } from '../../contexts/ApiContext';
