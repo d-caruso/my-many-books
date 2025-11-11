@@ -492,8 +492,6 @@ select:focus-visible {
 :focus:not(:focus-visible) {
   outline: none;
 }
-<<<<<<< HEAD
-=======
 
 /* ============================================
    ACCESSIBILITY: Reduced Motion Support
@@ -535,4 +533,3 @@ select:focus-visible {
     outline-width: 4px;
   }
 }
->>>>>>> task/accessibility-phase-5
