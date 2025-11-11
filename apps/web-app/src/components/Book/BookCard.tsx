@@ -97,9 +97,9 @@ export const BookCard: React.FC<BookCardProps> = ({
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Box display="flex" justifyContent="space-between" alignItems="flex-start">
             <Box flex={1} minWidth={0}>
-              <Typography 
-                variant="subtitle2" 
-                component="h3" 
+              <Typography
+                variant="subtitle2"
+                component="h2"
                 fontWeight="600"
                 noWrap
                 title={book.title}
@@ -267,9 +267,9 @@ export const BookCard: React.FC<BookCardProps> = ({
       </Box>
 
       <CardContent sx={{ flexGrow: 1, p: { xs: 2, sm: 2.5 } }}>
-        <Typography 
-          variant="subtitle2" 
-          component="h3" 
+        <Typography
+          variant="subtitle2"
+          component="h2"
           fontWeight="600"
           gutterBottom
           sx={{
