@@ -307,9 +307,10 @@ export const BooksPage: React.FC = () => {
 
         <Button
           variant="contained"
-          startIcon={<AddIcon />}
+          startIcon={<AddIcon aria-hidden="true" />}
           onClick={handleAddBook}
           size="large"
+          aria-label={t('pages:books.add_book')}
         >
           <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
             {t('pages:books.add_book')}
@@ -358,20 +359,31 @@ export const BooksPage: React.FC = () => {
             onClick={() => setViewMode('grid')}
             color={viewMode === 'grid' ? 'primary' : 'default'}
             title={t('pages:books.grid_view')}
+            aria-label={t('pages:books.grid_view')}
             size="small"
           >
-            <GridIcon />
+            <GridIcon aria-hidden="true" />
           </IconButton>
 
           <IconButton
             onClick={() => setViewMode('list')}
             color={viewMode === 'list' ? 'primary' : 'default'}
             title={t('pages:books.list_view')}
+            aria-label={t('pages:books.list_view')}
             size="small"
           >
-            <ListIcon />
+            <ListIcon aria-hidden="true" />
           </IconButton>
         </Box>
+      </div>
+
+      {/* Screen reader announcements for list updates */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {searchLoading
+          ? t('pages:books.loading')
+          : totalCount > 0
+          ? `${totalCount} ${t('pages:books.books_found')}`
+          : t('pages:books.no_books_empty')}
       </div>
 
       {/* Books list */}
