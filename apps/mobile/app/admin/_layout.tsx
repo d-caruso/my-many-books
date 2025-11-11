@@ -22,7 +22,7 @@ export default function AdminLayout() {
         style={styles.container}
         accessible={true}
         accessibilityRole="alert"
-        accessibilityLabel={t('pages:admin.access_denied_message', 'Access denied. You do not have permission to access this area.')}
+        accessibilityLabel={t('accessibility:access_denied_message', 'Access denied. You do not have permission to access this area.')}
       >
         <Text variant="headlineMedium" style={styles.title}>
           {t('pages:admin.access_denied', 'Access Denied')}
