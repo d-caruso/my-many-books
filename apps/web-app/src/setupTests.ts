@@ -1,6 +1,13 @@
 // Testing Library DOM matchers
 import '@testing-library/jest-dom';
 
+// jest-axe for accessibility testing (compatible with vitest)
+import { expect } from 'vitest';
+import { toHaveNoViolations } from 'jest-axe';
+
+// Extend expect with accessibility matchers
+expect.extend(toHaveNoViolations);
+
 // i18n setup for tests
 import './i18n';
 
