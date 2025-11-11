@@ -492,3 +492,47 @@ select:focus-visible {
 :focus:not(:focus-visible) {
   outline: none;
 }
+<<<<<<< HEAD
+=======
+
+/* ============================================
+   ACCESSIBILITY: Reduced Motion Support
+   ============================================ */
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable theme transition animations */
+  body {
+    transition: none !important;
+  }
+
+  .theme-transition {
+    transition: none !important;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY: High Contrast Mode Support
+   ============================================ */
+
+/* Windows High Contrast Mode */
+@media (prefers-contrast: high) {
+  *:focus-visible {
+    outline-width: 4px;
+  }
+
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    outline-width: 4px;
+  }
+}
+>>>>>>> task/accessibility-phase-5
