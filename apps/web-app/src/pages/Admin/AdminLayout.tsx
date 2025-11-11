@@ -111,19 +111,21 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </Typography>
         </Toolbar>
         <Divider />
-        <List>
-          {menuItems.map((item) => (
-            <ListItem key={item.path} disablePadding>
-              <ListItemButton
-                selected={location.pathname === item.path}
-                onClick={() => navigate(item.path)}
-              >
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        <Box component="nav" aria-label="Admin navigation">
+          <List>
+            {menuItems.map((item) => (
+              <ListItem key={item.path} disablePadding>
+                <ListItemButton
+                  selected={location.pathname === item.path}
+                  onClick={() => navigate(item.path)}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
       </Drawer>
 
       {/* Main Content */}
