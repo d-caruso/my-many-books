@@ -11,6 +11,7 @@ import {
   MenuItem,
   Select,
   FormControl,
+  InputLabel,
   Box,
   Stack
 } from '@mui/material';
@@ -368,12 +369,15 @@ export const BookCard: React.FC<BookCardProps> = ({
         <CardActions sx={{ pt: 0, px: { xs: 2, sm: 2.5 }, pb: { xs: 2, sm: 2.5 } }}>
           {onStatusChange && (
             <FormControl size="small" sx={{ minWidth: 120, flexGrow: 1 }}>
+              <InputLabel id="status-select-label" className="sr-only">
+                {t('accessibility:change_reading_status')}
+              </InputLabel>
               <Select
+                labelId="status-select-label"
                 value={book.status || ''}
                 onChange={handleStatusChange}
                 onClick={(e) => e.stopPropagation()}
                 sx={{ fontSize: '0.875rem' }}
-                aria-label={t('accessibility:change_reading_status')}
               >
                 <MenuItem value="">&nbsp;</MenuItem>
                 <MenuItem value="reading">{t('books:reading')}</MenuItem>
