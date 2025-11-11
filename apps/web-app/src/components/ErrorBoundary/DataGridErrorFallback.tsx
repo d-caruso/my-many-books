@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button, Alert, Stack } from '@mui/material';
-import { Refresh as RefreshIcon, TableChart as TableIcon } from '@mui/icons-material';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import TableIcon from '@mui/icons-material/TableChart';
 import { useTranslation } from 'react-i18next';
 
 interface DataGridErrorFallbackProps {

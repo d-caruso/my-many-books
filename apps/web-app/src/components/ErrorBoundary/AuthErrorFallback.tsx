@@ -1,6 +1,8 @@
 import React from 'react';
 import { Box, Typography, Button, Alert, Stack, Paper } from '@mui/material';
-import { Refresh as RefreshIcon, Lock as LockIcon, Login as LoginIcon } from '@mui/icons-material';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import LockIcon from '@mui/icons-material/Lock';
+import LoginIcon from '@mui/icons-material/Login';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
