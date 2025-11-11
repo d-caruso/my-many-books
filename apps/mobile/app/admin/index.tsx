@@ -39,14 +39,22 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator
+          size="large"
+          accessibilityLabel={t('accessibility:loading_statistics', 'Loading statistics...')}
+        />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
+      <View
+        style={styles.centered}
+        accessible={true}
+        accessibilityRole="alert"
+        accessibilityLabel={t('accessibility:error_message', 'Error: {{message}}', { message: error })}
+      >
         <Text style={styles.error}>{error}</Text>
       </View>
     );
@@ -55,28 +63,48 @@ export default function AdminDashboard() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.statsGrid}>
-        <Card style={styles.statCard}>
+        <Card
+          style={styles.statCard}
+          accessible={true}
+          accessibilityLabel={t('accessibility:stat_total_users', 'Total Users: {{count}}', { count: stats?.totalUsers || 0 })}
+          accessibilityRole="summary"
+        >
           <Card.Content>
             <Text variant="labelLarge">{t('pages:admin.dashboard.total_users', 'Total Users')}</Text>
             <Text variant="displaySmall">{stats?.totalUsers || 0}</Text>
           </Card.Content>
         </Card>
 
-        <Card style={styles.statCard}>
+        <Card
+          style={styles.statCard}
+          accessible={true}
+          accessibilityLabel={t('accessibility:stat_total_books', 'Total Books: {{count}}', { count: stats?.totalBooks || 0 })}
+          accessibilityRole="summary"
+        >
           <Card.Content>
             <Text variant="labelLarge">{t('pages:admin.dashboard.total_books', 'Total Books')}</Text>
             <Text variant="displaySmall">{stats?.totalBooks || 0}</Text>
           </Card.Content>
         </Card>
 
-        <Card style={styles.statCard}>
+        <Card
+          style={styles.statCard}
+          accessible={true}
+          accessibilityLabel={t('accessibility:stat_active_users', 'Active Users: {{count}}', { count: stats?.activeUsers || 0 })}
+          accessibilityRole="summary"
+        >
           <Card.Content>
             <Text variant="labelLarge">{t('pages:admin.dashboard.active_users', 'Active Users')}</Text>
             <Text variant="displaySmall">{stats?.activeUsers || 0}</Text>
           </Card.Content>
         </Card>
 
-        <Card style={styles.statCard}>
+        <Card
+          style={styles.statCard}
+          accessible={true}
+          accessibilityLabel={t('accessibility:stat_admin_users', 'Admin Users: {{count}}', { count: stats?.adminUsers || 0 })}
+          accessibilityRole="summary"
+        >
           <Card.Content>
             <Text variant="labelLarge">{t('pages:admin.dashboard.admin_users', 'Admin Users')}</Text>
             <Text variant="displaySmall">{stats?.adminUsers || 0}</Text>
@@ -89,6 +117,8 @@ export default function AdminDashboard() {
           mode="contained"
           onPress={() => router.push('/admin/users')}
           style={styles.navButton}
+          accessibilityLabel={t('pages:admin.menu.users', 'Users')}
+          accessibilityHint={t('accessibility:navigate_to_user_management', 'Navigate to user management screen')}
         >
           {t('pages:admin.menu.users', 'Users')}
         </Button>
@@ -96,6 +126,8 @@ export default function AdminDashboard() {
           mode="contained"
           onPress={() => router.push('/admin/books')}
           style={styles.navButton}
+          accessibilityLabel={t('pages:admin.menu.books', 'Books')}
+          accessibilityHint={t('accessibility:navigate_to_book_management', 'Navigate to book management screen')}
         >
           {t('pages:admin.menu.books', 'Books')}
         </Button>
@@ -103,6 +135,8 @@ export default function AdminDashboard() {
           mode="contained"
           onPress={() => router.push('/admin/settings')}
           style={styles.navButton}
+          accessibilityLabel={t('pages:admin.menu.settings', 'Settings')}
+          accessibilityHint={t('accessibility:navigate_to_settings', 'Navigate to admin settings screen')}
         >
           {t('pages:admin.menu.settings', 'Settings')}
         </Button>
