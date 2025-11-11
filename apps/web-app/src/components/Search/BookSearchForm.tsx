@@ -14,12 +14,10 @@ import {
   Alert,
   Stack
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  ExpandMore as ExpandMoreIcon,
-  Clear as ClearIcon,
-  Warning as WarningIcon
-} from '@mui/icons-material';
+import SearchIcon from '@mui/icons-material/Search';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ClearIcon from '@mui/icons-material/Clear';
+import WarningIcon from '@mui/icons-material/Warning';
 import { SearchFilters, Author } from '../../types';
 import { useCategories } from '../../hooks/useCategories';
 import { AuthorAutocomplete } from './AuthorAutocomplete';

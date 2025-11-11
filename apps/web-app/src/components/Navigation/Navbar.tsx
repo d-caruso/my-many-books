@@ -12,11 +12,9 @@ import {
   Box,
   Avatar
 } from '@mui/material';
-import {
-  MenuBook as MenuBookIcon,
-  Menu as MenuIcon,
-  ExpandMore as ExpandMoreIcon
-} from '@mui/icons-material';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import MenuIcon from '@mui/icons-material/Menu';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useAuth } from '../../contexts/AuthContext';
 import { LanguageSelector } from './LanguageSelector';
 

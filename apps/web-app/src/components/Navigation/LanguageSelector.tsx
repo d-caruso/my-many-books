@@ -2,7 +2,7 @@ import React from 'react';
 import { Select, MenuItem, SelectChangeEvent, Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES } from '@my-many-books/shared-i18n';
-import { Language as LanguageIcon } from '@mui/icons-material';
+import LanguageIcon from '@mui/icons-material/Language';
 
 export const LanguageSelector: React.FC = () => {
   const { i18n, t } = useTranslation();

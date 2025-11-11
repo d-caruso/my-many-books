@@ -23,11 +23,9 @@ import {
   GridRenderCellParams,
   GridPaginationModel,
 } from '@mui/x-data-grid';
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Search as SearchIcon,
-} from '@mui/icons-material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
 import { useApi } from '../../contexts/ApiContext';

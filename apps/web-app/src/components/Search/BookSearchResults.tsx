@@ -11,10 +11,8 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import {
-  Error as ErrorIcon,
-  MenuBook as BookIcon
-} from '@mui/icons-material';
+import ErrorIcon from '@mui/icons-material/Error';
+import BookIcon from '@mui/icons-material/MenuBook';
 import { Book, Author, Category } from '../../types';
 
 interface BookSearchResultsProps {
