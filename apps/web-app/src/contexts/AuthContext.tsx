@@ -4,9 +4,10 @@ import { User } from '../types';
 import { env } from '../config/env';
 import { apiService } from '../services/api';
 import { useApi } from '../contexts/ApiContext';
+import { configureAmplify } from '../config/amplify';
 
 // Check if Amplify should be configured
-const isAmplifyConfigured = env.COGNITO_USER_POOL_ID && env.COGNITO_USER_POOL_CLIENT_ID;
+const shouldConfigureAmplify = env.COGNITO_USER_POOL_ID && env.COGNITO_USER_POOL_CLIENT_ID;
 
 interface AuthContextType {
   user: User | null;
@@ -36,15 +37,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [amplifyConfigured, setAmplifyConfigured] = useState(false);
   const { userAPI } = useApi(); // Get userAPI from context
 
   useEffect(() => {
-    checkAuthState();
+    // Configure Amplify asynchronously before auth check
+    const initializeAuth = () => {
+      if (shouldConfigureAmplify) {
+        const configured = configureAmplify();
+        setAmplifyConfigured(configured);
+        // Pass configured value directly to avoid state update delay
+        if (configured) {
+          checkAuthState(configured);
+        } else {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
-  const checkAuthState = async () => {
+  const checkAuthState = async (isConfigured: boolean = amplifyConfigured) => {
     try {
-      if (!isAmplifyConfigured) {
+      if (!isConfigured) {
         setLoading(false);
         return;
       }
@@ -88,7 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (email: string, password: string) => {
-    if (!isAmplifyConfigured) {
+    if (!amplifyConfigured) {
       throw new Error('Authentication not configured');
     }
 
@@ -134,7 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = async (userData: { email: string; password: string; name: string; surname: string }) => {
-    if (!isAmplifyConfigured) {
+    if (!amplifyConfigured) {
       throw new Error('Authentication not configured');
     }
 
