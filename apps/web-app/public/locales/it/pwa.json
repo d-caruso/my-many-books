@@ -1,0 +1,20 @@
+{
+  "offline_indicator": {
+    "you_are_offline": "Sei attualmente offline",
+    "features_limited": "Alcune funzionalità potrebbero essere limitate",
+    "retry": "Riprova"
+  },
+  "update_prompt": {
+    "title": "Aggiornamento App Disponibile",
+    "message": "Una nuova versione è pronta per l'installazione",
+    "updating": "Aggiornamento in corso...",
+    "update_button": "Aggiorna",
+    "later_button": "Più tardi",
+    "update_failed": "Aggiornamento Fallito"
+  },
+  "install_prompt": {
+    "title": "Installa App",
+    "message": "Aggiungi My Many Books alla schermata home per un accesso rapido",
+    "install_button": "Installa"
+  }
+}

@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 type AuthMode = 'login' | 'register';
 
-export const AuthPage: React.FC = () => {
+const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>('login');
   const { user } = useAuth();
 
@@ -30,3 +30,4 @@ export const AuthPage: React.FC = () => {
     </div>
   );
 };
+export default AuthPage;
