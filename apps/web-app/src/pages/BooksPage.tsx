@@ -12,7 +12,7 @@ import { useApi } from '../contexts/ApiContext';
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
 
-export const BooksPage: React.FC = () => {
+const BooksPage: React.FC = () => {
   const { t } = useTranslation('pages');
   const { bookAPI } = useApi();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -415,3 +415,4 @@ export const BooksPage: React.FC = () => {
     </div>
   );
 };
+export default BooksPage;
