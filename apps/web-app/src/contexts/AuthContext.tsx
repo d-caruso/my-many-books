@@ -106,8 +106,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (email: string, password: string) => {
+    // Ensure Amplify is configured before attempting login
     if (!amplifyConfigured) {
-      throw new Error('Authentication not configured');
+      if (shouldConfigureAmplify) {
+        const configured = configureAmplify();
+        setAmplifyConfigured(configured);
+        if (!configured) {
+          throw new Error('Authentication not configured');
+        }
+      } else {
+        throw new Error('Authentication not configured');
+      }
     }
 
     try {
@@ -152,8 +161,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = async (userData: { email: string; password: string; name: string; surname: string }) => {
+    // Ensure Amplify is configured before attempting registration
     if (!amplifyConfigured) {
-      throw new Error('Authentication not configured');
+      if (shouldConfigureAmplify) {
+        const configured = configureAmplify();
+        setAmplifyConfigured(configured);
+        if (!configured) {
+          throw new Error('Authentication not configured');
+        }
+      } else {
+        throw new Error('Authentication not configured');
+      }
     }
 
     try {
