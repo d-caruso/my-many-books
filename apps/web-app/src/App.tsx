@@ -29,6 +29,11 @@ const theme = createTheme({
     secondary: {
       main: '#64748b',
     },
+    text: {
+      primary: '#111827',
+      secondary: '#4b5563',
+      disabled: '#6b7280', // Darker than default for WCAG AA compliance
+    },
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
