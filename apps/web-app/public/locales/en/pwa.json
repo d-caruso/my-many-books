@@ -1,0 +1,20 @@
+{
+  "offline_indicator": {
+    "you_are_offline": "You are currently offline",
+    "features_limited": "Some features may be limited",
+    "retry": "Retry"
+  },
+  "update_prompt": {
+    "title": "App Update Available",
+    "message": "A new version is ready to install",
+    "updating": "Updating...",
+    "update_button": "Update",
+    "later_button": "Later",
+    "update_failed": "Update Failed"
+  },
+  "install_prompt": {
+    "title": "Install App",
+    "message": "Add My Many Books to your home screen for quick access",
+    "install_button": "Install"
+  }
+}
