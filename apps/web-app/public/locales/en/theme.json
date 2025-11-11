@@ -1,0 +1,26 @@
+{
+  "settings": {
+    "title": "Theme Settings",
+    "description": "Customize the appearance of your reading experience",
+    "theme_mode": "Theme Mode",
+    "auto_system": "Auto (System)",
+    "auto_description": "Automatically switch between themes based on your system preference",
+    "currently_using_dark": "Currently using: Dark theme",
+    "currently_using_light": "Currently using: Light theme",
+    "enabled": "Enabled",
+    "enable": "Enable",
+    "choose_theme": "Choose Theme",
+    "auto_enabled": "Auto theme is enabled",
+    "auto_enabled_description": "Themes will automatically switch between light and dark based on your system settings. Disable auto theme to choose a specific theme.",
+    "toggle_theme": "Toggle theme"
+  },
+  "selector": {
+    "previewing": "Previewing...",
+    "preview": "Preview",
+    "active": "Active",
+    "select": "Select"
+  },
+  "header": {
+    "title": "My Many Books"
+  }
+}
