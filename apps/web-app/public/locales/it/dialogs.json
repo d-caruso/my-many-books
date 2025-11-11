@@ -1,0 +1,23 @@
+{
+  "author": {
+    "add_title": "Aggiungi Nuovo Autore",
+    "name_label": "Nome",
+    "surname_label": "Cognome",
+    "nationality_label": "Nazionalità",
+    "nationality_placeholder": "es., Italiano, Americano, Britannico",
+    "name_required": "Il nome è obbligatorio",
+    "surname_required": "Il cognome è obbligatorio",
+    "creating": "Creazione in corso...",
+    "create_button": "Crea Autore",
+    "create_failed": "Impossibile creare l'autore. Riprova."
+  },
+  "category": {
+    "add_title": "Aggiungi Nuova Categoria",
+    "name_label": "Nome Categoria",
+    "name_placeholder": "es., Fantascienza, Giallo, Biografia",
+    "name_required": "Il nome della categoria è obbligatorio",
+    "creating": "Creazione in corso...",
+    "create_button": "Crea Categoria",
+    "create_failed": "Impossibile creare la categoria. Riprova."
+  }
+}

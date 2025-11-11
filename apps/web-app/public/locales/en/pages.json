@@ -1,0 +1,93 @@
+{
+  "books": {
+    "title": "My Books",
+    "description": "Your personal book collection",
+    "description_with_count": "{{count}} books in your library",
+    "add_book": "Add Book",
+    "add": "Add",
+    "clear_search": "Clear search",
+    "grid_view": "Grid view",
+    "list_view": "List view",
+    "no_books_search": "No books found matching your search",
+    "no_books_empty": "No books in your library yet",
+    "loading": "Loading...",
+    "load_more": "Load More Books",
+    "error_load_books": "Failed to load your books"
+  },
+  "protected_route": {
+    "loading": "Loading..."
+  },
+  "admin": {
+    "menu": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "books": "Books",
+      "settings": "Settings"
+    },
+    "back_to_app": "Back to application",
+    "title": "Admin Panel",
+    "sidebar_title": "Administration",
+    "users": {
+      "title": "User Management",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "role_user": "User",
+      "role_admin": "Admin",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "created": "Created",
+      "actions": "Actions",
+      "search_placeholder": "Search by name or email...",
+      "search": "Search",
+      "edit": "Edit user",
+      "delete": "Delete user",
+      "edit_user": "Edit User",
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "delete_confirmation_title": "Delete User",
+      "delete_confirmation_message": "Are you sure you want to delete user {{name}}? This action cannot be undone."
+    },
+    "books": {
+      "page_title": "Book Management",
+      "title": "Title",
+      "isbn": "ISBN",
+      "authors": "Authors",
+      "user": "User",
+      "status": "Status",
+      "no_status": "None",
+      "reading": "Reading",
+      "paused": "Paused",
+      "finished": "Finished",
+      "created": "Created",
+      "actions": "Actions",
+      "search_placeholder": "Search by title, ISBN, or author...",
+      "search": "Search",
+      "edit": "Edit book",
+      "delete": "Delete book",
+      "edit_book": "Edit Book",
+      "edition_number": "Edition Number",
+      "edition_date": "Edition Date",
+      "notes": "Notes",
+      "delete_confirmation_title": "Delete Book",
+      "delete_confirmation_message": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone."
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "total_users": "Total Users",
+      "total_books": "Total Books",
+      "active_users": "Active Users",
+      "admin_users": "Admin Users",
+      "welcome_title": "Welcome to the Admin Panel",
+      "welcome_message": "This is the foundation for the admin dashboard. Use the sidebar to navigate to different admin sections.",
+      "phase_info": "Phase 1: Admin Foundation - Complete ✓",
+      "phase_2_info": "Phase 2: Admin Dashboard - Complete ✓",
+      "next_phase": "Next: Phase 3 will add user management features."
+    },
+    "settings": {
+      "coming_soon": "Coming soon...",
+      "page_title": "Settings"
+    }
+  }
+}

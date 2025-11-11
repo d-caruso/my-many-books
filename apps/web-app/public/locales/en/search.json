@@ -1,0 +1,53 @@
+{
+  "form": {
+    "placeholder": "Search by title, author, ISBN...",
+    "search_button": "Search",
+    "searching": "Searching...",
+    "advanced_filters": "Advanced Filters",
+    "clear_all": "Clear all",
+    "validation_error": "Please enter at least 2 characters in the search box or select an advanced filter.",
+    "author_placeholder": "Search by author name...",
+    "category_label": "Category",
+    "category_loading": "Loading categories...",
+    "category_all": "All Categories",
+    "status_label": "Reading Status",
+    "status_any": "Any Status",
+    "status_reading": "Reading",
+    "status_paused": "Paused",
+    "status_finished": "Finished",
+    "sort_label": "Sort By",
+    "sort_title": "Title (A-Z)",
+    "sort_author": "Author (A-Z)",
+    "sort_date": "Recently Added"
+  },
+  "filter": {
+    "title": "Filters",
+    "sort": {
+      "title_asc": "Title A-Z",
+      "title_desc": "Title Z-A",
+      "author_asc": "Author A-Z",
+      "author_desc": "Author Z-A",
+      "date_newest": "Date Added (Newest)",
+      "rating_highest": "Rating (Highest)"
+    },
+    "status": {
+      "label": "Status",
+      "all": "All Books",
+      "reading": "Reading",
+      "paused": "Paused",
+      "finished": "Finished"
+    },
+    "category": {
+      "label": "Category",
+      "all": "All Categories"
+    },
+    "author": {
+      "label": "Author",
+      "all": "All Authors"
+    },
+    "clear_all": "Clear All Filters",
+    "results_count": "{{filtered}} of {{total}} books",
+    "results_total": "{{total}} books",
+    "no_books": "No books found"
+  }
+}
