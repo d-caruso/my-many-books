@@ -24,10 +24,13 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#3b82f6',
+      main: '#0369a1', // Darker blue for better contrast (WCAG AA compliant)
     },
     secondary: {
       main: '#64748b',
+    },
+    warning: {
+      main: '#d97706',  // ← Darker orange for better contrast
     },
     text: {
       primary: '#111827',
