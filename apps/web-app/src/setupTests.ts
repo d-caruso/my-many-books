@@ -8,8 +8,8 @@ import { toHaveNoViolations } from 'jest-axe';
 // Extend expect with accessibility matchers
 expect.extend(toHaveNoViolations);
 
-// i18n setup for tests
-import './i18n';
+// i18n setup for tests (synchronous version for test environment)
+import './i18n.testing';
 
 // MSW (Mock Service Worker) setup for HTTP layer mocking
 // This is test infrastructure, not application code mocks
