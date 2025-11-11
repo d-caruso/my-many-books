@@ -69,7 +69,7 @@ export const Navbar: React.FC = () => {
         </Box>
 
         {/* Navigation Items - Desktop */}
-        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 2 }}>
+        <Box component="nav" sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 2 }} aria-label="Main navigation">
           <Button
             color={location.pathname === '/' ? 'primary' : 'inherit'}
             onClick={() => navigate('/')}
