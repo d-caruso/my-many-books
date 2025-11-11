@@ -32,6 +32,44 @@ export default defineConfig({
   },
   build: {
     outDir: 'build',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React core (300-400KB)
+          'vendor-react': [
+            'react',
+            'react-dom',
+            'react-router-dom'
+          ],
+          // Material UI (400-500KB)
+          'vendor-mui': [
+            '@mui/material',
+            '@mui/icons-material',
+            '@emotion/react',
+            '@emotion/styled'
+          ],
+          // AWS Amplify (300-400KB)
+          'vendor-aws': [
+            'aws-amplify',
+            '@aws-amplify/auth',
+            '@aws-amplify/ui-react'
+          ],
+          // Internationalization (100-150KB)
+          'vendor-i18n': [
+            'i18next',
+            'react-i18next',
+            'i18next-browser-languagedetector'
+          ],
+          // Barcode scanner (200-300KB)
+          'vendor-barcode': [
+            '@zxing/browser',
+            '@zxing/library'
+          ],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 500,
   },
   server: {
     port: 3000,
