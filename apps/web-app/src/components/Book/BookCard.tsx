@@ -134,8 +134,9 @@ export const BookCard: React.FC<BookCardProps> = ({
                       onEdit(book);
                     }}
                     title={t('books:edit_book_title')}
+                    aria-label={t('books:edit_book_title')}
                   >
-                    <EditIcon fontSize="small" />
+                    <EditIcon fontSize="small" aria-hidden="true" />
                   </IconButton>
                 )}
 
@@ -149,9 +150,10 @@ export const BookCard: React.FC<BookCardProps> = ({
                       }
                     }}
                     title={t('books:delete_book_title')}
+                    aria-label={t('books:delete_book_title')}
                     color="error"
                   >
-                    <DeleteIcon fontSize="small" />
+                    <DeleteIcon fontSize="small" aria-hidden="true" />
                   </IconButton>
                 )}
               </Stack>
@@ -186,8 +188,10 @@ export const BookCard: React.FC<BookCardProps> = ({
             justifyContent: 'center',
             color: 'grey.500'
           }}
+          role="img"
+          aria-label={t('books:book_cover_placeholder')}
         >
-          <BookIcon sx={{ fontSize: 48 }} />
+          <BookIcon sx={{ fontSize: 48 }} aria-hidden="true" />
         </CardMedia>
         
         {/* Status badge */}
@@ -229,8 +233,9 @@ export const BookCard: React.FC<BookCardProps> = ({
                     }
                   }}
                   title={t('books:edit_book_title')}
+                  aria-label={t('books:edit_book_title')}
                 >
-                  <EditIcon fontSize="small" />
+                  <EditIcon fontSize="small" aria-hidden="true" />
                 </IconButton>
               )}
 
@@ -251,8 +256,9 @@ export const BookCard: React.FC<BookCardProps> = ({
                     }
                   }}
                   title={t('books:delete_book_title')}
+                  aria-label={t('books:delete_book_title')}
                 >
-                  <DeleteIcon fontSize="small" />
+                  <DeleteIcon fontSize="small" aria-hidden="true" />
                 </IconButton>
               )}
             </Stack>
