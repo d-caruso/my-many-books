@@ -5,7 +5,7 @@ import { SUPPORTED_LANGUAGES } from '@my-many-books/shared-i18n';
 import { Language as LanguageIcon } from '@mui/icons-material';
 
 export const LanguageSelector: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   const handleLanguageChange = (event: SelectChangeEvent<string>) => {
     const newLanguage = event.target.value;
@@ -24,6 +24,9 @@ export const LanguageSelector: React.FC = () => {
         value={i18n.language}
         onChange={handleLanguageChange}
         size="small"
+        inputProps={{
+          'aria-label': t('common:select_language', 'Select language')
+        }}
         sx={{
           minWidth: 120,
           '& .MuiOutlinedInput-notchedOutline': {
