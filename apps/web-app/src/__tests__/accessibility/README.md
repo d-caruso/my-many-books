@@ -2,12 +2,12 @@
 
 ## Infrastructure Setup ✅
 
-This directory contains the infrastructure for automated accessibility testing using vitest-axe.
+This directory contains the infrastructure for automated accessibility testing using jest-axe (compatible with Vitest).
 
 ### Configured Components:
-- ✅ **vitest-axe** installed (v0.1.0)
-- ✅ **axe-core** engine (v4.11.0) via vitest-axe
-- ✅ **Test environment**: jsdom (compatible with vitest-axe)
+- ✅ **jest-axe** installed (v10.0.0) - Jest matcher for axe, compatible with Vitest
+- ✅ **axe-core** engine (v4.11.0) - Accessibility testing engine
+- ✅ **Test environment**: jsdom (compatible with jest-axe)
 - ✅ **Setup file**: `setupTests.ts` - extends expect with `toHaveNoViolations`
 - ✅ **Test utilities**: `utils/axe-helper.ts` - helper functions for running axe tests
 
@@ -36,7 +36,7 @@ describe('MyComponent Accessibility', () => {
 ```
 
 ### What Gets Tested:
-vitest-axe automatically checks for 90+ WCAG 2.1 AA rules including:
+jest-axe (via axe-core) automatically checks for 90+ WCAG 2.1 AA rules including:
 - Color contrast ratios
 - Form label associations
 - ARIA attribute usage
