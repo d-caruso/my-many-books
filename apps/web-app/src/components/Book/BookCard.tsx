@@ -303,12 +303,12 @@ export const BookCard: React.FC<BookCardProps> = ({
         {/* Edition info */}
         <Box display="flex" justifyContent="space-between" mb={1}>
           {book.editionNumber && (
-            <Typography variant="caption" color="text.disabled">
+            <Typography variant="caption" color="text.secondary">
               {t('books:edition')} {book.editionNumber}
             </Typography>
           )}
           {book.editionDate && (
-            <Typography variant="caption" color="text.disabled">
+            <Typography variant="caption" color="text.secondary">
               {new Date(book.editionDate).getFullYear()}
             </Typography>
           )}
@@ -329,7 +329,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                 />
               ))}
               {book.categories.length > 2 && (
-                <Typography variant="caption" color="text.disabled">
+                <Typography variant="caption" color="text.secondary">
                   +{book.categories.length - 2} {t('books:more')}
                 </Typography>
               )}
@@ -341,7 +341,7 @@ export const BookCard: React.FC<BookCardProps> = ({
         {book.notes && (
           <Typography 
             variant="caption" 
-            color="text.disabled"
+            color="text.secondary"
             sx={{
               display: '-webkit-box',
               WebkitLineClamp: 2,
@@ -357,7 +357,7 @@ export const BookCard: React.FC<BookCardProps> = ({
 
         {/* ISBN */}
         {book.isbnCode && (
-          <Typography variant="caption" color="text.disabled" sx={{ fontFamily: 'monospace' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
             ISBN: {book.isbnCode}
           </Typography>
         )}
