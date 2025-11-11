@@ -87,18 +87,26 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         <p className="text-text-secondary text-sm">{t('common:join_app')}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="p-6 space-y-4" aria-label="Registration form">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <div
+            className="bg-red-50 border border-red-200 rounded-lg p-3"
+            role="alert"
+            aria-live="assertive"
+          >
             <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
         
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div
+            className="bg-green-50 border border-green-200 rounded-lg p-4"
+            role="status"
+            aria-live="polite"
+          >
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               </div>
@@ -194,7 +202,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             <button
               type="button"
               onClick={onSwitchToLogin}
-              className="text-primary-500 hover:text-primary-600 font-medium"
+              className="text-primary-700 hover:text-primary-800 font-medium"
               disabled={loading}
             >
               {t('common:sign_in')}
