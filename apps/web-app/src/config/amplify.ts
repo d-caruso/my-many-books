@@ -1,4 +1,4 @@
-import { Amplify } from '@aws-amplify/core';
+import { Amplify } from 'aws-amplify';
 import { env } from './env';
 
 // Amplify v6 configuration interface
