@@ -39,6 +39,320 @@ Implementing critical and high-priority fixes will result in:
 
 ---
 
+## Git Branching Strategy
+
+### Branch Structure
+
+```
+fix/performance-issues (main performance branch)
+├── fix/performance-priority-1 (Critical issues)
+│   ├── fix/performance-issue-1.1 (Code splitting)
+│   ├── fix/performance-issue-1.2 (Lazy loading routes)
+│   ├── fix/performance-issue-1.3 (Async i18n)
+│   └── fix/performance-issue-1.4 (Lazy load scanner)
+├── fix/performance-priority-2 (High priority issues)
+│   ├── fix/performance-issue-2.1 (MUI icons)
+│   ├── fix/performance-issue-2.2 (AWS Amplify)
+│   └── fix/performance-issue-2.3 (Amplify config)
+└── fix/performance-priority-3 (Medium priority issues)
+    ├── fix/performance-issue-3.1 (Virtualization)
+    ├── fix/performance-issue-3.2 (Auth caching)
+    └── fix/performance-issue-3.3 (Theme optimization)
+```
+
+### Workflow Process
+
+#### Starting Point
+```bash
+# Ensure you're on fix/performance-issues branch
+git checkout fix/performance-issues
+git pull origin fix/performance-issues
+```
+
+#### For Each Priority Level
+
+**Step 1: Create Priority Branch**
+```bash
+# Create priority branch from fix/performance-issues
+git checkout fix/performance-issues
+git checkout -b fix/performance-priority-1
+```
+
+**Step 2: Fix Each Sub-Issue**
+
+For each sub-issue (e.g., Issue 1.1, Issue 1.2, etc.):
+
+```bash
+# Create sub-issue branch from priority branch
+git checkout fix/performance-priority-1
+git checkout -b fix/performance-issue-1.1
+
+# Make your changes for Issue 1.1
+# ... edit files ...
+
+# Run tests (IMPORTANT!)
+npm test
+
+# If tests fail, fix only related test files
+npm test -- path/to/related/test.test.tsx
+
+# Once tests pass, commit with specific format
+git add .
+git commit -m "[FIX] Issue 1.1: Implement code splitting in vite.config.ts
+
+- Added manualChunks configuration
+- Split vendors: react, mui, aws, i18n, barcode
+- Bundle now split into 6 chunks
+- Reduced initial bundle from 1.7MB to ~300KB
+
+Tests: All passing"
+
+# Switch back to priority branch and merge
+git checkout fix/performance-priority-1
+git merge fix/performance-issue-1.1 --no-ff
+
+# Delete sub-issue branch (optional)
+git branch -d fix/performance-issue-1.1
+
+# Repeat for Issue 1.2, 1.3, 1.4...
+```
+
+**Step 3: Merge Priority Branch**
+
+After all sub-issues in a priority are complete:
+
+```bash
+# Switch to main performance branch
+git checkout fix/performance-issues
+
+# Merge priority branch
+git merge fix/performance-priority-1 --no-ff -m "[MERGE] Priority 1 (Critical) fixes complete
+
+All critical performance issues resolved:
+✅ Issue 1.1: Code splitting implemented
+✅ Issue 1.2: Lazy loading for all routes
+✅ Issue 1.3: Async i18n loading
+✅ Issue 1.4: Scanner lazy loaded
+
+Performance improvements:
+- Initial bundle: 1.7MB → ~300KB (82% reduction)
+- Expected FCP: 40.5s → ~1.5s
+- Expected LCP: 79.2s → ~2s
+- All tests passing"
+
+# Delete priority branch (optional)
+git branch -d fix/performance-priority-1
+
+# Repeat for Priority 2, Priority 3...
+```
+
+#### Final Merge to Develop
+
+After all priorities are complete:
+
+```bash
+# Ensure all changes committed on fix/performance-issues
+git checkout fix/performance-issues
+git status
+
+# Switch to develop
+git checkout develop
+git pull origin develop
+
+# Merge performance fixes
+git merge fix/performance-issues --no-ff -m "[MERGE] Performance optimization complete
+
+All performance issues resolved (Priorities 1-3):
+
+Critical fixes (P1):
+✅ Code splitting (Issue 1.1)
+✅ Lazy loading routes (Issue 1.2)
+✅ Async i18n (Issue 1.3)
+✅ Scanner lazy load (Issue 1.4)
+
+High priority (P2):
+✅ MUI icon optimization (Issue 2.1)
+✅ AWS Amplify review (Issue 2.2)
+✅ Amplify async config (Issue 2.3)
+
+Medium priority (P3):
+✅ List virtualization (Issue 3.1)
+✅ Auth caching (Issue 3.2)
+✅ Theme optimization (Issue 3.3)
+
+Performance Results:
+- Bundle: 1.7MB → 300-400KB (77-82% reduction)
+- FCP: 40.5s → ~1.5s (96% improvement)
+- LCP: 79.2s → ~2s (97% improvement)
+- TBT: 7,730ms → ~150ms (98% improvement)
+- Lighthouse Score: 5/100 → 90-100/100
+
+All tests passing: ✅"
+
+# Push to remote
+git push origin develop
+
+# Optional: Clean up performance branch
+git branch -d fix/performance-issues
+git push origin --delete fix/performance-issues
+```
+
+### Commit Message Format
+
+**Format:** `[FIX] Issue X.Y: Brief description`
+
+**Examples:**
+```
+[FIX] Issue 1.1: Implement code splitting in vite.config.ts
+[FIX] Issue 1.2: Add React.lazy for route-based code splitting
+[FIX] Issue 1.3: Implement async i18n with http-backend
+[FIX] Issue 2.1: Replace MUI icon barrel imports with direct imports
+[MERGE] Priority 1 (Critical) fixes complete
+[MERGE] Performance optimization complete
+```
+
+**Required in commit message:**
+- Issue number reference (e.g., Issue 1.1)
+- Brief description of what was fixed
+- Key changes made (bullet points)
+- Test status (e.g., "Tests: All passing")
+
+### Testing Requirements
+
+**Before Every Commit:**
+
+1. **Run full test suite:**
+   ```bash
+   npm test
+   ```
+
+2. **If tests fail, isolate and fix:**
+   ```bash
+   # Run specific test file
+   npm test -- src/path/to/component.test.tsx
+
+   # Run tests for specific component
+   npm test -- BookCard
+
+   # Run tests in watch mode for development
+   npm test -- --watch
+   ```
+
+3. **Test types to run:**
+   - Unit tests for modified components
+   - Integration tests if API/context changes
+   - Accessibility tests (if applicable)
+   - Build test: `npm run build` (ensure no errors)
+
+4. **Don't commit if:**
+   - Any tests are failing
+   - Build produces errors
+   - Console has unexpected errors
+   - Types are broken (TypeScript errors)
+
+### Issue Tracking Checklist
+
+Use this checklist to track progress:
+
+#### Priority 1: Critical Issues ⏰ Immediate
+- [ ] Issue 1.1: Code splitting (vite.config.ts)
+  - [ ] Branch created: `fix/performance-issue-1.1`
+  - [ ] Changes implemented
+  - [ ] Tests passing
+  - [ ] Committed to priority-1 branch
+  - [ ] Merged to `fix/performance-priority-1`
+
+- [ ] Issue 1.2: Lazy loading routes (App.tsx)
+  - [ ] Branch created: `fix/performance-issue-1.2`
+  - [ ] Changes implemented
+  - [ ] Tests passing
+  - [ ] Committed to priority-1 branch
+  - [ ] Merged to `fix/performance-priority-1`
+
+- [ ] Issue 1.3: Async i18n loading (i18n.ts)
+  - [ ] Branch created: `fix/performance-issue-1.3`
+  - [ ] Changes implemented
+  - [ ] Tests passing
+  - [ ] Committed to priority-1 branch
+  - [ ] Merged to `fix/performance-priority-1`
+
+- [ ] Issue 1.4: Lazy load scanner (App.tsx)
+  - [ ] Branch created: `fix/performance-issue-1.4`
+  - [ ] Changes implemented
+  - [ ] Tests passing
+  - [ ] Committed to priority-1 branch
+  - [ ] Merged to `fix/performance-priority-1`
+
+- [ ] **Priority 1 Complete:**
+  - [ ] All sub-issues merged
+  - [ ] Final tests passing
+  - [ ] Merged to `fix/performance-issues`
+  - [ ] Performance measurements taken
+
+#### Priority 2: High Priority Issues ⚠️ Soon
+- [ ] Issue 2.1: MUI icon optimization
+- [ ] Issue 2.2: AWS Amplify review
+- [ ] Issue 2.3: Amplify async config
+- [ ] **Priority 2 Complete:** Merged to `fix/performance-issues`
+
+#### Priority 3: Medium Priority Issues 📋 Later
+- [ ] Issue 3.1: List virtualization
+- [ ] Issue 3.2: Auth caching
+- [ ] Issue 3.3: Theme optimization
+- [ ] **Priority 3 Complete:** Merged to `fix/performance-issues`
+
+#### Final Integration 🎯
+- [ ] All priorities merged to `fix/performance-issues`
+- [ ] Performance audit completed
+- [ ] Documentation updated
+- [ ] Merged to `develop`
+- [ ] Pushed to origin
+
+### Performance Measurement Points
+
+After each priority level, measure and document:
+
+```bash
+# Build production bundle
+npm run build
+
+# Check bundle sizes
+ls -lh apps/web-app/build/assets/
+
+# Run Lighthouse (if app is running)
+npx lighthouse http://localhost:3000 --only-categories=performance --view
+
+# Document results in this file
+```
+
+**Measurement Template:**
+
+```markdown
+### Performance Results - Priority X Complete
+
+**Date:** YYYY-MM-DD
+**Branch:** fix/performance-priority-X
+
+#### Bundle Sizes
+- Initial bundle: XXX KB
+- Total chunks: X files
+- Largest chunk: XXX KB
+
+#### Lighthouse Metrics
+- FCP: X.Xs
+- LCP: X.Xs
+- TBT: XXX ms
+- SI: X.Xs
+- Performance Score: XX/100
+
+#### Comparison to Baseline
+- Bundle size: ↓XX% from baseline
+- FCP: ↓XX% from baseline
+- LCP: ↓XX% from baseline
+```
+
+---
+
 ## Critical Issues (Priority 1 - Fix Immediately)
 
 ### Issue 1.1: No Code Splitting - Single 1.7MB Bundle
