@@ -11,9 +11,39 @@ describe('API Service Coverage', () => {
     // Temporarily unmock to test real implementation
     jest.unmock('@/services/api');
     jest.unmock('@my-many-books/shared-api');
-    
+
     // Mock the shared API to avoid external dependencies
     jest.doMock('@my-many-books/shared-api', () => ({
+      createApiClient: jest.fn(() => ({
+        books: {
+          getBooks: jest.fn(),
+          getBook: jest.fn(),
+          createBook: jest.fn(),
+          updateBook: jest.fn(),
+          updateBookStatus: jest.fn(),
+          deleteBook: jest.fn(),
+          searchBooks: jest.fn(),
+          searchByISBN: jest.fn(),
+        },
+        users: {
+          login: jest.fn(),
+          register: jest.fn(),
+          logout: jest.fn(),
+          getCurrentUser: jest.fn(),
+          updateProfile: jest.fn(),
+          deleteAccount: jest.fn(),
+          refreshToken: jest.fn(),
+        },
+        admin: {
+          getAdminStats: jest.fn(),
+          getAdminUsers: jest.fn(),
+          updateAdminUser: jest.fn(),
+          deleteAdminUser: jest.fn(),
+          getAdminBooks: jest.fn(),
+          updateAdminBook: jest.fn(),
+          deleteAdminBook: jest.fn(),
+        },
+      })),
       bookAPI: {
         setBaseURL: jest.fn(),
         getBooks: jest.fn(),
@@ -60,6 +90,36 @@ describe('API Service Coverage', () => {
   it('should test apiUtils isOnline function', () => {
     jest.unmock('@/services/api');
     jest.doMock('@my-many-books/shared-api', () => ({
+      createApiClient: jest.fn(() => ({
+        books: {
+          getBooks: jest.fn(),
+          getBook: jest.fn(),
+          createBook: jest.fn(),
+          updateBook: jest.fn(),
+          updateBookStatus: jest.fn(),
+          deleteBook: jest.fn(),
+          searchBooks: jest.fn(),
+          searchByISBN: jest.fn(),
+        },
+        users: {
+          login: jest.fn(),
+          register: jest.fn(),
+          logout: jest.fn(),
+          getCurrentUser: jest.fn(),
+          updateProfile: jest.fn(),
+          deleteAccount: jest.fn(),
+          refreshToken: jest.fn(),
+        },
+        admin: {
+          getAdminStats: jest.fn(),
+          getAdminUsers: jest.fn(),
+          updateAdminUser: jest.fn(),
+          deleteAdminUser: jest.fn(),
+          getAdminBooks: jest.fn(),
+          updateAdminBook: jest.fn(),
+          deleteAdminBook: jest.fn(),
+        },
+      })),
       bookAPI: { setBaseURL: jest.fn() },
       userAPI: { setBaseURL: jest.fn() },
     }));
@@ -75,6 +135,36 @@ describe('API Service Coverage', () => {
   it('should test apiUtils getAuthHeaders function', () => {
     jest.unmock('@/services/api');
     jest.doMock('@my-many-books/shared-api', () => ({
+      createApiClient: jest.fn(() => ({
+        books: {
+          getBooks: jest.fn(),
+          getBook: jest.fn(),
+          createBook: jest.fn(),
+          updateBook: jest.fn(),
+          updateBookStatus: jest.fn(),
+          deleteBook: jest.fn(),
+          searchBooks: jest.fn(),
+          searchByISBN: jest.fn(),
+        },
+        users: {
+          login: jest.fn(),
+          register: jest.fn(),
+          logout: jest.fn(),
+          getCurrentUser: jest.fn(),
+          updateProfile: jest.fn(),
+          deleteAccount: jest.fn(),
+          refreshToken: jest.fn(),
+        },
+        admin: {
+          getAdminStats: jest.fn(),
+          getAdminUsers: jest.fn(),
+          updateAdminUser: jest.fn(),
+          deleteAdminUser: jest.fn(),
+          getAdminBooks: jest.fn(),
+          updateAdminBook: jest.fn(),
+          deleteAdminBook: jest.fn(),
+        },
+      })),
       bookAPI: { setBaseURL: jest.fn() },
       userAPI: { setBaseURL: jest.fn() },
     }));
@@ -92,6 +182,36 @@ describe('API Service Coverage', () => {
   it('should test apiUtils handleOfflineError function', () => {
     jest.unmock('@/services/api');
     jest.doMock('@my-many-books/shared-api', () => ({
+      createApiClient: jest.fn(() => ({
+        books: {
+          getBooks: jest.fn(),
+          getBook: jest.fn(),
+          createBook: jest.fn(),
+          updateBook: jest.fn(),
+          updateBookStatus: jest.fn(),
+          deleteBook: jest.fn(),
+          searchBooks: jest.fn(),
+          searchByISBN: jest.fn(),
+        },
+        users: {
+          login: jest.fn(),
+          register: jest.fn(),
+          logout: jest.fn(),
+          getCurrentUser: jest.fn(),
+          updateProfile: jest.fn(),
+          deleteAccount: jest.fn(),
+          refreshToken: jest.fn(),
+        },
+        admin: {
+          getAdminStats: jest.fn(),
+          getAdminUsers: jest.fn(),
+          updateAdminUser: jest.fn(),
+          deleteAdminUser: jest.fn(),
+          getAdminBooks: jest.fn(),
+          updateAdminBook: jest.fn(),
+          deleteAdminBook: jest.fn(),
+        },
+      })),
       bookAPI: { setBaseURL: jest.fn() },
       userAPI: { setBaseURL: jest.fn() },
     }));
@@ -108,9 +228,39 @@ describe('API Service Coverage', () => {
 
   it('should test environment configuration', () => {
     const originalEnv = process.env.EXPO_PUBLIC_API_URL;
-    
+
     jest.unmock('@/services/api');
     jest.doMock('@my-many-books/shared-api', () => ({
+      createApiClient: jest.fn(() => ({
+        books: {
+          getBooks: jest.fn(),
+          getBook: jest.fn(),
+          createBook: jest.fn(),
+          updateBook: jest.fn(),
+          updateBookStatus: jest.fn(),
+          deleteBook: jest.fn(),
+          searchBooks: jest.fn(),
+          searchByISBN: jest.fn(),
+        },
+        users: {
+          login: jest.fn(),
+          register: jest.fn(),
+          logout: jest.fn(),
+          getCurrentUser: jest.fn(),
+          updateProfile: jest.fn(),
+          deleteAccount: jest.fn(),
+          refreshToken: jest.fn(),
+        },
+        admin: {
+          getAdminStats: jest.fn(),
+          getAdminUsers: jest.fn(),
+          updateAdminUser: jest.fn(),
+          deleteAdminUser: jest.fn(),
+          getAdminBooks: jest.fn(),
+          updateAdminBook: jest.fn(),
+          deleteAdminBook: jest.fn(),
+        },
+      })),
       bookAPI: { setBaseURL: jest.fn() },
       userAPI: { setBaseURL: jest.fn() },
     }));
@@ -135,9 +285,39 @@ describe('API Service Coverage', () => {
   it('should test default URL fallback', () => {
     const originalEnv = process.env.EXPO_PUBLIC_API_URL;
     delete process.env.EXPO_PUBLIC_API_URL;
-    
+
     jest.unmock('@/services/api');
     jest.doMock('@my-many-books/shared-api', () => ({
+      createApiClient: jest.fn(() => ({
+        books: {
+          getBooks: jest.fn(),
+          getBook: jest.fn(),
+          createBook: jest.fn(),
+          updateBook: jest.fn(),
+          updateBookStatus: jest.fn(),
+          deleteBook: jest.fn(),
+          searchBooks: jest.fn(),
+          searchByISBN: jest.fn(),
+        },
+        users: {
+          login: jest.fn(),
+          register: jest.fn(),
+          logout: jest.fn(),
+          getCurrentUser: jest.fn(),
+          updateProfile: jest.fn(),
+          deleteAccount: jest.fn(),
+          refreshToken: jest.fn(),
+        },
+        admin: {
+          getAdminStats: jest.fn(),
+          getAdminUsers: jest.fn(),
+          updateAdminUser: jest.fn(),
+          deleteAdminUser: jest.fn(),
+          getAdminBooks: jest.fn(),
+          updateAdminBook: jest.fn(),
+          deleteAdminBook: jest.fn(),
+        },
+      })),
       bookAPI: { setBaseURL: jest.fn() },
       userAPI: { setBaseURL: jest.fn() },
     }));

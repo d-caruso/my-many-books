@@ -1,5 +1,5 @@
 module.exports = {
-  testEnvironment: 'jsdom',
+  testEnvironment: 'node',
   setupFiles: [
     '<rootDir>/__tests__/setup/timers.js'
   ],
@@ -7,7 +7,7 @@ module.exports = {
     '<rootDir>/__tests__/setup/setupTests.ts'
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|react-native-paper|@expo|expo-.*|@react-navigation)/)'
+    'node_modules/(?!(react-native|@react-native|react-native-paper|@expo|expo|expo-.*|@react-navigation)/)'
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   transform: {
@@ -51,5 +51,4 @@ module.exports = {
       statements: 60
     }
   },
-  testEnvironment: 'jsdom',
 };

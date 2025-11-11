@@ -84,12 +84,14 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     }
   };
 
-  const currentLanguage = SUPPORTED_LANGUAGES.find((lang) => lang.code === value);
-  const buttonLabel = compact
-    ? currentLanguage?.code.toUpperCase() || value.toUpperCase()
   if (process.env.EXPO_PUBLIC_SHOW_LANGUAGE_SELECTOR !== 'true') {
     return null;
   }
+
+  const currentLanguage = SUPPORTED_LANGUAGES.find((lang) => lang.code === value);
+  const buttonLabel = compact
+    ? currentLanguage?.code.toUpperCase() || value.toUpperCase()
+    : currentLanguage?.nativeName || value;
 
   return (
     <View style={styles.container}>

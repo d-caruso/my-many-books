@@ -100,9 +100,22 @@ const BooksScreen = () => {
   return React.createElement(View, {}, elements);
 };
 
+// Mock React Native with simple string components
+jest.mock('react-native', () => ({
+  View: 'View',
+  Text: 'Text',
+  TouchableOpacity: 'TouchableOpacity',
+  TextInput: 'TextInput',
+  ScrollView: 'ScrollView',
+}));
+
 // Mock the hooks
-jest.mock('@/hooks/useBooks');
-jest.mock('@/hooks/useBookSearch');
+jest.mock('@/hooks/useBooks', () => ({
+  useBooks: jest.fn(),
+}));
+jest.mock('@/hooks/useBookSearch', () => ({
+  useBookSearch: jest.fn(),
+}));
 
 const mockUseBooks = useBooks as jest.MockedFunction<typeof useBooks>;
 const mockUseBookSearch = useBookSearch as jest.MockedFunction<typeof useBookSearch>;
@@ -137,9 +150,15 @@ describe('BooksScreen', () => {
   const mockSearchBooks = jest.fn();
   const mockClearSearch = jest.fn();
 
+  // Capture console errors
+  const originalConsoleError = console.error;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
+    // Restore console.error to see actual errors
+    console.error = originalConsoleError;
+
     // Reset component state before each test
     booksScreenState.searchQuery = '';
     booksScreenState.isSearching = false;
@@ -172,8 +191,11 @@ describe('BooksScreen', () => {
   });
 
   it('should render books list correctly', () => {
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const textElements = testInstance.findAllByType(Text);
     
@@ -187,24 +209,33 @@ describe('BooksScreen', () => {
   });
 
   it('should show search bar', () => {
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const searchbar = testInstance.findByProps({ testID: 'searchbar' });
     expect(searchbar).toBeTruthy();
   });
 
   it('should show FAB for adding books', () => {
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const fab = testInstance.findByProps({ testID: 'fab' });
     expect(fab).toBeTruthy();
   });
 
   it('should handle search input', () => {
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const searchbar = testInstance.findByProps({ testID: 'searchbar' });
     searchbar.props.onChangeText('test query');
@@ -213,8 +244,11 @@ describe('BooksScreen', () => {
   });
 
   it('should clear search when search query is empty', () => {
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const searchbar = testInstance.findByProps({ testID: 'searchbar' });
     searchbar.props.onChangeText('');
@@ -236,6 +270,10 @@ describe('BooksScreen', () => {
       },
     ];
 
+    // Set up search state first
+    booksScreenState.searchQuery = 'search';
+    booksScreenState.isSearching = true;
+
     mockUseBookSearch.mockReturnValue({
       books: searchResults,
       loading: false,
@@ -249,15 +287,11 @@ describe('BooksScreen', () => {
       loadMore: jest.fn(),
     });
 
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
-
-    // Simulate search
-    const searchbar = testInstance.findByProps({ testID: 'searchbar' });
-    searchbar.props.onChangeText('search');
-
-    // Re-render to get search results
-    tree.update(<BooksScreen />);
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const textElements = testInstance.findAllByType(Text);
     const searchResult = textElements.find(element => element.props.children === 'Search Result');
@@ -265,6 +299,10 @@ describe('BooksScreen', () => {
   });
 
   it('should show clear search chip when searching', () => {
+    // Set up search state first
+    booksScreenState.searchQuery = 'test';
+    booksScreenState.isSearching = true;
+
     mockUseBookSearch.mockReturnValue({
       books: [],
       loading: false,
@@ -278,15 +316,11 @@ describe('BooksScreen', () => {
       loadMore: jest.fn(),
     });
 
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
-
-    // Simulate search
-    const searchbar = testInstance.findByProps({ testID: 'searchbar' });
-    searchbar.props.onChangeText('test');
-
-    // Re-render to show clear search chip
-    tree.update(<BooksScreen />);
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const textElements = testInstance.findAllByType(Text);
     const clearSearchText = textElements.find(element => element.props.children === 'Clear search');
@@ -294,6 +328,10 @@ describe('BooksScreen', () => {
   });
 
   it('should handle clear search chip press', () => {
+    // Set up search state first
+    booksScreenState.searchQuery = 'test';
+    booksScreenState.isSearching = true;
+
     mockUseBookSearch.mockReturnValue({
       books: [],
       loading: false,
@@ -307,15 +345,11 @@ describe('BooksScreen', () => {
       loadMore: jest.fn(),
     });
 
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
-
-    // Simulate search
-    const searchbar = testInstance.findByProps({ testID: 'searchbar' });
-    searchbar.props.onChangeText('test');
-
-    // Re-render to show clear search chip
-    tree.update(<BooksScreen />);
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const touchableElements = testInstance.findAllByType(TouchableOpacity);
     const clearChip = touchableElements.find(element => {
@@ -343,8 +377,11 @@ describe('BooksScreen', () => {
       updateBookStatus: mockUpdateBookStatus,
     });
 
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const loadingElement = testInstance.findByProps({ testID: 'loading' });
     expect(loadingElement).toBeTruthy();
@@ -366,8 +403,11 @@ describe('BooksScreen', () => {
       updateBookStatus: mockUpdateBookStatus,
     });
 
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const textElements = testInstance.findAllByType(Text);
     const errorText = textElements.find(element => element.props.children === errorMessage);
@@ -388,8 +428,11 @@ describe('BooksScreen', () => {
       updateBookStatus: mockUpdateBookStatus,
     });
 
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const textElements = testInstance.findAllByType(Text);
     const noBooksText = textElements.find(element => element.props.children === 'No books yet');
@@ -400,6 +443,10 @@ describe('BooksScreen', () => {
   });
 
   it('should show search empty state', () => {
+    // Set up search state first
+    booksScreenState.searchQuery = 'nonexistent';
+    booksScreenState.isSearching = true;
+
     mockUseBookSearch.mockReturnValue({
       books: [],
       loading: false,
@@ -413,15 +460,11 @@ describe('BooksScreen', () => {
       loadMore: jest.fn(),
     });
 
-    const tree = renderer.create(<BooksScreen />);
-    const testInstance = tree.root;
-
-    // Simulate search
-    const searchbar = testInstance.findByProps({ testID: 'searchbar' });
-    searchbar.props.onChangeText('nonexistent');
-
-    // Re-render to show search empty state
-    tree.update(<BooksScreen />);
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<BooksScreen />);
+    });
+    const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     const textElements = testInstance.findAllByType(Text);
     const noResultsText = textElements.find(element => element.props.children === 'No books found');
