@@ -24,5 +24,6 @@
   "skip_to_main": "Skip to main content",
   "main_navigation": "Main navigation",
   "admin_navigation": "Admin navigation",
-  "access_denied_message": "Access denied. You do not have permission to access this area."
+  "access_denied_message": "Access denied. You do not have permission to access this area.",
+  "change_reading_status": "Change reading status"
 }
