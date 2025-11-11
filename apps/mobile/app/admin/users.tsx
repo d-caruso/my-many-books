@@ -46,7 +46,10 @@ export default function UserManagement() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator
+          size="large"
+          accessibilityLabel={t('accessibility:loading_users', 'Loading users...')}
+        />
       </View>
     );
   }
@@ -58,6 +61,8 @@ export default function UserManagement() {
         onChangeText={setSearchQuery}
         value={searchQuery}
         style={styles.searchBar}
+        accessibilityLabel={t('accessibility:search_users_label', 'Search users')}
+        accessibilityHint={t('accessibility:search_users_hint', 'Search for users by name or email address')}
       />
 
       <ScrollView
@@ -66,25 +71,48 @@ export default function UserManagement() {
         }
       >
         {users.length === 0 ? (
-          <Text style={styles.emptyText}>
+          <Text
+            style={styles.emptyText}
+            accessible={true}
+            accessibilityRole="text"
+          >
             {t('pages:admin.users.no_users', 'No users found')}
           </Text>
         ) : (
           users.map((user) => (
-            <Card key={user.id} style={styles.userCard}>
+            <Card
+              key={user.id}
+              style={styles.userCard}
+              accessible={true}
+              accessibilityLabel={t('accessibility:user_card_label', '{{name}}, {{email}}, {{role}} role, {{status}}, joined {{date}}', {
+                name: user.fullName,
+                email: user.email,
+                role: user.role,
+                status: user.isActive ? t('common:active', 'Active') : t('common:inactive', 'Inactive'),
+                date: new Date(user.createdAt).toLocaleDateString()
+              })}
+              accessibilityRole="summary"
+            >
               <Card.Content>
                 <View style={styles.userHeader}>
                   <Text variant="titleMedium">{user.fullName}</Text>
                   <Chip
                     mode="flat"
                     style={user.role === 'admin' ? styles.adminChip : styles.userChip}
+                    accessible={true}
+                    accessibilityLabel={t('accessibility:user_role', '{{role}} role', { role: user.role })}
                   >
                     {user.role}
                   </Chip>
                 </View>
                 <Text variant="bodyMedium">{user.email}</Text>
                 <View style={styles.userFooter}>
-                  <Chip mode="outlined" compact>
+                  <Chip
+                    mode="outlined"
+                    compact
+                    accessible={true}
+                    accessibilityLabel={user.isActive ? t('accessibility:status_active', 'Active status') : t('accessibility:status_inactive', 'Inactive status')}
+                  >
                     {user.isActive ? t('common:active', 'Active') : t('common:inactive', 'Inactive')}
                   </Chip>
                   <Text variant="bodySmall">
