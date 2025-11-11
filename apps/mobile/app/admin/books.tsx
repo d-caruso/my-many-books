@@ -47,7 +47,10 @@ export default function BookManagement() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator
+          size="large"
+          accessibilityLabel={t('accessibility:loading_books', 'Loading books...')}
+        />
       </View>
     );
   }
@@ -72,6 +75,8 @@ export default function BookManagement() {
         onChangeText={setSearchQuery}
         value={searchQuery}
         style={styles.searchBar}
+        accessibilityLabel={t('accessibility:search_books_label', 'Search books')}
+        accessibilityHint={t('accessibility:search_books_hint', 'Search for books by title, ISBN, or author name')}
       />
 
       <ScrollView
@@ -80,36 +85,59 @@ export default function BookManagement() {
         }
       >
         {books.length === 0 ? (
-          <Text style={styles.emptyText}>
+          <Text
+            style={styles.emptyText}
+            accessible={true}
+            accessibilityRole="text"
+          >
             {t('pages:admin.books.no_books', 'No books found')}
           </Text>
         ) : (
-          books.map((book) => (
-            <Card key={book.id} style={styles.bookCard}>
-              <Card.Content>
-                <Text variant="titleMedium">{book.title}</Text>
-                <Text variant="bodySmall" style={styles.isbn}>
-                  ISBN: {book.isbnCode}
-                </Text>
-                {book.authors.length > 0 && (
-                  <Text variant="bodySmall">
-                    {book.authors.map((a) => a.fullName).join(', ')}
+          books.map((book) => {
+            const authors = book.authors.map((a) => a.fullName).join(', ');
+            const status = book.status || 'N/A';
+            const owner = book.userName || t('pages:admin.books.no_owner', 'No owner');
+            return (
+              <Card
+                key={book.id}
+                style={styles.bookCard}
+                accessible={true}
+                accessibilityLabel={t('accessibility:book_card_label', '{{title}}, ISBN {{isbn}}{{authors}}, status: {{status}}, owner: {{owner}}', {
+                  title: book.title,
+                  isbn: book.isbnCode,
+                  authors: authors ? `, by ${authors}` : '',
+                  status: status,
+                  owner: owner
+                })}
+                accessibilityRole="summary"
+              >
+                <Card.Content>
+                  <Text variant="titleMedium">{book.title}</Text>
+                  <Text variant="bodySmall" style={styles.isbn}>
+                    ISBN: {book.isbnCode}
                   </Text>
-                )}
-                <View style={styles.bookFooter}>
-                  <Chip
-                    mode="flat"
-                    style={{ backgroundColor: getStatusColor(book.status) }}
-                  >
-                    {book.status || 'N/A'}
-                  </Chip>
-                  <Text variant="bodySmall">
-                    {book.userName || t('pages:admin.books.no_owner', 'No owner')}
-                  </Text>
-                </View>
-              </Card.Content>
-            </Card>
-          ))
+                  {book.authors.length > 0 && (
+                    <Text variant="bodySmall">
+                      {authors}
+                    </Text>
+                  )}
+                  <View style={styles.bookFooter}>
+                    <Chip
+                      mode="flat"
+                      style={{ backgroundColor: getStatusColor(book.status) }}
+                      accessible={true}
+                      accessibilityLabel={t('accessibility:book_status', 'Status: {{status}}', { status: status })}
+                    >
+                      {status}
+                    </Chip>
+                    <Text variant="bodySmall">
+                      {owner}
+                    </Text>
+                  </View>
+                </Card.Content>
+              </Card>
+            );
+          })
         )}
       </ScrollView>
     </View>

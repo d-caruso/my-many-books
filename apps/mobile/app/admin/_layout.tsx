@@ -1,9 +1,11 @@
 import { Stack, Redirect } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function AdminLayout() {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -16,12 +18,17 @@ export default function AdminLayout() {
 
   if (user.role !== 'admin') {
     return (
-      <View style={styles.container}>
+      <View
+        style={styles.container}
+        accessible={true}
+        accessibilityRole="alert"
+        accessibilityLabel={t('pages:admin.access_denied_message', 'Access denied. You do not have permission to access this area.')}
+      >
         <Text variant="headlineMedium" style={styles.title}>
-          Access Denied
+          {t('pages:admin.access_denied', 'Access Denied')}
         </Text>
         <Text variant="bodyLarge" style={styles.message}>
-          You do not have permission to access this area.
+          {t('pages:admin.no_permission', 'You do not have permission to access this area.')}
         </Text>
       </View>
     );
