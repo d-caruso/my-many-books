@@ -1,10 +1,10 @@
 /**
  * Accessibility Testing Utility
  *
- * Helper functions for running axe accessibility tests with vitest-axe
+ * Helper functions for running axe accessibility tests with jest-axe (compatible with vitest)
  */
 
-import { axe, toHaveNoViolations } from 'vitest-axe';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import { RenderResult } from '@testing-library/react';
 
 // Re-export for convenience
