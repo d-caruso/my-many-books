@@ -9,12 +9,10 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import {
-  People as PeopleIcon,
-  Book as BookIcon,
-  TrendingUp as TrendingUpIcon,
-  Dashboard as DashboardIcon
-} from '@mui/icons-material';
+import PeopleIcon from '@mui/icons-material/People';
+import BookIcon from '@mui/icons-material/Book';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
 import { useApi } from '../../contexts/ApiContext';

@@ -8,10 +8,8 @@ import {
   Alert,
   AlertTitle
 } from '@mui/material';
-import {
-  Warning as WarningIcon,
-  MenuBook as BookIcon
-} from '@mui/icons-material';
+import WarningIcon from '@mui/icons-material/Warning';
+import BookIcon from '@mui/icons-material/MenuBook';
 import { Book } from '../../types';
 import { BookCard } from './BookCard';
 
