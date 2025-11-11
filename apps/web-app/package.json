@@ -95,6 +95,7 @@
     "util": "^0.12.5",
     "vite": "^7.1.7",
     "vitest": "^3.2.4",
+    "vitest-axe": "^0.1.0",
     "whatwg-fetch": "^3.6.20",
     "workbox-window": "^7.3.0"
   }
