@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button, Alert, Stack, Container } from '@mui/material';
-import { Refresh as RefreshIcon, Home as HomeIcon } from '@mui/icons-material';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import HomeIcon from '@mui/icons-material/Home';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 

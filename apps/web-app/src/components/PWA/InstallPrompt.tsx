@@ -5,9 +5,7 @@ import {
   Button,
   Box
 } from '@mui/material';
-import {
-  GetApp as InstallIcon
-} from '@mui/icons-material';
+import InstallIcon from '@mui/icons-material/GetApp';
 import { useTranslation } from 'react-i18next';
 import { usePWA } from '../../hooks/usePWA';
 

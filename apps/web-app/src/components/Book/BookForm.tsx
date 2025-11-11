@@ -17,12 +17,10 @@ import {
   Divider,
   IconButton
 } from '@mui/material';
-import {
-  Save as SaveIcon,
-  Cancel as CancelIcon,
-  Close as CloseIcon,
-  Add as AddIcon
-} from '@mui/icons-material';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
 import { useTranslation } from 'react-i18next';
 import { Book, Author, Category } from '../../types';
 import { useCategories } from '../../hooks/useCategories';

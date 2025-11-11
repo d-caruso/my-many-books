@@ -9,14 +9,12 @@ import {
   Stack,
   Chip
 } from '@mui/material';
-import {
-  Close as CloseIcon,
-  SwapHoriz as SwapIcon,
-  Edit as EditIcon,
-  Camera as CameraIcon,
-  Warning as WarningIcon,
-  Timer as TimerIcon
-} from '@mui/icons-material';
+import CloseIcon from '@mui/icons-material/Close';
+import SwapIcon from '@mui/icons-material/SwapHoriz';
+import EditIcon from '@mui/icons-material/Edit';
+import CameraIcon from '@mui/icons-material/Camera';
+import WarningIcon from '@mui/icons-material/Warning';
+import TimerIcon from '@mui/icons-material/Timer';
 import { useTranslation } from 'react-i18next';
 import { useISBNScanner } from '../../hooks/useISBNScanner';
 import { ScanResult } from '../../types';

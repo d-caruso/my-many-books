@@ -5,7 +5,8 @@ import {
   Button,
   Container
 } from '@mui/material';
-import { Edit as EditIcon, ArrowBack as BackIcon } from '@mui/icons-material';
+import EditIcon from '@mui/icons-material/Edit';
+import BackIcon from '@mui/icons-material/ArrowBack';
 import { useTranslation } from 'react-i18next';
 import { ISBNScanner } from './ISBNScanner';
 import { ManualISBNInput } from './ManualISBNInput';

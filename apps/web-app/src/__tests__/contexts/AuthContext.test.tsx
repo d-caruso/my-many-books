@@ -4,8 +4,8 @@ import { AuthProvider, useAuth } from '../../contexts/AuthContext';
 import { ApiProvider } from '../../contexts/ApiContext';
 
 // Mock AWS Amplify auth - industry standard approach
-vi.mock('aws-amplify/auth');
-import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
+vi.mock('@aws-amplify/auth');
+import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from '@aws-amplify/auth';
 
 // Mock API service
 const mockApiService = {

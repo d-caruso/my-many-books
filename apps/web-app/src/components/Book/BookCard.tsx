@@ -14,11 +14,9 @@ import {
   Box,
   Stack
 } from '@mui/material';
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  MenuBook as BookIcon
-} from '@mui/icons-material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import BookIcon from '@mui/icons-material/MenuBook';
 import { Book, Author, Category } from '../../types';
 
 interface BookCardProps {
