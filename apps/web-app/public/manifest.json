@@ -23,11 +23,29 @@
   ],
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "theme_color": "#3b82f6",
   "background_color": "#f9fafb",
   "categories": ["books", "productivity", "education"],
   "lang": "en",
+  "dir": "ltr",
   "scope": "/",
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Add Book",
+      "short_name": "Add",
+      "description": "Add a new book to your collection",
+      "url": "/books/add",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Search Books",
+      "short_name": "Search",
+      "description": "Search your book collection",
+      "url": "/search",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    }
+  ],
+  "display_override": ["standalone", "minimal-ui"]
 }
