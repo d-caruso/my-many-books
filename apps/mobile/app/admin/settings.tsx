@@ -8,7 +8,12 @@ export default function AdminSettings() {
 
   return (
     <View style={styles.container}>
-      <Card style={styles.card}>
+      <Card
+        style={styles.card}
+        accessible={true}
+        accessibilityLabel={t('accessibility:settings_placeholder', 'Settings. Configuration coming soon.')}
+        accessibilityRole="text"
+      >
         <Card.Content>
           <Text variant="titleLarge" style={styles.title}>
             {t('pages:admin.settings.page_title', 'Settings')}
