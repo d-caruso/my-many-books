@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button, Stack, Paper } from '@mui/material';
-import { CameraAlt as CameraIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import CameraIcon from '@mui/icons-material/CameraAlt';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useTranslation } from 'react-i18next';
 
 interface ScannerErrorFallbackProps {

@@ -5,14 +5,12 @@ import {
   Box,
   Button
 } from '@mui/material';
-import {
-  Close as CloseIcon,
-  Add as AddIcon,
-  Search as SearchIcon,
-  MenuBook as BookIcon,
-  Person as PersonIcon,
-  FilterList as FilterIcon
-} from '@mui/icons-material';
+import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
+import BookIcon from '@mui/icons-material/MenuBook';
+import PersonIcon from '@mui/icons-material/Person';
+import FilterIcon from '@mui/icons-material/FilterList';
 import { BookSearchForm } from './BookSearchForm';
 import { BookSearchResults } from './BookSearchResults';
 import { useBookSearch } from '../../hooks/useBookSearch';
