@@ -7,7 +7,7 @@ import { ApiProvider } from './contexts/ApiContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary, AuthErrorBoundary, PageErrorBoundary } from './components/ErrorBoundary';
 import { RootErrorFallback } from './components/ErrorBoundary/RootErrorFallback';
-import './i18n';
+import { useI18nInit } from './hooks/useI18nInit';
 
 // Lazy load all pages for route-based code splitting
 const AuthPage = lazy(() => import('./pages/AuthPage'));
@@ -79,6 +79,14 @@ const theme = createTheme({
 });
 
 function App() {
+  // Initialize i18n asynchronously to defer library loading
+  const i18nReady = useI18nInit();
+
+  // Show loading screen while i18n initializes
+  if (!i18nReady) {
+    return <LoadingFallback />;
+  }
+
   return (
     <ErrorBoundary fallback={(error, reset) => <RootErrorFallback error={error} reset={reset} />}>
       <ThemeProvider theme={theme}>
