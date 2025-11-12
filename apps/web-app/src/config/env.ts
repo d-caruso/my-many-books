@@ -8,6 +8,7 @@ interface EnvironmentConfig {
   COGNITO_USER_POOL_CLIENT_ID: string;
   COGNITO_IDENTITY_POOL_ID: string;
   AWS_REGION: string;
+  BOOKS_PAGINATION_DEFAULT: number;
 }
 
 // Helper function to get environment variables with fallbacks
@@ -23,6 +24,7 @@ export const env: EnvironmentConfig = {
   COGNITO_USER_POOL_CLIENT_ID: getEnvVar('COGNITO_USER_POOL_CLIENT_ID', ''),
   COGNITO_IDENTITY_POOL_ID: getEnvVar('COGNITO_IDENTITY_POOL_ID', ''),
   AWS_REGION: getEnvVar('AWS_REGION', 'us-east-1'),
+  BOOKS_PAGINATION_DEFAULT: parseInt(getEnvVar('BOOKS_PAGINATION_DEFAULT', '10'), 10),
 };
 
 // For backwards compatibility, also export individual values
@@ -33,6 +35,7 @@ export const {
   COGNITO_USER_POOL_CLIENT_ID,
   COGNITO_IDENTITY_POOL_ID,
   AWS_REGION,
+  BOOKS_PAGINATION_DEFAULT,
 } = env;
 
 export default env;

@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import { Book, SearchFilters } from '../../hooks/../types';
 import { ApiProvider } from '../../contexts/ApiContext';
+import { env } from '../../config/env';
 import React from 'react';
 
 // Create mock API service
@@ -87,7 +88,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: 'test query',
         page: 1,
-        limit: parseInt(process.env.VITE_BOOKS_PAGINATION_DEFAULT),
+        limit: env.BOOKS_PAGINATION_DEFAULT,
       });
       expect(result.current.books).toEqual(mockBooks);
       expect(result.current.totalCount).toBe(2);
@@ -122,7 +123,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: 'query',
         page: 1,
-        limit: parseInt(process.env.VITE_BOOKS_PAGINATION_DEFAULT),
+        limit: env.BOOKS_PAGINATION_DEFAULT,
         categoryId: 1,
         authorId: 2,
       });
@@ -148,7 +149,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: '',
         page: 1,
-        limit: parseInt(process.env.VITE_BOOKS_PAGINATION_DEFAULT),
+        limit: env.BOOKS_PAGINATION_DEFAULT,
       });
       expect(result.current.books).toEqual([]);
       expect(result.current.loading).toBe(false);
@@ -176,7 +177,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: '',
         page: 1,
-        limit: parseInt(process.env.VITE_BOOKS_PAGINATION_DEFAULT),
+        limit: env.BOOKS_PAGINATION_DEFAULT,
         categoryId: 1,
       });
       expect(result.current.books).toEqual(mockBooks);
