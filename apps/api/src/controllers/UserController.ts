@@ -45,7 +45,8 @@ export class UserController {
         return;
       }
 
-      const user = await UserService.getUserById(req.user.userId);
+      // Use cached user from auth middleware to avoid duplicate query
+      const user = req.user.userModel || await UserService.getUserById(req.user.userId);
       if (!user) {
         res.status(404).json({ error: this.t('errors:user_not_found') });
         return;
