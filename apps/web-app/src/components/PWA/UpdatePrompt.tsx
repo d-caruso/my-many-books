@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePWA } from '../../hooks/usePWA';
+import { usePWAContext } from '../../contexts/PWAContext';
 
 interface UpdatePromptProps {
   variant?: 'banner' | 'dialog' | 'snackbar';
@@ -12,7 +12,7 @@ export const UpdatePrompt: React.FC<UpdatePromptProps> = ({
   message
 }) => {
   const { t } = useTranslation();
-  const { updateAvailable, updateApp, dismissUpdate } = usePWA();
+  const { updateAvailable, updateApp, dismissUpdate } = usePWAContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

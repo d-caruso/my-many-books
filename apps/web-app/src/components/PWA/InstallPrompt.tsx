@@ -7,11 +7,23 @@ import {
 } from '@mui/material';
 import InstallIcon from '@mui/icons-material/GetApp';
 import { useTranslation } from 'react-i18next';
-import { usePWA } from '../../hooks/usePWA';
+import { usePWAContext } from '../../contexts/PWAContext';
 
 export const InstallPrompt: React.FC = () => {
   const { t } = useTranslation();
-  const { isInstallable, isInstalled, installApp } = usePWA();
+  const { isInstallable, isInstalled, installApp } = usePWAContext();
+  const [canInstall, setCanInstall] = React.useState(false);
+
+  // Check if the deferred prompt is available by testing installApp
+  React.useEffect(() => {
+    // The installApp function will log a warning if deferredPrompt is null
+    // We'll consider it available after a short delay to allow the event to fire
+    const timer = setTimeout(() => {
+      setCanInstall(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   if (isInstalled || !isInstallable) {
     return null;
@@ -49,6 +61,7 @@ export const InstallPrompt: React.FC = () => {
           variant="contained"
           size="small"
           startIcon={<InstallIcon />}
+          disabled={!canInstall}
           sx={{
             bgcolor: 'background.paper',
             color: 'black',

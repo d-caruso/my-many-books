@@ -40,7 +40,8 @@
 
         // Preload critical translation files for detected language
         // search is included because BookSearchForm renders on BooksPage (default landing page)
-        var criticalNamespaces = ['common', 'pages', 'books', 'search'];
+        // pwa is included because InstallPrompt renders immediately
+        var criticalNamespaces = ['common', 'pages', 'books', 'search', 'pwa'];
         criticalNamespaces.forEach(function(ns) {
           var link = document.createElement('link');
           link.rel = 'preload';

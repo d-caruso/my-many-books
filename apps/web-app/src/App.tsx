@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, CircularProgress, Box } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
 import { ApiProvider } from './contexts/ApiContext';
+import { PWAProvider } from './contexts/PWAContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary/ErrorBoundary';
 import { AuthErrorBoundary } from './components/ErrorBoundary/AuthErrorBoundary';
@@ -22,10 +23,10 @@ const ScannerModal = lazy(() => import('./components/Scanner'));
 // Lazy load Navbar (only for authenticated users)
 const Navbar = lazy(() => import('./components/Navigation').then(m => ({ default: m.Navbar })));
 
-// Lazy load PWA components (non-critical, rarely shown)
-const InstallPrompt = lazy(() => import('./components/PWA').then(m => ({ default: m.InstallPrompt })));
-const UpdatePrompt = lazy(() => import('./components/PWA').then(m => ({ default: m.UpdatePrompt })));
-const OfflineIndicator = lazy(() => import('./components/PWA').then(m => ({ default: m.OfflineIndicator })));
+// Import PWA components directly (not lazy) to ensure immediate initialization
+import { InstallPrompt } from './components/PWA/InstallPrompt';
+import { UpdatePrompt } from './components/PWA/UpdatePrompt';
+import { OfflineIndicator } from './components/PWA/OfflineIndicator';
 
 // Admin pages - only loaded for admin users
 const AdminDashboardPage = lazy(() => import('./pages/Admin'));
@@ -91,10 +92,11 @@ function App() {
     )}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <ApiProvider>
-          <AuthErrorBoundary>
-            <AuthProvider>
-              <Router>
+        <PWAProvider>
+          <ApiProvider>
+            <AuthErrorBoundary>
+              <AuthProvider>
+                <Router>
           <div className="min-h-screen">
             {/* Skip to main content link for keyboard navigation */}
             <a
@@ -104,11 +106,9 @@ function App() {
               Skip to main content
             </a>
 
-            {/* Lazy load PWA components (non-critical) */}
-            <Suspense fallback={null}>
-              <OfflineIndicator />
-              <UpdatePrompt />
-            </Suspense>
+            {/* PWA components - loaded immediately */}
+            <OfflineIndicator />
+            <UpdatePrompt />
 
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
@@ -169,16 +169,15 @@ function App() {
             </Routes>
             </Suspense>
 
-            {/* Lazy load Install Prompt (non-critical) */}
-            <Suspense fallback={null}>
-              <InstallPrompt />
-            </Suspense>
+            {/* Install Prompt - loaded immediately */}
+            <InstallPrompt />
           </div>
-          </Router>
-            </AuthProvider>
-          </AuthErrorBoundary>
-      </ApiProvider>
-    </ThemeProvider>
+            </Router>
+              </AuthProvider>
+            </AuthErrorBoundary>
+          </ApiProvider>
+        </PWAProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

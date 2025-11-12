@@ -31,10 +31,11 @@ i18n
     supportedLngs: SUPPORTED_LANGUAGES.map((l) => l.code),
 
     // Load critical namespaces upfront (preloaded in HTML for parallel loading)
-    // These are needed immediately on app startup: common, pages, books, search
+    // These are needed immediately on app startup: common, pages, books, search, pwa
     // search is included because BookSearchForm renders on BooksPage (default landing page)
+    // pwa is included because InstallPrompt renders immediately
     // Other namespaces (scanner, admin, dialogs) will be loaded on-demand
-    ns: ['common', 'pages', 'books', 'search'],
+    ns: ['common', 'pages', 'books', 'search', 'pwa'],
     defaultNS: 'common',
 
     // Prevent preloading all languages - only load detected language
