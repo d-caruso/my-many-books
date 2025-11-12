@@ -24,7 +24,7 @@ export const env: EnvironmentConfig = {
   COGNITO_USER_POOL_CLIENT_ID: getEnvVar('COGNITO_USER_POOL_CLIENT_ID', ''),
   COGNITO_IDENTITY_POOL_ID: getEnvVar('COGNITO_IDENTITY_POOL_ID', ''),
   AWS_REGION: getEnvVar('AWS_REGION', 'us-east-1'),
-  BOOKS_PAGINATION_DEFAULT: parseInt(getEnvVar('BOOKS_PAGINATION_DEFAULT', '10'), 10),
+  BOOKS_PAGINATION_DEFAULT: parseInt(getEnvVar('BOOKS_PAGINATION_DEFAULT', '5'), 5),
 };
 
 // For backwards compatibility, also export individual values
