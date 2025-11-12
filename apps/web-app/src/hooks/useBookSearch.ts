@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Book, SearchFilters } from '../types';
 import { useApi } from '../contexts/ApiContext';
+import { env } from '../config/env';
 
 interface BookSearchState {
   books: Book[];
@@ -45,13 +46,11 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     setLoading(true);
     setError(null);
 
-    const defaultLimit = parseInt(import.meta.env.VITE_BOOKS_PAGINATION_DEFAULT || '10', 10);
-
     try {
       const searchParams = {
         q: query.trim(),
         page,
-        limit: defaultLimit,
+        limit: env.BOOKS_PAGINATION_DEFAULT,
         ...filters
       };
 
