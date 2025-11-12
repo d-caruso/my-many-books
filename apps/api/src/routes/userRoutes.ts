@@ -6,7 +6,7 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
 import { authMiddleware } from '../middleware/auth';
-import { standardLimiter, readLimiter, writeLimiter } from '../middleware/rateLimiters';
+import { readLimiter, writeLimiter } from '../middleware/rateLimiters';
 import {
   validateBody,
   validateQuery,
@@ -18,9 +18,6 @@ const router = Router();
 
 // All user routes require authentication
 router.use(authMiddleware);
-
-// Apply standard rate limiting to user routes for backwards compatibility
-router.use(standardLimiter);
 
 // User profile endpoints (without "profile" in URI)
 // Apply granular rate limiting: separate limits for read vs write operations
