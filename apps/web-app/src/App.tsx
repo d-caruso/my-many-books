@@ -6,8 +6,10 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ApiProvider } from './contexts/ApiContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary, AuthErrorBoundary, PageErrorBoundary } from './components/ErrorBoundary';
-import { RootErrorFallback } from './components/ErrorBoundary/RootErrorFallback';
 import { useI18nInit } from './hooks/useI18nInit';
+
+// Lazy load error fallback (only shown on errors)
+const RootErrorFallback = lazy(() => import('./components/ErrorBoundary/RootErrorFallback').then(m => ({ default: m.RootErrorFallback })));
 
 // Lazy load all pages for route-based code splitting
 const AuthPage = lazy(() => import('./pages/AuthPage'));
@@ -88,7 +90,11 @@ function App() {
   }
 
   return (
-    <ErrorBoundary fallback={(error, reset) => <RootErrorFallback error={error} reset={reset} />}>
+    <ErrorBoundary fallback={(error, reset) => (
+      <Suspense fallback={<LoadingFallback />}>
+        <RootErrorFallback error={error} reset={reset} />
+      </Suspense>
+    )}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <ApiProvider>
