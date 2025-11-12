@@ -24,7 +24,34 @@
     
     <!-- Manifest -->
     <link rel="manifest" href="/manifest.json" />
-    
+
+    <!-- Dynamic preload script for user's language translations -->
+    <script>
+      (function() {
+        // Detect user's language (same logic as i18next-browser-languagedetector)
+        var userLang = localStorage.getItem('preferred-language') ||
+                       (navigator.language || navigator.userLanguage || 'en').split('-')[0];
+
+        // Validate against supported languages
+        var supportedLangs = ['en', 'it'];
+        if (supportedLangs.indexOf(userLang) === -1) {
+          userLang = 'en';
+        }
+
+        // Preload critical translation files for detected language
+        // search is included because BookSearchForm renders on BooksPage (default landing page)
+        var criticalNamespaces = ['common', 'pages', 'books', 'search'];
+        criticalNamespaces.forEach(function(ns) {
+          var link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'fetch';
+          link.crossOrigin = 'anonymous';
+          link.href = '/locales/' + userLang + '/' + ns + '.json';
+          document.head.appendChild(link);
+        });
+      })();
+    </script>
+
     <title>My Many Books - Personal Library</title>
   </head>
   <body>
