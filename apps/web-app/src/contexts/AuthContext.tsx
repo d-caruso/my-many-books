@@ -42,9 +42,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Configure Amplify asynchronously before auth check
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       if (shouldConfigureAmplify) {
-        const configured = configureAmplify();
+        const configured = await configureAmplify();
         setAmplifyConfigured(configured);
         // Pass configured value directly to avoid state update delay
         if (configured) {
@@ -155,7 +155,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Ensure Amplify is configured before attempting login
     if (!amplifyConfigured) {
       if (shouldConfigureAmplify) {
-        const configured = configureAmplify();
+        const configured = await configureAmplify();
         setAmplifyConfigured(configured);
         if (!configured) {
           throw new Error('Authentication not configured');
@@ -210,7 +210,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Ensure Amplify is configured before attempting registration
     if (!amplifyConfigured) {
       if (shouldConfigureAmplify) {
-        const configured = configureAmplify();
+        const configured = await configureAmplify();
         setAmplifyConfigured(configured);
         if (!configured) {
           throw new Error('Authentication not configured');

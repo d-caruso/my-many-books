@@ -1,4 +1,3 @@
-import { Amplify } from 'aws-amplify';
 import { env } from './env';
 
 // Amplify v6 configuration interface
@@ -26,7 +25,9 @@ interface AmplifyV6Config {
   };
 }
 
-export const configureAmplify = (): boolean => {
+export const configureAmplify = async (): Promise<boolean> => {
+  // Dynamically import Amplify to defer heavy crypto/AWS SDK loading
+  const { Amplify } = await import('aws-amplify');
   // Validate required environment variables
   const requiredVars = {
     userPoolId: env.COGNITO_USER_POOL_ID,
