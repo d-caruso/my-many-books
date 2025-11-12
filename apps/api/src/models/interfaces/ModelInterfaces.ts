@@ -156,4 +156,5 @@ export interface AuthUser {
   provider: string; // Auth provider used
   providerUserId?: string; // External auth system ID
   isNewUser?: boolean; // Helpful for onboarding flows
+  userModel?: any; // Cached user model from auth middleware to avoid duplicate query
 }

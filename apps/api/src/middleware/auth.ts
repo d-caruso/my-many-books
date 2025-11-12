@@ -178,6 +178,7 @@ export const authMiddleware = async (
       provider: provider.getProviderName(),
       providerUserId: providerUser.id,
       isNewUser,
+      userModel: user, // Cache user model to avoid duplicate query in controllers
     };
 
     // Attach user to request
