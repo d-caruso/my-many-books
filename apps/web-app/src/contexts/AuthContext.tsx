@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 import { User } from '../types';
 import { env } from '../config/env';
 import { apiService } from '../services/api';
 import { useApi } from '../contexts/ApiContext';
 import { configureAmplify } from '../config/amplify';
+
+// Dynamic import types for AWS Amplify to defer loading
+type SignInOutput = any;
+type SignUpOutput = any;
 
 // Check if Amplify should be configured
 const shouldConfigureAmplify = env.COGNITO_USER_POOL_ID && env.COGNITO_USER_POOL_CLIENT_ID;
@@ -66,6 +69,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setLoading(false);
         return;
       }
+
+      // Dynamically import AWS Amplify auth functions
+      const { getCurrentUser, fetchAuthSession } = await import('aws-amplify/auth');
 
       const currentUser = await getCurrentUser();
       const session = await fetchAuthSession();
@@ -167,6 +173,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       setLoading(true);
+
+      // Dynamically import AWS Amplify auth functions
+      const { signIn, fetchAuthSession } = await import('aws-amplify/auth');
+
       const signInOutput = await signIn({
         username: email,
         password: password,
@@ -222,6 +232,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       setLoading(true);
+
+      // Dynamically import AWS Amplify auth functions
+      const { signUp } = await import('aws-amplify/auth');
+
       const signUpOutput = await signUp({
         username: userData.email,
         password: userData.password,
@@ -269,6 +283,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
+      // Dynamically import AWS Amplify auth functions
+      const { signOut } = await import('aws-amplify/auth');
+
       await signOut();
       setUser(null);
       setToken(null);
