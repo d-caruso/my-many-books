@@ -5,8 +5,6 @@ import { CssBaseline, CircularProgress, Box } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
 import { ApiProvider } from './contexts/ApiContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { Navbar } from './components/Navigation';
-import { InstallPrompt, UpdatePrompt, OfflineIndicator } from './components/PWA';
 import { ErrorBoundary, AuthErrorBoundary, PageErrorBoundary } from './components/ErrorBoundary';
 import { RootErrorFallback } from './components/ErrorBoundary/RootErrorFallback';
 import './i18n';
@@ -16,6 +14,14 @@ const AuthPage = lazy(() => import('./pages/AuthPage'));
 const BooksPage = lazy(() => import('./pages/BooksPage'));
 const BookSearchPage = lazy(() => import('./components/Search/BookSearchPage'));
 const ScannerModal = lazy(() => import('./components/Scanner'));
+
+// Lazy load Navbar (only for authenticated users)
+const Navbar = lazy(() => import('./components/Navigation').then(m => ({ default: m.Navbar })));
+
+// Lazy load PWA components (non-critical, rarely shown)
+const InstallPrompt = lazy(() => import('./components/PWA').then(m => ({ default: m.InstallPrompt })));
+const UpdatePrompt = lazy(() => import('./components/PWA').then(m => ({ default: m.UpdatePrompt })));
+const OfflineIndicator = lazy(() => import('./components/PWA').then(m => ({ default: m.OfflineIndicator })));
 
 // Admin pages - only loaded for admin users
 const AdminDashboardPage = lazy(() => import('./pages/Admin'));
@@ -90,8 +96,11 @@ function App() {
               Skip to main content
             </a>
 
-            <OfflineIndicator />
-            <UpdatePrompt />
+            {/* Lazy load PWA components (non-critical) */}
+            <Suspense fallback={null}>
+              <OfflineIndicator />
+              <UpdatePrompt />
+            </Suspense>
 
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
@@ -152,7 +161,10 @@ function App() {
             </Routes>
             </Suspense>
 
-            <InstallPrompt />
+            {/* Lazy load Install Prompt (non-critical) */}
+            <Suspense fallback={null}>
+              <InstallPrompt />
+            </Suspense>
           </div>
           </Router>
             </AuthProvider>
