@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePWA } from '../../hooks/usePWA';
+import { usePWAContext } from '../../contexts/PWAContext';
 
 interface OfflineIndicatorProps {
   variant?: 'banner' | 'snackbar';
@@ -20,7 +20,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   message
 }) => {
   const { t } = useTranslation();
-  const { isOffline } = usePWA();
+  const { isOffline } = usePWAContext();
   const displayMessage = message || t('pwa:offline_indicator.you_are_offline');
 
   if (!isOffline) {

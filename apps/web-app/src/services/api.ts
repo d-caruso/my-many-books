@@ -6,6 +6,7 @@
 import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
 import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
 import { BookFormData } from '../components/Book/BookForm';
+import { env } from '../config/env';
 import axios from 'axios';
 
 
@@ -260,7 +261,7 @@ class ApiService {
       }
       
       const page = searchParams.page || 1;
-      const limit = searchParams.limit || 10;
+      const limit = searchParams.limit || env.BOOKS_PAGINATION_DEFAULT;
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       const paginatedBooks = filteredBooks.slice(startIndex, endIndex);
@@ -553,7 +554,7 @@ class ApiService {
 
     return this.apiClient.books.getBooks(
       filters?.page || 1,
-      filters?.limit || 10,
+      filters?.limit || env.BOOKS_PAGINATION_DEFAULT,
       true, // includeAuthors
       true  // includeCategories
     );

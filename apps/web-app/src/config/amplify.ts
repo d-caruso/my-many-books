@@ -63,9 +63,7 @@ export const configureAmplify = async (): Promise<boolean> => {
       }
     };
 
-    console.log('Configuring Amplify with v6 format');
     Amplify.configure(amplifyConfig);
-    console.log('✅ Amplify configured successfully');
     
     return true;
   } catch (error) {
