@@ -6,7 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ApiProvider } from './contexts/ApiContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary, AuthErrorBoundary, PageErrorBoundary } from './components/ErrorBoundary';
-import { useI18nInit } from './hooks/useI18nInit';
+import './i18n';
 
 // Lazy load error fallback (only shown on errors)
 const RootErrorFallback = lazy(() => import('./components/ErrorBoundary/RootErrorFallback').then(m => ({ default: m.RootErrorFallback })));
@@ -81,14 +81,6 @@ const theme = createTheme({
 });
 
 function App() {
-  // Initialize i18n asynchronously to defer library loading
-  const i18nReady = useI18nInit();
-
-  // Show loading screen while i18n initializes
-  if (!i18nReady) {
-    return <LoadingFallback />;
-  }
-
   return (
     <ErrorBoundary fallback={(error, reset) => (
       <Suspense fallback={<LoadingFallback />}>
