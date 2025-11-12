@@ -36,36 +36,30 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // React core (300-400KB)
+          // React core (must stay together)
           'vendor-react': [
             'react',
             'react-dom',
             'react-router-dom'
           ],
-          // Material UI (400-500KB)
-          'vendor-mui': [
+          // Material UI core (without icons)
+          'vendor-mui-core': [
             '@mui/material',
-            '@mui/icons-material',
             '@emotion/react',
             '@emotion/styled'
           ],
-          // AWS Amplify (300-400KB)
-          'vendor-aws': [
-            'aws-amplify',
-            '@aws-amplify/auth',
-            '@aws-amplify/ui-react'
-          ],
+          // MUI icons - removed from manual chunks to bundle with components that use them
+          // AWS Amplify - removed from manual chunks to defer loading until auth is needed
+          // DataGrid - removed from manual chunks to allow lazy loading with admin pages
           // Internationalization (100-150KB)
           'vendor-i18n': [
             'i18next',
             'react-i18next',
-            'i18next-browser-languagedetector'
+            'i18next-browser-languagedetector',
+            'i18next-http-backend'
           ],
-          // Barcode scanner (200-300KB)
-          'vendor-barcode': [
-            '@zxing/browser',
-            '@zxing/library'
-          ],
+          // Barcode scanner - removed to enable dynamic loading
+          // Will be loaded on-demand when scanner is accessed
         },
       },
     },

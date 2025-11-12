@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library';
 import { ScanResult } from '../types';
+
+// Types for dynamically imported zxing library
+// Using 'any' to avoid bundling the library at compile time
+type BrowserMultiFormatReader = any;
+type NotFoundException = any;
 
 interface ScannerState {
   isScanning: boolean;
@@ -31,11 +35,30 @@ export const useISBNScanner = (
 
   const codeReader = useRef<BrowserMultiFormatReader | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const isInitializing = useRef(false);
 
-  // Initialize the barcode reader
+  // Dynamically import and initialize the barcode reader
+  const initializeReader = useCallback(async () => {
+    if (codeReader.current || isInitializing.current) {
+      return codeReader.current;
+    }
+
+    try {
+      isInitializing.current = true;
+      const { BrowserMultiFormatReader } = await import('@zxing/library');
+      codeReader.current = new BrowserMultiFormatReader();
+      return codeReader.current;
+    } catch (err) {
+      console.error('Failed to initialize barcode reader:', err);
+      setError('Failed to initialize scanner');
+      return null;
+    } finally {
+      isInitializing.current = false;
+    }
+  }, []);
+
+  // Cleanup on unmount
   useEffect(() => {
-    codeReader.current = new BrowserMultiFormatReader();
-    
     return () => {
       if (codeReader.current) {
         codeReader.current.reset();
@@ -158,7 +181,9 @@ export const useISBNScanner = (
       if (!granted) return;
     }
 
-    if (!codeReader.current || !videoRef.current) {
+    // Dynamically load the scanner library
+    const reader = await initializeReader();
+    if (!reader || !videoRef.current) {
       setError('Scanner not properly initialized');
       return;
     }
@@ -173,24 +198,27 @@ export const useISBNScanner = (
         return;
       }
 
-      await codeReader.current.decodeFromVideoDevice(
+      // Dynamically import NotFoundException for error checking
+      const { NotFoundException } = await import('@zxing/library');
+
+      await reader.decodeFromVideoDevice(
         deviceId,
         videoRef.current,
         (result, error) => {
           if (result) {
             const scannedText = result.getText();
-            
+
             if (validateISBN(scannedText)) {
               const scanResult: ScanResult = {
                 isbn: scannedText.replace(/[^0-9X]/gi, ''),
                 success: true
               };
-              
+
               onScanSuccess(scanResult);
               stopScanning();
             }
           }
-          
+
           if (error && !(error instanceof NotFoundException)) {
             console.warn('Scan error:', error);
             setError('Scanning error occurred');
@@ -204,7 +232,7 @@ export const useISBNScanner = (
       setIsScanning(false);
       onScanError?.('Failed to start camera');
     }
-  }, [hasPermission, requestPermission, selectedDeviceId, devices, onScanSuccess, onScanError, validateISBN]);
+  }, [hasPermission, requestPermission, selectedDeviceId, devices, onScanSuccess, onScanError, validateISBN, initializeReader]);
 
   // Stop scanning
   const stopScanning = useCallback((): void => {

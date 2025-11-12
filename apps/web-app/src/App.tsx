@@ -5,7 +5,9 @@ import { CssBaseline, CircularProgress, Box } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
 import { ApiProvider } from './contexts/ApiContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { ErrorBoundary, AuthErrorBoundary, PageErrorBoundary } from './components/ErrorBoundary';
+import { ErrorBoundary } from './components/ErrorBoundary/ErrorBoundary';
+import { AuthErrorBoundary } from './components/ErrorBoundary/AuthErrorBoundary';
+import { PageErrorBoundary } from './components/ErrorBoundary/PageErrorBoundary';
 import './i18n';
 
 // Lazy load error fallback (only shown on errors)
