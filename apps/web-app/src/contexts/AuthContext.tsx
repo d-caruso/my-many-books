@@ -69,32 +69,78 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const currentUser = await getCurrentUser();
       const session = await fetchAuthSession();
-      
+
       if (currentUser && session?.tokens?.idToken) {
         const idToken = session.tokens.idToken.toString();
         // Store token in localStorage for API client
         localStorage.setItem('authToken', idToken);
 
-        // Fetch full user profile from backend to get role and other details
-        const backendUser = await userAPI.getCurrentUser();
+        // Try to load cached user data for instant render
+        const cachedUserData = localStorage.getItem('user_profile');
+        if (cachedUserData) {
+          try {
+            const parsedUser = JSON.parse(cachedUserData);
+            setUser(parsedUser);
+            setToken(idToken);
+            setLoading(false); // Stop loading immediately with cached data
 
-        const userData: User = {
-          id: backendUser.id,
-          email: backendUser.email,
-          name: backendUser.name,
-          surname: backendUser.surname,
-          isActive: backendUser.isActive,
-          role: backendUser.role,
-          creationDate: backendUser.creationDate,
-          updateDate: backendUser.updateDate
-        };
+            // Fetch full user profile from backend in background (non-blocking)
+            // This updates the UI if role or other data changed
+            userAPI.getCurrentUser()
+              .then(backendUser => {
+                const userData: User = {
+                  id: backendUser.id,
+                  email: backendUser.email,
+                  name: backendUser.name,
+                  surname: backendUser.surname,
+                  isActive: backendUser.isActive,
+                  role: backendUser.role,
+                  creationDate: backendUser.creationDate,
+                  updateDate: backendUser.updateDate
+                };
 
-        setUser(userData);
-        setToken(idToken);
+                setUser(userData);
+                // Update cache
+                localStorage.setItem('user_profile', JSON.stringify(userData));
+              })
+              .catch(error => {
+                console.error('Failed to refresh user profile:', error);
+                // Keep using cached data
+              });
+          } catch (e) {
+            console.error('Failed to parse cached user data:', e);
+            // Cache is corrupted, fall through to fetch from backend
+            localStorage.removeItem('user_profile');
+          }
+        }
+
+        // No cache or cache was corrupted - MUST wait for backend (blocking)
+        // This is necessary for first login to get user role and permissions
+        if (!cachedUserData) {
+          const backendUser = await userAPI.getCurrentUser();
+
+          const userData: User = {
+            id: backendUser.id,
+            email: backendUser.email,
+            name: backendUser.name,
+            surname: backendUser.surname,
+            isActive: backendUser.isActive,
+            role: backendUser.role,
+            creationDate: backendUser.creationDate,
+            updateDate: backendUser.updateDate
+          };
+
+          setUser(userData);
+          setToken(idToken);
+          // Cache user data for next time
+          localStorage.setItem('user_profile', JSON.stringify(userData));
+        }
       } else {
         setUser(null);
         setToken(null);
         localStorage.removeItem('authToken');
+        localStorage.removeItem('user_profile');
+        setLoading(false);
       }
     } catch (error) {
       setUser(null);
@@ -227,18 +273,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       setToken(null);
       localStorage.removeItem('authToken');
+      localStorage.removeItem('user_profile');
     } catch (error) {
       console.error('Logout error:', error);
       // Clear local state even if logout fails
       setUser(null);
       setToken(null);
       localStorage.removeItem('authToken');
+      localStorage.removeItem('user_profile');
     }
   };
 
   const updateUser = (userData: Partial<User>) => {
     if (user) {
-      setUser({ ...user, ...userData });
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      // Update cache
+      localStorage.setItem('user_profile', JSON.stringify(updatedUser));
     }
   };
 
