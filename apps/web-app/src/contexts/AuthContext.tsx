@@ -44,12 +44,84 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { userAPI } = useApi(); // Get userAPI from context
 
   useEffect(() => {
-    // Configure Amplify asynchronously before auth check
+    // Fast path: Check localStorage first for returning users
+    const cachedToken = localStorage.getItem('authToken');
+    const cachedUserData = localStorage.getItem('user_profile');
+
+    if (cachedToken && cachedUserData) {
+      try {
+        // Restore user from cache immediately
+        const parsedUser = JSON.parse(cachedUserData);
+        setUser(parsedUser);
+        setToken(cachedToken);
+        setLoading(false); // Show app immediately for returning users
+
+        // Verify authentication in background
+        const verifyAuth = async () => {
+          if (shouldConfigureAmplify) {
+            const configured = await configureAmplify();
+            setAmplifyConfigured(configured);
+            if (configured) {
+              // Verify session is still valid
+              const { getCurrentUser, fetchAuthSession } = await import('aws-amplify/auth');
+              try {
+                await getCurrentUser();
+                const session = await fetchAuthSession();
+                if (session?.tokens?.idToken) {
+                  const idToken = session.tokens.idToken.toString();
+                  localStorage.setItem('authToken', idToken);
+                  setToken(idToken);
+
+                  // Refresh user profile in background
+                  userAPI.getCurrentUser()
+                    .then(backendUser => {
+                      const userData: User = {
+                        id: backendUser.id,
+                        email: backendUser.email,
+                        name: backendUser.name,
+                        surname: backendUser.surname,
+                        isActive: backendUser.isActive,
+                        role: backendUser.role,
+                        creationDate: backendUser.creationDate,
+                        updateDate: backendUser.updateDate
+                      };
+                      setUser(userData);
+                      localStorage.setItem('user_profile', JSON.stringify(userData));
+                    })
+                    .catch(error => console.error('Failed to refresh user profile:', error));
+                } else {
+                  // Session invalid, clear and redirect
+                  setUser(null);
+                  setToken(null);
+                  localStorage.removeItem('authToken');
+                  localStorage.removeItem('user_profile');
+                }
+              } catch (error) {
+                // Auth check failed, clear cache
+                setUser(null);
+                setToken(null);
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user_profile');
+              }
+            }
+          }
+        };
+
+        verifyAuth();
+        return;
+      } catch (e) {
+        // Cache is corrupted, fall through to full auth check
+        console.error('Failed to parse cached user data:', e);
+        localStorage.removeItem('user_profile');
+        localStorage.removeItem('authToken');
+      }
+    }
+
+    // No cache or corrupted cache - full auth check (first time users)
     const initializeAuth = async () => {
       if (shouldConfigureAmplify) {
         const configured = await configureAmplify();
         setAmplifyConfigured(configured);
-        // Pass configured value directly to avoid state update delay
         if (configured) {
           checkAuthState(configured);
         } else {
@@ -120,26 +192,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
 
-        // No cache or cache was corrupted - MUST wait for backend (blocking)
-        // This is necessary for first login to get user role and permissions
+        // No cache - fetch from backend in background (non-blocking)
         if (!cachedUserData) {
-          const backendUser = await userAPI.getCurrentUser();
-
-          const userData: User = {
-            id: backendUser.id,
-            email: backendUser.email,
-            name: backendUser.name,
-            surname: backendUser.surname,
-            isActive: backendUser.isActive,
-            role: backendUser.role,
-            creationDate: backendUser.creationDate,
-            updateDate: backendUser.updateDate
+          // Create temporary user object from Cognito data
+          const tempUser: User = {
+            id: 0, // Will be updated when backend responds
+            email: currentUser.signInDetails?.loginId || currentUser.username || '',
+            name: '',
+            surname: '',
+            isActive: true,
+            role: 'user', // Assume user role initially
+            creationDate: new Date().toISOString(),
+            updateDate: new Date().toISOString()
           };
 
-          setUser(userData);
+          setUser(tempUser);
           setToken(idToken);
-          // Cache user data for next time
-          localStorage.setItem('user_profile', JSON.stringify(userData));
+          setLoading(false); // Don't block rendering
+
+          // Fetch full user profile in background (non-blocking)
+          userAPI.getCurrentUser()
+            .then(backendUser => {
+              const userData: User = {
+                id: backendUser.id,
+                email: backendUser.email,
+                name: backendUser.name,
+                surname: backendUser.surname,
+                isActive: backendUser.isActive,
+                role: backendUser.role,
+                creationDate: backendUser.creationDate,
+                updateDate: backendUser.updateDate
+              };
+
+              setUser(userData);
+              // Cache user data for next time
+              localStorage.setItem('user_profile', JSON.stringify(userData));
+            })
+            .catch(error => {
+              console.error('Failed to fetch user profile:', error);
+              // Keep using temp user data
+            });
         }
       } else {
         setUser(null);

@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { Workbox } from 'workbox-window';
+import { useState, useEffect } from 'react';
 
 interface PWAState {
   isOffline: boolean;
@@ -29,16 +28,8 @@ export const usePWA = (): PWAState & PWAActions => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
-  const [wb, setWb] = useState<Workbox | null>(null);
-  const isInitialized = useRef(false);
 
   useEffect(() => {
-    // Prevent duplicate initialization in React Strict Mode - check this FIRST
-    if (isInitialized.current) {
-      return;
-    }
-    isInitialized.current = true;
-
     // Check if app is already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
@@ -48,58 +39,51 @@ export const usePWA = (): PWAState & PWAActions => {
       sessionStorage.removeItem('pwa-installable');
     }
 
-    // Check for existing installability flag
-    const storedInstallable = sessionStorage.getItem('pwa-installable');
-
     // Restore global deferred prompt if available
     if (globalDeferredPrompt) {
       setDeferredPrompt(globalDeferredPrompt);
     }
 
-    // Register service worker ONCE (enabled in both dev and production)
+    // Register service worker once
     if ('serviceWorker' in navigator && !swRegistrationPromise) {
+      swRegistrationPromise = navigator.serviceWorker
+        .register('/sw.js')
+        .then((reg) => {
+          setRegistration(reg);
 
-      // In production, use Workbox for advanced features
-      // In development, register the simple service worker directly
-      if (import.meta.env.PROD) {
-        const workbox = new Workbox('/sw.js');
-        setWb(workbox);
+          // Check for updates
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  setUpdateAvailable(true);
+                }
+              });
+            }
+          });
 
-        workbox.addEventListener('installed', (event) => {
-          if (event.isUpdate) {
+          // Check if there's a waiting worker
+          if (reg.waiting) {
             setUpdateAvailable(true);
           }
-        });
 
-        workbox.addEventListener('waiting', () => {
-          setUpdateAvailable(true);
-        });
-
-        workbox.addEventListener('controlling', () => {
-          window.location.reload();
-        });
-
-        swRegistrationPromise = workbox.register().then((reg) => {
-          setRegistration(reg || null);
           return reg;
+        })
+        .catch((err) => {
+          console.error('[PWA] Service worker registration failed:', err);
+          return undefined;
         });
-      } else {
-        // Development mode - register service worker directly (ONCE)
-        swRegistrationPromise = navigator.serviceWorker.register('/sw.js')
-          .then((reg) => {
-            setRegistration(reg);
-            return reg;
-          })
-          .catch((error) => {
-            return undefined;
-          });
-      }
+
+      // Handle controller change
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
     } else if (swRegistrationPromise) {
+      // Reuse existing promise
       swRegistrationPromise.then((reg) => {
         if (reg) setRegistration(reg);
       });
-    } else if (!('serviceWorker' in navigator)) {
-      console.warn('[PWA] Service worker not supported in this browser');
     }
 
     // Online/offline detection
@@ -131,34 +115,7 @@ export const usePWA = (): PWAState & PWAActions => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Fallback: Check if app is installable even without beforeinstallprompt
-    // This handles cases where Chrome doesn't fire the event due to engagement heuristics
-    const checkInstallability = async () => {
-      // Check if related apps are already installed (Chrome API)
-      if ('getInstalledRelatedApps' in navigator) {
-        try {
-          const relatedApps = await (navigator as any).getInstalledRelatedApps();
-          if (relatedApps.length === 0 && !isStandalone && !storedInstallable) {
-            // App is not installed and Chrome hasn't fired beforeinstallprompt
-            // Check if we have a service worker (indicates installability)
-            const registration = await navigator.serviceWorker.getRegistration();
-          }
-        } catch (e) {
-          // API not supported or failed, that's okay
-        }
-      }
-    };
-
-    // Log a message after some time if event hasn't fired
-    let devTimeoutId: NodeJS.Timeout | null = null;
-
-    const timeoutId = setTimeout(() => {
-      checkInstallability();
-    }, 3000);
-
     return () => {
-      clearTimeout(timeoutId);
-      if (devTimeoutId) clearTimeout(devTimeoutId);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -169,7 +126,6 @@ export const usePWA = (): PWAState & PWAActions => {
   const installApp = async (): Promise<void> => {
     const prompt = deferredPrompt || globalDeferredPrompt;
     if (!prompt) {
-      console.warn('Install prompt not available - deferred prompt is null');
       return;
     }
 
@@ -195,9 +151,6 @@ export const usePWA = (): PWAState & PWAActions => {
     if (registration && registration.waiting) {
       // Tell the waiting SW to skip waiting
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-    } else if (wb) {
-      // Force update by messaging the SW (production with Workbox)
-      wb.messageSkipWaiting();
     }
   };
 
