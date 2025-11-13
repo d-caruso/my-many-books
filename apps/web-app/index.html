@@ -53,13 +53,85 @@
       })();
     </script>
 
+    <!-- Critical CSS for instant loading screen (inline, no network request) -->
+    <style>
+      /* Reset and base styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Instant loading screen styles */
+      #root {
+        width: 100%;
+        height: 100%;
+      }
+
+      .app-loading {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        min-height: 100vh;
+        background: #ffffff;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+      }
+
+      .app-loading__spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #e5e7eb;
+        border-top-color: #0369a1;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      .app-loading__text {
+        margin-top: 16px;
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.025em;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* Hide loading screen after React mounts */
+      .app-mounted .app-loading {
+        display: none;
+      }
+    </style>
+
     <title>My Many Books - Personal Library</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <!-- Instant loading UI (renders before ANY JavaScript) -->
     <main>
-      <div id="root"></div>
+      <div id="root">
+        <div class="app-loading">
+          <div class="app-loading__spinner"></div>
+          <div class="app-loading__text">Loading My Many Books...</div>
+        </div>
+      </div>
     </main>
+
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

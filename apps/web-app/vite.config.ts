@@ -42,24 +42,16 @@ export default defineConfig({
             'react-dom',
             'react-router-dom'
           ],
-          // Material UI core (without icons)
-          'vendor-mui-core': [
+          // Material UI - separate chunk for caching, loads with ThemedApp (deferred)
+          'vendor-mui': [
             '@mui/material',
             '@emotion/react',
             '@emotion/styled'
           ],
-          // MUI icons - removed from manual chunks to bundle with components that use them
-          // AWS Amplify - removed from manual chunks to defer loading until auth is needed
-          // DataGrid - removed from manual chunks to allow lazy loading with admin pages
-          // Internationalization (100-150KB)
-          'vendor-i18n': [
-            'i18next',
-            'react-i18next',
-            'i18next-browser-languagedetector',
-            'i18next-http-backend'
-          ],
-          // Barcode scanner - removed to enable dynamic loading
-          // Will be loaded on-demand when scanner is accessed
+          // MUI icons - removed to bundle with pages that use them
+          // AWS Amplify - removed to defer loading until auth actions
+          // DataGrid - removed to lazy load with admin pages only
+          // i18n - removed from preload, loads after first render
         },
       },
     },
