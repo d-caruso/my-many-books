@@ -35,7 +35,6 @@ const Navbar = lazy(() => import('./components/Navigation').then(m => ({ default
 
 // Lazy load PWA components (non-critical, rarely shown)
 const InstallPrompt = lazy(() => import('./components/PWA').then(m => ({ default: m.InstallPrompt })));
-const InstallPromptDebug = lazy(() => import('./components/PWA/InstallPromptDebug').then(m => ({ default: m.InstallPromptDebug })));
 const UpdatePrompt = lazy(() => import('./components/PWA').then(m => ({ default: m.UpdatePrompt })));
 const OfflineIndicator = lazy(() => import('./components/PWA').then(m => ({ default: m.OfflineIndicator })));
 
@@ -152,7 +151,6 @@ function App() {
                       {/* Lazy load Install Prompt (non-critical) */}
                       <Suspense fallback={null}>
                         <InstallPrompt />
-                        <InstallPromptDebug />
                       </Suspense>
                     </div>
                   </Router>
