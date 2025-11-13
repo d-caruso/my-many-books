@@ -12,7 +12,9 @@
     "no_books_empty": "No books in your library yet",
     "loading": "Loading...",
     "load_more": "Load More Books",
-    "error_load_books": "Failed to load your books"
+    "error_load_books": "Failed to load your books",
+    "books_found": "{{count}} book found",
+    "books_found_plural": "{{count}} books found"
   },
   "protected_route": {
     "loading": "Loading..."
