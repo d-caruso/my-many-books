@@ -41,6 +41,7 @@
   "notes": "Notes",
   "cover_image": "Cover Image",
   "no_cover": "No cover available",
+  "book_cover_placeholder": "Book cover",
   "unknown_author": "Unknown Author",
   "edit_book_title": "Edit book",
   "delete_book_title": "Delete book",
