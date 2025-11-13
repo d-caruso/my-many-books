@@ -12,7 +12,9 @@
     "no_books_empty": "Nessun libro nella tua biblioteca ancora",
     "loading": "Caricamento in corso...",
     "load_more": "Carica Altri Libri",
-    "error_load_books": "Impossibile caricare i tuoi libri"
+    "error_load_books": "Impossibile caricare i tuoi libri",
+    "books_found": "{{count}} libro trovato",
+    "books_found_plural": "{{count}} libri trovati"
   },
   "protected_route": {
     "loading": "Caricamento in corso..."
