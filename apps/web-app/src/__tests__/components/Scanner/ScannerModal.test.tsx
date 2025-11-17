@@ -43,9 +43,12 @@ vi.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-vi.mock('@mui/icons-material', () => ({
-  Edit: () => <span data-testid="edit-icon">Edit</span>,
-  ArrowBack: () => <span data-testid="arrow-back-icon">ArrowBack</span>,
+vi.mock('@mui/icons-material/Edit', () => ({
+  default: () => <span data-testid="edit-icon">Edit</span>,
+}));
+
+vi.mock('@mui/icons-material/ArrowBack', () => ({
+  default: () => <span data-testid="arrow-back-icon">ArrowBack</span>,
 }));
 
 // Mock child components

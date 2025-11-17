@@ -55,13 +55,28 @@ vi.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-vi.mock('@mui/icons-material', () => ({
-  Close: () => <span data-testid="close-icon">Close</span>,
-  SwapHoriz: () => <span data-testid="swap-icon">Swap</span>,
-  Edit: () => <span data-testid="edit-icon">Edit</span>,
-  Camera: () => <span data-testid="camera-icon">Camera</span>,
-  Warning: () => <span data-testid="warning-icon">Warning</span>,
-  Timer: () => <span data-testid="timer-icon">Timer</span>,
+vi.mock('@mui/icons-material/Close', () => ({
+  default: () => <span data-testid="close-icon">Close</span>,
+}));
+
+vi.mock('@mui/icons-material/SwapHoriz', () => ({
+  default: () => <span data-testid="swap-icon">Swap</span>,
+}));
+
+vi.mock('@mui/icons-material/Edit', () => ({
+  default: () => <span data-testid="edit-icon">Edit</span>,
+}));
+
+vi.mock('@mui/icons-material/Camera', () => ({
+  default: () => <span data-testid="camera-icon">Camera</span>,
+}));
+
+vi.mock('@mui/icons-material/Warning', () => ({
+  default: () => <span data-testid="warning-icon">Warning</span>,
+}));
+
+vi.mock('@mui/icons-material/Timer', () => ({
+  default: () => <span data-testid="timer-icon">Timer</span>,
 }));
 
 const mockUseISBNScanner = vi.mocked(useISBNScanner);

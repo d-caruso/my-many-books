@@ -1,10 +1,14 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import MinimalReporter from './vitest.minimal.reporter'
+
+const useMinimal = process.env.VITEST_USE_MINIMAL === '1'
 
 export default defineConfig({
   plugins: [react()],
   test: {
+    reporters: useMinimal ? [new MinimalReporter()] : 'default',
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts', './src/jest.setup.ts'],

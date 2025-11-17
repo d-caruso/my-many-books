@@ -40,6 +40,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "test:min": "VITEST_USE_MINIMAL=1 vitest run",
     "test:coverage": "craco test --coverage --watchAll=false",
     "test:unit": "craco test --testPathPattern=src/ --watchAll=false",
     "test:unit:watch": "craco test --testPathPattern=src/",
