@@ -53,15 +53,31 @@ vi.mock('@mui/material', () => ({
     <div data-testid="avatar" {...props}>{children}</div>
   ),
   Select: ({ children, value, onChange, ...props }: any) => (
-    <select data-testid="language-select" value={value} onChange={onChange} {...props}>{children}</select>
+    <select data-testid="language-select" value={value} onChange={onChange} {...props}>
+      {React.Children.map(children, (child: any) => {
+        if (React.isValidElement(child) && child.props.value) {
+          return <option value={child.props.value}>{child.props.children}</option>;
+        }
+        return null;
+      })}
+    </select>
   ),
 }));
 
-vi.mock('@mui/icons-material', () => ({
-  MenuBook: () => <span data-testid="menu-book-icon">📚</span>,
-  Menu: () => <span data-testid="menu-icon">☰</span>,
-  ExpandMore: () => <span data-testid="expand-more-icon">▼</span>,
-  Language: () => <span data-testid="language-icon">🌐</span>,
+vi.mock('@mui/icons-material/MenuBook', () => ({
+  default: () => <span data-testid="menu-book-icon">📚</span>,
+}));
+
+vi.mock('@mui/icons-material/Menu', () => ({
+  default: () => <span data-testid="menu-icon">☰</span>,
+}));
+
+vi.mock('@mui/icons-material/ExpandMore', () => ({
+  default: () => <span data-testid="expand-more-icon">▼</span>,
+}));
+
+vi.mock('@mui/icons-material/Language', () => ({
+  default: () => <span data-testid="language-icon">🌐</span>,
 }));
 
 const mockUseAuth = vi.mocked(useAuth);

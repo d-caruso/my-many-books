@@ -21,7 +21,7 @@ vi.mock('../../hooks/useBookSearch', () => ({
 }));
 
 // Import after mocks
-import { BooksPage } from '../../pages/BooksPage';
+import BooksPage from '../../pages/BooksPage';
 import { ApiProvider } from '../../contexts/ApiContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useBookSearch } from '../../hooks/useBookSearch';
@@ -46,11 +46,20 @@ vi.mock('@mui/material', () => ({
   ),
 }));
 
-vi.mock('@mui/icons-material', () => ({
-  Add: () => <span data-testid="add-icon">Add</span>,
-  Clear: () => <span data-testid="clear-icon">Clear</span>,
-  ViewModule: () => <span data-testid="grid-icon">Grid</span>,
-  ViewList: () => <span data-testid="list-icon">List</span>,
+vi.mock('@mui/icons-material/Add', () => ({
+  default: () => <span data-testid="add-icon">Add</span>,
+}));
+
+vi.mock('@mui/icons-material/Clear', () => ({
+  default: () => <span data-testid="clear-icon">Clear</span>,
+}));
+
+vi.mock('@mui/icons-material/ViewModule', () => ({
+  default: () => <span data-testid="grid-icon">Grid</span>,
+}));
+
+vi.mock('@mui/icons-material/ViewList', () => ({
+  default: () => <span data-testid="list-icon">List</span>,
 }));
 
 // Store callbacks for testing
@@ -108,6 +117,9 @@ vi.mock('../../components/Search', () => ({
       <button onClick={mockOnClear}>Clear</button>
     </div>
   ),
+  BookSearchResults: ({ books }: any) => <div data-testid="search-results">{books?.length} results</div>,
+  BookSearchPage: () => <div data-testid="search-page">Search Page</div>,
+  AuthorAutocomplete: ({ onChange }: any) => <input data-testid="author-autocomplete" onChange={onChange} />,
 }));
 
 // Create mock API service

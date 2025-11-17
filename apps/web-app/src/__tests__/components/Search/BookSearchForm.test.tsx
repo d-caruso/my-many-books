@@ -153,12 +153,21 @@ vi.mock('@mui/material', () => ({
   ),
 }));
 
-// Mock Material-UI icons
-vi.mock('@mui/icons-material', () => ({
-  Search: () => <div data-testid="search-icon">Search</div>,
-  ExpandMore: () => <div data-testid="expand-more-icon">Expand</div>,
-  Clear: () => <div data-testid="clear-icon">Clear</div>,
-  Warning: () => <div data-testid="warning-icon">Warning</div>,
+// Mock Material-UI icons - using default exports
+vi.mock('@mui/icons-material/Search', () => ({
+  default: () => <div data-testid="search-icon">Search</div>,
+}));
+
+vi.mock('@mui/icons-material/ExpandMore', () => ({
+  default: () => <div data-testid="expand-more-icon">Expand</div>,
+}));
+
+vi.mock('@mui/icons-material/Clear', () => ({
+  default: () => <div data-testid="clear-icon">Clear</div>,
+}));
+
+vi.mock('@mui/icons-material/Warning', () => ({
+  default: () => <div data-testid="warning-icon">Warning</div>,
 }));
 
 const mockUseCategories = vi.mocked(useCategories);
