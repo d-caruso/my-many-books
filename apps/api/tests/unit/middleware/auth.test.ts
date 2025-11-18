@@ -109,6 +109,7 @@ describe('Authentication Middleware', () => {
         provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: false,
+        userModel: mockDbUser,
       });
       expect(next).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
@@ -210,6 +211,7 @@ describe('Authentication Middleware', () => {
         provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: true,
+        userModel: mockDbUser,
       });
       expect(next).toHaveBeenCalled();
     });
