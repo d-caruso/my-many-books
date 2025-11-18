@@ -96,13 +96,28 @@ vi.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-vi.mock('@mui/icons-material', () => ({
-  Close: () => <div data-testid="close-icon">Close</div>,
-  Add: () => <div data-testid="add-icon">Add</div>,
-  Search: () => <div data-testid="search-icon">Search</div>,
-  MenuBook: () => <div data-testid="menu-book-icon">Book</div>,
-  Person: () => <div data-testid="person-icon">Person</div>,
-  FilterList: () => <div data-testid="filter-icon">Filter</div>,
+vi.mock('@mui/icons-material/Close', () => ({
+  default: () => <div data-testid="close-icon">Close</div>,
+}));
+
+vi.mock('@mui/icons-material/Add', () => ({
+  default: () => <div data-testid="add-icon">Add</div>,
+}));
+
+vi.mock('@mui/icons-material/Search', () => ({
+  default: () => <div data-testid="search-icon">Search</div>,
+}));
+
+vi.mock('@mui/icons-material/MenuBook', () => ({
+  default: () => <div data-testid="menu-book-icon">Book</div>,
+}));
+
+vi.mock('@mui/icons-material/Person', () => ({
+  default: () => <div data-testid="person-icon">Person</div>,
+}));
+
+vi.mock('@mui/icons-material/FilterList', () => ({
+  default: () => <div data-testid="filter-icon">Filter</div>,
 }));
 
 // Import after mocks

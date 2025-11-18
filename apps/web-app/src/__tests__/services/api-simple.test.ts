@@ -135,7 +135,7 @@ describe('API Service Simple Tests', () => {
     expect(mockAxiosInstance.get).toHaveBeenCalled();
     const [url, config] = mockAxiosInstance.get.mock.calls[0];
     expect(url).toContain('/books');
-    expect(config.params).toEqual({ page: 1, limit: 10, includeAuthors: 'true', includeCategories: 'true' });
+    expect(config.params).toEqual({ page: 1, limit: 5, includeAuthors: 'true', includeCategories: 'true' });
     expect(result).toBe(mockResponse);
   });
 

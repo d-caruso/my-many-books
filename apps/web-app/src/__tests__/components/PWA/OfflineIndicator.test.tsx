@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { OfflineIndicator } from '../../../components/PWA/OfflineIndicator';
-import { usePWA } from '../../../hooks/usePWA';
+import { usePWAContext } from '../../../contexts/PWAContext';
 
-// Mock the usePWA hook
-vi.mock('../../../hooks/usePWA', () => ({
-  usePWA: vi.fn(),
+// Mock the usePWAContext hook
+vi.mock('../../../contexts/PWAContext', () => ({
+  usePWAContext: vi.fn(),
 }));
 
 // Mock Material-UI components
@@ -54,15 +54,27 @@ vi.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-vi.mock('@mui/icons-material', () => ({
-  WifiOff: () => <div data-testid="wifi-off-icon">Offline</div>,
-  Wifi: () => <div data-testid="wifi-icon">Online</div>,
-  CloudOff: () => <div data-testid="cloud-off-icon">Cloud Off</div>,
-  Refresh: () => <div data-testid="refresh-icon">Refresh</div>,
-  Close: () => <div data-testid="close-icon">Close</div>,
+vi.mock('@mui/icons-material/WifiOff', () => ({
+  default: () => <div data-testid="wifi-off-icon">Offline</div>,
 }));
 
-const mockUsePWA = vi.mocked(usePWA);
+vi.mock('@mui/icons-material/Wifi', () => ({
+  default: () => <div data-testid="wifi-icon">Online</div>,
+}));
+
+vi.mock('@mui/icons-material/CloudOff', () => ({
+  default: () => <div data-testid="cloud-off-icon">Cloud Off</div>,
+}));
+
+vi.mock('@mui/icons-material/Refresh', () => ({
+  default: () => <div data-testid="refresh-icon">Refresh</div>,
+}));
+
+vi.mock('@mui/icons-material/Close', () => ({
+  default: () => <div data-testid="close-icon">Close</div>,
+}));
+
+const mockUsePWAContext = vi.mocked(usePWAContext);
 
 describe('OfflineIndicator', () => {
   const mockPWAState = {
@@ -78,11 +90,11 @@ describe('OfflineIndicator', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUsePWA.mockReturnValue(mockPWAState);
+    mockUsePWAContext.mockReturnValue(mockPWAState);
   });
 
   test('does not render when online', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: false,
     });
@@ -93,7 +105,7 @@ describe('OfflineIndicator', () => {
   });
 
   test('renders offline indicator when offline', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: true,
     });
@@ -106,7 +118,7 @@ describe('OfflineIndicator', () => {
   });
 
   test('shows offline message and functionality info', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: true,
     });
@@ -117,7 +129,7 @@ describe('OfflineIndicator', () => {
   });
 
   test('renders as snackbar variant', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: true,
     });
@@ -128,7 +140,7 @@ describe('OfflineIndicator', () => {
   });
 
   test('shows retry button when enabled', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: true,
     });
@@ -141,7 +153,7 @@ describe('OfflineIndicator', () => {
 
   test('handles retry action', () => {
     const mockOnRetry = vi.fn();
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: true,
     });
@@ -155,7 +167,7 @@ describe('OfflineIndicator', () => {
   });
 
   test('shows close button when dismissible', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: true,
     });
@@ -167,7 +179,7 @@ describe('OfflineIndicator', () => {
 
   test('handles dismiss action', () => {
     const mockOnDismiss = vi.fn();
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: true,
     });
@@ -181,7 +193,7 @@ describe('OfflineIndicator', () => {
   });
 
   test('shows custom offline message', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: true,
     });
@@ -195,7 +207,7 @@ describe('OfflineIndicator', () => {
     const { rerender } = render(<OfflineIndicator />);
 
     // Go offline
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: true,
     });
@@ -204,7 +216,7 @@ describe('OfflineIndicator', () => {
     expect(screen.getByTestId('alert-warning')).toBeInTheDocument();
 
     // Go back online
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       isOffline: false,
     });

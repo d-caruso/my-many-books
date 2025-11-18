@@ -14,6 +14,7 @@ const mockRegistration = {
 Object.defineProperty(navigator, 'serviceWorker', {
   writable: true,
   value: {
+    register: vi.fn().mockResolvedValue(mockRegistration),
     ready: Promise.resolve(mockRegistration),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
@@ -131,11 +132,29 @@ describe('usePWA', () => {
   test('installApp function exists and can be called', async () => {
     const { result } = renderHook(() => usePWA());
 
-    // Call installApp without setup - should handle gracefully
+    // Find the beforeinstallprompt event listener
+    const beforeInstallPromptCall = mockAddEventListener.mock.calls.find(
+      call => call[0] === 'beforeinstallprompt'
+    );
+
+    // Set up a mock install prompt event with prompt() and userChoice
+    const mockEvent = {
+      preventDefault: vi.fn(),
+      prompt: vi.fn(),
+      userChoice: Promise.resolve({ outcome: 'accepted' }),
+    };
+
+    // Trigger the beforeinstallprompt event to set up the prompt
+    act(() => {
+      beforeInstallPromptCall[1](mockEvent);
+    });
+
+    // Now call installApp - it should work
     await act(async () => {
       await result.current.installApp();
     });
 
+    expect(mockEvent.prompt).toHaveBeenCalled();
     expect(typeof result.current.installApp).toBe('function');
   });
 

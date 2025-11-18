@@ -70,9 +70,12 @@ vi.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-vi.mock('@mui/icons-material', () => ({
-  Error: () => <div data-testid="error-icon">Error</div>,
-  MenuBook: () => <div data-testid="menu-book-icon">Book</div>,
+vi.mock('@mui/icons-material/Error', () => ({
+  default: () => <div data-testid="error-icon">Error</div>,
+}));
+
+vi.mock('@mui/icons-material/MenuBook', () => ({
+  default: () => <div data-testid="menu-book-icon">Book</div>,
 }));
 
 const mockBooks: Book[] = [

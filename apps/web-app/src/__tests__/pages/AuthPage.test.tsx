@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { AuthPage } from '../../pages/AuthPage';
+import AuthPage from '../../pages/AuthPage';
 import { useAuth } from '../../contexts/AuthContext';
 
 // Mock dependencies - industry standard approach
