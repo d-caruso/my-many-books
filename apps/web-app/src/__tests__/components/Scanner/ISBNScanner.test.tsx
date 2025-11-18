@@ -203,7 +203,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    const closeButton = screen.getByTestId('icon-button');
+    const closeButton = screen.getByTestId('close-icon').closest('button');
     expect(closeButton).toBeInTheDocument();
     fireEvent.click(closeButton);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
@@ -271,7 +271,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    const buttons = screen.getAllByTestId('icon-button');
+    const buttons = screen.getAllByTestId('swap-icon');
     const flipButton = buttons.find(btn => btn.textContent?.includes('Swap'));
     expect(flipButton).toBeTruthy();
     if (flipButton) {

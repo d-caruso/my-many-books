@@ -37,7 +37,7 @@ describe('ProtectedRoute', () => {
       signup: vi.fn(),
     });
 
-    const { container } = render(
+    render(
       <MemoryRouter>
         <ProtectedRoute>
           <TestComponent />
@@ -142,7 +142,7 @@ describe('ProtectedRoute', () => {
       signup: vi.fn(),
     });
 
-    const { container } = render(
+    render(
       <MemoryRouter>
         <ProtectedRoute>
           <TestComponent />

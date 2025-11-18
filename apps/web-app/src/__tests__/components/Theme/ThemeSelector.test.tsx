@@ -110,9 +110,8 @@ describe('ThemeSelector', () => {
   });
 
   test('renders with custom className', () => {
-    render(<ThemeSelector className="custom-class" />);
-    const themeSelector = screen.getByRole('group');
-    expect(themeSelector).toHaveClass('custom-class');
+    const { container } = render(<ThemeSelector className="custom-class" />);
+    expect(container.firstChild).toHaveClass('custom-class');
   });
 
   test('shows all available themes', () => {

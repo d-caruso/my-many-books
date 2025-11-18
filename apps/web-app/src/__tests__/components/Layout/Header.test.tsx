@@ -60,7 +60,7 @@ describe('Header', () => {
     render(<Header />, { wrapper: TestWrapper });
 
     const themeButton = screen.getByTitle('Toggle theme');
-    const icon = screen.getByRole('button', { name: 'Toggle theme' });
+    const icon = themeButton.querySelector('span');
     expect(icon).toBeInTheDocument();
   });
 
@@ -69,7 +69,7 @@ describe('Header', () => {
 
     const avatar = screen.getByText('U');
     expect(avatar).toBeInTheDocument();
-    expect(avatar).toHaveClass('w-8', 'h-8', 'bg-primary-500', 'rounded-full');
+    expect(avatar.closest('div')).toHaveClass('w-8', 'h-8', 'bg-primary-500', 'rounded-full');
   });
 
   test('has responsive layout classes', () => {
