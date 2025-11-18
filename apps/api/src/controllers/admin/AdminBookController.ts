@@ -56,7 +56,12 @@ export class AdminBookController extends BaseController {
       const userIdFilter = this.getQueryParameter(request, 'userId');
 
       // Build where clause for search
+<<<<<<< Updated upstream
       const whereClause: WhereOptions<BookAttributes> = {};
+=======
+<<<<<<< Updated upstream
+      const whereClause: any = {};
+>>>>>>> Stashed changes
       if (search) {
         whereClause[Op.or] = [
           { title: { [Op.like]: `%${search}%` } },
@@ -65,6 +70,34 @@ export class AdminBookController extends BaseController {
       }
       if (userIdFilter) {
         whereClause.userId = parseInt(userIdFilter, 10);
+=======
+      let whereClause: WhereOptions<BookAttributes> = {};
+
+      if (search && userIdFilter) {
+        // Both conditions: use Op.and
+        whereClause = {
+          [Op.and]: [
+            {
+              [Op.or]: [
+                { title: { [Op.like]: `%${search}%` } },
+                { isbnCode: { [Op.like]: `%${search}%` } },
+              ],
+            },
+            { userId: parseInt(userIdFilter, 10) },
+          ],
+        };
+      } else if (search) {
+        // Only search condition
+        whereClause = {
+          [Op.or]: [
+            { title: { [Op.like]: `%${search}%` } },
+            { isbnCode: { [Op.like]: `%${search}%` } },
+          ],
+        };
+      } else if (userIdFilter) {
+        // Only userId filter
+        whereClause = { userId: parseInt(userIdFilter, 10) };
+>>>>>>> Stashed changes
       }
 
       const { count, rows: books } = await Book.findAndCountAll({
@@ -255,8 +288,17 @@ export class AdminBookController extends BaseController {
         }
       }
 
+<<<<<<< Updated upstream
       // Update book
+<<<<<<< Updated upstream
       await book.update(updateData);
+=======
+      await book.update(validation.value);
+=======
+      // Update book - cast needed due to Sequelize type limitations with null values
+      await book.update(updateData as Partial<BookAttributes>);
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
       // Reload with associations
       await book.reload({

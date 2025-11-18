@@ -48,19 +48,29 @@ export class AdminUserController extends BaseController {
       const search = this.getQueryParameter(request, 'search');
 
       // Build where clause for search
+<<<<<<< Updated upstream
       const whereClause: WhereOptions<UserAttributes> = {};
+=======
+<<<<<<< Updated upstream
+      const whereClause: any = {};
+=======
+      let whereClause: WhereOptions<UserAttributes> = {};
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
       if (search) {
-        whereClause[Op.or] = [
-          { email: { [Op.like]: `%${search}%` } },
-          { name: { [Op.like]: `%${search}%` } },
-          { surname: { [Op.like]: `%${search}%` } },
-          Sequelize.where(
-            Sequelize.fn('concat', Sequelize.col('name'), ' ', Sequelize.col('surname')),
-            {
-              [Op.like]: `%${search}%`,
-            }
-          ),
-        ];
+        whereClause = {
+          [Op.or]: [
+            { email: { [Op.like]: `%${search}%` } },
+            { name: { [Op.like]: `%${search}%` } },
+            { surname: { [Op.like]: `%${search}%` } },
+            Sequelize.where(
+              Sequelize.fn('concat', Sequelize.col('name'), ' ', Sequelize.col('surname')),
+              {
+                [Op.like]: `%${search}%`,
+              }
+            ),
+          ],
+        };
       }
 
       const { count, rows: users } = await User.findAndCountAll({

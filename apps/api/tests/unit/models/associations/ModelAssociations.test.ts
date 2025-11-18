@@ -289,8 +289,8 @@ describe('ModelAssociations', () => {
     });
 
     it('should allow overriding model registrations', () => {
-      const originalUser = { name: 'original' };
-      const newUser = { name: 'new' };
+      const originalUser = { name: 'original' } as any;
+      const newUser = { name: 'new' } as any;
 
       ModelAssociations.registerModel('User', originalUser);
       expect(ModelAssociations.getModel('User')).toBe(originalUser);
