@@ -9,7 +9,7 @@ import userRoutes from '../../../src/routes/userRoutes';
 
 // Mock the UserController
 jest.mock('../../../src/controllers/UserController', () => ({
-  UserController: {
+  userController: {
     getCurrentUser: jest.fn(async (req, res) => {
       res.status(200).json({
         id: req.user?.userId || 1,
@@ -146,8 +146,8 @@ describe('User Routes', () => {
     });
 
     it('should handle validation errors', async () => {
-      const { UserController } = require('../../../src/controllers/UserController');
-      UserController.updateCurrentUser.mockImplementationOnce(async (_req: any, res: any) => {
+      const { userController } = require('../../../src/controllers/UserController');
+      userController.updateCurrentUser.mockImplementationOnce(async (_req: any, res: any) => {
         res.status(400).json({
           success: false,
           error: 'Invalid email format'
@@ -191,8 +191,8 @@ describe('User Routes', () => {
     });
 
     it('should handle deletion errors', async () => {
-      const { UserController } = require('../../../src/controllers/UserController');
-      UserController.deleteAccount.mockImplementationOnce(async (_req: any, res: any) => {
+      const { userController } = require('../../../src/controllers/UserController');
+      userController.deleteAccount.mockImplementationOnce(async (_req: any, res: any) => {
         res.status(409).json({
           success: false,
           error: 'Cannot delete account with active subscriptions'
@@ -245,8 +245,8 @@ describe('User Routes', () => {
     });
 
     it('should handle user with no books', async () => {
-      const { UserController } = require('../../../src/controllers/UserController');
-      UserController.getUserBooks.mockImplementationOnce(async (_req: any, res: any) => {
+      const { userController } = require('../../../src/controllers/UserController');
+      userController.getUserBooks.mockImplementationOnce(async (_req: any, res: any) => {
         res.status(200).json({
           books: [],
           pagination: { currentPage: 1, totalPages: 0, totalItems: 0, itemsPerPage: 10 }
@@ -292,8 +292,8 @@ describe('User Routes', () => {
     });
 
     it('should handle user with no statistics', async () => {
-      const { UserController } = require('../../../src/controllers/UserController');
-      UserController.getUserStats.mockImplementationOnce(async (_req: any, res: any) => {
+      const { userController } = require('../../../src/controllers/UserController');
+      userController.getUserStats.mockImplementationOnce(async (_req: any, res: any) => {
         res.status(200).json({
           totalBooks: 0,
           booksByStatus: {
@@ -339,8 +339,8 @@ describe('User Routes', () => {
     });
 
     it('should handle already deactivated account', async () => {
-      const { UserController } = require('../../../src/controllers/UserController');
-      UserController.deactivateAccount.mockImplementationOnce(async (_req: any, res: any) => {
+      const { userController } = require('../../../src/controllers/UserController');
+      userController.deactivateAccount.mockImplementationOnce(async (_req: any, res: any) => {
         res.status(409).json({
           success: false,
           error: 'Account is already deactivated'
@@ -371,26 +371,26 @@ describe('User Routes', () => {
 
   describe('Route Integration', () => {
     it('should properly bind all controller methods', async () => {
-      const { UserController } = require('../../../src/controllers/UserController');
-      
+      const { userController } = require('../../../src/controllers/UserController');
+
       // Test all routes to ensure they're properly bound
       await request(app).get('/api/users').expect(200);
-      expect(UserController.getCurrentUser).toHaveBeenCalled();
+      expect(userController.getCurrentUser).toHaveBeenCalled();
 
       await request(app).put('/api/users').send({ name: 'Test' }).expect(200);
-      expect(UserController.updateCurrentUser).toHaveBeenCalled();
+      expect(userController.updateCurrentUser).toHaveBeenCalled();
 
       await request(app).delete('/api/users').expect(200);
-      expect(UserController.deleteAccount).toHaveBeenCalled();
+      expect(userController.deleteAccount).toHaveBeenCalled();
 
       await request(app).get('/api/users/books').expect(200);
-      expect(UserController.getUserBooks).toHaveBeenCalled();
+      expect(userController.getUserBooks).toHaveBeenCalled();
 
       await request(app).get('/api/users/stats').expect(200);
-      expect(UserController.getUserStats).toHaveBeenCalled();
+      expect(userController.getUserStats).toHaveBeenCalled();
 
       await request(app).patch('/api/users').expect(200);
-      expect(UserController.deactivateAccount).toHaveBeenCalled();
+      expect(userController.deactivateAccount).toHaveBeenCalled();
     });
 
     it('should handle invalid JSON in request body', async () => {

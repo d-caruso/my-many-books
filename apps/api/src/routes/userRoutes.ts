@@ -4,7 +4,7 @@
 // ================================================================
 
 import { Router } from 'express';
-import { UserController } from '../controllers/UserController';
+import { userController } from '../controllers/UserController';
 import { authMiddleware } from '../middleware/auth';
 import { readLimiter, writeLimiter } from '../middleware/rateLimiters';
 import {
@@ -21,21 +21,21 @@ router.use(authMiddleware);
 
 // User profile endpoints (without "profile" in URI)
 // Apply granular rate limiting: separate limits for read vs write operations
-router.get('/', readLimiter, (req, res) => UserController.getCurrentUser(req, res)); // GET user info
+router.get('/', readLimiter, (req, res) => userController.getCurrentUser(req, res)); // GET user info
 router.put('/', writeLimiter, validateBody(updateUserSchema), (req, res) =>
-  UserController.updateCurrentUser(req, res)
+  userController.updateCurrentUser(req, res)
 ); // PUT to update user info
-router.delete('/', writeLimiter, (req, res) => UserController.deleteAccount(req, res)); // DELETE to delete account (no "delete" in URI)
+router.delete('/', writeLimiter, (req, res) => userController.deleteAccount(req, res)); // DELETE to delete account (no "delete" in URI)
 
 // User books endpoints (READ)
 router.get('/books', readLimiter, validateQuery(getUserBooksQuerySchema), (req, res) =>
-  UserController.getUserBooks(req, res)
+  userController.getUserBooks(req, res)
 );
 
 // User statistics (READ)
-router.get('/stats', readLimiter, (req, res) => UserController.getUserStats(req, res));
+router.get('/stats', readLimiter, (req, res) => userController.getUserStats(req, res));
 
 // Account deactivation (WRITE)
-router.patch('/', writeLimiter, (req, res) => UserController.deactivateAccount(req, res)); // PATCH to deactivate account (no "deactivate" in URI)
+router.patch('/', writeLimiter, (req, res) => userController.deactivateAccount(req, res)); // PATCH to deactivate account (no "deactivate" in URI)
 
 export default router;

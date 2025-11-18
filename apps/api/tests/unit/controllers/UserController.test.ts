@@ -4,7 +4,7 @@
 // ================================================================
 
 import { Response } from 'express';
-import { UserController } from '../../../src/controllers/UserController';
+import { userController } from '../../../src/controllers/UserController';
 import { AuthenticatedRequest } from '../../../src/middleware/auth';
 import { Book } from '../../../src/models/Book';
 import { UserService } from '../../../src/middleware/auth';
@@ -56,7 +56,7 @@ describe('UserController', () => {
 
       mockUserService.getUserById.mockResolvedValue(mockUserData as any);
 
-      await UserController.getCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.getCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(mockUserService.getUserById).toHaveBeenCalledWith(1);
       expect(res.status).toHaveBeenCalledWith(200);
@@ -75,7 +75,7 @@ describe('UserController', () => {
     it('should return 401 when user is not authenticated', async () => {
       delete req.user;
 
-      await UserController.getCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.getCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
@@ -85,7 +85,7 @@ describe('UserController', () => {
     it('should return 404 when user is not found', async () => {
       mockUserService.getUserById.mockResolvedValue(null);
 
-      await UserController.getCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.getCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'User not found' });
@@ -95,7 +95,7 @@ describe('UserController', () => {
       const error = new Error('Database connection failed');
       mockUserService.getUserById.mockRejectedValue(error);
 
-      await UserController.getCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.getCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
@@ -125,7 +125,7 @@ describe('UserController', () => {
 
       mockUserService.getUserById.mockResolvedValue(mockUserData as any);
 
-      await UserController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(mockUserData.update).toHaveBeenCalledWith({ name: 'John', surname: 'Smith' });
       expect(res.status).toHaveBeenCalledWith(200);
@@ -143,7 +143,7 @@ describe('UserController', () => {
     it('should return 401 when user is not authenticated', async () => {
       delete req.user;
 
-      await UserController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
@@ -152,7 +152,7 @@ describe('UserController', () => {
     it('should return 400 when name is missing', async () => {
       req.body = { surname: 'Doe' };
 
-      await UserController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Name and surname are required' });
@@ -161,7 +161,7 @@ describe('UserController', () => {
     it('should return 400 when surname is missing', async () => {
       req.body = { name: 'John' };
 
-      await UserController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Name and surname are required' });
@@ -170,7 +170,7 @@ describe('UserController', () => {
     it('should return 400 when name is not a string', async () => {
       req.body = { name: 123, surname: 'Doe' };
 
-      await UserController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Name and surname must be strings' });
@@ -179,7 +179,7 @@ describe('UserController', () => {
     it('should return 400 when name is too long', async () => {
       req.body = { name: 'a'.repeat(101), surname: 'Doe' };
 
-      await UserController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Name and surname must be 100 characters or less' });
@@ -189,7 +189,7 @@ describe('UserController', () => {
       req.body = { name: 'John', surname: 'Doe' };
       mockUserService.getUserById.mockResolvedValue(null);
 
-      await UserController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'User not found' });
@@ -226,7 +226,7 @@ describe('UserController', () => {
         rows: mockBooks as any,
       });
 
-      await UserController.getUserBooks(req as AuthenticatedRequest, res as Response);
+      await userController.getUserBooks(req as AuthenticatedRequest, res as Response);
 
       expect(mockBook.findAndCountAll).toHaveBeenCalledWith({
         where: { userId: 1 },
@@ -259,7 +259,7 @@ describe('UserController', () => {
       req.query = { status: 'reading' };
       (mockBook.findAndCountAll as jest.Mock).mockResolvedValue({ count: 0, rows: [] });
 
-      await UserController.getUserBooks(req as AuthenticatedRequest, res as Response);
+      await userController.getUserBooks(req as AuthenticatedRequest, res as Response);
 
       expect(mockBook.findAndCountAll).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -271,7 +271,7 @@ describe('UserController', () => {
     it('should return 401 when user is not authenticated', async () => {
       delete req.user;
 
-      await UserController.getUserBooks(req as AuthenticatedRequest, res as Response);
+      await userController.getUserBooks(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
@@ -293,7 +293,7 @@ describe('UserController', () => {
 
       mockBook.findAll.mockResolvedValue(recentBooks as any);
 
-      await UserController.getUserStats(req as AuthenticatedRequest, res as Response);
+      await userController.getUserStats(req as AuthenticatedRequest, res as Response);
 
       expect(mockBook.count).toHaveBeenCalledTimes(4);
       expect(res.status).toHaveBeenCalledWith(200);
@@ -322,7 +322,7 @@ describe('UserController', () => {
 
       mockBook.findAll.mockResolvedValue([]);
 
-      await UserController.getUserStats(req as AuthenticatedRequest, res as Response);
+      await userController.getUserStats(req as AuthenticatedRequest, res as Response);
 
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -334,7 +334,7 @@ describe('UserController', () => {
     it('should return 401 when user is not authenticated', async () => {
       delete req.user;
 
-      await UserController.getUserStats(req as AuthenticatedRequest, res as Response);
+      await userController.getUserStats(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
@@ -345,7 +345,7 @@ describe('UserController', () => {
     it('should deactivate user account successfully', async () => {
       mockUserService.deactivateUser.mockResolvedValue(undefined);
 
-      await UserController.deactivateAccount(req as AuthenticatedRequest, res as Response);
+      await userController.deactivateAccount(req as AuthenticatedRequest, res as Response);
 
       expect(mockUserService.deactivateUser).toHaveBeenCalledWith(1);
       expect(res.status).toHaveBeenCalledWith(200);
@@ -358,7 +358,7 @@ describe('UserController', () => {
     it('should return 401 when user is not authenticated', async () => {
       delete req.user;
 
-      await UserController.deactivateAccount(req as AuthenticatedRequest, res as Response);
+      await userController.deactivateAccount(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
@@ -369,7 +369,7 @@ describe('UserController', () => {
       const error = new Error('Deactivation failed');
       mockUserService.deactivateUser.mockRejectedValue(error);
 
-      await UserController.deactivateAccount(req as AuthenticatedRequest, res as Response);
+      await userController.deactivateAccount(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
@@ -388,7 +388,7 @@ describe('UserController', () => {
 
       mockUserService.getUserById.mockResolvedValue(mockUserData as any);
 
-      await UserController.deleteAccount(req as AuthenticatedRequest, res as Response);
+      await userController.deleteAccount(req as AuthenticatedRequest, res as Response);
 
       expect(mockUserService.getUserById).toHaveBeenCalledWith(1);
       expect(mockUserData.destroy).toHaveBeenCalled();
@@ -402,7 +402,7 @@ describe('UserController', () => {
     it('should return 401 when user is not authenticated', async () => {
       delete req.user;
 
-      await UserController.deleteAccount(req as AuthenticatedRequest, res as Response);
+      await userController.deleteAccount(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ error: 'User must be authenticated' });
@@ -411,7 +411,7 @@ describe('UserController', () => {
     it('should return 404 when user is not found', async () => {
       mockUserService.getUserById.mockResolvedValue(null);
 
-      await UserController.deleteAccount(req as AuthenticatedRequest, res as Response);
+      await userController.deleteAccount(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'User not found' });
@@ -425,7 +425,7 @@ describe('UserController', () => {
 
       mockUserService.getUserById.mockResolvedValue(mockUserData as any);
 
-      await UserController.deleteAccount(req as AuthenticatedRequest, res as Response);
+      await userController.deleteAccount(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
@@ -441,7 +441,7 @@ describe('UserController', () => {
         throw new Error('Service unavailable');
       });
 
-      await UserController.getCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.getCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
@@ -454,7 +454,7 @@ describe('UserController', () => {
       req.query = { page: 'invalid', limit: 'not-a-number' };
       (mockBook.findAndCountAll as jest.Mock).mockResolvedValue({ count: 0, rows: [] });
 
-      await UserController.getUserBooks(req as AuthenticatedRequest, res as Response);
+      await userController.getUserBooks(req as AuthenticatedRequest, res as Response);
 
       // Note: Current implementation has a bug - it doesn't handle NaN values
       // Should be fixed to default to valid values, but currently passes NaN
@@ -469,7 +469,7 @@ describe('UserController', () => {
     it('should handle empty body in updateCurrentUser', async () => {
       req.body = {};
 
-      await UserController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Name and surname are required' });
@@ -478,7 +478,7 @@ describe('UserController', () => {
     it('should handle null/undefined values in updateCurrentUser', async () => {
       req.body = { name: null, surname: undefined };
 
-      await UserController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.updateCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Name and surname are required' });
@@ -489,7 +489,7 @@ describe('UserController', () => {
       timeoutError.name = 'SequelizeConnectionError';
       mockUserService.getUserById.mockRejectedValue(timeoutError);
 
-      await UserController.getCurrentUser(req as AuthenticatedRequest, res as Response);
+      await userController.getCurrentUser(req as AuthenticatedRequest, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({

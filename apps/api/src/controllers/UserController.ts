@@ -11,49 +11,38 @@ import { Author } from '../models/Author';
 import { Category } from '../models/Category';
 import { UserService } from '../middleware/auth';
 import { BookAttributes, BookStatus } from '../models/interfaces/ModelInterfaces';
-import { i18n } from '@my-many-books/shared-i18n';
+import { BaseController } from './base/BaseController';
+import { UniversalRequest } from '../types';
 
-export class UserController {
+export class UserController extends BaseController {
   /**
-   * Get language from request headers (synchronous)
+   * Convert Express AuthenticatedRequest to UniversalRequest
+   * Helper method for backward compatibility with Express routes
    */
-  private static getRequestLanguage(req: AuthenticatedRequest): string {
-    const acceptLanguage = req.headers?.['accept-language'] || 'en';
-    const primaryLang =
-      acceptLanguage?.split(',')[0]?.split('-')[0]?.split(';')[0]?.trim()?.toLowerCase() || 'en';
-    const supportedLanguages = ['en', 'it'];
-    return supportedLanguages.includes(primaryLang) ? primaryLang : 'en';
-  }
-
-  /**
-   * Translate a key using i18n with request language
-   * @param req - Request object to get language from
-   * @param key - Translation key with namespace (e.g., "errors:book_not_found")
-   * @param interpolation - Optional interpolation values
-   */
-  private static t(
-    req: AuthenticatedRequest,
-    key: string,
-    interpolation?: Record<string, unknown>
-  ): string {
-    const language = this.getRequestLanguage(req);
-    return interpolation
-      ? i18n.t(key, { ...interpolation, lng: language })
-      : i18n.t(key, { lng: language });
+  private toUniversalRequest(req: AuthenticatedRequest): UniversalRequest {
+    return {
+      headers: req.headers as Record<string, string>,
+      body: req.body,
+      pathParameters: req.params,
+      queryStringParameters: req.query as Record<string, string>,
+      user: req.user,
+    };
   }
 
   // Get current user profile
-  static async getCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(this.toUniversalRequest(req));
+
     try {
       if (!req.user) {
-        res.status(401).json({ error: this.t(req, 'errors:user_not_authenticated') });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
       // Use cached user from auth middleware to avoid duplicate query
       const user = req.user.userModel || (await UserService.getUserById(req.user.userId));
       if (!user) {
-        res.status(404).json({ error: this.t(req, 'errors:user_not_found') });
+        res.status(404).json({ error: this.t('errors:user_not_found') });
         return;
       }
 
@@ -72,17 +61,19 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error fetching current user:', error);
       res.status(500).json({
-        error: this.t(req, 'errors:internal_server_error'),
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
 
   // Update current user profile
-  static async updateCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async updateCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(this.toUniversalRequest(req));
+
     try {
       if (!req.user) {
-        res.status(401).json({ error: this.t(req, 'errors:user_not_authenticated') });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
@@ -91,25 +82,25 @@ export class UserController {
 
       // Validate input
       if (!name || !surname) {
-        res.status(400).json({ error: this.t(req, 'errors:name_surname_required') });
+        res.status(400).json({ error: this.t('errors:name_surname_required') });
         return;
       }
 
       if (typeof name !== 'string' || typeof surname !== 'string') {
-        res.status(400).json({ error: this.t(req, 'errors:name_surname_strings') });
+        res.status(400).json({ error: this.t('errors:name_surname_strings') });
         return;
       }
 
       if (name.length > 100 || surname.length > 100) {
         res
           .status(400)
-          .json({ error: this.t(req, 'errors:name_surname_max_length', { max: 100 }) });
+          .json({ error: this.t('errors:name_surname_max_length', { max: 100 }) });
         return;
       }
 
       const user = await UserService.getUserById(req.user.userId);
       if (!user) {
-        res.status(404).json({ error: this.t(req, 'errors:user_not_found') });
+        res.status(404).json({ error: this.t('errors:user_not_found') });
         return;
       }
 
@@ -129,17 +120,19 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error updating current user:', error);
       res.status(500).json({
-        error: this.t(req, 'errors:internal_server_error'),
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
 
   // Get user's books
-  static async getUserBooks(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getUserBooks(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(this.toUniversalRequest(req));
+
     try {
       if (!req.user) {
-        res.status(401).json({ error: this.t(req, 'errors:user_not_authenticated') });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
@@ -211,17 +204,19 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error fetching user books:', error);
       res.status(500).json({
-        error: this.t(req, 'errors:internal_server_error'),
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
 
   // Get user statistics
-  static async getUserStats(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getUserStats(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(this.toUniversalRequest(req));
+
     try {
       if (!req.user) {
-        res.status(401).json({ error: this.t(req, 'errors:user_not_authenticated') });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
@@ -262,17 +257,19 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error fetching user stats:', error);
       res.status(500).json({
-        error: this.t(req, 'errors:internal_server_error'),
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
 
   // Deactivate user account
-  static async deactivateAccount(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async deactivateAccount(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(this.toUniversalRequest(req));
+
     try {
       if (!req.user) {
-        res.status(401).json({ error: this.t(req, 'errors:user_not_authenticated') });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
@@ -286,23 +283,25 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error deactivating user account:', error);
       res.status(500).json({
-        error: this.t(req, 'errors:internal_server_error'),
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
 
   // Delete user account (hard delete)
-  static async deleteAccount(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async deleteAccount(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.initializeI18n(this.toUniversalRequest(req));
+
     try {
       if (!req.user) {
-        res.status(401).json({ error: this.t(req, 'errors:user_not_authenticated') });
+        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
         return;
       }
 
       const user = await UserService.getUserById(req.user.userId);
       if (!user) {
-        res.status(404).json({ error: this.t(req, 'errors:user_not_found') });
+        res.status(404).json({ error: this.t('errors:user_not_found') });
         return;
       }
 
@@ -317,9 +316,12 @@ export class UserController {
       // TODO: Replace with proper logging
       // console.error('Error deleting user account:', error);
       res.status(500).json({
-        error: this.t(req, 'errors:internal_server_error'),
+        error: this.t('errors:internal_server_error'),
         details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
 }
+
+// Export singleton instance
+export const userController = new UserController();
