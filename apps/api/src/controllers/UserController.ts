@@ -31,7 +31,11 @@ export class UserController {
    * @param key - Translation key with namespace (e.g., "errors:book_not_found")
    * @param interpolation - Optional interpolation values
    */
-  private static t(req: AuthenticatedRequest, key: string, interpolation?: Record<string, unknown>): string {
+  private static t(
+    req: AuthenticatedRequest,
+    key: string,
+    interpolation?: Record<string, unknown>
+  ): string {
     const language = this.getRequestLanguage(req);
     return interpolation
       ? i18n.t(key, { ...interpolation, lng: language })
@@ -47,7 +51,7 @@ export class UserController {
       }
 
       // Use cached user from auth middleware to avoid duplicate query
-      const user = req.user.userModel || await UserService.getUserById(req.user.userId);
+      const user = req.user.userModel || (await UserService.getUserById(req.user.userId));
       if (!user) {
         res.status(404).json({ error: this.t(req, 'errors:user_not_found') });
         return;
@@ -60,7 +64,7 @@ export class UserController {
         surname: user.surname,
         fullName: user.getFullName(),
         isActive: user.isActive,
-        role: user.role, // Include user role
+        role: user.role,
         createdAt: user.creationDate,
         updatedAt: user.updateDate,
       });
@@ -97,7 +101,9 @@ export class UserController {
       }
 
       if (name.length > 100 || surname.length > 100) {
-        res.status(400).json({ error: this.t(req, 'errors:name_surname_max_length', { max: 100 }) });
+        res
+          .status(400)
+          .json({ error: this.t(req, 'errors:name_surname_max_length', { max: 100 }) });
         return;
       }
 
