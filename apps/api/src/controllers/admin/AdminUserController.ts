@@ -48,15 +48,7 @@ export class AdminUserController extends BaseController {
       const search = this.getQueryParameter(request, 'search');
 
       // Build where clause for search
-<<<<<<< Updated upstream
-      const whereClause: WhereOptions<UserAttributes> = {};
-=======
-<<<<<<< Updated upstream
-      const whereClause: any = {};
-=======
       let whereClause: WhereOptions<UserAttributes> = {};
->>>>>>> Stashed changes
->>>>>>> Stashed changes
       if (search) {
         whereClause = {
           [Op.or]: [
