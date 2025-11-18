@@ -1,6 +1,8 @@
 import { describe, test, expect, beforeEach, vi, type Mocked } from 'vitest';
 import axios from 'axios';
 
+import * as apiModule from '../../services/api';
+
 // Mock environment variables using Vitest
 vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000');
 vi.stubEnv('MODE', 'test');
@@ -54,8 +56,6 @@ vi.mock('axios', () => ({
     create: vi.fn(() => mockAxiosInstance),
   },
 }));
-
-import * as apiModule from '../../services/api';
 
 const mockedAxios = axios as Mocked<typeof axios>;
 
@@ -172,7 +172,7 @@ describe('API Service Simple Tests', () => {
   });
 
   test('request interceptor adds auth token', () => {
-    apiModule;
+    void apiModule;
     mockLocalStorage.getItem.mockReturnValue('test-token');
 
     // Get the request interceptor function from the captured interceptors
@@ -186,7 +186,7 @@ describe('API Service Simple Tests', () => {
   });
 
   test('response interceptor handles 401 errors', async () => {
-    apiModule;
+    void apiModule;
 
     // Get the error interceptor function from the captured interceptors
     const errorInterceptor = responseInterceptors[0].onRejected;

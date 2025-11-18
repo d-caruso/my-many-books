@@ -2,10 +2,10 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../../contexts/AuthContext';
 import { ApiProvider } from '../../contexts/ApiContext';
+import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 
 // Mock AWS Amplify auth - industry standard approach
 vi.mock('aws-amplify/auth');
-import { signIn, signUp, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 
 // Mock API service
 const mockApiService = {
@@ -149,8 +149,10 @@ describe('AuthContext', () => {
       const userElement = screen.getByTestId('user');
       const userData = JSON.parse(userElement.textContent || '{}');
       expect(userData.id).toBe(1);
-      expect(userData.email).toBe('test@example.com');
     }, { timeout: 3000 });
+    const userElement = screen.getByTestId('user');
+    const userData = JSON.parse(userElement.textContent || '{}');
+    expect(userData.email).toBe('test@example.com');
   });
 
   test('handles invalid JSON in localStorage', () => {
@@ -258,8 +260,8 @@ describe('AuthContext', () => {
 
     await waitFor(() => {
       expect(signOut).toHaveBeenCalled();
-      expect(screen.getByTestId('user')).toHaveTextContent('null');
     });
+    expect(screen.getByTestId('user')).toHaveTextContent('null');
   });
 
   test('signup function calls AWS Amplify signUp', async () => {

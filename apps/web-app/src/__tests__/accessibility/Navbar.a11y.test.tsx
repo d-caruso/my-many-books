@@ -8,6 +8,8 @@ import { initReactI18next } from 'react-i18next';
 import { Navbar } from '../../components/Navigation/Navbar';
 import { expectNoA11yViolations } from '../utils/axe-helper';
 
+import { useAuth } from '../../contexts/AuthContext';
+
 // Mock the useAuth hook
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: vi.fn(),
@@ -103,8 +105,6 @@ vi.mock('@mui/icons-material', () => ({
   ExpandMore: () => <span data-testid="expand-more-icon" aria-hidden="true">▼</span>,
   Language: () => <span data-testid="language-icon" aria-hidden="true">🌐</span>,
 }));
-
-import { useAuth } from '../../contexts/AuthContext';
 
 // Create test i18n instance
 const testI18n = i18n.createInstance();

@@ -167,10 +167,9 @@ describe('Admin Book Management Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('book-row-1')).toBeInTheDocument();
-      expect(screen.getByTestId('book-row-2')).toBeInTheDocument();
-      expect(screen.getByTestId('book-row-3')).toBeInTheDocument();
     });
-
+    expect(screen.getByTestId('book-row-2')).toBeInTheDocument();
+    expect(screen.getByTestId('book-row-3')).toBeInTheDocument();
     expect(mockGetAdminBooks).toHaveBeenCalledTimes(1);
   });
 
@@ -179,10 +178,10 @@ describe('Admin Book Management Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByText('The Great Gatsby')).toBeInTheDocument();
-      expect(screen.getByText('9780743273565')).toBeInTheDocument();
-      expect(screen.getByText('1984')).toBeInTheDocument();
-      expect(screen.getByText('9780451524935')).toBeInTheDocument();
     });
+    expect(screen.getByText('9780743273565')).toBeInTheDocument();
+    expect(screen.getByText('1984')).toBeInTheDocument();
+    expect(screen.getByText('9780451524935')).toBeInTheDocument();
   });
 
   test('renders page title and layout', async () => {
@@ -225,9 +224,9 @@ describe('Admin Book Management Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-      expect(screen.getByText('No owner')).toBeInTheDocument();
     });
+    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+    expect(screen.getByText('No owner')).toBeInTheDocument();
   });
 
   test('loads books on initial render', async () => {
@@ -243,9 +242,9 @@ describe('Admin Book Management Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('book-title-1')).toHaveTextContent('The Great Gatsby');
-      expect(screen.getByTestId('book-title-2')).toHaveTextContent('1984');
-      expect(screen.getByTestId('book-title-3')).toHaveTextContent('To Kill a Mockingbird');
     });
+    expect(screen.getByTestId('book-title-2')).toHaveTextContent('1984');
+    expect(screen.getByTestId('book-title-3')).toHaveTextContent('To Kill a Mockingbird');
   });
 
   test('handles pagination correctly', async () => {

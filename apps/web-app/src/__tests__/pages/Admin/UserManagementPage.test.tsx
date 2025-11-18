@@ -94,7 +94,7 @@ describe('UserManagementPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('row-1')).toBeInTheDocument();
-      expect(screen.getByTestId('row-2')).toBeInTheDocument();
     });
+    expect(screen.getByTestId('row-2')).toBeInTheDocument();
   });
 });

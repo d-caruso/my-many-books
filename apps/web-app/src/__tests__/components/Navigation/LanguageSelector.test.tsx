@@ -157,8 +157,8 @@ describe('LanguageSelector', () => {
     // Wait for language change
     await waitFor(() => {
       expect(i18n.language).toBe('en');
-      expect(localStorage.getItem('preferred-language')).toBe('en');
     });
+    expect(localStorage.getItem('preferred-language')).toBe('en');
   });
 
   it('should update UI instantly when language changes', async () => {

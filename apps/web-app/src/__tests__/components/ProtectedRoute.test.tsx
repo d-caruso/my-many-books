@@ -45,9 +45,13 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    // Check for spinner/loading state (the component renders a spinner div)
-    const loadingDiv = container.querySelector('div[style*="animation"]');
-    expect(loadingDiv).toBeInTheDocument();
+    // Check for spinner/loading state - NativeLoading renders a centered div with a spinner
+    const container = screen.getByText((content, element) => {
+      return element !== null &&
+             element.tagName === 'DIV' &&
+             element.style.minHeight === '100vh';
+    }, { selector: 'div' });
+    expect(container).toBeInTheDocument();
     expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
   });
 
@@ -146,8 +150,12 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    // Check that the loading spinner is present with correct styling
-    const loadingDiv = container.querySelector('div[style*="animation"]');
-    expect(loadingDiv).toBeInTheDocument();
+    // Check that the loading spinner is present - NativeLoading renders a centered div
+    const container = screen.getByText((content, element) => {
+      return element !== null &&
+             element.tagName === 'DIV' &&
+             element.style.minHeight === '100vh';
+    }, { selector: 'div' });
+    expect(container).toBeInTheDocument();
   });
 });

@@ -297,10 +297,8 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
       // Check if result exists and is an array
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
-      if (Array.isArray(result)) {
-        expect(result.length).toBe(1);
-        expect(result[0].surname).toBe('Fitzgerald');
-      }
+      expect(result.length).toBe(1);
+      expect(result[0].surname).toBe('Fitzgerald');
     });
   });
 

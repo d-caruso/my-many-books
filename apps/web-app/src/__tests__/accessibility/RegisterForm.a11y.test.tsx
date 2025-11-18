@@ -5,6 +5,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { RegisterForm } from '../../components/Auth/RegisterForm';
 import { expectNoA11yViolations } from '../utils/axe-helper';
 
+import { useAuth } from '../../contexts/AuthContext';
+
 // Mock the useAuth hook
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: vi.fn(),
@@ -58,8 +60,6 @@ vi.mock('@mui/material', () => ({
     <div role="alert" data-severity={severity} {...props}>{children}</div>
   ),
 }));
-
-import { useAuth } from '../../contexts/AuthContext';
 
 describe('RegisterForm Accessibility', () => {
   beforeEach(() => {

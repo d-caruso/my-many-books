@@ -231,8 +231,8 @@ describe('UpdatePrompt', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('alert-error')).toBeInTheDocument();
-      expect(screen.getByText('Update Failed')).toBeInTheDocument();
     });
+    expect(screen.getByText('Update Failed')).toBeInTheDocument();
   });
 
   test('shows custom update message', () => {

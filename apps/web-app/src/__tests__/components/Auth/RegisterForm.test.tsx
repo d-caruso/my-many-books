@@ -373,13 +373,13 @@ describe('RegisterForm', () => {
   });
 
   test('has proper form structure and styling', () => {
-    const { container } = render(
+    render(
       <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
       { wrapper: TestWrapper }
     );
 
     // RegisterForm uses native HTML elements, not MUI components
-    const form = container.querySelector('form');
+    const form = screen.getByRole('form');
     expect(form).toBeInTheDocument();
     expect(screen.getAllByText(/create account/i).length).toBeGreaterThan(0);
   });

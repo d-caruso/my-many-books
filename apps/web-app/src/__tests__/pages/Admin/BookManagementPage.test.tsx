@@ -139,10 +139,10 @@ describe('BookManagementPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('row-1')).toBeInTheDocument();
-      expect(screen.getByTestId('row-2')).toBeInTheDocument();
-      expect(screen.getByTestId('title-1')).toHaveTextContent('Book One');
-      expect(screen.getByTestId('isbn-1')).toHaveTextContent('1234567890');
     });
+    expect(screen.getByTestId('row-2')).toBeInTheDocument();
+    expect(screen.getByTestId('title-1')).toHaveTextContent('Book One');
+    expect(screen.getByTestId('isbn-1')).toHaveTextContent('1234567890');
   });
 
   test('displays error message if books fetching fails', async () => {

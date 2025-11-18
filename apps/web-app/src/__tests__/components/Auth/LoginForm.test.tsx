@@ -147,9 +147,8 @@ describe('LoginForm', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Email is required')).toBeInTheDocument();
-      expect(screen.getByText('Password is required')).toBeInTheDocument();
     });
-
+    expect(screen.getByText('Password is required')).toBeInTheDocument();
     expect(mockLogin).not.toHaveBeenCalled();
   });
 
@@ -233,8 +232,8 @@ describe('LoginForm', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('alert-error')).toBeInTheDocument();
-      expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
     });
+    expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
   });
 
   test('calls onSwitchToRegister when register link is clicked', () => {

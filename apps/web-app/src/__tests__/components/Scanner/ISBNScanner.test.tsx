@@ -203,11 +203,10 @@ describe('ISBNScanner', () => {
       />
     );
 
-    const closeButton = screen.getByTestId('close-icon').closest('button');
-    if (closeButton) {
-      fireEvent.click(closeButton);
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
-    }
+    const closeButton = screen.getByTestId('icon-button');
+    expect(closeButton).toBeInTheDocument();
+    fireEvent.click(closeButton);
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
   test('shows scanning indicator when scanning', () => {
@@ -272,11 +271,13 @@ describe('ISBNScanner', () => {
       />
     );
 
-    const flipButton = screen.getByTestId('swap-icon').closest('button');
+    const buttons = screen.getAllByTestId('icon-button');
+    const flipButton = buttons.find(btn => btn.textContent?.includes('Swap'));
+    expect(flipButton).toBeTruthy();
     if (flipButton) {
       fireEvent.click(flipButton);
-      expect(mockSwitchCamera).toHaveBeenCalledTimes(1);
     }
+    expect(mockSwitchCamera).toHaveBeenCalledTimes(1);
   });
 
   test('displays error message when error occurs', () => {

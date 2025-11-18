@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AuthorAutocomplete } from '../../../components/Search/AuthorAutocomplete';
 import { ApiProvider } from '../../../contexts/ApiContext';
@@ -195,7 +195,8 @@ describe('AuthorAutocomplete', () => {
       />
     );
 
-    const input = screen.getByTestId('text-field').querySelector('input');
+    const textField = screen.getByTestId('text-field');
+    const input = within(textField).getByRole('textbox');
     expect(input).toHaveAttribute('data-size', 'small');
   });
 
@@ -207,7 +208,8 @@ describe('AuthorAutocomplete', () => {
       />
     );
 
-    const input = screen.getByTestId('text-field').querySelector('input');
+    const textField = screen.getByTestId('text-field');
+    const input = within(textField).getByRole('textbox');
     expect(input).toBeDisabled();
   });
 
@@ -616,8 +618,8 @@ describe('AuthorAutocomplete', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('input-adornment')).toBeInTheDocument();
-      expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
     });
+    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
 
     act(() => {
       resolveSearch!(mockAuthors);

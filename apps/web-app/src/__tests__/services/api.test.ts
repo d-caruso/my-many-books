@@ -1,5 +1,9 @@
 import { Book, Author, Category, User, SearchResult, PaginatedResponse } from '../../types';
 
+// Import after mocks are set up (avoid importing default instance to prevent axios creation)
+import { createApiService, ApiService } from '../../services/api';
+import { createApiClient, createMockApiClient } from '@my-many-books/shared-api';
+
 // Mock the shared-api library using industry standard approach
 vi.mock('@my-many-books/shared-api', () => ({
   createApiClient: vi.fn(() => ({
@@ -72,10 +76,6 @@ vi.mock('axios', () => ({
     })),
   },
 }));
-
-// Import after mocks are set up (avoid importing default instance to prevent axios creation)
-import { createApiService, ApiService } from '../../services/api';
-import { createApiClient, createMockApiClient } from '@my-many-books/shared-api';
 
 // Mock localStorage
 const mockLocalStorage = {

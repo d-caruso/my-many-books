@@ -4,6 +4,12 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+// Import after mocks
+import BooksPage from '../../pages/BooksPage';
+import { ApiProvider } from '../../contexts/ApiContext';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useBookSearch } from '../../hooks/useBookSearch';
+
 // Mock dependencies - using vi.hoisted to ensure mocks are set up before imports
 const { mockUseSearchParams, mockUseNavigate, mockUseBookSearch } = vi.hoisted(() => ({
   mockUseSearchParams: vi.fn(),
@@ -19,12 +25,6 @@ vi.mock('react-router-dom', () => ({
 vi.mock('../../hooks/useBookSearch', () => ({
   useBookSearch: mockUseBookSearch,
 }));
-
-// Import after mocks
-import BooksPage from '../../pages/BooksPage';
-import { ApiProvider } from '../../contexts/ApiContext';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useBookSearch } from '../../hooks/useBookSearch';
 
 // Mock Material-UI components
 vi.mock('@mui/material', () => ({
@@ -237,30 +237,35 @@ describe('BooksPage', () => {
 
   test('switches to grid view mode', () => {
     renderWithProvider(<BooksPage />);
-    
-    const gridButton = screen.getByTestId('grid-icon').closest('button');
+
+    const iconButtons = screen.getAllByTestId('icon-button');
+    const gridButton = iconButtons.find(btn => btn.textContent?.includes('Grid'));
+    expect(gridButton).toBeTruthy();
     fireEvent.click(gridButton!);
-    
+
     const bookList = screen.getByTestId('book-list');
     expect(bookList).toHaveAttribute('data-view-mode', 'grid');
   });
 
   test('switches to list view mode', () => {
     renderWithProvider(<BooksPage />);
-    
-    const listButton = screen.getByTestId('list-icon').closest('button');
+
+    const iconButtons = screen.getAllByTestId('icon-button');
+    const listButton = iconButtons.find(btn => btn.textContent?.includes('List'));
+    expect(listButton).toBeTruthy();
     fireEvent.click(listButton!);
-    
+
     const bookList = screen.getByTestId('book-list');
     expect(bookList).toHaveAttribute('data-view-mode', 'list');
   });
 
   test('opens add book form', () => {
     renderWithProvider(<BooksPage />);
-    
-    const addButton = screen.getByTestId('add-icon').closest('button');
-    fireEvent.click(addButton!);
-    
+
+    const addButton = screen.getByTestId('button-contained');
+    expect(addButton).toBeInTheDocument();
+    fireEvent.click(addButton);
+
     expect(screen.getByTestId('book-form')).toBeInTheDocument();
     expect(screen.queryByTestId('book-list')).not.toBeInTheDocument();
   });
@@ -330,15 +335,16 @@ describe('BooksPage', () => {
 
   test('cancels book form', () => {
     renderWithProvider(<BooksPage />);
-    
+
     // Open add form
-    const addButton = screen.getByTestId('add-icon').closest('button');
-    fireEvent.click(addButton!);
-    
+    const addButton = screen.getByTestId('button-contained');
+    expect(addButton).toBeInTheDocument();
+    fireEvent.click(addButton);
+
     // Cancel form
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
-    
+
     expect(screen.getByTestId('book-list')).toBeInTheDocument();
     expect(screen.queryByTestId('book-form')).not.toBeInTheDocument();
   });
@@ -362,9 +368,11 @@ describe('BooksPage', () => {
 
   test('handles book interactions', async () => {
     renderWithProvider(<BooksPage />);
-    
+
     // Test add book button triggers add mode
-    fireEvent.click(screen.getByTestId('add-icon').closest('button')!);
+    const addButton = screen.getByTestId('button-contained');
+    expect(addButton).toBeInTheDocument();
+    fireEvent.click(addButton);
     expect(screen.getByTestId('book-form')).toBeInTheDocument();
   });
 
@@ -485,20 +493,22 @@ describe('BooksPage', () => {
 
   test('calls status change handler', async () => {
     renderWithProvider(<BooksPage />);
-    
+
     // Use the stored callback
-    if (mockOnStatusChange) {
-      await mockOnStatusChange(1, 'read');
-      expect(mockApiService.updateBook).toHaveBeenCalledWith(1, { status: 'read' });
-    }
+    expect(mockOnStatusChange).toBeDefined();
+    await mockOnStatusChange(1, 'read');
+    expect(mockApiService.updateBook).toHaveBeenCalledWith(1, { status: 'read' });
   });
 
   test('handles different view modes', () => {
     renderWithProvider(<BooksPage />);
-    
+
     // Click list view
-    fireEvent.click(screen.getByTestId('list-icon').closest('button')!);
-    
+    const iconButtons = screen.getAllByTestId('icon-button');
+    const listButton = iconButtons.find(btn => btn.textContent?.includes('List'));
+    expect(listButton).toBeTruthy();
+    fireEvent.click(listButton!);
+
     const bookList = screen.getByTestId('book-list');
     expect(bookList).toHaveAttribute('data-view-mode', 'list');
   });

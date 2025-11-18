@@ -55,8 +55,11 @@ vi.mock('@mui/material', () => ({
   Select: ({ children, value, onChange, ...props }: any) => (
     <select data-testid="language-select" value={value} onChange={onChange} {...props}>
       {React.Children.map(children, (child: any) => {
-        if (React.isValidElement(child) && child.props.value) {
-          return <option value={child.props.value}>{child.props.children}</option>;
+        if (React.isValidElement(child)) {
+          const { value: childValue, children: childChildren } = child.props;
+          if (childValue) {
+            return <option value={childValue}>{childChildren}</option>;
+          }
         }
         return null;
       })}

@@ -97,16 +97,13 @@ describe('AdminDashboardPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Total Users')).toBeInTheDocument();
-      expect(screen.getByText('10')).toBeInTheDocument();
-
-      expect(screen.getByText('Total Books')).toBeInTheDocument();
-      expect(screen.getByText('100')).toBeInTheDocument();
-
-      expect(screen.getByText('Active Users')).toBeInTheDocument();
-      expect(screen.getByText('8')).toBeInTheDocument();
-
-      expect(screen.getByText('Admin Users')).toBeInTheDocument();
-      expect(screen.getByText('2')).toBeInTheDocument();
     });
+    expect(screen.getByText('10')).toBeInTheDocument();
+    expect(screen.getByText('Total Books')).toBeInTheDocument();
+    expect(screen.getByText('100')).toBeInTheDocument();
+    expect(screen.getByText('Active Users')).toBeInTheDocument();
+    expect(screen.getByText('8')).toBeInTheDocument();
+    expect(screen.getByText('Admin Users')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
   });
 });

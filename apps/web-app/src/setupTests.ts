@@ -5,15 +5,15 @@ import '@testing-library/jest-dom';
 import { expect } from 'vitest';
 import { toHaveNoViolations } from 'jest-axe';
 
-// Extend expect with accessibility matchers
-expect.extend(toHaveNoViolations);
-
 // i18n setup for tests (synchronous version for test environment)
 import './i18n.testing';
 
 // MSW (Mock Service Worker) setup for HTTP layer mocking
 // This is test infrastructure, not application code mocks
 import { server } from './__tests__/mocks/server';
+
+// Extend expect with accessibility matchers
+expect.extend(toHaveNoViolations);
 
 // Start MSW server before all tests
 beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));

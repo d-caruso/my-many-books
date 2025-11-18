@@ -4,6 +4,9 @@
  */
 
 // Mock axios before importing the API service
+import { createApiService } from '../../services/api';
+import axios from 'axios';
+
 vi.mock('axios', () => ({
   default: {
     create: vi.fn(() => ({
@@ -18,9 +21,6 @@ vi.mock('axios', () => ({
     })),
   },
 }));
-
-import { createApiService } from '../../services/api';
-import axios from 'axios';
 
 const mockAxios = axios as Mocked<typeof axios>;
 const mockAxiosInstance = {

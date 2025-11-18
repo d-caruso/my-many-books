@@ -147,10 +147,9 @@ describe('Admin User Management Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('user-row-1')).toBeInTheDocument();
-      expect(screen.getByTestId('user-row-2')).toBeInTheDocument();
-      expect(screen.getByTestId('user-row-3')).toBeInTheDocument();
     });
-
+    expect(screen.getByTestId('user-row-2')).toBeInTheDocument();
+    expect(screen.getByTestId('user-row-3')).toBeInTheDocument();
     expect(mockGetAdminUsers).toHaveBeenCalledTimes(1);
   });
 
@@ -159,10 +158,10 @@ describe('Admin User Management Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('john@example.com')).toBeInTheDocument();
-      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-      expect(screen.getByText('jane@example.com')).toBeInTheDocument();
     });
+    expect(screen.getByText('john@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+    expect(screen.getByText('jane@example.com')).toBeInTheDocument();
   });
 
   test('renders page title and layout', async () => {

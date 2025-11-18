@@ -96,11 +96,10 @@ describe('Admin Dashboard Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByText('100')).toBeInTheDocument();
-      expect(screen.getByText('500')).toBeInTheDocument();
-      expect(screen.getByText('80')).toBeInTheDocument();
-      expect(screen.getByText('5')).toBeInTheDocument();
     });
-
+    expect(screen.getByText('500')).toBeInTheDocument();
+    expect(screen.getByText('80')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
     expect(mockGetAdminStats).toHaveBeenCalled();
   });
 
@@ -109,10 +108,10 @@ describe('Admin Dashboard Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Total Users')).toBeInTheDocument();
-      expect(screen.getByText('Total Books')).toBeInTheDocument();
-      expect(screen.getByText('Active Users')).toBeInTheDocument();
-      expect(screen.getByText('Admin Users')).toBeInTheDocument();
     });
+    expect(screen.getByText('Total Books')).toBeInTheDocument();
+    expect(screen.getByText('Active Users')).toBeInTheDocument();
+    expect(screen.getByText('Admin Users')).toBeInTheDocument();
   });
 
   test('shows welcome message after loading', async () => {
@@ -138,11 +137,11 @@ describe('Admin Dashboard Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Administration')).toBeInTheDocument();
-      expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0);
-      expect(screen.getByText('Users')).toBeInTheDocument();
-      expect(screen.getByText('Books')).toBeInTheDocument();
-      expect(screen.getByText('Settings')).toBeInTheDocument();
     });
+    expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0);
+    expect(screen.getByText('Users')).toBeInTheDocument();
+    expect(screen.getByText('Books')).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 
   test('displays timestamp when available', async () => {

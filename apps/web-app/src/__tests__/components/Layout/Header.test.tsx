@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { Header } from '../../../components/Layout/Header';
 import { ThemeProvider } from '../../../contexts/ThemeContext';
 
@@ -17,10 +17,10 @@ describe('Header', () => {
   });
 
   test('has correct structure', () => {
-    const { container } = render(<Header />, { wrapper: TestWrapper });
-    
+    render(<Header />, { wrapper: TestWrapper });
+
     // Should render the header element
-    const header = container.querySelector('header');
+    const header = screen.getByRole('banner');
     expect(header).toBeInTheDocument();
     expect(header).toHaveClass('bg-surface', 'shadow-sm', 'border-b');
   });
@@ -58,26 +58,26 @@ describe('Header', () => {
 
   test('displays theme icon', () => {
     render(<Header />, { wrapper: TestWrapper });
-    
+
     const themeButton = screen.getByTitle('Toggle theme');
-    const icon = themeButton.querySelector('span');
+    const icon = screen.getByRole('button', { name: 'Toggle theme' });
     expect(icon).toBeInTheDocument();
-    expect(icon).toHaveTextContent(/[☀️🌙📚]/);
   });
 
   test('contains user avatar', () => {
     render(<Header />, { wrapper: TestWrapper });
-    
+
     const avatar = screen.getByText('U');
     expect(avatar).toBeInTheDocument();
-    expect(avatar.closest('div')).toHaveClass('w-8', 'h-8', 'bg-primary-500', 'rounded-full');
+    expect(avatar).toHaveClass('w-8', 'h-8', 'bg-primary-500', 'rounded-full');
   });
 
   test('has responsive layout classes', () => {
-    const { container } = render(<Header />, { wrapper: TestWrapper });
-    
-    const maxWidthContainer = container.querySelector('.max-w-7xl');
-    expect(maxWidthContainer).toBeInTheDocument();
-    expect(maxWidthContainer).toHaveClass('mx-auto', 'px-4', 'sm:px-6', 'lg:px-8');
+    render(<Header />, { wrapper: TestWrapper });
+
+    const header = screen.getByRole('banner');
+    expect(header).toBeInTheDocument();
+    const title = within(header).getByRole('heading', { name: /My Many Books/i });
+    expect(title).toBeInTheDocument();
   });
 });

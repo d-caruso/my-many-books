@@ -3,6 +3,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { Book } from '../../../types';
 
+// Import after mocks
+import { MemoryRouter } from 'react-router-dom';
+import { BookSearchPage } from '../../../components/Search/BookSearchPage';
+import { useBookSearch } from '../../../hooks/useBookSearch';
+
 const mockNavigate = vi.fn();
 
 // Mock react-router-dom BEFORE importing anything that uses it
@@ -119,11 +124,6 @@ vi.mock('@mui/icons-material/Person', () => ({
 vi.mock('@mui/icons-material/FilterList', () => ({
   default: () => <div data-testid="filter-icon">Filter</div>,
 }));
-
-// Import after mocks
-import { MemoryRouter } from 'react-router-dom';
-import { BookSearchPage } from '../../../components/Search/BookSearchPage';
-import { useBookSearch } from '../../../hooks/useBookSearch';
 
 const mockUseBookSearch = vi.mocked(useBookSearch);
 
