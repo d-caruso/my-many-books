@@ -4,7 +4,7 @@
 // ================================================================
 
 import Joi from 'joi';
-import { Op } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
@@ -12,10 +12,21 @@ import { Book } from '../../models/Book';
 import { Author } from '../../models/Author';
 import { Category } from '../../models/Category';
 import { User } from '../../models/User';
+import { BookAttributes } from '../../models/interfaces/ModelInterfaces';
 
 /**
  * Validation schemas
  */
+interface UpdateBookData {
+  title?: string;
+  isbnCode?: string;
+  editionNumber?: number | null;
+  editionDate?: Date | null;
+  status?: 'reading' | 'paused' | 'finished' | null;
+  notes?: string | null;
+  userId?: number | null;
+}
+
 const updateBookSchema = Joi.object({
   title: Joi.string().min(1).max(255).optional(),
   isbnCode: Joi.string().min(10).max(20).optional(),
@@ -45,7 +56,7 @@ export class AdminBookController extends BaseController {
       const userIdFilter = this.getQueryParameter(request, 'userId');
 
       // Build where clause for search
-      const whereClause: any = {};
+      const whereClause: WhereOptions<BookAttributes> = {};
       if (search) {
         whereClause[Op.or] = [
           { title: { [Op.like]: `%${search}%` } },
@@ -234,16 +245,18 @@ export class AdminBookController extends BaseController {
         return this.createErrorResponseI18n('errors:book_not_found', 404);
       }
 
+      const updateData = validation.value as UpdateBookData;
+
       // If userId is being changed, verify the user exists
-      if (validation.value?.userId !== undefined && validation.value.userId !== null) {
-        const user = await User.findByPk(validation.value.userId);
+      if (updateData?.userId !== undefined && updateData.userId !== null) {
+        const user = await User.findByPk(updateData.userId);
         if (!user) {
           return this.createErrorResponseI18n('errors:user_not_found', 404);
         }
       }
 
       // Update book
-      await book.update(validation.value);
+      await book.update(updateData);
 
       // Reload with associations
       await book.reload({

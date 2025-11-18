@@ -47,9 +47,9 @@ export class StatsController extends BaseController {
    *
    * Future implementation: user growth over time, user activity, etc.
    */
-  async getUserStats(_request: UniversalRequest): Promise<ApiResponse> {
+  getUserStats(_request: UniversalRequest): Promise<ApiResponse> {
     // TODO: Implement detailed user statistics
-    return this.createErrorResponse('Not implemented yet', 501);
+    return Promise.resolve(this.createErrorResponse('Not implemented yet', 501));
   }
 
   /**
@@ -58,9 +58,9 @@ export class StatsController extends BaseController {
    *
    * Future implementation: popular books, book additions over time, etc.
    */
-  async getBookStats(_request: UniversalRequest): Promise<ApiResponse> {
+  getBookStats(_request: UniversalRequest): Promise<ApiResponse> {
     // TODO: Implement detailed book statistics
-    return this.createErrorResponse('Not implemented yet', 501);
+    return Promise.resolve(this.createErrorResponse('Not implemented yet', 501));
   }
 }
 

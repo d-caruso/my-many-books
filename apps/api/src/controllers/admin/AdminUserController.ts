@@ -4,15 +4,24 @@
 // ================================================================
 
 import Joi from 'joi';
-import { Op, Sequelize } from 'sequelize';
+import { Op, Sequelize, WhereOptions } from 'sequelize';
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { User } from '../../models/User';
+import { UserAttributes } from '../../models/interfaces/ModelInterfaces';
 
 /**
  * Validation schemas
  */
+interface UpdateUserData {
+  name?: string;
+  surname?: string;
+  email?: string;
+  isActive?: boolean;
+  role?: 'user' | 'admin';
+}
+
 const updateUserSchema = Joi.object({
   name: Joi.string().min(1).max(100).optional(),
   surname: Joi.string().min(1).max(100).optional(),
@@ -39,7 +48,7 @@ export class AdminUserController extends BaseController {
       const search = this.getQueryParameter(request, 'search');
 
       // Build where clause for search
-      const whereClause: any = {};
+      const whereClause: WhereOptions<UserAttributes> = {};
       if (search) {
         whereClause[Op.or] = [
           { email: { [Op.like]: `%${search}%` } },
@@ -175,10 +184,12 @@ export class AdminUserController extends BaseController {
         return this.createErrorResponseI18n('errors:user_not_found', 404);
       }
 
+      const updateData = validation.value as UpdateUserData;
+
       // Check if email is being changed and if it's already in use
-      if (validation.value?.email && validation.value.email !== user.email) {
+      if (updateData?.email && updateData.email !== user.email) {
         const existingUser = await User.findOne({
-          where: { email: validation.value.email },
+          where: { email: updateData.email },
         });
         if (existingUser) {
           return this.createErrorResponseI18n('errors:email_already_exists', 400);
@@ -186,7 +197,7 @@ export class AdminUserController extends BaseController {
       }
 
       // Update user
-      await user.update(validation.value);
+      await user.update(updateData);
 
       return this.createSuccessResponse({
         id: user.id,

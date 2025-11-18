@@ -2,25 +2,25 @@
 // src/models/associations/ModelAssociations.ts
 // ================================================================
 
-import { Sequelize } from 'sequelize';
+import { Sequelize, ModelStatic, Model } from 'sequelize';
 
 export interface ModelRegistry {
-  User: any;
-  Book: any;
-  Author: any;
-  Category: any;
-  BookAuthor: any;
-  BookCategory: any;
+  User: ModelStatic<Model>;
+  Book: ModelStatic<Model>;
+  Author: ModelStatic<Model>;
+  Category: ModelStatic<Model>;
+  BookAuthor: ModelStatic<Model>;
+  BookCategory: ModelStatic<Model>;
 }
 
 export class ModelAssociations {
   private static models: Partial<ModelRegistry> = {};
 
-  static registerModel(name: keyof ModelRegistry, model: any): void {
+  static registerModel(name: keyof ModelRegistry, model: ModelStatic<Model>): void {
     ModelAssociations.models[name] = model;
   }
 
-  static getModel(name: keyof ModelRegistry): any {
+  static getModel(name: keyof ModelRegistry): ModelStatic<Model> {
     const model = ModelAssociations.models[name];
     if (!model) {
       throw new Error(`Model ${name} is not registered`);
