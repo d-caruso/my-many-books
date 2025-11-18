@@ -28,6 +28,17 @@ describe('Authentication Middleware', () => {
   let req: Partial<AuthenticatedRequest>;
   let res: Partial<Response>;
   let next: NextFunction;
+  let consoleErrorSpy: jest.SpyInstance;
+
+  beforeAll(() => {
+    // Suppress console.error during tests
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    // Restore console.error after tests
+    consoleErrorSpy.mockRestore();
+  });
 
   beforeEach(() => {
     req = {
