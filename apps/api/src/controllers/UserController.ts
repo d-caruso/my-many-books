@@ -92,9 +92,7 @@ export class UserController extends BaseController {
       }
 
       if (name.length > 100 || surname.length > 100) {
-        res
-          .status(400)
-          .json({ error: this.t('errors:name_surname_max_length', { max: 100 }) });
+        res.status(400).json({ error: this.t('errors:name_surname_max_length', { max: 100 }) });
         return;
       }
 

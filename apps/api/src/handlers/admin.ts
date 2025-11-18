@@ -16,7 +16,7 @@ import { authAdminMiddleware } from '../middleware/authAdmin';
 
 const withMiddleware = (
   handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
-) => {
+): ((event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>) => {
   return authAdminMiddleware(
     async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
       try {
