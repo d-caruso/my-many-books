@@ -2,11 +2,11 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { UpdatePrompt } from '../../../components/PWA/UpdatePrompt';
-import { usePWA } from '../../../hooks/usePWA';
+import { usePWAContext } from '../../../contexts/PWAContext';
 
-// Mock the usePWA hook
-vi.mock('../../../hooks/usePWA', () => ({
-  usePWA: vi.fn(),
+// Mock the usePWAContext hook
+vi.mock('../../../contexts/PWAContext', () => ({
+  usePWAContext: vi.fn(),
 }));
 
 // Mock Material-UI components
@@ -71,14 +71,23 @@ vi.mock('@mui/material', () => ({
 }));
 
 // Mock Material-UI icons
-vi.mock('@mui/icons-material', () => ({
-  SystemUpdate: () => <div data-testid="system-update-icon">Update</div>,
-  Refresh: () => <div data-testid="refresh-icon">Refresh</div>,
-  Close: () => <div data-testid="close-icon">Close</div>,
-  CheckCircle: () => <div data-testid="check-icon">Check</div>,
+vi.mock('@mui/icons-material/SystemUpdate', () => ({
+  default: () => <div data-testid="system-update-icon">Update</div>,
 }));
 
-const mockUsePWA = vi.mocked(usePWA);
+vi.mock('@mui/icons-material/Refresh', () => ({
+  default: () => <div data-testid="refresh-icon">Refresh</div>,
+}));
+
+vi.mock('@mui/icons-material/Close', () => ({
+  default: () => <div data-testid="close-icon">Close</div>,
+}));
+
+vi.mock('@mui/icons-material/CheckCircle', () => ({
+  default: () => <div data-testid="check-icon">Check</div>,
+}));
+
+const mockUsePWAContext = vi.mocked(usePWAContext);
 
 describe('UpdatePrompt', () => {
   const mockUpdateApp = vi.fn();
@@ -97,11 +106,11 @@ describe('UpdatePrompt', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUsePWA.mockReturnValue(mockPWAState);
+    mockUsePWAContext.mockReturnValue(mockPWAState);
   });
 
   test('does not render when no update available', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: false,
     });
@@ -112,7 +121,7 @@ describe('UpdatePrompt', () => {
   });
 
   test('renders update prompt when update is available', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: true,
     });
@@ -125,7 +134,7 @@ describe('UpdatePrompt', () => {
   });
 
   test('shows update and dismiss buttons', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: true,
     });
@@ -137,7 +146,7 @@ describe('UpdatePrompt', () => {
   });
 
   test('calls updateApp when update button is clicked', async () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: true,
     });
@@ -151,7 +160,7 @@ describe('UpdatePrompt', () => {
   });
 
   test('calls dismissUpdate when later button is clicked', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: true,
     });
@@ -165,7 +174,7 @@ describe('UpdatePrompt', () => {
   });
 
   test('renders as dialog variant', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: true,
     });
@@ -179,7 +188,7 @@ describe('UpdatePrompt', () => {
   });
 
   test('renders as snackbar variant', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: true,
     });
@@ -190,7 +199,7 @@ describe('UpdatePrompt', () => {
   });
 
   test('shows loading state during update', async () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: true,
     });
@@ -208,7 +217,7 @@ describe('UpdatePrompt', () => {
   });
 
   test('handles update errors', async () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: true,
     });
@@ -227,7 +236,7 @@ describe('UpdatePrompt', () => {
   });
 
   test('shows custom update message', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: true,
     });
@@ -238,7 +247,7 @@ describe('UpdatePrompt', () => {
   });
 
   test('handles component unmount during update', () => {
-    mockUsePWA.mockReturnValue({
+    mockUsePWAContext.mockReturnValue({
       ...mockPWAState,
       updateAvailable: true,
     });

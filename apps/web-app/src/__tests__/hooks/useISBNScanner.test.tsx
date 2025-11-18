@@ -10,8 +10,10 @@ const mockCodeReader = {
   getVideoInputDevices: vi.fn(),
 };
 
+const MockBrowserMultiFormatReader = vi.fn(() => mockCodeReader);
+
 vi.mock('@zxing/library', () => ({
-  BrowserMultiFormatReader: vi.fn(() => mockCodeReader),
+  BrowserMultiFormatReader: MockBrowserMultiFormatReader,
   NotFoundException: vi.fn(),
 }));
 
@@ -55,8 +57,8 @@ describe('useISBNScanner', () => {
     ]);
   });
 
-  afterAll(() => {
-    consoleSpy.mockRestore();
+  afterEach(() => {
+    consoleSpy.mockClear();
   });
 
   test('initializes with default state', () => {
@@ -76,15 +78,41 @@ describe('useISBNScanner', () => {
   });
 
   test('initializes BrowserMultiFormatReader on mount', async () => {
-    const { BrowserMultiFormatReader } = await import('@zxing/library');
+    const { result } = renderHook(() => useISBNScanner(mockOnScanSuccess));
 
-    renderHook(() => useISBNScanner(mockOnScanSuccess));
+    // Set up video element
+    const mockVideo = document.createElement('video');
+    act(() => {
+      result.current.setVideoElement(mockVideo);
+    });
 
-    expect(vi.mocked(BrowserMultiFormatReader)).toHaveBeenCalled();
+    // The reader is initialized lazily when startScanning is called
+    await act(async () => {
+      await result.current.startScanning();
+    });
+
+    // Wait for the dynamic import and initialization
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(MockBrowserMultiFormatReader).toHaveBeenCalled();
   });
 
-  test('cleans up code reader on unmount', () => {
-    const { unmount } = renderHook(() => useISBNScanner(mockOnScanSuccess));
+  test('cleans up code reader on unmount', async () => {
+    const { result, unmount } = renderHook(() => useISBNScanner(mockOnScanSuccess));
+
+    // Set up video element
+    const mockVideo = document.createElement('video');
+    act(() => {
+      result.current.setVideoElement(mockVideo);
+    });
+
+    // Initialize the reader by starting scanning
+    await act(async () => {
+      await result.current.startScanning();
+    });
+
+    // Wait for initialization
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     unmount();
 
@@ -250,8 +278,22 @@ describe('useISBNScanner', () => {
   });
 
   describe('stopScanning', () => {
-    test('stops scanning', () => {
+    test('stops scanning', async () => {
       const { result } = renderHook(() => useISBNScanner(mockOnScanSuccess));
+
+      // Set up video element
+      const mockVideo = document.createElement('video');
+      act(() => {
+        result.current.setVideoElement(mockVideo);
+      });
+
+      // Initialize the reader by starting scanning
+      await act(async () => {
+        await result.current.startScanning();
+      });
+
+      // Wait for initialization
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       // Stop scanning
       act(() => {

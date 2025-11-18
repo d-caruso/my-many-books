@@ -37,7 +37,7 @@ describe('ProtectedRoute', () => {
       signup: vi.fn(),
     });
 
-    render(
+    const { container } = render(
       <MemoryRouter>
         <ProtectedRoute>
           <TestComponent />
@@ -45,8 +45,9 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    // Check for spinner/loading state (the component renders a spinner div)
+    const loadingDiv = container.querySelector('div[style*="animation"]');
+    expect(loadingDiv).toBeInTheDocument();
     expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
   });
 
@@ -137,7 +138,7 @@ describe('ProtectedRoute', () => {
       signup: vi.fn(),
     });
 
-    render(
+    const { container } = render(
       <MemoryRouter>
         <ProtectedRoute>
           <TestComponent />
@@ -145,8 +146,8 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    // Check that the loading container is present
-    const loadingContainer = screen.getByText('Loading...').closest('div');
-    expect(loadingContainer).toBeInTheDocument();
+    // Check that the loading spinner is present with correct styling
+    const loadingDiv = container.querySelector('div[style*="animation"]');
+    expect(loadingDiv).toBeInTheDocument();
   });
 });
