@@ -8,7 +8,7 @@
  * Visual and interaction testing should be done manually or with E2E tests.
  */
 import React from 'react';
-import LanguageSelector from '../LanguageSelector';
+import LanguageSelector from '../../src/components/LanguageSelector';
 
 // Mock process.env for environment variables
 jest.mock('process', () => ({
