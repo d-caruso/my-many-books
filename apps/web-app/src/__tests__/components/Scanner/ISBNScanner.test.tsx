@@ -203,9 +203,9 @@ describe('ISBNScanner', () => {
       />
     );
 
-    const closeButton = screen.getByTestId('close-icon').closest('button');
-    expect(closeButton).toBeInTheDocument();
-    fireEvent.click(closeButton);
+    const closeIcon = screen.getByTestId('close-icon');
+    expect(closeIcon).toBeInTheDocument();
+    fireEvent.click(closeIcon);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
