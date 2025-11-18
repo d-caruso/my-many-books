@@ -17,8 +17,8 @@ const TextInput = React.forwardRef((props, ref) =>
   React.createElement('TextInput', { ...props, ref }));
 const SafeAreaView = React.forwardRef(({ children, ...props }, ref) => 
   React.createElement('SafeAreaView', { ...props, ref }, children));
-const FlatList = React.forwardRef(({ data, renderItem, keyExtractor, ...props }, ref) => 
-  React.createElement('FlatList', { ...props, ref }, 
+const FlatList = React.forwardRef(({ data, renderItem, keyExtractor: _keyExtractor, ...props }, ref) =>
+  React.createElement('FlatList', { ...props, ref },
     data?.map((item, index) => renderItem({ item, index }))
   ));
 

@@ -272,8 +272,8 @@ describe('useBookSearch Hook Coverage', () => {
     const originalUseCallback = React.useCallback;
     const originalUseRef = React.useRef;
     
-    let hasMore = true;
-    let loading = false;
+    const hasMore = true;
+    const loading = false;
     
     React.useState = jest.fn()
       .mockReturnValueOnce([[], jest.fn()])

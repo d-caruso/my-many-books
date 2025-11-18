@@ -384,22 +384,22 @@ declare module 'react-native-safe-area-context' {
 }
 
 // Node.js globals
-declare var require: {
+declare let require: {
   (id: string): any;
 };
 
-declare var process: {
+declare let process: {
   env: {
     [key: string]: string | undefined;
   };
 };
 
-declare var global: any;
-declare var __dirname: string;
-declare var __filename: string;
+declare let global: any;
+declare let __dirname: string;
+declare let __filename: string;
 
 // Jest globals
-declare var jest: {
+declare let jest: {
   fn: (implementation?: any) => any;
   mock: (moduleName: string, factory?: () => any) => any;
   unmock: (moduleName: string) => any;
@@ -407,28 +407,32 @@ declare var jest: {
   dontMock: (moduleName: string) => any;
 };
 
-declare var describe: (name: string, fn: () => void) => void;
-declare var it: (name: string, fn: () => void) => void;
-declare var test: (name: string, fn: () => void) => void;
-declare var expect: (actual: any) => any;
-declare var beforeAll: (fn: () => void) => void;
-declare var afterAll: (fn: () => void) => void;
-declare var beforeEach: (fn: () => void) => void;
-declare var afterEach: (fn: () => void) => void;
+declare let describe: (name: string, fn: () => void) => void;
+declare let it: (name: string, fn: () => void) => void;
+declare let test: (name: string, fn: () => void) => void;
+declare let expect: (actual: any) => any;
+declare let beforeAll: (fn: () => void) => void;
+declare let afterAll: (fn: () => void) => void;
+declare let beforeEach: (fn: () => void) => void;
+declare let afterEach: (fn: () => void) => void;
 
 // Workspace package type declarations
+// eslint-disable-next-line import/no-unresolved
 declare module '@my-many-books/shared-types' {
   export * from '../../../libs/shared-types/src/index';
 }
 
+// eslint-disable-next-line import/no-unresolved
 declare module '@my-many-books/shared-api' {
   export * from '../../../libs/shared-api/src/index';
 }
 
+// eslint-disable-next-line import/no-unresolved
 declare module '@my-many-books/shared-utils' {
   export * from '../../../libs/shared-utils/src/index';
 }
 
+// eslint-disable-next-line import/no-unresolved
 declare module '@my-many-books/shared-business' {
   export * from '../../../libs/shared-business/src/index';
 }

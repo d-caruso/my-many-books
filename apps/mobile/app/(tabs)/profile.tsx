@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { List, Text, Avatar, Button, Card, Switch, Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 
@@ -13,7 +12,7 @@ import LanguageSelector from '@/components/LanguageSelector';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
-  const { themeMode, setThemeMode, isDark } = useTheme();
+  const { setThemeMode, isDark } = useTheme();
   const { t, i18n } = useTranslation();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');

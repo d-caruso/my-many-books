@@ -4,7 +4,7 @@
 /// <reference types="react-native" />
 
 // Console API for React Native
-declare var console: {
+declare let console: {
   log(...args: any[]): void;
   error(...args: any[]): void;
   warn(...args: any[]): void;
@@ -20,10 +20,10 @@ declare namespace NodeJS {
   }
 }
 
-declare var setTimeout: (callback: () => void, ms: number) => NodeJS.Timeout;
-declare var clearTimeout: (id: NodeJS.Timeout) => void;
-declare var setInterval: (callback: () => void, ms: number) => NodeJS.Timeout;
-declare var clearInterval: (id: NodeJS.Timeout) => void;
+declare let setTimeout: (callback: () => void, ms: number) => NodeJS.Timeout;
+declare let clearTimeout: (id: NodeJS.Timeout) => void;
+declare let setInterval: (callback: () => void, ms: number) => NodeJS.Timeout;
+declare let clearInterval: (id: NodeJS.Timeout) => void;
 
 // URLSearchParams for React Native
 declare class URLSearchParams {
@@ -41,12 +41,12 @@ declare class URLSearchParams {
 }
 
 // Jest globals for testing
-declare var jest: any;
-declare var test: any;
-declare var describe: any;
-declare var it: any;
-declare var expect: any;
-declare var beforeAll: any;
-declare var beforeEach: any;
-declare var afterAll: any;
-declare var afterEach: any;
+declare let jest: any;
+declare let test: any;
+declare let describe: any;
+declare let it: any;
+declare let expect: any;
+declare let beforeAll: any;
+declare let beforeEach: any;
+declare let afterAll: any;
+declare let afterEach: any;

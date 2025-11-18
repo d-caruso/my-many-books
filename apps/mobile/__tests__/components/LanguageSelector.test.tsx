@@ -7,7 +7,6 @@
  * These tests verify the component can be imported and instantiated correctly.
  * Visual and interaction testing should be done manually or with E2E tests.
  */
-import React from 'react';
 import LanguageSelector from '../../src/components/LanguageSelector';
 
 // Mock process.env for environment variables

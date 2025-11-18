@@ -4,7 +4,7 @@
  */
 
 // Import the main testUtils which has all the mocks
-import './/testUtils';
+import './testUtils';
 
 // Re-export everything from testUtils for convenience
-export * from './/testUtils';
+export * from './testUtils';

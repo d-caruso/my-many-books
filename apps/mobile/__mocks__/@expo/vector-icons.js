@@ -1,5 +1,5 @@
-export const MaterialIcons = ({ name, size, color, ...props }) => `MaterialIcons-${name}`;
-export const Ionicons = ({ name, size, color, ...props }) => `Ionicons-${name}`;
-export const FontAwesome = ({ name, size, color, ...props }) => `FontAwesome-${name}`;
-export const AntDesign = ({ name, size, color, ...props }) => `AntDesign-${name}`;
-export const Feather = ({ name, size, color, ...props }) => `Feather-${name}`;
+export const MaterialIcons = ({ name, size: _size, color: _color, ..._props }) => `MaterialIcons-${name}`;
+export const Ionicons = ({ name, size: _size, color: _color, ..._props }) => `Ionicons-${name}`;
+export const FontAwesome = ({ name, size: _size, color: _color, ..._props }) => `FontAwesome-${name}`;
+export const AntDesign = ({ name, size: _size, color: _color, ..._props }) => `AntDesign-${name}`;
+export const Feather = ({ name, size: _size, color: _color, ..._props }) => `Feather-${name}`;

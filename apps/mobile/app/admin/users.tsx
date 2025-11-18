@@ -19,7 +19,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
 
   const loadUsers = async () => {
     try {

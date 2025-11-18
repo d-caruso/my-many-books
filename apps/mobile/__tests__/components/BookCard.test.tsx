@@ -63,7 +63,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 // Keep destructure for util coverage
-const { BookCard: BookCardComponent, ...BookCardModule } = require('../../src/components/BookCard');
+const { BookCard: _BookCardComponent, ...BookCardModule } = require('../../src/components/BookCard');
 
 // ✅ Fix: match component prop names (thumbnail instead of thumbnailUrl, authors as objects)
 const mockBook: Book = {
