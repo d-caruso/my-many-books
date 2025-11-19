@@ -15,7 +15,7 @@ import {
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import MenuIcon from '@mui/icons-material/Menu';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@my-many-books/shared-auth';
 import { LanguageSelector } from './LanguageSelector';
 
 export const Navbar: React.FC = () => {

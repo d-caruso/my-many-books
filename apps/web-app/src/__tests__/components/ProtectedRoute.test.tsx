@@ -3,10 +3,9 @@ import { render, screen } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { ProtectedRoute } from '../../components/ProtectedRoute';
-import { useAuth } from '../../contexts/AuthContext';
 
 // Mock the useAuth hook
-vi.mock('../../contexts/AuthContext', () => ({
+vi.mock('@my-many-books/shared-auth', () => ({
   useAuth: vi.fn(),
 }));
 
@@ -19,6 +18,8 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+// Import useAuth after mock is set up
+const { useAuth } = await import('@my-many-books/shared-auth');
 const mockUseAuth = vi.mocked(useAuth);
 
 const TestComponent = () => <div data-testid="protected-content">Protected Content</div>;
@@ -34,7 +35,9 @@ describe('ProtectedRoute', () => {
       loading: true,
       login: vi.fn(),
       logout: vi.fn(),
-      signup: vi.fn(),
+      register: vi.fn(),
+      refreshUser: vi.fn(),
+      isAuthenticated: false,
     });
 
     render(
@@ -61,7 +64,9 @@ describe('ProtectedRoute', () => {
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
-      signup: vi.fn(),
+      register: vi.fn(),
+      refreshUser: vi.fn(),
+      isAuthenticated: false,
     });
 
     render(
@@ -79,9 +84,10 @@ describe('ProtectedRoute', () => {
 
   test('renders children when user is authenticated', () => {
     const mockUser = {
-      userId: 1,
+      id: '1',
       email: 'test@example.com',
-      provider: 'local',
+      name: 'Test',
+      surname: 'User',
     };
 
     mockUseAuth.mockReturnValue({
@@ -89,7 +95,9 @@ describe('ProtectedRoute', () => {
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
-      signup: vi.fn(),
+      register: vi.fn(),
+      refreshUser: vi.fn(),
+      isAuthenticated: true,
     });
 
     render(
@@ -107,9 +115,10 @@ describe('ProtectedRoute', () => {
 
   test('renders multiple children when authenticated', () => {
     const mockUser = {
-      userId: 1,
+      id: '1',
       email: 'test@example.com',
-      provider: 'local',
+      name: 'Test',
+      surname: 'User',
     };
 
     mockUseAuth.mockReturnValue({
@@ -117,7 +126,9 @@ describe('ProtectedRoute', () => {
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
-      signup: vi.fn(),
+      register: vi.fn(),
+      refreshUser: vi.fn(),
+      isAuthenticated: true,
     });
 
     render(
@@ -139,7 +150,9 @@ describe('ProtectedRoute', () => {
       loading: true,
       login: vi.fn(),
       logout: vi.fn(),
-      signup: vi.fn(),
+      register: vi.fn(),
+      refreshUser: vi.fn(),
+      isAuthenticated: false,
     });
 
     render(

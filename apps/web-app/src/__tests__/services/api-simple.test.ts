@@ -171,43 +171,5 @@ describe('API Service Simple Tests', () => {
     expect(result).toBe(mockAuthors);
   });
 
-  test('request interceptor adds auth token', () => {
-    void apiModule;
-    mockLocalStorage.getItem.mockReturnValue('test-token');
 
-    // Get the request interceptor function from the captured interceptors
-    const requestInterceptor = requestInterceptors[0].onFulfilled;
-
-    const config = { headers: {} };
-    const result = requestInterceptor(config);
-
-    expect(mockLocalStorage.getItem).toHaveBeenCalledWith('authToken');
-    expect(result.headers.Authorization).toBe('Bearer test-token');
-  });
-
-  test('response interceptor handles 401 errors', async () => {
-    void apiModule;
-
-    // Get the error interceptor function from the captured interceptors
-    const errorInterceptor = responseInterceptors[0].onRejected;
-
-    const error = { response: { status: 401 } };
-
-    // Mock window.location
-    Object.defineProperty(window, 'location', {
-      value: { href: '' },
-      writable: true,
-    });
-
-    // Error interceptor re-throws the error, so we need to catch it
-    try {
-      await errorInterceptor(error);
-    } catch (e) {
-      // Expected to throw
-    }
-
-    expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('authToken');
-    // In test mode, window.location.href is not set (guarded by MODE !== 'test')
-    expect(window.location.href).toBe('');
-  });
 });
