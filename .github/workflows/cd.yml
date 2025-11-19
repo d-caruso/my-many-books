@@ -365,6 +365,97 @@ jobs:
           
           echo "Infrastructure deployment completed successfully"
 
+      - name: Deploy Cognito Stack
+        run: |
+          STACK_NAME="my-many-books-cognito-${{ needs.setup.outputs.environment }}"
+          TEMPLATE_FILE="apps/api/deployment/cloudformation/cognito-stack.yml"
+
+          # Set parameters based on environment
+          PARAMETERS="ParameterKey=Environment,ParameterValue=${{ needs.setup.outputs.environment }}"
+          PARAMETERS="$PARAMETERS ParameterKey=ServiceName,ParameterValue=my-many-books-api"
+
+          # Check if stack exists and get its status
+          if aws cloudformation describe-stacks --stack-name "$STACK_NAME" >/dev/null 2>&1; then
+            STACK_STATUS=$(aws cloudformation describe-stacks \
+              --stack-name "$STACK_NAME" \
+              --query 'Stacks[0].StackStatus' \
+              --output text)
+
+            echo "Cognito stack exists with status: $STACK_STATUS"
+
+            # Handle ROLLBACK_IN_PROGRESS or UPDATE_ROLLBACK_IN_PROGRESS
+            if [ "$STACK_STATUS" = "ROLLBACK_IN_PROGRESS" ] || [ "$STACK_STATUS" = "UPDATE_ROLLBACK_IN_PROGRESS" ]; then
+              echo "Stack is in $STACK_STATUS state, waiting for rollback to complete..."
+              aws cloudformation wait stack-rollback-complete --stack-name "$STACK_NAME" 2>/dev/null || \
+              aws cloudformation wait stack-update-rollback-complete --stack-name "$STACK_NAME" 2>/dev/null || true
+
+              STACK_STATUS=$(aws cloudformation describe-stacks \
+                --stack-name "$STACK_NAME" \
+                --query 'Stacks[0].StackStatus' \
+                --output text)
+              echo "Rollback completed, stack is now in $STACK_STATUS state"
+            fi
+
+            # If stack is in failed state, delete and recreate
+            if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ] || [ "$STACK_STATUS" = "UPDATE_ROLLBACK_COMPLETE" ]; then
+              echo "Stack is in $STACK_STATUS state, deleting it first..."
+              aws cloudformation delete-stack --stack-name "$STACK_NAME"
+              echo "Waiting for Cognito stack deletion..."
+              aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" || true
+
+              echo "Creating new Cognito stack: $STACK_NAME"
+              aws cloudformation create-stack \
+                --stack-name "$STACK_NAME" \
+                --template-body "file://$TEMPLATE_FILE" \
+                --parameters $PARAMETERS \
+                --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+
+              echo "Waiting for Cognito stack creation..."
+              aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
+            else
+              echo "Updating existing Cognito stack: $STACK_NAME"
+
+              UPDATE_OUTPUT=$(aws cloudformation update-stack \
+                --stack-name "$STACK_NAME" \
+                --template-body "file://$TEMPLATE_FILE" \
+                --parameters $PARAMETERS \
+                --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM 2>&1) || {
+                  exit_code=$?
+                  if echo "$UPDATE_OUTPUT" | grep -q "No updates are to be performed"; then
+                    echo "No updates needed - Cognito stack is already up-to-date"
+                  else
+                    echo "Failed to update Cognito stack"
+                    echo "$UPDATE_OUTPUT"
+                    exit $exit_code
+                  fi
+                }
+
+              if ! echo "$UPDATE_OUTPUT" | grep -q "No updates are to be performed"; then
+                echo "Waiting for Cognito stack update..."
+                aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
+              fi
+            fi
+          else
+            echo "Creating new Cognito stack: $STACK_NAME"
+            aws cloudformation create-stack \
+              --stack-name "$STACK_NAME" \
+              --template-body "file://$TEMPLATE_FILE" \
+              --parameters $PARAMETERS \
+              --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+
+            echo "Waiting for Cognito stack creation..."
+            if ! aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME" 2>&1; then
+              echo "Cognito stack creation failed. Retrieving stack events..."
+              aws cloudformation describe-stack-events \
+                --stack-name "$STACK_NAME" \
+                --query 'StackEvents[?ResourceStatus==`CREATE_FAILED`].[LogicalResourceId,ResourceStatus,ResourceStatusReason]' \
+                --output table
+              exit 1
+            fi
+          fi
+
+          echo "Cognito stack deployment completed successfully"
+
       - name: Run Database Migrations
         run: |
           # Install all workspace dependencies from root (includes all workspace packages)
@@ -527,11 +618,14 @@ jobs:
       - name: Get Cognito Configuration
         id: cognito-config
         run: |
-          # Get Cognito resource IDs and API endpoint from API stack (Cognito is part of Serverless deployment)
+          # Get Cognito resource IDs from standalone Cognito CloudFormation stack
+          COGNITO_STACK="my-many-books-cognito-${{ needs.setup.outputs.environment }}"
+          USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK --query "Stacks[0].Outputs[?OutputKey=='CognitoUserPoolId'].OutputValue" --output text)
+          CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK --query "Stacks[0].Outputs[?OutputKey=='CognitoUserPoolClientId'].OutputValue" --output text)
+          IDENTITY_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK --query "Stacks[0].Outputs[?OutputKey=='CognitoIdentityPoolId'].OutputValue" --output text)
+
+          # Get API endpoint from Serverless API stack
           API_STACK="my-many-books-api-${{ needs.setup.outputs.environment }}"
-          USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $API_STACK --query "Stacks[0].Outputs[?OutputKey=='CognitoUserPoolId'].OutputValue" --output text)
-          CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $API_STACK --query "Stacks[0].Outputs[?OutputKey=='CognitoUserPoolClientId'].OutputValue" --output text)
-          IDENTITY_POOL_ID=$(aws cloudformation describe-stacks --stack-name $API_STACK --query "Stacks[0].Outputs[?OutputKey=='CognitoIdentityPoolId'].OutputValue" --output text)
           API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $API_STACK --query "Stacks[0].Outputs[?OutputKey=='ServiceEndpoint'].OutputValue" --output text)
 
           echo "user-pool-id=$USER_POOL_ID" >> $GITHUB_OUTPUT
