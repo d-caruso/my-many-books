@@ -133,11 +133,29 @@ Check that all documentation files are consistent:
 
 ### Step 5: Commit Documentation Changes
 
-Commit documentation separately from code changes:
+**⚠️ IMPORTANT: `docs/` is a git submodule (separate repository).**
+
+**You MUST commit from within the `docs/` directory:**
 
 ```bash
-git add docs/
+# 1. Navigate to docs folder
+cd /path/to/my-many-books/docs
+
+# 2. Stage all changes
+git add .
+
+# 3. Commit with proper message
 git commit -m "docs: update documentation for [feature/change description]"
+
+# 4. Push to docs repository
+git push origin feature/branch-name
+```
+
+**❌ WRONG - Don't do this:**
+```bash
+cd /path/to/my-many-books
+git add docs/  # Won't work - docs is in .gitignore
+git commit -m "update docs"
 ```
 
 **Commit message format:**
@@ -149,6 +167,8 @@ git commit -m "docs: update documentation for [feature/change description]"
 - `docs: update architecture for authorization implementation`
 - `docs: mark DB connection pool gap as resolved`
 - `docs: add shared-auth library to architecture overview`
+
+**Note:** The `docs/` folder is in the main project's `.gitignore`, so documentation changes are only tracked in the separate docs repository.
 
 ---
 
