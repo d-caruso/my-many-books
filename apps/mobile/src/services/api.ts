@@ -1,17 +1,9 @@
 // Create API services from shared libraries with mobile-specific configurations
 import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api/';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authService } from './authService';
 
 // Configure API base URL for mobile
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
-
-// In-memory token storage for synchronous access
-let authToken: string | null = null;
-
-// Initialize token from AsyncStorage
-AsyncStorage.getItem('authToken').then((token) => {
-  authToken = token;
-});
 
 // Fetch-based HTTP client for React Native
 class FetchHttpClient implements HttpClient {
@@ -98,29 +90,17 @@ class FetchHttpClient implements HttpClient {
 const apiConfig: ApiClientConfig = {
   baseURL: API_BASE_URL,
   timeout: 10000,
-  getAuthToken: () => authToken,
-  onUnauthorized: () => {
-    // Clear token on unauthorized access
-    authToken = null;
-    AsyncStorage.removeItem('authToken');
-    // TODO: Implement navigation to login screen
-    console.warn('Unauthorized access');
+  getAuthToken: async () => {
+    return await authService.getIdToken();
+  },
+  onUnauthorized: async () => {
+    await authService.logout();
   },
 };
 
 // Create HTTP client and API client
 const httpClient = new FetchHttpClient(apiConfig.baseURL, apiConfig.timeout);
 const apiClient = createApiClient(httpClient, apiConfig);
-
-// Helper to update auth token in memory when it changes
-export const updateAuthToken = async (token: string | null) => {
-  authToken = token;
-  if (token) {
-    await AsyncStorage.setItem('authToken', token);
-  } else {
-    await AsyncStorage.removeItem('authToken');
-  }
-};
 
 // Export API instances with bound methods
 export const bookAPI = {
