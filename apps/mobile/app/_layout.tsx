@@ -2,16 +2,21 @@ import { Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider } from '@my-many-books/shared-auth';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import '@/i18n'; // Initialize i18n
+import { authService } from './src/services/authService';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <PaperProvider>
-          <AuthProvider>
+          <AuthProvider
+            authService={authService}
+            loadingComponent={<LoadingSpinner />}
+          >
             <StatusBar style="auto" />
             <Stack>
               <Stack.Screen 
