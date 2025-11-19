@@ -1,6 +1,25 @@
 // Test api.ts by bypassing the global mock
 // The setupTests.ts mocks @/services/api, so we need to work around it
 
+// Mock expo-constants
+jest.mock('expo-constants', () => ({
+  __esModule: true,
+  default: {
+    expoConfig: {
+      extra: {
+        apiUrl: 'http://localhost:3001/api/v1',
+      },
+    },
+  },
+}));
+
+// Mock expo-secure-store
+jest.mock('expo-secure-store', () => ({
+  setItemAsync: jest.fn(),
+  getItemAsync: jest.fn(),
+  deleteItemAsync: jest.fn(),
+}));
+
 describe('API Service Coverage', () => {
   beforeAll(() => {
     // Clear the mock to test the real implementation
