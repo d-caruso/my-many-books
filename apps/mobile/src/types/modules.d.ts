@@ -417,22 +417,22 @@ declare let beforeEach: (fn: () => void) => void;
 declare let afterEach: (fn: () => void) => void;
 
 // Workspace package type declarations
-// eslint-disable-next-line import/no-unresolved
+ 
 declare module '@my-many-books/shared-types' {
   export * from '../../../libs/shared-types/src/index';
 }
 
-// eslint-disable-next-line import/no-unresolved
+ 
 declare module '@my-many-books/shared-api' {
   export * from '../../../libs/shared-api/src/index';
 }
 
-// eslint-disable-next-line import/no-unresolved
+ 
 declare module '@my-many-books/shared-utils' {
   export * from '../../../libs/shared-utils/src/index';
 }
 
-// eslint-disable-next-line import/no-unresolved
+ 
 declare module '@my-many-books/shared-business' {
   export * from '../../../libs/shared-business/src/index';
 }
