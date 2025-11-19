@@ -39,6 +39,9 @@
       ],
       "@my-many-books/shared-business": [
         "../../libs/shared-business/src"
+      ],
+      "@my-many-books/shared-auth": [
+        "../../libs/shared-auth/src"
       ]
     }
   },

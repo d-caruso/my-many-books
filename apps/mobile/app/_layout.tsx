@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import '@/i18n'; // Initialize i18n
-import { authService } from './src/services/authService';
+import { authService } from '@/services/authService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function RootLayout() {
