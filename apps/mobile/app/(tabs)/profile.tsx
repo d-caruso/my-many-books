@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@my-many-books/shared-auth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { changeLanguage } from '@/i18n';
 import LanguageSelector from '@/components/LanguageSelector';

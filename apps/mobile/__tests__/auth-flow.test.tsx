@@ -22,7 +22,7 @@ const mockAuthProvider = jest.fn(({ children }) => children);
 
 jest.mock('@my-many-books/shared-auth', () => ({
   useAuth: () => mockUseAuth(),
-  AuthProvider: (props: any) => mockAuthProvider(props),
+  AuthProvider: (props: { children: React.ReactNode }) => mockAuthProvider(props),
 }));
 
 // Mock authService

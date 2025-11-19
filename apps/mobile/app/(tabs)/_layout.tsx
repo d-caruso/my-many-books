@@ -1,14 +1,14 @@
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@my-many-books/shared-auth';
 import { Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 export default function TabLayout() {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const { t } = useTranslation();
 
-  if (isLoading) {
+  if (loading) {
     return null;
   }
 

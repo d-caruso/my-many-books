@@ -2,7 +2,7 @@ import { Stack, Redirect } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@my-many-books/shared-auth';
 
 export default function AdminLayout() {
   const { t } = useTranslation();
