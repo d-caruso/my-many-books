@@ -30,6 +30,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['buffer', 'process', 'stream-browserify', 'util'],
+    exclude: ['react-native', 'expo-secure-store'],
   },
   build: {
     outDir: 'build',
