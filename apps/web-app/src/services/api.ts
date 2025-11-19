@@ -8,6 +8,7 @@ import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilter
 import { BookFormData } from '../components/Book/BookForm';
 import { env } from '../config/env';
 import axios from 'axios';
+import { authService } from './authService';
 
 
 // Axios adapter for web platform
@@ -20,10 +21,11 @@ class AxiosHttpClient implements HttpClient {
     // complete URLs, not relative paths. This is the industry standard for layered APIs.
     this.axios = axios.create({
       timeout,
+      withCredentials: true, // Send cookies for refresh token
     });
     // Add request interceptor for auth token
-    this.axios.interceptors.request.use((config: any) => {
-      const token = localStorage.getItem('authToken');
+    this.axios.interceptors.request.use(async (config: any) => {
+      const token = await authService.getIdToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -40,13 +42,21 @@ class AxiosHttpClient implements HttpClient {
         }
         return response.data;
       },
-      (error: any) => {
+      async (error: any) => {
         if (error.response?.status === 401) {
-          // Handle unauthorized - redirect to login
-          localStorage.removeItem('authToken');
-          // Don't redirect in test environment
+          // Try to refresh token
+          const refreshed = await authService.silentRefresh();
+
+          if (refreshed) {
+            // Retry the original request
+            const token = await authService.getIdToken();
+            error.config.headers.Authorization = `Bearer ${token}`;
+            return axios.request(error.config);
+          }
+
+          // Redirect to login if refresh fails
           if (typeof window !== 'undefined' && import.meta.env.MODE !== 'test') {
-            window.location.href = '/login';
+            window.location.href = '/auth';
           }
         }
         return Promise.reject(error);

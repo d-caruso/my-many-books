@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider } from '@my-many-books/shared-auth';
+import { authService } from './services/authService';
 import { ApiProvider } from './contexts/ApiContext';
 import { PWAProvider } from './contexts/PWAContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -72,7 +73,7 @@ function App() {
           <PWAProvider>
             <ApiProvider>
               <AuthErrorBoundary>
-                <AuthProvider>
+                <AuthProvider authService={authService} loadingComponent={<NativeLoading />}>
                   <Router>
                     <div className="min-h-screen">
                       {/* Skip to main content link for keyboard navigation */}

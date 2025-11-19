@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { LoginForm, RegisterForm } from '../components/Auth';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@my-many-books/shared-auth';
 
 type AuthMode = 'login' | 'register';
 

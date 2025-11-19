@@ -12,6 +12,7 @@
     "@mui/material": "^7.3.4",
     "@mui/system": "^7.3.3",
     "@mui/x-data-grid": "^8.16.0",
+    "@my-many-books/shared-auth": "file:../../libs/shared-auth",
     "@my-many-books/shared-i18n": "file:../../libs/shared-i18n",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
