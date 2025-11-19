@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@my-many-books/shared-auth';
 import { ResponsiveInput } from '../UI/ResponsiveInput';
 import { ResponsiveButton } from '../UI/ResponsiveButton';
 
