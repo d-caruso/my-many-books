@@ -251,7 +251,3 @@ jest.mock('@/hooks/useBooks', () => ({
 jest.mock('@/hooks/useBookSearch', () => ({
   useBookSearch: jest.fn(),
 }));
-
-jest.mock('@/hooks/useAuth', () => ({
-  useAuth: jest.fn(),
-}));
