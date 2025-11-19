@@ -24,6 +24,7 @@ describe('Express App Integration', () => {
     it('should have CORS enabled', async () => {
       const response = await request(app)
         .get('/api/v1/health')
+        .set('Origin', 'http://localhost:3000')
         .expect(200);
 
       expect(response.headers['access-control-allow-origin']).toBeDefined();
