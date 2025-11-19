@@ -80,6 +80,11 @@ jobs:
       - name: Install if cache miss
         run: npm ci || npm install
 
+      - name: Build shared-auth library
+        run: |
+          cd libs/shared-auth
+          npm run build
+
       - name: Test
         run: |
           # Test API using root-level node_modules (monorepo pattern)
