@@ -135,5 +135,10 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "types": "./dist/handlers/index.d.ts"
 }
