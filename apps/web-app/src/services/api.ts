@@ -112,10 +112,10 @@ class ApiService {
     const apiConfig: ApiClientConfig = dependencies.config || {
       baseURL: validBaseURL,
       timeout: 10000,
-      getAuthToken: () => localStorage.getItem('authToken'),
+      getAuthToken: async () => authService.getIdToken(),
       onUnauthorized: () => {
-        localStorage.removeItem('authToken');
-        window.location.href = '/login';
+        void authService.logout();
+        window.location.href = '/auth';
       },
     };
 
@@ -299,7 +299,7 @@ class ApiService {
     // Make a direct HTTP request for admin stats
     // The apiClient is from shared-api library, so we use its HTTP client directly
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
-    const token = localStorage.getItem('authToken');
+    const token = await authService.getIdToken();
 
     // Remove trailing slash from baseURL if present
     const cleanBaseURL = baseURL.replace(/\/$/, '');
@@ -328,7 +328,7 @@ class ApiService {
 
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
-    const token = localStorage.getItem('authToken');
+    const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
     const queryParams = new URLSearchParams({
@@ -362,7 +362,7 @@ class ApiService {
 
   async getAdminUser(id: number): Promise<any> {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
-    const token = localStorage.getItem('authToken');
+    const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
     const url = cleanBaseURL.endsWith('/api/v1')
@@ -388,7 +388,7 @@ class ApiService {
 
   async updateAdminUser(id: number, userData: any): Promise<any> {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
-    const token = localStorage.getItem('authToken');
+    const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
     const url = cleanBaseURL.endsWith('/api/v1')
@@ -415,7 +415,7 @@ class ApiService {
 
   async deleteAdminUser(id: number): Promise<any> {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
-    const token = localStorage.getItem('authToken');
+    const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
     const url = cleanBaseURL.endsWith('/api/v1')
@@ -441,7 +441,7 @@ class ApiService {
 
   async getAdminBooks(page: number = 1, limit: number = 10, search?: string, userId?: number): Promise<any> {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
-    const token = localStorage.getItem('authToken');
+    const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
     const queryParams = new URLSearchParams({
@@ -478,7 +478,7 @@ class ApiService {
 
   async getAdminBook(id: number): Promise<any> {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
-    const token = localStorage.getItem('authToken');
+    const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
     const url = cleanBaseURL.endsWith('/api/v1')
@@ -504,7 +504,7 @@ class ApiService {
 
   async updateAdminBook(id: number, bookData: any): Promise<any> {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
-    const token = localStorage.getItem('authToken');
+    const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
     const url = cleanBaseURL.endsWith('/api/v1')
@@ -531,7 +531,7 @@ class ApiService {
 
   async deleteAdminBook(id: number): Promise<any> {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
-    const token = localStorage.getItem('authToken');
+    const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
     const url = cleanBaseURL.endsWith('/api/v1')
