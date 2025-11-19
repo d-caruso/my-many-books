@@ -3,10 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { RegisterForm } from '../../../components/Auth/RegisterForm';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '@my-many-books/shared-auth';
 
 // Mock the useAuth hook
-vi.mock('../../../contexts/AuthContext', () => ({
+vi.mock('@my-many-books/shared-auth', () => ({
   useAuth: vi.fn(),
 }));
 

@@ -1,14 +1,14 @@
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import AuthPage from '../../pages/AuthPage';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@my-many-books/shared-auth';
 
 // Import mocked modules
 import { LoginForm, RegisterForm } from '../../components/Auth';
 import { Navigate } from 'react-router-dom';
 
 // Mock dependencies - industry standard approach
-vi.mock('../../contexts/AuthContext');
+vi.mock('@my-many-books/shared-auth');
 vi.mock('../../components/Auth');
 vi.mock('react-router-dom');
 

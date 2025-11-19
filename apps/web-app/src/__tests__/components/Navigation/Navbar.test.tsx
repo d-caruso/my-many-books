@@ -7,10 +7,10 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { Navbar } from '../../../components/Navigation/Navbar';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '@my-many-books/shared-auth';
 
 // Mock the useAuth hook
-vi.mock('../../../contexts/AuthContext', () => ({
+vi.mock('@my-many-books/shared-auth', () => ({
   useAuth: vi.fn(),
 }));
 

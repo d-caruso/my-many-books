@@ -5,10 +5,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { LoginForm } from '../../components/Auth/LoginForm';
 import { expectNoA11yViolations } from '../utils/axe-helper';
 
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@my-many-books/shared-auth';
 
 // Mock the useAuth hook
-vi.mock('../../contexts/AuthContext', () => ({
+vi.mock('@my-many-books/shared-auth', () => ({
   useAuth: vi.fn(),
 }));
 
