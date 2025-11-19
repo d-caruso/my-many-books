@@ -11,6 +11,7 @@ export default defineConfig({
       '@my-many-books/shared-types': path.resolve(__dirname, '../../libs/shared-types/src'),
       '@my-many-books/shared-api': path.resolve(__dirname, '../../libs/shared-api/src'),
       '@my-many-books/shared-utils': path.resolve(__dirname, '../../libs/shared-utils/src'),
+      '@my-many-books/shared-auth': path.resolve(__dirname, '../../libs/shared-auth/src'),
       '@my-many-books/ui-components': path.resolve(__dirname, '../../libs/ui-components/src'),
       '@my-many-books/shared-hooks': path.resolve(__dirname, '../../libs/shared-hooks/src'),
       '@my-many-books/shared-business': path.resolve(__dirname, '../../libs/shared-business/src'),
