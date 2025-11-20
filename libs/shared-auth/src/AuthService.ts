@@ -166,6 +166,8 @@ export class AuthService {
           email: payload.email,
           name: payload.given_name,
           surname: payload.family_name,
+          role: 'user', // Default role, will be updated from API if different
+          isActive: true, // Default active status
         };
         await this.storage.setUser(user);
       } catch (decodeError) {
