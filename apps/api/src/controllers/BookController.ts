@@ -49,35 +49,6 @@ interface BookSearchFilters {
  * independent of the web framework (Express, Lambda, etc.).
  */
 export class BookController extends BaseController {
-  private readonly createBookSchema = Joi.object<CreateBookRequest>({
-    title: Joi.string().required().max(500).trim(),
-    isbnCode: Joi.string()
-      .required()
-      .custom((value: string, helpers: Joi.CustomHelpers) =>
-        this.validateIsbnField(value, helpers)
-      ),
-    editionNumber: Joi.number().integer().min(1).optional(),
-    editionDate: Joi.date().iso().optional().allow(null),
-    status: Joi.string()
-      .valid(...Object.values(BOOK_STATUS))
-      .optional()
-      .allow(null),
-    notes: Joi.string().optional().max(5000).trim(),
-    authorIds: Joi.array().items(Joi.number().integer().positive()).optional(),
-    categoryIds: Joi.array().items(Joi.number().integer().positive()).optional(),
-    userId: Joi.any().strip(),
-  });
-
-  // PUT schema: Full update requires title (ISBN can't be changed)
-  private readonly putBookSchema = this.createBookSchema.fork(['isbnCode'], schema =>
-    schema.optional()
-  );
-
-  // PATCH schema: Partial update - all fields optional
-  private readonly patchBookSchema = this.createBookSchema.fork(['isbnCode', 'title'], schema =>
-    schema.optional()
-  );
-
   private readonly searchFiltersSchema = Joi.object<BookSearchFilters>({
     title: Joi.string().required().max(200).trim(),
     isbnCode: Joi.string()
@@ -251,18 +222,14 @@ export class BookController extends BaseController {
       return this.createErrorResponseI18n('errors:book_not_found', 404);
     }
 
-    const updateData: Partial<BookAttributes> = {
-      title: bookData.title,
-      editionNumber: bookData.editionNumber,
-      editionDate:
-        bookData.editionDate === null
-          ? undefined
-          : bookData.editionDate
-            ? new Date(bookData.editionDate)
-            : undefined,
-      status: bookData.status,
-      notes: bookData.notes,
-    };
+    const updateData: Partial<BookAttributes> = {};
+    if (bookData.title !== undefined) updateData.title = bookData.title;
+    if (bookData.editionNumber !== undefined) updateData.editionNumber = bookData.editionNumber;
+    if (bookData.editionDate !== undefined) {
+      updateData.editionDate = bookData.editionDate ? new Date(bookData.editionDate) : undefined;
+    }
+    if (bookData.status !== undefined) updateData.status = bookData.status;
+    if (bookData.notes !== undefined) updateData.notes = bookData.notes;
 
     await book.update(updateData);
 

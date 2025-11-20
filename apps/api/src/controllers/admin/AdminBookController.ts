@@ -3,7 +3,6 @@
 // Admin book management controller
 // ================================================================
 
-import Joi from 'joi';
 import { Op, WhereOptions } from 'sequelize';
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
@@ -26,16 +25,6 @@ interface UpdateBookData {
   notes?: string | null;
   userId?: number | null;
 }
-
-const updateBookSchema = Joi.object({
-  title: Joi.string().min(1).max(255).optional(),
-  isbnCode: Joi.string().min(10).max(20).optional(),
-  editionNumber: Joi.number().integer().min(1).allow(null).optional(),
-  editionDate: Joi.date().allow(null).optional(),
-  status: Joi.string().valid('reading', 'paused', 'finished').allow(null).optional(),
-  notes: Joi.string().max(2000).allow(null, '').optional(),
-  userId: Joi.number().integer().allow(null).optional(),
-});
 
 /**
  * Controller for admin book management.

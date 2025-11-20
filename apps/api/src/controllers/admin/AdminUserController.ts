@@ -3,7 +3,6 @@
 // Admin user management controller
 // ================================================================
 
-import Joi from 'joi';
 import { Op, Sequelize, WhereOptions } from 'sequelize';
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
@@ -12,7 +11,7 @@ import { User } from '../../models/User';
 import { UserAttributes } from '../../models/interfaces/ModelInterfaces';
 
 /**
- * Validation schemas
+ * Interface for update user data
  */
 interface UpdateUserData {
   name?: string;
@@ -21,14 +20,6 @@ interface UpdateUserData {
   isActive?: boolean;
   role?: 'user' | 'admin';
 }
-
-const updateUserSchema = Joi.object({
-  name: Joi.string().min(1).max(100).optional(),
-  surname: Joi.string().min(1).max(100).optional(),
-  email: Joi.string().email().max(255).optional(),
-  isActive: Joi.boolean().optional(),
-  role: Joi.string().valid('user', 'admin').optional(),
-});
 
 /**
  * Controller for admin user management.
