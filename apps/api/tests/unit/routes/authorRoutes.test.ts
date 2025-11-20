@@ -16,6 +16,7 @@ jest.mock('../../../src/controllers/AuthorController', () => ({
     updateAuthor: jest.fn(),
     deleteAuthor: jest.fn(),
     getAuthorBooks: jest.fn(),
+    searchAuthors: jest.fn(),
   }
 }));
 jest.mock('../../../src/middleware/auth');
@@ -32,6 +33,7 @@ describe('Author Routes', () => {
     updateAuthor: jest.Mock;
     deleteAuthor: jest.Mock;
     getAuthorBooks: jest.Mock;
+    searchAuthors: jest.Mock;
   };
   let mockAuthMiddleware: jest.MockedFunction<typeof authMiddleware>;
 
