@@ -99,11 +99,12 @@ export class AuthService {
 
   async getAuthState(): Promise<AuthState> {
     try {
-      let tokens = await this.storage.getTokens();
+      const tokens = await this.storage.getTokens();
+      const user = await this.storage.getUser();
 
-      // Check if access token expired
+      // Check if access token expired or not available
       if (!tokens || Date.now() >= tokens.expiresAt) {
-        // Try silent refresh
+        // Try silent refresh (which will also restore user data)
         const refreshed = await this.silentRefresh();
 
         if (!refreshed) {
@@ -111,12 +112,18 @@ export class AuthService {
           return { user: null, isAuthenticated: false };
         }
 
-        tokens = await this.storage.getTokens();
+        // After successful refresh, user should be restored
+        const refreshedUser = await this.storage.getUser();
+
+        if (!refreshedUser) {
+          await this.storage.clear();
+          return { user: null, isAuthenticated: false };
+        }
+
+        return { user: refreshedUser, isAuthenticated: true };
       }
 
-      // Get cached user
-      const user = await this.storage.getUser();
-
+      // User should exist if tokens exist
       if (!user) {
         await this.storage.clear();
         return { user: null, isAuthenticated: false };
@@ -150,12 +157,49 @@ export class AuthService {
       };
 
       await this.storage.setTokens(tokens);
+
+      // Decode ID token to extract user data
+      try {
+        const payload = this.decodeJWT(data.idToken);
+        const user: User = {
+          id: payload.sub,
+          email: payload.email,
+          name: payload.given_name,
+          surname: payload.family_name,
+        };
+        await this.storage.setUser(user);
+      } catch (decodeError) {
+        console.error('Failed to decode ID token:', decodeError);
+        return false;
+      }
+
       this.config.onTokenRefresh?.(tokens);
+
+      console.log('Tokens refreshed, expires at:', new Date(tokens.expiresAt));
 
       return true;
     } catch (error) {
       console.error('Silent refresh failed:', error);
       return false;
+    }
+  }
+
+  /**
+   * Decode JWT token (without verification - verification is done server-side)
+   */
+  private decodeJWT(token: string): any {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      throw new Error('Invalid JWT token');
     }
   }
 
