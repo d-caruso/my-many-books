@@ -247,22 +247,13 @@ export class AdminBookController extends BaseController {
         return this.createErrorResponseI18n('errors:invalid_request_body', 400);
       }
 
-      // Validate request body
-      const validation = this.validateRequest(body, updateBookSchema);
-      if (!validation.isValid) {
-        return this.createErrorResponse(
-          this.t('errors:validation_failed'),
-          400,
-          validation.errors ? { errors: validation.errors } : undefined
-        );
-      }
-
+      // Validation is handled by middleware (validateBody in adminRoutes.ts)
       const book = await Book.findByPk(parseInt(bookId, 10));
       if (!book) {
         return this.createErrorResponseI18n('errors:book_not_found', 404);
       }
 
-      const updateData = validation.value as UpdateBookData;
+      const updateData = body as UpdateBookData;
 
       // If userId is being changed, verify the user exists
       if (updateData?.userId !== undefined && updateData.userId !== null) {

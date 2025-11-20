@@ -171,22 +171,13 @@ export class AdminUserController extends BaseController {
         return this.createErrorResponseI18n('errors:invalid_request_body', 400);
       }
 
-      // Validate request body
-      const validation = this.validateRequest(body, updateUserSchema);
-      if (!validation.isValid) {
-        return this.createErrorResponse(
-          this.t('errors:validation_failed'),
-          400,
-          validation.errors ? { errors: validation.errors } : undefined
-        );
-      }
-
+      // Validation is handled by middleware (validateBody in adminRoutes.ts)
       const user = await User.findByPk(parseInt(userId, 10));
       if (!user) {
         return this.createErrorResponseI18n('errors:user_not_found', 404);
       }
 
-      const updateData = validation.value as UpdateUserData;
+      const updateData = body as UpdateUserData;
 
       // Check if email is being changed and if it's already in use
       if (updateData?.email && updateData.email !== user.email) {

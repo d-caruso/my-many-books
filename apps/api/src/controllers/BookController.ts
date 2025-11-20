@@ -236,16 +236,8 @@ export class BookController extends BaseController {
       return this.createErrorResponseI18n('errors:request_body_required', 400);
     }
 
-    const validation = this.validateRequest(body, this.putBookSchema);
-    if (!validation.isValid) {
-      return this.createErrorResponseI18n(
-        'errors:validation_failed',
-        400,
-        undefined,
-        validation.errors ? { errors: validation.errors } : undefined
-      );
-    }
-    const bookData = validation.value!;
+    // Validation is handled by middleware (validateBody in bookRoutes.ts)
+    const bookData = body;
 
     const whereClause: WhereOptions<BookAttributes> = {
       id: Number(bookId),
@@ -329,16 +321,8 @@ export class BookController extends BaseController {
       return this.createErrorResponseI18n('errors:request_body_required', 400);
     }
 
-    const validation = this.validateRequest(body, this.patchBookSchema);
-    if (!validation.isValid) {
-      return this.createErrorResponseI18n(
-        'errors:validation_failed',
-        400,
-        undefined,
-        validation.errors ? { errors: validation.errors } : undefined
-      );
-    }
-    const bookData = validation.value!;
+    // Validation is handled by middleware (validateBody in bookRoutes.ts)
+    const bookData = body;
 
     const whereClause: WhereOptions<BookAttributes> = {
       id: Number(bookId),
