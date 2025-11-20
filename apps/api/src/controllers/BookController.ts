@@ -115,17 +115,9 @@ export class BookController extends BaseController {
       return this.createErrorResponseI18n('errors:request_body_required', 400);
     }
 
-    const validation = this.validateRequest(body, this.createBookSchema);
-    if (!validation.isValid) {
-      return this.createErrorResponseI18n(
-        'errors:validation_failed',
-        400,
-        undefined,
-        validation.errors ? { errors: validation.errors } : undefined
-      );
-    }
-
-    const bookData = validation.value!;
+    // Validation is handled by middleware (validateBody in bookRoutes.ts)
+    // Request body has already been validated and normalized
+    const bookData = body;
     const userId = request.user?.userId;
 
     // Check if book with ISBN already exists

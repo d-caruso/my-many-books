@@ -9,12 +9,21 @@ import Joi from 'joi';
 import { bookValidationSchema } from '../../utils/validation';
 import { commonSchemas } from './common.schema';
 import { BOOK_STATUS } from '../../utils/constants';
+import { validateIsbn } from '../../utils/isbn';
 
 /**
  * Create book schema
  */
 export const createBookSchema = Joi.object({
-  isbnCode: bookValidationSchema.isbnCode,
+  isbnCode: Joi.string()
+    .required()
+    .custom((value: string, helpers: Joi.CustomHelpers) => {
+      const validation = validateIsbn(value);
+      if (!validation.isValid) {
+        return helpers.error('any.invalid', { message: `Invalid ISBN: ${validation.error}` });
+      }
+      return validation.normalizedIsbn as string;
+    }),
   title: bookValidationSchema.title,
   editionNumber: bookValidationSchema.editionNumber,
   editionDate: bookValidationSchema.editionDate,
