@@ -38,7 +38,7 @@ export const BookCard: React.FC<BookCardProps> = ({
   showActions = true,
   compact = false
 }) => {
-  const { t } = useTranslation(['books', 'common']);
+  const { t } = useTranslation(['books', 'common', 'accessibility']);
 
   const formatAuthors = (authors?: Author[]) => {
     if (!authors || authors.length === 0) return t('books:unknown_author');

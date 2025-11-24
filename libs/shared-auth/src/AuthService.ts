@@ -177,8 +177,6 @@ export class AuthService {
 
       this.config.onTokenRefresh?.(tokens);
 
-      console.log('Tokens refreshed, expires at:', new Date(tokens.expiresAt));
-
       return true;
     } catch (error) {
       console.error('Silent refresh failed:', error);
