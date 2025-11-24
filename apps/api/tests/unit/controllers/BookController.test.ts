@@ -130,27 +130,9 @@ describe('BookController', () => {
       expect(result.data).toEqual(mockPlainBook);
     });
 
-    it('should return 400 if ISBN is invalid', async () => {
-      mockRequest.body = JSON.stringify({ ...validBookData, isbnCode: '123' });
-
-      // Simulate ISBN validation failure
-      (validateIsbn as jest.Mock).mockReturnValue({
-        isValid: false,
-        error: 'Invalid ISBN'
-      });
-
-      const result = await bookController.createBook(mockRequest);
-
-      // The controller should return 400 directly.
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      // Expected based on the error output from the previous run.
-      expect(result.error).toContain('Validation failed');
-
-      // Restore the mock after the test to avoid affecting others
-      (validateIsbn as jest.Mock).mockRestore();
-      (Book.create as jest.Mock).mockClear();
-    });
+    // Note: ISBN validation is now handled by middleware (validateBody in bookRoutes.ts)
+    // Controller no longer validates - it assumes data is already validated by middleware
+    // Validation tests should be in the middleware test file instead
   });
 
   describe('getBook', () => {
