@@ -20,6 +20,9 @@ node_modules
 # claude
 .claude/commands/primer.md
 
+# codex
+AGENTS.md
+
 # IDE - VSCode
 .vscode/*
 !.vscode/settings.json
