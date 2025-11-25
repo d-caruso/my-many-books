@@ -3,10 +3,12 @@
 // ================================================================
 import { Sequelize } from 'sequelize';
 import { Author } from '@/models/Author';
+import { User } from '@/models/User';
 import { ModelAssociations } from '@/models/associations/ModelAssociations';
 
 describe('Author Model', () => {
   let sequelize: Sequelize;
+  let testUserId: number;
 
   beforeAll(async () => {
     sequelize = new Sequelize('sqlite::memory:', {
@@ -19,8 +21,10 @@ describe('Author Model', () => {
       },
     });
 
-    // Initialize model
+    // Initialize models
+    User.initialize(sequelize);
     Author.initModel(sequelize);
+    ModelAssociations.registerModel('User', User);
     ModelAssociations.registerModel('Author', Author);
 
     // Sync database
@@ -36,17 +40,105 @@ describe('Author Model', () => {
   beforeEach(async () => {
     // Clean up data before each test
     await Author.destroy({ where: {} });
+    await User.destroy({ where: {} });
+
+    // Create test user
+    const user = await User.create({
+      email: 'test@example.com',
+      name: 'Test',
+      surname: 'User',
+      cognitoSub: 'test-sub-123',
+      role: 'user',
+      isActive: true,
+    } as any);
+    testUserId = user.id;
   });
 
   describe('Model Creation', () => {
+    it('should create author with userId', async () => {
+      const author = await Author.createAuthor({
+        name: 'John',
+        surname: 'Doe',
+        userId: testUserId,
+      });
+
+      expect(author.userId).toBe(testUserId);
+    });
+
+    it('should allow different users to have authors with same name', async () => {
+      const user2 = await User.create({
+        email: 'user2@example.com',
+        name: 'Test2',
+        surname: 'User2',
+        cognitoSub: 'test-sub-456',
+        role: 'user',
+        isActive: true,
+      } as any);
+
+      const author1 = await Author.createAuthor({
+        name: 'John',
+        surname: 'Doe',
+        userId: testUserId,
+      });
+
+      const author2 = await Author.createAuthor({
+        name: 'John',
+        surname: 'Doe',
+        userId: user2.id,
+      });
+
+      expect(author1.id).not.toBe(author2.id);
+      expect(author1.userId).toBe(testUserId);
+      expect(author2.userId).toBe(user2.id);
+    });
+
+    it('should not allow same user to create duplicate author', async () => {
+      await Author.createAuthor({
+        name: 'John',
+        surname: 'Doe',
+        userId: testUserId,
+      });
+
+      await Author.createAuthor({
+        name: 'John',
+        surname: 'Doe',
+        userId: testUserId,
+      });
+
+      // Should return existing author, not create new one
+      const authors = await Author.findAll({ where: { userId: testUserId } });
+      expect(authors.length).toBe(1);
+    });
+
+    it('should only return authors for specific user', async () => {
+      const user2 = await User.create({
+        email: 'user2@example.com',
+        name: 'Test3',
+        surname: 'User3',
+        cognitoSub: 'test-sub-789',
+        role: 'user',
+        isActive: true,
+      } as any);
+
+      await Author.createAuthor({ name: 'John', surname: 'Doe', userId: testUserId });
+      await Author.createAuthor({ name: 'Jane', surname: 'Smith', userId: user2.id });
+
+      const user1Authors = await Author.findAll({ where: { userId: testUserId } });
+      const user2Authors = await Author.findAll({ where: { userId: user2.id } });
+
+      expect(user1Authors.length).toBe(1);
+      expect(user2Authors.length).toBe(1);
+      expect(user1Authors[0]?.name).toBe('John');
+      expect(user2Authors[0]?.name).toBe('Jane');
+    });
+
     it('should create an author with valid data', async () => {
-      const authorData = {
+      const author = await Author.createAuthor({
         name: 'John',
         surname: 'Doe',
         nationality: 'American',
-      };
-
-      const author = await Author.create(authorData as any);
+        userId: testUserId,
+      });
 
       expect(author.name).toBe('John');
       expect(author.surname).toBe('Doe');
@@ -57,12 +149,11 @@ describe('Author Model', () => {
     });
 
     it('should create an author without nationality', async () => {
-      const authorData = {
+      const author = await Author.createAuthor({
         name: 'Jane',
         surname: 'Smith',
-      };
-
-      const author = await Author.create(authorData as any);
+        userId: testUserId,
+      });
 
       expect(author.name).toBe('Jane');
       expect(author.surname).toBe('Smith');
@@ -73,28 +164,31 @@ describe('Author Model', () => {
       const authorData = {
         name: 'John',
         // Missing surname
+        userId: testUserId,
       };
 
-      await expect(Author.create(authorData as any)).rejects.toThrow();
+      await expect(Author.createAuthor(authorData as any)).rejects.toThrow();
     });
   });
 
   describe('Instance Methods', () => {
     it('should return full name correctly', async () => {
-      const author = await Author.create({
+      const author = await Author.createAuthor({
         name: 'John',
         surname: 'Doe',
-      } as any);
+        userId: testUserId,
+      });
 
       expect(author.getFullName()).toBe('John Doe');
     });
 
     it('should serialize to JSON correctly', async () => {
-      const author = await Author.create({
+      const author = await Author.createAuthor({
         name: 'John',
         surname: 'Doe',
         nationality: 'American',
-      } as any);
+        userId: testUserId,
+      });
 
       const json = author.toJSON();
 
@@ -102,6 +196,7 @@ describe('Author Model', () => {
       expect(json).toHaveProperty('name', 'John');
       expect(json).toHaveProperty('surname', 'Doe');
       expect(json).toHaveProperty('nationality', 'American');
+      expect(json).toHaveProperty('userId');
       expect(json).toHaveProperty('creationDate');
       expect(json).toHaveProperty('updateDate');
     });
@@ -110,15 +205,13 @@ describe('Author Model', () => {
   describe('Static Methods', () => {
     beforeEach(async () => {
       // Create test data
-      await Author.bulkCreate([
-        { name: 'John', surname: 'Doe', nationality: 'American' },
-        { name: 'Jane', surname: 'Smith', nationality: 'British' },
-        { name: 'Bob', surname: 'Johnson', nationality: 'American' },
-      ] as any);
+      await Author.createAuthor({ name: 'John', surname: 'Doe', nationality: 'American', userId: testUserId });
+      await Author.createAuthor({ name: 'Jane', surname: 'Smith', nationality: 'British', userId: testUserId });
+      await Author.createAuthor({ name: 'Bob', surname: 'Johnson', nationality: 'American', userId: testUserId });
     });
 
     it('should find author by full name', async () => {
-      const author = await Author.findByFullName('John', 'Doe');
+      const author = await Author.findByFullName('John', 'Doe', testUserId);
 
       expect(author).not.toBeNull();
       expect(author?.name).toBe('John');
@@ -126,14 +219,14 @@ describe('Author Model', () => {
     });
 
     it('should find authors by nationality', async () => {
-      const americanAuthors = await Author.findByNationality('American');
+      const americanAuthors = await Author.findByNationality('American', testUserId);
 
       expect(americanAuthors).toHaveLength(2);
       expect(americanAuthors.every(author => author.nationality === 'American')).toBe(true);
     });
 
     it('should search authors by name', async () => {
-      const results = await Author.searchByName('John');
+      const results = await Author.searchByName('John', testUserId);
 
       expect(results).toHaveLength(2); // John Doe and Bob Johnson
     });
@@ -142,6 +235,7 @@ describe('Author Model', () => {
       const newAuthor = await Author.createAuthor({
         name: 'New',
         surname: 'Author',
+        userId: testUserId,
       });
 
       expect(newAuthor.name).toBe('New');
@@ -152,9 +246,10 @@ describe('Author Model', () => {
       const existingAuthor = await Author.createAuthor({
         name: 'John',
         surname: 'Doe',
+        userId: testUserId,
       });
 
-      const authorCount = await Author.count();
+      const authorCount = await Author.count({ where: { userId: testUserId } });
       expect(authorCount).toBe(3); // Should not create duplicate
       expect(existingAuthor.name).toBe('John');
     });

@@ -14,6 +14,7 @@ export interface AuthorAttributes
   name: string;
   surname: string;
   nationality?: string | null;
+  userId: number;
   creationDate: CreationOptional<Date>;
   updateDate?: CreationOptional<Date | undefined>;
 }
@@ -22,6 +23,7 @@ export interface AuthorCreationAttributes {
   name: string;
   surname: string;
   nationality?: string | null;
+  userId: number;
   updateDate?: Date | undefined;
 }
 
@@ -30,12 +32,14 @@ export interface CategoryAttributes
   extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
   id: CreationOptional<number>;
   name: string;
+  userId: number;
   creationDate: CreationOptional<Date>;
   updateDate?: CreationOptional<Date | undefined>;
 }
 
 export interface CategoryCreationAttributes {
   name: string;
+  userId: number;
   updateDate?: Date | undefined;
 }
 

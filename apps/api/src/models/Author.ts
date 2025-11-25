@@ -12,6 +12,7 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
   public name!: string;
   public surname!: string;
   public nationality?: string;
+  public userId!: number;
 
   static override getTableName(): string {
     return TABLE_NAMES.AUTHORS;
@@ -48,13 +49,28 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
             len: [0, 255],
           },
         },
+        userId: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+          field: 'user_id',
+          references: {
+            model: 'users',
+            key: 'id',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'SET NULL',
+        },
       },
       {
         ...this.getBaseOptions(sequelize, TABLE_NAMES.AUTHORS),
         indexes: [
           ...this.getBaseOptions(sequelize, TABLE_NAMES.AUTHORS).indexes,
           {
-            fields: ['name', 'surname'],
+            fields: ['user_id'],
+            name: 'idx_author_user_id',
+          },
+          {
+            fields: ['user_id', 'name', 'surname'],
             name: 'idx_author_name_surname',
           },
           {
@@ -83,24 +99,23 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
       name: this.name,
       surname: this.surname,
       nationality: this.nationality || null,
+      userId: this.userId,
       creationDate: this.creationDate,
       updateDate: this.updateDate,
     };
   }
 
   // Static query methods
-  static async findByFullName(name: string, surname: string): Promise<Author | null> {
+  static async findByFullName(name: string, surname: string, userId: number): Promise<Author | null> {
     return await Author.findOne({
-      where: {
-        name,
-        surname,
-      },
+      where: { name, surname, userId },
     });
   }
 
-  static async findByNationality(nationality: string): Promise<Author[]> {
+  static async findByNationality(nationality: string, userId: number): Promise<Author[]> {
     return await Author.findAll({
       where: {
+        userId,
         nationality,
       },
       order: [
@@ -110,9 +125,10 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
     });
   }
 
-  static async searchByName(searchTerm: string): Promise<Author[]> {
+  static async searchByName(searchTerm: string, userId: number): Promise<Author[]> {
     return await Author.findAll({
       where: {
+        userId,
         [Op.or]: [
           {
             name: {
@@ -134,8 +150,12 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
   }
 
   static async createAuthor(authorData: AuthorCreationAttributes): Promise<Author> {
-    // Check if author already exists
-    const existingAuthor = await Author.findByFullName(authorData.name, authorData.surname);
+    // Check if author already exists FOR THIS USER
+    const existingAuthor = await Author.findByFullName(
+      authorData.name,
+      authorData.surname,
+      authorData.userId
+    );
 
     if (existingAuthor) {
       return existingAuthor;
@@ -144,13 +164,12 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
     return await createModel(Author, authorData);
   }
 
-  static async findOrCreateAuthor(
-    authorData: AuthorCreationAttributes
-  ): Promise<[Author, boolean]> {
+  static async findOrCreateAuthor(authorData: AuthorCreationAttributes): Promise<[Author, boolean]> {
     return await findOrCreateModel(Author, {
       where: {
         name: authorData.name,
         surname: authorData.surname,
+        userId: authorData.userId,
       },
       defaults: authorData,
     });

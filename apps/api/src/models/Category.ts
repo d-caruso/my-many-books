@@ -9,6 +9,7 @@ import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
 
 export class Category extends IdBaseModel<CategoryAttributes> implements CategoryAttributes {
   public name!: string;
+  public userId!: number;
 
   static override getTableName(): string {
     return TABLE_NAMES.CATEGORIES;
@@ -31,15 +32,30 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
             len: [1, 255],
           },
         },
+        userId: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+          field: 'user_id',
+          references: {
+            model: 'users',
+            key: 'id',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'SET NULL',
+        },
       },
       {
         ...this.getBaseOptions(sequelize, TABLE_NAMES.CATEGORIES),
         indexes: [
           ...this.getBaseOptions(sequelize, TABLE_NAMES.CATEGORIES).indexes,
           {
-            fields: ['name'],
+            fields: ['user_id'],
+            name: 'idx_category_user_id',
+          },
+          {
+            fields: ['user_id', 'name'],
             unique: true,
-            name: 'idx_category_name_unique',
+            name: 'idx_category_user_name_unique',
           },
         ],
       }
@@ -53,26 +69,28 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
     return {
       id: this.id,
       name: this.name,
+      userId: this.userId,
       creationDate: this.creationDate,
       updateDate: this.updateDate,
     };
   }
 
   // Static query methods
-  static async findByName(name: string): Promise<Category | null> {
+  static async findByName(name: string, userId: number): Promise<Category | null> {
     return await Category.findOne({
       where: {
         name: name.trim(),
+        userId,
       },
     });
   }
 
-  static async searchByName(searchTerm: string): Promise<Category[]> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+  static async searchByName(searchTerm: string, userId: number): Promise<Category[]> {
     const { Op } = require('sequelize') as { Op: { like: symbol } };
 
     return await Category.findAll({
       where: {
+        userId,
         name: {
           [Op.like]: `%${searchTerm}%`,
         },
@@ -81,50 +99,45 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
     });
   }
 
-  static async getAllCategories(): Promise<Category[]> {
+  static async getAllCategories(userId: number): Promise<Category[]> {
     return await Category.findAll({
+      where: { userId },
       order: [['name', 'ASC']],
     });
   }
 
   static async createCategory(categoryData: CategoryCreationAttributes): Promise<Category> {
-    // Normalize category name (trim and proper case)
     const normalizedName = categoryData.name.trim();
 
-    // Check if category already exists
-    const existingCategory = await Category.findByName(normalizedName);
+    // Check if category already exists FOR THIS USER
+    const existingCategory = await Category.findByName(normalizedName, categoryData.userId);
 
     if (existingCategory) {
       return existingCategory;
     }
 
     try {
-      // eslint-disable-next-line no-console
-      console.log('Creating category with data:', { ...categoryData, name: normalizedName });
-      // eslint-disable-next-line no-console
-      console.log('Category model initialized:', !!Category.sequelize);
-
       return await createModel(Category, {
         name: normalizedName,
+        userId: categoryData.userId,
       });
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Category.create failed:', error);
       throw error;
     }
   }
 
-  static async findOrCreateCategory(
-    categoryData: CategoryCreationAttributes
-  ): Promise<[Category, boolean]> {
+  static async findOrCreateCategory(categoryData: CategoryCreationAttributes): Promise<[Category, boolean]> {
     const normalizedName = categoryData.name.trim();
 
     return await findOrCreateModel(Category, {
       where: {
         name: normalizedName,
+        userId: categoryData.userId,
       },
       defaults: {
         name: normalizedName,
+        userId: categoryData.userId,
       },
     });
   }
