@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/security-authentication-improvements ]
+    branches: [ main, develop, feature/authorization ]
   pull_request:
-    branches: [ main, develop, feature/security-authentication-improvements ]
+    branches: [ main, develop, feature/authorization ]
   workflow_dispatch:
     inputs:
       run_tests:

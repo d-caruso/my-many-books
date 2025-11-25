@@ -2,7 +2,7 @@ name: Monorepo CD
 
 on:
   push:
-    branches: [ main, develop, feature/security-authentication-improvements ]
+    branches: [ main, develop, feature/authorization ]
     tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
