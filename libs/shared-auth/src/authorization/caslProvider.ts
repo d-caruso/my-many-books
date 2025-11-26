@@ -38,16 +38,18 @@ export function createAbilityFor(user: AuthUser | null): AppAbility {
   can(ACTIONS.READ, RESOURCES.CATEGORY);
 
   // ============================================
-  // AUTHENTICATED USERS
+  // AUTHENTICATED USERS (role: 'user')
   // ============================================
+  // Regular users have full CRUD on their own resources
+  // Ownership is enforced via { userId: user.id } condition
   if (user) {
-    // Users can create new resources
+    // CREATE: Users can create new resources
     can(ACTIONS.CREATE, RESOURCES.BOOK);
     can(ACTIONS.CREATE, RESOURCES.AUTHOR);
     can(ACTIONS.CREATE, RESOURCES.CATEGORY);
 
-    // Users can update/delete ONLY their own resources
-    // Condition: { userId: user.id } enforces ownership
+    // UPDATE/DELETE: Users can ONLY modify their own resources
+    // CASL checks if resource.userId matches user.id
     can(ACTIONS.UPDATE, RESOURCES.BOOK, { userId: user.id });
     can(ACTIONS.DELETE, RESOURCES.BOOK, { userId: user.id });
 
@@ -57,7 +59,7 @@ export function createAbilityFor(user: AuthUser | null): AppAbility {
     can(ACTIONS.UPDATE, RESOURCES.CATEGORY, { userId: user.id });
     can(ACTIONS.DELETE, RESOURCES.CATEGORY, { userId: user.id });
 
-    // Users can read their own profile
+    // READ: Users can read their own profile
     can(ACTIONS.READ, RESOURCES.USER, { id: user.id });
   }
 
