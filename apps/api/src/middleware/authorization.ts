@@ -25,9 +25,10 @@ import { createAbilityFor, Action, Resource } from '@my-many-books/shared-auth';
  */
 export const requirePermission = (action: Action, resource: Resource) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    // Get authenticated user from request (set by auth middleware)
+    const user = (req as any).user;
+
     try {
-      // Get authenticated user from request (set by auth middleware)
-      const user = req.user;
 
       // Create CASL ability for this user
       const ability = createAbilityFor(user || null);
