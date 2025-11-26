@@ -61,9 +61,20 @@ export const requirePermission = (action: Action, resource: Resource) => {
       // Permission granted - continue to next middleware/handler
       next();
     } catch (error) {
-      console.error('Authorization middleware error:', error);
+      // Log error for debugging
+      console.error('[Authorization Middleware] Error:', {
+        error: error instanceof Error ? error.message : String(error),
+        action,
+        resource,
+        userId: user?.id,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
 
-      const t = (req as any).t || ((key: string) => key);
+      const t = (req as any).t || ((key: string) => {
+        return key === 'errors:internal_server_error'
+          ? 'Internal server error'
+          : key;
+      });
 
       return res.status(500).json({
         success: false,
