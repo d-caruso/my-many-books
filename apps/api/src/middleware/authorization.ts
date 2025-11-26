@@ -24,7 +24,7 @@ import { createAbilityFor, Action, Resource } from '@my-many-books/shared-auth';
  * ```
  */
 export const requirePermission = (action: Action, resource: Resource) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Get authenticated user from request (set by auth middleware)
       const user = req.user;
@@ -46,7 +46,7 @@ export const requirePermission = (action: Action, resource: Resource) => {
           return fallbackMessages[key] || key;
         });
 
-        return res.status(403).json({
+        res.status(403).json({
           success: false,
           error: t('errors:permission_denied'),
           details: {
@@ -56,10 +56,12 @@ export const requirePermission = (action: Action, resource: Resource) => {
             role: user?.role || 'anonymous',
           },
         });
+        return;
       }
 
       // Permission granted - continue to next middleware/handler
       next();
+      return;
     } catch (error) {
       // Log error for debugging
       console.error('[Authorization Middleware] Error:', {
@@ -76,10 +78,11 @@ export const requirePermission = (action: Action, resource: Resource) => {
           : key;
       });
 
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         error: t('errors:internal_server_error'),
       });
+      return;
     }
   };
 };
