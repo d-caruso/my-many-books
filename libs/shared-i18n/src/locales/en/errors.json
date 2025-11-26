@@ -55,5 +55,10 @@
   "rate_limit_public": "Too many requests from this IP. Please try again in 1 hour",
   "rate_limit_search": "Too many search requests. Please try again in 15 minutes",
   "rate_limit_write": "Too many write operations. Please try again in 1 hour",
-  "rate_limit_read": "Too many read operations. Please try again in 1 hour"
+  "rate_limit_read": "Too many read operations. Please try again in 1 hour",
+  "permission_denied": "You do not have permission to perform this action",
+  "permission_denied_resource": "You do not have permission to {{action}} this {{resource}}",
+  "admin_only": "This action requires administrator privileges",
+  "owner_only": "You can only modify your own {{resource}}",
+  "insufficient_permissions": "Insufficient permissions to access this resource"
 }
