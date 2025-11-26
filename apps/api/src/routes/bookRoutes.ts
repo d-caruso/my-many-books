@@ -89,6 +89,7 @@ router.put(
 router.patch(
   '/:id',
   writeLimiter,
+  requirePermission(ACTIONS.UPDATE, RESOURCES.BOOK),
   validateParams(bookIdParamSchema),
   validateBody(patchBookSchema),
   expressRouteWrapper(bookController.patchBookForUser.bind(bookController))
@@ -97,6 +98,7 @@ router.patch(
 router.delete(
   '/:id',
   writeLimiter,
+  requirePermission(ACTIONS.DELETE, RESOURCES.BOOK),
   validateParams(bookIdParamSchema),
   expressRouteWrapper(bookController.deleteBookForUser.bind(bookController))
 );
