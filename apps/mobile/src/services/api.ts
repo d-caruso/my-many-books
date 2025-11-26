@@ -15,7 +15,7 @@ class FetchHttpClient implements HttpClient {
     this.timeout = timeout;
   }
 
-  private async fetchWithTimeout<T>(url: string, options: RequestInit = {}): Promise<T> {
+  private async fetchWithTimeout<T>(url: string, options: RequestInit = {}, isRetry = false): Promise<T> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
@@ -29,6 +29,29 @@ class FetchHttpClient implements HttpClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+
+        // Handle authentication errors (401 Unauthorized)
+        // Try to refresh token and retry the request once
+        if (response.status === 401 && !isRetry) {
+          const refreshed = await authService.silentRefresh();
+
+          if (refreshed) {
+            // Get new token and retry the original request
+            const newToken = await authService.getIdToken();
+            const retryOptions = {
+              ...options,
+              headers: {
+                ...options.headers,
+                Authorization: `Bearer ${newToken}`,
+              },
+            };
+            return this.fetchWithTimeout<T>(url, retryOptions, true);
+          }
+
+          // Token refresh failed - logout user
+          await authService.logout();
+          throw new Error('Session expired. Please login again.');
+        }
 
         // Handle authorization errors (403 Forbidden)
         // Error message is already localized by the API based on Accept-Language header
