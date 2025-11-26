@@ -217,10 +217,8 @@ export class BookController extends BaseController {
     }
 
     // Verify ownership (authorization middleware already checked CASL permissions)
-    // This is an additional check to ensure data integrity
-    if (request.user && book.userId !== request.user.userId && request.user.role !== 'admin') {
-      return this.createErrorResponseI18n('errors:permission_denied', 403);
-    }
+    const ownershipError = this.verifyOwnership(request, book.userId);
+    if (ownershipError) return ownershipError;
 
     const updateData: Partial<BookAttributes> = {};
     if (bookData.title !== undefined) updateData.title = bookData.title;
@@ -367,10 +365,8 @@ export class BookController extends BaseController {
     }
 
     // Verify ownership (authorization middleware already checked CASL permissions)
-    // This is an additional check to ensure data integrity
-    if (request.user && book.userId !== request.user.userId && request.user.role !== 'admin') {
-      return this.createErrorResponseI18n('errors:permission_denied', 403);
-    }
+    const ownershipError = this.verifyOwnership(request, book.userId);
+    if (ownershipError) return ownershipError;
 
     await book.destroy();
 

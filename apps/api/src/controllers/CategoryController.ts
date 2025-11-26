@@ -149,6 +149,10 @@ export class CategoryController extends BaseController {
         return this.createErrorResponseI18n('errors:category_not_found', 404);
       }
 
+      // Verify ownership (authorization middleware already checked CASL permissions)
+      const ownershipError = this.verifyOwnership(request, category.userId);
+      if (ownershipError) return ownershipError;
+
       // Check if new name already exists (if name is being changed)
       if (categoryData.name && categoryData.name !== category.name) {
         const existingCategory = await Category.findByName(categoryData.name, request.user!.userId);
@@ -208,6 +212,10 @@ export class CategoryController extends BaseController {
       if (!category) {
         return this.createErrorResponseI18n('errors:category_not_found', 404);
       }
+
+      // Verify ownership (authorization middleware already checked CASL permissions)
+      const ownershipError = this.verifyOwnership(request, category.userId);
+      if (ownershipError) return ownershipError;
 
       // Check if category has associated books
       const hasBooks = await Book.count({

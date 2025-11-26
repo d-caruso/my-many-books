@@ -5,6 +5,17 @@
 
 import request from 'supertest';
 import express from 'express';
+
+// Mock authorization middleware BEFORE importing routes
+jest.mock('../../../src/middleware/authorization', () => ({
+  requirePermission: () => (_req: any, _res: any, next: any) => next(),
+}));
+
+// Mock auth middleware BEFORE importing routes
+jest.mock('../../../src/middleware/auth', () => ({
+  authMiddleware: (_req: any, _res: any, next: any) => next(),
+}));
+
 import categoryRoutes from '../../../src/routes/categoryRoutes';
 
 // Mock the CategoryController
