@@ -64,11 +64,12 @@ export function createAbilityFor(user: AuthUser | null): AppAbility {
   }
 
   // ============================================
-  // ADMIN USERS
+  // ADMIN USERS (role: 'admin')
   // ============================================
+  // Admins have unrestricted access to all resources
+  // "manage all" grants every permission on every resource
   if (user?.role === 'admin') {
-    // Admin has full access to everything
-    can(ACTIONS.MANAGE, RESOURCES.ALL);
+    can(ACTIONS.MANAGE, RESOURCES.ALL);  // Full system access
   }
 
   return build();
