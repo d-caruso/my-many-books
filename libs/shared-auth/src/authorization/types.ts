@@ -34,3 +34,8 @@ export type Resource = typeof RESOURCES[keyof typeof RESOURCES];
  * Subject type for CASL - can be a string or an object with resource type
  */
 export type Subject = Resource | { __typename: Resource; [key: string]: any };
+
+/**
+ * User roles supported by the system
+ */
+export type UserRole = 'user' | 'admin';
