@@ -171,6 +171,7 @@ describe('CategoryController', () => {
       const mockCategoryToUpdate = {
         id: 1,
         name: 'Fiction',
+        userId: 1, // Same as mockRequest.user.userId
         update: jest.fn().mockResolvedValue(true),
       };
 
@@ -218,7 +219,7 @@ describe('CategoryController', () => {
     });
 
     it('should return 409 for duplicate name conflict', async () => {
-      const mockCategory = { id: 1, name: 'Fiction' };
+      const mockCategory = { id: 1, name: 'Fiction', userId: 1 };
       (Category.findByPk as jest.Mock).mockResolvedValue(mockCategory);
       (Category.findByName as jest.Mock).mockResolvedValue({ id: 2, name: 'Updated Fiction' }); // Duplicate exists
 
@@ -237,6 +238,7 @@ describe('CategoryController', () => {
     it('should delete a category successfully', async () => {
       const mockCategoryToDelete = {
         id: 1,
+        userId: 1, // Same as mockRequest.user.userId
         destroy: jest.fn(),
       };
 
@@ -278,6 +280,7 @@ describe('CategoryController', () => {
     it('should handle database errors during deletion', async () => {
       const mockCategoryToDelete = {
         id: 1,
+        userId: 1, // Same as mockRequest.user.userId
         destroy: jest.fn().mockRejectedValue(new Error('Delete failed')),
       };
 
