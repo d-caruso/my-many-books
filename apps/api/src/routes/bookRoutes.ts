@@ -80,6 +80,7 @@ router.post(
 router.put(
   '/:id',
   writeLimiter,
+  requirePermission(ACTIONS.UPDATE, RESOURCES.BOOK),
   validateParams(bookIdParamSchema),
   validateBody(updateBookSchema),
   expressRouteWrapper(bookController.updateBookForUser.bind(bookController))
