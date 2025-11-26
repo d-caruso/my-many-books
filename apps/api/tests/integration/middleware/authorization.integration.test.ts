@@ -149,9 +149,9 @@ describe('Authorization Middleware Integration', () => {
     it('should work correctly in middleware chain', async () => {
       app.post(
         '/books',
-        (req, res, next) => {
+        (_req, _res, next) => {
           // Mock authentication
-          req.user = {
+          _req.user = {
             id: 1,
             email: 'user@example.com',
             role: 'user',
@@ -159,11 +159,11 @@ describe('Authorization Middleware Integration', () => {
           next();
         },
         requirePermission(ACTIONS.CREATE, RESOURCES.BOOK),
-        (req, res, next) => {
+        (_req, _res, next) => {
           // Additional middleware
           next();
         },
-        (req, res) => {
+        (_req, res) => {
           res.status(201).json({ success: true });
         }
       );
@@ -174,7 +174,7 @@ describe('Authorization Middleware Integration', () => {
     });
 
     it('should stop middleware chain on permission denial', async () => {
-      const finalHandler = jest.fn((req, res) => {
+      const finalHandler = jest.fn((_req, res) => {
         res.status(200).json({ success: true });
       });
 
@@ -196,7 +196,7 @@ describe('Authorization Middleware Integration', () => {
       app.post(
         '/books',
         requirePermission(ACTIONS.CREATE, RESOURCES.BOOK),
-        (req, res) => {
+        (_req, res) => {
           res.status(201).json({ success: true });
         }
       );
