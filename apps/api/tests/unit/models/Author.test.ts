@@ -22,7 +22,7 @@ describe('Author Model', () => {
     });
 
     // Initialize models
-    User.initialize(sequelize);
+    User.initModel(sequelize);
     Author.initModel(sequelize);
     ModelAssociations.registerModel('User', User);
     ModelAssociations.registerModel('Author', Author);

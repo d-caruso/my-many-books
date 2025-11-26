@@ -35,7 +35,7 @@ export class User extends IdBaseModel<UserAttributes> implements UserAttributes 
     return 'users';
   }
 
-  public static initialize(sequelize: Sequelize): typeof User {
+  public static initModel(sequelize: Sequelize): typeof User {
     User.init(
       {
         id: {

@@ -40,7 +40,7 @@ describe('ModelManager', () => {
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
 
     // Mock all the init methods
-    (User.initialize as jest.Mock) = jest.fn();
+    (User.initModel as jest.Mock) = jest.fn();
     (Author.initModel as jest.Mock) = jest.fn();
     (Category.initModel as jest.Mock) = jest.fn();
     (Book.initModel as jest.Mock) = jest.fn();
@@ -61,7 +61,7 @@ describe('ModelManager', () => {
     it('should initialize ModelManager successfully', () => {
       ModelManager.initialize(mockSequelize);
 
-      expect(User.initialize).toHaveBeenCalledWith(mockSequelize);
+      expect(User.initModel).toHaveBeenCalledWith(mockSequelize);
       expect(Author.initModel).toHaveBeenCalledWith(mockSequelize);
       expect(Category.initModel).toHaveBeenCalledWith(mockSequelize);
       expect(Book.initModel).toHaveBeenCalledWith(mockSequelize);
@@ -89,7 +89,7 @@ describe('ModelManager', () => {
       // Second initialization - should return early
       ModelManager.initialize(mockSequelize);
 
-      expect(User.initialize).not.toHaveBeenCalled();
+      expect(User.initModel).not.toHaveBeenCalled();
       expect(Author.initModel).not.toHaveBeenCalled();
       expect(ModelAssociations.registerModel).not.toHaveBeenCalled();
     });

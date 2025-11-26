@@ -33,7 +33,7 @@ export class ModelManager {
     ModelManager.sequelize = sequelize;
 
     // Initialize models in dependency order
-    User.initialize(sequelize);
+    User.initModel(sequelize);
     Author.initModel(sequelize);
     Category.initModel(sequelize);
     Book.initModel(sequelize);

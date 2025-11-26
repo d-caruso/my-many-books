@@ -23,7 +23,7 @@ describe('Category Model', () => {
     });
 
     // Initialize models
-    User.initialize(sequelize);
+    User.initModel(sequelize);
     Category.initModel(sequelize);
     ModelAssociations.registerModel('User', User);
     ModelAssociations.registerModel('Category', Category);

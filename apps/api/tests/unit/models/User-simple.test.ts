@@ -45,7 +45,7 @@ describe('User Model - Simple Coverage', () => {
   });
 
   describe('Static methods', () => {
-    describe('initialize', () => {
+    describe('initModel', () => {
       it('should initialize User model', () => {
         const mockSequelize = {
           define: jest.fn(),
@@ -54,7 +54,7 @@ describe('User Model - Simple Coverage', () => {
         // Mock the User.init method
         User.init = jest.fn().mockReturnValue(User);
 
-        const result = User.initialize(mockSequelize);
+        const result = User.initModel(mockSequelize);
 
         expect(User.init).toHaveBeenCalled();
         expect(result).toBe(User);
@@ -64,7 +64,7 @@ describe('User Model - Simple Coverage', () => {
         const mockSequelize = { test: 'sequelize' } as any;
         User.init = jest.fn().mockReturnValue(User);
 
-        User.initialize(mockSequelize);
+        User.initModel(mockSequelize);
 
         const initCall = (User.init as jest.Mock).mock.calls[0];
         expect(initCall[0]).toHaveProperty('id');
@@ -116,7 +116,7 @@ describe('User Model - Simple Coverage', () => {
       const mockSequelize = {} as any;
       User.init = jest.fn().mockReturnValue(User);
 
-      User.initialize(mockSequelize);
+      User.initModel(mockSequelize);
 
       const fields = (User.init as jest.Mock).mock.calls[0][0];
       
@@ -150,7 +150,7 @@ describe('User Model - Simple Coverage', () => {
       const mockSequelize = {} as any;
       User.init = jest.fn().mockReturnValue(User);
 
-      User.initialize(mockSequelize);
+      User.initModel(mockSequelize);
 
       const options = (User.init as jest.Mock).mock.calls[0][1];
       const indexes = options.indexes;

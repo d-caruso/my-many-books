@@ -18,7 +18,7 @@ describe('User Model', () => {
     });
 
     // Initialize models
-    User.initialize(sequelize);
+    User.initModel(sequelize);
     Book.initModel = jest.fn().mockReturnValue(Book);
     
     // Mock associations
