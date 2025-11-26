@@ -45,7 +45,7 @@ export class CategoryController extends BaseController {
     const categoryData = validation.value!;
 
     // Check for duplicate category name
-    const existingCategory = await Category.findByName(categoryData.name);
+    const existingCategory = await Category.findByName(categoryData.name, request.user!.userId);
     if (existingCategory) {
       return this.createErrorResponseI18n('errors:resource_exists', 409, {
         resource: 'Category',
@@ -57,6 +57,7 @@ export class CategoryController extends BaseController {
       // Create category
       const categoryCreateData = {
         name: categoryData.name,
+        userId: request.user!.userId,
       };
       const category = await Category.createCategory(categoryCreateData);
 
@@ -150,7 +151,7 @@ export class CategoryController extends BaseController {
 
       // Check if new name already exists (if name is being changed)
       if (categoryData.name && categoryData.name !== category.name) {
-        const existingCategory = await Category.findByName(categoryData.name);
+        const existingCategory = await Category.findByName(categoryData.name, request.user!.userId);
         if (existingCategory) {
           return this.createErrorResponseI18n('errors:resource_exists', 409, {
             resource: 'Category',
@@ -250,7 +251,7 @@ export class CategoryController extends BaseController {
 
       if (search) {
         // Search categories by name
-        categories = await Category.searchByName(search);
+        categories = await Category.searchByName(search, request.user!.userId);
         totalCount = categories.length;
 
         // Apply pagination to search results
@@ -259,6 +260,7 @@ export class CategoryController extends BaseController {
       } else {
         // Get all categories with pagination
         const result = await Category.findAndCountAll({
+          where: { userId: request.user!.userId },
           order: [['name', 'ASC']],
           limit,
           offset: (page - 1) * limit,
