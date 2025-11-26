@@ -150,14 +150,8 @@ export class CategoryController extends BaseController {
       }
 
       // Verify ownership (authorization middleware already checked CASL permissions)
-      // This is an additional check to ensure data integrity
-      if (
-        request.user &&
-        category.userId !== request.user.userId &&
-        request.user.role !== 'admin'
-      ) {
-        return this.createErrorResponseI18n('errors:permission_denied', 403);
-      }
+      const ownershipError = this.verifyOwnership(request, category.userId);
+      if (ownershipError) return ownershipError;
 
       // Check if new name already exists (if name is being changed)
       if (categoryData.name && categoryData.name !== category.name) {
@@ -220,14 +214,8 @@ export class CategoryController extends BaseController {
       }
 
       // Verify ownership (authorization middleware already checked CASL permissions)
-      // This is an additional check to ensure data integrity
-      if (
-        request.user &&
-        category.userId !== request.user.userId &&
-        request.user.role !== 'admin'
-      ) {
-        return this.createErrorResponseI18n('errors:permission_denied', 403);
-      }
+      const ownershipError = this.verifyOwnership(request, category.userId);
+      if (ownershipError) return ownershipError;
 
       // Check if category has associated books
       const hasBooks = await Book.count({

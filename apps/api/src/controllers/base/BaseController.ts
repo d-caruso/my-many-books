@@ -5,6 +5,7 @@
 
 import Joi from 'joi';
 import { i18n } from '@my-many-books/shared-i18n';
+import { USER_ROLES } from '@my-many-books/shared-auth';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 
@@ -179,5 +180,50 @@ export abstract class BaseController {
       total,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  /**
+   * Verify resource ownership for non-admin users
+   *
+   * This helper method checks if the authenticated user owns the resource
+   * or if they are an admin (who can access any resource).
+   *
+   * @param request - The universal request containing the authenticated user
+   * @param resourceUserId - The userId of the resource being accessed
+   * @returns ApiResponse with 403 error if permission denied, null if allowed
+   *
+   * @example
+   * ```typescript
+   * const author = await Author.findByPk(id);
+   * const ownershipError = this.verifyOwnership(request, author.userId);
+   * if (ownershipError) return ownershipError;
+   * ```
+   */
+  protected verifyOwnership(
+    request: UniversalRequest,
+    resourceUserId: number | undefined
+  ): ApiResponse | null {
+    // No user in request - should not happen after auth middleware
+    if (!request.user) {
+      return this.createErrorResponseI18n('errors:permission_denied', 403);
+    }
+
+    // No userId on resource - data integrity issue
+    if (resourceUserId === undefined) {
+      return this.createErrorResponseI18n('errors:permission_denied', 403);
+    }
+
+    // Admin can access any resource
+    if (request.user.role === USER_ROLES.ADMIN) {
+      return null;
+    }
+
+    // Check if user owns the resource
+    if (resourceUserId !== request.user.userId) {
+      return this.createErrorResponseI18n('errors:permission_denied', 403);
+    }
+
+    // Ownership verified
+    return null;
   }
 }

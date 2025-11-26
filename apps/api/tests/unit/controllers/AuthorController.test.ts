@@ -11,7 +11,7 @@ interface UniversalRequest {
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
   headers?: { [key: string]: string | undefined };
-  user?: { userId: number };
+  user?: { userId: number; role: 'user' | 'admin' };
 }
 
 // Mock dependencies
@@ -30,6 +30,7 @@ describe('AuthorController', () => {
       pathParameters: {},
       headers: { 'accept-language': 'en' },
       body: undefined,
+      user: { userId: 1, role: 'user' },
     };
   });
 
@@ -218,6 +219,7 @@ describe('AuthorController', () => {
         name: 'John',
         surname: 'Doe',
         nationality: 'American',
+        userId: 1, // Same as mockRequest.user.userId
         update: jest.fn(),
       };
 
@@ -241,6 +243,7 @@ describe('AuthorController', () => {
         name: 'John',
         surname: 'Doe',
         nationality: 'American',
+        userId: 1, // Same as mockRequest.user.userId
         update: jest.fn(),
       };
 
@@ -286,6 +289,7 @@ describe('AuthorController', () => {
     it('should delete an author successfully', async () => {
       const mockAuthor = {
         id: 1,
+        userId: 1, // Same as mockRequest.user.userId
         destroy: jest.fn(),
       };
 
@@ -306,6 +310,7 @@ describe('AuthorController', () => {
     it('should return 409 when author has associated books', async () => {
       const mockAuthor = {
         id: 1,
+        userId: 1, // Same as mockRequest.user.userId
         destroy: jest.fn(),
       };
 

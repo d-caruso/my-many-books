@@ -157,6 +157,10 @@ export class AuthorController extends BaseController {
       return this.createErrorResponseI18n('errors:author_not_found', 404);
     }
 
+    // Verify ownership (authorization middleware already checked CASL permissions)
+    const ownershipError = this.verifyOwnership(request, author.userId);
+    if (ownershipError) return ownershipError;
+
     const authorData = validation.value!;
 
     // Check for name conflicts on update
@@ -213,6 +217,10 @@ export class AuthorController extends BaseController {
     if (!author) {
       return this.createErrorResponseI18n('errors:author_not_found', 404);
     }
+
+    // Verify ownership (authorization middleware already checked CASL permissions)
+    const ownershipError = this.verifyOwnership(request, author.userId);
+    if (ownershipError) return ownershipError;
 
     // Check if author has books before deletion
     const bookCount = await Book.count({
