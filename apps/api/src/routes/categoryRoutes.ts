@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { categoryController } from '../controllers/CategoryController';
-import { AuthenticatedRequest } from '../middleware/auth';
+import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
 import { Response } from 'express';
@@ -14,6 +14,9 @@ import { UniversalRequest } from '../types';
 import { standardLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
+
+// Apply authentication middleware to all category routes
+router.use(authMiddleware);
 
 // Apply rate limiting to category routes
 router.use(standardLimiter);

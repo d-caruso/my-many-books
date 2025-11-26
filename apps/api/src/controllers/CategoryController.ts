@@ -149,6 +149,16 @@ export class CategoryController extends BaseController {
         return this.createErrorResponseI18n('errors:category_not_found', 404);
       }
 
+      // Verify ownership (authorization middleware already checked CASL permissions)
+      // This is an additional check to ensure data integrity
+      if (
+        request.user &&
+        category.userId !== request.user.userId &&
+        request.user.role !== 'admin'
+      ) {
+        return this.createErrorResponseI18n('errors:permission_denied', 403);
+      }
+
       // Check if new name already exists (if name is being changed)
       if (categoryData.name && categoryData.name !== category.name) {
         const existingCategory = await Category.findByName(categoryData.name, request.user!.userId);
@@ -207,6 +217,16 @@ export class CategoryController extends BaseController {
 
       if (!category) {
         return this.createErrorResponseI18n('errors:category_not_found', 404);
+      }
+
+      // Verify ownership (authorization middleware already checked CASL permissions)
+      // This is an additional check to ensure data integrity
+      if (
+        request.user &&
+        category.userId !== request.user.userId &&
+        request.user.role !== 'admin'
+      ) {
+        return this.createErrorResponseI18n('errors:permission_denied', 403);
       }
 
       // Check if category has associated books
