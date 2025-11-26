@@ -4,7 +4,7 @@
 // ================================================================
 
 import { AbilityBuilder, createMongoAbility, MongoAbility } from '@casl/ability';
-import { ACTIONS, RESOURCES, Action, Resource } from './types';
+import { ACTIONS, RESOURCES, Action, Subject } from './types';
 
 /**
  * User interface for authorization
@@ -18,7 +18,7 @@ interface AuthUser {
 /**
  * Type for our application's ability
  */
-export type AppAbility = MongoAbility<[Action, Resource]>;
+export type AppAbility = MongoAbility<[Action, Subject]>;
 
 /**
  * Create ability rules for a user based on their role

@@ -1,7 +1,7 @@
 // ================================================================
 // src/models/Category.ts
 // ================================================================
-import { DataTypes, Sequelize } from 'sequelize';
+import { DataTypes, Sequelize, Op } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
 import { CategoryAttributes, CategoryCreationAttributes } from './interfaces/ModelInterfaces';
 import { TABLE_NAMES } from '@/utils/constants';
@@ -85,8 +85,6 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
   }
 
   static async searchByName(searchTerm: string, userId: number): Promise<Category[]> {
-    const { Op } = require('sequelize') as { Op: { like: symbol } };
-
     return await Category.findAll({
       where: {
         userId,
@@ -126,7 +124,9 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
     }
   }
 
-  static async findOrCreateCategory(categoryData: CategoryCreationAttributes): Promise<[Category, boolean]> {
+  static async findOrCreateCategory(
+    categoryData: CategoryCreationAttributes
+  ): Promise<[Category, boolean]> {
     const normalizedName = categoryData.name.trim();
 
     return await findOrCreateModel(Category, {

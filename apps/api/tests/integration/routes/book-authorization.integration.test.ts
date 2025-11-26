@@ -3,17 +3,47 @@
 // Integration Tests for Book Routes Authorization
 // ================================================================
 
+// Mock dependencies BEFORE imports
+jest.mock('../../../src/models/Book');
+jest.mock('../../../src/models/Author');
+jest.mock('../../../src/models/Category');
+jest.mock('../../../src/middleware/auth', () => ({
+  authMiddleware: (req: any, res: any, next: any) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      return res.status(401).json({ error: 'No authorization header' });
+    }
+
+    // Mock user based on token
+    if (authHeader === 'Bearer valid-token') {
+      req.user = {
+        id: 1,
+        userId: 1,
+        email: 'user@example.com',
+        role: 'user',
+      };
+    } else if (authHeader === 'Bearer admin-token') {
+      req.user = {
+        id: 999,
+        userId: 999,
+        email: 'admin@example.com',
+        role: 'admin',
+      };
+    } else {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    next();
+  },
+}));
+
 import request from 'supertest';
 import express from 'express';
 import bookRoutes from '../../../src/routes/bookRoutes';
 import { Book } from '../../../src/models/Book';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
-
-// Mock the models
-jest.mock('../../../src/models/Book');
-jest.mock('../../../src/models/Author');
-jest.mock('../../../src/models/Category');
 
 describe('Book Routes Authorization Integration', () => {
   let app: express.Application;

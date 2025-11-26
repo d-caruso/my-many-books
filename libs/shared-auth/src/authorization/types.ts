@@ -31,9 +31,32 @@ export const RESOURCES = {
 export type Resource = typeof RESOURCES[keyof typeof RESOURCES];
 
 /**
+ * Subject types with their fields for CASL type inference
+ */
+export interface Book {
+  __typename: 'Book';
+  userId: number;
+}
+
+export interface Author {
+  __typename: 'Author';
+  userId: number;
+}
+
+export interface Category {
+  __typename: 'Category';
+  userId: number;
+}
+
+export interface User {
+  __typename: 'User';
+  id: number;
+}
+
+/**
  * Subject type for CASL - can be a string or an object with resource type
  */
-export type Subject = Resource | { __typename: Resource; [key: string]: any };
+export type Subject = Resource | Book | Author | Category | User;
 
 /**
  * User roles supported by the system
