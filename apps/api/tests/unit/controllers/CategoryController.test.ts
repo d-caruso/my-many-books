@@ -25,6 +25,7 @@ interface UniversalRequest {
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
   headers?: { [key: string]: string | undefined };
+  user?: { userId: number };
 }
 
 describe('CategoryController', () => {
@@ -36,6 +37,7 @@ describe('CategoryController', () => {
     jest.clearAllMocks();
     mockRequest = {
       headers: { 'accept-language': 'en' },
+      user: { userId: 1 },
     };
   });
 
