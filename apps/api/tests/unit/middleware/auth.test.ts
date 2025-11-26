@@ -7,7 +7,6 @@ import { Response, NextFunction } from 'express';
 import {
   authMiddleware,
   optionalAuthMiddleware,
-  requirePermission,
   AuthProviderFactory,
   CognitoAuthProvider,
   Auth0Provider,
@@ -301,34 +300,6 @@ describe('Authentication Middleware', () => {
       expect(req.user).toBeUndefined();
       expect(res.status).toHaveBeenCalledWith(401); // authMiddleware responds
       expect(next).not.toHaveBeenCalled(); // next is not called due to response
-    });
-  });
-
-  describe('requirePermission', () => {
-    it('should require authentication', async () => {
-      const permissionMiddleware = requirePermission('read');
-
-      await permissionMiddleware(req as AuthenticatedRequest, res as Response, next);
-
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should allow authenticated user through', async () => {
-      req.user = {
-        userId: 1,
-        email: 'test@example.com',
-        provider: 'cognito',
-        providerUserId: 'provider123',
-      };
-
-      const permissionMiddleware = requirePermission('read');
-
-      await permissionMiddleware(req as AuthenticatedRequest, res as Response, next);
-
-      expect(next).toHaveBeenCalled();
-      expect(res.status).not.toHaveBeenCalled();
     });
   });
 });

@@ -216,17 +216,3 @@ export const optionalAuthMiddleware = async (
     next();
   }
 };
-
-// Middleware to require specific roles or permissions (extensible)
-export const requirePermission = (_permission: string) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      res.status(401).json({ error: 'Authentication required' });
-      return;
-    }
-
-    // TODO: Implement permission checking logic
-    // For now, all authenticated users have all permissions
-    next();
-  };
-};
