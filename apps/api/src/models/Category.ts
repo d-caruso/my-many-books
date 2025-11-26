@@ -26,7 +26,6 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
         name: {
           type: DataTypes.STRING(255),
           allowNull: false,
-          unique: true,
           validate: {
             notEmpty: true,
             len: [1, 255],

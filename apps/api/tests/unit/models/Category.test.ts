@@ -22,8 +22,10 @@ describe('Category Model', () => {
       },
     });
 
-    // Initialize model
+    // Initialize models
+    User.initialize(sequelize);
     Category.initModel(sequelize);
+    ModelAssociations.registerModel('User', User);
     ModelAssociations.registerModel('Category', Category);
 
     // Sync database
@@ -39,46 +41,49 @@ describe('Category Model', () => {
   beforeEach(async () => {
     // Clean up data before each test
     await Category.destroy({ where: {} });
+    await User.destroy({ where: {} });
 
     // Create test user
     const user = await User.create({
       email: 'test@example.com',
-      // ... other fields
-    });
+      name: 'Test',
+      surname: 'User',
+      cognitoSub: 'test-sub-123',
+      role: 'user',
+      isActive: true,
+    } as any);
     testUserId = user.id;
   });
 
   describe('Model Creation', () => {
     it('should create category with userId', async () => {
-      const category = await Category.create(
-        { name: 'Fiction' },
-        testUserId
-      );
-
-      expect(category.userId).toBe(testUserId);
-    });
-
-    it('should create category with userId', async () => {
-      const category = await Category.create(
-        { name: 'John', surname: 'Doe' },
-        testUserId
-      );
+      const category = await Category.createCategory({
+        name: 'Fiction',
+        userId: testUserId,
+      });
 
       expect(category.userId).toBe(testUserId);
     });
 
     it('should allow different users to have categories with same name', async () => {
-      const user2 = await User.create({ email: 'user2@example.com' });
+      const user2 = await User.create({
+        email: 'user2@example.com',
+        name: 'Test2',
+        surname: 'User2',
+        cognitoSub: 'test-sub-456',
+        role: 'user',
+        isActive: true,
+      } as any);
 
-      const category1 = await Category.create(
-        { name: 'Biography' },
-        testUserId
-      );
+      const category1 = await Category.createCategory({
+        name: 'Fiction',
+        userId: testUserId,
+      });
 
-      const category2 = await Category.create(
-        { name: 'Fiction' },
-        user2.id
-      );
+      const category2 = await Category.createCategory({
+        name: 'Fiction',
+        userId: user2.id,
+      });
 
       expect(category1.id).not.toBe(category2.id);
       expect(category1.userId).toBe(testUserId);
@@ -86,15 +91,15 @@ describe('Category Model', () => {
     });
 
     it('should not allow same user to create duplicate category', async () => {
-      await Category.create(
-        { name: 'Biography' },
-        testUserId
-      );
+      await Category.createCategory({
+        name: 'Fiction',
+        userId: testUserId,
+      });
 
-      await Category.create(
-        { name: 'Fiction' },
-        testUserId
-      );
+      await Category.createCategory({
+        name: 'Fiction',
+        userId: testUserId,
+      });
 
       // Should return existing category, not create new one
       const categories = await Category.findAll({ where: { userId: testUserId } });
@@ -102,56 +107,69 @@ describe('Category Model', () => {
     });
 
     it('should only return categories for specific user', async () => {
-      const user2 = await User.create({ email: 'user2@example.com' });
+      const user2 = await User.create({
+        email: 'user2@example.com',
+        name: 'Test3',
+        surname: 'User3',
+        cognitoSub: 'test-sub-789',
+        role: 'user',
+        isActive: true,
+      } as any);
 
-      await Category.create({ name: 'Biography' }, testUserId);
-      await Category.create({ name: 'Fiction' }, user2.id);
+      await Category.createCategory({ name: 'Fiction', userId: testUserId });
+      await Category.createCategory({ name: 'Non-Fiction', userId: user2.id });
 
       const user1Categories = await Category.findAll({ where: { userId: testUserId } });
       const user2Categories = await Category.findAll({ where: { userId: user2.id } });
 
       expect(user1Categories.length).toBe(1);
       expect(user2Categories.length).toBe(1);
-      expect(user1Categories[0].name).toBe('John');
-      expect(user2Categories[0].name).toBe('Jane');
+      expect(user1Categories[0]?.name).toBe('Fiction');
+      expect(user2Categories[0]?.name).toBe('Non-Fiction');
     });
 
-/////////////////////////
     it('should create a category with valid data', async () => {
-      const categoryData = {
-        name: 'Fiction',
-      };
+      const category = await Category.createCategory({
+        name: 'Science Fiction',
+        userId: testUserId,
+      });
 
-      const category = await Category.create(categoryData as any, testUserId);
-
-      expect(category.name).toBe('Fiction');
+      expect(category.name).toBe('Science Fiction');
       expect(category.id).toBeDefined();
       expect(category.creationDate).toBeDefined();
       expect(category.updateDate).toBeDefined();
     });
 
-    it('should fail to create category without name', async () => {
-      await expect(Category.create({} as any), testUserId).rejects.toThrow();
+    it('should fail to create category without required fields', async () => {
+      const categoryData = {
+        // Missing name
+        userId: testUserId,
+      };
+
+      await expect(Category.createCategory(categoryData as any)).rejects.toThrow();
     });
 
-    it('should fail to create duplicate category names', async () => {
-      await Category.create({ name: 'Fiction' } as any, testUserId);
-      
-      await expect(Category.create({ name: 'Fiction' } as any), testUserId).rejects.toThrow();
+    it('should trim category name', async () => {
+      const category = await Category.createCategory({
+        name: '  Trimmed Category  ',
+        userId: testUserId,
+      });
+
+      expect(category.name).toBe('Trimmed Category');
     });
   });
 
   describe('Instance Methods', () => {
     it('should serialize to JSON correctly', async () => {
-      const category = await Category.create({
-        name: 'Science Fiction',
-      } as any,
-      testUserId);
+      const category = await Category.createCategory({
+        name: 'Biography',
+        userId: testUserId,
+      });
 
       const json = category.toJSON();
 
       expect(json).toHaveProperty('id');
-      expect(json).toHaveProperty('name', 'Science Fiction');
+      expect(json).toHaveProperty('name', 'Biography');
       expect(json).toHaveProperty('userId');
       expect(json).toHaveProperty('creationDate');
       expect(json).toHaveProperty('updateDate');
@@ -161,13 +179,9 @@ describe('Category Model', () => {
   describe('Static Methods', () => {
     beforeEach(async () => {
       // Create test data
-      await Category.bulkCreate([
-        { name: 'Fiction' },
-        { name: 'Non-Fiction' },
-        { name: 'Science Fiction' },
-        { name: 'Biography' },
-      ] as any,
-      testUserId);
+      await Category.createCategory({ name: 'Fiction', userId: testUserId });
+      await Category.createCategory({ name: 'Non-Fiction', userId: testUserId });
+      await Category.createCategory({ name: 'Biography', userId: testUserId });
     });
 
     it('should find category by name', async () => {
@@ -180,43 +194,34 @@ describe('Category Model', () => {
     it('should search categories by name', async () => {
       const results = await Category.searchByName('Fiction', testUserId);
 
-      expect(results).toHaveLength(3); // Fiction, Non-Fiction and Science Fiction
+      expect(results).toHaveLength(2); // Fiction and Non-Fiction
     });
 
-    it('should get all categories sorted by name', async () => {
+    it('should get all categories for user', async () => {
       const categories = await Category.getAllCategories(testUserId);
 
-      expect(categories).toHaveLength(4);
-      expect(categories[0]!.name).toBe('Biography'); // Alphabetical order
-      expect(categories[1]!.name).toBe('Fiction');
+      expect(categories).toHaveLength(3);
+      expect(categories[0]?.name).toBe('Biography'); // Sorted alphabetically
     });
 
     it('should create new category if not exists', async () => {
       const newCategory = await Category.createCategory({
-        name: 'Mystery',
-      },
-      testUserId);
+        name: 'Horror',
+        userId: testUserId,
+      });
 
-      expect(newCategory.name).toBe('Mystery');
+      expect(newCategory.name).toBe('Horror');
     });
 
     it('should return existing category if already exists', async () => {
       const existingCategory = await Category.createCategory({
         name: 'Fiction',
-      },
-      testUserId);
-
-      const categoryCount = await Category.count();
-      expect(categoryCount).toBe(4);
-      expect(existingCategory.name).toBe('Fiction');
-    });
-
-    it('should trim category names', async () => {
-      const category = await Category.createCategory({
-        name: '  Trimmed Category  ',
+        userId: testUserId,
       });
 
-      expect(category.name).toBe('Trimmed Category');
+      const categoryCount = await Category.count({ where: { userId: testUserId } });
+      expect(categoryCount).toBe(3); // Should not create duplicate
+      expect(existingCategory.name).toBe('Fiction');
     });
   });
 });
