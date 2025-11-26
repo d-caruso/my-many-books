@@ -6,6 +6,8 @@
 import { Router } from 'express';
 import { categoryController } from '../controllers/CategoryController';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { requirePermission } from '../middleware/authorization';
+import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
 import { Response } from 'express';
 import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
@@ -65,15 +67,24 @@ router.get('/', expressRouteWrapper(categoryController.listCategories.bind(categ
 // Get category by ID
 router.get('/:id', expressRouteWrapper(categoryController.getCategory.bind(categoryController)));
 
-// Create new category
-router.post('/', expressRouteWrapper(categoryController.createCategory.bind(categoryController)));
+// Create new category - protected
+router.post(
+  '/',
+  requirePermission(ACTIONS.CREATE, RESOURCES.CATEGORY),
+  expressRouteWrapper(categoryController.createCategory.bind(categoryController))
+);
 
-// Update category
-router.put('/:id', expressRouteWrapper(categoryController.updateCategory.bind(categoryController)));
+// Update category - protected
+router.put(
+  '/:id',
+  requirePermission(ACTIONS.UPDATE, RESOURCES.CATEGORY),
+  expressRouteWrapper(categoryController.updateCategory.bind(categoryController))
+);
 
-// Delete category
+// Delete category - protected
 router.delete(
   '/:id',
+  requirePermission(ACTIONS.DELETE, RESOURCES.CATEGORY),
   expressRouteWrapper(categoryController.deleteCategory.bind(categoryController))
 );
 
