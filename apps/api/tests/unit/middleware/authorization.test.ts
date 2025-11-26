@@ -5,7 +5,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { requirePermission } from '../../../src/middleware/authorization';
-import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth/authorization';
+import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
 
 describe('Authorization Middleware', () => {
   let mockRequest: Partial<Request>;

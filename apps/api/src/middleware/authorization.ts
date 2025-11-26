@@ -4,7 +4,7 @@
 // ================================================================
 
 import { Request, Response, NextFunction } from 'express';
-import { createAbilityFor, Action, Resource } from '@my-many-books/shared-auth/authorization';
+import { createAbilityFor, Action, Resource } from '@my-many-books/shared-auth';
 
 /**
  * Middleware to check if user has required permission

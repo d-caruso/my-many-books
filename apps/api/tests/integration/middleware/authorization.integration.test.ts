@@ -6,7 +6,7 @@
 import express, { Express } from 'express';
 import request from 'supertest';
 import { requirePermission } from '../../../src/middleware/authorization';
-import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth/authorization';
+import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
 
 describe('Authorization Middleware Integration', () => {
   let app: Express;
