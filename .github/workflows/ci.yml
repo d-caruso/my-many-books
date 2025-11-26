@@ -52,6 +52,11 @@ jobs:
         run: |
           npm ci
 
+      - name: Build shared-auth library
+        run: |
+          cd libs/shared-auth
+          npm run build
+
       - name: Lint
         run: |
           # Lint each app directly since Nx binary is not available
