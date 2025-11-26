@@ -7,3 +7,4 @@ export * from './cors';
 export * from './requestLogger';
 export * from './auth';
 export * from './adminAuth';
+export * from './authorization';
