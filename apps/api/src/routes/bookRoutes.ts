@@ -71,6 +71,7 @@ router.get(
 router.post(
   '/',
   writeLimiter,
+  requirePermission(ACTIONS.CREATE, RESOURCES.BOOK),
   validateBody(createBookSchema),
   expressRouteWrapper(bookController.createBookForUser.bind(bookController))
 );
