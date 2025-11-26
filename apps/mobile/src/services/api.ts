@@ -28,6 +28,20 @@ class FetchHttpClient implements HttpClient {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        // Handle authorization errors (403 Forbidden)
+        // Error message is already localized by the API based on Accept-Language header
+        if (response.status === 403) {
+          const authError = {
+            status: 403,
+            isAuthorizationError: true,
+            message: errorData.error || 'errors:permission_denied',
+            details: errorData.details,
+          };
+          throw authError;
+        }
+
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
