@@ -210,16 +210,16 @@ export class BookController extends BaseController {
     // Validation is handled by middleware (validateBody in bookRoutes.ts)
     const bookData = body;
 
-    const whereClause: WhereOptions<BookAttributes> = {
-      id: Number(bookId),
-    };
-    if (request.user) {
-      Object.assign(whereClause, { userId: request.user.userId });
-    }
-
-    const book = await Book.findOne({ where: whereClause });
+    // First, find the book to verify ownership
+    const book = await Book.findOne({ where: { id: Number(bookId) } });
     if (!book) {
       return this.createErrorResponseI18n('errors:book_not_found', 404);
+    }
+
+    // Verify ownership (authorization middleware already checked CASL permissions)
+    // This is an additional check to ensure data integrity
+    if (request.user && book.userId !== request.user.userId && request.user.role !== 'admin') {
+      return this.createErrorResponseI18n('errors:permission_denied', 403);
     }
 
     const updateData: Partial<BookAttributes> = {};
