@@ -8,7 +8,7 @@ import { requirePermission } from '../../../src/middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
 
 describe('Authorization Middleware', () => {
-  let mockRequest: Partial<Request>;
+  let mockRequest: any;
   let mockResponse: Partial<Response>;
   let nextFunction: NextFunction;
 
@@ -31,7 +31,7 @@ describe('Authorization Middleware', () => {
         id: 1,
         email: 'user@example.com',
         role: 'user',
-      } as any;
+      };
     });
 
     it('should allow authenticated users to create books', () => {
