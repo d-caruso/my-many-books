@@ -35,11 +35,26 @@ export const requirePermission = (action: Action, resource: Resource) => {
       // Check if user can perform action on resource
       if (!ability.can(action, resource)) {
         // Get i18n translator from request (if available)
-        const t = (req as any).t || ((key: string) => key);
+        // Falls back to English key if translator not available
+        const t = (req as any).t || ((key: string) => {
+          // Fallback to English messages
+          const fallbackMessages: Record<string, string> = {
+            'errors:permission_denied': 'You do not have permission to perform this action',
+            'errors:admin_only': 'This action requires administrator privileges',
+            'errors:internal_server_error': 'Internal server error',
+          };
+          return fallbackMessages[key] || key;
+        });
 
         return res.status(403).json({
           success: false,
           error: t('errors:permission_denied'),
+          details: {
+            action,
+            resource,
+            authenticated: !!user,
+            role: user?.role || 'anonymous',
+          },
         });
       }
 
