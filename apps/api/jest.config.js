@@ -15,6 +15,9 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(@my-many-books)/)',
+  ],
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',
