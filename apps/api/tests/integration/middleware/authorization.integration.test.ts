@@ -20,17 +20,17 @@ describe('Authorization Middleware Integration', () => {
     it('should allow authenticated users to access protected create route', async () => {
       app.post(
         '/books',
-        (req, res, next) => {
+        (_req, _res, next) => {
           // Mock auth middleware setting user
-          req.user = {
+          (_req as any).user = {
             id: 1,
             email: 'user@example.com',
             role: 'user',
-          } as any;
+          };
           next();
         },
         requirePermission(ACTIONS.CREATE, RESOURCES.BOOK),
-        (req, res) => {
+        (_req, res) => {
           res.status(201).json({ success: true, message: 'Book created' });
         }
       );
@@ -44,12 +44,12 @@ describe('Authorization Middleware Integration', () => {
     it('should deny unauthenticated users from creating books', async () => {
       app.post(
         '/books',
-        (req, res, next) => {
+        (_req, _res, next) => {
           // No user set (anonymous)
           next();
         },
         requirePermission(ACTIONS.CREATE, RESOURCES.BOOK),
-        (req, res) => {
+        (_req, res) => {
           res.status(201).json({ success: true });
         }
       );
@@ -65,7 +65,7 @@ describe('Authorization Middleware Integration', () => {
       app.get(
         '/books',
         requirePermission(ACTIONS.READ, RESOURCES.BOOK),
-        (req, res) => {
+        (_req, res) => {
           res.status(200).json({ success: true, books: [] });
         }
       );
@@ -133,7 +133,7 @@ describe('Authorization Middleware Integration', () => {
       app.get(
         '/admin/users',
         requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
-        (req, res) => {
+        (_req, res) => {
           res.status(200).json({ success: true });
         }
       );
