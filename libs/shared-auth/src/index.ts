@@ -24,3 +24,19 @@ export type {
   RegisterResponse,
   AuthState,
 } from './types';
+
+// Authorization (CASL)
+export {
+  createAbilityFor,
+  ACTIONS,
+  RESOURCES,
+  USER_ROLES,
+} from './authorization';
+
+export type {
+  AppAbility,
+  Action,
+  Resource,
+  Subject,
+  UserRole,
+} from './authorization';
