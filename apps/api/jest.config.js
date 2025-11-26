@@ -14,6 +14,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@my-many-books/shared-auth$': '<rootDir>/../../libs/shared-auth/src/index.ts',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(@my-many-books)/)',
