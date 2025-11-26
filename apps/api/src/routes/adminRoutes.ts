@@ -9,7 +9,8 @@ import { statsController } from '../controllers/admin/StatsController';
 import { adminUserController } from '../controllers/admin/AdminUserController';
 import { adminBookController } from '../controllers/admin/AdminBookController';
 import { authMiddleware } from '../middleware/auth';
-import { requireAdmin } from '../middleware/adminAuth';
+import { requirePermission } from '../middleware/authorization';
+import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
 import {
   validateQuery,
   validateBody,
@@ -27,7 +28,7 @@ const router = Router();
 
 // All admin routes require authentication AND admin role
 router.use(authMiddleware);
-router.use(requireAdmin);
+router.use(requirePermission(ACTIONS.MANAGE, RESOURCES.ALL));
 
 // Apply base admin rate limiting to all admin routes
 router.use(adminLimiter);
