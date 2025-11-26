@@ -7,6 +7,8 @@ import { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { BookController } from '../controllers/BookController';
 import { authMiddleware } from '../middleware/auth';
+import { requirePermission } from '../middleware/authorization';
+import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
 import {
   standardLimiter,
   searchLimiter,
