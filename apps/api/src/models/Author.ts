@@ -106,7 +106,11 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
   }
 
   // Static query methods
-  static async findByFullName(name: string, surname: string, userId: number): Promise<Author | null> {
+  static async findByFullName(
+    name: string,
+    surname: string,
+    userId: number
+  ): Promise<Author | null> {
     return await Author.findOne({
       where: { name, surname, userId },
     });
@@ -164,7 +168,9 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
     return await createModel(Author, authorData);
   }
 
-  static async findOrCreateAuthor(authorData: AuthorCreationAttributes): Promise<[Author, boolean]> {
+  static async findOrCreateAuthor(
+    authorData: AuthorCreationAttributes
+  ): Promise<[Author, boolean]> {
     return await findOrCreateModel(Author, {
       where: {
         name: authorData.name,
