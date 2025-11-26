@@ -81,16 +81,16 @@ describe('Authorization Middleware Integration', () => {
     it('should allow admins to access admin-only routes', async () => {
       app.get(
         '/admin/users',
-        (req, res, next) => {
-          req.user = {
+        (_req, _res, next) => {
+          (_req as any).user = {
             id: 2,
             email: 'admin@example.com',
             role: 'admin',
-          } as any;
+          };
           next();
         },
         requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
-        (req, res) => {
+        (_req, res) => {
           res.status(200).json({ success: true, users: [] });
         }
       );
@@ -104,16 +104,16 @@ describe('Authorization Middleware Integration', () => {
     it('should deny regular users from admin routes', async () => {
       app.get(
         '/admin/users',
-        (req, res, next) => {
-          req.user = {
+        (_req, _res, next) => {
+          (_req as any).user = {
             id: 1,
             email: 'user@example.com',
             role: 'user',
-          } as any;
+          };
           next();
         },
         requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
-        (req, res) => {
+        (_req, res) => {
           res.status(200).json({ success: true });
         }
       );
@@ -151,11 +151,11 @@ describe('Authorization Middleware Integration', () => {
         '/books',
         (_req, _res, next) => {
           // Mock authentication
-          _req.user = {
+          (_req as any).user = {
             id: 1,
             email: 'user@example.com',
             role: 'user',
-          } as any;
+          };
           next();
         },
         requirePermission(ACTIONS.CREATE, RESOURCES.BOOK),
