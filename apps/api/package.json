@@ -89,6 +89,7 @@
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.934.0",
+    "@casl/ability": "^6.7.3",
     "@my-many-books/shared-i18n": "file:../../libs/shared-i18n",
     "aws-sdk": "^2.1490.0",
     "axios": "^1.6.2",
