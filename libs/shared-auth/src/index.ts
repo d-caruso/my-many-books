@@ -10,8 +10,9 @@ export { AuthService } from './AuthService';
 export { WebStorageAdapter } from './adapters/WebStorageAdapter';
 export { MobileStorageAdapter } from './adapters/MobileStorageAdapter';
 
-// React components
+// React components and hooks
 export { AuthProvider, useAuth } from './react/AuthProvider';
+export { usePermission, useIsAdmin, useIsOwner } from './react/usePermission';
 
 // Types
 export type {
