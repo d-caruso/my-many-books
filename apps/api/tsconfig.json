@@ -26,6 +26,7 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "types": ["node", "jest"],
+    "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
