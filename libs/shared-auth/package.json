@@ -24,6 +24,9 @@
   ],
   "author": "My Many Books",
   "license": "MIT",
+  "dependencies": {
+    "@casl/ability": "^6.7.3"
+  },
   "peerDependencies": {
     "react": "^18.0.0"
   },
