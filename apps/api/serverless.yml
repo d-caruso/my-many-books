@@ -109,6 +109,9 @@ build:
       - redis
       - sequelize
       - aws-sdk
+      - react-native
+      - react
+      - react-dom
 
 custom:
   # Fetch DB credentials from Secrets Manager
