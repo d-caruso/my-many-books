@@ -1,22 +1,8 @@
 {
   "name": "@my-many-books/shared-i18n",
   "version": "0.1.0",
-  "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
-  },
-  "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
-    "dev": "tsc --watch"
-  },
+  "type": "commonjs",
+  "main": "src/index.ts",
   "dependencies": {
     "i18next": "^23.8.0"
   },
