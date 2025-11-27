@@ -58,15 +58,12 @@ jobs:
         run: npm ci
 
       - name: Build shared-auth library
-        run: |
-          cd libs/shared-auth
-          npm run build
+        working-directory: libs/shared-auth
+        run: npm run build
 
-      - name: Lint
-        run: |
-          # Lint each app directly since Nx binary is not available
-          cd apps/api && npm run lint
-          echo "Web app lint: Using ESLint via React app configuration"
+      - name: Lint API
+        working-directory: apps/api
+        run: npm run lint
 
   test:
     name: Test
@@ -91,20 +88,19 @@ jobs:
         run: npm ci
 
       - name: Build shared-auth library
-        run: |
-          cd libs/shared-auth
-          npm run build
+        working-directory: libs/shared-auth
+        run: npm run build
 
-      - name: Test
-        run: |
-          # Test API using root-level node_modules (monorepo pattern)
-          # Rebuild SQLite3 native bindings for test environment
-          npm rebuild sqlite3 --silent
-          cd apps/api
-          npm run test
-          cd ../web-app
-          # Test web-app using root-level node_modules (monorepo pattern)
-          npm run test
+      - name: Rebuild SQLite3
+        run: npm rebuild sqlite3 --silent
+
+      - name: Test API
+        working-directory: apps/api
+        run: npm run test
+
+      - name: Test Web App
+        working-directory: apps/web-app
+        run: npm run test
 
   build:
     name: Build
@@ -129,14 +125,13 @@ jobs:
         run: npm ci
 
       - name: Build shared-auth library
-        run: |
-          cd libs/shared-auth
-          npm run build
+        working-directory: libs/shared-auth
+        run: npm run build
 
-      - name: Build
-        run: |
-          # Build each app using root-level node_modules (monorepo pattern)
-          cd apps/api
-          npm run build
-          cd ../web-app
-          npm run build
+      - name: Build API
+        working-directory: apps/api
+        run: npm run build
+
+      - name: Build Web App
+        working-directory: apps/web-app
+        run: npm run build
