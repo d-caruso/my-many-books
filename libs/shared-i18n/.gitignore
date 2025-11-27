@@ -1,4 +1,5 @@
-# Build artifacts (should not exist in src-only package)
+# Build artifacts
+dist/
 src/**/*.js
 src/**/*.d.ts
 src/**/*.map

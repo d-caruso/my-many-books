@@ -2,7 +2,13 @@
   "name": "@my-many-books/shared-i18n",
   "version": "0.1.0",
   "type": "commonjs",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "dev": "tsc --watch"
+  },
   "dependencies": {
     "i18next": "^23.8.0"
   },
