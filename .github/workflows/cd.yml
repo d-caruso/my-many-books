@@ -160,6 +160,12 @@ jobs:
                 cd ../..
               elif [ "$project" == "web-app" ]; then
                 echo "Building project: $project"
+
+                # Build shared libraries first (required by web-app)
+                echo "=== Building shared libraries for web-app ==="
+                cd ../../libs/shared-auth && npm run build && cd ../../
+                cd libs/shared-i18n && npm run build && cd ../..
+
                 cd apps/web-app
                 echo "=== Starting web-app dependency installation for build ==="
                 if ! timeout 300 npm ci --ignore-scripts 2>/dev/null; then
