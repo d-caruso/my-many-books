@@ -36,8 +36,10 @@
       "@/services/*": ["src/services/*"],
       "@/controllers/*": ["src/controllers/*"],
       "@/handlers/*": ["src/handlers/*"],
-      "@my-many-books/shared-auth": ["../../node_modules/@my-many-books/shared-auth"],
-      "@my-many-books/shared-i18n": ["../../node_modules/@my-many-books/shared-i18n"]
+      "@my-many-books/shared-auth": ["../../libs/shared-auth/dist"],
+      "@my-many-books/shared-auth/*": ["../../libs/shared-auth/dist/*"],
+      "@my-many-books/shared-i18n": ["../../libs/shared-i18n/dist"],
+      "@my-many-books/shared-i18n/*": ["../../libs/shared-i18n/dist/*"]
     }
   },
   "include": [

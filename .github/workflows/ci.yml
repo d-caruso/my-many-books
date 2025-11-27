@@ -61,6 +61,10 @@ jobs:
         working-directory: libs/shared-auth
         run: npm run build
 
+      - name: Build shared-i18n library
+        working-directory: libs/shared-i18n
+        run: npm run build
+
       - name: Lint API
         working-directory: apps/api
         run: npm run lint
@@ -91,6 +95,13 @@ jobs:
         working-directory: libs/shared-auth
         run: npm run build
 
+<<<<<<< HEAD
+=======
+      - name: Build shared-i18n library
+        working-directory: libs/shared-i18n
+        run: npm run build
+
+>>>>>>> fix/build-monorepo
       - name: Rebuild SQLite3
         run: npm rebuild sqlite3 --silent
 
@@ -128,6 +139,13 @@ jobs:
         working-directory: libs/shared-auth
         run: npm run build
 
+<<<<<<< HEAD
+=======
+      - name: Build shared-i18n library
+        working-directory: libs/shared-i18n
+        run: npm run build
+
+>>>>>>> fix/build-monorepo
       - name: Build API
         working-directory: apps/api
         run: npm run build
