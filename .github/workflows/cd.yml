@@ -138,6 +138,13 @@ jobs:
         run: |
           BUILD_PROJECTS="${{ needs.setup.outputs.affected-projects }}"
           if [ -n "$BUILD_PROJECTS" ]; then
+            # Build shared libraries first (required by API)
+            echo "=== Building shared libraries ==="
+            echo "Building shared-auth..."
+            cd libs/shared-auth && npm run build && cd ../..
+            echo "Building shared-i18n..."
+            cd libs/shared-i18n && npm run build && cd ../..
+
             IFS=',' read -ra ADDR <<< "$BUILD_PROJECTS"
             for project in "${ADDR[@]}"; do
               if [ "$project" == "api" ]; then
@@ -545,6 +552,13 @@ jobs:
             rm -f package-lock.json
             npm install --legacy-peer-deps --ignore-scripts
           fi
+
+      - name: Build shared libraries
+        run: |
+          echo "Building shared-auth..."
+          cd libs/shared-auth && npm run build && cd ../..
+          echo "Building shared-i18n..."
+          cd libs/shared-i18n && npm run build && cd ../..
 
       - name: Build API
         # The working-directory is already set, so a simple npm run build will work.
