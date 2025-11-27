@@ -15,6 +15,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@my-many-books/shared-auth$': '<rootDir>/../../libs/shared-auth/src/authorization/index.ts',
+    '^@my-many-books/shared-i18n$': '<rootDir>/../../libs/shared-i18n/src/index.ts',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(@my-many-books)/)',
