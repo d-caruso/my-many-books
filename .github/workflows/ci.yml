@@ -48,14 +48,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Restore dependencies
+      - name: Restore dependencies cache
         uses: actions/cache@v3
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Install if cache miss
-        run: npm ci || npm install
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build shared-auth library
         run: |
@@ -81,14 +81,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Restore dependencies
+      - name: Restore dependencies cache
         uses: actions/cache@v3
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Install if cache miss
-        run: npm ci || npm install
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build shared-auth library
         run: |
@@ -119,14 +119,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Restore dependencies
+      - name: Restore dependencies cache
         uses: actions/cache@v3
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Install if cache miss
-        run: npm ci || npm install
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build shared-auth library
         run: |
