@@ -48,18 +48,17 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Restore dependencies cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
-
       - name: Install dependencies
         run: npm ci
 
       - name: Build shared-auth library
         working-directory: libs/shared-auth
         run: npm run build
+
+      - name: Debug - Verify shared-auth dist
+        run: |
+          echo "=== Checking shared-auth dist folder ==="
+          ls -la libs/shared-auth/dist/ || echo "dist folder does not exist"
 
       - name: Build shared-i18n library
         working-directory: libs/shared-i18n
@@ -82,18 +81,17 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Restore dependencies cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
-
       - name: Install dependencies
         run: npm ci
 
       - name: Build shared-auth library
         working-directory: libs/shared-auth
         run: npm run build
+
+      - name: Debug - Verify shared-auth dist
+        run: |
+          echo "=== Checking shared-auth dist folder ==="
+          ls -la libs/shared-auth/dist/ || echo "dist folder does not exist"
 
       - name: Build shared-i18n library
         working-directory: libs/shared-i18n
@@ -123,12 +121,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Restore dependencies cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
-
       - name: Install dependencies
         run: npm ci
 
@@ -136,9 +128,21 @@ jobs:
         working-directory: libs/shared-auth
         run: npm run build
 
+      - name: Debug - Verify shared-auth dist
+        run: |
+          echo "=== Checking shared-auth dist folder ==="
+          ls -la libs/shared-auth/dist/ || echo "dist folder does not exist"
+          echo "=== Checking for index.d.ts ==="
+          ls -la libs/shared-auth/dist/index.d.ts || echo "index.d.ts not found"
+
       - name: Build shared-i18n library
         working-directory: libs/shared-i18n
         run: npm run build
+
+      - name: Debug - Verify shared-i18n dist
+        run: |
+          echo "=== Checking shared-i18n dist folder ==="
+          ls -la libs/shared-i18n/dist/ || echo "dist folder does not exist"
 
       - name: Build API
         working-directory: apps/api
