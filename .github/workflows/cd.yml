@@ -174,7 +174,7 @@ jobs:
             # --- END OF INSERTION ---
 
             IFS=',' read -ra ADDR <<< "$BUILD_PROJECTS"
-            for project in "${{ ADDR[@] }}"; do
+            for project in "${ADDR[@]}"; do
               if [ "$project" == "api" ]; then
                 echo "Building project: $project"
                 cd apps/api
