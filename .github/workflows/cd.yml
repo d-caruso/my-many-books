@@ -264,17 +264,17 @@ jobs:
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.small"
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=50"
               PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=true"
-              ;;;;
+              ;;
             "staging")
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.micro"
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=20"
               PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=false"
-              ;;;;
+              ;;
             "dev")
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.micro"
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=20"
               PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=false"
-              ;;;;
+              ;;
           esac
           
           # Check if stack exists and get its status
@@ -784,13 +784,13 @@ jobs:
               case "${{ needs.setup.outputs.environment }}" in
                 "dev")
                   echo "API_BASE_URL=https://api.my-many-books.com/dev" >> $GITHUB_ENV
-                  ;;;;
+                  ;;
                 "staging")
                   echo "API_BASE_URL=https://api.my-many-books.com/staging" >> $GITHUB_ENV
-                  ;;;;
+                  ;;
                 "prod")
                   echo "API_BASE_URL=https://api.my-many-books.com/prod" >> $GITHUB_ENV
-                  ;;;;
+                  ;;
               esac
             else
               echo "API deployment skipped, no API URL available for testing"
