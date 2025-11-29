@@ -4,7 +4,7 @@
   "description": "Serverless API for My Many Books - Personal library management system",
   "main": "dist/handlers/index.js",
   "scripts": {
-    "build": "npx nx run shared-i18n:build && npx nx run @my-many-books/shared-auth:build && tsc --project tsconfig.build.json",
+    "build": "../../node_modules/.bin/nx run shared-i18n:build && ../../node_modules/.bin/nx run @my-many-books/shared-auth:build && tsc --project tsconfig.build.json",
     "build:watch": "tsc --project tsconfig.build.json --watch",
     "build:check": "tsc --noEmit",
     "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/app.ts",
