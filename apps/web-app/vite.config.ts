@@ -18,6 +18,7 @@ export default defineConfig({
       '@my-many-books/shared-design': path.resolve(__dirname, '../../libs/shared-design/src'),
       '@my-many-books/shared-navigation': path.resolve(__dirname, '../../libs/shared-navigation/src'),
       '@my-many-books/shared-forms': path.resolve(__dirname, '../../libs/shared-forms/src'),
+      '@my-many-books/shared-i18n': path.resolve(__dirname, '../../libs/shared-i18n/src'),
       '@': path.resolve(__dirname, './src'),
       buffer: 'buffer',
       process: 'process/browser',
