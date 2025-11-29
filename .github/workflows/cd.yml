@@ -142,8 +142,6 @@ jobs:
             echo "=== Building shared libraries ==="
             echo "Building shared-auth..."
             cd libs/shared-auth && npm run build && cd ../..
-            echo "Building shared-i18n..."
-            cd libs/shared-i18n && npm run build && cd ../..
 
             IFS=',' read -ra ADDR <<< "$BUILD_PROJECTS"
             for project in "${ADDR[@]}"; do
@@ -164,7 +162,6 @@ jobs:
                 # Build shared libraries first (required by web-app)
                 echo "=== Building shared libraries for web-app ==="
                 cd ../../libs/shared-auth && npm run build && cd ../../
-                cd libs/shared-i18n && npm run build && cd ../..
 
                 cd apps/web-app
                 echo "=== Starting web-app dependency installation for build ==="
@@ -563,8 +560,6 @@ jobs:
         run: |
           echo "Building shared-auth..."
           cd libs/shared-auth && npm run build && cd ../..
-          echo "Building shared-i18n..."
-          cd libs/shared-i18n && npm run build && cd ../..
 
       - name: Build API
         # The working-directory is already set, so a simple npm run build will work.
