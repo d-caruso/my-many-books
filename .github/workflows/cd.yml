@@ -145,23 +145,23 @@ jobs:
             echo "Building shared-i18n..."
             cd libs/shared-i18n && npm run build && cd ../..
 
-            # --- START DEBUG OUTPUT ---
+            # --- INSERT THE FOLLOWING LINES HERE ---
             echo "--- START DEBUG OUTPUT ---"
             echo "Current working directory before API build check: $(pwd)"
-            echo "Contents of libs/shared-i18n/dist/:
+            echo "Contents of libs/shared-i18n/dist/:"
             ls -la libs/shared-i18n/dist/
-            echo "Contents of libs/shared-i18n/dist/index.d.ts:
+            echo "Contents of libs/shared-i18n/dist/index.d.ts:"
             cat libs/shared-i18n/dist/index.d.ts
-            echo "Contents of node_modules/@my-many-books/shared-i18n/ (symlink check from root):
+            echo "Contents of node_modules/@my-many-books/shared-i18n/ (symlink check from root):"
             ls -la node_modules/@my-many-books/shared-i18n || echo "node_modules/@my-many-books/shared-i18n not found or not a symlink"
-            echo "Contents of apps/api/node_modules/@my-many-books/shared-i18n/ (symlink check from apps/api perspective):
+            echo "Contents of apps/api/node_modules/@my-many-books/shared-i18n/ (symlink check from apps/api perspective):"
             ls -la apps/api/node_modules/@my-many-books/shared-i18n || echo "apps/api/node_modules/@my-many-books/shared-i18n not found or not a symlink (expected to be symlinked to root node_modules)"
             echo "---"
 
             echo "=== Debugging shared-auth ==="
-            echo "Contents of libs/shared-auth/dist/:
+            echo "Contents of libs/shared-auth/dist/:"
             ls -la libs/shared-auth/dist/
-            echo "Contents of libs/shared-auth/dist/index.d.ts:
+            echo "Contents of libs/shared-auth/dist/index.d.ts:"
             cat libs/shared-auth/dist/index.d.ts
             echo "---"
 
@@ -172,6 +172,7 @@ jobs:
             cd ../.. # Go back to root
             echo "--- END DEBUG OUTPUT ---"
             # --- END OF INSERTION ---
+
             IFS=',' read -ra ADDR <<< "$BUILD_PROJECTS"
             for project in "${{ ADDR[@] }}"; do
               if [ "$project" == "api" ]; then
