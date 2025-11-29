@@ -142,9 +142,38 @@ jobs:
             echo "=== Building shared libraries ==="
             echo "Building shared-auth..."
             cd libs/shared-auth && npm run build && cd ../..
+            echo "Building shared-i18n..."
+            cd libs/shared-i18n && npm run build && cd ../..
 
+            # --- START DEBUG OUTPUT ---
+            echo "--- START DEBUG OUTPUT ---"
+            echo "Current working directory before API build check: $(pwd)"
+            echo "Contents of libs/shared-i18n/dist/:
+            ls -la libs/shared-i18n/dist/
+            echo "Contents of libs/shared-i18n/dist/index.d.ts:
+            cat libs/shared-i18n/dist/index.d.ts
+            echo "Contents of node_modules/@my-many-books/shared-i18n/ (symlink check from root):
+            ls -la node_modules/@my-many-books/shared-i18n || echo "node_modules/@my-many-books/shared-i18n not found or not a symlink"
+            echo "Contents of apps/api/node_modules/@my-many-books/shared-i18n/ (symlink check from apps/api perspective):
+            ls -la apps/api/node_modules/@my-many-books/shared-i18n || echo "apps/api/node_modules/@my-many-books/shared-i18n not found or not a symlink (expected to be symlinked to root node_modules)"
+            echo "---"
+
+            echo "=== Debugging shared-auth ==="
+            echo "Contents of libs/shared-auth/dist/:
+            ls -la libs/shared-auth/dist/
+            echo "Contents of libs/shared-auth/dist/index.d.ts:
+            cat libs/shared-auth/dist/index.d.ts
+            echo "---"
+
+            echo "=== Running tsc --traceResolution from apps/api ==="
+            cd apps/api
+            tsc --project tsconfig.build.json --traceResolution > ../../tsc_trace_resolution_api.log 2>&1
+            cat ../../tsc_trace_resolution_api.log
+            cd ../.. # Go back to root
+            echo "--- END DEBUG OUTPUT ---"
+            # --- END OF INSERTION ---
             IFS=',' read -ra ADDR <<< "$BUILD_PROJECTS"
-            for project in "${ADDR[@]}"; do
+            for project in "${{ ADDR[@] }}"; do
               if [ "$project" == "api" ]; then
                 echo "Building project: $project"
                 cd apps/api
@@ -161,7 +190,7 @@ jobs:
 
                 # Build shared libraries first (required by web-app)
                 echo "=== Building shared libraries for web-app ==="
-                cd ../../libs/shared-auth && npm run build && cd ../../
+                cd ../../libs/shared-auth && npm run build && cd ../..
 
                 cd apps/web-app
                 echo "=== Starting web-app dependency installation for build ==="
@@ -176,7 +205,7 @@ jobs:
                 fi
                 echo "=== Rebuilding native dependencies for build ==="
                 timeout 300 npm rebuild || {
-                  echo "WARNING: npm rebuild timed out after 5 minutes, continuing..."
+                  echo "WARNING: npm rebuild timed out, continuing..."
                 }
                 echo "=== Installing Rollup native binary specifically for build ==="
                 timeout 180 npm install @rollup/rollup-linux-x64-gnu --no-save || {
@@ -209,7 +238,7 @@ jobs:
     needs: [setup, pre-deployment-checks]
     environment: ${{ needs.setup.outputs.environment }}
     if: needs.setup.outputs.should-deploy == 'true' && needs.setup.outputs.deploy-api == 'true'
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -234,17 +263,17 @@ jobs:
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.small"
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=50"
               PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=true"
-              ;;
+              ;;;;
             "staging")
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.micro"
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=20"
               PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=false"
-              ;;
+              ;;;;
             "dev")
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.micro"
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=20"
               PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=false"
-              ;;
+              ;;;;
           esac
           
           # Check if stack exists and get its status
@@ -357,17 +386,11 @@ jobs:
               --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 
             echo "Waiting for stack creation to complete..."
-            # Wait with error handling to display stack events on failure
             if ! aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME" 2>&1; then
               echo "Stack creation failed. Retrieving stack events..."
               aws cloudformation describe-stack-events \
                 --stack-name "$STACK_NAME" \
-                --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`ROLLBACK_IN_PROGRESS` || ResourceStatus==`ROLLBACK_COMPLETE`].[LogicalResourceId,ResourceStatus,ResourceStatusReason]' \
-                --output table
-              echo "Full stack status:"
-              aws cloudformation describe-stacks \
-                --stack-name "$STACK_NAME" \
-                --query 'Stacks[0].[StackStatus,StackStatusReason]' \
+                --query 'StackEvents[?ResourceStatus==`CREATE_FAILED`].[LogicalResourceId,ResourceStatus,ResourceStatusReason]' \
                 --output table
               exit 1
             fi
@@ -468,7 +491,7 @@ jobs:
 
       - name: Run Database Migrations
         run: |
-          # Install all workspace dependencies from root (includes all workspace packages)
+          # Install all workspace dependencies from root (includes all workspace packages) 
           echo "Installing workspace dependencies..."
           npm ci
 
@@ -530,7 +553,7 @@ jobs:
     needs: [setup, pre-deployment-checks, deploy-infrastructure]
     environment: ${{ needs.setup.outputs.environment }}
     if: needs.setup.outputs.should-deploy == 'true' && needs.setup.outputs.deploy-api == 'true'
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -560,6 +583,8 @@ jobs:
         run: |
           echo "Building shared-auth..."
           cd libs/shared-auth && npm run build && cd ../..
+          echo "Building shared-i18n..."
+          cd libs/shared-i18n && npm run build && cd ../..
 
       - name: Build API
         # The working-directory is already set, so a simple npm run build will work.
@@ -604,7 +629,7 @@ jobs:
     needs: [setup, pre-deployment-checks, deploy-api]
     environment: ${{ needs.setup.outputs.environment }}
     if: needs.setup.outputs.should-deploy == 'true' && needs.setup.outputs.deploy-web-app == 'true' && always() && (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped' || needs.deploy-api.result == 'failure')
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -664,7 +689,7 @@ jobs:
           timeout 300 npm rebuild || {
             echo "WARNING: npm rebuild timed out, continuing..."
           }
-          echo "=== Installing Rollup native binary ==="
+          echo "=== Installing Rollup native binary specifically for build ==="
           timeout 180 npm install @rollup/rollup-linux-x64-gnu --no-save || {
             echo "WARNING: Could not install Rollup native binary, continuing..."
           }
@@ -688,21 +713,21 @@ jobs:
           if ! aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
             echo "Creating S3 bucket: $BUCKET_NAME"
             aws s3 mb s3://$BUCKET_NAME
-            
+          
             # Disable public access block to allow public website
             echo "Disabling public access block..."
             aws s3api put-public-access-block \
               --bucket "$BUCKET_NAME" \
               --public-access-block-configuration \
               "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
-            
+          
             # Wait for public access block to be applied
             sleep 5
-            
+          
             # Enable static website hosting
             echo "Enabling static website hosting..."
             aws s3 website s3://$BUCKET_NAME --index-document index.html --error-document index.html
-            
+          
             # Set public read policy
             echo "Setting bucket policy..."
             aws s3api put-bucket-policy --bucket "$BUCKET_NAME" --policy "{
@@ -738,7 +763,7 @@ jobs:
     needs: [setup, deploy-api, deploy-web-app]
     environment: ${{ needs.setup.outputs.environment }}
     if: always() && needs.setup.outputs.should-deploy == 'true' && (needs.deploy-api.result == 'success' || needs.setup.outputs.deploy-api == 'false')
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -753,22 +778,23 @@ jobs:
 
       - name: Configure Test Environment
         run: |
-          # Get the API Gateway URL from Serverless deployment
-          if [ "${{ needs.deploy-api.result }}" == "success" ]; then
-            case "${{ needs.setup.outputs.environment }}" in
-              "dev")
-                echo "API_BASE_URL=https://api.my-many-books.com/dev" >> $GITHUB_ENV
-                ;;
-              "staging")
-                echo "API_BASE_URL=https://api.my-many-books.com/staging" >> $GITHUB_ENV
-                ;;
-              "prod")
-                echo "API_BASE_URL=https://api.my-many-books.com/prod" >> $GITHUB_ENV
-                ;;
-            esac
-          else
-            echo "API deployment skipped, no API URL available for testing"
-            echo "API_BASE_URL=" >> $GITHUB_ENV
+          if [ -z "${{ env.API_BASE_URL }}" ]; then
+            if [ "${{ needs.deploy-api.result }}" == "success" ]; then
+              case "${{ needs.setup.outputs.environment }}" in
+                "dev")
+                  echo "API_BASE_URL=https://api.my-many-books.com/dev" >> $GITHUB_ENV
+                  ;;;;
+                "staging")
+                  echo "API_BASE_URL=https://api.my-many-books.com/staging" >> $GITHUB_ENV
+                  ;;;;
+                "prod")
+                  echo "API_BASE_URL=https://api.my-many-books.com/prod" >> $GITHUB_ENV
+                  ;;;;
+              esac
+            else
+              echo "API deployment skipped, no API URL available for testing"
+              echo "API_BASE_URL=" >> $GITHUB_ENV
+            fi
           fi
 
       - name: Run Health Checks
@@ -814,10 +840,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup, deploy-api, deploy-web-app, post-deployment-tests]
     if: always() && needs.setup.outputs.should-deploy == 'true'
-    
+
     steps:
       - name: Notify Success
-        if: (needs.deploy-api.result == 'success' || needs.setup.outputs.deploy-api == 'false') && (needs.deploy-web-app.result == 'success' || needs.setup.outputs.deploy-web-app == 'false')
+        if: (needs.deploy-api.result == 'success' || needs.setup.outputs.deploy-api == 'false') && (needs.deploy-web-app.result == 'success' || needs.setup.outputs.deploy-app == 'false')
         run: |
           echo "✅ Monorepo deployment completed successfully"
           echo "Environment: ${{ needs.setup.outputs.environment }}"
