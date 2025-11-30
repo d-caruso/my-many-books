@@ -201,14 +201,19 @@ export class SequelizeCategoryRepository implements ICategoryRepository {
     return { rows: entities, total, limit, offset };
   }
 
-  private toDomain(category: Category | null): CategoryEntity | null {
+  private toDomain(category: Category | CategoryEntity | null): CategoryEntity | null {
     if (!category) {
       return null;
     }
 
-    const base = category.get({ plain: true }) as CategoryEntity & {
-      books?: Array<{ id: number; title: string }>;
-    };
+    const base =
+      typeof (category as Category).get === 'function'
+        ? ((category as Category).get({ plain: true }) as CategoryEntity & {
+            books?: Array<{ id: number; title: string }>;
+          })
+        : (category as CategoryEntity & {
+            books?: Array<{ id: number; title: string }>;
+          });
 
     const { books, ...rest } = base;
     const mappedBooks = this.mapBooks(books);
