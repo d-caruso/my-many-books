@@ -14,6 +14,7 @@ import {
 } from '../../repositories/user/UserRepository.types';
 import { UserCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import { USER_ROLES } from '@my-many-books/shared-auth';
+import { ApplicationError } from '../../errors/ApplicationError';
 
 export type UserServiceErrorCode =
   | 'USER_NOT_FOUND'
@@ -22,13 +23,21 @@ export type UserServiceErrorCode =
   | 'INVALID_ROLE'
   | 'LAST_ADMIN';
 
-export class AdminUserServiceError extends Error {
+const statusMap: Record<UserServiceErrorCode, number> = {
+  USER_NOT_FOUND: 404,
+  EMAIL_EXISTS: 409,
+  FORBIDDEN: 403,
+  INVALID_ROLE: 400,
+  LAST_ADMIN: 400,
+};
+
+export class AdminUserServiceError extends ApplicationError {
   constructor(
-    public readonly code: UserServiceErrorCode,
+    override readonly code: UserServiceErrorCode,
     message?: string,
-    public readonly details?: Record<string, unknown>
+    override readonly details?: Record<string, unknown>
   ) {
-    super(message ?? code);
+    super(message ?? code, statusMap[code] ?? 400, code, details);
   }
 }
 

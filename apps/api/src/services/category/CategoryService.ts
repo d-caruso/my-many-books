@@ -13,6 +13,7 @@ import {
   PaginatedResult,
 } from '../../repositories/category/CategoryRepository.types';
 import { CategoryCreationAttributes } from '@/models/interfaces/ModelInterfaces';
+import { ApplicationError } from '../../errors/ApplicationError';
 
 export type CategoryServiceErrorCode =
   | 'CATEGORY_NOT_FOUND'
@@ -20,13 +21,20 @@ export type CategoryServiceErrorCode =
   | 'FORBIDDEN'
   | 'CATEGORY_HAS_BOOKS';
 
-export class CategoryServiceError extends Error {
+const categoryErrorStatus: Record<CategoryServiceErrorCode, number> = {
+  CATEGORY_NOT_FOUND: 404,
+  DUPLICATE_CATEGORY: 409,
+  FORBIDDEN: 403,
+  CATEGORY_HAS_BOOKS: 400,
+};
+
+export class CategoryServiceError extends ApplicationError {
   constructor(
-    public readonly code: CategoryServiceErrorCode,
+    override readonly code: CategoryServiceErrorCode,
     message?: string,
-    public readonly details?: Record<string, unknown>
+    override readonly details?: Record<string, unknown>
   ) {
-    super(message ?? code);
+    super(message ?? code, categoryErrorStatus[code] ?? 400, code, details);
   }
 }
 

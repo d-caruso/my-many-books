@@ -9,6 +9,7 @@ import { TYPES } from '../../container/types';
 import { IAuthorRepository } from '../../repositories/author/IAuthorRepository';
 import { AuthorEntity } from '../../repositories/author/AuthorRepository.types';
 import { AuthorCreationAttributes } from '@/models/interfaces/ModelInterfaces';
+import { ApplicationError } from '../../errors/ApplicationError';
 
 export type AuthorServiceErrorCode =
   | 'AUTHOR_NOT_FOUND'
@@ -16,13 +17,20 @@ export type AuthorServiceErrorCode =
   | 'FORBIDDEN'
   | 'AUTHOR_HAS_BOOKS';
 
-export class AuthorServiceError extends Error {
+const authorErrorStatus: Record<AuthorServiceErrorCode, number> = {
+  AUTHOR_NOT_FOUND: 404,
+  DUPLICATE_AUTHOR: 409,
+  FORBIDDEN: 403,
+  AUTHOR_HAS_BOOKS: 409,
+};
+
+export class AuthorServiceError extends ApplicationError {
   constructor(
-    public readonly code: AuthorServiceErrorCode,
+    override readonly code: AuthorServiceErrorCode,
     message?: string,
-    public readonly details?: Record<string, unknown>
+    override readonly details?: Record<string, unknown>
   ) {
-    super(message ?? code);
+    super(message ?? code, authorErrorStatus[code] ?? 400, code, details);
   }
 }
 
