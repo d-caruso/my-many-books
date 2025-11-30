@@ -20,19 +20,10 @@ import { UniversalRequest } from '../types';
 import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
 import { BOOK_STATUS } from '../utils/constants';
 import { BookService, BookServiceError, BookUserContext } from '../services/book/BookService';
+import { CreateBookDTO } from '../dtos/book/CreateBookDTO';
+import { UpdateBookDTO } from '../dtos/book/UpdateBookDTO';
+import { toBookResponseDTO } from '../dtos/book/BookResponseDTO';
 import { TYPES } from '../container/types';
-
-interface CreateBookRequest {
-  title: string;
-  isbnCode: string;
-  editionNumber?: number;
-  editionDate?: string;
-  status?: BookStatus;
-  notes?: string;
-  authorIds?: number[];
-  categoryIds?: number[];
-  userId?: number; // Stripped by validation, never used
-}
 
 interface BookSearchFilters {
   title?: string;
@@ -93,14 +84,24 @@ export class BookController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<CreateBookRequest>(request);
-    if (!body) {
-      return this.createErrorResponseI18n('errors:request_body_required', 400);
+    const body = this.parseBody(request);
+    const dto = CreateBookDTO.from(body);
+    const errors = CreateBookDTO.validate(dto);
+    if (errors.length > 0) {
+      return this.createValidationErrorResponse(errors);
     }
 
     try {
-      const createdBook = await this.bookService.createBook(body, this.getUserContext(request));
-      return this.createSuccessResponse(createdBook, 'Book created successfully', undefined, 201);
+      const createdBook = await this.bookService.createBook(
+        dto.toServiceInput(),
+        this.getUserContext(request)
+      );
+      return this.createSuccessResponse(
+        toBookResponseDTO(createdBook),
+        'Book created successfully',
+        undefined,
+        201
+      );
     } catch (error) {
       return this.handleBookServiceError(error);
     }
@@ -156,18 +157,20 @@ export class BookController extends BaseController {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'book' });
     }
 
-    const body = this.parseBody<Partial<CreateBookRequest>>(request);
-    if (!body) {
-      return this.createErrorResponseI18n('errors:request_body_required', 400);
+    const body = this.parseBody(request);
+    const dto = UpdateBookDTO.from(body);
+    const errors = UpdateBookDTO.validate(dto);
+    if (errors.length > 0) {
+      return this.createValidationErrorResponse(errors);
     }
 
     try {
       const updated = await this.bookService.updateBook(
         Number(bookId),
-        body,
+        dto.toServiceInput(),
         this.getUserContext(request)!
       );
-      return this.createSuccessResponse(updated, 'Book updated successfully');
+      return this.createSuccessResponse(toBookResponseDTO(updated), 'Book updated successfully');
     } catch (error) {
       return this.handleBookServiceError(error);
     }
@@ -188,18 +191,20 @@ export class BookController extends BaseController {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'book' });
     }
 
-    const body = this.parseBody<Partial<CreateBookRequest>>(request);
-    if (!body) {
-      return this.createErrorResponseI18n('errors:request_body_required', 400);
+    const body = this.parseBody(request);
+    const dto = UpdateBookDTO.from(body);
+    const errors = UpdateBookDTO.validate(dto);
+    if (errors.length > 0) {
+      return this.createValidationErrorResponse(errors);
     }
 
     try {
       const updated = await this.bookService.updateBook(
         Number(bookId),
-        body,
+        dto.toServiceInput(),
         this.getUserContext(request)!
       );
-      return this.createSuccessResponse(updated, 'Book updated successfully');
+      return this.createSuccessResponse(toBookResponseDTO(updated), 'Book updated successfully');
     } catch (error) {
       return this.handleBookServiceError(error);
     }
@@ -742,5 +747,11 @@ export class BookController extends BaseController {
       default:
         return this.createErrorResponseI18n('errors:permission_denied', 403);
     }
+  }
+
+  private createValidationErrorResponse(errors: string[]): ApiResponse {
+    return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
+      errors,
+    });
   }
 }
