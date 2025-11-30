@@ -271,14 +271,15 @@ export class SequelizeBookRepository implements IBookRepository {
       categories?: Array<{ id: number; name: string }>;
     };
 
-    const domain: BookEntity = {
-      ...plain,
+    const { authors, categories, ...rest } = plain;
+    const authorsMapped = this.mapAuthors(authors);
+    const categoriesMapped = this.mapCategories(categories);
+
+    return {
+      ...(rest as BookEntity),
+      ...(authorsMapped ? { authors: authorsMapped } : {}),
+      ...(categoriesMapped ? { categories: categoriesMapped } : {}),
     };
-
-    domain.authors = this.mapAuthors(plain.authors);
-    domain.categories = this.mapCategories(plain.categories);
-
-    return domain;
   }
 
   private mapAuthors(
