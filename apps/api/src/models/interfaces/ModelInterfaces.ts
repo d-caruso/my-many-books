@@ -5,7 +5,6 @@
 import { CreationOptional } from 'sequelize';
 import { BaseModelAttributes } from '../base/BaseModel';
 import { IdBaseModelAttributes } from '../base/IdBaseModel';
-import type { User } from '../User';
 
 // Author interfaces
 export interface AuthorAttributes
@@ -161,5 +160,4 @@ export interface AuthUser {
   provider: string; // Auth provider used
   providerUserId?: string; // External auth system ID
   isNewUser?: boolean; // Helpful for onboarding flows
-  userModel?: User; // Cached user model from auth middleware to avoid duplicate query
 }

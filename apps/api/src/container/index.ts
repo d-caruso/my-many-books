@@ -22,6 +22,8 @@ import { AdminUserController } from '../controllers/admin/AdminUserController';
 import { IUserRepository } from '../repositories/user/IUserRepository';
 import { SequelizeUserRepository } from '../repositories/user/SequelizeUserRepository';
 import { AdminUserService } from '../services/user/AdminUserService';
+import { UserController } from '../controllers/UserController';
+import { UserService } from '../services/user/UserService';
 
 const container = new Container({
   defaultScope: 'Singleton',
@@ -51,6 +53,12 @@ container
   .to(CategoryController)
   .inTransientScope();
 
+container
+  .bind<IUserRepository>(TYPES.UserRepository)
+  .to(SequelizeUserRepository)
+  .inSingletonScope();
+container.bind<UserService>(TYPES.UserService).to(UserService).inSingletonScope();
+container.bind<UserController>(TYPES.UserController).to(UserController).inTransientScope();
 container
   .bind<IUserRepository>(TYPES.AdminUserRepository)
   .to(SequelizeUserRepository)

@@ -8,7 +8,7 @@ import { FindAndCountOptions, FindOptions, IncludeOptions, Op, WhereOptions } fr
 import { Book } from '@/models/Book';
 import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';
-import { BookAttributes, BookCreationAttributes } from '@/models/interfaces/ModelInterfaces';
+import { BookAttributes, BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import {
   BookAssociationInput,
   BookEntity,
@@ -101,6 +101,27 @@ export class SequelizeBookRepository implements IBookRepository {
     const { rows, count } = await Book.findAndCountAll(query);
 
     return this.buildPaginatedResult(rows, count, limit, offset);
+  }
+
+  async countUserBooks(userId: number, status?: BookStatus): Promise<number> {
+    const where: WhereOptions<BookAttributes> = { userId };
+    if (status) {
+      where.status = status;
+    }
+
+    return Book.count({ where });
+  }
+
+  async findRecentUserBooks(userId: number, limit: number): Promise<BookEntity[]> {
+    const recentBooks = await Book.findAll({
+      where: { userId },
+      order: [['creationDate', 'DESC']],
+      limit,
+    });
+
+    return recentBooks
+      .map(book => this.toDomain(book))
+      .filter((entity): entity is BookEntity => Boolean(entity));
   }
 
   async create(

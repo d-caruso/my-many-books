@@ -5,8 +5,9 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { AuthUser } from '../models/interfaces/ModelInterfaces';
-import { User } from '../models/User';
-import { createModel } from '../utils/sequelize-helpers';
+import { container } from '../container';
+import { TYPES } from '../container/types';
+import { UserService as DomainUserService } from '../services/user/UserService';
 
 // Extended Request interface to include authenticated user
 export interface AuthenticatedRequest extends Request {
@@ -104,37 +105,27 @@ export class AuthProviderFactory {
   }
 }
 
-// User service for database operations
-export class UserService {
-  static async findOrCreateUser(
-    providerUser: AuthProviderUser,
-    _provider: string
-  ): Promise<{ user: User; isNewUser: boolean }> {
-    let user = await User.findOne({ where: { email: providerUser.email } });
-    let isNewUser = false;
+const resolveUserService = (): DomainUserService =>
+  container.get<DomainUserService>(TYPES.UserService);
 
-    if (!user) {
-      // Create new user
-      user = await createModel(User, {
+export const UserService = {
+  findOrCreateUser(providerUser: AuthProviderUser, provider: string) {
+    return resolveUserService().findOrCreateUser(
+      {
         email: providerUser.email,
-        name: providerUser.name || 'Unknown',
-        surname: providerUser.surname || 'User',
-        isActive: true,
-      });
-      isNewUser = true;
-    }
-
-    return { user, isNewUser };
-  }
-
-  static async getUserById(userId: number): Promise<User | null> {
-    return await User.findByPk(userId);
-  }
-
-  static async deactivateUser(userId: number): Promise<void> {
-    await User.update({ isActive: false }, { where: { id: userId } });
-  }
-}
+        name: providerUser.name ?? null,
+        surname: providerUser.surname ?? null,
+      },
+      provider
+    );
+  },
+  getUserById(userId: number) {
+    return resolveUserService().getUserById(userId);
+  },
+  deactivateUser(userId: number) {
+    return resolveUserService().deactivateAccount(userId);
+  },
+};
 
 // Main authentication middleware
 export const authMiddleware = async (
@@ -178,7 +169,6 @@ export const authMiddleware = async (
       provider: provider.getProviderName(),
       providerUserId: providerUser.id,
       isNewUser,
-      userModel: user, // Cache user model to avoid duplicate query in controllers
     };
 
     // Attach user to request

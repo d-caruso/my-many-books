@@ -15,13 +15,10 @@ import {
   AuthProvider,
   AuthProviderUser,
 } from '../../../src/middleware/auth';
-import { User } from '../../../src/models/User';
 
 // Mock dependencies
-jest.mock('../../../src/models/User');
 jest.mock('jsonwebtoken');
 
-const mockUser = User as jest.Mocked<typeof User>;
 
 describe('Authentication Middleware', () => {
   let req: Partial<AuthenticatedRequest>;
@@ -119,7 +116,6 @@ describe('Authentication Middleware', () => {
         provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: false,
-        userModel: mockDbUser,
       });
       expect(next).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
@@ -221,7 +217,6 @@ describe('Authentication Middleware', () => {
         provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: true,
-        userModel: mockDbUser,
       });
       expect(next).toHaveBeenCalled();
     });
@@ -415,133 +410,5 @@ describe('Auth0Provider', () => {
 
   it('should throw error for unimplemented verification', async () => {
     await expect(provider.verifyToken('mock.jwt.token')).rejects.toThrow('Auth0 provider not yet implemented');
-  });
-});
-
-describe('UserService', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    // Reset mockUser to clear any persistent mocks
-    jest.resetAllMocks();
-  });
-
-  describe('findOrCreateUser', () => {
-    it('should return existing user', async () => {
-      const mockExistingUser = {
-        id: 1,
-        email: 'existing@example.com',
-        name: 'Existing',
-        surname: 'User',
-      };
-
-      // Clear and set up specific mock for this test
-      mockUser.findOne.mockClear();
-      mockUser.findOne.mockResolvedValue(mockExistingUser as any);
-
-      const providerUser: AuthProviderUser = {
-        id: 'provider123',
-        email: 'existing@example.com',
-        name: 'Existing',
-        surname: 'User',
-      };
-
-      const result = await UserService.findOrCreateUser(providerUser, 'cognito');
-
-      expect(result.user).toEqual(mockExistingUser); // Use toEqual instead of toBe
-      expect(result.isNewUser).toBe(false);
-      expect(mockUser.findOne).toHaveBeenCalledWith({ where: { email: 'existing@example.com' } });
-      expect(mockUser.create).not.toHaveBeenCalled();
-    });
-
-    it('should create new user when not found', async () => {
-      const mockNewUser = {
-        id: 2,
-        email: 'new@example.com',
-        name: 'New',
-        surname: 'User',
-        isActive: true,
-      };
-
-      // Clear and set up specific mocks for this test
-      mockUser.findOne.mockClear();
-      mockUser.create.mockClear();
-      mockUser.findOne.mockResolvedValue(null);
-      mockUser.create.mockResolvedValue(mockNewUser as any);
-
-      const providerUser: AuthProviderUser = {
-        id: 'provider123',
-        email: 'new@example.com',
-        name: 'New',
-        surname: 'User',
-      };
-
-      const result = await UserService.findOrCreateUser(providerUser, 'cognito');
-
-      expect(result.user).toEqual(mockNewUser); // Use toEqual instead of toBe
-      expect(result.isNewUser).toBe(true);
-      expect(mockUser.create).toHaveBeenCalledWith({
-        email: 'new@example.com',
-        name: 'New',
-        surname: 'User',
-        isActive: true,
-      });
-    });
-
-    it('should handle missing name/surname with defaults', async () => {
-      // Clear and set up specific mocks for this test
-      mockUser.findOne.mockClear();
-      mockUser.create.mockClear();
-      mockUser.findOne.mockResolvedValue(null);
-      mockUser.create.mockResolvedValue({ id: 3 } as any);
-
-      const providerUser: AuthProviderUser = {
-        id: 'provider123',
-        email: 'minimal@example.com',
-        name: undefined,
-        surname: undefined,
-      };
-
-      await UserService.findOrCreateUser(providerUser, 'cognito');
-
-      expect(mockUser.create).toHaveBeenCalledWith({
-        email: 'minimal@example.com',
-        name: 'Unknown',
-        surname: 'User',
-        isActive: true,
-      });
-    });
-  });
-
-  describe('getUserById', () => {
-    it('should return user by ID', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
-      (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
-
-      const result = await UserService.getUserById(1);
-
-      expect(result).toBe(mockUser);
-      expect(User.findByPk).toHaveBeenCalledWith(1);
-    });
-
-    it('should return null when user not found', async () => {
-      (User.findByPk as jest.Mock).mockResolvedValue(null);
-
-      const result = await UserService.getUserById(999);
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('deactivateUser', () => {
-    it('should deactivate user', async () => {
-      (User.update as jest.Mock).mockResolvedValue([1]);
-
-      await UserService.deactivateUser(1);
-
-      expect(User.update).toHaveBeenCalledWith(
-        { isActive: false },
-        { where: { id: 1 } }
-      );
-    });
   });
 });

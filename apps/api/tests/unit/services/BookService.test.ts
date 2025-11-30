@@ -30,7 +30,9 @@ describe('BookService', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    };
+      countUserBooks: jest.fn(),
+      findRecentUserBooks: jest.fn(),
+    } as unknown as jest.Mocked<IBookRepository>;
 
     service = new BookService(repository);
   });

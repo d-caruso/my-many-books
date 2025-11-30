@@ -12,6 +12,8 @@ jest.mock('../../../src/models/Book', () => ({
     findAndCountAll: jest.fn(),
     create: jest.fn(),
     destroy: jest.fn(),
+    count: jest.fn(),
+    findAll: jest.fn(),
   },
 }));
 
@@ -128,5 +130,29 @@ describe('SequelizeBookRepository (unit)', () => {
     (Book.destroy as jest.Mock).mockResolvedValue(1);
     await expect(repository.delete(9)).resolves.toBe(true);
     expect(Book.destroy).toHaveBeenCalledWith({ where: { id: 9 } });
+  });
+
+  it('countUserBooks delegates to Book.count with optional status', async () => {
+    (Book.count as jest.Mock).mockResolvedValue(4);
+    const total = await repository.countUserBooks(7, BOOK_STATUS.READING);
+
+    expect(Book.count).toHaveBeenCalledWith({
+      where: { userId: 7, status: BOOK_STATUS.READING },
+    });
+    expect(total).toBe(4);
+  });
+
+  it('findRecentUserBooks returns mapped domain entities', async () => {
+    (Book.findAll as jest.Mock).mockResolvedValue([createModelMock()]);
+
+    const result = await repository.findRecentUserBooks(3, 5);
+
+    expect(Book.findAll).toHaveBeenCalledWith({
+      where: { userId: 3 },
+      order: [['creationDate', 'DESC']],
+      limit: 5,
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ id: 1, title: 'Test Book' });
   });
 });

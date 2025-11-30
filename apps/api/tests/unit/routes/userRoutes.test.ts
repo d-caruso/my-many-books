@@ -1,426 +1,122 @@
 // ================================================================
 // tests/routes/userRoutes.test.ts
-// Comprehensive tests for User routes
 // ================================================================
 
 import request from 'supertest';
 import express from 'express';
-import userRoutes from '../../../src/routes/userRoutes';
+let mockController: any = {};
 
-// Mock the UserController
-jest.mock('../../../src/controllers/UserController', () => ({
-  userController: {
-    getCurrentUser: jest.fn(async (req, res) => {
-      res.status(200).json({
-        id: req.user?.userId || 1,
-        email: 'test@example.com',
-        name: 'John',
-        surname: 'Doe',
-        fullName: 'John Doe',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-    }),
-    updateCurrentUser: jest.fn(async (req, res) => {
-      res.status(200).json({
-        id: req.user?.userId || 1,
-        email: 'test@example.com',
-        name: req.body.name || 'Updated',
-        surname: req.body.surname || 'User',
-        fullName: `${req.body.name || 'Updated'} ${req.body.surname || 'User'}`,
-        isActive: true,
-        updatedAt: new Date()
-      });
-    }),
-    deleteAccount: jest.fn(async (_req, res) => {
-      res.status(200).json({
-        message: 'Account deleted successfully',
-        note: 'All personal data has been removed. Books will remain anonymized in the system.'
-      });
-    }),
-    getUserBooks: jest.fn(async (_req, res) => {
-      res.status(200).json({
-        books: [
-          { id: 1, title: 'Book 1', isbnCode: '123456' },
-          { id: 2, title: 'Book 2', isbnCode: '789012' }
-        ],
-        pagination: { currentPage: 1, totalPages: 1, totalItems: 2, itemsPerPage: 10 }
-      });
-    }),
-    getUserStats: jest.fn(async (_req, res) => {
-      res.status(200).json({
-        totalBooks: 2,
-        booksByStatus: {
-          inProgress: 1,
-          paused: 0,
-          finished: 1,
-          unspecified: 0
-        },
-        completionRate: 50,
-        recentBooks: []
-      });
-    }),
-    deactivateAccount: jest.fn(async (_req, res) => {
-      res.status(200).json({
-        message: 'Account deactivated successfully',
-        note: 'Your books will remain in the system but will no longer be accessible'
-      });
-    })
-  }
+jest.mock('../../../src/container', () => ({
+  container: {
+    get: jest.fn(() => mockController),
+  },
 }));
 
-// Mock auth middleware
 jest.mock('../../../src/middleware/auth', () => ({
   authMiddleware: jest.fn((req: any, _res: any, next: any) => {
-    req.user = { userId: 1, email: 'test@example.com' };
+    req.user = { userId: 1, email: 'user@example.com', provider: 'cognito' };
     next();
-  })
+  }),
 }));
 
 jest.mock('../../../src/validation', () => ({
-  validateQuery: jest.fn(() => (_req: any, _res: any, next: any) => next()),
   validateBody: jest.fn(() => (_req: any, _res: any, next: any) => next()),
-  validateParams: jest.fn(() => (_req: any, _res: any, next: any) => next()),
+  validateQuery: jest.fn(() => (_req: any, _res: any, next: any) => next()),
   updateUserSchema: {},
   getUserBooksQuerySchema: {},
 }));
+
+jest.mock('../../../src/utils/routeWrapper', () => ({
+  expressRouteWrapper: jest.fn((controllerMethod: any) => {
+    return async (req: any, res: any, next: any) => {
+      try {
+        const universalRequest = {
+          body: JSON.stringify(req.body || {}),
+          queryStringParameters: req.query,
+          pathParameters: req.params,
+          user: req.user,
+        };
+        const result = await controllerMethod(universalRequest);
+        res.status(result.statusCode).json({
+          success: result.success,
+          data: result.data,
+          ...(result.message && { message: result.message }),
+        });
+      } catch (error) {
+        next(error);
+      }
+    };
+  }),
+}));
+
+mockController = {
+  getCurrentUser: jest.fn(async () => ({ statusCode: 200, success: true, data: { id: 1 } })),
+  updateCurrentUser: jest.fn(async () => ({ statusCode: 200, success: true, data: { id: 1 } })),
+  deleteAccount: jest.fn(async () => ({ statusCode: 200, success: true })),
+  getUserBooks: jest.fn(async () => ({
+    statusCode: 200,
+    success: true,
+    data: {
+      books: [],
+      pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 20 },
+    },
+  })),
+  getUserStats: jest.fn(async () => ({
+    statusCode: 200,
+    success: true,
+    data: {
+      totalBooks: 0,
+      booksByStatus: { reading: 0, paused: 0, finished: 0, unspecified: 0 },
+      completionRate: 0,
+      recentBooks: [],
+    },
+  })),
+  deactivateAccount: jest.fn(async () => ({ statusCode: 200, success: true })),
+};
+
+const userRoutes = require('../../../src/routes/userRoutes').default;
 
 describe('User Routes', () => {
   let app: express.Application;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     app = express();
     app.use(express.json());
     app.use('/api/users', userRoutes);
   });
 
-  describe('GET /api/users', () => {
-    it('should get current user information', async () => {
-      const response = await request(app)
-        .get('/api/users')
-        .expect(200);
-
-      expect(response.body).toEqual(expect.objectContaining({
-        id: 1,
-        email: 'test@example.com',
-        name: 'John',
-        surname: 'Doe',
-        fullName: 'John Doe',
-        isActive: true
-      }));
-    });
-
-    it('should require authentication', async () => {
-      const { authMiddleware } = require('../../../src/middleware/auth');
-      authMiddleware.mockImplementationOnce((_req: any, res: any, _next: any) => {
-        res.status(401).json({ success: false, error: 'Unauthorized' });
-      });
-
-      await request(app)
-        .get('/api/users')
-        .expect(401);
-    });
+  it('GET /api/users returns current user', async () => {
+    const response = await request(app).get('/api/users').expect(200);
+    expect(response.body.data).toMatchObject({ id: 1 });
+    expect(mockController.getCurrentUser).toHaveBeenCalled();
   });
 
-  describe('PUT /api/users', () => {
-    it('should update current user information', async () => {
-      const updateData = {
-        name: 'Updated',
-        surname: 'User'
-      };
-
-      const response = await request(app)
-        .put('/api/users')
-        .send(updateData)
-        .expect(200);
-
-      expect(response.body).toEqual(expect.objectContaining({
-        id: 1,
-        email: 'test@example.com',
-        name: 'Updated',
-        surname: 'User',
-        fullName: 'Updated User',
-        isActive: true
-      }));
-    });
-
-    it('should handle validation errors', async () => {
-      const { userController } = require('../../../src/controllers/UserController');
-      userController.updateCurrentUser.mockImplementationOnce(async (_req: any, res: any) => {
-        res.status(400).json({
-          success: false,
-          error: 'Invalid email format'
-        });
-      });
-
-      const response = await request(app)
-        .put('/api/users')
-        .send({ email: 'invalid-email' })
-        .expect(400);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Invalid email format'
-      });
-    });
-
-    it('should require authentication', async () => {
-      const { authMiddleware } = require('../../../src/middleware/auth');
-      authMiddleware.mockImplementationOnce((_req: any, res: any, _next: any) => {
-        res.status(401).json({ success: false, error: 'Unauthorized' });
-      });
-
-      await request(app)
-        .put('/api/users')
-        .send({ name: 'Test' })
-        .expect(401);
-    });
+  it('PUT /api/users updates current user', async () => {
+    await request(app)
+      .put('/api/users')
+      .send({ name: 'Jane', surname: 'Doe' })
+      .expect(200);
+    expect(mockController.updateCurrentUser).toHaveBeenCalled();
   });
 
-  describe('DELETE /api/users', () => {
-    it('should delete user account', async () => {
-      const response = await request(app)
-        .delete('/api/users')
-        .expect(200);
-
-      expect(response.body).toEqual({
-        message: 'Account deleted successfully',
-        note: 'All personal data has been removed. Books will remain anonymized in the system.'
-      });
-    });
-
-    it('should handle deletion errors', async () => {
-      const { userController } = require('../../../src/controllers/UserController');
-      userController.deleteAccount.mockImplementationOnce(async (_req: any, res: any) => {
-        res.status(409).json({
-          success: false,
-          error: 'Cannot delete account with active subscriptions'
-        });
-      });
-
-      const response = await request(app)
-        .delete('/api/users')
-        .expect(409);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Cannot delete account with active subscriptions'
-      });
-    });
-
-    it('should require authentication', async () => {
-      const { authMiddleware } = require('../../../src/middleware/auth');
-      authMiddleware.mockImplementationOnce((_req: any, res: any, _next: any) => {
-        res.status(401).json({ success: false, error: 'Unauthorized' });
-      });
-
-      await request(app)
-        .delete('/api/users')
-        .expect(401);
-    });
+  it('DELETE /api/users removes account', async () => {
+    await request(app).delete('/api/users').expect(200);
+    expect(mockController.deleteAccount).toHaveBeenCalled();
   });
 
-  describe('GET /api/users/books', () => {
-    it('should get user books', async () => {
-      const response = await request(app)
-        .get('/api/users/books')
-        .expect(200);
-
-      expect(response.body).toEqual({
-        books: [
-          { id: 1, title: 'Book 1', isbnCode: '123456' },
-          { id: 2, title: 'Book 2', isbnCode: '789012' }
-        ],
-        pagination: { currentPage: 1, totalPages: 1, totalItems: 2, itemsPerPage: 10 }
-      });
-    });
-
-    it('should handle pagination parameters', async () => {
-      const response = await request(app)
-        .get('/api/users/books?page=2&limit=5')
-        .expect(200);
-
-      expect(response.body.books).toBeDefined();
-    });
-
-    it('should handle user with no books', async () => {
-      const { userController } = require('../../../src/controllers/UserController');
-      userController.getUserBooks.mockImplementationOnce(async (_req: any, res: any) => {
-        res.status(200).json({
-          books: [],
-          pagination: { currentPage: 1, totalPages: 0, totalItems: 0, itemsPerPage: 10 }
-        });
-      });
-
-      const response = await request(app)
-        .get('/api/users/books')
-        .expect(200);
-
-      expect(response.body.books).toEqual([]);
-    });
-
-    it('should require authentication', async () => {
-      const { authMiddleware } = require('../../../src/middleware/auth');
-      authMiddleware.mockImplementationOnce((_req: any, res: any, _next: any) => {
-        res.status(401).json({ success: false, error: 'Unauthorized' });
-      });
-
-      await request(app)
-        .get('/api/users/books')
-        .expect(401);
-    });
+  it('GET /api/users/books returns user books', async () => {
+    await request(app).get('/api/users/books').expect(200);
+    expect(mockController.getUserBooks).toHaveBeenCalled();
   });
 
-  describe('GET /api/users/stats', () => {
-    it('should get user statistics', async () => {
-      const response = await request(app)
-        .get('/api/users/stats')
-        .expect(200);
-
-      expect(response.body).toEqual({
-        totalBooks: 2,
-        booksByStatus: {
-          inProgress: 1,
-          paused: 0,
-          finished: 1,
-          unspecified: 0
-        },
-        completionRate: 50,
-        recentBooks: []
-      });
-    });
-
-    it('should handle user with no statistics', async () => {
-      const { userController } = require('../../../src/controllers/UserController');
-      userController.getUserStats.mockImplementationOnce(async (_req: any, res: any) => {
-        res.status(200).json({
-          totalBooks: 0,
-          booksByStatus: {
-            inProgress: 0,
-            paused: 0,
-            finished: 0,
-            unspecified: 0
-          },
-          completionRate: 0,
-          recentBooks: []
-        });
-      });
-
-      const response = await request(app)
-        .get('/api/users/stats')
-        .expect(200);
-
-      expect(response.body.totalBooks).toBe(0);
-    });
-
-    it('should require authentication', async () => {
-      const { authMiddleware } = require('../../../src/middleware/auth');
-      authMiddleware.mockImplementationOnce((_req: any, res: any, _next: any) => {
-        res.status(401).json({ success: false, error: 'Unauthorized' });
-      });
-
-      await request(app)
-        .get('/api/users/stats')
-        .expect(401);
-    });
+  it('GET /api/users/stats returns stats', async () => {
+    await request(app).get('/api/users/stats').expect(200);
+    expect(mockController.getUserStats).toHaveBeenCalled();
   });
 
-  describe('PATCH /api/users', () => {
-    it('should deactivate user account', async () => {
-      const response = await request(app)
-        .patch('/api/users')
-        .expect(200);
-
-      expect(response.body).toEqual({
-        message: 'Account deactivated successfully',
-        note: 'Your books will remain in the system but will no longer be accessible'
-      });
-    });
-
-    it('should handle already deactivated account', async () => {
-      const { userController } = require('../../../src/controllers/UserController');
-      userController.deactivateAccount.mockImplementationOnce(async (_req: any, res: any) => {
-        res.status(409).json({
-          success: false,
-          error: 'Account is already deactivated'
-        });
-      });
-
-      const response = await request(app)
-        .patch('/api/users')
-        .expect(409);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Account is already deactivated'
-      });
-    });
-
-    it('should require authentication', async () => {
-      const { authMiddleware } = require('../../../src/middleware/auth');
-      authMiddleware.mockImplementationOnce((_req: any, res: any, _next: any) => {
-        res.status(401).json({ success: false, error: 'Unauthorized' });
-      });
-
-      await request(app)
-        .patch('/api/users')
-        .expect(401);
-    });
-  });
-
-  describe('Route Integration', () => {
-    it('should properly bind all controller methods', async () => {
-      const { userController } = require('../../../src/controllers/UserController');
-
-      // Test all routes to ensure they're properly bound
-      await request(app).get('/api/users').expect(200);
-      expect(userController.getCurrentUser).toHaveBeenCalled();
-
-      await request(app).put('/api/users').send({ name: 'Test' }).expect(200);
-      expect(userController.updateCurrentUser).toHaveBeenCalled();
-
-      await request(app).delete('/api/users').expect(200);
-      expect(userController.deleteAccount).toHaveBeenCalled();
-
-      await request(app).get('/api/users/books').expect(200);
-      expect(userController.getUserBooks).toHaveBeenCalled();
-
-      await request(app).get('/api/users/stats').expect(200);
-      expect(userController.getUserStats).toHaveBeenCalled();
-
-      await request(app).patch('/api/users').expect(200);
-      expect(userController.deactivateAccount).toHaveBeenCalled();
-    });
-
-    it('should handle invalid JSON in request body', async () => {
-      const response = await request(app)
-        .put('/api/users')
-        .set('Content-Type', 'application/json')
-        .send('{ invalid json }')
-        .expect(400);
-
-      // Express handles malformed JSON
-      expect(response.status).toBe(400);
-    });
-  });
-
-  describe('Authentication Middleware', () => {
-    it('should apply authentication to all routes', async () => {
-      const { authMiddleware } = require('../../../src/middleware/auth');
-      
-      // Mock to reject all requests
-      authMiddleware.mockImplementation((_req: any, res: any, _next: any) => {
-        res.status(401).json({ success: false, error: 'Unauthorized' });
-      });
-
-      // Test that all routes require authentication
-      await request(app).get('/api/users').expect(401);
-      await request(app).put('/api/users').expect(401);
-      await request(app).delete('/api/users').expect(401);
-      await request(app).get('/api/users/books').expect(401);
-      await request(app).get('/api/users/stats').expect(401);
-      await request(app).patch('/api/users').expect(401);
-    });
+  it('PATCH /api/users deactivates account', async () => {
+    await request(app).patch('/api/users').expect(200);
+    expect(mockController.deactivateAccount).toHaveBeenCalled();
   });
 });

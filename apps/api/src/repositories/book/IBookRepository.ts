@@ -3,7 +3,7 @@
 // Contract for book persistence operations
 // ================================================================
 
-import { BookCreationAttributes } from '@/models/interfaces/ModelInterfaces';
+import { BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import {
   BookAssociationInput,
   BookEntity,
@@ -30,6 +30,8 @@ export interface IBookRepository {
     filters: BookSearchFilters,
     options?: BookListOptions
   ): Promise<PaginatedResult<BookEntity>>;
+  countUserBooks(userId: number, status?: BookStatus): Promise<number>;
+  findRecentUserBooks(userId: number, limit: number): Promise<BookEntity[]>;
   create(
     payload: BookCreationAttributes,
     associations?: BookAssociationInput,

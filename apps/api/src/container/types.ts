@@ -16,6 +16,9 @@ const TYPES = {
   AdminUserRepository: Symbol.for('AdminUserRepository'),
   AdminUserService: Symbol.for('AdminUserService'),
   AdminUserController: Symbol.for('AdminUserController'),
+  UserRepository: Symbol.for('UserRepository'),
+  UserService: Symbol.for('UserService'),
+  UserController: Symbol.for('UserController'),
 };
 
 export { TYPES };
