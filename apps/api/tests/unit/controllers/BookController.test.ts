@@ -2,6 +2,8 @@ import { BookController } from '../../../src/controllers/BookController';
 import { Book, Author, Category } from '../../../src/models';
 import { isbnService } from '../../../src/services/isbnService';
 import { BOOK_STATUS } from '../../../src/utils/constants';
+import { container } from '../../../src/container';
+import { TYPES } from '../../../src/container/types';
 
 // Mock dependencies
 jest.mock('../../../src/models');
@@ -58,13 +60,18 @@ describe('BookController', () => {
   let bookController: BookController;
   let mockRequest: UniversalRequest;
 
-  beforeEach(() => {
-    bookController = new BookController();
+beforeEach(() => {
+    container.snapshot();
+    bookController = container.get<BookController>(TYPES.BookController);
     jest.clearAllMocks();
 
     mockRequest = {
       headers: { 'accept-language': 'en' },
     };
+  });
+
+  afterEach(() => {
+    container.restore();
   });
 
   describe('createBook', () => {

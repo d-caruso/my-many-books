@@ -3,6 +3,7 @@
 // ================================================================
 
 import Joi from 'joi';
+import { inject, injectable } from 'inversify';
 import { Op, WhereOptions } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book, Category } from '../models';
@@ -18,6 +19,8 @@ import { isbnService } from '../services/isbnService';
 import { UniversalRequest } from '../types';
 import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
 import { BOOK_STATUS } from '../utils/constants';
+import { BookService } from '../services/book/BookService';
+import { TYPES } from '../container/types';
 
 interface CreateBookRequest {
   title: string;
@@ -48,7 +51,13 @@ interface BookSearchFilters {
  * This class contains all the business logic for books,
  * independent of the web framework (Express, Lambda, etc.).
  */
+@injectable()
 export class BookController extends BaseController {
+  constructor(@inject(TYPES.BookService) private readonly bookService: BookService) {
+    super();
+    this.bookService.initializeControllerContext();
+  }
+
   private readonly searchFiltersSchema = Joi.object<BookSearchFilters>({
     title: Joi.string().required().max(200).trim(),
     isbnCode: Joi.string()
@@ -876,5 +885,3 @@ export class BookController extends BaseController {
     return this.searchBooksByIsbn(request);
   }
 }
-
-export const bookController = new BookController();

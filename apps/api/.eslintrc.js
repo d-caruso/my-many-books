@@ -3,7 +3,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
-    project: './tsconfig.json',
+    project: require('path').join(__dirname, 'tsconfig.json'),
   },
   plugins: ['@typescript-eslint', 'prettier'],
   extends: [
@@ -27,5 +27,5 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['dist/', 'node_modules/', '*.js'],
+  ignorePatterns: ['dist/', 'node_modules/', '*.js', 'scripts/**/*', 'tests/**/*'],
 };
