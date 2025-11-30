@@ -11,7 +11,7 @@ import { TYPES } from '../container/types';
 import { UpdateUserDTO } from '../dtos/user/UpdateUserDTO';
 import { toUserResponseDTO } from '../dtos/user/UserResponseDTO';
 import { UserService, UserServiceError } from '../services/user/UserService';
-import { BookEntity } from '../repositories/book/BookRepository.types';
+import { BookEntity } from '../repositories/book/BookRepositoryTypes';
 import { BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { BOOK_STATUS } from '../utils/constants';
 

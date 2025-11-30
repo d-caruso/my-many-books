@@ -43,12 +43,12 @@ export interface IRepositoryAdapter<
   Query extends IQueryOptions,
   List extends IListOptions,
 > {
-  buildFindOptions(options?: Query): Record<string, unknown>;
+  buildFindOptions(options?: Query): unknown;
   buildListQuery(
     where: Record<string, unknown>,
     options?: List
   ): {
-    query: Record<string, unknown>;
+    query: unknown;
     limit: number;
     offset: number;
   };

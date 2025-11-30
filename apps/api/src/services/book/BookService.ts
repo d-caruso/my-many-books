@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { TYPES } from '../../container/types';
 import { IBookRepository } from '../../repositories/book/IBookRepository';
-import { BookAssociationInput, BookEntity } from '../../repositories/book/BookRepository.types';
+import { BookAssociationInput, BookEntity } from '../../repositories/book/BookRepositoryTypes';
 import { BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';

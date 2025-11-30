@@ -9,7 +9,7 @@ import { TYPES } from '../../container/types';
 import { IUserRepository } from '../../repositories/user/IUserRepository';
 import { UserEntity, UserUpdateInput } from '../../repositories/user/UserRepository.types';
 import { IBookRepository } from '../../repositories/book/IBookRepository';
-import { BookEntity, BookListOptions, PaginatedResult as BookPaginatedResult } from '../../repositories/book/BookRepository.types';
+import { BookEntity, BookListOptions, PaginatedResult as BookPaginatedResult } from '../../repositories/book/BookRepositoryTypes';
 import { ApplicationError } from '../../errors/ApplicationError';
 import { UserCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { BOOK_STATUS } from '../../utils/constants';

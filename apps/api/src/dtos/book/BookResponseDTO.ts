@@ -1,4 +1,4 @@
-import { BookEntity } from '../../repositories/book/BookRepository.types';
+import { BookEntity } from '../../repositories/book/BookRepositoryTypes';
 
 export interface BookResponseDTO {
   id?: number;
