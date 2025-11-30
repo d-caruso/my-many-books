@@ -23,6 +23,9 @@ node_modules
 # codex
 AGENTS.md
 
+# gemini
+GEMINI.md
+
 # IDE - VSCode
 .vscode/*
 !.vscode/settings.json
