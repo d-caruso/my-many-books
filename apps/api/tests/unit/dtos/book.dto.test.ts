@@ -31,4 +31,32 @@ describe('Book DTO validation', () => {
     expect(errors).toHaveLength(0);
     expect(dto.notes).toBe('Updated notes');
   });
+
+  it('maps CreateBookDTO to service input', () => {
+    const dto = CreateBookDTO.from({
+      title: 'Map Title',
+      isbnCode: '9780000000000',
+      editionNumber: 2,
+      status: 'reading',
+      authorIds: [1, 2],
+    });
+
+    const input = dto.toServiceInput();
+    expect(input).toMatchObject({
+      title: 'Map Title',
+      isbnCode: '9780000000000',
+      editionNumber: 2,
+      status: 'reading',
+      authorIds: [1, 2],
+    });
+  });
+
+  it('maps UpdateBookDTO to partial service input', () => {
+    const dto = UpdateBookDTO.from({
+      notes: 'Changed notes',
+    });
+
+    const input = dto.toServiceInput();
+    expect(input).toEqual({ notes: 'Changed notes' });
+  });
 });
