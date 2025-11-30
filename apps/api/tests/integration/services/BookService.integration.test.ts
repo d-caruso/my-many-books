@@ -1,7 +1,7 @@
 import { Sequelize } from 'sequelize';
 import { ModelManager } from '../../../src/models';
 import { BookService } from '../../../src/services/book/BookService';
-import { SequelizeBookRepository } from '../../../src/repositories/book/SequelizeBookRepository';
+import { BookRepository } from '../../../src/repositories/book/BookRepository';
 import { User } from '../../../src/models/User';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
@@ -11,14 +11,14 @@ import { Book } from '../../../src/models/Book';
 describe('BookService (integration)', () => {
   let sequelize: Sequelize;
   let service: BookService;
-  let repository: SequelizeBookRepository;
+  let repository: BookRepository;
   let user: User;
 
   beforeAll(async () => {
     sequelize = new Sequelize('sqlite::memory:', { logging: false });
     ModelManager.initialize(sequelize);
     await ModelManager.syncDatabase(true);
-    repository = new SequelizeBookRepository();
+    repository = new BookRepository();
     service = new BookService(repository);
   });
 

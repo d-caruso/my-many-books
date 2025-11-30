@@ -11,7 +11,7 @@ import {
   BookQueryOptions,
   BookSearchFilters,
   PaginatedResult,
-} from './BookRepository.types';
+} from './BookRepositoryTypes';
 
 export interface IBookRepository {
   findById(id: number, options?: BookQueryOptions): Promise<BookEntity | null>;

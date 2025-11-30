@@ -1,4 +1,4 @@
-import { SequelizeBookRepository } from '../../../src/repositories/book/SequelizeBookRepository';
+import { SequelizeBookAdapter } from '../../../src/repositories/book/adapters/SequelizeBookAdapter';
 import { Book } from '../../../src/models/Book';
 import { BOOK_STATUS } from '../../../src/utils/constants';
 import { Author } from '../../../src/models/Author';
@@ -29,8 +29,8 @@ jest.mock('../../../src/models/Category', () => ({
   },
 }));
 
-describe('SequelizeBookRepository (unit)', () => {
-  const repository = new SequelizeBookRepository();
+describe('SequelizeBookAdapter (unit)', () => {
+  const adapter = new SequelizeBookAdapter();
   const mockBookPlain = {
     id: 1,
     title: 'Test Book',
@@ -59,7 +59,7 @@ describe('SequelizeBookRepository (unit)', () => {
     const instance = createModelMock();
     (Book.findByPk as jest.Mock).mockResolvedValue(instance);
 
-    const result = await repository.findById(1);
+    const result = await adapter.findById(1);
 
     expect(Book.findByPk).toHaveBeenCalledWith(
       1,
@@ -77,7 +77,7 @@ describe('SequelizeBookRepository (unit)', () => {
 
   it('findByIsbnCode scopes by userId when provided', async () => {
     (Book.findOne as jest.Mock).mockResolvedValue(createModelMock());
-    await repository.findByIsbnCode('123', 7);
+    await adapter.findByIsbnCode('123', 7);
 
     expect(Book.findOne).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -92,7 +92,7 @@ describe('SequelizeBookRepository (unit)', () => {
       count: 1,
     });
 
-    const result = await repository.listUserBooks(5, { limit: 5, offset: 0 });
+    const result = await adapter.listUserBooks(5, { limit: 5, offset: 0 });
 
     const args = (Book.findAndCountAll as jest.Mock).mock.calls[0][0];
     expect(args.limit).toBe(5);
@@ -112,29 +112,28 @@ describe('SequelizeBookRepository (unit)', () => {
     (Author.findAll as jest.Mock).mockResolvedValue([{ id: 1 }]);
     (Category.findAll as jest.Mock).mockResolvedValue([{ id: 2 }]);
 
-    const result = await repository.create(
-      {
-        title: 'Test Book',
-        isbnCode: '1234567890',
-        status: BOOK_STATUS.READING,
-      } as any,
-      { authorIds: [1], categoryIds: [2] }
-    );
+    const result = await adapter.createModel({
+      title: 'Test Book',
+      isbnCode: '1234567890',
+      status: BOOK_STATUS.READING,
+      authorIds: [1],
+      categoryIds: [2],
+    } as any);
 
     expect(Author.findAll).toHaveBeenCalledWith({ where: { id: [1] } });
     expect(Category.findAll).toHaveBeenCalledWith({ where: { id: [2] } });
     expect(result).toBeDefined();
   });
 
-  it('delete removes records and returns boolean', async () => {
+  it('delete removes records and returns number of rows', async () => {
     (Book.destroy as jest.Mock).mockResolvedValue(1);
-    await expect(repository.delete(9)).resolves.toBe(true);
+    await expect(adapter.deleteModel(9)).resolves.toBe(1);
     expect(Book.destroy).toHaveBeenCalledWith({ where: { id: 9 } });
   });
 
   it('countUserBooks delegates to Book.count with optional status', async () => {
     (Book.count as jest.Mock).mockResolvedValue(4);
-    const total = await repository.countUserBooks(7, BOOK_STATUS.READING);
+    const total = await adapter.countUserBooks(7, BOOK_STATUS.READING);
 
     expect(Book.count).toHaveBeenCalledWith({
       where: { userId: 7, status: BOOK_STATUS.READING },
@@ -145,7 +144,7 @@ describe('SequelizeBookRepository (unit)', () => {
   it('findRecentUserBooks returns mapped domain entities', async () => {
     (Book.findAll as jest.Mock).mockResolvedValue([createModelMock()]);
 
-    const result = await repository.findRecentUserBooks(3, 5);
+    const result = await adapter.findRecentUserBooks(3, 5);
 
     expect(Book.findAll).toHaveBeenCalledWith({
       where: { userId: 3 },

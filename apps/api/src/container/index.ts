@@ -7,7 +7,7 @@ import 'reflect-metadata';
 import { Container } from 'inversify';
 import { TYPES } from './types';
 import { BookController } from '../controllers/BookController';
-import { SequelizeBookRepository } from '../repositories/book/SequelizeBookRepository';
+import { BookRepository } from '../repositories/book/BookRepository';
 import { IBookRepository } from '../repositories/book/IBookRepository';
 import { BookService } from '../services/book/BookService';
 import { AuthorController } from '../controllers/AuthorController';
@@ -31,7 +31,7 @@ const container = new Container({
 
 container
   .bind<IBookRepository>(TYPES.BookRepository)
-  .to(SequelizeBookRepository)
+  .to(BookRepository)
   .inSingletonScope();
 container.bind<BookService>(TYPES.BookService).to(BookService).inSingletonScope();
 container.bind<BookController>(TYPES.BookController).to(BookController).inTransientScope();

@@ -1,21 +1,21 @@
 import { Sequelize } from 'sequelize';
 import { ModelManager } from '../../../src/models';
-import { SequelizeBookRepository } from '../../../src/repositories/book/SequelizeBookRepository';
+import { BookRepository } from '../../../src/repositories/book/BookRepository';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
 import { BOOK_STATUS } from '../../../src/utils/constants';
 import { Book } from '../../../src/models/Book';
 import { User } from '../../../src/models/User';
 
-describe('SequelizeBookRepository (integration)', () => {
+describe('BookRepository (integration)', () => {
   let sequelize: Sequelize;
-  let repository: SequelizeBookRepository;
+  let repository: BookRepository;
 
   beforeAll(async () => {
     sequelize = new Sequelize('sqlite::memory:', { logging: false });
     ModelManager.initialize(sequelize);
     await ModelManager.syncDatabase(true);
-    repository = new SequelizeBookRepository();
+    repository = new BookRepository();
   });
 
   afterAll(async () => {
