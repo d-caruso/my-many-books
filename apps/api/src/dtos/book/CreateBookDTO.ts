@@ -10,6 +10,7 @@ import {
   validateSync,
 } from 'class-validator';
 import { BOOK_STATUS } from '@/utils/constants';
+import type { BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { CreateBookInput } from '../../services/book/BookService';
 
 export class CreateBookDTO {
@@ -32,7 +33,7 @@ export class CreateBookDTO {
 
   @IsOptional()
   @IsEnum(BOOK_STATUS)
-  status?: string;
+  status?: BookStatus;
 
   @IsOptional()
   @IsString()
@@ -53,9 +54,7 @@ export class CreateBookDTO {
 
   static validate(dto: CreateBookDTO): string[] {
     const validationErrors = validateSync(dto, { whitelist: true, forbidNonWhitelisted: true });
-    return validationErrors.flatMap(error =>
-      Object.values(error.constraints || {})
-    );
+    return validationErrors.flatMap(error => Object.values(error.constraints || {}));
   }
 
   toServiceInput(): CreateBookInput {
@@ -66,7 +65,7 @@ export class CreateBookDTO {
 
     if (this.editionNumber !== undefined) input.editionNumber = this.editionNumber;
     if (this.editionDate !== undefined) input.editionDate = this.editionDate;
-    if (this.status !== undefined) input.status = this.status as any;
+    if (this.status !== undefined) input.status = this.status;
     if (this.notes !== undefined) input.notes = this.notes;
     if (this.authorIds !== undefined) input.authorIds = this.authorIds;
     if (this.categoryIds !== undefined) input.categoryIds = this.categoryIds;

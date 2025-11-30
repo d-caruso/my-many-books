@@ -261,17 +261,23 @@ export class SequelizeBookRepository implements IBookRepository {
     }
   }
 
-  private toDomain(book: Book | null): BookEntity | null {
+  private toDomain(book: Book | BookEntity | null): BookEntity | null {
     if (!book) {
       return null;
     }
 
-    const plain = book.get({ plain: true }) as BookEntity & {
-      authors?: Array<{ id: number; name: string; surname?: string }>;
-      categories?: Array<{ id: number; name: string }>;
-    };
+    const base =
+      typeof (book as Book).get === 'function'
+        ? ((book as Book).get({ plain: true }) as BookEntity & {
+            authors?: Array<{ id: number; name: string; surname?: string }>;
+            categories?: Array<{ id: number; name: string }>;
+          })
+        : (book as BookEntity & {
+            authors?: Array<{ id: number; name: string; surname?: string }>;
+            categories?: Array<{ id: number; name: string }>;
+          });
 
-    const { authors, categories, ...rest } = plain;
+    const { authors, categories, ...rest } = base;
     const authorsMapped = this.mapAuthors(authors);
     const categoriesMapped = this.mapCategories(categories);
 

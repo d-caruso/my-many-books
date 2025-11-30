@@ -3,24 +3,30 @@
 // ================================================================
 
 import Joi from 'joi';
+import { inject, injectable } from 'inversify';
 import { Op, WhereOptions, Order } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book } from '../models';
 import { ApiResponse } from '../common/ApiResponse';
 import { AuthorAttributes } from '../models/interfaces/ModelInterfaces';
 import { UniversalRequest } from '../types';
-import { createModel } from '../utils/sequelize-helpers';
-
-interface CreateAuthorRequest {
-  name: string;
-  surname: string;
-  nationality?: string;
-}
+import { TYPES } from '../container/types';
+import {
+  AuthorService,
+  AuthorServiceError,
+  AuthorUserContext,
+} from '../services/author/AuthorService';
+import { CreateAuthorDTO } from '../dtos/author/CreateAuthorDTO';
+import { UpdateAuthorDTO } from '../dtos/author/UpdateAuthorDTO';
+import { toAuthorResponseDTO } from '../dtos/author/AuthorResponseDTO';
+import { IAuthorRepository } from '../repositories/author/IAuthorRepository';
+import { USER_ROLES } from '@my-many-books/shared-auth';
 
 interface AuthorSearchFilters {
   name?: string;
   surname?: string;
   nationality?: string;
+  userId?: number;
 }
 
 /**
@@ -28,16 +34,15 @@ interface AuthorSearchFilters {
  * This class contains all the business logic for authors,
  * independent of the web framework (Express, Lambda, etc.).
  */
+@injectable()
 export class AuthorController extends BaseController {
-  private readonly createAuthorSchema = Joi.object<CreateAuthorRequest>({
-    name: Joi.string().required().max(255).trim(),
-    surname: Joi.string().required().max(255).trim(),
-    nationality: Joi.string().max(255).allow(null, '').optional(),
-  });
-
-  private readonly updateAuthorSchema = this.createAuthorSchema.fork(['name', 'surname'], schema =>
-    schema.optional()
-  );
+  constructor(
+    @inject(TYPES.AuthorService) private readonly authorService: AuthorService,
+    @inject(TYPES.AuthorRepository) private readonly authorRepository: IAuthorRepository
+  ) {
+    super();
+    this.authorService.initializeControllerContext();
+  }
 
   private readonly searchFiltersSchema = Joi.object<AuthorSearchFilters>({
     name: Joi.string().max(200).optional().trim(),
@@ -52,50 +57,29 @@ export class AuthorController extends BaseController {
    */
   async createAuthor(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
-    const body = this.parseBody<CreateAuthorRequest>(request);
-    if (!body) {
-      return this.createErrorResponseI18n('errors:request_body_required', 400);
-    }
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
 
-    const validation = this.validateRequest(body, this.createAuthorSchema);
-    if (!validation.isValid) {
-      return this.createErrorResponseI18n(
-        'errors:validation_failed',
-        400,
-        undefined,
-        validation.errors ? { errors: validation.errors } : undefined
-      );
-    }
-
-    const authorData = validation.value!;
-
-    // Check if author already exists
-    const existingAuthor = await Author.findOne({
-      where: {
-        name: authorData.name,
-        surname: authorData.surname,
-      },
-    });
-
-    if (existingAuthor) {
-      return this.createErrorResponseI18n('errors:resource_exists', 409, {
-        resource: 'Author',
-        field: 'name',
-      });
+    const body = this.parseBody(request);
+    const dto = CreateAuthorDTO.from(body);
+    const errors = CreateAuthorDTO.validate(dto);
+    if (errors.length > 0) {
+      return this.createValidationErrorResponse(errors);
     }
 
     try {
-      // Create author
-      const newAuthor = await createModel(Author, authorData);
-      return this.createSuccessResponse(newAuthor, 'Author created successfully', undefined, 201);
-    } catch (dbError: unknown) {
-      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n(
-        'errors:create_failed',
-        500,
-        { resource: 'author' },
-        { message: errorMessage }
+      const createdAuthor = await this.authorService.createAuthor(
+        dto.toServiceInput(),
+        this.getUserContext(request)!
       );
+      return this.createSuccessResponse(
+        toAuthorResponseDTO(createdAuthor),
+        'Author created successfully',
+        undefined,
+        201
+      );
+    } catch (error) {
+      return this.handleAuthorServiceError(error);
     }
   }
 
@@ -112,11 +96,16 @@ export class AuthorController extends BaseController {
     }
 
     const includeBooks = this.getQueryParameter(request, 'includeBooks') === 'true';
-    const includeClause = includeBooks ? [{ model: Book, through: { attributes: [] } }] : [];
-
-    const author = await Author.findByPk(Number(authorId), {
-      include: includeClause,
-    });
+    const author =
+      request.user?.role === USER_ROLES.ADMIN
+        ? await this.authorRepository.findById(Number(authorId), { includeBooks })
+        : await this.authorRepository.findUserAuthorById(
+            Number(authorId),
+            request.user?.userId ?? -1,
+            {
+              includeBooks,
+            }
+          );
 
     if (!author) {
       return this.createErrorResponseI18n('errors:author_not_found', 404);
@@ -132,71 +121,33 @@ export class AuthorController extends BaseController {
    */
   async updateAuthor(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
     const authorId = this.getPathParameter(request, 'id');
     if (!authorId || isNaN(Number(authorId))) {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'author' });
     }
 
-    const body = this.parseBody<Partial<CreateAuthorRequest>>(request);
-    if (!body) {
-      return this.createErrorResponseI18n('errors:request_body_required', 400);
-    }
-
-    const validation = this.validateRequest(body, this.updateAuthorSchema);
-    if (!validation.isValid) {
-      return this.createErrorResponseI18n(
-        'errors:validation_failed',
-        400,
-        undefined,
-        validation.errors ? { errors: validation.errors } : undefined
-      );
-    }
-
-    const author = await Author.findByPk(Number(authorId));
-    if (!author) {
-      return this.createErrorResponseI18n('errors:author_not_found', 404);
-    }
-
-    // Verify ownership (authorization middleware already checked CASL permissions)
-    const ownershipError = this.verifyOwnership(request, author.userId);
-    if (ownershipError) return ownershipError;
-
-    const authorData = validation.value!;
-
-    // Check for name conflicts on update
-    if (
-      (authorData.name || authorData.surname) &&
-      (authorData.name !== author.name || authorData.surname !== author.surname)
-    ) {
-      const name = authorData.name ?? author.name;
-      const surname = authorData.surname ?? author.surname;
-
-      const existingAuthor = await Author.findOne({
-        where: {
-          name,
-          surname,
-        },
-      });
-
-      if (existingAuthor && existingAuthor.id !== author.id) {
-        return this.createErrorResponseI18n('errors:resource_exists', 409, {
-          resource: 'Author',
-          field: 'name',
-        });
-      }
+    const body = this.parseBody(request);
+    const dto = UpdateAuthorDTO.from(body);
+    const errors = UpdateAuthorDTO.validate(dto);
+    if (errors.length > 0) {
+      return this.createValidationErrorResponse(errors);
     }
 
     try {
-      await author.update(authorData);
-      return this.createSuccessResponse(author, 'Author updated successfully');
-    } catch (dbError: unknown) {
-      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n(
-        'errors:update_failed',
-        500,
-        { resource: 'author' },
-        { message: errorMessage }
+      const updated = await this.authorService.updateAuthor(
+        Number(authorId),
+        dto.toServiceInput(),
+        this.getUserContext(request)!
       );
+      return this.createSuccessResponse(
+        toAuthorResponseDTO(updated),
+        'Author updated successfully'
+      );
+    } catch (error) {
+      return this.handleAuthorServiceError(error);
     }
   }
 
@@ -207,47 +158,19 @@ export class AuthorController extends BaseController {
    */
   async deleteAuthor(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
     const authorId = this.getPathParameter(request, 'id');
     if (!authorId || isNaN(Number(authorId))) {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'author' });
     }
 
-    const author = await Author.findByPk(Number(authorId));
-
-    if (!author) {
-      return this.createErrorResponseI18n('errors:author_not_found', 404);
-    }
-
-    // Verify ownership (authorization middleware already checked CASL permissions)
-    const ownershipError = this.verifyOwnership(request, author.userId);
-    if (ownershipError) return ownershipError;
-
-    // Check if author has books before deletion
-    const bookCount = await Book.count({
-      include: [
-        {
-          model: Author,
-          where: { id: Number(authorId) },
-        },
-      ],
-    });
-
-    if (bookCount > 0) {
-      return this.createErrorResponseI18n('errors:author_has_books', 409);
-    }
-
     try {
-      await author.destroy();
-      // Return a 204 No Content status for successful deletion
+      await this.authorService.deleteAuthor(Number(authorId), this.getUserContext(request)!);
       return this.createSuccessResponse(null, 'Author deleted successfully', undefined, 204);
-    } catch (dbError: unknown) {
-      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-      return this.createErrorResponseI18n(
-        'errors:delete_failed',
-        500,
-        { resource: 'author' },
-        { message: errorMessage }
-      );
+    } catch (error) {
+      return this.handleAuthorServiceError(error);
     }
   }
 
@@ -258,6 +181,9 @@ export class AuthorController extends BaseController {
    */
   async listAuthors(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
     const pagination = this.getPaginationParams(request);
     const filters = this.getQueryParameter(request, 'filters');
     const includeBooks = this.getQueryParameter(request, 'includeBooks') === 'true';
@@ -281,28 +207,11 @@ export class AuthorController extends BaseController {
       }
     }
 
-    // Build the where clause dynamically
-    const whereConditions: WhereOptions<AuthorAttributes>[] = [];
-
-    if (searchFilters.name && searchFilters.surname) {
-      whereConditions.push({ name: { [Op.iLike]: `%${searchFilters.name}%` } });
-      whereConditions.push({ surname: { [Op.iLike]: `%${searchFilters.surname}%` } });
-    } else if (searchFilters.name) {
-      whereConditions.push({
-        [Op.or]: [
-          { name: { [Op.iLike]: `%${searchFilters.name}%` } },
-          { surname: { [Op.iLike]: `%${searchFilters.name}%` } },
-        ],
-      });
-    } else if (searchFilters.surname) {
-      whereConditions.push({ surname: { [Op.iLike]: `%${searchFilters.surname}%` } });
+    if (request.user?.role !== USER_ROLES.ADMIN && request.user?.userId !== undefined) {
+      searchFilters.userId = request.user.userId;
     }
 
-    if (searchFilters.nationality) {
-      whereConditions.push({ nationality: { [Op.iLike]: `%${searchFilters.nationality}%` } });
-    }
-
-    const whereClause = whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
+    const whereClause = this.buildWhereClauseFromFilters(searchFilters);
 
     const includeClause = includeBooks ? [{ model: Book, through: { attributes: [] } }] : [];
 
@@ -330,29 +239,20 @@ export class AuthorController extends BaseController {
    */
   async searchAuthors(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
     const query = this.getQueryParameter(request, 'q');
 
     if (!query || query.trim().length < 2) {
       return this.createErrorResponseI18n('errors:search_query_min_length', 400, { min: 2 });
     }
 
-    const searchTerm = query.trim();
-
-    // Search across name and surname fields using MySQL-compatible LIKE
-    const authors = await Author.findAll({
-      where: {
-        [Op.or]: [
-          { name: { [Op.like]: `%${searchTerm}%` } },
-          { surname: { [Op.like]: `%${searchTerm}%` } },
-        ],
-      },
-      attributes: ['id', 'name', 'surname', 'nationality', 'creationDate', 'updateDate'],
-      order: [
-        ['surname', 'ASC'],
-        ['name', 'ASC'],
-      ],
-      limit: 20, // Limit results for autocomplete
-    });
+    const authors = await this.authorRepository.searchByQuery(
+      query.trim(),
+      request.user!.userId,
+      20
+    );
 
     return this.createSuccessResponse(authors);
   }
@@ -364,6 +264,9 @@ export class AuthorController extends BaseController {
    */
   async getAuthorBooks(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
     const authorId = this.getPathParameter(request, 'id');
     if (!authorId || isNaN(Number(authorId))) {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'author' });
@@ -371,7 +274,7 @@ export class AuthorController extends BaseController {
 
     const pagination = this.getPaginationParams(request);
 
-    const author = await Author.findByPk(Number(authorId));
+    const author = await this.authorRepository.findById(Number(authorId));
     if (!author) {
       return this.createErrorResponseI18n('errors:author_not_found', 404);
     }
@@ -405,6 +308,80 @@ export class AuthorController extends BaseController {
       meta
     );
   }
-}
+  private buildWhereClauseFromFilters(
+    searchFilters: AuthorSearchFilters
+  ): WhereOptions<AuthorAttributes> {
+    const whereConditions: WhereOptions<AuthorAttributes>[] = [];
 
-export const authorController = new AuthorController();
+    if (searchFilters.name && searchFilters.surname) {
+      whereConditions.push({ name: { [Op.iLike]: `%${searchFilters.name}%` } });
+      whereConditions.push({ surname: { [Op.iLike]: `%${searchFilters.surname}%` } });
+    } else if (searchFilters.name) {
+      whereConditions.push({
+        [Op.or]: [
+          { name: { [Op.iLike]: `%${searchFilters.name}%` } },
+          { surname: { [Op.iLike]: `%${searchFilters.name}%` } },
+        ],
+      });
+    } else if (searchFilters.surname) {
+      whereConditions.push({ surname: { [Op.iLike]: `%${searchFilters.surname}%` } });
+    }
+
+    if (searchFilters.nationality) {
+      whereConditions.push({ nationality: { [Op.iLike]: `%${searchFilters.nationality}%` } });
+    }
+
+    if (searchFilters.userId !== undefined) {
+      whereConditions.push({ userId: searchFilters.userId });
+    }
+
+    return whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
+  }
+
+  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
+    if (!request.user?.userId) {
+      return this.createErrorResponseI18n('errors:auth_required', 401);
+    }
+    return null;
+  }
+
+  private getUserContext(request: UniversalRequest): AuthorUserContext | null {
+    if (!request.user) {
+      return null;
+    }
+    const context: AuthorUserContext = {
+      userId: request.user.userId,
+    };
+    if (request.user.role) {
+      context.role = request.user.role;
+    }
+    return context;
+  }
+
+  private handleAuthorServiceError(error: unknown): ApiResponse {
+    if (!(error instanceof AuthorServiceError)) {
+      throw error;
+    }
+
+    switch (error.code) {
+      case 'DUPLICATE_AUTHOR':
+        return this.createErrorResponseI18n('errors:resource_exists', 409, {
+          resource: 'Author',
+          field: 'name',
+        });
+      case 'AUTHOR_NOT_FOUND':
+        return this.createErrorResponseI18n('errors:author_not_found', 404);
+      case 'AUTHOR_HAS_BOOKS':
+        return this.createErrorResponseI18n('errors:author_has_books', 409);
+      case 'FORBIDDEN':
+      default:
+        return this.createErrorResponseI18n('errors:permission_denied', 403);
+    }
+  }
+
+  private createValidationErrorResponse(errors: string[]): ApiResponse {
+    return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
+      errors,
+    });
+  }
+}

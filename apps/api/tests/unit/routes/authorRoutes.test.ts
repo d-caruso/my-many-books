@@ -4,45 +4,45 @@
 
 import request from 'supertest';
 import express from 'express';
-import authorRoutes from '../../../src/routes/authorRoutes';
 import { authMiddleware } from '../../../src/middleware/auth';
+import { container } from '../../../src/container';
 
-// Mock dependencies
-jest.mock('../../../src/controllers/AuthorController', () => ({
-  authorController: {
-    listAuthors: jest.fn(),
-    getAuthor: jest.fn(),
-    createAuthor: jest.fn(),
-    updateAuthor: jest.fn(),
-    deleteAuthor: jest.fn(),
-    getAuthorBooks: jest.fn(),
-    searchAuthors: jest.fn(),
-  }
-}));
+const mockAuthorController = {
+  listAuthors: jest.fn(),
+  getAuthor: jest.fn(),
+  createAuthor: jest.fn(),
+  updateAuthor: jest.fn(),
+  deleteAuthor: jest.fn(),
+  getAuthorBooks: jest.fn(),
+  searchAuthors: jest.fn(),
+};
+
+jest.mock('../../../src/container', () => {
+  const actual = jest.requireActual('../../../src/container');
+  return {
+    ...actual,
+    container: {
+      ...actual.container,
+      get: jest.fn(),
+    },
+  };
+});
 jest.mock('../../../src/middleware/auth');
 
 const app = express();
 app.use(express.json());
+
+(container.get as jest.Mock).mockReturnValue(mockAuthorController);
+const authorRoutes = require('../../../src/routes/authorRoutes').default;
 app.use('/api/authors', authorRoutes);
 
 describe('Author Routes', () => {
-  let mockAuthorController: {
-    listAuthors: jest.Mock;
-    getAuthor: jest.Mock;
-    createAuthor: jest.Mock;
-    updateAuthor: jest.Mock;
-    deleteAuthor: jest.Mock;
-    getAuthorBooks: jest.Mock;
-    searchAuthors: jest.Mock;
-  };
   let mockAuthMiddleware: jest.MockedFunction<typeof authMiddleware>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Get the mocked controller
-    const { authorController } = require('../../../src/controllers/AuthorController');
-    mockAuthorController = authorController;
+    Object.values(mockAuthorController).forEach(method => (method as jest.Mock).mockReset());
+    (container.get as jest.Mock).mockReturnValue(mockAuthorController);
     
     // Mock auth middleware to pass through
     mockAuthMiddleware = authMiddleware as jest.MockedFunction<typeof authMiddleware>;
