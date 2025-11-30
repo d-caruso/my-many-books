@@ -55,6 +55,9 @@ describe('Author & Category Routes Authorization Integration', () => {
     app.use('/api/v1/authors', authorRoutes);
     app.use('/api/v1/categories', categoryRoutes);
     jest.clearAllMocks();
+    (Author.create as jest.Mock).mockResolvedValue({ id: 1 });
+    (Category.create as jest.Mock).mockResolvedValue({ id: 1 });
+    (Book.count as jest.Mock).mockResolvedValue(0);
   });
 
   // ============================================

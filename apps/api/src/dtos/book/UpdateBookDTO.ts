@@ -9,6 +9,7 @@ import {
   validateSync,
 } from 'class-validator';
 import { BOOK_STATUS } from '@/utils/constants';
+import type { BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { UpdateBookInput } from '../../services/book/BookService';
 
 export class UpdateBookDTO {
@@ -31,7 +32,7 @@ export class UpdateBookDTO {
 
   @IsOptional()
   @IsEnum(BOOK_STATUS)
-  status?: string;
+  status?: BookStatus;
 
   @IsOptional()
   @IsString()
@@ -62,7 +63,7 @@ export class UpdateBookDTO {
     if (this.isbnCode !== undefined) input.isbnCode = this.isbnCode;
     if (this.editionNumber !== undefined) input.editionNumber = this.editionNumber;
     if (this.editionDate !== undefined) input.editionDate = this.editionDate;
-    if (this.status !== undefined) input.status = this.status as any;
+    if (this.status !== undefined) input.status = this.status;
     if (this.notes !== undefined) input.notes = this.notes;
     if (this.authorIds !== undefined) input.authorIds = this.authorIds;
     if (this.categoryIds !== undefined) input.categoryIds = this.categoryIds;

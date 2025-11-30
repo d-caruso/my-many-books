@@ -4,11 +4,22 @@
 
 import request from 'supertest';
 import express from 'express';
-import adminRoutes from '../../../src/routes/adminRoutes';
 import { authMiddleware } from '../../../src/middleware/auth';
 import { requirePermission } from '../../../src/middleware/authorization';
+import { container } from '../../../src/container';
+import { TYPES } from '../../../src/container/types';
 
 // Mock dependencies
+jest.mock('../../../src/container', () => {
+  const actual = jest.requireActual('../../../src/container');
+  return {
+    ...actual,
+    container: {
+      ...actual.container,
+      get: jest.fn(),
+    },
+  };
+});
 /* jest.mock('../../../src/controllers/admin/StatsController', () => ({
   statsController: {
     getSummary: jest.fn(),
@@ -16,14 +27,6 @@ import { requirePermission } from '../../../src/middleware/authorization';
     getBookStats: jest.fn(),
   },
 })); */
-jest.mock('../../../src/controllers/admin/AdminUserController', () => ({
-  adminUserController: {
-    getAllUsers: jest.fn(),
-    getUserById: jest.fn(),
-    updateUser: jest.fn(),
-    deleteUser: jest.fn(),
-  },
-}));
 jest.mock('../../../src/controllers/admin/AdminBookController', () => ({
   adminBookController: {
     getAllBooks: jest.fn(),
@@ -51,6 +54,10 @@ jest.mock('@my-many-books/shared-auth', () => ({
     USER: 'User',
     ALL: 'all',
   },
+  USER_ROLES: {
+    ADMIN: 'admin',
+    USER: 'user',
+  },
 }));
 jest.mock('../../../src/validation', () => ({
   validateQuery: jest.fn(() => (_req: any, _res: any, next: any) => next()),
@@ -64,6 +71,21 @@ jest.mock('../../../src/validation', () => ({
   adminStatsQuerySchema: {},
 }));
 
+const mockAdminUserController = {
+  getAllUsers: jest.fn(),
+  getUserById: jest.fn(),
+  updateUser: jest.fn(),
+  deleteUser: jest.fn(),
+};
+
+(container.get as jest.Mock).mockImplementation(token => {
+  if (token === TYPES.AdminUserController) {
+    return mockAdminUserController;
+  }
+  throw new Error(`Unexpected token ${token.toString()}`);
+});
+
+const adminRoutes = require('../../../src/routes/adminRoutes').default;
 const app = express();
 app.use(express.json());
 app.use('/api/admin', adminRoutes);
@@ -74,12 +96,6 @@ describe('Admin Routes', () => {
     getUserStats: jest.Mock;
     getBookStats: jest.Mock;
   }; */
-  let mockAdminUserController: {
-    getAllUsers: jest.Mock;
-    getUserById: jest.Mock;
-    updateUser: jest.Mock;
-    deleteUser: jest.Mock;
-  };
   let mockAdminBookController: {
     getAllBooks: jest.Mock;
     getBookById: jest.Mock;
@@ -95,10 +111,10 @@ describe('Admin Routes', () => {
     // Get the mocked controllers
     // const { statsController } = require('../../../src/controllers/admin/StatsController');
     // mockStatsController = statsController;
-    const { adminUserController } = require('../../../src/controllers/admin/AdminUserController');
-    mockAdminUserController = adminUserController;
     const { adminBookController } = require('../../../src/controllers/admin/AdminBookController');
     mockAdminBookController = adminBookController;
+
+    Object.values(mockAdminUserController).forEach(method => method.mockReset());
 
     // Mock auth middleware to pass through and set an admin user
     mockAuthMiddleware = authMiddleware as jest.MockedFunction<typeof authMiddleware>;

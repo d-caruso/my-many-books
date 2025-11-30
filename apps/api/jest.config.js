@@ -8,7 +8,7 @@ module.exports = {
   ],
   transform: {
     '^.+\\.ts$': ['ts-jest', {
-      tsconfig: 'tsconfig.test.json'
+      tsconfig: '<rootDir>/tsconfig.test.json'
     }],
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],

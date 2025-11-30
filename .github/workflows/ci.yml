@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements ]
+    branches: [ main, develop, feature/architecture-improvement, phase/backend-expansion-all-resources ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements ]
+    branches: [ main, develop, feature/architecture-improvements, phase/backend-expansion-all-resources ]
   workflow_dispatch:
     inputs:
       run_tests:

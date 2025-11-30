@@ -62,9 +62,13 @@ describe('Express App Integration', () => {
         .post('/api/v1/health')
         .set('Content-Type', 'application/json')
         .send('invalid json')
-        .expect(500); // Current implementation returns 500 for invalid JSON
+        .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Invalid JSON payload',
+        code: 'INVALID_JSON',
+      });
     });
   });
 

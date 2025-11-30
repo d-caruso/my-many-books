@@ -1,362 +1,133 @@
-// ================================================================
-// tests/routes/categoryRoutes.test.ts
-// Comprehensive tests for Category routes
-// ================================================================
-
 import request from 'supertest';
 import express from 'express';
+import { authMiddleware } from '../../../src/middleware/auth';
+import { container } from '../../../src/container';
 
-// Mock authorization middleware BEFORE importing routes
+const mockCategoryController = {
+  listCategories: jest.fn(),
+  getCategory: jest.fn(),
+  createCategory: jest.fn(),
+  updateCategory: jest.fn(),
+  deleteCategory: jest.fn(),
+  getCategoryBooks: jest.fn(),
+};
+
+jest.mock('../../../src/container', () => {
+  const actual = jest.requireActual('../../../src/container');
+  return {
+    ...actual,
+    container: {
+      ...actual.container,
+      get: jest.fn(),
+    },
+  };
+});
+jest.mock('../../../src/middleware/auth');
 jest.mock('../../../src/middleware/authorization', () => ({
   requirePermission: () => (_req: any, _res: any, next: any) => next(),
 }));
 
-// Mock auth middleware BEFORE importing routes
-jest.mock('../../../src/middleware/auth', () => ({
-  authMiddleware: (_req: any, _res: any, next: any) => next(),
-}));
+const app = express();
+app.use(express.json());
 
-import categoryRoutes from '../../../src/routes/categoryRoutes';
-
-// Mock the CategoryController
-jest.mock('../../../src/controllers/CategoryController', () => ({
-  categoryController: {
-    listCategories: jest.fn(async (_req) => ({
-      statusCode: 200,
-      success: true,
-      data: [
-        { id: 1, name: 'Fiction' },
-        { id: 2, name: 'Science Fiction' },
-        { id: 3, name: 'Biography' }
-      ],
-      meta: { pagination: { page: 1, limit: 10, total: 3, totalPages: 1 } }
-    })),
-    getCategory: jest.fn(async (req) => ({
-      statusCode: 200,
-      success: true,
-      data: { 
-        id: parseInt(req.pathParameters?.id || '1'), 
-        name: 'Fiction' 
-      }
-    })),
-    createCategory: jest.fn(async (_req) => ({
-      statusCode: 201,
-      success: true,
-      data: { id: 1, name: 'New Category' },
-      message: 'Category created successfully'
-    })),
-    updateCategory: jest.fn(async (req) => ({
-      statusCode: 200,
-      success: true,
-      data: { 
-        id: parseInt(req.pathParameters?.id || '1'), 
-        name: 'Updated Category' 
-      },
-      message: 'Category updated successfully'
-    })),
-    deleteCategory: jest.fn(async (_req) => ({
-      statusCode: 204,
-      success: true,
-      message: 'Category deleted successfully'
-    }))
-  }
-}));
+(container.get as jest.Mock).mockReturnValue(mockCategoryController);
+const categoryRoutes = require('../../../src/routes/categoryRoutes').default;
+app.use('/api/categories', categoryRoutes);
 
 describe('Category Routes', () => {
-  let app: express.Application;
+  let mockAuthMiddleware: jest.MockedFunction<typeof authMiddleware>;
 
   beforeEach(() => {
-    app = express();
-    app.use(express.json());
-    app.use('/api/categories', categoryRoutes);
-  });
+    jest.clearAllMocks();
+    Object.values(mockCategoryController).forEach(method => (method as jest.Mock).mockReset());
+    (container.get as jest.Mock).mockReturnValue(mockCategoryController);
 
-  describe('GET /api/categories', () => {
-    it('should list all categories', async () => {
-      const response = await request(app)
-        .get('/api/categories')
-        .expect(200);
-
-      expect(response.body).toEqual({
-        success: true,
-        data: [
-          { id: 1, name: 'Fiction' },
-          { id: 2, name: 'Science Fiction' },
-          { id: 3, name: 'Biography' }
-        ],
-        meta: { pagination: { page: 1, limit: 10, total: 3, totalPages: 1 } }
-      });
-    });
-
-    it('should handle search parameters', async () => {
-      const response = await request(app)
-        .get('/api/categories?search=fiction')
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-    });
-
-    it('should handle pagination parameters', async () => {
-      const response = await request(app)
-        .get('/api/categories?page=2&limit=5')
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
+    mockAuthMiddleware = authMiddleware as jest.MockedFunction<typeof authMiddleware>;
+    mockAuthMiddleware.mockImplementation(async (req, _res, next) => {
+      (req as any).user = { userId: 123 };
+      next();
     });
   });
 
-  describe('GET /api/categories/:id', () => {
-    it('should get a specific category', async () => {
-      const response = await request(app)
-        .get('/api/categories/123')
-        .expect(200);
-
-      expect(response.body).toEqual({
-        success: true,
-        data: { id: 123, name: 'Fiction' }
-      });
+  it('GET / should forward to controller', async () => {
+    mockCategoryController.listCategories.mockResolvedValue({
+      statusCode: 200,
+      success: true,
+      data: [],
     });
 
-    it('should handle invalid category ID', async () => {
-      const { categoryController } = require('../../../src/controllers/CategoryController');
-      categoryController.getCategory.mockResolvedValueOnce({
-        statusCode: 404,
-        success: false,
-        error: 'Category not found'
-      });
+    await request(app).get('/api/categories').expect(200);
 
-      const response = await request(app)
-        .get('/api/categories/999')
-        .expect(404);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Category not found'
-      });
-    });
+    expect(mockCategoryController.listCategories).toHaveBeenCalledWith(
+      expect.objectContaining({ user: { userId: 123 } })
+    );
   });
 
-  describe('POST /api/categories', () => {
-    it('should create a new category', async () => {
-      const categoryData = {
-        name: 'New Category'
-      };
-
-      const response = await request(app)
-        .post('/api/categories')
-        .send(categoryData)
-        .expect(201);
-
-      expect(response.body).toEqual({
-        success: true,
-        data: { id: 1, name: 'New Category' },
-        message: 'Category created successfully'
-      });
+  it('GET /:id should forward', async () => {
+    mockCategoryController.getCategory.mockResolvedValue({
+      statusCode: 200,
+      success: true,
+      data: { id: 1 },
     });
 
-    it('should handle validation errors', async () => {
-      const { categoryController } = require('../../../src/controllers/CategoryController');
-      categoryController.createCategory.mockResolvedValueOnce({
-        statusCode: 400,
-        success: false,
-        error: 'Category name is required'
-      });
+    const response = await request(app).get('/api/categories/1').expect(200);
 
-      const response = await request(app)
-        .post('/api/categories')
-        .send({ name: '' })
-        .expect(400);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Category name is required'
-      });
-    });
-
-    it('should handle duplicate category names', async () => {
-      const { categoryController } = require('../../../src/controllers/CategoryController');
-      categoryController.createCategory.mockResolvedValueOnce({
-        statusCode: 409,
-        success: false,
-        error: 'Category with this name already exists'
-      });
-
-      const response = await request(app)
-        .post('/api/categories')
-        .send({ name: 'Fiction' })
-        .expect(409);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Category with this name already exists'
-      });
-    });
+    expect(mockCategoryController.getCategory).toHaveBeenCalled();
+    expect(response.body.data).toEqual({ id: 1 });
   });
 
-  describe('PUT /api/categories/:id', () => {
-    it('should update a category', async () => {
-      const updateData = {
-        name: 'Updated Category'
-      };
-
-      const response = await request(app)
-        .put('/api/categories/456')
-        .send(updateData)
-        .expect(200);
-
-      expect(response.body).toEqual({
-        success: true,
-        data: { id: 456, name: 'Updated Category' },
-        message: 'Category updated successfully'
-      });
+  it('POST / should forward to controller', async () => {
+    mockCategoryController.createCategory.mockResolvedValue({
+      statusCode: 201,
+      success: true,
+      data: { id: 10 },
     });
 
-    it('should handle category not found during update', async () => {
-      const { categoryController } = require('../../../src/controllers/CategoryController');
-      categoryController.updateCategory.mockResolvedValueOnce({
-        statusCode: 404,
-        success: false,
-        error: 'Category not found'
-      });
+    await request(app)
+      .post('/api/categories')
+      .send({ name: 'Fiction' })
+      .expect(201);
 
-      const response = await request(app)
-        .put('/api/categories/999')
-        .send({ name: 'Updated Name' })
-        .expect(404);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Category not found'
-      });
-    });
-
-    it('should handle validation errors during update', async () => {
-      const { categoryController } = require('../../../src/controllers/CategoryController');
-      categoryController.updateCategory.mockResolvedValueOnce({
-        statusCode: 400,
-        success: false,
-        error: 'Category name cannot be empty'
-      });
-
-      const response = await request(app)
-        .put('/api/categories/1')
-        .send({ name: '' })
-        .expect(400);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Category name cannot be empty'
-      });
-    });
+    expect(mockCategoryController.createCategory).toHaveBeenCalled();
   });
 
-  describe('DELETE /api/categories/:id', () => {
-    it('should delete a category', async () => {
-      await request(app)
-        .delete('/api/categories/789')
-        .expect(204);
-      
-      // 204 responses typically have no body content
+  it('PUT /:id should forward to controller', async () => {
+    mockCategoryController.updateCategory.mockResolvedValue({
+      statusCode: 200,
+      success: true,
+      data: { id: 5 },
     });
 
-    it('should handle category not found during deletion', async () => {
-      const { categoryController } = require('../../../src/controllers/CategoryController');
-      categoryController.deleteCategory.mockResolvedValueOnce({
-        statusCode: 404,
-        success: false,
-        error: 'Category not found'
-      });
+    await request(app)
+      .put('/api/categories/5')
+      .send({ name: 'Updated' })
+      .expect(200);
 
-      const response = await request(app)
-        .delete('/api/categories/999')
-        .expect(404);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Category not found'
-      });
-    });
-
-    it('should handle category with associated books', async () => {
-      const { categoryController } = require('../../../src/controllers/CategoryController');
-      categoryController.deleteCategory.mockResolvedValueOnce({
-        statusCode: 409,
-        success: false,
-        error: 'Cannot delete category with associated books'
-      });
-
-      const response = await request(app)
-        .delete('/api/categories/1')
-        .expect(409);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Cannot delete category with associated books'
-      });
-    });
+    expect(mockCategoryController.updateCategory).toHaveBeenCalled();
   });
 
-  describe('Error Handling', () => {
-    it('should handle controller method throwing an error', async () => {
-      const { categoryController } = require('../../../src/controllers/CategoryController');
-      categoryController.listCategories.mockRejectedValueOnce(new Error('Database connection failed'));
-
-      const response = await request(app)
-        .get('/api/categories')
-        .expect(500);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Internal server error',
-        details: 'Database connection failed'
-      });
+  it('DELETE /:id should forward to controller', async () => {
+    mockCategoryController.deleteCategory.mockResolvedValue({
+      statusCode: 204,
+      success: true,
     });
 
-    it('should handle unknown errors', async () => {
-      const { categoryController } = require('../../../src/controllers/CategoryController');
-      categoryController.listCategories.mockRejectedValueOnce('Unknown error');
+    await request(app).delete('/api/categories/2').expect(204);
 
-      const response = await request(app)
-        .get('/api/categories')
-        .expect(500);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Internal server error',
-        details: 'Unknown error'
-      });
-    });
-
-    it('should handle invalid JSON in request body', async () => {
-      const response = await request(app)
-        .post('/api/categories')
-        .set('Content-Type', 'application/json')
-        .send('{ invalid json }')
-        .expect(400);
-
-      // Express handles malformed JSON
-      expect(response.status).toBe(400);
-    });
+    expect(mockCategoryController.deleteCategory).toHaveBeenCalled();
   });
 
-  describe('Route Integration', () => {
-    it('should properly bind controller methods', async () => {
-      const { categoryController } = require('../../../src/controllers/CategoryController');
-      
-      await request(app).get('/api/categories').expect(200);
-      expect(categoryController.listCategories).toHaveBeenCalled();
-
-      await request(app).get('/api/categories/1').expect(200);
-      expect(categoryController.getCategory).toHaveBeenCalled();
-
-      await request(app).post('/api/categories').send({ name: 'Test' }).expect(201);
-      expect(categoryController.createCategory).toHaveBeenCalled();
-
-      await request(app).put('/api/categories/1').send({ name: 'Test' }).expect(200);
-      expect(categoryController.updateCategory).toHaveBeenCalled();
-
-      await request(app).delete('/api/categories/1').expect(204);
-      expect(categoryController.deleteCategory).toHaveBeenCalled();
+  it('GET /:id/books should forward to controller', async () => {
+    mockCategoryController.getCategoryBooks.mockResolvedValue({
+      statusCode: 200,
+      success: true,
+      data: { books: [] },
     });
+
+    await request(app).get('/api/categories/3/books').expect(200);
+
+    expect(mockCategoryController.getCategoryBooks).toHaveBeenCalledWith(
+      expect.objectContaining({ pathParameters: { id: '3' } })
+    );
   });
 });

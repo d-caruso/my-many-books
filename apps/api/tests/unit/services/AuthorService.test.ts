@@ -1,0 +1,132 @@
+import { AuthorService, AuthorServiceError } from '../../../src/services/author/AuthorService';
+import { IAuthorRepository } from '../../../src/repositories/author/IAuthorRepository';
+
+describe('AuthorService', () => {
+  let service: AuthorService;
+  let repository: jest.Mocked<IAuthorRepository>;
+
+  const userContext = { userId: 1, role: 'user' };
+
+  beforeEach(() => {
+    repository = {
+      findById: jest.fn(),
+      findUserAuthorById: jest.fn(),
+      findByNameAndSurname: jest.fn(),
+      list: jest.fn(),
+      searchByQuery: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      countBooks: jest.fn(),
+    };
+
+    service = new AuthorService(repository);
+  });
+
+  describe('createAuthor', () => {
+    it('creates author for current user', async () => {
+      repository.findByNameAndSurname.mockResolvedValue(null);
+      repository.create.mockResolvedValue({
+        id: 1,
+        name: 'John',
+        surname: 'Doe',
+        userId: 1,
+      } as any);
+
+      const author = await service.createAuthor(
+        { name: 'John', surname: 'Doe' },
+        userContext
+      );
+
+      expect(repository.findByNameAndSurname).toHaveBeenCalledWith('John', 'Doe', 1);
+      expect(repository.create).toHaveBeenCalledWith({
+        name: 'John',
+        surname: 'Doe',
+        nationality: null,
+        userId: 1,
+      });
+      expect(author.id).toBe(1);
+    });
+
+    it('throws when author exists', async () => {
+      repository.findByNameAndSurname.mockResolvedValue({ id: 1 } as any);
+
+      await expect(
+        service.createAuthor({ name: 'John', surname: 'Doe' }, userContext)
+      ).rejects.toThrow(AuthorServiceError);
+    });
+  });
+
+  describe('updateAuthor', () => {
+    it('updates author when owned by user', async () => {
+      repository.findById.mockResolvedValue({
+        id: 2,
+        name: 'Old',
+        surname: 'Name',
+        userId: 1,
+      } as any);
+      repository.findByNameAndSurname.mockResolvedValue(null);
+      repository.update.mockResolvedValue({
+        id: 2,
+        name: 'New',
+        surname: 'Name',
+        userId: 1,
+      } as any);
+
+      const updated = await service.updateAuthor(
+        2,
+        { name: 'New' },
+        userContext
+      );
+
+      expect(repository.update).toHaveBeenCalledWith(
+        2,
+        expect.objectContaining({ name: 'New' })
+      );
+      expect(updated.name).toBe('New');
+    });
+
+    it('throws when user does not own author', async () => {
+      repository.findById.mockResolvedValue({
+        id: 3,
+        name: 'Other',
+        surname: 'User',
+        userId: 2,
+      } as any);
+
+      await expect(
+        service.updateAuthor(3, { name: 'Hack' }, userContext)
+      ).rejects.toThrow(AuthorServiceError);
+    });
+  });
+
+  describe('deleteAuthor', () => {
+    it('deletes author when without books', async () => {
+      repository.findById.mockResolvedValue({
+        id: 4,
+        name: 'Jane',
+        surname: 'Doe',
+        userId: 1,
+      } as any);
+      repository.countBooks.mockResolvedValue(0);
+      repository.delete.mockResolvedValue(true);
+
+      await service.deleteAuthor(4, userContext);
+
+      expect(repository.countBooks).toHaveBeenCalledWith(4);
+      expect(repository.delete).toHaveBeenCalledWith(4);
+    });
+
+    it('throws when author has books', async () => {
+      repository.findById.mockResolvedValue({
+        id: 4,
+        name: 'Jane',
+        surname: 'Doe',
+        userId: 1,
+      } as any);
+      repository.countBooks.mockResolvedValue(2);
+
+      await expect(service.deleteAuthor(4, userContext)).rejects.toThrow(AuthorServiceError);
+    });
+  });
+});

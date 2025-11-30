@@ -28,7 +28,6 @@ describe('i18n Integration Tests', () => {
     ModelManager.initialize(sequelize);
     await ModelManager.syncDatabase(true);
 
-    authorController = new AuthorController();
   });
 
   afterAll(async () => {
@@ -38,6 +37,7 @@ describe('i18n Integration Tests', () => {
   beforeEach(async () => {
     container.snapshot();
     bookController = container.get<BookController>(TYPES.BookController);
+    authorController = container.get<AuthorController>(TYPES.AuthorController);
     await Book.destroy({ where: {}, truncate: true });
     await Author.destroy({ where: {}, truncate: true });
     await Category.destroy({ where: {}, truncate: true });
