@@ -15,7 +15,7 @@ import {
   AuthorQueryOptions,
   AuthorUpdateInput,
   PaginatedResult,
-} from './AuthorRepository.types';
+} from './AuthorRepositoryTypes';
 import { IAuthorRepository } from './IAuthorRepository';
 
 @injectable()

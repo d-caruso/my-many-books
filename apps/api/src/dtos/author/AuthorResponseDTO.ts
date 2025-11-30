@@ -1,4 +1,4 @@
-import { AuthorEntity } from '../../repositories/author/AuthorRepository.types';
+import { AuthorEntity } from '../../repositories/author/AuthorRepositoryTypes';
 
 export interface AuthorResponseDTO {
   id: number;

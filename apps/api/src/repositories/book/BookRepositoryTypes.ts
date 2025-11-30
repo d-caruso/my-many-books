@@ -3,19 +3,17 @@
 // Domain types used by the Book repository layer
 // ================================================================
 
-import {
-  BookAttributes,
-  BookCreationAttributes,
-  BookStatus,
-} from '@/models/interfaces/ModelInterfaces';
+import { BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import {
   IAssociationInput,
   ICreationAttributes,
-  IEntity,
   IListOptions,
   IQueryOptions,
   PaginatedResult as AdapterPaginatedResult,
 } from '../interfaces/adapters/IRepositoryAdapter';
+import { BookEntity } from '../../domain/entities/Book';
+
+export type { BookEntity } from '../../domain/entities/Book';
 
 export interface BookAssociationInput extends IAssociationInput {
   authorIds?: number[];
@@ -44,11 +42,6 @@ export interface BookListOptions extends IListOptions {
 }
 
 export type PaginatedResult<T extends BookEntity = BookEntity> = AdapterPaginatedResult<T>;
-
-export interface BookEntity extends BookAttributes, IEntity {
-  authors?: Array<{ id: number; name: string; surname?: string }>;
-  categories?: Array<{ id: number; name: string }>;
-}
 
 export interface BookCreationInput
   extends BookCreationAttributes,

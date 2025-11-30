@@ -9,7 +9,7 @@ import {
   AuthorQueryOptions,
   AuthorUpdateInput,
   PaginatedResult,
-} from './AuthorRepository.types';
+} from './AuthorRepositoryTypes';
 import { AuthorCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 
 export interface IAuthorRepository {

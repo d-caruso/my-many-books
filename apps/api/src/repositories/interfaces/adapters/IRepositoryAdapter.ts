@@ -3,10 +3,7 @@
 // Generic contracts shared by every persistence adapter
 // ================================================================
 
-export interface IEntity {
-  id: number | string;
-  [key: string]: unknown;
-}
+import { BaseEntity } from '../../../domain/entities/BaseEntity';
 
 export interface ICreationAttributes {
   [key: string]: unknown;
@@ -29,7 +26,7 @@ export interface IListOptions extends IQueryOptions {
   orderDirection?: 'ASC' | 'DESC';
 }
 
-export interface PaginatedResult<T extends IEntity> {
+export interface PaginatedResult<T extends BaseEntity> {
   rows: T[];
   total: number;
   limit: number;
@@ -37,7 +34,7 @@ export interface PaginatedResult<T extends IEntity> {
 }
 
 export interface IRepositoryAdapter<
-  Entity extends IEntity,
+  Entity extends BaseEntity,
   Creation extends ICreationAttributes,
   Associations extends IAssociationInput,
   Query extends IQueryOptions,

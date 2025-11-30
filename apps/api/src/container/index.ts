@@ -29,10 +29,7 @@ const container = new Container({
   defaultScope: 'Singleton',
 });
 
-container
-  .bind<IBookRepository>(TYPES.BookRepository)
-  .to(BookRepository)
-  .inSingletonScope();
+container.bind<IBookRepository>(TYPES.BookRepository).to(BookRepository).inSingletonScope();
 container.bind<BookService>(TYPES.BookService).to(BookService).inSingletonScope();
 container.bind<BookController>(TYPES.BookController).to(BookController).inTransientScope();
 

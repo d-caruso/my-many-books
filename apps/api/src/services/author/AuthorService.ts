@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { TYPES } from '../../container/types';
 import { IAuthorRepository } from '../../repositories/author/IAuthorRepository';
-import { AuthorEntity } from '../../repositories/author/AuthorRepository.types';
+import { AuthorEntity } from '../../repositories/author/AuthorRepositoryTypes';
 import { AuthorCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import { ApplicationError } from '../../errors/ApplicationError';
 
