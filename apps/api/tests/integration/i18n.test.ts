@@ -12,6 +12,8 @@ import { Category } from '../../src/models/Category';
 import { BookController } from '../../src/controllers/BookController';
 import { AuthorController } from '../../src/controllers/AuthorController';
 import { UniversalRequest } from '../../src/types';
+import { container } from '../../src/container';
+import { TYPES } from '../../src/container/types';
 
 describe('i18n Integration Tests', () => {
   let sequelize: Sequelize;
@@ -26,7 +28,6 @@ describe('i18n Integration Tests', () => {
     ModelManager.initialize(sequelize);
     await ModelManager.syncDatabase(true);
 
-    bookController = new BookController();
     authorController = new AuthorController();
   });
 
@@ -35,9 +36,15 @@ describe('i18n Integration Tests', () => {
   });
 
   beforeEach(async () => {
+    container.snapshot();
+    bookController = container.get<BookController>(TYPES.BookController);
     await Book.destroy({ where: {}, truncate: true });
     await Author.destroy({ where: {}, truncate: true });
     await Category.destroy({ where: {}, truncate: true });
+  });
+
+  afterEach(() => {
+    container.restore();
   });
 
   describe('Books API - Language Detection', () => {
@@ -74,6 +81,7 @@ describe('i18n Integration Tests', () => {
       const request: UniversalRequest = {
         body: undefined,
         headers: { 'accept-language': 'en' },
+        user: mockUser,
       };
 
       const response = await bookController.createBook(request);
@@ -87,6 +95,7 @@ describe('i18n Integration Tests', () => {
       const request: UniversalRequest = {
         body: undefined,
         headers: { 'accept-language': 'it' },
+        user: mockUser,
       };
 
       const response = await bookController.createBook(request);

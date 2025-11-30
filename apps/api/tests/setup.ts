@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { config } from 'dotenv';
 import { initializeI18n } from '@my-many-books/shared-i18n';
 

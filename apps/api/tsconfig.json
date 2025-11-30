@@ -26,6 +26,8 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "types": ["node", "jest"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
