@@ -27,9 +27,11 @@ import {
   bookIdParamSchema,
   isbnParamSchema,
 } from '../validation';
+import { container } from '../container';
+import { TYPES } from '../container/types';
 
 const router = Router();
-const bookController = new BookController();
+const bookController = container.get<BookController>(TYPES.BookController);
 
 // All book routes require authentication
 router.use(authMiddleware);
