@@ -81,6 +81,7 @@ describe('i18n Integration Tests', () => {
       const request: UniversalRequest = {
         body: undefined,
         headers: { 'accept-language': 'en' },
+        user: mockUser,
       };
 
       const response = await bookController.createBook(request);
@@ -94,6 +95,7 @@ describe('i18n Integration Tests', () => {
       const request: UniversalRequest = {
         body: undefined,
         headers: { 'accept-language': 'it' },
+        user: mockUser,
       };
 
       const response = await bookController.createBook(request);
