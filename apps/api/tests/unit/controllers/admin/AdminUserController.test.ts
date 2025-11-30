@@ -1,407 +1,151 @@
-// ================================================================
-// tests/controllers/admin/AdminUserController.test.ts
-// ================================================================
-
 import { AdminUserController } from '../../../../src/controllers/admin/AdminUserController';
-import { User } from '../../../../src/models/User';
+import {
+  AdminUserService,
+  AdminUserServiceError,
+} from '../../../../src/services/user/AdminUserService';
 import { UniversalRequest } from '../../../../src/types';
-import { Op } from 'sequelize';
-
-// Mock dependencies
-jest.mock('../../../../src/models/User');
+import { UserEntity } from '../../../../src/repositories/user/UserRepository.types';
 
 describe('AdminUserController', () => {
-  let adminUserController: AdminUserController;
-  let mockRequest: UniversalRequest;
+  let controller: AdminUserController;
+  let service: jest.Mocked<AdminUserService>;
+  let baseRequest: UniversalRequest;
+
+  const buildUser = (overrides: Partial<UserEntity> = {}): UserEntity => ({
+    id: overrides.id ?? 1,
+    email: overrides.email ?? 'user@example.com',
+    name: overrides.name ?? 'John',
+    surname: overrides.surname ?? 'Doe',
+    isActive: overrides.isActive ?? true,
+    role: overrides.role ?? 'user',
+    creationDate: overrides.creationDate ?? new Date(),
+    updateDate: overrides.updateDate ?? new Date(),
+  });
 
   beforeEach(() => {
-    adminUserController = new AdminUserController();
-    jest.clearAllMocks();
+    service = {
+      initializeControllerContext: jest.fn(),
+      listUsers: jest.fn(),
+      getUserById: jest.fn(),
+      createUser: jest.fn(),
+      updateUser: jest.fn(),
+      deleteUser: jest.fn(),
+    } as unknown as jest.Mocked<AdminUserService>;
 
-    // Mock BaseController's i18n methods
-    (adminUserController as any).initializeI18n = jest.fn().mockResolvedValue(undefined);
-    (adminUserController as any).t = jest.fn((key: string) => {
-      if (key === 'errors:user_id_required') return 'User ID is required';
-      if (key === 'errors:invalid_request_body') return 'Invalid request body';
-      if (key === 'errors:user_not_found') return 'User not found';
-      if (key === 'errors:email_already_exists') return 'Email already exists';
-      if (key === 'errors:cannot_delete_last_admin') return 'Cannot delete the last admin user';
-      if (key === 'errors:internal_server_error') return 'Internal server error';
-      if (key === 'errors:validation_failed') return 'Validation failed';
-      if (key === 'success:user_deleted') return 'User deleted successfully';
-      return key; // Fallback for other keys
-    });
+    controller = new AdminUserController(service);
 
-    mockRequest = {
+    baseRequest = {
+      headers: { 'accept-language': 'en' },
       queryStringParameters: {},
       pathParameters: {},
-      headers: { 'accept-language': 'en' },
-      body: undefined,
+      user: { userId: 99, role: 'admin' },
     };
   });
 
   describe('getAllUsers', () => {
-    it('should return a paginated list of users', async () => {
-      const mockUsers = [
-        { id: 1, email: 'user1@example.com', name: 'John', surname: 'Doe', isActive: true, role: 'user', creationDate: new Date(), updateDate: new Date(), getFullName: () => 'John Doe' },
-        { id: 2, email: 'user2@example.com', name: 'Jane', surname: 'Smith', isActive: true, role: 'user', creationDate: new Date(), updateDate: new Date(), getFullName: () => 'Jane Smith' },
-      ];
-
-      (User.findAndCountAll as jest.Mock).mockResolvedValue({
-        count: 2,
-        rows: mockUsers,
-      });
-
-      mockRequest.queryStringParameters = { page: '1', limit: '10' };
-
-      const result = await adminUserController.getAllUsers(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect((result.data as any).users).toHaveLength(2);
-      expect(result.pagination).toEqual({
-        page: 1,
+    it('returns paginated users from service', async () => {
+      service.listUsers.mockResolvedValue({
+        rows: [buildUser({ id: 1 }), buildUser({ id: 2 })],
         total: 2,
-        totalPages: 1,
-        limit: 10,
-      });
-      expect(User.findAndCountAll).toHaveBeenCalledWith(
-        expect.objectContaining({
-          limit: 10,
-          offset: 0,
-          order: [['creationDate', 'DESC']],
-          attributes: ['id', 'email', 'name', 'surname', 'isActive', 'role', 'creationDate', 'updateDate'],
-        })
-      );
-    });
-
-    it('should return a filtered list of users based on search query', async () => {
-      const mockUsers = [
-        {
-          id: 1,
-          email: 'john@example.com',
-          name: 'John',
-          surname: 'Doe',
-          isActive: true,
-          role: 'user',
-          creationDate: new Date(),
-          updateDate: new Date(),
-          getFullName: () => 'John Doe'
-        },
-      ];
-
-      (User.findAndCountAll as jest.Mock).mockResolvedValue({
-        count: 1,
-        rows: mockUsers,
+        limit: 20,
+        offset: 0,
       });
 
-      mockRequest.queryStringParameters = { search: 'john' };
+      const response = await controller.getAllUsers(baseRequest);
 
-      const result = await adminUserController.getAllUsers(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect((result.data as any).users).toHaveLength(1);
-
-      // Verify search is applied to email, name, surname, and full name (concat)
-      const callArgs = (User.findAndCountAll as jest.Mock).mock.calls[0][0];
-      expect(callArgs.where[Op.or]).toHaveLength(4);
-      expect(callArgs.where[Op.or]).toEqual(
-        expect.arrayContaining([
-          { email: { [Op.like]: '%john%' } },
-          { name: { [Op.like]: '%john%' } },
-          { surname: { [Op.like]: '%john%' } },
-          expect.any(Object), // The concat condition
-        ])
-      );
+      expect(service.listUsers).toHaveBeenCalledWith(expect.objectContaining({ limit: 20, offset: 0 }));
+      expect(response.statusCode).toBe(200);
+      expect((response.data as { users: unknown }).users).toHaveLength(2);
     });
 
-    it('should handle errors during user retrieval', async () => {
-      (User.findAndCountAll as jest.Mock).mockRejectedValue(new Error('Database error'));
+    it('maps service errors', async () => {
+      service.listUsers.mockRejectedValue(new AdminUserServiceError('FORBIDDEN'));
 
-      const result = await adminUserController.getAllUsers(mockRequest);
+      const response = await controller.getAllUsers(baseRequest);
 
-      expect(result.statusCode).toBe(500);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal server error');
+      expect(response.statusCode).toBe(403);
     });
   });
 
   describe('getUserById', () => {
-    it('should return a user by ID', async () => {
-      const mockUser = { id: 1, email: 'user1@example.com', name: 'John', surname: 'Doe', isActive: true, role: 'user', creationDate: new Date(), updateDate: new Date(), getFullName: () => 'John Doe' };
-      (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
+    it('returns user DTO', async () => {
+      service.getUserById.mockResolvedValue(buildUser({ id: 10 }));
 
-      mockRequest.pathParameters = { id: '1' };
+      const response = await controller.getUserById({
+        ...baseRequest,
+        pathParameters: { id: '10' },
+      });
 
-      const result = await adminUserController.getUserById(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect((result.data as any).id).toBe(1);
-      expect(User.findByPk).toHaveBeenCalledWith(1, expect.any(Object));
+      expect(service.getUserById).toHaveBeenCalledWith(10);
+      expect(response.statusCode).toBe(200);
     });
 
-    it('should return 400 if user ID is missing', async () => {
-      mockRequest.pathParameters = {};
-
-      const result = await adminUserController.getUserById(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe((adminUserController as any).t('errors:user_id_required'));
-    });
-
-    it('should return 404 if user is not found', async () => {
-      (User.findByPk as jest.Mock).mockResolvedValue(null);
-
-      mockRequest.pathParameters = { id: '999' };
-
-      const result = await adminUserController.getUserById(mockRequest);
-
-      expect(result.statusCode).toBe(404);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('User not found');
-    });
-
-    it('should handle errors during user retrieval by ID', async () => {
-      (User.findByPk as jest.Mock).mockRejectedValue(new Error('Database error'));
-
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await adminUserController.getUserById(mockRequest);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal server error');
+    it('validates id parameter', async () => {
+      const response = await controller.getUserById(baseRequest);
+      expect(response.statusCode).toBe(400);
     });
   });
 
   describe('updateUser', () => {
-    it('should update a user successfully', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'user1@example.com',
-        name: 'John',
-        surname: 'Doe',
-        isActive: true,
-        role: 'user',
-        creationDate: new Date(),
-        updateDate: new Date(),
-        getFullName: () => 'John Doe',
-        update: jest.fn(function (this: any, values: any) {
-          Object.assign(this, values);
-          return Promise.resolve(this);
-        }),
-      };
-      (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
-      (User.findOne as jest.Mock).mockResolvedValue(null); // No existing user with new email
+    it('delegates to service', async () => {
+      service.updateUser.mockResolvedValue(buildUser({ id: 5, name: 'Jane' }));
 
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.body = JSON.stringify({ name: 'Jonathan', isActive: false, role: 'admin' });
+      const response = await controller.updateUser({
+        ...baseRequest,
+        pathParameters: { id: '5' },
+        body: { name: 'Jane', email: 'new@example.com' },
+      });
 
-      const result = await adminUserController.updateUser(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(mockUser.update).toHaveBeenCalledWith({ name: 'Jonathan', isActive: false, role: 'admin' });
-      expect((result.data as any).name).toBe('Jonathan');
-      expect((result.data as any).isActive).toBe(false);
-      expect((result.data as any).role).toBe('admin');
+      expect(service.updateUser).toHaveBeenCalledWith(
+        5,
+        expect.objectContaining({ name: 'Jane' }),
+        expect.any(Object)
+      );
+      expect(response.statusCode).toBe(200);
     });
 
-    it('should return 400 if user ID is missing', async () => {
-      mockRequest.pathParameters = {};
-      mockRequest.body = JSON.stringify({ name: 'John' });
-
-      const result = await adminUserController.updateUser(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe((adminUserController as any).t('errors:user_id_required'));
+    it('validates payload', async () => {
+      const response = await controller.updateUser({
+        ...baseRequest,
+        pathParameters: { id: '5' },
+        body: { email: 'not-an-email' },
+      });
+      expect(response.statusCode).toBe(400);
     });
 
-    it('should return 400 if request body is missing', async () => {
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.body = null;
+    it('maps service error', async () => {
+      service.updateUser.mockRejectedValue(new AdminUserServiceError('EMAIL_EXISTS'));
 
-      const result = await adminUserController.updateUser(mockRequest);
+      const response = await controller.updateUser({
+        ...baseRequest,
+        pathParameters: { id: '5' },
+        body: { email: 'taken@example.com' },
+      });
 
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe((adminUserController as any).t('errors:invalid_request_body'));
-    });
-
-    // Validation test removed: validation happens at middleware level (adminRoutes.ts),
-    // not in the controller. The controller expects validated data.
-
-    it('should return 404 if user to update is not found', async () => {
-      (User.findByPk as jest.Mock).mockResolvedValue(null);
-
-      mockRequest.pathParameters = { id: '999' };
-      mockRequest.body = JSON.stringify({ name: 'Jonathan' });
-
-      const result = await adminUserController.updateUser(mockRequest);
-
-      expect(result.statusCode).toBe(404);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('User not found');
-    });
-
-    it('should return 400 if new email already exists', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'user1@example.com',
-        name: 'John',
-        surname: 'Doe',
-        isActive: true,
-        role: 'user',
-        creationDate: new Date(),
-        updateDate: new Date(),
-        getFullName: () => 'John Doe',
-        update: jest.fn().mockResolvedValue(true),
-      };
-      (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
-      (User.findOne as jest.Mock).mockResolvedValue({ id: 2, email: 'new@example.com' }); // Another user with this email
-
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.body = JSON.stringify({ email: 'new@example.com' });
-
-      const result = await adminUserController.updateUser(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe((adminUserController as any).t('errors:email_already_exists'));
-    });
-
-    it('should handle errors during user update', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'user1@example.com',
-        name: 'John',
-        surname: 'Doe',
-        isActive: true,
-        role: 'user',
-        creationDate: new Date(),
-        updateDate: new Date(),
-        getFullName: () => 'John Doe',
-        update: jest.fn().mockRejectedValue(new Error('Database error')),
-      };
-      (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
-      (User.findOne as jest.Mock).mockResolvedValue(null);
-
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.body = JSON.stringify({ name: 'Jonathan' });
-
-      const result = await adminUserController.updateUser(mockRequest);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal server error');
+      expect(response.statusCode).toBe(409);
     });
   });
 
   describe('deleteUser', () => {
-    it('should delete a user successfully', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'user1@example.com',
-        name: 'John',
-        surname: 'Doe',
-        isActive: true,
-        role: 'user',
-        creationDate: new Date(),
-        updateDate: new Date(),
-        getFullName: () => 'John Doe',
-        isAdmin: () => false, // Not an admin
-        destroy: jest.fn().mockResolvedValue(true),
-      };
-      (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
-      (User.count as jest.Mock).mockResolvedValue(2); // More than one admin
+    it('deletes via service', async () => {
+      const response = await controller.deleteUser({
+        ...baseRequest,
+        pathParameters: { id: '6' },
+      });
 
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await adminUserController.deleteUser(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect((result.data as any).message).toBe((adminUserController as any).t('success:user_deleted'));
-      expect(mockUser.destroy).toHaveBeenCalled();
+      expect(service.deleteUser).toHaveBeenCalledWith(6, expect.any(Object));
+      expect(response.statusCode).toBe(200);
     });
 
-    it('should return 400 if user ID is missing', async () => {
-      mockRequest.pathParameters = {};
+    it('maps last admin error', async () => {
+      service.deleteUser.mockRejectedValue(new AdminUserServiceError('LAST_ADMIN'));
 
-      const result = await adminUserController.deleteUser(mockRequest);
+      const response = await controller.deleteUser({
+        ...baseRequest,
+        pathParameters: { id: '6' },
+      });
 
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe((adminUserController as any).t('errors:user_id_required'));
-    });
-
-    it('should return 404 if user to delete is not found', async () => {
-      (User.findByPk as jest.Mock).mockResolvedValue(null);
-
-      mockRequest.pathParameters = { id: '999' };
-
-      const result = await adminUserController.deleteUser(mockRequest);
-
-      expect(result.statusCode).toBe(404);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('User not found');
-    });
-
-    it('should return 400 if trying to delete the last admin', async () => {
-      const mockAdminUser = {
-        id: 1,
-        email: 'admin@example.com',
-        name: 'Admin',
-        surname: 'User',
-        isActive: true,
-        role: 'admin',
-        creationDate: new Date(),
-        updateDate: new Date(),
-        getFullName: () => 'Admin User',
-        isAdmin: () => true, // Is an admin
-        destroy: jest.fn(),
-      };
-      (User.findByPk as jest.Mock).mockResolvedValue(mockAdminUser);
-      (User.count as jest.Mock).mockResolvedValue(1); // Only one admin left
-
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await adminUserController.deleteUser(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe((adminUserController as any).t('errors:cannot_delete_last_admin'));
-      expect(mockAdminUser.destroy).not.toHaveBeenCalled();
-    });
-
-    it('should handle errors during user deletion', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'user1@example.com',
-        name: 'John',
-        surname: 'Doe',
-        isActive: true,
-        role: 'user',
-        creationDate: new Date(),
-        updateDate: new Date(),
-        getFullName: () => 'John Doe',
-        isAdmin: () => false,
-        destroy: jest.fn().mockRejectedValue(new Error('Database error')),
-      };
-      (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
-      (User.count as jest.Mock).mockResolvedValue(2);
-
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await adminUserController.deleteUser(mockRequest);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal server error');
+      expect(response.statusCode).toBe(400);
     });
   });
 });

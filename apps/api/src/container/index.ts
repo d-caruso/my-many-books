@@ -18,6 +18,10 @@ import { CategoryController } from '../controllers/CategoryController';
 import { ICategoryRepository } from '../repositories/category/ICategoryRepository';
 import { SequelizeCategoryRepository } from '../repositories/category/SequelizeCategoryRepository';
 import { CategoryService } from '../services/category/CategoryService';
+import { AdminUserController } from '../controllers/admin/AdminUserController';
+import { IUserRepository } from '../repositories/user/IUserRepository';
+import { SequelizeUserRepository } from '../repositories/user/SequelizeUserRepository';
+import { AdminUserService } from '../services/user/AdminUserService';
 
 const container = new Container({
   defaultScope: 'Singleton',
@@ -45,6 +49,16 @@ container.bind<CategoryService>(TYPES.CategoryService).to(CategoryService).inSin
 container
   .bind<CategoryController>(TYPES.CategoryController)
   .to(CategoryController)
+  .inTransientScope();
+
+container
+  .bind<IUserRepository>(TYPES.AdminUserRepository)
+  .to(SequelizeUserRepository)
+  .inSingletonScope();
+container.bind<AdminUserService>(TYPES.AdminUserService).to(AdminUserService).inSingletonScope();
+container
+  .bind<AdminUserController>(TYPES.AdminUserController)
+  .to(AdminUserController)
   .inTransientScope();
 
 export { container };

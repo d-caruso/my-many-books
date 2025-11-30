@@ -21,6 +21,7 @@ export interface UserListOptions extends UserQueryOptions {
   orderBy?: string;
   orderDirection?: 'ASC' | 'DESC';
   filters?: Partial<UserListFilters>;
+  search?: string;
 }
 
 export interface PaginatedResult<T> {

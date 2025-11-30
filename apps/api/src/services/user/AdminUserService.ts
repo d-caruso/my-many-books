@@ -19,9 +19,10 @@ export type UserServiceErrorCode =
   | 'USER_NOT_FOUND'
   | 'EMAIL_EXISTS'
   | 'FORBIDDEN'
-  | 'INVALID_ROLE';
+  | 'INVALID_ROLE'
+  | 'LAST_ADMIN';
 
-export class UserServiceError extends Error {
+export class AdminUserServiceError extends Error {
   constructor(
     public readonly code: UserServiceErrorCode,
     message?: string,
@@ -41,8 +42,8 @@ export interface CreateUserInput extends Omit<UserCreationAttributes, 'id'> {}
 export interface UpdateUserInput extends Partial<CreateUserInput> {}
 
 @injectable()
-class UserService {
-  constructor(@inject(TYPES.UserRepository) private readonly userRepository: IUserRepository) {}
+class AdminUserService {
+  constructor(@inject(TYPES.AdminUserRepository) private readonly userRepository: IUserRepository) {}
 
   initializeControllerContext(): void {
     void this.userRepository;
@@ -55,7 +56,7 @@ class UserService {
   async getUserById(id: number): Promise<UserEntity> {
     const user = await this.userRepository.findById(id);
     if (!user) {
-      throw new UserServiceError('USER_NOT_FOUND');
+      throw new AdminUserServiceError('USER_NOT_FOUND');
     }
     return user;
   }
@@ -68,7 +69,7 @@ class UserService {
   async updateUser(id: number, input: UpdateUserInput, context: UserAdminContext): Promise<UserEntity> {
     const existing = await this.userRepository.findById(id);
     if (!existing) {
-      throw new UserServiceError('USER_NOT_FOUND');
+      throw new AdminUserServiceError('USER_NOT_FOUND');
     }
 
     this.ensureAdminPrivileges(context);
@@ -78,7 +79,7 @@ class UserService {
     }
 
     if (input.role && !Object.values(USER_ROLES).includes(input.role)) {
-      throw new UserServiceError('INVALID_ROLE');
+      throw new AdminUserServiceError('INVALID_ROLE');
     }
 
     const payload: UserUpdateInput = {};
@@ -89,7 +90,7 @@ class UserService {
 
     const updated = await this.userRepository.update(id, payload);
     if (!updated) {
-      throw new UserServiceError('USER_NOT_FOUND');
+      throw new AdminUserServiceError('USER_NOT_FOUND');
     }
 
     return updated;
@@ -100,27 +101,34 @@ class UserService {
 
     const existing = await this.userRepository.findById(id);
     if (!existing) {
-      throw new UserServiceError('USER_NOT_FOUND');
+      throw new AdminUserServiceError('USER_NOT_FOUND');
+    }
+
+    if (existing.role === USER_ROLES.ADMIN) {
+      const adminCount = await this.userRepository.countByRole(USER_ROLES.ADMIN);
+      if (adminCount <= 1) {
+        throw new AdminUserServiceError('LAST_ADMIN');
+      }
     }
 
     const deleted = await this.userRepository.delete(id);
     if (!deleted) {
-      throw new UserServiceError('USER_NOT_FOUND');
+      throw new AdminUserServiceError('USER_NOT_FOUND');
     }
   }
 
   private async ensureEmailUnique(email: string): Promise<void> {
     const existing = await this.userRepository.findByEmail(email);
     if (existing) {
-      throw new UserServiceError('EMAIL_EXISTS');
+      throw new AdminUserServiceError('EMAIL_EXISTS');
     }
   }
 
   private ensureAdminPrivileges(context: UserAdminContext): void {
     if (context.role !== USER_ROLES.ADMIN) {
-      throw new UserServiceError('FORBIDDEN');
+      throw new AdminUserServiceError('FORBIDDEN');
     }
   }
 }
 
-export { UserService };
+export { AdminUserService };

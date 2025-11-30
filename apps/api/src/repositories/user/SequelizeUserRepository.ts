@@ -34,7 +34,7 @@ export class SequelizeUserRepository implements IUserRepository {
 
   async list(options?: UserListOptions): Promise<PaginatedResult<UserEntity>> {
     const { limit, offset } = this.getPagination(options);
-    const where = this.buildWhereClause(options?.filters);
+    const where = this.buildWhereClause(options?.filters, options?.search);
 
     const query: FindAndCountOptions = {
       where,
@@ -80,6 +80,10 @@ export class SequelizeUserRepository implements IUserRepository {
     return deleted > 0;
   }
 
+  async countByRole(role: string): Promise<number> {
+    return User.count({ where: { role } });
+  }
+
   private buildFindOptions(options?: UserQueryOptions) {
     const query: Parameters<typeof User.findByPk>[1] = {};
     if (options?.transaction) {
@@ -88,7 +92,10 @@ export class SequelizeUserRepository implements IUserRepository {
     return query;
   }
 
-  private buildWhereClause(filters?: Partial<UserListFilters>): WhereOptions<User> {
+  private buildWhereClause(
+    filters?: Partial<UserListFilters>,
+    search?: string
+  ): WhereOptions<User> {
     const where: WhereOptions<User> = {};
 
     if (filters?.email) {
@@ -101,6 +108,14 @@ export class SequelizeUserRepository implements IUserRepository {
 
     if (filters?.isActive !== undefined) {
       where.isActive = filters.isActive;
+    }
+
+    if (search) {
+      (where as Record<string, unknown>)[Op.or as unknown as string] = [
+        { email: { [Op.iLike]: `%${search}%` } },
+        { name: { [Op.iLike]: `%${search}%` } },
+        { surname: { [Op.iLike]: `%${search}%` } },
+      ];
     }
 
     return where;

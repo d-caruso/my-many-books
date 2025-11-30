@@ -19,4 +19,5 @@ export interface IUserRepository {
   create(payload: UserCreationAttributes, options?: UserQueryOptions): Promise<UserEntity>;
   update(id: number, payload: UserUpdateInput, options?: UserQueryOptions): Promise<UserEntity | null>;
   delete(id: number): Promise<boolean>;
+  countByRole(role: string): Promise<number>;
 }

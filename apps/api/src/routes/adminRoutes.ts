@@ -6,7 +6,7 @@
 import { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { statsController } from '../controllers/admin/StatsController';
-import { adminUserController } from '../controllers/admin/AdminUserController';
+import { AdminUserController } from '../controllers/admin/AdminUserController';
 import { adminBookController } from '../controllers/admin/AdminBookController';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
@@ -23,8 +23,11 @@ import {
   adminStatsQuerySchema,
 } from '../validation';
 import { adminLimiter, readLimiter, writeLimiter } from '../middleware/rateLimiters';
+import { container } from '../container';
+import { TYPES } from '../container/types';
 
 const router = Router();
+const adminUserController = container.get<AdminUserController>(TYPES.AdminUserController);
 
 // All admin routes require authentication AND admin role
 router.use(authMiddleware);
