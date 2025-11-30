@@ -5,6 +5,7 @@
 import request from 'supertest';
 import express from 'express';
 import { authMiddleware } from '../../../src/middleware/auth';
+import { expressErrorHandler } from '../../../src/middleware/expressErrorHandler';
 import { container } from '../../../src/container';
 
 const mockAuthorController = {
@@ -35,6 +36,7 @@ app.use(express.json());
 (container.get as jest.Mock).mockReturnValue(mockAuthorController);
 const authorRoutes = require('../../../src/routes/authorRoutes').default;
 app.use('/api/authors', authorRoutes);
+app.use(expressErrorHandler);
 
 describe('Author Routes', () => {
   let mockAuthMiddleware: jest.MockedFunction<typeof authMiddleware>;
@@ -377,11 +379,12 @@ describe('Author Routes', () => {
         .get('/api/authors')
         .expect(500);
 
-      expect(response.body).toEqual({
+      expect(response.body).toMatchObject({
         success: false,
         error: 'Internal server error',
-        details: 'Database connection failed',
+        code: 'INTERNAL_ERROR',
       });
+      expect(response.body.stack).toEqual(expect.any(String));
     });
 
     it('should handle invalid JSON in request body', async () => {
@@ -391,8 +394,11 @@ describe('Author Routes', () => {
         .send('{ invalid json }')
         .expect(400);
 
-      // Express handles malformed JSON
-      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Invalid JSON payload',
+        code: 'INVALID_JSON',
+      });
     });
   });
 });

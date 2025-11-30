@@ -18,10 +18,12 @@ import isbnRoutes from './routes/isbnRoutes';
 import adminRoutes from './routes/adminRoutes';
 import authRoutes from './routes/authRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
+import { expressErrorHandler } from './middleware/expressErrorHandler';
 
 import { initializeI18n } from '@my-many-books/shared-i18n';
 
 const app = express();
+const isTestEnvironment = process.env['NODE_ENV'] === 'test';
 
 // Middleware
 app.use(
@@ -72,19 +74,14 @@ app.use((_req, res): void => {
 });
 
 // ===== GLOBAL ERROR HANDLER =====
-app.use(
-  (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction): void => {
-    console.error('Global error handler:', err);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      details: process.env['NODE_ENV'] === 'development' ? err.message : undefined,
-    });
-  }
-);
+app.use(expressErrorHandler);
 
 // Database initialization (for both local and Lambda cold start)
 const initializeDatabase = async (): Promise<void> => {
+  if (isTestEnvironment) {
+    return;
+  }
+
   try {
     const sequelize = DatabaseConnection.getInstance();
     await sequelize.authenticate();

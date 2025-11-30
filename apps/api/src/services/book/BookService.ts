@@ -11,6 +11,7 @@ import { BookAssociationInput, BookEntity } from '../../repositories/book/BookRe
 import { BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';
+import { ApplicationError } from '../../errors/ApplicationError';
 
 export type BookServiceErrorCode =
   | 'BOOK_NOT_FOUND'
@@ -19,13 +20,21 @@ export type BookServiceErrorCode =
   | 'INVALID_AUTHOR_IDS'
   | 'INVALID_CATEGORY_IDS';
 
-export class BookServiceError extends Error {
+const bookErrorStatus: Record<BookServiceErrorCode, number> = {
+  BOOK_NOT_FOUND: 404,
+  ISBN_EXISTS: 409,
+  FORBIDDEN: 403,
+  INVALID_AUTHOR_IDS: 400,
+  INVALID_CATEGORY_IDS: 400,
+};
+
+export class BookServiceError extends ApplicationError {
   constructor(
-    public readonly code: BookServiceErrorCode,
+    override readonly code: BookServiceErrorCode,
     message?: string,
-    public readonly details?: Record<string, unknown>
+    override readonly details?: Record<string, unknown>
   ) {
-    super(message ?? code);
+    super(message ?? code, bookErrorStatus[code] ?? 400, code, details);
   }
 }
 

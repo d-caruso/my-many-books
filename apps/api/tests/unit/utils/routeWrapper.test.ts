@@ -35,9 +35,6 @@ describe('expressRouteWrapper', () => {
     
     mockNext = jest.fn();
     mockControllerMethod = jest.fn();
-    
-    // Clear console.error mock
-    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -312,51 +309,38 @@ describe('expressRouteWrapper', () => {
   });
 
   describe('exception handling', () => {
-    it('should handle controller method throwing an error', async () => {
+    it('should forward controller errors to next middleware', async () => {
       const error = new Error('Controller method failed');
       mockControllerMethod.mockRejectedValue(error);
 
       const wrappedHandler = expressRouteWrapper(mockControllerMethod);
       await wrappedHandler(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(console.error).toHaveBeenCalledWith('Error in route handler:', error);
-      expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Internal server error',
-        details: 'Controller method failed',
-      });
+      expect(mockNext).toHaveBeenCalledWith(error);
+      expect(mockRes.status).not.toHaveBeenCalled();
+      expect(mockRes.json).not.toHaveBeenCalled();
+      expect(mockRes.send).not.toHaveBeenCalled();
     });
 
-    it('should handle controller method throwing a non-Error object', async () => {
+    it('should forward non-Error rejections as-is', async () => {
       const error = 'String error';
       mockControllerMethod.mockRejectedValue(error);
 
       const wrappedHandler = expressRouteWrapper(mockControllerMethod);
       await wrappedHandler(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(console.error).toHaveBeenCalledWith('Error in route handler:', error);
-      expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Internal server error',
-        details: 'Unknown error',
-      });
+      expect(mockNext).toHaveBeenCalledWith(error);
+      expect(mockRes.status).not.toHaveBeenCalled();
     });
 
-    it('should handle controller method throwing undefined', async () => {
+    it('should forward undefined rejections', async () => {
       mockControllerMethod.mockRejectedValue(undefined);
 
       const wrappedHandler = expressRouteWrapper(mockControllerMethod);
       await wrappedHandler(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(console.error).toHaveBeenCalledWith('Error in route handler:', undefined);
-      expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Internal server error',
-        details: 'Unknown error',
-      });
+      expect(mockNext).toHaveBeenCalledWith(undefined);
+      expect(mockRes.status).not.toHaveBeenCalled();
     });
   });
 
