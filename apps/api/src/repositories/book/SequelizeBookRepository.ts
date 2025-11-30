@@ -275,26 +275,41 @@ export class SequelizeBookRepository implements IBookRepository {
       ...plain,
     };
 
-    if (plain.authors) {
-      domain.authors = plain.authors.map(author => {
-        const normalized: { id: number; name: string; surname?: string } = {
-          id: author.id,
-          name: author.name,
-        };
-        if (author.surname !== undefined && author.surname !== null) {
-          normalized.surname = author.surname;
-        }
-        return normalized;
-      });
-    }
-
-    if (plain.categories) {
-      domain.categories = plain.categories.map(category => ({
-        id: category.id,
-        name: category.name,
-      }));
-    }
+    domain.authors = this.mapAuthors(plain.authors);
+    domain.categories = this.mapCategories(plain.categories);
 
     return domain;
+  }
+
+  private mapAuthors(
+    authors?: Array<{ id: number; name: string; surname?: string | null }>
+  ): BookEntity['authors'] {
+    if (!authors) {
+      return undefined;
+    }
+
+    return authors.map(author => {
+      const normalized: { id: number; name: string; surname?: string } = {
+        id: author.id,
+        name: author.name,
+      };
+      if (author.surname !== undefined && author.surname !== null) {
+        normalized.surname = author.surname;
+      }
+      return normalized;
+    });
+  }
+
+  private mapCategories(
+    categories?: Array<{ id: number; name: string }>
+  ): BookEntity['categories'] {
+    if (!categories) {
+      return undefined;
+    }
+
+    return categories.map(category => ({
+      id: category.id,
+      name: category.name,
+    }));
   }
 }
