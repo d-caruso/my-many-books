@@ -59,7 +59,9 @@ export class CategoryController extends BaseController {
 
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId || isNaN(Number(categoryId))) {
-      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, {
+        resource: 'category',
+      });
     }
 
     const includeBooks = this.getQueryParameter(request, 'includeBooks') === 'true';
@@ -83,7 +85,9 @@ export class CategoryController extends BaseController {
 
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId || isNaN(Number(categoryId))) {
-      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, {
+        resource: 'category',
+      });
     }
 
     const body = this.parseBody(request);
@@ -99,7 +103,10 @@ export class CategoryController extends BaseController {
         dto.toServiceInput(),
         this.getUserContext(request)!
       );
-      return this.createSuccessResponse(toCategoryResponseDTO(updated), 'Category updated successfully');
+      return this.createSuccessResponse(
+        toCategoryResponseDTO(updated),
+        'Category updated successfully'
+      );
     } catch (error) {
       return this.handleCategoryServiceError(error);
     }
@@ -112,7 +119,9 @@ export class CategoryController extends BaseController {
 
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId || isNaN(Number(categoryId))) {
-      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, {
+        resource: 'category',
+      });
     }
 
     const forceDelete = this.getQueryParameter(request, 'force') === 'true';
@@ -175,7 +184,9 @@ export class CategoryController extends BaseController {
 
     const categoryId = this.getPathParameter(request, 'id');
     if (!categoryId || isNaN(Number(categoryId))) {
-      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'category' });
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, {
+        resource: 'category',
+      });
     }
 
     const pagination = this.getPaginationParams(request);

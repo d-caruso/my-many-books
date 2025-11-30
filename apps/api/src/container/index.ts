@@ -42,6 +42,9 @@ container
   .to(SequelizeCategoryRepository)
   .inSingletonScope();
 container.bind<CategoryService>(TYPES.CategoryService).to(CategoryService).inSingletonScope();
-container.bind<CategoryController>(TYPES.CategoryController).to(CategoryController).inTransientScope();
+container
+  .bind<CategoryController>(TYPES.CategoryController)
+  .to(CategoryController)
+  .inTransientScope();
 
 export { container };
