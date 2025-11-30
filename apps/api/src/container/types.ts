@@ -8,6 +8,8 @@ const TYPES = {
   BookService: Symbol.for('BookService'),
   BookController: Symbol.for('BookController'),
   AuthorRepository: Symbol.for('AuthorRepository'),
+  AuthorService: Symbol.for('AuthorService'),
+  AuthorController: Symbol.for('AuthorController'),
 };
 
 export { TYPES };
