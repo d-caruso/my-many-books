@@ -3,7 +3,7 @@ import { Author, Book } from '../../../src/models';
 import { container } from '../../../src/container';
 import { TYPES } from '../../../src/container/types';
 import { AuthorService } from '../../../src/services/author/AuthorService';
-import { SequelizeAuthorRepository } from '../../../src/repositories/author/SequelizeAuthorRepository';
+import { AuthorRepository } from '../../../src/repositories/author/AuthorRepository';
 
 interface UniversalRequest {
   body?: any;
@@ -33,13 +33,11 @@ describe('AuthorController', () => {
     updateAuthorSpy = jest.spyOn(AuthorService.prototype, 'updateAuthor');
     deleteAuthorSpy = jest.spyOn(AuthorService.prototype, 'deleteAuthor');
     findUserAuthorByIdSpy = jest
-      .spyOn(SequelizeAuthorRepository.prototype, 'findUserAuthorById')
+      .spyOn(AuthorRepository.prototype, 'findUserAuthorById')
       .mockResolvedValue(null);
-    findByIdSpy = jest
-      .spyOn(SequelizeAuthorRepository.prototype, 'findById')
-      .mockResolvedValue(null);
+    findByIdSpy = jest.spyOn(AuthorRepository.prototype, 'findById').mockResolvedValue(null);
     searchByQuerySpy = jest
-      .spyOn(SequelizeAuthorRepository.prototype, 'searchByQuery')
+      .spyOn(AuthorRepository.prototype, 'searchByQuery')
       .mockResolvedValue([]);
 
     mockRequest = {

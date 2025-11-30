@@ -1,28 +1,26 @@
 // ================================================================
-// src/repositories/author/SequelizeAuthorRepository.ts
-// Sequelize-backed implementation of the Author repository contract
+// repositories/author/adapters/SequelizeAuthorAdapter.ts
+// Sequelize-backed adapter for the Author repository
 // ================================================================
 
-import { injectable } from 'inversify';
 import { FindAndCountOptions, FindOptions, IncludeOptions, Op, WhereOptions } from 'sequelize';
 import { Author } from '@/models/Author';
 import { Book } from '@/models/Book';
-import { AuthorAttributes, AuthorCreationAttributes } from '@/models/interfaces/ModelInterfaces';
+import { AuthorAttributes } from '@/models/interfaces/ModelInterfaces';
 import {
+  AuthorCreationInput,
   AuthorEntity,
   AuthorListFilters,
   AuthorListOptions,
   AuthorQueryOptions,
   AuthorUpdateInput,
   PaginatedResult,
-} from './AuthorRepositoryTypes';
-import { IAuthorRepository } from './IAuthorRepository';
+} from '../AuthorRepositoryTypes';
+import { AuthorRepositoryAdapter } from './AuthorRepositoryAdapter';
 
-@injectable()
-export class SequelizeAuthorRepository implements IAuthorRepository {
-  async findById(id: number, options?: AuthorQueryOptions): Promise<AuthorEntity | null> {
-    const author = await Author.findByPk(id, this.buildFindOptions(options));
-    return this.toDomain(author);
+export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
+  findById(id: number, options?: AuthorQueryOptions): Promise<AuthorEntity | null> {
+    return Author.findByPk(id, this.buildFindOptions(options)).then(author => this.toDomain(author));
   }
 
   async findUserAuthorById(
@@ -99,19 +97,16 @@ export class SequelizeAuthorRepository implements IAuthorRepository {
     return authors.map(author => author.get({ plain: true }));
   }
 
-  async create(
-    payload: AuthorCreationAttributes,
-    options?: AuthorQueryOptions
-  ): Promise<AuthorEntity> {
-    const author = await Author.create(payload as AuthorAttributes, {
+  async createModel(payload: AuthorCreationInput, options?: AuthorQueryOptions): Promise<AuthorEntity> {
+    const record = await Author.create(payload as unknown as AuthorAttributes, {
       transaction: options?.transaction ?? null,
     });
-    return (await this.findById(author.id, options))!;
+    return (await this.findById(record.id, options))!;
   }
 
-  async update(
+  async updateModel(
     id: number,
-    payload: AuthorUpdateInput,
+    payload: Partial<AuthorCreationInput>,
     options?: AuthorQueryOptions
   ): Promise<AuthorEntity | null> {
     const author = await Author.findByPk(id);
@@ -119,16 +114,17 @@ export class SequelizeAuthorRepository implements IAuthorRepository {
       return null;
     }
 
-    await author.update(payload, { transaction: options?.transaction ?? null });
+    await author.update(payload as AuthorUpdateInput, {
+      transaction: options?.transaction ?? null,
+    });
     return this.findById(id, options);
   }
 
-  async delete(id: number): Promise<boolean> {
-    const deleted = await Author.destroy({ where: { id } });
-    return deleted > 0;
+  deleteModel(id: number): Promise<number> {
+    return Author.destroy({ where: { id } });
   }
 
-  async countBooks(authorId: number): Promise<number> {
+  countBooks(authorId: number): Promise<number> {
     return Book.count({
       include: [
         {
@@ -141,9 +137,7 @@ export class SequelizeAuthorRepository implements IAuthorRepository {
     });
   }
 
-  // ===== Helpers ==========================================================
-
-  private buildFindOptions(options?: AuthorQueryOptions): FindOptions<Author> {
+  buildFindOptions(options?: AuthorQueryOptions): FindOptions<Author> {
     const include = this.buildIncludeClause(options?.includeBooks);
     const query: FindOptions<Author> = {};
     if (options?.transaction) {
@@ -153,6 +147,62 @@ export class SequelizeAuthorRepository implements IAuthorRepository {
       query.include = include;
     }
     return query;
+  }
+
+  buildListQuery(
+    filters: Partial<AuthorListFilters>,
+    options?: AuthorListOptions
+  ): { query: FindAndCountOptions; limit: number; offset: number } {
+    const { limit, offset } = this.getPagination(options);
+    const where = this.buildWhereClause(filters);
+    const query: FindAndCountOptions = {
+      where,
+      limit,
+      offset,
+      order: this.buildOrderClause(options),
+      distinct: true,
+    };
+
+    const include = this.buildIncludeClause(options?.includeBooks);
+    if (include) {
+      query.include = include;
+    }
+
+    return { query, limit, offset };
+  }
+
+  syncAssociations(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  toDomain(author: Author | AuthorEntity | null): AuthorEntity | null {
+    if (!author) {
+      return null;
+    }
+
+    if (typeof (author as Author).get === 'function') {
+      return (author as Author).get({ plain: true }) as AuthorEntity;
+    }
+
+    return author as AuthorEntity;
+  }
+
+  buildPaginatedResult(
+    rows: Author[],
+    total: number,
+    limit: number,
+    offset: number
+  ): PaginatedResult<AuthorEntity> {
+    const entities = rows
+      .map(row => this.toDomain(row))
+      .filter((entity): entity is AuthorEntity => Boolean(entity));
+
+    return {
+      rows: entities,
+      total,
+      limit,
+      offset,
+    };
   }
 
   private buildIncludeClause(includeBooks?: boolean): IncludeOptions[] | undefined {
@@ -211,35 +261,5 @@ export class SequelizeAuthorRepository implements IAuthorRepository {
     const limit = Math.min(options?.limit ?? 20, 100);
     const offset = Math.max(options?.offset ?? 0, 0);
     return { limit, offset };
-  }
-
-  private buildPaginatedResult(
-    rows: Author[],
-    total: number,
-    limit: number,
-    offset: number
-  ): PaginatedResult<AuthorEntity> {
-    const entities = rows
-      .map(row => this.toDomain(row))
-      .filter((entity): entity is AuthorEntity => Boolean(entity));
-
-    return {
-      rows: entities,
-      total,
-      limit,
-      offset,
-    };
-  }
-
-  private toDomain(author: Author | AuthorEntity | null): AuthorEntity | null {
-    if (!author) {
-      return null;
-    }
-
-    if (typeof (author as Author).get === 'function') {
-      return (author as Author).get({ plain: true }) as AuthorEntity;
-    }
-
-    return author as AuthorEntity;
   }
 }

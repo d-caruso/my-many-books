@@ -12,7 +12,7 @@ import { IBookRepository } from '../repositories/book/IBookRepository';
 import { BookService } from '../services/book/BookService';
 import { AuthorController } from '../controllers/AuthorController';
 import { IAuthorRepository } from '../repositories/author/IAuthorRepository';
-import { SequelizeAuthorRepository } from '../repositories/author/SequelizeAuthorRepository';
+import { AuthorRepository } from '../repositories/author/AuthorRepository';
 import { AuthorService } from '../services/author/AuthorService';
 import { CategoryController } from '../controllers/CategoryController';
 import { ICategoryRepository } from '../repositories/category/ICategoryRepository';
@@ -35,7 +35,7 @@ container.bind<BookController>(TYPES.BookController).to(BookController).inTransi
 
 container
   .bind<IAuthorRepository>(TYPES.AuthorRepository)
-  .to(SequelizeAuthorRepository)
+  .to(AuthorRepository)
   .inSingletonScope();
 container.bind<AuthorService>(TYPES.AuthorService).to(AuthorService).inSingletonScope();
 container.bind<AuthorController>(TYPES.AuthorController).to(AuthorController).inTransientScope();

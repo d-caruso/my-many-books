@@ -3,6 +3,7 @@ import { TYPES } from '../../../src/container/types';
 import { BookController } from '../../../src/controllers/BookController';
 import { BookService } from '../../../src/services/book/BookService';
 import { BookRepository } from '../../../src/repositories/book/BookRepository';
+import { AuthorRepository } from '../../../src/repositories/author/AuthorRepository';
 
 describe('DI Container Configuration', () => {
   beforeEach(() => {
@@ -31,6 +32,14 @@ describe('DI Container Configuration', () => {
     const second = container.get<BookRepository>(TYPES.BookRepository);
 
     expect(first).toBeInstanceOf(BookRepository);
+    expect(first).toBe(second);
+  });
+
+  it('resolves AuthorRepository singleton', () => {
+    const first = container.get<AuthorRepository>(TYPES.AuthorRepository);
+    const second = container.get<AuthorRepository>(TYPES.AuthorRepository);
+
+    expect(first).toBeInstanceOf(AuthorRepository);
     expect(first).toBe(second);
   });
 });
