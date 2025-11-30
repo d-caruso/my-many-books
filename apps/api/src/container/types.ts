@@ -10,6 +10,9 @@ const TYPES = {
   AuthorRepository: Symbol.for('AuthorRepository'),
   AuthorService: Symbol.for('AuthorService'),
   AuthorController: Symbol.for('AuthorController'),
+  CategoryRepository: Symbol.for('CategoryRepository'),
+  CategoryService: Symbol.for('CategoryService'),
+  CategoryController: Symbol.for('CategoryController'),
 };
 
 export { TYPES };

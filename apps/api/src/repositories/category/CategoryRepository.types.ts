@@ -31,7 +31,7 @@ export interface PaginatedResult<T> {
 }
 
 export type CategoryEntity = CategoryAttributes & {
-  books?: Array<{ id: number; title: string }>;
+  books?: Array<{ id: number; title: string }> | undefined;
 };
 
 export type CategoryUpdateInput = Partial<CategoryCreationAttributes>;

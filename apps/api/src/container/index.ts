@@ -14,6 +14,10 @@ import { AuthorController } from '../controllers/AuthorController';
 import { IAuthorRepository } from '../repositories/author/IAuthorRepository';
 import { SequelizeAuthorRepository } from '../repositories/author/SequelizeAuthorRepository';
 import { AuthorService } from '../services/author/AuthorService';
+import { CategoryController } from '../controllers/CategoryController';
+import { ICategoryRepository } from '../repositories/category/ICategoryRepository';
+import { SequelizeCategoryRepository } from '../repositories/category/SequelizeCategoryRepository';
+import { CategoryService } from '../services/category/CategoryService';
 
 const container = new Container({
   defaultScope: 'Singleton',
@@ -32,5 +36,12 @@ container
   .inSingletonScope();
 container.bind<AuthorService>(TYPES.AuthorService).to(AuthorService).inSingletonScope();
 container.bind<AuthorController>(TYPES.AuthorController).to(AuthorController).inTransientScope();
+
+container
+  .bind<ICategoryRepository>(TYPES.CategoryRepository)
+  .to(SequelizeCategoryRepository)
+  .inSingletonScope();
+container.bind<CategoryService>(TYPES.CategoryService).to(CategoryService).inSingletonScope();
+container.bind<CategoryController>(TYPES.CategoryController).to(CategoryController).inTransientScope();
 
 export { container };

@@ -43,7 +43,7 @@ export interface CreateCategoryInput {
 export type UpdateCategoryInput = Partial<CreateCategoryInput>;
 
 export interface ListCategoriesInput extends CategoryListOptions {
-  search?: string;
+  search?: string | undefined;
 }
 
 @injectable()
@@ -61,13 +61,15 @@ class CategoryService {
     userContext: CategoryUserContext,
     includeBooks = false
   ): Promise<CategoryEntity> {
-    const category = await this.categoryRepository.findUserCategoryById(id, userContext.userId, {
+    const category = await this.categoryRepository.findById(id, {
       includeBooks,
     });
 
     if (!category) {
       throw new CategoryServiceError('CATEGORY_NOT_FOUND');
     }
+
+    this.ensureOwnership(category, userContext);
 
     return category;
   }

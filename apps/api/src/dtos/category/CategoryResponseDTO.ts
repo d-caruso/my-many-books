@@ -6,6 +6,7 @@ export interface CategoryResponseDTO {
   userId: number;
   creationDate?: Date;
   updateDate?: Date;
+  books?: Array<{ id: number; title: string }> | undefined;
 }
 
 export const toCategoryResponseDTO = (category: CategoryEntity): CategoryResponseDTO => {
@@ -21,6 +22,10 @@ export const toCategoryResponseDTO = (category: CategoryEntity): CategoryRespons
 
   if (category.updateDate) {
     dto.updateDate = category.updateDate;
+  }
+
+  if (category.books) {
+    dto.books = category.books.map(book => ({ id: book.id, title: book.title }));
   }
 
   return dto;
