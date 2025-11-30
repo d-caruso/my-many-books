@@ -5,3 +5,4 @@
 
 export interface BaseEntity<ID = number | string> {
   id: ID;
+}
