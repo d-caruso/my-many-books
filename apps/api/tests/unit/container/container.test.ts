@@ -2,7 +2,7 @@ import { container } from '../../../src/container';
 import { TYPES } from '../../../src/container/types';
 import { BookController } from '../../../src/controllers/BookController';
 import { BookService } from '../../../src/services/book/BookService';
-import { BookRepository } from '../../../src/repositories/book/BookRepository';
+import { SequelizeBookRepository } from '../../../src/repositories/book/SequelizeBookRepository';
 
 describe('DI Container Configuration', () => {
   beforeEach(() => {
@@ -27,10 +27,10 @@ describe('DI Container Configuration', () => {
   });
 
   it('resolves BookRepository singleton', () => {
-    const first = container.get<BookRepository>(TYPES.BookRepository);
-    const second = container.get<BookRepository>(TYPES.BookRepository);
+    const first = container.get<SequelizeBookRepository>(TYPES.BookRepository);
+    const second = container.get<SequelizeBookRepository>(TYPES.BookRepository);
 
-    expect(first).toBeInstanceOf(BookRepository);
+    expect(first).toBeInstanceOf(SequelizeBookRepository);
     expect(first).toBe(second);
   });
 });

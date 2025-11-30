@@ -5,11 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../container/types';
-import { BookRepository } from '../../repositories/book/BookRepository';
+import { IBookRepository } from '../../repositories/book/IBookRepository';
 
 @injectable()
 class BookService {
-  constructor(@inject(TYPES.BookRepository) private readonly bookRepository: BookRepository) {}
+  constructor(@inject(TYPES.BookRepository) private readonly bookRepository: IBookRepository) {}
 
   /**
    * Phase 1 diagnostic helper.
@@ -17,7 +17,7 @@ class BookService {
    */
   initializeControllerContext(): void {
     // Accessing the repository ensures the binding is evaluated.
-    this.bookRepository.getRepositoryIdentifier();
+    void this.bookRepository;
   }
 }
 
