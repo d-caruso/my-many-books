@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvement, phase/backend-expansion-all-resources, phase/foundation-di-repository-service ]
+    branches: [ main, develop, feature/architecture-improvement, phase/backend-expansion-all-resources, phase/foundation-di-repository-service, task/add-zod-schemas ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, phase/backend-expansion-all-resources, phase/foundation-di-repository-service ]
+    branches: [ main, develop, feature/architecture-improvements, phase/backend-expansion-all-resources, phase/foundation-di-repository-service, task/add-zod-schemas ]
   workflow_dispatch:
     inputs:
       run_tests:

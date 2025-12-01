@@ -2,7 +2,7 @@ name: Monorepo CD
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, phase/backend-expansion-all-resources, phase/foundation-di-repository-service ]
+    branches: [ main, develop, feature/architecture-improvements, phase/backend-expansion-all-resources, phase/foundation-di-repository-service, task/add-zod-schemas ]
     tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
