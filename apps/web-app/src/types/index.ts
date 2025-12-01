@@ -10,7 +10,7 @@ export interface Book {
   isbnCode: string;
   editionNumber?: number;
   editionDate?: string;
-  status?: 'reading' | 'paused' | 'finished';
+  status?: 'reading' | 'paused' | 'finished' | 'unread';
   notes?: string;
   userId?: number;
   authors?: Author[];
@@ -56,7 +56,7 @@ export interface AuthUser {
 
 export interface SearchFilters {
   query?: string;
-  status?: 'reading' | 'paused' | 'finished';
+  status?: 'reading' | 'paused' | 'finished' | 'unread';
   sortBy?: string;
   authorId?: number;
   categoryId?: number;

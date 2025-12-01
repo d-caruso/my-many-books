@@ -332,8 +332,13 @@ describe('ApiService with Industry Standard Testing', () => {
       test('getCurrentUser delegates to API client with correct parameters', async () => {
         const mockUser: User = {
           id: 1,
-          username: 'testuser',
           email: 'test@example.com',
+          name: 'Test',
+          surname: 'User',
+          isActive: true,
+          role: 'user',
+          creationDate: new Date().toISOString(),
+          updateDate: new Date().toISOString(),
         };
         mockApiClient.users.getCurrentUser.mockResolvedValue(mockUser);
 
@@ -345,11 +350,16 @@ describe('ApiService with Industry Standard Testing', () => {
       });
 
       test('updateProfile delegates to API client with correct parameters', async () => {
-        const userUpdate = { username: 'newusername' };
+        const userUpdate = { name: 'New', surname: 'Username' };
         const mockUpdatedUser: User = {
           id: 1,
-          username: 'newusername',
           email: 'test@example.com',
+          name: 'New',
+          surname: 'Username',
+          isActive: true,
+          role: 'user',
+          creationDate: new Date().toISOString(),
+          updateDate: new Date().toISOString(),
         };
         mockApiClient.users.updateProfile.mockResolvedValue(mockUpdatedUser);
 
@@ -725,7 +735,16 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('testApiService uses injected mock API client', async () => {
       // Verify that our test service is using the injected mock
-      const mockUser: User = { id: 1, username: 'test', email: 'test@example.com' };
+      const mockUser: User = {
+        id: 1,
+        email: 'test@example.com',
+        name: 'Test',
+        surname: 'User',
+        isActive: true,
+        role: 'user',
+        creationDate: new Date().toISOString(),
+        updateDate: new Date().toISOString(),
+      };
       mockApiClient.users.getCurrentUser.mockResolvedValue(mockUser);
 
       const result = await testApiService.getCurrentUser();
