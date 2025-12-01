@@ -9,8 +9,9 @@ export const AuthorSchema = z.object({
   name: z.string().min(1),
   surname: z.string().min(1),
   nationality: z.string().min(1).optional(),
-  creationDate: z.string(),
-  updateDate: z.string(),
+  userId: z.number().int().optional(),
+  creationDate: z.string().optional(),
+  updateDate: z.string().optional(),
 });
 
 export type Author = z.infer<typeof AuthorSchema>;

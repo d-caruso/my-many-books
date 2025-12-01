@@ -7,8 +7,17 @@ import { z } from 'zod';
 export const CategorySchema = z.object({
   id: z.number().int(),
   name: z.string().min(1),
-  creationDate: z.string(),
-  updateDate: z.string(),
+  userId: z.number().int().optional(),
+  creationDate: z.string().optional(),
+  updateDate: z.string().optional(),
+  books: z
+    .array(
+      z.object({
+        id: z.number().int(),
+        title: z.string(),
+      })
+    )
+    .optional(),
 });
 
 export type Category = z.infer<typeof CategorySchema>;

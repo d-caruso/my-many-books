@@ -18,10 +18,10 @@ export const BookSchema = z.object({
   status: BookStatusSchema.optional(),
   notes: z.string().optional(),
   userId: z.number().int().optional(),
-  authors: AuthorSchema.array().optional(),
-  categories: CategorySchema.array().optional(),
-  creationDate: z.string(),
-  updateDate: z.string(),
+  authors: AuthorSchema.pick({ id: true, name: true, surname: true }).array().optional(),
+  categories: CategorySchema.pick({ id: true, name: true }).array().optional(),
+  creationDate: z.string().optional(),
+  updateDate: z.string().optional(),
 });
 
 export type Book = z.infer<typeof BookSchema>;
