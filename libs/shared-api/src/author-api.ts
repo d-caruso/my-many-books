@@ -3,23 +3,29 @@
  */
 
 import { BaseApiClient } from './base-client';
-import { Author } from '@my-many-books/shared-types';
+import { Author, AuthorSchema } from '@my-many-books/shared-types';
+
+const AuthorsArraySchema = AuthorSchema.array();
 
 export class AuthorApi extends BaseApiClient {
   async getAuthors(): Promise<Author[]> {
-    return this.get<Author[]>('/authors');
+    const response = await this.get<unknown>('/authors');
+    return AuthorsArraySchema.parse(response);
   }
 
   async getAuthor(id: number): Promise<Author> {
-    return this.get<Author>(`/authors/${id}`);
+    const response = await this.get<unknown>(`/authors/${id}`);
+    return AuthorSchema.parse(response);
   }
 
   async createAuthor(authorData: Omit<Author, 'id' | 'creationDate' | 'updateDate'>): Promise<Author> {
-    return this.post<Author>('/authors', authorData);
+    const response = await this.post<unknown>('/authors', authorData);
+    return AuthorSchema.parse(response);
   }
 
   async updateAuthor(id: number, authorData: Partial<Omit<Author, 'id' | 'creationDate' | 'updateDate'>>): Promise<Author> {
-    return this.put<Author>(`/authors/${id}`, authorData);
+    const response = await this.put<unknown>(`/authors/${id}`, authorData);
+    return AuthorSchema.parse(response);
   }
 
   async deleteAuthor(id: number): Promise<void> {
@@ -27,8 +33,9 @@ export class AuthorApi extends BaseApiClient {
   }
 
   async searchAuthors(query: string): Promise<Author[]> {
-    return this.get<Author[]>('/authors/search', {
-      params: { q: query }
+    const response = await this.get<unknown>('/authors/search', {
+      params: { q: query },
     });
+    return AuthorsArraySchema.parse(response);
   }
 }

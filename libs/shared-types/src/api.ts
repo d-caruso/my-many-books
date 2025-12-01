@@ -1,43 +1,62 @@
 /**
- * API-related type definitions
+ * API-related type definitions powered by Zod
  */
 
-import { Book, BookStatus } from './book';
+import { z } from 'zod';
+import { BookSchema, BookStatusSchema } from './book';
+
+export const PaginationMetadataSchema = z.object({
+  currentPage: z.number().int().nonnegative(),
+  totalPages: z.number().int().nonnegative(),
+  totalItems: z.number().int().nonnegative(),
+  itemsPerPage: z.number().int().positive(),
+});
+
+export type PaginationMetadata = z.infer<typeof PaginationMetadataSchema>;
 
 export interface PaginatedResponse<T> {
   books?: T[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-    itemsPerPage: number;
-  };
+  pagination: PaginationMetadata;
 }
 
-export interface ApiError {
-  error: string;
-  details?: string;
-}
+export const createPaginatedResponseSchema = <Schema extends z.ZodTypeAny>(itemSchema: Schema) =>
+  z.object({
+    books: itemSchema.array().optional(),
+    pagination: PaginationMetadataSchema,
+  });
 
-export interface SearchFilters {
-  query?: string;
-  status?: BookStatus;
-  authorId?: number;
-  categoryId?: number;
-  sortBy?: 'title' | 'author' | 'date-added';
-  page?: number;
-  limit?: number;
-}
+export const ApiErrorSchema = z.object({
+  error: z.string(),
+  details: z.string().optional(),
+});
 
-export interface SearchResult {
-  books: Book[];
-  total: number;
-  hasMore: boolean;
-  page: number;
-}
+export type ApiError = z.infer<typeof ApiErrorSchema>;
 
-export interface ScanResult {
-  isbn: string;
-  success: boolean;
-  error?: string;
-}
+export const SearchFiltersSchema = z.object({
+  query: z.string().min(2).optional(),
+  status: BookStatusSchema.optional(),
+  authorId: z.number().int().positive().optional(),
+  categoryId: z.number().int().positive().optional(),
+  sortBy: z.enum(['title', 'author', 'date-added']).optional(),
+  page: z.number().int().positive().optional(),
+  limit: z.number().int().positive().optional(),
+});
+
+export type SearchFilters = z.infer<typeof SearchFiltersSchema>;
+
+export const SearchResultSchema = z.object({
+  books: BookSchema.array(),
+  total: z.number().int().nonnegative(),
+  hasMore: z.boolean(),
+  page: z.number().int().nonnegative(),
+});
+
+export type SearchResult = z.infer<typeof SearchResultSchema>;
+
+export const ScanResultSchema = z.object({
+  isbn: z.string().min(10),
+  success: z.boolean(),
+  error: z.string().optional(),
+});
+
+export type ScanResult = z.infer<typeof ScanResultSchema>;

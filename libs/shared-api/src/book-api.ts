@@ -3,13 +3,22 @@
  */
 
 import { BaseApiClient } from './base-client';
-import { 
-  Book, 
-  BookFormData, 
-  PaginatedResponse, 
-  SearchFilters, 
-  SearchResult 
+import {
+  Book,
+  BookFormData,
+  BookFormSchema,
+  BookSchema,
+  BookStatus,
+  BookStatusSchema,
+  PaginatedResponse,
+  SearchFilters,
+  SearchResult,
+  SearchFiltersSchema,
+  SearchResultSchema,
+  createPaginatedResponseSchema,
 } from '@my-many-books/shared-types';
+
+const PaginatedBooksSchema = createPaginatedResponseSchema(BookSchema);
 
 export class BookApi extends BaseApiClient {
   async getBooks(
@@ -18,30 +27,39 @@ export class BookApi extends BaseApiClient {
     includeAuthors: boolean = true,
     includeCategories: boolean = true
   ): Promise<PaginatedResponse<Book>> {
-    return this.get<PaginatedResponse<Book>>('/books', {
+    const response = await this.get<unknown>('/books', {
       params: {
         page,
         limit,
         includeAuthors: includeAuthors.toString(),
-        includeCategories: includeCategories.toString()
-      }
+        includeCategories: includeCategories.toString(),
+      },
     });
+
+    return PaginatedBooksSchema.parse(response) as PaginatedResponse<Book>;
   }
 
   async getBook(id: number): Promise<Book> {
-    return this.get<Book>(`/books/${id}`);
+    const response = await this.get<unknown>(`/books/${id}`);
+    return BookSchema.parse(response);
   }
 
   async createBook(bookData: BookFormData): Promise<Book> {
-    return this.post<Book>('/books', bookData);
+    const payload = BookFormSchema.parse(bookData);
+    const response = await this.post<unknown>('/books', payload);
+    return BookSchema.parse(response);
   }
 
   async updateBook(id: number, bookData: Partial<BookFormData>): Promise<Book> {
-    return this.put<Book>(`/books/${id}`, bookData);
+    const payload = BookFormSchema.partial().parse(bookData);
+    const response = await this.put<unknown>(`/books/${id}`, payload);
+    return BookSchema.parse(response);
   }
 
   async patchBook(id: number, bookData: Partial<BookFormData>): Promise<Book> {
-    return this.patch<Book>(`/books/${id}`, bookData);
+    const payload = BookFormSchema.partial().parse(bookData);
+    const response = await this.patch<unknown>(`/books/${id}`, payload);
+    return BookSchema.parse(response);
   }
 
   async deleteBook(id: number): Promise<void> {
@@ -49,22 +67,26 @@ export class BookApi extends BaseApiClient {
   }
 
   async searchBooks(filters: SearchFilters): Promise<SearchResult> {
+    const parsedFilters = SearchFiltersSchema.partial().parse(filters);
     const params = new URLSearchParams();
-    
-    if (filters.query) params.append('q', filters.query);
-    if (filters.status) params.append('status', filters.status);
-    if (filters.authorId) params.append('authorId', filters.authorId.toString());
-    if (filters.categoryId) params.append('categoryId', filters.categoryId.toString());
-    if (filters.sortBy) params.append('sortBy', filters.sortBy);
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
 
-    return this.get<SearchResult>(`/books/search?${params.toString()}`);
+    if (parsedFilters.query) params.append('q', parsedFilters.query);
+    if (parsedFilters.status) params.append('status', parsedFilters.status);
+    if (parsedFilters.authorId) params.append('authorId', parsedFilters.authorId.toString());
+    if (parsedFilters.categoryId)
+      params.append('categoryId', parsedFilters.categoryId.toString());
+    if (parsedFilters.sortBy) params.append('sortBy', parsedFilters.sortBy);
+    if (parsedFilters.page) params.append('page', parsedFilters.page.toString());
+    if (parsedFilters.limit) params.append('limit', parsedFilters.limit.toString());
+
+    const response = await this.get<unknown>(`/books/search?${params.toString()}`);
+    return SearchResultSchema.parse(response) as SearchResult;
   }
 
   async searchByISBN(isbn: string): Promise<Book | null> {
     try {
-      return await this.get<Book>(`/books/search/${isbn}`);
+      const response = await this.get<unknown>(`/books/search/${isbn}`);
+      return BookSchema.parse(response);
     } catch (error: any) {
       if (error.status === 404) {
         return null;
@@ -73,7 +95,9 @@ export class BookApi extends BaseApiClient {
     }
   }
 
-  async updateBookStatus(id: number, status: Book['status']): Promise<Book> {
-    return this.put<Book>(`/books/${id}/status`, { status });
+  async updateBookStatus(id: number, status: BookStatus): Promise<Book> {
+    const parsedStatus = BookStatusSchema.parse(status);
+    const response = await this.put<unknown>(`/books/${id}/status`, { status: parsedStatus });
+    return BookSchema.parse(response);
   }
 }

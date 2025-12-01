@@ -1,37 +1,43 @@
 /**
- * Book-related type definitions
+ * Book-related type definitions powered by Zod
  */
 
-import type { Author } from './author';
-import type { Category } from './category';
+import { z } from 'zod';
+import { AuthorSchema } from './author';
+import { CategorySchema } from './category';
 
-export interface Book {
-  id: number;
-  isbnCode: string;
-  title: string;
-  editionNumber?: number;
-  editionDate?: string;
-  status?: BookStatus;
-  notes?: string;
-  userId?: number;
-  authors?: Author[];
-  categories?: Category[];
-  creationDate: string;
-  updateDate: string;
-}
+export const BookStatusSchema = z.enum(['reading', 'paused', 'finished']);
+export type BookStatus = z.infer<typeof BookStatusSchema>;
 
-export type BookStatus = 'reading' | 'paused' | 'finished';
+export const BookSchema = z.object({
+  id: z.number().int(),
+  isbnCode: z.string().min(1),
+  title: z.string().min(1),
+  editionNumber: z.number().int().positive().optional(),
+  editionDate: z.string().optional(),
+  status: BookStatusSchema.optional(),
+  notes: z.string().optional(),
+  userId: z.number().int().optional(),
+  authors: AuthorSchema.array().optional(),
+  categories: CategorySchema.array().optional(),
+  creationDate: z.string(),
+  updateDate: z.string(),
+});
 
-export interface BookFormData {
-  title: string;
-  isbnCode: string;
-  editionNumber?: number;
-  editionDate?: string;
-  status?: BookStatus;
-  notes?: string;
-  authorIds?: number[];
-  categoryIds?: number[];
-}
+export type Book = z.infer<typeof BookSchema>;
+
+export const BookFormSchema = z.object({
+  title: z.string().min(1),
+  isbnCode: z.string().min(1),
+  editionNumber: z.number().int().positive().optional(),
+  editionDate: z.string().optional(),
+  status: BookStatusSchema.optional(),
+  notes: z.string().optional(),
+  authorIds: z.array(z.number().int()).optional(),
+  categoryIds: z.array(z.number().int()).optional(),
+});
+
+export type BookFormData = z.infer<typeof BookFormSchema>;
 
 export interface BookCardProps {
   book: Book;

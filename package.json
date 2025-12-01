@@ -64,7 +64,8 @@
   },
   "dependencies": {
     "serverless-http": "^4.0.0",
-    "whatwg-fetch": "^3.6.20"
+    "whatwg-fetch": "^3.6.20",
+    "zod": "^4.1.13"
   },
   "overrides": {
     "whatwg-fetch": "^3.6.20",

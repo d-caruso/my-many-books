@@ -1,10 +1,14 @@
 /**
- * Category-related type definitions
+ * Category-related type definitions powered by Zod
  */
 
-export interface Category {
-  id: number;
-  name: string;
-  creationDate: string;
-  updateDate: string;
-}
+import { z } from 'zod';
+
+export const CategorySchema = z.object({
+  id: z.number().int(),
+  name: z.string().min(1),
+  creationDate: z.string(),
+  updateDate: z.string(),
+});
+
+export type Category = z.infer<typeof CategorySchema>;
