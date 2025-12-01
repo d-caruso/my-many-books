@@ -5,31 +5,32 @@
 
 import { AuthorCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import {
-  IAssociationInput,
-  ICreationAttributes,
-  IListOptions,
-  IQueryOptions,
+  AssociationInput,
+  CreationAttributes,
+  ListOptions,
+  QueryOptions,
   PaginatedResult as AdapterPaginatedResult,
-} from '../interfaces/adapters/IRepositoryAdapter';
+  SearchFilters,
+} from '../interfaces/adapters/RepositoryAdapter';
 import { AuthorEntity } from '../../domain/entities/Author';
 
 export type { AuthorEntity } from '../../domain/entities/Author';
 
-export type AuthorAssociationInput = IAssociationInput;
+export type AuthorAssociationInput = AssociationInput;
 
-export interface AuthorQueryOptions extends IQueryOptions {
+export interface AuthorQueryOptions extends QueryOptions {
   includeBooks?: boolean;
   transaction?: import('sequelize').Transaction | null;
 }
 
-export interface AuthorListFilters {
+export interface AuthorListFilters extends SearchFilters {
   name?: string;
   surname?: string;
   nationality?: string;
   userId?: number;
 }
 
-export interface AuthorListOptions extends IListOptions {
+export interface AuthorListOptions extends ListOptions {
   includeBooks?: boolean;
   orderBy?: string;
   orderDirection?: 'ASC' | 'DESC';
@@ -41,6 +42,6 @@ export type PaginatedResult<T extends AuthorEntity = AuthorEntity> = AdapterPagi
 export interface AuthorCreationInput
   extends AuthorCreationAttributes,
     AuthorAssociationInput,
-    ICreationAttributes {}
+    CreationAttributes {}
 
 export type AuthorUpdateInput = Partial<AuthorCreationAttributes>;

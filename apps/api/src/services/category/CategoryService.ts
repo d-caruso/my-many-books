@@ -6,12 +6,12 @@
 import { inject, injectable } from 'inversify';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { TYPES } from '../../container/types';
-import { ICategoryRepository } from '../../repositories/category/ICategoryRepository';
+import { Repository as CategoryRepositoryContract } from '../../repositories/category/Repository';
 import {
   CategoryEntity,
   CategoryListOptions,
   PaginatedResult,
-} from '../../repositories/category/CategoryRepository.types';
+} from '../../repositories/category/CategoryRepositoryTypes';
 import { CategoryCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import { ApplicationError } from '../../errors/ApplicationError';
 
@@ -57,7 +57,8 @@ export interface ListCategoriesInput extends CategoryListOptions {
 @injectable()
 class CategoryService {
   constructor(
-    @inject(TYPES.CategoryRepository) private readonly categoryRepository: ICategoryRepository
+    @inject(TYPES.CategoryRepository)
+    private readonly categoryRepository: CategoryRepositoryContract
   ) {}
 
   initializeControllerContext(): void {

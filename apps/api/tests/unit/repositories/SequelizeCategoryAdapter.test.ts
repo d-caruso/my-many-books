@@ -1,15 +1,15 @@
-import { SequelizeCategoryRepository } from '../../../src/repositories/category/SequelizeCategoryRepository';
+import { SequelizeCategoryAdapter } from '../../../src/repositories/category/adapters/SequelizeCategoryAdapter';
 import { Category } from '../../../src/models/Category';
 import { Book } from '../../../src/models/Book';
 
 jest.mock('../../../src/models/Category');
 jest.mock('../../../src/models/Book');
 
-describe('SequelizeCategoryRepository', () => {
-  let repository: SequelizeCategoryRepository;
+describe('SequelizeCategoryAdapter', () => {
+  let adapter: SequelizeCategoryAdapter;
 
   beforeEach(() => {
-    repository = new SequelizeCategoryRepository();
+    adapter = new SequelizeCategoryAdapter();
     jest.clearAllMocks();
   });
 
@@ -18,7 +18,7 @@ describe('SequelizeCategoryRepository', () => {
       get: jest.fn().mockReturnValue({ id: 1, name: 'Fiction', userId: 1 }),
     });
 
-    const category = await repository.findById(1);
+    const category = await adapter.findById(1);
 
     expect(Category.findByPk).toHaveBeenCalledWith(1, expect.any(Object));
     expect(category).toMatchObject({ id: 1, name: 'Fiction' });
@@ -27,10 +27,10 @@ describe('SequelizeCategoryRepository', () => {
   it('create persists and reloads entity', async () => {
     (Category.create as jest.Mock).mockResolvedValue({ id: 10 });
     const findByIdSpy = jest
-      .spyOn(repository, 'findById')
+      .spyOn(adapter, 'findById')
       .mockResolvedValue({ id: 10, name: 'History', userId: 1 } as any);
 
-    const result = await repository.create({ name: 'History', userId: 1 });
+    const result = await adapter.createModel({ name: 'History', userId: 1 });
 
     expect(Category.create).toHaveBeenCalledWith(
       { name: 'History', userId: 1 },
@@ -43,7 +43,7 @@ describe('SequelizeCategoryRepository', () => {
   it('countBooks aggregates using Book model', async () => {
     (Book.count as jest.Mock).mockResolvedValue(5);
 
-    const count = await repository.countBooks(3);
+    const count = await adapter.countBooks(3);
 
     expect(Book.count).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -56,7 +56,7 @@ describe('SequelizeCategoryRepository', () => {
   });
 
   it('searchByQuery normalizes short terms', async () => {
-    const results = await repository.searchByQuery(' a ', 1);
+    const results = await adapter.searchByQuery(' a ', 1);
     expect(results).toEqual([]);
   });
 
@@ -67,7 +67,7 @@ describe('SequelizeCategoryRepository', () => {
       },
     ]);
 
-    const rows = await repository.searchByQuery('dr', 1, 5);
+    const rows = await adapter.searchByQuery('dr', 1, 5);
 
     expect(Category.findAll).toHaveBeenCalledWith(
       expect.objectContaining({

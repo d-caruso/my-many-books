@@ -1,5 +1,5 @@
 // ================================================================
-// src/repositories/author/IAuthorRepository.ts
+// src/repositories/author/Repository.ts
 // Contract for author persistence operations
 // ================================================================
 
@@ -12,7 +12,7 @@ import {
 } from './AuthorRepositoryTypes';
 import { AuthorCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 
-export interface IAuthorRepository {
+export interface Repository {
   findById(id: number, options?: AuthorQueryOptions): Promise<AuthorEntity | null>;
   findUserAuthorById(
     id: number,

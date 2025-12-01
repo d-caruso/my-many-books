@@ -20,7 +20,9 @@ import { AuthorRepositoryAdapter } from './AuthorRepositoryAdapter';
 
 export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
   findById(id: number, options?: AuthorQueryOptions): Promise<AuthorEntity | null> {
-    return Author.findByPk(id, this.buildFindOptions(options)).then(author => this.toDomain(author));
+    return Author.findByPk(id, this.buildFindOptions(options)).then(author =>
+      this.toDomain(author)
+    );
   }
 
   async findUserAuthorById(
@@ -97,7 +99,10 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
     return authors.map(author => author.get({ plain: true }));
   }
 
-  async createModel(payload: AuthorCreationInput, options?: AuthorQueryOptions): Promise<AuthorEntity> {
+  async createModel(
+    payload: AuthorCreationInput,
+    options?: AuthorQueryOptions
+  ): Promise<AuthorEntity> {
     const record = await Author.create(payload as unknown as AuthorAttributes, {
       transaction: options?.transaction ?? null,
     });

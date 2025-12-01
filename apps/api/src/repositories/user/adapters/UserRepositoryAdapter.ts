@@ -1,23 +1,27 @@
 // ================================================================
-// src/repositories/user/IUserRepository.ts
-// Contract for user persistence operations
+// repositories/user/adapters/UserRepositoryAdapter.ts
+// Contract for user repository adapters
 // ================================================================
 
-import { UserCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import {
   PaginatedResult,
   UserEntity,
   UserListOptions,
   UserQueryOptions,
-  UserUpdateInput,
-} from './UserRepository.types';
+} from '../UserRepositoryTypes';
+import { UserCreationAttributes } from '@/models/interfaces/ModelInterfaces';
+import { RepositoryAdapter } from '../../interfaces/adapters/RepositoryAdapter';
 
-export interface IUserRepository {
+export interface UserRepositoryAdapter
+  extends RepositoryAdapter<
+    UserEntity,
+    UserCreationAttributes,
+    Record<string, unknown>,
+    UserQueryOptions,
+    UserListOptions
+  > {
   findById(id: number, options?: UserQueryOptions): Promise<UserEntity | null>;
   findByEmail(email: string, options?: UserQueryOptions): Promise<UserEntity | null>;
   list(options?: UserListOptions): Promise<PaginatedResult<UserEntity>>;
-  create(payload: UserCreationAttributes, options?: UserQueryOptions): Promise<UserEntity>;
-  update(id: number, payload: UserUpdateInput, options?: UserQueryOptions): Promise<UserEntity | null>;
-  delete(id: number): Promise<boolean>;
   countByRole(role: string): Promise<number>;
 }

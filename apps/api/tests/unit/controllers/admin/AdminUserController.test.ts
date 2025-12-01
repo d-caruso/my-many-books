@@ -4,7 +4,7 @@ import {
   AdminUserServiceError,
 } from '../../../../src/services/user/AdminUserService';
 import { UniversalRequest } from '../../../../src/types';
-import { UserEntity } from '../../../../src/repositories/user/UserRepository.types';
+import { UserEntity } from '../../../../src/repositories/user/UserRepositoryTypes';
 
 describe('AdminUserController', () => {
   let controller: AdminUserController;

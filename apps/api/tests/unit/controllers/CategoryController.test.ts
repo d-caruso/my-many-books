@@ -5,7 +5,7 @@ import {
 } from '../../../src/services/category/CategoryService';
 import { Book } from '../../../src/models/Book';
 import { UniversalRequest } from '../../../src/types';
-import { CategoryEntity } from '../../../src/repositories/category/CategoryRepository.types';
+import { CategoryEntity } from '../../../src/repositories/category/CategoryRepositoryTypes';
 
 jest.mock('../../../src/models/Book', () => ({
   Book: {

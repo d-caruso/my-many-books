@@ -1,11 +1,11 @@
 import { UserService, UserServiceError } from '../../../src/services/user/UserService';
-import { IUserRepository } from '../../../src/repositories/user/IUserRepository';
-import { IBookRepository } from '../../../src/repositories/book/IBookRepository';
+import { Repository as UserRepositoryContract } from '../../../src/repositories/user/Repository';
+import { Repository as BookRepositoryContract } from '../../../src/repositories/book/Repository';
 import { BOOK_STATUS } from '../../../src/utils/constants';
 
 describe('UserService', () => {
-  let userRepository: jest.Mocked<IUserRepository>;
-  let bookRepository: jest.Mocked<IBookRepository>;
+  let userRepository: jest.Mocked<UserRepositoryContract>;
+  let bookRepository: jest.Mocked<BookRepositoryContract>;
   let service: UserService;
 
   beforeEach(() => {
@@ -15,13 +15,13 @@ describe('UserService', () => {
       findById: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    } as unknown as jest.Mocked<IUserRepository>;
+    } as unknown as jest.Mocked<UserRepositoryContract>;
 
     bookRepository = {
       listUserBooks: jest.fn(),
       countUserBooks: jest.fn(),
       findRecentUserBooks: jest.fn(),
-    } as unknown as jest.Mocked<IBookRepository>;
+    } as unknown as jest.Mocked<BookRepositoryContract>;
 
     service = new UserService(userRepository, bookRepository);
   });

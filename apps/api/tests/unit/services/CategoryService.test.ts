@@ -1,11 +1,11 @@
 import { CategoryService, CategoryServiceError } from '../../../src/services/category/CategoryService';
-import { ICategoryRepository } from '../../../src/repositories/category/ICategoryRepository';
+import { Repository as CategoryRepositoryContract } from '../../../src/repositories/category/Repository';
 
 const userContext = { userId: 1, role: 'user' };
 
 describe('CategoryService', () => {
   let service: CategoryService;
-  let repository: jest.Mocked<ICategoryRepository>;
+  let repository: jest.Mocked<CategoryRepositoryContract>;
 
   beforeEach(() => {
     repository = {
@@ -18,7 +18,7 @@ describe('CategoryService', () => {
       update: jest.fn(),
       delete: jest.fn(),
       countBooks: jest.fn(),
-    } as unknown as jest.Mocked<ICategoryRepository>;
+    } as unknown as jest.Mocked<CategoryRepositoryContract>;
 
     service = new CategoryService(repository);
   });

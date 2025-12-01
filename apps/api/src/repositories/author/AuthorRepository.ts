@@ -4,7 +4,7 @@
 // ================================================================
 
 import { injectable } from 'inversify';
-import { IAuthorRepository } from './IAuthorRepository';
+import { Repository as AuthorRepositoryContract } from './Repository';
 import {
   AuthorCreationInput,
   AuthorEntity,
@@ -18,7 +18,7 @@ import { getAuthorRepositoryAdapter } from './adapters/AuthorRepositoryAdapterFa
 import { AuthorRepositoryAdapter } from './adapters/AuthorRepositoryAdapter';
 
 @injectable()
-export class AuthorRepository implements IAuthorRepository {
+export class AuthorRepository implements AuthorRepositoryContract {
   constructor(private readonly adapter: AuthorRepositoryAdapter = getAuthorRepositoryAdapter()) {}
 
   findById(id: number, options?: AuthorQueryOptions): Promise<AuthorEntity | null> {

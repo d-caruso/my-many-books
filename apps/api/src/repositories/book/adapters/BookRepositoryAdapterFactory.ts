@@ -10,18 +10,20 @@ const ADAPTER_CACHE: Partial<Record<string, BookRepositoryAdapter>> = {};
 
 export const getBookRepositoryAdapter = (): BookRepositoryAdapter => {
   const provider = (process.env['BOOK_REPOSITORY_ADAPTER'] || 'sequelize').toLowerCase();
+  let adapter = ADAPTER_CACHE[provider];
 
-  if (!ADAPTER_CACHE[provider]) {
+  if (!adapter) {
     switch (provider) {
       case 'sequelize':
-        ADAPTER_CACHE[provider] = new SequelizeBookAdapter();
+        adapter = new SequelizeBookAdapter();
+        ADAPTER_CACHE[provider] = adapter;
         break;
       default:
         throw new Error(`Unsupported book repository adapter: ${provider}`);
     }
   }
 
-  return ADAPTER_CACHE[provider]!;
+  return adapter;
 };
 
 export const clearBookRepositoryAdapterCache = (): void => {

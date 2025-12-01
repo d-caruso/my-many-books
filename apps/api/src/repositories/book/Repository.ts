@@ -1,5 +1,5 @@
 // ================================================================
-// src/repositories/book/IBookRepository.ts
+// src/repositories/book/Repository.ts
 // Contract for book persistence operations
 // ================================================================
 
@@ -13,7 +13,7 @@ import {
   PaginatedResult,
 } from './BookRepositoryTypes';
 
-export interface IBookRepository {
+export interface Repository {
   findById(id: number, options?: BookQueryOptions): Promise<BookEntity | null>;
   findUserBookById(
     id: number,

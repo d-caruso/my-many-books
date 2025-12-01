@@ -1,28 +1,31 @@
 // ================================================================
-// src/repositories/category/SequelizeCategoryRepository.ts
-// Sequelize-backed implementation of the Category repository contract
+// repositories/category/adapters/SequelizeCategoryAdapter.ts
+// Sequelize-backed adapter for the Category repository
 // ================================================================
 
-import { injectable } from 'inversify';
+import type { Transaction } from 'sequelize';
 import { FindAndCountOptions, FindOptions, IncludeOptions, Op, WhereOptions } from 'sequelize';
 import { Category } from '@/models/Category';
 import { Book } from '@/models/Book';
-import { CategoryAttributes, CategoryCreationAttributes } from '@/models/interfaces/ModelInterfaces';
+import {
+  CategoryAttributes,
+  CategoryCreationAttributes,
+} from '@/models/interfaces/ModelInterfaces';
 import {
   CategoryEntity,
   CategoryListFilters,
   CategoryListOptions,
   CategoryQueryOptions,
-  CategoryUpdateInput,
   PaginatedResult,
-} from './CategoryRepository.types';
-import { ICategoryRepository } from './ICategoryRepository';
+} from '../CategoryRepositoryTypes';
+import { CategoryRepositoryAdapter } from './CategoryRepositoryAdapter';
+import type { SearchFilters } from '../../interfaces/adapters/RepositoryAdapter';
 
-@injectable()
-export class SequelizeCategoryRepository implements ICategoryRepository {
-  async findById(id: number, options?: CategoryQueryOptions): Promise<CategoryEntity | null> {
-    const category = await Category.findByPk(id, this.buildFindOptions(options));
-    return this.toDomain(category);
+export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
+  findById(id: number, options?: CategoryQueryOptions): Promise<CategoryEntity | null> {
+    return Category.findByPk(id, this.buildFindOptions(options)).then(category =>
+      this.toDomain(category)
+    );
   }
 
   async findUserCategoryById(
@@ -94,19 +97,20 @@ export class SequelizeCategoryRepository implements ICategoryRepository {
     return categories.map(category => category.get({ plain: true }));
   }
 
-  async create(
+  async createModel(
     payload: CategoryCreationAttributes,
     options?: CategoryQueryOptions
   ): Promise<CategoryEntity> {
+    const transaction = (options?.transaction ?? null) as Transaction | null;
     const category = await Category.create(payload as CategoryAttributes, {
-      transaction: options?.transaction ?? null,
+      transaction,
     });
     return (await this.findById(category.id, options))!;
   }
 
-  async update(
+  async updateModel(
     id: number,
-    payload: CategoryUpdateInput,
+    payload: Partial<CategoryCreationAttributes>,
     options?: CategoryQueryOptions
   ): Promise<CategoryEntity | null> {
     const category = await Category.findByPk(id);
@@ -114,16 +118,16 @@ export class SequelizeCategoryRepository implements ICategoryRepository {
       return null;
     }
 
-    await category.update(payload, { transaction: options?.transaction ?? null });
+    const transaction = (options?.transaction ?? null) as Transaction | null;
+    await category.update(payload, { transaction });
     return this.findById(id, options);
   }
 
-  async delete(id: number): Promise<boolean> {
-    const deleted = await Category.destroy({ where: { id } });
-    return deleted > 0;
+  deleteModel(id: number): Promise<number> {
+    return Category.destroy({ where: { id } });
   }
 
-  async countBooks(categoryId: number): Promise<number> {
+  countBooks(categoryId: number): Promise<number> {
     return Book.count({
       include: [
         {
@@ -137,18 +141,73 @@ export class SequelizeCategoryRepository implements ICategoryRepository {
     });
   }
 
-  // ===== Helpers ==========================================================
-
-  private buildFindOptions(options?: CategoryQueryOptions): FindOptions<Category> {
+  buildFindOptions(options?: CategoryQueryOptions): FindOptions<Category> {
     const include = this.buildIncludeClause(options?.includeBooks);
     const query: FindOptions<Category> = {};
     if (options?.transaction) {
-      query.transaction = options.transaction;
+      query.transaction = options.transaction as Transaction;
     }
     if (include) {
       query.include = include;
     }
     return query;
+  }
+
+  buildListQuery(
+    filters: SearchFilters,
+    options?: CategoryListOptions
+  ): { query: FindAndCountOptions; limit: number; offset: number } {
+    const typedFilters = (filters as Partial<CategoryListFilters>) || {};
+    const { limit, offset } = this.getPagination(options);
+    const where = this.buildWhereClause(typedFilters);
+    const query: FindAndCountOptions = {
+      where,
+      limit,
+      offset,
+      order: this.buildOrderClause(options),
+      distinct: true,
+    };
+
+    const include = this.buildIncludeClause(options?.includeBooks);
+    if (include) {
+      query.include = include;
+    }
+
+    return { query, limit, offset };
+  }
+
+  syncAssociations(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  toDomain(category: Category | CategoryEntity | null): CategoryEntity | null {
+    if (!category) {
+      return null;
+    }
+
+    if (typeof (category as Category).get === 'function') {
+      return (category as Category).get({ plain: true }) as CategoryEntity;
+    }
+
+    return category as CategoryEntity;
+  }
+
+  buildPaginatedResult(
+    rows: Category[],
+    total: number,
+    limit: number,
+    offset: number
+  ): PaginatedResult<CategoryEntity> {
+    const entities = rows
+      .map(row => this.toDomain(row))
+      .filter((entity): entity is CategoryEntity => Boolean(entity));
+
+    return {
+      rows: entities,
+      total,
+      limit,
+      offset,
+    };
   }
 
   private buildIncludeClause(includeBooks?: boolean): IncludeOptions[] | undefined {
@@ -169,7 +228,9 @@ export class SequelizeCategoryRepository implements ICategoryRepository {
     const where: WhereOptions<Category> = {};
 
     if (filters?.name) {
-      where.name = { [Op.iLike]: `%${filters.name}%` } as any;
+      Object.assign(where, {
+        name: { [Op.iLike]: `%${filters.name}%` },
+      });
     }
 
     if (filters?.userId !== undefined) {
@@ -189,51 +250,5 @@ export class SequelizeCategoryRepository implements ICategoryRepository {
     const limit = options?.limit ?? 50;
     const offset = options?.offset ?? 0;
     return { limit, offset };
-  }
-
-  private buildPaginatedResult(
-    rows: Category[],
-    total: number,
-    limit: number,
-    offset: number
-  ): PaginatedResult<CategoryEntity> {
-    const entities = rows.map(row => this.toDomain(row)).filter(Boolean) as CategoryEntity[];
-    return { rows: entities, total, limit, offset };
-  }
-
-  private toDomain(category: Category | CategoryEntity | null): CategoryEntity | null {
-    if (!category) {
-      return null;
-    }
-
-    const base =
-      typeof (category as Category).get === 'function'
-        ? ((category as Category).get({ plain: true }) as CategoryEntity & {
-            books?: Array<{ id: number; title: string }>;
-          })
-        : (category as CategoryEntity & {
-            books?: Array<{ id: number; title: string }>;
-          });
-
-    const { books, ...rest } = base;
-    const mappedBooks = this.mapBooks(books);
-
-    return {
-      ...rest,
-      books: mappedBooks,
-    };
-  }
-
-  private mapBooks(
-    books?: Array<{ id: number; title: string }>
-  ): Array<{ id: number; title: string }> | undefined {
-    if (!books) {
-      return undefined;
-    }
-
-    return books.map(book => ({
-      id: book.id,
-      title: book.title,
-    }));
   }
 }

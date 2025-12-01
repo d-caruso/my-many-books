@@ -5,7 +5,7 @@
 
 import { injectable } from 'inversify';
 import { BookStatus, BookCreationAttributes } from '@/models/interfaces/ModelInterfaces';
-import { IBookRepository } from './IBookRepository';
+import { Repository as BookRepositoryContract } from './Repository';
 import {
   BookAssociationInput,
   BookCreationInput,
@@ -19,7 +19,7 @@ import { getBookRepositoryAdapter } from './adapters/BookRepositoryAdapterFactor
 import { BookRepositoryAdapter } from './adapters/BookRepositoryAdapter';
 
 @injectable()
-export class BookRepository implements IBookRepository {
+export class BookRepository implements BookRepositoryContract {
   constructor(private readonly adapter: BookRepositoryAdapter = getBookRepositoryAdapter()) {}
 
   findById(id: number, options?: BookQueryOptions): Promise<BookEntity | null> {
@@ -42,10 +42,7 @@ export class BookRepository implements IBookRepository {
     return this.adapter.findByIsbnCode(isbnCode, userId, options);
   }
 
-  listUserBooks(
-    userId: number,
-    options?: BookListOptions
-  ): Promise<PaginatedResult<BookEntity>> {
+  listUserBooks(userId: number, options?: BookListOptions): Promise<PaginatedResult<BookEntity>> {
     return this.adapter.listUserBooks(userId, options);
   }
 

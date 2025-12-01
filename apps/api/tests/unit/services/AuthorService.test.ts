@@ -1,9 +1,9 @@
 import { AuthorService, AuthorServiceError } from '../../../src/services/author/AuthorService';
-import { IAuthorRepository } from '../../../src/repositories/author/IAuthorRepository';
+import { Repository as AuthorRepositoryContract } from '../../../src/repositories/author/Repository';
 
 describe('AuthorService', () => {
   let service: AuthorService;
-  let repository: jest.Mocked<IAuthorRepository>;
+  let repository: jest.Mocked<AuthorRepositoryContract>;
 
   const userContext = { userId: 1, role: 'user' };
 
