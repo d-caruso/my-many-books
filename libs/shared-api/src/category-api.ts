@@ -10,14 +10,12 @@ const CategoriesArraySchema = CategorySchema.array();
 export class CategoryApi extends BaseApiClient {
   async getCategories(): Promise<Category[]> {
     const response = await this.get<unknown>('/categories');
-    CategoriesArraySchema.parse(response);
-    return response as Category[];
+    return CategoriesArraySchema.parse(response);
   }
 
   async getCategory(id: number): Promise<Category> {
     const response = await this.get<unknown>(`/categories/${id}`);
-    CategorySchema.parse(response);
-    return response as Category;
+    return CategorySchema.parse(response);
   }
 
   async createCategory(categoryData: Omit<Category, 'id' | 'creationDate' | 'updateDate'>): Promise<Category> {

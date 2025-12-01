@@ -36,8 +36,7 @@ export class BookApi extends BaseApiClient {
       },
     });
 
-    PaginatedBooksSchema.parse(response);
-    return response as PaginatedResponse<Book>;
+    return PaginatedBooksSchema.parse(response) as PaginatedResponse<Book>;
   }
 
   async getBook(id: number): Promise<Book> {
