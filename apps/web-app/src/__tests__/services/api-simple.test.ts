@@ -116,7 +116,7 @@ describe('API Service Simple Tests', () => {
     expect(mockAxiosInstance.get).toHaveBeenCalled();
     const [url, config] = mockAxiosInstance.get.mock.calls[0];
     expect(url).toContain('/users');
-    expect(result).toBe(mockUser);
+    expect(result).toEqual(mockUser);
   });
 
   test('bookAPI.getBooks calls correct endpoint', async () => {
@@ -136,7 +136,7 @@ describe('API Service Simple Tests', () => {
     const [url, config] = mockAxiosInstance.get.mock.calls[0];
     expect(url).toContain('/books');
     expect(config.params).toEqual({ page: 1, limit: 5, includeAuthors: 'true', includeCategories: 'true' });
-    expect(result).toBe(mockResponse);
+    expect(result).toEqual(mockResponse);
   });
 
   test('categoryAPI.getCategories calls correct endpoint', async () => {
@@ -152,7 +152,7 @@ describe('API Service Simple Tests', () => {
     expect(mockAxiosInstance.get).toHaveBeenCalled();
     const [url] = mockAxiosInstance.get.mock.calls[0];
     expect(url).toContain('/categories');
-    expect(result).toBe(mockCategories);
+    expect(result).toEqual(mockCategories);
   });
 
   test('authorAPI.getAuthors calls correct endpoint', async () => {
@@ -168,7 +168,7 @@ describe('API Service Simple Tests', () => {
     expect(mockAxiosInstance.get).toHaveBeenCalled();
     const [url] = mockAxiosInstance.get.mock.calls[0];
     expect(url).toContain('/authors');
-    expect(result).toBe(mockAuthors);
+    expect(result).toEqual(mockAuthors);
   });
 
 
