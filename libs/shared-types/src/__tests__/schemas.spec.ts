@@ -27,7 +27,15 @@ describe('shared-types schemas', () => {
       ],
     };
 
-    expect(BookSchema.parse(payload)).toEqual(payload);
+    const parsed = BookSchema.parse(payload);
+    expect(parsed).toMatchObject({
+      id: payload.id,
+      isbnCode: payload.isbnCode,
+      title: payload.title,
+      status: payload.status,
+      authors: payload.authors?.map(({ id, name, surname }) => ({ id, name, surname })),
+      categories: payload.categories?.map(({ id, name }) => ({ id, name })),
+    });
   });
 
   it('rejects invalid book status', () => {

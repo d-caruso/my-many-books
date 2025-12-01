@@ -105,7 +105,16 @@ describe('API Service Simple Tests', () => {
 
   test('userAPI.getCurrentUser calls correct endpoint', async () => {
     const { userAPI } = apiModule;
-    const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
+    const mockUser = {
+      id: 1,
+      email: 'test@example.com',
+      name: 'Test',
+      surname: 'User',
+      isActive: true,
+      role: 'user',
+      creationDate: new Date().toISOString(),
+      updateDate: new Date().toISOString(),
+    };
 
     // Mock returns just the data (response interceptor extracts .data)
     mockAxiosInstance.get.mockResolvedValue(mockUser);
