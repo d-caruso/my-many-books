@@ -4,6 +4,8 @@ import { BookController } from '../../../src/controllers/BookController';
 import { BookService } from '../../../src/services/book/BookService';
 import { BookRepository } from '../../../src/repositories/book/BookRepository';
 import { AuthorRepository } from '../../../src/repositories/author/AuthorRepository';
+import { CategoryRepository } from '../../../src/repositories/category/CategoryRepository';
+import { UserRepository } from '../../../src/repositories/user/UserRepository';
 
 describe('DI Container Configuration', () => {
   beforeEach(() => {
@@ -40,6 +42,22 @@ describe('DI Container Configuration', () => {
     const second = container.get<AuthorRepository>(TYPES.AuthorRepository);
 
     expect(first).toBeInstanceOf(AuthorRepository);
+    expect(first).toBe(second);
+  });
+
+  it('resolves CategoryRepository singleton', () => {
+    const first = container.get<CategoryRepository>(TYPES.CategoryRepository);
+    const second = container.get<CategoryRepository>(TYPES.CategoryRepository);
+
+    expect(first).toBeInstanceOf(CategoryRepository);
+    expect(first).toBe(second);
+  });
+
+  it('resolves UserRepository singleton', () => {
+    const first = container.get<UserRepository>(TYPES.UserRepository);
+    const second = container.get<UserRepository>(TYPES.UserRepository);
+
+    expect(first).toBeInstanceOf(UserRepository);
     expect(first).toBe(second);
   });
 });

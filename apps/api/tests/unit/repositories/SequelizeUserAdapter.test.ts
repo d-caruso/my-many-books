@@ -1,13 +1,13 @@
-import { SequelizeUserRepository } from '../../../src/repositories/user/SequelizeUserRepository';
+import { SequelizeUserAdapter } from '../../../src/repositories/user/adapters/SequelizeUserAdapter';
 import { User } from '../../../src/models/User';
 
 jest.mock('../../../src/models/User');
 
-describe('SequelizeUserRepository', () => {
-  let repository: SequelizeUserRepository;
+describe('SequelizeUserAdapter', () => {
+  let adapter: SequelizeUserAdapter;
 
   beforeEach(() => {
-    repository = new SequelizeUserRepository();
+    adapter = new SequelizeUserAdapter();
     jest.clearAllMocks();
   });
 
@@ -16,7 +16,7 @@ describe('SequelizeUserRepository', () => {
       get: jest.fn().mockReturnValue({ id: 1, email: 'test@example.com' }),
     });
 
-    const user = await repository.findById(1);
+    const user = await adapter.findById(1);
 
     expect(User.findByPk).toHaveBeenCalledWith(1, expect.any(Object));
     expect(user).toMatchObject({ id: 1 });
@@ -25,10 +25,10 @@ describe('SequelizeUserRepository', () => {
   it('create persists and refetches user', async () => {
     (User.create as jest.Mock).mockResolvedValue({ id: 2 });
     const findSpy = jest
-      .spyOn(repository, 'findById')
+      .spyOn(adapter, 'findById')
       .mockResolvedValue({ id: 2, email: 'new@example.com' } as any);
 
-    const created = await repository.create({ email: 'new@example.com' } as any);
+    const created = await adapter.createModel({ email: 'new@example.com' } as any);
 
     expect(User.create).toHaveBeenCalled();
     expect(findSpy).toHaveBeenCalledWith(2, undefined);
@@ -37,14 +37,14 @@ describe('SequelizeUserRepository', () => {
 
   it('delete removes record', async () => {
     (User.destroy as jest.Mock).mockResolvedValue(1);
-    const result = await repository.delete(5);
+    const result = await adapter.deleteModel(5);
     expect(User.destroy).toHaveBeenCalledWith({ where: { id: 5 } });
-    expect(result).toBe(true);
+    expect(result).toBe(1);
   });
 
   it('countByRole leverages User.count', async () => {
     (User.count as jest.Mock).mockResolvedValue(3);
-    const count = await repository.countByRole('admin');
+    const count = await adapter.countByRole('admin');
     expect(User.count).toHaveBeenCalledWith({ where: { role: 'admin' } });
     expect(count).toBe(3);
   });

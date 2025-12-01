@@ -6,9 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { TYPES } from '../../container/types';
-import { IUserRepository } from '../../repositories/user/IUserRepository';
-import { UserEntity, UserUpdateInput } from '../../repositories/user/UserRepository.types';
-import { IBookRepository } from '../../repositories/book/IBookRepository';
+import { Repository as UserRepositoryContract } from '../../repositories/user/Repository';
+import { UserEntity, UserUpdateInput } from '../../repositories/user/UserRepositoryTypes';
+import { Repository as BookRepositoryContract } from '../../repositories/book/Repository';
 import { BookEntity, BookListOptions, PaginatedResult as BookPaginatedResult } from '../../repositories/book/BookRepositoryTypes';
 import { ApplicationError } from '../../errors/ApplicationError';
 import { UserCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
@@ -54,8 +54,8 @@ export interface UserStatsResult {
 @injectable()
 export class UserService {
   constructor(
-    @inject(TYPES.UserRepository) private readonly userRepository: IUserRepository,
-    @inject(TYPES.BookRepository) private readonly bookRepository: IBookRepository
+    @inject(TYPES.UserRepository) private readonly userRepository: UserRepositoryContract,
+    @inject(TYPES.BookRepository) private readonly bookRepository: BookRepositoryContract
   ) {}
 
   initializeControllerContext(): void {

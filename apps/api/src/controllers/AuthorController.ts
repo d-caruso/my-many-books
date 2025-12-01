@@ -19,7 +19,7 @@ import {
 import { CreateAuthorDTO } from '../dtos/author/CreateAuthorDTO';
 import { UpdateAuthorDTO } from '../dtos/author/UpdateAuthorDTO';
 import { toAuthorResponseDTO } from '../dtos/author/AuthorResponseDTO';
-import { IAuthorRepository } from '../repositories/author/IAuthorRepository';
+import { Repository as AuthorRepositoryContract } from '../repositories/author/Repository';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 
 interface AuthorSearchFilters {
@@ -38,7 +38,7 @@ interface AuthorSearchFilters {
 export class AuthorController extends BaseController {
   constructor(
     @inject(TYPES.AuthorService) private readonly authorService: AuthorService,
-    @inject(TYPES.AuthorRepository) private readonly authorRepository: IAuthorRepository
+    @inject(TYPES.AuthorRepository) private readonly authorRepository: AuthorRepositoryContract
   ) {
     super();
     this.authorService.initializeControllerContext();

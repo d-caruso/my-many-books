@@ -5,13 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../container/types';
-import { IUserRepository } from '../../repositories/user/IUserRepository';
+import { Repository as UserRepositoryContract } from '../../repositories/user/Repository';
 import {
   PaginatedResult,
   UserEntity,
   UserListOptions,
   UserUpdateInput,
-} from '../../repositories/user/UserRepository.types';
+} from '../../repositories/user/UserRepositoryTypes';
 import { UserCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { ApplicationError } from '../../errors/ApplicationError';
@@ -52,7 +52,9 @@ export interface UpdateUserInput extends Partial<CreateUserInput> {}
 
 @injectable()
 class AdminUserService {
-  constructor(@inject(TYPES.AdminUserRepository) private readonly userRepository: IUserRepository) {}
+  constructor(
+    @inject(TYPES.AdminUserRepository) private readonly userRepository: UserRepositoryContract
+  ) {}
 
   initializeControllerContext(): void {
     void this.userRepository;

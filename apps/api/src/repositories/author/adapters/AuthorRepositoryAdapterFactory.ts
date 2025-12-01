@@ -10,18 +10,20 @@ const ADAPTER_CACHE: Partial<Record<string, AuthorRepositoryAdapter>> = {};
 
 export const getAuthorRepositoryAdapter = (): AuthorRepositoryAdapter => {
   const provider = (process.env['AUTHOR_REPOSITORY_ADAPTER'] || 'sequelize').toLowerCase();
+  let adapter = ADAPTER_CACHE[provider];
 
-  if (!ADAPTER_CACHE[provider]) {
+  if (!adapter) {
     switch (provider) {
       case 'sequelize':
-        ADAPTER_CACHE[provider] = new SequelizeAuthorAdapter();
+        adapter = new SequelizeAuthorAdapter();
+        ADAPTER_CACHE[provider] = adapter;
         break;
       default:
         throw new Error(`Unsupported author repository adapter: ${provider}`);
     }
   }
 
-  return ADAPTER_CACHE[provider]!;
+  return adapter;
 };
 
 export const clearAuthorRepositoryAdapterCache = (): void => {

@@ -13,10 +13,10 @@ import {
   BookSearchFilters,
   PaginatedResult,
 } from '../BookRepositoryTypes';
-import { IRepositoryAdapter } from '../../interfaces/adapters/IRepositoryAdapter';
+import { RepositoryAdapter } from '../../interfaces/adapters/RepositoryAdapter';
 
 export interface BookRepositoryAdapter
-  extends IRepositoryAdapter<
+  extends RepositoryAdapter<
     BookEntity,
     BookCreationInput,
     BookAssociationInput,

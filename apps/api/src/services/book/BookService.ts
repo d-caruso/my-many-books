@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { TYPES } from '../../container/types';
-import { IBookRepository } from '../../repositories/book/IBookRepository';
+import { Repository as BookRepositoryContract } from '../../repositories/book/Repository';
 import { BookAssociationInput, BookEntity } from '../../repositories/book/BookRepositoryTypes';
 import { BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { Author } from '@/models/Author';
@@ -59,7 +59,9 @@ export type UpdateBookInput = Partial<CreateBookInput>;
 
 @injectable()
 class BookService {
-  constructor(@inject(TYPES.BookRepository) private readonly bookRepository: IBookRepository) {}
+  constructor(
+    @inject(TYPES.BookRepository) private readonly bookRepository: BookRepositoryContract
+  ) {}
 
   initializeControllerContext(): void {
     // Accessing the repository ensures the binding is evaluated.

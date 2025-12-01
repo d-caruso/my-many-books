@@ -1,4 +1,4 @@
-import { UserEntity } from '../../repositories/user/UserRepository.types';
+import { UserEntity } from '../../repositories/user/UserRepositoryTypes';
 
 export interface UserResponseDTO {
   id: number;

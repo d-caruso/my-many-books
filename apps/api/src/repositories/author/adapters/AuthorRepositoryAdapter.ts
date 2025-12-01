@@ -7,16 +7,14 @@ import {
   AuthorAssociationInput,
   AuthorCreationInput,
   AuthorEntity,
-  AuthorListFilters,
   AuthorListOptions,
   AuthorQueryOptions,
-  AuthorUpdateInput,
   PaginatedResult,
 } from '../AuthorRepositoryTypes';
-import { IRepositoryAdapter } from '../../interfaces/adapters/IRepositoryAdapter';
+import { RepositoryAdapter } from '../../interfaces/adapters/RepositoryAdapter';
 
 export interface AuthorRepositoryAdapter
-  extends IRepositoryAdapter<
+  extends RepositoryAdapter<
     AuthorEntity,
     AuthorCreationInput,
     AuthorAssociationInput,

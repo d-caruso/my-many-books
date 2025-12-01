@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { TYPES } from '../../container/types';
-import { IAuthorRepository } from '../../repositories/author/IAuthorRepository';
+import { Repository as AuthorRepositoryContract } from '../../repositories/author/Repository';
 import { AuthorEntity } from '../../repositories/author/AuthorRepositoryTypes';
 import { AuthorCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import { ApplicationError } from '../../errors/ApplicationError';
@@ -51,7 +51,8 @@ export type UpdateAuthorInput = Partial<CreateAuthorInput>;
 @injectable()
 class AuthorService {
   constructor(
-    @inject(TYPES.AuthorRepository) private readonly authorRepository: IAuthorRepository
+    @inject(TYPES.AuthorRepository)
+    private readonly authorRepository: AuthorRepositoryContract
   ) {}
 
   initializeControllerContext(): void {

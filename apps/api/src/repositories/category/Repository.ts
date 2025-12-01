@@ -1,5 +1,5 @@
 // ================================================================
-// src/repositories/category/ICategoryRepository.ts
+// src/repositories/category/Repository.ts
 // Contract for category persistence operations
 // ================================================================
 
@@ -9,10 +9,10 @@ import {
   CategoryQueryOptions,
   CategoryUpdateInput,
   PaginatedResult,
-} from './CategoryRepository.types';
+} from './CategoryRepositoryTypes';
 import { CategoryCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 
-export interface ICategoryRepository {
+export interface Repository {
   findById(id: number, options?: CategoryQueryOptions): Promise<CategoryEntity | null>;
   findUserCategoryById(
     id: number,
@@ -30,7 +30,10 @@ export interface ICategoryRepository {
     userId: number,
     limit?: number
   ): Promise<Array<Pick<CategoryEntity, 'id' | 'name'>>>;
-  create(payload: CategoryCreationAttributes, options?: CategoryQueryOptions): Promise<CategoryEntity>;
+  create(
+    payload: CategoryCreationAttributes,
+    options?: CategoryQueryOptions
+  ): Promise<CategoryEntity>;
   update(
     id: number,
     payload: CategoryUpdateInput,

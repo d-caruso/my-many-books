@@ -1,4 +1,4 @@
-import { CategoryEntity } from '../../repositories/category/CategoryRepository.types';
+import { CategoryEntity } from '../../repositories/category/CategoryRepositoryTypes';
 
 export interface CategoryResponseDTO {
   id: number;

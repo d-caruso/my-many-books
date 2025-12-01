@@ -5,26 +5,25 @@
 
 import { BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import {
-  IAssociationInput,
-  ICreationAttributes,
-  IListOptions,
-  IQueryOptions,
+  AssociationInput,
+  CreationAttributes,
+  ListOptions,
+  QueryOptions,
   PaginatedResult as AdapterPaginatedResult,
-} from '../interfaces/adapters/IRepositoryAdapter';
+  SearchFilters,
+} from '../interfaces/adapters/RepositoryAdapter';
 import { BookEntity } from '../../domain/entities/Book';
 
 export type { BookEntity } from '../../domain/entities/Book';
 
-export interface BookAssociationInput extends IAssociationInput {
+export interface BookAssociationInput extends AssociationInput {
   authorIds?: number[];
   categoryIds?: number[];
 }
 
-export interface BookQueryOptions extends IQueryOptions {
-  transaction?: import('sequelize').Transaction | null;
-}
+export type BookQueryOptions = QueryOptions;
 
-export interface BookSearchFilters {
+export interface BookSearchFilters extends SearchFilters {
   title?: string;
   isbnCode?: string;
   editionNumber?: number;
@@ -36,7 +35,7 @@ export interface BookSearchFilters {
   userId?: number;
 }
 
-export interface BookListOptions extends IListOptions {
+export interface BookListOptions extends ListOptions {
   includeAssociations?: boolean;
   filters?: Partial<BookSearchFilters>;
 }
@@ -46,4 +45,4 @@ export type PaginatedResult<T extends BookEntity = BookEntity> = AdapterPaginate
 export interface BookCreationInput
   extends BookCreationAttributes,
     BookAssociationInput,
-    ICreationAttributes {}
+    CreationAttributes {}

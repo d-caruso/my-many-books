@@ -1,5 +1,5 @@
 import { BookService, BookServiceError } from '../../../src/services/book/BookService';
-import { IBookRepository } from '../../../src/repositories/book/IBookRepository';
+import { Repository as BookRepositoryContract } from '../../../src/repositories/book/Repository';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
@@ -17,7 +17,7 @@ jest.mock('../../../src/models/Category', () => ({
 }));
 
 describe('BookService', () => {
-  let repository: jest.Mocked<IBookRepository>;
+  let repository: jest.Mocked<BookRepositoryContract>;
   let service: BookService;
 
   beforeEach(() => {
@@ -32,7 +32,7 @@ describe('BookService', () => {
       delete: jest.fn(),
       countUserBooks: jest.fn(),
       findRecentUserBooks: jest.fn(),
-    } as unknown as jest.Mocked<IBookRepository>;
+    } as unknown as jest.Mocked<BookRepositoryContract>;
 
     service = new BookService(repository);
   });

@@ -1,29 +1,31 @@
 // ================================================================
-// repositories/interfaces/adapters/IRepositoryAdapter.ts
+// repositories/interfaces/adapters/RepositoryAdapter.ts
 // Generic contracts shared by every persistence adapter
 // ================================================================
 
 import { BaseEntity } from '../../../domain/entities/BaseEntity';
 
-export interface ICreationAttributes {
+export type CreationAttributes = Record<string, unknown>;
+
+export interface AssociationInput {
   [key: string]: unknown;
 }
 
-export interface IAssociationInput {
-  [key: string]: unknown;
-}
-
-export interface IQueryOptions {
+export interface QueryOptions {
   transaction?: unknown;
   includeAssociations?: boolean;
 }
 
-export interface IListOptions extends IQueryOptions {
+export interface ListOptions extends QueryOptions {
   limit?: number;
   offset?: number;
-  filters?: Record<string, unknown>;
+  filters?: SearchFilters;
   orderBy?: string;
   orderDirection?: 'ASC' | 'DESC';
+}
+
+export interface SearchFilters {
+  [key: string]: unknown;
 }
 
 export interface PaginatedResult<T extends BaseEntity> {
@@ -33,16 +35,16 @@ export interface PaginatedResult<T extends BaseEntity> {
   offset: number;
 }
 
-export interface IRepositoryAdapter<
+export interface RepositoryAdapter<
   Entity extends BaseEntity,
-  Creation extends ICreationAttributes,
-  Associations extends IAssociationInput,
-  Query extends IQueryOptions,
-  List extends IListOptions,
+  Creation,
+  Associations extends AssociationInput,
+  Query extends QueryOptions,
+  List extends ListOptions,
 > {
   buildFindOptions(options?: Query): unknown;
   buildListQuery(
-    where: Record<string, unknown>,
+    filters: SearchFilters,
     options?: List
   ): {
     query: unknown;

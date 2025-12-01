@@ -1,11 +1,11 @@
 import { AdminUserService, AdminUserServiceError } from '../../../src/services/user/AdminUserService';
-import { IUserRepository } from '../../../src/repositories/user/IUserRepository';
+import { Repository as UserRepositoryContract } from '../../../src/repositories/user/Repository';
 
 const adminContext = { userId: 1, role: 'admin' };
 
 describe('AdminUserService', () => {
   let service: AdminUserService;
-  let repository: jest.Mocked<IUserRepository>;
+  let repository: jest.Mocked<UserRepositoryContract>;
 
   beforeEach(() => {
     repository = {
@@ -17,7 +17,7 @@ describe('AdminUserService', () => {
       update: jest.fn(),
       delete: jest.fn(),
       countByRole: jest.fn(),
-    } as unknown as jest.Mocked<IUserRepository>;
+    } as unknown as jest.Mocked<UserRepositoryContract>;
 
     service = new AdminUserService(repository);
   });
