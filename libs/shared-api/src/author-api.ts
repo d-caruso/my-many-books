@@ -10,12 +10,14 @@ const AuthorsArraySchema = AuthorSchema.array();
 export class AuthorApi extends BaseApiClient {
   async getAuthors(): Promise<Author[]> {
     const response = await this.get<unknown>('/authors');
-    return AuthorsArraySchema.parse(response);
+    AuthorsArraySchema.parse(response);
+    return response as Author[];
   }
 
   async getAuthor(id: number): Promise<Author> {
     const response = await this.get<unknown>(`/authors/${id}`);
-    return AuthorSchema.parse(response);
+    AuthorSchema.parse(response);
+    return response as Author;
   }
 
   async createAuthor(authorData: Omit<Author, 'id' | 'creationDate' | 'updateDate'>): Promise<Author> {
