@@ -2,7 +2,6 @@ import { renderHook, act } from '@testing-library/react';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import { Book, SearchFilters } from '../../hooks/../types';
 import { ApiProvider } from '../../contexts/ApiContext';
-import { env } from '../../config/env';
 import React from 'react';
 
 // Create mock API service
@@ -66,6 +65,8 @@ describe('useBookSearch', () => {
     expect(typeof result.current.loadMore).toBe('function');
   });
 
+  const SHARED_DEFAULT_LIMIT = 20; // Mirrors shared-ui-hooks/useBookSearch default
+
   describe('searchBooks', () => {
     test('searches books with query', async () => {
       const mockResponse = {
@@ -88,7 +89,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: 'test query',
         page: 1,
-        limit: env.BOOKS_PAGINATION_DEFAULT,
+        limit: SHARED_DEFAULT_LIMIT,
       });
       expect(result.current.books).toEqual(mockBooks);
       expect(result.current.totalCount).toBe(2);
@@ -123,7 +124,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: 'query',
         page: 1,
-        limit: env.BOOKS_PAGINATION_DEFAULT,
+        limit: SHARED_DEFAULT_LIMIT,
         categoryId: 1,
         authorId: 2,
       });
@@ -135,22 +136,11 @@ describe('useBookSearch', () => {
         wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
       });
 
-      mockBookAPI.searchBooks.mockResolvedValue({
-        books: [],
-        total: 0,
-        hasMore: false,
-        page: 1,
-      });
-
       await act(async () => {
         await result.current.searchBooks('');
       });
 
-      expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
-        q: '',
-        page: 1,
-        limit: env.BOOKS_PAGINATION_DEFAULT,
-      });
+      expect(mockBookAPI.searchBooks).not.toHaveBeenCalled();
       expect(result.current.books).toEqual([]);
       expect(result.current.loading).toBe(false);
       expect(result.current.error).toBe(null);
@@ -177,7 +167,7 @@ describe('useBookSearch', () => {
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         q: '',
         page: 1,
-        limit: env.BOOKS_PAGINATION_DEFAULT,
+        limit: SHARED_DEFAULT_LIMIT,
         categoryId: 1,
       });
       expect(result.current.books).toEqual(mockBooks);
