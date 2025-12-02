@@ -67,6 +67,32 @@ Reusable React components shared between web and future mobile applications.
 ### `@my-many-books/shared-utils`
 Business logic utilities and helper functions.
 
+### `@my-many-books/shared-ui-hooks`
+Cross-platform React hooks (`useBooks`, `useBookSearch`, `useCategories`, etc.) that both web and mobile consume. Hooks expose TypeScript generics and options (page size, auto load, custom sort comparators) so each client can extend domain entities/forms without duplicating logic.
+
+```tsx
+import { useBooks } from '@my-many-books/shared-ui-hooks';
+
+const AdminBooksWidget = () => {
+  const {
+    books,
+    loadBooks,
+    updateBookStatus,
+  } = useBooks({ autoLoad: false, pageSize: 50 });
+
+  useEffect(() => {
+    void loadBooks(1);
+  }, [loadBooks]);
+
+  return (
+    <div>
+      <h3>Latest Books ({books.length})</h3>
+      <button onClick={() => updateBookStatus(42, 'finished')}>Mark #42 done</button>
+    </div>
+  );
+};
+```
+
 ## Internationalization (i18n)
 
 This project uses `i18next` and `react-i18next` for internationalization. The configuration is located in the `libs/shared-i18n` library.
