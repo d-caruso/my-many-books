@@ -68,6 +68,8 @@ logs
 # docs
 apps/mobile/MOBILE_APP_GUIDE.md
 docs/
+!libs/hookey/docs/
+!libs/hookey/docs/**
 
 # bak files
 *.bak
