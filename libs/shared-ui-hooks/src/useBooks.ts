@@ -86,7 +86,7 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, pageSize]);
 
   const createBook = useCallback(async (bookData: TForm): Promise<TBook | null> => {
     try {
