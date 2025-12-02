@@ -27,7 +27,6 @@ const ThemeToggle: React.FC = () => {
         data-testid="theme-toggle"
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
-        role="button"
         aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         className="p-2 rounded-lg border hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
       >

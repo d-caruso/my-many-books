@@ -4,7 +4,6 @@ import { ScanResult } from '../types';
 // Types for dynamically imported zxing library
 // Using 'any' to avoid bundling the library at compile time
 type BrowserMultiFormatReader = any;
-type NotFoundException = any;
 
 interface ScannerState {
   isScanning: boolean;
@@ -174,6 +173,14 @@ export const useISBNScanner = (
     return false;
   }, [validateISBN10, validateISBN13]);
 
+  // Stop scanning
+  const stopScanning = useCallback((): void => {
+    if (codeReader.current) {
+      codeReader.current.reset();
+    }
+    setIsScanning(false);
+  }, []);
+
   // Start scanning
   const startScanning = useCallback(async (): Promise<void> => {
     if (!hasPermission) {
@@ -232,15 +239,7 @@ export const useISBNScanner = (
       setIsScanning(false);
       onScanError?.('Failed to start camera');
     }
-  }, [hasPermission, requestPermission, selectedDeviceId, devices, onScanSuccess, onScanError, validateISBN, initializeReader]);
-
-  // Stop scanning
-  const stopScanning = useCallback((): void => {
-    if (codeReader.current) {
-      codeReader.current.reset();
-    }
-    setIsScanning(false);
-  }, []);
+  }, [hasPermission, requestPermission, selectedDeviceId, devices, onScanSuccess, onScanError, validateISBN, initializeReader, stopScanning]);
 
   // Switch camera
   const switchCamera = useCallback((): void => {

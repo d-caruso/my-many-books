@@ -31,7 +31,6 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   const [authors, setAuthors] = useState<Author[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -57,7 +56,6 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
       const results = await authorAPI.searchAuthors(term);
       setAuthors(results);
       setShowDropdown(results.length > 0);
-      setSelectedIndex(-1);
     } catch (error) {
       console.error('Author search failed:', error);
       setAuthors([]);

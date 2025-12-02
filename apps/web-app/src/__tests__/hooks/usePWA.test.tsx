@@ -1,5 +1,5 @@
-import React from 'react';
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { usePWA } from '../../hooks/usePWA';
 
 // Mock service worker registration

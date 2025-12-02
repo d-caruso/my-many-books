@@ -11,11 +11,11 @@ import './i18n.testing';
 import 'whatwg-fetch';
 import { TransformStream } from 'web-streams-polyfill/dist/ponyfill';
 
+import type { SetupServerApi } from 'msw/node';
+
 if (typeof globalThis.TransformStream === 'undefined') {
   globalThis.TransformStream = TransformStream as any;
 }
-
-import type { SetupServerApi } from 'msw/node';
 
 // Extend expect with accessibility matchers
 expect.extend(toHaveNoViolations);
@@ -63,7 +63,7 @@ const safeVi = vitestGlobals.vi ?? {
 // matchMedia API (used by responsive components)
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: safeVi.fn().mockImplementation(query => ({
+  value: safeVi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -92,7 +92,6 @@ if (typeof window.localStorage === 'undefined') {
 // IntersectionObserver API (used by lazy loading, infinite scroll, etc.)
 if (typeof global.IntersectionObserver === 'undefined') {
   global.IntersectionObserver = class IntersectionObserver {
-    constructor() {}
     observe() {
       return null;
     }

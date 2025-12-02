@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { BookCard } from '../../../components/Book/BookCard';
 import { Book } from '../../types';
 
@@ -252,11 +252,6 @@ describe('BookCard', () => {
     );
 
     // Create a mock event with stopPropagation
-    const mockEvent = {
-      stopPropagation: vi.fn(),
-      target: { value: 'finished' },
-    };
-
     // Simulate clicking edit button
     const editButton = screen.getByTitle('Edit book');
     editButton.onclick = (e) => {

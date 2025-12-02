@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { ISBNScanner } from '../../../components/Scanner/ISBNScanner';
 import { useISBNScanner } from '../../../hooks/useISBNScanner';

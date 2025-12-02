@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -60,6 +60,7 @@ interface BookFormData {
 export const BookManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
+  const { getAdminBooks, updateAdminBook, deleteAdminBook } = apiService;
 
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,12 +88,12 @@ export const BookManagementPage: React.FC = () => {
   const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const fetchBooks = async () => {
+  const fetchBooks = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.getAdminBooks(
+      const response = await getAdminBooks(
         paginationModel.page + 1,
         paginationModel.pageSize,
         searchTerm || undefined
@@ -106,11 +107,11 @@ export const BookManagementPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAdminBooks, paginationModel.page, paginationModel.pageSize, searchTerm]);
 
   useEffect(() => {
     fetchBooks();
-  }, [paginationModel, searchTerm]);
+  }, [fetchBooks]);
 
   const handleSearch = () => {
     setPaginationModel({ ...paginationModel, page: 0 });
@@ -145,7 +146,7 @@ export const BookManagementPage: React.FC = () => {
       setFormLoading(true);
       setFormError(null);
 
-      await apiService.updateAdminBook(selectedBook.id, formData);
+      await updateAdminBook(selectedBook.id, formData);
 
       setEditDialogOpen(false);
       setSelectedBook(null);
@@ -174,7 +175,7 @@ export const BookManagementPage: React.FC = () => {
     try {
       setDeleteLoading(true);
 
-      await apiService.deleteAdminBook(bookToDelete.id);
+      await deleteAdminBook(bookToDelete.id);
 
       setDeleteDialogOpen(false);
       setBookToDelete(null);

@@ -63,7 +63,7 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  }, [setThemeState]);
 
   const toggleTheme = () => {
     if (isTransitioning) return;

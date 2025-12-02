@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -56,6 +56,7 @@ interface UserFormData {
 export const UserManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
+  const { getAdminUsers, updateAdminUser, deleteAdminUser } = apiService;
 
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,12 +86,12 @@ export const UserManagementPage: React.FC = () => {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.getAdminUsers(
+      const response = await getAdminUsers(
         paginationModel.page + 1,
         paginationModel.pageSize,
         searchTerm || undefined
@@ -104,11 +105,11 @@ export const UserManagementPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAdminUsers, paginationModel.page, paginationModel.pageSize, searchTerm]);
 
   useEffect(() => {
     fetchUsers();
-  }, [paginationModel, searchTerm]);
+  }, [fetchUsers]);
 
   const handleSearch = () => {
     setPaginationModel({ ...paginationModel, page: 0 });
@@ -141,7 +142,7 @@ export const UserManagementPage: React.FC = () => {
       setFormLoading(true);
       setFormError(null);
 
-      await apiService.updateAdminUser(selectedUser.id, formData);
+      await updateAdminUser(selectedUser.id, formData);
 
       setEditDialogOpen(false);
       setSelectedUser(null);
@@ -170,7 +171,7 @@ export const UserManagementPage: React.FC = () => {
     try {
       setDeleteLoading(true);
 
-      await apiService.deleteAdminUser(userToDelete.id);
+      await deleteAdminUser(userToDelete.id);
 
       setDeleteDialogOpen(false);
       setUserToDelete(null);

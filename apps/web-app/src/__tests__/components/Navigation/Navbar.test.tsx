@@ -1,6 +1,5 @@
 import React from 'react';
-import { render as rtlRender, screen, waitFor, act, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render as rtlRender, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { I18nextProvider } from 'react-i18next';

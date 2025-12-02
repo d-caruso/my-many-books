@@ -1,5 +1,5 @@
 import React from 'react';
-import { render as rtlRender, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent, act } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -70,8 +70,6 @@ vi.mock('@mui/icons-material/ViewList', () => ({
 
 // Store callbacks for testing
 let mockOnStatusChange: any;
-let mockFormCancel: any;
-let mockDetailsEdit: any;
 
 // Mock components with better callback handling
 vi.mock('../../components/Book', () => ({
@@ -91,7 +89,6 @@ vi.mock('../../components/Book', () => ({
     );
   },
   BookForm: ({ book, onSubmit, onCancel, loading }: any) => {
-    mockFormCancel = onCancel;
     return (
       <div data-testid="book-form" data-loading={loading} data-book-id={book?.id}>
         <button onClick={() => onSubmit({ title: 'Test Book', isbn: '123' })} data-testid="form-submit">Submit</button>
@@ -100,7 +97,6 @@ vi.mock('../../components/Book', () => ({
     );
   },
   BookDetails: ({ book, onEdit, onDelete, onClose }: any) => {
-    mockDetailsEdit = onEdit;
     return (
       <div data-testid="book-details" data-book-id={book?.id}>
         <h3>{book?.title}</h3>
@@ -113,7 +109,6 @@ vi.mock('../../components/Book', () => ({
 }));
 
 // Mock callback references for BookSearchForm
-const mockOnSearch = vi.fn();
 const mockOnClear = vi.fn();
 
 vi.mock('../../components/Search', () => ({

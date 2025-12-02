@@ -1,6 +1,4 @@
-import { describe, test, expect, beforeEach, vi, type Mocked } from 'vitest';
-import axios from 'axios';
-
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import * as apiModule from '../../services/api';
 
 // Mock environment variables using Vitest
@@ -56,8 +54,6 @@ vi.mock('axios', () => ({
     create: vi.fn(() => mockAxiosInstance),
   },
 }));
-
-const mockedAxios = axios as Mocked<typeof axios>;
 
 describe('API Service Simple Tests', () => {
   beforeEach(() => {
@@ -123,7 +119,7 @@ describe('API Service Simple Tests', () => {
 
     // shared-api constructs full URLs with configured base URL
     expect(mockAxiosInstance.get).toHaveBeenCalled();
-    const [url, config] = mockAxiosInstance.get.mock.calls[0];
+    const [url] = mockAxiosInstance.get.mock.calls[0];
     expect(url).toContain('/users');
     expect(result).toEqual(mockUser);
   });

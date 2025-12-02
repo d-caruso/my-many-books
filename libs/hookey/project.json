@@ -22,7 +22,7 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": [],
       "options": {
         "lintFilePatterns": ["libs/hookey/**/*.ts"]

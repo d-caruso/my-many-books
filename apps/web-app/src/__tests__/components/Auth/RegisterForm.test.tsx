@@ -278,7 +278,7 @@ describe('RegisterForm', () => {
     // We need to test the button being disabled during submission
     mockRegister.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 1000)));
 
-    const { container } = render(
+    render(
       <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
       { wrapper: TestWrapper }
     );

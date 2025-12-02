@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, beforeEach, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { LoginForm } from '../../components/Auth/LoginForm';
 import { expectNoA11yViolations } from '../utils/axe-helper';

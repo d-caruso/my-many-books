@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, beforeEach, vi } from 'vitest';
 import { BookCard } from '../../components/Book/BookCard';
 import { expectNoA11yViolations } from '../utils/axe-helper';
 import type { Book } from '@my-many-books/types';

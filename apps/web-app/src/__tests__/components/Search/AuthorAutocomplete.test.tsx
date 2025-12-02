@@ -450,7 +450,7 @@ describe('AuthorAutocomplete', () => {
   test('renders author options with nationality', async () => {
     mockAuthorAPI.searchAuthors.mockResolvedValue([mockAuthors[0]]);
 
-    const { container } = renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
+    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
 
     const input = screen.getByTestId('autocomplete-input');
 
