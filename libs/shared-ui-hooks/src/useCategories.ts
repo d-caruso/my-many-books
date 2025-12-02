@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Category } from '@my-many-books/shared-types';
 
 export interface CategoriesState<TCategory extends Category = Category> {
   categories: TCategory[];

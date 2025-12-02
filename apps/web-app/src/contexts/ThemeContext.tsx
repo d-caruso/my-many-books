@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { ThemeName } from '../types';
+import { useLocalStorage } from '@my-many-books/shared-ui-hooks';
 
 interface ThemeContextType {
   theme: ThemeName;
@@ -25,23 +26,29 @@ interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
+const resolveSystemTheme = (): ThemeName => {
+  if (typeof window === 'undefined') {
+    return 'default';
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default';
+};
+
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>('light');
-  const [autoTheme, setAutoTheme] = useState(() => {
-    return localStorage.getItem('autoTheme') === 'true';
-  });
-  
-  const [theme, setTheme] = useState<ThemeName>(() => {
-    const savedAutoTheme = localStorage.getItem('autoTheme') === 'true';
-    if (savedAutoTheme) {
-      // Detect system theme
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      return prefersDark ? 'dark' : 'default';
-    }
-    // Get theme from localStorage or default to 'default'
-    const savedTheme = localStorage.getItem('theme') as ThemeName;
-    return savedTheme || 'default';
-  });
+  const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(() =>
+    resolveSystemTheme() === 'dark' ? 'dark' : 'light'
+  );
+
+  const [autoTheme, setAutoThemePreference] = useLocalStorage<boolean>('autoTheme', false);
+  const [storedTheme, setStoredThemePreference, removeStoredThemePreference] = useLocalStorage<ThemeName>(
+    'theme',
+    'default'
+  );
+
+  const initialTheme = useMemo<ThemeName>(() => {
+    return autoTheme ? resolveSystemTheme() : storedTheme;
+  }, [autoTheme, storedTheme]);
+
+  const [theme, setTheme] = useState<ThemeName>(initialTheme);
 
   const themes: Record<ThemeName, string> = {
     default: 'Default',
@@ -76,23 +83,36 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     // Apply theme to document
     document.documentElement.setAttribute('data-theme', theme);
     
-    // Save preferences to localStorage
     if (!autoTheme) {
-      localStorage.setItem('theme', theme);
+      setStoredThemePreference(theme);
     }
-    localStorage.setItem('autoTheme', autoTheme.toString());
-  }, [theme, autoTheme]);
+  }, [theme, autoTheme, setStoredThemePreference]);
+
+  useEffect(() => {
+    if (autoTheme) {
+      setTheme(resolveSystemTheme());
+      removeStoredThemePreference();
+    }
+  }, [autoTheme, removeStoredThemePreference]);
+
+  useEffect(() => {
+    if (!autoTheme && storedTheme && storedTheme !== theme) {
+      setTheme(storedTheme);
+    }
+  }, [storedTheme, autoTheme, theme]);
 
   const handleSetTheme = (newTheme: ThemeName) => {
-    setAutoTheme(false);
+    setAutoThemePreference(false);
     setTheme(newTheme);
   };
 
   const handleSetAutoTheme = (auto: boolean) => {
-    setAutoTheme(auto);
+    setAutoThemePreference(auto);
     if (auto) {
       setTheme(systemTheme === 'dark' ? 'dark' : 'default');
-      localStorage.removeItem('theme'); // Remove manual theme preference
+      removeStoredThemePreference();
+    } else if (storedTheme) {
+      setTheme(storedTheme);
     }
   };
 

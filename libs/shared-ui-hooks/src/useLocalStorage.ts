@@ -35,16 +35,57 @@ const defaultWebStorage: StorageAdapter = {
   }
 };
 
+export interface UseLocalStorageOptions<T> {
+  storage?: StorageAdapter;
+  serialize?: (value: T) => string;
+  deserialize?: (value: string) => T;
+}
+
+const defaultSerialize = <T>(value: T): string => JSON.stringify(value);
+const defaultDeserialize = <T>(value: string): T => JSON.parse(value) as T;
+
+type LocalStorageArg<T> = StorageAdapter | UseLocalStorageOptions<T> | undefined;
+
+const resolveOptions = <T>(arg: LocalStorageArg<T>): {
+  storage: StorageAdapter;
+  serialize: (value: T) => string;
+  deserialize: (value: string) => T;
+} => {
+  if (!arg) {
+    return {
+      storage: defaultWebStorage,
+      serialize: defaultSerialize,
+      deserialize: defaultDeserialize,
+    };
+  }
+
+  if ('getItem' in arg) {
+    return {
+      storage: arg,
+      serialize: defaultSerialize,
+      deserialize: defaultDeserialize,
+    };
+  }
+
+  return {
+    storage: arg.storage ?? defaultWebStorage,
+    serialize: arg.serialize ?? defaultSerialize,
+    deserialize: arg.deserialize ?? defaultDeserialize,
+  };
+};
+
 export const useLocalStorage = <T>(
   key: string,
   initialValue: T,
-  storageAdapter: StorageAdapter = defaultWebStorage
+  options?: StorageAdapter | UseLocalStorageOptions<T>
 ): [T, (value: T | ((val: T) => T)) => void, () => void] => {
+  const { storage, serialize, deserialize } = resolveOptions(options);
+
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
-      const item = storageAdapter.getItem(key);
+      const item = storage.getItem(key);
       if (item && typeof item === 'string') {
-        return JSON.parse(item);
+        return deserialize(item);
       }
       return initialValue;
     } catch (error) {
@@ -57,20 +98,20 @@ export const useLocalStorage = <T>(
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
-      storageAdapter.setItem(key, JSON.stringify(valueToStore));
+      storage.setItem(key, serialize(valueToStore));
     } catch (error) {
       console.error(`Error setting localStorage key "${key}":`, error);
     }
-  }, [key, storedValue, storageAdapter]);
+  }, [key, serialize, storage, storedValue]);
 
   const removeValue = useCallback(() => {
     try {
       setStoredValue(initialValue);
-      storageAdapter.removeItem(key);
+      storage.removeItem(key);
     } catch (error) {
       console.error(`Error removing localStorage key "${key}":`, error);
     }
-  }, [key, initialValue, storageAdapter]);
+  }, [key, initialValue, storage]);
 
   return [storedValue, setValue, removeValue];
 };

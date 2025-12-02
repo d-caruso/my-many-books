@@ -34,4 +34,4 @@ export type {
 export { useAsyncOperation } from './useAsyncOperation';
 export { useDebounce } from './useDebounce';
 export { useLocalStorage } from './useLocalStorage';
-export type { StorageAdapter } from './useLocalStorage';
+export type { StorageAdapter, UseLocalStorageOptions } from './useLocalStorage';
