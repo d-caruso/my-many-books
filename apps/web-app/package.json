@@ -42,6 +42,7 @@
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "test": "vitest",
+    "test:web-app:components": "vitest run --config vitest.config.components.ts",
     "test:min": "VITEST_USE_MINIMAL=1 vitest run",
     "test:coverage": "craco test --coverage --watchAll=false",
     "test:unit": "craco test --testPathPattern=src/ --watchAll=false",
