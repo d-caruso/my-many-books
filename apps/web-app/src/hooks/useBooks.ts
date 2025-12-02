@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
-import { useBooks as useSharedBooks, BooksAPI } from '@my-many-books/shared-ui-hooks';
+import {
+  useBooks as useSharedBooks,
+  BooksAPI,
+  UseBooksOptions as SharedUseBooksOptions,
+} from '@my-many-books/shared-ui-hooks';
 import { useApi } from '../contexts/ApiContext';
 
-interface UseBooksOptions {
-  autoLoad?: boolean;
-}
+export type UseBooksOptions = SharedUseBooksOptions;
 
 export const useBooks = (options: UseBooksOptions = {}) => {
   const { bookAPI } = useApi();
@@ -17,5 +19,8 @@ export const useBooks = (options: UseBooksOptions = {}) => {
     updateBookStatus: (id, status) => bookAPI.updateBookStatus(id, status),
   }), [bookAPI]);
 
-  return useSharedBooks(api, options.autoLoad ?? true);
+  return useSharedBooks(api, {
+    autoLoad: options.autoLoad,
+    pageSize: options.pageSize,
+  });
 };

@@ -5,8 +5,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Book, BookFormData, PaginatedResponse } from '@my-many-books/shared-types';
 
-interface BooksState {
-  books: Book[];
+export interface BooksState<TBook extends Book = Book> {
+  books: TBook[];
   loading: boolean;
   error: string | null;
   totalCount: number;
@@ -14,26 +14,40 @@ interface BooksState {
   hasMore: boolean;
 }
 
-interface BooksActions {
+export interface BooksActions<TBook extends Book = Book, TForm extends BookFormData = BookFormData> {
   loadBooks: (page?: number) => Promise<void>;
-  createBook: (bookData: BookFormData) => Promise<Book | null>;
-  updateBook: (id: number, bookData: Partial<BookFormData>) => Promise<Book | null>;
+  createBook: (bookData: TForm) => Promise<TBook | null>;
+  updateBook: (id: number, bookData: Partial<TForm>) => Promise<TBook | null>;
   deleteBook: (id: number) => Promise<boolean>;
-  updateBookStatus: (id: number, status: Book['status']) => Promise<Book | null>;
+  updateBookStatus: (id: number, status: TBook['status']) => Promise<TBook | null>;
   refreshBooks: () => Promise<void>;
   loadMore: () => Promise<void>;
 }
 
-export interface BooksAPI {
-  getBooks: (page?: number, limit?: number) => Promise<PaginatedResponse<Book>>;
-  createBook: (data: BookFormData) => Promise<Book>;
-  updateBook: (id: number, data: Partial<BookFormData>) => Promise<Book>;
+export interface BooksAPI<TBook extends Book = Book, TForm extends BookFormData = BookFormData> {
+  getBooks: (page?: number, limit?: number) => Promise<PaginatedResponse<TBook>>;
+  createBook: (data: TForm) => Promise<TBook>;
+  updateBook: (id: number, data: Partial<TForm>) => Promise<TBook>;
   deleteBook: (id: number) => Promise<void>;
-  updateBookStatus: (id: number, status: Book['status']) => Promise<Book>;
+  updateBookStatus: (id: number, status: TBook['status']) => Promise<TBook>;
 }
 
-export const useBooks = (api: BooksAPI, autoLoad = true): BooksState & BooksActions => {
-  const [books, setBooks] = useState<Book[]>([]);
+export interface UseBooksOptions {
+  autoLoad?: boolean;
+  pageSize?: number;
+}
+
+export type UseBooksResult<TBook extends Book = Book, TForm extends BookFormData = BookFormData> =
+  BooksState<TBook> & BooksActions<TBook, TForm>;
+
+export const useBooks = <TBook extends Book = Book, TForm extends BookFormData = BookFormData>(
+  api: BooksAPI<TBook, TForm>,
+  options: UseBooksOptions = {}
+): UseBooksResult<TBook, TForm> => {
+  const pageSize = options.pageSize ?? 20;
+  const autoLoad = options.autoLoad ?? true;
+
+  const [books, setBooks] = useState<TBook[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
@@ -45,17 +59,20 @@ export const useBooks = (api: BooksAPI, autoLoad = true): BooksState & BooksActi
     setError(null);
 
     try {
-      const response = await api.getBooks(page, 20);
+      const response = await api.getBooks(page, pageSize);
+      const receivedBooks = response.books ?? [];
+      const pagination = response.pagination;
       
       if (page === 1) {
-        setBooks(response.books || []);
+        setBooks(receivedBooks);
       } else {
-        setBooks(prev => [...prev, ...(response.books || [])]);
+        setBooks(prev => [...prev, ...receivedBooks]);
       }
       
-      setTotalCount(response.pagination.totalItems);
+      setTotalCount(pagination?.totalItems ?? receivedBooks.length);
       setCurrentPage(page);
-      setHasMore(page < response.pagination.totalPages);
+      const totalPages = pagination?.totalPages ?? page;
+      setHasMore(page < totalPages);
       
     } catch (err: any) {
       console.error('Failed to load books:', err);
@@ -71,7 +88,7 @@ export const useBooks = (api: BooksAPI, autoLoad = true): BooksState & BooksActi
     }
   }, [api]);
 
-  const createBook = useCallback(async (bookData: BookFormData): Promise<Book | null> => {
+  const createBook = useCallback(async (bookData: TForm): Promise<TBook | null> => {
     try {
       const newBook = await api.createBook(bookData);
       setBooks(prev => [newBook, ...prev]);
@@ -84,10 +101,10 @@ export const useBooks = (api: BooksAPI, autoLoad = true): BooksState & BooksActi
     }
   }, [api]);
 
-  const updateBook = useCallback(async (id: number, bookData: Partial<BookFormData>): Promise<Book | null> => {
+  const updateBook = useCallback(async (id: number, bookData: Partial<TForm>): Promise<TBook | null> => {
     try {
       const updatedBook = await api.updateBook(id, bookData);
-      setBooks(prev => prev.map(book => book.id === id ? updatedBook : book));
+      setBooks(prev => prev.map(book => (book.id === id ? updatedBook : book)));
       return updatedBook;
     } catch (err: any) {
       console.error('Failed to update book:', err);
@@ -109,10 +126,10 @@ export const useBooks = (api: BooksAPI, autoLoad = true): BooksState & BooksActi
     }
   }, [api]);
 
-  const updateBookStatus = useCallback(async (id: number, status: Book['status']): Promise<Book | null> => {
+  const updateBookStatus = useCallback(async (id: number, status: TBook['status']): Promise<TBook | null> => {
     try {
       const updatedBook = await api.updateBookStatus(id, status);
-      setBooks(prev => prev.map(book => book.id === id ? updatedBook : book));
+      setBooks(prev => prev.map(book => (book.id === id ? updatedBook : book)));
       return updatedBook;
     } catch (err: any) {
       console.error('Failed to update book status:', err);
@@ -136,9 +153,9 @@ export const useBooks = (api: BooksAPI, autoLoad = true): BooksState & BooksActi
   // Load books on mount if autoLoad is enabled
   useEffect(() => {
     if (autoLoad) {
-      loadBooks(1);
+      void loadBooks(1);
     }
-  }, [loadBooks, autoLoad]);
+  }, [autoLoad, loadBooks]);
 
   return {
     books,

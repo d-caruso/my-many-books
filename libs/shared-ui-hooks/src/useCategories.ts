@@ -2,28 +2,41 @@
  * Shared categories hook - works on web and mobile
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { Category } from '@my-many-books/shared-types';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
-interface CategoriesState {
-  categories: Category[];
+export interface CategoriesState<TCategory extends Category = Category> {
+  categories: TCategory[];
   loading: boolean;
   error: string | null;
 }
 
-interface CategoriesActions {
+export interface CategoriesActions<TCategory extends Category = Category> {
   loadCategories: () => Promise<void>;
-  createCategory: (name: string) => Promise<Category | null>;
+  createCategory: (name: string) => Promise<TCategory | null>;
   refreshCategories: () => Promise<void>;
 }
 
-export interface CategoriesAPI {
-  getCategories: () => Promise<Category[]>;
-  createCategory: (data: { name: string }) => Promise<Category>;
+export interface CategoriesAPI<TCategory extends Category = Category> {
+  getCategories: () => Promise<TCategory[]>;
+  createCategory: (data: { name: string }) => Promise<TCategory>;
 }
 
-export const useCategories = (api: CategoriesAPI, autoLoad = true): CategoriesState & CategoriesActions => {
-  const [categories, setCategories] = useState<Category[]>([]);
+export interface UseCategoriesOptions<TCategory extends Category = Category> {
+  autoLoad?: boolean;
+  sortComparator?: (a: TCategory, b: TCategory) => number;
+}
+
+export const useCategories = <TCategory extends Category = Category>(
+  api: CategoriesAPI<TCategory>,
+  options: UseCategoriesOptions<TCategory> = {}
+): CategoriesState<TCategory> & CategoriesActions<TCategory> => {
+  const { autoLoad = true, sortComparator: customComparator } = options;
+  const sortComparator = useMemo(
+    () => customComparator ?? ((a: TCategory, b: TCategory) => a.name.localeCompare(b.name)),
+    [customComparator]
+  );
+
+  const [categories, setCategories] = useState<TCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,30 +46,30 @@ export const useCategories = (api: CategoriesAPI, autoLoad = true): CategoriesSt
 
     try {
       const categoriesData = await api.getCategories();
-      setCategories(categoriesData.sort((a, b) => a.name.localeCompare(b.name)));
+      setCategories([...categoriesData].sort(sortComparator));
     } catch (err: any) {
       console.error('Failed to load categories:', err);
       setError(err.response?.data?.message || err.message || 'Failed to load categories');
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, sortComparator]);
 
-  const createCategory = useCallback(async (name: string): Promise<Category | null> => {
+  const createCategory = useCallback(async (name: string): Promise<TCategory | null> => {
     if (!name.trim()) {
       return null;
     }
 
     try {
       const newCategory = await api.createCategory({ name: name.trim() });
-      setCategories(prev => [...prev, newCategory].sort((a, b) => a.name.localeCompare(b.name)));
+      setCategories(prev => [...prev, newCategory].sort(sortComparator));
       return newCategory;
     } catch (err: any) {
       console.error('Failed to create category:', err);
       setError(err.response?.data?.message || err.message || 'Failed to create category');
       return null;
     }
-  }, [api]);
+  }, [api, sortComparator]);
 
   const refreshCategories = useCallback(async (): Promise<void> => {
     await loadCategories();
@@ -65,9 +78,9 @@ export const useCategories = (api: CategoriesAPI, autoLoad = true): CategoriesSt
   // Load categories on mount if autoLoad is enabled
   useEffect(() => {
     if (autoLoad) {
-      loadCategories();
+      void loadCategories();
     }
-  }, [loadCategories, autoLoad]);
+  }, [autoLoad, loadCategories]);
 
   return {
     categories,

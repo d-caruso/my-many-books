@@ -5,13 +5,30 @@
 
 // Data management hooks
 export { useBooks } from './useBooks';
-export type { BooksAPI } from './useBooks';
+export type {
+  BooksAPI,
+  BooksState,
+  BooksActions,
+  UseBooksOptions,
+  UseBooksResult,
+} from './useBooks';
 
 export { useBookSearch } from './useBookSearch';
-export type { BookSearchAPI } from './useBookSearch';
+export type {
+  BookSearchAPI,
+  BookSearchState,
+  BookSearchActions,
+  BookSearchOptions,
+  BookSearchResult,
+} from './useBookSearch';
 
 export { useCategories } from './useCategories';
-export type { CategoriesAPI } from './useCategories';
+export type {
+  CategoriesAPI,
+  CategoriesState,
+  CategoriesActions,
+  UseCategoriesOptions,
+} from './useCategories';
 
 // Utility hooks
 export { useAsyncOperation } from './useAsyncOperation';
