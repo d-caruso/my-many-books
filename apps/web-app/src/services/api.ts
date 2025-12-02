@@ -5,7 +5,8 @@
 
 import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
 import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
-import { BookFormData } from '../components/Book/BookForm';
+import { BookFormData as WebBookFormData } from '../components/Book/BookForm';
+import type { BookFormData as SharedBookFormData } from '@my-many-books/shared-types';
 import { env } from '../config/env';
 import axios from 'axios';
 import { authService } from './authService';
@@ -98,6 +99,37 @@ class AxiosHttpClient implements HttpClient {
     return this.axios.delete(url, config);
   }
 }
+
+type CreateBookInput = WebBookFormData | SharedBookFormData;
+type UpdateBookInput = Partial<WebBookFormData> | Partial<SharedBookFormData>;
+
+const extractAuthorIds = (data: CreateBookInput | UpdateBookInput): number[] | undefined => {
+  if ('selectedAuthors' in data && Array.isArray(data.selectedAuthors) && data.selectedAuthors.length > 0) {
+    return data.selectedAuthors.map(author => author.id);
+  }
+  if ('authorIds' in data && Array.isArray(data.authorIds) && data.authorIds.length > 0) {
+    return data.authorIds;
+  }
+  return undefined;
+};
+
+const extractCategoryIds = (data: CreateBookInput | UpdateBookInput): number[] | undefined => {
+  if ('selectedCategories' in data && Array.isArray(data.selectedCategories) && data.selectedCategories.length > 0) {
+    return data.selectedCategories;
+  }
+  if ('categoryIds' in data && Array.isArray(data.categoryIds) && data.categoryIds.length > 0) {
+    return data.categoryIds;
+  }
+  return undefined;
+};
+
+const sanitizeString = (value?: string | null): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
 
 // Interface for API service dependencies
 interface ApiServiceDependencies {
@@ -588,66 +620,76 @@ class ApiService {
     return this.apiClient.books.getBook(id);
   }
 
-  async createBook(bookData: BookFormData): Promise<Book> {
-    // Transform frontend format to backend format
-    const authorIds = bookData.selectedAuthors && bookData.selectedAuthors.length > 0
-      ? bookData.selectedAuthors.map(author => author.id)
-      : undefined;
-
-    const categoryIds = bookData.selectedCategories && bookData.selectedCategories.length > 0
-      ? bookData.selectedCategories
-      : undefined;
+  async createBook(bookData: CreateBookInput): Promise<Book> {
+    const authorIds = extractAuthorIds(bookData);
+    const categoryIds = extractCategoryIds(bookData);
 
     const backendData = {
       title: bookData.title,
       isbnCode: bookData.isbnCode,
       ...(bookData.editionNumber && { editionNumber: bookData.editionNumber }),
-      ...(bookData.editionDate && bookData.editionDate.trim() && { editionDate: bookData.editionDate }),
-      ...(bookData.status && bookData.status.trim() && { status: bookData.status }),
-      ...(bookData.notes && bookData.notes.trim() && { notes: bookData.notes }),
+      ...(sanitizeString(bookData.editionDate) && { editionDate: sanitizeString(bookData.editionDate) }),
+      ...(bookData.status && { status: bookData.status }),
+      ...(sanitizeString(bookData.notes) && { notes: sanitizeString(bookData.notes) }),
       ...(authorIds && { authorIds }),
       ...(categoryIds && { categoryIds })
     };
+
     return this.apiClient.books.createBook(backendData);
   }
 
-  async updateBook(id: number, bookData: Partial<BookFormData>): Promise<Book> {
-    // Transform frontend format to backend format, filtering out empty values
-    const backendData: any = {};
+  async updateBook(id: number, bookData: UpdateBookInput): Promise<Book> {
+    const backendData: Record<string, unknown> = {};
 
-    if (bookData.title) backendData.title = bookData.title;
-    if (bookData.isbnCode) backendData.isbnCode = bookData.isbnCode;
-    if (bookData.editionNumber) backendData.editionNumber = bookData.editionNumber;
-    if (bookData.editionDate) backendData.editionDate = bookData.editionDate;
-
-    // Handle status explicitly - allow null to clear status
-    if ('status' in bookData) {
-      backendData.status = (bookData.status === '' || bookData.status === null || bookData.status === undefined) ? null : bookData.status;
+    const title = sanitizeString(bookData.title);
+    if (title) {
+      backendData.title = title;
     }
 
-    if (bookData.notes !== undefined) backendData.notes = bookData.notes;
-
-    // Handle authors
-    if (bookData.selectedAuthors) {
-      backendData.authorIds = bookData.selectedAuthors.map(author => author.id);
+    const isbnCode = sanitizeString(bookData.isbnCode);
+    if (isbnCode) {
+      backendData.isbnCode = isbnCode;
     }
 
-    // Handle categories
-    if (bookData.selectedCategories !== undefined) {
-      backendData.categoryIds = bookData.selectedCategories;
+    if (bookData.editionNumber !== undefined) {
+      backendData.editionNumber = bookData.editionNumber;
     }
 
-    // Detect if this is a partial update (e.g., status-only) or full update
-    // If only status is being updated (no title, no authors, no categories), use PATCH
+    const editionDate = sanitizeString(bookData.editionDate);
+    if (editionDate) {
+      backendData.editionDate = editionDate;
+    }
+
+    if (bookData.status) {
+      backendData.status = bookData.status;
+    }
+
+    const notes = sanitizeString(bookData.notes);
+    if (notes) {
+      backendData.notes = notes;
+    }
+
+    const authorIds = extractAuthorIds(bookData);
+    if (authorIds) {
+      backendData.authorIds = authorIds;
+    }
+
+    const categoryIds = extractCategoryIds(bookData);
+    if (categoryIds) {
+      backendData.categoryIds = categoryIds;
+    }
+
     const isPartialUpdate = Object.keys(backendData).length === 1 && backendData.status !== undefined;
 
     if (isPartialUpdate) {
-      // Use PATCH for partial updates (e.g., status-only changes)
-      return this.apiClient.books.patchBook(id, backendData);
-    } else {
-      // Use PUT for full updates from the form
-      return this.apiClient.books.updateBook(id, backendData);
+      return this.apiClient.books.patchBook(id, { status: backendData.status });
     }
+
+    return this.apiClient.books.updateBook(id, backendData);
+  }
+
+  async updateBookStatus(id: number, status: Book['status']): Promise<Book> {
+    return this.apiClient.books.updateBookStatus(id, status);
   }
 
   async deleteBook(id: number): Promise<void> {
@@ -773,6 +815,7 @@ export const bookAPI = {
   getBook: apiService.getBook.bind(apiService),
   createBook: apiService.createBook.bind(apiService),
   updateBook: apiService.updateBook.bind(apiService),
+  updateBookStatus: apiService.updateBookStatus.bind(apiService),
   deleteBook: apiService.deleteBook.bind(apiService),
 };
 

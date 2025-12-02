@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useBookSearch as useSharedBookSearch, BookSearchAPI } from '@my-many-books/shared-ui-hooks';
-import { SearchFilters } from '../types';
 import { useApi } from '../contexts/ApiContext';
 export const useBookSearch = () => {
   const { bookAPI } = useApi();

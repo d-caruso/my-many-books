@@ -281,11 +281,7 @@ describe('useBookSearch', () => {
         authors: [],
       };
 
-      const mockResponse = {
-        book: mockBook,
-      };
-
-      mockBookAPI.searchByISBN.mockResolvedValue(mockResponse);
+      mockBookAPI.searchByISBN.mockResolvedValue(mockBook);
 
       const { result } = renderHook(() => useBookSearch(), {
         wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,

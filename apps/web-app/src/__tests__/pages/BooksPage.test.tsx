@@ -1,5 +1,5 @@
 import React from 'react';
-import { render as rtlRender, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -9,12 +9,14 @@ import BooksPage from '../../pages/BooksPage';
 import { ApiProvider } from '../../contexts/ApiContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useBookSearch } from '../../hooks/useBookSearch';
+import { useBooks } from '../../hooks/useBooks';
 
 // Mock dependencies - using vi.hoisted to ensure mocks are set up before imports
-const { mockUseSearchParams, mockUseNavigate, mockUseBookSearch } = vi.hoisted(() => ({
+const { mockUseSearchParams, mockUseNavigate, mockUseBookSearch, mockUseBooks } = vi.hoisted(() => ({
   mockUseSearchParams: vi.fn(),
   mockUseNavigate: vi.fn(),
   mockUseBookSearch: vi.fn(),
+  mockUseBooks: vi.fn(),
 }));
 
 vi.mock('react-router-dom', () => ({
@@ -24,6 +26,10 @@ vi.mock('react-router-dom', () => ({
 
 vi.mock('../../hooks/useBookSearch', () => ({
   useBookSearch: mockUseBookSearch,
+}));
+
+vi.mock('../../hooks/useBooks', () => ({
+  useBooks: mockUseBooks,
 }));
 
 // Mock Material-UI components
@@ -153,6 +159,7 @@ describe('BooksPage', () => {
   const mockUseSearchParams = vi.mocked(useSearchParams);
   const mockUseNavigate = vi.mocked(useNavigate);
   const mockUseBookSearch = vi.mocked(useBookSearch);
+  const mockUseBooksHook = vi.mocked(useBooks);
   const mockNavigate = vi.fn();
   const mockSetSearchParams = vi.fn();
   const mockSearchParams = new URLSearchParams();
@@ -171,6 +178,24 @@ describe('BooksPage', () => {
     clearSearch: vi.fn(),
   };
 
+  const mockUseBooksReturn = {
+    books: [
+      { id: 1, title: 'Library Book 1', isbn: '789' },
+      { id: 2, title: 'Library Book 2', isbn: '012' },
+    ],
+    loading: false,
+    error: null,
+    totalCount: 2,
+    hasMore: false,
+    loadBooks: vi.fn().mockResolvedValue(undefined),
+    loadMore: vi.fn().mockResolvedValue(undefined),
+    createBook: vi.fn().mockResolvedValue({ id: 3, title: 'Created Book' }),
+    updateBook: vi.fn().mockResolvedValue({ id: 1, title: 'Updated Book' }),
+    deleteBook: vi.fn().mockResolvedValue(true),
+    updateBookStatus: vi.fn().mockResolvedValue({ id: 1, status: 'finished' }),
+    refreshBooks: vi.fn().mockResolvedValue(undefined),
+  };
+
   // Create test i18n instance
   const testI18n = i18n.createInstance();
   testI18n.use(initReactI18next).init({
@@ -187,6 +212,8 @@ describe('BooksPage', () => {
             description: 'Your personal book collection',
             description_with_count_one: '{{count}} book in your library',
             description_with_count_other: '{{count}} books in your library',
+            no_books_empty: 'No books yet',
+            books_found: 'books found',
             clear_search: 'Clear search',
           },
         },
@@ -224,9 +251,19 @@ describe('BooksPage', () => {
     mockBookSearchReturn.hasMore = false;
     
     mockUseBookSearch.mockReturnValue(mockBookSearchReturn);
+
+    mockUseBooksReturn.books = [
+      { id: 1, title: 'Library Book 1', isbn: '789' },
+      { id: 2, title: 'Library Book 2', isbn: '012' },
+    ];
+    mockUseBooksReturn.loading = false;
+    mockUseBooksReturn.error = null;
+    mockUseBooksReturn.totalCount = 2;
+    mockUseBooksReturn.hasMore = false;
+    mockUseBooksHook.mockReturnValue(mockUseBooksReturn as any);
     
     // Mock URLSearchParams methods
-    mockSearchParams.get = vi.fn().mockReturnValue(null);
+    mockSearchParams.get = vi.fn((key: string) => (key === 'q' ? 'initial' : null));
   });
 
   test('renders books page in list mode by default', () => {
@@ -271,12 +308,13 @@ describe('BooksPage', () => {
   });
 
   test('renders book list with books', () => {
+    mockSearchParams.get = vi.fn().mockReturnValue(null);
     renderWithProvider(<BooksPage />);
     
-    expect(screen.getByText('Select Test Book 1')).toBeInTheDocument();
-    expect(screen.getByText('Edit Test Book 1')).toBeInTheDocument();
-    expect(screen.getByText('Delete Test Book 1')).toBeInTheDocument();
-    expect(screen.getByText('Select Test Book 2')).toBeInTheDocument();
+    expect(screen.getByText('Select Library Book 1')).toBeInTheDocument();
+    expect(screen.getByText('Edit Library Book 1')).toBeInTheDocument();
+    expect(screen.getByText('Delete Library Book 1')).toBeInTheDocument();
+    expect(screen.getByText('Select Library Book 2')).toBeInTheDocument();
   });
 
   test('displays book count', () => {
@@ -432,19 +470,21 @@ describe('BooksPage', () => {
 
     renderWithProvider(<BooksPage />);
 
-    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {});
+    expect(mockUseBooksReturn.loadBooks).toHaveBeenCalledWith(1);
   });
 
   test('renders with different book counts', () => {
-    mockBookSearchReturn.totalCount = 5;
+    mockSearchParams.get = vi.fn().mockReturnValue(null);
+    mockUseBooksReturn.totalCount = 5;
     renderWithProvider(<BooksPage />);
     
     expect(screen.getByText('5 books in your library')).toBeInTheDocument();
   });
 
   test('renders singular book count', () => {
-    mockBookSearchReturn.totalCount = 1;
-    mockBookSearchReturn.books = [{ id: 1, title: 'Single Book', isbn: '123' }];
+    mockSearchParams.get = vi.fn().mockReturnValue(null);
+    mockUseBooksReturn.totalCount = 1;
+    mockUseBooksReturn.books = [{ id: 1, title: 'Single Book', isbn: '123' }];
     renderWithProvider(<BooksPage />);
     
     expect(screen.getByText('1 book in your library')).toBeInTheDocument();
@@ -465,19 +505,12 @@ describe('BooksPage', () => {
   });
 
   test('handles no books scenario', () => {
-    mockBookSearchReturn.books = [];
-    mockBookSearchReturn.totalCount = 0;
+    mockSearchParams.get = vi.fn().mockReturnValue(null);
+    mockUseBooksReturn.books = [];
+    mockUseBooksReturn.totalCount = 0;
     renderWithProvider(<BooksPage />);
     
-    expect(screen.getByText('Your personal book collection')).toBeInTheDocument();
-  });
-
-  test('handles getBooks API error', async () => {
-    mockBookSearchReturn.searchBooks.mockRejectedValueOnce(new Error('API Error'));
-
-    renderWithProvider(<BooksPage />);
-
-    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {});
+    expect(screen.getByText('No books yet')).toBeInTheDocument();
   });
 
   test('renders with search query from URL', () => {
@@ -496,8 +529,10 @@ describe('BooksPage', () => {
 
     // Use the stored callback
     expect(mockOnStatusChange).toBeDefined();
-    await mockOnStatusChange(1, 'read');
-    expect(mockApiService.updateBook).toHaveBeenCalledWith(1, { status: 'read' });
+    await act(async () => {
+      await mockOnStatusChange(1, 'read');
+    });
+    expect(mockUseBooksReturn.updateBookStatus).toHaveBeenCalledWith(1, 'read');
   });
 
   test('handles different view modes', () => {
@@ -514,12 +549,13 @@ describe('BooksPage', () => {
   });
 
   test('renders multiple books correctly', () => {
-    mockBookSearchReturn.books = [
+    mockSearchParams.get = vi.fn().mockReturnValue(null);
+    mockUseBooksReturn.books = [
       { id: 1, title: 'Book 1', isbn: '123' },
       { id: 2, title: 'Book 2', isbn: '456' },
       { id: 3, title: 'Book 3', isbn: '789' }
     ];
-    mockBookSearchReturn.totalCount = 3;
+    mockUseBooksReturn.totalCount = 3;
     
     renderWithProvider(<BooksPage />);
     
