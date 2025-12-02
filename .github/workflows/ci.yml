@@ -104,9 +104,25 @@ jobs:
         working-directory: apps/api
         run: npm run test
 
-      - name: Test Web App
+      - name: Test Web App - Components
         working-directory: apps/web-app
-        run: npm run test
+        run: npm run test:web-app:components
+
+      - name: Test Web App - Pages
+        working-directory: apps/web-app
+        run: npm run test:web-app:pages
+
+      - name: Test Web App - Services
+        working-directory: apps/web-app
+        run: npm run test:web-app:services
+
+      - name: Test Web App - Integration
+        working-directory: apps/web-app
+        run: npm run test:web-app:integration
+
+      - name: Test Web App - Hooks
+        working-directory: apps/web-app
+        run: npm run test:web-app:hooks
 
   build:
     name: Build

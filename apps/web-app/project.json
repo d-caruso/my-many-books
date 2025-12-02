@@ -18,8 +18,8 @@
         "polyfills": "apps/web-app/src/polyfills.ts",
         "tsConfig": "apps/web-app/tsconfig.app.json",
         "assets": [
-          "apps/web-app/public/favicon.ico",
-          "apps/web-app/public/manifest.json"
+          "apps/web-app/src/favicon.ico",
+          "apps/web-app/src/manifest.json"
         ],
         "styles": ["apps/web-app/src/index.css"],
         "scripts": [],
@@ -66,10 +66,45 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vite:test",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/web-app/jest.config.ts"
+        "configFile": "apps/web-app/vitest.config.ts"
+      }
+    },
+    "test:components": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "configFile": "apps/web-app/vitest.config.components.ts"
+      }
+    },
+    "test:pages": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "configFile": "apps/web-app/vitest.config.pages.ts"
+      }
+    },
+    "test:services": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "configFile": "apps/web-app/vitest.config.services.ts"
+      }
+    },
+    "test:integration": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "configFile": "apps/web-app/vitest.config.integration.ts"
+      }
+    },
+    "test:hooks": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "configFile": "apps/web-app/vitest.config.hooks.ts"
       }
     },
     "lint": {

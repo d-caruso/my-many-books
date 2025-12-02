@@ -2,27 +2,60 @@
 import '@testing-library/jest-dom';
 
 // jest-axe for accessibility testing (compatible with vitest)
-import { expect } from 'vitest';
 import { toHaveNoViolations } from 'jest-axe';
 
 // i18n setup for tests (synchronous version for test environment)
 import './i18n.testing';
 
-// MSW (Mock Service Worker) setup for HTTP layer mocking
-// This is test infrastructure, not application code mocks
-import { server } from './__tests__/mocks/server';
+// Browser fetch/stream polyfills needed by MSW
+import 'whatwg-fetch';
+import { TransformStream } from 'web-streams-polyfill/dist/ponyfill';
+
+if (typeof globalThis.TransformStream === 'undefined') {
+  globalThis.TransformStream = TransformStream as any;
+}
+
+import type { SetupServerApi } from 'msw/node';
 
 // Extend expect with accessibility matchers
 expect.extend(toHaveNoViolations);
 
-// Start MSW server before all tests
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+let serverInstance: SetupServerApi | null = null;
 
-// Reset handlers after each test to ensure test isolation
-afterEach(() => server.resetHandlers());
+beforeAll(async () => {
+  const module = await import('./__tests__/mocks/server');
+  serverInstance = module.server;
+  serverInstance.listen({ onUnhandledRequest: 'warn' });
+});
 
-// Clean up after all tests
-afterAll(() => server.close());
+afterEach(() => serverInstance?.resetHandlers());
+
+afterAll(() => serverInstance?.close());
+
+const vitestGlobals = globalThis as typeof globalThis & {
+  vi?: {
+    fn: () => {
+      mockImplementation?: (impl: (...args: unknown[]) => unknown) => unknown;
+      mockReturnValue?: (value: unknown) => unknown;
+      mockResolvedValue?: (value: unknown) => unknown;
+      mockRejectedValue?: (value: unknown) => unknown;
+      mockReset?: () => unknown;
+    };
+  };
+};
+const safeVi = vitestGlobals.vi ?? {
+  fn: () => {
+    const stub: any = () => undefined;
+    stub.mockImplementation = () => stub;
+    stub.mockReturnValue = () => stub;
+    stub.mockResolvedValue = () => stub;
+    stub.mockRejectedValue = () => stub;
+    stub.mockReset = () => stub;
+    stub.mockReturnValueOnce = () => stub;
+    stub.mockResolvedValueOnce = () => stub;
+    return stub;
+  },
+};
 
 // Browser API polyfills for jsdom environment
 // These are global browser APIs that don't exist in Node/jsdom
@@ -30,25 +63,25 @@ afterAll(() => server.close());
 // matchMedia API (used by responsive components)
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: safeVi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
+    addListener: safeVi.fn(),
+    removeListener: safeVi.fn(),
+    addEventListener: safeVi.fn(),
+    removeEventListener: safeVi.fn(),
+    dispatchEvent: safeVi.fn(),
   })),
 });
 
 // localStorage API (if not already available in jsdom)
 if (typeof window.localStorage === 'undefined') {
   const localStorageMock = {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
+    getItem: safeVi.fn(),
+    setItem: safeVi.fn(),
+    removeItem: safeVi.fn(),
+    clear: safeVi.fn(),
   };
   Object.defineProperty(window, 'localStorage', {
     value: localStorageMock,
@@ -77,8 +110,8 @@ if (typeof navigator.mediaDevices === 'undefined') {
   Object.defineProperty(navigator, 'mediaDevices', {
     writable: true,
     value: {
-      getUserMedia: vi.fn(() => Promise.resolve({
-        getTracks: () => [{ stop: vi.fn() }]
+      getUserMedia: safeVi.fn(() => Promise.resolve({
+        getTracks: () => [{ stop: safeVi.fn() }]
       } as any)),
     },
   });
