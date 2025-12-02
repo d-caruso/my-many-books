@@ -21,7 +21,7 @@ export default {
     '^@my-many-books/shared-types$': '<rootDir>/../../libs/shared-types/src/index.ts',
     '^@my-many-books/shared-api$': '<rootDir>/../../libs/shared-api/src/index.ts',
     '^@my-many-books/shared-utils$': '<rootDir>/../../libs/shared-utils/src/index.ts',
-    '^@my-many-books/shared-hooks$': '<rootDir>/../../libs/shared-hooks/src/index.ts',
+    '^@my-many-books/shared-ui-hooks$': '<rootDir>/../../libs/shared-ui-hooks/src/index.ts',
     '^@my-many-books/shared-business$': '<rootDir>/../../libs/shared-business/src/index.ts',
     '^@my-many-books/shared-design$': '<rootDir>/../../libs/shared-design/src/index.ts',
     '^@my-many-books/shared-navigation$': '<rootDir>/../../libs/shared-navigation/src/index.ts',

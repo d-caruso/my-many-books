@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/libs/shared-hooks",
+    "outDir": "../../dist/libs/shared-ui-hooks",
     "declaration": true,
     "jsx": "react-jsx",
     "types": ["react"]
