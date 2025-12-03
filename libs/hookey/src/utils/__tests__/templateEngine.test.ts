@@ -1,4 +1,4 @@
-import { replaceTemplateVariables, getNestedValue } from './templateEngine';
+import { replaceTemplateVariables, getNestedValue } from '../templateEngine';
 
 describe('getNestedValue', () => {
   it('gets top-level property', () => {

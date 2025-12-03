@@ -5,7 +5,7 @@ import {
   LogActionConfigSchema,
   EmailActionConfigSchema,
   DatabaseActionConfigSchema,
-} from './validation';
+} from '../validation';
 import { ZodError } from 'zod';
 
 describe('LogActionConfigSchema', () => {
