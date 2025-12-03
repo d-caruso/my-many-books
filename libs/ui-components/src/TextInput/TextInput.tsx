@@ -16,7 +16,6 @@ export const TextInput: React.FC<TextInputProps> = ({
   numberOfLines = 1,
   maxLength,
   keyboardType = 'default',
-  autoCapitalize = 'sentences',
   autoComplete,
   testID,
   accessibilityLabel,

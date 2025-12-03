@@ -19,7 +19,10 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/shared-ui-hooks/**/*.{ts,tsx}"]
+        "lintFilePatterns": [
+          "libs/shared-ui-hooks/**/*.{ts,tsx}",
+          "!libs/shared-ui-hooks/src/examples/**"
+        ]
       }
     },
     "test": {

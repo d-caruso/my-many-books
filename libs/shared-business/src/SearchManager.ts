@@ -75,7 +75,7 @@ export class SearchManager {
     yearTo?: number;
   }): Promise<SearchResult> {
     const filters: SearchFilters = {};
-    let queryParts: string[] = [];
+    const queryParts: string[] = [];
 
     // Build query string
     if (criteria.title?.trim()) {
@@ -165,20 +165,22 @@ export class SearchManager {
       switch (sortBy) {
         case 'title':
           return a.title.localeCompare(b.title);
-        
-        case 'author':
+
+        case 'author': {
           const authorA = a.authors?.[0] ? `${a.authors[0].surname} ${a.authors[0].name}` : '';
           const authorB = b.authors?.[0] ? `${b.authors[0].surname} ${b.authors[0].name}` : '';
           return authorA.localeCompare(authorB);
-        
+        }
+
         case 'date-added':
           return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime();
-        
-        case 'status':
+
+        case 'status': {
           const statusOrder = { 'in progress': 0, 'paused': 1, 'finished': 2 };
           const statusA = statusOrder[a.status as keyof typeof statusOrder] ?? 3;
           const statusB = statusOrder[b.status as keyof typeof statusOrder] ?? 3;
           return statusA - statusB;
+        }
         
         default:
           return 0;

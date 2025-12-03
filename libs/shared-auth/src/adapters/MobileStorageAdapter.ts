@@ -15,7 +15,7 @@ export class MobileStorageAdapter implements StorageAdapter {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       this.SecureStore = require('expo-secure-store');
-    } catch (error) {
+    } catch {
       console.warn('expo-secure-store not available. MobileStorageAdapter will not work.');
     }
   }
