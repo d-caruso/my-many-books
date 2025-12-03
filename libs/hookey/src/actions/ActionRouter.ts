@@ -54,7 +54,7 @@ export class ActionRouter {
   }
 
   private createLogAction(config?: Record<string, unknown>): LogAction {
-    const prefix = (config?.prefix as string) || 'hook';
+    const prefix = (config?.['prefix'] as string) || 'hook';
     return new LogAction(prefix);
   }
 

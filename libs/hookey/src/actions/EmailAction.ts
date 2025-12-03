@@ -68,15 +68,26 @@ export class EmailAction implements HookAction {
     const cc = this.config.cc ? this.processRecipients(this.config.cc, data) : undefined;
     const bcc = this.config.bcc ? this.processRecipients(this.config.bcc, data) : undefined;
 
-    // Send email via email service
-    await this.emailService.sendEmail({
+    const emailPayload: Parameters<EmailService['sendEmail']>[0] = {
       to,
-      cc,
-      bcc,
       subject,
       body,
-      from: this.config.from,
-    });
+    };
+
+    if (cc !== undefined) {
+      emailPayload.cc = cc;
+    }
+
+    if (bcc !== undefined) {
+      emailPayload.bcc = bcc;
+    }
+
+    if (this.config.from !== undefined) {
+      emailPayload.from = this.config.from;
+    }
+
+    // Send email via email service
+    await this.emailService.sendEmail(emailPayload);
   }
 
   /**

@@ -1,62 +1,38 @@
-import { EventEmitter2 } from "eventemitter2";
+import { EventEmitter2 } from 'eventemitter2';
 import {
   HookAction,
   HookActionContext,
   HookConfig,
   HookStorage,
-} from "./types";
-import { InMemoryHookStorage } from "./storage/InMemoryHookStorage";
-import { validateActionConfig, validateEventPattern } from "./utils/validation";
+} from './types';
+import { InMemoryHookStorage } from './storage/InMemoryHookStorage';
+import { validateActionConfig, validateEventPattern } from './utils/validation';
 
 export class HookSystem {
   private emitter: EventEmitter2;
   private storage: HookStorage;
-  private hooks: Map<string, { hook: HookConfig; action: HookAction }> =
-    new Map();
+  private hooks: Map<string, { hook: HookConfig; action: HookAction }> = new Map();
   private currentEvent: string | undefined;
 
   constructor(storage?: HookStorage) {
     this.storage = storage ?? new InMemoryHookStorage();
     this.emitter = new EventEmitter2({
       wildcard: true,
-      delimiter: ".",
+      delimiter: '.',
       maxListeners: 100,
       verboseMemoryLeak: true,
     });
   }
 
   async registerHook(hook: HookConfig, action: HookAction): Promise<void> {
-    // Validate event pattern for ReDoS and malicious patterns
-    validateEventPattern(hook.eventPattern);
+    this.validateHookConfig(hook);
+    await this.storage.createHook(this.mapHookForPersistence(hook));
+    await this.registerHookInternal(hook, action);
+  }
 
-    // Validate action configuration based on action type
-    if (hook.actionConfig) {
-      validateActionConfig(hook.actionType, hook.actionConfig);
-    }
-
-    await this.storage.createHook({
-      name: hook.name,
-      ...(hook.description !== undefined && { description: hook.description }),
-      ...(hook.actionConfig !== undefined && {
-        actionConfig: hook.actionConfig,
-      }),
-      actionType: hook.actionType,
-      eventPattern: hook.eventPattern,
-      isActive: hook.isActive,
-      priority: hook.priority,
-    });
-
-    // Store hook and action for reference
-    this.hooks.set(hook.id, { hook, action });
-
-    // Register listener for the pattern
-    const listener = async (payload?: unknown) => {
-      // Use the current event name being triggered (set in trigger method)
-      const actualEventName = this.currentEvent || hook.eventPattern;
-      await this.executeAction(hook, action, actualEventName, payload);
-    };
-
-    this.emitter.on(hook.eventPattern, listener);
+  async registerExistingHook(hook: HookConfig, action: HookAction): Promise<void> {
+    this.validateHookConfig(hook);
+    await this.registerHookInternal(hook, action);
   }
 
   async trigger(eventName: string, payload?: unknown): Promise<void> {
@@ -64,6 +40,48 @@ export class HookSystem {
     this.currentEvent = eventName;
     this.emitter.emit(eventName, payload);
     this.currentEvent = undefined;
+  }
+
+  private async registerHookInternal(hook: HookConfig, action: HookAction): Promise<void> {
+    const normalizedHook = this.normalizeHook(hook);
+    // Store hook and action for reference
+    this.hooks.set(normalizedHook.id, { hook: normalizedHook, action });
+
+    // Register listener for the pattern
+    const listener = async (payload?: unknown): Promise<void> => {
+      // Use the current event name being triggered (set in trigger method)
+      const actualEventName = this.currentEvent || normalizedHook.eventPattern;
+      await this.executeAction(normalizedHook, action, actualEventName, payload);
+    };
+
+    this.emitter.on(normalizedHook.eventPattern, listener);
+  }
+
+  private validateHookConfig(hook: HookConfig): void {
+    validateEventPattern(hook.eventPattern);
+    if (hook.actionConfig) {
+      validateActionConfig(hook.actionType, hook.actionConfig);
+    }
+  }
+
+  private mapHookForPersistence(
+    hook: HookConfig,
+  ): Omit<HookConfig, 'id' | 'createdAt' | 'updatedAt'> {
+    const { name, description, actionConfig, actionType, eventPattern, isActive, priority } = hook;
+    return {
+      name,
+      ...(description !== undefined && { description }),
+      ...(actionConfig !== undefined && { actionConfig }),
+      actionType,
+      eventPattern,
+      isActive,
+      priority,
+    };
+  }
+
+  private normalizeHook(hook: HookConfig): HookConfig {
+    const hookId = typeof hook.id === 'string' ? hook.id : String(hook.id);
+    return { ...hook, id: hookId };
   }
 
   private async executeAction(
