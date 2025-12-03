@@ -3,6 +3,8 @@ import { Repository as BookRepositoryContract } from '../../../src/repositories/
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { BOOK_STATUS } from '../../../src/utils/constants';
 
 jest.mock('../../../src/models/Author', () => ({
   Author: {
@@ -16,9 +18,14 @@ jest.mock('../../../src/models/Category', () => ({
   },
 }));
 
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
+}));
+
 describe('BookService', () => {
   let repository: jest.Mocked<BookRepositoryContract>;
   let service: BookService;
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
   beforeEach(() => {
     repository = {
@@ -35,6 +42,7 @@ describe('BookService', () => {
     } as unknown as jest.Mocked<BookRepositoryContract>;
 
     service = new BookService(repository);
+    emitHookEventMock.mockClear();
   });
 
   afterEach(() => {
@@ -69,6 +77,13 @@ describe('BookService', () => {
       undefined
     );
     expect(result.title).toBe('Test Book');
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      'book.create.after',
+      expect.objectContaining({
+        book: expect.objectContaining({ title: 'Test Book' }),
+        user: { id: 10, role: USER_ROLES.USER },
+      })
+    );
   });
 
   it('throws when trying to use duplicate ISBN', async () => {
@@ -91,18 +106,20 @@ describe('BookService', () => {
       id: 7,
       isbnCode: '111',
       title: 'Original',
+      status: BOOK_STATUS.READING,
       userId: 2,
     });
     (repository.update as jest.Mock).mockResolvedValue({
       id: 7,
       isbnCode: '111',
       title: 'Updated',
+      status: BOOK_STATUS.FINISHED,
       userId: 2,
     });
 
     const updated = await service.updateBook(
       7,
-      { title: 'Updated' },
+      { title: 'Updated', status: BOOK_STATUS.FINISHED },
       { userId: 2, role: USER_ROLES.USER }
     );
 
@@ -112,6 +129,21 @@ describe('BookService', () => {
       undefined
     );
     expect(updated.title).toBe('Updated');
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      'book.update.after',
+      expect.objectContaining({
+        bookId: 7,
+        user: { id: 2, role: USER_ROLES.USER },
+      })
+    );
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      'book.status.changed',
+      expect.objectContaining({
+        bookId: 7,
+        previousStatus: BOOK_STATUS.READING,
+        newStatus: BOOK_STATUS.FINISHED,
+      })
+    );
   });
 
   it('prevents users from deleting books they do not own', async () => {
@@ -125,5 +157,25 @@ describe('BookService', () => {
     await expect(
       service.deleteBook(4, { userId: 3, role: USER_ROLES.USER })
     ).rejects.toThrow(BookServiceError);
+  });
+
+  it('emits hook event after deleting a book', async () => {
+    (repository.findById as jest.Mock).mockResolvedValue({
+      id: 8,
+      isbnCode: '555',
+      title: 'Removable',
+      userId: 8,
+    });
+    (repository.delete as jest.Mock).mockResolvedValue(true);
+
+    await service.deleteBook(8, { userId: 8, role: USER_ROLES.USER });
+
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      'book.delete.after',
+      expect.objectContaining({
+        bookId: 8,
+        user: { id: 8, role: USER_ROLES.USER },
+      })
+    );
   });
 });

@@ -12,6 +12,7 @@ import { BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInt
 import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';
 import { ApplicationError } from '../../errors/ApplicationError';
+import { emitHookEvent } from '../hooks/hookSystem';
 
 export type BookServiceErrorCode =
   | 'BOOK_NOT_FOUND'
@@ -79,7 +80,13 @@ class BookService {
     const associations = this.extractAssociations(input);
     const payload = this.normalizePayload({ ...input, userId: ownerId });
 
-    return this.bookRepository.create(payload, associations);
+    const createdBook = await this.bookRepository.create(payload, associations);
+    await this.emitBookEvent('book.create.after', {
+      book: createdBook,
+      user: this.mapEventUser(userContext),
+      input,
+    });
+    return createdBook;
   }
 
   async updateBook(
@@ -108,6 +115,23 @@ class BookService {
       throw new BookServiceError('BOOK_NOT_FOUND');
     }
 
+    await this.emitBookEvent('book.update.after', {
+      bookId,
+      book: updated,
+      user: this.mapEventUser(userContext),
+      changes: input,
+    });
+
+    if (book.status !== updated.status) {
+      await this.emitBookEvent('book.status.changed', {
+        bookId,
+        previousStatus: book.status ?? null,
+        newStatus: updated.status ?? null,
+        book: updated,
+        user: this.mapEventUser(userContext),
+      });
+    }
+
     return updated;
   }
 
@@ -123,9 +147,33 @@ class BookService {
     if (!deleted) {
       throw new BookServiceError('BOOK_NOT_FOUND');
     }
+
+    await this.emitBookEvent('book.delete.after', {
+      bookId,
+      book,
+      user: this.mapEventUser(userContext),
+    });
   }
 
   // ===== helpers ==========================================================
+
+  private async emitBookEvent(eventName: string, payload: Record<string, unknown>): Promise<void> {
+    await emitHookEvent(eventName, payload);
+  }
+
+  private mapEventUser(userContext?: BookUserContext | null): { id: number; role?: string } | null {
+    if (!userContext) {
+      return null;
+    }
+
+    const user: { id: number; role?: string } = {
+      id: userContext.userId,
+    };
+    if (userContext.role) {
+      user.role = userContext.role;
+    }
+    return user;
+  }
 
   private resolveOwnerId(
     inputUserId: number | undefined,

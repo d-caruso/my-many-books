@@ -5,10 +5,14 @@ import { BOOK_STATUS } from '../../../src/utils/constants';
 import { container } from '../../../src/container';
 import { TYPES } from '../../../src/container/types';
 import { BookService } from '../../../src/services/book/BookService';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
 
 // Mock dependencies
 jest.mock('../../../src/models');
 jest.mock('../../../src/services/isbnService');
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
+}));
 
 interface UniversalRequest {
   body?: any;
@@ -61,12 +65,18 @@ describe('BookController', () => {
   let bookController: BookController;
   let mockRequest: UniversalRequest;
   let createBookSpy: jest.SpyInstance;
+  let updateBookSpy: jest.SpyInstance;
+  let deleteBookSpy: jest.SpyInstance;
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
-beforeEach(() => {
+  beforeEach(() => {
     container.snapshot();
     createBookSpy = jest.spyOn(BookService.prototype, 'createBook');
+    updateBookSpy = jest.spyOn(BookService.prototype, 'updateBook');
+    deleteBookSpy = jest.spyOn(BookService.prototype, 'deleteBook');
     bookController = container.get<BookController>(TYPES.BookController);
     jest.clearAllMocks();
+    emitHookEventMock.mockClear();
 
     mockRequest = {
       headers: { 'accept-language': 'en' },
@@ -75,6 +85,8 @@ beforeEach(() => {
 
   afterEach(() => {
     createBookSpy.mockRestore();
+    updateBookSpy.mockRestore();
+    deleteBookSpy.mockRestore();
     container.restore();
   });
 
@@ -117,6 +129,13 @@ beforeEach(() => {
         id: 1,
         title: 'Test Book',
       });
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        'book.create.before',
+        expect.objectContaining({
+          user: { id: 1, role: 'user' },
+          input: expect.objectContaining({ title: 'Test Book' }),
+        })
+      );
     });
 
     // Note: ISBN validation is now handled by middleware (validateBody in bookRoutes.ts)
@@ -163,7 +182,43 @@ beforeEach(() => {
     });
   });
 
-  // ... (Other describe blocks like 'updateBook', 'deleteBook', 'listBooks', etc. would go here)
+  describe('hook events', () => {
+    it('emits book.update.before before updating', async () => {
+      mockRequest.body = JSON.stringify({ title: 'Updated Title' });
+      mockRequest.user = { userId: 2, role: 'user' };
+      mockRequest.pathParameters = { id: '5' };
+      updateBookSpy.mockResolvedValue({
+        id: 5,
+        title: 'Updated Title',
+      } as any);
+
+      await bookController.updateBook(mockRequest);
+
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        'book.update.before',
+        expect.objectContaining({
+          bookId: 5,
+          user: { id: 2, role: 'user' },
+        })
+      );
+    });
+
+    it('emits book.delete.before before deleting', async () => {
+      mockRequest.user = { userId: 4, role: 'user' };
+      mockRequest.pathParameters = { id: '9' };
+      deleteBookSpy.mockResolvedValue(undefined);
+
+      await bookController.deleteBook(mockRequest);
+
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        'book.delete.before',
+        expect.objectContaining({
+          bookId: 9,
+          user: { id: 4, role: 'user' },
+        })
+      );
+    });
+  });
 
   describe('importBookFromIsbn', () => {
     // Original mock data - book data structure
