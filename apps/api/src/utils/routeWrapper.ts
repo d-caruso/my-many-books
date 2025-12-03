@@ -48,6 +48,7 @@ export const expressRouteWrapper = (controllerMethod: ControllerMethod) => {
           ...(result.error && { error: result.error }),
           ...(result.message && { message: result.message }),
           ...(result.meta && { meta: result.meta }),
+          ...(result.pagination && { pagination: result.pagination }),
         });
       }
     } catch (error) {

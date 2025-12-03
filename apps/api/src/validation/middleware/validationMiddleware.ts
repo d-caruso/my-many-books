@@ -148,6 +148,7 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
     // If validation errors exist, return 400 Bad Request
     if (errors.length > 0) {
       res.status(400).json({
+        success: false,
         error: i18n.t('errors.validation_failed'),
         details: errors,
       });

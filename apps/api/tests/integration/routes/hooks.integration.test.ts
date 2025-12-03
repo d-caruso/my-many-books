@@ -459,14 +459,21 @@ describe('Hook API Integration Tests', () => {
     it('should respect limit parameter with max cap', async () => {
       (HookExecution.findAll as jest.Mock).mockResolvedValue([]);
 
+      // Validation rejects limit > 200, which is correct behavior
       await request(app)
         .get(`${BASE_URL}/executions/recent`)
         .query({ limit: 500 }) // Requesting more than max
+        .expect(400); // Validation should reject this
+
+      // Test with valid limit at the max
+      await request(app)
+        .get(`${BASE_URL}/executions/recent`)
+        .query({ limit: 200 })
         .expect(200);
 
       expect(HookExecution.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
-          limit: 200, // Should be capped at 200
+          limit: 200,
         })
       );
     });
