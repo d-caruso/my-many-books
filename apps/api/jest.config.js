@@ -4,7 +4,8 @@ module.exports = {
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   testMatch: [
     '<rootDir>/tests/unit/**/*.test.ts',
-    '<rootDir>/tests/integration/**/*.test.ts'
+    '<rootDir>/tests/integration/**/*.test.ts',
+    '<rootDir>/tests/performance/**/*.test.ts',
   ],
   transform: {
     '^.+\\.ts$': ['ts-jest', {
