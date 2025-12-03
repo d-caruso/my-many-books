@@ -214,4 +214,80 @@ describe('HookSystem', () => {
     expect(action.calls).toHaveLength(1);
     expect(action.calls[0].eventName).toBe('book.created');
   });
+
+  it('enforces execution timeout and records failure', async () => {
+    const storage = new InMemoryHookStorage();
+    const hookSystem = new HookSystem(storage, { timeoutMs: 25, failureThreshold: 5 });
+    const hangingAction: HookAction = {
+      execute: () => new Promise(() => undefined),
+    };
+    const hook: HookConfig = {
+      id: 'timeout-hook',
+      name: 'timeout-hook',
+      eventPattern: 'book.create.before',
+      actionType: 'log',
+      actionConfig: {},
+      isActive: true,
+      priority: 1,
+    };
+
+    await hookSystem.registerHook(hook, hangingAction);
+
+    await expect(
+      hookSystem.trigger('book.create.before', { bookId: 99 })
+    ).rejects.toThrow('timed out');
+
+    const executions = await storage.getExecutions('timeout-hook');
+    expect(executions).toHaveLength(1);
+    expect(executions[0].success).toBe(false);
+    expect(executions[0].errorMessage).toContain('timed out');
+  });
+
+  it('opens circuit breaker after repeated failures and recovers after cooldown', async () => {
+    const storage = new InMemoryHookStorage();
+    const warn = jest.fn();
+    const error = jest.fn();
+    const hookSystem = new HookSystem(storage, {
+      timeoutMs: 50,
+      failureThreshold: 2,
+      cooldownMs: 40,
+      logger: { warn, error },
+    });
+    const failingAction: HookAction = {
+      execute: jest.fn(() => Promise.reject(new Error('boom'))),
+    };
+    const hook: HookConfig = {
+      id: 'breaker-hook',
+      name: 'breaker-hook',
+      eventPattern: 'user.login.after',
+      actionType: 'log',
+      actionConfig: {},
+      isActive: true,
+      priority: 1,
+    };
+
+    await hookSystem.registerHook(hook, failingAction);
+
+    await expect(
+      hookSystem.trigger('user.login.after', { userId: 1 })
+    ).rejects.toThrow('boom');
+    await expect(
+      hookSystem.trigger('user.login.after', { userId: 2 })
+    ).rejects.toThrow('boom');
+    expect((failingAction.execute as jest.Mock)).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalled();
+
+    await expect(
+      hookSystem.trigger('user.login.after', { userId: 3 })
+    ).resolves.toBeUndefined();
+    expect((failingAction.execute as jest.Mock)).toHaveBeenCalledTimes(2);
+
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    await expect(
+      hookSystem.trigger('user.login.after', { userId: 4 })
+    ).rejects.toThrow('boom');
+    expect((failingAction.execute as jest.Mock)).toHaveBeenCalledTimes(3);
+    expect(error).toHaveBeenCalled();
+  });
 });
