@@ -26,8 +26,9 @@
       "outputs": [],
       "options": {
         "lintFilePatterns": [
-          "libs/hookey/**/*.ts",
-          "!libs/hookey/examples/**"
+          "libs/hookey/src/**/*.ts",
+          "!libs/hookey/examples/**",
+          "!libs/hookey/jest.config.ts"
         ]
       }
     }

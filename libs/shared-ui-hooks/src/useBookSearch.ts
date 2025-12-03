@@ -78,7 +78,7 @@ export const useBookSearch = <TBook extends Book = Book, TFilters extends Search
           q: trimmedQuery,
           page,
           limit: pageSize,
-          ...(filters as Partial<TFilters>),
+          ...filters,
         };
 
         const response = await api.searchBooks(searchParams);

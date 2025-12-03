@@ -20,8 +20,10 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "libs/shared-ui-hooks/**/*.{ts,tsx}",
-          "!libs/shared-ui-hooks/src/examples/**"
+          "libs/shared-ui-hooks/src/**/*.{ts,tsx}",
+          "!libs/shared-ui-hooks/src/examples/**",
+          "!libs/shared-ui-hooks/src/__tests__/**",
+          "!libs/shared-ui-hooks/jest.config.ts"
         ]
       }
     },
