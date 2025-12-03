@@ -7,12 +7,14 @@ import enValidation from './locales/en/validation.json';
 import enErrors from './locales/en/errors.json';
 import enBooks from './locales/en/books.json';
 import enAdmin from './locales/en/pages.json';
+import enHooks from './locales/en/hooks.json';
 
 import itCommon from './locales/it/common.json';
 import itValidation from './locales/it/validation.json';
 import itErrors from './locales/it/errors.json';
 import itBooks from './locales/it/books.json';
 import itAdmin from './locales/it/pages.json';
+import itHooks from './locales/it/hooks.json';
 
 /**
  * Initialize i18next with all translations
@@ -31,6 +33,7 @@ export const initializeI18n = async (language?: string) => {
       TranslationNamespace.ERRORS,
       TranslationNamespace.BOOKS,
       TranslationNamespace.ADMIN,
+      TranslationNamespace.HOOKS,
     ],
     defaultNS: TranslationNamespace.COMMON,
 
@@ -42,6 +45,7 @@ export const initializeI18n = async (language?: string) => {
         [TranslationNamespace.ERRORS]: enErrors,
         [TranslationNamespace.BOOKS]: enBooks,
         [TranslationNamespace.ADMIN]: enAdmin,
+        [TranslationNamespace.HOOKS]: enHooks,
       },
       it: {
         [TranslationNamespace.COMMON]: itCommon,
@@ -49,6 +53,7 @@ export const initializeI18n = async (language?: string) => {
         [TranslationNamespace.ERRORS]: itErrors,
         [TranslationNamespace.BOOKS]: itBooks,
         [TranslationNamespace.ADMIN]: itAdmin,
+        [TranslationNamespace.HOOKS]: itHooks,
       },
     },
 

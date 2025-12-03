@@ -53,4 +53,5 @@ export enum TranslationNamespace {
   THEME = 'theme',
   SEARCH = 'search',
   ADMIN = 'admin',
+  HOOKS = 'hooks',
 }

@@ -31,48 +31,36 @@ vi.mock('../../../pages/Admin/AdminLayout', () => ({
   ),
 }));
 
+const hooksTranslations = {
+  title: 'Hooks Administration',
+  stats: {
+    total_hooks: 'Total Hooks',
+    active_hooks: 'Active Hooks',
+    executions_today: 'Executions Today',
+    last_reload: 'Last Reload',
+    never_reloaded: 'Never reloaded',
+    reload_hint: 'Reload when you deploy new hook configurations.',
+  },
+  actions: {
+    create: 'Create Hook',
+    reload: 'Reload Hooks',
+    reloading: 'Reloading Hooks...',
+  },
+  errors: {
+    fetch: 'Failed to load hook data.',
+    reload: 'Failed to reload hooks.',
+    delete: 'Delete action is not implemented yet.',
+  },
+};
+
 const testI18n = i18n.createInstance();
 testI18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['pages'],
-  defaultNS: 'pages',
+  ns: ['hooks'],
+  defaultNS: 'hooks',
   resources: {
-    en: {
-      pages: {
-        admin: {
-          hooks: {
-            title: 'Hooks Administration',
-            stats: {
-              total_hooks: 'Total Hooks',
-              active_hooks: 'Active Hooks',
-              executions_today: 'Executions Today',
-              last_reload: 'Last Reload',
-              never_reloaded: 'Never reloaded',
-              reload_hint: 'Reload when you deploy new hook configurations.',
-            },
-            actions: {
-              create: 'Create Hook',
-              reload: 'Reload Hooks',
-              reloading: 'Reloading Hooks...',
-            },
-            list_title: 'Hooks',
-            list_summary: '{{count}} configured',
-            list_action_info: '{{actionType}} • Priority {{priority}}',
-            no_hooks: 'No hooks configured yet.',
-            active: 'Active',
-            inactive: 'Inactive',
-            last_execution: 'Last executed {{timestamp}}',
-            never_executed: 'Never executed',
-            priority_label: 'Priority {{priority}}',
-            errors: {
-              fetch: 'Failed to load hook data.',
-              reload: 'Failed to reload hooks.',
-            },
-          },
-        },
-      },
-    },
+    en: { hooks: hooksTranslations },
   },
 });
 

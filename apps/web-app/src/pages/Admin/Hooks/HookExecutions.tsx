@@ -27,7 +27,7 @@ interface ExecutionFilters {
 }
 
 export const HookExecutions: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('hooks');
   const navigate = useNavigate();
   const { hookId } = useParams<{ hookId?: string }>();
   const { apiService } = useApi();
@@ -65,7 +65,7 @@ export const HookExecutions: React.FC = () => {
       setTotal(response.total);
     } catch (err: any) {
       console.error('Failed to load hook executions:', err);
-      setError(err?.message || t('pages:admin.hooks.executions.errors.fetch', 'Failed to load executions'));
+      setError(err?.message || t('executions.errors.fetch', 'Failed to load executions'));
     } finally {
       setLoading(false);
     }
@@ -76,10 +76,10 @@ export const HookExecutions: React.FC = () => {
   }, [fetchExecutions]);
 
   const columns: GridColDef[] = [
-    { field: 'eventName', headerName: t('pages:admin.hooks.executions.columns.event_name', 'Event'), flex: 1.2, minWidth: 180 },
+    { field: 'eventName', headerName: t('executions.columns.event_name', 'Event'), flex: 1.2, minWidth: 180 },
     {
       field: 'success',
-      headerName: t('pages:admin.hooks.executions.columns.success', 'Success'),
+      headerName: t('executions.columns.success', 'Success'),
       flex: 0.6,
       minWidth: 120,
       renderCell: (params: GridRenderCellParams<boolean>) => (
@@ -92,20 +92,20 @@ export const HookExecutions: React.FC = () => {
     },
     {
       field: 'executionTimeMs',
-      headerName: t('pages:admin.hooks.executions.columns.duration', 'Duration (ms)'),
+      headerName: t('executions.columns.duration', 'Duration (ms)'),
       flex: 0.6,
       minWidth: 140,
     },
     {
       field: 'executedAt',
-      headerName: t('pages:admin.hooks.executions.columns.executed_at', 'Executed At'),
+      headerName: t('executions.columns.executed_at', 'Executed At'),
       flex: 1,
       minWidth: 180,
       valueGetter: (params) => new Date(params.value as string).toLocaleString(),
     },
     {
       field: 'errorMessage',
-      headerName: t('pages:admin.hooks.executions.columns.error', 'Error'),
+      headerName: t('executions.columns.error', 'Error'),
       flex: 1,
       minWidth: 220,
       renderCell: (params: GridRenderCellParams<string | undefined>) => params.value || '-',
@@ -116,17 +116,17 @@ export const HookExecutions: React.FC = () => {
     <AdminLayout>
       <Box>
         <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          {t('pages:admin.hooks.executions.title', 'Hook Executions')}
+          {t('executions.title', 'Hook Executions')}
         </Typography>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} mb={2} alignItems="center">
           <FormControl sx={{ minWidth: 160 }}>
             <InputLabel id="success-filter-label">
-              {t('pages:admin.hooks.executions.filters.success', 'Status')}
+              {t('executions.filters.success', 'Status')}
             </InputLabel>
             <Select
               labelId="success-filter-label"
               value={filters.success}
-              label={t('pages:admin.hooks.executions.filters.status', 'Status')}
+              label={t('executions.filters.status', 'Status')}
               onChange={(event) =>
                 setFilters((prev) => ({
                   ...prev,
@@ -134,30 +134,30 @@ export const HookExecutions: React.FC = () => {
                 }))
               }
             >
-              <MenuItem value="all">{t('pages:admin.hooks.executions.filters.all', 'All')}</MenuItem>
-              <MenuItem value="success">{t('pages:admin.hooks.executions.filters.success_only', 'Success')}</MenuItem>
-              <MenuItem value="failure">{t('pages:admin.hooks.executions.filters.failure_only', 'Failure')}</MenuItem>
+              <MenuItem value="all">{t('executions.filters.all', 'All')}</MenuItem>
+              <MenuItem value="success">{t('executions.filters.success_only', 'Success')}</MenuItem>
+              <MenuItem value="failure">{t('executions.filters.failure_only', 'Failure')}</MenuItem>
             </Select>
           </FormControl>
           <TextField
-            label={t('pages:admin.hooks.executions.filters.from', 'From Date')}
+            label={t('executions.filters.from', 'From Date')}
             type="date"
             value={filters.from}
             onChange={(event) => setFilters((prev) => ({ ...prev, from: event.target.value }))}
             InputLabelProps={{ shrink: true }}
           />
           <TextField
-            label={t('pages:admin.hooks.executions.filters.to', 'To Date')}
+            label={t('executions.filters.to', 'To Date')}
             type="date"
             value={filters.to}
             onChange={(event) => setFilters((prev) => ({ ...prev, to: event.target.value }))}
             InputLabelProps={{ shrink: true }}
           />
           <Button variant="outlined" onClick={() => fetchExecutions()}>
-            {t('pages:admin.hooks.executions.actions.refresh', 'Refresh')}
+            {t('executions.actions.refresh', 'Refresh')}
           </Button>
           <Button onClick={() => navigate('/admin/hooks')} variant="text">
-            {t('pages:admin.hooks.executions.actions.back', 'Back to Hooks')}
+            {t('executions.actions.back', 'Back to Hooks')}
           </Button>
         </Stack>
 

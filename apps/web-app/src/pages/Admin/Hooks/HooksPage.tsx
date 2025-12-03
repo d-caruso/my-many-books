@@ -23,7 +23,7 @@ import { HookForm, HookFormData } from './HookForm';
 import type { AdminHookSummary, AdminHookStats } from '../../../services/api';
 
 export const HooksPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('hooks');
   const navigate = useNavigate();
   const { apiService } = useApi();
 
@@ -48,7 +48,7 @@ export const HooksPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to load hooks data:', err);
       const message =
-        err?.message || t('pages:admin.hooks.errors.fetch', 'Failed to load hook data');
+        err?.message || t('errors.fetch', 'Failed to load hook data');
       setError(message);
     } finally {
       setLoading(false);
@@ -68,7 +68,7 @@ export const HooksPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to reload hooks:', err);
       const message =
-        err?.message || t('pages:admin.hooks.errors.reload', 'Failed to reload hooks');
+        err?.message || t('errors.reload', 'Failed to reload hooks');
       setError(message);
     } finally {
       setReloading(false);
@@ -77,36 +77,33 @@ export const HooksPage: React.FC = () => {
 
   const formattedLastReload = stats?.lastReloadedAt
     ? new Date(stats.lastReloadedAt).toLocaleString()
-    : t('pages:admin.hooks.stats.never_reloaded', 'Never reloaded');
+    : t('stats.never_reloaded', 'Never reloaded');
 
   const statsCards = [
     {
-      title: t('pages:admin.hooks.stats.total_hooks', 'Total Hooks'),
+      title: t('stats.total_hooks', 'Total Hooks'),
       value: stats?.totalHooks ?? 0,
       icon: <WebhookIcon />,
       color: '#1e88e5',
     },
     {
-      title: t('pages:admin.hooks.stats.active_hooks', 'Active Hooks'),
+      title: t('stats.active_hooks', 'Active Hooks'),
       value: stats?.activeHooks ?? 0,
       icon: <BoltIcon />,
       color: '#2e7d32',
     },
     {
-      title: t('pages:admin.hooks.stats.executions_today', 'Executions Today'),
+      title: t('stats.executions_today', 'Executions Today'),
       value: stats?.executionsToday ?? 0,
       icon: <HistoryIcon />,
       color: '#ed6c02',
     },
     {
-      title: t('pages:admin.hooks.stats.last_reload', 'Last Reload'),
+      title: t('stats.last_reload', 'Last Reload'),
       value: formattedLastReload,
       icon: <ReplayIcon />,
       color: '#9c27b0',
-      helperText: t(
-        'pages:admin.hooks.stats.reload_hint',
-        'Reload when you deploy new hook configurations.'
-      ),
+      helperText: t('stats.reload_hint', 'Reload when you deploy new hook configurations.'),
     },
   ];
 
@@ -114,7 +111,7 @@ export const HooksPage: React.FC = () => {
     <AdminLayout>
     <Box>
         <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          {t('pages:admin.hooks.title', 'Hooks Administration')}
+          {t('title', 'Hooks Administration')}
         </Typography>
 
         <Box
@@ -132,7 +129,7 @@ export const HooksPage: React.FC = () => {
               setIsFormOpen(true);
             }}
           >
-            {t('pages:admin.hooks.actions.create', 'Create Hook')}
+            {t('actions.create', 'Create Hook')}
           </Button>
           <Button
             variant="outlined"
@@ -141,8 +138,8 @@ export const HooksPage: React.FC = () => {
             disabled={reloading}
           >
             {reloading
-              ? t('pages:admin.hooks.actions.reloading', 'Reloading Hooks…')
-              : t('pages:admin.hooks.actions.reload', 'Reload Hooks')}
+              ? t('actions.reloading', 'Reloading Hooks…')
+              : t('actions.reload', 'Reload Hooks')}
           </Button>
         </Box>
 
@@ -198,9 +195,9 @@ export const HooksPage: React.FC = () => {
               setIsFormOpen(true);
             }}
             onViewExecutions={(id) => navigate(`/admin/hooks/${id}/executions`)}
-            onDelete={(id) =>
-              setError(t('pages:admin.hooks.errors.delete', 'Delete action is not implemented yet'))
-            }
+                onDelete={(id) =>
+                  setError(t('errors.delete', 'Delete action is not implemented yet'))
+                }
           />
         </Paper>
       </Box>

@@ -21,44 +21,42 @@ vi.mock('../../contexts/ApiContext', async () => {
   };
 });
 
+const hooksExecutionsTranslations = {
+  executions: {
+    filters: {
+      status: 'Status',
+      success: 'Success',
+      failure: 'Failure',
+      all: 'All',
+      from: 'From',
+      to: 'To',
+    },
+    columns: {
+      event_name: 'Event',
+      success: 'Success',
+      duration: 'Duration (ms)',
+      executed_at: 'Executed At',
+      error: 'Error',
+    },
+    actions: {
+      refresh: 'Refresh',
+      back: 'Back to Hooks',
+    },
+    errors: {
+      fetch: 'Failed to load executions',
+    },
+  },
+};
+
 const testI18n = i18n.createInstance();
 testI18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['pages'],
-  defaultNS: 'pages',
+  ns: ['hooks'],
+  defaultNS: 'hooks',
   resources: {
     en: {
-      pages: {
-        admin: {
-          hooks: {
-            executions: {
-              filters: {
-                status: 'Status',
-                success: 'Success',
-                failure: 'Failure',
-                all: 'All',
-                from: 'From',
-                to: 'To',
-              },
-              columns: {
-                event_name: 'Event',
-                success: 'Success',
-                duration: 'Duration (ms)',
-                executed_at: 'Executed At',
-                error: 'Error',
-              },
-              actions: {
-                refresh: 'Refresh',
-                back: 'Back to Hooks',
-              },
-              errors: {
-                fetch: 'Failed to load executions',
-              },
-            },
-          },
-        },
-      },
+      hooks: hooksExecutionsTranslations,
     },
   },
 });

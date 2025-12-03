@@ -1,0 +1,46 @@
+{
+  "title": "Gestione Hook",
+  "stats": {
+    "total_hooks": "Hook Totali",
+    "active_hooks": "Hook Attivi",
+    "executions_today": "Esecuzioni Oggi",
+    "last_reload": "Ultimo Ricaricamento",
+    "never_reloaded": "Mai ricaricati",
+    "reload_hint": "Ricarica quando distribuisci nuove configurazioni di hook."
+  },
+  "actions": {
+    "create": "Crea Hook",
+    "reload": "Ricarica Hook",
+    "reloading": "Sto ricaricando gli Hook…"
+  },
+  "errors": {
+    "fetch": "Impossibile caricare i dati degli hook.",
+    "reload": "Impossibile ricaricare gli hook.",
+    "delete": "L'eliminazione degli hook non è ancora implementata."
+  },
+  "executions": {
+    "title": "Esecuzioni Hook",
+    "filters": {
+      "status": "Stato",
+      "success": "Successo",
+      "failure": "Errore",
+      "all": "Tutti",
+      "from": "Da",
+      "to": "A"
+    },
+    "columns": {
+      "event_name": "Evento",
+      "success": "Successo",
+      "duration": "Durata (ms)",
+      "executed_at": "Eseguito il",
+      "error": "Errore"
+    },
+    "actions": {
+      "refresh": "Aggiorna",
+      "back": "Torna agli Hook"
+    },
+    "errors": {
+      "fetch": "Impossibile caricare le esecuzioni"
+    }
+  }
+}
