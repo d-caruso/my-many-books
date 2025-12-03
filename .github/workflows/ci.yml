@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvement, phase/backend-expansion-all-resources, phase/foundation-di-repository-service, feature/hookey ]
+    branches: [ main, develop, feature/architecture-improvement, feature/hookey ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, phase/backend-expansion-all-resources, phase/foundation-di-repository-service, feature/hookey ]
+    branches: [ main, develop, feature/architecture-improvements, feature/hookey ]
   workflow_dispatch:
     inputs:
       run_tests:

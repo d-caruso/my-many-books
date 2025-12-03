@@ -47,6 +47,7 @@
     "test:web-app:services": "vitest run --config vitest.config.services.ts",
     "test:web-app:integration": "vitest run --config vitest.config.integration.ts",
     "test:web-app:hooks": "vitest run --config vitest.config.hooks.ts",
+
     "test:min": "VITEST_USE_MINIMAL=1 vitest run",
     "test:coverage": "craco test --coverage --watchAll=false",
     "test:unit": "craco test --testPathPattern=src/ --watchAll=false",
