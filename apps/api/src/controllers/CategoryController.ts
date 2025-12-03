@@ -17,6 +17,7 @@ import { UpdateCategoryDTO } from '../dtos/category/UpdateCategoryDTO';
 import { toCategoryResponseDTO } from '../dtos/category/CategoryResponseDTO';
 import { Book, Category } from '../models';
 import { emitHookEvent } from '../services/hooks/hookSystem';
+import { EVENTS } from '../services/hooks/events';
 
 @injectable()
 export class CategoryController extends BaseController {
@@ -39,7 +40,7 @@ export class CategoryController extends BaseController {
 
     const serviceInput = dto.toServiceInput();
 
-    await emitHookEvent('category.create.before', {
+    await emitHookEvent(EVENTS.CATEGORY.CREATE.BEFORE, {
       user: this.mapRequestUser(request),
       input: serviceInput,
     });
@@ -107,7 +108,7 @@ export class CategoryController extends BaseController {
 
     const updateInput = dto.toServiceInput();
 
-    await emitHookEvent('category.update.before', {
+    await emitHookEvent(EVENTS.CATEGORY.UPDATE.BEFORE, {
       user: this.mapRequestUser(request),
       categoryId: Number(categoryId),
       input: updateInput,
@@ -143,7 +144,7 @@ export class CategoryController extends BaseController {
     const forceDelete = this.getQueryParameter(request, 'force') === 'true';
 
     const numericCategoryId = Number(categoryId);
-    await emitHookEvent('category.delete.before', {
+    await emitHookEvent(EVENTS.CATEGORY.DELETE.BEFORE, {
       user: this.mapRequestUser(request),
       categoryId: numericCategoryId,
       force: forceDelete,

@@ -11,6 +11,7 @@ import { AuthorEntity } from '../../repositories/author/AuthorRepositoryTypes';
 import { AuthorCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import { ApplicationError } from '../../errors/ApplicationError';
 import { emitHookEvent } from '../hooks/hookSystem';
+import { EVENTS } from '../hooks/events';
 
 export type AuthorServiceErrorCode =
   | 'AUTHOR_NOT_FOUND'
@@ -75,7 +76,7 @@ class AuthorService {
     };
 
     const createdAuthor = await this.authorRepository.create(payload);
-    await this.emitAuthorEvent('author.create.after', {
+    await this.emitAuthorEvent(EVENTS.AUTHOR.CREATE.AFTER, {
       author: createdAuthor,
       user: this.mapEventUser(userContext),
       input,
@@ -119,7 +120,7 @@ class AuthorService {
     if (!updated) {
       throw new AuthorServiceError('AUTHOR_NOT_FOUND');
     }
-    await this.emitAuthorEvent('author.update.after', {
+    await this.emitAuthorEvent(EVENTS.AUTHOR.UPDATE.AFTER, {
       authorId: id,
       author: updated,
       user: this.mapEventUser(userContext),
@@ -147,7 +148,7 @@ class AuthorService {
       throw new AuthorServiceError('AUTHOR_NOT_FOUND');
     }
 
-    await this.emitAuthorEvent('author.delete.after', {
+    await this.emitAuthorEvent(EVENTS.AUTHOR.DELETE.AFTER, {
       authorId: id,
       author: existing,
       user: this.mapEventUser(userContext),

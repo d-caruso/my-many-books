@@ -7,6 +7,7 @@ import { Book } from '../../../src/models/Book';
 import { UniversalRequest } from '../../../src/types';
 import { CategoryEntity } from '../../../src/repositories/category/CategoryRepositoryTypes';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
 
 jest.mock('../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
@@ -79,7 +80,7 @@ describe('CategoryController', () => {
       expect(response.statusCode).toBe(201);
       expect(response.data).toMatchObject({ id: 1, name: 'Fiction', userId: 1 });
       expect(emitHookEventMock).toHaveBeenCalledWith(
-        'category.create.before',
+        EVENTS.CATEGORY.CREATE.BEFORE,
         expect.objectContaining({
           user: { id: 1, role: 'user' },
           input: { name: 'Fiction' },
@@ -171,7 +172,7 @@ describe('CategoryController', () => {
       );
       expect(response.data).toMatchObject({ id: 2, name: 'Updated', userId: 1 });
       expect(emitHookEventMock).toHaveBeenCalledWith(
-        'category.update.before',
+        EVENTS.CATEGORY.UPDATE.BEFORE,
         expect.objectContaining({
           categoryId: 2,
           user: { id: 1, role: 'user' },
@@ -209,7 +210,7 @@ describe('CategoryController', () => {
       );
       expect(response.statusCode).toBe(204);
       expect(emitHookEventMock).toHaveBeenCalledWith(
-        'category.delete.before',
+        EVENTS.CATEGORY.DELETE.BEFORE,
         expect.objectContaining({
           categoryId: 3,
           user: { id: 1, role: 'user' },

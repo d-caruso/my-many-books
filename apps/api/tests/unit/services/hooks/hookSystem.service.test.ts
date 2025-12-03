@@ -7,6 +7,7 @@ import type {
   HookSystem,
 } from '@my-many-books/hookey';
 import * as hookService from '../../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../../src/services/hooks/events';
 
 const { HookSystemManager } = hookService;
 
@@ -37,7 +38,7 @@ describe('HookSystem service', () => {
     {
       id: '2',
       name: 'book created notifier',
-      eventPattern: 'book.create.after',
+      eventPattern: EVENTS.BOOK.CREATE.AFTER,
       actionType: 'log',
       actionConfig: { prefix: 'book' },
       isActive: true,
@@ -178,7 +179,7 @@ describe('HookSystem service', () => {
   describe('emitHookEvent', () => {
     it('does nothing when running inside test runtime', async () => {
       process.env['NODE_ENV'] = 'test';
-      await expect(hookService.emitHookEvent('book.create.before')).resolves.toBeUndefined();
+      await expect(hookService.emitHookEvent(EVENTS.BOOK.CREATE.BEFORE)).resolves.toBeUndefined();
     });
 
     it('logs a warning when hook system is unavailable', async () => {
@@ -192,7 +193,7 @@ describe('HookSystem service', () => {
           throw new Error('HookSystem has not been initialized');
         });
 
-      await expect(hookService.emitHookEvent('book.create.before')).resolves.toBeUndefined();
+      await expect(hookService.emitHookEvent(EVENTS.BOOK.CREATE.BEFORE)).resolves.toBeUndefined();
       expect(warnSpy).toHaveBeenCalled();
 
       warnSpy.mockRestore();
