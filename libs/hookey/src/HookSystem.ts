@@ -1,24 +1,25 @@
-import { EventEmitter2 } from 'eventemitter2';
+import { EventEmitter2 } from "eventemitter2";
 import {
   HookAction,
   HookActionContext,
   HookConfig,
   HookStorage,
-} from './types';
-import { InMemoryHookStorage } from './storage/InMemoryHookStorage';
-import { validateActionConfig, validateEventPattern } from './utils/validation';
+} from "./types";
+import { InMemoryHookStorage } from "./storage/InMemoryHookStorage";
+import { validateActionConfig, validateEventPattern } from "./utils/validation";
 
 export class HookSystem {
   private emitter: EventEmitter2;
   private storage: HookStorage;
-  private hooks: Map<string, { hook: HookConfig; action: HookAction }> = new Map();
-  private currentEvent?: string;
+  private hooks: Map<string, { hook: HookConfig; action: HookAction }> =
+    new Map();
+  private currentEvent: string | undefined;
 
   constructor(storage?: HookStorage) {
     this.storage = storage ?? new InMemoryHookStorage();
     this.emitter = new EventEmitter2({
       wildcard: true,
-      delimiter: '.',
+      delimiter: ".",
       maxListeners: 100,
       verboseMemoryLeak: true,
     });
@@ -35,8 +36,10 @@ export class HookSystem {
 
     await this.storage.createHook({
       name: hook.name,
-      description: hook.description,
-      actionConfig: hook.actionConfig,
+      ...(hook.description !== undefined && { description: hook.description }),
+      ...(hook.actionConfig !== undefined && {
+        actionConfig: hook.actionConfig,
+      }),
       actionType: hook.actionType,
       eventPattern: hook.eventPattern,
       isActive: hook.isActive,
@@ -67,7 +70,7 @@ export class HookSystem {
     hook: HookConfig,
     action: HookAction,
     actualEventName: string,
-    payload?: unknown
+    payload?: unknown,
   ): Promise<void> {
     const context: HookActionContext = { eventName: actualEventName, payload };
     const start = Date.now();

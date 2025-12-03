@@ -30,8 +30,9 @@ const eventPatternValidator = (value: string, helpers: Joi.CustomHelpers) => {
  * Uses hookey's safeValidateActionConfig function
  */
 const actionConfigValidator = (value: unknown, helpers: Joi.CustomHelpers) => {
-  const context = helpers.prefs.context;
-  const actionType = context?.['actionType'];
+  // Access the parent object to get actionType
+  const parent = helpers.state.ancestors[0] as { actionType?: string };
+  const actionType = parent?.actionType;
 
   if (!actionType) {
     return helpers.error('any.custom', {
@@ -39,7 +40,7 @@ const actionConfigValidator = (value: unknown, helpers: Joi.CustomHelpers) => {
     });
   }
 
-  const result = safeValidateActionConfig(actionType as string, value);
+  const result = safeValidateActionConfig(actionType, value);
 
   if (!result.success) {
     let errorMessage = 'Invalid action configuration';
@@ -70,7 +71,7 @@ export const createHookBodySchema = Joi.object({
   actionConfig: Joi.object().required().custom(actionConfigValidator),
   isActive: Joi.boolean().default(true),
   priority: Joi.number().integer().min(0).max(999).default(0),
-}).options({ context: { actionType: Joi.ref('actionType') } });
+});
 
 export const updateHookBodySchema = Joi.object({
   name: Joi.string().min(1).max(255).optional(),
@@ -80,9 +81,7 @@ export const updateHookBodySchema = Joi.object({
   actionConfig: Joi.object().optional().custom(actionConfigValidator),
   isActive: Joi.boolean().optional(),
   priority: Joi.number().integer().min(0).max(999).optional(),
-})
-  .min(1)
-  .options({ context: { actionType: Joi.ref('actionType') } });
+}).min(1);
 
 /**
  * Hook query schemas

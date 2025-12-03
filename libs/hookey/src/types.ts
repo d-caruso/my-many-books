@@ -33,7 +33,9 @@ export interface HookStorageStats {
 export interface HookStorage {
   getHooks(filters?: { isActive?: boolean }): Promise<HookConfig[]>;
   getHook(id: string): Promise<HookConfig | null>;
-  createHook(hook: Omit<HookConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<HookConfig>;
+  createHook(
+    hook: Omit<HookConfig, "id" | "createdAt" | "updatedAt">,
+  ): Promise<HookConfig>;
   updateHook(id: string, updates: Partial<HookConfig>): Promise<HookConfig>;
   deleteHook(id: string): Promise<void>;
   logExecution(execution: HookExecution): Promise<void>;
