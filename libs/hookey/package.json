@@ -7,6 +7,8 @@
   "main": "src/index.ts",
   "types": "src/index.d.ts",
   "dependencies": {
+    "@types/eventemitter2": "^2.2.1",
+    "eventemitter2": "^6.4.9",
     "express": "^4.18.2",
     "sequelize": "^6.34.0",
     "sqlite3": "^5.1.6"

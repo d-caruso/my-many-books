@@ -1,19 +1,26 @@
-import { EventEmitter } from 'events';
+import { EventEmitter2 } from 'eventemitter2';
 import {
   HookAction,
   HookActionContext,
   HookConfig,
-  HookExecution,
   HookStorage,
 } from './types';
 import { InMemoryHookStorage } from './storage/InMemoryHookStorage';
 
 export class HookSystem {
-  private emitter = new EventEmitter();
+  private emitter: EventEmitter2;
   private storage: HookStorage;
+  private hooks: Map<string, { hook: HookConfig; action: HookAction }> = new Map();
+  private currentEvent?: string;
 
   constructor(storage?: HookStorage) {
     this.storage = storage ?? new InMemoryHookStorage();
+    this.emitter = new EventEmitter2({
+      wildcard: true,
+      delimiter: '.',
+      maxListeners: 100,
+      verboseMemoryLeak: true,
+    });
   }
 
   async registerHook(hook: HookConfig, action: HookAction): Promise<void> {
@@ -26,23 +33,40 @@ export class HookSystem {
       isActive: hook.isActive,
       priority: hook.priority,
     });
-    this.emitter.on(hook.eventPattern, async payload => {
-      await this.executeAction(hook, action, payload);
-    });
+
+    // Store hook and action for reference
+    this.hooks.set(hook.id, { hook, action });
+
+    // Register listener for the pattern
+    const listener = async (payload?: unknown) => {
+      // Use the current event name being triggered (set in trigger method)
+      const actualEventName = this.currentEvent || hook.eventPattern;
+      await this.executeAction(hook, action, actualEventName, payload);
+    };
+
+    this.emitter.on(hook.eventPattern, listener);
   }
 
   async trigger(eventName: string, payload?: unknown): Promise<void> {
+    // Track the current event being triggered for wildcard pattern matching
+    this.currentEvent = eventName;
     this.emitter.emit(eventName, payload);
+    this.currentEvent = undefined;
   }
 
-  private async executeAction(hook: HookConfig, action: HookAction, payload?: unknown): Promise<void> {
-    const context: HookActionContext = { eventName: hook.eventPattern, payload };
+  private async executeAction(
+    hook: HookConfig,
+    action: HookAction,
+    actualEventName: string,
+    payload?: unknown
+  ): Promise<void> {
+    const context: HookActionContext = { eventName: actualEventName, payload };
     const start = Date.now();
     try {
       await action.execute(context);
       await this.storage.logExecution({
         hookId: hook.id,
-        eventName: hook.eventPattern,
+        eventName: actualEventName,
         eventData: payload as Record<string, unknown>,
         success: true,
         executedAt: new Date(),
@@ -51,7 +75,7 @@ export class HookSystem {
     } catch (error: any) {
       await this.storage.logExecution({
         hookId: hook.id,
-        eventName: hook.eventPattern,
+        eventName: actualEventName,
         eventData: payload as Record<string, unknown>,
         success: false,
         errorMessage: error.message,
