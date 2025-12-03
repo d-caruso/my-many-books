@@ -16,10 +16,13 @@ export const TextInput: React.FC<TextInputProps> = ({
   numberOfLines = 1,
   maxLength,
   keyboardType = 'default',
+  autoCapitalize = 'sentences', // Used in React Native, not in web
   autoComplete,
   testID,
   accessibilityLabel,
 }) => {
+  // Note: autoCapitalize is part of the cross-platform API but only used in React Native
+  void autoCapitalize;
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     onChangeText(event.target.value);
   };
