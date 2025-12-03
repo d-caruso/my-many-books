@@ -1,3 +1,4 @@
+/* eslint-env node */
 /**
  * Timer setup for React Native Testing Library compatibility
  * This fixes the "globalObj.setTimeout is not a function" error
