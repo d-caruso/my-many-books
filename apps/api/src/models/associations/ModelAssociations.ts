@@ -11,6 +11,8 @@ export interface ModelRegistry {
   Category: ModelStatic<Model>;
   BookAuthor: ModelStatic<Model>;
   BookCategory: ModelStatic<Model>;
+  Hook: ModelStatic<Model>;
+  HookExecution: ModelStatic<Model>;
 }
 
 export class ModelAssociations {

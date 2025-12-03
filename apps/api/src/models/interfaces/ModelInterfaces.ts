@@ -161,3 +161,55 @@ export interface AuthUser {
   providerUserId?: string; // External auth system ID
   isNewUser?: boolean; // Helpful for onboarding flows
 }
+
+// Hook interfaces
+export type HookActionType = 'log' | 'email' | 'database';
+
+export interface HookAttributes
+  extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
+  id: CreationOptional<number>;
+  name: string;
+  description?: string | null;
+  eventPattern: string;
+  actionType: HookActionType;
+  actionConfig: Record<string, unknown>;
+  isActive: boolean;
+  priority: number;
+  createdBy?: number | null;
+  creationDate: CreationOptional<Date>;
+  updateDate?: CreationOptional<Date | undefined>;
+}
+
+export interface HookCreationAttributes {
+  name: string;
+  description?: string | null;
+  eventPattern: string;
+  actionType: HookActionType;
+  actionConfig: Record<string, unknown>;
+  isActive?: boolean;
+  priority?: number;
+  createdBy?: number | null;
+}
+
+export interface HookUpdateAttributes extends Omit<Partial<HookAttributes>, 'id' | 'creationDate'> {}
+
+// HookExecution interfaces
+export interface HookExecutionAttributes {
+  id: CreationOptional<number>;
+  hookId: number;
+  eventName: string;
+  eventData?: Record<string, unknown> | null;
+  success: boolean;
+  errorMessage?: string | null;
+  executionTimeMs?: number | null;
+  executedAt: CreationOptional<Date>;
+}
+
+export interface HookExecutionCreationAttributes {
+  hookId: number;
+  eventName: string;
+  eventData?: Record<string, unknown> | null;
+  success: boolean;
+  errorMessage?: string | null;
+  executionTimeMs?: number | null;
+}

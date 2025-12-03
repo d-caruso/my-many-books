@@ -10,6 +10,8 @@ import { Book } from './Book';
 import { BookAuthor } from './BookAuthor';
 import { BookCategory } from './BookCategory';
 import { User } from './User';
+import { Hook } from './Hook';
+import { HookExecution } from './HookExecution';
 
 export * from './interfaces/ModelInterfaces';
 export * from './base/BaseModel';
@@ -20,6 +22,8 @@ export * from './Book';
 export * from './BookAuthor';
 export * from './BookCategory';
 export * from './User';
+export * from './Hook';
+export * from './HookExecution';
 
 export class ModelManager {
   private static sequelize: Sequelize | null = null;
@@ -39,6 +43,8 @@ export class ModelManager {
     Book.initModel(sequelize);
     BookAuthor.initModel(sequelize);
     BookCategory.initModel(sequelize);
+    Hook.initModel(sequelize);
+    HookExecution.initModel(sequelize);
 
     // Register models for associations
     ModelAssociations.registerModel('User', User);
@@ -47,6 +53,8 @@ export class ModelManager {
     ModelAssociations.registerModel('Book', Book);
     ModelAssociations.registerModel('BookAuthor', BookAuthor);
     ModelAssociations.registerModel('BookCategory', BookCategory);
+    ModelAssociations.registerModel('Hook', Hook);
+    ModelAssociations.registerModel('HookExecution', HookExecution);
 
     // Define associations
     ModelAssociations.defineAssociations();
@@ -90,6 +98,8 @@ export class ModelManager {
     Book: typeof Book;
     BookAuthor: typeof BookAuthor;
     BookCategory: typeof BookCategory;
+    Hook: typeof Hook;
+    HookExecution: typeof HookExecution;
   } {
     return {
       User,
@@ -98,6 +108,8 @@ export class ModelManager {
       Book,
       BookAuthor,
       BookCategory,
+      Hook,
+      HookExecution,
     };
   }
 }
