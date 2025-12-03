@@ -17,6 +17,7 @@ import categoryRoutes from './routes/categoryRoutes';
 import isbnRoutes from './routes/isbnRoutes';
 import adminRoutes from './routes/adminRoutes';
 import authRoutes from './routes/authRoutes';
+import hookRoutes from './routes/hookRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
 
@@ -63,6 +64,7 @@ app.use(`${BASE_PATH}/authors`, authorRoutes);
 app.use(`${BASE_PATH}/categories`, categoryRoutes);
 app.use(`${BASE_PATH}/isbn`, isbnRoutes);
 app.use(`${BASE_PATH}/admin`, adminRoutes);
+app.use(`${BASE_PATH}/admin/hooks`, hookRoutes);
 
 // ===== 404 HANDLER =====
 app.use((_req, res): void => {
