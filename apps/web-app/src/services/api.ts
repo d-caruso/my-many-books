@@ -389,6 +389,25 @@ class ApiService {
     await this.fetchAdminData('/admin/hooks/reload', { method: 'POST' });
   }
 
+  async getAdminHookExecutions(params: {
+    hookId?: number;
+    success?: boolean;
+    from?: string;
+    to?: string;
+    page?: number;
+    pageSize?: number;
+  }): Promise<AdminHookExecutionResponse> {
+    const query = new URLSearchParams();
+    if (params.hookId) query.append('hookId', params.hookId.toString());
+    if (params.success !== undefined) query.append('success', String(params.success));
+    if (params.from) query.append('from', params.from);
+    if (params.to) query.append('to', params.to);
+    if (params.page) query.append('page', params.page.toString());
+    if (params.pageSize) query.append('pageSize', params.pageSize.toString());
+    const queryString = query.toString() ? `?${query.toString()}` : '';
+    return this.fetchAdminData(`/admin/hooks/executions${queryString}`);
+  }
+
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
     const token = await authService.getIdToken();
@@ -829,6 +848,23 @@ export interface AdminHookStats {
   lastReloadedAt?: string;
 }
 
+export interface AdminHookExecution {
+  id: number;
+  hookId: number;
+  eventName: string;
+  success: boolean;
+  executionTimeMs: number;
+  errorMessage?: string;
+  executedAt: string;
+}
+
+export interface AdminHookExecutionResponse {
+  executions: AdminHookExecution[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 // Factory function for creating API service with dependencies (useful for testing)
 export const createApiService = (dependencies?: ApiServiceDependencies): ApiService => {
   return new ApiService(dependencies);
@@ -840,7 +876,7 @@ export const apiService = new ApiService();
 // Export the class and interface for direct usage in tests
 export { ApiService };
 export type { ApiServiceDependencies };
-export type { AdminHookSummary, AdminHookStats };
+export type { AdminHookSummary, AdminHookStats, AdminHookExecution, AdminHookExecutionResponse };
 
 // Legacy export for compatibility - ensure all existing imports continue to work
 export const bookAPI = {

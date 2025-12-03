@@ -46,6 +46,9 @@ const BookManagementPage = lazy(() => import('./pages/Admin/BookManagementPage')
 const HooksPage = lazy(() =>
   import('./pages/Admin/Hooks/HooksPage').then(m => ({ default: m.HooksPage }))
 );
+const HookExecutionsPage = lazy(() =>
+  import('./pages/Admin/Hooks/HookExecutions').then(m => ({ default: m.HookExecutions }))
+);
 const AdminSettingsPage = lazy(() => import('./pages/Admin/AdminSettingsPage'));
 
 function App() {
@@ -128,6 +131,14 @@ function App() {
                             element={
                               <ProtectedRoute requireAdmin>
                                 <HooksPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/hooks/:hookId/executions"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <HookExecutionsPage />
                               </ProtectedRoute>
                             }
                           />
