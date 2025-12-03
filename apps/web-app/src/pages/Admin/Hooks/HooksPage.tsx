@@ -6,8 +6,6 @@ import {
   Alert,
   CircularProgress,
   Paper,
-  Stack,
-  Chip
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -20,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../AdminLayout';
 import { useApi } from '../../../contexts/ApiContext';
 import { HookStatsCard } from './components/HookStatsCard';
+import { HooksList } from './HooksList';
 import type { AdminHookSummary, AdminHookStats } from '../../../services/api';
 
 export const HooksPage: React.FC = () => {
@@ -110,7 +109,7 @@ export const HooksPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <Box>
+    <Box>
         <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
           {t('pages:admin.hooks.title', 'Hooks Administration')}
         </Typography>
@@ -184,101 +183,13 @@ export const HooksPage: React.FC = () => {
         )}
 
         <Paper variant="outlined" sx={{ p: 3 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="baseline"
-            flexWrap="wrap"
-            mb={2}
-          >
-            <Typography variant="h6">
-              {t('pages:admin.hooks.list_title', 'Hooks')}
-            </Typography>
-            <Typography variant="caption" color="textSecondary">
-              {t(
-                'pages:admin.hooks.list_summary',
-                '{{count}} configured',
-                { count: stats?.totalHooks ?? hooks.length }
-              )}
-            </Typography>
-          </Box>
-
-          {loading ? (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              minHeight="160px"
-            >
-              <CircularProgress />
-            </Box>
-          ) : hooks.length === 0 ? (
-            <Typography variant="body2" color="textSecondary">
-              {t('pages:admin.hooks.no_hooks', 'No hooks configured yet.')}
-            </Typography>
-          ) : (
-            <Stack spacing={2}>
-              {hooks.map((hook) => (
-                <Paper
-                  key={hook.id}
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                    alignItems: 'flex-start',
-                  }}
-                >
-                  <Box>
-                    <Typography variant="subtitle1">{hook.name}</Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {hook.eventPattern}
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      {t(
-                        'pages:admin.hooks.list_action_info',
-                        '{{actionType}} • Priority {{priority}}',
-                        {
-                          actionType: hook.actionType,
-                          priority: hook.priority,
-                        }
-                      )}
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary" display="block">
-                      {hook.lastExecution
-                        ? t(
-                            'pages:admin.hooks.last_execution',
-                            'Last executed {{timestamp}}',
-                            {
-                              timestamp: new Date(hook.lastExecution).toLocaleString(),
-                            }
-                          )
-                        : t('pages:admin.hooks.never_executed', 'Never executed')}
-                    </Typography>
-                  </Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Chip
-                      label={
-                        hook.isActive
-                          ? t('pages:admin.hooks.active', 'Active')
-                          : t('pages:admin.hooks.inactive', 'Inactive')
-                      }
-                      variant={hook.isActive ? 'filled' : 'outlined'}
-                      color={hook.isActive ? 'primary' : 'default'}
-                      size="small"
-                    />
-                    <Typography variant="caption" color="textSecondary">
-                      {t('pages:admin.hooks.priority_label', 'Priority {{priority}}', {
-                        priority: hook.priority,
-                      })}
-                    </Typography>
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
-          )}
+          <HooksList
+            hooks={hooks}
+            loading={loading}
+            onEdit={(id) => navigate(`/admin/hooks/${id}/edit`)}
+            onViewExecutions={(id) => navigate(`/admin/hooks/${id}/executions`)}
+            onDelete={(id) => setError(t('pages:admin.hooks.errors.delete', 'Delete action is not implemented yet'))}
+          />
         </Paper>
       </Box>
     </AdminLayout>

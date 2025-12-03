@@ -13,6 +13,9 @@ const baseVitestConfig: UserConfig = {
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts', './src/jest.setup.ts'],
     css: true,
+    transformMode: {
+      web: [/\.[jt]sx?$/, /\.css$/],
+    },
     env: {
       VITE_API_BASE_URL: 'http://localhost:3000',
     },

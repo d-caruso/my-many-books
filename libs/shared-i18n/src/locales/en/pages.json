@@ -115,10 +115,11 @@
       "never_executed": "Never executed",
       "priority": "Priority {{priority}}",
       "priority_label": "Priority {{priority}}",
-      "errors": {
-        "fetch": "Failed to load hook data.",
-        "reload": "Failed to reload hooks."
+        "errors": {
+          "fetch": "Failed to load hook data.",
+          "reload": "Failed to reload hooks.",
+          "delete": "Delete action is not implemented yet."
+        }
       }
-    }
   }
 }

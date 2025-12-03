@@ -1,5 +1,7 @@
 // Testing Library DOM matchers
 import '@testing-library/jest-dom';
+import React from 'react';
+import { vi } from 'vitest';
 
 // jest-axe for accessibility testing (compatible with vitest)
 import { toHaveNoViolations } from 'jest-axe';
@@ -12,6 +14,67 @@ import 'whatwg-fetch';
 import { TransformStream } from 'web-streams-polyfill/dist/ponyfill';
 
 import type { SetupServerApi } from 'msw/node';
+
+vi.mock('@mui/x-data-grid', () => {
+  const GridToolbarStub = ({ showQuickFilter, quickFilterProps, ...rest }: any) =>
+    React.createElement('div', {
+      'data-testid': 'mock-grid-toolbar',
+      ...rest,
+    });
+
+  const DataGridStub = ({
+    rows = [],
+    columns = [],
+    loading = false,
+    components = {},
+    componentsProps = {},
+  }: any) => {
+    const toolbarElement = components.Toolbar
+      ? React.createElement(components.Toolbar, componentsProps.toolbar)
+      : null;
+    const rowElements = rows.map((row: any) => {
+      const cells = columns.map((column: any) => {
+        if (column.field === 'actions') {
+          return React.createElement(
+            'div',
+            { key: `${row.id}-actions`, 'data-testid': 'mock-row-actions' },
+            column.renderCell({ row, value: row[column.field] })
+          );
+        }
+
+        const value = column.valueGetter ? column.valueGetter({ row }) : row[column.field];
+        return React.createElement(
+          'span',
+          { key: `${row.id}-${column.field}`, 'data-testid': `mock-cell-${column.field}` },
+          value
+        );
+      });
+
+      const loadingNode = loading
+        ? React.createElement('span', { 'data-testid': 'mock-loading' }, 'Loading')
+        : null;
+
+      return React.createElement(
+        'div',
+        { key: row.id, 'data-testid': 'mock-row' },
+        ...cells,
+        loadingNode
+      );
+    });
+
+    return React.createElement(
+      'div',
+      { 'data-testid': 'mock-data-grid' },
+      toolbarElement,
+      ...rowElements
+    );
+  };
+
+  return {
+    DataGrid: DataGridStub,
+    GridToolbar: GridToolbarStub,
+  };
+});
 
 if (typeof globalThis.TransformStream === 'undefined') {
   globalThis.TransformStream = TransformStream as any;

@@ -117,7 +117,8 @@
       "priority_label": "Priorità {{priority}}",
       "errors": {
         "fetch": "Impossibile caricare i dati degli hook.",
-        "reload": "Impossibile ricaricare gli hook."
+        "reload": "Impossibile ricaricare gli hook.",
+        "delete": "L'eliminazione degli hook non è ancora implementata."
       }
     }
   }
