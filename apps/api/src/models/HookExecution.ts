@@ -7,7 +7,10 @@ import { DataTypes, Model, Sequelize, Association } from 'sequelize';
 import { HookExecutionAttributes } from './interfaces/ModelInterfaces';
 import { Hook } from './Hook';
 
-export class HookExecution extends Model<HookExecutionAttributes> implements HookExecutionAttributes {
+export class HookExecution
+  extends Model<HookExecutionAttributes>
+  implements HookExecutionAttributes
+{
   public id!: number;
   public hookId!: number;
   public eventName!: string;
