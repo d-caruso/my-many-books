@@ -46,9 +46,9 @@ export interface UserAdminContext {
   role?: string;
 }
 
-export interface CreateUserInput extends Omit<UserCreationAttributes, 'id'> {}
+export type CreateUserInput = Omit<UserCreationAttributes, 'id'>;
 
-export interface UpdateUserInput extends Partial<CreateUserInput> {}
+export type UpdateUserInput = Partial<CreateUserInput>;
 
 @injectable()
 class AdminUserService {
@@ -77,7 +77,11 @@ class AdminUserService {
     return this.userRepository.create(input);
   }
 
-  async updateUser(id: number, input: UpdateUserInput, context: UserAdminContext): Promise<UserEntity> {
+  async updateUser(
+    id: number,
+    input: UpdateUserInput,
+    context: UserAdminContext
+  ): Promise<UserEntity> {
     const existing = await this.userRepository.findById(id);
     if (!existing) {
       throw new AdminUserServiceError('USER_NOT_FOUND');

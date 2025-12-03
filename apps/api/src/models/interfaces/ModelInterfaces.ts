@@ -191,7 +191,7 @@ export interface HookCreationAttributes {
   createdBy?: number | null;
 }
 
-export interface HookUpdateAttributes extends Omit<Partial<HookAttributes>, 'id' | 'creationDate'> {}
+export type HookUpdateAttributes = Omit<Partial<HookAttributes>, 'id' | 'creationDate'>;
 
 // HookExecution interfaces
 export interface HookExecutionAttributes {

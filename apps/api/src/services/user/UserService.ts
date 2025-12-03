@@ -9,7 +9,11 @@ import { TYPES } from '../../container/types';
 import { Repository as UserRepositoryContract } from '../../repositories/user/Repository';
 import { UserEntity, UserUpdateInput } from '../../repositories/user/UserRepositoryTypes';
 import { Repository as BookRepositoryContract } from '../../repositories/book/Repository';
-import { BookEntity, BookListOptions, PaginatedResult as BookPaginatedResult } from '../../repositories/book/BookRepositoryTypes';
+import {
+  BookEntity,
+  BookListOptions,
+  PaginatedResult as BookPaginatedResult,
+} from '../../repositories/book/BookRepositoryTypes';
 import { ApplicationError } from '../../errors/ApplicationError';
 import { UserCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { BOOK_STATUS } from '../../utils/constants';
@@ -144,8 +148,7 @@ export class UserService {
         ? totalBooks - readingBooks - pausedBooks - finishedBooks
         : 0;
 
-    const completionRate =
-      totalBooks > 0 ? Math.round((finishedBooks / totalBooks) * 100) : 0;
+    const completionRate = totalBooks > 0 ? Math.round((finishedBooks / totalBooks) * 100) : 0;
 
     return {
       totalBooks,

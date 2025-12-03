@@ -7,8 +7,11 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { Hook, HookExecution } from '../../models';
-import { HookCreationAttributes, HookUpdateAttributes } from '../../models/interfaces/ModelInterfaces';
-import { Op } from 'sequelize';
+import {
+  HookCreationAttributes,
+  HookUpdateAttributes,
+} from '../../models/interfaces/ModelInterfaces';
+import { Op, CreationAttributes } from 'sequelize';
 
 export class HookController extends BaseController {
   async listHooks(request: UniversalRequest): Promise<ApiResponse> {
@@ -38,7 +41,10 @@ export class HookController extends BaseController {
       where,
       limit: pagination.limit,
       offset: pagination.offset,
-      order: [['priority', 'DESC'], ['creationDate', 'DESC']],
+      order: [
+        ['priority', 'DESC'],
+        ['creationDate', 'DESC'],
+      ],
     });
 
     const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
@@ -91,7 +97,7 @@ export class HookController extends BaseController {
         createdBy: request.user?.userId ?? null,
       };
 
-      const hook = await Hook.create(hookData as any);
+      const hook = await Hook.create(hookData as CreationAttributes<Hook>);
       return this.createSuccessResponse(
         hook.get({ plain: true }),
         'Hook created successfully',
@@ -127,11 +133,8 @@ export class HookController extends BaseController {
     }
 
     try {
-      await hook.update(body as any);
-      return this.createSuccessResponse(
-        hook.get({ plain: true }),
-        'Hook updated successfully'
-      );
+      await hook.update(body as Partial<Hook>);
+      return this.createSuccessResponse(hook.get({ plain: true }), 'Hook updated successfully');
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
@@ -157,12 +160,7 @@ export class HookController extends BaseController {
 
     try {
       await hook.destroy();
-      return this.createSuccessResponse(
-        null,
-        'Hook deleted successfully',
-        undefined,
-        204
-      );
+      return this.createSuccessResponse(null, 'Hook deleted successfully', undefined, 204);
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
@@ -241,9 +239,8 @@ export class HookController extends BaseController {
       totalExecutions,
       successfulExecutions,
       failedExecutions,
-      successRate: totalExecutions > 0
-        ? ((successfulExecutions / totalExecutions) * 100).toFixed(2)
-        : '0.00',
+      successRate:
+        totalExecutions > 0 ? ((successfulExecutions / totalExecutions) * 100).toFixed(2) : '0.00',
     };
 
     return this.createSuccessResponse(stats);

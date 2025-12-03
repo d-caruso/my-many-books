@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { UpdateUserInput } from '../../services/user/AdminUserService';
 import { USER_ROLES } from '@my-many-books/shared-auth';
+import { UserRole } from '../../models/interfaces/ModelInterfaces';
 
 export class AdminUpdateUserDTO {
   @IsOptional()
@@ -33,7 +34,7 @@ export class AdminUpdateUserDTO {
   @IsOptional()
   @IsString()
   @IsIn(Object.values(USER_ROLES))
-  role?: string;
+  role?: UserRole;
 
   static from(body: unknown): AdminUpdateUserDTO {
     return plainToInstance(AdminUpdateUserDTO, body ?? {});
@@ -50,7 +51,7 @@ export class AdminUpdateUserDTO {
     if (this.surname !== undefined) input.surname = this.surname;
     if (this.email !== undefined) input.email = this.email;
     if (this.isActive !== undefined) input.isActive = this.isActive;
-    if (this.role !== undefined) input.role = this.role as any;
+    if (this.role !== undefined) input.role = this.role;
     return input;
   }
 }
