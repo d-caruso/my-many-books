@@ -7,3 +7,4 @@ export {
   ConsoleDatabaseService,
   DatabaseOperation,
 } from './DatabaseAction';
+export { ActionRouter, ActionType, ActionServices, defaultActionRouter } from './ActionRouter';
