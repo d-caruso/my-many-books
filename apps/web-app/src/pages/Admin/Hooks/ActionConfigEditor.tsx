@@ -23,6 +23,7 @@ export const ActionConfigEditor: React.FC<ActionConfigEditorProps> = ({
       helperText={error || 'Provide valid JSON per action requirements'}
       error={Boolean(error)}
       variant="outlined"
+      inputProps={{ 'data-testid': 'hook-form-action-config' }}
     />
   );
 };

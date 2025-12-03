@@ -99,6 +99,7 @@ export const HookForm: React.FC<HookFormProps> = ({
               value={formState.name}
               onChange={(event) => handleFieldChange('name', event.target.value)}
               fullWidth
+              inputProps={{ 'data-testid': 'hook-form-name' }}
             />
             <TextField
               label="Priority"
@@ -106,6 +107,7 @@ export const HookForm: React.FC<HookFormProps> = ({
               value={formState.priority}
               onChange={(event) => handleFieldChange('priority', Number(event.target.value))}
               fullWidth
+              inputProps={{ 'data-testid': 'hook-form-priority' }}
             />
           </Stack>
           <TextField
@@ -114,6 +116,7 @@ export const HookForm: React.FC<HookFormProps> = ({
             onChange={(event) => handleFieldChange('description', event.target.value)}
             fullWidth
             multiline
+            inputProps={{ 'data-testid': 'hook-form-description' }}
           />
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
             <FormControl fullWidth>
@@ -125,6 +128,7 @@ export const HookForm: React.FC<HookFormProps> = ({
                 onChange={(event) =>
                   handleFieldChange('actionType', event.target.value as HookActionType)
                 }
+                inputProps={{ 'data-testid': 'hook-form-action-type' }}
               >
                 <MenuItem value="log">Log</MenuItem>
                 <MenuItem value="email">Email</MenuItem>
@@ -136,6 +140,7 @@ export const HookForm: React.FC<HookFormProps> = ({
                 <Switch
                   checked={formState.isActive}
                   onChange={(event) => handleFieldChange('isActive', event.target.checked)}
+                  inputProps={{ 'data-testid': 'hook-form-active' }}
                 />
               }
               label="Active"
@@ -154,7 +159,12 @@ export const HookForm: React.FC<HookFormProps> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={Boolean(configError)}>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={Boolean(configError)}
+          data-testid="hook-form-save"
+        >
           Save
         </Button>
       </DialogActions>

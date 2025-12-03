@@ -111,6 +111,7 @@ export const HooksList: React.FC<HooksListProps> = ({
 
   return (
     <Box
+      data-testid="hooks-grid"
       sx={{
         height: 480,
         width: '100%',

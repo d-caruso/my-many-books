@@ -128,6 +128,7 @@ export const HooksPage: React.FC = () => {
               setEditingHook(null);
               setIsFormOpen(true);
             }}
+            data-testid="open-hook-form"
           >
             {t('actions.create', 'Create Hook')}
           </Button>
@@ -136,6 +137,7 @@ export const HooksPage: React.FC = () => {
             startIcon={reloading ? <CircularProgress size={16} /> : <RefreshIcon />}
             onClick={handleReload}
             disabled={reloading}
+            data-testid="reload-hooks-button"
           >
             {reloading
               ? t('actions.reloading', 'Reloading Hooks…')

@@ -10,7 +10,7 @@ interface EventPatternInputProps {
 
 export const EventPatternInput: React.FC<EventPatternInputProps> = ({ value, onChange }) => {
   return (
-    <Box>
+    <Box data-testid="hook-form-event-pattern">
       <TextField
         label="Event Pattern"
         value={value}
@@ -18,6 +18,7 @@ export const EventPatternInput: React.FC<EventPatternInputProps> = ({ value, onC
         fullWidth
         variant="outlined"
         helperText="Supports wildcards such as *, **, and ?"
+        inputProps={{ 'data-testid': 'hook-form-event-pattern-input' }}
       />
       <Stack direction="row" spacing={1} mt={1} flexWrap="wrap">
         {suggestions.map((suggestion) => (

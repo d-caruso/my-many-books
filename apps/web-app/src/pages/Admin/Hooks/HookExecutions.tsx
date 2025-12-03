@@ -133,6 +133,7 @@ export const HookExecutions: React.FC = () => {
                   success: event.target.value as ExecutionFilters['success'],
                 }))
               }
+              inputProps={{ 'data-testid': 'executions-status-filter' }}
             >
               <MenuItem value="all">{t('executions.filters.all', 'All')}</MenuItem>
               <MenuItem value="success">{t('executions.filters.success_only', 'Success')}</MenuItem>
@@ -145,6 +146,7 @@ export const HookExecutions: React.FC = () => {
             value={filters.from}
             onChange={(event) => setFilters((prev) => ({ ...prev, from: event.target.value }))}
             InputLabelProps={{ shrink: true }}
+            inputProps={{ 'data-testid': 'executions-from-date' }}
           />
           <TextField
             label={t('executions.filters.to', 'To Date')}
@@ -152,11 +154,16 @@ export const HookExecutions: React.FC = () => {
             value={filters.to}
             onChange={(event) => setFilters((prev) => ({ ...prev, to: event.target.value }))}
             InputLabelProps={{ shrink: true }}
+            inputProps={{ 'data-testid': 'executions-to-date' }}
           />
-          <Button variant="outlined" onClick={() => fetchExecutions()}>
+          <Button variant="outlined" onClick={() => fetchExecutions()} data-testid="executions-refresh">
             {t('executions.actions.refresh', 'Refresh')}
           </Button>
-          <Button onClick={() => navigate('/admin/hooks')} variant="text">
+          <Button
+            onClick={() => navigate('/admin/hooks')}
+            variant="text"
+            data-testid="executions-back-to-hooks"
+          >
             {t('executions.actions.back', 'Back to Hooks')}
           </Button>
         </Stack>
@@ -167,7 +174,7 @@ export const HookExecutions: React.FC = () => {
           </Alert>
         )}
 
-        <Paper variant="outlined" sx={{ p: 2 }}>
+        <Paper variant="outlined" sx={{ p: 2 }} data-testid="hook-executions-grid">
           <DataGrid
             rows={executions}
             columns={columns}
