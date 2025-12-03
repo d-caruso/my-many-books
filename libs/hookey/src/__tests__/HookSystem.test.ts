@@ -190,4 +190,28 @@ describe('HookSystem', () => {
     expect(executions[0].eventName).toBe('user.created');
     expect(executions[0].success).toBe(true);
   });
+
+  it('registers existing hooks without persisting duplicates', async () => {
+    const storage = new InMemoryHookStorage();
+    const hookSystem = new HookSystem(storage);
+    const action = new DummyAction();
+    const hook: HookConfig = {
+      id: 'existing-hook',
+      name: 'preloaded-hook',
+      eventPattern: 'book.created',
+      actionType: 'log',
+      actionConfig: {},
+      isActive: true,
+      priority: 5,
+    };
+
+    const createSpy = jest.spyOn(storage, 'createHook');
+
+    await hookSystem.registerExistingHook(hook, action);
+    await hookSystem.trigger('book.created', { bookId: 42 });
+
+    expect(createSpy).not.toHaveBeenCalled();
+    expect(action.calls).toHaveLength(1);
+    expect(action.calls[0].eventName).toBe('book.created');
+  });
 });

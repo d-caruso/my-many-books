@@ -14,6 +14,8 @@ import {
 } from '../../repositories/category/CategoryRepositoryTypes';
 import { CategoryCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import { ApplicationError } from '../../errors/ApplicationError';
+import { emitHookEvent } from '../hooks/hookSystem';
+import { EVENTS } from '../hooks/events';
 
 export type CategoryServiceErrorCode =
   | 'CATEGORY_NOT_FOUND'
@@ -102,7 +104,10 @@ class CategoryService {
     });
   }
 
-  async searchCategories(term: string, userContext: CategoryUserContext): Promise<Array<Pick<CategoryEntity, 'id' | 'name'>>> {
+  async searchCategories(
+    term: string,
+    userContext: CategoryUserContext
+  ): Promise<Array<Pick<CategoryEntity, 'id' | 'name'>>> {
     return this.categoryRepository.searchByQuery(term, userContext.userId);
   }
 
@@ -118,7 +123,13 @@ class CategoryService {
       userId: ownerId,
     };
 
-    return this.categoryRepository.create(payload);
+    const created = await this.categoryRepository.create(payload);
+    await this.emitCategoryEvent(EVENTS.CATEGORY.CREATE.AFTER, {
+      category: created,
+      user: this.mapEventUser(userContext),
+      input,
+    });
+    return created;
   }
 
   async updateCategory(
@@ -147,6 +158,13 @@ class CategoryService {
       throw new CategoryServiceError('CATEGORY_NOT_FOUND');
     }
 
+    await this.emitCategoryEvent(EVENTS.CATEGORY.UPDATE.AFTER, {
+      categoryId: id,
+      category: updated,
+      user: this.mapEventUser(userContext),
+      changes: input,
+    });
+
     return updated;
   }
 
@@ -171,11 +189,44 @@ class CategoryService {
     if (!deleted) {
       throw new CategoryServiceError('CATEGORY_NOT_FOUND');
     }
+
+    await this.emitCategoryEvent(EVENTS.CATEGORY.DELETE.AFTER, {
+      categoryId: id,
+      category: existing,
+      user: this.mapEventUser(userContext),
+      options: options ?? {},
+    });
   }
 
   // ===== helpers ==========================================================
 
-  private resolveOwnerId(inputUserId: number | undefined, userContext: CategoryUserContext): number {
+  private async emitCategoryEvent(
+    eventName: string,
+    payload: Record<string, unknown>
+  ): Promise<void> {
+    await emitHookEvent(eventName, payload);
+  }
+
+  private mapEventUser(
+    userContext?: CategoryUserContext | null
+  ): { id: number; role?: string } | null {
+    if (!userContext) {
+      return null;
+    }
+
+    const summary: { id: number; role?: string } = {
+      id: userContext.userId,
+    };
+    if (userContext.role) {
+      summary.role = userContext.role;
+    }
+    return summary;
+  }
+
+  private resolveOwnerId(
+    inputUserId: number | undefined,
+    userContext: CategoryUserContext
+  ): number {
     if (inputUserId !== undefined) {
       if (userContext.role === USER_ROLES.ADMIN) {
         return inputUserId;

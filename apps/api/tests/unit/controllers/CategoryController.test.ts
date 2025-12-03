@@ -6,6 +6,12 @@ import {
 import { Book } from '../../../src/models/Book';
 import { UniversalRequest } from '../../../src/types';
 import { CategoryEntity } from '../../../src/repositories/category/CategoryRepositoryTypes';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
+
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
+}));
 
 jest.mock('../../../src/models/Book', () => ({
   Book: {
@@ -21,6 +27,7 @@ describe('CategoryController', () => {
   let controller: CategoryController;
   let mockService: jest.Mocked<CategoryService>;
   let baseRequest: UniversalRequest;
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
   const buildCategory = (overrides: Partial<CategoryEntity> = {}): CategoryEntity => ({
     id: 1,
@@ -52,6 +59,7 @@ describe('CategoryController', () => {
     };
 
     jest.clearAllMocks();
+    emitHookEventMock.mockClear();
   });
 
   describe('createCategory', () => {
@@ -71,6 +79,13 @@ describe('CategoryController', () => {
       );
       expect(response.statusCode).toBe(201);
       expect(response.data).toMatchObject({ id: 1, name: 'Fiction', userId: 1 });
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.CATEGORY.CREATE.BEFORE,
+        expect.objectContaining({
+          user: { id: 1, role: 'user' },
+          input: { name: 'Fiction' },
+        })
+      );
     });
 
     it('returns validation error for invalid payload', async () => {
@@ -156,6 +171,14 @@ describe('CategoryController', () => {
         expect.any(Object)
       );
       expect(response.data).toMatchObject({ id: 2, name: 'Updated', userId: 1 });
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.CATEGORY.UPDATE.BEFORE,
+        expect.objectContaining({
+          categoryId: 2,
+          user: { id: 1, role: 'user' },
+          input: { name: 'Updated' },
+        })
+      );
     });
 
     it('validates body', async () => {
@@ -186,6 +209,14 @@ describe('CategoryController', () => {
         { force: true }
       );
       expect(response.statusCode).toBe(204);
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.CATEGORY.DELETE.BEFORE,
+        expect.objectContaining({
+          categoryId: 3,
+          user: { id: 1, role: 'user' },
+          force: true,
+        })
+      );
     });
   });
 

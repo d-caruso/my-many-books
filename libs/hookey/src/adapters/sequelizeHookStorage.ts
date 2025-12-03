@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model, Optional, ModelCtor } from 'sequelize';
+import { Sequelize, DataTypes, Model, Optional, ModelCtor, FindOptions } from 'sequelize';
 import {
   HookConfig,
   HookExecution,
@@ -68,8 +68,11 @@ export class SequelizeHookStorage implements HookStorage {
   }
 
   async getHooks(filters?: { isActive?: boolean }): Promise<HookConfig[]> {
-    const where = filters?.isActive !== undefined ? { isActive: filters.isActive } : undefined;
-    const records = await this.HookModel.findAll({ where });
+    const options: FindOptions<HookConfig> = {};
+    if (filters?.isActive !== undefined) {
+      options.where = { isActive: filters.isActive };
+    }
+    const records = await this.HookModel.findAll(options);
     return records.map(record => record.get() as HookConfig);
   }
 
@@ -112,19 +115,29 @@ export class SequelizeHookStorage implements HookStorage {
   }
 
   async getExecutions(hookId: string, limit?: number): Promise<HookExecution[]> {
-    const records = await this.ExecutionModel.findAll({
+    const options: FindOptions<HookExecution> = {
       where: { hookId },
-      limit,
       order: [['executedAt', 'DESC']],
-    });
+    };
+
+    if (limit !== undefined) {
+      options.limit = limit;
+    }
+
+    const records = await this.ExecutionModel.findAll(options);
     return records.map(record => record.get() as HookExecution);
   }
 
   async getRecentExecutions(limit?: number): Promise<HookExecution[]> {
-    const records = await this.ExecutionModel.findAll({
-      limit,
+    const options: FindOptions<HookExecution> = {
       order: [['executedAt', 'DESC']],
-    });
+    };
+
+    if (limit !== undefined) {
+      options.limit = limit;
+    }
+
+    const records = await this.ExecutionModel.findAll(options);
     return records.map(record => record.get() as HookExecution);
   }
 

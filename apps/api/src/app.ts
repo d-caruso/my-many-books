@@ -20,6 +20,7 @@ import authRoutes from './routes/authRoutes';
 import hookRoutes from './routes/hookRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
+import { initializeHookSystem } from './services/hooks/hookSystem';
 
 import { initializeI18n } from '@my-many-books/shared-i18n';
 
@@ -109,13 +110,18 @@ const initializeDatabase = async (): Promise<void> => {
   }
 };
 
-// Initialize database on module load (Lambda cold start)
+const bootstrapInfrastructure = async (): Promise<void> => {
+  await initializeDatabase();
+  await initializeHookSystem();
+};
+
+// Initialize database + hook system on module load (Lambda cold start)
 // Export the promise so Lambda handler can wait for it
-export const initPromise = initializeDatabase();
+export const initPromise = bootstrapInfrastructure();
 
 // Start server
 const startServer = async (): Promise<void> => {
-  await initializeDatabase();
+  await initPromise;
   await initializeI18n();
 
   const PORT = process.env['PORT'] || 3000;

@@ -24,6 +24,8 @@ import { CreateBookDTO } from '../dtos/book/CreateBookDTO';
 import { UpdateBookDTO } from '../dtos/book/UpdateBookDTO';
 import { toBookResponseDTO } from '../dtos/book/BookResponseDTO';
 import { TYPES } from '../container/types';
+import { emitHookEvent } from '../services/hooks/hookSystem';
+import { EVENTS } from '../services/hooks/events';
 
 interface BookSearchFilters {
   title?: string;
@@ -91,11 +93,16 @@ export class BookController extends BaseController {
       return this.createValidationErrorResponse(errors);
     }
 
+    const serviceInput = dto.toServiceInput();
+    const userContext = this.getUserContext(request);
+
+    await emitHookEvent(EVENTS.BOOK.CREATE.BEFORE, {
+      user: this.mapRequestUser(request),
+      input: serviceInput,
+    });
+
     try {
-      const createdBook = await this.bookService.createBook(
-        dto.toServiceInput(),
-        this.getUserContext(request)
-      );
+      const createdBook = await this.bookService.createBook(serviceInput, userContext);
       return this.createSuccessResponse(
         toBookResponseDTO(createdBook),
         'Book created successfully',
@@ -164,16 +171,7 @@ export class BookController extends BaseController {
       return this.createValidationErrorResponse(errors);
     }
 
-    try {
-      const updated = await this.bookService.updateBook(
-        Number(bookId),
-        dto.toServiceInput(),
-        this.getUserContext(request)!
-      );
-      return this.createSuccessResponse(toBookResponseDTO(updated), 'Book updated successfully');
-    } catch (error) {
-      return this.handleBookServiceError(error);
-    }
+    return this.executeBookUpdate(request, Number(bookId), dto);
   }
 
   /**
@@ -198,16 +196,7 @@ export class BookController extends BaseController {
       return this.createValidationErrorResponse(errors);
     }
 
-    try {
-      const updated = await this.bookService.updateBook(
-        Number(bookId),
-        dto.toServiceInput(),
-        this.getUserContext(request)!
-      );
-      return this.createSuccessResponse(toBookResponseDTO(updated), 'Book updated successfully');
-    } catch (error) {
-      return this.handleBookServiceError(error);
-    }
+    return this.executeBookUpdate(request, Number(bookId), dto);
   }
 
   /**
@@ -226,7 +215,12 @@ export class BookController extends BaseController {
     }
 
     try {
-      await this.bookService.deleteBook(Number(bookId), this.getUserContext(request)!);
+      const numericBookId = Number(bookId);
+      await emitHookEvent(EVENTS.BOOK.DELETE.BEFORE, {
+        user: this.mapRequestUser(request),
+        bookId: numericBookId,
+      });
+      await this.bookService.deleteBook(numericBookId, this.getUserContext(request)!);
       return this.createSuccessResponse(null, 'Book deleted successfully', undefined, 204);
     } catch (error) {
       return this.handleBookServiceError(error);
@@ -694,6 +688,43 @@ export class BookController extends BaseController {
 
   async patchBookForUser(request: UniversalRequest): Promise<ApiResponse> {
     return this.patchBook(request);
+  }
+
+  private async executeBookUpdate(
+    request: UniversalRequest,
+    bookId: number,
+    dto: UpdateBookDTO
+  ): Promise<ApiResponse> {
+    try {
+      const updateInput = dto.toServiceInput();
+      await emitHookEvent(EVENTS.BOOK.UPDATE.BEFORE, {
+        user: this.mapRequestUser(request),
+        bookId,
+        input: updateInput,
+      });
+
+      const updated = await this.bookService.updateBook(
+        bookId,
+        updateInput,
+        this.getUserContext(request)!
+      );
+      return this.createSuccessResponse(toBookResponseDTO(updated), 'Book updated successfully');
+    } catch (error) {
+      return this.handleBookServiceError(error);
+    }
+  }
+
+  private mapRequestUser(request: UniversalRequest): { id: number; role?: string } | null {
+    if (!request.user) {
+      return null;
+    }
+    const user: { id: number; role?: string } = {
+      id: request.user.userId,
+    };
+    if (request.user.role) {
+      user.role = request.user.role;
+    }
+    return user;
   }
 
   async deleteBookForUser(request: UniversalRequest): Promise<ApiResponse> {

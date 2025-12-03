@@ -21,6 +21,8 @@ import { UpdateAuthorDTO } from '../dtos/author/UpdateAuthorDTO';
 import { toAuthorResponseDTO } from '../dtos/author/AuthorResponseDTO';
 import { Repository as AuthorRepositoryContract } from '../repositories/author/Repository';
 import { USER_ROLES } from '@my-many-books/shared-auth';
+import { emitHookEvent } from '../services/hooks/hookSystem';
+import { EVENTS } from '../services/hooks/events';
 
 interface AuthorSearchFilters {
   name?: string;
@@ -67,9 +69,16 @@ export class AuthorController extends BaseController {
       return this.createValidationErrorResponse(errors);
     }
 
+    const serviceInput = dto.toServiceInput();
+
+    await emitHookEvent(EVENTS.AUTHOR.CREATE.BEFORE, {
+      user: this.mapRequestUser(request),
+      input: serviceInput,
+    });
+
     try {
       const createdAuthor = await this.authorService.createAuthor(
-        dto.toServiceInput(),
+        serviceInput,
         this.getUserContext(request)!
       );
       return this.createSuccessResponse(
@@ -136,10 +145,18 @@ export class AuthorController extends BaseController {
       return this.createValidationErrorResponse(errors);
     }
 
+    const updateInput = dto.toServiceInput();
+
+    await emitHookEvent(EVENTS.AUTHOR.UPDATE.BEFORE, {
+      user: this.mapRequestUser(request),
+      authorId: Number(authorId),
+      input: updateInput,
+    });
+
     try {
       const updated = await this.authorService.updateAuthor(
         Number(authorId),
-        dto.toServiceInput(),
+        updateInput,
         this.getUserContext(request)!
       );
       return this.createSuccessResponse(
@@ -166,8 +183,14 @@ export class AuthorController extends BaseController {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'author' });
     }
 
+    const numericAuthorId = Number(authorId);
+    await emitHookEvent(EVENTS.AUTHOR.DELETE.BEFORE, {
+      user: this.mapRequestUser(request),
+      authorId: numericAuthorId,
+    });
+
     try {
-      await this.authorService.deleteAuthor(Number(authorId), this.getUserContext(request)!);
+      await this.authorService.deleteAuthor(numericAuthorId, this.getUserContext(request)!);
       return this.createSuccessResponse(null, 'Author deleted successfully', undefined, 204);
     } catch (error) {
       return this.handleAuthorServiceError(error);
@@ -383,5 +406,18 @@ export class AuthorController extends BaseController {
     return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
       errors,
     });
+  }
+
+  private mapRequestUser(request: UniversalRequest): { id: number; role?: string } | null {
+    if (!request.user) {
+      return null;
+    }
+    const summary: { id: number; role?: string } = {
+      id: request.user.userId,
+    };
+    if (request.user.role) {
+      summary.role = request.user.role;
+    }
+    return summary;
   }
 }

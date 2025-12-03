@@ -24,6 +24,7 @@ jest.mock('@my-many-books/shared-i18n', () => ({
 import request from 'supertest';
 import app from '../../../src/app';
 import { Hook, HookExecution } from '../../../src/models';
+import { EVENTS } from '../../../src/services/hooks/events';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -80,7 +81,7 @@ describe('Hook API Integration Tests', () => {
           id: 1,
           name: 'Test Hook 1',
           description: 'Test description',
-          eventPattern: 'book.create.*',
+          eventPattern: EVENTS.BOOK.CREATE.ANY,
           actionType: 'log',
           actionConfig: { level: 'info' },
           isActive: true,
@@ -92,7 +93,7 @@ describe('Hook API Integration Tests', () => {
           id: 2,
           name: 'Test Hook 2',
           description: null,
-          eventPattern: 'user.*',
+          eventPattern: EVENTS.USER.ANY,
           actionType: 'email',
           actionConfig: { to: 'admin@example.com', subject: 'Test', template: 'test' },
           isActive: false,
@@ -175,7 +176,7 @@ describe('Hook API Integration Tests', () => {
       const mockHook = {
         id: 1,
         name: 'Test Hook',
-        eventPattern: 'book.*',
+        eventPattern: EVENTS.BOOK.ANY,
         actionType: 'log',
         actionConfig: { level: 'info' },
         isActive: true,
@@ -183,7 +184,7 @@ describe('Hook API Integration Tests', () => {
         get: jest.fn().mockReturnValue({
           id: 1,
           name: 'Test Hook',
-          eventPattern: 'book.*',
+          eventPattern: EVENTS.BOOK.ANY,
           actionType: 'log',
         }),
       };
@@ -224,7 +225,7 @@ describe('Hook API Integration Tests', () => {
       const newHookData = {
         name: 'New Test Hook',
         description: 'Test description',
-        eventPattern: 'book.create.*',
+        eventPattern: EVENTS.BOOK.CREATE.ANY,
         actionType: 'log',
         actionConfig: { level: 'info' },
         isActive: true,
@@ -286,7 +287,7 @@ describe('Hook API Integration Tests', () => {
     it('should validate action config based on action type', async () => {
       const invalidData = {
         name: 'Test Hook',
-        eventPattern: 'book.*',
+        eventPattern: EVENTS.BOOK.ANY,
         actionType: 'email',
         actionConfig: { invalid: 'config' }, // Missing required email fields
       };
@@ -377,14 +378,14 @@ describe('Hook API Integration Tests', () => {
         {
           id: 1,
           hookId: 1,
-          eventName: 'book.create.after',
+          eventName: EVENTS.BOOK.CREATE.AFTER,
           success: true,
           executedAt: new Date(),
         },
         {
           id: 2,
           hookId: 1,
-          eventName: 'book.update.after',
+          eventName: EVENTS.BOOK.UPDATE.AFTER,
           success: false,
           errorMessage: 'Test error',
           executedAt: new Date(),
@@ -428,13 +429,13 @@ describe('Hook API Integration Tests', () => {
         {
           id: 1,
           hookId: 1,
-          eventName: 'book.create.after',
+          eventName: EVENTS.BOOK.CREATE.AFTER,
           success: true,
           executedAt: new Date(),
           hook: {
             id: 1,
             name: 'Book Create Hook',
-            eventPattern: 'book.create.*',
+            eventPattern: EVENTS.BOOK.CREATE.ANY,
           },
         },
       ];

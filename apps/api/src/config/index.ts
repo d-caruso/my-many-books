@@ -24,3 +24,10 @@ export const apiConfig = {
   openLibraryUrl: process.env['OPEN_LIBRARY_API_URL'] || 'https://openlibrary.org/api/books',
   corsOrigins: process.env['ALLOWED_ORIGINS']?.split(',') || ['http://localhost:3000'],
 };
+
+export const hookConfig = {
+  /**
+   * Global flag to disable hook initialization (e.g., during maintenance)
+   */
+  enabled: process.env['HOOKS_ENABLED'] !== 'false',
+};

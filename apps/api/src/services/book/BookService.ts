@@ -12,6 +12,8 @@ import { BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInt
 import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';
 import { ApplicationError } from '../../errors/ApplicationError';
+import { emitHookEvent } from '../hooks/hookSystem';
+import { EVENTS } from '../hooks/events';
 
 export type BookServiceErrorCode =
   | 'BOOK_NOT_FOUND'
@@ -79,7 +81,13 @@ class BookService {
     const associations = this.extractAssociations(input);
     const payload = this.normalizePayload({ ...input, userId: ownerId });
 
-    return this.bookRepository.create(payload, associations);
+    const createdBook = await this.bookRepository.create(payload, associations);
+    await this.emitBookEvent(EVENTS.BOOK.CREATE.AFTER, {
+      book: createdBook,
+      user: this.mapEventUser(userContext),
+      input,
+    });
+    return createdBook;
   }
 
   async updateBook(
@@ -101,11 +109,41 @@ class BookService {
     await this.validateAssociations(book.userId, input.authorIds, input.categoryIds);
 
     const associations = this.extractAssociations(input);
+    const statusWillChange = input.status !== undefined && input.status !== book.status;
+
+    if (statusWillChange) {
+      await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.BEFORE, {
+        bookId,
+        previousStatus: book.status ?? null,
+        nextStatus: input.status ?? null,
+        book,
+        user: this.mapEventUser(userContext),
+        changes: input,
+      });
+    }
+
     const payload = this.normalizePartialPayload(input);
 
     const updated = await this.bookRepository.update(bookId, payload, associations);
     if (!updated) {
       throw new BookServiceError('BOOK_NOT_FOUND');
+    }
+
+    await this.emitBookEvent(EVENTS.BOOK.UPDATE.AFTER, {
+      bookId,
+      book: updated,
+      user: this.mapEventUser(userContext),
+      changes: input,
+    });
+
+    if (book.status !== updated.status) {
+      await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.AFTER, {
+        bookId,
+        previousStatus: book.status ?? null,
+        newStatus: updated.status ?? null,
+        book: updated,
+        user: this.mapEventUser(userContext),
+      });
     }
 
     return updated;
@@ -123,9 +161,33 @@ class BookService {
     if (!deleted) {
       throw new BookServiceError('BOOK_NOT_FOUND');
     }
+
+    await this.emitBookEvent(EVENTS.BOOK.DELETE.AFTER, {
+      bookId,
+      book,
+      user: this.mapEventUser(userContext),
+    });
   }
 
   // ===== helpers ==========================================================
+
+  private async emitBookEvent(eventName: string, payload: Record<string, unknown>): Promise<void> {
+    await emitHookEvent(eventName, payload);
+  }
+
+  private mapEventUser(userContext?: BookUserContext | null): { id: number; role?: string } | null {
+    if (!userContext) {
+      return null;
+    }
+
+    const user: { id: number; role?: string } = {
+      id: userContext.userId,
+    };
+    if (userContext.role) {
+      user.role = userContext.role;
+    }
+    return user;
+  }
 
   private resolveOwnerId(
     inputUserId: number | undefined,
