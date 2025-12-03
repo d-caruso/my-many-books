@@ -6,6 +6,7 @@ import {
   HookStorage,
 } from './types';
 import { InMemoryHookStorage } from './storage/InMemoryHookStorage';
+import { validateActionConfig, validateEventPattern } from './utils/validation';
 
 export class HookSystem {
   private emitter: EventEmitter2;
@@ -24,6 +25,14 @@ export class HookSystem {
   }
 
   async registerHook(hook: HookConfig, action: HookAction): Promise<void> {
+    // Validate event pattern for ReDoS and malicious patterns
+    validateEventPattern(hook.eventPattern);
+
+    // Validate action configuration based on action type
+    if (hook.actionConfig) {
+      validateActionConfig(hook.actionType, hook.actionConfig);
+    }
+
     await this.storage.createHook({
       name: hook.name,
       description: hook.description,
