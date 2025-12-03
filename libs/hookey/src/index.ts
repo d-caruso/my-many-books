@@ -1,5 +1,5 @@
 export * from './types';
-export { HookSystem } from './HookSystem';
+export { HookSystem, HookSystemOptions } from './HookSystem';
 export { InMemoryHookStorage } from './storage/InMemoryHookStorage';
 export { LogAction } from './actions/LogAction';
 export { ActionRouter, ActionType, ActionServices, defaultActionRouter } from './actions/ActionRouter';
