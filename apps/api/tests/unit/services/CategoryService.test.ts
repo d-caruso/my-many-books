@@ -1,11 +1,17 @@
 import { CategoryService, CategoryServiceError } from '../../../src/services/category/CategoryService';
 import { Repository as CategoryRepositoryContract } from '../../../src/repositories/category/Repository';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
+}));
 
 const userContext = { userId: 1, role: 'user' };
 
 describe('CategoryService', () => {
   let service: CategoryService;
   let repository: jest.Mocked<CategoryRepositoryContract>;
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
   beforeEach(() => {
     repository = {
@@ -21,6 +27,7 @@ describe('CategoryService', () => {
     } as unknown as jest.Mocked<CategoryRepositoryContract>;
 
     service = new CategoryService(repository);
+    emitHookEventMock.mockClear();
   });
 
   describe('createCategory', () => {
@@ -28,12 +35,19 @@ describe('CategoryService', () => {
       repository.findByName.mockResolvedValue(null);
       repository.create.mockResolvedValue({ id: 1, name: 'Fiction', userId: 1 } as any);
 
-      const result = await service.createCategory({ name: 'Fiction' }, userContext);
+    const result = await service.createCategory({ name: 'Fiction' }, userContext);
 
-      expect(repository.findByName).toHaveBeenCalledWith('Fiction', 1);
-      expect(repository.create).toHaveBeenCalledWith({ name: 'Fiction', userId: 1 });
-      expect(result.id).toBe(1);
-    });
+    expect(repository.findByName).toHaveBeenCalledWith('Fiction', 1);
+    expect(repository.create).toHaveBeenCalledWith({ name: 'Fiction', userId: 1 });
+    expect(result.id).toBe(1);
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      'category.create.after',
+      expect.objectContaining({
+        category: expect.objectContaining({ id: 1 }),
+        user: { id: 1, role: 'user' },
+      })
+    );
+  });
 
     it('throws when duplicate', async () => {
       repository.findByName.mockResolvedValue({ id: 2 } as any);
@@ -67,11 +81,19 @@ describe('CategoryService', () => {
       repository.findByName.mockResolvedValue(null);
       repository.update.mockResolvedValue({ id: 7, userId: 1, name: 'New' } as any);
 
-      const updated = await service.updateCategory(7, { name: 'New' }, userContext);
+    const updated = await service.updateCategory(7, { name: 'New' }, userContext);
 
-      expect(repository.update).toHaveBeenCalledWith(7, { name: 'New' });
-      expect(updated.name).toBe('New');
-    });
+    expect(repository.update).toHaveBeenCalledWith(7, { name: 'New' });
+    expect(updated.name).toBe('New');
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      'category.update.after',
+      expect.objectContaining({
+        categoryId: 7,
+        category: expect.objectContaining({ id: 7 }),
+        user: { id: 1, role: 'user' },
+      })
+    );
+  });
 
     it('throws when category missing', async () => {
       repository.findById.mockResolvedValue(null);
@@ -97,10 +119,17 @@ describe('CategoryService', () => {
       repository.countBooks.mockResolvedValue(0);
       repository.delete.mockResolvedValue(true);
 
-      await service.deleteCategory(3, userContext);
+    await service.deleteCategory(3, userContext);
 
-      expect(repository.delete).toHaveBeenCalledWith(3);
-    });
+    expect(repository.delete).toHaveBeenCalledWith(3);
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      'category.delete.after',
+      expect.objectContaining({
+        categoryId: 3,
+        user: { id: 1, role: 'user' },
+      })
+    );
+  });
   });
 
   describe('listCategories', () => {

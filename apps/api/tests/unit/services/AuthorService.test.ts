@@ -1,9 +1,15 @@
 import { AuthorService, AuthorServiceError } from '../../../src/services/author/AuthorService';
 import { Repository as AuthorRepositoryContract } from '../../../src/repositories/author/Repository';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
+}));
 
 describe('AuthorService', () => {
   let service: AuthorService;
   let repository: jest.Mocked<AuthorRepositoryContract>;
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
   const userContext = { userId: 1, role: 'user' };
 
@@ -21,6 +27,7 @@ describe('AuthorService', () => {
     };
 
     service = new AuthorService(repository);
+    emitHookEventMock.mockClear();
   });
 
   describe('createAuthor', () => {
@@ -33,20 +40,27 @@ describe('AuthorService', () => {
         userId: 1,
       } as any);
 
-      const author = await service.createAuthor(
-        { name: 'John', surname: 'Doe' },
-        userContext
-      );
+    const author = await service.createAuthor(
+      { name: 'John', surname: 'Doe' },
+      userContext
+    );
 
-      expect(repository.findByNameAndSurname).toHaveBeenCalledWith('John', 'Doe', 1);
-      expect(repository.create).toHaveBeenCalledWith({
-        name: 'John',
-        surname: 'Doe',
-        nationality: null,
-        userId: 1,
-      });
-      expect(author.id).toBe(1);
+    expect(repository.findByNameAndSurname).toHaveBeenCalledWith('John', 'Doe', 1);
+    expect(repository.create).toHaveBeenCalledWith({
+      name: 'John',
+      surname: 'Doe',
+      nationality: null,
+      userId: 1,
     });
+    expect(author.id).toBe(1);
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      'author.create.after',
+      expect.objectContaining({
+        author: expect.objectContaining({ id: 1 }),
+        user: { id: 1, role: 'user' },
+      })
+    );
+  });
 
     it('throws when author exists', async () => {
       repository.findByNameAndSurname.mockResolvedValue({ id: 1 } as any);
@@ -73,18 +87,26 @@ describe('AuthorService', () => {
         userId: 1,
       } as any);
 
-      const updated = await service.updateAuthor(
-        2,
-        { name: 'New' },
-        userContext
-      );
+    const updated = await service.updateAuthor(
+      2,
+      { name: 'New' },
+      userContext
+    );
 
-      expect(repository.update).toHaveBeenCalledWith(
-        2,
-        expect.objectContaining({ name: 'New' })
-      );
-      expect(updated.name).toBe('New');
-    });
+    expect(repository.update).toHaveBeenCalledWith(
+      2,
+      expect.objectContaining({ name: 'New' })
+    );
+    expect(updated.name).toBe('New');
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      'author.update.after',
+      expect.objectContaining({
+        authorId: 2,
+        author: expect.objectContaining({ id: 2 }),
+        user: { id: 1, role: 'user' },
+      })
+    );
+  });
 
     it('throws when user does not own author', async () => {
       repository.findById.mockResolvedValue({
@@ -115,6 +137,13 @@ describe('AuthorService', () => {
 
       expect(repository.countBooks).toHaveBeenCalledWith(4);
       expect(repository.delete).toHaveBeenCalledWith(4);
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        'author.delete.after',
+        expect.objectContaining({
+          authorId: 4,
+          user: { id: 1, role: 'user' },
+        })
+      );
     });
 
     it('throws when author has books', async () => {

@@ -10,6 +10,7 @@ import { Repository as AuthorRepositoryContract } from '../../repositories/autho
 import { AuthorEntity } from '../../repositories/author/AuthorRepositoryTypes';
 import { AuthorCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import { ApplicationError } from '../../errors/ApplicationError';
+import { emitHookEvent } from '../hooks/hookSystem';
 
 export type AuthorServiceErrorCode =
   | 'AUTHOR_NOT_FOUND'
@@ -73,7 +74,13 @@ class AuthorService {
       userId: ownerId,
     };
 
-    return this.authorRepository.create(payload);
+    const createdAuthor = await this.authorRepository.create(payload);
+    await this.emitAuthorEvent('author.create.after', {
+      author: createdAuthor,
+      user: this.mapEventUser(userContext),
+      input,
+    });
+    return createdAuthor;
   }
 
   async updateAuthor(
@@ -112,6 +119,13 @@ class AuthorService {
     if (!updated) {
       throw new AuthorServiceError('AUTHOR_NOT_FOUND');
     }
+    await this.emitAuthorEvent('author.update.after', {
+      authorId: id,
+      author: updated,
+      user: this.mapEventUser(userContext),
+      changes: input,
+    });
+
     return updated;
   }
 
@@ -132,9 +146,38 @@ class AuthorService {
     if (!deleted) {
       throw new AuthorServiceError('AUTHOR_NOT_FOUND');
     }
+
+    await this.emitAuthorEvent('author.delete.after', {
+      authorId: id,
+      author: existing,
+      user: this.mapEventUser(userContext),
+    });
   }
 
   // ===== helpers ==========================================================
+
+  private async emitAuthorEvent(
+    eventName: string,
+    payload: Record<string, unknown>
+  ): Promise<void> {
+    await emitHookEvent(eventName, payload);
+  }
+
+  private mapEventUser(
+    userContext?: AuthorUserContext | null
+  ): { id: number; role?: string } | null {
+    if (!userContext) {
+      return null;
+    }
+
+    const summary: { id: number; role?: string } = {
+      id: userContext.userId,
+    };
+    if (userContext.role) {
+      summary.role = userContext.role;
+    }
+    return summary;
+  }
 
   private resolveOwnerId(inputUserId: number | undefined, userContext: AuthorUserContext): number {
     if (inputUserId !== undefined) {

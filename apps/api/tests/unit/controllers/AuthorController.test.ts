@@ -4,6 +4,11 @@ import { container } from '../../../src/container';
 import { TYPES } from '../../../src/container/types';
 import { AuthorService } from '../../../src/services/author/AuthorService';
 import { AuthorRepository } from '../../../src/repositories/author/AuthorRepository';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
+}));
 
 interface UniversalRequest {
   body?: any;
@@ -24,6 +29,8 @@ describe('AuthorController', () => {
   let findUserAuthorByIdSpy: jest.SpyInstance;
   let findByIdSpy: jest.SpyInstance;
   let searchByQuerySpy: jest.SpyInstance;
+
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
   beforeEach(() => {
     container.snapshot();
@@ -46,6 +53,7 @@ describe('AuthorController', () => {
       pathParameters: {},
       user: { userId: 1, role: 'user' },
     };
+    emitHookEventMock.mockClear();
   });
 
   afterEach(() => {
@@ -78,6 +86,13 @@ describe('AuthorController', () => {
       expect(response.statusCode).toBe(201);
       expect(response.success).toBe(true);
       expect((response.data as { id: number }).id).toBe(1);
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        'author.create.before',
+        expect.objectContaining({
+          user: { id: 1, role: 'user' },
+          input: expect.objectContaining(payload),
+        })
+      );
     });
 
     it('should return validation error for invalid body', async () => {
@@ -110,6 +125,14 @@ describe('AuthorController', () => {
         expect.objectContaining({ userId: 1 })
       );
       expect(response.statusCode).toBe(200);
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        'author.update.before',
+        expect.objectContaining({
+          authorId: 1,
+          user: { id: 1, role: 'user' },
+          input: expect.objectContaining({ nationality: 'US' }),
+        })
+      );
     });
 
     it('should return validation error for invalid payload', async () => {
@@ -135,6 +158,13 @@ describe('AuthorController', () => {
         expect.objectContaining({ userId: 1 })
       );
       expect(response.statusCode).toBe(204);
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        'author.delete.before',
+        expect.objectContaining({
+          authorId: 2,
+          user: { id: 1, role: 'user' },
+        })
+      );
     });
   });
 

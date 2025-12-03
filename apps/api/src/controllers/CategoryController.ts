@@ -16,6 +16,7 @@ import { CreateCategoryDTO } from '../dtos/category/CreateCategoryDTO';
 import { UpdateCategoryDTO } from '../dtos/category/UpdateCategoryDTO';
 import { toCategoryResponseDTO } from '../dtos/category/CategoryResponseDTO';
 import { Book, Category } from '../models';
+import { emitHookEvent } from '../services/hooks/hookSystem';
 
 @injectable()
 export class CategoryController extends BaseController {
@@ -36,9 +37,16 @@ export class CategoryController extends BaseController {
       return this.createValidationErrorResponse(errors);
     }
 
+    const serviceInput = dto.toServiceInput();
+
+    await emitHookEvent('category.create.before', {
+      user: this.mapRequestUser(request),
+      input: serviceInput,
+    });
+
     try {
       const created = await this.categoryService.createCategory(
-        dto.toServiceInput(),
+        serviceInput,
         this.getUserContext(request)!
       );
       return this.createSuccessResponse(
@@ -97,10 +105,18 @@ export class CategoryController extends BaseController {
       return this.createValidationErrorResponse(errors);
     }
 
+    const updateInput = dto.toServiceInput();
+
+    await emitHookEvent('category.update.before', {
+      user: this.mapRequestUser(request),
+      categoryId: Number(categoryId),
+      input: updateInput,
+    });
+
     try {
       const updated = await this.categoryService.updateCategory(
         Number(categoryId),
-        dto.toServiceInput(),
+        updateInput,
         this.getUserContext(request)!
       );
       return this.createSuccessResponse(
@@ -126,8 +142,15 @@ export class CategoryController extends BaseController {
 
     const forceDelete = this.getQueryParameter(request, 'force') === 'true';
 
+    const numericCategoryId = Number(categoryId);
+    await emitHookEvent('category.delete.before', {
+      user: this.mapRequestUser(request),
+      categoryId: numericCategoryId,
+      force: forceDelete,
+    });
+
     try {
-      await this.categoryService.deleteCategory(Number(categoryId), this.getUserContext(request)!, {
+      await this.categoryService.deleteCategory(numericCategoryId, this.getUserContext(request)!, {
         force: forceDelete,
       });
       return this.createSuccessResponse(null, 'Category deleted successfully', undefined, 204);
@@ -279,5 +302,18 @@ export class CategoryController extends BaseController {
     return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
       errors,
     });
+  }
+
+  private mapRequestUser(request: UniversalRequest): { id: number; role?: string } | null {
+    if (!request.user) {
+      return null;
+    }
+    const summary: { id: number; role?: string } = {
+      id: request.user.userId,
+    };
+    if (request.user.role) {
+      summary.role = request.user.role;
+    }
+    return summary;
   }
 }
