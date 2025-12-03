@@ -6,6 +6,7 @@ import {
   Alert,
   CircularProgress,
   Paper,
+  Tooltip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -59,7 +60,7 @@ export const HooksPage: React.FC = () => {
     void loadHooksData();
   }, [loadHooksData]);
 
-  const handleReload = async () => {
+  const handleReload = useCallback(async () => {
     try {
       setReloading(true);
       setError(null);
@@ -73,11 +74,37 @@ export const HooksPage: React.FC = () => {
     } finally {
       setReloading(false);
     }
-  };
+  }, [apiService, loadHooksData, t]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setEditingHook(null);
+        setIsFormOpen(true);
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key === 'r') {
+        event.preventDefault();
+        void handleReload();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleReload]);
 
   const formattedLastReload = stats?.lastReloadedAt
     ? new Date(stats.lastReloadedAt).toLocaleString()
     : t('stats.never_reloaded', 'Never reloaded');
+
+  const cardHelpers = {
+    total: t('stats.total_helper', 'All hooks stored in the database, including disabled entries.'),
+    active: t('stats.active_helper', 'Hooks currently enabled and ready to run.'),
+    executions: t('stats.executions_helper', 'Executions recorded during the last 24 hours.'),
+    reload: t('stats.reload_helper', 'Reload clears the in-memory cache on the API nodes.'),
+  };
 
   const statsCards = [
     {
@@ -85,18 +112,24 @@ export const HooksPage: React.FC = () => {
       value: stats?.totalHooks ?? 0,
       icon: <WebhookIcon />,
       color: '#1e88e5',
+      helperText: cardHelpers.total,
+      tooltip: t('stats.total_tooltip', 'Includes archived hooks so you know how many recipes exist.'),
     },
     {
       title: t('stats.active_hooks', 'Active Hooks'),
       value: stats?.activeHooks ?? 0,
       icon: <BoltIcon />,
       color: '#2e7d32',
+      helperText: cardHelpers.active,
+      tooltip: t('stats.active_tooltip', 'Compare this number with the list below to catch desynced reloads.'),
     },
     {
       title: t('stats.executions_today', 'Executions Today'),
       value: stats?.executionsToday ?? 0,
       icon: <HistoryIcon />,
       color: '#ed6c02',
+      helperText: cardHelpers.executions,
+      tooltip: t('stats.executions_tooltip', 'Spikes usually mean a scheduled job or a new automation.'),
     },
     {
       title: t('stats.last_reload', 'Last Reload'),
@@ -104,14 +137,70 @@ export const HooksPage: React.FC = () => {
       icon: <ReplayIcon />,
       color: '#9c27b0',
       helperText: t('stats.reload_hint', 'Reload when you deploy new hook configurations.'),
+      tooltip: t('stats.reload_tooltip', 'Reload whenever you add/edit hooks directly in the database.'),
     },
   ];
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingHook(null);
+  };
+
+  const handleSaveHook = (data: HookFormData) => {
+    setHooks((prev) => {
+      if (editingHook) {
+        return prev.map((hook) =>
+          hook.id === editingHook.id
+            ? {
+                ...hook,
+                name: data.name,
+                eventPattern: data.eventPattern,
+                isActive: data.isActive,
+                priority: data.priority,
+                actionType: data.actionType,
+              }
+            : hook
+        );
+      }
+      const newHook: AdminHookSummary = {
+        id: Date.now(),
+        name: data.name,
+        eventPattern: data.eventPattern,
+        actionType: data.actionType,
+        priority: data.priority,
+        isActive: data.isActive,
+        lastExecution: null,
+      };
+      return [newHook, ...prev];
+    });
+
+    setStats((prev) => {
+      if (!prev) return prev;
+      if (!editingHook) {
+        return {
+          ...prev,
+          totalHooks: prev.totalHooks + 1,
+          activeHooks: prev.activeHooks + (data.isActive ? 1 : 0),
+        };
+      }
+      if (editingHook.isActive === data.isActive) {
+        return prev;
+      }
+      return {
+        ...prev,
+        activeHooks: prev.activeHooks + (data.isActive ? 1 : -1),
+      };
+    });
+  };
 
   return (
     <AdminLayout>
     <Box>
         <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
           {t('title', 'Hooks Administration')}
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+          {t('subtitle', 'Monitor and orchestrate automation events across the platform.')}
         </Typography>
 
         <Box
@@ -121,26 +210,32 @@ export const HooksPage: React.FC = () => {
           alignItems="center"
           sx={{ mb: 3 }}
         >
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setEditingHook(null);
-              setIsFormOpen(true);
-            }}
-          >
-            {t('actions.create', 'Create Hook')}
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={reloading ? <CircularProgress size={16} /> : <RefreshIcon />}
-            onClick={handleReload}
-            disabled={reloading}
-          >
-            {reloading
-              ? t('actions.reloading', 'Reloading Hooks…')
-              : t('actions.reload', 'Reload Hooks')}
-          </Button>
+          <Tooltip title={t('actions.create_hint', 'Create a new hook (⌘K / Ctrl+K)')}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setEditingHook(null);
+                setIsFormOpen(true);
+              }}
+            >
+              {t('actions.create', 'Create Hook')}
+            </Button>
+          </Tooltip>
+          <Tooltip title={t('stats.reload_hint_with_shortcut', 'Reload when you deploy new hook configurations (⌘R / Ctrl+R)')}>
+            <span>
+              <Button
+                variant="outlined"
+                startIcon={reloading ? <CircularProgress size={16} /> : <RefreshIcon />}
+                onClick={handleReload}
+                disabled={reloading}
+              >
+                {reloading
+                  ? t('actions.reloading', 'Reloading Hooks…')
+                  : t('actions.reload', 'Reload Hooks')}
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
 
         {error && (
@@ -149,43 +244,36 @@ export const HooksPage: React.FC = () => {
           </Alert>
         )}
 
-        {loading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="180px"
-            sx={{ mb: 3 }}
-          >
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gap: 3,
-              mb: 3,
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, minmax(0, 1fr))',
-                md: 'repeat(4, minmax(0, 1fr))',
-              },
-            }}
-          >
-            {statsCards.map((card) => (
-              <HookStatsCard
-                key={card.title}
-                title={card.title}
-                value={card.value}
-                icon={card.icon}
-                color={card.color}
-                helperText={card.helperText}
-              />
-            ))}
-          </Box>
-        )}
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 3,
+            mb: 3,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(4, minmax(0, 1fr))',
+            },
+          }}
+        >
+          {statsCards.map((card) => (
+            <HookStatsCard
+              key={card.title}
+              title={card.title}
+              value={card.value}
+              icon={card.icon}
+              color={card.color}
+              helperText={card.helperText}
+              tooltip={card.tooltip}
+              loading={loading}
+            />
+          ))}
+        </Box>
 
         <Paper variant="outlined" sx={{ p: 3 }}>
+          <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
+            {t('list.title', 'Hooks')}
+          </Typography>
           <HooksList
             hooks={hooks}
             loading={loading}
@@ -204,27 +292,9 @@ export const HooksPage: React.FC = () => {
       <HookForm
         open={isFormOpen}
         initialData={editingHook ?? undefined}
-        onClose={() => setIsFormOpen(false)}
+        onClose={handleCloseForm}
         onSave={(data: HookFormData) => {
-          const newHook: AdminHookSummary = {
-            id: Date.now(),
-            name: data.name,
-            eventPattern: data.eventPattern,
-            actionType: data.actionType,
-            priority: data.priority,
-            isActive: data.isActive,
-            lastExecution: null,
-          };
-          setHooks((prev) => [newHook, ...prev]);
-          setStats((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  totalHooks: prev.totalHooks + 1,
-                  activeHooks: prev.activeHooks + (data.isActive ? 1 : 0),
-                }
-              : prev
-          );
+          handleSaveHook(data);
         }}
       />
     </AdminLayout>
