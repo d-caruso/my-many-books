@@ -25,7 +25,11 @@
       "executor": "@nx/eslint:lint",
       "outputs": [],
       "options": {
-        "lintFilePatterns": ["libs/hookey/**/*.ts"]
+        "lintFilePatterns": [
+          "libs/hookey/src/**/*.ts",
+          "!libs/hookey/examples/**",
+          "!libs/hookey/jest.config.ts"
+        ]
       }
     }
   },

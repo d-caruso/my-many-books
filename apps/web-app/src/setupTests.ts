@@ -28,10 +28,17 @@ vi.mock('@mui/x-data-grid', () => {
     loading = false,
     components = {},
     componentsProps = {},
+    slots = {},
+    slotProps = {},
   }: any) => {
-    const toolbarElement = components.Toolbar
-      ? React.createElement(components.Toolbar, componentsProps.toolbar)
+    const resolvedToolbar = slots?.toolbar ?? components.Toolbar;
+    const toolbarProps = slotProps?.toolbar ?? componentsProps?.toolbar;
+    const toolbarElement = resolvedToolbar
+      ? React.createElement(resolvedToolbar, toolbarProps)
       : null;
+    const resolvedLoadingOverlay = slots?.loadingOverlay ?? components.LoadingOverlay;
+    const resolvedNoRowsOverlay = slots?.noRowsOverlay ?? components.NoRowsOverlay;
+
     const rowElements = rows.map((row: any) => {
       const cells = columns.map((column: any) => {
         if (column.field === 'actions') {
@@ -62,11 +69,19 @@ vi.mock('@mui/x-data-grid', () => {
       );
     });
 
+    const overlayElement =
+      loading && resolvedLoadingOverlay
+        ? React.createElement(resolvedLoadingOverlay, slotProps?.loadingOverlay)
+        : !loading && rows.length === 0 && resolvedNoRowsOverlay
+        ? React.createElement(resolvedNoRowsOverlay, slotProps?.noRowsOverlay)
+        : null;
+
     return React.createElement(
       'div',
       { 'data-testid': 'mock-data-grid' },
       toolbarElement,
-      ...rowElements
+      ...rowElements,
+      overlayElement
     );
   };
 

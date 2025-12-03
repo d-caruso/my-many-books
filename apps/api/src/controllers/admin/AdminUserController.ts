@@ -42,11 +42,7 @@ export class AdminUserController extends BaseController {
 
       const result = await this.adminUserService.listUsers(options);
 
-      const meta = this.createPaginationMeta(
-        pagination.page,
-        pagination.limit,
-        result.total
-      );
+      const meta = this.createPaginationMeta(pagination.page, pagination.limit, result.total);
 
       return this.createSuccessResponse(
         { users: result.rows.map(toUserResponseDTO) },

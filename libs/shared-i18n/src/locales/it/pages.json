@@ -98,7 +98,7 @@
         "executions_today": "Esecuzioni Oggi",
         "last_reload": "Ultimo Ricaricamento",
         "never_reloaded": "Mai ricaricati",
-        "reload_hint": "Ricarica quando distribuisci nuove configurazioni di hook."
+        "reload_hint": "Ricarica quando rilasci nuove configurazioni degli hook."
       },
       "actions": {
         "create": "Crea Hook",

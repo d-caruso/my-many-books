@@ -31,7 +31,7 @@ const eventPatternValidator = (value: string, helpers: Joi.CustomHelpers) => {
  */
 const actionConfigValidator = (value: unknown, helpers: Joi.CustomHelpers) => {
   // Access the parent object to get actionType
-  const parent = helpers.state.ancestors[0] as { actionType?: string };
+  const parent = (helpers.state.ancestors as unknown[])?.[0] as { actionType?: string } | undefined;
   const actionType = parent?.actionType;
 
   if (!actionType) {

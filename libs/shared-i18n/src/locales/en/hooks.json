@@ -1,15 +1,26 @@
 {
   "title": "Hooks Administration",
+  "subtitle": "Monitor and orchestrate automation events across the platform.",
   "stats": {
     "total_hooks": "Total Hooks",
     "active_hooks": "Active Hooks",
     "executions_today": "Executions Today",
     "last_reload": "Last Reload",
     "never_reloaded": "Never reloaded",
-    "reload_hint": "Reload when you deploy new hook configurations."
+    "reload_hint": "Reload when you deploy new hook configurations.",
+    "reload_hint_with_shortcut": "Reload when you deploy new hook configurations (⌘R / Ctrl+R)",
+    "total_helper": "All hooks stored in the database, including disabled entries.",
+    "active_helper": "Hooks currently enabled and ready to run.",
+    "executions_helper": "Successful + failed executions recorded during the last 24 hours.",
+    "reload_helper": "Reload clears the in-memory hook cache on the API nodes.",
+    "total_tooltip": "Includes archived hooks so you know how many recipes exist.",
+    "active_tooltip": "Compare this number with the list below to catch desynced reloads.",
+    "executions_tooltip": "Spikes usually mean a scheduled job or a new automation.",
+    "reload_tooltip": "Reload whenever you add/edit hooks directly in the database."
   },
   "actions": {
     "create": "Create Hook",
+    "create_hint": "Create a new hook (⌘K / Ctrl+K)",
     "reload": "Reload Hooks",
     "reloading": "Reloading Hooks…"
   },
@@ -18,8 +29,79 @@
     "reload": "Failed to reload hooks.",
     "delete": "Delete action is not implemented yet."
   },
+  "list": {
+    "title": "Hooks",
+    "empty_title": "No hooks configured yet",
+    "empty_description": "Create your first hook to automate workflows when books, users, or categories change.",
+    "empty_filtered": "No hooks match the current filters. Clear them to see every configuration.",
+    "loading": "Loading hooks…",
+    "quick_filter": "Search hooks…",
+    "columns": {
+      "name": "Name",
+      "event_pattern": "Event Pattern",
+      "action_type": "Action Type",
+      "status": "Status",
+      "priority": "Priority",
+      "last_execution": "Last Execution",
+      "actions": "Actions"
+    },
+    "actions": {
+      "edit": "Edit",
+      "view": "View Executions",
+      "delete": "Delete"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "last_execution": {
+      "never": "Never executed"
+    }
+  },
+  "form": {
+    "title": "Create or Edit Hook",
+    "description": "Hooks listen for events (like book.create.before) and execute an action (log, email, or database).",
+    "fields": {
+      "name": "Name",
+      "priority": "Priority",
+      "description": "Description",
+      "action_type": "Action Type",
+      "is_active": "Active",
+      "event_pattern": "Event Pattern",
+      "action_config": "Action Configuration (JSON)"
+    },
+    "action_types": {
+      "log": "Log",
+      "email": "Email",
+      "database": "Database"
+    },
+    "helpers": {
+      "name": "Use human-friendly context so others recognize the automation.",
+      "description": "Optional context so other admins understand the automation.",
+      "priority": "Lower numbers execute first when multiple hooks match an event.",
+      "event_pattern": "Supports wildcards such as *, **, and ?. Use EVENT.ANY helpers from Hookey.",
+      "action_config": "Provide valid JSON per action requirements.",
+      "is_active": "Disable hooks without deleting them."
+    },
+    "errors": {
+      "required": "This field is required",
+      "invalid_json": "Provide valid JSON",
+      "priority": "Priority must be zero or greater"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save Hook"
+    },
+    "wildcard_legend": {
+      "single": "* → matches one segment (book.*)",
+      "multi": "** → matches any depth (book.**.after)",
+      "replace": "? → replaces a single character"
+    },
+    "chips_hint": "Click a suggestion to autofill the event pattern."
+  },
   "executions": {
     "title": "Hook Executions",
+    "subtitle": "Inspect historical runs to debug or audit automation behavior.",
     "filters": {
       "status": "Status",
       "success": "Success",
@@ -35,9 +117,19 @@
       "executed_at": "Executed At",
       "error": "Error"
     },
+    "status": {
+      "success": "Success",
+      "failure": "Failure"
+    },
     "actions": {
       "refresh": "Refresh",
-      "back": "Back to Hooks"
+      "back": "Back to Hooks",
+      "clear": "Clear Filters"
+    },
+    "empty": {
+      "title": "No executions yet",
+      "filtered": "No executions match the current filters.",
+      "description": "This hook has not produced any executions. Trigger an event or wait for the automation to run."
     },
     "errors": {
       "fetch": "Failed to load executions"

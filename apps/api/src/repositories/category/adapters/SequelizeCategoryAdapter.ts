@@ -3,7 +3,6 @@
 // Sequelize-backed adapter for the Category repository
 // ================================================================
 
-import type { Transaction } from 'sequelize';
 import { FindAndCountOptions, FindOptions, IncludeOptions, Op, WhereOptions } from 'sequelize';
 import { Category } from '@/models/Category';
 import { Book } from '@/models/Book';
@@ -101,7 +100,7 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
     payload: CategoryCreationAttributes,
     options?: CategoryQueryOptions
   ): Promise<CategoryEntity> {
-    const transaction = (options?.transaction ?? null) as Transaction | null;
+    const transaction = options?.transaction ?? null;
     const category = await Category.create(payload as CategoryAttributes, {
       transaction,
     });
@@ -118,7 +117,7 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
       return null;
     }
 
-    const transaction = (options?.transaction ?? null) as Transaction | null;
+    const transaction = options?.transaction ?? null;
     await category.update(payload, { transaction });
     return this.findById(id, options);
   }
@@ -145,7 +144,7 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
     const include = this.buildIncludeClause(options?.includeBooks);
     const query: FindOptions<Category> = {};
     if (options?.transaction) {
-      query.transaction = options.transaction as Transaction;
+      query.transaction = options.transaction;
     }
     if (include) {
       query.include = include;

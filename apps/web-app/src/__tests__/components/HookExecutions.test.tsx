@@ -23,13 +23,17 @@ vi.mock('../../contexts/ApiContext', async () => {
 
 const hooksExecutionsTranslations = {
   executions: {
+    title: 'Hook Executions',
+    subtitle: 'Inspect historical runs to debug or audit automation behavior.',
     filters: {
       status: 'Status',
       success: 'Success',
       failure: 'Failure',
       all: 'All',
-      from: 'From',
-      to: 'To',
+      from: 'From Date',
+      to: 'To Date',
+      success_only: 'Success',
+      failure_only: 'Failure',
     },
     columns: {
       event_name: 'Event',
@@ -41,6 +45,12 @@ const hooksExecutionsTranslations = {
     actions: {
       refresh: 'Refresh',
       back: 'Back to Hooks',
+      clear: 'Clear Filters',
+    },
+    empty: {
+      title: 'No executions yet',
+      description: 'This hook has not produced any executions. Trigger an event or wait for it to run.',
+      filtered: 'No executions match the current filters.',
     },
     errors: {
       fetch: 'Failed to load executions',
@@ -112,5 +122,20 @@ describe('HookExecutions', () => {
     await waitFor(() => {
       expect(mockGetExecutions.mock.calls.length).toBeGreaterThan(1);
     });
+  });
+
+  test('clear filters button enables when filters change', async () => {
+    renderWithRouter(<HookExecutions />);
+    await waitFor(() => expect(mockGetExecutions).toHaveBeenCalled());
+
+    const fromInput = screen.getByLabelText('From Date');
+    const clearButton = screen.getByRole('button', { name: 'Clear Filters' });
+    expect(clearButton).toBeDisabled();
+
+    fireEvent.change(fromInput, { target: { value: '2025-12-05' } });
+    await waitFor(() => expect(clearButton).not.toBeDisabled());
+
+    fireEvent.click(clearButton);
+    await waitFor(() => expect(fromInput).toHaveValue(''));
   });
 });

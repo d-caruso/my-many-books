@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { mount } from 'cypress/react';
 import React from 'react';
 

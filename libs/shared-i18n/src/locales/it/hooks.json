@@ -6,10 +6,12 @@
     "executions_today": "Esecuzioni Oggi",
     "last_reload": "Ultimo Ricaricamento",
     "never_reloaded": "Mai ricaricati",
-    "reload_hint": "Ricarica quando distribuisci nuove configurazioni di hook."
+    "reload_hint": "Ricarica quando rilasci nuove configurazioni degli hook.",
+    "reload_hint_with_shortcut": "Ricarica quando rilasci nuove configurazioni degli hook (⌘R / Ctrl+R)"
   },
   "actions": {
     "create": "Crea Hook",
+    "create_hint": "Crea un nuovo hook (⌘K / Ctrl+K)",
     "reload": "Ricarica Hook",
     "reloading": "Sto ricaricando gli Hook…"
   },

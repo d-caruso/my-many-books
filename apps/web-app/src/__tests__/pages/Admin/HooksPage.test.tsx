@@ -101,6 +101,14 @@ describe('HooksPage', () => {
     expect(loaders.length).toBeGreaterThanOrEqual(1);
   });
 
+  test('shows empty state copy when no hooks exist', async () => {
+    renderWithProvider(<HooksPage />);
+    expect(await screen.findByText('No hooks configured yet')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Create your first hook to automate workflows/i)
+    ).toBeInTheDocument();
+  });
+
   test('shows error message if fetching stats fails', async () => {
     const errorMessage = 'Failed to load stats';
     mockGetAdminHookStats.mockRejectedValue(new Error(errorMessage));

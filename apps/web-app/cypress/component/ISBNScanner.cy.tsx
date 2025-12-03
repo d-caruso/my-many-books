@@ -1,7 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { mount } from 'cypress/react';
 import React from 'react';
-import { ISBNScanner } from '../../src/components/Scanner/ISBNScanner';
-
 // Mock ISBNScanner component with proper data-testids
 const MockISBNScanner: React.FC<any> = (props) => {
   if (!props.isOpen) return null;

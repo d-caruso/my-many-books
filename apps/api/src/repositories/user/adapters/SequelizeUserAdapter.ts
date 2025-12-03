@@ -3,7 +3,6 @@
 // Sequelize-backed adapter for the User repository
 // ================================================================
 
-import type { Transaction } from 'sequelize';
 import { FindAndCountOptions, Op, WhereOptions } from 'sequelize';
 import { User } from '@/models/User';
 import { UserAttributes, UserCreationAttributes } from '@/models/interfaces/ModelInterfaces';
@@ -56,7 +55,7 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
     payload: UserCreationAttributes,
     options?: UserQueryOptions
   ): Promise<UserEntity> {
-    const transaction = (options?.transaction ?? null) as Transaction | null;
+    const transaction = options?.transaction ?? null;
     const user = await User.create(payload as UserAttributes, {
       transaction,
     });
@@ -73,7 +72,7 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
       return null;
     }
 
-    const transaction = (options?.transaction ?? null) as Transaction | null;
+    const transaction = options?.transaction ?? null;
     await user.update(payload, { transaction });
     return this.findById(id, options);
   }
@@ -89,7 +88,7 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
   buildFindOptions(options?: UserQueryOptions): Parameters<typeof User.findByPk>[1] {
     const query: Parameters<typeof User.findByPk>[1] = {};
     if (options?.transaction) {
-      query.transaction = options.transaction as Transaction;
+      query.transaction = options.transaction;
     }
     return query;
   }
