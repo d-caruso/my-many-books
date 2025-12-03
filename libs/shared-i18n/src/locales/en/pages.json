@@ -22,6 +22,7 @@
       "dashboard": "Dashboard",
       "users": "Users",
       "books": "Books",
+      "hooks": "Hooks",
       "settings": "Settings"
     },
     "back_to_app": "Back to application",
@@ -88,6 +89,36 @@
     "settings": {
       "coming_soon": "Coming soon...",
       "page_title": "Settings"
+    },
+    "hooks": {
+      "title": "Hooks Administration",
+      "stats": {
+        "total_hooks": "Total Hooks",
+        "active_hooks": "Active Hooks",
+        "executions_today": "Executions Today",
+        "last_reload": "Last Reload",
+        "never_reloaded": "Never reloaded",
+        "reload_hint": "Reload when you deploy new hook configurations."
+      },
+      "actions": {
+        "create": "Create Hook",
+        "reload": "Reload Hooks",
+        "reloading": "Reloading Hooks..."
+      },
+      "list_title": "Hooks",
+      "list_summary": "{{count}} configured",
+      "list_action_info": "{{actionType}} • Priority {{priority}}",
+      "no_hooks": "No hooks configured yet.",
+      "active": "Active",
+      "inactive": "Inactive",
+      "last_execution": "Last executed {{timestamp}}",
+      "never_executed": "Never executed",
+      "priority": "Priority {{priority}}",
+      "priority_label": "Priority {{priority}}",
+      "errors": {
+        "fetch": "Failed to load hook data.",
+        "reload": "Failed to reload hooks."
+      }
     }
   }
 }

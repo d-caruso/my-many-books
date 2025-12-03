@@ -43,6 +43,9 @@ const OfflineIndicator = lazy(() => import('./components/PWA').then(m => ({ defa
 const AdminDashboardPage = lazy(() => import('./pages/Admin'));
 const UserManagementPage = lazy(() => import('./pages/Admin/UserManagementPage'));
 const BookManagementPage = lazy(() => import('./pages/Admin/BookManagementPage'));
+const HooksPage = lazy(() =>
+  import('./pages/Admin/Hooks/HooksPage').then(m => ({ default: m.HooksPage }))
+);
 const AdminSettingsPage = lazy(() => import('./pages/Admin/AdminSettingsPage'));
 
 function App() {
@@ -117,6 +120,14 @@ function App() {
                             element={
                               <ProtectedRoute requireAdmin>
                                 <BookManagementPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/hooks"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <HooksPage />
                               </ProtectedRoute>
                             }
                           />

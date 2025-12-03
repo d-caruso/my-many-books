@@ -342,23 +342,29 @@ class ApiService {
 
   // Admin methods
   async getAdminStats(): Promise<any> {
-    // Make a direct HTTP request for admin stats
-    // The apiClient is from shared-api library, so we use its HTTP client directly
+    return this.fetchAdminData('/admin/stats/summary');
+  }
+
+  private buildAdminUrl(endpoint: string): string {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    if (cleanBaseURL.endsWith('/api/v1')) {
+      return `${cleanBaseURL}${normalizedEndpoint}`;
+    }
+    return `${cleanBaseURL}/api/v1${normalizedEndpoint}`;
+  }
+
+  private async fetchAdminData<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = this.buildAdminUrl(endpoint);
     const token = await authService.getIdToken();
 
-    // Remove trailing slash from baseURL if present
-    const cleanBaseURL = baseURL.replace(/\/$/, '');
-    // Construct the full URL - baseURL should already include /api/v1
-    const url = cleanBaseURL.endsWith('/api/v1')
-      ? `${cleanBaseURL}/admin/stats/summary`
-      : `${cleanBaseURL}/api/v1/admin/stats/summary`;
-
     const response = await fetch(url, {
-      method: 'GET',
+      ...options,
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
+        ...(options.headers || {}),
       },
     });
 
@@ -367,9 +373,20 @@ class ApiService {
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    // Handle both {success: true, data: {...}} and direct {...} formats
-    return data.data || data;
+    const payload = await response.json();
+    return payload.data || payload;
+  }
+
+  async getAdminHooks(): Promise<{ hooks: AdminHookSummary[]; total?: number }> {
+    return this.fetchAdminData('/admin/hooks');
+  }
+
+  async getAdminHookStats(): Promise<AdminHookStats> {
+    return this.fetchAdminData('/admin/hooks/stats');
+  }
+
+  async reloadAdminHooks(): Promise<void> {
+    await this.fetchAdminData('/admin/hooks/reload', { method: 'POST' });
   }
 
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
@@ -795,6 +812,23 @@ class ApiService {
   }
 }
 
+export interface AdminHookSummary {
+  id: number;
+  name: string;
+  eventPattern: string;
+  actionType: string;
+  isActive: boolean;
+  priority: number;
+  lastExecution?: string;
+}
+
+export interface AdminHookStats {
+  totalHooks: number;
+  activeHooks: number;
+  executionsToday: number;
+  lastReloadedAt?: string;
+}
+
 // Factory function for creating API service with dependencies (useful for testing)
 export const createApiService = (dependencies?: ApiServiceDependencies): ApiService => {
   return new ApiService(dependencies);
@@ -806,6 +840,7 @@ export const apiService = new ApiService();
 // Export the class and interface for direct usage in tests
 export { ApiService };
 export type { ApiServiceDependencies };
+export type { AdminHookSummary, AdminHookStats };
 
 // Legacy export for compatibility - ensure all existing imports continue to work
 export const bookAPI = {

@@ -27,20 +27,21 @@ testI18n.use(initReactI18next).init({
   resources: {
     en: {
       pages: {
-        admin: {
-          title: 'Admin Panel',
-          sidebar_title: 'Administration',
-          back_to_app: 'Back to application',
-          menu: {
-            dashboard: 'Dashboard',
-            users: 'Users',
-            books: 'Books',
-            settings: 'Settings',
+          admin: {
+            title: 'Admin Panel',
+            sidebar_title: 'Administration',
+            back_to_app: 'Back to application',
+            menu: {
+              dashboard: 'Dashboard',
+              users: 'Users',
+              books: 'Books',
+              hooks: 'Hooks',
+              settings: 'Settings',
+            },
           },
         },
       },
     },
-  },
 });
 
 const renderWithProvider = (ui: React.ReactElement) => {
@@ -85,6 +86,7 @@ describe('AdminLayout', () => {
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Users')).toBeInTheDocument();
     expect(screen.getByText('Books')).toBeInTheDocument();
+    expect(screen.getByText('Hooks')).toBeInTheDocument();
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 
@@ -147,6 +149,19 @@ describe('AdminLayout', () => {
     fireEvent.click(booksButton);
 
     expect(mockNavigate).toHaveBeenCalledWith('/admin/books');
+  });
+
+  test('navigates to hooks page when hooks menu item is clicked', () => {
+    renderWithProvider(
+      <AdminLayout>
+        <div>Test Content</div>
+      </AdminLayout>
+    );
+
+    const hooksButton = screen.getByText('Hooks');
+    fireEvent.click(hooksButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/hooks');
   });
 
   test('navigates to settings page when settings menu item is clicked', () => {
