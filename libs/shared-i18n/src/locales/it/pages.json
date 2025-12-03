@@ -119,6 +119,31 @@
         "fetch": "Impossibile caricare i dati degli hook.",
         "reload": "Impossibile ricaricare gli hook.",
         "delete": "L'eliminazione degli hook non è ancora implementata."
+      },
+      "executions": {
+        "title": "Esecuzioni Hook",
+        "filters": {
+          "status": "Stato",
+          "success": "Successo",
+          "failure": "Errore",
+          "all": "Tutti",
+          "from": "Da",
+          "to": "A"
+        },
+        "columns": {
+          "event_name": "Evento",
+          "success": "Successo",
+          "duration": "Durata (ms)",
+          "executed_at": "Eseguito il",
+          "error": "Errore"
+        },
+        "actions": {
+          "refresh": "Aggiorna",
+          "back": "Torna agli Hook"
+        },
+        "errors": {
+          "fetch": "Impossibile caricare le esecuzioni"
+        }
       }
     }
   }

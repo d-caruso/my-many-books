@@ -115,11 +115,36 @@
       "never_executed": "Never executed",
       "priority": "Priority {{priority}}",
       "priority_label": "Priority {{priority}}",
-        "errors": {
-          "fetch": "Failed to load hook data.",
-          "reload": "Failed to reload hooks.",
-          "delete": "Delete action is not implemented yet."
-        }
+      "errors": {
+        "fetch": "Failed to load hook data.",
+        "reload": "Failed to reload hooks.",
+        "delete": "Delete action is not implemented yet."
       }
+    },
+    "executions": {
+      "title": "Hook Executions",
+      "filters": {
+        "status": "Status",
+        "success": "Success",
+        "failure": "Failure",
+        "all": "All",
+        "from": "From Date",
+        "to": "To Date"
+      },
+      "columns": {
+        "event_name": "Event",
+        "success": "Success",
+        "duration": "Duration (ms)",
+        "executed_at": "Executed At",
+        "error": "Error"
+      },
+      "actions": {
+        "refresh": "Refresh",
+        "back": "Back to Hooks"
+      },
+      "errors": {
+        "fetch": "Failed to load executions"
+      }
+    }
   }
 }
