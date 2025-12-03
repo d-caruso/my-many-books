@@ -10,6 +10,17 @@ import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
 import { adminLimiter, readLimiter, writeLimiter } from '../middleware/rateLimiters';
+import {
+  validateQuery,
+  validateBody,
+  validateParams,
+  createHookBodySchema,
+  updateHookBodySchema,
+  listHooksQuerySchema,
+  getExecutionsQuerySchema,
+  getRecentExecutionsQuerySchema,
+  hookIdParamSchema,
+} from '../validation';
 
 const router = Router();
 
@@ -23,18 +34,35 @@ router.use(adminLimiter);
 // ===== HOOK CRUD ENDPOINTS =====
 
 // List all hooks with optional filters (READ)
-router.get('/', readLimiter, expressRouteWrapper(hookController.listHooks.bind(hookController)));
+router.get(
+  '/',
+  readLimiter,
+  validateQuery(listHooksQuerySchema),
+  expressRouteWrapper(hookController.listHooks.bind(hookController))
+);
 
 // Get single hook by ID (READ)
-router.get('/:id', readLimiter, expressRouteWrapper(hookController.getHook.bind(hookController)));
+router.get(
+  '/:id',
+  readLimiter,
+  validateParams(hookIdParamSchema),
+  expressRouteWrapper(hookController.getHook.bind(hookController))
+);
 
 // Create new hook (WRITE)
-router.post('/', writeLimiter, expressRouteWrapper(hookController.createHook.bind(hookController)));
+router.post(
+  '/',
+  writeLimiter,
+  validateBody(createHookBodySchema),
+  expressRouteWrapper(hookController.createHook.bind(hookController))
+);
 
 // Update hook (WRITE)
 router.put(
   '/:id',
   writeLimiter,
+  validateParams(hookIdParamSchema),
+  validateBody(updateHookBodySchema),
   expressRouteWrapper(hookController.updateHook.bind(hookController))
 );
 
@@ -42,6 +70,7 @@ router.put(
 router.delete(
   '/:id',
   writeLimiter,
+  validateParams(hookIdParamSchema),
   expressRouteWrapper(hookController.deleteHook.bind(hookController))
 );
 
@@ -51,6 +80,8 @@ router.delete(
 router.get(
   '/:id/executions',
   readLimiter,
+  validateParams(hookIdParamSchema),
+  validateQuery(getExecutionsQuerySchema),
   expressRouteWrapper(hookController.getHookExecutions.bind(hookController))
 );
 
@@ -58,6 +89,7 @@ router.get(
 router.get(
   '/executions/recent',
   readLimiter,
+  validateQuery(getRecentExecutionsQuerySchema),
   expressRouteWrapper(hookController.getRecentExecutions.bind(hookController))
 );
 
