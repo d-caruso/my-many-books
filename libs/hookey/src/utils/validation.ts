@@ -114,7 +114,7 @@ export function validateEventPattern(eventPattern: string): boolean {
     /(\*{3,})/,                    // More than 2 consecutive wildcards
     /(\.\*){5,}/,                  // More than 4 consecutive .*
     /(\w+\*){10,}/,                // Excessive wildcards
-    /([\[\(].*[\]\)]){5,}/,        // Excessive grouping
+    /([[(].*[\])]){5,}/,           // Excessive grouping
   ];
 
   for (const pattern of dangerousPatterns) {
