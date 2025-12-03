@@ -19,6 +19,7 @@ import { AdminLayout } from '../AdminLayout';
 import { useApi } from '../../../contexts/ApiContext';
 import { HookStatsCard } from './components/HookStatsCard';
 import { HooksList } from './HooksList';
+import { HookForm, HookFormData } from './HookForm';
 import type { AdminHookSummary, AdminHookStats } from '../../../services/api';
 
 export const HooksPage: React.FC = () => {
@@ -31,6 +32,8 @@ export const HooksPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloading, setReloading] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingHook, setEditingHook] = useState<AdminHookSummary | null>(null);
 
   const loadHooksData = useCallback(async () => {
     try {
@@ -124,7 +127,10 @@ export const HooksPage: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => navigate('/admin/hooks/new')}
+            onClick={() => {
+              setEditingHook(null);
+              setIsFormOpen(true);
+            }}
           >
             {t('pages:admin.hooks.actions.create', 'Create Hook')}
           </Button>
@@ -186,12 +192,44 @@ export const HooksPage: React.FC = () => {
           <HooksList
             hooks={hooks}
             loading={loading}
-            onEdit={(id) => navigate(`/admin/hooks/${id}/edit`)}
+            onEdit={(id) => {
+              const hookToEdit = hooks.find((hook) => hook.id === id) || null;
+              setEditingHook(hookToEdit);
+              setIsFormOpen(true);
+            }}
             onViewExecutions={(id) => navigate(`/admin/hooks/${id}/executions`)}
-            onDelete={(id) => setError(t('pages:admin.hooks.errors.delete', 'Delete action is not implemented yet'))}
+            onDelete={(id) =>
+              setError(t('pages:admin.hooks.errors.delete', 'Delete action is not implemented yet'))
+            }
           />
         </Paper>
       </Box>
+      <HookForm
+        open={isFormOpen}
+        initialData={editingHook ?? undefined}
+        onClose={() => setIsFormOpen(false)}
+        onSave={(data: HookFormData) => {
+          const newHook: AdminHookSummary = {
+            id: Date.now(),
+            name: data.name,
+            eventPattern: data.eventPattern,
+            actionType: data.actionType,
+            priority: data.priority,
+            isActive: data.isActive,
+            lastExecution: null,
+          };
+          setHooks((prev) => [newHook, ...prev]);
+          setStats((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  totalHooks: prev.totalHooks + 1,
+                  activeHooks: prev.activeHooks + (data.isActive ? 1 : 0),
+                }
+              : prev
+          );
+        }}
+      />
     </AdminLayout>
   );
 };
