@@ -15,6 +15,7 @@ import {
 import { CategoryCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import { ApplicationError } from '../../errors/ApplicationError';
 import { emitHookEvent } from '../hooks/hookSystem';
+import { EVENTS } from '../hooks/events';
 
 export type CategoryServiceErrorCode =
   | 'CATEGORY_NOT_FOUND'
@@ -123,7 +124,7 @@ class CategoryService {
     };
 
     const created = await this.categoryRepository.create(payload);
-    await this.emitCategoryEvent('category.create.after', {
+    await this.emitCategoryEvent(EVENTS.CATEGORY.CREATE.AFTER, {
       category: created,
       user: this.mapEventUser(userContext),
       input,
@@ -157,7 +158,7 @@ class CategoryService {
       throw new CategoryServiceError('CATEGORY_NOT_FOUND');
     }
 
-    await this.emitCategoryEvent('category.update.after', {
+    await this.emitCategoryEvent(EVENTS.CATEGORY.UPDATE.AFTER, {
       categoryId: id,
       category: updated,
       user: this.mapEventUser(userContext),
@@ -189,7 +190,7 @@ class CategoryService {
       throw new CategoryServiceError('CATEGORY_NOT_FOUND');
     }
 
-    await this.emitCategoryEvent('category.delete.after', {
+    await this.emitCategoryEvent(EVENTS.CATEGORY.DELETE.AFTER, {
       categoryId: id,
       category: existing,
       user: this.mapEventUser(userContext),

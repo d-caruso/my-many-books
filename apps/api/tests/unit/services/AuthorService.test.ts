@@ -1,6 +1,7 @@
 import { AuthorService, AuthorServiceError } from '../../../src/services/author/AuthorService';
 import { Repository as AuthorRepositoryContract } from '../../../src/repositories/author/Repository';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
 
 jest.mock('../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
@@ -54,7 +55,7 @@ describe('AuthorService', () => {
     });
     expect(author.id).toBe(1);
     expect(emitHookEventMock).toHaveBeenCalledWith(
-      'author.create.after',
+      EVENTS.AUTHOR.CREATE.AFTER,
       expect.objectContaining({
         author: expect.objectContaining({ id: 1 }),
         user: { id: 1, role: 'user' },
@@ -99,7 +100,7 @@ describe('AuthorService', () => {
     );
     expect(updated.name).toBe('New');
     expect(emitHookEventMock).toHaveBeenCalledWith(
-      'author.update.after',
+      EVENTS.AUTHOR.UPDATE.AFTER,
       expect.objectContaining({
         authorId: 2,
         author: expect.objectContaining({ id: 2 }),
@@ -138,7 +139,7 @@ describe('AuthorService', () => {
       expect(repository.countBooks).toHaveBeenCalledWith(4);
       expect(repository.delete).toHaveBeenCalledWith(4);
       expect(emitHookEventMock).toHaveBeenCalledWith(
-        'author.delete.after',
+        EVENTS.AUTHOR.DELETE.AFTER,
         expect.objectContaining({
           authorId: 4,
           user: { id: 1, role: 'user' },

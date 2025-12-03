@@ -25,6 +25,7 @@ import { UpdateBookDTO } from '../dtos/book/UpdateBookDTO';
 import { toBookResponseDTO } from '../dtos/book/BookResponseDTO';
 import { TYPES } from '../container/types';
 import { emitHookEvent } from '../services/hooks/hookSystem';
+import { EVENTS } from '../services/hooks/events';
 
 interface BookSearchFilters {
   title?: string;
@@ -95,7 +96,7 @@ export class BookController extends BaseController {
     const serviceInput = dto.toServiceInput();
     const userContext = this.getUserContext(request);
 
-    await emitHookEvent('book.create.before', {
+    await emitHookEvent(EVENTS.BOOK.CREATE.BEFORE, {
       user: this.mapRequestUser(request),
       input: serviceInput,
     });
@@ -215,7 +216,7 @@ export class BookController extends BaseController {
 
     try {
       const numericBookId = Number(bookId);
-      await emitHookEvent('book.delete.before', {
+      await emitHookEvent(EVENTS.BOOK.DELETE.BEFORE, {
         user: this.mapRequestUser(request),
         bookId: numericBookId,
       });
@@ -696,7 +697,7 @@ export class BookController extends BaseController {
   ): Promise<ApiResponse> {
     try {
       const updateInput = dto.toServiceInput();
-      await emitHookEvent('book.update.before', {
+      await emitHookEvent(EVENTS.BOOK.UPDATE.BEFORE, {
         user: this.mapRequestUser(request),
         bookId,
         input: updateInput,

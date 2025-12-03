@@ -5,6 +5,7 @@ import { TYPES } from '../../../src/container/types';
 import { AuthorService } from '../../../src/services/author/AuthorService';
 import { AuthorRepository } from '../../../src/repositories/author/AuthorRepository';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
 
 jest.mock('../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
@@ -87,7 +88,7 @@ describe('AuthorController', () => {
       expect(response.success).toBe(true);
       expect((response.data as { id: number }).id).toBe(1);
       expect(emitHookEventMock).toHaveBeenCalledWith(
-        'author.create.before',
+        EVENTS.AUTHOR.CREATE.BEFORE,
         expect.objectContaining({
           user: { id: 1, role: 'user' },
           input: expect.objectContaining(payload),
@@ -126,7 +127,7 @@ describe('AuthorController', () => {
       );
       expect(response.statusCode).toBe(200);
       expect(emitHookEventMock).toHaveBeenCalledWith(
-        'author.update.before',
+        EVENTS.AUTHOR.UPDATE.BEFORE,
         expect.objectContaining({
           authorId: 1,
           user: { id: 1, role: 'user' },
@@ -159,7 +160,7 @@ describe('AuthorController', () => {
       );
       expect(response.statusCode).toBe(204);
       expect(emitHookEventMock).toHaveBeenCalledWith(
-        'author.delete.before',
+        EVENTS.AUTHOR.DELETE.BEFORE,
         expect.objectContaining({
           authorId: 2,
           user: { id: 1, role: 'user' },

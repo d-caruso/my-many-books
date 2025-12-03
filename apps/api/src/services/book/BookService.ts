@@ -13,6 +13,7 @@ import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';
 import { ApplicationError } from '../../errors/ApplicationError';
 import { emitHookEvent } from '../hooks/hookSystem';
+import { EVENTS } from '../hooks/events';
 
 export type BookServiceErrorCode =
   | 'BOOK_NOT_FOUND'
@@ -81,7 +82,7 @@ class BookService {
     const payload = this.normalizePayload({ ...input, userId: ownerId });
 
     const createdBook = await this.bookRepository.create(payload, associations);
-    await this.emitBookEvent('book.create.after', {
+    await this.emitBookEvent(EVENTS.BOOK.CREATE.AFTER, {
       book: createdBook,
       user: this.mapEventUser(userContext),
       input,
@@ -108,6 +109,19 @@ class BookService {
     await this.validateAssociations(book.userId, input.authorIds, input.categoryIds);
 
     const associations = this.extractAssociations(input);
+    const statusWillChange = input.status !== undefined && input.status !== book.status;
+
+    if (statusWillChange) {
+      await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.BEFORE, {
+        bookId,
+        previousStatus: book.status ?? null,
+        nextStatus: input.status ?? null,
+        book,
+        user: this.mapEventUser(userContext),
+        changes: input,
+      });
+    }
+
     const payload = this.normalizePartialPayload(input);
 
     const updated = await this.bookRepository.update(bookId, payload, associations);
@@ -115,7 +129,7 @@ class BookService {
       throw new BookServiceError('BOOK_NOT_FOUND');
     }
 
-    await this.emitBookEvent('book.update.after', {
+    await this.emitBookEvent(EVENTS.BOOK.UPDATE.AFTER, {
       bookId,
       book: updated,
       user: this.mapEventUser(userContext),
@@ -123,7 +137,7 @@ class BookService {
     });
 
     if (book.status !== updated.status) {
-      await this.emitBookEvent('book.status.changed', {
+      await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.AFTER, {
         bookId,
         previousStatus: book.status ?? null,
         newStatus: updated.status ?? null,
@@ -148,7 +162,7 @@ class BookService {
       throw new BookServiceError('BOOK_NOT_FOUND');
     }
 
-    await this.emitBookEvent('book.delete.after', {
+    await this.emitBookEvent(EVENTS.BOOK.DELETE.AFTER, {
       bookId,
       book,
       user: this.mapEventUser(userContext),

@@ -6,6 +6,7 @@ import { container } from '../../../src/container';
 import { TYPES } from '../../../src/container/types';
 import { BookService } from '../../../src/services/book/BookService';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
 
 // Mock dependencies
 jest.mock('../../../src/models');
@@ -130,7 +131,7 @@ describe('BookController', () => {
         title: 'Test Book',
       });
       expect(emitHookEventMock).toHaveBeenCalledWith(
-        'book.create.before',
+        EVENTS.BOOK.CREATE.BEFORE,
         expect.objectContaining({
           user: { id: 1, role: 'user' },
           input: expect.objectContaining({ title: 'Test Book' }),
@@ -195,7 +196,7 @@ describe('BookController', () => {
       await bookController.updateBook(mockRequest);
 
       expect(emitHookEventMock).toHaveBeenCalledWith(
-        'book.update.before',
+        EVENTS.BOOK.UPDATE.BEFORE,
         expect.objectContaining({
           bookId: 5,
           user: { id: 2, role: 'user' },
@@ -211,7 +212,7 @@ describe('BookController', () => {
       await bookController.deleteBook(mockRequest);
 
       expect(emitHookEventMock).toHaveBeenCalledWith(
-        'book.delete.before',
+        EVENTS.BOOK.DELETE.BEFORE,
         expect.objectContaining({
           bookId: 9,
           user: { id: 4, role: 'user' },

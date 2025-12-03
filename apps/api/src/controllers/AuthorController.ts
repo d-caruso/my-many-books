@@ -22,6 +22,7 @@ import { toAuthorResponseDTO } from '../dtos/author/AuthorResponseDTO';
 import { Repository as AuthorRepositoryContract } from '../repositories/author/Repository';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { emitHookEvent } from '../services/hooks/hookSystem';
+import { EVENTS } from '../services/hooks/events';
 
 interface AuthorSearchFilters {
   name?: string;
@@ -70,7 +71,7 @@ export class AuthorController extends BaseController {
 
     const serviceInput = dto.toServiceInput();
 
-    await emitHookEvent('author.create.before', {
+    await emitHookEvent(EVENTS.AUTHOR.CREATE.BEFORE, {
       user: this.mapRequestUser(request),
       input: serviceInput,
     });
@@ -146,7 +147,7 @@ export class AuthorController extends BaseController {
 
     const updateInput = dto.toServiceInput();
 
-    await emitHookEvent('author.update.before', {
+    await emitHookEvent(EVENTS.AUTHOR.UPDATE.BEFORE, {
       user: this.mapRequestUser(request),
       authorId: Number(authorId),
       input: updateInput,
@@ -183,7 +184,7 @@ export class AuthorController extends BaseController {
     }
 
     const numericAuthorId = Number(authorId);
-    await emitHookEvent('author.delete.before', {
+    await emitHookEvent(EVENTS.AUTHOR.DELETE.BEFORE, {
       user: this.mapRequestUser(request),
       authorId: numericAuthorId,
     });

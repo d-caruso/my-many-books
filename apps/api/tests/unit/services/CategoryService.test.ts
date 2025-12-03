@@ -1,6 +1,7 @@
 import { CategoryService, CategoryServiceError } from '../../../src/services/category/CategoryService';
 import { Repository as CategoryRepositoryContract } from '../../../src/repositories/category/Repository';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
 
 jest.mock('../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
@@ -41,7 +42,7 @@ describe('CategoryService', () => {
     expect(repository.create).toHaveBeenCalledWith({ name: 'Fiction', userId: 1 });
     expect(result.id).toBe(1);
     expect(emitHookEventMock).toHaveBeenCalledWith(
-      'category.create.after',
+      EVENTS.CATEGORY.CREATE.AFTER,
       expect.objectContaining({
         category: expect.objectContaining({ id: 1 }),
         user: { id: 1, role: 'user' },
@@ -86,7 +87,7 @@ describe('CategoryService', () => {
     expect(repository.update).toHaveBeenCalledWith(7, { name: 'New' });
     expect(updated.name).toBe('New');
     expect(emitHookEventMock).toHaveBeenCalledWith(
-      'category.update.after',
+      EVENTS.CATEGORY.UPDATE.AFTER,
       expect.objectContaining({
         categoryId: 7,
         category: expect.objectContaining({ id: 7 }),
@@ -123,7 +124,7 @@ describe('CategoryService', () => {
 
     expect(repository.delete).toHaveBeenCalledWith(3);
     expect(emitHookEventMock).toHaveBeenCalledWith(
-      'category.delete.after',
+      EVENTS.CATEGORY.DELETE.AFTER,
       expect.objectContaining({
         categoryId: 3,
         user: { id: 1, role: 'user' },

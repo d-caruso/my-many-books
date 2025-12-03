@@ -5,6 +5,7 @@ import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
 import { BOOK_STATUS } from '../../../src/utils/constants';
+import { EVENTS } from '../../../src/services/hooks/events';
 
 jest.mock('../../../src/models/Author', () => ({
   Author: {
@@ -78,7 +79,7 @@ describe('BookService', () => {
     );
     expect(result.title).toBe('Test Book');
     expect(emitHookEventMock).toHaveBeenCalledWith(
-      'book.create.after',
+      EVENTS.BOOK.CREATE.AFTER,
       expect.objectContaining({
         book: expect.objectContaining({ title: 'Test Book' }),
         user: { id: 10, role: USER_ROLES.USER },
@@ -130,14 +131,22 @@ describe('BookService', () => {
     );
     expect(updated.title).toBe('Updated');
     expect(emitHookEventMock).toHaveBeenCalledWith(
-      'book.update.after',
+      EVENTS.BOOK.UPDATE.AFTER,
       expect.objectContaining({
         bookId: 7,
         user: { id: 2, role: USER_ROLES.USER },
       })
     );
     expect(emitHookEventMock).toHaveBeenCalledWith(
-      'book.status.changed',
+      EVENTS.BOOK.STATUS.CHANGE.BEFORE,
+      expect.objectContaining({
+        bookId: 7,
+        previousStatus: BOOK_STATUS.READING,
+        nextStatus: BOOK_STATUS.FINISHED,
+      })
+    );
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      EVENTS.BOOK.STATUS.CHANGE.AFTER,
       expect.objectContaining({
         bookId: 7,
         previousStatus: BOOK_STATUS.READING,
@@ -171,7 +180,7 @@ describe('BookService', () => {
     await service.deleteBook(8, { userId: 8, role: USER_ROLES.USER });
 
     expect(emitHookEventMock).toHaveBeenCalledWith(
-      'book.delete.after',
+      EVENTS.BOOK.DELETE.AFTER,
       expect.objectContaining({
         bookId: 8,
         user: { id: 8, role: USER_ROLES.USER },
