@@ -41,19 +41,30 @@ vi.mock('@mui/x-data-grid', () => {
 
     const rowElements = rows.map((row: any) => {
       const cells = columns.map((column: any) => {
+        const rawValue = row[column.field];
+        const params = {
+          row,
+          value: rawValue,
+          id: row.id,
+          field: column.field
+        };
+
         if (column.field === 'actions') {
+          const cellContent = column.renderCell ? column.renderCell(params) : null;
           return React.createElement(
             'div',
             { key: `${row.id}-actions`, 'data-testid': 'mock-row-actions' },
-            column.renderCell({ row, value: row[column.field] })
+            cellContent
           );
         }
 
-        const value = column.valueGetter ? column.valueGetter({ row }) : row[column.field];
+        const value = column.valueGetter ? column.valueGetter(params) : rawValue;
+        const cellContent = column.renderCell ? column.renderCell({ ...params, value }) : value;
+
         return React.createElement(
           'span',
           { key: `${row.id}-${column.field}`, 'data-testid': `mock-cell-${column.field}` },
-          value
+          cellContent
         );
       });
 

@@ -13,6 +13,15 @@ const baseVitestConfig: UserConfig = {
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts', './src/jest.setup.ts'],
     css: true,
+    testTimeout: 7000,
+    hookTimeout: 7000,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: false,
+        isolate: true,
+      },
+    },
     transformMode: {
       web: [/\.[jt]sx?$/, /\.css$/],
     },

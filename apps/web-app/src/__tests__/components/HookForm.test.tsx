@@ -1,6 +1,6 @@
 import React from 'react';
-import { render as rtlRender, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
+import { render as rtlRender, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { vi, afterEach } from 'vitest';
 import { HookForm } from '../../pages/Admin/Hooks/HookForm';
 import { BrowserRouter } from 'react-router-dom';
 import { I18nextProvider } from 'react-i18next';
@@ -71,6 +71,12 @@ const renderWithProviders = (ui: React.ReactElement) => {
 };
 
 describe('HookForm', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+    vi.clearAllTimers();
+  });
+
   test('calls onSave with parsed JSON and closes dialog', async () => {
     const onClose = vi.fn();
     const onSave = vi.fn();

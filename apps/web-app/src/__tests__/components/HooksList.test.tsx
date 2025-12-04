@@ -1,5 +1,6 @@
 import React from 'react';
-import { render as rtlRender, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render as rtlRender, screen, waitFor, fireEvent, cleanup } from '@testing-library/react';
+import { vi, afterEach } from 'vitest';
 import { HooksList } from '../../pages/Admin/Hooks/HooksList';
 
 const hooksData = [
@@ -15,6 +16,11 @@ const hooksData = [
 ];
 
 describe('HooksList', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
   test('renders rows and action buttons', async () => {
     const onEdit = vi.fn();
     const onDelete = vi.fn();
