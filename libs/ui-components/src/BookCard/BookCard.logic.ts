@@ -46,20 +46,16 @@ export const getStatusColor = (status?: BookStatus): string => {
   }
 };
 
-/**
- * Get the i18n key for a book status
- * Usage: t(getStatusI18nKey(status))
- */
-export const getStatusI18nKey = (status?: BookStatus): string => {
+export const getStatusLabel = (status?: BookStatus): string => {
   switch (status) {
     case 'reading':
-      return 'search.filter.status.reading';
+      return 'Reading';
     case 'paused':
-      return 'search.filter.status.paused';
+      return 'Paused';
     case 'finished':
-      return 'search.filter.status.finished';
+      return 'Finished';
     case 'unread':
-      return 'search.filter.status.unread';
+      return 'Unread';
     default:
       return '';
   }

@@ -8,7 +8,7 @@ export { Button } from './Button/Button';
 export type { ButtonProps } from './Button/Button.types';
 
 // BookCard components
-export { BookCard, formatBookCardData, getStatusColor, getStatusI18nKey } from './BookCard/BookCard';
+export { BookCard, formatBookCardData, getStatusColor, getStatusLabel } from './BookCard/BookCard';
 export type { BookCardProps, BookCardData } from './BookCard/BookCard.types';
 
 // Loading components

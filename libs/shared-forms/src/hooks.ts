@@ -5,7 +5,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  FormManager,
   FormConfig,
   FormState,
   FormField,
@@ -15,7 +14,9 @@ import {
   FormSubmissionResult,
   FormSubmissionState
 } from './types';
+import { FormManager } from './FormManager';
 import { FormValidator } from './FormValidator';
+import { bookFormSchema, userFormSchema, authFormSchemas, searchFormSchema } from './schemas';
 
 // Main form hook
 export function useForm(
@@ -258,8 +259,6 @@ export function useBookForm(
   submissionHandler?: FormSubmissionHandler,
   initialData?: Partial<Record<string, FieldValue>>
 ) {
-  const { bookFormSchema } = require('./schemas');
-  
   // Update schema with initial data if provided
   const configWithInitialData = useMemo(() => {
     if (!initialData) return bookFormSchema;
@@ -279,8 +278,6 @@ export function useUserForm(
   submissionHandler?: FormSubmissionHandler,
   initialData?: Partial<Record<string, FieldValue>>
 ) {
-  const { userFormSchema } = require('./schemas');
-  
   const configWithInitialData = useMemo(() => {
     if (!initialData) return userFormSchema;
     
@@ -299,7 +296,6 @@ export function useAuthForm(
   mode: 'login' | 'register',
   submissionHandler?: FormSubmissionHandler
 ) {
-  const { authFormSchemas } = require('./schemas');
   return useForm(authFormSchemas[mode], submissionHandler);
 }
 
@@ -308,8 +304,6 @@ export function useSearchForm(
   categories?: Array<{ id: number; name: string }>,
   authors?: Array<{ id: number; name: string }>
 ) {
-  const { searchFormSchema } = require('./schemas');
-  
   const configWithOptions = useMemo(() => {
     const updatedFields = searchFormSchema.fields.map(field => {
       if (field.name === 'category' && categories) {
