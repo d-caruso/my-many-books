@@ -4,17 +4,18 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  FormManager, 
-  FormConfig, 
-  FormState, 
-  FormField, 
-  FieldValue, 
+import {
+  FormManager,
+  FormConfig,
+  FormState,
+  FormField,
+  FieldValue,
   FormEvent,
   FormSubmissionHandler,
   FormSubmissionResult,
   FormSubmissionState
 } from './types';
+import { FormValidator } from './FormValidator';
 
 // Main form hook
 export function useForm(
@@ -353,7 +354,6 @@ export function useFieldValidation(
   const [errors, setErrors] = useState<string[]>([]);
 
   const validate = useCallback(async () => {
-    const { FormValidator } = require('./FormValidator');
     const validator = new FormValidator();
     
     const field: FormField = {
@@ -393,7 +393,7 @@ export function useFormAutoSave(
 } {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [saveTimeout, setSaveTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const saveNow = useCallback(async () => {
     setIsSaving(true);

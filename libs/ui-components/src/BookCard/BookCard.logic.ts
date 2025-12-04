@@ -37,7 +37,7 @@ export const getStatusColor = (status?: BookStatus): string => {
   switch (status) {
     case 'finished':
       return '#10B981'; // green
-    case 'in progress':
+    case 'reading':
       return '#3B82F6'; // blue
     case 'paused':
       return '#F59E0B'; // amber
@@ -46,14 +46,20 @@ export const getStatusColor = (status?: BookStatus): string => {
   }
 };
 
-export const getStatusLabel = (status?: BookStatus): string => {
+/**
+ * Get the i18n key for a book status
+ * Usage: t(getStatusI18nKey(status))
+ */
+export const getStatusI18nKey = (status?: BookStatus): string => {
   switch (status) {
-    case 'in progress':
-      return 'In Progress';
+    case 'reading':
+      return 'search.filter.status.reading';
     case 'paused':
-      return 'Paused';
+      return 'search.filter.status.paused';
     case 'finished':
-      return 'Finished';
+      return 'search.filter.status.finished';
+    case 'unread':
+      return 'search.filter.status.unread';
     default:
       return '';
   }

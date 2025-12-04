@@ -66,7 +66,7 @@ export const HooksList: React.FC<HooksListProps> = ({
       headerName: t('list.columns.action_type', 'Action Type'),
       flex: 0.9,
       minWidth: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<AdminHookSummary, string>) => (
         <Chip
           label={params.value ? actionLabels[params.value] ?? params.value : actionLabels.log}
           size="small"

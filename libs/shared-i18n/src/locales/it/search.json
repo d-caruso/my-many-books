@@ -35,7 +35,8 @@
       "all": "Tutti i Libri",
       "reading": "In Lettura",
       "paused": "In Pausa",
-      "finished": "Completato"
+      "finished": "Completato",
+      "unread": "Da Leggere"
     },
     "category": {
       "label": "Categoria",

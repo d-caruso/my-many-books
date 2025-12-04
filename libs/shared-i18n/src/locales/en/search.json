@@ -35,7 +35,8 @@
       "all": "All Books",
       "reading": "Reading",
       "paused": "Paused",
-      "finished": "Finished"
+      "finished": "Finished",
+      "unread": "Unread"
     },
     "category": {
       "label": "Category",

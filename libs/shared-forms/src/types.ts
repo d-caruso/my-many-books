@@ -2,7 +2,7 @@
  * Platform-agnostic form types and interfaces
  */
 
-export type FieldValue = string | number | boolean | Date | null | undefined;
+export type FieldValue = string | number | boolean | Date | null | undefined | Array<string | number>;
 
 export interface FormField {
   id: string;

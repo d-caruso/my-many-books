@@ -219,7 +219,7 @@ export const HookForm: React.FC<HookFormProps> = ({
                 <Switch
                   checked={formState.isActive}
                   onChange={(event) => handleFieldChange('isActive', event.target.checked)}
-                  inputProps={{ 'data-testid': 'hook-form-active' }}
+                  inputProps={{ 'data-testid': 'hook-form-active' } as React.InputHTMLAttributes<HTMLInputElement>}
                 />
               }
               label={

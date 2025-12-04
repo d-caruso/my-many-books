@@ -300,8 +300,8 @@ export const HookExecutions: React.FC = () => {
             page={pagination.page}
             pageSize={pagination.pageSize}
             paginationMode="server"
-            onPageChange={(newPage) => setPagination((prev) => ({ ...prev, page: newPage }))}
-            onPageSizeChange={(newSize) => setPagination((prev) => ({ ...prev, pageSize: newSize }))}
+            onPageChange={(newPage: number) => setPagination((prev) => ({ ...prev, page: newPage }))}
+            onPageSizeChange={(newSize: number) => setPagination((prev) => ({ ...prev, pageSize: newSize }))}
             rowsPerPageOptions={[5, 10, 20]}
             loading={loading}
             getRowId={(row) => row.id}

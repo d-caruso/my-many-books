@@ -53,8 +53,8 @@ export class BookManager {
    * Update book status with validation
    */
   async updateBookStatus(bookId: number, status: BookStatus): Promise<Book> {
-    const validStatuses: BookStatus[] = ['in progress', 'paused', 'finished'];
-    
+    const validStatuses: BookStatus[] = ['reading', 'paused', 'finished'];
+
     if (!validStatuses.includes(status)) {
       throw new Error(`Invalid status: ${status}. Must be one of: ${validStatuses.join(', ')}`);
     }
@@ -114,7 +114,7 @@ export class BookManager {
     percentageComplete: number;
   } {
     const total = books.length;
-    const inProgress = books.filter(book => book.status === 'in progress').length;
+    const inProgress = books.filter(book => book.status === 'reading').length;
     const paused = books.filter(book => book.status === 'paused').length;
     const finished = books.filter(book => book.status === 'finished').length;
     
