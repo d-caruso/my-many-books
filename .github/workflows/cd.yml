@@ -140,6 +140,8 @@ jobs:
           if [ -n "$BUILD_PROJECTS" ]; then
             # Build shared libraries first (required by API)
             echo "=== Building shared libraries ==="
+            echo "Building hookey..."
+            npx nx build hookey
             echo "Building shared-auth..."
             cd libs/shared-auth && npm run build && cd ../..
             echo "Building shared-i18n..."
@@ -582,6 +584,8 @@ jobs:
 
       - name: Build shared libraries
         run: |
+          echo "Building hookey..."
+          npx nx build hookey
           echo "Building shared-auth..."
           cd libs/shared-auth && npm run build && cd ../..
           echo "Building shared-i18n..."

@@ -43,5 +43,11 @@ module.exports = {
         'no-var': 'off',
       },
     },
+    {
+      files: ['scripts/**/*.js'],
+      env: {
+        node: true,
+      },
+    },
   ],
 };
