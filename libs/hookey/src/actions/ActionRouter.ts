@@ -1,5 +1,5 @@
 import { HookAction } from '../types';
-import { LogAction } from './LogAction';
+import { LogAction, LogActionOptions } from './LogAction';
 import {
   EmailAction,
   EmailActionConfig,
@@ -54,8 +54,19 @@ export class ActionRouter {
   }
 
   private createLogAction(config?: Record<string, unknown>): LogAction {
-    const prefix = (config?.['prefix'] as string) || 'hook';
-    return new LogAction(prefix);
+    if (!config) {
+      return new LogAction();
+    }
+
+    const options: LogActionOptions = {
+      prefix: this.extractString(config['prefix']),
+      level: this.extractLogLevel(config['level']),
+      destination: this.extractDestination(config['destination']),
+      filePath: this.extractFilePath(config),
+      includeMetadata: this.extractIncludeMetadata(config),
+    };
+
+    return new LogAction(options);
   }
 
   private createEmailAction(config?: Record<string, unknown>): EmailAction {
@@ -75,6 +86,53 @@ export class ActionRouter {
     const dbConfig = config as unknown as DatabaseActionConfig;
     return new DatabaseAction(dbConfig, this.databaseService);
   }
+
+  private extractString(value: unknown): string | undefined {
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  private extractLogLevel(value: unknown): LogLevelOption | undefined {
+    return isValidLogLevel(value) ? (value as LogLevelOption) : undefined;
+  }
+
+  private extractDestination(value: unknown): LogDestinationOption | undefined {
+    return isValidDestination(value) ? (value as LogDestinationOption) : undefined;
+  }
+
+  private extractFilePath(config: Record<string, unknown>): string | undefined {
+    if (typeof config['filePath'] === 'string') {
+      return config['filePath'];
+    }
+
+    if (typeof config['file_path'] === 'string') {
+      return config['file_path'];
+    }
+
+    return undefined;
+  }
+
+  private extractIncludeMetadata(config: Record<string, unknown>): boolean | undefined {
+    if (typeof config['includeMetadata'] === 'boolean') {
+      return config['includeMetadata'];
+    }
+
+    if (typeof config['include_metadata'] === 'boolean') {
+      return config['include_metadata'];
+    }
+
+    return undefined;
+  }
+}
+
+type LogLevelOption = 'info' | 'warn' | 'error' | 'debug';
+type LogDestinationOption = 'console' | 'file';
+
+function isValidLogLevel(value: unknown): value is LogLevelOption {
+  return value === 'info' || value === 'warn' || value === 'error' || value === 'debug';
+}
+
+function isValidDestination(value: unknown): value is LogDestinationOption {
+  return value === 'console' || value === 'file';
 }
 
 /**

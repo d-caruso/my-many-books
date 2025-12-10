@@ -3,6 +3,12 @@ import { LogAction } from '../LogAction';
 import { EmailAction, EmailService } from '../EmailAction';
 import { DatabaseAction, DatabaseService } from '../DatabaseAction';
 import { HookActionContext } from '../../types';
+import { appendFile, mkdir } from 'node:fs/promises';
+
+jest.mock('node:fs/promises', () => ({
+  appendFile: jest.fn().mockResolvedValue(undefined),
+  mkdir: jest.fn().mockResolvedValue(undefined),
+}));
 
 // Mock services
 class MockEmailService implements EmailService {
@@ -24,6 +30,10 @@ class MockDatabaseService implements DatabaseService {
 }
 
 describe('ActionRouter', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('createAction', () => {
     describe('log action', () => {
       it('creates LogAction with default prefix', () => {
@@ -179,7 +189,7 @@ describe('ActionRouter', () => {
 
     describe('action execution', () => {
       it('creates functional LogAction', async () => {
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
         const router = new ActionRouter();
         const action = router.createAction('log', { prefix: 'test' });
 
@@ -190,12 +200,53 @@ describe('ActionRouter', () => {
 
         await action.execute(context);
 
-        expect(consoleSpy).toHaveBeenCalledWith(
-          '[test] event=test.event',
-          { data: 'value' }
-        );
+        expect(consoleSpy).toHaveBeenCalledWith('[test] event=test.event', { data: 'value' });
 
         consoleSpy.mockRestore();
+      });
+
+      it('omits metadata when include_metadata is false', async () => {
+        const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
+        const router = new ActionRouter();
+        const action = router.createAction('log', {
+          prefix: 'audit',
+          include_metadata: false,
+        });
+
+        const context: HookActionContext = {
+          eventName: 'audit.event',
+          payload: { secret: 'value' },
+        };
+
+        await action.execute(context);
+
+        expect(consoleSpy).toHaveBeenCalledWith('[audit] event=audit.event');
+
+        consoleSpy.mockRestore();
+      });
+
+      it('writes to file when configured for file destination', async () => {
+        const router = new ActionRouter();
+        const action = router.createAction('log', {
+          prefix: 'file',
+          destination: 'file',
+          file_path: '/tmp/hook.log',
+          include_metadata: false,
+        });
+
+        const context: HookActionContext = {
+          eventName: 'test.event',
+          payload: { data: 'value' },
+        };
+
+        await action.execute(context);
+
+        expect(mkdir).toHaveBeenCalledWith('/tmp', { recursive: true });
+        expect(appendFile).toHaveBeenCalledWith(
+          '/tmp/hook.log',
+          expect.stringContaining('[file] event=test.event'),
+          'utf8'
+        );
       });
 
       it('creates functional EmailAction', async () => {

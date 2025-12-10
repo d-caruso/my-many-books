@@ -5,10 +5,32 @@ import { z } from 'zod';
  */
 
 // Log Action Configuration Schema
-export const LogActionConfigSchema = z.object({
-  prefix: z.string().optional(),
-  level: z.enum(['info', 'warn', 'error', 'debug']).optional(),
-}).strict();
+export const LogActionConfigSchema = z
+  .object({
+    prefix: z.string().optional(),
+    level: z.enum(['info', 'warn', 'error', 'debug']).optional(),
+    destination: z.enum(['console', 'file']).optional(),
+    file_path: z.string().min(1, 'file_path must be provided when destination is "file"').optional(),
+    include_metadata: z.boolean().optional(),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.destination === 'file' && !data.file_path) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'file_path is required when destination is "file"',
+        path: ['file_path'],
+      });
+    }
+
+    if (data.file_path && data.destination !== 'file') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'destination must be "file" when file_path is provided',
+        path: ['destination'],
+      });
+    }
+  });
 
 // Email Action Configuration Schema
 export const EmailActionConfigSchema = z.object({

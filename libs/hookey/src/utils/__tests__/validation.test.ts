@@ -24,8 +24,28 @@ describe('LogActionConfigSchema', () => {
     expect(() => LogActionConfigSchema.parse(config)).not.toThrow();
   });
 
+  it('validates log config targeting file destination with metadata', () => {
+    const config = {
+      destination: 'file' as const,
+      file_path: '/tmp/hooks.log',
+      include_metadata: true,
+      level: 'warn' as const,
+    };
+    expect(() => LogActionConfigSchema.parse(config)).not.toThrow();
+  });
+
   it('rejects invalid log level', () => {
     const config = { level: 'invalid' };
+    expect(() => LogActionConfigSchema.parse(config)).toThrow(ZodError);
+  });
+
+  it('rejects file destination without file_path', () => {
+    const config = { destination: 'file' as const };
+    expect(() => LogActionConfigSchema.parse(config)).toThrow(ZodError);
+  });
+
+  it('rejects file_path when destination is not file', () => {
+    const config = { destination: 'console' as const, file_path: '/tmp/hooks.log' };
     expect(() => LogActionConfigSchema.parse(config)).toThrow(ZodError);
   });
 
