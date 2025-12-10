@@ -64,7 +64,7 @@ i18n
     // Load other namespaces on-demand
     partialBundledLanguages: true,
 
-    debug: process.env.NODE_ENV === 'development',
+    debug: false, // Disable i18next debug logging
   });
 
 export default i18n;

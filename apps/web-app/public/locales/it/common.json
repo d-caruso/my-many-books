@@ -84,5 +84,9 @@
   "terms_of_service": "Termini di Servizio",
   "read_our_terms_of_service": "Leggi i nostri termini di servizio",
   "app_version": "Versione App",
-  "select_language": "Seleziona Lingua"
+  "select_language": "Seleziona Lingua",
+  "menu": "Menu",
+  "user_menu": "Menu utente",
+  "user_avatar": "Avatar utente",
+  "none": "Nessuno"
 }
