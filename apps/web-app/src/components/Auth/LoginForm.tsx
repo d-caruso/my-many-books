@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@my-many-books/shared-auth';
+import {
+  Paper,
+  Box,
+  Typography,
+  Alert,
+  Divider,
+  Button as MuiButton,
+  Stack
+} from '@mui/material';
 import { ResponsiveInput } from '../UI/ResponsiveInput';
 import { ResponsiveButton } from '../UI/ResponsiveButton';
 
@@ -70,88 +79,106 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-surface rounded-lg shadow-lg border border-secondary-200 overflow-hidden">
-      <div className="px-6 py-4 bg-primary-50 border-b border-secondary-200">
-        <h2 className="text-xl font-semibold text-text-primary">{t('common:sign_in')}</h2>
-        <p className="text-text-secondary text-sm">{t('common:welcome_back')}</p>
-      </div>
+    <Paper
+      elevation={3}
+      sx={{
+        maxWidth: 480,
+        margin: '0 auto',
+        borderRadius: 2,
+        overflow: 'hidden',
+      }}
+    >
+      <Box sx={{ px: 4, py: 3, bgcolor: 'primary.50', borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="h5" component="h2">
+          {t('common:sign_in')}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t('common:welcome_back')}
+        </Typography>
+      </Box>
 
-      <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate aria-label="Login form">
-        {error && (
-          <div
-            className="bg-red-50 border border-red-200 rounded-lg p-3"
-            data-testid="alert-error"
-            role="alert"
-            aria-live="assertive"
-          >
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
-
-        <div className="space-y-1">
-          <ResponsiveInput
-            type="email"
-            id="email"
-            label={t('common:email')}
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder={t('common:enter_email')}
-            disabled={isLoading}
-            aria-invalid={!!validationErrors.email}
-            aria-describedby={validationErrors.email ? 'email-error' : undefined}
-          />
-          {validationErrors.email && (
-            <p id="email-error" className="text-red-600 text-sm" role="alert">{validationErrors.email}</p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <ResponsiveInput
-            type="password"
-            id="password"
-            label={t('common:password')}
-            value={formData.password}
-            onChange={(e) => handleInputChange('password', e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSubmit(e as any);
-              }
-            }}
-            placeholder={t('common:enter_password')}
-            disabled={isLoading}
-            aria-invalid={!!validationErrors.password}
-            aria-describedby={validationErrors.password ? 'password-error' : undefined}
-          />
-          {validationErrors.password && (
-            <p id="password-error" className="text-red-600 text-sm" role="alert">{validationErrors.password}</p>
-          )}
-        </div>
-
-        <ResponsiveButton
-          type="submit"
-          variant="primary"
-          size="lg"
-          disabled={isLoading}
-          loading={isLoading}
-          className="w-full"
-        >
-          {isLoading ? t('common:signing_in') : t('common:sign_in')}
-        </ResponsiveButton>
-
-        <div className="text-center pt-4 border-t border-secondary-200">
-          <p className="text-text-secondary text-sm">
-            {t('common:dont_have_account')}{' '}
-            <button
-              type="button"
-              onClick={onSwitchToRegister}
-              className="text-primary-700 hover:text-primary-800 font-medium"
-              disabled={isLoading}
+      <Box component="form" onSubmit={handleSubmit} noValidate aria-label="Login form" sx={{ p: 4 }}>
+        <Stack spacing={2}>
+          {error && (
+            <Alert
+              severity="error"
+              data-testid="alert-error"
+              role="alert"
             >
-              {t('common:sign_up')}
-            </button>
-          </p>
-        </div>
-      </form>
-    </div>
+              {error}
+            </Alert>
+          )}
+
+          <div>
+            <ResponsiveInput
+              type="email"
+              id="email"
+              label={t('common:email')}
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              placeholder={t('common:enter_email')}
+              disabled={isLoading}
+              aria-invalid={!!validationErrors.email}
+              aria-describedby={validationErrors.email ? 'email-error' : undefined}
+            />
+            {validationErrors.email && (
+              <Typography id="email-error" color="error" variant="caption" component="p" role="alert" sx={{ mt: 0.5 }}>
+                {validationErrors.email}
+              </Typography>
+            )}
+          </div>
+
+          <div>
+            <ResponsiveInput
+              type="password"
+              id="password"
+              label={t('common:password')}
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSubmit(e as any);
+                }
+              }}
+              placeholder={t('common:enter_password')}
+              disabled={isLoading}
+              aria-invalid={!!validationErrors.password}
+              aria-describedby={validationErrors.password ? 'password-error' : undefined}
+            />
+            {validationErrors.password && (
+              <Typography id="password-error" color="error" variant="caption" component="p" role="alert" sx={{ mt: 0.5 }}>
+                {validationErrors.password}
+              </Typography>
+            )}
+          </div>
+
+          <ResponsiveButton
+            type="submit"
+            variant="primary"
+            size="lg"
+            disabled={isLoading}
+            loading={isLoading}
+            fullWidth
+          >
+            {isLoading ? t('common:signing_in') : t('common:sign_in')}
+          </ResponsiveButton>
+        </Stack>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="body2" color="text.secondary" textAlign="center">
+          {t('common:dont_have_account')}{' '}
+          <MuiButton
+            type="button"
+            onClick={onSwitchToRegister}
+            disabled={isLoading}
+            variant="text"
+            size="small"
+          >
+            {t('common:sign_up')}
+          </MuiButton>
+        </Typography>
+      </Box>
+    </Paper>
   );
 };

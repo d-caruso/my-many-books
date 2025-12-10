@@ -3,71 +3,11 @@ import { render, screen, fireEvent } from '../../../__tests__/test-utils';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BookSearchResults } from '../../../components/Search/BookSearchResults';
 import { Book } from '../../../types';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Box: ({ children, sx, ...props }: any) => (
-    <div data-testid="box" style={sx} {...props}>{children}</div>
-  ),
-  Typography: ({ children, variant, color, fontWeight, gutterBottom, ...props }: any) => (
-    <div 
-      data-testid={`typography-${variant}`} 
-      data-color={color}
-      data-fontweight={fontWeight}
-      data-gutter-bottom={gutterBottom}
-      {...props}
-    >
-      {children}
-    </div>
-  ),
-  Card: ({ children, onClick, sx, ...props }: any) => (
-    <div 
-      data-testid="card" 
-      style={sx}
-      onClick={onClick}
-      {...props}
-    >
-      {children}
-    </div>
-  ),
-  CardContent: ({ children, sx, ...props }: any) => (
-    <div data-testid="card-content" style={sx} {...props}>{children}</div>
-  ),
-  CardMedia: ({ sx, children, ...props }: any) => (
-    <div data-testid="card-media" style={sx} {...props}>{children}</div>
-  ),
-  Chip: ({ label, color, variant, size, sx, ...props }: any) => (
-    <span 
-      data-testid="chip" 
-      data-color={color}
-      data-variant={variant}
-      data-size={size}
-      style={sx}
-      {...props}
-    >
-      {label}
-    </span>
-  ),
-  Button: ({ children, onClick, variant, color, size, startIcon, disabled, ...props }: any) => (
-    <button
-      data-testid={`button-${variant || 'default'}`}
-      onClick={onClick}
-      data-color={color}
-      data-size={size}
-      disabled={disabled}
-      {...props}
-    >
-      {startIcon && <span data-testid="start-icon">{startIcon}</span>}
-      {children}
-    </button>
-  ),
-  CircularProgress: ({ size, sx, ...props }: any) => (
-    <div data-testid="circular-progress" data-size={size} style={sx} {...props} />
-  ),
-  Alert: ({ children, severity, sx, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} style={sx} {...props}>{children}</div>
-  ),
-}));
+setupMuiMock();
 
 // Mock Material-UI icons
 vi.mock('@mui/icons-material/Error', () => ({

@@ -49,7 +49,6 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 describe('Header', () => {
   test('renders header component', () => {
-    console.log('Header test: renders header component');
     render(<Header />, { wrapper: TestWrapper });
     
     const header = screen.getByRole('banner');
@@ -57,24 +56,22 @@ describe('Header', () => {
   });
 
   test('has correct structure', () => {
-    console.log('Header test: has correct structure');
     render(<Header />, { wrapper: TestWrapper });
 
-    // Should render the header element
     const header = screen.getByRole('banner');
     expect(header).toBeInTheDocument();
-    expect(header).toHaveClass('bg-surface', 'shadow-sm', 'border-b');
+    expect(within(header).getByRole('heading', { name: /My Many Books/i })).toBeInTheDocument();
+    expect(within(header).getByTitle('Toggle theme')).toBeInTheDocument();
+    expect(within(header).getByLabelText('User avatar')).toBeInTheDocument();
   });
 
   test('displays default title', () => {
-    console.log('Header test: displays default title');
     render(<Header />, { wrapper: TestWrapper });
     
     expect(screen.getByText('My Many Books')).toBeInTheDocument();
   });
 
   test('displays custom title when provided', () => {
-    console.log('Header test: displays custom title when provided');
     render(<Header title="Custom Title" />, { wrapper: TestWrapper });
     
     expect(screen.getByText('Custom Title')).toBeInTheDocument();
@@ -82,16 +79,14 @@ describe('Header', () => {
   });
 
   test('contains theme toggle button', () => {
-    console.log('Header test: contains theme toggle button');
     render(<Header />, { wrapper: TestWrapper });
     
     const themeButton = screen.getByTitle('Toggle theme');
     expect(themeButton).toBeInTheDocument();
-    expect(themeButton).toHaveClass('p-2', 'rounded-md');
+    expect(themeButton).toHaveAttribute('aria-label', 'Toggle theme');
   });
 
   test('theme toggle button works', () => {
-    console.log('Header test: theme toggle button works');
     render(<Header />, { wrapper: TestWrapper });
 
     const themeButton = screen.getByTitle('Toggle theme');
@@ -102,7 +97,6 @@ describe('Header', () => {
   });
 
   test('displays theme icon', () => {
-    console.log('Header test: displays theme icon');
     render(<Header />, { wrapper: TestWrapper });
 
     const themeButton = screen.getByTitle('Toggle theme');
@@ -111,16 +105,13 @@ describe('Header', () => {
   });
 
   test('contains user avatar', () => {
-    console.log('Header test: contains user avatar');
     render(<Header />, { wrapper: TestWrapper });
 
-    const avatar = screen.getByText('U');
+    const avatar = screen.getByLabelText('User avatar');
     expect(avatar).toBeInTheDocument();
-    expect(avatar).toHaveClass('text-white', 'text-sm', 'font-medium');
   });
 
-  test('has responsive layout classes', () => {
-    console.log('Header test: has responsive layout classes');
+  test('supports accessible layout', () => {
     render(<Header />, { wrapper: TestWrapper });
 
     const header = screen.getByRole('banner');

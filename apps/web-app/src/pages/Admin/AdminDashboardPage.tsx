@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Grid,
   Paper,
   Typography,
   Card,
@@ -9,6 +8,7 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import PeopleIcon from '@mui/icons-material/People';
 import BookIcon from '@mui/icons-material/Book';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -65,7 +65,7 @@ interface DashboardStats {
   timestamp?: string;
 }
 
-const AdminDashboardPage: React.FC = () => {
+export const AdminDashboardPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -122,7 +122,7 @@ const AdminDashboardPage: React.FC = () => {
         {/* Stats Grid */}
         {!loading && stats && (
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid {...{ item: true } as any} xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <StatCard
                 title={t('pages:admin.dashboard.total_users', 'Total Users')}
                 value={stats.totalUsers}
@@ -130,7 +130,7 @@ const AdminDashboardPage: React.FC = () => {
                 color="#1976d2"
               />
             </Grid>
-            <Grid {...{ item: true } as any} xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <StatCard
                 title={t('pages:admin.dashboard.total_books', 'Total Books')}
                 value={stats.totalBooks}
@@ -138,7 +138,7 @@ const AdminDashboardPage: React.FC = () => {
                 color="#2e7d32"
               />
             </Grid>
-            <Grid {...{ item: true } as any} xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <StatCard
                 title={t('pages:admin.dashboard.active_users', 'Active Users')}
                 value={stats.activeUsers}
@@ -146,7 +146,7 @@ const AdminDashboardPage: React.FC = () => {
                 color="#ed6c02"
               />
             </Grid>
-            <Grid {...{ item: true } as any} xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <StatCard
                 title={t('pages:admin.dashboard.admin_users', 'Admin Users')}
                 value={stats.adminUsers}

@@ -24,6 +24,14 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation(['common', 'books']);
+  const appName = t('common:app_name');
+  const menuLabel = t('common:menu');
+  const userMenuLabel = t('common:user_menu', 'User menu');
+  const avatarLabel = t('common:user_avatar', 'User avatar');
+  const userInitial = user?.name?.charAt(0)?.toUpperCase()
+    ?? user?.surname?.charAt(0)?.toUpperCase()
+    ?? user?.email?.charAt(0)?.toUpperCase()
+    ?? 'U';
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -62,7 +70,7 @@ export const Navbar: React.FC = () => {
               cursor: 'pointer'
             }}
           >
-            {t('common:app_name')}
+            {appName}
           </Typography>
         </Box>
 
@@ -97,8 +105,8 @@ export const Navbar: React.FC = () => {
             <Button
               onClick={handleMenuOpen}
               startIcon={
-                <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                  {user.name?.charAt(0).toUpperCase()}
+                <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }} aria-label={avatarLabel}>
+                  {userInitial}
                 </Avatar>
               }
               endIcon={<ExpandMoreIcon />}
@@ -111,9 +119,10 @@ export const Navbar: React.FC = () => {
             <IconButton
               onClick={handleMenuOpen}
               sx={{ display: { xs: 'flex', sm: 'none' } }}
+              aria-label={userMenuLabel}
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                {user.name?.charAt(0).toUpperCase()}
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }} aria-label={avatarLabel}>
+                {userInitial}
               </Avatar>
             </IconButton>
 
@@ -139,7 +148,7 @@ export const Navbar: React.FC = () => {
           <IconButton
             onClick={handleMenuOpen}
             sx={{ display: { xs: 'flex', md: 'none' } }}
-            aria-label={t('common:menu')}
+            aria-label={menuLabel}
           >
             <MenuIcon />
           </IconButton>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Box, Button, IconButton, Chip } from '@mui/material';
+import { Box, Button, IconButton, Chip, Container, Typography, Alert } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ClearIcon from '@mui/icons-material/Clear';
 import GridIcon from '@mui/icons-material/ViewModule';
@@ -233,10 +233,21 @@ const BooksPage: React.FC = () => {
     setActionError(null);
   };
 
+  const visuallyHidden = {
+    border: 0,
+    clip: 'rect(0 0 0 0)',
+    height: 1,
+    margin: -1,
+    overflow: 'hidden',
+    padding: 0,
+    position: 'absolute' as const,
+    width: 1,
+  };
+
   // Render different modes
   if (pageMode === 'add' || pageMode === 'edit') {
     return (
-      <div style={{ maxWidth: '672px', margin: '0 auto', padding: '2rem 1rem' }}>
+      <Container maxWidth="md" sx={{ py: 4 }}>
         <BookForm
           book={selectedBook}
           onSubmit={handleFormSubmit}
@@ -244,17 +255,17 @@ const BooksPage: React.FC = () => {
           loading={actionLoading}
         />
         {actionError && (
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600" style={{ whiteSpace: 'pre-line' }}>{actionError}</p>
-          </div>
+          <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-line' }}>
+            {actionError}
+          </Alert>
         )}
-      </div>
+      </Container>
     );
   }
 
   if (pageMode === 'details' && selectedBook) {
     return (
-      <div style={{ maxWidth: '896px', margin: '0 auto', padding: '2rem 1rem' }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         <BookDetails
           book={selectedBook}
           onEdit={handleEditBook}
@@ -264,25 +275,27 @@ const BooksPage: React.FC = () => {
           loading={actionLoading}
         />
         {actionError && (
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600" style={{ whiteSpace: 'pre-line' }}>{actionError}</p>
-          </div>
+          <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-line' }}>
+            {actionError}
+          </Alert>
         )}
-      </div>
+      </Container>
     );
   }
 
   // List mode (default)
   return (
-    <div style={{ maxWidth: '1024px', margin: '0 auto', padding: '2rem 1rem' }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Page header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">{t('pages:books.title')}</h1>
-          <p className="text-lg text-text-secondary">
+      <Box mb={6} display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
+        <Box>
+          <Typography variant="h4" component="h1" gutterBottom>
+            {t('pages:books.title')}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
             {displayedTotalCount > 0 ? t('pages:books.description_with_count', { count: displayedTotalCount }) : t('pages:books.description')}
-          </p>
-        </div>
+          </Typography>
+        </Box>
 
         <Button
           variant="contained"
@@ -298,20 +311,20 @@ const BooksPage: React.FC = () => {
             {t('pages:books.add')}
           </Box>
         </Button>
-      </div>
+      </Box>
 
       {/* Search and filters */}
-      <div className="mb-8">
+      <Box mb={6}>
         <BookSearchForm
           onSearch={handleSearch}
           loading={searchLoading}
           initialQuery={searchParams.get('q') || ''}
         />
-      </div>
+      </Box>
 
       {/* View controls */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <Box mb={4} display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
+        <Box display="flex" alignItems="center" gap={2}>
           {searchActive && (
             <Chip
               icon={<ClearIcon />}
@@ -331,9 +344,9 @@ const BooksPage: React.FC = () => {
               size="small"
             />
           )}
-        </div>
+        </Box>
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box display="flex" gap={1}>
           <IconButton
             onClick={() => setViewMode('grid')}
             color={viewMode === 'grid' ? 'primary' : 'default'}
@@ -354,16 +367,16 @@ const BooksPage: React.FC = () => {
             <ListIcon aria-hidden="true" />
           </IconButton>
         </Box>
-      </div>
+      </Box>
 
       {/* Screen reader announcements for list updates */}
-      <div role="status" aria-live="polite" className="sr-only">
+      <Box role="status" aria-live="polite" sx={visuallyHidden}>
         {displayedLoading
           ? t('pages:books.loading')
           : displayedTotalCount > 0
           ? `${displayedTotalCount} ${t('pages:books.books_found')}`
           : t('pages:books.no_books_empty')}
-      </div>
+      </Box>
 
       {/* Books list */}
       <BookList
@@ -391,7 +404,7 @@ const BooksPage: React.FC = () => {
           </Button>
         </Box>
       )}
-    </div>
+    </Container>
   );
 };
 export default BooksPage;

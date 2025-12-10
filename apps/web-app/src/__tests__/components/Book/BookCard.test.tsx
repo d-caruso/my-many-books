@@ -2,86 +2,11 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BookCard } from '../../../components/Book/BookCard';
 import { Book } from '../../types';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Card: ({ children, onClick, sx }: any) => (
-    <div data-testid="card" onClick={onClick} style={sx}>
-      {children}
-    </div>
-  ),
-  CardContent: ({ children, sx }: any) => (
-    <div data-testid="card-content" style={sx}>
-      {children}
-    </div>
-  ),
-  CardActions: ({ children, sx }: any) => (
-    <div data-testid="card-actions" style={sx}>
-      {children}
-    </div>
-  ),
-  CardMedia: ({ children, sx }: any) => (
-    <div data-testid="card-media" style={sx}>
-      {children}
-    </div>
-  ),
-  Typography: ({ children, variant, component, title, ...props }: any) => {
-    const Component = component || 'div';
-    return (
-      <Component data-testid={`typography-${variant}`} title={title} {...props}>
-        {children}
-      </Component>
-    );
-  },
-  Chip: ({ label, color, size, ...props }: any) => (
-    <span data-testid="chip" data-color={color} data-size={size} {...props}>
-      {label}
-    </span>
-  ),
-  IconButton: ({ children, onClick, title, size, color, ...props }: any) => (
-    <button
-      data-testid="icon-button"
-      onClick={onClick}
-      title={title}
-      data-size={size}
-      data-color={color}
-      {...props}
-    >
-      {children}
-    </button>
-  ),
-  MenuItem: ({ children, value, ...props }: any) => (
-    <option data-testid="menu-item" value={value} {...props}>
-      {children}
-    </option>
-  ),
-  Select: ({ children, value, onChange, onClick, ...props }: any) => (
-    <select
-      data-testid="select"
-      value={value}
-      onChange={onChange}
-      onClick={onClick}
-      {...props}
-    >
-      {children}
-    </select>
-  ),
-  FormControl: ({ children, ...props }: any) => (
-    <div data-testid="form-control" {...props}>
-      {children}
-    </div>
-  ),
-  Box: ({ children, ...props }: any) => (
-    <div data-testid="box" {...props}>
-      {children}
-    </div>
-  ),
-  Stack: ({ children, ...props }: any) => (
-    <div data-testid="stack" {...props}>
-      {children}
-    </div>
-  ),
-}));
+setupMuiMock();
 
 vi.mock('@mui/icons-material', () => ({
   Edit: () => <span data-testid="edit-icon">Edit</span>,

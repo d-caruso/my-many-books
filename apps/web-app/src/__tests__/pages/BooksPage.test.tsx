@@ -3,6 +3,7 @@ import { render as rtlRender, screen, fireEvent, act } from '@testing-library/re
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { setupMuiMock } from '../test-utils/setupMuiMock';
 
 // Import after mocks
 import BooksPage from '../../pages/BooksPage';
@@ -32,25 +33,7 @@ vi.mock('../../hooks/useBooks', () => ({
   useBooks: mockUseBooks,
 }));
 
-// Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Box: ({ children, ...props }: any) => <div data-testid="box" {...props}>{children}</div>,
-  Button: ({ children, onClick, startIcon, variant, ...props }: any) => (
-    <button data-testid={`button-${variant || 'default'}`} onClick={onClick} {...props}>
-      {startIcon && <span data-testid="button-icon">{startIcon}</span>}
-      {children}
-    </button>
-  ),
-  IconButton: ({ children, onClick, ...props }: any) => (
-    <button data-testid="icon-button" onClick={onClick} {...props}>{children}</button>
-  ),
-  Chip: ({ label, onDelete, ...props }: any) => (
-    <div data-testid="chip" onClick={onDelete} {...props}>{label}</div>
-  ),
-  Typography: ({ children, variant, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} {...props}>{children}</div>
-  ),
-}));
+setupMuiMock();
 
 vi.mock('@mui/icons-material/Add', () => ({
   default: () => <span data-testid="add-icon">Add</span>,

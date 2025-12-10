@@ -3,6 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { UpdatePrompt } from '../../../components/PWA/UpdatePrompt';
 import { usePWAContext } from '../../../contexts/PWAContext';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 // Mock the usePWAContext hook
 vi.mock('../../../contexts/PWAContext', () => ({
@@ -10,65 +12,7 @@ vi.mock('../../../contexts/PWAContext', () => ({
 }));
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Alert: ({ children, severity, action, variant, onClose, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} data-variant={variant} {...props}>
-      {children}
-      {action && <div data-testid="alert-action">{action}</div>}
-      {onClose && <button data-testid="alert-close" onClick={onClose}>×</button>}
-    </div>
-  ),
-  Snackbar: ({ children, open, onClose, anchorOrigin, autoHideDuration, ...props }: any) => (
-    open ? (
-      <div 
-        data-testid="snackbar" 
-        data-anchor={`${anchorOrigin?.vertical}-${anchorOrigin?.horizontal}`}
-        data-auto-hide={autoHideDuration}
-        {...props}
-      >
-        {children}
-        <button data-testid="snackbar-close" onClick={onClose}>Close</button>
-      </div>
-    ) : null
-  ),
-  Dialog: ({ children, open, onClose, maxWidth, ...props }: any) => (
-    open ? (
-      <div data-testid="dialog" data-maxwidth={maxWidth} {...props}>
-        {children}
-        <button data-testid="dialog-backdrop" onClick={onClose} />
-      </div>
-    ) : null
-  ),
-  DialogTitle: ({ children, ...props }: any) => (
-    <div data-testid="dialog-title" {...props}>{children}</div>
-  ),
-  DialogContent: ({ children, ...props }: any) => (
-    <div data-testid="dialog-content" {...props}>{children}</div>
-  ),
-  DialogActions: ({ children, ...props }: any) => (
-    <div data-testid="dialog-actions" {...props}>{children}</div>
-  ),
-  Button: ({ children, onClick, variant, color, disabled, ...props }: any) => (
-    <button
-      data-testid={`button-${variant || 'default'}`}
-      onClick={onClick}
-      data-color={color}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </button>
-  ),
-  Typography: ({ children, variant, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} {...props}>{children}</div>
-  ),
-  LinearProgress: ({ variant, value, ...props }: any) => (
-    <div data-testid="linear-progress" data-variant={variant} data-value={value} {...props} />
-  ),
-  Box: ({ children, sx, ...props }: any) => (
-    <div data-testid="box" style={sx} {...props}>{children}</div>
-  ),
-}));
+setupMuiMock();
 
 // Mock Material-UI icons
 vi.mock('@mui/icons-material/SystemUpdate', () => ({

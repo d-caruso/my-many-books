@@ -1,46 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ScannerModal } from '../../../components/Scanner/ScannerModal';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
 
-// Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Box: ({ children, sx, mb, mt, display, alignItems, justifyContent, textAlign, ...props }: any) => (
-    <div 
-      data-testid="box" 
-      style={sx}
-      data-mb={mb}
-      data-mt={mt}
-      data-display={display}
-      data-alignitems={alignItems}
-      data-justifycontent={justifyContent}
-      data-textalign={textAlign}
-      {...props}
-    >
-      {children}
-    </div>
-  ),
-  Typography: ({ children, variant, fontWeight, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} data-fontweight={fontWeight} {...props}>
-      {children}
-    </div>
-  ),
-  Button: ({ children, onClick, startIcon, variant, size, ...props }: any) => (
-    <button 
-      data-testid={`button-${variant || 'default'}`} 
-      onClick={onClick} 
-      data-size={size}
-      {...props}
-    >
-      {startIcon && <span data-testid="button-icon">{startIcon}</span>}
-      {children}
-    </button>
-  ),
-  Container: ({ children, maxWidth, sx, ...props }: any) => (
-    <div data-testid="container" data-maxwidth={maxWidth} style={sx} {...props}>
-      {children}
-    </div>
-  ),
-}));
+setupMuiMock();
 
 // Mock Material-UI icons
 vi.mock('@mui/icons-material/Edit', () => ({

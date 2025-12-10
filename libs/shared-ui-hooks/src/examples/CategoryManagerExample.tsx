@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Box, Typography, List, ListItem, TextField, Button, Stack } from '@mui/material';
 import { CategoriesAPI, useCategories } from '../useCategories';
 
 interface CategoryManagerExampleProps {
@@ -23,19 +24,26 @@ export const CategoryManagerExample: React.FC<CategoryManagerExampleProps> = ({ 
   };
 
   return (
-    <div>
-      <h3>Category Manager</h3>
-      <ul>
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        Category Manager
+      </Typography>
+      <List>
         {categories.map(category => (
-          <li key={category.id}>{category.name}</li>
+          <ListItem key={category.id}>{category.name}</ListItem>
         ))}
-      </ul>
-      <input
-        placeholder="New category"
-        value={name}
-        onChange={e => setName(e.target.value)}
-      />
-      <button onClick={handleCreate}>Add</button>
-    </div>
+      </List>
+      <Stack direction="row" spacing={2} mt={2}>
+        <TextField
+          placeholder="New category"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          size="small"
+        />
+        <Button variant="contained" onClick={handleCreate}>
+          Add
+        </Button>
+      </Stack>
+    </Box>
   );
 };

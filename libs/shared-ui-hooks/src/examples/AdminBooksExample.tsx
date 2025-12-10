@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Box, Typography, List, ListItem, Button, Stack } from '@mui/material';
 import { BooksAPI, useBooks } from '../useBooks';
 import { Book, BookFormData } from '@my-many-books/shared-types';
 
@@ -20,20 +21,42 @@ export const AdminBooksExample: React.FC<AdminBooksExampleProps> = ({ api }) => 
   }, [loadBooks]);
 
   return (
-    <div>
-      <h2>Admin Book Overview</h2>
-      <ul>
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        Admin Book Overview
+      </Typography>
+      <List>
         {books.map(book => (
-          <li key={book.id}>
-            <span>{book.title}</span>
-            <button onClick={() => void updateBookStatus(book.id, 'finished')}>Mark Done</button>
-            <button onClick={() => void deleteBook(book.id)}>Remove</button>
-          </li>
+          <ListItem key={book.id}>
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%' }}>
+              <Typography sx={{ flexGrow: 1 }}>{book.title}</Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => void updateBookStatus(book.id, 'finished')}
+              >
+                Mark Done
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                color="error"
+                onClick={() => void deleteBook(book.id)}
+              >
+                Remove
+              </Button>
+            </Stack>
+          </ListItem>
         ))}
-      </ul>
-      <button onClick={() => void loadMore()} disabled={books.length === 0}>
+      </List>
+      <Button
+        variant="contained"
+        onClick={() => void loadMore()}
+        disabled={books.length === 0}
+        sx={{ mt: 2 }}
+      >
         Load more
-      </button>
-    </div>
+      </Button>
+    </Box>
   );
 };

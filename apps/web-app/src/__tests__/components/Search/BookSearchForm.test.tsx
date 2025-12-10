@@ -3,6 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BookSearchForm } from '../../../components/Search/BookSearchForm';
 import { useCategories } from '../../../hooks/useCategories';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 // Mock the useCategories hook
 vi.mock('../../../hooks/useCategories', () => ({
@@ -26,132 +28,7 @@ vi.mock('../../../components/Search/AuthorAutocomplete', () => ({
 }));
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Paper: ({ children, sx, ...props }: any) => (
-    <div data-testid="paper" style={sx} {...props}>{children}</div>
-  ),
-  TextField: ({ 
-    label, 
-    value, 
-    onChange, 
-    placeholder, 
-    fullWidth, 
-    disabled,
-    error,
-    InputProps,
-    ...props 
-  }: any) => (
-    <div data-testid="text-field-container">
-      <input
-        data-testid="search-input"
-        placeholder={placeholder}
-        value={value || ''}
-        onChange={(e) => onChange?.(e)}
-        disabled={disabled}
-        data-error={error}
-        data-fullwidth={fullWidth}
-        {...props}
-      />
-      {InputProps?.startAdornment && (
-        <div data-testid="input-adornment">{InputProps.startAdornment}</div>
-      )}
-    </div>
-  ),
-  Button: ({ 
-    children, 
-    onClick, 
-    variant, 
-    disabled, 
-    type, 
-    color,
-    size,
-    startIcon, 
-    endIcon,
-    sx,
-    ...props 
-  }: any) => (
-    <button
-      data-testid={`button-${variant || 'default'}`}
-      onClick={onClick}
-      disabled={disabled}
-      type={type}
-      data-color={color}
-      data-size={size}
-      style={sx}
-      {...props}
-    >
-      {startIcon && <span data-testid="start-icon">{startIcon}</span>}
-      {children}
-      {endIcon && <span data-testid="end-icon">{endIcon}</span>}
-    </button>
-  ),
-  Box: ({ children, component, sx, display, gap, mb, onSubmit, ...props }: any) => {
-    const Element = component === 'form' ? 'form' : 'div';
-    return (
-      <Element
-        data-testid="box"
-        data-component={component}
-        style={{ display, gap, marginBottom: mb, ...sx }}
-        onSubmit={onSubmit}
-        {...props}
-      >
-        {children}
-      </Element>
-    );
-  },
-  FormControl: ({ children, fullWidth, size, ...props }: any) => (
-    <div data-testid="form-control" data-fullwidth={fullWidth} data-size={size} {...props}>
-      {children}
-    </div>
-  ),
-  InputLabel: ({ children, id, ...props }: any) => (
-    <label data-testid="input-label" id={id} {...props}>{children}</label>
-  ),
-  Select: ({ 
-    children, 
-    value, 
-    onChange, 
-    label, 
-    disabled,
-    labelId,
-    ...props 
-  }: any) => (
-    <div data-testid="select-container">
-      <select
-        data-testid="select"
-        value={value || ''}
-        onChange={(e) => onChange?.({ target: { value: e.target.value } })}
-        disabled={disabled}
-        data-label-id={labelId}
-        aria-label={label}
-        {...props}
-      >
-        {children}
-      </select>
-    </div>
-  ),
-  MenuItem: ({ children, value, ...props }: any) => (
-    <option data-testid="menu-item" value={value} {...props}>{children}</option>
-  ),
-  Collapse: ({ children, in: isIn, ...props }: any) => (
-    isIn ? <div data-testid="collapse" {...props}>{children}</div> : null
-  ),
-  Typography: ({ children, variant, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} {...props}>{children}</div>
-  ),
-  InputAdornment: ({ children, position, ...props }: any) => (
-    <div data-testid={`input-adornment-${position}`} {...props}>{children}</div>
-  ),
-  Alert: ({ children, severity, icon, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} {...props}>
-      {icon && <span data-testid="alert-icon">{icon}</span>}
-      {children}
-    </div>
-  ),
-  Stack: ({ children, spacing, ...props }: any) => (
-    <div data-testid="stack" data-spacing={spacing} {...props}>{children}</div>
-  ),
-}));
+setupMuiMock();
 
 // Mock Material-UI icons - using default exports
 vi.mock('@mui/icons-material/Search', () => ({

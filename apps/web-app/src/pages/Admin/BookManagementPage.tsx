@@ -57,7 +57,7 @@ interface BookFormData {
   userId?: number | null;
 }
 
-const BookManagementPage: React.FC = () => {
+export const BookManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
   const { getAdminBooks, updateAdminBook, deleteAdminBook } = apiService;

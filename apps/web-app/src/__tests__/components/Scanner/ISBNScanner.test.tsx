@@ -3,6 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { ISBNScanner } from '../../../components/Scanner/ISBNScanner';
 import { useISBNScanner } from '../../../hooks/useISBNScanner';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 // Mock the useISBNScanner hook
 vi.mock('../../../hooks/useISBNScanner', () => ({
@@ -10,49 +12,7 @@ vi.mock('../../../hooks/useISBNScanner', () => ({
 }));
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Box: ({ children, sx, component, ref, playsInline, muted, autoPlay, ...props }: any) => {
-    const Tag = component || 'div';
-    const cleanProps = { ...props };
-    if (playsInline) cleanProps.playsInline = playsInline;
-    if (muted) cleanProps.muted = muted;
-    if (autoPlay) cleanProps.autoPlay = autoPlay;
-    return (
-      <Tag data-testid="box" style={sx} ref={ref} {...cleanProps}>{children}</Tag>
-    );
-  },
-  Paper: ({ children, elevation, ...props }: any) => (
-    <div data-testid="paper" data-elevation={elevation} {...props}>{children}</div>
-  ),
-  Typography: ({ children, variant, color, gutterBottom, fontWeight, textAlign, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} data-color={color} data-gutterbottom={gutterBottom} data-fontweight={fontWeight} style={{ textAlign }} {...props}>{children}</div>
-  ),
-  Container: ({ children, maxWidth, ...props }: any) => (
-    <div data-testid="container" data-maxwidth={maxWidth} {...props}>{children}</div>
-  ),
-  Stack: ({ children, direction, spacing, alignItems, justifyContent, ...props }: any) => (
-    <div data-testid="stack" data-direction={direction} data-spacing={spacing} style={{ alignItems, justifyContent }} {...props}>{children}</div>
-  ),
-  IconButton: ({ children, onClick, color, disabled, ...props }: any) => (
-    <button data-testid="icon-button" onClick={onClick} disabled={disabled} data-color={color} {...props}>
-      {children}
-    </button>
-  ),
-  Alert: ({ children, severity, action, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} {...props}>
-      {children}
-      {action && <div data-testid="alert-action">{action}</div>}
-    </div>
-  ),
-  CircularProgress: ({ size, color, ...props }: any) => (
-    <div data-testid="circular-progress" data-size={size} data-color={color} {...props} />
-  ),
-  Chip: ({ label, color, variant, onDelete, ...props }: any) => (
-    <div data-testid="chip" data-color={color} data-variant={variant} onClick={onDelete} {...props}>
-      {label}
-    </div>
-  ),
-}));
+setupMuiMock();
 
 // Mock Material-UI icons
 vi.mock('@mui/icons-material/Close', () => ({

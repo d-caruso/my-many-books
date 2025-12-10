@@ -1,70 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ManualISBNInput } from '../../../components/Scanner/ManualISBNInput';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
 
-// Mock Material-UI components - match the actual component structure
-vi.mock('@mui/material', () => ({
-  Box: ({ children, sx, component, onSubmit, ...props }: any) => {
-    const Tag = component || 'div';
-    const handleSubmit = onSubmit || (() => {});
-    return (
-      <Tag data-testid="box" style={sx} onSubmit={handleSubmit} {...props}>{children}</Tag>
-    );
-  },
-  Paper: ({ children, elevation, sx, ...props }: any) => (
-    <div data-testid="paper" data-elevation={elevation} style={sx} {...props}>{children}</div>
-  ),
-  Typography: ({ children, variant, color, gutterBottom, fontWeight, ...props }: any) => (
-    <div 
-      data-testid={`typography-${variant}`} 
-      data-color={color} 
-      data-gutterbottom={gutterBottom}
-      data-fontweight={fontWeight}
-      {...props}
-    >
-      {children}
-    </div>
-  ),
-  TextField: ({ label, value, onChange, error, helperText, placeholder, fullWidth, id, inputProps, autoComplete, ...props }: any) => (
-    <div data-testid="text-field-container">
-      <label data-testid="text-field-label" htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        data-testid="text-field"
-        data-label={label}
-        placeholder={placeholder}
-        value={value || ''}
-        onChange={(e) => onChange?.(e)}
-        data-error={!!error}
-        data-fullwidth={fullWidth}
-        autoComplete={autoComplete}
-        maxLength={inputProps?.maxLength}
-        {...props}
-      />
-      {error && helperText && <div data-testid="text-field-error">{helperText}</div>}
-      {helperText && !error && <div data-testid="text-field-helper">{helperText}</div>}
-    </div>
-  ),
-  Button: ({ children, onClick, variant, disabled, color, fullWidth, type, ...props }: any) => (
-    <button
-      data-testid={`button-${variant || 'default'}`}
-      onClick={onClick}
-      disabled={disabled}
-      data-color={color}
-      data-fullwidth={fullWidth}
-      type={type}
-      {...props}
-    >
-      {children}
-    </button>
-  ),
-  Stack: ({ children, direction, spacing, ...props }: any) => (
-    <div data-testid="stack" data-direction={direction} data-spacing={spacing} {...props}>{children}</div>
-  ),
-  Alert: ({ children, severity, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} {...props}>{children}</div>
-  ),
-}));
+setupMuiMock();
 
 // Mock Material-UI icons
 vi.mock('@mui/icons-material', () => ({

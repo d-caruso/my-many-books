@@ -8,8 +8,8 @@ import {
   Typography,
   Chip,
   IconButton,
-  MenuItem,
   Select,
+  MenuItem,
   FormControl,
   Box,
   Stack
@@ -84,6 +84,7 @@ export const BookCard: React.FC<BookCardProps> = ({
   if (compact) {
     return (
       <Card 
+        data-testid="card"
         sx={{ 
           cursor: onClick ? 'pointer' : 'default',
           '&:hover': {
@@ -164,6 +165,7 @@ export const BookCard: React.FC<BookCardProps> = ({
 
   return (
     <Card 
+      data-testid="card"
       sx={{ 
         cursor: onClick ? 'pointer' : 'default',
         '&:hover': {
@@ -370,12 +372,16 @@ export const BookCard: React.FC<BookCardProps> = ({
                 value={book.status || ''}
                 onChange={handleStatusChange}
                 onClick={(e) => e.stopPropagation()}
+                displayEmpty
                 sx={{ fontSize: '0.875rem' }}
                 inputProps={{
-                  'aria-label': t('accessibility:change_reading_status')
+                  'aria-label': t('accessibility:change_reading_status'),
+                  'data-testid': 'select'
                 }}
               >
-                <MenuItem value="">&nbsp;</MenuItem>
+                <MenuItem value="">
+                  <em>{t('common:none', 'None')}</em>
+                </MenuItem>
                 <MenuItem value="reading">{t('books:reading')}</MenuItem>
                 <MenuItem value="paused">{t('books:paused')}</MenuItem>
                 <MenuItem value="finished">{t('books:finished')}</MenuItem>

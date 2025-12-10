@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { Box, Container } from '@mui/material';
 import { LoginForm, RegisterForm } from '../components/Auth';
 import { useAuth } from '@my-many-books/shared-auth';
 
@@ -15,19 +16,25 @@ const AuthPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: { xs: 6, md: 10 },
+        px: 2,
+      }}
+    >
+      <Container maxWidth="sm">
         {mode === 'login' ? (
-          <LoginForm
-            onSwitchToRegister={() => setMode('register')}
-          />
+          <LoginForm onSwitchToRegister={() => setMode('register')} />
         ) : (
-          <RegisterForm
-            onSwitchToLogin={() => setMode('login')}
-          />
+          <RegisterForm onSwitchToLogin={() => setMode('login')} />
         )}
-      </div>
-    </div>
+      </Container>
+    </Box>
   );
 };
 export default AuthPage;

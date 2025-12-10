@@ -7,7 +7,9 @@ import {
   CircularProgress,
   Container,
   Stack,
-  Chip
+  Chip,
+  TextField,
+  Button
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SwapIcon from '@mui/icons-material/SwapHoriz';
@@ -313,31 +315,20 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
                   </IconButton>
                   
                   {/* Manual Entry Form */}
-                  <Box data-testid="manual-entry-form" sx={{ mt: 3, width: '100%' }}>
-                    <input
+                  <Box data-testid="manual-entry-form" sx={{ mt: 3, width: '100%', display: 'flex', gap: 1 }}>
+                    <TextField
                       data-testid="manual-isbn-input"
                       placeholder={t('scanner:enter_isbn_placeholder')}
-                      style={{
-                        padding: '8px',
-                        marginRight: '8px',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        width: '200px'
-                      }}
+                      size="small"
+                      sx={{ width: 200 }}
                     />
-                    <button
+                    <Button
                       data-testid="submit-manual-isbn"
-                      style={{
-                        padding: '8px 16px',
-                        backgroundColor: '#1976d2',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
+                      variant="contained"
+                      size="small"
                     >
                       {t('scanner:submit')}
-                    </button>
+                    </Button>
                   </Box>
                 </Stack>
               ) : (

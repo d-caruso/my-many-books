@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Snackbar, Alert, AlertTitle, Button as MuiButton } from '@mui/material';
 import { usePWAContext } from '../../contexts/PWAContext';
 
 interface OfflineIndicatorProps {
@@ -29,73 +30,64 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
 
   if (variant === 'snackbar') {
     return (
-      <div data-testid="snackbar" className="fixed bottom-4 left-4 right-4 bg-semantic-warning text-white p-4 rounded shadow-lg z-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div 
-              data-testid="wifi-off-icon"
-              className="w-2 h-2 bg-white rounded-full animate-pulse"
-            />
-            <span>{displayMessage}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            {showRetry && (
-              <button
-                data-testid="alert-action"
-                onClick={onRetry}
-                className="text-white underline hover:no-underline"
-              >
-                {t('pwa:offline_indicator.retry')}
-              </button>
-            )}
-            {dismissible && (
-              <button 
-                data-testid="alert-close"
-                onClick={onDismiss}
-                className="text-white text-lg leading-none"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      <Snackbar
+        open
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        data-testid="snackbar"
+      >
+        <Alert
+          severity="warning"
+          action={
+            <>
+              {showRetry && (
+                <MuiButton color="inherit" size="small" data-testid="alert-action" onClick={onRetry}>
+                  {t('pwa:offline_indicator.retry')}
+                </MuiButton>
+              )}
+              {dismissible && (
+                <MuiButton color="inherit" size="small" data-testid="alert-close" onClick={onDismiss}>
+                  {t('common:close')}
+                </MuiButton>
+              )}
+            </>
+          }
+        >
+          <AlertTitle>{t('pwa:offline_indicator.you_are_offline')}</AlertTitle>
+          {displayMessage}
+        </Alert>
+      </Snackbar>
     );
   }
 
   return (
-    <div 
+    <Alert
+      severity="warning"
       data-testid="alert-warning"
-      className="fixed top-0 left-0 right-0 bg-semantic-warning text-white px-4 py-2 text-center text-sm font-medium z-50"
+      sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1300,
+        borderRadius: 0,
+      }}
+      action={
+        <>
+          {showRetry && (
+            <MuiButton color="inherit" size="small" data-testid="alert-action" onClick={onRetry}>
+              {t('pwa:offline_indicator.retry')}
+            </MuiButton>
+          )}
+          {dismissible && (
+            <MuiButton color="inherit" size="small" data-testid="alert-close" onClick={onDismiss}>
+              {t('common:close')}
+            </MuiButton>
+          )}
+        </>
+      }
     >
-      <div className="flex items-center justify-center space-x-2">
-        <div 
-          data-testid="wifi-off-icon"
-          className="w-2 h-2 bg-white rounded-full animate-pulse"
-        />
-        <div className="flex items-center space-x-1">
-          <span>{displayMessage}</span>
-          <span>{t('pwa:offline_indicator.features_limited')}</span>
-        </div>
-        {showRetry && (
-          <button
-            data-testid="alert-action"
-            onClick={onRetry}
-            className="ml-4 text-white underline hover:no-underline"
-          >
-            {t('pwa:offline_indicator.retry')}
-          </button>
-        )}
-        {dismissible && (
-          <button 
-            data-testid="alert-close"
-            onClick={onDismiss}
-            className="ml-4 text-white text-lg leading-none"
-          >
-            ×
-          </button>
-        )}
-      </div>
-    </div>
+      <AlertTitle>{t('pwa:offline_indicator.you_are_offline')}</AlertTitle>
+      {displayMessage} {t('pwa:offline_indicator.features_limited')}
+    </Alert>
   );
 };

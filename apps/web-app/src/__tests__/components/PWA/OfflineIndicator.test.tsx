@@ -2,6 +2,8 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { OfflineIndicator } from '../../../components/PWA/OfflineIndicator';
 import { usePWAContext } from '../../../contexts/PWAContext';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 // Mock the usePWAContext hook
 vi.mock('../../../contexts/PWAContext', () => ({
@@ -9,49 +11,7 @@ vi.mock('../../../contexts/PWAContext', () => ({
 }));
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Alert: ({ children, severity, action, variant, onClose, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} data-variant={variant} {...props}>
-      {children}
-      {action && <div data-testid="alert-action">{action}</div>}
-      {onClose && <button data-testid="alert-close" onClick={onClose}>×</button>}
-    </div>
-  ),
-  Slide: ({ children, direction, in: isIn, ...props }: any) => (
-    isIn ? <div data-testid="slide" data-direction={direction} {...props}>{children}</div> : null
-  ),
-  Snackbar: ({ children, open, onClose, anchorOrigin, autoHideDuration, ...props }: any) => (
-    open ? (
-      <div 
-        data-testid="snackbar" 
-        data-anchor={`${anchorOrigin?.vertical}-${anchorOrigin?.horizontal}`}
-        data-auto-hide={autoHideDuration}
-        {...props}
-      >
-        {children}
-        <button data-testid="snackbar-close" onClick={onClose}>Close</button>
-      </div>
-    ) : null
-  ),
-  IconButton: ({ children, onClick, size, color, ...props }: any) => (
-    <button data-testid="icon-button" onClick={onClick} data-size={size} data-color={color} {...props}>
-      {children}
-    </button>
-  ),
-  Chip: ({ label, color, variant, icon, onDelete, size, ...props }: any) => (
-    <div data-testid="chip" data-color={color} data-variant={variant} data-size={size} {...props}>
-      {icon && <span data-testid="chip-icon">{icon}</span>}
-      {label}
-      {onDelete && <button data-testid="chip-delete" onClick={onDelete}>×</button>}
-    </div>
-  ),
-  Typography: ({ children, variant, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} {...props}>{children}</div>
-  ),
-  Box: ({ children, sx, ...props }: any) => (
-    <div data-testid="box" style={sx} {...props}>{children}</div>
-  ),
-}));
+setupMuiMock();
 
 // Mock Material-UI icons
 vi.mock('@mui/icons-material/WifiOff', () => ({

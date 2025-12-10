@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { RegisterForm } from '../../../components/Auth/RegisterForm';
 import { useAuth } from '@my-many-books/shared-auth';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 // Mock the useAuth hook
 vi.mock('@my-many-books/shared-auth', () => ({
@@ -11,52 +13,7 @@ vi.mock('@my-many-books/shared-auth', () => ({
 }));
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Box: ({ children, sx, ...props }: any) => (
-    <div data-testid="box" style={sx} {...props}>{children}</div>
-  ),
-  Paper: ({ children, elevation, ...props }: any) => (
-    <div data-testid="paper" data-elevation={elevation} {...props}>{children}</div>
-  ),
-  Typography: ({ children, variant, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} {...props}>{children}</div>
-  ),
-  TextField: ({ label, value, onChange, error, helperText, type, ...props }: any) => (
-    <div data-testid="text-field-container">
-      <label data-testid="text-field-label">{label}</label>
-      <input
-        data-testid="text-field"
-        data-label={label}
-        type={type}
-        value={value || ''}
-        onChange={(e) => onChange?.(e)}
-        data-error={!!error}
-        {...props}
-      />
-      {error && <div data-testid="text-field-error">{error}</div>}
-      {helperText && <div data-testid="text-field-helper">{helperText}</div>}
-    </div>
-  ),
-  Button: ({ children, onClick, variant, disabled, loading, ...props }: any) => (
-    <button
-      data-testid={`button-${variant || 'default'}`}
-      onClick={onClick}
-      disabled={disabled || loading}
-      {...props}
-    >
-      {loading ? 'Loading...' : children}
-    </button>
-  ),
-  Link: ({ children, onClick, ...props }: any) => (
-    <button data-testid="link" onClick={onClick} {...props}>{children}</button>
-  ),
-  Alert: ({ children, severity, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} {...props}>{children}</div>
-  ),
-  CircularProgress: (props: any) => (
-    <div data-testid="circular-progress" {...props} />
-  ),
-}));
+setupMuiMock();
 
 const mockUseAuth = vi.mocked(useAuth);
 

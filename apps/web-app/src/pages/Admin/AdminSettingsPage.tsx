@@ -3,7 +3,7 @@ import { Box, Typography, Paper } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
 
-const AdminSettingsPage: React.FC = () => {
+export const AdminSettingsPage: React.FC = () => {
   const { t } = useTranslation();
 
   return (

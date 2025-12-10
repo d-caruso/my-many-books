@@ -5,95 +5,16 @@ import { AuthorAutocomplete } from '../../../components/Search/AuthorAutocomplet
 import { ApiProvider } from '../../../contexts/ApiContext';
 import { Author } from '../../../types';
 
+vi.mock('@mui/material', async () => {
+  const module = await import('../../test-utils/mockMui');
+  return module.createMuiMock();
+});
+
+
 // Create mock API service
 const mockAuthorAPI = {
   searchAuthors: vi.fn(),
 };
-
-// Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Autocomplete: ({ 
-    value,
-    onChange,
-    inputValue,
-    onInputChange,
-    options,
-    getOptionLabel,
-    renderOption,
-    renderInput,
-    loading,
-    noOptionsText,
-    open,
-    onOpen,
-    onClose,
-    isOptionEqualToValue,
-    filterOptions,
-    ...props 
-  }: any) => (
-    <div data-testid="autocomplete" {...props}>
-      <input
-        data-testid="autocomplete-input"
-        value={inputValue || ''}
-        onChange={(e) => onInputChange?.(e, e.target.value)}
-        onFocus={() => onOpen?.()}
-        onBlur={() => onClose?.()}
-      />
-      <div data-testid="loading-state">{loading ? 'loading' : 'not-loading'}</div>
-      <div data-testid="no-options-text">{noOptionsText}</div>
-      <div data-testid="open-state">{open ? 'open' : 'closed'}</div>
-      {open && options.length > 0 && (
-        <ul data-testid="options-list">
-          {options.map((option: Author, index: number) => (
-            <li 
-              key={option.id}
-              data-testid={`option-${index}`}
-              onClick={() => onChange?.(null, option)}
-            >
-              {renderOption ? renderOption({}, option) : getOptionLabel(option)}
-            </li>
-          ))}
-        </ul>
-      )}
-      {renderInput && renderInput({
-        InputProps: {
-          endAdornment: loading ? <div data-testid="loading-icon">Loading</div> : null,
-        }
-      })}
-    </div>
-  ),
-  TextField: ({ label, placeholder, disabled, size, InputProps, ...props }: any) => (
-    <div data-testid="text-field">
-      <label>{label}</label>
-      <input
-        placeholder={placeholder}
-        disabled={disabled}
-        data-size={size}
-        {...props}
-      />
-      {InputProps?.endAdornment && (
-        <div data-testid="input-adornment">{InputProps.endAdornment}</div>
-      )}
-    </div>
-  ),
-  CircularProgress: ({ color, size }: any) => (
-    <div data-testid="circular-progress" data-color={color} data-size={size}>
-      Loading
-    </div>
-  ),
-  Box: ({ children, component, ...props }: any) => (
-    <div data-testid="box" data-component={component} {...props}>{children}</div>
-  ),
-  Typography: ({ children, variant, fontWeight, color, ...props }: any) => (
-    <div 
-      data-testid={`typography-${variant}`}
-      data-fontweight={fontWeight}
-      data-color={color}
-      {...props}
-    >
-      {children}
-    </div>
-  ),
-}));
 
 // Create mock API service instance
 const mockApiService = {
