@@ -346,7 +346,14 @@ export class BookController extends BaseController {
 
     const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
 
-    return this.createSuccessResponse(plainBooks, undefined, meta);
+    return this.createSuccessResponse(
+      {
+        books: plainBooks,
+        pagination: meta,
+      },
+      undefined,
+      undefined
+    );
   }
 
   /**

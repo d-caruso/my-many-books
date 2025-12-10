@@ -173,11 +173,11 @@ export abstract class BaseController {
     page: number,
     limit: number,
     total: number
-  ): { page: number; limit: number; total: number; totalPages: number } {
+  ): { currentPage: number; itemsPerPage: number; totalItems: number; totalPages: number } {
     return {
-      page,
-      limit,
-      total,
+      currentPage: page,
+      itemsPerPage: limit,
+      totalItems: total,
       totalPages: Math.ceil(total / limit),
     };
   }
