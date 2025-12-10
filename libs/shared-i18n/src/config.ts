@@ -26,7 +26,7 @@ export const initializeI18n = async (language?: string) => {
   await i18n.init({
     lng: language || DEFAULT_LANGUAGE,
     fallbackLng: DEFAULT_LANGUAGE,
-    debug: process.env['NODE_ENV'] === 'development',
+    debug: false, // Disable i18next debug logging
 
     // Namespaces
     ns: [
