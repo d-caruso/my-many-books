@@ -16,23 +16,13 @@
       }
     },
     "serve": {
-      "executor": "@nx/js:node",
+      "executor": "nx:run-commands",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "api:build",
-        "inspect": true,
-        "port": 9229,
-        "args": ["--inspect-brk"]
+        "command": "node --inspect dist/app.js",
+        "cwd": "apps/api"
       },
-      "dependsOn": ["^build"],
-      "configurations": {
-        "development": {
-          "buildTarget": "api:build:development"
-        },
-        "production": {
-          "buildTarget": "api:build:production"
-        }
-      }
+      "dependsOn": ["build"]
     },
     "test": {
       "executor": "@nx/jest:jest",

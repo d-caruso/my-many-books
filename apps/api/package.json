@@ -4,7 +4,7 @@
   "description": "Serverless API for My Many Books - Personal library management system",
   "main": "dist/handlers/index.js",
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "build:watch": "tsc --project tsconfig.build.json --watch",
     "build:check": "tsc --noEmit",
     "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/app.ts",
@@ -137,6 +137,7 @@
     "supertest": "^6.3.4",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.2.2"
   },

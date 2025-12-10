@@ -8,7 +8,7 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/hookey",
+        "outputPath": "libs/hookey/dist",
         "main": "libs/hookey/src/index.ts",
         "tsConfig": "libs/hookey/tsconfig.lib.json",
         "assets": []

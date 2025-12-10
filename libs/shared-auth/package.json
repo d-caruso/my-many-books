@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Shared authentication library for My Many Books web and mobile apps",
   "type": "commonjs",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",

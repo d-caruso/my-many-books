@@ -5,8 +5,8 @@
     "access": "public"
   },
   "type": "commonjs",
-  "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "dependencies": {
     "@types/eventemitter2": "^2.2.1",
     "eventemitter2": "^6.4.9",
