@@ -88,7 +88,7 @@ describe('BookCard Accessibility', () => {
       id: '2',
       title: 'Minimal Book',
       authors: [],
-      status: 'to_read',
+      status: 'paused',
       isbnCode: '',
       userId: 'user1',
       createdAt: new Date(),
@@ -113,7 +113,7 @@ describe('BookCard Accessibility', () => {
   it('should not have accessibility violations with completed book', async () => {
     const completedBook: Book = {
       ...mockBook,
-      status: 'read',
+      status: 'finished',
     };
 
     const { container } = render(

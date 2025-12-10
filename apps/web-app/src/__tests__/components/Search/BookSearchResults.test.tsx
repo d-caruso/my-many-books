@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '../../../__tests__/test-utils';
+import { render, screen, fireEvent, within } from '../../../__tests__/test-utils';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BookSearchResults } from '../../../components/Search/BookSearchResults';
 import { Book } from '../../../types';
@@ -90,9 +90,10 @@ describe('BookSearchResults', () => {
       />
     );
 
-    expect(screen.getByTestId('alert-error')).toBeInTheDocument();
-    expect(screen.getByText('Search Error')).toBeInTheDocument();
-    expect(screen.getByText('Search failed')).toBeInTheDocument();
+    const alert = screen.getByRole('alert');
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveTextContent('Search Error');
+    expect(alert).toHaveTextContent('Search failed');
     expect(screen.getByTestId('error-icon')).toBeInTheDocument();
   });
 
@@ -163,8 +164,8 @@ describe('BookSearchResults', () => {
       />
     );
 
-    const bookCard = screen.getByTestId('card');
-    fireEvent.click(bookCard);
+    const bookTitle = screen.getByText('The Great Gatsby');
+    fireEvent.click(bookTitle);
 
     expect(mockOnBookSelect).toHaveBeenCalledWith(mockBooks[0]);
   });
@@ -197,11 +198,9 @@ describe('BookSearchResults', () => {
       />
     );
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
-    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
-    
-    const loadMoreButton = screen.getByTestId('button-contained');
+    const loadMoreButton = screen.getByRole('button', { name: /loading/i });
     expect(loadMoreButton).toBeDisabled();
+    expect(within(loadMoreButton).getByRole('progressbar')).toBeInTheDocument();
   });
 
   test('renders initial loading state', () => {
@@ -213,7 +212,7 @@ describe('BookSearchResults', () => {
     );
 
     expect(screen.getByText('Searching for books...')).toBeInTheDocument();
-    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   test('renders book status badges', () => {
@@ -345,14 +344,12 @@ describe('BookSearchResults', () => {
       />
     );
 
-    const statusChips = screen.getAllByTestId('chip');
-    const finishedChip = statusChips.find(chip => chip.textContent === 'Finished');
-    const readingChip = statusChips.find(chip => chip.textContent === 'Reading');
-    const pausedChip = statusChips.find(chip => chip.textContent === 'Paused');
+    const getChipClass = (label: string) =>
+      screen.getByText(label).closest('.MuiChip-root')?.className || '';
 
-    expect(finishedChip).toHaveAttribute('data-color', 'success');
-    expect(readingChip).toHaveAttribute('data-color', 'primary');
-    expect(pausedChip).toHaveAttribute('data-color', 'warning');
+    expect(getChipClass('Finished')).toMatch(/MuiChip-colorSuccess/);
+    expect(getChipClass('Reading')).toMatch(/MuiChip-colorPrimary/);
+    expect(getChipClass('Paused')).toMatch(/MuiChip-colorWarning/);
   });
 
   test('truncates long titles and authors with title attribute', () => {
@@ -386,13 +383,11 @@ describe('BookSearchResults', () => {
       />
     );
 
-    // Get all Box components and check that at least one has grid display
-    const boxes = screen.getAllByTestId('box');
-    const hasGridLayout = boxes.some(box =>
-      box.style.display === 'grid' ||
-      (box.style as any).display === 'grid'
-    );
-    expect(hasGridLayout).toBe(true);
+    const cards = Array.from(document.querySelectorAll('.MuiCard-root'));
+    expect(cards.length).toBeGreaterThan(1);
+    const gridContainer = cards[0]?.parentElement?.parentElement;
+    expect(gridContainer?.className).toContain('MuiBox-root');
+    expect(gridContainer?.children.length).toBeGreaterThan(1);
   });
 
   test('handles component mount and unmount cleanly', () => {
@@ -431,7 +426,7 @@ describe('BookSearchResults', () => {
     const statusChip = screen.getByText('custom-status');
     expect(statusChip).toBeInTheDocument();
 
-    // Check that it has default color (since status is unknown)
-    expect(statusChip).toHaveAttribute('data-color', 'default');
+    const chipClass = statusChip.closest('.MuiChip-root')?.className || '';
+    expect(chipClass).toMatch(/MuiChip-colorDefault/);
   });
 });

@@ -50,6 +50,7 @@ const baseVitestConfig: UserConfig = {
     },
   },
   resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.json'],
     alias: {
       '@my-many-books/shared-types': path.resolve(__dirname, '../../libs/shared-types/src'),
       '@my-many-books/shared-api': path.resolve(__dirname, '../../libs/shared-api/src'),
@@ -60,6 +61,8 @@ const baseVitestConfig: UserConfig = {
       '@my-many-books/shared-design': path.resolve(__dirname, '../../libs/shared-design/src'),
       '@my-many-books/shared-navigation': path.resolve(__dirname, '../../libs/shared-navigation/src'),
       '@my-many-books/shared-forms': path.resolve(__dirname, '../../libs/shared-forms/src'),
+      '@my-many-books/shared-i18n/src': path.resolve(__dirname, '../../libs/shared-i18n/src'),
+      '@my-many-books/shared-i18n': path.resolve(__dirname, '../../libs/shared-i18n/src/index.ts'),
       '@': path.resolve(__dirname, './src'),
       buffer: 'buffer',
       process: 'process/browser',

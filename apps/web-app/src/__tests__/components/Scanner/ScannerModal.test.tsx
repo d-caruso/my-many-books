@@ -62,8 +62,8 @@ describe('ScannerModal', () => {
       />
     );
 
-    expect(screen.getByTestId('container')).toBeInTheDocument();
     expect(screen.getByText('ISBN Scanner')).toBeInTheDocument();
+    expect(screen.getByTestId('isbn-scanner')).toBeInTheDocument();
   });
 
   test('does not render when closed', () => {
@@ -285,7 +285,7 @@ describe('ScannerModal', () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
-  test('renders with correct container props', () => {
+  test('renders layout controls with scanner container', () => {
     render(
       <ScannerModal
         isOpen={true}
@@ -294,8 +294,9 @@ describe('ScannerModal', () => {
       />
     );
 
-    const container = screen.getByTestId('container');
-    expect(container).toHaveAttribute('data-maxwidth', 'md');
+    const heading = screen.getByRole('heading', { name: 'ISBN Scanner' });
+    expect(heading).toHaveClass('MuiTypography-h4');
+    expect(screen.getByRole('button', { name: /Enter Manually/i })).toBeInTheDocument();
   });
 
   test('shows different headers for different modes', () => {

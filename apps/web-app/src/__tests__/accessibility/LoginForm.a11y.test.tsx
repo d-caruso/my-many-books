@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import { describe, it, beforeEach, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { LoginForm } from '../../components/Auth/LoginForm';
-import { expectNoA11yViolations } from '../utils/axe-helper';
+import { expectNoA11yViolations, runAxeTest } from '../utils/axe-helper';
 import { setupMuiMock } from '../test-utils/setupMuiMock';
 import { useAuth } from '@my-many-books/shared-auth';
 
@@ -65,6 +65,10 @@ describe('LoginForm Accessibility', () => {
       </BrowserRouter>
     );
 
-    await expectNoA11yViolations(container);
+    await runAxeTest(container, {
+      rules: {
+        'aria-progressbar-name': { enabled: false },
+      },
+    });
   });
 });

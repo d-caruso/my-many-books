@@ -127,8 +127,7 @@ describe('ISBNScanner', () => {
     // Clear any calls from useEffect (component mount may trigger requestPermission)
     mockRequestPermission.mockClear();
 
-    // Find the permission button by its accessible name
-    const permissionButton = screen.getByRole('button', { name: /camera request access/i });
+    const permissionButton = screen.getByRole('button', { name: /Request Access/i });
     fireEvent.click(permissionButton);
 
     expect(mockRequestPermission).toHaveBeenCalledTimes(1);
@@ -149,9 +148,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    // Check that video component is rendered (it's a Box with component="video")
-    const boxes = screen.getAllByTestId('box');
-    expect(boxes.length).toBeGreaterThan(0);
+    expect(screen.getByTestId('camera-view')).toBeInTheDocument();
   });
 
   test('calls onClose when close button is clicked', () => {
@@ -185,7 +182,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(screen.getByText('Initializing Camera')).toBeInTheDocument();
   });
 
@@ -207,8 +204,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    // Multiple cameras should show flip button
-    expect(screen.getByTestId('swap-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('toggle-torch')).toBeInTheDocument();
   });
 
   test('switches camera when flip camera button is clicked', () => {
@@ -231,12 +227,8 @@ describe('ISBNScanner', () => {
       />
     );
 
-    const buttons = screen.getAllByTestId('swap-icon');
-    const flipButton = buttons.find(btn => btn.textContent?.includes('Swap'));
-    expect(flipButton).toBeTruthy();
-    if (flipButton) {
-      fireEvent.click(flipButton);
-    }
+    const flipButton = screen.getByTestId('toggle-torch');
+    fireEvent.click(flipButton);
     expect(mockSwitchCamera).toHaveBeenCalledTimes(1);
   });
 
@@ -315,8 +307,8 @@ describe('ISBNScanner', () => {
       />
     );
 
-    // Should render the scanning frame and guidelines
-    expect(screen.getAllByTestId('box').length).toBeGreaterThan(1);
+    expect(screen.getByTestId('scan-overlay')).toBeInTheDocument();
+    expect(screen.getByTestId('scan-instructions')).toBeInTheDocument();
   });
 
   test('displays current device information when available', () => {

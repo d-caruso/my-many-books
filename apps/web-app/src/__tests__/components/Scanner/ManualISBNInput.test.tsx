@@ -27,9 +27,8 @@ describe('ManualISBNInput', () => {
       />
     );
 
-    expect(screen.getByTestId('paper')).toBeInTheDocument();
-    expect(screen.getByText('Enter ISBN Manually')).toBeInTheDocument();
-    expect(screen.getByText('ISBN (10 or 13 digits)')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Enter ISBN Manually' })).toBeInTheDocument();
+    expect(screen.getByLabelText('ISBN (10 or 13 digits)')).toBeInTheDocument();
   });
 
   test('does not render when isOpen is false', () => {
@@ -81,11 +80,11 @@ describe('ManualISBNInput', () => {
       />
     );
 
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByTestId('text-field-error')).toHaveTextContent('Please enter an ISBN');
+      expect(screen.getByText('Please enter an ISBN')).toBeInTheDocument();
     });
 
     expect(mockOnSubmit).not.toHaveBeenCalled();
@@ -101,13 +100,13 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
 
     fireEvent.change(isbnInput, { target: { value: '123456' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByTestId('text-field-error')).toHaveTextContent('Invalid ISBN format. Please enter a valid 10 or 13 digit ISBN.');
+      expect(screen.getByText('Invalid ISBN format. Please enter a valid 10 or 13 digit ISBN.')).toBeInTheDocument();
     });
 
     expect(mockOnSubmit).not.toHaveBeenCalled();
@@ -123,7 +122,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
 
     fireEvent.change(isbnInput, { target: { value: '0486409120' } });
     fireEvent.click(submitButton);
@@ -146,7 +145,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
 
     fireEvent.change(isbnInput, { target: { value: '9780486409122' } });
     fireEvent.click(submitButton);
@@ -169,7 +168,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
 
     fireEvent.change(isbnInput, { target: { value: '978-0-486-40912-2' } });
     fireEvent.click(submitButton);
@@ -192,7 +191,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
 
     fireEvent.change(isbnInput, { target: { value: '048665088X' } });
     fireEvent.click(submitButton);
@@ -221,7 +220,7 @@ describe('ManualISBNInput', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByTestId('text-field-error')).toHaveTextContent('Invalid ISBN format. Please enter a valid 10 or 13 digit ISBN.');
+      expect(screen.getByText('Invalid ISBN format. Please enter a valid 10 or 13 digit ISBN.')).toBeInTheDocument();
     });
 
     expect(mockOnSubmit).not.toHaveBeenCalled();
@@ -236,7 +235,7 @@ describe('ManualISBNInput', () => {
       />
     );
 
-    const cancelButton = screen.getByText('Cancel');
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' });
     fireEvent.click(cancelButton);
 
     expect(mockOnCancel).toHaveBeenCalledTimes(1);
@@ -252,7 +251,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const cancelButton = screen.getByText('Cancel');
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' });
 
     fireEvent.change(isbnInput, { target: { value: '1234567890' } });
     fireEvent.click(cancelButton);
@@ -270,18 +269,18 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
 
     fireEvent.click(submitButton);
     
     await waitFor(() => {
-      expect(screen.getByTestId('text-field-error')).toBeInTheDocument();
+      expect(screen.getByText('Please enter an ISBN')).toBeInTheDocument();
     });
 
     fireEvent.change(isbnInput, { target: { value: '123' } });
 
     await waitFor(() => {
-      expect(screen.queryByTestId('text-field-error')).not.toBeInTheDocument();
+      expect(screen.queryByText('Please enter an ISBN')).not.toBeInTheDocument();
     });
   });
 
@@ -322,7 +321,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
 
     fireEvent.change(isbnInput, { target: { value: '9780486409122' } });
     fireEvent.click(submitButton);
@@ -346,7 +345,7 @@ describe('ManualISBNInput', () => {
     const isbnInput = screen.getByDisplayValue('');
 
     fireEvent.change(isbnInput, { target: { value: '9780486409122' } });
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -366,7 +365,7 @@ describe('ManualISBNInput', () => {
       />
     );
 
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
     expect(submitButton).not.toBeDisabled();
   });
 
@@ -380,7 +379,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: 'Add Book' });
 
     fireEvent.change(isbnInput, { target: { value: '123' } });
 

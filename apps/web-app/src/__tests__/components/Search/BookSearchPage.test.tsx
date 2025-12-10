@@ -5,7 +5,7 @@ import { Book } from '../../../types';
 
 // Import after mocks
 import { MemoryRouter } from 'react-router-dom';
-import { BookSearchPage } from '../../../components/Search/BookSearchPage';
+import BookSearchPage from '../../../components/Search/BookSearchPage';
 import { useBookSearch } from '../../../hooks/useBookSearch';
 import { setupMuiMock } from '../../test-utils/setupMuiMock';
 

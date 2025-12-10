@@ -72,9 +72,9 @@ describe('OfflineIndicator', () => {
 
     render(<OfflineIndicator />);
 
-    expect(screen.getByTestId('alert-warning')).toBeInTheDocument();
-    expect(screen.getByText('You are currently offline')).toBeInTheDocument();
-    expect(screen.getByTestId('wifi-off-icon')).toBeInTheDocument();
+    const alert = screen.getByTestId('alert-warning');
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveTextContent('You are currently offline');
   });
 
   test('shows offline message and functionality info', () => {
@@ -85,7 +85,7 @@ describe('OfflineIndicator', () => {
 
     render(<OfflineIndicator />);
 
-    expect(screen.getByText('Some features may be limited')).toBeInTheDocument();
+    expect(screen.getByTestId('alert-warning')).toHaveTextContent('Some features may be limited');
   });
 
   test('renders as snackbar variant', () => {
@@ -160,7 +160,7 @@ describe('OfflineIndicator', () => {
 
     render(<OfflineIndicator message="Custom offline message" />);
 
-    expect(screen.getByText('Custom offline message')).toBeInTheDocument();
+    expect(screen.getByTestId('alert-warning')).toHaveTextContent('Custom offline message');
   });
 
   test('handles network status changes', () => {
