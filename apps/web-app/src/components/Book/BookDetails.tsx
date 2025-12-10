@@ -255,7 +255,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                       </Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                         {book.categories.map((category: Category) => (
-                          <Chip key={category.id} label={category.name} variant="outlined" size="small" />
+                          <Chip key={category.id} label={category.name} variant="outlined" size="medium" />
                         ))}
                       </Stack>
                     </Box>

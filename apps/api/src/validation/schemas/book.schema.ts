@@ -85,6 +85,8 @@ export const getBooksQuerySchema = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(20),
   sortBy: Joi.string().optional(),
   sortOrder: Joi.string().valid('asc', 'desc').default('asc'),
+  includeAuthors: Joi.string().optional().valid('true', 'false').default('false'),
+  includeCategories: Joi.string().optional().valid('true', 'false').default('false'),
 });
 
 /**
