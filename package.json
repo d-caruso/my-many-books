@@ -4,7 +4,8 @@
   "private": true,
   "description": "My Many Books - Monorepo for managing personal book collections",
   "scripts": {
-    "build": "nx run-many --target=build --all",
+    "sync-translations": "bash scripts/sync-translations.sh",
+    "build": "npm run sync-translations && nx run-many --target=build --all",
     "build:affected": "nx affected --target=build",
     "test": "nx run-many --target=test --projects=api,web-app",
     "test:affected": "nx affected --target=test",

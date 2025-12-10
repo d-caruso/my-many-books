@@ -37,7 +37,10 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "sync-translations": "bash ../../scripts/sync-translations.sh",
+    "prestart": "npm run sync-translations",
     "start": "vite",
+    "prebuild": "npm run sync-translations",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
