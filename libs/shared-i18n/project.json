@@ -9,10 +9,17 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/shared-i18n",
+        "outputPath": "libs/shared-i18n/dist",
         "main": "libs/shared-i18n/src/index.ts",
         "tsConfig": "libs/shared-i18n/tsconfig.lib.json",
-        "assets": ["libs/shared-i18n/*.md"]
+        "assets": [
+          "libs/shared-i18n/*.md",
+          {
+            "glob": "**/*",
+            "input": "libs/shared-i18n/src/locales",
+            "output": "locales"
+          }
+        ]
       }
     },
     "lint": {

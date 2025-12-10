@@ -15,8 +15,8 @@ export interface Book {
   userId?: number;
   authors?: Author[];
   categories?: Category[];
-  creationDate: string;
-  updateDate: string;
+  creationDate?: string;
+  updateDate?: string;
 }
 
 export interface Author {
@@ -24,15 +24,15 @@ export interface Author {
   name: string;
   surname: string;
   nationality?: string;
-  creationDate: string;
-  updateDate: string;
+  creationDate?: string;
+  updateDate?: string;
 }
 
 export interface Category {
   id: number;
   name: string;
-  creationDate: string;
-  updateDate: string;
+  creationDate?: string;
+  updateDate?: string;
 }
 
 export interface User {
@@ -57,7 +57,7 @@ export interface AuthUser {
 export interface SearchFilters {
   query?: string;
   status?: 'reading' | 'paused' | 'finished' | 'unread';
-  sortBy?: string;
+  sortBy?: 'title' | 'author' | 'date-added';
   authorId?: number;
   categoryId?: number;
   page?: number;

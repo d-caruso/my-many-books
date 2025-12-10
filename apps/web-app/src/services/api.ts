@@ -155,7 +155,7 @@ class ApiService {
     // Ensure baseURL is never empty string (fallback to default if it is)
     const validBaseURL = baseURL && baseURL.trim() !== '' ? baseURL : 'http://localhost:3000';
 
-    const apiConfig: ApiClientConfig = dependencies.config || {
+    const apiConfig: ApiClientConfig = (dependencies.config || {
       baseURL: validBaseURL,
       timeout: 10000,
       getAuthToken: async () => authService.getIdToken(),
@@ -163,7 +163,7 @@ class ApiService {
         void authService.logout();
         window.location.href = '/auth';
       },
-    };
+    }) as ApiClientConfig;
 
     // Create HTTP client (use injected or default)
     const httpClient = dependencies.httpClient || new AxiosHttpClient(apiConfig.baseURL, apiConfig.timeout);
@@ -311,7 +311,11 @@ class ApiService {
             });
             break;
           case 'date-added':
-            filteredBooks.sort((a, b) => new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime());
+            filteredBooks.sort((a, b) => {
+              const aDate = a.creationDate ? new Date(a.creationDate).getTime() : 0;
+              const bDate = b.creationDate ? new Date(b.creationDate).getTime() : 0;
+              return bDate - aDate;
+            });
             break;
         }
       }
@@ -876,7 +880,6 @@ export const apiService = new ApiService();
 // Export the class and interface for direct usage in tests
 export { ApiService };
 export type { ApiServiceDependencies };
-export type { AdminHookSummary, AdminHookStats, AdminHookExecution, AdminHookExecutionResponse };
 
 // Legacy export for compatibility - ensure all existing imports continue to work
 export const bookAPI = {

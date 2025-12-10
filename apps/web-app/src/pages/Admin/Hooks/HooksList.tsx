@@ -80,7 +80,7 @@ export const HooksList: React.FC<HooksListProps> = ({
       headerName: t('list.columns.status', 'Status'),
       flex: 0.7,
       minWidth: 120,
-      renderCell: (params: GridRenderCellParams<boolean>) => <StatusChip value={!!params.value} />,
+      renderCell: (params: GridRenderCellParams) => <StatusChip value={!!params.value} />,
     },
     {
       field: 'priority',
@@ -93,9 +93,9 @@ export const HooksList: React.FC<HooksListProps> = ({
       headerName: t('list.columns.last_execution', 'Last Execution'),
       flex: 1,
       minWidth: 180,
-      valueGetter: (params) =>
-        params.value
-          ? new Date(params.value).toLocaleString()
+      valueGetter: (value: string | undefined) =>
+        value
+          ? new Date(value).toLocaleString()
           : t('list.last_execution.never', 'Never executed'),
     },
     {
@@ -105,7 +105,7 @@ export const HooksList: React.FC<HooksListProps> = ({
       filterable: false,
       disableColumnMenu: true,
       width: 220,
-      renderCell: (params: GridRenderCellParams<number>) => {
+      renderCell: (params: GridRenderCellParams) => {
         const hookId = params.row.id as number;
         return (
           <Stack direction="row" spacing={1}>
@@ -195,7 +195,6 @@ export const HooksList: React.FC<HooksListProps> = ({
         columns={columns}
         loading={loading}
         autoHeight
-        disableSelectionOnClick
         disableRowSelectionOnClick
         pageSizeOptions={[10, 25, 50]}
         initialState={{

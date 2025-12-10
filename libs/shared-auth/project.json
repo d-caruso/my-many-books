@@ -1,8 +1,8 @@
 {
-  "name": "shared-design",
-  "version": "0.1.0",
+  "name": "shared-auth",
+  "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/shared-design/src",
+  "sourceRoot": "libs/shared-auth/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -10,21 +10,14 @@
       "outputs": ["{projectRoot}/dist"],
       "options": {
         "command": "npm run build",
-        "cwd": "libs/shared-design"
+        "cwd": "libs/shared-auth"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/shared-design/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "libs/shared-design/jest.config.ts"
+        "lintFilePatterns": ["libs/shared-auth/**/*.{ts,tsx}"]
       }
     }
   },

@@ -53,7 +53,7 @@ interface UserFormData {
   role: 'user' | 'admin';
 }
 
-export const UserManagementPage: React.FC = () => {
+const UserManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
   const { getAdminUsers, updateAdminUser, deleteAdminUser } = apiService;
@@ -396,3 +396,5 @@ export const UserManagementPage: React.FC = () => {
     </AdminLayout>
   );
 };
+
+export default UserManagementPage;

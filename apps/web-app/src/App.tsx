@@ -40,7 +40,7 @@ const UpdatePrompt = lazy(() => import('./components/PWA').then(m => ({ default:
 const OfflineIndicator = lazy(() => import('./components/PWA').then(m => ({ default: m.OfflineIndicator })));
 
 // Admin pages - only loaded for admin users
-const AdminDashboardPage = lazy(() => import('./pages/Admin'));
+const AdminDashboardPage = lazy(() => import('./pages/Admin').then(m => ({ default: m.AdminDashboardPage })));
 const UserManagementPage = lazy(() => import('./pages/Admin/UserManagementPage'));
 const BookManagementPage = lazy(() => import('./pages/Admin/BookManagementPage'));
 const HooksPage = lazy(() =>

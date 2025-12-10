@@ -211,7 +211,7 @@ export const useISBNScanner = (
       await reader.decodeFromVideoDevice(
         deviceId,
         videoRef.current,
-        (result, error) => {
+        (result: any, error: any) => {
           if (result) {
             const scannedText = result.getText();
 

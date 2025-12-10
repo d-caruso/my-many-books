@@ -2,6 +2,9 @@
   "name": "@my-many-books/ui-components",
   "version": "0.1.0",
   "type": "commonjs",
+  "scripts": {
+    "build": "tsc --project tsconfig.lib.json"
+  },
   "dependencies": {
     "react": "*",
     "react-dom": "*"

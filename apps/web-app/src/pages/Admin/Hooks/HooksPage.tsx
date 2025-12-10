@@ -169,7 +169,7 @@ export const HooksPage: React.FC = () => {
         actionType: data.actionType,
         priority: data.priority,
         isActive: data.isActive,
-        lastExecution: null,
+        lastExecution: undefined,
       };
       return [newHook, ...prev];
     });
@@ -287,7 +287,7 @@ export const HooksPage: React.FC = () => {
       </Box>
       <HookForm
         open={isFormOpen}
-        initialData={editingHook ?? undefined}
+        initialData={editingHook as any}
         onClose={handleCloseForm}
         onSave={(data: HookFormData) => {
           handleSaveHook(data);

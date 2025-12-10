@@ -49,7 +49,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
           >
             {React.cloneElement(icon, {
               sx: { fontSize: 40, color: 'white' }
-            })}
+            } as any)}
           </Box>
         </Box>
       </CardContent>
@@ -65,7 +65,7 @@ interface DashboardStats {
   timestamp?: string;
 }
 
-export const AdminDashboardPage: React.FC = () => {
+const AdminDashboardPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -122,7 +122,7 @@ export const AdminDashboardPage: React.FC = () => {
         {/* Stats Grid */}
         {!loading && stats && (
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid {...{ item: true } as any} xs={12} sm={6} md={3}>
               <StatCard
                 title={t('pages:admin.dashboard.total_users', 'Total Users')}
                 value={stats.totalUsers}
@@ -130,7 +130,7 @@ export const AdminDashboardPage: React.FC = () => {
                 color="#1976d2"
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid {...{ item: true } as any} xs={12} sm={6} md={3}>
               <StatCard
                 title={t('pages:admin.dashboard.total_books', 'Total Books')}
                 value={stats.totalBooks}
@@ -138,7 +138,7 @@ export const AdminDashboardPage: React.FC = () => {
                 color="#2e7d32"
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid {...{ item: true } as any} xs={12} sm={6} md={3}>
               <StatCard
                 title={t('pages:admin.dashboard.active_users', 'Active Users')}
                 value={stats.activeUsers}
@@ -146,7 +146,7 @@ export const AdminDashboardPage: React.FC = () => {
                 color="#ed6c02"
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid {...{ item: true } as any} xs={12} sm={6} md={3}>
               <StatCard
                 title={t('pages:admin.dashboard.admin_users', 'Admin Users')}
                 value={stats.adminUsers}
@@ -182,3 +182,5 @@ export const AdminDashboardPage: React.FC = () => {
     </AdminLayout>
   );
 };
+
+export default AdminDashboardPage;

@@ -70,7 +70,7 @@ export const HookStatsCard: React.FC<HookStatsCardProps> = ({
             ) : (
               React.cloneElement(icon, {
                 sx: { fontSize: 36, color: 'white' },
-              })
+              } as any)
             )}
           </Box>
         </Box>

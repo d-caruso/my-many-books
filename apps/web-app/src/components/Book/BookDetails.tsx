@@ -70,7 +70,8 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
     try {
       return new Date(dateString).toLocaleDateString();
     } catch {

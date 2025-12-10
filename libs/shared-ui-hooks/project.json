@@ -6,13 +6,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
-        "outputPath": "dist/libs/shared-ui-hooks",
-        "main": "libs/shared-ui-hooks/src/index.ts",
-        "tsConfig": "libs/shared-ui-hooks/tsconfig.lib.json",
-        "assets": ["libs/shared-ui-hooks/*.md"]
+        "command": "npm run build",
+        "cwd": "libs/shared-ui-hooks"
       }
     },
     "lint": {

@@ -40,8 +40,8 @@
       "@/handlers/*": ["src/handlers/*"],
       "@my-many-books/shared-auth": ["../../libs/shared-auth/dist/index.d.ts"],
       "@my-many-books/shared-auth/*": ["../../libs/shared-auth/dist/*"],
-      "@my-many-books/shared-i18n": ["../../libs/shared-i18n/dist/index.d.ts"],
-      "@my-many-books/shared-i18n/*": ["../../libs/shared-i18n/dist/*"]
+      "@my-many-books/shared-i18n": ["../../libs/shared-i18n/dist/src/index.d.ts"],
+      "@my-many-books/shared-i18n/*": ["../../libs/shared-i18n/dist/src/*"]
     }
   },
   "include": [

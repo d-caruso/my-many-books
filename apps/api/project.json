@@ -5,29 +5,14 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
-        "target": "node",
-        "compiler": "tsc",
-        "outputPath": "dist/apps/api",
-        "outputFileName": "main.js",
-        "main": "apps/api/src/app.ts",
-        "tsConfig": "apps/api/tsconfig.json",
-        "webpackConfig": "apps/api/webpack.config.js"
+        "command": "npm run build",
+        "cwd": "apps/api"
       },
       "configurations": {
-        "production": {
-          "optimization": true,
-          "extractLicenses": true,
-          "inspect": false,
-          "fileReplacements": [
-            {
-              "replace": "apps/api/src/environments/environment.ts",
-              "with": "apps/api/src/environments/environment.prod.ts"
-            }
-          ]
-        }
+        "production": {}
       }
     },
     "serve": {
@@ -39,6 +24,7 @@
         "port": 9229,
         "args": ["--inspect-brk"]
       },
+      "dependsOn": ["^build"],
       "configurations": {
         "development": {
           "buildTarget": "api:build:development"

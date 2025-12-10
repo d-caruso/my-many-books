@@ -31,8 +31,6 @@ interface ExecutionFilters {
   to: string;
 }
 
-type TranslateFn = (key: string, defaultValue?: string) => string;
-
 const defaultFilters: ExecutionFilters = {
   success: 'all',
   from: '',
@@ -46,7 +44,7 @@ interface FilterControlsProps {
   onRefresh: () => void;
   onClear: () => void;
   onBack: () => void;
-  t: TranslateFn;
+  t: ReturnType<typeof useTranslation>['t'];
 }
 
 const FilterControls: React.FC<FilterControlsProps> = ({
@@ -171,7 +169,7 @@ export const HookExecutions: React.FC = () => {
       headerName: t('executions.columns.success', 'Success'),
       flex: 0.6,
       minWidth: 120,
-      renderCell: (params: GridRenderCellParams<boolean>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <Chip
           label={
             params.value
@@ -194,14 +192,14 @@ export const HookExecutions: React.FC = () => {
       headerName: t('executions.columns.executed_at', 'Executed At'),
       flex: 1,
       minWidth: 180,
-      valueGetter: (params) => new Date(params.value as string).toLocaleString(),
+      valueGetter: (value: string) => new Date(value).toLocaleString(),
     },
     {
       field: 'errorMessage',
       headerName: t('executions.columns.error', 'Error'),
       flex: 1,
       minWidth: 220,
-      renderCell: (params: GridRenderCellParams<string | undefined>) => params.value || '-',
+      renderCell: (params: GridRenderCellParams) => params.value || '-',
     },
   ];
 
@@ -297,12 +295,10 @@ export const HookExecutions: React.FC = () => {
             autoHeight
             rowCount={total}
             pagination
-            page={pagination.page}
-            pageSize={pagination.pageSize}
+            paginationModel={{ page: pagination.page, pageSize: pagination.pageSize }}
             paginationMode="server"
-            onPageChange={(newPage: number) => setPagination((prev) => ({ ...prev, page: newPage }))}
-            onPageSizeChange={(newSize: number) => setPagination((prev) => ({ ...prev, pageSize: newSize }))}
-            rowsPerPageOptions={[5, 10, 20]}
+            onPaginationModelChange={(model) => setPagination({ page: model.page, pageSize: model.pageSize })}
+            pageSizeOptions={[5, 10, 20]}
             loading={loading}
             getRowId={(row) => row.id}
             slots={{

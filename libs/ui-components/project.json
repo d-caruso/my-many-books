@@ -6,13 +6,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
-        "outputPath": "dist/libs/ui-components",
-        "main": "libs/ui-components/src/index.ts",
-        "tsConfig": "libs/ui-components/tsconfig.lib.json",
-        "assets": ["libs/ui-components/*.md"]
+        "command": "npm run build",
+        "cwd": "libs/ui-components"
       }
     },
     "lint": {

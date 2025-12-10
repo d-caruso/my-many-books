@@ -12,7 +12,7 @@ export const useBooks = (options: UseBooksOptions = {}) => {
   const { bookAPI } = useApi();
 
   const api = useMemo<BooksAPI>(() => ({
-    getBooks: (page?: number, limit?: number) => bookAPI.getBooks({ page, limit }),
+    getBooks: (page?: number, limit?: number) => bookAPI.getBooks({ page, limit }) as any,
     createBook: data => bookAPI.createBook(data),
     updateBook: (id, data) => bookAPI.updateBook(id, data),
     deleteBook: id => bookAPI.deleteBook(id),

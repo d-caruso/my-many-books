@@ -57,7 +57,7 @@ interface BookFormData {
   userId?: number | null;
 }
 
-export const BookManagementPage: React.FC = () => {
+const BookManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
   const { getAdminBooks, updateAdminBook, deleteAdminBook } = apiService;
@@ -196,7 +196,7 @@ export const BookManagementPage: React.FC = () => {
       field: 'authors',
       headerName: t('pages:admin.books.authors', 'Authors'),
       width: 200,
-      valueGetter: (params) => params.map((a: any) => a.fullName).join(', '),
+      valueGetter: (value: any[]) => value?.map((a: any) => a.fullName).join(', ') || '',
     },
     {
       field: 'userName',
@@ -412,3 +412,5 @@ export const BookManagementPage: React.FC = () => {
     </AdminLayout>
   );
 };
+
+export default BookManagementPage;

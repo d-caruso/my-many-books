@@ -6,58 +6,23 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/apps/web-app/build"],
       "options": {
-        "compiler": "babel",
-        "outputPath": "dist/apps/web-app",
-        "index": "apps/web-app/public/index.html",
-        "baseHref": "/",
-        "main": "apps/web-app/src/index.tsx",
-        "polyfills": "apps/web-app/src/polyfills.ts",
-        "tsConfig": "apps/web-app/tsconfig.app.json",
-        "assets": [
-          "apps/web-app/src/favicon.ico",
-          "apps/web-app/src/manifest.json"
-        ],
-        "styles": ["apps/web-app/src/index.css"],
-        "scripts": [],
-        "webpackConfig": "apps/web-app/webpack.config.js"
-      },
-      "configurations": {
-        "development": {
-          "extractLicenses": false,
-          "optimization": false,
-          "sourceMap": true,
-          "vendorChunk": true
-        },
-        "production": {
-          "fileReplacements": [
-            {
-              "replace": "apps/web-app/src/environments/environment.ts",
-              "with": "apps/web-app/src/environments/environment.prod.ts"
-            }
-          ],
-          "optimization": true,
-          "outputHashing": "all",
-          "sourceMap": false,
-          "namedChunks": false,
-          "extractLicenses": true,
-          "vendorChunk": false
-        }
+        "command": "npm run build",
+        "cwd": "apps/web-app"
       }
     },
     "serve": {
-      "executor": "@nx/webpack:dev-server",
+      "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "web-app:build",
-        "hmr": true
+        "buildTarget": "web-app:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "web-app:build:development"
+          "buildTarget": "web-app:build:development",
+          "hmr": true
         },
         "production": {
           "buildTarget": "web-app:build:production",

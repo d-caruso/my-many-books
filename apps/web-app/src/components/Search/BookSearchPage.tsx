@@ -16,7 +16,7 @@ import { BookSearchResults } from './BookSearchResults';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import { Book, SearchFilters } from '../../types';
 
-export const BookSearchPage: React.FC = () => {
+const BookSearchPage: React.FC = () => {
   const { t } = useTranslation(['books', 'common']);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -180,3 +180,5 @@ export const BookSearchPage: React.FC = () => {
     </div>
   );
 };
+
+export default BookSearchPage;

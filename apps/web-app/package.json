@@ -33,7 +33,7 @@
     "react-dom": "19.1.0",
     "react-i18next": "^14.0.0",
     "react-router-dom": "^7.8.0",
-    "typescript": "^4.9.5",
+    "typescript": "^5.4.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -47,7 +47,6 @@
     "test:web-app:services": "vitest run --config vitest.config.services.ts",
     "test:web-app:integration": "vitest run --config vitest.config.integration.ts",
     "test:web-app:hooks": "vitest run --config vitest.config.hooks.ts",
-
     "test:min": "VITEST_USE_MINIMAL=1 vitest run",
     "test:coverage": "craco test --coverage --watchAll=false",
     "test:unit": "craco test --testPathPattern=src/ --watchAll=false",
