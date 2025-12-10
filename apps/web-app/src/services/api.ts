@@ -7,8 +7,8 @@ import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/sha
 import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
 import { BookFormData as WebBookFormData } from '../components/Book/BookForm';
 import type { BookFormData as SharedBookFormData } from '@my-many-books/shared-types';
-import { env } from '../config/env';
 import axios from 'axios';
+import { env } from '../config/env';
 import { authService } from './authService';
 
 
@@ -150,10 +150,7 @@ class ApiService {
     }
 
     // Create API client configuration (use injected or default)
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-
-    // Ensure baseURL is never empty string (fallback to default if it is)
-    const validBaseURL = baseURL && baseURL.trim() !== '' ? baseURL : 'http://localhost:3000';
+    const validBaseURL = env.API_BASE_URL;
 
     const apiConfig: ApiClientConfig = (dependencies.config || {
       baseURL: validBaseURL,
@@ -350,7 +347,7 @@ class ApiService {
   }
 
   private buildAdminUrl(endpoint: string): string {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const cleanBaseURL = baseURL.replace(/\/$/, '');
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     if (cleanBaseURL.endsWith('/api/v1')) {
@@ -413,7 +410,7 @@ class ApiService {
   }
 
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -447,7 +444,7 @@ class ApiService {
   }
 
   async getAdminUser(id: number): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -473,7 +470,7 @@ class ApiService {
   }
 
   async updateAdminUser(id: number, userData: any): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -500,7 +497,7 @@ class ApiService {
   }
 
   async deleteAdminUser(id: number): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -526,7 +523,7 @@ class ApiService {
   }
 
   async getAdminBooks(page: number = 1, limit: number = 10, search?: string, userId?: number): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -563,7 +560,7 @@ class ApiService {
   }
 
   async getAdminBook(id: number): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -589,7 +586,7 @@ class ApiService {
   }
 
   async updateAdminBook(id: number, bookData: any): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -616,7 +613,7 @@ class ApiService {
   }
 
   async deleteAdminBook(id: number): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 

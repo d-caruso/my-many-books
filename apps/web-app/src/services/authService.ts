@@ -4,9 +4,10 @@
 // ================================================================
 
 import { AuthService, WebStorageAdapter } from '@my-many-books/shared-auth';
+import { env } from '../config/env';
 
 // Create singleton instance
 export const authService = new AuthService({
   storage: new WebStorageAdapter(),
-  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1',
+  apiUrl: env.API_BASE_URL || 'http://localhost:3001/api/v1',
 });

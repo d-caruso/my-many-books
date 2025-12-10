@@ -2,7 +2,7 @@ import { Book, Author, Category, User, PaginatedResponse } from '../../types';
 
 // Import after mocks are set up (avoid importing default instance to prevent axios creation)
 import { createApiService, ApiService } from '../../services/api';
-import { createMockApiClient } from '@my-many-books/shared-api';
+import { createMockApiClient, createApiClient } from '@my-many-books/shared-api';
 
 // Mock the shared-api library using industry standard approach
 vi.mock('@my-many-books/shared-api', () => ({
@@ -91,12 +91,13 @@ Object.defineProperty(window, 'localStorage', {
 
 // Mock window.location
 Object.defineProperty(window, 'location', {
-  value: { href: '' },
+  value: { href: '', hostname: 'localhost' },
   writable: true,
 });
 
 // Mock environment variables
 const originalEnv = process.env;
+
 
 describe('ApiService with Industry Standard Testing', () => {
   let mockApiClient: ReturnType<typeof createMockApiClient>;
@@ -776,6 +777,7 @@ describe('ApiService with Industry Standard Testing', () => {
       expect(customApiService).toBeInstanceOf(ApiService);
       expect(customApiService).toBeDefined();
     });
+
   });
 
   describe('Integration Tests', () => {
