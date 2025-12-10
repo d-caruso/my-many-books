@@ -73,3 +73,7 @@ docs/
 
 # bak files
 *.bak
+
+# Auto-generated translation files (synced from libs/shared-i18n)
+apps/web-app/public/locales/**/*.json
+!apps/web-app/public/locales/README.md
