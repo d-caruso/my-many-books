@@ -14,20 +14,10 @@
       }
     },
     "serve": {
-      "executor": "@nx/vite:dev-server",
-      "defaultConfiguration": "development",
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "web-app:build"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "web-app:build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "web-app:build:production",
-          "hmr": false
-        }
+        "command": "npm run start -- --host localhost --port 3000",
+        "cwd": "apps/web-app"
       }
     },
     "test": {
