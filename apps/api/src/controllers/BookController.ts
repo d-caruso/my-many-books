@@ -238,7 +238,7 @@ export class BookController extends BaseController {
     const filters = this.getQueryParameter(request, 'filters');
 
     const includeAuthors = this.getQueryParameter(request, 'includeAuthors') === 'true';
-    const includeCategories = this.getQueryParameter(request, 'includeCategories')=== 'true';
+    const includeCategories = this.getQueryParameter(request, 'includeCategories') === 'true';
 
     let searchFilters: BookSearchFilters = {};
     if (filters) {

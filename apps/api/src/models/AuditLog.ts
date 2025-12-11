@@ -9,6 +9,7 @@ import { IdBaseModel } from './base/IdBaseModel';
 export interface AuditLogAttributes {
   id: number;
   userId: number;
+  role?: string;
   action: string;
   resourceType: string;
   resourceId: string;
@@ -16,13 +17,24 @@ export interface AuditLogAttributes {
   ipAddress?: string;
   userAgent?: string;
   createdAt: Date;
+  creationDate: Date;
 }
 
-export class AuditLog
-  extends IdBaseModel<AuditLogAttributes>
-  implements AuditLogAttributes
-{
+export interface AuditLogCreationAttributes {
+  userId: number;
+  role?: string;
+  action: string;
+  resourceType: string;
+  resourceId: string;
+  details?: Record<string, any>;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt?: Date;
+}
+
+export class AuditLog extends IdBaseModel<AuditLogAttributes> implements AuditLogAttributes {
   public userId!: number;
+  public role?: string;
   public action!: string;
   public resourceType!: string;
   public resourceId!: string;
@@ -30,6 +42,7 @@ export class AuditLog
   public ipAddress?: string;
   public userAgent?: string;
   public createdAt!: Date;
+  public override creationDate!: Date;
 
   static override getTableName(): string {
     return 'audit_logs';
@@ -53,6 +66,11 @@ export class AuditLog
             model: 'users',
             key: 'id',
           },
+        },
+        role: {
+          type: DataTypes.STRING(50),
+          allowNull: true,
+          comment: 'User role at time of action',
         },
         action: {
           type: DataTypes.STRING(100),
@@ -89,6 +107,12 @@ export class AuditLog
           comment: 'User agent string from the request',
         },
         createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          field: 'created_at',
+          defaultValue: DataTypes.NOW,
+        },
+        creationDate: {
           type: DataTypes.DATE,
           allowNull: false,
           field: 'created_at',

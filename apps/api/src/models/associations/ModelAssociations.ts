@@ -13,6 +13,7 @@ export interface ModelRegistry {
   BookCategory: ModelStatic<Model>;
   Hook: ModelStatic<Model>;
   HookExecution: ModelStatic<Model>;
+  AuditLog: ModelStatic<Model>;
 }
 
 export class ModelAssociations {

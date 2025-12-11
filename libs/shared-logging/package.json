@@ -7,6 +7,10 @@
   "type": "commonjs",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
   "dependencies": {
     "pino": "^8.21.0",
     "pino-pretty": "^10.3.1",

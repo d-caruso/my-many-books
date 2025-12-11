@@ -7,26 +7,24 @@
  * - TraceId correlation
  */
 
-import { Request } from 'express';
 import pino from 'pino';
-import Queue from 'bull';
-import {
-  AuditLogEntry,
-  createPinoConfig,
-  getTraceIdFromRequest,
-} from '@my-many-books/shared-logging';
-import { AuditLog } from '../models';
+import { AuditLogEntry, createPinoConfig } from '@my-many-books/shared-logging';
+import { AuditLog, AuditLogCreationAttributes } from '../models';
+import { UniversalRequest } from '../types';
 
 /**
  * Data for creating an audit log
  */
 export interface AuditLogData {
   userId: number;
+  role?: string;
   action: string;
   resourceType: string;
   resourceId: string;
   details?: Record<string, any>;
-  req?: Request;
+  ipAddress?: string;
+  userAgent?: string;
+  traceId?: string;
 }
 
 /**
@@ -34,38 +32,66 @@ export interface AuditLogData {
  *
  * Features:
  * - Logs to Pino immediately (CloudWatch/console)
- * - Queues database persistence (async, non-blocking)
- * - Captures IP address and user agent
+ * - Async database persistence (fire-and-forget)
+ * - Captures IP address, user agent, and role
  * - Includes traceId for correlation
+ * - Switchable via environment variables and database setting
  */
 export class AuditLogService {
   private logger: pino.Logger;
-  private queue: Queue.Queue;
+  private cachedEnabled: boolean | null = null;
+  private cacheExpiry: number = 0;
+  private readonly CACHE_TTL = 30000; // 30 seconds
 
   constructor() {
     // Initialize Pino logger
     this.logger = pino(createPinoConfig());
+  }
 
-    // Initialize Bull queue for async database writes
-    this.queue = new Queue('audit-logs', {
-      redis: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD,
-      },
-      defaultJobOptions: {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
-        },
-        removeOnComplete: true,
-        removeOnFail: false,
-      },
-    });
+  /**
+   * Check if audit logging is enabled
+   *
+   * Hierarchical precedence:
+   * 1. AUDIT_LOGGING_FORCE_DISABLED=true → Always OFF
+   * 2. AUDIT_LOGGING_FORCE_ENABLED=true → Always ON
+   * 3. Database setting (future implementation)
+   * 4. Default: true (enabled)
+   *
+   * @returns true if audit logging is enabled
+   */
+  async isEnabled(): Promise<boolean> {
+    // 1. Check FORCE_DISABLED (highest priority)
+    if (process.env['AUDIT_LOGGING_FORCE_DISABLED'] === 'true') {
+      return false;
+    }
 
-    // Set up queue processor
-    this.setupQueueProcessor();
+    // 2. Check FORCE_ENABLED (second priority)
+    if (process.env['AUDIT_LOGGING_FORCE_ENABLED'] === 'true') {
+      return true;
+    }
+
+    // 3. Check database setting (with cache)
+    // TODO: Implement database setting in Task 3.7
+    // For now, check cache
+    const now = Date.now();
+    if (this.cachedEnabled !== null && now < this.cacheExpiry) {
+      return this.cachedEnabled;
+    }
+
+    // 4. Default: enabled
+    const enabled = true;
+    this.cachedEnabled = enabled;
+    this.cacheExpiry = now + this.CACHE_TTL;
+    return enabled;
+  }
+
+  /**
+   * Invalidate the enabled cache
+   * Call this when database setting changes
+   */
+  invalidateCache(): void {
+    this.cachedEnabled = null;
+    this.cacheExpiry = 0;
   }
 
   /**
@@ -73,14 +99,26 @@ export class AuditLogService {
    *
    * This method:
    * 1. Logs immediately to Pino (for CloudWatch/console)
-   * 2. Queues database persistence (async, non-blocking)
+   * 2. Persists to database (async, fire-and-forget)
    *
    * @param data - Audit log data
    */
   async logAction(data: AuditLogData): Promise<void> {
-    const traceId = data.req ? getTraceIdFromRequest(data.req) : 'unknown';
+    const traceId = data.traceId ?? 'unknown';
 
-    const auditLog: AuditLogEntry = {
+    const auditLog: Partial<AuditLogEntry> & {
+      type: 'audit';
+      timestamp: Date;
+      level: 'info';
+      message: string;
+      traceId: string;
+      service: string;
+      userId: string;
+      action: string;
+      resourceType: string;
+      resourceId: string;
+      metadata: Record<string, unknown>;
+    } = {
       type: 'audit',
       timestamp: new Date(),
       level: 'info',
@@ -91,24 +129,116 @@ export class AuditLogService {
       action: data.action,
       resourceType: data.resourceType,
       resourceId: data.resourceId,
-      ipAddress: data.req?.ip,
-      userAgent: data.req?.get('user-agent'),
-      details: data.details,
       metadata: {},
     };
 
-    // 1. Log immediately to Pino
-    this.logger.info(auditLog, 'Audit event');
-
-    // 2. Queue database persistence (fire-and-forget)
-    try {
-      await this.queue.add('persist', auditLog);
-    } catch (error) {
-      this.logger.error(
-        { err: error },
-        'Failed to queue audit log for database persistence'
-      );
+    if (data.role) {
+      (auditLog as any).role = data.role;
     }
+    if (data.ipAddress) {
+      auditLog.ipAddress = data.ipAddress;
+    }
+    if (data.userAgent) {
+      auditLog.userAgent = data.userAgent;
+    }
+    if (data.details) {
+      auditLog.details = data.details;
+    }
+
+    // 1. Log immediately to Pino
+    this.logger.info(auditLog as AuditLogEntry, 'Audit event');
+
+    // 2. Persist to database (fire-and-forget)
+    this.persistToDatabase(auditLog as any).catch(error => {
+      this.logger.error({ err: error, auditLog }, 'Failed to persist audit log to database');
+    });
+  }
+
+  /**
+   * Persist audit log to database
+   *
+   * @param auditLog - Audit log entry to persist
+   */
+  private async persistToDatabase(auditLog: any): Promise<void> {
+    const creationData: Partial<AuditLogCreationAttributes> & {
+      userId: number;
+      action: string;
+      resourceType: string;
+      resourceId: string;
+    } = {
+      userId: parseInt(auditLog.userId),
+      action: auditLog.action,
+      resourceType: auditLog.resourceType,
+      resourceId: auditLog.resourceId,
+      createdAt: auditLog.timestamp,
+    };
+
+    if (auditLog.role) {
+      creationData.role = auditLog.role;
+    }
+    if (auditLog.details) {
+      creationData.details = auditLog.details;
+    }
+    if (auditLog.ipAddress) {
+      creationData.ipAddress = auditLog.ipAddress;
+    }
+    if (auditLog.userAgent) {
+      creationData.userAgent = auditLog.userAgent;
+    }
+
+    await AuditLog.create(creationData as any);
+  }
+
+  /**
+   * Log an audit event from a UniversalRequest
+   *
+   * Convenience method that extracts user info and headers from request
+   * Respects audit logging enabled/disabled configuration
+   *
+   * @param request - Universal request object
+   * @param action - Action performed (create, update, delete, etc.)
+   * @param resourceType - Type of resource (hook, book, user, etc.)
+   * @param resourceId - ID of the resource
+   * @param details - Additional details about the action
+   */
+  async logActionFromRequest(
+    request: UniversalRequest,
+    action: string,
+    resourceType: string,
+    resourceId: string,
+    details?: Record<string, any>
+  ): Promise<void> {
+    // Check if audit logging is enabled
+    if (!(await this.isEnabled())) {
+      return;
+    }
+
+    const auditData: AuditLogData = {
+      userId: request.user?.userId ?? 0,
+      action,
+      resourceType,
+      resourceId,
+    };
+
+    if (request.user?.role) {
+      auditData.role = request.user.role;
+    }
+
+    if (details) {
+      auditData.details = details;
+    }
+
+    const ipAddress = request.headers?.['x-forwarded-for'] || request.headers?.['x-real-ip'];
+    const userAgent = request.headers?.['user-agent'];
+
+    if (ipAddress) {
+      auditData.ipAddress = ipAddress;
+    }
+    if (userAgent) {
+      auditData.userAgent = userAgent;
+    }
+
+    await this.logAction(auditData);
   }
 
   /**
@@ -156,53 +286,6 @@ export class AuditLogService {
       offset: filter.offset || 0,
       order: [['createdAt', 'DESC']],
     });
-  }
-
-  /**
-   * Set up queue processor to persist audit logs to database
-   */
-  private setupQueueProcessor(): void {
-    this.queue.process('persist', async (job) => {
-      const auditLog: AuditLogEntry = job.data;
-
-      try {
-        await AuditLog.create({
-          userId: parseInt(auditLog.userId),
-          action: auditLog.action,
-          resourceType: auditLog.resourceType,
-          resourceId: auditLog.resourceId,
-          details: auditLog.details,
-          ipAddress: auditLog.ipAddress,
-          userAgent: auditLog.userAgent,
-          createdAt: auditLog.timestamp,
-        });
-      } catch (error) {
-        this.logger.error(
-          { err: error, auditLog },
-          'Failed to persist audit log to database'
-        );
-        throw error; // Bull will retry
-      }
-    });
-
-    // Log queue events
-    this.queue.on('failed', (job, err) => {
-      this.logger.error(
-        { jobId: job?.id, err },
-        'Audit log persistence job failed'
-      );
-    });
-
-    this.queue.on('completed', (job) => {
-      this.logger.debug({ jobId: job.id }, 'Audit log persisted to database');
-    });
-  }
-
-  /**
-   * Close queue connections (for graceful shutdown)
-   */
-  async close(): Promise<void> {
-    await this.queue.close();
   }
 }
 

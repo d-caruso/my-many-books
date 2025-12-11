@@ -22,6 +22,11 @@ module.exports = {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
       },
+      role: {
+        type: Sequelize.STRING(50),
+        allowNull: true,
+        comment: 'User role at time of action'
+      },
       action: {
         type: Sequelize.STRING(100),
         allowNull: false,

@@ -12,6 +12,7 @@ import {
   HookUpdateAttributes,
 } from '../../models/interfaces/ModelInterfaces';
 import { Op, CreationAttributes } from 'sequelize';
+import { getAuditLogService } from '../../services/AuditLogService';
 
 export class HookController extends BaseController {
   async listHooks(request: UniversalRequest): Promise<ApiResponse> {
@@ -98,6 +99,20 @@ export class HookController extends BaseController {
       };
 
       const hook = await Hook.create(hookData as CreationAttributes<Hook>);
+
+      // Log audit event
+      await getAuditLogService().logActionFromRequest(
+        request,
+        'create',
+        'hook',
+        String(hook.id),
+        {
+          name: hook.name,
+          eventPattern: hook.eventPattern,
+          actionType: hook.actionType,
+        }
+      );
+
       return this.createSuccessResponse(
         hook.get({ plain: true }),
         'Hook created successfully',
@@ -133,7 +148,25 @@ export class HookController extends BaseController {
     }
 
     try {
+      const oldValues = hook.get({ plain: true });
       await hook.update(body as Partial<Hook>);
+
+      // Log audit event
+      await getAuditLogService().logActionFromRequest(
+        request,
+        'update',
+        'hook',
+        String(hook.id),
+        {
+          changes: body,
+          oldValues: {
+            name: oldValues.name,
+            isActive: oldValues.isActive,
+            eventPattern: oldValues.eventPattern,
+          },
+        }
+      );
+
       return this.createSuccessResponse(hook.get({ plain: true }), 'Hook updated successfully');
     } catch (error) {
       if (error instanceof Error) {
@@ -159,7 +192,21 @@ export class HookController extends BaseController {
     }
 
     try {
+      const hookData = hook.get({ plain: true });
       await hook.destroy();
+
+      // Log audit event
+      await getAuditLogService().logActionFromRequest(
+        request,
+        'delete',
+        'hook',
+        String(hookData.id),
+        {
+          name: hookData.name,
+          eventPattern: hookData.eventPattern,
+        }
+      );
+
       return this.createSuccessResponse(null, 'Hook deleted successfully', undefined, 204);
     } catch (error) {
       if (error instanceof Error) {

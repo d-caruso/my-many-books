@@ -93,6 +93,7 @@
     "@my-many-books/hookey": "file:../../libs/hookey",
     "@my-many-books/shared-auth": "file:../../libs/shared-auth",
     "@my-many-books/shared-i18n": "file:../../libs/shared-i18n",
+    "@my-many-books/shared-logging": "file:../../libs/shared-logging",
     "aws-sdk": "^2.1490.0",
     "axios": "^1.6.2",
     "class-transformer": "^0.5.1",
