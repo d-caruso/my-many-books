@@ -13,6 +13,8 @@ import { BookAuthor } from '../../../src/models/BookAuthor';
 import { BookCategory } from '../../../src/models/BookCategory';
 import { Hook } from '../../../src/models/Hook';
 import { HookExecution } from '../../../src/models/HookExecution';
+import { AuditLog } from '../../../src/models/AuditLog';
+import { Setting } from '../../../src/models/Setting';
 
 // Mock all dependencies
 jest.mock('../../../src/models/associations/ModelAssociations');
@@ -24,6 +26,8 @@ jest.mock('../../../src/models/BookAuthor');
 jest.mock('../../../src/models/BookCategory');
 jest.mock('../../../src/models/Hook');
 jest.mock('../../../src/models/HookExecution');
+jest.mock('../../../src/models/AuditLog');
+jest.mock('../../../src/models/Setting');
 
 describe('ModelManager', () => {
   let mockSequelize: any;
@@ -52,6 +56,8 @@ describe('ModelManager', () => {
     (BookCategory.initModel as jest.Mock) = jest.fn();
     (Hook.initModel as jest.Mock) = jest.fn();
     (HookExecution.initModel as jest.Mock) = jest.fn();
+    (AuditLog.initModel as jest.Mock) = jest.fn();
+    (Setting.initModel as jest.Mock) = jest.fn();
 
     // Mock ModelAssociations methods
     (ModelAssociations.registerModel as jest.Mock) = jest.fn();
@@ -75,8 +81,10 @@ describe('ModelManager', () => {
       expect(BookCategory.initModel).toHaveBeenCalledWith(mockSequelize);
       expect(Hook.initModel).toHaveBeenCalledWith(mockSequelize);
       expect(HookExecution.initModel).toHaveBeenCalledWith(mockSequelize);
+      expect(AuditLog.initModel).toHaveBeenCalledWith(mockSequelize);
+      expect(Setting.initModel).toHaveBeenCalledWith(mockSequelize);
 
-      expect(ModelAssociations.registerModel).toHaveBeenCalledTimes(8);
+      expect(ModelAssociations.registerModel).toHaveBeenCalledTimes(10);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('User', User);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('Author', Author);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('Category', Category);
@@ -85,6 +93,8 @@ describe('ModelManager', () => {
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('BookCategory', BookCategory);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('Hook', Hook);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('HookExecution', HookExecution);
+      expect(ModelAssociations.registerModel).toHaveBeenCalledWith('AuditLog', AuditLog);
+      expect(ModelAssociations.registerModel).toHaveBeenCalledWith('Setting', Setting);
 
       expect(ModelAssociations.defineAssociations).toHaveBeenCalled();
       expect(consoleLogSpy).toHaveBeenCalledWith('Model manager initialized with all models and associations');
@@ -177,7 +187,7 @@ describe('ModelManager', () => {
   describe('getModels', () => {
     it('should return all model classes', () => {
       const models = ModelManager.getModels();
-      
+
       expect(models).toEqual({
         User,
         Author,
@@ -186,13 +196,15 @@ describe('ModelManager', () => {
         BookAuthor,
         BookCategory,
         Hook,
-        HookExecution
+        HookExecution,
+        AuditLog,
+        Setting
       });
     });
 
     it('should return models even when not initialized', () => {
       const models = ModelManager.getModels();
-      
+
       expect(models).toBeDefined();
       expect(models.User).toBe(User);
       expect(models.Author).toBe(Author);
@@ -200,6 +212,10 @@ describe('ModelManager', () => {
       expect(models.Book).toBe(Book);
       expect(models.BookAuthor).toBe(BookAuthor);
       expect(models.BookCategory).toBe(BookCategory);
+      expect(models.Hook).toBe(Hook);
+      expect(models.HookExecution).toBe(HookExecution);
+      expect(models.AuditLog).toBe(AuditLog);
+      expect(models.Setting).toBe(Setting);
     });
   });
 
