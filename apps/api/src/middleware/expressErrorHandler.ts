@@ -5,6 +5,8 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { ApplicationError, BadRequestError, InternalServerError } from '../errors/ApplicationError';
+import { getLogger } from '../services/logger';
+import { getCurrentTraceId } from '@my-many-books/shared-logging';
 
 const isJsonSyntaxError = (
   error: Error
@@ -30,15 +32,19 @@ export const expressErrorHandler = (
         : new InternalServerError('Internal server error');
 
   const isProduction = process.env['NODE_ENV'] === 'production';
+  const traceId = getCurrentTraceId();
 
   if (!isProduction || !appError.isOperational) {
-    console.error('Unhandled application error:', {
-      name: error.name,
-      message: error.message,
-      code: appError.code,
-      statusCode: appError.statusCode,
-      stack: error.stack,
-    });
+    getLogger().error(
+      {
+        err: error,
+        traceId,
+        code: appError.code,
+        statusCode: appError.statusCode,
+        isOperational: appError.isOperational,
+      },
+      'Unhandled application error'
+    );
   }
 
   const payload: Record<string, unknown> = {

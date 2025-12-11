@@ -51,14 +51,15 @@ export interface AuditLogQueryFilter {
  * - Switchable via environment variables and database setting
  */
 export class AuditLogService {
-  private logger: pino.Logger;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private logger: any;
   private cachedEnabled: boolean | null = null;
   private cacheExpiry: number = 0;
   private readonly CACHE_TTL = 30000; // 30 seconds
 
   constructor() {
     // Initialize Pino logger
-    this.logger = pino(createPinoConfig());
+    this.logger = pino(createPinoConfig() as unknown as pino.LoggerOptions);
   }
 
   /**

@@ -14,6 +14,7 @@ import { Hook } from './Hook';
 import { HookExecution } from './HookExecution';
 import { AuditLog } from './AuditLog';
 import { Setting } from './Setting';
+import { getLogger } from '../services/logger';
 
 export * from './interfaces/ModelInterfaces';
 export * from './base/BaseModel';
@@ -68,8 +69,7 @@ export class ModelManager {
     ModelAssociations.defineAssociations();
 
     ModelManager.initialized = true;
-    // eslint-disable-next-line no-console
-    console.log('Model manager initialized with all models and associations');
+    getLogger().info('Model manager initialized with all models and associations');
   }
 
   static getSequelize(): Sequelize {

@@ -21,13 +21,24 @@ import hookRoutes from './routes/hookRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
 import { initializeHookSystem } from './services/hooks/hookSystem';
+import { traceIdMiddleware, requestLoggerMiddleware } from '@my-many-books/shared-logging';
 
 import { initializeI18n } from '@my-many-books/shared-i18n';
+import { getLogger } from './services/logger';
 
 const app = express();
 const isTestEnvironment = process.env['NODE_ENV'] === 'test';
 
-// Middleware
+// ===== LOGGING MIDDLEWARE (MUST BE FIRST) =====
+// 1. TraceId middleware for request correlation
+app.use(traceIdMiddleware() as unknown as express.RequestHandler);
+
+// 2. Request logger middleware (logs all HTTP requests)
+if (!isTestEnvironment) {
+  app.use(requestLoggerMiddleware() as unknown as express.RequestHandler);
+}
+
+// ===== CORE MIDDLEWARE =====
 app.use(
   cors({
     origin: [process.env['FRONTEND_URL'], /^http:\/\/localhost:\d+$/].filter(Boolean) as (
@@ -88,7 +99,7 @@ const initializeDatabase = async (): Promise<void> => {
   try {
     const sequelize = DatabaseConnection.getInstance();
     await sequelize.authenticate();
-    console.log('Database connection established successfully');
+    getLogger().info('Database connection established successfully');
 
     // Initialize models
     ModelManager.initialize(sequelize);
@@ -97,11 +108,14 @@ const initializeDatabase = async (): Promise<void> => {
     // Disabled: Use migrations instead (npm run db:migrate)
     // if (process.env['NODE_ENV'] === 'development') {
     //   await ModelManager.syncDatabase(false);
-    //   // TODO: Replace with proper logging
-    //   // console.log('Database synchronized');
     // }
   } catch (error) {
-    console.error('Database initialization failed:', error);
+    getLogger().error(
+      {
+        err: error instanceof Error ? error : new Error(String(error)),
+      },
+      'Database initialization failed'
+    );
     // Don't exit in Lambda - controllers can return mock data
     // Only exit when running locally as server
     if (require.main === module) {
@@ -125,17 +139,24 @@ const startServer = async (): Promise<void> => {
   await initializeI18n();
 
   const PORT = process.env['PORT'] || 3000;
+  const env = process.env['NODE_ENV'] || 'development';
+
   app.listen(PORT, (): void => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/health`);
-    console.log(`Environment: ${process.env['NODE_ENV'] || 'development'}`);
+    getLogger().info(
+      {
+        port: PORT,
+        environment: env,
+        healthCheck: `http://localhost:${PORT}/health`,
+      },
+      'Server started successfully'
+    );
   });
 };
 
 // Handle graceful shutdown
 process.on('SIGTERM', (): void => {
   void (async (): Promise<void> => {
-    console.log('SIGTERM received, shutting down gracefully');
+    getLogger().info('SIGTERM received, shutting down gracefully');
     await ModelManager.close();
     process.exit(0);
   })();
@@ -143,16 +164,15 @@ process.on('SIGTERM', (): void => {
 
 process.on('SIGINT', (): void => {
   void (async (): Promise<void> => {
-    console.log('SIGINT received, shutting down gracefully');
+    getLogger().info('SIGINT received, shutting down gracefully');
     await ModelManager.close();
     process.exit(0);
   })();
 });
 
 if (require.main === module) {
-  startServer().catch((_error: Error): void => {
-    // TODO: Replace with proper logging
-    // console.error('Failed to start server:', error);
+  startServer().catch((error: Error): void => {
+    getLogger().error({ err: error }, 'Failed to start server');
     process.exit(1);
   });
 }

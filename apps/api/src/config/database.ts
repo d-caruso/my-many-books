@@ -4,6 +4,7 @@
 
 import { Sequelize } from 'sequelize';
 import { DATABASE_CONFIG } from '@/utils/constants';
+import { getLogger } from '../services/logger';
 
 class DatabaseConnection {
   private static instance: Sequelize | null = null;
@@ -33,9 +34,8 @@ class DatabaseConnection {
       },
       logging:
         NODE_ENV === 'development'
-          ? (_msg: string): void => {
-              // TODO: Replace with proper logging
-              // console.log(_msg);
+          ? (msg: string): void => {
+              getLogger().debug({ sql: msg }, 'SQL query');
             }
           : false,
       define: {
@@ -53,12 +53,15 @@ class DatabaseConnection {
     try {
       const sequelize = DatabaseConnection.getInstance();
       await sequelize.authenticate();
-      // TODO: Replace with proper logging
-      // console.log('Database connection established successfully');
+      getLogger().info('Database connection test successful');
       return true;
-    } catch {
-      // TODO: Replace with proper logging
-      // console.error('Unable to connect to database:', _error);
+    } catch (error) {
+      getLogger().error(
+        {
+          err: error instanceof Error ? error : new Error(String(error)),
+        },
+        'Unable to connect to database'
+      );
       return false;
     }
   }

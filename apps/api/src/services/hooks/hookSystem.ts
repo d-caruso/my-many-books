@@ -6,6 +6,7 @@
 import { ActionRouter, HookSystem, HookStorage } from '@my-many-books/hookey';
 import { DatabaseHookStorage } from './DatabaseHookStorage';
 import { hookConfig } from '../../config';
+import { getLogger } from '../logger';
 
 const isTestRuntime = (): boolean => {
   return process.env['NODE_ENV'] === 'test' || Boolean(process.env['JEST_WORKER_ID']);
@@ -89,7 +90,12 @@ export class HookSystemManager {
       this.hookSystem = system;
       return system;
     } catch (error) {
-      console.error('[HookSystem] Initialization failed', error);
+      getLogger().error(
+        {
+          err: error instanceof Error ? error : new Error(String(error)),
+        },
+        'HookSystem initialization failed'
+      );
       throw error;
     }
   }
@@ -101,9 +107,14 @@ export class HookSystemManager {
         const action = this.router.createAction(hook.actionType, hook.actionConfig);
         await system.registerExistingHook(hook, action);
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error(
-          `[HookSystem] Failed to register hook "${hook.name}" (${hook.eventPattern}): ${message}`
+        getLogger().error(
+          {
+            err: error instanceof Error ? error : new Error(String(error)),
+            hookName: hook.name,
+            eventPattern: hook.eventPattern,
+            actionType: hook.actionType,
+          },
+          'Failed to register hook'
         );
         throw error;
       }
@@ -138,7 +149,12 @@ export const emitHookEvent = async (eventName: string, payload?: unknown): Promi
     const system = getHookSystem();
     await system.trigger(eventName, payload);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.warn(`[HookSystem] Skipped event "${eventName}": ${message}`);
+    getLogger().warn(
+      {
+        err: error instanceof Error ? error : new Error(String(error)),
+        eventName,
+      },
+      'Skipped hook event'
+    );
   }
 };
