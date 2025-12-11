@@ -5,6 +5,7 @@
 
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
+import { getLogger } from '../../services/logger';
 import { UniversalRequest } from '../../types';
 import { Setting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
@@ -54,7 +55,7 @@ export class AdminSettingsController extends BaseController {
         });
       }
     } catch (error) {
-      console.error('Failed to query audit logging setting:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to query audit logging setting:');
       return this.createErrorResponse('Failed to query audit logging setting', 500);
     }
 
@@ -109,7 +110,7 @@ export class AdminSettingsController extends BaseController {
         canChange: true,
       });
     } catch (error) {
-      console.error('Failed to update audit logging setting:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to update audit logging setting:');
       return this.createErrorResponse('Failed to update audit logging setting', 500);
     }
   }

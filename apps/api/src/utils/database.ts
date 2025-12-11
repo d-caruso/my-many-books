@@ -1,6 +1,6 @@
 // ================================================================
 // src/utils/database.ts
-// ================================================================
+import { getLogger } from '../services/logger';// ================================================================
 
 import { Sequelize } from 'sequelize';
 import DatabaseConnection from '@/config/database';
@@ -65,7 +65,7 @@ export class DatabaseUtils {
       // TODO: Replace with proper logging
       // console.log('Database reset completed successfully');
     } catch (error) {
-      console.error('Database reset failed:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Database reset failed:');
       throw error;
     }
   }
@@ -121,7 +121,7 @@ export class DatabaseUtils {
         tableStats,
       };
     } catch (error) {
-      console.error('Error getting database status:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error getting database status:');
       return {
         connected: false,
         modelsInitialized: false,

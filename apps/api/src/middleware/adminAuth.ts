@@ -1,5 +1,5 @@
 // ================================================================
-// src/middleware/adminAuth.ts
+import { getLogger } from '../services/logger';// src/middleware/adminAuth.ts
 // Admin authentication middleware for role-based access control
 // ================================================================
 
@@ -46,7 +46,7 @@ export const requireAdmin = async (
     // User is admin, proceed to next middleware
     next();
   } catch (error) {
-    console.error('Admin authorization error:', error);
+    getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Admin authorization error:');
     res.status(500).json({
       error: 'Authorization check failed',
       details: error instanceof Error ? error.message : 'Unknown error',
@@ -93,7 +93,7 @@ export const requireRole = (allowedRole: 'user' | 'admin') => {
       // User has required role, proceed to next middleware
       next();
     } catch (error) {
-      console.error('Role authorization error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Role authorization error:');
       res.status(500).json({
         error: 'Authorization check failed',
         details: error instanceof Error ? error.message : 'Unknown error',

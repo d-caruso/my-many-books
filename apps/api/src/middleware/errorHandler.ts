@@ -3,6 +3,7 @@
 // ================================================================
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { getLogger } from '../services/logger';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -81,16 +82,17 @@ export const createErrorResponse = (
   const isOperational = appError.isOperational || false;
 
   // Log error details
-  console.error('Error occurred:', {
-    name: error.name,
-    message: error.message,
-    statusCode,
-    isOperational,
-    stack: error.stack,
-    path: event?.resource,
-    method: event?.httpMethod,
-    requestId: event?.requestContext?.requestId,
-  });
+  getLogger().error(
+    {
+      err: error,
+      statusCode,
+      isOperational,
+      path: event?.resource,
+      method: event?.httpMethod,
+      requestId: event?.requestContext?.requestId,
+    },
+    'Error occurred'
+  );
 
   // Don't expose internal error details in production
   const isProduction = process.env['NODE_ENV'] === 'production';

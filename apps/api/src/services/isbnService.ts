@@ -1,6 +1,6 @@
 // ================================================================
 // src/services/isbnService.ts
-// ================================================================
+import { getLogger } from './logger';// ================================================================
 
 import { OpenLibraryClient, openLibraryClient, FetchBookResult } from './openLibraryClient';
 import { DataTransformer } from './dataTransformer';
@@ -131,7 +131,7 @@ export class IsbnService {
         );
       }
     } catch (error) {
-      console.error('Error in resilient ISBN lookup:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error in resilient ISBN lookup:');
       return this.handleApiFallback(
         normalizedIsbn,
         'Unexpected error during book lookup',
@@ -381,7 +381,7 @@ export class IsbnService {
         }
       } catch (error) {
         const errorMsg = 'Batch API request failed';
-        console.error(errorMsg, error);
+        getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, errorMsg);
 
         // Mark all uncached ISBNs as failed
         for (const isbn of uncachedIsbns) {
@@ -453,7 +453,7 @@ export class IsbnService {
         books,
       };
     } catch (error) {
-      console.error('Error searching books by title:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error searching books by title:');
       return {
         success: false,
         error: 'Unexpected error during title search',

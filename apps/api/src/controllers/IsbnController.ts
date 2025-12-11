@@ -10,6 +10,7 @@ import { ApiResponse } from '../common/ApiResponse';
 
 // A universal request interface to decouple the controller from the framework
 import { UniversalRequest } from '../types';
+import { getLogger } from '../services/logger';
 
 /*interface UniversalRequest {
   body?: unknown;
@@ -105,7 +106,7 @@ export class IsbnController extends BaseController {
         });
       }
     } catch (error) {
-      console.error('ISBN lookup error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'ISBN lookup error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -148,7 +149,7 @@ export class IsbnController extends BaseController {
         errors: result.errors,
       });
     } catch (error) {
-      console.error('Batch ISBN lookup error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Batch ISBN lookup error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -193,7 +194,7 @@ export class IsbnController extends BaseController {
         return this.createErrorResponseI18n('errors:internal_server_error', 400);
       }
     } catch (error) {
-      console.error('Title search error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Title search error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -220,7 +221,7 @@ export class IsbnController extends BaseController {
         statusCode
       );
     } catch (error) {
-      console.error('Health check error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Health check error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 503);
     }
   }
@@ -239,7 +240,7 @@ export class IsbnController extends BaseController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Resilience stats error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Resilience stats error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -252,7 +253,7 @@ export class IsbnController extends BaseController {
 
       return this.createSuccessResponse(null, 'Resilience mechanisms reset successfully');
     } catch (error) {
-      console.error('Reset resilience error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Reset resilience error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -265,7 +266,7 @@ export class IsbnController extends BaseController {
 
       return this.createSuccessResponse(null, 'ISBN service cache cleared successfully');
     } catch (error) {
-      console.error('Clear cache error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Clear cache error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -281,7 +282,7 @@ export class IsbnController extends BaseController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Cache stats error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Cache stats error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -320,7 +321,7 @@ export class IsbnController extends BaseController {
         return this.createErrorResponseI18n('errors:internal_server_error', 400);
       }
     } catch (error) {
-      console.error('Add fallback book error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Add fallback book error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -354,7 +355,7 @@ export class IsbnController extends BaseController {
         },
       });
     } catch (error) {
-      console.error('ISBN validation error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'ISBN validation error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -441,7 +442,7 @@ export class IsbnController extends BaseController {
         format,
       });
     } catch (error) {
-      console.error('ISBN formatting error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'ISBN formatting error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }

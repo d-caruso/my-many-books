@@ -3,6 +3,7 @@
 // ================================================================
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { getLogger } from '../services/logger';
 
 export interface RequestLogEntry {
   requestId: string;
@@ -54,18 +55,20 @@ export class RequestLogger {
     };
 
     if (this.logLevel !== 'none') {
-      // eslint-disable-next-line no-console
-      console.log('Incoming request:', {
-        requestId: logEntry.requestId,
-        method: logEntry.method,
-        resource: logEntry.resource,
-        sourceIp: logEntry.sourceIp,
-        ...(this.logLevel === 'detailed' && {
-          queryStringParameters: logEntry.queryStringParameters,
-          pathParameters: logEntry.pathParameters,
-          userAgent: logEntry.userAgent,
-        }),
-      });
+      getLogger().info(
+        {
+          requestId: logEntry.requestId,
+          method: logEntry.method,
+          resource: logEntry.resource,
+          sourceIp: logEntry.sourceIp,
+          ...(this.logLevel === 'detailed' && {
+            queryStringParameters: logEntry.queryStringParameters,
+            pathParameters: logEntry.pathParameters,
+            userAgent: logEntry.userAgent,
+          }),
+        },
+        'Incoming request'
+      );
     }
 
     return logEntry;
@@ -103,26 +106,28 @@ export class RequestLogger {
 
     // Log slow requests (over 5 seconds)
     if (responseTime > 5000) {
-      console.warn('Slow request detected:', {
-        requestId: logEntry.requestId,
-        method: logEntry.method,
-        resource: logEntry.resource,
-        responseTime: `${responseTime}ms`,
-      });
+      getLogger().warn(
+        {
+          requestId: logEntry.requestId,
+          method: logEntry.method,
+          resource: logEntry.resource,
+          responseTime,
+        },
+        'Slow request detected'
+      );
     }
   }
 
   public logError(logEntry: RequestLogEntry, error: Error): void {
-    console.error('Request error:', {
-      requestId: logEntry.requestId,
-      method: logEntry.method,
-      resource: logEntry.resource,
-      error: {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
+    getLogger().error(
+      {
+        err: error,
+        requestId: logEntry.requestId,
+        method: logEntry.method,
+        resource: logEntry.resource,
       },
-    });
+      'Request error'
+    );
   }
 
   private sanitizeHeaders(headers: Record<string, string>): Record<string, string> {

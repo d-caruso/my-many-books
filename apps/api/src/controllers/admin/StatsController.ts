@@ -5,6 +5,7 @@
 
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
+import { getLogger } from '../../services/logger';
 import { UniversalRequest } from '../../types';
 import { User } from '../../models/User';
 import { Book } from '../../models/Book';
@@ -36,7 +37,7 @@ export class StatsController extends BaseController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Stats summary error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Stats summary error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }

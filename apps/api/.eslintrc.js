@@ -21,7 +21,8 @@ module.exports = {
     '@typescript-eslint/no-unsafe-call': 'error',
     '@typescript-eslint/no-unsafe-member-access': 'error',
     '@typescript-eslint/no-unsafe-return': 'error',
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    // Prevent console usage - use structured logging (Pino) instead
+    'no-console': 'error',
   },
   env: {
     node: true,

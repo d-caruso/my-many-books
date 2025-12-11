@@ -1,6 +1,6 @@
 // ================================================================
 // src/services/openLibraryClient.ts
-// ================================================================
+import { getLogger } from './logger';// ================================================================
 
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import { OpenLibraryResponse, OpenLibraryBook } from '@/types/openLibrary';
@@ -44,7 +44,7 @@ export class OpenLibraryClient {
     try {
       this.setupInterceptors();
     } catch (error) {
-      console.warn('Could not setup interceptors:', error);
+      getLogger().warn({ err: error instanceof Error ? error : new Error(String(error)) }, 'Could not setup interceptors:');
     }
   }
 
@@ -92,7 +92,7 @@ export class OpenLibraryClient {
       };
     } catch (error) {
       // TODO: Replace with proper logging
-      // console.error('Error fetching book from Open Library:', error);
+      // getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error fetching book from Open Library:');
 
       if (error instanceof AxiosError) {
         return {
@@ -168,7 +168,7 @@ export class OpenLibraryClient {
 
       return results;
     } catch (error) {
-      console.error('Error fetching multiple books from Open Library:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error fetching multiple books from Open Library:');
 
       // Return error for all valid ISBNs
       const errorMessage =
@@ -238,7 +238,7 @@ export class OpenLibraryClient {
       };
     } catch (error) {
       // TODO: Replace with proper logging
-      // console.error('Error searching books by title:', error);
+      // getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error searching books by title:');
 
       return {
         success: false,
@@ -337,7 +337,7 @@ export class OpenLibraryClient {
       },
       error => {
         // TODO: Replace with proper logging
-        // console.error('Request error:', error);
+        // getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Request error:');
         return Promise.reject(new Error(error instanceof Error ? error.message : 'Request error'));
       }
     );
