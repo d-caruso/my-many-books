@@ -5,3 +5,4 @@
 export * from './BaseAdapter';
 export * from './CloudWatchAdapter';
 export * from './DatabaseAdapter';
+export * from './S3Adapter';
