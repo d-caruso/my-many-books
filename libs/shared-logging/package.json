@@ -12,7 +12,11 @@
     "pino-pretty": "^10.3.1",
     "pino-http": "^8.6.1",
     "@aws-sdk/client-cloudwatch-logs": "^3.670.0",
+    "@aws-sdk/client-s3": "^3.670.0",
     "bull": "^4.16.3"
+  },
+  "peerDependencies": {
+    "sequelize": "^6.34.0"
   },
   "devDependencies": {
     "@types/bull": "^4.10.0",
