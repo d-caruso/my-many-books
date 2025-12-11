@@ -9,3 +9,9 @@ export * from './interfaces';
 
 // Services
 export * from './services';
+
+// Config
+export * from './config';
+
+// Middleware
+export * from './middleware';
