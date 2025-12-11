@@ -10,6 +10,9 @@ export * from './interfaces';
 // Services
 export * from './services';
 
+// Adapters
+export * from './adapters';
+
 // Config
 export * from './config';
 
