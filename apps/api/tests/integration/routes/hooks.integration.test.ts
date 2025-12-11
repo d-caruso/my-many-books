@@ -67,12 +67,8 @@ jest.mock('../../../src/middleware/authorization', () => ({
   },
 }));
 
-// Mock validation middleware to pass all validation
-jest.mock('../../../src/validation/middleware/validationMiddleware', () => ({
-  validateBody: () => (_req: any, _res: any, next: any) => next(),
-  validateParams: () => (_req: any, _res: any, next: any) => next(),
-  validateQuery: () => (_req: any, _res: any, next: any) => next(),
-}));
+// Don't mock validation middleware - let real validation run for integration tests
+// This allows us to test actual validation behavior
 
 // Mock audit log service
 jest.mock('../../../src/services/auditLogService', () => ({
