@@ -44,6 +44,8 @@ describe('DatabaseUtils', () => {
       BookCategory: { count: jest.fn().mockResolvedValue(0) } as any,
       Hook: { count: jest.fn().mockResolvedValue(0) } as any,
       HookExecution: { count: jest.fn().mockResolvedValue(0) } as any,
+      AuditLog: { count: jest.fn().mockResolvedValue(0) } as any,
+      Setting: { count: jest.fn().mockResolvedValue(0) } as any,
     });
 
     // Clear any static state

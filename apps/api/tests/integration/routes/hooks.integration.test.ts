@@ -67,6 +67,20 @@ jest.mock('../../../src/middleware/authorization', () => ({
   },
 }));
 
+// Mock validation middleware to pass all validation
+jest.mock('../../../src/validation/middleware/validationMiddleware', () => ({
+  validateBody: () => (_req: any, _res: any, next: any) => next(),
+  validateParams: () => (_req: any, _res: any, next: any) => next(),
+  validateQuery: () => (_req: any, _res: any, next: any) => next(),
+}));
+
+// Mock audit log service
+jest.mock('../../../src/services/auditLogService', () => ({
+  getAuditLogService: jest.fn(() => ({
+    logActionFromRequest: jest.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 describe('Hook API Integration Tests', () => {
   const BASE_URL = '/api/v1/admin/hooks';
 
@@ -349,6 +363,7 @@ describe('Hook API Integration Tests', () => {
       const mockHook = {
         id: 1,
         destroy: jest.fn().mockResolvedValue(undefined),
+        get: jest.fn().mockReturnValue({ id: 1, name: 'Test Hook', event: 'book.create' }),
       };
 
       (Hook.findByPk as jest.Mock).mockResolvedValue(mockHook);
