@@ -8,6 +8,7 @@ import { expressRouteWrapper } from '../utils/routeWrapper';
 import { statsController } from '../controllers/admin/StatsController';
 import { AdminUserController } from '../controllers/admin/AdminUserController';
 import { adminBookController } from '../controllers/admin/AdminBookController';
+import { adminSettingsController } from '../controllers/admin/AdminSettingsController';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
@@ -125,6 +126,21 @@ router.delete(
   writeLimiter,
   validateParams(adminIdParamSchema),
   expressRouteWrapper(adminBookController.deleteBook.bind(adminBookController))
+);
+
+// ===== SETTINGS ENDPOINTS =====
+// Get audit logging status (READ)
+router.get(
+  '/settings/audit-logging',
+  readLimiter,
+  expressRouteWrapper(adminSettingsController.getAuditLoggingStatus.bind(adminSettingsController))
+);
+
+// Update audit logging status (WRITE)
+router.patch(
+  '/settings/audit-logging',
+  writeLimiter,
+  expressRouteWrapper(adminSettingsController.updateAuditLoggingStatus.bind(adminSettingsController))
 );
 
 export default router;

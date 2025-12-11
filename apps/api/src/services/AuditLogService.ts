@@ -9,7 +9,7 @@
 
 import pino from 'pino';
 import { AuditLogEntry, createPinoConfig } from '@my-many-books/shared-logging';
-import { AuditLog, AuditLogCreationAttributes } from '../models';
+import { AuditLog, AuditLogCreationAttributes, Setting } from '../models';
 import { UniversalRequest } from '../types';
 
 /**
@@ -71,11 +71,22 @@ export class AuditLogService {
     }
 
     // 3. Check database setting (with cache)
-    // TODO: Implement database setting in Task 3.7
-    // For now, check cache
     const now = Date.now();
     if (this.cachedEnabled !== null && now < this.cacheExpiry) {
       return this.cachedEnabled;
+    }
+
+    // Query database for setting
+    try {
+      const setting = await Setting.findOne({ where: { key: 'audit_logging_enabled' } });
+      if (setting) {
+        const enabled = setting.value === 'true';
+        this.cachedEnabled = enabled;
+        this.cacheExpiry = now + this.CACHE_TTL;
+        return enabled;
+      }
+    } catch (error) {
+      this.logger.warn({ err: error }, 'Failed to query audit logging setting from database');
     }
 
     // 4. Default: enabled

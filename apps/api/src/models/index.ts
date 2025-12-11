@@ -13,6 +13,7 @@ import { User } from './User';
 import { Hook } from './Hook';
 import { HookExecution } from './HookExecution';
 import { AuditLog } from './AuditLog';
+import { Setting } from './Setting';
 
 export * from './interfaces/ModelInterfaces';
 export * from './base/BaseModel';
@@ -26,6 +27,7 @@ export * from './User';
 export * from './Hook';
 export * from './HookExecution';
 export * from './AuditLog';
+export * from './Setting';
 
 export class ModelManager {
   private static sequelize: Sequelize | null = null;
@@ -48,6 +50,7 @@ export class ModelManager {
     Hook.initModel(sequelize);
     HookExecution.initModel(sequelize);
     AuditLog.initModel(sequelize);
+    Setting.initModel(sequelize);
 
     // Register models for associations
     ModelAssociations.registerModel('User', User);
@@ -59,6 +62,7 @@ export class ModelManager {
     ModelAssociations.registerModel('Hook', Hook);
     ModelAssociations.registerModel('HookExecution', HookExecution);
     ModelAssociations.registerModel('AuditLog', AuditLog);
+    ModelAssociations.registerModel('Setting', Setting);
 
     // Define associations
     ModelAssociations.defineAssociations();
@@ -105,6 +109,7 @@ export class ModelManager {
     Hook: typeof Hook;
     HookExecution: typeof HookExecution;
     AuditLog: typeof AuditLog;
+    Setting: typeof Setting;
   } {
     return {
       User,
@@ -116,6 +121,7 @@ export class ModelManager {
       Hook,
       HookExecution,
       AuditLog,
+      Setting,
     };
   }
 }
