@@ -1,12 +1,20 @@
 import React from 'react';
-import { render as rtlRender, screen } from '@testing-library/react';
+import { render as rtlRender, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { AdminSettingsPage } from '../../../pages/Admin/AdminSettingsPage';
+import { apiClient } from '../../../services/api';
 
 vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
+}));
+
+vi.mock('../../../services/api', () => ({
+  apiClient: {
+    get: vi.fn(),
+    patch: vi.fn(),
+  },
 }));
 
 // Create test i18n instance
@@ -22,7 +30,6 @@ testI18n.use(initReactI18next).init({
         admin: {
           settings: {
             page_title: 'Settings',
-            coming_soon: 'Settings configuration coming soon...',
           },
         },
       },
@@ -39,18 +46,59 @@ const renderWithProvider = (ui: React.ReactElement) => {
 };
 
 describe('AdminSettingsPage', () => {
-  test('renders settings title', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('renders settings title', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        enabled: false,
+        source: 'default',
+        canChange: true,
+      },
+    });
+
     renderWithProvider(<AdminSettingsPage />);
     expect(screen.getByText('Settings')).toBeInTheDocument();
+
+    // Wait for async state updates
+    await waitFor(() => {
+      expect(apiClient.get).toHaveBeenCalled();
+    });
   });
 
-  test('displays coming soon message', () => {
+  test('displays audit logging section', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        enabled: false,
+        source: 'default',
+        canChange: true,
+      },
+    });
+
     renderWithProvider(<AdminSettingsPage />);
-    expect(screen.getByText('Settings configuration coming soon...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Audit Logging')).toBeInTheDocument();
+    });
   });
 
-  test('renders within AdminLayout', () => {
+  test('renders within AdminLayout', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        enabled: false,
+        source: 'default',
+        canChange: true,
+      },
+    });
+
     renderWithProvider(<AdminSettingsPage />);
     expect(screen.getByTestId('admin-layout')).toBeInTheDocument();
+
+    // Wait for async state updates
+    await waitFor(() => {
+      expect(apiClient.get).toHaveBeenCalled();
+    });
   });
 });
