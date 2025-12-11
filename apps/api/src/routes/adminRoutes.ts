@@ -140,7 +140,9 @@ router.get(
 router.patch(
   '/settings/audit-logging',
   writeLimiter,
-  expressRouteWrapper(adminSettingsController.updateAuditLoggingStatus.bind(adminSettingsController))
+  expressRouteWrapper(
+    adminSettingsController.updateAuditLoggingStatus.bind(adminSettingsController)
+  )
 );
 
 export default router;

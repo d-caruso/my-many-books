@@ -101,7 +101,7 @@ export class HookController extends BaseController {
       const hook = await Hook.create(hookData as CreationAttributes<Hook>);
 
       // Log audit event
-      await getAuditLogService().logActionFromRequest(
+      getAuditLogService().logActionFromRequest(
         request,
         'create',
         'hook',
@@ -152,7 +152,7 @@ export class HookController extends BaseController {
       await hook.update(body as Partial<Hook>);
 
       // Log audit event
-      await getAuditLogService().logActionFromRequest(
+      getAuditLogService().logActionFromRequest(
         request,
         'update',
         'hook',
@@ -196,7 +196,7 @@ export class HookController extends BaseController {
       await hook.destroy();
 
       // Log audit event
-      await getAuditLogService().logActionFromRequest(
+      getAuditLogService().logActionFromRequest(
         request,
         'delete',
         'hook',

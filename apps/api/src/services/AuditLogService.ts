@@ -9,7 +9,7 @@
 
 import pino from 'pino';
 import { AuditLogEntry, createPinoConfig } from '@my-many-books/shared-logging';
-import { AuditLog, AuditLogCreationAttributes, Setting } from '../models';
+import { AuditLog, AuditLogAttributes, AuditLogCreationAttributes, Setting } from '../models';
 import { UniversalRequest } from '../types';
 
 /**
@@ -17,14 +17,27 @@ import { UniversalRequest } from '../types';
  */
 export interface AuditLogData {
   userId: number;
-  role?: string;
+  role: string;
   action: string;
   resourceType: string;
   resourceId: string;
-  details?: Record<string, any>;
-  ipAddress?: string;
+  details?: Record<string, unknown>;
+  ipAddress: string;
   userAgent?: string;
   traceId?: string;
+}
+
+/**
+ * Filter for querying audit logs
+ */
+export interface AuditLogQueryFilter {
+  userId?: number;
+  resourceType?: string;
+  action?: string;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
+  offset?: number;
 }
 
 /**
@@ -114,22 +127,10 @@ export class AuditLogService {
    *
    * @param data - Audit log data
    */
-  async logAction(data: AuditLogData): Promise<void> {
+  logAction(data: AuditLogData): void {
     const traceId = data.traceId ?? 'unknown';
 
-    const auditLog: Partial<AuditLogEntry> & {
-      type: 'audit';
-      timestamp: Date;
-      level: 'info';
-      message: string;
-      traceId: string;
-      service: string;
-      userId: string;
-      action: string;
-      resourceType: string;
-      resourceId: string;
-      metadata: Record<string, unknown>;
-    } = {
+    const auditLogEntry: AuditLogEntry = {
       type: 'audit',
       timestamp: new Date(),
       level: 'info',
@@ -140,28 +141,39 @@ export class AuditLogService {
       action: data.action,
       resourceType: data.resourceType,
       resourceId: data.resourceId,
-      metadata: {},
+      metadata: {
+        role: data.role,
+        ipAddress: data.ipAddress,
+        userAgent: data.userAgent,
+        details: data.details,
+      },
     };
 
-    if (data.role) {
-      (auditLog as any).role = data.role;
-    }
-    if (data.ipAddress) {
-      auditLog.ipAddress = data.ipAddress;
-    }
-    if (data.userAgent) {
-      auditLog.userAgent = data.userAgent;
-    }
+    const persistData: AuditLogData = {
+      userId: data.userId,
+      action: data.action,
+      resourceType: data.resourceType,
+      resourceId: data.resourceId,
+      role: data.role,
+      ipAddress: data.ipAddress,
+    };
+
     if (data.details) {
-      auditLog.details = data.details;
+      persistData.details = data.details;
+    }
+
+    if (data.userAgent) {
+      persistData.userAgent = data.userAgent;
     }
 
     // 1. Log immediately to Pino
-    this.logger.info(auditLog as AuditLogEntry, 'Audit event');
+    this.logger.info(auditLogEntry, 'Audit event');
 
     // 2. Persist to database (fire-and-forget)
-    this.persistToDatabase(auditLog as any).catch(error => {
-      this.logger.error({ err: error, auditLog }, 'Failed to persist audit log to database');
+    void this.persistToDatabase(persistData).catch((error: unknown) => {
+      const err = error instanceof Error ? error : new Error(String(error));
+
+      this.logger.error({ err, persistData }, 'Failed to persist audit log to database');
     });
   }
 
@@ -170,34 +182,19 @@ export class AuditLogService {
    *
    * @param auditLog - Audit log entry to persist
    */
-  private async persistToDatabase(auditLog: any): Promise<void> {
-    const creationData: Partial<AuditLogCreationAttributes> & {
-      userId: number;
-      action: string;
-      resourceType: string;
-      resourceId: string;
-    } = {
-      userId: parseInt(auditLog.userId),
+  private async persistToDatabase(auditLog: AuditLogData): Promise<void> {
+    const creationData: AuditLogCreationAttributes = {
+      userId: auditLog.userId,
       action: auditLog.action,
       resourceType: auditLog.resourceType,
       resourceId: auditLog.resourceId,
-      createdAt: auditLog.timestamp,
-    };
+      role: auditLog.role,
+      details: auditLog.details,
+      ipAddress: auditLog.ipAddress,
+      userAgent: auditLog.userAgent,
+    } as AuditLogCreationAttributes;
 
-    if (auditLog.role) {
-      creationData.role = auditLog.role;
-    }
-    if (auditLog.details) {
-      creationData.details = auditLog.details;
-    }
-    if (auditLog.ipAddress) {
-      creationData.ipAddress = auditLog.ipAddress;
-    }
-    if (auditLog.userAgent) {
-      creationData.userAgent = auditLog.userAgent;
-    }
-
-    await AuditLog.create(creationData as any);
+    await AuditLog.create(creationData as AuditLogAttributes);
   }
 
   /**
@@ -212,44 +209,45 @@ export class AuditLogService {
    * @param resourceId - ID of the resource
    * @param details - Additional details about the action
    */
-  async logActionFromRequest(
+  logActionFromRequest(
     request: UniversalRequest,
     action: string,
     resourceType: string,
     resourceId: string,
-    details?: Record<string, any>
-  ): Promise<void> {
+    details?: Record<string, unknown>
+  ): void {
     // Check if audit logging is enabled
-    if (!(await this.isEnabled())) {
-      return;
-    }
+    void this.isEnabled()
+      .then(isEnabled => {
+        if (!isEnabled) return;
 
-    const auditData: AuditLogData = {
-      userId: request.user?.userId ?? 0,
-      action,
-      resourceType,
-      resourceId,
-    };
+        const user = request.user as { userId: number; role: string };
 
-    if (request.user?.role) {
-      auditData.role = request.user.role;
-    }
+        const auditData: AuditLogData = {
+          userId: user.userId,
+          role: user.role,
+          action,
+          resourceType,
+          resourceId,
+          ipAddress:
+            request.headers?.['x-forwarded-for'] || request.headers?.['x-real-ip'] || 'none',
+        };
 
-    if (details) {
-      auditData.details = details;
-    }
+        if (details) {
+          auditData.details = details;
+        }
 
-    const ipAddress = request.headers?.['x-forwarded-for'] || request.headers?.['x-real-ip'];
-    const userAgent = request.headers?.['user-agent'];
+        const userAgent = request.headers?.['user-agent'];
+        if (userAgent) {
+          auditData.userAgent = userAgent;
+        }
 
-    if (ipAddress) {
-      auditData.ipAddress = ipAddress;
-    }
-    if (userAgent) {
-      auditData.userAgent = userAgent;
-    }
-
-    await this.logAction(auditData);
+        this.logAction(auditData); //fire-and-forget
+      })
+      .catch((error: unknown) => {
+        const err = error instanceof Error ? error : new Error(String(error));
+        this.logger.error({ err }, 'Audit log: isEnabled() failed');
+      });
   }
 
   /**
@@ -258,16 +256,15 @@ export class AuditLogService {
    * @param filter - Query filters
    * @returns Audit log entries
    */
-  async query(filter: {
-    userId?: number;
-    resourceType?: string;
-    action?: string;
-    startDate?: Date;
-    endDate?: Date;
-    limit?: number;
-    offset?: number;
-  }): Promise<AuditLog[]> {
-    const where: any = {};
+  async query(filter: AuditLogQueryFilter): Promise<AuditLog[]> {
+    type CreatedAtFilter = {
+      gte?: Date;
+      lte?: Date;
+    };
+
+    const where: Omit<Partial<AuditLogAttributes>, 'createdAt'> & {
+      createdAt?: CreatedAtFilter;
+    } = {};
 
     if (filter.userId) {
       where.userId = filter.userId;
@@ -282,13 +279,16 @@ export class AuditLogService {
     }
 
     if (filter.startDate || filter.endDate) {
-      where.createdAt = {};
+      const createdAt: CreatedAtFilter = {};
+
       if (filter.startDate) {
-        where.createdAt.gte = filter.startDate;
+        createdAt.gte = filter.startDate;
       }
       if (filter.endDate) {
-        where.createdAt.lte = filter.endDate;
+        createdAt.lte = filter.endDate;
       }
+
+      where.createdAt = createdAt;
     }
 
     return await AuditLog.findAll({

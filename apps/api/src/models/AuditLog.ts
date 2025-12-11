@@ -13,7 +13,7 @@ export interface AuditLogAttributes {
   action: string;
   resourceType: string;
   resourceId: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   createdAt: Date;
@@ -26,10 +26,22 @@ export interface AuditLogCreationAttributes {
   action: string;
   resourceType: string;
   resourceId: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   createdAt?: Date;
+}
+
+export interface AuditLogFilterAttributes {
+  userId?: number;
+  resourceType?: string;
+  action?: string;
+
+  // Range query for dates
+  createdAt?: {
+    gte?: Date;
+    lte?: Date;
+  };
 }
 
 export class AuditLog extends IdBaseModel<AuditLogAttributes> implements AuditLogAttributes {
@@ -38,7 +50,7 @@ export class AuditLog extends IdBaseModel<AuditLogAttributes> implements AuditLo
   public action!: string;
   public resourceType!: string;
   public resourceId!: string;
-  public details?: Record<string, any>;
+  public details?: Record<string, unknown>;
   public ipAddress?: string;
   public userAgent?: string;
   public createdAt!: Date;
