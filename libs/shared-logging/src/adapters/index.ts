@@ -4,3 +4,4 @@
 
 export * from './BaseAdapter';
 export * from './CloudWatchAdapter';
+export * from './DatabaseAdapter';
