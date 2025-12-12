@@ -15,9 +15,7 @@ const hooksData = [
   },
 ];
 
-test.skip('SKIPPING HooksList.test.tsx', () => {})
-
-describe('HooksList', () => {
+describe.skip('HooksList', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
