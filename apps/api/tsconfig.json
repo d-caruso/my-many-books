@@ -38,12 +38,12 @@
       "@/services/*": ["src/services/*"],
       "@/controllers/*": ["src/controllers/*"],
       "@/handlers/*": ["src/handlers/*"],
-      "@my-many-books/shared-auth": ["../../libs/shared-auth/src/index.ts"],
-      "@my-many-books/shared-auth/*": ["../../libs/shared-auth/src/*"],
-      "@my-many-books/shared-i18n": ["../../libs/shared-i18n/src/index.ts"],
-      "@my-many-books/shared-i18n/*": ["../../libs/shared-i18n/src/*"],
-      "@my-many-books/shared-logging": ["../../libs/shared-logging/src/index.ts"],
-      "@my-many-books/shared-logging/*": ["../../libs/shared-logging/src/*"]
+      "@my-many-books/shared-auth": ["../../libs/shared-auth/dist/index.d.ts"],
+      "@my-many-books/shared-auth/*": ["../../libs/shared-auth/dist/*"],
+      "@my-many-books/shared-i18n": ["../../libs/shared-i18n/dist/src/index.d.ts"],
+      "@my-many-books/shared-i18n/*": ["../../libs/shared-i18n/dist/src/*"],
+      "@my-many-books/shared-logging": ["../../libs/shared-logging/dist/src/index.d.ts"],
+      "@my-many-books/shared-logging/*": ["../../libs/shared-logging/dist/src/*"]
     }
   },
   "include": [
