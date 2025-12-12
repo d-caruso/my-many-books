@@ -39,7 +39,7 @@ export interface RequestLoggerOptions {
  * Default function to determine log level based on status code
  */
 function getLogLevel(
-  req: Request,
+  _req: Request,
   res: Response
 ): pino.LevelWithSilent | string {
   const statusCode = res.statusCode;
@@ -74,7 +74,7 @@ export function requestLoggerMiddleware(options: RequestLoggerOptions = {}) {
   const logger = options.logger || pino(createPinoConfig());
 
   return pinoHttp({
-    logger,
+    logger: logger as pino.Logger<string>,
 
     // Determine log level based on response status
     customLogLevel: options.level

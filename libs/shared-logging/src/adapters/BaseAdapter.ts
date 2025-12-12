@@ -6,6 +6,16 @@ import { LogStorage, StorageAdapterConfig } from '../interfaces/LogStorage';
 import { LogEntry } from '../interfaces/LogEntry';
 
 /**
+ * Resolved configuration with all required properties
+ */
+interface ResolvedAdapterConfig {
+  name: string;
+  enabled: boolean;
+  timeout: number;
+  retries: number;
+}
+
+/**
  * Base adapter class with common functionality
  *
  * Provides basic configuration and utility methods that can be
@@ -13,7 +23,7 @@ import { LogEntry } from '../interfaces/LogEntry';
  */
 export abstract class BaseAdapter implements LogStorage {
   abstract readonly name: string;
-  protected readonly config: StorageAdapterConfig;
+  protected readonly config: ResolvedAdapterConfig;
 
   constructor(config: Partial<StorageAdapterConfig>) {
     this.config = {

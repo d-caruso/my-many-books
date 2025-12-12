@@ -22,7 +22,7 @@ export type LogEnvironment =
  * Get current environment
  */
 export function getEnvironment(): LogEnvironment {
-  const env = process.env.NODE_ENV || 'development';
+  const env = process.env['NODE_ENV'] || 'development';
   if (
     env === 'development' ||
     env === 'test' ||
@@ -42,10 +42,10 @@ export function getEnvironment(): LogEnvironment {
  */
 export function getLogLevel(env: LogEnvironment = getEnvironment()): string {
   const levels: Record<LogEnvironment, string> = {
-    development: process.env.LOG_LEVEL || 'debug',
-    test: process.env.LOG_LEVEL || 'error',
-    staging: process.env.LOG_LEVEL || 'info',
-    production: process.env.LOG_LEVEL || 'warn',
+    development: process.env['LOG_LEVEL'] || 'debug',
+    test: process.env['LOG_LEVEL'] || 'error',
+    staging: process.env['LOG_LEVEL'] || 'info',
+    production: process.env['LOG_LEVEL'] || 'warn',
   };
 
   return levels[env];
@@ -61,7 +61,6 @@ export function errorSerializer(error: Error): Record<string, any> {
     type: error.name,
     message: error.message,
     stack: error.stack,
-    ...error, // Include any custom properties
   };
 }
 
@@ -128,13 +127,13 @@ export function createPinoConfig(env: LogEnvironment = getEnvironment()): PinoLo
     }),
 
     // Disable logging in test unless explicitly enabled
-    ...( isTest && !process.env.ENABLE_TEST_LOGGING && {
+    ...( isTest && !process.env['ENABLE_TEST_LOGGING'] && {
       level: 'silent',
     }),
 
     // Base configuration
     base: {
-      service: process.env.SERVICE_NAME || 'my-many-books',
+      service: process.env['SERVICE_NAME'] || 'my-many-books',
       environment: env,
     },
 

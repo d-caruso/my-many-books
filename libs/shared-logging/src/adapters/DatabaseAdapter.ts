@@ -88,24 +88,24 @@ export class DatabaseAdapter extends BaseAdapter {
 
     // Build WHERE clause
     if (filter.userId) {
-      where.userId = filter.userId;
+      where['userId'] = filter.userId;
     }
 
     if (filter.resourceType) {
-      where.resourceType = filter.resourceType;
+      where['resourceType'] = filter.resourceType;
     }
 
     if (filter.action) {
-      where.action = filter.action;
+      where['action'] = filter.action;
     }
 
     if (filter.startDate || filter.endDate) {
-      where.createdAt = {};
+      where['createdAt'] = {};
       if (filter.startDate) {
-        (where.createdAt as any)[Op.gte] = filter.startDate;
+        (where['createdAt'] as any)[Op.gte] = filter.startDate;
       }
       if (filter.endDate) {
-        (where.createdAt as any)[Op.lte] = filter.endDate;
+        (where['createdAt'] as any)[Op.lte] = filter.endDate;
       }
     }
 
