@@ -79,6 +79,7 @@ export class RequestLogger {
     response: APIGatewayProxyResult,
     startTime: number
   ): void {
+    const loggerInstance = getLogger();
     const endTime = Date.now();
     const responseTime = endTime - startTime;
 
@@ -88,9 +89,7 @@ export class RequestLogger {
 
     if (this.logLevel !== 'none') {
       const logLevel = this.getLogLevelForStatus(response.statusCode);
-
-      // eslint-disable-next-line no-console
-      console[logLevel]('Request completed:', {
+      const payload = {
         requestId: logEntry.requestId,
         method: logEntry.method,
         resource: logEntry.resource,
@@ -101,12 +100,20 @@ export class RequestLogger {
           sourceIp: logEntry.sourceIp,
           userAgent: logEntry.userAgent,
         }),
-      });
+      };
+
+      if (logLevel === 'log') {
+        loggerInstance.info(payload, 'Request completed');
+      } else if (logLevel === 'warn') {
+        loggerInstance.warn(payload, 'Request completed');
+      } else {
+        loggerInstance.error(payload, 'Request completed');
+      }
     }
 
     // Log slow requests (over 5 seconds)
     if (responseTime > 5000) {
-      getLogger().warn(
+      loggerInstance.warn(
         {
           requestId: logEntry.requestId,
           method: logEntry.method,

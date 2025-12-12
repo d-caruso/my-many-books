@@ -15,15 +15,22 @@ import {
   ServiceUnavailableError,
   AppError,
 } from '../../../src/middleware/errorHandler';
+import { getLogger } from '../../../src/services/logger';
 
-// Mock console methods
-const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+jest.mock('../../../src/services/logger', () => ({
+  getLogger: jest.fn(),
+}));
 
 describe('ErrorHandler Middleware', () => {
   let mockEvent: APIGatewayProxyEvent;
+  let mockLogger: { error: jest.Mock };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockLogger = {
+      error: jest.fn(),
+    };
+    (getLogger as jest.Mock).mockReturnValue(mockLogger);
     
     mockEvent = {
       httpMethod: 'GET',
@@ -33,10 +40,6 @@ describe('ErrorHandler Middleware', () => {
         requestId: 'test-request-id',
       },
     } as any;
-  });
-
-  afterEach(() => {
-    mockConsoleError.mockClear();
   });
 
   describe('Error Classes', () => {
@@ -233,16 +236,17 @@ describe('ErrorHandler Middleware', () => {
       const error = new ValidationError('Test error');
       createErrorResponse(error, mockEvent);
 
-      expect(mockConsoleError).toHaveBeenCalledWith('Error occurred:', {
-        name: 'ValidationError',
-        message: 'Test error',
-        statusCode: 400,
-        isOperational: true,
-        stack: error.stack,
-        path: '/test',
-        method: 'GET',
-        requestId: 'test-request-id',
-      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        {
+          err: error,
+          statusCode: 400,
+          isOperational: true,
+          path: '/test',
+          method: 'GET',
+          requestId: 'test-request-id',
+        },
+        'Error occurred'
+      );
     });
 
     it('should handle event without requestContext', () => {

@@ -1,8 +1,9 @@
 // ================================================================
-import { getLogger } from '../services/logger';// apps/api/src/middleware/authorization.ts
+// apps/api/src/middleware/authorization.ts
 // CASL-based Authorization Middleware
 // ================================================================
 
+import { getLogger } from '../services/logger';
 import { Request, Response, NextFunction } from 'express';
 import { createAbilityFor, Action, Resource } from '@my-many-books/shared-auth';
 

@@ -8,16 +8,28 @@ import type {
 } from '@my-many-books/hookey';
 import * as hookService from '../../../../src/services/hooks/hookSystem';
 import { EVENTS } from '../../../../src/services/hooks/events';
+import { getLogger } from '../../../../src/services/logger';
+
+jest.mock('../../../../src/services/logger', () => ({
+  getLogger: jest.fn(),
+}));
 
 const { HookSystemManager } = hookService;
 
 describe('HookSystem service', () => {
   const originalEnv = process.env['NODE_ENV'];
+  let mockLogger: { info: jest.Mock; warn: jest.Mock; error: jest.Mock };
 
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
     process.env['NODE_ENV'] = 'development';
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    (getLogger as jest.Mock).mockReturnValue(mockLogger);
   });
 
   afterEach(() => {
@@ -186,7 +198,6 @@ describe('HookSystem service', () => {
       process.env['NODE_ENV'] = 'development';
       const originalWorkerId = process.env['JEST_WORKER_ID'];
       delete process.env['JEST_WORKER_ID'];
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
       const getHookSystemSpy = jest
         .spyOn(hookService, 'getHookSystem')
         .mockImplementation(() => {
@@ -194,9 +205,14 @@ describe('HookSystem service', () => {
         });
 
       await expect(hookService.emitHookEvent(EVENTS.BOOK.CREATE.BEFORE)).resolves.toBeUndefined();
-      expect(warnSpy).toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        {
+          err: expect.any(Error),
+          eventName: EVENTS.BOOK.CREATE.BEFORE,
+        },
+        'Skipped hook event'
+      );
 
-      warnSpy.mockRestore();
       getHookSystemSpy.mockRestore();
       if (originalWorkerId) {
         process.env['JEST_WORKER_ID'] = originalWorkerId;

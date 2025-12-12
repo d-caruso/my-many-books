@@ -1,7 +1,8 @@
 // ================================================================
 // src/services/openLibraryClient.ts
-import { getLogger } from './logger';// ================================================================
+// ================================================================
 
+import { getLogger } from './logger';
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import { OpenLibraryResponse, OpenLibraryBook } from '@/types/openLibrary';
 import { validateIsbn } from '@/utils/isbn';
@@ -44,7 +45,10 @@ export class OpenLibraryClient {
     try {
       this.setupInterceptors();
     } catch (error) {
-      getLogger().warn({ err: error instanceof Error ? error : new Error(String(error)) }, 'Could not setup interceptors:');
+      getLogger().warn(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Could not setup interceptors:'
+      );
     }
   }
 
@@ -168,7 +172,10 @@ export class OpenLibraryClient {
 
       return results;
     } catch (error) {
-      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Error fetching multiple books from Open Library:');
+      getLogger().error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Error fetching multiple books from Open Library:'
+      );
 
       // Return error for all valid ISBNs
       const errorMessage =

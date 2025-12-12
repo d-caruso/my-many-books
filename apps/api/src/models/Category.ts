@@ -1,6 +1,8 @@
 // ================================================================
 // src/models/Category.ts
-import { getLogger } from '../services/logger';// ================================================================
+// ================================================================
+
+import { getLogger } from '../services/logger';
 import { DataTypes, Sequelize, Op } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
 import { CategoryAttributes, CategoryCreationAttributes } from './interfaces/ModelInterfaces';
@@ -119,7 +121,10 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
         userId: categoryData.userId,
       });
     } catch (error) {
-      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Category.create failed:');
+      getLogger().error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Category.create failed:'
+      );
       throw error;
     }
   }

@@ -1,8 +1,9 @@
 // ================================================================
-import { getLogger } from '../services/logger';// src/middleware/auth.ts
+// src/middleware/auth.ts
 // Authentication middleware with provider abstraction
 // ================================================================
 
+import { getLogger } from '../services/logger';
 import { Request, Response, NextFunction } from 'express';
 import { AuthUser } from '../models/interfaces/ModelInterfaces';
 import { container } from '../container';
@@ -176,7 +177,10 @@ export const authMiddleware = async (
 
     next();
   } catch (error) {
-    getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'AuthMiddleware: Authentication error:');
+    getLogger().error(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'AuthMiddleware: Authentication error:'
+    );
     res.status(401).json({
       error: 'Authentication failed',
       details: error instanceof Error ? error.message : 'Unknown error',
@@ -202,7 +206,10 @@ export const optionalAuthMiddleware = async (
     await authMiddleware(req, res, next);
   } catch (error) {
     // Auth failed, but continue without user for optional auth
-    getLogger().warn({ err: error instanceof Error ? error : new Error(String(error)) }, 'Optional authentication failed:');
+    getLogger().warn(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'Optional authentication failed:'
+    );
     next();
   }
 };

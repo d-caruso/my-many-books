@@ -4,6 +4,11 @@
 
 import { Sequelize } from 'sequelize';
 import { ModelAssociations } from '../../../../src/models/associations/ModelAssociations';
+import { getLogger } from '../../../../src/services/logger';
+
+jest.mock('../../../../src/services/logger', () => ({
+  getLogger: jest.fn(),
+}));
 
 describe('ModelAssociations', () => {
   let mockUser: any;
@@ -13,13 +18,17 @@ describe('ModelAssociations', () => {
   let mockBookAuthor: any;
   let mockBookCategory: any;
   let mockSequelize: jest.Mocked<Sequelize>;
+  let mockLogger: { info: jest.Mock; error: jest.Mock; warn: jest.Mock };
 
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Mock console methods
-    jest.spyOn(console, 'log').mockImplementation();
-    jest.spyOn(console, 'error').mockImplementation();
+    mockLogger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+    };
+    (getLogger as jest.Mock).mockReturnValue(mockLogger);
 
     // Create mock models with the methods they need
     mockUser = {
@@ -165,7 +174,7 @@ describe('ModelAssociations', () => {
         as: 'books',
       });
 
-      expect(console.log).toHaveBeenCalledWith('Model associations defined successfully');
+      expect(mockLogger.info).toHaveBeenCalledWith('Model associations defined successfully');
     });
 
     it('should define junction table associations', () => {
@@ -242,7 +251,7 @@ describe('ModelAssociations', () => {
       await ModelAssociations.syncModels(mockSequelize);
 
       expect(mockSequelize.sync).toHaveBeenCalledWith({ force: false });
-      expect(console.log).toHaveBeenCalledWith('Database models synchronized successfully');
+      expect(mockLogger.info).toHaveBeenCalledWith({ force: false }, 'Database models synchronized successfully');
     });
 
     it('should sync models with force option', async () => {
@@ -251,7 +260,7 @@ describe('ModelAssociations', () => {
       await ModelAssociations.syncModels(mockSequelize, true);
 
       expect(mockSequelize.sync).toHaveBeenCalledWith({ force: true });
-      expect(console.log).toHaveBeenCalledWith('Database models synchronized successfully');
+      expect(mockLogger.info).toHaveBeenCalledWith({ force: true }, 'Database models synchronized successfully');
     });
 
     it('should handle sync errors', async () => {
@@ -261,7 +270,13 @@ describe('ModelAssociations', () => {
       await expect(ModelAssociations.syncModels(mockSequelize)).rejects.toThrow('Sync failed');
 
       expect(mockSequelize.sync).toHaveBeenCalledWith({ force: false });
-      expect(console.error).toHaveBeenCalledWith('Error synchronizing database models:', error);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        {
+          err: error,
+          force: false,
+        },
+        'Error synchronizing database models'
+      );
     });
 
     it('should handle sync errors with force option', async () => {
@@ -271,7 +286,13 @@ describe('ModelAssociations', () => {
       await expect(ModelAssociations.syncModels(mockSequelize, true)).rejects.toThrow('Force sync failed');
 
       expect(mockSequelize.sync).toHaveBeenCalledWith({ force: true });
-      expect(console.error).toHaveBeenCalledWith('Error synchronizing database models:', error);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        {
+          err: error,
+          force: true,
+        },
+        'Error synchronizing database models'
+      );
     });
   });
 

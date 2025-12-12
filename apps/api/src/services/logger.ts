@@ -18,18 +18,17 @@ import { createPinoConfig, getCurrentTraceId } from '@my-many-books/shared-loggi
 /**
  * Singleton Pino logger instance
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let loggerInstance: any;
+type AppLogger = ReturnType<typeof pino>;
+let loggerInstance: AppLogger | undefined;
 
 /**
  * Get the singleton Pino logger instance
  *
  * @returns Pino logger
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getLogger(): any {
+export function getLogger(): AppLogger {
   if (!loggerInstance) {
-    loggerInstance = pino(createPinoConfig() as unknown as pino.LoggerOptions);
+    loggerInstance = pino(createPinoConfig());
   }
   return loggerInstance;
 }
@@ -81,22 +80,21 @@ export function logWarn(message: string, context?: Record<string, unknown>): voi
  */
 export function logError(
   message: string,
-  error?: Error | unknown,
+  error?: unknown,
   context?: Record<string, unknown>
 ): void {
   const logger = getLogger();
   const traceId = getCurrentTraceId();
 
-  const err = error instanceof Error ? error : error ? new Error(String(error)) : undefined;
-
-  logger.error(
-    {
-      traceId,
-      err,
-      ...context,
-    },
-    message
-  );
+  const err = normalizeError(error);
+  const safeContext: Record<string, unknown> = {
+    traceId,
+    ...context,
+  };
+  if (err) {
+    safeContext['err'] = err;
+  }
+  logger.error(safeContext, message);
 }
 
 /**
@@ -117,3 +115,30 @@ export function logDebug(message: string, context?: Record<string, unknown>): vo
     message
   );
 }
+
+const normalizeError = (value: unknown): Error | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  if (value instanceof Error) {
+    return value;
+  }
+
+  const serialized =
+    typeof value === 'string'
+      ? value
+      : typeof value === 'number' || typeof value === 'boolean'
+        ? String(value)
+        : serializeUnknown(value);
+
+  return new Error(serialized);
+};
+
+const serializeUnknown = (input: unknown): string => {
+  try {
+    return JSON.stringify(input);
+  } catch {
+    return '[unserializable error]';
+  }
+};

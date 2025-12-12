@@ -15,6 +15,7 @@ import { Hook } from '../../../src/models/Hook';
 import { HookExecution } from '../../../src/models/HookExecution';
 import { AuditLog } from '../../../src/models/AuditLog';
 import { Setting } from '../../../src/models/Setting';
+import { getLogger } from '../../../src/services/logger';
 
 // Mock all dependencies
 jest.mock('../../../src/models/associations/ModelAssociations');
@@ -28,10 +29,13 @@ jest.mock('../../../src/models/Hook');
 jest.mock('../../../src/models/HookExecution');
 jest.mock('../../../src/models/AuditLog');
 jest.mock('../../../src/models/Setting');
+jest.mock('../../../src/services/logger', () => ({
+  getLogger: jest.fn(),
+}));
 
 describe('ModelManager', () => {
   let mockSequelize: any;
-  let consoleLogSpy: jest.SpyInstance;
+  let mockLogger: { info: jest.Mock };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -45,7 +49,10 @@ describe('ModelManager', () => {
       sync: jest.fn().mockResolvedValue(undefined)
     };
 
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+    mockLogger = {
+      info: jest.fn(),
+    };
+    (getLogger as jest.Mock).mockReturnValue(mockLogger);
 
     // Mock all the init methods
     (User.initModel as jest.Mock) = jest.fn();
@@ -63,10 +70,6 @@ describe('ModelManager', () => {
     (ModelAssociations.registerModel as jest.Mock) = jest.fn();
     (ModelAssociations.defineAssociations as jest.Mock) = jest.fn();
     (ModelAssociations.syncModels as jest.Mock) = jest.fn().mockResolvedValue(undefined);
-  });
-
-  afterEach(() => {
-    consoleLogSpy.mockRestore();
   });
 
   describe('initialize', () => {
@@ -97,7 +100,7 @@ describe('ModelManager', () => {
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('Setting', Setting);
 
       expect(ModelAssociations.defineAssociations).toHaveBeenCalled();
-      expect(consoleLogSpy).toHaveBeenCalledWith('Model manager initialized with all models and associations');
+      expect(mockLogger.info).toHaveBeenCalledWith('Model manager initialized with all models and associations');
     });
 
     it('should not reinitialize if already initialized', () => {

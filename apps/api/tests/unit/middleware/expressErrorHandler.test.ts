@@ -5,6 +5,15 @@
 import { Request, Response } from 'express';
 import { BadRequestError, InternalServerError } from '../../../src/errors/ApplicationError';
 import { expressErrorHandler } from '../../../src/middleware/expressErrorHandler';
+import { getLogger } from '../../../src/services/logger';
+
+jest.mock('../../../src/services/logger', () => {
+  const actual = jest.requireActual('../../../src/services/logger');
+  return {
+    ...actual,
+    getLogger: jest.fn(),
+  };
+});
 
 describe('expressErrorHandler', () => {
   const buildRes = () => {
@@ -16,17 +25,19 @@ describe('expressErrorHandler', () => {
 
   const noopReq = {} as Request;
   const next = jest.fn();
-  let consoleSpy: jest.SpyInstance;
+  let mockLogger: { error: jest.Mock };
   const originalNodeEnv = process.env['NODE_ENV'];
 
   beforeEach(() => {
     jest.clearAllMocks();
-    consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockLogger = {
+      error: jest.fn(),
+    };
+    (getLogger as jest.Mock).mockReturnValue(mockLogger);
     process.env['NODE_ENV'] = 'test';
   });
 
   afterEach(() => {
-    consoleSpy.mockRestore();
     process.env['NODE_ENV'] = originalNodeEnv;
   });
 
@@ -45,7 +56,15 @@ describe('expressErrorHandler', () => {
         details: { field: 'title' },
       })
     );
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        err: error,
+        code: 'VALIDATION_ERROR',
+        statusCode: 400,
+        isOperational: true,
+      }),
+      'Unhandled application error'
+    );
     expect(next).not.toHaveBeenCalled();
   });
 

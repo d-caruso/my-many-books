@@ -4,8 +4,10 @@
  * Provides base configuration for structured logging with Pino
  */
 
-import { LoggerOptions } from 'pino';
+import type { LoggerOptions } from 'pino';
 import { redactionConfig } from './redactionRules';
+
+type PinoLoggerOptions = LoggerOptions<string>;
 
 /**
  * Environment for logging configuration
@@ -106,9 +108,7 @@ export function responseSerializer(res: any): Record<string, any> {
  *
  * Provides sensible defaults for structured logging
  */
-export function createPinoConfig(
-  env: LogEnvironment = getEnvironment()
-): LoggerOptions {
+export function createPinoConfig(env: LogEnvironment = getEnvironment()): PinoLoggerOptions {
   const isDevelopment = env === 'development';
   const isTest = env === 'test';
 
@@ -164,4 +164,4 @@ export function createPinoConfig(
 /**
  * Default Pino configuration for current environment
  */
-export const defaultPinoConfig = createPinoConfig();
+export const defaultPinoConfig: PinoLoggerOptions = createPinoConfig();

@@ -50,16 +50,17 @@ export interface AuditLogQueryFilter {
  * - Includes traceId for correlation
  * - Switchable via environment variables and database setting
  */
+type AuditLogger = ReturnType<typeof pino>;
+
 export class AuditLogService {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private logger: any;
+  private logger: AuditLogger;
   private cachedEnabled: boolean | null = null;
   private cacheExpiry: number = 0;
   private readonly CACHE_TTL = 30000; // 30 seconds
 
   constructor() {
     // Initialize Pino logger
-    this.logger = pino(createPinoConfig() as unknown as pino.LoggerOptions);
+    this.logger = pino(createPinoConfig());
   }
 
   /**

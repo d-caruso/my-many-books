@@ -9,18 +9,25 @@ import {
   withRequestLogging,
   requestLogger,
 } from '../../../src/middleware/requestLogger';
+import { getLogger } from '../../../src/services/logger';
 
-// Mock console methods
-const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
-const mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+jest.mock('../../../src/services/logger', () => ({
+  getLogger: jest.fn(),
+}));
 
 describe('RequestLogger Middleware', () => {
   let mockEvent: APIGatewayProxyEvent;
   let logger: RequestLogger;
+  let mockLogger: { info: jest.Mock; warn: jest.Mock; error: jest.Mock };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    (getLogger as jest.Mock).mockReturnValue(mockLogger);
     delete process.env['LOG_LEVEL'];
     
     // Reset singleton instance
@@ -49,9 +56,9 @@ describe('RequestLogger Middleware', () => {
   });
 
   afterEach(() => {
-    mockConsoleLog.mockClear();
-    mockConsoleWarn.mockClear();
-    mockConsoleError.mockClear();
+    mockLogger.info.mockClear();
+    mockLogger.warn.mockClear();
+    mockLogger.error.mockClear();
   });
 
   describe('RequestLogger Singleton', () => {
@@ -173,12 +180,15 @@ describe('RequestLogger Middleware', () => {
 
         logger.logRequest(mockEvent);
 
-        expect(mockConsoleLog).toHaveBeenCalledWith('Incoming request:', {
-          requestId: 'test-request-id',
-          method: 'GET',
-          resource: '/api/test',
-          sourceIp: '192.168.1.1',
-        });
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          {
+            requestId: 'test-request-id',
+            method: 'GET',
+            resource: '/api/test',
+            sourceIp: '192.168.1.1',
+          },
+          'Incoming request'
+        );
       });
 
       it('should log detailed info when log level is detailed', () => {
@@ -188,15 +198,18 @@ describe('RequestLogger Middleware', () => {
 
         logger.logRequest(mockEvent);
 
-        expect(mockConsoleLog).toHaveBeenCalledWith('Incoming request:', {
-          requestId: 'test-request-id',
-          method: 'GET',
-          resource: '/api/test',
-          sourceIp: '192.168.1.1',
-          queryStringParameters: { limit: '10', page: '1' },
-          pathParameters: { id: '123' },
-          userAgent: 'test-agent',
-        });
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          {
+            requestId: 'test-request-id',
+            method: 'GET',
+            resource: '/api/test',
+            sourceIp: '192.168.1.1',
+            queryStringParameters: { limit: '10', page: '1' },
+            pathParameters: { id: '123' },
+            userAgent: 'test-agent',
+          },
+          'Incoming request'
+        );
       });
 
       it('should not log when log level is none', () => {
@@ -206,7 +219,7 @@ describe('RequestLogger Middleware', () => {
 
         logger.logRequest(mockEvent);
 
-        expect(mockConsoleLog).not.toHaveBeenCalled();
+        expect(mockLogger.info).not.toHaveBeenCalled();
       });
     });
   });
@@ -250,28 +263,31 @@ describe('RequestLogger Middleware', () => {
     it('should log successful response', () => {
       logger.logResponse(logEntry, mockResponse, startTime);
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('Request completed:', {
-        requestId: 'test-request-id',
-        method: 'GET',
-        resource: '/api/test',
-        statusCode: 200,
-        responseTime: expect.stringMatching(/\d+ms/),
-        responseSize: expect.stringMatching(/\d+ bytes/),
-      });
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        {
+          requestId: 'test-request-id',
+          method: 'GET',
+          resource: '/api/test',
+          statusCode: 200,
+          responseTime: expect.stringMatching(/\d+ms/),
+          responseSize: expect.stringMatching(/\d+ bytes/),
+        },
+        'Request completed'
+      );
     });
 
     it('should log warning for 4xx status codes', () => {
       mockResponse.statusCode = 400;
       logger.logResponse(logEntry, mockResponse, startTime);
 
-      expect(mockConsoleWarn).toHaveBeenCalledWith('Request completed:', expect.any(Object));
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(Object), 'Request completed');
     });
 
     it('should log error for 5xx status codes', () => {
       mockResponse.statusCode = 500;
       logger.logResponse(logEntry, mockResponse, startTime);
 
-      expect(mockConsoleError).toHaveBeenCalledWith('Request completed:', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.any(Object), 'Request completed');
     });
 
     it('should include detailed info when log level is detailed', () => {
@@ -281,16 +297,19 @@ describe('RequestLogger Middleware', () => {
 
       logger.logResponse(logEntry, mockResponse, startTime);
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('Request completed:', {
-        requestId: 'test-request-id',
-        method: 'GET',
-        resource: '/api/test',
-        statusCode: 200,
-        responseTime: expect.stringMatching(/\d+ms/),
-        responseSize: expect.stringMatching(/\d+ bytes/),
-        sourceIp: '192.168.1.1',
-        userAgent: 'test-agent',
-      });
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        {
+          requestId: 'test-request-id',
+          method: 'GET',
+          resource: '/api/test',
+          statusCode: 200,
+          responseTime: expect.stringMatching(/\d+ms/),
+          responseSize: expect.stringMatching(/\d+ bytes/),
+          sourceIp: '192.168.1.1',
+          userAgent: 'test-agent',
+        },
+        'Request completed'
+      );
     });
 
     it('should not log when log level is none', () => {
@@ -300,9 +319,9 @@ describe('RequestLogger Middleware', () => {
 
       logger.logResponse(logEntry, mockResponse, startTime);
 
-      expect(mockConsoleLog).not.toHaveBeenCalled();
-      expect(mockConsoleWarn).not.toHaveBeenCalled();
-      expect(mockConsoleError).not.toHaveBeenCalled();
+      expect(mockLogger.info).not.toHaveBeenCalled();
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     it('should handle response with no body', () => {
@@ -316,12 +335,15 @@ describe('RequestLogger Middleware', () => {
       const slowStartTime = Date.now() - 6000; // 6 seconds ago
       logger.logResponse(logEntry, mockResponse, slowStartTime);
 
-      expect(mockConsoleWarn).toHaveBeenCalledWith('Slow request detected:', {
-        requestId: 'test-request-id',
-        method: 'GET',
-        resource: '/api/test',
-        responseTime: expect.stringMatching(/\d+ms/),
-      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        {
+          requestId: 'test-request-id',
+          method: 'GET',
+          resource: '/api/test',
+          responseTime: expect.any(Number),
+        },
+        'Slow request detected'
+      );
     });
   });
 
@@ -349,16 +371,15 @@ describe('RequestLogger Middleware', () => {
 
       logger.logError(logEntry, error);
 
-      expect(mockConsoleError).toHaveBeenCalledWith('Request error:', {
-        requestId: 'test-request-id',
-        method: 'GET',
-        resource: '/api/test',
-        error: {
-          name: 'Error',
-          message: 'Test error',
-          stack: 'Error stack trace',
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        {
+          err: error,
+          requestId: 'test-request-id',
+          method: 'GET',
+          resource: '/api/test',
         },
-      });
+        'Request error'
+      );
     });
 
     it('should handle error without stack trace', () => {
@@ -367,16 +388,15 @@ describe('RequestLogger Middleware', () => {
 
       logger.logError(logEntry, error);
 
-      expect(mockConsoleError).toHaveBeenCalledWith('Request error:', {
-        requestId: 'test-request-id',
-        method: 'GET',
-        resource: '/api/test',
-        error: {
-          name: 'Error',
-          message: 'Test error',
-          stack: undefined,
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        {
+          err: error,
+          requestId: 'test-request-id',
+          method: 'GET',
+          resource: '/api/test',
         },
-      });
+        'Request error'
+      );
     });
   });
 
@@ -393,7 +413,7 @@ describe('RequestLogger Middleware', () => {
 
       expect(mockHandler).toHaveBeenCalledWith(mockEvent);
       expect(result.statusCode).toBe(200);
-      expect(mockConsoleLog).toHaveBeenCalledTimes(2); // Request + Response logs
+      expect(mockLogger.info).toHaveBeenCalledTimes(2); // Request + Response logs
     });
 
     it('should log errors and re-throw them', async () => {
@@ -403,7 +423,7 @@ describe('RequestLogger Middleware', () => {
       const wrappedHandler = withRequestLogging(mockHandler);
 
       await expect(wrappedHandler(mockEvent)).rejects.toThrow('Handler error');
-      expect(mockConsoleError).toHaveBeenCalledWith('Request error:', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.any(Object), 'Request error');
     });
 
     it('should measure response time accurately', async () => {
@@ -419,12 +439,12 @@ describe('RequestLogger Middleware', () => {
       const wrappedHandler = withRequestLogging(mockHandler);
       await wrappedHandler(mockEvent);
 
-      const responseLogCall = mockConsoleLog.mock.calls.find(call => 
-        call[0] === 'Request completed:'
+      const responseLogCall = mockLogger.info.mock.calls.find(
+        call => call[1] === 'Request completed'
       );
-      
+
       expect(responseLogCall).toBeDefined();
-      const responseTime = responseLogCall![1].responseTime;
+      const responseTime = responseLogCall![0].responseTime;
       expect(responseTime).toMatch(/\d+ms/);
     });
   });

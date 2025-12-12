@@ -1,8 +1,9 @@
 // ================================================================
 // src/routes/authRoutes.ts
-import { getLogger } from '../services/logger';// Authentication routes for login, register, refresh, and logout
+// Authentication routes for login, register, refresh, and logout
 // ================================================================
 
+import { getLogger } from '../services/logger';
 import { Router, Request, Response } from 'express';
 import {
   CognitoIdentityProviderClient,
@@ -112,7 +113,10 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error: unknown) {
-    getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Login error:');
+    getLogger().error(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'Login error:'
+    );
 
     if (error && typeof error === 'object' && 'name' in error) {
       const errorName = (error as { name: string }).name;
@@ -169,7 +173,10 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
       expiresIn: authResult.ExpiresIn,
     });
   } catch (error: unknown) {
-    getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Refresh token error:');
+    getLogger().error(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'Refresh token error:'
+    );
     res.clearCookie('refresh_token', { path: '/api/v1/auth' });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -212,7 +219,10 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       requiresVerification: true,
     });
   } catch (error: unknown) {
-    getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Registration error:');
+    getLogger().error(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'Registration error:'
+    );
 
     if (error && typeof error === 'object' && 'name' in error) {
       const errorName = (error as { name: string }).name;

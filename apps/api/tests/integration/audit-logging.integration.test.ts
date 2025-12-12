@@ -8,13 +8,61 @@
  * - Query functionality
  */
 
+import { Sequelize } from 'sequelize';
 import { getAuditLogService } from '../../src/services/AuditLogService';
-import { AuditLog, Setting } from '../../src/models';
+import { AuditLog, ModelManager, Setting, User } from '../../src/models';
 
 describe('Audit Logging Integration', () => {
+  let sequelize: Sequelize;
+
+  beforeAll(async () => {
+    sequelize = new Sequelize({
+      dialect: 'sqlite',
+      storage: ':memory:',
+      logging: false,
+    });
+    ModelManager.initialize(sequelize);
+    await ModelManager.syncDatabase(true);
+  });
+
+  afterAll(async () => {
+    await ModelManager.close();
+  });
+
   beforeEach(async () => {
-    // Clean up audit logs before each test
-    await AuditLog.destroy({ where: {}, truncate: true });
+    await Setting.destroy({ where: {}, truncate: true, cascade: true });
+    await AuditLog.destroy({ where: {}, truncate: true, cascade: true });
+    await User.destroy({ where: {}, truncate: true, cascade: true });
+
+    await User.bulkCreate(
+      [
+        {
+          id: 1,
+          email: 'admin1@example.com',
+          name: 'Admin',
+          surname: 'One',
+          role: 'admin',
+          isActive: true,
+        },
+        {
+          id: 2,
+          email: 'user2@example.com',
+          name: 'User',
+          surname: 'Two',
+          role: 'user',
+          isActive: true,
+        },
+        {
+          id: 3,
+          email: 'admin3@example.com',
+          name: 'Admin',
+          surname: 'Three',
+          role: 'admin',
+          isActive: true,
+        },
+      ] as any,
+      { validate: false }
+    );
   });
 
   describe('Audit Log Service', () => {
@@ -41,7 +89,7 @@ describe('Audit Logging Integration', () => {
       const logs = await AuditLog.findAll({ where: { action: 'create' } });
       expect(logs.length).toBeGreaterThan(0);
 
-      const log = logs[0];
+      const log = logs[0]!;
       expect(log.userId).toBe(1);
       expect(log.role).toBe('admin');
       expect(log.action).toBe('create');
@@ -70,7 +118,7 @@ describe('Audit Logging Integration', () => {
       const logs = await AuditLog.findAll({ where: { userId: 2 } });
       expect(logs.length).toBe(1);
 
-      const log = logs[0];
+      const log = logs[0]!;
       expect(log.ipAddress).toBe('192.168.1.1');
       expect(log.userAgent).toBe('Mozilla/5.0');
     });
@@ -95,7 +143,7 @@ describe('Audit Logging Integration', () => {
       const logs = await AuditLog.findAll({ where: { userId: 3 } });
       expect(logs.length).toBe(1);
 
-      const log = logs[0];
+      const log = logs[0]!;
       expect(log.details).toEqual(details);
     });
   });
