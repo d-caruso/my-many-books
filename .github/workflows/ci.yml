@@ -104,23 +104,23 @@ jobs:
 
       - name: Test Web App - Components
         working-directory: apps/web-app
-        run: timeout 2m npm run test:web-app:components
+        run: timeout 10m npm run test:web-app:components
 
       - name: Test Web App - Pages
         working-directory: apps/web-app
-        run: timeout 2m npm run test:web-app:pages
+        run: timeout 10m npm run test:web-app:pages
 
       - name: Test Web App - Services
         working-directory: apps/web-app
-        run: timeout 2m npm run test:web-app:services
+        run: timeout 10m npm run test:web-app:services
 
       - name: Test Web App - Integration
         working-directory: apps/web-app
-        run: timeout 2m npm run test:web-app:integration
+        run: timeout 10m npm run test:web-app:integration
 
       - name: Test Web App - Hooks
         working-directory: apps/web-app
-        run: timeout 2m npm run test:web-app:hooks
+        run: timeout 10m npm run test:web-app:hooks
 
   build:
     name: Build

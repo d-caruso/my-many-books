@@ -15,10 +15,40 @@ const hooksData = [
   },
 ];
 
+test.skip('SKIPPING HooksList.test.tsx', () => {})
+
 describe('HooksList', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  test('renders rows and action buttons', async () => {
+    const onEdit = vi.fn();
+    const onDelete = vi.fn();
+    const onViewExecutions = vi.fn();
+
+    rtlRender(
+      <HooksList
+        hooks={hooksData}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onViewExecutions={onViewExecutions}
+      />
+    );
+
+    expect(await screen.findByTestId('mock-data-grid')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Audit Hook')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View Executions' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    expect(onEdit).toHaveBeenCalledWith(11);
+    expect(onViewExecutions).toHaveBeenCalledWith(11);
+    expect(onDelete).toHaveBeenCalledWith(11);
   });
 
   test('renders toolbar stub', async () => {
