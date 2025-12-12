@@ -41,7 +41,9 @@
       "@my-many-books/shared-auth": ["../../libs/shared-auth/dist/index.d.ts"],
       "@my-many-books/shared-auth/*": ["../../libs/shared-auth/dist/*"],
       "@my-many-books/shared-i18n": ["../../libs/shared-i18n/dist/src/index.d.ts"],
-      "@my-many-books/shared-i18n/*": ["../../libs/shared-i18n/dist/src/*"]
+      "@my-many-books/shared-i18n/*": ["../../libs/shared-i18n/dist/src/*"],
+      "@my-many-books/shared-logging": ["../../libs/shared-logging/dist/src/index.d.ts"],
+      "@my-many-books/shared-logging/*": ["../../libs/shared-logging/dist/src/*"]
     }
   },
   "include": [
