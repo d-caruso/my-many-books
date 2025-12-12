@@ -71,10 +71,15 @@ const renderWithProviders = (ui: React.ReactElement) => {
 };
 
 describe('HookForm', () => {
+  beforeEach(() => {
+    vi.useRealTimers();
+  });
+
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
     vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   test('calls onSave with parsed JSON and closes dialog', async () => {
@@ -96,10 +101,8 @@ describe('HookForm', () => {
 
     await waitFor(() => {
       expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Test Hook' }));
-    });
-    await waitFor(() => {
       expect(onClose).toHaveBeenCalled();
-    });
+    }, { timeout: 1500 });
   });
 
   test('shows validation error when action config JSON is invalid', () => {
