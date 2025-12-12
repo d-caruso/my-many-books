@@ -12,13 +12,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
-import { apiClient } from '../../services/api';
-
-interface AuditLoggingStatus {
-  enabled: boolean;
-  source: 'force_disabled' | 'force_enabled' | 'database' | 'default';
-  canChange: boolean;
-}
+import { apiService, type AuditLoggingStatus } from '../../services/api';
 
 export const AdminSettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -36,8 +30,8 @@ export const AdminSettingsPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.get('/admin/settings/audit-logging');
-      setStatus(response.data);
+      const data = await apiService.getAuditLoggingStatus();
+      setStatus(data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch audit logging status');
     } finally {
@@ -51,10 +45,8 @@ export const AdminSettingsPage: React.FC = () => {
     try {
       setUpdating(true);
       setError(null);
-      const response = await apiClient.patch('/admin/settings/audit-logging', {
-        enabled: !status.enabled,
-      });
-      setStatus(response.data);
+      const data = await apiService.updateAuditLoggingStatus(!status.enabled);
+      setStatus(data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update audit logging status');
     } finally {

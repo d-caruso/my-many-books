@@ -138,17 +138,20 @@ interface ApiServiceDependencies {
   config?: ApiClientConfig;
 }
 
+export interface AuditLoggingStatus {
+  enabled: boolean;
+  source: 'force_disabled' | 'force_enabled' | 'database' | 'default';
+  canChange: boolean;
+}
+
 // Enhanced API service with dependency injection and mock data support
 class ApiService {
   private apiClient: any;
+  private httpClient: HttpClient;
+  private apiConfig: ApiClientConfig;
 
   constructor(dependencies: ApiServiceDependencies = {}) {
-    // Use injected API client if provided (for testing)
-    if (dependencies.apiClient) {
-      this.apiClient = dependencies.apiClient;
-      return;
-    }
-
+    const injectedApiClient = dependencies.apiClient;
     // Create API client configuration (use injected or default)
     const validBaseURL = env.API_BASE_URL;
 
@@ -162,11 +165,14 @@ class ApiService {
       },
     }) as ApiClientConfig;
 
+    this.apiConfig = apiConfig;
+
     // Create HTTP client (use injected or default)
     const httpClient = dependencies.httpClient || new AxiosHttpClient(apiConfig.baseURL, apiConfig.timeout);
+    this.httpClient = httpClient;
 
     // Create and configure the API client
-    this.apiClient = createApiClient(httpClient, apiConfig);
+    this.apiClient = injectedApiClient || createApiClient(httpClient, apiConfig);
   }
 
   // Mock data for development mode - preserved from old api.ts
@@ -829,6 +835,22 @@ class ApiService {
       error: 'Network error',
       details: error.message || 'Unknown error occurred'
     };
+  }
+
+  private buildUrl(path: string): string {
+    const base = this.apiConfig.baseURL.replace(/\/$/, '');
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${normalizedPath}`;
+  }
+
+  async getAuditLoggingStatus(): Promise<AuditLoggingStatus> {
+    return this.httpClient.get<AuditLoggingStatus>(this.buildUrl('/admin/settings/audit-logging'));
+  }
+
+  async updateAuditLoggingStatus(enabled: boolean): Promise<AuditLoggingStatus> {
+    return this.httpClient.patch<AuditLoggingStatus>(this.buildUrl('/admin/settings/audit-logging'), {
+      enabled,
+    });
   }
 }
 

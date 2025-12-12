@@ -4,16 +4,16 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { AdminSettingsPage } from '../../../pages/Admin/AdminSettingsPage';
-import { apiClient } from '../../../services/api';
+import { apiService } from '../../../services/api';
 
 vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
 }));
 
 vi.mock('../../../services/api', () => ({
-  apiClient: {
-    get: vi.fn(),
-    patch: vi.fn(),
+  apiService: {
+    getAuditLoggingStatus: vi.fn(),
+    updateAuditLoggingStatus: vi.fn(),
   },
 }));
 
@@ -51,12 +51,10 @@ describe('AdminSettingsPage', () => {
   });
 
   test('renders settings title', async () => {
-    vi.mocked(apiClient.get).mockResolvedValue({
-      data: {
-        enabled: false,
-        source: 'default',
-        canChange: true,
-      },
+    vi.mocked(apiService.getAuditLoggingStatus).mockResolvedValue({
+      enabled: false,
+      source: 'default',
+      canChange: true,
     });
 
     renderWithProvider(<AdminSettingsPage />);
@@ -64,17 +62,15 @@ describe('AdminSettingsPage', () => {
 
     // Wait for async state updates
     await waitFor(() => {
-      expect(apiClient.get).toHaveBeenCalled();
+      expect(apiService.getAuditLoggingStatus).toHaveBeenCalled();
     });
   });
 
   test('displays audit logging section', async () => {
-    vi.mocked(apiClient.get).mockResolvedValue({
-      data: {
-        enabled: false,
-        source: 'default',
-        canChange: true,
-      },
+    vi.mocked(apiService.getAuditLoggingStatus).mockResolvedValue({
+      enabled: false,
+      source: 'default',
+      canChange: true,
     });
 
     renderWithProvider(<AdminSettingsPage />);
@@ -85,12 +81,10 @@ describe('AdminSettingsPage', () => {
   });
 
   test('renders within AdminLayout', async () => {
-    vi.mocked(apiClient.get).mockResolvedValue({
-      data: {
-        enabled: false,
-        source: 'default',
-        canChange: true,
-      },
+    vi.mocked(apiService.getAuditLoggingStatus).mockResolvedValue({
+      enabled: false,
+      source: 'default',
+      canChange: true,
     });
 
     renderWithProvider(<AdminSettingsPage />);
@@ -98,7 +92,7 @@ describe('AdminSettingsPage', () => {
 
     // Wait for async state updates
     await waitFor(() => {
-      expect(apiClient.get).toHaveBeenCalled();
+      expect(apiService.getAuditLoggingStatus).toHaveBeenCalled();
     });
   });
 });
