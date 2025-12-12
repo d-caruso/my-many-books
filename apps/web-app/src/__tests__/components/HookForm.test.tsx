@@ -1,11 +1,20 @@
 import React from 'react';
-import { render as rtlRender, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent, cleanup } from '@testing-library/react';
 import { vi, afterEach } from 'vitest';
 import { HookForm } from '../../pages/Admin/Hooks/HookForm';
 import { BrowserRouter } from 'react-router-dom';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+
+vi.mock('@mui/material', async () => {
+  const actual = await vi.importActual<typeof import('@mui/material')>('@mui/material');
+  return {
+    ...actual,
+    Dialog: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
+      open ? <div data-testid="mock-dialog">{children}</div> : null,
+  };
+});
 
 const testI18n = i18n.createInstance();
 testI18n.use(initReactI18next).init({
@@ -82,7 +91,7 @@ describe('HookForm', () => {
     vi.useRealTimers();
   });
 
-  test('calls onSave with parsed JSON and closes dialog', async () => {
+  test('calls onSave with parsed JSON and closes dialog', () => {
     const onClose = vi.fn();
     const onSave = vi.fn();
 
@@ -99,10 +108,8 @@ describe('HookForm', () => {
     const saveButton = screen.getByRole('button', { name: /Save Hook/ });
     fireEvent.click(saveButton);
 
-    await waitFor(() => {
-      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Test Hook' }));
-      expect(onClose).toHaveBeenCalled();
-    }, { timeout: 1500 });
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Test Hook' }));
+    expect(onClose).toHaveBeenCalled();
   });
 
   test('shows validation error when action config JSON is invalid', () => {
