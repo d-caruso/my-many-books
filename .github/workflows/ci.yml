@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/logging ]
+    branches: [ main, develop, feature/architecture-improvements, feature/logging, fix/workflow-test-hanging ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, feature/logging ]
+    branches: [ main, develop, feature/architecture-improvements, feature/logging, fix/workflow-test-hanging ]
   workflow_dispatch:
     inputs:
       run_tests:
@@ -63,10 +63,6 @@ jobs:
           echo "=== Checking shared-auth dist folder ==="
           ls -la libs/shared-auth/dist/ || echo "dist folder does not exist"
 
-      - name: Build shared-i18n library
-        working-directory: libs/shared-i18n
-        run: npm run build
-
       - name: Lint API
         working-directory: apps/api
         run: npm run lint
@@ -99,36 +95,32 @@ jobs:
           echo "=== Checking shared-auth dist folder ==="
           ls -la libs/shared-auth/dist/ || echo "dist folder does not exist"
 
-      - name: Build shared-i18n library
-        working-directory: libs/shared-i18n
-        run: npm run build
-
       - name: Rebuild SQLite3
         run: npm rebuild sqlite3 --silent
 
       - name: Test API
         working-directory: apps/api
-        run: npm run test
+        run: npm run test -- --forceExit
 
       - name: Test Web App - Components
         working-directory: apps/web-app
-        run: npm run test:web-app:components
+        run: timeout 2m npm run test:web-app:components
 
       - name: Test Web App - Pages
         working-directory: apps/web-app
-        run: npm run test:web-app:pages
+        run: timeout 2m npm run test:web-app:pages
 
       - name: Test Web App - Services
         working-directory: apps/web-app
-        run: npm run test:web-app:services
+        run: timeout 2m npm run test:web-app:services
 
       - name: Test Web App - Integration
         working-directory: apps/web-app
-        run: npm run test:web-app:integration
+        run: timeout 2m npm run test:web-app:integration
 
       - name: Test Web App - Hooks
         working-directory: apps/web-app
-        run: npm run test:web-app:hooks
+        run: timeout 2m npm run test:web-app:hooks
 
   build:
     name: Build

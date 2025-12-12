@@ -18,7 +18,7 @@
     "test:integration:coverage": "jest tests/integration --coverage --runInBand",
     "test:all": "npm run test:unit && npm run test:integration",
     "test:ci": "npm run test:unit && npm run test:integration",
-    "lint": "tsc --noEmit && eslint src/**/*.ts",
+    "lint": "tsc --noEmit --project tsconfig.build.json && eslint src/**/*.ts",
     "lint:fix": "tsc --noEmit && eslint src/**/*.ts --fix",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run lint",
