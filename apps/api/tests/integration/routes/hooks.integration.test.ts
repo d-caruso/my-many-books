@@ -71,7 +71,7 @@ jest.mock('../../../src/middleware/authorization', () => ({
 // This allows us to test actual validation behavior
 
 // Mock audit log service
-jest.mock('../../../src/services/auditLogService', () => ({
+jest.mock('../../../src/services/AuditLogService', () => ({
   getAuditLogService: jest.fn(() => ({
     logActionFromRequest: jest.fn().mockResolvedValue(undefined),
   })),
