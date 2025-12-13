@@ -174,9 +174,6 @@ describe('BooksPage', () => {
     refreshBooks: vi.fn().mockResolvedValue(undefined),
   };
 
-  /* Temporarily disable the remaining BooksPage tests to keep CI stable.
-     Re-enable them incrementally once the Vitest hangs are resolved.
-
   // Create test i18n instance
   const testI18n = i18n.createInstance();
   testI18n.use(initReactI18next).init({
@@ -215,6 +212,9 @@ describe('BooksPage', () => {
       </I18nextProvider>
     );
   };
+
+  /* Temporarily disable the remaining BooksPage tests to keep CI stable.
+     Re-enable them incrementally once the Vitest hangs are resolved.
 
   beforeEach(() => {
     vi.clearAllMocks();
