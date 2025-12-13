@@ -134,9 +134,17 @@ jobs:
         working-directory: apps/web-app
         run: timeout 10m npm run test:web-app:components:scanner
 
-      - name: Test Web App - Components (Search)
+      - name: Test Web App - Components (Search - Form)
         working-directory: apps/web-app
-        run: timeout 10m npm run test:web-app:components:search
+        run: timeout 10m npm run test:web-app:components:search:form
+
+      - name: Test Web App - Components (Search - Page)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:search:page
+
+      - name: Test Web App - Components (Search - Results)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:search:results
 
       - name: Test Web App - Components (Theme)
         working-directory: apps/web-app
