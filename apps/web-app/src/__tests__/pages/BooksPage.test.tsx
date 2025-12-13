@@ -213,9 +213,6 @@ describe('BooksPage', () => {
     );
   };
 
-  /* Temporarily disable the remaining BooksPage tests to keep CI stable.
-     Re-enable them incrementally once the Vitest hangs are resolved.
-
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseNavigate.mockReturnValue(mockNavigate);
@@ -252,6 +249,9 @@ describe('BooksPage', () => {
     expect(screen.getByTestId('book-list')).toBeInTheDocument();
     expect(screen.getByTestId('search-form')).toBeInTheDocument();
   });
+
+  /* Temporarily disable the remaining BooksPage tests to keep CI stable.
+     Re-enable them incrementally once the Vitest hangs are resolved.
 
   test('switches to grid view mode', () => {
     renderWithProvider(<BooksPage />);
