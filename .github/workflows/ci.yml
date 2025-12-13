@@ -170,9 +170,37 @@ jobs:
         working-directory: apps/web-app
         run: timeout 10m npm run test:web-app:components:protected-route
 
-      - name: Test Web App - Pages
+      - name: Test Web App - Pages (Admin Dashboard)
         working-directory: apps/web-app
-        run: timeout 10m npm run test:web-app:pages
+        run: timeout 10m npm run test:web-app:pages:admin-dashboard
+
+      - name: Test Web App - Pages (Admin Layout)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-layout
+
+      - name: Test Web App - Pages (Admin Settings)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-settings
+
+      - name: Test Web App - Pages (Admin Book Management)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-book-management
+
+      - name: Test Web App - Pages (Admin Hooks)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-hooks
+
+      - name: Test Web App - Pages (Admin User Management)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-user-management
+
+      - name: Test Web App - Pages (Auth)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:auth
+
+      - name: Test Web App - Pages (Books)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:books
 
       - name: Test Web App - Services
         working-directory: apps/web-app
