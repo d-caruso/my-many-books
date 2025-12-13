@@ -33,7 +33,7 @@ vi.mock('../../hooks/useBooks', () => ({
   useBooks: mockUseBooks,
 }));
 
-setupMuiMock();
+//setupMuiMock();
 
 vi.mock('@mui/icons-material/Add', () => ({
   default: () => <span data-testid="add-icon">Add</span>,
@@ -200,6 +200,10 @@ describe('BooksPage', () => {
     interpolation: {
       escapeValue: false,
     },
+  });
+
+  beforeAll(async () => {
+    await i18nReady;
   });
 
   // Helper to render with ApiProvider and I18nextProvider
