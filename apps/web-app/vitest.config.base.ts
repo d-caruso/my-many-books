@@ -15,13 +15,7 @@ const baseVitestConfig: UserConfig = {
     css: true,
     testTimeout: 7000,
     hookTimeout: 7000,
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: false,
-        isolate: true,
-      },
-    },
+    pool: 'threads',
     transformMode: {
       web: [/\.[jt]sx?$/, /\.css$/],
     },
