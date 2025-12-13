@@ -176,7 +176,7 @@ describe('BooksPage', () => {
 
   // Create test i18n instance
   const testI18n = i18n.createInstance();
-  testI18n.use(initReactI18next).init({
+  const i18nReady = testI18n.use(initReactI18next).init({
     lng: 'en',
     fallbackLng: 'en',
     ns: ['common', 'pages'],
