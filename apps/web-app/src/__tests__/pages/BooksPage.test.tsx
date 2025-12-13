@@ -285,9 +285,6 @@ describe('BooksPage', () => {
     expect(screen.queryByTestId('book-list')).not.toBeInTheDocument();
   });
 
-/* Temporarily disable the remaining BooksPage tests to keep CI stable.
-     Re-enable them incrementally once the Vitest hangs are resolved.
-     
   test('renders book list with books', () => {
     mockSearchParams.get = vi.fn().mockReturnValue(null);
     renderWithProvider(<BooksPage />);
@@ -428,7 +425,9 @@ describe('BooksPage', () => {
     
     expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('test query', {});
   });
-
+/* Temporarily disable the remaining BooksPage tests to keep CI stable.
+     Re-enable them incrementally once the Vitest hangs are resolved.
+     
   test('handles search params with filters', () => {
     mockSearchParams.get = vi.fn((key) => {
       if (key === 'categoryId') return '1';
