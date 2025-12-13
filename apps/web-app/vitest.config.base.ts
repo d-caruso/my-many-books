@@ -5,6 +5,8 @@ import MinimalReporter from './vitest.minimal.reporter';
 
 const useMinimal = process.env.VITEST_USE_MINIMAL === '1';
 
+const workerPool = process.env.VITEST_POOL === 'forks' ? 'forks' : 'threads';
+
 const baseVitestConfig: UserConfig = {
   plugins: [react()],
   test: {
@@ -15,7 +17,7 @@ const baseVitestConfig: UserConfig = {
     css: true,
     testTimeout: 7000,
     hookTimeout: 7000,
-    pool: 'threads',
+    pool: workerPool,
     transformMode: {
       web: [/\.[jt]sx?$/, /\.css$/],
     },

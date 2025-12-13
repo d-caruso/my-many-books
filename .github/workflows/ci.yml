@@ -71,6 +71,8 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     needs: setup
+    env:
+      VITEST_POOL: forks
     steps:
       - name: Checkout
         uses: actions/checkout@v4
