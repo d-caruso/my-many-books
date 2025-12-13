@@ -102,9 +102,65 @@ jobs:
         working-directory: apps/api
         run: npm run test -- --forceExit
 
-      - name: Test Web App - Components
+      - name: Test Web App - Accessibility
         working-directory: apps/web-app
-        run: timeout 10m npm run test:web-app:components
+        run: timeout 10m npm run test:web-app:accessibility
+
+      - name: Test Web App - Components (Auth)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:auth
+
+      - name: Test Web App - Components (Book)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:book
+
+      - name: Test Web App - Components (Error Boundary)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:error-boundary
+
+      - name: Test Web App - Components (Layout)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:layout
+
+      - name: Test Web App - Components (Navigation)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:navigation
+
+      - name: Test Web App - Components (PWA)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:pwa
+
+      - name: Test Web App - Components (Scanner)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:scanner
+
+      - name: Test Web App - Components (Search)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:search
+
+      - name: Test Web App - Components (Theme)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:theme
+
+      - name: Test Web App - Components (UI)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:ui
+
+      - name: Test Web App - Components (Hook Executions)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:hook-executions
+
+      - name: Test Web App - Components (Hook Form)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:hook-form
+
+      - name: Test Web App - Components (Hooks List)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:hooks-list
+
+      - name: Test Web App - Components (Protected Route)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:protected-route
 
       - name: Test Web App - Pages
         working-directory: apps/web-app
@@ -121,6 +177,14 @@ jobs:
       - name: Test Web App - Hooks
         working-directory: apps/web-app
         run: timeout 10m npm run test:web-app:hooks
+
+      - name: Test Web App - Types
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:types
+
+      - name: Test Web App - Utils
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:utils
 
   build:
     name: Build
