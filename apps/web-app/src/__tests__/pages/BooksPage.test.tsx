@@ -210,7 +210,7 @@ describe('BooksPage', () => {
   test('performs search and updates params', () => {
     renderBooksPage();
     fireEvent.click(screen.getByTestId('search-button'));
-    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams));
+    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams), { replace: true });
   });
 
   test('clears search chip resets params and results', () => {
