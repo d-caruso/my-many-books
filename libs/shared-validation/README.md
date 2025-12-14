@@ -155,7 +155,10 @@ ISBN_PATTERNS.ISBN_13              // /^\d{13}$/
 ```typescript
 BOOK_CONSTRAINTS.TITLE.MAX_LENGTH        // 500
 BOOK_CONSTRAINTS.NOTES.MAX_LENGTH        // 2000
-VALID_BOOK_STATUSES                      // ['reading', 'paused', 'finished', 'TO_READ']
+BOOK_STATUS.READING                      // 'reading'
+BOOK_STATUS.PAUSED                       // 'paused'
+BOOK_STATUS.FINISHED                     // 'finished'
+BOOK_STATUSES                            // ['reading', 'paused', 'finished'] (derived from BOOK_STATUS)
 ```
 
 ### Author Constants
@@ -176,13 +179,19 @@ CATEGORY_CONSTRAINTS.NAME.MAX_LENGTH     // 255
 
 ```typescript
 import { z } from 'zod';
-import { isValidIsbnFormat, ISBN_CONSTRAINTS, BOOK_CONSTRAINTS } from '@my-many-books/shared-validation';
+import {
+  isValidIsbnFormat,
+  ISBN_CONSTRAINTS,
+  BOOK_CONSTRAINTS,
+  BOOK_STATUSES
+} from '@my-many-books/shared-validation';
 
 const bookSchema = z.object({
   title: z.string()
     .min(BOOK_CONSTRAINTS.TITLE.MIN_LENGTH)
     .max(BOOK_CONSTRAINTS.TITLE.MAX_LENGTH),
   isbnCode: z.string().refine(isValidIsbnFormat),
+  status: z.enum(BOOK_STATUSES as [string, ...string[]]),
 });
 ```
 
@@ -190,7 +199,11 @@ const bookSchema = z.object({
 
 ```typescript
 import Joi from 'joi';
-import { validateIsbn, ISBN_CONSTRAINTS } from '@my-many-books/shared-validation';
+import {
+  validateIsbn,
+  ISBN_CONSTRAINTS,
+  BOOK_STATUSES
+} from '@my-many-books/shared-validation';
 
 const bookSchema = Joi.object({
   isbnCode: Joi.string()
@@ -200,6 +213,7 @@ const bookSchema = Joi.object({
       if (!result.isValid) throw new Error(result.error);
       return result.normalizedIsbn;
     }),
+  status: Joi.string().valid(...BOOK_STATUSES),
 });
 ```
 
