@@ -11,7 +11,7 @@ A framework-agnostic validation library that provides a single source of truth f
 - ✅ **i18n Ready**: All validators return translatable error keys
 - ✅ **Zero Dependencies**: No runtime dependencies, tree-shakable
 - ✅ **Comprehensive**: Validators for ISBN, Book, Author, Category
-- ✅ **Well Tested**: 85+ tests with 100% coverage
+- ✅ **Well Tested**: 110 tests with 94.55% coverage
 - ✅ **Single Source of Truth**: One place for all validation rules
 
 ## Installation
@@ -210,7 +210,11 @@ npm test              # Run tests
 npm run test:coverage # Run with coverage
 ```
 
-Current coverage: **100%** (85 tests)
+**Current Coverage:**
+- Overall: **94.55%** (110 tests)
+- Validators: **93.71%** coverage
+- Utils: **100%** coverage
+- Functions: **100%** coverage
 
 ## Building
 
