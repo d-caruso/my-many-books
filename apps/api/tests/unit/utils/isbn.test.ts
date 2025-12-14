@@ -94,16 +94,18 @@ describe('IsbnUtils', () => {
 
       it('should reject ISBN-10 with invalid characters', () => {
         const result = IsbnUtils.validate('045152493A'); // A is not valid (only X allowed)
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.error).toContain('must be a digit or X');
+        // Shared-validation reports this as "First 9 characters of ISBN-10 must be digits"
+        expect(result.error).toContain('digits');
       });
 
       it('should reject string with no valid characters', () => {
         const result = IsbnUtils.validate('ABC-DEF-GHI');
-        
+
         expect(result.isValid).toBe(false);
-        expect(result.error).toContain('Invalid ISBN length');
+        // Shared-validation reports "No valid ISBN found" for strings with no digits
+        expect(result.error).toContain('No valid ISBN found');
       });
     });
   });

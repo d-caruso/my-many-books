@@ -2,12 +2,13 @@
  * Admin Validation Schemas
  *
  * Validation schemas for admin-only endpoints.
- * These use stricter validation than regular user endpoints.
+ * Uses shared-validation library for consistent ISBN validation.
  */
 
 import Joi from 'joi';
 import { commonSchemas } from './common.schema';
 import { BOOK_STATUS } from '../../utils/constants';
+import { ISBN_CONSTRAINTS, ISBN_PATTERNS } from '@my-many-books/shared-validation';
 
 /**
  * Admin get users query schema
@@ -50,13 +51,21 @@ export const adminGetBooksQuerySchema = Joi.object({
 
 /**
  * Admin update book schema
+ *
+ * IMPORTANT: Uses shared ISBN validation to allow 'X' character
+ * and ensure consistency with frontend validation.
  */
 export const adminUpdateBookSchema = Joi.object({
   isbnCode: Joi.string()
-    .min(10)
-    .max(17)
-    .pattern(/^[\d-]+$/)
-    .optional(),
+    .min(ISBN_CONSTRAINTS.MIN_LENGTH)
+    .max(ISBN_CONSTRAINTS.MAX_LENGTH)
+    .pattern(ISBN_PATTERNS.NORMALIZED)
+    .optional()
+    .messages({
+      'string.pattern.base': 'ISBN must contain only digits and X (case insensitive)',
+      'string.min': `ISBN must be at least ${ISBN_CONSTRAINTS.MIN_LENGTH} characters`,
+      'string.max': `ISBN must be at most ${ISBN_CONSTRAINTS.MAX_LENGTH} characters`,
+    }),
   title: Joi.string().min(1).max(500).optional(),
   editionNumber: Joi.number().integer().positive().optional(),
   editionDate: Joi.date().optional(),

@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/logging ]
+    branches: [ main, develop, feature/architecture-improvements, feature/shared-validation]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, feature/logging ]
+    branches: [ main, develop, feature/architecture-improvements, feature/shared-validation ]
   workflow_dispatch:
     inputs:
       run_tests:
