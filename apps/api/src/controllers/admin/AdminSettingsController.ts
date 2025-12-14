@@ -99,7 +99,7 @@ export class AdminSettingsController extends BaseController {
         key: 'audit_logging_enabled',
         value: body.enabled ? 'true' : 'false',
         description: 'Enable or disable audit logging (true/false)',
-      } as any);
+      });
 
       // Invalidate cache
       getAuditLogService().invalidateCache();
