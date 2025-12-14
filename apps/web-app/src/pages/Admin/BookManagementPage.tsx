@@ -30,6 +30,8 @@ import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
 import { useApi } from '../../contexts/ApiContext';
 import { DataGridErrorBoundary } from '../../components/ErrorBoundary';
+import { normalizeIsbn } from '@my-many-books/shared-validation';
+import { adminBookSchema } from '../../validation/bookSchemas';
 
 interface Book {
   id: number;
@@ -142,11 +144,28 @@ export const BookManagementPage: React.FC = () => {
   const handleEditSubmit = async () => {
     if (!selectedBook) return;
 
+    // Validate with Zod schema
+    const result = adminBookSchema.safeParse(formData);
+
+    if (!result.success) {
+      // Show first validation error
+      const firstError = result.error.errors[0];
+      setFormError(firstError.message);
+      return;
+    }
+
     try {
       setFormLoading(true);
       setFormError(null);
 
-      await updateAdminBook(selectedBook.id, formData);
+      // Normalize ISBN before submitting
+      const normalized = formData.isbnCode ? normalizeIsbn(formData.isbnCode) : null;
+      const submissionData = {
+        ...formData,
+        isbnCode: normalized || formData.isbnCode,
+      };
+
+      await updateAdminBook(selectedBook.id, submissionData);
 
       setEditDialogOpen(false);
       setSelectedBook(null);

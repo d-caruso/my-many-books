@@ -1,0 +1,78 @@
+/**
+ * Book Validation Schemas (Zod)
+ *
+ * Frontend validation schemas using Zod.
+ * Uses shared-validation library for ISBN validation logic.
+ */
+
+import { z } from 'zod';
+import {
+  isValidIsbnFormat,
+  ISBN_CONSTRAINTS,
+} from '@my-many-books/shared-validation';
+
+/**
+ * Book status enum
+ */
+const bookStatusEnum = z.enum(['reading', 'paused', 'finished', 'TO_READ']);
+
+/**
+ * Base ISBN validation schema
+ * Uses shared-validation library for consistent validation with backend
+ */
+const isbnSchema = z
+  .string()
+  .min(1, 'ISBN is required')
+  .refine(
+    (value) => isValidIsbnFormat(value),
+    {
+      message: `Invalid ISBN format. Must be ${ISBN_CONSTRAINTS.MIN_LENGTH}-${ISBN_CONSTRAINTS.MAX_LENGTH} digits, may contain 'X'`,
+    }
+  );
+
+/**
+ * Create Book Schema (User)
+ *
+ * Strict validation for creating new books.
+ * All fields required except optional ones.
+ */
+export const createBookSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(500, 'Title too long'),
+  isbnCode: isbnSchema,
+  editionNumber: z.number().int().positive().optional(),
+  editionDate: z.string().optional(),
+  status: bookStatusEnum.optional(),
+  notes: z.string().max(2000, 'Notes too long').optional(),
+  selectedAuthors: z.array(z.any()).optional(), // Author objects
+  selectedCategories: z.array(z.number()).optional(),
+});
+
+/**
+ * Update Book Schema (User)
+ *
+ * Partial validation for updating books.
+ * All fields optional, but must be valid if provided.
+ */
+export const updateBookSchema = createBookSchema.partial();
+
+/**
+ * Admin Book Schema
+ *
+ * Flexible validation for admin book updates.
+ * Allows partial updates with all fields optional.
+ */
+export const adminBookSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(500, 'Title too long').optional(),
+  isbnCode: isbnSchema.optional(),
+  editionNumber: z.number().int().positive().optional(),
+  editionDate: z.string().optional(),
+  status: bookStatusEnum.optional(),
+  notes: z.string().max(2000, 'Notes too long').optional(),
+});
+
+/**
+ * Type exports for TypeScript
+ */
+export type CreateBookInput = z.infer<typeof createBookSchema>;
+export type UpdateBookInput = z.infer<typeof updateBookSchema>;
+export type AdminBookInput = z.infer<typeof adminBookSchema>;
