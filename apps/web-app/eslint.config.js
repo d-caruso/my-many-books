@@ -66,6 +66,11 @@ export default tseslint.config(
       '*.config.ts',
       'vite.config.ts',
       'vitest.config.ts',
+      'vitest.*.ts',
+      'src/**/__tests__/**',
+      'src/**/__mocks__/**',
+      'src/setupTests.ts',
+      'src/jest.setup.ts',
     ],
   }
 );
