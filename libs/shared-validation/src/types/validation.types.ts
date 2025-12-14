@@ -20,6 +20,9 @@ export interface ValidationResult<T = unknown> {
   /** Error code for programmatic handling */
   errorCode?: string;
 
+  /** i18n key for translatable error messages */
+  i18nKey?: string;
+
   /** Additional validation metadata */
   metadata?: Record<string, unknown>;
 }
@@ -42,6 +45,9 @@ export interface IsbnValidationResult {
 
   /** Error code for programmatic handling */
   errorCode?: string;
+
+  /** i18n key for translatable error messages */
+  i18nKey?: string;
 }
 
 /**
