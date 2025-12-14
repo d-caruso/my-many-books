@@ -1,8 +1,0 @@
-build/
-dist/
-node_modules/
-coverage/
-.vite/
-*.config.js
-*.config.ts
-vite.config.ts
