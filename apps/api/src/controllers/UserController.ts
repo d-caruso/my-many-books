@@ -13,7 +13,7 @@ import { toUserResponseDTO } from '../dtos/user/UserResponseDTO';
 import { UserService, UserServiceError } from '../services/user/UserService';
 import { BookEntity } from '../repositories/book/BookRepositoryTypes';
 import { BookStatus } from '@/models/interfaces/ModelInterfaces';
-import { BOOK_STATUS } from '../utils/constants';
+import { BOOK_STATUSES } from '@my-many-books/shared-validation';
 
 const toBookView = (book: BookEntity) => ({
   id: book.id,
@@ -189,8 +189,6 @@ export class UserController extends BaseController {
     if (!value) {
       return undefined;
     }
-    return Object.values(BOOK_STATUS).includes(value as BookStatus)
-      ? (value as BookStatus)
-      : undefined;
+    return BOOK_STATUSES.includes(value as BookStatus) ? (value as BookStatus) : undefined;
   }
 }

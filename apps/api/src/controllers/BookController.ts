@@ -18,7 +18,7 @@ import { validateIsbn } from '../utils/isbn';
 import { isbnService } from '../services/isbnService';
 import { UniversalRequest } from '../types';
 import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
-import { BOOK_STATUS } from '../utils/constants';
+import { BOOK_STATUSES } from '@my-many-books/shared-validation';
 import { BookService, BookServiceError, BookUserContext } from '../services/book/BookService';
 import { CreateBookDTO } from '../dtos/book/CreateBookDTO';
 import { UpdateBookDTO } from '../dtos/book/UpdateBookDTO';
@@ -61,7 +61,7 @@ export class BookController extends BaseController {
     editionNumber: Joi.number().integer().min(1).optional(),
     editionDate: Joi.date().iso().optional().allow(null),
     status: Joi.string()
-      .valid(...Object.values(BOOK_STATUS))
+      .valid(...BOOK_STATUSES)
       .optional(),
     notes: Joi.string().optional().max(5000).trim(),
     author: Joi.string().max(200).optional().trim(),

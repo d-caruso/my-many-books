@@ -6,7 +6,7 @@
 import { Book } from '../../../src/models/Book';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
-import { BOOK_STATUS } from '../../../src/utils/constants';
+import { BOOK_STATUS } from '@my-many-books/shared-validation';
 
 // Mock Sequelize and dependencies
 jest.mock('../../../src/models/Author');

@@ -6,15 +6,21 @@
 import {
   HTTP_STATUS,
   ERROR_MESSAGES,
-  BOOK_STATUS,
   API_ENDPOINTS,
   DATABASE_CONFIG,
   PAGINATION_DEFAULTS,
   TABLE_NAMES,
-  VALIDATION_RULES,
-  ISBN_CONSTANTS,
-  ISBN_ERROR_MESSAGES
 } from '../../../src/utils/constants';
+
+import {
+  BOOK_STATUS,
+  ISBN_CONSTRAINTS,
+  ISBN_PATTERNS,
+  ISBN_ERROR_MESSAGES,
+  BOOK_CONSTRAINTS,
+  AUTHOR_CONSTRAINTS,
+  CATEGORY_CONSTRAINTS,
+} from '@my-many-books/shared-validation';
 
 describe('Constants', () => {
   describe('HTTP_STATUS', () => {
@@ -116,60 +122,79 @@ describe('Constants', () => {
     });
   });
 
-  describe('VALIDATION_RULES', () => {
-    it('should have correct validation rules', () => {
-      expect(VALIDATION_RULES.ISBN.MIN_LENGTH).toBe(10);
-      expect(VALIDATION_RULES.ISBN.MAX_LENGTH).toBe(13);
-      expect(VALIDATION_RULES.TITLE.MIN_LENGTH).toBe(1);
-      expect(VALIDATION_RULES.TITLE.MAX_LENGTH).toBe(255);
-      expect(VALIDATION_RULES.AUTHOR_NAME.MIN_LENGTH).toBe(1);
-      expect(VALIDATION_RULES.AUTHOR_NAME.MAX_LENGTH).toBe(255);
-      expect(VALIDATION_RULES.CATEGORY_NAME.MIN_LENGTH).toBe(1);
-      expect(VALIDATION_RULES.CATEGORY_NAME.MAX_LENGTH).toBe(255);
-      expect(VALIDATION_RULES.NOTES.MAX_LENGTH).toBe(2000);
+  describe('Shared Validation Constants', () => {
+    describe('ISBN_CONSTRAINTS', () => {
+      it('should have correct ISBN constraints', () => {
+        expect(ISBN_CONSTRAINTS.MIN_LENGTH).toBe(10);
+        expect(ISBN_CONSTRAINTS.MAX_LENGTH).toBe(13);
+        expect(ISBN_CONSTRAINTS.VALID_PREFIXES).toEqual(['978', '979']);
+      });
+
+      it('should be frozen/immutable', () => {
+        expect(Object.isFrozen(ISBN_CONSTRAINTS)).toBe(true);
+        expect(Object.isFrozen(ISBN_CONSTRAINTS.VALID_PREFIXES)).toBe(true);
+      });
     });
 
-    it('should be frozen/immutable', () => {
-      expect(Object.isFrozen(VALIDATION_RULES)).toBe(true);
-      expect(Object.isFrozen(VALIDATION_RULES.ISBN)).toBe(true);
-      expect(Object.isFrozen(VALIDATION_RULES.TITLE)).toBe(true);
-      expect(Object.isFrozen(VALIDATION_RULES.AUTHOR_NAME)).toBe(true);
-      expect(Object.isFrozen(VALIDATION_RULES.CATEGORY_NAME)).toBe(true);
-      expect(Object.isFrozen(VALIDATION_RULES.NOTES)).toBe(true);
-    });
-  });
+    describe('ISBN_PATTERNS', () => {
+      it('should have correct regex patterns', () => {
+        expect(ISBN_PATTERNS.ALL_DIGITS).toBeInstanceOf(RegExp);
+        expect(ISBN_PATTERNS.ISBN_10).toBeInstanceOf(RegExp);
+        expect(ISBN_PATTERNS.ISBN_13).toBeInstanceOf(RegExp);
+        expect(ISBN_PATTERNS.NORMALIZED).toBeInstanceOf(RegExp);
+      });
 
-  describe('ISBN_CONSTANTS', () => {
-    it('should have correct ISBN constants', () => {
-      expect(ISBN_CONSTANTS.ISBN_10_LENGTH).toBe(10);
-      expect(ISBN_CONSTANTS.ISBN_13_LENGTH).toBe(13);
-      expect(ISBN_CONSTANTS.VALID_PREFIXES).toEqual(['978', '979']);
-    });
+      it('should validate regex patterns work correctly', () => {
+        expect(ISBN_PATTERNS.ALL_DIGITS.test('123456789')).toBe(true);
+        expect(ISBN_PATTERNS.ALL_DIGITS.test('12345abc')).toBe(false);
 
-    it('should have correct regex patterns', () => {
-      expect(ISBN_CONSTANTS.REGEX.DIGITS_ONLY).toBeInstanceOf(RegExp);
-      expect(ISBN_CONSTANTS.REGEX.ISBN_10).toBeInstanceOf(RegExp);
-      expect(ISBN_CONSTANTS.REGEX.ISBN_13).toBeInstanceOf(RegExp);
-      expect(ISBN_CONSTANTS.REGEX.EXTRACT_13).toBeInstanceOf(RegExp);
-      expect(ISBN_CONSTANTS.REGEX.EXTRACT_10).toBeInstanceOf(RegExp);
-    });
+        expect(ISBN_PATTERNS.ISBN_10.test('123456789X')).toBe(true);
+        expect(ISBN_PATTERNS.ISBN_10.test('1234567890')).toBe(true);
+        expect(ISBN_PATTERNS.ISBN_10.test('12345')).toBe(false);
 
-    it('should validate regex patterns work correctly', () => {
-      expect(ISBN_CONSTANTS.REGEX.DIGITS_ONLY.test('123456789')).toBe(true);
-      expect(ISBN_CONSTANTS.REGEX.DIGITS_ONLY.test('12345abc')).toBe(false);
-      
-      expect(ISBN_CONSTANTS.REGEX.ISBN_10.test('123456789X')).toBe(true);
-      expect(ISBN_CONSTANTS.REGEX.ISBN_10.test('1234567890')).toBe(true);
-      expect(ISBN_CONSTANTS.REGEX.ISBN_10.test('12345')).toBe(false);
-      
-      expect(ISBN_CONSTANTS.REGEX.ISBN_13.test('9781234567890')).toBe(true);
-      expect(ISBN_CONSTANTS.REGEX.ISBN_13.test('123456789')).toBe(false);
+        expect(ISBN_PATTERNS.ISBN_13.test('9781234567890')).toBe(true);
+        expect(ISBN_PATTERNS.ISBN_13.test('123456789')).toBe(false);
+      });
+
+      it('should be frozen/immutable', () => {
+        expect(Object.isFrozen(ISBN_PATTERNS)).toBe(true);
+      });
     });
 
-    it('should be frozen/immutable', () => {
-      expect(Object.isFrozen(ISBN_CONSTANTS)).toBe(true);
-      expect(Object.isFrozen(ISBN_CONSTANTS.VALID_PREFIXES)).toBe(true);
-      expect(Object.isFrozen(ISBN_CONSTANTS.REGEX)).toBe(true);
+    describe('BOOK_CONSTRAINTS', () => {
+      it('should have correct book constraints', () => {
+        expect(BOOK_CONSTRAINTS.TITLE.MIN_LENGTH).toBe(1);
+        expect(BOOK_CONSTRAINTS.TITLE.MAX_LENGTH).toBe(500);
+        expect(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH).toBe(2000);
+      });
+
+      it('should be frozen/immutable', () => {
+        expect(Object.isFrozen(BOOK_CONSTRAINTS)).toBe(true);
+      });
+    });
+
+    describe('AUTHOR_CONSTRAINTS', () => {
+      it('should have correct author constraints', () => {
+        expect(AUTHOR_CONSTRAINTS.NAME.MIN_LENGTH).toBe(1);
+        expect(AUTHOR_CONSTRAINTS.NAME.MAX_LENGTH).toBe(255);
+        expect(AUTHOR_CONSTRAINTS.SURNAME.MIN_LENGTH).toBe(1);
+        expect(AUTHOR_CONSTRAINTS.SURNAME.MAX_LENGTH).toBe(255);
+      });
+
+      it('should be frozen/immutable', () => {
+        expect(Object.isFrozen(AUTHOR_CONSTRAINTS)).toBe(true);
+      });
+    });
+
+    describe('CATEGORY_CONSTRAINTS', () => {
+      it('should have correct category constraints', () => {
+        expect(CATEGORY_CONSTRAINTS.NAME.MIN_LENGTH).toBe(1);
+        expect(CATEGORY_CONSTRAINTS.NAME.MAX_LENGTH).toBe(255);
+      });
+
+      it('should be frozen/immutable', () => {
+        expect(Object.isFrozen(CATEGORY_CONSTRAINTS)).toBe(true);
+      });
     });
   });
 

@@ -4,7 +4,7 @@ import { USER_ROLES } from '@my-many-books/shared-auth';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
-import { BOOK_STATUS } from '../../../src/utils/constants';
+import { BOOK_STATUS } from '@my-many-books/shared-validation';
 import { EVENTS } from '../../../src/services/hooks/events';
 
 jest.mock('../../../src/models/Author', () => ({

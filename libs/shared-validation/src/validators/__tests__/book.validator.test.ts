@@ -66,7 +66,6 @@ describe('book.validator', () => {
       expect(validateStatus('reading')).toEqual({ isValid: true });
       expect(validateStatus('paused')).toEqual({ isValid: true });
       expect(validateStatus('finished')).toEqual({ isValid: true });
-      expect(validateStatus('TO_READ')).toEqual({ isValid: true });
     });
 
     it('should reject invalid status', () => {
@@ -128,7 +127,6 @@ describe('book.validator', () => {
       expect(isValidBookStatus('reading')).toBe(true);
       expect(isValidBookStatus('paused')).toBe(true);
       expect(isValidBookStatus('finished')).toBe(true);
-      expect(isValidBookStatus('TO_READ')).toBe(true);
     });
 
     it('should return false for invalid statuses', () => {

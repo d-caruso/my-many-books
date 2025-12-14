@@ -5,7 +5,7 @@
 import { Sequelize, Op } from 'sequelize';
 import { Book } from '../../../src/models/Book';
 import { ModelManager } from '../../../src/models';
-import { BOOK_STATUS } from '../../../src/utils/constants';
+import { BOOK_STATUS } from '@my-many-books/shared-validation';
 
 // Create an in-memory SQLite database for testing
 let sequelize: Sequelize;

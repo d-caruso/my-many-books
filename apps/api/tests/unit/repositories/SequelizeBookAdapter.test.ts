@@ -1,6 +1,6 @@
 import { SequelizeBookAdapter } from '../../../src/repositories/book/adapters/SequelizeBookAdapter';
 import { Book } from '../../../src/models/Book';
-import { BOOK_STATUS } from '../../../src/utils/constants';
+import { BOOK_STATUS } from '@my-many-books/shared-validation';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
 import { Op } from 'sequelize';

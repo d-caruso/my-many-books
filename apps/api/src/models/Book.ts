@@ -5,7 +5,8 @@
 import { DataTypes, Sequelize, Association } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
 import { BookAttributes, BookCreationAttributes, BookStatus } from './interfaces/ModelInterfaces';
-import { TABLE_NAMES, BOOK_STATUS } from '@/utils/constants';
+import { TABLE_NAMES } from '@/utils/constants';
+import { BOOK_STATUS, BOOK_STATUSES } from '@my-many-books/shared-validation';
 import { Author } from './Author';
 import { Category } from './Category';
 import { createModel } from '../utils/sequelize-helpers';
@@ -79,12 +80,12 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
           field: 'edition_date',
         },
         status: {
-          type: DataTypes.ENUM(...Object.values(BOOK_STATUS)),
+          type: DataTypes.ENUM(...BOOK_STATUSES),
           allowNull: true,
           validate: {
             isIn: {
-              args: [Object.values(BOOK_STATUS)],
-              msg: 'Status must be one of: in progress, paused, finished',
+              args: [BOOK_STATUSES],
+              msg: 'Status must be one of: reading, paused, finished',
             },
           },
         },
