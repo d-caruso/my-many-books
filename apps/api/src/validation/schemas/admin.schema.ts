@@ -7,8 +7,11 @@
 
 import Joi from 'joi';
 import { commonSchemas } from './common.schema';
-import { BOOK_STATUS } from '../../utils/constants';
-import { ISBN_CONSTRAINTS, ISBN_PATTERNS } from '@my-many-books/shared-validation';
+import {
+  ISBN_CONSTRAINTS,
+  ISBN_PATTERNS,
+  BOOK_STATUSES,
+} from '@my-many-books/shared-validation';
 
 /**
  * Admin get users query schema
@@ -38,7 +41,7 @@ export const adminUpdateUserSchema = Joi.object({
 export const adminGetBooksQuerySchema = Joi.object({
   search: Joi.string().min(1).max(255).trim().optional(),
   status: Joi.string()
-    .valid(...Object.values(BOOK_STATUS))
+    .valid(...BOOK_STATUSES)
     .optional(),
   userId: commonSchemas.id.optional(),
   authorId: commonSchemas.id.optional(),
@@ -70,7 +73,7 @@ export const adminUpdateBookSchema = Joi.object({
   editionNumber: Joi.number().integer().positive().optional(),
   editionDate: Joi.date().optional(),
   status: Joi.string()
-    .valid(...Object.values(BOOK_STATUS))
+    .valid(...BOOK_STATUSES)
     .optional(),
   notes: Joi.string().max(2000).allow('').optional(),
   userId: commonSchemas.id.optional(), // Admin can reassign book to different user

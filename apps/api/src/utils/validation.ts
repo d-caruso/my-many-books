@@ -1,9 +1,19 @@
 // ================================================================
 // src/utils/validation.ts
 // ================================================================
+//
+// Legacy Joi schemas using shared-validation constants.
+// New code should use validation/schemas/*.schema.ts instead.
+//
 
 import Joi from 'joi';
-import { VALIDATION_RULES, BOOK_STATUS } from './constants';
+import {
+  AUTHOR_CONSTRAINTS,
+  CATEGORY_CONSTRAINTS,
+  BOOK_CONSTRAINTS,
+  ISBN_CONSTRAINTS,
+  BOOK_STATUSES,
+} from '@my-many-books/shared-validation';
 
 // Base validation schemas
 export const baseValidationSchema = {
@@ -16,22 +26,22 @@ export const baseValidationSchema = {
 export const authorValidationSchema = {
   ...baseValidationSchema,
   name: Joi.string()
-    .min(VALIDATION_RULES.AUTHOR_NAME.MIN_LENGTH)
-    .max(VALIDATION_RULES.AUTHOR_NAME.MAX_LENGTH)
+    .min(AUTHOR_CONSTRAINTS.NAME.MIN_LENGTH)
+    .max(AUTHOR_CONSTRAINTS.NAME.MAX_LENGTH)
     .required(),
   surname: Joi.string()
-    .min(VALIDATION_RULES.AUTHOR_NAME.MIN_LENGTH)
-    .max(VALIDATION_RULES.AUTHOR_NAME.MAX_LENGTH)
+    .min(AUTHOR_CONSTRAINTS.SURNAME.MIN_LENGTH)
+    .max(AUTHOR_CONSTRAINTS.SURNAME.MAX_LENGTH)
     .required(),
-  nationality: Joi.string().max(VALIDATION_RULES.AUTHOR_NAME.MAX_LENGTH).optional(),
+  nationality: Joi.string().max(AUTHOR_CONSTRAINTS.NATIONALITY.MAX_LENGTH).optional(),
 };
 
 // Category validation schemas
 export const categoryValidationSchema = {
   ...baseValidationSchema,
   name: Joi.string()
-    .min(VALIDATION_RULES.CATEGORY_NAME.MIN_LENGTH)
-    .max(VALIDATION_RULES.CATEGORY_NAME.MAX_LENGTH)
+    .min(CATEGORY_CONSTRAINTS.NAME.MIN_LENGTH)
+    .max(CATEGORY_CONSTRAINTS.NAME.MAX_LENGTH)
     .required(),
 };
 
@@ -39,20 +49,20 @@ export const categoryValidationSchema = {
 export const bookValidationSchema = {
   ...baseValidationSchema,
   isbnCode: Joi.string()
-    .min(VALIDATION_RULES.ISBN.MIN_LENGTH)
-    .max(VALIDATION_RULES.ISBN.MAX_LENGTH)
+    .min(ISBN_CONSTRAINTS.MIN_LENGTH)
+    .max(ISBN_CONSTRAINTS.MAX_LENGTH)
     .pattern(/^[\d-]+$/)
     .required(),
   title: Joi.string()
-    .min(VALIDATION_RULES.TITLE.MIN_LENGTH)
-    .max(VALIDATION_RULES.TITLE.MAX_LENGTH)
+    .min(BOOK_CONSTRAINTS.TITLE.MIN_LENGTH)
+    .max(BOOK_CONSTRAINTS.TITLE.MAX_LENGTH)
     .required(),
   editionNumber: Joi.number().integer().positive().optional(),
   editionDate: Joi.date().optional(),
   status: Joi.string()
-    .valid(...Object.values(BOOK_STATUS))
+    .valid(...BOOK_STATUSES)
     .optional(),
-  notes: Joi.string().max(VALIDATION_RULES.NOTES.MAX_LENGTH).optional(),
+  notes: Joi.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH).optional(),
 };
 
 // Validation functions

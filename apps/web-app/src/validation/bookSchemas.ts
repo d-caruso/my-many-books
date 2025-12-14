@@ -9,12 +9,15 @@ import { z } from 'zod';
 import {
   isValidIsbnFormat,
   ISBN_CONSTRAINTS,
+  BOOK_CONSTRAINTS,
+  BOOK_STATUSES,
 } from '@my-many-books/shared-validation';
 
 /**
  * Book status enum
+ * Uses shared-validation BOOK_STATUSES for consistency
  */
-const bookStatusEnum = z.enum(['reading', 'paused', 'finished', 'TO_READ']);
+const bookStatusEnum = z.enum(BOOK_STATUSES as [string, ...string[]]);
 
 /**
  * Base ISBN validation schema
@@ -35,14 +38,18 @@ const isbnSchema = z
  *
  * Strict validation for creating new books.
  * All fields required except optional ones.
+ * Uses shared-validation constraints for consistency with backend.
  */
 export const createBookSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(500, 'Title too long'),
+  title: z
+    .string()
+    .min(BOOK_CONSTRAINTS.TITLE.MIN_LENGTH, 'Title is required')
+    .max(BOOK_CONSTRAINTS.TITLE.MAX_LENGTH, 'Title too long'),
   isbnCode: isbnSchema,
   editionNumber: z.number().int().positive().optional(),
   editionDate: z.string().optional(),
   status: bookStatusEnum.optional(),
-  notes: z.string().max(2000, 'Notes too long').optional(),
+  notes: z.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH, 'Notes too long').optional(),
   selectedAuthors: z.array(z.any()).optional(), // Author objects
   selectedCategories: z.array(z.number()).optional(),
 });
@@ -62,12 +69,16 @@ export const updateBookSchema = createBookSchema.partial();
  * Allows partial updates with all fields optional.
  */
 export const adminBookSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(500, 'Title too long').optional(),
+  title: z
+    .string()
+    .min(BOOK_CONSTRAINTS.TITLE.MIN_LENGTH, 'Title is required')
+    .max(BOOK_CONSTRAINTS.TITLE.MAX_LENGTH, 'Title too long')
+    .optional(),
   isbnCode: isbnSchema.optional(),
   editionNumber: z.number().int().positive().optional(),
   editionDate: z.string().optional(),
   status: bookStatusEnum.optional(),
-  notes: z.string().max(2000, 'Notes too long').optional(),
+  notes: z.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH, 'Notes too long').optional(),
 });
 
 /**

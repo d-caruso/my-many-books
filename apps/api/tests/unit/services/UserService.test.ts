@@ -1,7 +1,7 @@
 import { UserService, UserServiceError } from '../../../src/services/user/UserService';
 import { Repository as UserRepositoryContract } from '../../../src/repositories/user/Repository';
 import { Repository as BookRepositoryContract } from '../../../src/repositories/book/Repository';
-import { BOOK_STATUS } from '../../../src/utils/constants';
+import { BOOK_STATUS } from '@my-many-books/shared-validation';
 
 describe('UserService', () => {
   let userRepository: jest.Mocked<UserRepositoryContract>;

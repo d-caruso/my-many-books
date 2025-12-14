@@ -8,8 +8,12 @@
 import Joi from 'joi';
 import { bookValidationSchema } from '../../utils/validation';
 import { commonSchemas } from './common.schema';
-import { BOOK_STATUS } from '../../utils/constants';
-import { validateIsbn, ISBN_CONSTRAINTS, ISBN_PATTERNS } from '@my-many-books/shared-validation';
+import {
+  validateIsbn,
+  ISBN_CONSTRAINTS,
+  ISBN_PATTERNS,
+  BOOK_STATUSES,
+} from '@my-many-books/shared-validation';
 
 /**
  * Create book schema
@@ -42,7 +46,7 @@ export const updateBookSchema = Joi.object({
   editionNumber: bookValidationSchema.editionNumber,
   editionDate: bookValidationSchema.editionDate,
   status: Joi.string()
-    .valid(...Object.values(BOOK_STATUS))
+    .valid(...BOOK_STATUSES)
     .optional(),
   notes: bookValidationSchema.notes,
   authorIds: Joi.array().items(commonSchemas.id).min(1).optional(),
@@ -54,7 +58,7 @@ export const updateBookSchema = Joi.object({
  */
 export const patchBookSchema = Joi.object({
   status: Joi.string()
-    .valid(...Object.values(BOOK_STATUS))
+    .valid(...BOOK_STATUSES)
     .optional(),
   notes: bookValidationSchema.notes,
   editionNumber: bookValidationSchema.editionNumber,
@@ -77,7 +81,7 @@ export const searchBooksQuerySchema = Joi.object({
  */
 export const getBooksQuerySchema = Joi.object({
   status: Joi.string()
-    .valid(...Object.values(BOOK_STATUS))
+    .valid(...BOOK_STATUSES)
     .optional(),
   authorId: commonSchemas.id.optional(),
   categoryId: commonSchemas.id.optional(),

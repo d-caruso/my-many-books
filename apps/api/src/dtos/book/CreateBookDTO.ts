@@ -9,7 +9,7 @@ import {
   Length,
   validateSync,
 } from 'class-validator';
-import { BOOK_STATUS } from '@/utils/constants';
+import { BOOK_STATUS } from '@my-many-books/shared-validation';
 import type { BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { CreateBookInput } from '../../services/book/BookService';
 

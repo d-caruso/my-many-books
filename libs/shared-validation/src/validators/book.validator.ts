@@ -8,7 +8,7 @@
 import {
   BOOK_CONSTRAINTS,
   BOOK_STATUS,
-  VALID_BOOK_STATUSES,
+  BOOK_STATUSES,
   BOOK_ERROR_MESSAGES,
   BookStatus,
 } from '../constants/book.constants';
@@ -80,7 +80,7 @@ export function validateNotes(notes: string | null | undefined): ValidationResul
  * Validate book status
  */
 export function validateStatus(status: string): ValidationResult {
-  if (!VALID_BOOK_STATUSES.includes(status as BookStatus)) {
+  if (!BOOK_STATUSES.includes(status as BookStatus)) {
     const errorCode = 'INVALID_STATUS';
     return {
       isValid: false,
@@ -142,5 +142,5 @@ export function validateEditionDate(editionDate: string | Date | null | undefine
  * Check if a string is a valid book status
  */
 export function isValidBookStatus(status: string): boolean {
-  return VALID_BOOK_STATUSES.includes(status as BookStatus);
+  return BOOK_STATUSES.includes(status as BookStatus);
 }

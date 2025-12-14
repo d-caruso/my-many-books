@@ -60,14 +60,11 @@ export class IsbnUtils {
 }
 
 // Export convenience functions (delegating to shared-validation)
-export const validateIsbn = (isbn: string): IsbnValidationResult =>
-  sharedValidateIsbn(isbn);
+export const validateIsbn = (isbn: string): IsbnValidationResult => sharedValidateIsbn(isbn);
 
-export const formatIsbn = (isbn: string): string =>
-  sharedFormatIsbnForDisplay(isbn);
+export const formatIsbn = (isbn: string): string => sharedFormatIsbnForDisplay(isbn);
 
-export const isValidIsbn = (isbn: string): boolean =>
-  sharedValidateIsbn(isbn).isValid;
+export const isValidIsbn = (isbn: string): boolean => sharedValidateIsbn(isbn).isValid;
 
 export const normalizeIsbn = (isbn: string): string | null => {
   const result = sharedValidateIsbn(isbn);
