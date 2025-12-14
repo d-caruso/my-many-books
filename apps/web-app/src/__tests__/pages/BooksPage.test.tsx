@@ -1,179 +1,23 @@
 import React from 'react';
-import { render as rtlRender, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { setupMuiMock } from '../test-utils/setupMuiMock';
-
-// Import after mocks
 import BooksPage from '../../pages/BooksPage';
 import { ApiProvider } from '../../contexts/ApiContext';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useBookSearch } from '../../hooks/useBookSearch';
-import { useBooks } from '../../hooks/useBooks';
 
-// Mock dependencies - using vi.hoisted to ensure mocks are set up before imports
-const { mockUseSearchParams, mockUseNavigate, mockUseBookSearch, mockUseBooks } = vi.hoisted(() => ({
-  mockUseSearchParams: vi.fn(),
-  mockUseNavigate: vi.fn(),
-  mockUseBookSearch: vi.fn(),
-  mockUseBooks: vi.fn(),
-}));
+const mockSetSearchParams = vi.fn();
+let currentSearchParams: URLSearchParams = new URLSearchParams();
 
 vi.mock('react-router-dom', () => ({
-  useSearchParams: mockUseSearchParams,
-  useNavigate: mockUseNavigate,
+  useSearchParams: () => [currentSearchParams, mockSetSearchParams],
+  useNavigate: () => vi.fn(),
 }));
 
-vi.mock('../../hooks/useBookSearch', () => ({
-  useBookSearch: mockUseBookSearch,
-}));
-
-vi.mock('../../hooks/useBooks', () => ({
-  useBooks: mockUseBooks,
-}));
-
-const shouldMockMui = process.env.MOCK_MUI === 'true';
-
-if (shouldMockMui) {
-  setupMuiMock();
-}
-
-vi.mock('@mui/icons-material/Add', () => ({
-  default: () => <span data-testid="add-icon">Add</span>,
-}));
-
-vi.mock('@mui/icons-material/Clear', () => ({
-  default: () => <span data-testid="clear-icon">Clear</span>,
-}));
-
-vi.mock('@mui/icons-material/ViewModule', () => ({
-  default: () => <span data-testid="grid-icon">Grid</span>,
-}));
-
-vi.mock('@mui/icons-material/ViewList', () => ({
-  default: () => <span data-testid="list-icon">List</span>,
-}));
-
-// Store callbacks for testing
-let mockOnStatusChange: any;
-
-// Mock components with better callback handling
-vi.mock('../../components/Book', () => ({
-  BookList: ({ books, onBookSelect, onBookEdit, onBookDelete, viewMode, onStatusChange }: any) => {
-    mockOnStatusChange = onStatusChange;
-    return (
-      <div data-testid="book-list" data-view-mode={viewMode}>
-        {books?.map((book: any) => (
-          <div key={book.id} data-testid={`book-item-${book.id}`}>
-            <button onClick={() => onBookSelect?.(book)} data-testid={`select-${book.id}`}>Select {book.title}</button>
-            <button onClick={() => onBookEdit?.(book)} data-testid={`edit-${book.id}`}>Edit {book.title}</button>
-            <button onClick={() => onBookDelete?.(book.id)} data-testid={`delete-${book.id}`}>Delete {book.title}</button>
-            <button onClick={() => onStatusChange?.(book.id, 'read')} data-testid={`status-${book.id}`}>Mark Read</button>
-          </div>
-        ))}
-      </div>
-    );
-  },
-  BookForm: ({ book, onSubmit, onCancel, loading }: any) => {
-    return (
-      <div data-testid="book-form" data-loading={loading} data-book-id={book?.id}>
-        <button onClick={() => onSubmit({ title: 'Test Book', isbn: '123' })} data-testid="form-submit">Submit</button>
-        <button onClick={onCancel} data-testid="form-cancel">Cancel</button>
-      </div>
-    );
-  },
-  BookDetails: ({ book, onEdit, onDelete, onClose }: any) => {
-    return (
-      <div data-testid="book-details" data-book-id={book?.id}>
-        <h3>{book?.title}</h3>
-        <button onClick={() => onEdit?.(book)} data-testid="details-edit">Edit</button>
-        <button onClick={() => onDelete?.(book.id)} data-testid="details-delete">Delete</button>
-        <button onClick={onClose} data-testid="details-close">Close</button>
-      </div>
-    );
-  },
-}));
-
-// Mock callback references for BookSearchForm
-const mockOnClear = vi.fn();
-
-vi.mock('../../components/Search', () => ({
-  BookSearchForm: ({ onSearch, loading }: any) => (
-    <div data-testid="search-form" data-loading={loading}>
-      <button onClick={() => onSearch('test', {})}>Search</button>
-      <button onClick={mockOnClear}>Clear</button>
-    </div>
-  ),
-  BookSearchResults: ({ books }: any) => <div data-testid="search-results">{books?.length} results</div>,
-  BookSearchPage: () => <div data-testid="search-page">Search Page</div>,
-  AuthorAutocomplete: ({ onChange }: any) => <input data-testid="author-autocomplete" onChange={onChange} />,
-}));
-
-// Create mock API service
-const mockApiService = {
-  createBook: vi.fn().mockResolvedValue({ id: 3, title: 'New Book' }),
-  updateBook: vi.fn().mockResolvedValue({ id: 1, title: 'Updated Book' }),
-  deleteBook: vi.fn().mockResolvedValue({}),
-  getBook: vi.fn().mockResolvedValue({ id: 1, title: 'Test Book' }),
-  getBooks: vi.fn().mockResolvedValue([]),
-  searchBooks: vi.fn(),
-  searchByISBN: vi.fn(),
-  getCategories: vi.fn(),
-  getCategory: vi.fn(),
-  createCategory: vi.fn(),
-  updateCategory: vi.fn(),
-  deleteCategory: vi.fn(),
-  getAuthors: vi.fn(),
-  getAuthor: vi.fn(),
-  createAuthor: vi.fn(),
-  updateAuthor: vi.fn(),
-  deleteAuthor: vi.fn(),
-  searchAuthors: vi.fn(),
-  login: vi.fn(),
-  register: vi.fn(),
-  getCurrentUser: vi.fn(),
-  logout: vi.fn(),
-} as any;
-
-const testI18n = i18n.createInstance();
-const i18nReady = testI18n.use(initReactI18next).init({
-  lng: 'en',
-  fallbackLng: 'en',
-  ns: ['common', 'pages'],
-  defaultNS: 'common',
-  resources: {
-    en: {
-      common: {},
-      pages: {
-        books: {
-          title: 'My Books',
-          description: 'Your personal book collection',
-          description_with_count_one: '{{count}} book in your library',
-          description_with_count_other: '{{count}} books in your library',
-          no_books_empty: 'No books yet',
-          books_found: 'books found',
-          clear_search: 'Clear search',
-          add_book: 'Add book',
-          add: 'Add',
-          grid_view: 'Grid view',
-          list_view: 'List view',
-          loading: 'Loading...',
-          no_books_search: 'No books match your search',
-          load_more: 'Load more',
-        },
-      },
-    },
-  },
-  interpolation: {
-    escapeValue: false,
-  },
-});
-
-const createBookSearchMock = () => ({
+const createBookSearchState = () => ({
   books: [
-    { id: 1, title: 'Test Book 1', isbn: '123' },
-    { id: 2, title: 'Test Book 2', isbn: '456' },
+    { id: 1, title: 'Search Book 1', isbn: '123' },
+    { id: 2, title: 'Search Book 2', isbn: '456' },
   ],
   loading: false,
   error: null,
@@ -184,10 +28,10 @@ const createBookSearchMock = () => ({
   clearSearch: vi.fn(),
 });
 
-const createBooksHookMock = () => ({
+const createBooksState = () => ({
   books: [
-    { id: 1, title: 'Library Book 1', isbn: '789' },
-    { id: 2, title: 'Library Book 2', isbn: '012' },
+    { id: 10, title: 'Library Book 1', isbn: '789' },
+    { id: 11, title: 'Library Book 2', isbn: '012' },
   ],
   loading: false,
   error: null,
@@ -195,412 +39,268 @@ const createBooksHookMock = () => ({
   hasMore: false,
   loadBooks: vi.fn().mockResolvedValue(undefined),
   loadMore: vi.fn().mockResolvedValue(undefined),
-  createBook: vi.fn().mockResolvedValue({ id: 3, title: 'Created Book' }),
-  updateBook: vi.fn().mockResolvedValue({ id: 1, title: 'Updated Book' }),
+  createBook: vi.fn().mockResolvedValue({ id: 20 }),
+  updateBook: vi.fn().mockResolvedValue({ id: 10 }),
   deleteBook: vi.fn().mockResolvedValue(true),
-  updateBookStatus: vi.fn().mockResolvedValue({ id: 1, status: 'finished' }),
+  updateBookStatus: vi.fn().mockResolvedValue({ id: 10, status: 'read' }),
   refreshBooks: vi.fn().mockResolvedValue(undefined),
 });
 
-describe('BooksPage', () => {
-  // Get mocked functions
-  const mockUseSearchParams = vi.mocked(useSearchParams);
-  const mockUseNavigate = vi.mocked(useNavigate);
-  const mockUseBookSearch = vi.mocked(useBookSearch);
-  const mockUseBooksHook = vi.mocked(useBooks);
-  const mockNavigate = vi.fn();
-  const mockSetSearchParams = vi.fn();
-  let mockSearchParams = new URLSearchParams();
-  let mockBookSearchReturn = createBookSearchMock();
-  let mockUseBooksReturn = createBooksHookMock();
+let bookSearchState = createBookSearchState();
+let booksState = createBooksState();
 
+vi.mock('../../hooks/useBookSearch', () => ({
+  useBookSearch: () => bookSearchState,
+}));
+
+vi.mock('../../hooks/useBooks', () => ({
+  useBooks: () => booksState,
+}));
+
+vi.mock('../../components/Book', () => ({
+  BookList: ({ books, viewMode = 'grid', loading, error, onBookClick, onEdit, onDelete, onStatusChange, emptyMessage }: any) => (
+    <div data-testid="book-list" data-view-mode={viewMode}>
+      {error && <div data-testid="book-error">{error}</div>}
+      {books.length === 0 && <div data-testid="empty-message">{emptyMessage}</div>}
+      {books.map((book: any) => (
+        <div key={book.id} data-testid={`book-item-${book.id}`}>
+          <button data-testid={`select-${book.id}`} onClick={() => onBookClick?.(book)}>Select {book.title}</button>
+          <button data-testid={`edit-${book.id}`} onClick={() => onEdit?.(book)}>Edit {book.title}</button>
+          <button data-testid={`delete-${book.id}`} onClick={() => onDelete?.(book.id)}>Delete {book.title}</button>
+          <button data-testid={`status-${book.id}`} onClick={() => onStatusChange?.(book.id, 'read')}>Status</button>
+        </div>
+      ))}
+      {loading && <div data-testid="book-loading">Loading</div>}
+    </div>
+  ),
+  BookForm: ({ book, onSubmit, onCancel, loading }: any) => (
+    <div data-testid="book-form" data-book-id={book?.id ?? 'new'} data-loading={loading}>
+      <button data-testid="form-submit" onClick={() => onSubmit({ title: 'Form Book', isbn: '123', selectedAuthors: [], selectedCategories: [] })}>
+        Submit
+      </button>
+      <button data-testid="form-cancel" onClick={onCancel}>
+        Cancel
+      </button>
+    </div>
+  ),
+  BookDetails: ({ book, onEdit, onDelete, onClose }: any) => (
+    <div data-testid="book-details">
+      <div data-testid="details-title">{book?.title}</div>
+      <button data-testid="details-edit" onClick={() => onEdit?.(book)}>
+        Edit
+      </button>
+      <button data-testid="details-delete" onClick={() => onDelete?.(book.id)}>
+        Delete
+      </button>
+      <button data-testid="details-close" onClick={onClose}>
+        Close
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('../../components/Search', () => ({
+  BookSearchForm: ({ onSearch, loading, initialQuery }: any) => (
+    <div data-testid="search-form" data-loading={loading} data-initial-query={initialQuery}>
+      <button data-testid="search-button" onClick={() => onSearch(initialQuery || 'query', { categoryId: 2 })}>
+        Search
+      </button>
+    </div>
+  ),
+  BookSearchResults: ({ books }: any) => <div data-testid="search-results">{books.length} results</div>,
+}));
+
+const mockApiService = {
+  getBooks: vi.fn(),
+} as any;
+
+const testI18n = i18n.createInstance();
+const i18nReady = testI18n.use(initReactI18next).init({
+  lng: 'en',
+  fallbackLng: 'en',
+  ns: ['pages'],
+  defaultNS: 'pages',
+  resources: {
+    en: {
+      pages: {
+        books: {
+          title: 'My Books',
+          description: 'Your personal book collection',
+          description_with_count_one: '{{count}} book in your library',
+          description_with_count_other: '{{count}} books in your library',
+          books_found: '{{count}} books found',
+          clear_search: 'Clear search',
+          add_book: 'Add book',
+          add: 'Add',
+          grid_view: 'Grid view',
+          list_view: 'List view',
+          loading: 'Loading books...',
+          no_books_search: 'No books match your search',
+          no_books_empty: 'No books yet',
+          load_more: 'Load more',
+        },
+      },
+    },
+  },
+  interpolation: {
+    escapeValue: false,
+  },
+});
+
+const renderBooksPage = () =>
+  render(
+    <I18nextProvider i18n={testI18n}>
+      <ApiProvider apiService={mockApiService}>
+        <BooksPage />
+      </ApiProvider>
+    </I18nextProvider>
+  );
+
+describe('BooksPage', () => {
   beforeAll(async () => {
     await i18nReady;
   });
 
-  afterAll(() => {
-    if (shouldMockMui) {
-      vi.unmock('@mui/material');
-    }
-  });
-
-  // Helper to render with ApiProvider and I18nextProvider
-  const renderWithProvider = (ui: React.ReactElement) => {
-    return rtlRender(
-      <I18nextProvider i18n={testI18n}>
-        <ApiProvider apiService={mockApiService}>
-          {ui}
-        </ApiProvider>
-      </I18nextProvider>
-    );
-  };
-
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockNavigate.mockReset();
-    mockSetSearchParams.mockReset();
-    mockSearchParams = new URLSearchParams();
-    mockUseNavigate.mockReturnValue(mockNavigate);
-    mockUseSearchParams.mockReturnValue([mockSearchParams, mockSetSearchParams]);
-    mockBookSearchReturn = createBookSearchMock();
-    mockUseBookSearch.mockReturnValue(mockBookSearchReturn);
-    mockUseBooksReturn = createBooksHookMock();
-    mockUseBooksHook.mockReturnValue(mockUseBooksReturn as any);
-    mockSearchParams.get = vi.fn((key: string) => (key === 'q' ? 'initial' : null));
+    currentSearchParams = new URLSearchParams();
+    mockSetSearchParams.mockClear();
+    bookSearchState = createBookSearchState();
+    booksState = createBooksState();
   });
-
-
-  /* Temporarily disable the remaining BooksPage tests to keep CI stable.
-     Re-enable them incrementally once the Vitest hangs are resolved.
 
   test('renders books page in list mode by default', () => {
-    renderWithProvider(<BooksPage />);
+    renderBooksPage();
     expect(screen.getByTestId('book-list')).toBeInTheDocument();
     expect(screen.getByTestId('search-form')).toBeInTheDocument();
   });
-*/
 
   test('switches to grid view mode', () => {
-    renderWithProvider(<BooksPage />);
-
+    renderBooksPage();
     const gridButton = screen.getByRole('button', { name: /grid view/i });
     fireEvent.click(gridButton);
-
-    const bookList = screen.getByTestId('book-list');
-    expect(bookList).toHaveAttribute('data-view-mode', 'grid');
+    expect(screen.getByTestId('book-list')).toHaveAttribute('data-view-mode', 'grid');
   });
 
-
-  /* Temporarily disable the remaining BooksPage tests to keep CI stable.
-     Re-enable them incrementally once the Vitest hangs are resolved.
   test('switches to list view mode', () => {
-    renderWithProvider(<BooksPage />);
-
+    renderBooksPage();
     const listButton = screen.getByRole('button', { name: /list view/i });
     fireEvent.click(listButton);
-
-    const bookList = screen.getByTestId('book-list');
-    expect(bookList).toHaveAttribute('data-view-mode', 'list');
+    expect(screen.getByTestId('book-list')).toHaveAttribute('data-view-mode', 'list');
   });
 
-  test('opens add book form', () => {
-    renderWithProvider(<BooksPage />);
-
-    const addButton = screen.getByTestId('button-contained');
-    expect(addButton).toBeInTheDocument();
-    fireEvent.click(addButton);
-
+  test('opens and cancels add book form', () => {
+    renderBooksPage();
+    fireEvent.click(screen.getByRole('button', { name: /add book/i }));
     expect(screen.getByTestId('book-form')).toBeInTheDocument();
-    expect(screen.queryByTestId('book-list')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('form-cancel'));
+    expect(screen.getByTestId('book-list')).toBeInTheDocument();
   });
 
-  test('renders book list with books', () => {
-    mockSearchParams.get = vi.fn().mockReturnValue(null);
-    renderWithProvider(<BooksPage />);
-    
+  test('renders book list items when library data is available', () => {
+    renderBooksPage();
     expect(screen.getByText('Select Library Book 1')).toBeInTheDocument();
-    expect(screen.getByText('Edit Library Book 1')).toBeInTheDocument();
-    expect(screen.getByText('Delete Library Book 1')).toBeInTheDocument();
     expect(screen.getByText('Select Library Book 2')).toBeInTheDocument();
   });
 
-  test('displays book count', () => {
-    renderWithProvider(<BooksPage />);
-    
+  test('displays total count in heading', () => {
+    renderBooksPage();
     expect(screen.getByText('2 books in your library')).toBeInTheDocument();
   });
 
-  test('performs search', () => {
-    renderWithProvider(<BooksPage />);
-    
-    const searchButton = screen.getByText('Search');
-    fireEvent.click(searchButton);
-    
-    // Should update search params with query
-    expect(mockSetSearchParams).toHaveBeenCalledWith(
-      expect.objectContaining({
-        get: expect.any(Function),
-        set: expect.any(Function),
-      })
-    );
+  test('performs search and updates params', () => {
+    renderBooksPage();
+    fireEvent.click(screen.getByTestId('search-button'));
+    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams));
   });
 
-  test('clears search', () => {
-    // Set up search params with a query so the clear chip appears
-    const searchParamsWithQuery = new URLSearchParams();
-    searchParamsWithQuery.set('q', 'test query');
-    mockUseSearchParams.mockReturnValue([searchParamsWithQuery, mockSetSearchParams]);
-
-    renderWithProvider(<BooksPage />);
-
-    // Click the "Clear search" chip
-    const clearChip = screen.getByText('Clear search');
-    fireEvent.click(clearChip);
-
-    // Should call clearSearch on the hook
-    expect(mockBookSearchReturn.clearSearch).toHaveBeenCalled();
-    // Should clear search params
+  test('clears search chip resets params and results', () => {
+    currentSearchParams = new URLSearchParams([['q', 'history']]);
+    renderBooksPage();
+    fireEvent.click(screen.getByText('Clear search'));
     expect(mockSetSearchParams).toHaveBeenCalledWith({});
+    expect(bookSearchState.clearSearch).toHaveBeenCalled();
   });
 
-  test('renders search form', () => {
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByTestId('search-form')).toBeInTheDocument();
-    expect(screen.getByText('Search')).toBeInTheDocument();
-    expect(screen.getByText('Clear')).toBeInTheDocument();
+  test('loads user books when there is no active search', () => {
+    renderBooksPage();
+    expect(booksState.loadBooks).toHaveBeenCalledWith(1);
   });
 
-  test('renders view mode controls', () => {
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByTestId('grid-icon')).toBeInTheDocument();
-    expect(screen.getByTestId('list-icon')).toBeInTheDocument();
+  test('runs search when query param is present', () => {
+    currentSearchParams = new URLSearchParams([['q', 'sci-fi']]);
+    renderBooksPage();
+    expect(bookSearchState.searchBooks).toHaveBeenCalledWith('sci-fi', {});
   });
 
-  test('cancels book form', () => {
-    renderWithProvider(<BooksPage />);
-
-    // Open add form
-    const addButton = screen.getByTestId('button-contained');
-    expect(addButton).toBeInTheDocument();
-    fireEvent.click(addButton);
-
-    // Cancel form
-    const cancelButton = screen.getByText('Cancel');
-    fireEvent.click(cancelButton);
-
-    expect(screen.getByTestId('book-list')).toBeInTheDocument();
-    expect(screen.queryByTestId('book-form')).not.toBeInTheDocument();
-  });
-
-  test('renders page header with title', () => {
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByText('My Books')).toBeInTheDocument();
-  });
-
-  test('handles URL search params on mount', () => {
-    mockSearchParams.get = vi.fn((key) => {
-      if (key === 'mode') return 'add';
-      return null;
-    });
-    
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByTestId('book-form')).toBeInTheDocument();
-  });
-
-  test('handles book interactions', async () => {
-    renderWithProvider(<BooksPage />);
-
-    // Test add book button triggers add mode
-    const addButton = screen.getByTestId('button-contained');
-    expect(addButton).toBeInTheDocument();
-    fireEvent.click(addButton);
-    expect(screen.getByTestId('book-form')).toBeInTheDocument();
-  });
-
-  test('handles loading states', () => {
-    mockBookSearchReturn.loading = true;
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByTestId('search-form')).toHaveAttribute('data-loading', 'true');
-  });
-
-  test('displays error states', () => {
-    mockBookSearchReturn.error = 'Search error';
-    renderWithProvider(<BooksPage />);
-    
-    // Component should still render even with error
-    expect(screen.getByTestId('book-list')).toBeInTheDocument();
-  });
-
-  test('handles empty book list', () => {
-    mockBookSearchReturn.books = [];
-    mockBookSearchReturn.totalCount = 0;
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByText('Your personal book collection')).toBeInTheDocument();
-  });
-
-  test('handles search params with query', () => {
-    mockSearchParams.get = vi.fn((key) => {
-      if (key === 'q') return 'test query';
-      return null;
-    });
-    
-    renderWithProvider(<BooksPage />);
-    
-    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('test query', {});
-  });
-
-  test('handles search params with filters', () => {
-    mockSearchParams.get = vi.fn((key) => {
-      if (key === 'categoryId') return '1';
-      if (key === 'authorId') return '2';
-      if (key === 'sortBy') return 'title';
-      return null;
-    });
-    
-    renderWithProvider(<BooksPage />);
-    
-    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {
-      categoryId: 1,
-      authorId: 2,
-      sortBy: 'title'
-    });
-  });
-
-  test('loads user books when no search params', () => {
-    mockSearchParams.get = vi.fn().mockReturnValue(null);
-
-    renderWithProvider(<BooksPage />);
-
-    expect(mockUseBooksReturn.loadBooks).toHaveBeenCalledWith(1);
-  });
-
-  test('renders with different book counts', () => {
-    mockSearchParams.get = vi.fn().mockReturnValue(null);
-    mockUseBooksReturn.totalCount = 5;
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByText('5 books in your library')).toBeInTheDocument();
-  });
-
-  test('renders singular book count', () => {
-    mockSearchParams.get = vi.fn().mockReturnValue(null);
-    mockUseBooksReturn.totalCount = 1;
-    mockUseBooksReturn.books = [{ id: 1, title: 'Single Book', isbn: '123' }];
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByText('1 book in your library')).toBeInTheDocument();
-  });
-
-  test('handles has more books', () => {
-    mockBookSearchReturn.hasMore = true;
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByTestId('book-list')).toBeInTheDocument();
-  });
-
-  test('renders when search error occurs', () => {
-    mockBookSearchReturn.error = 'Search failed';
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByTestId('book-list')).toBeInTheDocument();
-  });
-
-  test('handles no books scenario', () => {
-    mockSearchParams.get = vi.fn().mockReturnValue(null);
-    mockUseBooksReturn.books = [];
-    mockUseBooksReturn.totalCount = 0;
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByText('No books yet')).toBeInTheDocument();
-  });
-
-  test('renders with search query from URL', () => {
-    mockSearchParams.get = vi.fn((key) => {
-      if (key === 'q') return 'test search';
-      return null;
-    });
-    
-    renderWithProvider(<BooksPage />);
-    
-    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('test search', {});
-  });
-
-  test('calls status change handler', async () => {
-    renderWithProvider(<BooksPage />);
-
-    // Use the stored callback
-    expect(mockOnStatusChange).toBeDefined();
-    await act(async () => {
-      await mockOnStatusChange(1, 'read');
-    });
-    expect(mockUseBooksReturn.updateBookStatus).toHaveBeenCalledWith(1, 'read');
-  });
-
-  test('handles different view modes', () => {
-    renderWithProvider(<BooksPage />);
-
-    // Click list view
-    const listButton = screen.getByRole('button', { name: /list view/i });
-    fireEvent.click(listButton);
-
-    const bookList = screen.getByTestId('book-list');
-    expect(bookList).toHaveAttribute('data-view-mode', 'list');
-  });
-
-  test('renders multiple books correctly', () => {
-    mockSearchParams.get = vi.fn().mockReturnValue(null);
-    mockUseBooksReturn.books = [
-      { id: 1, title: 'Book 1', isbn: '123' },
-      { id: 2, title: 'Book 2', isbn: '456' },
-      { id: 3, title: 'Book 3', isbn: '789' }
-    ];
-    mockUseBooksReturn.totalCount = 3;
-    
-    renderWithProvider(<BooksPage />);
-    
-    expect(screen.getByText('3 books in your library')).toBeInTheDocument();
-    expect(screen.getByTestId('book-item-1')).toBeInTheDocument();
-    expect(screen.getByTestId('book-item-2')).toBeInTheDocument();
-    expect(screen.getByTestId('book-item-3')).toBeInTheDocument();
-  });
-
-  test('handles all search filter combinations', () => {
-    mockSearchParams.get = vi.fn((key) => {
-      if (key === 'q') return 'fantasy';
-      if (key === 'categoryId') return '5';
-      if (key === 'authorId') return '10';
-      if (key === 'sortBy') return 'author';
-      return null;
-    });
-    
-    renderWithProvider(<BooksPage />);
-    
-    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('fantasy', {
-      categoryId: 5,
-      authorId: 10,
-      sortBy: 'author'
-    });
-  });
-
-  test('handles complex search parameters scenario', () => {
-    mockSearchParams.get = vi.fn((key) => {
-      if (key === 'categoryId') return '3';
-      if (key === 'sortBy') return 'date';
-      return null;
-    });
-    
-    renderWithProvider(<BooksPage />);
-    
-    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {
+  test('runs search when filters exist', () => {
+    currentSearchParams = new URLSearchParams([
+      ['categoryId', '3'],
+      ['authorId', '9'],
+      ['sortBy', 'title'],
+    ]);
+    renderBooksPage();
+    expect(bookSearchState.searchBooks).toHaveBeenCalledWith('', {
       categoryId: 3,
-      sortBy: 'date'
+      authorId: 9,
+      sortBy: 'title',
     });
   });
 
-  test('handles author-only search filter', () => {
-    mockSearchParams.get = vi.fn((key) => {
-      if (key === 'authorId') return '7';
-      return null;
-    });
-    
-    renderWithProvider(<BooksPage />);
-    
-    expect(mockBookSearchReturn.searchBooks).toHaveBeenCalledWith('', {
-      authorId: 7
-    });
+  test('opens add mode when mode=add param is provided', () => {
+    currentSearchParams = new URLSearchParams([['mode', 'add']]);
+    renderBooksPage();
+    expect(screen.getByTestId('book-form')).toBeInTheDocument();
+    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams));
   });
 
-  test('calls loadMore function when available', () => {
-    mockBookSearchReturn.hasMore = true;
-    renderWithProvider(<BooksPage />);
-    
-    expect(mockBookSearchReturn.loadMore).toBeDefined();
+  test('handles load more button when there are more results', () => {
+    booksState.hasMore = true;
+    renderBooksPage();
+    fireEvent.click(screen.getByRole('button', { name: /load more/i }));
+    expect(booksState.loadMore).toHaveBeenCalled();
   });
-  */
+
+  test('shows search results count when search active', () => {
+    currentSearchParams = new URLSearchParams([['q', 'fiction']]);
+    renderBooksPage();
+    expect(screen.getByText(/books found/i)).toBeInTheDocument();
+  });
+
+  test('handles selecting a book to open details', () => {
+    renderBooksPage();
+    fireEvent.click(screen.getByTestId('select-10'));
+    expect(screen.getByTestId('book-details')).toBeInTheDocument();
+  });
+
+  test('handles editing a book from details', () => {
+    renderBooksPage();
+    fireEvent.click(screen.getByTestId('select-10'));
+    fireEvent.click(screen.getByTestId('details-edit'));
+    expect(screen.getByTestId('book-form')).toBeInTheDocument();
+    expect(screen.getByTestId('book-form')).toHaveAttribute('data-book-id', '10');
+  });
+
+  test('handles deleting a book and refreshing library', async () => {
+    renderBooksPage();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('delete-10'));
+    });
+    expect(booksState.deleteBook).toHaveBeenCalledWith(10);
+    expect(booksState.refreshBooks).toHaveBeenCalled();
+  });
+
+  test('handles status change action', async () => {
+    renderBooksPage();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('status-10'));
+    });
+    expect(booksState.updateBookStatus).toHaveBeenCalledWith(10, 'read');
+  });
+
+  test('shows empty message when no books present', () => {
+    booksState.books = [];
+    booksState.totalCount = 0;
+    renderBooksPage();
+    expect(screen.getByTestId('empty-message')).toHaveTextContent('No books yet');
+  });
 });
