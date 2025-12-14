@@ -2,14 +2,14 @@
  * Book Validation Schemas
  *
  * Validation schemas for book-related endpoints.
- * Leverages existing book validation from utils/validation.ts
+ * Uses shared-validation library for consistent ISBN validation.
  */
 
 import Joi from 'joi';
 import { bookValidationSchema } from '../../utils/validation';
 import { commonSchemas } from './common.schema';
 import { BOOK_STATUS } from '../../utils/constants';
-import { validateIsbn } from '../../utils/isbn';
+import { validateIsbn, ISBN_CONSTRAINTS, ISBN_PATTERNS } from '@my-many-books/shared-validation';
 
 /**
  * Create book schema
@@ -98,10 +98,13 @@ export const bookIdParamSchema = Joi.object({
 
 /**
  * ISBN param schema
+ * Uses shared ISBN pattern for consistency
  */
 export const isbnParamSchema = Joi.object({
   isbn: Joi.string()
-    .pattern(/^(?:\d{10}|\d{13}|[\d-]{10,17})$/)
+    .min(ISBN_CONSTRAINTS.MIN_LENGTH)
+    .max(ISBN_CONSTRAINTS.MAX_LENGTH)
+    .pattern(ISBN_PATTERNS.NORMALIZED)
     .required()
     .messages({
       'string.pattern.base': 'ISBN must be a valid ISBN-10 or ISBN-13 format',
