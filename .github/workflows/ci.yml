@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/logging, fix/workflow-test-hanging ]
+    branches: [ main, develop, feature/architecture-improvements, feature/logging ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, feature/logging, fix/workflow-test-hanging ]
+    branches: [ main, develop, feature/architecture-improvements, feature/logging ]
   workflow_dispatch:
     inputs:
       run_tests:
