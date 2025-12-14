@@ -33,7 +33,11 @@ vi.mock('../../hooks/useBooks', () => ({
   useBooks: mockUseBooks,
 }));
 
-//setupMuiMock();
+const shouldMockMui = process.env.MOCK_MUI === 'true';
+
+if (shouldMockMui) {
+  setupMuiMock();
+}
 
 vi.mock('@mui/icons-material/Add', () => ({
   default: () => <span data-testid="add-icon">Add</span>,
@@ -132,6 +136,72 @@ const mockApiService = {
   logout: vi.fn(),
 } as any;
 
+const testI18n = i18n.createInstance();
+const i18nReady = testI18n.use(initReactI18next).init({
+  lng: 'en',
+  fallbackLng: 'en',
+  ns: ['common', 'pages'],
+  defaultNS: 'common',
+  resources: {
+    en: {
+      common: {},
+      pages: {
+        books: {
+          title: 'My Books',
+          description: 'Your personal book collection',
+          description_with_count_one: '{{count}} book in your library',
+          description_with_count_other: '{{count}} books in your library',
+          no_books_empty: 'No books yet',
+          books_found: 'books found',
+          clear_search: 'Clear search',
+          add_book: 'Add book',
+          add: 'Add',
+          grid_view: 'Grid view',
+          list_view: 'List view',
+          loading: 'Loading...',
+          no_books_search: 'No books match your search',
+          load_more: 'Load more',
+        },
+      },
+    },
+  },
+  interpolation: {
+    escapeValue: false,
+  },
+});
+
+const createBookSearchMock = () => ({
+  books: [
+    { id: 1, title: 'Test Book 1', isbn: '123' },
+    { id: 2, title: 'Test Book 2', isbn: '456' },
+  ],
+  loading: false,
+  error: null,
+  totalCount: 2,
+  hasMore: false,
+  searchBooks: vi.fn(),
+  loadMore: vi.fn(),
+  clearSearch: vi.fn(),
+});
+
+const createBooksHookMock = () => ({
+  books: [
+    { id: 1, title: 'Library Book 1', isbn: '789' },
+    { id: 2, title: 'Library Book 2', isbn: '012' },
+  ],
+  loading: false,
+  error: null,
+  totalCount: 2,
+  hasMore: false,
+  loadBooks: vi.fn().mockResolvedValue(undefined),
+  loadMore: vi.fn().mockResolvedValue(undefined),
+  createBook: vi.fn().mockResolvedValue({ id: 3, title: 'Created Book' }),
+  updateBook: vi.fn().mockResolvedValue({ id: 1, title: 'Updated Book' }),
+  deleteBook: vi.fn().mockResolvedValue(true),
+  updateBookStatus: vi.fn().mockResolvedValue({ id: 1, status: 'finished' }),
+  refreshBooks: vi.fn().mockResolvedValue(undefined),
+});
+
 describe('BooksPage', () => {
   // Get mocked functions
   const mockUseSearchParams = vi.mocked(useSearchParams);
@@ -140,70 +210,18 @@ describe('BooksPage', () => {
   const mockUseBooksHook = vi.mocked(useBooks);
   const mockNavigate = vi.fn();
   const mockSetSearchParams = vi.fn();
-  const mockSearchParams = new URLSearchParams();
-
-  const mockBookSearchReturn = {
-    books: [
-      { id: 1, title: 'Test Book 1', isbn: '123' },
-      { id: 2, title: 'Test Book 2', isbn: '456' },
-    ],
-    loading: false,
-    error: null,
-    totalCount: 2,
-    hasMore: false,
-    searchBooks: vi.fn(),
-    loadMore: vi.fn(),
-    clearSearch: vi.fn(),
-  };
-
-  const mockUseBooksReturn = {
-    books: [
-      { id: 1, title: 'Library Book 1', isbn: '789' },
-      { id: 2, title: 'Library Book 2', isbn: '012' },
-    ],
-    loading: false,
-    error: null,
-    totalCount: 2,
-    hasMore: false,
-    loadBooks: vi.fn().mockResolvedValue(undefined),
-    loadMore: vi.fn().mockResolvedValue(undefined),
-    createBook: vi.fn().mockResolvedValue({ id: 3, title: 'Created Book' }),
-    updateBook: vi.fn().mockResolvedValue({ id: 1, title: 'Updated Book' }),
-    deleteBook: vi.fn().mockResolvedValue(true),
-    updateBookStatus: vi.fn().mockResolvedValue({ id: 1, status: 'finished' }),
-    refreshBooks: vi.fn().mockResolvedValue(undefined),
-  };
-
-  // Create test i18n instance
-  const testI18n = i18n.createInstance();
-  const i18nReady = testI18n.use(initReactI18next).init({
-    lng: 'en',
-    fallbackLng: 'en',
-    ns: ['common', 'pages'],
-    defaultNS: 'common',
-    resources: {
-      en: {
-        common: {},
-        pages: {
-          books: {
-            title: 'My Books',
-            description: 'Your personal book collection',
-            description_with_count_one: '{{count}} book in your library',
-            description_with_count_other: '{{count}} books in your library',
-            no_books_empty: 'No books yet',
-            books_found: 'books found',
-            clear_search: 'Clear search',
-          },
-        },
-      },
-    },
-    interpolation: {
-      escapeValue: false,
-    },
-  });
+  let mockSearchParams = new URLSearchParams();
+  let mockBookSearchReturn = createBookSearchMock();
+  let mockUseBooksReturn = createBooksHookMock();
 
   beforeAll(async () => {
     await i18nReady;
+  });
+
+  afterAll(() => {
+    if (shouldMockMui) {
+      vi.unmock('@mui/material');
+    }
   });
 
   // Helper to render with ApiProvider and I18nextProvider
@@ -219,32 +237,15 @@ describe('BooksPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockNavigate.mockReset();
+    mockSetSearchParams.mockReset();
+    mockSearchParams = new URLSearchParams();
     mockUseNavigate.mockReturnValue(mockNavigate);
     mockUseSearchParams.mockReturnValue([mockSearchParams, mockSetSearchParams]);
-    
-    // Reset to default state
-    mockBookSearchReturn.books = [
-      { id: 1, title: 'Test Book 1', isbn: '123' },
-      { id: 2, title: 'Test Book 2', isbn: '456' },
-    ];
-    mockBookSearchReturn.loading = false;
-    mockBookSearchReturn.error = null;
-    mockBookSearchReturn.totalCount = 2;
-    mockBookSearchReturn.hasMore = false;
-    
+    mockBookSearchReturn = createBookSearchMock();
     mockUseBookSearch.mockReturnValue(mockBookSearchReturn);
-
-    mockUseBooksReturn.books = [
-      { id: 1, title: 'Library Book 1', isbn: '789' },
-      { id: 2, title: 'Library Book 2', isbn: '012' },
-    ];
-    mockUseBooksReturn.loading = false;
-    mockUseBooksReturn.error = null;
-    mockUseBooksReturn.totalCount = 2;
-    mockUseBooksReturn.hasMore = false;
+    mockUseBooksReturn = createBooksHookMock();
     mockUseBooksHook.mockReturnValue(mockUseBooksReturn as any);
-    
-    // Mock URLSearchParams methods
     mockSearchParams.get = vi.fn((key: string) => (key === 'q' ? 'initial' : null));
   });
 
@@ -262,10 +263,8 @@ describe('BooksPage', () => {
   test('switches to grid view mode', () => {
     renderWithProvider(<BooksPage />);
 
-    const iconButtons = screen.getAllByTestId('icon-button');
-    const gridButton = iconButtons.find(btn => btn.textContent?.includes('Grid'));
-    expect(gridButton).toBeTruthy();
-    fireEvent.click(gridButton!);
+    const gridButton = screen.getByRole('button', { name: /grid view/i });
+    fireEvent.click(gridButton);
 
     const bookList = screen.getByTestId('book-list');
     expect(bookList).toHaveAttribute('data-view-mode', 'grid');
@@ -277,10 +276,8 @@ describe('BooksPage', () => {
   test('switches to list view mode', () => {
     renderWithProvider(<BooksPage />);
 
-    const iconButtons = screen.getAllByTestId('icon-button');
-    const listButton = iconButtons.find(btn => btn.textContent?.includes('List'));
-    expect(listButton).toBeTruthy();
-    fireEvent.click(listButton!);
+    const listButton = screen.getByRole('button', { name: /list view/i });
+    fireEvent.click(listButton);
 
     const bookList = screen.getByTestId('book-list');
     expect(bookList).toHaveAttribute('data-view-mode', 'list');
@@ -529,10 +526,8 @@ describe('BooksPage', () => {
     renderWithProvider(<BooksPage />);
 
     // Click list view
-    const iconButtons = screen.getAllByTestId('icon-button');
-    const listButton = iconButtons.find(btn => btn.textContent?.includes('List'));
-    expect(listButton).toBeTruthy();
-    fireEvent.click(listButton!);
+    const listButton = screen.getByRole('button', { name: /list view/i });
+    fireEvent.click(listButton);
 
     const bookList = screen.getByTestId('book-list');
     expect(bookList).toHaveAttribute('data-view-mode', 'list');
