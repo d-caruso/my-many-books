@@ -11,6 +11,7 @@ import {
 } from '../constants/category.constants';
 import { ValidationResult } from '../types/validation.types';
 import { isEmpty, trim } from '../utils/string.utils';
+import { getI18nKey } from '../errors/i18n-keys';
 
 /**
  * Validate category name
@@ -20,7 +21,8 @@ export function validateCategoryName(name: string): ValidationResult {
     return {
       isValid: false,
       error: CATEGORY_ERROR_MESSAGES.NAME_REQUIRED,
-      errorCode: 'NAME_REQUIRED',
+      errorCode: 'CATEGORY_NAME_REQUIRED',
+      i18nKey: getI18nKey('CATEGORY_NAME_REQUIRED'),
     };
   }
 
@@ -30,7 +32,8 @@ export function validateCategoryName(name: string): ValidationResult {
     return {
       isValid: false,
       error: CATEGORY_ERROR_MESSAGES.NAME_TOO_SHORT,
-      errorCode: 'NAME_TOO_SHORT',
+      errorCode: 'CATEGORY_NAME_TOO_SHORT',
+      i18nKey: getI18nKey('CATEGORY_NAME_TOO_SHORT'),
     };
   }
 
@@ -38,7 +41,8 @@ export function validateCategoryName(name: string): ValidationResult {
     return {
       isValid: false,
       error: CATEGORY_ERROR_MESSAGES.NAME_TOO_LONG,
-      errorCode: 'NAME_TOO_LONG',
+      errorCode: 'CATEGORY_NAME_TOO_LONG',
+      i18nKey: getI18nKey('CATEGORY_NAME_TOO_LONG'),
     };
   }
 

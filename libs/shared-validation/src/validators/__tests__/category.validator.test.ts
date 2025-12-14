@@ -22,7 +22,7 @@ describe('category.validator', () => {
       const result = validateCategoryName('');
       expect(result.isValid).toBe(false);
       expect(result.error).toBe(CATEGORY_ERROR_MESSAGES.NAME_REQUIRED);
-      expect(result.errorCode).toBe('NAME_REQUIRED');
+      expect(result.errorCode).toBe('CATEGORY_NAME_REQUIRED');
     });
 
     it('should reject category name that is too long', () => {
@@ -30,7 +30,7 @@ describe('category.validator', () => {
       const result = validateCategoryName(longName);
       expect(result.isValid).toBe(false);
       expect(result.error).toBe(CATEGORY_ERROR_MESSAGES.NAME_TOO_LONG);
-      expect(result.errorCode).toBe('NAME_TOO_LONG');
+      expect(result.errorCode).toBe('CATEGORY_NAME_TOO_LONG');
     });
 
     it('should trim whitespace', () => {

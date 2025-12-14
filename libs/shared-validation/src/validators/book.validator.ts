@@ -14,34 +14,41 @@ import {
 } from '../constants/book.constants';
 import { ValidationResult } from '../types/validation.types';
 import { isEmpty, trim } from '../utils/string.utils';
+import { getI18nKey } from '../errors/i18n-keys';
 
 /**
  * Validate book title
  */
 export function validateTitle(title: string): ValidationResult {
   if (isEmpty(title)) {
+    const errorCode = 'TITLE_REQUIRED';
     return {
       isValid: false,
       error: BOOK_ERROR_MESSAGES.TITLE_REQUIRED,
-      errorCode: 'TITLE_REQUIRED',
+      errorCode,
+      i18nKey: getI18nKey(errorCode),
     };
   }
 
   const trimmed = trim(title);
 
   if (trimmed.length < BOOK_CONSTRAINTS.TITLE.MIN_LENGTH) {
+    const errorCode = 'TITLE_TOO_SHORT';
     return {
       isValid: false,
       error: BOOK_ERROR_MESSAGES.TITLE_TOO_SHORT,
-      errorCode: 'TITLE_TOO_SHORT',
+      errorCode,
+      i18nKey: getI18nKey(errorCode),
     };
   }
 
   if (trimmed.length > BOOK_CONSTRAINTS.TITLE.MAX_LENGTH) {
+    const errorCode = 'TITLE_TOO_LONG';
     return {
       isValid: false,
       error: BOOK_ERROR_MESSAGES.TITLE_TOO_LONG,
-      errorCode: 'TITLE_TOO_LONG',
+      errorCode,
+      i18nKey: getI18nKey(errorCode),
     };
   }
 
@@ -57,10 +64,12 @@ export function validateNotes(notes: string | null | undefined): ValidationResul
   }
 
   if (notes.length > BOOK_CONSTRAINTS.NOTES.MAX_LENGTH) {
+    const errorCode = 'NOTES_TOO_LONG';
     return {
       isValid: false,
       error: BOOK_ERROR_MESSAGES.NOTES_TOO_LONG,
-      errorCode: 'NOTES_TOO_LONG',
+      errorCode,
+      i18nKey: getI18nKey(errorCode),
     };
   }
 
@@ -72,10 +81,12 @@ export function validateNotes(notes: string | null | undefined): ValidationResul
  */
 export function validateStatus(status: string): ValidationResult {
   if (!VALID_BOOK_STATUSES.includes(status as BookStatus)) {
+    const errorCode = 'INVALID_STATUS';
     return {
       isValid: false,
       error: BOOK_ERROR_MESSAGES.INVALID_STATUS,
-      errorCode: 'INVALID_STATUS',
+      errorCode,
+      i18nKey: getI18nKey(errorCode),
     };
   }
 
@@ -91,10 +102,12 @@ export function validateEditionNumber(editionNumber: number | null | undefined):
   }
 
   if (!Number.isInteger(editionNumber) || editionNumber < BOOK_CONSTRAINTS.EDITION_NUMBER.MIN) {
+    const errorCode = 'EDITION_NUMBER_INVALID';
     return {
       isValid: false,
       error: BOOK_ERROR_MESSAGES.EDITION_NUMBER_INVALID,
-      errorCode: 'EDITION_NUMBER_INVALID',
+      errorCode,
+      i18nKey: getI18nKey(errorCode),
     };
   }
 
@@ -113,10 +126,12 @@ export function validateEditionDate(editionDate: string | Date | null | undefine
   const date = typeof editionDate === 'string' ? new Date(editionDate) : editionDate;
 
   if (isNaN(date.getTime())) {
+    const errorCode = 'EDITION_DATE_INVALID';
     return {
       isValid: false,
       error: BOOK_ERROR_MESSAGES.EDITION_DATE_INVALID,
-      errorCode: 'EDITION_DATE_INVALID',
+      errorCode,
+      i18nKey: getI18nKey(errorCode),
     };
   }
 

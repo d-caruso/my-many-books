@@ -12,6 +12,7 @@ import {
 } from '../constants/author.constants';
 import { ValidationResult } from '../types/validation.types';
 import { isEmpty, trim } from '../utils/string.utils';
+import { getI18nKey } from '../errors/i18n-keys';
 
 /**
  * Validate author name (first name)
@@ -22,6 +23,7 @@ export function validateAuthorName(name: string): ValidationResult {
       isValid: false,
       error: AUTHOR_ERROR_MESSAGES.NAME_REQUIRED,
       errorCode: 'NAME_REQUIRED',
+      i18nKey: getI18nKey('NAME_REQUIRED'),
     };
   }
 
@@ -32,6 +34,7 @@ export function validateAuthorName(name: string): ValidationResult {
       isValid: false,
       error: AUTHOR_ERROR_MESSAGES.NAME_TOO_SHORT,
       errorCode: 'NAME_TOO_SHORT',
+      i18nKey: getI18nKey('NAME_TOO_SHORT'),
     };
   }
 
@@ -40,6 +43,7 @@ export function validateAuthorName(name: string): ValidationResult {
       isValid: false,
       error: AUTHOR_ERROR_MESSAGES.NAME_TOO_LONG,
       errorCode: 'NAME_TOO_LONG',
+      i18nKey: getI18nKey('NAME_TOO_LONG'),
     };
   }
 
@@ -48,6 +52,7 @@ export function validateAuthorName(name: string): ValidationResult {
       isValid: false,
       error: AUTHOR_ERROR_MESSAGES.NAME_INVALID_CHARS,
       errorCode: 'NAME_INVALID_CHARS',
+      i18nKey: getI18nKey('NAME_INVALID_CHARS'),
     };
   }
 
@@ -63,6 +68,7 @@ export function validateAuthorSurname(surname: string): ValidationResult {
       isValid: false,
       error: AUTHOR_ERROR_MESSAGES.SURNAME_REQUIRED,
       errorCode: 'SURNAME_REQUIRED',
+      i18nKey: getI18nKey('SURNAME_REQUIRED'),
     };
   }
 
@@ -73,6 +79,7 @@ export function validateAuthorSurname(surname: string): ValidationResult {
       isValid: false,
       error: AUTHOR_ERROR_MESSAGES.SURNAME_TOO_SHORT,
       errorCode: 'SURNAME_TOO_SHORT',
+      i18nKey: getI18nKey('SURNAME_TOO_SHORT'),
     };
   }
 
@@ -81,6 +88,7 @@ export function validateAuthorSurname(surname: string): ValidationResult {
       isValid: false,
       error: AUTHOR_ERROR_MESSAGES.SURNAME_TOO_LONG,
       errorCode: 'SURNAME_TOO_LONG',
+      i18nKey: getI18nKey('SURNAME_TOO_LONG'),
     };
   }
 
@@ -89,6 +97,7 @@ export function validateAuthorSurname(surname: string): ValidationResult {
       isValid: false,
       error: AUTHOR_ERROR_MESSAGES.SURNAME_INVALID_CHARS,
       errorCode: 'SURNAME_INVALID_CHARS',
+      i18nKey: getI18nKey('SURNAME_INVALID_CHARS'),
     };
   }
 
@@ -110,6 +119,7 @@ export function validateNationality(nationality: string | null | undefined): Val
       isValid: false,
       error: AUTHOR_ERROR_MESSAGES.NATIONALITY_TOO_LONG,
       errorCode: 'NATIONALITY_TOO_LONG',
+      i18nKey: getI18nKey('NATIONALITY_TOO_LONG'),
     };
   }
 
