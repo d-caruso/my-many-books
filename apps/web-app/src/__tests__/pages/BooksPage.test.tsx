@@ -210,7 +210,7 @@ describe('BooksPage', () => {
   test('performs search and updates params', () => {
     renderBooksPage();
     fireEvent.click(screen.getByTestId('search-button'));
-    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams), { replace: true });
+    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams));
   });
 
   test('clears search chip resets params and results', () => {
@@ -250,7 +250,7 @@ describe('BooksPage', () => {
     currentSearchParams = new URLSearchParams([['mode', 'add']]);
     renderBooksPage();
     expect(screen.getByTestId('book-form')).toBeInTheDocument();
-    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams));
+    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams), { replace: true });
   });
 
   test('handles load more button when there are more results', () => {
