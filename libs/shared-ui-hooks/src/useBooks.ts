@@ -16,10 +16,10 @@ export interface BooksState<TBook extends Book = Book> {
 
 export interface BooksActions<TBook extends Book = Book, TForm extends BookFormData = BookFormData> {
   loadBooks: (page?: number) => Promise<void>;
-  createBook: (bookData: TForm) => Promise<TBook | null>;
-  updateBook: (id: number, bookData: Partial<TForm>) => Promise<TBook | null>;
+  createBook: (bookData: TForm) => Promise<TBook>;
+  updateBook: (id: number, bookData: Partial<TForm>) => Promise<TBook>;
   deleteBook: (id: number) => Promise<boolean>;
-  updateBookStatus: (id: number, status: TBook['status']) => Promise<TBook | null>;
+  updateBookStatus: (id: number, status: TBook['status']) => Promise<TBook>;
   refreshBooks: () => Promise<void>;
   loadMore: () => Promise<void>;
 }
@@ -88,7 +88,7 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
     }
   }, [api, pageSize]);
 
-  const createBook = useCallback(async (bookData: TForm): Promise<TBook | null> => {
+  const createBook = useCallback(async (bookData: TForm): Promise<TBook> => {
     try {
       const newBook = await api.createBook(bookData);
       setBooks(prev => [newBook, ...prev]);
@@ -97,11 +97,11 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
     } catch (err: any) {
       console.error('Failed to create book:', err);
       setError(err.response?.data?.message || err.message || 'Failed to create book');
-      return null;
+      throw err;
     }
   }, [api]);
 
-  const updateBook = useCallback(async (id: number, bookData: Partial<TForm>): Promise<TBook | null> => {
+  const updateBook = useCallback(async (id: number, bookData: Partial<TForm>): Promise<TBook> => {
     try {
       const updatedBook = await api.updateBook(id, bookData);
       setBooks(prev => prev.map(book => (book.id === id ? updatedBook : book)));
@@ -109,7 +109,7 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
     } catch (err: any) {
       console.error('Failed to update book:', err);
       setError(err.response?.data?.message || err.message || 'Failed to update book');
-      return null;
+      throw err;
     }
   }, [api]);
 
@@ -122,11 +122,11 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
     } catch (err: any) {
       console.error('Failed to delete book:', err);
       setError(err.response?.data?.message || err.message || 'Failed to delete book');
-      return false;
+      throw err;
     }
   }, [api]);
 
-  const updateBookStatus = useCallback(async (id: number, status: TBook['status']): Promise<TBook | null> => {
+  const updateBookStatus = useCallback(async (id: number, status: TBook['status']): Promise<TBook> => {
     try {
       const updatedBook = await api.updateBookStatus(id, status);
       setBooks(prev => prev.map(book => (book.id === id ? updatedBook : book)));
@@ -134,7 +134,7 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
     } catch (err: any) {
       console.error('Failed to update book status:', err);
       setError(err.response?.data?.message || err.message || 'Failed to update book status');
-      return null;
+      throw err;
     }
   }, [api]);
 
