@@ -55,6 +55,20 @@ export function normalizeUppercase(value: string): string {
 }
 
 /**
+ * Trims leading and trailing whitespace from a string
+ *
+ * @param value - Input string
+ * @returns Trimmed string
+ */
+export function trim(value: string): string {
+  if (!value || typeof value !== 'string') {
+    return '';
+  }
+
+  return value.trim();
+}
+
+/**
  * Checks if a string is null, undefined, or empty after trimming
  *
  * @param value - Input string
