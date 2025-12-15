@@ -159,17 +159,8 @@ const BooksPage: React.FC = () => {
   };
 
   const handleStatusChange = async (bookId: number, status: Book['status']) => {
-    setActionLoading(true);
-    setActionError(null);
-
     try {
       await updateBookStatusEntry(bookId, status);
-
-      if (searchActive) {
-        await runCurrentSearch();
-      } else {
-        await refreshBooks();
-      }
 
       if (selectedBook?.id === bookId) {
         setSelectedBook(prev => (prev ? { ...prev, status } : null));
@@ -177,8 +168,6 @@ const BooksPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to update book status:', err);
       setActionError(err.response?.data?.message || err.message || 'Failed to update book status');
-    } finally {
-      setActionLoading(false);
     }
   };
 
