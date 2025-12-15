@@ -51,6 +51,7 @@ describe('DatabaseUtils', () => {
       HookExecution: { count: jest.fn().mockResolvedValue(0) } as any,
       AuditLog: { count: jest.fn().mockResolvedValue(0) } as any,
       Setting: { count: jest.fn().mockResolvedValue(0) } as any,
+      AppSetting: { count: jest.fn().mockResolvedValue(0) } as any,
     });
 
     mockLogger = {
