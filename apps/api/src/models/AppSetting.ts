@@ -4,12 +4,12 @@
 // ================================================================
 
 import { DataTypes, Sequelize } from 'sequelize';
-import { BaseModel } from './base/BaseModel';
+import { BaseModel, BaseModelAttributes } from './base/BaseModel';
 
 export type SettingType = 'string' | 'number' | 'boolean' | 'enum' | 'json';
 export type SettingCategory = 'ui' | 'api' | 'features' | 'business' | 'security';
 
-export interface AppSettingAttributes {
+export interface AppSettingAttributes extends BaseModelAttributes {
   key: string;
   value: string;
   category: SettingCategory;
@@ -20,8 +20,6 @@ export interface AppSettingAttributes {
   deleted: boolean;
   deletedAt?: Date;
   lastSyncedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface AppSettingCreationAttributes {
@@ -46,10 +44,10 @@ export class AppSetting extends BaseModel<AppSettingAttributes> implements AppSe
   public deleted!: boolean;
   public deletedAt?: Date;
   public lastSyncedAt?: Date;
-  public readonly createdAt!: Date;
-  public updatedAt!: Date;
+  public override creationDate!: Date;
+  public override updateDate?: Date;
 
-  static getTableName(): string {
+  static override getTableName(): string {
     return 'app_settings';
   }
 
@@ -60,6 +58,7 @@ export class AppSetting extends BaseModel<AppSettingAttributes> implements AppSe
   static initModel(sequelize: Sequelize): typeof AppSetting {
     AppSetting.init(
       {
+        ...BaseModel.getBaseAttributes(),
         key: {
           type: DataTypes.STRING(100),
           primaryKey: true,
@@ -106,27 +105,11 @@ export class AppSetting extends BaseModel<AppSettingAttributes> implements AppSe
           allowNull: true,
           field: 'last_synced_at',
         },
-        createdAt: {
-          type: DataTypes.DATE,
-          allowNull: false,
-          defaultValue: DataTypes.NOW,
-          field: 'created_at',
-        },
-        updatedAt: {
-          type: DataTypes.DATE,
-          allowNull: false,
-          defaultValue: DataTypes.NOW,
-          field: 'updated_at',
-        },
       },
       {
-        sequelize,
-        tableName: 'app_settings',
-        timestamps: true,
-        underscored: true,
-        createdAt: 'created_at',
-        updatedAt: 'updated_at',
+        ...BaseModel.getBaseOptions(sequelize, 'app_settings'),
         indexes: [
+          ...BaseModel.getBaseOptions(sequelize, 'app_settings').indexes,
           {
             fields: ['active', 'deleted'],
             name: 'idx_app_settings_active_deleted',
@@ -143,7 +126,7 @@ export class AppSetting extends BaseModel<AppSettingAttributes> implements AppSe
   }
 
   // Instance methods
-  public toJSON(): AppSettingAttributes {
+  public override toJSON(): AppSettingAttributes {
     return {
       key: this.key,
       value: this.value,
@@ -155,8 +138,8 @@ export class AppSetting extends BaseModel<AppSettingAttributes> implements AppSe
       deleted: this.deleted,
       deletedAt: this.deletedAt,
       lastSyncedAt: this.lastSyncedAt,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      creationDate: this.creationDate,
+      updateDate: this.updateDate,
     };
   }
 
@@ -179,7 +162,7 @@ export class AppSetting extends BaseModel<AppSettingAttributes> implements AppSe
         default:
           return this.value;
       }
-    } catch (error) {
+    } catch {
       // If parsing fails, return default value
       return JSON.parse(this.defaultValue);
     }
