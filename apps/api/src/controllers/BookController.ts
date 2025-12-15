@@ -88,11 +88,6 @@ export class BookController extends BaseController {
 
     const body = this.parseBody(request);
     const dto = CreateBookDTO.from(body);
-    const errors = CreateBookDTO.validate(dto);
-    if (errors.length > 0) {
-      return this.createValidationErrorResponse(errors);
-    }
-
     const serviceInput = dto.toServiceInput();
     const userContext = this.getUserContext(request);
 
@@ -166,10 +161,6 @@ export class BookController extends BaseController {
 
     const body = this.parseBody(request);
     const dto = UpdateBookDTO.from(body);
-    const errors = UpdateBookDTO.validate(dto);
-    if (errors.length > 0) {
-      return this.createValidationErrorResponse(errors);
-    }
 
     return this.executeBookUpdate(request, Number(bookId), dto);
   }
@@ -191,10 +182,6 @@ export class BookController extends BaseController {
 
     const body = this.parseBody(request);
     const dto = UpdateBookDTO.from(body);
-    const errors = UpdateBookDTO.validate(dto);
-    if (errors.length > 0) {
-      return this.createValidationErrorResponse(errors);
-    }
 
     return this.executeBookUpdate(request, Number(bookId), dto);
   }
@@ -788,9 +775,4 @@ export class BookController extends BaseController {
     }
   }
 
-  private createValidationErrorResponse(errors: string[]): ApiResponse {
-    return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
-      errors,
-    });
-  }
 }

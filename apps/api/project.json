@@ -19,7 +19,7 @@
       "executor": "nx:run-commands",
       "defaultConfiguration": "development",
       "options": {
-        "command": "node --inspect dist/app.js",
+        "command": "node --inspect dist/apps/api/src/app.js",
         "cwd": "apps/api"
       },
       "dependsOn": ["build"]

@@ -49,7 +49,7 @@ export const createBookSchema = z.object({
   editionNumber: z.number().int().positive().optional(),
   editionDate: z.string().optional(),
   status: bookStatusEnum.optional(),
-  notes: z.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH, 'Notes too long').optional(),
+  notes: z.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH, 'Notes too long').nullable().optional(),
   selectedAuthors: z.array(z.any()).optional(), // Author objects
   selectedCategories: z.array(z.number()).optional(),
 });
@@ -78,7 +78,7 @@ export const adminBookSchema = z.object({
   editionNumber: z.number().int().positive().optional(),
   editionDate: z.string().optional(),
   status: bookStatusEnum.optional(),
-  notes: z.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH, 'Notes too long').optional(),
+  notes: z.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH, 'Notes too long').nullable().optional(),
 });
 
 /**

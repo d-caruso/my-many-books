@@ -1,60 +1,19 @@
 import { plainToInstance } from 'class-transformer';
-import {
-  IsArray,
-  IsDateString,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Length,
-  validateSync,
-} from 'class-validator';
-import { BOOK_STATUS } from '@my-many-books/shared-validation';
 import type { BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { CreateBookInput } from '../../services/book/BookService';
 
 export class CreateBookDTO {
-  @IsString()
-  @IsNotEmpty()
-  @Length(1, 255)
   title!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @Length(10, 20)
   isbnCode!: string;
-
-  @IsOptional()
   editionNumber?: number;
-
-  @IsOptional()
-  @IsDateString()
   editionDate?: string | null;
-
-  @IsOptional()
-  @IsEnum(BOOK_STATUS)
   status?: BookStatus;
-
-  @IsOptional()
-  @IsString()
-  @Length(0, 5000)
   notes?: string;
-
-  @IsOptional()
-  @IsArray()
   authorIds?: number[];
-
-  @IsOptional()
-  @IsArray()
   categoryIds?: number[];
 
   static from(body: unknown): CreateBookDTO {
     return plainToInstance(CreateBookDTO, body ?? {});
-  }
-
-  static validate(dto: CreateBookDTO): string[] {
-    const validationErrors = validateSync(dto, { whitelist: true, forbidNonWhitelisted: true });
-    return validationErrors.flatMap(error => Object.values(error.constraints || {}));
   }
 
   toServiceInput(): CreateBookInput {

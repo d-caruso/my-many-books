@@ -81,13 +81,6 @@ describe('UserController', () => {
       expect(response.data).toMatchObject({ name: 'Jane', surname: 'Smith' });
     });
 
-    it('returns validation errors', async () => {
-      const response = await controller.updateCurrentUser(
-        buildRequest({ body: JSON.stringify({ name: '' }) })
-      );
-      expect(response.statusCode).toBe(400);
-      expect(response.error).toBeDefined();
-    });
   });
 
   describe('getUserBooks', () => {

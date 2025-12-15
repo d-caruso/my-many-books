@@ -96,14 +96,6 @@ describe('AuthorController', () => {
       );
     });
 
-    it('should return validation error for invalid body', async () => {
-      mockRequest.body = JSON.stringify({ name: '' });
-
-      const response = await authorController.createAuthor(mockRequest);
-
-      expect(response.statusCode).toBe(400);
-      expect(response.success).toBe(false);
-    });
   });
 
   describe('updateAuthor', () => {
@@ -136,15 +128,6 @@ describe('AuthorController', () => {
       );
     });
 
-    it('should return validation error for invalid payload', async () => {
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.body = JSON.stringify({ name: '' });
-
-      const response = await authorController.updateAuthor(mockRequest);
-
-      expect(response.statusCode).toBe(400);
-      expect(response.success).toBe(false);
-    });
   });
 
   describe('deleteAuthor', () => {

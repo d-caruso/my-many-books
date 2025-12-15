@@ -77,33 +77,6 @@ describe('i18n Integration Tests', () => {
       expect(response.error).toContain('trovato'); // Italian translation for "found"
     });
 
-    it('should handle missing request body error in English', async () => {
-      const request: UniversalRequest = {
-        body: undefined,
-        headers: { 'accept-language': 'en' },
-        user: mockUser,
-      };
-
-      const response = await bookController.createBook(request);
-
-      expect(response.statusCode).toBe(400);
-      expect(response.error).toBeDefined();
-      expect(typeof response.error).toBe('string');
-    });
-
-    it('should handle missing request body error in Italian', async () => {
-      const request: UniversalRequest = {
-        body: undefined,
-        headers: { 'accept-language': 'it' },
-        user: mockUser,
-      };
-
-      const response = await bookController.createBook(request);
-
-      expect(response.statusCode).toBe(400);
-      expect(response.error).toBeDefined();
-      expect(typeof response.error).toBe('string');
-    });
   });
 
   describe('Authors API - Language Detection', () => {

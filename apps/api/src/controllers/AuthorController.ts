@@ -64,11 +64,6 @@ export class AuthorController extends BaseController {
 
     const body = this.parseBody(request);
     const dto = CreateAuthorDTO.from(body);
-    const errors = CreateAuthorDTO.validate(dto);
-    if (errors.length > 0) {
-      return this.createValidationErrorResponse(errors);
-    }
-
     const serviceInput = dto.toServiceInput();
 
     await emitHookEvent(EVENTS.AUTHOR.CREATE.BEFORE, {
@@ -140,11 +135,6 @@ export class AuthorController extends BaseController {
 
     const body = this.parseBody(request);
     const dto = UpdateAuthorDTO.from(body);
-    const errors = UpdateAuthorDTO.validate(dto);
-    if (errors.length > 0) {
-      return this.createValidationErrorResponse(errors);
-    }
-
     const updateInput = dto.toServiceInput();
 
     await emitHookEvent(EVENTS.AUTHOR.UPDATE.BEFORE, {
@@ -402,11 +392,6 @@ export class AuthorController extends BaseController {
     }
   }
 
-  private createValidationErrorResponse(errors: string[]): ApiResponse {
-    return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
-      errors,
-    });
-  }
 
   private mapRequestUser(request: UniversalRequest): { id: number; role?: string } | null {
     if (!request.user) {

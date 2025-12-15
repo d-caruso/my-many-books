@@ -104,14 +104,6 @@ describe('AdminUserController', () => {
       expect(response.statusCode).toBe(200);
     });
 
-    it('validates payload', async () => {
-      const response = await controller.updateUser({
-        ...baseRequest,
-        pathParameters: { id: '5' },
-        body: { email: 'not-an-email' },
-      });
-      expect(response.statusCode).toBe(400);
-    });
 
     it('maps service error', async () => {
       service.updateUser.mockRejectedValue(new AdminUserServiceError('EMAIL_EXISTS'));

@@ -369,7 +369,7 @@ export const BookManagementPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any || null })}
                   label={t('pages:admin.books.status', 'Status')}
                 >
-                  <MenuItem value="">{t('pages:admin.books.no_status', 'None')}</MenuItem>
+                  <MenuItem value="">&nbsp;</MenuItem>
                   <MenuItem value="reading">{t('pages:admin.books.reading', 'Reading')}</MenuItem>
                   <MenuItem value="paused">{t('pages:admin.books.paused', 'Paused')}</MenuItem>
                   <MenuItem value="finished">{t('pages:admin.books.finished', 'Finished')}</MenuItem>

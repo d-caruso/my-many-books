@@ -59,7 +59,7 @@ const mockBooks: Book[] = [
     title: 'Book With String Authors',
     authors: ['Author One', 'Author Two'] as any,
     isbnCode: '9780987654321',
-    status: 'unread',
+    status: 'reading',
     categories: [{ id: 5, name: 'Non-Fiction' }],
   },
 ];
@@ -344,8 +344,10 @@ describe('BookSearchResults', () => {
       />
     );
 
-    const getChipClass = (label: string) =>
-      screen.getByText(label).closest('.MuiChip-root')?.className || '';
+    const getChipClass = (label: string) => {
+      const elements = screen.getAllByText(label);
+      return elements[0].closest('.MuiChip-root')?.className || '';
+    };
 
     expect(getChipClass('Finished')).toMatch(/MuiChip-colorSuccess/);
     expect(getChipClass('Reading')).toMatch(/MuiChip-colorPrimary/);

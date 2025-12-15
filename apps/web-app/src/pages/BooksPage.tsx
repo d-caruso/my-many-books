@@ -219,8 +219,17 @@ const BooksPage: React.FC = () => {
       const errorData = err.response?.data;
       const errorMessage = errorData?.error || errorData?.message || 'Failed to save book';
       const errorDetails = errorData?.details || [];
-      const fullError = errorDetails.length > 0 ? `${errorMessage}:\n${errorDetails.join('\n')}` : errorMessage;
-      setActionError(fullError);
+
+      // Format validation errors with field names
+      if (errorDetails.length > 0) {
+        const formattedErrors = errorDetails.map((detail: any) =>
+          `${detail.field}: ${detail.message}`
+        ).join('\n');
+        setActionError(formattedErrors);
+      } else {
+        setActionError(errorMessage);
+      }
+
       throw err;
     } finally {
       setActionLoading(false);

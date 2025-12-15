@@ -31,7 +31,7 @@ export const createBookSchema = Joi.object({
   title: bookValidationSchema.title,
   editionNumber: bookValidationSchema.editionNumber,
   editionDate: bookValidationSchema.editionDate,
-  status: bookValidationSchema.status.default('TO_READ'),
+  status: bookValidationSchema.status,
   notes: bookValidationSchema.notes,
   authorIds: Joi.array().items(commonSchemas.id).min(1).optional(),
   categoryIds: Joi.array().items(commonSchemas.id).min(1).optional(),

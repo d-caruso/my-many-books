@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { AuthorSchema } from './author';
 import { CategorySchema } from './category';
 
-export const BookStatusSchema = z.enum(['reading', 'paused', 'finished', 'unread']);
+export const BookStatusSchema = z.enum(['reading', 'paused', 'finished', null]);
 export type BookStatus = z.infer<typeof BookStatusSchema>;
 
 export const BookSchema = z.object({
@@ -16,7 +16,7 @@ export const BookSchema = z.object({
   editionNumber: z.number().int().positive().nullable().optional(),
   editionDate: z.string().nullable().optional(),
   status: BookStatusSchema.optional(),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
   userId: z.number().int().optional(),
   authors: AuthorSchema.pick({ id: true, name: true, surname: true }).array().optional(),
   categories: CategorySchema.pick({ id: true, name: true }).array().optional(),

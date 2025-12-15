@@ -379,9 +379,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                   'data-testid': 'select'
                 }}
               >
-                <MenuItem value="">
-                  <em>{t('common:none', 'None')}</em>
-                </MenuItem>
+                <MenuItem value="">&nbsp;</MenuItem>
                 <MenuItem value="reading">{t('books:reading')}</MenuItem>
                 <MenuItem value="paused">{t('books:paused')}</MenuItem>
                 <MenuItem value="finished">{t('books:finished')}</MenuItem>

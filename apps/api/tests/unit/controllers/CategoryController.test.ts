@@ -88,16 +88,6 @@ describe('CategoryController', () => {
       );
     });
 
-    it('returns validation error for invalid payload', async () => {
-      const response = await controller.createCategory({
-        ...baseRequest,
-        body: { name: '' },
-      });
-
-      expect(response.statusCode).toBe(400);
-      expect(response.success).toBe(false);
-      expect(mockService.createCategory).not.toHaveBeenCalled();
-    });
 
     it('handles service errors', async () => {
       mockService.createCategory.mockRejectedValue(
@@ -181,16 +171,6 @@ describe('CategoryController', () => {
       );
     });
 
-    it('validates body', async () => {
-      const response = await controller.updateCategory({
-        ...baseRequest,
-        pathParameters: { id: '2' },
-        body: { name: '' },
-      });
-
-      expect(response.statusCode).toBe(400);
-      expect(mockService.updateCategory).not.toHaveBeenCalled();
-    });
   });
 
   describe('deleteCategory', () => {

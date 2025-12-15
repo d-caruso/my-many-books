@@ -35,6 +35,7 @@ interface BookFormProps {
   onCancel: () => void;
   loading?: boolean;
   title?: string;
+  apiErrors?: Array<{ field: string; message: string }>;
 }
 
 export interface BookFormData {
@@ -53,7 +54,8 @@ export const BookForm: React.FC<BookFormProps> = ({
   onSubmit,
   onCancel,
   loading = false,
-  title
+  title,
+  apiErrors = []
 }) => {
   const { t } = useTranslation(['books', 'common']);
   const { categories, loading: categoriesLoading, loadCategories } = useCategories();
@@ -87,6 +89,20 @@ export const BookForm: React.FC<BookFormProps> = ({
       });
     }
   }, [book]);
+
+  // Update errors when API errors change
+  useEffect(() => {
+    if (apiErrors.length > 0) {
+      const newErrors: Partial<Record<keyof BookFormData, string>> = {};
+      apiErrors.forEach((error) => {
+        const field = error.field as keyof BookFormData;
+        if (field) {
+          newErrors[field] = error.message;
+        }
+      });
+      setErrors(newErrors);
+    }
+  }, [apiErrors]);
 
   const validateForm = (): boolean => {
     // Use Zod schema for validation

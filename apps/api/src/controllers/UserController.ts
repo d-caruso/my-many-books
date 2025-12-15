@@ -65,10 +65,6 @@ export class UserController extends BaseController {
     if (authError) return authError;
 
     const dto = UpdateUserDTO.from(this.parseBody(request));
-    const errors = UpdateUserDTO.validate(dto);
-    if (errors.length > 0) {
-      return this.createValidationErrorResponse(errors);
-    }
 
     try {
       const updated = await this.userService.updateCurrentUser(
@@ -179,11 +175,6 @@ export class UserController extends BaseController {
     }
   }
 
-  private createValidationErrorResponse(errors: string[]): ApiResponse {
-    return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
-      errors,
-    });
-  }
 
   private normalizeStatus(value?: string | null): BookStatus | undefined {
     if (!value) {

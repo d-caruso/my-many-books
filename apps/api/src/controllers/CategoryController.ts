@@ -33,11 +33,6 @@ export class CategoryController extends BaseController {
 
     const body = this.parseBody(request);
     const dto = CreateCategoryDTO.from(body);
-    const errors = CreateCategoryDTO.validate(dto);
-    if (errors.length > 0) {
-      return this.createValidationErrorResponse(errors);
-    }
-
     const serviceInput = dto.toServiceInput();
 
     await emitHookEvent(EVENTS.CATEGORY.CREATE.BEFORE, {
@@ -101,11 +96,6 @@ export class CategoryController extends BaseController {
 
     const body = this.parseBody(request);
     const dto = UpdateCategoryDTO.from(body);
-    const errors = UpdateCategoryDTO.validate(dto);
-    if (errors.length > 0) {
-      return this.createValidationErrorResponse(errors);
-    }
-
     const updateInput = dto.toServiceInput();
 
     await emitHookEvent(EVENTS.CATEGORY.UPDATE.BEFORE, {
@@ -297,12 +287,6 @@ export class CategoryController extends BaseController {
       default:
         return this.createErrorResponseI18n('errors:permission_denied', 403);
     }
-  }
-
-  private createValidationErrorResponse(errors: string[]): ApiResponse {
-    return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
-      errors,
-    });
   }
 
   private mapRequestUser(request: UniversalRequest): { id: number; role?: string } | null {

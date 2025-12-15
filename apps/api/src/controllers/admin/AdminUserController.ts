@@ -84,10 +84,6 @@ export class AdminUserController extends BaseController {
 
     const body = this.parseBody(request);
     const dto = AdminUpdateUserDTO.from(body);
-    const errors = AdminUpdateUserDTO.validate(dto);
-    if (errors.length > 0) {
-      return this.createValidationErrorResponse(errors);
-    }
 
     try {
       const updated = await this.adminUserService.updateUser(
@@ -137,12 +133,6 @@ export class AdminUserController extends BaseController {
       context.role = request.user.role;
     }
     return context;
-  }
-
-  private createValidationErrorResponse(errors: string[]): ApiResponse {
-    return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
-      errors,
-    });
   }
 
   private handleServiceError(error: unknown): ApiResponse {

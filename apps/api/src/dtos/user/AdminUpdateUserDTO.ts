@@ -1,49 +1,22 @@
 import { plainToInstance } from 'class-transformer';
-import {
-  IsBoolean,
-  IsEmail,
-  IsIn,
-  IsOptional,
-  IsString,
-  Length,
-  validateSync,
-} from 'class-validator';
 import { UpdateUserInput } from '../../services/user/AdminUserService';
-import { USER_ROLES } from '@my-many-books/shared-auth';
 import { UserRole } from '../../models/interfaces/ModelInterfaces';
 
 export class AdminUpdateUserDTO {
-  @IsOptional()
-  @IsString()
-  @Length(1, 100)
   name?: string;
 
-  @IsOptional()
-  @IsString()
-  @Length(1, 100)
   surname?: string;
 
-  @IsOptional()
-  @IsEmail()
   email?: string;
 
-  @IsOptional()
-  @IsBoolean()
   isActive?: boolean;
 
-  @IsOptional()
-  @IsString()
-  @IsIn(Object.values(USER_ROLES))
   role?: UserRole;
 
   static from(body: unknown): AdminUpdateUserDTO {
     return plainToInstance(AdminUpdateUserDTO, body ?? {});
   }
 
-  static validate(dto: AdminUpdateUserDTO): string[] {
-    const validationErrors = validateSync(dto, { whitelist: true, forbidNonWhitelisted: true });
-    return validationErrors.flatMap(error => Object.values(error.constraints || {}));
-  }
 
   toServiceInput(): UpdateUserInput {
     const input: UpdateUserInput = {};

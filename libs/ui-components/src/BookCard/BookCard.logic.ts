@@ -54,8 +54,8 @@ export const getStatusLabel = (status?: BookStatus): string => {
       return 'Paused';
     case 'finished':
       return 'Finished';
-    case 'unread':
-      return 'Unread';
+    case '':
+      return '';
     default:
       return '';
   }
