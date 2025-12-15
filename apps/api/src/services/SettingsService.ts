@@ -4,7 +4,7 @@
 // ================================================================
 
 import { AppSetting } from '../models/AppSetting';
-import { getAllSettingDefinitions, SettingDefinition } from '@my-many-books/shared-types';
+import { getAllSettingDefinitions } from '@my-many-books/shared-types';
 import { getLogger } from './logger';
 
 export class SettingsService {
@@ -48,7 +48,6 @@ export class SettingsService {
 
     // Get all existing settings from DB
     const existingSettings = await AppSetting.findAll();
-    const existingKeys = new Set(existingSettings.map(s => s.key));
 
     // 1. Add or update settings from definitions
     for (const def of definitions) {
