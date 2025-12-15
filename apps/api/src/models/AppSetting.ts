@@ -5,9 +5,7 @@
 
 import { DataTypes, Sequelize } from 'sequelize';
 import { BaseModel, BaseModelAttributes } from './base/BaseModel';
-
-export type SettingType = 'string' | 'number' | 'boolean' | 'enum' | 'json';
-export type SettingCategory = 'ui' | 'api' | 'features' | 'business' | 'security';
+import { SettingType, SettingCategory } from '@my-many-books/shared-types';
 
 export interface AppSettingAttributes extends BaseModelAttributes {
   key: string;

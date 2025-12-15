@@ -17,7 +17,9 @@
       "@my-many-books/shared-i18n": ["../../libs/shared-i18n/src/index.ts"],
       "@my-many-books/shared-i18n/*": ["../../libs/shared-i18n/src/*"],
       "@my-many-books/shared-logging": ["../../libs/shared-logging/src/index.ts"],
-      "@my-many-books/shared-logging/*": ["../../libs/shared-logging/src/*"]
+      "@my-many-books/shared-logging/*": ["../../libs/shared-logging/src/*"],
+      "@my-many-books/shared-types": ["../../libs/shared-types/src/index.ts"],
+      "@my-many-books/shared-types/*": ["../../libs/shared-types/src/*"]
     }
   },
   "include": [
