@@ -16,6 +16,7 @@ export interface ModelRegistry {
   HookExecution: ModelStatic<Model>;
   AuditLog: ModelStatic<Model>;
   Setting: ModelStatic<Model>;
+  AppSetting: ModelStatic<Model>;
 }
 
 export class ModelAssociations {
