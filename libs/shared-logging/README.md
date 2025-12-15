@@ -38,7 +38,7 @@ logger.info({ userId: '123', action: 'login' }, 'User logged in');
 
 ## Architecture
 
-See `docs/improvements/logging/unified-logging-plan.md` for detailed architecture and implementation plan.
+See `docs/logging/unified-logging-plan.md` for detailed architecture and implementation plan.
 
 ## License
 

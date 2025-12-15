@@ -113,6 +113,6 @@ Hookey ships with jest + Vitest helpers already configured in `libs/hookey/src/_
 
 ## What to do next
 
-1. Wire Hookey into `apps/api` by registering hooks when the server boots (see Phase 5 in `docs/planning/hooks-system-plan.md`).
+1. Wire Hookey into `apps/api` by registering hooks when the server boots (see Phase 5 in `docs/archive/planning/hooks-system-plan.md`).
 2. Create new `HookAction` implementations for email, notifications, or third-party services.
 3. Extend `expressHookEmitter` or build other adapters (Prisma, Kafka, serverless) if you change infra.
