@@ -97,7 +97,7 @@ export class BookApi extends BaseApiClient {
 
   async updateBookStatus(id: number, status: BookStatus): Promise<Book> {
     const parsedStatus = BookStatusSchema.parse(status);
-    const response = await this.put<unknown>(`/books/${id}/status`, { status: parsedStatus });
+    const response = await this.patch<unknown>(`/books/${id}`, { status: parsedStatus });
     return BookSchema.parse(response);
   }
 }

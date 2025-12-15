@@ -47,6 +47,7 @@ export const updateBookSchema = Joi.object({
   editionDate: bookValidationSchema.editionDate,
   status: Joi.string()
     .valid(...BOOK_STATUSES)
+    .allow(null)
     .optional(),
   notes: bookValidationSchema.notes,
   authorIds: Joi.array().items(commonSchemas.id).min(1).optional(),
@@ -59,6 +60,7 @@ export const updateBookSchema = Joi.object({
 export const patchBookSchema = Joi.object({
   status: Joi.string()
     .valid(...BOOK_STATUSES)
+    .allow(null)
     .optional(),
   notes: bookValidationSchema.notes,
   editionNumber: bookValidationSchema.editionNumber,
