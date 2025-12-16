@@ -3,7 +3,7 @@
 // Settings Service - Manages application settings with auto-sync
 // ================================================================
 
-import { AppSetting } from '../models/AppSetting';
+import { AppSetting, AppSettingAttributes } from '../models/AppSetting';
 import { getAllSettingDefinitions } from '@my-many-books/shared-types';
 import { getLogger } from './logger';
 
@@ -72,7 +72,7 @@ export class SettingsService {
           description: def.description,
           active: true,
           deleted: false,
-        });
+        } as AppSettingAttributes);
         getLogger().info({ key: def.key }, 'Created new setting');
       }
     }
