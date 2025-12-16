@@ -6,6 +6,10 @@
 export type SettingType = 'string' | 'number' | 'boolean' | 'enum' | 'json';
 export type SettingCategory = 'ui' | 'api' | 'features' | 'business' | 'security';
 
+// Arrays for Zod enum validation
+export const SettingTypeValues = ['string', 'number', 'boolean', 'enum', 'json'] as const;
+export const SettingCategoryValues = ['ui', 'api', 'features', 'business', 'security'] as const;
+
 export interface SettingDefinition<T = unknown> {
   key: string;
   category: SettingCategory;

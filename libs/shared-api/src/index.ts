@@ -11,6 +11,7 @@ export { BookApi } from './book-api';
 export { AuthorApi } from './author-api';
 export { CategoryApi } from './category-api';
 export { UserApi } from './user-api';
+export { SettingsApi } from './settings-api';
 
 // Base client and interfaces
 export { BaseApiClient } from './base-client';

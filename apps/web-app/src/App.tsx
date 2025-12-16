@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { authService } from './services/authService';
 import { ApiProvider } from './contexts/ApiContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import { PWAProvider } from './contexts/PWAContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary/ErrorBoundary';
@@ -89,8 +90,9 @@ function App() {
         <ThemedApp>
           <PWAProvider>
             <ApiProvider>
-              <AuthErrorBoundary>
-                <AuthProvider authService={authService} loadingComponent={<NativeLoading />}>
+              <SettingsProvider>
+                <AuthErrorBoundary>
+                  <AuthProvider authService={authService} loadingComponent={<NativeLoading />}>
                   <Router>
                     <Box sx={{ minHeight: '100vh', position: 'relative' }}>
                       {/* Skip to main content link for keyboard navigation */}
@@ -203,8 +205,9 @@ function App() {
                       </Suspense>
                     </Box>
                   </Router>
-                </AuthProvider>
-              </AuthErrorBoundary>
+                  </AuthProvider>
+                </AuthErrorBoundary>
+              </SettingsProvider>
             </ApiProvider>
           </PWAProvider>
         </ThemedApp>
