@@ -1,5 +1,6 @@
 import { SettingsService } from '../../../src/services/SettingsService';
 import { AppSetting } from '../../../src/models/AppSetting';
+import { getAllSettingDefinitions } from '@my-many-books/shared-types';
 
 // Mock AppSetting model
 jest.mock('../../../src/models/AppSetting');
@@ -14,10 +15,17 @@ jest.mock('../../../src/services/logger', () => ({
   })),
 }));
 
+// Mock setting definitions
+jest.mock('@my-many-books/shared-types', () => ({
+  getAllSettingDefinitions: jest.fn(),
+}));
+
 describe('SettingsService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     SettingsService.reset();
+    // Default mock for getAllSettingDefinitions
+    (getAllSettingDefinitions as jest.Mock).mockReturnValue([]);
   });
 
   describe('initialize', () => {
@@ -51,6 +59,76 @@ describe('SettingsService', () => {
 
       expect(SettingsService.isInitialized()).toBe(true);
       expect(AppSetting.findAll).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('auto-sync', () => {
+    beforeEach(() => {
+      (AppSetting as any).sequelize = {};
+    });
+
+    it('should create new settings from definitions', async () => {
+      const mockDefinitions = [
+        { key: 'new.setting', category: 'ui', type: 'string', defaultValue: 'test', description: 'Test' }
+      ];
+      (getAllSettingDefinitions as jest.Mock).mockReturnValue(mockDefinitions);
+      (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+      (AppSetting.findActiveSettings as jest.Mock).mockResolvedValue([]);
+      (AppSetting.create as jest.Mock).mockResolvedValue({});
+
+      await SettingsService.initialize();
+
+      expect(AppSetting.create).toHaveBeenCalledWith(expect.objectContaining({
+        key: 'new.setting',
+        value: '"test"',
+        category: 'ui',
+      }));
+    });
+
+    it('should restore deleted settings when re-added to definitions', async () => {
+      const mockDefinitions = [
+        { key: 'restored.setting', category: 'ui', type: 'string', defaultValue: 'test', description: 'Test' }
+      ];
+      const mockExisting = {
+        key: 'restored.setting',
+        deleted: true,
+        update: jest.fn().mockResolvedValue(true),
+      };
+
+      (getAllSettingDefinitions as jest.Mock).mockReturnValue(mockDefinitions);
+      (AppSetting.findAll as jest.Mock).mockResolvedValue([mockExisting]);
+      (AppSetting.findActiveSettings as jest.Mock).mockResolvedValue([]);
+
+      await SettingsService.initialize();
+
+      expect(mockExisting.update).toHaveBeenCalledWith(expect.objectContaining({
+        deleted: false,
+      }));
+    });
+
+    it('should mark orphaned settings as deleted', async () => {
+      const mockDefinitions = [
+        { key: 'active.setting', category: 'ui', type: 'string', defaultValue: 'test', description: 'Test' }
+      ];
+      const mockOrphaned = {
+        key: 'orphaned.setting',
+        deleted: false,
+        update: jest.fn().mockResolvedValue(true),
+      };
+      const mockActive = {
+        key: 'active.setting',
+        update: jest.fn().mockResolvedValue(true),
+      };
+
+      (getAllSettingDefinitions as jest.Mock).mockReturnValue(mockDefinitions);
+      (AppSetting.findAll as jest.Mock).mockResolvedValue([mockOrphaned, mockActive]);
+      (AppSetting.findActiveSettings as jest.Mock).mockResolvedValue([]);
+
+      await SettingsService.initialize();
+
+      expect(mockOrphaned.update).toHaveBeenCalledWith(expect.objectContaining({
+        deleted: true,
+      }));
     });
   });
 

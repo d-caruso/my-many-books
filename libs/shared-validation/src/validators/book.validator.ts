@@ -7,7 +7,6 @@
 
 import {
   BOOK_CONSTRAINTS,
-  BOOK_STATUS,
   BOOK_STATUSES,
   BOOK_ERROR_MESSAGES,
   BookStatus,
