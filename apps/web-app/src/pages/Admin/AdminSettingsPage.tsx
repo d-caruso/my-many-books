@@ -134,6 +134,35 @@ export const AdminSettingsPage: React.FC = () => {
     }
   };
 
+  // Toggle setting active status
+  const handleToggleActive = async (key: string, active: boolean) => {
+    try {
+      setUpdatingSettings(prev => new Set(prev).add(key));
+      setAppSettingsError(null);
+      const settingsApi = new SettingsApi(apiClient);
+      const updated = await settingsApi.toggleActive(key, active);
+
+      // Update local state
+      setAppSettings(prev =>
+        prev.map(s => s.key === key ? updated : s)
+      );
+
+      // Refresh global settings context if setting is being activated
+      if (active) {
+        await refreshSettings();
+      }
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      setAppSettingsError(error.response?.data?.message || error.message || 'Failed to toggle setting');
+    } finally {
+      setUpdatingSettings(prev => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
+  };
+
   // Parse setting value
   const parseSettingValue = (setting: AppSetting) => {
     try {
@@ -242,19 +271,30 @@ export const AdminSettingsPage: React.FC = () => {
           ) : (
             <Grid container spacing={3}>
               {appSettings
-                .filter(setting => setting.active)
+                .filter(setting => !setting.deleted)
                 .map(setting => {
                   const value = parseSettingValue(setting);
                   const isUpdating = updatingSettings.has(setting.key);
 
                   return (
                     <Grid item xs={12} key={setting.key}>
-                      <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                      <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1, opacity: setting.active ? 1 : 0.6 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                           <Typography variant="subtitle1" sx={{ fontWeight: 'medium', flex: 1 }}>
                             {setting.key}
                           </Typography>
-                          <Chip label={setting.category} size="small" color="primary" variant="outlined" />
+                          <Chip label={setting.category} size="small" color="primary" variant="outlined" sx={{ mr: 1 }} />
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={setting.active}
+                                onChange={(e) => handleToggleActive(setting.key, e.target.checked)}
+                                disabled={isUpdating}
+                                size="small"
+                              />
+                            }
+                            label={setting.active ? 'Active' : 'Inactive'}
+                          />
                         </Box>
 
                         <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
@@ -262,7 +302,7 @@ export const AdminSettingsPage: React.FC = () => {
                         </Typography>
 
                         {setting.type === 'enum' && (
-                          <FormControl fullWidth size="small" disabled={isUpdating}>
+                          <FormControl fullWidth size="small" disabled={isUpdating || !setting.active}>
                             <InputLabel>Value</InputLabel>
                             <Select
                               value={value}
