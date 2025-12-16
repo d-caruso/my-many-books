@@ -5,6 +5,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import BooksPage from '../../pages/BooksPage';
 import { ApiProvider } from '../../contexts/ApiContext';
+import { SettingsProvider } from '../../contexts/SettingsContext';
 
 const mockSetSearchParams = vi.fn();
 let currentSearchParams: URLSearchParams = new URLSearchParams();
@@ -112,6 +113,29 @@ vi.mock('../../components/Search', () => ({
 
 const mockApiService = {
   getBooks: vi.fn(),
+  baseURL: 'http://localhost:3000',
+  get: vi.fn(),
+  post: vi.fn(),
+  patch: vi.fn(),
+  delete: vi.fn(),
+} as any;
+
+const mockSettingsApi = {
+  getSettings: vi.fn().mockResolvedValue([
+    {
+      key: 'books.list.status.onchange',
+      value: '"remove"',
+      category: 'ui',
+      type: 'enum',
+      defaultValue: '"remove"',
+      description: 'Behavior when book status changes',
+      active: true,
+      deleted: false,
+      creationDate: new Date().toISOString(),
+    }
+  ]),
+  getAllSettingsAdmin: vi.fn().mockResolvedValue([]),
+  updateSetting: vi.fn(),
 } as any;
 
 const testI18n = i18n.createInstance();
@@ -151,7 +175,9 @@ const renderBooksPage = () =>
   render(
     <I18nextProvider i18n={testI18n}>
       <ApiProvider apiService={mockApiService}>
-        <BooksPage />
+        <SettingsProvider settingsApi={mockSettingsApi}>
+          <BooksPage />
+        </SettingsProvider>
       </ApiProvider>
     </I18nextProvider>
   );

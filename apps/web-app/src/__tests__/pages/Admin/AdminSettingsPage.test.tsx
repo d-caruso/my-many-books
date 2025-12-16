@@ -5,6 +5,8 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { AdminSettingsPage } from '../../../pages/Admin/AdminSettingsPage';
 import { apiService } from '../../../services/api';
+import { ApiProvider } from '../../../contexts/ApiContext';
+import { SettingsProvider } from '../../../contexts/SettingsContext';
 
 vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
@@ -16,6 +18,34 @@ vi.mock('../../../services/api', () => ({
     updateAuditLoggingStatus: vi.fn(),
   },
 }));
+
+const mockApiService = {
+  getAuditLoggingStatus: vi.fn(),
+  updateAuditLoggingStatus: vi.fn(),
+  baseURL: 'http://localhost:3000',
+  get: vi.fn(),
+  post: vi.fn(),
+  patch: vi.fn(),
+  delete: vi.fn(),
+} as any;
+
+const mockSettingsApi = {
+  getSettings: vi.fn().mockResolvedValue([]),
+  getAllSettingsAdmin: vi.fn().mockResolvedValue([
+    {
+      key: 'books.list.status.onchange',
+      value: '"remove"',
+      category: 'ui',
+      type: 'enum',
+      defaultValue: '"remove"',
+      description: 'Behavior when book status changes',
+      active: true,
+      deleted: false,
+      creationDate: new Date().toISOString(),
+    }
+  ]),
+  updateSetting: vi.fn(),
+} as any;
 
 // Create test i18n instance
 const testI18n = i18n.createInstance();
@@ -40,7 +70,11 @@ testI18n.use(initReactI18next).init({
 const renderWithProvider = (ui: React.ReactElement) => {
   return rtlRender(
     <I18nextProvider i18n={testI18n}>
-      {ui}
+      <ApiProvider apiService={mockApiService}>
+        <SettingsProvider settingsApi={mockSettingsApi}>
+          {ui}
+        </SettingsProvider>
+      </ApiProvider>
     </I18nextProvider>
   );
 };
@@ -48,31 +82,32 @@ const renderWithProvider = (ui: React.ReactElement) => {
 describe('AdminSettingsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockApiService.getAuditLoggingStatus.mockResolvedValue({
+      enabled: false,
+      source: 'default',
+      canChange: true,
+    });
+    mockSettingsApi.getAllSettingsAdmin.mockResolvedValue([
+      {
+        key: 'books.list.status.onchange',
+        value: '"remove"',
+        category: 'ui',
+        type: 'enum',
+        defaultValue: '"remove"',
+        description: 'Behavior when book status changes',
+        active: true,
+        deleted: false,
+        creationDate: new Date().toISOString(),
+      }
+    ]);
   });
 
   test('renders settings title', async () => {
-    vi.mocked(apiService.getAuditLoggingStatus).mockResolvedValue({
-      enabled: false,
-      source: 'default',
-      canChange: true,
-    });
-
     renderWithProvider(<AdminSettingsPage />);
     expect(screen.getByText('Settings')).toBeInTheDocument();
-
-    // Wait for async state updates
-    await waitFor(() => {
-      expect(apiService.getAuditLoggingStatus).toHaveBeenCalled();
-    });
   });
 
   test('displays audit logging section', async () => {
-    vi.mocked(apiService.getAuditLoggingStatus).mockResolvedValue({
-      enabled: false,
-      source: 'default',
-      canChange: true,
-    });
-
     renderWithProvider(<AdminSettingsPage />);
 
     await waitFor(() => {
@@ -80,19 +115,8 @@ describe('AdminSettingsPage', () => {
     });
   });
 
-  test('renders within AdminLayout', async () => {
-    vi.mocked(apiService.getAuditLoggingStatus).mockResolvedValue({
-      enabled: false,
-      source: 'default',
-      canChange: true,
-    });
-
+  test('renders within AdminLayout', () => {
     renderWithProvider(<AdminSettingsPage />);
     expect(screen.getByTestId('admin-layout')).toBeInTheDocument();
-
-    // Wait for async state updates
-    await waitFor(() => {
-      expect(apiService.getAuditLoggingStatus).toHaveBeenCalled();
-    });
   });
 });

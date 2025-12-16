@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { AuthorSchema } from './author';
 import { CategorySchema } from './category';
 
-export const BookStatusSchema = z.enum(['reading', 'paused', 'finished', null]);
+export const BookStatusSchema = z.enum(['reading', 'paused', 'finished']).nullable();
 export type BookStatus = z.infer<typeof BookStatusSchema>;
 
 export const BookSchema = z.object({
