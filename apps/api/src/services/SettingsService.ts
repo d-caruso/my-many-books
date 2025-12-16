@@ -21,6 +21,14 @@ export class SettingsService {
       return;
     }
 
+    // Check if AppSetting model is initialized
+    // In test environment, models may not be initialized yet
+    if (!AppSetting.sequelize) {
+      getLogger().debug('AppSetting model not initialized, skipping SettingsService initialization');
+      SettingsService.initialized = true;
+      return;
+    }
+
     getLogger().info('Initializing SettingsService...');
 
     try {
