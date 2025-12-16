@@ -8,6 +8,9 @@ import { BaseController } from './base/BaseController';
 import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
 import { SettingsService } from '../services/SettingsService';
+import { UpdateSettingDTO } from '../dtos/setting/UpdateSettingDTO';
+import { ToggleActiveDTO } from '../dtos/setting/ToggleActiveDTO';
+import { toSettingResponseDTO } from '../dtos/setting/SettingResponseDTO';
 
 @injectable()
 export class SettingsController extends BaseController {
@@ -19,7 +22,7 @@ export class SettingsController extends BaseController {
 
     try {
       const settings = SettingsService.getAllSettings();
-      return this.createSuccessResponse(settings.map(s => s.toJSON()));
+      return this.createSuccessResponse(settings.map(s => toSettingResponseDTO(s)));
     } catch {
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
@@ -57,7 +60,7 @@ export class SettingsController extends BaseController {
 
     try {
       const settings = await SettingsService.getAllSettingsAdmin();
-      return this.createSuccessResponse(settings.map(s => s.toJSON()));
+      return this.createSuccessResponse(settings.map(s => toSettingResponseDTO(s)));
     } catch {
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
@@ -80,19 +83,19 @@ export class SettingsController extends BaseController {
       return this.createErrorResponseI18n('errors:invalid_request_body', 400);
     }
 
-    const { value } = body;
-    if (value === undefined) {
-      return this.createErrorResponseI18n('errors:value_required', 400);
-    }
-
     try {
-      const updated = await SettingsService.updateSetting(key, value);
+      const dto = UpdateSettingDTO.from(body);
+      const serviceInput = dto.toServiceInput();
+      const updated = await SettingsService.updateSetting(key, serviceInput.value);
       return this.createSuccessResponse(
-        updated.toJSON(),
+        toSettingResponseDTO(updated),
         this.t('settings:setting_updated')
       );
     } catch (error) {
       if (error instanceof Error) {
+        if (error.message.includes('Value is required')) {
+          return this.createErrorResponseI18n('errors:value_required', 400);
+        }
         if (error.message.includes('not found')) {
           return this.createErrorResponseI18n('errors:setting_not_found', 404, { key });
         }
@@ -123,20 +126,25 @@ export class SettingsController extends BaseController {
       return this.createErrorResponseI18n('errors:invalid_request_body', 400);
     }
 
-    const { active } = body;
-    if (typeof active !== 'boolean') {
-      return this.createErrorResponseI18n('errors:active_must_be_boolean', 400);
-    }
-
     try {
-      const updated = await SettingsService.toggleActive(key, active);
+      const dto = ToggleActiveDTO.from(body);
+      const serviceInput = dto.toServiceInput();
+      const updated = await SettingsService.toggleActive(key, serviceInput.active);
       return this.createSuccessResponse(
-        updated.toJSON(),
+        toSettingResponseDTO(updated),
         this.t('settings:setting_toggled')
       );
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
-        return this.createErrorResponseI18n('errors:setting_not_found', 404, { key });
+      if (error instanceof Error) {
+        if (error.message.includes('Active field is required')) {
+          return this.createErrorResponseI18n('errors:active_field_required', 400);
+        }
+        if (error.message.includes('Active field must be a boolean')) {
+          return this.createErrorResponseI18n('errors:active_must_be_boolean', 400);
+        }
+        if (error.message.includes('not found')) {
+          return this.createErrorResponseI18n('errors:setting_not_found', 404, { key });
+        }
       }
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
