@@ -42,13 +42,11 @@ router.get(
 );
 
 // ===== ADMIN ENDPOINTS (REQUIRE AUTH + ADMIN PERMISSION) =====
-// Apply auth middleware for all admin routes below
-router.use('/admin', authMiddleware);
-router.use('/admin', requirePermission(ACTIONS.MANAGE, RESOURCES.SETTINGS));
-
 // Get all settings including deleted (admin only)
 router.get(
   '/admin',
+  authMiddleware,
+  requirePermission(ACTIONS.MANAGE, RESOURCES.SETTINGS),
   readLimiter,
   expressRouteWrapper(settingsController.getAllSettingsAdmin.bind(settingsController))
 );
@@ -56,6 +54,8 @@ router.get(
 // Update setting value (admin only)
 router.patch(
   '/admin/:key',
+  authMiddleware,
+  requirePermission(ACTIONS.MANAGE, RESOURCES.SETTINGS),
   writeLimiter,
   validateParams(settingKeyParamSchema),
   validateBody(updateSettingBodySchema),
@@ -65,6 +65,8 @@ router.patch(
 // Toggle setting active status (admin only)
 router.patch(
   '/admin/:key/toggle',
+  authMiddleware,
+  requirePermission(ACTIONS.MANAGE, RESOURCES.SETTINGS),
   writeLimiter,
   validateParams(settingKeyParamSchema),
   validateBody(toggleActiveBodySchema),
