@@ -18,6 +18,7 @@ import isbnRoutes from './routes/isbnRoutes';
 import adminRoutes from './routes/adminRoutes';
 import authRoutes from './routes/authRoutes';
 import hookRoutes from './routes/hookRoutes';
+import settingsRoutes from './routes/settingsRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
 import { initializeHookSystem } from './services/hooks/hookSystem';
@@ -25,6 +26,7 @@ import { traceIdMiddleware, requestLoggerMiddleware } from '@my-many-books/share
 
 import { initializeI18n } from '@my-many-books/shared-i18n';
 import { getLogger } from './services/logger';
+import { SettingsService } from './services/SettingsService';
 
 const app = express();
 const isTestEnvironment = process.env['NODE_ENV'] === 'test';
@@ -75,6 +77,7 @@ app.use(`${BASE_PATH}/users`, userRoutes);
 app.use(`${BASE_PATH}/authors`, authorRoutes);
 app.use(`${BASE_PATH}/categories`, categoryRoutes);
 app.use(`${BASE_PATH}/isbn`, isbnRoutes);
+app.use(`${BASE_PATH}/settings`, settingsRoutes);
 app.use(`${BASE_PATH}/admin`, adminRoutes);
 app.use(`${BASE_PATH}/admin/hooks`, hookRoutes);
 
@@ -126,6 +129,7 @@ const initializeDatabase = async (): Promise<void> => {
 
 const bootstrapInfrastructure = async (): Promise<void> => {
   await initializeDatabase();
+  await SettingsService.initialize();
   await initializeHookSystem();
 };
 

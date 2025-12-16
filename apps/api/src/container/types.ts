@@ -19,6 +19,7 @@ const TYPES = {
   UserRepository: Symbol.for('UserRepository'),
   UserService: Symbol.for('UserService'),
   UserController: Symbol.for('UserController'),
+  SettingsController: Symbol.for('SettingsController'),
 };
 
 export { TYPES };

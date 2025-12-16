@@ -24,6 +24,7 @@ import { UserRepository } from '../repositories/user/UserRepository';
 import { AdminUserService } from '../services/user/AdminUserService';
 import { UserController } from '../controllers/UserController';
 import { UserService } from '../services/user/UserService';
+import { SettingsController } from '../controllers/SettingsController';
 
 const container = new Container({
   defaultScope: 'Singleton',
@@ -61,6 +62,11 @@ container.bind<AdminUserService>(TYPES.AdminUserService).to(AdminUserService).in
 container
   .bind<AdminUserController>(TYPES.AdminUserController)
   .to(AdminUserController)
+  .inTransientScope();
+
+container
+  .bind<SettingsController>(TYPES.SettingsController)
+  .to(SettingsController)
   .inTransientScope();
 
 export { container };
