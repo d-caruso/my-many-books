@@ -34,32 +34,33 @@ jest.mock('../../src/container', () => {
 
   const createMockController = () => {
     const controller = {
-      getAllSettings: async (res: any) => {
+      getAllSettings: async () => {
         const settings = SettingsService.getAllSettings();
-        return res.status(200).json({ success: true, data: settings });
+        return { statusCode: 200, success: true, data: settings };
       },
-      getSetting: async (req: any, res: any) => {
-        const key = req.params.key;
+      getSetting: async (req: any) => {
+        const key = req.pathParameters?.key;
         const value = SettingsService.getSetting(key);
         const allSettings = SettingsService.getAllSettings();
         const setting = allSettings.find((s: any) => s.key === key);
         if (!setting) {
-          return res.status(404).json({ success: false, error: 'Setting not found' });
+          return { statusCode: 404, success: false, error: 'Setting not found' };
         }
-        return res.status(200).json({ success: true, data: { key, value } });
+        return { statusCode: 200, success: true, data: { key, value } };
       },
-      getAllSettingsAdmin: async (res: any) => {
+      getAllSettingsAdmin: async () => {
         const settings = await SettingsService.getAllSettingsAdmin();
-        return res.status(200).json({ success: true, data: settings });
+        return { statusCode: 200, success: true, data: settings };
       },
-      updateSetting: async (req: any, res: any) => {
-        const { key } = req.params;
-        const { value } = req.body;
+      updateSetting: async (req: any) => {
+        const key = req.pathParameters?.key;
+        const body = req.body ? JSON.parse(req.body) : {};
+        const { value } = body;
         const updated = await SettingsService.updateSetting(key, value);
-        return res.status(200).json({ success: true, data: updated });
+        return { statusCode: 200, success: true, data: updated };
       },
-      toggleActive: async (res: any) => {
-        return res.status(200).json({ success: true });
+      toggleActive: async () => {
+        return { statusCode: 200, success: true };
       },
     };
 

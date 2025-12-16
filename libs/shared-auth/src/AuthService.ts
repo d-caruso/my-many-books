@@ -199,7 +199,7 @@ export class AuthService {
           .join('')
       );
       return JSON.parse(jsonPayload);
-    } catch (error) {
+    } catch {
       throw new Error('Invalid JWT token');
     }
   }

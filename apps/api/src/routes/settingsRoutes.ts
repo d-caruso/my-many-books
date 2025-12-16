@@ -33,15 +33,9 @@ router.get(
   expressRouteWrapper(settingsController.getAllSettings.bind(settingsController))
 );
 
-// Get specific setting by key
-router.get(
-  '/:key',
-  readLimiter,
-  validateParams(settingKeyParamSchema),
-  expressRouteWrapper(settingsController.getSetting.bind(settingsController))
-);
-
 // ===== ADMIN ENDPOINTS (REQUIRE AUTH + ADMIN PERMISSION) =====
+// NOTE: These must come BEFORE /:key route to avoid matching "admin" as a key parameter
+
 // Get all settings including deleted (admin only)
 router.get(
   '/admin',
@@ -71,6 +65,15 @@ router.patch(
   validateParams(settingKeyParamSchema),
   validateBody(toggleActiveBodySchema),
   expressRouteWrapper(settingsController.toggleActive.bind(settingsController))
+);
+
+// Get specific setting by key (public endpoint)
+// NOTE: This must come AFTER /admin routes
+router.get(
+  '/:key',
+  readLimiter,
+  validateParams(settingKeyParamSchema),
+  expressRouteWrapper(settingsController.getSetting.bind(settingsController))
 );
 
 export default router;
