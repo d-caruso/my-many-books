@@ -10,6 +10,15 @@ export type SettingCategory = 'ui' | 'api' | 'features' | 'business' | 'security
 export const SettingTypeValues = ['string', 'number', 'boolean', 'enum', 'json'] as const;
 export const SettingCategoryValues = ['ui', 'api', 'features', 'business', 'security'] as const;
 
+// Book list status change behavior constants
+export const BOOK_STATUS_CHANGE_BEHAVIOR = {
+  REMOVE: 'remove',
+  KEEP: 'keep',
+  REFRESH: 'refresh',
+} as const;
+
+export type BookStatusChangeBehavior = typeof BOOK_STATUS_CHANGE_BEHAVIOR[keyof typeof BOOK_STATUS_CHANGE_BEHAVIOR];
+
 export interface SettingDefinition<T = unknown> {
   key: string;
   category: SettingCategory;
@@ -43,10 +52,14 @@ export const SETTING_DEFINITIONS = {
           key: 'books.list.status.onchange',
           category: 'ui',
           type: 'enum',
-          defaultValue: 'remove',
-          allowedValues: ['remove', 'keep', 'refresh'],
+          defaultValue: BOOK_STATUS_CHANGE_BEHAVIOR.REMOVE,
+          allowedValues: [
+            BOOK_STATUS_CHANGE_BEHAVIOR.REMOVE,
+            BOOK_STATUS_CHANGE_BEHAVIOR.KEEP,
+            BOOK_STATUS_CHANGE_BEHAVIOR.REFRESH
+          ] as const,
           description: 'Behavior when book status changes in filtered list'
-        } as SettingDefinition<'remove' | 'keep' | 'refresh'>
+        } as SettingDefinition<BookStatusChangeBehavior>
       }
     }
   },

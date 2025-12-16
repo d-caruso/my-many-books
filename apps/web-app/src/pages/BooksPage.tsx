@@ -7,11 +7,13 @@ import GridIcon from '@mui/icons-material/ViewModule';
 import ListIcon from '@mui/icons-material/ViewList';
 import { useTranslation } from 'react-i18next';
 import type { BookFormData as SharedBookFormInput } from '@my-many-books/shared-types';
+import { SETTING_KEYS, BOOK_STATUS_CHANGE_BEHAVIOR, BookStatusChangeBehavior } from '@my-many-books/shared-types';
 import { Book } from '../types';
 import { BookList, BookForm, BookDetails, type BookFormData } from '../components/Book';
 import { BookSearchForm } from '../components/Search';
 import { useBookSearch } from '../hooks/useBookSearch';
 import { useBooks } from '../hooks/useBooks';
+import { useSetting } from '../hooks/useSetting';
 
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
@@ -25,6 +27,11 @@ const BooksPage: React.FC = () => {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // Get setting for book status change behavior
+  const { value: statusChangeBehavior } = useSetting<BookStatusChangeBehavior>(
+    SETTING_KEYS.BOOKS.LIST.STATUS.ONCHANGE
+  );
 
   const {
     books: searchResults,
@@ -165,6 +172,24 @@ const BooksPage: React.FC = () => {
       if (selectedBook?.id === bookId) {
         setSelectedBook(prev => (prev ? { ...prev, status } : null));
       }
+
+      // Apply behavior based on setting
+      const behavior = statusChangeBehavior || BOOK_STATUS_CHANGE_BEHAVIOR.REMOVE;
+
+      if (behavior === BOOK_STATUS_CHANGE_BEHAVIOR.REMOVE) {
+        // Remove behavior: The book removal is handled by the useBooks hook
+        // which will automatically update the books state after updateBookStatus
+        // No additional action needed - the book is removed from the list
+      } else if (behavior === BOOK_STATUS_CHANGE_BEHAVIOR.REFRESH) {
+        // Refresh behavior: Reload the entire list from the server
+        if (searchActive) {
+          await runCurrentSearch();
+        } else {
+          await refreshBooks();
+        }
+      }
+      // KEEP behavior: do nothing, book stays in list with updated status
+      // The useBooks hook will update the book status in place
     } catch (err: any) {
       console.error('Failed to update book status:', err);
       setActionError(err.response?.data?.message || err.message || 'Failed to update book status');
