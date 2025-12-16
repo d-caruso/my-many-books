@@ -92,6 +92,10 @@ jobs:
         working-directory: libs/shared-auth
         run: npm run build
 
+      - name: Build shared-validation library
+        working-directory: libs/shared-validation
+        run: npm run build
+
       - name: Debug - Verify shared-auth dist
         run: |
           echo "=== Checking shared-auth dist folder ==="
