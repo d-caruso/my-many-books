@@ -90,6 +90,7 @@ describe('Authentication Middleware', () => {
         name: 'John',
         surname: 'Doe',
         isActive: true,
+        role: 'user',
       };
 
       // Mock AuthProviderFactory and provider
@@ -111,8 +112,9 @@ describe('Authentication Middleware', () => {
       expect(mockProvider.verifyToken).toHaveBeenCalledWith(mockToken);
       expect(UserService.findOrCreateUser).toHaveBeenCalledWith(mockProviderUser, 'cognito');
       expect(req.user).toEqual({
-        userId: 1,
+        id: 1,
         email: 'test@example.com',
+        role: 'user',
         provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: false,
@@ -137,7 +139,8 @@ describe('Authentication Middleware', () => {
         email: 'test@example.com',
         name: 'John',
         surname: 'Doe',
-        isActive: false, // Deactivated user
+        isActive: false,
+        role: 'user', // Deactivated user
       };
 
       const mockProvider: jest.Mocked<AuthProvider> = {
@@ -196,6 +199,7 @@ describe('Authentication Middleware', () => {
         name: 'New',
         surname: 'User',
         isActive: true,
+        role: 'user',
       };
 
       const mockProvider: jest.Mocked<AuthProvider> = {
@@ -212,8 +216,9 @@ describe('Authentication Middleware', () => {
       await authMiddleware(req as AuthenticatedRequest, res as Response, next);
 
       expect(req.user).toEqual({
-        userId: 2,
+        id: 2,
         email: 'newuser@example.com',
+        role: 'user',
         provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: true,
@@ -258,6 +263,7 @@ describe('Authentication Middleware', () => {
         name: 'John',
         surname: 'Doe',
         isActive: true,
+        role: 'user',
       };
 
       const mockProvider: jest.Mocked<AuthProvider> = {
