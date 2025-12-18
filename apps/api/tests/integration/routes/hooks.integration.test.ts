@@ -51,11 +51,11 @@ jest.mock('../../../src/models', () => ({
 jest.mock('../../../src/middleware/auth', () => ({
   authMiddleware: (req: any, _res: any, next: any) => {
     req.user = {
-      userId: 1,
+      id: 1,
       email: 'admin@example.com',
-      role: 'user',
+      role: 'admin',
       provider: 'cognito',
-          };
+    };
     next();
   },
 }));
