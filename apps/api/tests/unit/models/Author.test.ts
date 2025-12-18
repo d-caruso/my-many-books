@@ -123,8 +123,8 @@ describe('Author Model', () => {
       await Author.createAuthor({ name: 'John', surname: 'Doe', userId: testUserId });
       await Author.createAuthor({ name: 'Jane', surname: 'Smith', userId: user2.id });
 
-      const user1Authors = await Author.findAll({ where: { userId: testUserId } });
-      const user2Authors = await Author.findAll({ where: { userId: user2.id } });
+      const user?: { id: testUserId } });
+      const user?: { id: user2.id } });
 
       expect(user1Authors.length).toBe(1);
       expect(user2Authors.length).toBe(1);

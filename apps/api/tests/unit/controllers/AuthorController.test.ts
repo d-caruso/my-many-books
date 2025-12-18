@@ -16,7 +16,7 @@ interface UniversalRequest {
   queryStringParameters?: Record<string, string | undefined>;
   pathParameters?: Record<string, string | undefined>;
   headers?: Record<string, string | undefined>;
-  user?: { userId: number; role?: string };
+  user?: { id: number; role?: string };
 }
 
 jest.mock('../../../src/models');
@@ -52,7 +52,7 @@ describe('AuthorController', () => {
       headers: { 'accept-language': 'en' },
       queryStringParameters: {},
       pathParameters: {},
-      user: { userId: 1, role: 'user' },
+      user?: { id: 1, role: 'user' },
     };
     emitHookEventMock.mockClear();
   });

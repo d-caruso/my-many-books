@@ -35,7 +35,7 @@ export const standardLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.standard.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.standard.skipFailedRequests,
   keyGenerator: req => {
-    const userId = (req as AuthenticatedRequest).user?.userId;
+    const userId = (req as AuthenticatedRequest).user?.id;
     if (userId) return String(userId);
     return ipKeyGenerator(req.ip || '');
   },
@@ -54,7 +54,7 @@ export const adminLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.admin.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.admin.skipFailedRequests,
   keyGenerator: req => {
-    const userId = (req as AuthenticatedRequest).user?.userId;
+    const userId = (req as AuthenticatedRequest).user?.id;
     if (userId) return String(userId);
     return ipKeyGenerator(req.ip || '');
   },
@@ -87,7 +87,7 @@ export const searchLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.search.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.search.skipFailedRequests,
   keyGenerator: req => {
-    const userId = (req as AuthenticatedRequest).user?.userId;
+    const userId = (req as AuthenticatedRequest).user?.id;
     if (userId) return String(userId);
     return ipKeyGenerator(req.ip || '');
   },
@@ -106,7 +106,7 @@ export const writeLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.write.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.write.skipFailedRequests,
   keyGenerator: req => {
-    const userId = (req as AuthenticatedRequest).user?.userId;
+    const userId = (req as AuthenticatedRequest).user?.id;
     if (userId) return String(userId);
     return ipKeyGenerator(req.ip || '');
   },
@@ -125,7 +125,7 @@ export const readLimiter = rateLimit({
   skipSuccessfulRequests: rateLimitConfigs.read.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.read.skipFailedRequests,
   keyGenerator: req => {
-    const userId = (req as AuthenticatedRequest).user?.userId;
+    const userId = (req as AuthenticatedRequest).user?.id;
     if (userId) return String(userId);
     return ipKeyGenerator(req.ip || '');
   },

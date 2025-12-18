@@ -60,7 +60,7 @@ jest.mock('../../../src/controllers/BookController', () => ({
 
 jest.mock('../../../src/middleware/auth', () => ({
   authMiddleware: jest.fn((req: any, _res: any, next: any) => {
-    req.user = { userId: 1, email: 'test@example.com' };
+    req.user?: { id: 1, email: 'test@example.com' };
     next();
   })
 }));

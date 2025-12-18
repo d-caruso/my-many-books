@@ -82,7 +82,7 @@ export interface UniversalRequest {
   queryStringParameters?: { [key: string]: string | undefined } | undefined;
   pathParameters?: { [key: string]: string | undefined } | undefined;
   headers?: { [key: string]: string | undefined } | undefined;
-  user?: { userId: number; role?: string } | undefined;
+  user?: { id: number; email: string; role: string; provider: string; providerUserId?: string; isNewUser?: boolean } | undefined;
 }
 
 // Database operation types

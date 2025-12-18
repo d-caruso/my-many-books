@@ -12,7 +12,7 @@ describe('AuthorService', () => {
   let repository: jest.Mocked<AuthorRepositoryContract>;
   const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
-  const userContext = { userId: 1, role: 'user' };
+  const user?: { id: 1, role: 'user' };
 
   beforeEach(() => {
     repository = {

@@ -527,7 +527,7 @@ export class BookController extends BaseController {
     if (!body?.isbn) {
       return this.createErrorResponseI18n('errors:isbn_not_provided', 400);
     }
-    const userId = request.user?.userId;
+    const userId = request.user?.id;
 
     const validation = validateIsbn(body.isbn);
     if (!validation.isValid) {
@@ -728,7 +728,7 @@ export class BookController extends BaseController {
 
   async searchByIsbnForUser(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
-    if (!request.user?.userId) {
+    if (!request.user?.id) {
       return this.createErrorResponseI18n('errors:auth_required', 401);
     }
 
@@ -736,7 +736,7 @@ export class BookController extends BaseController {
   }
 
   private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.userId) {
+    if (!request.user?.id) {
       return this.createErrorResponseI18n('errors:auth_required', 401);
     }
     return null;

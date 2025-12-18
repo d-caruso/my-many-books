@@ -20,7 +20,7 @@ interface UniversalRequest {
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
   headers?: { [key: string]: string | undefined };
-  user?: { userId: number; role?: string };
+  user?: { id: number; role?: string };
 }
 
 /**
@@ -108,7 +108,7 @@ describe('BookController', () => {
     
     it('should create a book successfully', async () => {
       mockRequest.body = JSON.stringify(validBookData);
-      mockRequest.user = { userId: 1, role: 'user' };
+      mockRequest.user?: { id: 1, role: 'user' };
 
       createBookSpy.mockResolvedValue({
         id: 1,
@@ -186,7 +186,7 @@ describe('BookController', () => {
   describe('hook events', () => {
     it('emits book.update.before before updating', async () => {
       mockRequest.body = JSON.stringify({ title: 'Updated Title' });
-      mockRequest.user = { userId: 2, role: 'user' };
+      mockRequest.user?: { id: 2, role: 'user' };
       mockRequest.pathParameters = { id: '5' };
       updateBookSpy.mockResolvedValue({
         id: 5,
@@ -205,7 +205,7 @@ describe('BookController', () => {
     });
 
     it('emits book.delete.before before deleting', async () => {
-      mockRequest.user = { userId: 4, role: 'user' };
+      mockRequest.user?: { id: 4, role: 'user' };
       mockRequest.pathParameters = { id: '9' };
       deleteBookSpy.mockResolvedValue(undefined);
 
@@ -307,7 +307,7 @@ describe('BookController', () => {
     });
 
     it('should call listBooks with user context', async () => {
-      mockRequest.user = { userId: 123 };
+      mockRequest.user?: { id: 123 };
       (Book.findAndCountAll as jest.Mock).mockResolvedValue({
         count: 0,
         rows: [],

@@ -44,7 +44,7 @@ describe('Category Routes', () => {
 
     mockAuthMiddleware = authMiddleware as jest.MockedFunction<typeof authMiddleware>;
     mockAuthMiddleware.mockImplementation(async (req, _res, next) => {
-      (req as any).user = { userId: 123 };
+      (req as any).user?: { id: 123 };
       next();
     });
   });
@@ -59,7 +59,7 @@ describe('Category Routes', () => {
     await request(app).get('/api/categories').expect(200);
 
     expect(mockCategoryController.listCategories).toHaveBeenCalledWith(
-      expect.objectContaining({ user: { userId: 123 } })
+      expect.objectContaining({ user?: { id: 123 } })
     );
   });
 

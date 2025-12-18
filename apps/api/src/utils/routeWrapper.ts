@@ -6,6 +6,7 @@
 import { Response, Request, NextFunction } from 'express';
 import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
+import { AuthUser } from '../models/interfaces/ModelInterfaces';
 
 // Define a generic type for a controller method
 // It should accept a universal request and return a Promise that resolves to an ApiResponse
@@ -32,7 +33,7 @@ export const expressRouteWrapper = (controllerMethod: ControllerMethod) => {
         body: body ? JSON.stringify(body) : undefined,
         queryStringParameters: query as { [key: string]: string | undefined },
         pathParameters: params as { [key: string]: string | undefined },
-        user: (req as Request & { user?: { userId: number } }).user || undefined, // From auth middleware
+        user: (req as Request & { user?: AuthUser }).user || undefined, // From auth middleware
       };
 
       // The controller method executes the core logic

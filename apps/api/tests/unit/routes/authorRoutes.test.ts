@@ -49,7 +49,7 @@ describe('Author Routes', () => {
     // Mock auth middleware to pass through
     mockAuthMiddleware = authMiddleware as jest.MockedFunction<typeof authMiddleware>;
     mockAuthMiddleware.mockImplementation(async (req, _res, next) => {
-      (req as any).user = { userId: 123 };
+      (req as any).user?: { id: 123 };
       next();
     });
   });
@@ -73,7 +73,7 @@ describe('Author Routes', () => {
         body: undefined,
         queryStringParameters: {},
         pathParameters: {},
-        user: { userId: 123 },
+        user?: { id: 123 },
       });
       
       expect(response.body).toEqual({
@@ -101,7 +101,7 @@ describe('Author Routes', () => {
         body: undefined,
         queryStringParameters: { page: '1', limit: '5' },
         pathParameters: {},
-        user: { userId: 123 },
+        user?: { id: 123 },
       });
     });
   });
@@ -122,7 +122,7 @@ describe('Author Routes', () => {
         body: undefined,
         queryStringParameters: {},
         pathParameters: { id: '1' },
-        user: { userId: 123 },
+        user?: { id: 123 },
       });
       
       expect(response.body).toEqual({
@@ -173,7 +173,7 @@ describe('Author Routes', () => {
         body: JSON.stringify(authorData),
         queryStringParameters: {},
         pathParameters: {},
-        user: { userId: 123 },
+        user?: { id: 123 },
       });
       
       expect(response.body).toEqual({
@@ -222,7 +222,7 @@ describe('Author Routes', () => {
         body: JSON.stringify(updateData),
         queryStringParameters: {},
         pathParameters: { id: '1' },
-        user: { userId: 123 },
+        user?: { id: 123 },
       });
       
       expect(response.body).toEqual({
@@ -267,7 +267,7 @@ describe('Author Routes', () => {
         body: undefined,
         queryStringParameters: {},
         pathParameters: { id: '1' },
-        user: { userId: 123 },
+        user?: { id: 123 },
       });
     });
 
@@ -308,7 +308,7 @@ describe('Author Routes', () => {
         body: undefined,
         queryStringParameters: {},
         pathParameters: { id: '1' },
-        user: { userId: 123 },
+        user?: { id: 123 },
       });
       
       expect(response.body).toEqual({

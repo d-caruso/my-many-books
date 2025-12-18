@@ -38,7 +38,7 @@ describe('AdminUserController', () => {
       headers: { 'accept-language': 'en' },
       queryStringParameters: {},
       pathParameters: {},
-      user: { userId: 99, role: 'admin' },
+      user?: { id: 99, role: 'admin' },
     };
   });
 

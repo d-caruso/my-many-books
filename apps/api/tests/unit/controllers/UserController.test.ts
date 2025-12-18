@@ -6,7 +6,7 @@ const buildRequest = (overrides: Partial<UniversalRequest> = {}): UniversalReque
   headers: { 'accept-language': 'en' },
   queryStringParameters: {},
   pathParameters: {},
-  user: { userId: 1 },
+  user?: { id: 1 },
   ...overrides,
 });
 

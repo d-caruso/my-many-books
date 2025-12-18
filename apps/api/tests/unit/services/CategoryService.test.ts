@@ -7,7 +7,7 @@ jest.mock('../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
-const userContext = { userId: 1, role: 'user' };
+const user?: { id: 1, role: 'user' };
 
 describe('CategoryService', () => {
   let service: CategoryService;

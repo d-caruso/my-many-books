@@ -14,7 +14,7 @@ jest.mock('../../../src/container', () => ({
 
 jest.mock('../../../src/middleware/auth', () => ({
   authMiddleware: jest.fn((req: any, _res: any, next: any) => {
-    req.user = { userId: 1, email: 'user@example.com', provider: 'cognito' };
+    req.user?: { id: 1, email: 'user@example.com', provider: 'cognito' };
     next();
   }),
 }));

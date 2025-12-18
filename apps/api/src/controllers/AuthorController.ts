@@ -105,7 +105,7 @@ export class AuthorController extends BaseController {
         ? await this.authorRepository.findById(Number(authorId), { includeBooks })
         : await this.authorRepository.findUserAuthorById(
             Number(authorId),
-            request.user?.userId ?? -1,
+            request.user?.id ?? -1,
             {
               includeBooks,
             }
@@ -263,7 +263,7 @@ export class AuthorController extends BaseController {
 
     const authors = await this.authorRepository.searchByQuery(
       query.trim(),
-      request.user!.userId,
+      request.user!.id,
       20
     );
 
@@ -352,7 +352,7 @@ export class AuthorController extends BaseController {
   }
 
   private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.userId) {
+    if (!request.user?.id) {
       return this.createErrorResponseI18n('errors:auth_required', 401);
     }
     return null;
