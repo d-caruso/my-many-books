@@ -3,15 +3,17 @@ import { AuthUser } from '../../../src/models/interfaces/ModelInterfaces';
 describe('AuthUser Interface', () => {
   it('captures essential properties', () => {
     const authUser: AuthUser = {
-      userId: 1,
+      id: 1,
       email: 'test@example.com',
+      role: 'user',
       provider: 'cognito',
       providerUserId: 'sub-123',
       isNewUser: true,
     };
 
-    expect(authUser.userId).toBe(1);
+    expect(authUser.id).toBe(1);
     expect(authUser.email).toBe('test@example.com');
+    expect(authUser.role).toBe('user');
     expect(authUser.provider).toBe('cognito');
     expect(authUser.providerUserId).toBe('sub-123');
     expect(authUser.isNewUser).toBe(true);
@@ -19,8 +21,9 @@ describe('AuthUser Interface', () => {
 
   it('supports optional providerUserId and isNewUser', () => {
     const authUser: AuthUser = {
-      userId: 2,
+      id: 2,
       email: 'existing@example.com',
+      role: 'admin',
       provider: 'auth0',
     };
 
@@ -30,8 +33,9 @@ describe('AuthUser Interface', () => {
 
   it('is serializable', () => {
     const authUser: AuthUser = {
-      userId: 3,
+      id: 3,
       email: 'serialize@example.com',
+      role: 'user',
       provider: 'custom',
       providerUserId: 'custom-001',
     };
