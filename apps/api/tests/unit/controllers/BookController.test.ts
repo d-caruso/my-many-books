@@ -205,7 +205,6 @@ describe('BookController', () => {
     });
 
     it('emits book.delete.before before deleting', async () => {
-      mockRequest.user?: { id: 4, role: 'user' };
       mockRequest.pathParameters = { id: '9' };
       deleteBookSpy.mockResolvedValue(undefined);
 

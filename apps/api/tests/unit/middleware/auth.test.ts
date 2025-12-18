@@ -142,7 +142,6 @@ describe('Authentication Middleware', () => {
         name: 'John',
         surname: 'Doe',
         isActive: false,
-        role: 'user', // Deactivated user
       };
 
       const mockProvider: jest.Mocked<AuthProvider> = {

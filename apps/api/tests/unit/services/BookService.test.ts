@@ -183,7 +183,6 @@ describe('BookService', () => {
       EVENTS.BOOK.DELETE.AFTER,
       expect.objectContaining({
         bookId: 8,
-        user: { id: 8, role: USER_ROLES.USER },
       })
     );
   });

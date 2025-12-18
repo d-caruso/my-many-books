@@ -42,7 +42,6 @@ describe('AdminUserService', () => {
   });
 
   it('prevents deleting last admin', async () => {
-    repository.findById.mockResolvedValue({ id: 1, role: 'admin' } as any);
     repository.countByRole.mockResolvedValue(1);
     await expect(service.deleteUser(1, adminContext)).rejects.toThrow(AdminUserServiceError);
   });

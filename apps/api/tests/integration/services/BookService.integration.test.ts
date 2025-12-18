@@ -62,7 +62,6 @@ describe('BookService (integration)', () => {
     const updated = await service.updateBook(
       created.id!,
       { title: 'Updated Title' },
-      { userId: user.id, role: 'user' }
     );
     expect(updated.title).toBe('Updated Title');
 

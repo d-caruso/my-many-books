@@ -103,7 +103,6 @@ jest.mock('../../src/middleware/auth', () => ({
     if (token === 'admin-token') {
       req.user = { id: 1, sub: 'admin-123', email: 'admin@example.com', role: 'admin' };
     } else if (token === 'user-token') {
-      req.user = { id: 2, sub: 'user-123', email: 'user@example.com', role: 'user' };
     } else {
       return res.status(401).json({ success: false, error: 'Invalid token' });
     }

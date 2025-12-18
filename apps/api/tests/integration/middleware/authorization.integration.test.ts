@@ -85,8 +85,8 @@ describe('Authorization Middleware Integration', () => {
           (_req as any).user = {
             id: 2,
             email: 'admin@example.com',
-      role: 'user',
-                      };
+            role: 'admin',
+          };
           next();
         },
         requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),

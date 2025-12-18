@@ -28,7 +28,6 @@ jest.mock('../../../src/middleware/auth', () => ({
         id: 999,
         userId: 999,
         email: 'admin@example.com',
-      role: 'user',
               };
     } else {
       return res.status(401).json({ error: 'Invalid token' });

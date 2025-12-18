@@ -47,7 +47,6 @@ describe('Audit Logging Integration', () => {
         {
           id: 2,
           email: 'user2@example.com',
-      role: 'user',
           name: 'User',
           surname: 'Two',
                     isActive: true,
