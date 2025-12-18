@@ -89,8 +89,8 @@ describe('Authorization Middleware', () => {
       mockRequest.user = {
         id: 2,
         email: 'admin@example.com',
-      role: 'user',
-              } as any;
+        role: 'admin',
+      } as any;
     });
 
     it('should allow admins to manage all resources', () => {
