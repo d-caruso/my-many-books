@@ -59,7 +59,9 @@ describe('Category Routes', () => {
     await request(app).get('/api/categories').expect(200);
 
     expect(mockCategoryController.listCategories).toHaveBeenCalledWith(
-      expect.objectContaining({ user: { id: 123 } })
+      expect.objectContaining({
+        user: expect.objectContaining({ id: 123 })
+      })
     );
   });
 

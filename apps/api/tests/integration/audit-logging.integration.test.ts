@@ -70,7 +70,7 @@ describe('Audit Logging Integration', () => {
 
       service.logActionFromRequest(
         {
-          user?: { id: 1, role: 'admin' },
+          user: { id: 1, role: 'admin' },
           headers: {
             'x-forwarded-for': '127.0.0.1',
             'user-agent': 'test-agent',
@@ -101,7 +101,7 @@ describe('Audit Logging Integration', () => {
 
       service.logActionFromRequest(
         {
-          user?: { id: 2, role: 'user' },
+          user: { id: 2, role: 'user' },
           headers: {
             'x-forwarded-for': '192.168.1.1',
             'user-agent': 'Mozilla/5.0',
@@ -128,7 +128,7 @@ describe('Audit Logging Integration', () => {
 
       service.logActionFromRequest(
         {
-          user?: { id: 3, role: 'admin' },
+          user: { id: 3, role: 'admin' },
           headers: {},
         } as any,
         'update',

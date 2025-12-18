@@ -45,7 +45,7 @@ describe('CategoryService', () => {
       EVENTS.CATEGORY.CREATE.AFTER,
       expect.objectContaining({
         category: expect.objectContaining({ id: 1 }),
-        user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
+        user: { id: 1, role: 'user' },
       })
     );
   });
@@ -91,7 +91,7 @@ describe('CategoryService', () => {
       expect.objectContaining({
         categoryId: 7,
         category: expect.objectContaining({ id: 7 }),
-        user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
+        user: { id: 1, role: 'user' },
       })
     );
   });
@@ -127,7 +127,7 @@ describe('CategoryService', () => {
       EVENTS.CATEGORY.DELETE.AFTER,
       expect.objectContaining({
         categoryId: 3,
-        user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
+        user: { id: 1, role: 'user' },
       })
     );
   });

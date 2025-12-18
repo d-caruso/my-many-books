@@ -45,7 +45,7 @@ describe('Author Model', () => {
     // Create test user
     const user = await User.create({
       email: 'test@example.com',
-      role: 'user',
+        role: 'user',
       name: 'Test',
       surname: 'User',
       cognitoSub: 'test-sub-123',
@@ -68,7 +68,7 @@ describe('Author Model', () => {
     it('should allow different users to have authors with same name', async () => {
       const user2 = await User.create({
         email: 'user2@example.com',
-      role: 'user',
+        role: 'user',
         name: 'Test2',
         surname: 'User2',
         cognitoSub: 'test-sub-456',
@@ -113,7 +113,7 @@ describe('Author Model', () => {
     it('should only return authors for specific user', async () => {
       const user2 = await User.create({
         email: 'user2@example.com',
-      role: 'user',
+        role: 'user',
         name: 'Test3',
         surname: 'User3',
         cognitoSub: 'test-sub-789',

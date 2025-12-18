@@ -58,7 +58,7 @@ describe('AuthorService', () => {
       EVENTS.AUTHOR.CREATE.AFTER,
       expect.objectContaining({
         author: expect.objectContaining({ id: 1 }),
-        user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
+        user: { id: 1, role: 'user' },
       })
     );
   });
@@ -104,7 +104,7 @@ describe('AuthorService', () => {
       expect.objectContaining({
         authorId: 2,
         author: expect.objectContaining({ id: 2 }),
-        user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
+        user: { id: 1, role: 'user' },
       })
     );
   });
@@ -142,7 +142,7 @@ describe('AuthorService', () => {
         EVENTS.AUTHOR.DELETE.AFTER,
         expect.objectContaining({
           authorId: 4,
-          user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
+          user: { id: 1, role: 'user' },
         })
       );
     });

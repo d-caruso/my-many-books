@@ -46,7 +46,7 @@ describe('Category Model', () => {
     // Create test user
     const user = await User.create({
       email: 'test@example.com',
-      role: 'user',
+        role: 'user',
       name: 'Test',
       surname: 'User',
       cognitoSub: 'test-sub-123',
@@ -68,7 +68,7 @@ describe('Category Model', () => {
     it('should allow different users to have categories with same name', async () => {
       const user2 = await User.create({
         email: 'user2@example.com',
-      role: 'user',
+        role: 'user',
         name: 'Test2',
         surname: 'User2',
         cognitoSub: 'test-sub-456',
@@ -109,7 +109,7 @@ describe('Category Model', () => {
     it('should only return categories for specific user', async () => {
       const user2 = await User.create({
         email: 'user2@example.com',
-      role: 'user',
+        role: 'user',
         name: 'Test3',
         surname: 'User3',
         cognitoSub: 'test-sub-789',

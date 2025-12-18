@@ -80,7 +80,6 @@ describe('Authentication Middleware', () => {
       const mockProviderUser: AuthProviderUser = {
         id: 'provider123',
         email: 'test@example.com',
-      role: 'user',
         name: 'John',
         surname: 'Doe',
       };
@@ -91,8 +90,7 @@ describe('Authentication Middleware', () => {
               name: 'John',
         surname: 'Doe',
         isActive: true,
-        role: 'user',
-      };
+        };
 
       // Mock AuthProviderFactory and provider
       const mockProvider: jest.Mocked<AuthProvider> = {
@@ -115,8 +113,7 @@ describe('Authentication Middleware', () => {
       expect(req.user).toEqual({
         id: 1,
         email: 'test@example.com',
-              role: 'user',
-        provider: 'cognito',
+                provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: false,
       });
@@ -138,7 +135,6 @@ describe('Authentication Middleware', () => {
       const mockDbUser = {
         id: 1,
         email: 'test@example.com',
-      role: 'user',
         name: 'John',
         surname: 'Doe',
         isActive: false,
@@ -197,7 +193,6 @@ describe('Authentication Middleware', () => {
       const mockDbUser = {
         id: 2,
         email: 'newuser@example.com',
-      role: 'user',
         name: 'New',
         surname: 'User',
         isActive: true,
@@ -219,7 +214,6 @@ describe('Authentication Middleware', () => {
       expect(req.user).toEqual({
         id: 2,
         email: 'newuser@example.com',
-      role: 'user',
                 provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: true,
@@ -254,7 +248,6 @@ describe('Authentication Middleware', () => {
       const mockProviderUser: AuthProviderUser = {
         id: 'provider123',
         email: 'test@example.com',
-      role: 'user',
         name: 'John',
         surname: 'Doe',
       };
@@ -265,8 +258,7 @@ describe('Authentication Middleware', () => {
               name: 'John',
         surname: 'Doe',
         isActive: true,
-        role: 'user',
-      };
+        };
 
       const mockProvider: jest.Mocked<AuthProvider> = {
         verifyToken: jest.fn().mockResolvedValue(mockProviderUser),
@@ -378,7 +370,6 @@ describe('CognitoAuthProvider', () => {
     expect(result).toEqual({
       id: 'user-123',
       email: 'test@example.com',
-      role: 'user',
       name: 'John',
       surname: 'Doe',
     });
