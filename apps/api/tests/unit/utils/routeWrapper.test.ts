@@ -11,7 +11,7 @@ import { ApiResponse } from '../../../src/common/ApiResponse';
 //   body?: any;
 //   queryStringParameters?: { [key: string]: string | undefined };
 //   pathParameters?: { [key: string]: string | undefined };
-//   user?: { id: number };
+//   user: { id: number };
 // }
 
 describe('expressRouteWrapper', () => {
@@ -200,7 +200,7 @@ describe('expressRouteWrapper', () => {
         params: { id: '123' },
       };
       // Add user separately to avoid TypeScript error
-      (mockReq as any).user?: { id: 456 };
+      (mockReq as any).user = { id: 456 };
 
       const apiResponse: ApiResponse = {
         statusCode: 200,
@@ -217,7 +217,7 @@ describe('expressRouteWrapper', () => {
         body: JSON.stringify({ title: 'Test Book', isbnCode: '123456' }),
         queryStringParameters: { page: '1', limit: '10' },
         pathParameters: { id: '123' },
-        user?: { id: 456 },
+        user: { id: 456 },
       });
     });
 

@@ -119,8 +119,8 @@ describe('Category Model', () => {
       await Category.createCategory({ name: 'Fiction', userId: testUserId });
       await Category.createCategory({ name: 'Non-Fiction', userId: user2.id });
 
-      const user?: { id: testUserId } });
-      const user?: { id: user2.id } });
+      const user: { id: testUserId } });
+      const user: { id: user2.id } });
 
       expect(user1Categories.length).toBe(1);
       expect(user2Categories.length).toBe(1);

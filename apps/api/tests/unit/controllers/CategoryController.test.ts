@@ -55,7 +55,7 @@ describe('CategoryController', () => {
       headers: { 'accept-language': 'en' },
       queryStringParameters: {},
       pathParameters: {},
-      user?: { id: 1, role: 'user' },
+      user: { id: 1, email: 'test@example.com', role: 'user', provider: 'cognito' },
     };
 
     jest.clearAllMocks();

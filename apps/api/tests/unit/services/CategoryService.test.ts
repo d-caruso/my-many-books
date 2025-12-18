@@ -7,7 +7,7 @@ jest.mock('../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
-const user?: { id: 1, role: 'user' };
+const user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" };
 
 describe('CategoryService', () => {
   let service: CategoryService;
@@ -45,7 +45,7 @@ describe('CategoryService', () => {
       EVENTS.CATEGORY.CREATE.AFTER,
       expect.objectContaining({
         category: expect.objectContaining({ id: 1 }),
-        user: { id: 1, role: 'user' },
+        user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
       })
     );
   });
@@ -91,7 +91,7 @@ describe('CategoryService', () => {
       expect.objectContaining({
         categoryId: 7,
         category: expect.objectContaining({ id: 7 }),
-        user: { id: 1, role: 'user' },
+        user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
       })
     );
   });
@@ -127,7 +127,7 @@ describe('CategoryService', () => {
       EVENTS.CATEGORY.DELETE.AFTER,
       expect.objectContaining({
         categoryId: 3,
-        user: { id: 1, role: 'user' },
+        user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
       })
     );
   });

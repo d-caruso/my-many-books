@@ -20,7 +20,7 @@ interface UniversalRequest {
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
   headers?: { [key: string]: string | undefined };
-  user?: { id: number };
+  user: { id: number };
 }
 
 describe('IsbnController', () => {

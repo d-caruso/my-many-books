@@ -47,7 +47,7 @@ describe('AdminUserService', () => {
   });
 
   it('allows deleting non-admin user', async () => {
-    repository.findById.mockResolvedValue({ id: 2, role: 'user' } as any);
+    repository.findById.mockResolvedValue({ id: 2, email: "test@example.com", role: 'user', provider: "cognito" } as any);
     repository.delete.mockResolvedValue(true);
     await service.deleteUser(2, adminContext);
     expect(repository.delete).toHaveBeenCalledWith(2);

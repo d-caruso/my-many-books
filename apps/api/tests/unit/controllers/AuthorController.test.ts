@@ -16,7 +16,7 @@ interface UniversalRequest {
   queryStringParameters?: Record<string, string | undefined>;
   pathParameters?: Record<string, string | undefined>;
   headers?: Record<string, string | undefined>;
-  user?: { id: number; role?: string };
+  user: { id: number; role?: string };
 }
 
 jest.mock('../../../src/models');
@@ -52,7 +52,7 @@ describe('AuthorController', () => {
       headers: { 'accept-language': 'en' },
       queryStringParameters: {},
       pathParameters: {},
-      user?: { id: 1, role: 'user' },
+      user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
     };
     emitHookEventMock.mockClear();
   });
@@ -90,7 +90,7 @@ describe('AuthorController', () => {
       expect(emitHookEventMock).toHaveBeenCalledWith(
         EVENTS.AUTHOR.CREATE.BEFORE,
         expect.objectContaining({
-          user: { id: 1, role: 'user' },
+          user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
           input: expect.objectContaining(payload),
         })
       );
@@ -122,7 +122,7 @@ describe('AuthorController', () => {
         EVENTS.AUTHOR.UPDATE.BEFORE,
         expect.objectContaining({
           authorId: 1,
-          user: { id: 1, role: 'user' },
+          user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
           input: expect.objectContaining({ nationality: 'US' }),
         })
       );
@@ -146,7 +146,7 @@ describe('AuthorController', () => {
         EVENTS.AUTHOR.DELETE.BEFORE,
         expect.objectContaining({
           authorId: 2,
-          user: { id: 1, role: 'user' },
+          user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
         })
       );
     });

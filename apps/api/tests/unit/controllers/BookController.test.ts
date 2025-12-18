@@ -20,7 +20,7 @@ interface UniversalRequest {
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
   headers?: { [key: string]: string | undefined };
-  user?: { id: number; role?: string };
+  user: { id: number; role?: string };
 }
 
 /**
@@ -108,7 +108,7 @@ describe('BookController', () => {
     
     it('should create a book successfully', async () => {
       mockRequest.body = JSON.stringify(validBookData);
-      mockRequest.user?: { id: 1, role: 'user' };
+      mockRequest.user = { id: 1, email: "test@example.com", role: 'user', provider: "cognito" };
 
       createBookSpy.mockResolvedValue({
         id: 1,
@@ -133,7 +133,7 @@ describe('BookController', () => {
       expect(emitHookEventMock).toHaveBeenCalledWith(
         EVENTS.BOOK.CREATE.BEFORE,
         expect.objectContaining({
-          user: { id: 1, role: 'user' },
+          user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
           input: expect.objectContaining({ title: 'Test Book' }),
         })
       );
@@ -186,7 +186,7 @@ describe('BookController', () => {
   describe('hook events', () => {
     it('emits book.update.before before updating', async () => {
       mockRequest.body = JSON.stringify({ title: 'Updated Title' });
-      mockRequest.user?: { id: 2, role: 'user' };
+      mockRequest.user = { id: 2, email: "test@example.com", role: 'user', provider: "cognito" };
       mockRequest.pathParameters = { id: '5' };
       updateBookSpy.mockResolvedValue({
         id: 5,
@@ -199,7 +199,7 @@ describe('BookController', () => {
         EVENTS.BOOK.UPDATE.BEFORE,
         expect.objectContaining({
           bookId: 5,
-          user: { id: 2, role: 'user' },
+          user: { id: 2, email: "test@example.com", role: 'user', provider: "cognito" },
         })
       );
     });
@@ -214,7 +214,7 @@ describe('BookController', () => {
         EVENTS.BOOK.DELETE.BEFORE,
         expect.objectContaining({
           bookId: 9,
-          user: { id: 4, role: 'user' },
+          user: { id: 4, email: "test@example.com", role: 'user', provider: "cognito" },
         })
       );
     });
@@ -306,7 +306,7 @@ describe('BookController', () => {
     });
 
     it('should call listBooks with user context', async () => {
-      mockRequest.user?: { id: 123 };
+      mockRequest.user = { id: 123 };
       (Book.findAndCountAll as jest.Mock).mockResolvedValue({
         count: 0,
         rows: [],
