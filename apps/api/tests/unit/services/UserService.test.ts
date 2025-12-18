@@ -52,6 +52,7 @@ describe('UserService', () => {
       expect(userRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           email: 'new@example.com',
+      role: 'user',
           name: 'Unknown',
           surname: 'User',
         })

@@ -36,10 +36,10 @@ jest.mock('../../src/middleware/auth', () => {
         user: {
           id: 1,
           email: 'test@example.com',
+      role: 'user',
           name: 'Test',
           surname: 'User',
-          role: 'user',
-          isActive: true,
+                    isActive: true,
         },
         isNewUser: false,
       }),
@@ -87,6 +87,7 @@ describe('Authentication Flow Integration', () => {
       jwt.decode = jest.fn().mockReturnValue({
         sub: 'cognito-user-123',
         email: 'test@example.com',
+      role: 'user',
         given_name: 'Test',
         family_name: 'User',
       });
@@ -194,7 +195,7 @@ describe('Authentication Flow Integration', () => {
 
       const registerResponse = await request(app).post('/api/v1/auth/register').send({
         email: 'newuser@example.com',
-        password: 'SecurePass123!',
+              password: 'SecurePass123!',
         name: 'New',
         surname: 'User',
       });
@@ -255,6 +256,7 @@ describe('Authentication Flow Integration', () => {
       jwt.decode = jest.fn().mockReturnValue({
         sub: 'user-session-123',
         email: 'session@example.com',
+      role: 'user',
         given_name: 'Session',
         family_name: 'User',
       });

@@ -73,10 +73,10 @@ describe('Auth Routes', () => {
     const mockUser: Partial<User> = {
       id: 1,
       email: 'test@example.com',
+      role: 'user',
       name: 'Test',
       surname: 'User',
-      role: 'user',
-      isActive: true,
+            isActive: true,
     };
 
     beforeEach(() => {
@@ -106,6 +106,7 @@ describe('Auth Routes', () => {
       jwt.decode = jest.fn().mockReturnValue({
         sub: 'cognito-user-123',
         email: 'test@example.com',
+      role: 'user',
         given_name: 'Test',
         family_name: 'User',
       });
@@ -122,7 +123,7 @@ describe('Auth Routes', () => {
       expect(response.body.user).toEqual({
         id: 1,
         email: 'test@example.com',
-        name: 'Test',
+              name: 'Test',
         surname: 'User',
         role: 'user',
         isActive: true,
@@ -298,7 +299,7 @@ describe('Auth Routes', () => {
 
       const response = await request(app).post('/api/v1/auth/register').send({
         email: 'newuser@example.com',
-        password: 'Password123!',
+              password: 'Password123!',
         name: 'New',
         surname: 'User',
       });
@@ -326,6 +327,7 @@ describe('Auth Routes', () => {
     it('should return 400 when password is missing', async () => {
       const response = await request(app).post('/api/v1/auth/register').send({
         email: 'newuser@example.com',
+      role: 'user',
         name: 'New',
         surname: 'User',
       });
@@ -337,7 +339,7 @@ describe('Auth Routes', () => {
     it('should return 400 when name is missing', async () => {
       const response = await request(app).post('/api/v1/auth/register').send({
         email: 'newuser@example.com',
-        password: 'Password123!',
+              password: 'Password123!',
         surname: 'User',
       });
 
@@ -348,6 +350,7 @@ describe('Auth Routes', () => {
     it('should return 400 when surname is missing', async () => {
       const response = await request(app).post('/api/v1/auth/register').send({
         email: 'newuser@example.com',
+      role: 'user',
         password: 'Password123!',
         name: 'New',
       });
@@ -364,7 +367,7 @@ describe('Auth Routes', () => {
 
       const response = await request(app).post('/api/v1/auth/register').send({
         email: 'existing@example.com',
-        password: 'Password123!',
+              password: 'Password123!',
         name: 'Existing',
         surname: 'User',
       });
@@ -381,6 +384,7 @@ describe('Auth Routes', () => {
 
       const response = await request(app).post('/api/v1/auth/register').send({
         email: 'newuser@example.com',
+      role: 'user',
         password: 'weak',
         name: 'New',
         surname: 'User',
@@ -395,7 +399,7 @@ describe('Auth Routes', () => {
 
       const response = await request(app).post('/api/v1/auth/register').send({
         email: 'newuser@example.com',
-        password: 'Password123!',
+              password: 'Password123!',
         name: 'New',
         surname: 'User',
       });

@@ -80,6 +80,7 @@ describe('Authentication Middleware', () => {
       const mockProviderUser: AuthProviderUser = {
         id: 'provider123',
         email: 'test@example.com',
+      role: 'user',
         name: 'John',
         surname: 'Doe',
       };
@@ -87,7 +88,7 @@ describe('Authentication Middleware', () => {
       const mockDbUser = {
         id: 1,
         email: 'test@example.com',
-        name: 'John',
+              name: 'John',
         surname: 'Doe',
         isActive: true,
         role: 'user',
@@ -114,7 +115,7 @@ describe('Authentication Middleware', () => {
       expect(req.user).toEqual({
         id: 1,
         email: 'test@example.com',
-        role: 'user',
+              role: 'user',
         provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: false,
@@ -130,13 +131,14 @@ describe('Authentication Middleware', () => {
       const mockProviderUser: AuthProviderUser = {
         id: 'provider123',
         email: 'test@example.com',
-        name: 'John',
+              name: 'John',
         surname: 'Doe',
       };
 
       const mockDbUser = {
         id: 1,
         email: 'test@example.com',
+      role: 'user',
         name: 'John',
         surname: 'Doe',
         isActive: false,
@@ -189,18 +191,18 @@ describe('Authentication Middleware', () => {
       const mockProviderUser: AuthProviderUser = {
         id: 'provider123',
         email: 'newuser@example.com',
-        name: 'New',
+              name: 'New',
         surname: 'User',
       };
 
       const mockDbUser = {
         id: 2,
         email: 'newuser@example.com',
+      role: 'user',
         name: 'New',
         surname: 'User',
         isActive: true,
-        role: 'user',
-      };
+              };
 
       const mockProvider: jest.Mocked<AuthProvider> = {
         verifyToken: jest.fn().mockResolvedValue(mockProviderUser),
@@ -218,8 +220,8 @@ describe('Authentication Middleware', () => {
       expect(req.user).toEqual({
         id: 2,
         email: 'newuser@example.com',
-        role: 'user',
-        provider: 'cognito',
+      role: 'user',
+                provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: true,
       });
@@ -253,6 +255,7 @@ describe('Authentication Middleware', () => {
       const mockProviderUser: AuthProviderUser = {
         id: 'provider123',
         email: 'test@example.com',
+      role: 'user',
         name: 'John',
         surname: 'Doe',
       };
@@ -260,7 +263,7 @@ describe('Authentication Middleware', () => {
       const mockDbUser = {
         id: 1,
         email: 'test@example.com',
-        name: 'John',
+              name: 'John',
         surname: 'Doe',
         isActive: true,
         role: 'user',
@@ -365,7 +368,7 @@ describe('CognitoAuthProvider', () => {
     const mockDecodedToken = {
       sub: 'user-123',
       email: 'test@example.com',
-      given_name: 'John',
+            given_name: 'John',
       family_name: 'Doe',
     };
 
@@ -376,6 +379,7 @@ describe('CognitoAuthProvider', () => {
     expect(result).toEqual({
       id: 'user-123',
       email: 'test@example.com',
+      role: 'user',
       name: 'John',
       surname: 'Doe',
     });

@@ -13,11 +13,11 @@ const buildRequest = (overrides: Partial<UniversalRequest> = {}): UniversalReque
 const buildUser = () => ({
   id: 1,
   email: 'user@example.com',
+      role: 'user',
   name: 'John',
   surname: 'Doe',
   isActive: true,
-  role: 'user',
-  creationDate: new Date('2023-01-01'),
+    creationDate: new Date('2023-01-01'),
   updateDate: new Date('2023-01-02'),
 });
 

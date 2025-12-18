@@ -36,10 +36,10 @@ jest.mock('../../src/middleware/auth', () => {
         user: {
           id: 1,
           email: 'test@example.com',
+      role: 'user',
           name: 'Test',
           surname: 'User',
-          role: 'user',
-          isActive: true,
+                    isActive: true,
         },
         isNewUser: false,
       }),
@@ -85,6 +85,7 @@ describe('XSS Protection Tests', () => {
       jwt.decode = jest.fn().mockReturnValue({
         sub: 'cognito-user-123',
         email: 'test@example.com',
+      role: 'user',
         given_name: 'Test',
         family_name: 'User',
       });
@@ -122,7 +123,7 @@ describe('XSS Protection Tests', () => {
       jwt.decode = jest.fn().mockReturnValue({
         sub: 'cognito-user-123',
         email: 'test@example.com',
-        given_name: 'Test',
+              given_name: 'Test',
         family_name: 'User',
       });
 
@@ -158,6 +159,7 @@ describe('XSS Protection Tests', () => {
       jwt.decode = jest.fn().mockReturnValue({
         sub: 'cognito-user-123',
         email: 'test@example.com',
+      role: 'user',
         given_name: 'Test',
         family_name: 'User',
       });
@@ -217,7 +219,7 @@ describe('XSS Protection Tests', () => {
 
       const response = await request(app).post('/api/v1/auth/register').send({
         email: 'test@example.com',
-        password: 'Password123!',
+              password: 'Password123!',
         name: xssPayload,
         surname: 'User',
       });
@@ -268,6 +270,7 @@ describe('XSS Protection Tests', () => {
       jwt.decode = jest.fn().mockReturnValue({
         sub: 'cognito-user-123',
         email: 'test@example.com',
+      role: 'user',
         given_name: 'Test',
         family_name: 'User',
       });

@@ -25,8 +25,8 @@ describe('Authorization Middleware Integration', () => {
           (_req as any).user = {
             id: 1,
             email: 'user@example.com',
-            role: 'user',
-          };
+      role: 'user',
+                      };
           next();
         },
         requirePermission(ACTIONS.CREATE, RESOURCES.BOOK),
@@ -85,8 +85,8 @@ describe('Authorization Middleware Integration', () => {
           (_req as any).user = {
             id: 2,
             email: 'admin@example.com',
-            role: 'admin',
-          };
+      role: 'user',
+                      };
           next();
         },
         requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
@@ -108,8 +108,8 @@ describe('Authorization Middleware Integration', () => {
           (_req as any).user = {
             id: 1,
             email: 'user@example.com',
-            role: 'user',
-          };
+      role: 'user',
+                      };
           next();
         },
         requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
@@ -154,7 +154,7 @@ describe('Authorization Middleware Integration', () => {
           (_req as any).user = {
             id: 1,
             email: 'user@example.com',
-            role: 'user',
+                  role: 'user',
           };
           next();
         },

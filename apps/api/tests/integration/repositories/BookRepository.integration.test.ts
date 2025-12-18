@@ -32,11 +32,11 @@ describe('BookRepository (integration)', () => {
   it('creates and fetches a book with associations', async () => {
     const user = await User.create({
       email: 'integration@example.com',
+      role: 'user',
       name: 'Integration',
       surname: 'User',
       isActive: true,
-      role: 'user',
-    } as any);
+          } as any);
 
     const author = await Author.create({ name: 'Author', surname: 'One', userId: user.id } as any);
     const category = await Category.create({ name: 'History', userId: user.id } as any);
@@ -61,11 +61,11 @@ describe('BookRepository (integration)', () => {
   it('lists user books with pagination metadata', async () => {
     const user = await User.create({
       email: 'pagination@example.com',
+      role: 'user',
       name: 'Pagination',
       surname: 'User',
       isActive: true,
-      role: 'user',
-    } as any);
+          } as any);
 
     await repository.create(
       {

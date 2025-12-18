@@ -39,6 +39,7 @@ describe('User Model', () => {
     it('should create a user with valid data', async () => {
       const userData: UserCreationAttributes = {
         email: 'test@example.com',
+      role: 'user',
         name: 'John',
         surname: 'Doe',
         isActive: true,
@@ -59,7 +60,7 @@ describe('User Model', () => {
     it('should create a user with default isActive as true', async () => {
       const userData = {
         email: 'test@example.com',
-        name: 'John',
+              name: 'John',
         surname: 'Doe',
         // isActive should default to true
       };
@@ -72,6 +73,7 @@ describe('User Model', () => {
     it('should auto-generate creation and update dates', async () => {
       const userData = {
         email: 'test@example.com',
+      role: 'user',
         name: 'John',
         surname: 'Doe',
       };
@@ -98,7 +100,7 @@ describe('User Model', () => {
     it('should require name', async () => {
       const userData = {
         email: 'test@example.com',
-        surname: 'Doe',
+              surname: 'Doe',
       };
 
       await expect(User.create(userData as any)).rejects.toThrow();
@@ -107,6 +109,7 @@ describe('User Model', () => {
     it('should require surname', async () => {
       const userData = {
         email: 'test@example.com',
+      role: 'user',
         name: 'John',
       };
 
@@ -116,7 +119,7 @@ describe('User Model', () => {
     it('should validate email format', async () => {
       const userData = {
         email: 'invalid-email',
-        name: 'John',
+              name: 'John',
         surname: 'Doe',
       };
 
@@ -147,6 +150,7 @@ describe('User Model', () => {
     it('should enforce unique email constraint', async () => {
       const userData1 = {
         email: 'test@example.com',
+      role: 'user',
         name: 'John',
         surname: 'Doe',
       };
@@ -164,7 +168,7 @@ describe('User Model', () => {
     it('should validate name length', async () => {
       const userData = {
         email: 'test@example.com',
-        name: 'a'.repeat(101), // 101 characters
+              name: 'a'.repeat(101), // 101 characters
         surname: 'Doe',
       };
 
@@ -174,6 +178,7 @@ describe('User Model', () => {
     it('should validate surname length', async () => {
       const userData = {
         email: 'test@example.com',
+      role: 'user',
         name: 'John',
         surname: 'a'.repeat(101), // 101 characters
       };
@@ -184,7 +189,7 @@ describe('User Model', () => {
     it('should accept maximum length names', async () => {
       const userData = {
         email: 'test@example.com',
-        name: 'a'.repeat(100), // 100 characters (max)
+              name: 'a'.repeat(100), // 100 characters (max)
         surname: 'b'.repeat(100), // 100 characters (max)
       };
 
@@ -196,6 +201,7 @@ describe('User Model', () => {
     it('should not allow empty name', async () => {
       const userData = {
         email: 'test@example.com',
+      role: 'user',
         name: '',
         surname: 'Doe',
       };
@@ -206,7 +212,7 @@ describe('User Model', () => {
     it('should not allow empty surname', async () => {
       const userData = {
         email: 'test@example.com',
-        name: 'John',
+              name: 'John',
         surname: '',
       };
 
@@ -220,6 +226,7 @@ describe('User Model', () => {
     beforeEach(async () => {
       user = await User.create({
         email: 'test@example.com',
+      role: 'user',
         name: 'John',
         surname: 'Doe',
       } as any);
@@ -234,7 +241,7 @@ describe('User Model', () => {
       it('should handle special characters in names', async () => {
         const specialUser = await User.create({
           email: 'special@example.com',
-          name: 'José',
+                name: 'José',
           surname: "O'Connor",
         } as any);
 
@@ -245,6 +252,7 @@ describe('User Model', () => {
       it('should handle names with spaces', async () => {
         const spaceUser = await User.create({
           email: 'space@example.com',
+      role: 'user',
           name: 'Mary Jane',
           surname: 'Watson Smith',
         } as any);
@@ -261,7 +269,7 @@ describe('User Model', () => {
     beforeEach(async () => {
       user = await User.create({
         email: 'test@example.com',
-        name: 'John',
+              name: 'John',
         surname: 'Doe',
       } as any);
     });
@@ -293,6 +301,7 @@ describe('User Model', () => {
     it('should not update email to duplicate value', async () => {
       await User.create({
         email: 'another@example.com',
+      role: 'user',
         name: 'Another',
         surname: 'User',
       } as any);
@@ -317,7 +326,7 @@ describe('User Model', () => {
     it('should delete user successfully', async () => {
       const user = await User.create({
         email: 'delete@example.com',
-        name: 'Delete',
+              name: 'Delete',
         surname: 'User',
       } as any);
 
@@ -331,6 +340,7 @@ describe('User Model', () => {
     it('should allow creating user with same email after deletion', async () => {
       const userData = {
         email: 'reuse@example.com',
+      role: 'user',
         name: 'First',
         surname: 'User',
       };
@@ -443,7 +453,7 @@ describe('User Model', () => {
     it('should handle unicode characters in names', async () => {
       const userData = {
         email: 'unicode@example.com',
-        name: '中文名字',
+              name: '中文名字',
         surname: 'العربية',
       };
 
@@ -471,6 +481,7 @@ describe('User Model', () => {
     it('should handle boolean values correctly', async () => {
       const userData1 = {
         email: 'boolean1@example.com',
+      role: 'user',
         name: 'Boolean',
         surname: 'Test',
         isActive: true,
@@ -478,7 +489,7 @@ describe('User Model', () => {
 
       const userData2 = {
         email: 'boolean2@example.com',
-        name: 'Boolean',
+              name: 'Boolean',
         surname: 'Test',
         isActive: false,
       };

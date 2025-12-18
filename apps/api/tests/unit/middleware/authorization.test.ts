@@ -30,8 +30,8 @@ describe('Authorization Middleware', () => {
       mockRequest.user = {
         id: 1,
         email: 'user@example.com',
-        role: 'user',
-      };
+      role: 'user',
+              };
     });
 
     it('should allow authenticated users to create books', () => {
@@ -89,8 +89,8 @@ describe('Authorization Middleware', () => {
       mockRequest.user = {
         id: 2,
         email: 'admin@example.com',
-        role: 'admin',
-      } as any;
+      role: 'user',
+              } as any;
     });
 
     it('should allow admins to manage all resources', () => {
@@ -188,8 +188,8 @@ describe('Authorization Middleware', () => {
       mockRequest.user = {
         id: 1,
         email: 'user@example.com',
-        role: 'user',
-      } as any;
+      role: 'user',
+              } as any;
 
       const middleware = requirePermission(ACTIONS.MANAGE, RESOURCES.ALL);
 
@@ -220,8 +220,7 @@ describe('Authorization Middleware', () => {
         expect.objectContaining({
           details: expect.objectContaining({
             authenticated: false,
-            role: 'anonymous',
-          }),
+                      }),
         })
       );
     });

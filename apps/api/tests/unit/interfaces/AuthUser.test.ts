@@ -6,7 +6,7 @@ describe('AuthUser Interface', () => {
       id: 1,
       email: 'test@example.com',
       role: 'user',
-      provider: 'cognito',
+            provider: 'cognito',
       providerUserId: 'sub-123',
       isNewUser: true,
     };
@@ -23,8 +23,8 @@ describe('AuthUser Interface', () => {
     const authUser: AuthUser = {
       id: 2,
       email: 'existing@example.com',
-      role: 'admin',
-      provider: 'auth0',
+      role: 'user',
+            provider: 'auth0',
     };
 
     expect(authUser.providerUserId).toBeUndefined();
@@ -36,7 +36,7 @@ describe('AuthUser Interface', () => {
       id: 3,
       email: 'serialize@example.com',
       role: 'user',
-      provider: 'custom',
+            provider: 'custom',
       providerUserId: 'custom-001',
     };
 

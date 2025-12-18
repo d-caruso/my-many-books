@@ -15,11 +15,11 @@ describe('UserRepository', () => {
   const baseUser: UserEntity = {
     id: 1,
     email: 'user@example.com',
+      role: 'user',
     name: 'User',
     surname: 'Example',
     isActive: true,
-    role: 'user',
-    creationDate: new Date(),
+        creationDate: new Date(),
   };
 
   beforeEach(() => {

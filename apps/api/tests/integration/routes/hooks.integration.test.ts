@@ -53,9 +53,9 @@ jest.mock('../../../src/middleware/auth', () => ({
     req.user = {
       userId: 1,
       email: 'admin@example.com',
+      role: 'user',
       provider: 'cognito',
-      role: 'admin',
-    };
+          };
     next();
   },
 }));

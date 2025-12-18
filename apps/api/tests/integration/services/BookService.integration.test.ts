@@ -34,11 +34,11 @@ describe('BookService (integration)', () => {
 
     user = await User.create({
       email: 'service@example.com',
+      role: 'user',
       name: 'Service',
       surname: 'User',
       isActive: true,
-      role: 'user',
-    } as any);
+          } as any);
   });
 
   it('creates, updates, and deletes a book', async () => {

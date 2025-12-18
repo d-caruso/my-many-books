@@ -39,26 +39,26 @@ describe('Audit Logging Integration', () => {
         {
           id: 1,
           email: 'admin1@example.com',
+      role: 'user',
           name: 'Admin',
           surname: 'One',
-          role: 'admin',
-          isActive: true,
+                    isActive: true,
         },
         {
           id: 2,
           email: 'user2@example.com',
+      role: 'user',
           name: 'User',
           surname: 'Two',
-          role: 'user',
-          isActive: true,
+                    isActive: true,
         },
         {
           id: 3,
           email: 'admin3@example.com',
+      role: 'user',
           name: 'Admin',
           surname: 'Three',
-          role: 'admin',
-          isActive: true,
+                    isActive: true,
         },
       ] as any,
       { validate: false }
@@ -208,8 +208,7 @@ describe('Audit Logging Integration', () => {
       await AuditLog.bulkCreate([
         {
           userId: 1,
-          role: 'admin',
-          action: 'create',
+                    action: 'create',
           resourceType: 'book',
           resourceId: '1',
           ipAddress: '127.0.0.1',
@@ -228,8 +227,7 @@ describe('Audit Logging Integration', () => {
         },
         {
           userId: 2,
-          role: 'user',
-          action: 'create',
+                    action: 'create',
           resourceType: 'user',
           resourceId: '2',
           ipAddress: '127.0.0.1',

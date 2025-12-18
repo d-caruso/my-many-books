@@ -3,6 +3,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
+import { AuthUser } from '../models/interfaces/ModelInterfaces';
 
 type ControllerMethod = (request: UniversalRequest) => Promise<ApiResponse>;
 
@@ -25,7 +26,7 @@ export const lambdaAdapter = (controllerMethod: ControllerMethod) => {
         user:
           (
             event as APIGatewayProxyEvent & {
-              requestContext: { authorizer?: { user?: { userId: number } } };
+              requestContext: { authorizer?: { user?: AuthUser } };
             }
           ).requestContext?.authorizer?.user || undefined,
       };

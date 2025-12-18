@@ -21,15 +21,15 @@ jest.mock('../../../src/middleware/auth', () => ({
         id: 1,
         userId: 1,
         email: 'user@example.com',
-        role: 'user',
-      };
+      role: 'user',
+              };
     } else if (authHeader === 'Bearer admin-token') {
       req.user = {
         id: 999,
         userId: 999,
         email: 'admin@example.com',
-        role: 'admin',
-      };
+      role: 'user',
+              };
     } else {
       return res.status(401).json({ error: 'Invalid token' });
     }
