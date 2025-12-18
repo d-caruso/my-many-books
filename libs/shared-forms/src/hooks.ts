@@ -4,17 +4,19 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  FormManager, 
-  FormConfig, 
-  FormState, 
-  FormField, 
-  FieldValue, 
+import {
+  FormConfig,
+  FormState,
+  FormField,
+  FieldValue,
   FormEvent,
   FormSubmissionHandler,
   FormSubmissionResult,
   FormSubmissionState
 } from './types';
+import { FormManager } from './FormManager';
+import { FormValidator } from './FormValidator';
+import { bookFormSchema, userFormSchema, authFormSchemas, searchFormSchema } from './schemas';
 
 // Main form hook
 export function useForm(
@@ -257,8 +259,6 @@ export function useBookForm(
   submissionHandler?: FormSubmissionHandler,
   initialData?: Partial<Record<string, FieldValue>>
 ) {
-  const { bookFormSchema } = require('./schemas');
-  
   // Update schema with initial data if provided
   const configWithInitialData = useMemo(() => {
     if (!initialData) return bookFormSchema;
@@ -278,8 +278,6 @@ export function useUserForm(
   submissionHandler?: FormSubmissionHandler,
   initialData?: Partial<Record<string, FieldValue>>
 ) {
-  const { userFormSchema } = require('./schemas');
-  
   const configWithInitialData = useMemo(() => {
     if (!initialData) return userFormSchema;
     
@@ -298,7 +296,6 @@ export function useAuthForm(
   mode: 'login' | 'register',
   submissionHandler?: FormSubmissionHandler
 ) {
-  const { authFormSchemas } = require('./schemas');
   return useForm(authFormSchemas[mode], submissionHandler);
 }
 
@@ -307,8 +304,6 @@ export function useSearchForm(
   categories?: Array<{ id: number; name: string }>,
   authors?: Array<{ id: number; name: string }>
 ) {
-  const { searchFormSchema } = require('./schemas');
-  
   const configWithOptions = useMemo(() => {
     const updatedFields = searchFormSchema.fields.map(field => {
       if (field.name === 'category' && categories) {
@@ -353,7 +348,6 @@ export function useFieldValidation(
   const [errors, setErrors] = useState<string[]>([]);
 
   const validate = useCallback(async () => {
-    const { FormValidator } = require('./FormValidator');
     const validator = new FormValidator();
     
     const field: FormField = {
@@ -393,7 +387,7 @@ export function useFormAutoSave(
 } {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [saveTimeout, setSaveTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const saveNow = useCallback(async () => {
     setIsSaving(true);

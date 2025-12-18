@@ -5,7 +5,6 @@
 import { CreationOptional } from 'sequelize';
 import { BaseModelAttributes } from '../base/BaseModel';
 import { IdBaseModelAttributes } from '../base/IdBaseModel';
-import type { User } from '../User';
 
 // Author interfaces
 export interface AuthorAttributes
@@ -161,5 +160,56 @@ export interface AuthUser {
   provider: string; // Auth provider used
   providerUserId?: string; // External auth system ID
   isNewUser?: boolean; // Helpful for onboarding flows
-  userModel?: User; // Cached user model from auth middleware to avoid duplicate query
+}
+
+// Hook interfaces
+export type HookActionType = 'log' | 'email' | 'database';
+
+export interface HookAttributes
+  extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
+  id: CreationOptional<number>;
+  name: string;
+  description?: string | null;
+  eventPattern: string;
+  actionType: HookActionType;
+  actionConfig: Record<string, unknown>;
+  isActive: boolean;
+  priority: number;
+  createdBy?: number | null;
+  creationDate: CreationOptional<Date>;
+  updateDate?: CreationOptional<Date | undefined>;
+}
+
+export interface HookCreationAttributes {
+  name: string;
+  description?: string | null;
+  eventPattern: string;
+  actionType: HookActionType;
+  actionConfig: Record<string, unknown>;
+  isActive?: boolean;
+  priority?: number;
+  createdBy?: number | null;
+}
+
+export type HookUpdateAttributes = Omit<Partial<HookAttributes>, 'id' | 'creationDate'>;
+
+// HookExecution interfaces
+export interface HookExecutionAttributes {
+  id: CreationOptional<number>;
+  hookId: number;
+  eventName: string;
+  eventData?: Record<string, unknown> | null;
+  success: boolean;
+  errorMessage?: string | null;
+  executionTimeMs?: number | null;
+  executedAt: CreationOptional<Date>;
+}
+
+export interface HookExecutionCreationAttributes {
+  hookId: number;
+  eventName: string;
+  eventData?: Record<string, unknown> | null;
+  success: boolean;
+  errorMessage?: string | null;
+  executionTimeMs?: number | null;
 }

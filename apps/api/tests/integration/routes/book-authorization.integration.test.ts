@@ -97,7 +97,7 @@ describe('Book Routes Authorization Integration', () => {
         setCategories: jest.fn(),
       };
 
-      (Book.findOne as jest.Mock).mockResolvedValue(mockBook);
+      (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
       (Author.findAll as jest.Mock).mockResolvedValue([]);
       (Category.findAll as jest.Mock).mockResolvedValue([]);
 
@@ -121,7 +121,7 @@ describe('Book Routes Authorization Integration', () => {
         userId: 999, // Different user
       };
 
-      (Book.findOne as jest.Mock).mockResolvedValue(mockBook);
+      (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
       // Mock authenticated user with userId: 1
       const response = await request(app)
@@ -149,7 +149,7 @@ describe('Book Routes Authorization Integration', () => {
         setCategories: jest.fn(),
       };
 
-      (Book.findOne as jest.Mock).mockResolvedValue(mockBook);
+      (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
       (Author.findAll as jest.Mock).mockResolvedValue([]);
       (Category.findAll as jest.Mock).mockResolvedValue([]);
 
@@ -175,7 +175,7 @@ describe('Book Routes Authorization Integration', () => {
         destroy: jest.fn().mockResolvedValue(true),
       };
 
-      (Book.findOne as jest.Mock).mockResolvedValue(mockBook);
+      (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
       const response = await request(app)
         .delete('/api/v1/books/1')
@@ -191,7 +191,7 @@ describe('Book Routes Authorization Integration', () => {
         userId: 999,
       };
 
-      (Book.findOne as jest.Mock).mockResolvedValue(mockBook);
+      (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
       const response = await request(app)
         .delete('/api/v1/books/1')
@@ -208,7 +208,7 @@ describe('Book Routes Authorization Integration', () => {
         destroy: jest.fn().mockResolvedValue(true),
       };
 
-      (Book.findOne as jest.Mock).mockResolvedValue(mockBook);
+      (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
       const response = await request(app)
         .delete('/api/v1/books/1')
@@ -243,7 +243,7 @@ describe('Book Routes Authorization Integration', () => {
         userId: 999,
       };
 
-      (Book.findOne as jest.Mock).mockResolvedValue(mockBook);
+      (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
       const response = await request(app)
         .delete('/api/v1/books/1')

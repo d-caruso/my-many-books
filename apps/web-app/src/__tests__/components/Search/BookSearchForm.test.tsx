@@ -1,15 +1,14 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BookSearchForm } from '../../../components/Search/BookSearchForm';
 import { useCategories } from '../../../hooks/useCategories';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
 
-// Mock the useCategories hook
 vi.mock('../../../hooks/useCategories', () => ({
   useCategories: vi.fn(),
 }));
 
-// Mock AuthorAutocomplete component
 vi.mock('../../../components/Search/AuthorAutocomplete', () => ({
   AuthorAutocomplete: ({ value, onChange, placeholder, disabled, size }: any) => (
     <div data-testid="author-autocomplete">
@@ -18,142 +17,15 @@ vi.mock('../../../components/Search/AuthorAutocomplete', () => ({
         placeholder={placeholder}
         disabled={disabled}
         data-size={size}
-        onChange={(e) => onChange({ id: 1, name: 'Test', surname: 'Author' })}
+        onChange={() => onChange({ id: 1, name: 'Test', surname: 'Author' })}
       />
       <div data-testid="author-value">{value ? `${value.name} ${value.surname}` : ''}</div>
     </div>
   ),
 }));
 
-// Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Paper: ({ children, sx, ...props }: any) => (
-    <div data-testid="paper" style={sx} {...props}>{children}</div>
-  ),
-  TextField: ({ 
-    label, 
-    value, 
-    onChange, 
-    placeholder, 
-    fullWidth, 
-    disabled,
-    error,
-    InputProps,
-    ...props 
-  }: any) => (
-    <div data-testid="text-field-container">
-      <input
-        data-testid="search-input"
-        placeholder={placeholder}
-        value={value || ''}
-        onChange={(e) => onChange?.(e)}
-        disabled={disabled}
-        data-error={error}
-        data-fullwidth={fullWidth}
-        {...props}
-      />
-      {InputProps?.startAdornment && (
-        <div data-testid="input-adornment">{InputProps.startAdornment}</div>
-      )}
-    </div>
-  ),
-  Button: ({ 
-    children, 
-    onClick, 
-    variant, 
-    disabled, 
-    type, 
-    color,
-    size,
-    startIcon, 
-    endIcon,
-    sx,
-    ...props 
-  }: any) => (
-    <button
-      data-testid={`button-${variant || 'default'}`}
-      onClick={onClick}
-      disabled={disabled}
-      type={type}
-      data-color={color}
-      data-size={size}
-      style={sx}
-      {...props}
-    >
-      {startIcon && <span data-testid="start-icon">{startIcon}</span>}
-      {children}
-      {endIcon && <span data-testid="end-icon">{endIcon}</span>}
-    </button>
-  ),
-  Box: ({ children, component, sx, display, gap, mb, onSubmit, ...props }: any) => {
-    const Element = component === 'form' ? 'form' : 'div';
-    return (
-      <Element
-        data-testid="box"
-        data-component={component}
-        style={{ display, gap, marginBottom: mb, ...sx }}
-        onSubmit={onSubmit}
-        {...props}
-      >
-        {children}
-      </Element>
-    );
-  },
-  FormControl: ({ children, fullWidth, size, ...props }: any) => (
-    <div data-testid="form-control" data-fullwidth={fullWidth} data-size={size} {...props}>
-      {children}
-    </div>
-  ),
-  InputLabel: ({ children, id, ...props }: any) => (
-    <label data-testid="input-label" id={id} {...props}>{children}</label>
-  ),
-  Select: ({ 
-    children, 
-    value, 
-    onChange, 
-    label, 
-    disabled,
-    labelId,
-    ...props 
-  }: any) => (
-    <div data-testid="select-container">
-      <select
-        data-testid="select"
-        value={value || ''}
-        onChange={(e) => onChange?.({ target: { value: e.target.value } })}
-        disabled={disabled}
-        data-label-id={labelId}
-        aria-label={label}
-        {...props}
-      >
-        {children}
-      </select>
-    </div>
-  ),
-  MenuItem: ({ children, value, ...props }: any) => (
-    <option data-testid="menu-item" value={value} {...props}>{children}</option>
-  ),
-  Collapse: ({ children, in: isIn, ...props }: any) => (
-    isIn ? <div data-testid="collapse" {...props}>{children}</div> : null
-  ),
-  Typography: ({ children, variant, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} {...props}>{children}</div>
-  ),
-  InputAdornment: ({ children, position, ...props }: any) => (
-    <div data-testid={`input-adornment-${position}`} {...props}>{children}</div>
-  ),
-  Alert: ({ children, severity, icon, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} {...props}>
-      {icon && <span data-testid="alert-icon">{icon}</span>}
-      {children}
-    </div>
-  ),
-  Stack: ({ children, spacing, ...props }: any) => (
-    <div data-testid="stack" data-spacing={spacing} {...props}>{children}</div>
-  ),
-}));
+setupMuiMock();
 
-// Mock Material-UI icons - using default exports
 vi.mock('@mui/icons-material/Search', () => ({
   default: () => <div data-testid="search-icon">Search</div>,
 }));
@@ -178,12 +50,47 @@ const mockCategories = [
   { id: 3, name: 'Science Fiction' },
 ];
 
+const getSearchInput = () =>
+  screen.getByPlaceholderText('Search by title, author, ISBN...');
+
+const getSearchButton = () =>
+  screen.getByRole('button', { name: /Search/i });
+
+const openAdvancedFilters = () => {
+  fireEvent.click(screen.getByRole('button', { name: /Advanced Filters/i }));
+};
+
+const normalizeSelectText = (element: HTMLElement) =>
+  element.textContent?.replace(/\u200b/g, '').trim() ?? '';
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const openSelectListbox = async (labelText: string) => {
+  const trigger = screen.getByLabelText(labelText);
+  fireEvent.mouseDown(trigger);
+  const nameMatcher = new RegExp(`^${escapeRegExp(labelText)}$`, 'i');
+  return await screen.findByRole('listbox', { name: nameMatcher });
+};
+
+const selectOption = async (labelText: string, optionText: string | RegExp) => {
+  const listbox = await openSelectListbox(labelText);
+  const matcher =
+    typeof optionText === 'string'
+      ? new RegExp(`^${escapeRegExp(optionText)}$`, 'i')
+      : optionText;
+  const option = within(listbox).getByRole('option', { name: matcher });
+  fireEvent.click(option);
+  await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+};
+
+const getSelectDisplayText = (labelText: string) => {
+  const trigger = screen.getByLabelText(labelText);
+  return normalizeSelectText(trigger);
+};
+
 describe('BookSearchForm', () => {
   const mockOnSearch = vi.fn();
-
-  const defaultProps = {
-    onSearch: mockOnSearch,
-  };
+  const defaultProps = { onSearch: mockOnSearch };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -196,38 +103,32 @@ describe('BookSearchForm', () => {
   test('renders search form elements', () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    expect(screen.getByTestId('paper')).toBeInTheDocument();
-    expect(screen.getByTestId('search-input')).toBeInTheDocument();
-    expect(screen.getByTestId('button-contained')).toBeInTheDocument();
-    // "Search" appears twice: once in the icon and once in the button
-    expect(screen.getAllByText('Search').length).toBe(2);
-    expect(screen.getByText('Advanced Filters')).toBeInTheDocument();
+    expect(getSearchInput()).toBeInTheDocument();
+    expect(getSearchButton()).toBeInTheDocument();
+    expect(screen.getAllByText('Search').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole('button', { name: /Advanced Filters/i })).toBeInTheDocument();
   });
 
   test('handles search input changes', () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const searchInput = screen.getByTestId('search-input');
+    const searchInput = getSearchInput();
     fireEvent.change(searchInput, { target: { value: 'Harry Potter' } });
-
     expect(searchInput).toHaveValue('Harry Potter');
   });
 
   test('shows initial query when provided', () => {
     render(<BookSearchForm {...defaultProps} initialQuery="Initial Query" />);
 
-    const searchInput = screen.getByTestId('search-input');
-    expect(searchInput).toHaveValue('Initial Query');
+    expect(getSearchInput()).toHaveValue('Initial Query');
   });
 
   test('calls onSearch when form is submitted with valid query', () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const searchInput = screen.getByTestId('search-input');
-    const searchButton = screen.getByTestId('button-contained');
-
+    const searchInput = getSearchInput();
     fireEvent.change(searchInput, { target: { value: 'Test Book' } });
-    fireEvent.click(searchButton);
+    fireEvent.click(getSearchButton());
 
     expect(mockOnSearch).toHaveBeenCalledWith('Test Book', {});
   });
@@ -235,258 +136,185 @@ describe('BookSearchForm', () => {
   test('prevents submission with query shorter than 2 characters', async () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const searchInput = screen.getByTestId('search-input');
-    const searchButton = screen.getByTestId('button-contained');
-
-    fireEvent.change(searchInput, { target: { value: 'T' } });
-    fireEvent.click(searchButton);
+    fireEvent.change(getSearchInput(), { target: { value: 'T' } });
+    fireEvent.click(getSearchButton());
 
     await waitFor(() => {
-      expect(screen.getByText(/Please enter at least 2 characters/i)).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent(/Please enter at least 2 characters/i);
     });
     expect(mockOnSearch).not.toHaveBeenCalled();
   });
 
-  test('allows submission with filters but no query', () => {
+  test('allows submission with filters but no query', async () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    // Expand advanced filters
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
-
-    // Select a category
-    const categorySelect = screen.getByLabelText('Category');
-    fireEvent.change(categorySelect, { target: { value: '1' } });
-
-    const searchButton = screen.getByTestId('button-contained');
-    fireEvent.click(searchButton);
+    openAdvancedFilters();
+    await selectOption('Category', 'Fiction');
+    fireEvent.click(getSearchButton());
 
     expect(mockOnSearch).toHaveBeenCalledWith('', { categoryId: 1 });
   });
 
-  test('toggles advanced filters visibility', () => {
+  test('toggles advanced filters visibility', async () => {
     render(<BookSearchForm {...defaultProps} />);
-
-    // Initially collapsed
-    expect(screen.queryByTestId('collapse')).not.toBeInTheDocument();
-
-    // Expand
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
-
-    expect(screen.getByTestId('collapse')).toBeInTheDocument();
-    expect(screen.getByTestId('author-autocomplete')).toBeInTheDocument();
-
-    // Collapse
-    fireEvent.click(advancedButton);
-    expect(screen.queryByTestId('collapse')).not.toBeInTheDocument();
-  });
-
-  test('handles category selection', () => {
-    render(<BookSearchForm {...defaultProps} />);
-
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
 
     const categorySelect = screen.getByLabelText('Category');
-    fireEvent.change(categorySelect, { target: { value: '2' } });
+    expect(categorySelect).not.toBeVisible();
 
-    expect(categorySelect).toHaveValue('2');
+    openAdvancedFilters();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Category')).toBeVisible();
+    });
   });
 
-  test('handles reading status selection', () => {
+  test('handles category selection', async () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
-
-    const statusSelect = screen.getByLabelText('Reading Status');
-    fireEvent.change(statusSelect, { target: { value: 'finished' } });
-
-    expect(statusSelect).toHaveValue('finished');
+    openAdvancedFilters();
+    await selectOption('Category', 'Non-Fiction');
+    await waitFor(() => {
+      expect(getSelectDisplayText('Category')).toBe('Non-Fiction');
+    });
   });
 
-  test('handles sort by selection', () => {
+  test('handles reading status selection', async () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
+    openAdvancedFilters();
+    await selectOption('Reading Status', 'Finished');
+    await waitFor(() => {
+      expect(getSelectDisplayText('Reading Status')).toBe('Finished');
+    });
+  });
 
-    const sortBySelect = screen.getByLabelText('Sort By');
-    fireEvent.change(sortBySelect, { target: { value: 'author' } });
+  test('handles sort by selection', async () => {
+    render(<BookSearchForm {...defaultProps} />);
 
-    expect(sortBySelect).toHaveValue('author');
+    openAdvancedFilters();
+    await selectOption('Sort By', 'Author (A-Z)');
+    await waitFor(() => {
+      expect(getSelectDisplayText('Sort By')).toBe('Author (A-Z)');
+    });
   });
 
   test('handles author selection', () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
-
-    const authorInput = screen.getByTestId('author-input');
-    fireEvent.change(authorInput, { target: { value: 'test' } });
-
+    openAdvancedFilters();
+    fireEvent.change(screen.getByTestId('author-input'), { target: { value: 'test' } });
     expect(screen.getByTestId('author-value')).toHaveTextContent('Test Author');
   });
 
-  test('clears all filters and query', () => {
+  test('clears all filters and query', async () => {
     render(<BookSearchForm {...defaultProps} initialQuery="test query" />);
 
-    const searchInput = screen.getByTestId('search-input');
-    expect(searchInput).toHaveValue('test query');
+    expect(getSearchInput()).toHaveValue('test query');
+    openAdvancedFilters();
+    await selectOption('Category', 'Fiction');
 
-    // Expand advanced filters and set some values
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
+    fireEvent.click(screen.getByRole('button', { name: /Clear all/i }));
+    expect(getSearchInput()).toHaveValue('');
 
-    const categorySelect = screen.getByLabelText('Category');
-    fireEvent.change(categorySelect, { target: { value: '1' } });
-
-    // Clear all should now be visible
-    const clearButton = screen.getByText('Clear all');
-    fireEvent.click(clearButton);
-
-    expect(searchInput).toHaveValue('');
-    expect(categorySelect).toHaveValue('');
+    const listbox = await openSelectListbox('Category');
+    const selectedOption = within(listbox).getByRole('option', { selected: true });
+    expect(selectedOption).toHaveTextContent('All Categories');
+    fireEvent.click(selectedOption);
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
   });
 
   test('shows loading state', () => {
-    render(<BookSearchForm {...defaultProps} loading={true} />);
+    render(<BookSearchForm {...defaultProps} loading />);
 
-    const searchButton = screen.getByTestId('button-contained');
-    const searchInput = screen.getByTestId('search-input');
-
-    expect(searchButton).toBeDisabled();
-    expect(searchInput).toBeDisabled();
-    expect(screen.getByText('Searching...')).toBeInTheDocument();
+    expect(getSearchButton()).toBeDisabled();
+    expect(getSearchInput()).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Searching...' })).toBeDisabled();
   });
 
-  test('clears validation error when typing in search box', () => {
+  test('clears validation error when typing in search box', async () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const searchInput = screen.getByTestId('search-input');
-    const searchButton = screen.getByTestId('button-contained');
+    fireEvent.change(getSearchInput(), { target: { value: 'T' } });
+    fireEvent.click(getSearchButton());
+    expect(screen.getByRole('alert')).toBeInTheDocument();
 
-    // Trigger validation error
-    fireEvent.change(searchInput, { target: { value: 'T' } });
-    fireEvent.click(searchButton);
-
-    expect(screen.getByTestId('alert-warning')).toBeInTheDocument();
-
-    // Type more to clear error
-    fireEvent.change(searchInput, { target: { value: 'Test' } });
-
-    expect(screen.queryByTestId('alert-warning')).not.toBeInTheDocument();
+    fireEvent.change(getSearchInput(), { target: { value: 'Test' } });
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
   });
 
-  test('clears validation error when changing filters', () => {
+  test('clears validation error when changing filters', async () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const searchInput = screen.getByTestId('search-input');
-    const searchButton = screen.getByTestId('button-contained');
+    fireEvent.change(getSearchInput(), { target: { value: 'T' } });
+    fireEvent.click(getSearchButton());
+    expect(screen.getByRole('alert')).toBeInTheDocument();
 
-    // Trigger validation error
-    fireEvent.change(searchInput, { target: { value: 'T' } });
-    fireEvent.click(searchButton);
-
-    expect(screen.getByTestId('alert-warning')).toBeInTheDocument();
-
-    // Expand filters and change category
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
-
-    const categorySelect = screen.getByLabelText('Category');
-    fireEvent.change(categorySelect, { target: { value: '1' } });
-
-    expect(screen.queryByTestId('alert-warning')).not.toBeInTheDocument();
+    openAdvancedFilters();
+    await selectOption('Category', 'Fiction');
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
   });
 
   test('handles categories loading state', () => {
-    mockUseCategories.mockReturnValue({
-      categories: [],
-      loading: true,
-    });
-
+    mockUseCategories.mockReturnValue({ categories: [], loading: true });
     render(<BookSearchForm {...defaultProps} />);
 
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
-
-    expect(screen.getByText('Loading categories...')).toBeInTheDocument();
+    openAdvancedFilters();
+    const categorySelect = screen.getByLabelText('Category');
+    expect(categorySelect).toHaveAttribute('aria-disabled', 'true');
   });
 
-  test('sorts categories alphabetically', () => {
-    const unsortedCategories = [
-      { id: 1, name: 'Zebra' },
-      { id: 2, name: 'Apple' },
-      { id: 3, name: 'Banana' },
-    ];
-
+  test('sorts categories alphabetically', async () => {
     mockUseCategories.mockReturnValue({
-      categories: unsortedCategories,
+      categories: [
+        { id: 1, name: 'Zebra' },
+        { id: 2, name: 'Apple' },
+        { id: 3, name: 'Banana' },
+      ],
       loading: false,
     });
 
     render(<BookSearchForm {...defaultProps} />);
+    openAdvancedFilters();
 
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
-
-    const options = screen.getAllByTestId('menu-item');
-    // First option is "All Categories", then sorted categories
-    expect(options[1]).toHaveTextContent('Apple');
-    expect(options[2]).toHaveTextContent('Banana');
-    expect(options[3]).toHaveTextContent('Zebra');
+    const listbox = await openSelectListbox('Category');
+    const optionTexts = within(listbox)
+      .getAllByRole('option')
+      .map((option) => option.textContent?.trim());
+    expect(optionTexts.slice(1)).toEqual(['Apple', 'Banana', 'Zebra']);
+    const closeOption = within(listbox).getByRole('option', { name: /All Categories/i });
+    fireEvent.click(closeOption);
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
   });
 
-  test('handles form submission via Enter key', () => {
+  test('handles form submission via button click', () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const searchInput = screen.getByTestId('search-input');
-    const searchButton = screen.getByTestId('button-contained');
-
-    fireEvent.change(searchInput, { target: { value: 'Test Book' } });
-    fireEvent.click(searchButton);
-
+    fireEvent.change(getSearchInput(), { target: { value: 'Test Book' } });
+    fireEvent.click(getSearchButton());
     expect(mockOnSearch).toHaveBeenCalledWith('Test Book', {});
   });
 
   test('shows clear button only when form has values', () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    // Initially no clear button
-    expect(screen.queryByText('Clear all')).not.toBeInTheDocument();
-
-    // Add search query
-    const searchInput = screen.getByTestId('search-input');
-    fireEvent.change(searchInput, { target: { value: 'test' } });
-
-    expect(screen.getByText('Clear all')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Clear all/i })).not.toBeInTheDocument();
+    fireEvent.change(getSearchInput(), { target: { value: 'test' } });
+    expect(screen.getByRole('button', { name: /Clear all/i })).toBeInTheDocument();
   });
 
-  test('includes all form values in search call', () => {
+  test('includes all form values in search call', async () => {
     render(<BookSearchForm {...defaultProps} />);
 
-    const searchInput = screen.getByTestId('search-input');
-    fireEvent.change(searchInput, { target: { value: 'test query' } });
-
-    // Expand advanced filters
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
-
-    // Set multiple filters
-    const categorySelect = screen.getByLabelText('Category');
-    fireEvent.change(categorySelect, { target: { value: '1' } });
-
-    const statusSelect = screen.getByLabelText('Reading Status');
-    fireEvent.change(statusSelect, { target: { value: 'finished' } });
-
-    const sortBySelect = screen.getByLabelText('Sort By');
-    fireEvent.change(sortBySelect, { target: { value: 'author' } });
-
-    const searchButton = screen.getByTestId('button-contained');
-    fireEvent.click(searchButton);
+    fireEvent.change(getSearchInput(), { target: { value: 'test query' } });
+    openAdvancedFilters();
+    await selectOption('Category', 'Fiction');
+    await selectOption('Reading Status', 'Finished');
+    await selectOption('Sort By', 'Author (A-Z)');
+    fireEvent.click(getSearchButton());
 
     expect(mockOnSearch).toHaveBeenCalledWith('test query', {
       categoryId: 1,
@@ -495,44 +323,29 @@ describe('BookSearchForm', () => {
     });
   });
 
-  test('handles responsive layout correctly', () => {
+  test('renders advanced filter controls when requested', () => {
     render(<BookSearchForm {...defaultProps} />);
+    openAdvancedFilters();
 
-    expect(screen.getByTestId('paper')).toBeInTheDocument();
-    
-    const advancedButton = screen.getByText('Advanced Filters');
-    fireEvent.click(advancedButton);
-
-    // Should have responsive grid
-    const gridBoxes = screen.getAllByTestId('box');
-    const responsiveBox = gridBoxes.find(box => 
-      box.style.display === 'grid'
-    );
-    expect(responsiveBox).toBeInTheDocument();
+    expect(screen.getByLabelText('Category')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reading Status')).toBeInTheDocument();
+    expect(screen.getByLabelText('Sort By')).toBeInTheDocument();
+    expect(screen.getByTestId('author-autocomplete')).toBeInTheDocument();
   });
 
   test('renders search input placeholder', () => {
     render(<BookSearchForm {...defaultProps} />);
-
-    const searchInput = screen.getByTestId('search-input');
-    expect(searchInput).toHaveAttribute('placeholder', 'Search by title, author, ISBN...');
+    expect(getSearchInput()).toHaveAttribute('placeholder', 'Search by title, author, ISBN...');
   });
 
-  test('renders search icon in input adornment', () => {
+  test('renders search icon and expand icon', () => {
     render(<BookSearchForm {...defaultProps} />);
-
     expect(screen.getByTestId('search-icon')).toBeInTheDocument();
-  });
-
-  test('renders expand icon with animation', () => {
-    render(<BookSearchForm {...defaultProps} />);
-
     expect(screen.getByTestId('expand-more-icon')).toBeInTheDocument();
   });
 
   test('handles component mount and unmount cleanly', () => {
     const { unmount } = render(<BookSearchForm {...defaultProps} />);
-    
     expect(() => unmount()).not.toThrow();
   });
 });

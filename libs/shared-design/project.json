@@ -6,13 +6,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
-        "outputPath": "dist/libs/shared-design",
-        "main": "libs/shared-design/src/index.ts",
-        "tsConfig": "libs/shared-design/tsconfig.lib.json",
-        "assets": ["libs/shared-design/*.md"]
+        "command": "npm run build",
+        "cwd": "libs/shared-design"
       }
     },
     "lint": {

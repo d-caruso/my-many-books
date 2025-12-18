@@ -1,0 +1,10 @@
+{
+  "setting_updated": "Setting updated successfully",
+  "setting_toggled": "Setting status toggled successfully",
+  "categories": {
+    "ui": "User Interface",
+    "behavior": "Behavior",
+    "system": "System",
+    "features": "Features"
+  }
+}

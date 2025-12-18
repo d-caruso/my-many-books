@@ -1,7 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/libs/shared-i18n",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "module": "commonjs",
     "declaration": true,
     "types": ["node"],
     "resolveJsonModule": true,

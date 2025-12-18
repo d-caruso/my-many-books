@@ -2,6 +2,7 @@
 // src/services/dataTransformer.ts
 // ================================================================
 
+import { getLogger } from './logger';
 import { OpenLibraryBook } from '@/types/openLibrary';
 import {
   TransformedBookData,
@@ -193,7 +194,13 @@ export class DataTransformer {
 
       return undefined;
     } catch (error) {
-      console.warn(`Failed to parse edition date: ${olBook.publish_date}`, error);
+      getLogger().warn(
+        {
+          err: error instanceof Error ? error : new Error(String(error)),
+          publishDate: olBook.publish_date,
+        },
+        'Failed to parse edition date'
+      );
       return undefined;
     }
   }

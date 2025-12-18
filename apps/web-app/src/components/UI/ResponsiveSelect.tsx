@@ -1,6 +1,13 @@
 import React from 'react';
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  SelectProps,
+  FormHelperText
+} from '@mui/material';
 
-interface ResponsiveSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface ResponsiveSelectProps extends Omit<SelectProps, 'variant'> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -13,55 +20,31 @@ export const ResponsiveSelect: React.FC<ResponsiveSelectProps> = ({
   error,
   helperText,
   isRequired,
-  className = '',
   children,
+  id,
+  labelId,
   ...props
 }) => {
-  const baseClasses = `
-    w-full px-3 py-3 border rounded-lg 
-    focus:outline-none focus:ring-2 focus:ring-primary-500 
-    text-base sm:text-sm min-h-[44px] touch-manipulation
-    transition-colors duration-200
-    cursor-pointer appearance-none
-    bg-background
-  `.trim().replace(/\s+/g, ' ');
-
-  const stateClasses = error
-    ? 'border-semantic-error bg-red-50'
-    : 'border-secondary-300 hover:border-secondary-400';
+  const computedLabelId = label ? labelId ?? (id ? `${id}-label` : undefined) : undefined;
 
   return (
-    <div className="space-y-1">
+    <FormControl fullWidth error={Boolean(error)}>
       {label && (
-        <label 
-          htmlFor={props.id} 
-          className="block text-sm font-medium text-text-secondary"
-        >
-          {label} {isRequired && <span className="text-semantic-error">*</span>}
-        </label>
+        <InputLabel id={computedLabelId} required={isRequired}>
+          {label}
+        </InputLabel>
       )}
-      
-      <div className="relative">
-        <select
-          {...props}
-          className={`${baseClasses} ${stateClasses} ${className}`}
-        >
-          {children}
-        </select>
-        
-        {/* Custom dropdown arrow */}
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-          <span className="text-text-muted" style={{fontSize: '16px'}}>▼</span>
-        </div>
-      </div>
-      
-      {error && (
-        <p className="text-sm text-semantic-error">{error}</p>
+      <Select
+        {...props}
+        id={id}
+        labelId={computedLabelId}
+        label={label}
+      >
+        {children}
+      </Select>
+      {(helperText || error) && (
+        <FormHelperText>{error ?? helperText}</FormHelperText>
       )}
-      
-      {helperText && !error && (
-        <p className="text-sm text-text-muted">{helperText}</p>
-      )}
-    </div>
+    </FormControl>
   );
 };

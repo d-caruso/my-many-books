@@ -1,11 +1,50 @@
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { Header } from '../../../components/Layout/Header';
-import { ThemeProvider } from '../../../contexts/ThemeContext';
+import { ThemeContext } from '../../../contexts/ThemeContext';
+import { ThemeName } from '../../../types';
+
+const themeLabels: Record<ThemeName, string> = {
+  default: 'Default',
+  dark: 'Dark',
+  bookish: 'Bookish',
+  forest: 'Forest',
+  ocean: 'Ocean',
+  sunset: 'Sunset',
+  lavender: 'Lavender',
+};
+
+const themeSequence: ThemeName[] = ['default', 'dark', 'bookish', 'forest', 'ocean', 'sunset', 'lavender'];
+
+const MockThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [theme, setThemeState] = useState<ThemeName>('default');
+
+  const toggleTheme = useCallback(() => {
+    setThemeState((prev) => {
+      const currentIndex = themeSequence.indexOf(prev);
+      return themeSequence[(currentIndex + 1) % themeSequence.length];
+    });
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      theme,
+      setTheme: (newTheme: ThemeName) => setThemeState(newTheme),
+      toggleTheme,
+      themes: themeLabels,
+      systemTheme: 'light',
+      autoTheme: false,
+      setAutoTheme: () => undefined,
+    }),
+    [theme, toggleTheme]
+  );
+
+  return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
+};
 
 // Test wrapper with ThemeProvider
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ThemeProvider>{children}</ThemeProvider>
+  <MockThemeProvider>{children}</MockThemeProvider>
 );
 
 describe('Header', () => {
@@ -19,10 +58,11 @@ describe('Header', () => {
   test('has correct structure', () => {
     render(<Header />, { wrapper: TestWrapper });
 
-    // Should render the header element
     const header = screen.getByRole('banner');
     expect(header).toBeInTheDocument();
-    expect(header).toHaveClass('bg-surface', 'shadow-sm', 'border-b');
+    expect(within(header).getByRole('heading', { name: /My Many Books/i })).toBeInTheDocument();
+    expect(within(header).getByTitle('Toggle theme')).toBeInTheDocument();
+    expect(within(header).getByLabelText('User avatar')).toBeInTheDocument();
   });
 
   test('displays default title', () => {
@@ -43,15 +83,15 @@ describe('Header', () => {
     
     const themeButton = screen.getByTitle('Toggle theme');
     expect(themeButton).toBeInTheDocument();
-    expect(themeButton).toHaveClass('p-2', 'rounded-md');
+    expect(themeButton).toHaveAttribute('aria-label', 'Toggle theme');
   });
 
   test('theme toggle button works', () => {
     render(<Header />, { wrapper: TestWrapper });
-    
+
     const themeButton = screen.getByTitle('Toggle theme');
     fireEvent.click(themeButton);
-    
+
     // The theme should change, which should be reflected in the icon
     expect(themeButton).toBeInTheDocument();
   });
@@ -67,12 +107,11 @@ describe('Header', () => {
   test('contains user avatar', () => {
     render(<Header />, { wrapper: TestWrapper });
 
-    const avatar = screen.getByText('U');
+    const avatar = screen.getByLabelText('User avatar');
     expect(avatar).toBeInTheDocument();
-    expect(avatar).toHaveClass('text-white', 'text-sm', 'font-medium');
   });
 
-  test('has responsive layout classes', () => {
+  test('supports accessible layout', () => {
     render(<Header />, { wrapper: TestWrapper });
 
     const header = screen.getByRole('banner');

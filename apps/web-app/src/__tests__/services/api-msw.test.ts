@@ -178,7 +178,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
         isbnCode: '123456789',
         editionNumber: 1,
         editionDate: '2024-01-01',
-        status: 'unread' as const,
+        status: 'reading' as const,
         notes: 'Test notes',
         selectedAuthors: [{ id: 1, name: 'Test', surname: 'Author' }],
         selectedCategories: [1, 2],
@@ -195,7 +195,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
             isbnCode: '123456789',
             editionNumber: 1,
             editionDate: '2024-01-01',
-            status: 'unread',
+            status: 'reading',
             notes: 'Test notes',
             authorIds: [1],
             categoryIds: [1, 2],
@@ -304,34 +304,40 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
 
   describe('Users API', () => {
     test('getCurrentUser makes HTTP request and returns user data', async () => {
-      const result = await userAPI.getCurrentUser();
+    const result = await userAPI.getCurrentUser();
 
-      expect(result).toHaveProperty('id');
-      expect(result).toHaveProperty('username');
-      expect(result).toHaveProperty('email');
+    expect(result).toHaveProperty('id');
+    expect(result).toHaveProperty('name');
+    expect(result).toHaveProperty('surname');
+    expect(result).toHaveProperty('email');
     });
 
     test('updateProfile makes HTTP PUT request with user data', async () => {
-      const updateData = { username: 'newusername' };
+    const updateData = { name: 'New', surname: 'Username' };
 
       server.use(
         http.put('*/api/users', async ({ request }) => {
-          const body = await request.json() as any;
+          const body = await request.json() as Partial<User>;
           expect(body).toEqual(updateData);
 
           const updatedUser: User = {
             id: 1,
-            username: 'newusername',
-            email: 'test@example.com'
+            email: 'test@example.com',
+            name: body.name ?? 'Test',
+            surname: body.surname ?? 'User',
+            isActive: true,
+            role: 'user',
+            creationDate: new Date().toISOString(),
+            updateDate: new Date().toISOString(),
           };
 
           return HttpResponse.json(updatedUser);
         })
       );
 
-      const result = await userAPI.updateProfile(updateData);
+    const result = await userAPI.updateProfile(updateData);
 
-      expect(result.username).toBe('newusername');
+    expect(result.name).toBe('New');
     });
   });
 
@@ -387,19 +393,26 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
 
       server.use(
         http.get(`*/api/books/search/${isbn}`, () => {
-          // ISBN is part of the path, not a param
-
-          return HttpResponse.json({
+          const payload = {
+            id: 99,
             title: 'The Great Gatsby',
-            isbn: isbn
-          });
+            isbnCode: isbn,
+            status: 'finished',
+            userId: 1,
+            authors: [],
+            categories: [],
+            creationDate: new Date().toISOString(),
+            updateDate: new Date().toISOString(),
+          };
+
+          return HttpResponse.json(payload);
         })
       );
 
       const result = await bookAPI.searchByISBN(isbn);
 
       expect(result.title).toBe('The Great Gatsby');
-      expect(result.isbn).toBe(isbn);
+      expect(result.isbnCode).toBe(isbn);
     });
   });
 });

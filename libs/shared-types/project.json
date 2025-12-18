@@ -6,13 +6,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
-        "outputPath": "dist/libs/shared-types",
-        "main": "libs/shared-types/src/index.ts",
-        "tsConfig": "libs/shared-types/tsconfig.lib.json",
-        "assets": ["libs/shared-types/*.md"]
+        "command": "npm run build",
+        "cwd": "libs/shared-types"
       }
     },
     "lint": {

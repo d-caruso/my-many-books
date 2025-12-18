@@ -1,0 +1,11 @@
+# Build artifacts
+dist/
+src/**/*.js
+src/**/*.d.ts
+src/**/*.map
+
+# Dependencies
+node_modules/
+
+# Testing
+coverage/

@@ -4,20 +4,25 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  root: '.',
+  root: __dirname,
+  envDir: __dirname,
   publicDir: 'public',
   resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.json'],
     alias: {
       '@my-many-books/shared-types': path.resolve(__dirname, '../../libs/shared-types/src'),
       '@my-many-books/shared-api': path.resolve(__dirname, '../../libs/shared-api/src'),
       '@my-many-books/shared-utils': path.resolve(__dirname, '../../libs/shared-utils/src'),
       '@my-many-books/shared-auth': path.resolve(__dirname, '../../libs/shared-auth/src'),
+      '@my-many-books/shared-validation': path.resolve(__dirname, '../../libs/shared-validation/src'),
       '@my-many-books/ui-components': path.resolve(__dirname, '../../libs/ui-components/src'),
-      '@my-many-books/shared-hooks': path.resolve(__dirname, '../../libs/shared-hooks/src'),
+      '@my-many-books/shared-ui-hooks': path.resolve(__dirname, '../../libs/shared-ui-hooks/src'),
       '@my-many-books/shared-business': path.resolve(__dirname, '../../libs/shared-business/src'),
       '@my-many-books/shared-design': path.resolve(__dirname, '../../libs/shared-design/src'),
       '@my-many-books/shared-navigation': path.resolve(__dirname, '../../libs/shared-navigation/src'),
       '@my-many-books/shared-forms': path.resolve(__dirname, '../../libs/shared-forms/src'),
+      '@my-many-books/shared-i18n/src': path.resolve(__dirname, '../../libs/shared-i18n/src'),
+      '@my-many-books/shared-i18n': path.resolve(__dirname, '../../libs/shared-i18n/src/index.ts'),
       '@': path.resolve(__dirname, './src'),
       buffer: 'buffer',
       process: 'process/browser',

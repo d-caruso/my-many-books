@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocalStorage } from '@my-many-books/shared-ui-hooks';
 
 type Theme = 'light' | 'dark';
 
@@ -22,26 +23,22 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
-const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    // Check localStorage first
-    const saved = localStorage.getItem('theme');
-    if (saved) return saved as Theme;
-    
-    // Check system preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    
+const resolvePreferredTheme = (): Theme => {
+  if (typeof window === 'undefined') {
     return 'light';
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
+const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+  const [theme, setThemeState] = useLocalStorage<Theme>('theme', resolvePreferredTheme(), {
+    serialize: value => value,
+    deserialize: value => value as Theme,
   });
 
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
-    // Save to localStorage
-    localStorage.setItem('theme', theme);
-    
     // Apply theme to document
     document.documentElement.setAttribute('data-theme', theme);
     document.body.className = `${theme}-theme`;
@@ -61,21 +58,18 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     // Listen for system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
-      // Only auto-change if user hasn't manually set a preference
-      if (!localStorage.getItem('theme')) {
-        setThemeState(e.matches ? 'dark' : 'light');
-      }
+      setThemeState(e.matches ? 'dark' : 'light');
     };
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  }, [setThemeState]);
 
   const toggleTheme = () => {
     if (isTransitioning) return;
     
     setIsTransitioning(true);
-    setThemeState(prev => prev === 'light' ? 'dark' : 'light');
+    setThemeState(prev => (prev === 'light' ? 'dark' : 'light'));
     
     setTimeout(() => setIsTransitioning(false), 300);
   };

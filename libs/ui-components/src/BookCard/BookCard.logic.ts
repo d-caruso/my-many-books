@@ -37,7 +37,7 @@ export const getStatusColor = (status?: BookStatus): string => {
   switch (status) {
     case 'finished':
       return '#10B981'; // green
-    case 'in progress':
+    case 'reading':
       return '#3B82F6'; // blue
     case 'paused':
       return '#F59E0B'; // amber
@@ -48,12 +48,14 @@ export const getStatusColor = (status?: BookStatus): string => {
 
 export const getStatusLabel = (status?: BookStatus): string => {
   switch (status) {
-    case 'in progress':
-      return 'In Progress';
+    case 'reading':
+      return 'Reading';
     case 'paused':
       return 'Paused';
     case 'finished':
       return 'Finished';
+    case '':
+      return '';
     default:
       return '';
   }

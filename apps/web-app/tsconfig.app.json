@@ -17,6 +17,9 @@
     "**/*.test.js",
     "**/*.spec.jsx",
     "**/*.test.jsx",
+    "**/__tests__/**/*",
+    "src/setupTests.ts",
+    "vitest.config.*.ts",
     "cypress/**/*",
     "cypress.config.ts",
     "src/**/*.stories.@(js|jsx|ts|tsx|mdx)"

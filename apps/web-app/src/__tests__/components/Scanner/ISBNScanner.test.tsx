@@ -1,8 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { ISBNScanner } from '../../../components/Scanner/ISBNScanner';
 import { useISBNScanner } from '../../../hooks/useISBNScanner';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 // Mock the useISBNScanner hook
 vi.mock('../../../hooks/useISBNScanner', () => ({
@@ -10,49 +12,7 @@ vi.mock('../../../hooks/useISBNScanner', () => ({
 }));
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Box: ({ children, sx, component, ref, playsInline, muted, autoPlay, ...props }: any) => {
-    const Tag = component || 'div';
-    const cleanProps = { ...props };
-    if (playsInline) cleanProps.playsInline = playsInline;
-    if (muted) cleanProps.muted = muted;
-    if (autoPlay) cleanProps.autoPlay = autoPlay;
-    return (
-      <Tag data-testid="box" style={sx} ref={ref} {...cleanProps}>{children}</Tag>
-    );
-  },
-  Paper: ({ children, elevation, ...props }: any) => (
-    <div data-testid="paper" data-elevation={elevation} {...props}>{children}</div>
-  ),
-  Typography: ({ children, variant, color, gutterBottom, fontWeight, textAlign, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} data-color={color} data-gutterbottom={gutterBottom} data-fontweight={fontWeight} style={{ textAlign }} {...props}>{children}</div>
-  ),
-  Container: ({ children, maxWidth, ...props }: any) => (
-    <div data-testid="container" data-maxwidth={maxWidth} {...props}>{children}</div>
-  ),
-  Stack: ({ children, direction, spacing, alignItems, justifyContent, ...props }: any) => (
-    <div data-testid="stack" data-direction={direction} data-spacing={spacing} style={{ alignItems, justifyContent }} {...props}>{children}</div>
-  ),
-  IconButton: ({ children, onClick, color, disabled, ...props }: any) => (
-    <button data-testid="icon-button" onClick={onClick} disabled={disabled} data-color={color} {...props}>
-      {children}
-    </button>
-  ),
-  Alert: ({ children, severity, action, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} {...props}>
-      {children}
-      {action && <div data-testid="alert-action">{action}</div>}
-    </div>
-  ),
-  CircularProgress: ({ size, color, ...props }: any) => (
-    <div data-testid="circular-progress" data-size={size} data-color={color} {...props} />
-  ),
-  Chip: ({ label, color, variant, onDelete, ...props }: any) => (
-    <div data-testid="chip" data-color={color} data-variant={variant} onClick={onDelete} {...props}>
-      {label}
-    </div>
-  ),
-}));
+setupMuiMock();
 
 // Mock Material-UI icons
 vi.mock('@mui/icons-material/Close', () => ({
@@ -167,8 +127,7 @@ describe('ISBNScanner', () => {
     // Clear any calls from useEffect (component mount may trigger requestPermission)
     mockRequestPermission.mockClear();
 
-    // Find the permission button by its accessible name
-    const permissionButton = screen.getByRole('button', { name: /camera request access/i });
+    const permissionButton = screen.getByRole('button', { name: /Request Access/i });
     fireEvent.click(permissionButton);
 
     expect(mockRequestPermission).toHaveBeenCalledTimes(1);
@@ -189,9 +148,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    // Check that video component is rendered (it's a Box with component="video")
-    const boxes = screen.getAllByTestId('box');
-    expect(boxes.length).toBeGreaterThan(0);
+    expect(screen.getByTestId('camera-view')).toBeInTheDocument();
   });
 
   test('calls onClose when close button is clicked', () => {
@@ -225,7 +182,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(screen.getByText('Initializing Camera')).toBeInTheDocument();
   });
 
@@ -247,8 +204,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    // Multiple cameras should show flip button
-    expect(screen.getByTestId('swap-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('toggle-torch')).toBeInTheDocument();
   });
 
   test('switches camera when flip camera button is clicked', () => {
@@ -271,12 +227,8 @@ describe('ISBNScanner', () => {
       />
     );
 
-    const buttons = screen.getAllByTestId('swap-icon');
-    const flipButton = buttons.find(btn => btn.textContent?.includes('Swap'));
-    expect(flipButton).toBeTruthy();
-    if (flipButton) {
-      fireEvent.click(flipButton);
-    }
+    const flipButton = screen.getByTestId('toggle-torch');
+    fireEvent.click(flipButton);
     expect(mockSwitchCamera).toHaveBeenCalledTimes(1);
   });
 
@@ -355,8 +307,8 @@ describe('ISBNScanner', () => {
       />
     );
 
-    // Should render the scanning frame and guidelines
-    expect(screen.getAllByTestId('box').length).toBeGreaterThan(1);
+    expect(screen.getByTestId('scan-overlay')).toBeInTheDocument();
+    expect(screen.getByTestId('scan-instructions')).toBeInTheDocument();
   });
 
   test('displays current device information when available', () => {

@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/authorization ]
+    branches: [ main, develop, feature/architecture-improvements, feature/app-settings ]
   pull_request:
-    branches: [ main, develop, feature/authorization ]
+    branches: [ main, develop, feature/architecture-improvements, feature/app-settings ]
   workflow_dispatch:
     inputs:
       run_tests:
@@ -48,30 +48,31 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Restore dependencies
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Install if cache miss
-        run: npm ci || npm install
+      - name: Build hookey library
+        run: npx nx build hookey
 
       - name: Build shared-auth library
-        run: |
-          cd libs/shared-auth
-          npm run build
+        working-directory: libs/shared-auth
+        run: npm run build
 
-      - name: Lint
+      - name: Debug - Verify shared-auth dist
         run: |
-          # Lint each app directly since Nx binary is not available
-          cd apps/api && npm run lint
-          echo "Web app lint: Using ESLint via React app configuration"
+          echo "=== Checking shared-auth dist folder ==="
+          ls -la libs/shared-auth/dist/ || echo "dist folder does not exist"
+
+      - name: Lint API
+        working-directory: apps/api
+        run: npm run lint
 
   test:
     name: Test
     runs-on: ubuntu-latest
     needs: setup
+    env:
+      VITEST_POOL: forks
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -81,30 +82,151 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Restore dependencies
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Install if cache miss
-        run: npm ci || npm install
+      - name: Build hookey library
+        run: npx nx build hookey
 
       - name: Build shared-auth library
-        run: |
-          cd libs/shared-auth
-          npm run build
+        working-directory: libs/shared-auth
+        run: npm run build
 
-      - name: Test
+      - name: Build shared-validation library
+        working-directory: libs/shared-validation
+        run: npm run build
+
+      - name: Debug - Verify shared-auth dist
         run: |
-          # Test API using root-level node_modules (monorepo pattern)
-          # Rebuild SQLite3 native bindings for test environment
-          npm rebuild sqlite3 --silent
-          cd apps/api
-          npm run test
-          cd ../web-app
-          # Test web-app using root-level node_modules (monorepo pattern)
-          npm run test
+          echo "=== Checking shared-auth dist folder ==="
+          ls -la libs/shared-auth/dist/ || echo "dist folder does not exist"
+
+      - name: Rebuild SQLite3
+        run: npm rebuild sqlite3 --silent
+
+      - name: Test API
+        working-directory: apps/api
+        run: npm run test -- --forceExit
+
+      - name: Test Web App - Accessibility
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:accessibility
+
+      - name: Test Web App - Components (Auth)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:auth
+
+      - name: Test Web App - Components (Book)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:book
+
+      - name: Test Web App - Components (Error Boundary)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:error-boundary
+
+      - name: Test Web App - Components (Layout)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:layout
+
+      - name: Test Web App - Components (Navigation)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:navigation
+
+      - name: Test Web App - Components (PWA)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:pwa
+
+      - name: Test Web App - Components (Scanner)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:scanner
+
+      - name: Test Web App - Components (Search - Form)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:search:form
+
+      - name: Test Web App - Components (Search - Page)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:search:page
+
+      - name: Test Web App - Components (Search - Results)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:search:results
+
+      - name: Test Web App - Components (Theme)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:theme
+
+      - name: Test Web App - Components (UI)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:ui
+
+      - name: Test Web App - Components (Hook Executions)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:hook-executions
+
+      - name: Test Web App - Components (Hook Form)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:hook-form
+
+      - name: Test Web App - Components (Hooks List)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:hooks-list
+
+      - name: Test Web App - Components (Protected Route)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:components:protected-route
+
+      - name: Test Web App - Pages (Admin Dashboard)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-dashboard
+
+      - name: Test Web App - Pages (Admin Layout)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-layout
+
+      - name: Test Web App - Pages (Admin Settings)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-settings
+
+      - name: Test Web App - Pages (Admin Book Management)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-book-management
+
+      - name: Test Web App - Pages (Admin Hooks)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-hooks
+
+      - name: Test Web App - Pages (Admin User Management)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:admin-user-management
+
+      - name: Test Web App - Pages (Auth)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:auth
+
+      - name: Test Web App - Pages (Books)
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:pages:books
+
+      - name: Test Web App - Services
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:services
+
+      - name: Test Web App - Integration
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:integration
+
+      - name: Test Web App - Hooks
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:hooks
+
+      - name: Test Web App - Types
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:types
+
+      - name: Test Web App - Utils
+        working-directory: apps/web-app
+        run: timeout 10m npm run test:web-app:utils
 
   build:
     name: Build
@@ -119,24 +241,36 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Restore dependencies
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Install if cache miss
-        run: npm ci || npm install
+      - name: Build hookey library
+        run: npx nx build hookey
 
       - name: Build shared-auth library
-        run: |
-          cd libs/shared-auth
-          npm run build
+        working-directory: libs/shared-auth
+        run: npm run build
 
-      - name: Build
+      - name: Debug - Verify shared-auth dist
         run: |
-          # Build each app using root-level node_modules (monorepo pattern)
-          cd apps/api
-          npm run build
-          cd ../web-app
-          npm run build
+          echo "=== Checking shared-auth dist folder ==="
+          ls -la libs/shared-auth/dist/ || echo "dist folder does not exist"
+          echo "=== Checking for index.d.ts ==="
+          ls -la libs/shared-auth/dist/index.d.ts || echo "index.d.ts not found"
+
+      - name: Build shared-i18n library
+        working-directory: libs/shared-i18n
+        run: npm run build
+
+      - name: Debug - Verify shared-i18n dist
+        run: |
+          echo "=== Checking shared-i18n dist folder ==="
+          ls -la libs/shared-i18n/dist/ || echo "dist folder does not exist"
+
+      - name: Build API
+        working-directory: apps/api
+        run: npm run build
+
+      - name: Build Web App
+        working-directory: apps/web-app
+        run: npm run build

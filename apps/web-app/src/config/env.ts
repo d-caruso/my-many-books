@@ -4,6 +4,7 @@
 interface EnvironmentConfig {
   NODE_ENV: string;
   API_URL: string;
+  API_BASE_URL: string;
   COGNITO_USER_POOL_ID: string;
   COGNITO_USER_POOL_CLIENT_ID: string;
   COGNITO_IDENTITY_POOL_ID: string;
@@ -20,6 +21,7 @@ const getEnvVar = (key: string, fallback: string = ''): string => {
 export const env: EnvironmentConfig = {
   NODE_ENV: import.meta.env.MODE || 'development',
   API_URL: getEnvVar('API_URL', 'http://localhost:3001'),
+  API_BASE_URL: getEnvVar('API_BASE_URL', 'http://localhost:3001/api/v1'),
   COGNITO_USER_POOL_ID: getEnvVar('COGNITO_USER_POOL_ID', ''),
   COGNITO_USER_POOL_CLIENT_ID: getEnvVar('COGNITO_USER_POOL_CLIENT_ID', ''),
   COGNITO_IDENTITY_POOL_ID: getEnvVar('COGNITO_IDENTITY_POOL_ID', ''),
@@ -31,6 +33,7 @@ export const env: EnvironmentConfig = {
 export const {
   NODE_ENV,
   API_URL,
+  API_BASE_URL,
   COGNITO_USER_POOL_ID,
   COGNITO_USER_POOL_CLIENT_ID,
   COGNITO_IDENTITY_POOL_ID,

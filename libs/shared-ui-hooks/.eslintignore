@@ -1,0 +1,3 @@
+src/examples/
+src/__tests__/
+jest.config.ts

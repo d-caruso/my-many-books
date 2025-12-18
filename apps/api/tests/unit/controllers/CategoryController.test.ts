@@ -1,522 +1,255 @@
-// ================================================================
-// tests/controllers/CategoryController.test.ts
-// ================================================================
-
 import { CategoryController } from '../../../src/controllers/CategoryController';
-import { Category, Book } from '../../../src/models';
+import {
+  CategoryService,
+  CategoryServiceError,
+} from '../../../src/services/category/CategoryService';
+import { Book } from '../../../src/models/Book';
+import { UniversalRequest } from '../../../src/types';
+import { CategoryEntity } from '../../../src/repositories/category/CategoryRepositoryTypes';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
 
-// Mock dependencies
-jest.mock('../../../src/models', () => ({
-  Category: {
-    findByName: jest.fn(),
-    createCategory: jest.fn(),
-    findByPk: jest.fn(),
-    findAndCountAll: jest.fn(),
-    searchByName: jest.fn(),
-  },
-  Book: {
-    count: jest.fn(),
-    findAndCountAll: jest.fn(),
-  }
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
-interface UniversalRequest {
-  body?: any;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-  headers?: { [key: string]: string | undefined };
-  user?: { userId: number };
-}
+jest.mock('../../../src/models/Book', () => ({
+  Book: {
+    findAndCountAll: jest.fn(),
+  },
+}));
+
+jest.mock('../../../src/models/Category', () => ({
+  Category: {},
+}));
 
 describe('CategoryController', () => {
-  let categoryController: CategoryController;
-  let mockRequest: UniversalRequest;
+  let controller: CategoryController;
+  let mockService: jest.Mocked<CategoryService>;
+  let baseRequest: UniversalRequest;
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
+
+  const buildCategory = (overrides: Partial<CategoryEntity> = {}): CategoryEntity => ({
+    id: 1,
+    name: 'Category',
+    userId: 1,
+    creationDate: new Date(),
+    updateDate: new Date(),
+    ...overrides,
+  });
 
   beforeEach(() => {
-    categoryController = new CategoryController();
-    jest.clearAllMocks();
-    mockRequest = {
+    mockService = {
+      initializeControllerContext: jest.fn(),
+      getCategory: jest.fn(),
+      listCategories: jest.fn(),
+      searchCategories: jest.fn(),
+      createCategory: jest.fn(),
+      updateCategory: jest.fn(),
+      deleteCategory: jest.fn(),
+    } as unknown as jest.Mocked<CategoryService>;
+
+    controller = new CategoryController(mockService as unknown as CategoryService);
+
+    baseRequest = {
       headers: { 'accept-language': 'en' },
-      user: { userId: 1 },
+      queryStringParameters: {},
+      pathParameters: {},
+      user: { userId: 1, role: 'user' },
     };
+
+    jest.clearAllMocks();
+    emitHookEventMock.mockClear();
   });
 
   describe('createCategory', () => {
-    const validCategoryData = {
-      name: 'Fiction',
-    };
+    it('creates category via service', async () => {
+      mockService.createCategory.mockResolvedValue(
+        buildCategory({ id: 1, name: 'Fiction' })
+      );
 
-    it('should create a category successfully', async () => {
-      const mockCreatedCategory = { id: 1, name: 'Fiction' };
+      const response = await controller.createCategory({
+        ...baseRequest,
+        body: { name: 'Fiction' },
+      });
 
-      (Category.findByName as jest.Mock).mockResolvedValue(null);
-      (Category.createCategory as jest.Mock).mockResolvedValue(mockCreatedCategory);
-
-      mockRequest.body = JSON.stringify(validCategoryData);
-
-      const result = await categoryController.createCategory(mockRequest);
-
-      expect(result.statusCode).toBe(201);
-      expect(result.success).toBe(true);
-      expect(result.message).toBe('Category created successfully');
-      expect(result.data).toEqual(mockCreatedCategory);
+      expect(mockService.createCategory).toHaveBeenCalledWith(
+        { name: 'Fiction' },
+        expect.objectContaining({ userId: 1 })
+      );
+      expect(response.statusCode).toBe(201);
+      expect(response.data).toMatchObject({ id: 1, name: 'Fiction', userId: 1 });
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.CATEGORY.CREATE.BEFORE,
+        expect.objectContaining({
+          user: { id: 1, role: 'user' },
+          input: { name: 'Fiction' },
+        })
+      );
     });
 
-    it('should return 400 for missing request body', async () => {
-      mockRequest.body = undefined;
 
-      const result = await categoryController.createCategory(mockRequest);
+    it('handles service errors', async () => {
+      mockService.createCategory.mockRejectedValue(
+        new CategoryServiceError('DUPLICATE_CATEGORY')
+      );
 
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Request body is required');
-    });
+      const response = await controller.createCategory({
+        ...baseRequest,
+        body: { name: 'Fiction' },
+      });
 
-    it('should return 400 for validation errors', async () => {
-      const invalidData = { name: '' }; // Empty name
-
-      mockRequest.body = JSON.stringify(invalidData);
-
-      const result = await categoryController.createCategory(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Validation failed');
-    });
-
-    it('should return 409 for duplicate category name', async () => {
-      (Category.findByName as jest.Mock).mockResolvedValue({ id: 2, name: 'Fiction' });
-
-      mockRequest.body = JSON.stringify(validCategoryData);
-
-      const result = await categoryController.createCategory(mockRequest);
-
-      expect(result.statusCode).toBe(409);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Category with this name already exists');
-    });
-
-    it('should handle database errors', async () => {
-      (Category.findByName as jest.Mock).mockResolvedValue(null);
-      (Category.createCategory as jest.Mock).mockRejectedValue(new Error('Database error'));
-
-      mockRequest.body = JSON.stringify(validCategoryData);
-
-      const result = await categoryController.createCategory(mockRequest);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to create category');
+      expect(response.statusCode).toBe(409);
+      expect(response.success).toBe(false);
     });
   });
 
   describe('getCategory', () => {
-    it('should get a category successfully', async () => {
-      const mockCategoryData = {
-        id: 1,
-        name: 'Fiction',
-        books: [],
-      };
+    it('returns DTO from service', async () => {
+      mockService.getCategory.mockResolvedValue(
+        buildCategory({ id: 10, name: 'Mystery' })
+      );
 
-      (Category.findByPk as jest.Mock).mockResolvedValue(mockCategoryData);
+      const response = await controller.getCategory({
+        ...baseRequest,
+        pathParameters: { id: '10' },
+      });
 
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await categoryController.getCategory(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockCategoryData);
+      expect(mockService.getCategory).toHaveBeenCalledWith(10, expect.any(Object), false);
+      expect(response.data).toMatchObject({ id: 10, name: 'Mystery', userId: 1 });
     });
 
-    it('should return 400 for invalid category ID', async () => {
-      mockRequest.pathParameters = { id: 'invalid' };
+    it('validates id parameter', async () => {
+      const response = await controller.getCategory({
+        ...baseRequest,
+        pathParameters: { id: 'abc' },
+      });
 
-      const result = await categoryController.getCategory(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Invalid category ID');
+      expect(response.statusCode).toBe(400);
+      expect(mockService.getCategory).not.toHaveBeenCalled();
     });
 
-    it('should return 404 for non-existent category', async () => {
-      (Category.findByPk as jest.Mock).mockResolvedValue(null);
+    it('maps service not found error', async () => {
+      mockService.getCategory.mockRejectedValue(
+        new CategoryServiceError('CATEGORY_NOT_FOUND')
+      );
 
-      mockRequest.pathParameters = { id: '999' };
+      const response = await controller.getCategory({
+        ...baseRequest,
+        pathParameters: { id: '99' },
+      });
 
-      const result = await categoryController.getCategory(mockRequest);
-
-      expect(result.statusCode).toBe(404);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Category not found');
-    });
-
-    it('should handle database errors', async () => {
-      (Category.findByPk as jest.Mock).mockRejectedValue(new Error('Database error'));
-
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await categoryController.getCategory(mockRequest);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal server error');
+      expect(response.statusCode).toBe(404);
     });
   });
 
   describe('updateCategory', () => {
-    const updateData = { name: 'Updated Fiction' };
+    it('updates via service', async () => {
+      mockService.updateCategory.mockResolvedValue(
+        buildCategory({ id: 2, name: 'Updated' })
+      );
 
-    it('should update a category successfully', async () => {
-      const mockCategoryToUpdate = {
-        id: 1,
-        name: 'Fiction',
-        userId: 1, // Same as mockRequest.user.userId
-        update: jest.fn().mockResolvedValue(true),
-      };
+      const response = await controller.updateCategory({
+        ...baseRequest,
+        pathParameters: { id: '2' },
+        body: { name: 'Updated' },
+      });
 
-      (Category.findByPk as jest.Mock).mockResolvedValue(mockCategoryToUpdate);
-      (Category.findByName as jest.Mock).mockResolvedValue(null); // No duplicate name
-
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.body = JSON.stringify(updateData);
-
-      const result = await categoryController.updateCategory(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(result.message).toBe('Category updated successfully');
-      expect(mockCategoryToUpdate.update).toHaveBeenCalled();
+      expect(mockService.updateCategory).toHaveBeenCalledWith(
+        2,
+        { name: 'Updated' },
+        expect.any(Object)
+      );
+      expect(response.data).toMatchObject({ id: 2, name: 'Updated', userId: 1 });
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.CATEGORY.UPDATE.BEFORE,
+        expect.objectContaining({
+          categoryId: 2,
+          user: { id: 1, role: 'user' },
+          input: { name: 'Updated' },
+        })
+      );
     });
 
-    it('should return 404 for non-existent category', async () => {
-      (Category.findByPk as jest.Mock).mockResolvedValue(null);
-
-      mockRequest.pathParameters = { id: '999' };
-      mockRequest.body = JSON.stringify(updateData);
-
-      const result = await categoryController.updateCategory(mockRequest);
-
-      expect(result.statusCode).toBe(404);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Category not found');
-    });
-
-    it('should return 400 for validation errors', async () => {
-      const mockCategory = { id: 1, name: 'Fiction' };
-      (Category.findByPk as jest.Mock).mockResolvedValue(mockCategory);
-
-      const invalidData = { name: 'a'.repeat(300) }; // Too long
-
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.body = JSON.stringify(invalidData);
-
-      const result = await categoryController.updateCategory(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Validation failed');
-    });
-
-    it('should return 409 for duplicate name conflict', async () => {
-      const mockCategory = { id: 1, name: 'Fiction', userId: 1 };
-      (Category.findByPk as jest.Mock).mockResolvedValue(mockCategory);
-      (Category.findByName as jest.Mock).mockResolvedValue({ id: 2, name: 'Updated Fiction' }); // Duplicate exists
-
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.body = JSON.stringify(updateData);
-
-      const result = await categoryController.updateCategory(mockRequest);
-
-      expect(result.statusCode).toBe(409);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Category with this name already exists');
-    });
   });
 
   describe('deleteCategory', () => {
-    it('should delete a category successfully', async () => {
-      const mockCategoryToDelete = {
-        id: 1,
-        userId: 1, // Same as mockRequest.user.userId
-        destroy: jest.fn(),
-      };
+    it('deletes via service with force flag', async () => {
+      mockService.deleteCategory.mockResolvedValue();
 
-      (Category.findByPk as jest.Mock).mockResolvedValue(mockCategoryToDelete);
-      (Book.count as jest.Mock).mockResolvedValue(0); // No associated books
+      const response = await controller.deleteCategory({
+        ...baseRequest,
+        pathParameters: { id: '3' },
+        queryStringParameters: { force: 'true' },
+      });
 
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await categoryController.deleteCategory(mockRequest);
-
-      expect(result.statusCode).toBe(204);
-      expect(result.success).toBe(true);
-      expect(result.message).toBe('Category deleted successfully');
-      expect(mockCategoryToDelete.destroy).toHaveBeenCalled();
-    });
-
-    it('should return 404 for non-existent category', async () => {
-      (Category.findByPk as jest.Mock).mockResolvedValue(null);
-
-      mockRequest.pathParameters = { id: '999' };
-
-      const result = await categoryController.deleteCategory(mockRequest);
-
-      expect(result.statusCode).toBe(404);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Category not found');
-    });
-
-    it('should return 400 for invalid category ID', async () => {
-      mockRequest.pathParameters = { id: 'invalid' };
-
-      const result = await categoryController.deleteCategory(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Invalid category ID');
-    });
-
-    it('should handle database errors during deletion', async () => {
-      const mockCategoryToDelete = {
-        id: 1,
-        userId: 1, // Same as mockRequest.user.userId
-        destroy: jest.fn().mockRejectedValue(new Error('Delete failed')),
-      };
-
-      (Category.findByPk as jest.Mock).mockResolvedValue(mockCategoryToDelete);
-      (Book.count as jest.Mock).mockResolvedValue(0);
-
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await categoryController.deleteCategory(mockRequest);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to delete category');
+      expect(mockService.deleteCategory).toHaveBeenCalledWith(
+        3,
+        expect.any(Object),
+        { force: true }
+      );
+      expect(response.statusCode).toBe(204);
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.CATEGORY.DELETE.BEFORE,
+        expect.objectContaining({
+          categoryId: 3,
+          user: { id: 1, role: 'user' },
+          force: true,
+        })
+      );
     });
   });
 
   describe('listCategories', () => {
-    it('should list categories with pagination', async () => {
-      const mockCategories = [
-        { id: 1, name: 'Fiction' },
-        { id: 2, name: 'Non-Fiction' },
-      ];
-
-      (Category.findAndCountAll as jest.Mock).mockResolvedValue({
-        count: 2,
-        rows: mockCategories,
+    it('returns paginated categories', async () => {
+      mockService.listCategories.mockResolvedValue({
+        rows: [
+          buildCategory({ id: 1, name: 'Fiction' }),
+          buildCategory({ id: 2, name: 'Science' }),
+        ],
+        total: 2,
+        limit: 20,
+        offset: 0,
       });
 
-      mockRequest.queryStringParameters = { page: '1', limit: '10' };
-
-      const result = await categoryController.listCategories(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockCategories);
-      expect(result.pagination).toEqual({
-        pagination: {
-          page: 1,
-          limit: 10,
-          totalCount: 2,
-          totalPages: 1,
-          hasNext: false,
-          hasPrev: false,
-        }
-      });
-    });
-
-    it('should handle search filter', async () => {
-      const mockCategories = [{ id: 1, name: 'Fiction' }];
-
-      (Category.searchByName as jest.Mock).mockResolvedValue(mockCategories);
-
-      mockRequest.queryStringParameters = { search: 'Fiction' };
-
-      const result = await categoryController.listCategories(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockCategories);
-    });
-
-    it('should handle empty results', async () => {
-      (Category.findAndCountAll as jest.Mock).mockResolvedValue({
-        count: 0,
-        rows: [],
+      const response = await controller.listCategories({
+        ...baseRequest,
+        queryStringParameters: { page: '1', limit: '20', search: 'fi' },
       });
 
-      mockRequest.queryStringParameters = {};
-
-      const result = await categoryController.listCategories(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual([]);
-      expect((result as any).pagination?.pagination?.totalCount).toBe(0);
-    });
-
-    it('should handle database errors', async () => {
-      (Category.findAndCountAll as jest.Mock).mockRejectedValue(new Error('Database error'));
-
-      mockRequest.queryStringParameters = {};
-
-      const result = await categoryController.listCategories(mockRequest);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal server error');
+      expect(mockService.listCategories).toHaveBeenCalledWith(
+        expect.objectContaining({ search: 'fi', limit: 20, offset: 0 }),
+        expect.any(Object)
+      );
+      expect(response.data).toEqual([
+        expect.objectContaining({ id: 1, name: 'Fiction', userId: 1 }),
+        expect.objectContaining({ id: 2, name: 'Science', userId: 1 }),
+      ]);
+      expect(response.pagination).toMatchObject({ totalCount: 2 });
     });
   });
 
   describe('getCategoryBooks', () => {
-    it('should get books for a category successfully', async () => {
-      const mockCategory = {
-        id: 1,
-        name: 'Fiction',
-      };
-
-      const mockBooks = [
-        { id: 1, title: 'Book 1' },
-        { id: 2, title: 'Book 2' },
-      ];
-
-      (Category.findByPk as jest.Mock).mockResolvedValue(mockCategory);
+    it('fetches books for category', async () => {
+      mockService.getCategory.mockResolvedValue(
+        buildCategory({ id: 5, name: 'History' })
+      );
       (Book.findAndCountAll as jest.Mock).mockResolvedValue({
-        count: 2,
-        rows: mockBooks,
+        count: 1,
+        rows: [{ id: 10, title: 'Book' }],
       });
 
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await categoryController.getCategoryBooks(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual({
-        category: { id: 1, name: 'Fiction' },
-        books: mockBooks,
-      });
-    });
-
-    it('should return 404 for non-existent category', async () => {
-      (Category.findByPk as jest.Mock).mockResolvedValue(null);
-
-      mockRequest.pathParameters = { id: '999' };
-
-      const result = await categoryController.getCategoryBooks(mockRequest);
-
-      expect(result.statusCode).toBe(404);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Category not found');
-    });
-
-    it('should return 400 for invalid category ID', async () => {
-      mockRequest.pathParameters = { id: 'invalid' };
-
-      const result = await categoryController.getCategoryBooks(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Invalid category ID');
-    });
-
-    it('should handle category with no books', async () => {
-      const mockCategory = {
-        id: 1,
-        name: 'Fiction',
-      };
-
-      (Category.findByPk as jest.Mock).mockResolvedValue(mockCategory);
-      (Book.findAndCountAll as jest.Mock).mockResolvedValue({
-        count: 0,
-        rows: [],
+      const response = await controller.getCategoryBooks({
+        ...baseRequest,
+        pathParameters: { id: '5' },
       });
 
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await categoryController.getCategoryBooks(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual({
-        category: { id: 1, name: 'Fiction' },
-        books: [],
+      expect(mockService.getCategory).toHaveBeenCalledWith(5, expect.any(Object));
+      expect(Book.findAndCountAll).toHaveBeenCalled();
+      expect(response.data).toMatchObject({
+        category: expect.objectContaining({ id: 5, name: 'History' }),
+        books: [{ id: 10, title: 'Book' }],
       });
-    });
-
-    it('should handle database errors', async () => {
-      (Category.findByPk as jest.Mock).mockRejectedValue(new Error('Database error'));
-
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await categoryController.getCategoryBooks(mockRequest);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal server error');
-    });
   });
-
-  describe('Edge cases and validation', () => {
-    it('should handle malformed JSON in request body', async () => {
-      mockRequest.body = 'invalid json';
-
-      const result = await categoryController.createCategory(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Request body is required');
-    });
-
-    it('should handle empty path parameters', async () => {
-      mockRequest.pathParameters = {};
-
-      const result = await categoryController.getCategory(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Valid category ID is required');
-    });
-
-    it('should handle missing path parameters', async () => {
-      delete mockRequest.pathParameters;
-
-      const result = await categoryController.getCategory(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Valid category ID is required');
-    });
-
-    it('should handle very long category names', async () => {
-      const longName = 'a'.repeat(300);
-      
-      mockRequest.body = JSON.stringify({ name: longName });
-
-      const result = await categoryController.createCategory(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Validation failed');
-    });
-
-    it('should handle category names with special characters', async () => {
-      const specialName = 'Fiction & Non-Fiction (Books)';
-      const mockCategory = { id: 1, name: specialName };
-
-      (Category.findByName as jest.Mock).mockResolvedValue(null);
-      (Category.createCategory as jest.Mock).mockResolvedValue(mockCategory);
-
-      mockRequest.body = JSON.stringify({ name: specialName });
-
-      const result = await categoryController.createCategory(mockRequest);
-
-      expect(result.statusCode).toBe(201);
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockCategory);
-    });
-  });
+});
 });

@@ -1,90 +1,110 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Box, Button, IconButton, Chip } from '@mui/material';
+import { Box, Button, IconButton, Chip, Container, Typography, Alert } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ClearIcon from '@mui/icons-material/Clear';
 import GridIcon from '@mui/icons-material/ViewModule';
 import ListIcon from '@mui/icons-material/ViewList';
 import { useTranslation } from 'react-i18next';
+import type { BookFormData as SharedBookFormInput } from '@my-many-books/shared-types';
+import { SETTING_KEYS, BOOK_STATUS_CHANGE_BEHAVIOR, BookStatusChangeBehavior } from '@my-many-books/shared-types';
 import { Book } from '../types';
 import { BookList, BookForm, BookDetails, type BookFormData } from '../components/Book';
 import { BookSearchForm } from '../components/Search';
 import { useBookSearch } from '../hooks/useBookSearch';
-import { useApi } from '../contexts/ApiContext';
+import { useBooks } from '../hooks/useBooks';
+import { useSetting } from '../hooks/useSetting';
 
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
 
 const BooksPage: React.FC = () => {
   const { t } = useTranslation('pages');
-  const { bookAPI } = useApi();
   const [searchParams, setSearchParams] = useSearchParams();
-  // const navigate = useNavigate(); // Commented out as currently unused
 
   const [pageMode, setPageMode] = useState<PageMode>('list');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  // Get setting for book status change behavior
+  const { value: statusChangeBehavior } = useSetting<BookStatusChangeBehavior>(
+    SETTING_KEYS.BOOKS.LIST.STATUS.ONCHANGE
+  );
 
   const {
-    books,
+    books: searchResults,
     loading: searchLoading,
     error: searchError,
-    totalCount,
-    hasMore,
+    totalCount: searchTotalCount,
+    hasMore: searchHasMore,
     searchBooks,
-    loadMore,
+    loadMore: loadMoreSearch,
     clearSearch
   } = useBookSearch();
 
-  // Use refs to store the latest functions to avoid dependency issues
-  const searchBooksRef = useRef(searchBooks);
-  const loadUserBooksRef = useRef<(() => Promise<void>) | null>(null);
+  const {
+    books: libraryBooks,
+    loading: booksLoading,
+    error: booksError,
+    totalCount: booksTotalCount,
+    hasMore: booksHasMore,
+    loadBooks,
+    loadMore: loadMoreBooks,
+    createBook: createBookEntry,
+    updateBook: updateBookEntry,
+    deleteBook: deleteBookEntry,
+    updateBookStatus: updateBookStatusEntry,
+    refreshBooks,
+  } = useBooks({ autoLoad: false });
 
-  searchBooksRef.current = searchBooks;
+  const searchCategoryId = searchParams.get('categoryId');
+  const searchAuthorId = searchParams.get('authorId');
+  const searchSortBy = searchParams.get('sortBy');
+  const searchModeParam = searchParams.get('mode');
+  const searchQuery = searchParams.get('q') || '';
+  const searchActive = Boolean(searchQuery || searchCategoryId || searchAuthorId || searchSortBy);
 
-  const loadUserBooks = useCallback(async () => {
-    try {
-      // For now, we'll use the search with empty query to get all books
-      searchBooksRef.current('', {});
-    } catch (err: any) {
-      console.error('Failed to load user books:', err);
-      setError(t('books.error_load_books'));
-    }
-  }, [t]);
-
-  loadUserBooksRef.current = loadUserBooks;
-
-  // Initialize with user's books or search params
-  useEffect(() => {
-    const query = searchParams.get('q');
+  const runCurrentSearch = useCallback(async () => {
+    const query = searchParams.get('q') || '';
+    const filters: any = {};
     const categoryId = searchParams.get('categoryId');
     const authorId = searchParams.get('authorId');
     const sortBy = searchParams.get('sortBy');
-    const mode = searchParams.get('mode');
 
-    // Handle mode changes
-    if (mode === 'add') {
+    if (categoryId) filters.categoryId = parseInt(categoryId);
+    if (authorId) filters.authorId = parseInt(authorId);
+    if (sortBy) filters.sortBy = sortBy;
+
+    await searchBooks(query, filters);
+  }, [searchParams, searchBooks]);
+
+  useEffect(() => {
+    if (searchModeParam === 'add') {
       handleAddBook();
-      // Remove mode param to clean URL
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('mode');
       setSearchParams(newParams, { replace: true });
       return;
     }
 
-    if (query || categoryId || authorId || sortBy) {
-      const filters: any = {};
-      if (categoryId) filters.categoryId = parseInt(categoryId);
-      if (authorId) filters.authorId = parseInt(authorId);
-      if (sortBy) filters.sortBy = sortBy;
-      searchBooksRef.current(query || '', filters);
-    } else {
-      // Load user's books by default
-      loadUserBooksRef.current?.();
+    if (searchActive) {
+      runCurrentSearch();
+      return;
     }
-  }, [searchParams, setSearchParams]);
+
+    clearSearch();
+    loadBooks(1);
+  }, [searchActive, searchModeParam, searchParams, setSearchParams, runCurrentSearch, clearSearch, loadBooks]);
+
+  const displayedBooks = searchActive ? searchResults : libraryBooks;
+  const displayedLoading = searchActive ? searchLoading : booksLoading;
+  const displayedError = searchActive ? searchError : booksError;
+  const displayedTotalCount = searchActive ? searchTotalCount : booksTotalCount;
+  const displayedHasMore = searchActive ? searchHasMore : booksHasMore;
+  const displayedLoadMore = searchActive ? loadMoreSearch : loadMoreBooks;
+  const combinedError = actionError || displayedError;
 
   const handleSearch = (query: string, filters: any) => {
     // Update URL params
@@ -103,6 +123,7 @@ const BooksPage: React.FC = () => {
   const handleAddBook = () => {
     setSelectedBook(null);
     setPageMode('add');
+    setActionError(null);
   };
 
   const handleEditBook = (book: Book) => {
@@ -113,200 +134,191 @@ const BooksPage: React.FC = () => {
   const handleViewDetails = (book: Book) => {
     setSelectedBook(book);
     setPageMode('details');
+    setActionError(null);
   };
 
   const handleDeleteBook = async (bookId: number) => {
-    setLoading(true);
-    setError(null);
+    setActionLoading(true);
+    setActionError(null);
 
     try {
-      await bookAPI.deleteBook(bookId);
-      
-      // Refresh the book list
-      const query = searchParams.get('q');
-      const categoryId = searchParams.get('categoryId');
-      const authorId = searchParams.get('authorId');
-      const sortBy = searchParams.get('sortBy');
-      
-      if (query || categoryId || authorId || sortBy) {
-        const filters: any = {};
-        if (categoryId) filters.categoryId = parseInt(categoryId);
-        if (authorId) filters.authorId = parseInt(authorId);
-        if (sortBy) filters.sortBy = sortBy;
-        await searchBooks(query || '', filters);
-      } else {
-        await loadUserBooks();
+      const deleted = await deleteBookEntry(bookId);
+      if (!deleted) {
+        throw new Error('Failed to delete book');
       }
 
-      // Close details if we were viewing the deleted book
+      if (searchActive) {
+        await runCurrentSearch();
+      } else {
+        await refreshBooks();
+      }
+
       if (selectedBook?.id === bookId) {
         setPageMode('list');
         setSelectedBook(null);
       }
     } catch (err: any) {
       console.error('Failed to delete book:', err);
-      setError(err.response?.data?.message || 'Failed to delete book');
+      setActionError(err.response?.data?.message || err.message || 'Failed to delete book');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   const handleStatusChange = async (bookId: number, status: Book['status']) => {
-    setLoading(true);
-    setError(null);
-
     try {
-      await bookAPI.updateBook(bookId, { status });
-      
-      // Refresh the book list
-      const query = searchParams.get('q');
-      const categoryId = searchParams.get('categoryId');
-      const authorId = searchParams.get('authorId');
-      const sortBy = searchParams.get('sortBy');
-      
-      if (query || categoryId || authorId || sortBy) {
-        const filters: any = {};
-        if (categoryId) filters.categoryId = parseInt(categoryId);
-        if (authorId) filters.authorId = parseInt(authorId);
-        if (sortBy) filters.sortBy = sortBy;
-        await searchBooks(query || '', filters);
-      } else {
-        await loadUserBooks();
+      await updateBookStatusEntry(bookId, status);
+
+      if (selectedBook?.id === bookId) {
+        setSelectedBook(prev => (prev ? { ...prev, status } : null));
       }
 
-      // Update selected book if it's currently being viewed
-      if (selectedBook?.id === bookId) {
-        setSelectedBook(prev => prev ? { ...prev, status } : null);
+      // Apply behavior based on setting
+      const behavior = statusChangeBehavior || BOOK_STATUS_CHANGE_BEHAVIOR.REMOVE;
+
+      if (behavior === BOOK_STATUS_CHANGE_BEHAVIOR.REMOVE) {
+        // Remove behavior: The book removal is handled by the useBooks hook
+        // which will automatically update the books state after updateBookStatus
+        // No additional action needed - the book is removed from the list
+      } else if (behavior === BOOK_STATUS_CHANGE_BEHAVIOR.REFRESH) {
+        // Refresh behavior: Reload the entire list from the server
+        if (searchActive) {
+          await runCurrentSearch();
+        } else {
+          await refreshBooks();
+        }
       }
+      // KEEP behavior: do nothing, book stays in list with updated status
+      // The useBooks hook will update the book status in place
     } catch (err: any) {
       console.error('Failed to update book status:', err);
-      setError(err.response?.data?.message || 'Failed to update book status');
-    } finally {
-      setLoading(false);
+      setActionError(err.response?.data?.message || err.message || 'Failed to update book status');
     }
   };
 
+  const buildSharedPayload = (formData: BookFormData): SharedBookFormInput => ({
+    title: formData.title,
+    isbnCode: formData.isbnCode,
+    editionNumber: formData.editionNumber,
+    editionDate: formData.editionDate,
+    status: formData.status,
+    notes: formData.notes,
+    authorIds: formData.selectedAuthors?.map(author => author.id),
+    categoryIds: formData.selectedCategories,
+  });
+
   const handleFormSubmit = async (formData: BookFormData) => {
-    setLoading(true);
-    setError(null);
+    setActionLoading(true);
+    setActionError(null);
 
     try {
-      console.log('BooksPage handleFormSubmit formData:', formData);
-      console.log('BooksPage formData keys:', Object.keys(formData));
-
-      // Transform the form data to API format
-      const apiData = {
-        title: formData.title,
-        isbnCode: formData.isbnCode,
-        editionNumber: formData.editionNumber,
-        editionDate: formData.editionDate,
-        status: formData.status,
-        notes: formData.notes,
-        selectedAuthors: formData.selectedAuthors,
-        selectedCategories: formData.selectedCategories
-      };
-
-      console.log('BooksPage apiData:', apiData);
-      console.log('BooksPage apiData keys:', Object.keys(apiData));
+      const payload = buildSharedPayload(formData);
 
       if (selectedBook) {
-        await bookAPI.updateBook(selectedBook.id, apiData);
+        await updateBookEntry(selectedBook.id, payload);
       } else {
-        await bookAPI.createBook(apiData);
+        await createBookEntry(payload);
       }
 
-      // Refresh the book list
-      const query = searchParams.get('q');
-      const categoryId = searchParams.get('categoryId');
-      const authorId = searchParams.get('authorId');
-      const sortBy = searchParams.get('sortBy');
-      
-      if (query || categoryId || authorId || sortBy) {
-        const filters: any = {};
-        if (categoryId) filters.categoryId = parseInt(categoryId);
-        if (authorId) filters.authorId = parseInt(authorId);
-        if (sortBy) filters.sortBy = sortBy;
-        await searchBooks(query || '', filters);
+      if (searchActive) {
+        await runCurrentSearch();
       } else {
-        await loadUserBooks();
+        await refreshBooks();
       }
 
       setPageMode('list');
       setSelectedBook(null);
     } catch (err: any) {
       console.error('Failed to save book:', err);
-      console.error('Error response data:', err.response?.data);
       const errorData = err.response?.data;
       const errorMessage = errorData?.error || errorData?.message || 'Failed to save book';
       const errorDetails = errorData?.details || [];
 
-      // Combine error message with details for display
-      const fullError = errorDetails.length > 0
-        ? `${errorMessage}:\n${errorDetails.join('\n')}`
-        : errorMessage;
+      // Format validation errors with field names
+      if (errorDetails.length > 0) {
+        const formattedErrors = errorDetails.map((detail: any) =>
+          `${detail.field}: ${detail.message}`
+        ).join('\n');
+        setActionError(formattedErrors);
+      } else {
+        setActionError(errorMessage);
+      }
 
-      setError(fullError);
-      throw err; // Re-throw to keep form open
+      throw err;
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   const handleCancel = () => {
     setPageMode('list');
     setSelectedBook(null);
+    setActionError(null);
+  };
+
+  const visuallyHidden = {
+    border: 0,
+    clip: 'rect(0 0 0 0)',
+    height: 1,
+    margin: -1,
+    overflow: 'hidden',
+    padding: 0,
+    position: 'absolute' as const,
+    width: 1,
   };
 
   // Render different modes
   if (pageMode === 'add' || pageMode === 'edit') {
     return (
-      <div style={{ maxWidth: '672px', margin: '0 auto', padding: '2rem 1rem' }}>
+      <Container maxWidth="md" sx={{ py: 4 }}>
         <BookForm
           book={selectedBook}
           onSubmit={handleFormSubmit}
           onCancel={handleCancel}
-          loading={loading}
+          loading={actionLoading}
         />
-        {error && (
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600" style={{ whiteSpace: 'pre-line' }}>{error}</p>
-          </div>
+        {actionError && (
+          <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-line' }}>
+            {actionError}
+          </Alert>
         )}
-      </div>
+      </Container>
     );
   }
 
   if (pageMode === 'details' && selectedBook) {
     return (
-      <div style={{ maxWidth: '896px', margin: '0 auto', padding: '2rem 1rem' }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         <BookDetails
           book={selectedBook}
           onEdit={handleEditBook}
           onDelete={handleDeleteBook}
           onStatusChange={handleStatusChange}
           onClose={() => setPageMode('list')}
-          loading={loading}
+          loading={actionLoading}
         />
-        {error && (
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600" style={{ whiteSpace: 'pre-line' }}>{error}</p>
-          </div>
+        {actionError && (
+          <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-line' }}>
+            {actionError}
+          </Alert>
         )}
-      </div>
+      </Container>
     );
   }
 
   // List mode (default)
   return (
-    <div style={{ maxWidth: '1024px', margin: '0 auto', padding: '2rem 1rem' }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Page header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">{t('pages:books.title')}</h1>
-          <p className="text-lg text-text-secondary">
-            {totalCount > 0 ? t('pages:books.description_with_count', { count: totalCount }) : t('pages:books.description')}
-          </p>
-        </div>
+      <Box mb={6} display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
+        <Box>
+          <Typography variant="h4" component="h1" gutterBottom>
+            {t('pages:books.title')}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            {displayedTotalCount > 0 ? t('pages:books.description_with_count', { count: displayedTotalCount }) : t('pages:books.description')}
+          </Typography>
+        </Box>
 
         <Button
           variant="contained"
@@ -322,42 +334,42 @@ const BooksPage: React.FC = () => {
             {t('pages:books.add')}
           </Box>
         </Button>
-      </div>
+      </Box>
 
       {/* Search and filters */}
-      <div className="mb-8">
+      <Box mb={6}>
         <BookSearchForm
           onSearch={handleSearch}
           loading={searchLoading}
           initialQuery={searchParams.get('q') || ''}
         />
-      </div>
+      </Box>
 
       {/* View controls */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          {searchParams.get('q') && (
+      <Box mb={4} display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
+        <Box display="flex" alignItems="center" gap={2}>
+          {searchActive && (
             <Chip
               icon={<ClearIcon />}
               label={t('pages:books.clear_search')}
               onClick={() => {
                 setSearchParams({});
                 clearSearch();
-                loadUserBooksRef.current?.();
+                setActionError(null);
               }}
               onDelete={() => {
                 setSearchParams({});
                 clearSearch();
-                loadUserBooksRef.current?.();
+                setActionError(null);
               }}
               color="secondary"
               variant="outlined"
               size="small"
             />
           )}
-        </div>
+        </Box>
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box display="flex" gap={1}>
           <IconButton
             onClick={() => setViewMode('grid')}
             color={viewMode === 'grid' ? 'primary' : 'default'}
@@ -378,22 +390,22 @@ const BooksPage: React.FC = () => {
             <ListIcon aria-hidden="true" />
           </IconButton>
         </Box>
-      </div>
+      </Box>
 
       {/* Screen reader announcements for list updates */}
-      <div role="status" aria-live="polite" className="sr-only">
-        {searchLoading
+      <Box role="status" aria-live="polite" sx={visuallyHidden}>
+        {displayedLoading
           ? t('pages:books.loading')
-          : totalCount > 0
-          ? `${totalCount} ${t('pages:books.books_found')}`
+          : displayedTotalCount > 0
+          ? `${displayedTotalCount} ${t('pages:books.books_found')}`
           : t('pages:books.no_books_empty')}
-      </div>
+      </Box>
 
       {/* Books list */}
       <BookList
-        books={books}
-        loading={searchLoading}
-        error={searchError || error}
+        books={displayedBooks}
+        loading={displayedLoading}
+        error={combinedError}
         viewMode={viewMode}
         onEdit={handleEditBook}
         onDelete={handleDeleteBook}
@@ -403,19 +415,19 @@ const BooksPage: React.FC = () => {
       />
 
       {/* Load more */}
-      {hasMore && (
+      {displayedHasMore && (
         <Box mt={4} textAlign="center">
           <Button
             variant="contained"
-            onClick={loadMore}
-            disabled={searchLoading}
+            onClick={() => displayedLoadMore()}
+            disabled={displayedLoading}
             size="large"
           >
             {searchLoading ? t('pages:books.loading') : t('pages:books.load_more')}
           </Button>
         </Box>
       )}
-    </div>
+    </Container>
   );
 };
 export default BooksPage;

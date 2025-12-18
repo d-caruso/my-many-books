@@ -3,15 +3,24 @@
  */
 
 import { BaseApiClient } from './base-client';
-import { User, AuthUser } from '@my-many-books/shared-types';
+import {
+  User,
+  UserSchema,
+  AuthSession,
+  AuthSessionSchema,
+  RefreshTokenResponse,
+  RefreshTokenSchema,
+} from '@my-many-books/shared-types';
 
 export class UserApi extends BaseApiClient {
   async getCurrentUser(): Promise<User> {
-    return this.get<User>('/users');
+    const response = await this.get<unknown>('/users');
+    return UserSchema.parse(response);
   }
 
   async updateProfile(userData: Partial<Omit<User, 'id' | 'creationDate' | 'updateDate'>>): Promise<User> {
-    return this.put<User>('/users', userData);
+    const response = await this.put<unknown>('/users', userData);
+    return UserSchema.parse(response);
   }
 
   async deleteAccount(): Promise<void> {
@@ -19,11 +28,12 @@ export class UserApi extends BaseApiClient {
   }
 
   // Auth methods
-  async login(email: string, password: string): Promise<{ user: AuthUser; token: string }> {
-    return this.post<{ user: AuthUser; token: string }>('/auth/login', {
+  async login(email: string, password: string): Promise<AuthSession> {
+    const response = await this.post<unknown>('/auth/login', {
       email,
-      password
+      password,
     });
+    return AuthSessionSchema.parse(response);
   }
 
   async register(userData: {
@@ -31,15 +41,17 @@ export class UserApi extends BaseApiClient {
     password: string;
     name: string;
     surname: string;
-  }): Promise<{ user: AuthUser; token: string }> {
-    return this.post<{ user: AuthUser; token: string }>('/auth/register', userData);
+  }): Promise<AuthSession> {
+    const response = await this.post<unknown>('/auth/register', userData);
+    return AuthSessionSchema.parse(response);
   }
 
   async logout(): Promise<void> {
     return this.post<void>('/auth/logout');
   }
 
-  async refreshToken(): Promise<{ token: string }> {
-    return this.post<{ token: string }>('/auth/refresh');
+  async refreshToken(): Promise<RefreshTokenResponse> {
+    const response = await this.post<unknown>('/auth/refresh');
+    return RefreshTokenSchema.parse(response);
   }
 }

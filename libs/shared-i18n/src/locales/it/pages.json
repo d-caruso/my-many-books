@@ -22,6 +22,7 @@
       "dashboard": "Dashboard",
       "users": "Utenti",
       "books": "Libri",
+      "hooks": "Hook",
       "settings": "Impostazioni"
     },
     "back_to_app": "Torna all'applicazione",
@@ -88,6 +89,62 @@
     "settings": {
       "coming_soon": "Coming soon...",
       "page_title": "Settings"
+    },
+    "hooks": {
+      "title": "Gestione Hook",
+      "stats": {
+        "total_hooks": "Hook Totali",
+        "active_hooks": "Hook Attivi",
+        "executions_today": "Esecuzioni Oggi",
+        "last_reload": "Ultimo Ricaricamento",
+        "never_reloaded": "Mai ricaricati",
+        "reload_hint": "Ricarica quando rilasci nuove configurazioni degli hook."
+      },
+      "actions": {
+        "create": "Crea Hook",
+        "reload": "Ricarica Hook",
+        "reloading": "Ricaricamento Hook..."
+      },
+      "list_title": "Hook",
+      "list_summary": "{{count}} configurati",
+      "list_action_info": "{{actionType}} • Priorità {{priority}}",
+      "no_hooks": "Nessun hook configurato al momento.",
+      "active": "Attivo",
+      "inactive": "Inattivo",
+      "last_execution": "Ultima esecuzione {{timestamp}}",
+      "never_executed": "Mai eseguito",
+      "priority": "Priorità {{priority}}",
+      "priority_label": "Priorità {{priority}}",
+      "errors": {
+        "fetch": "Impossibile caricare i dati degli hook.",
+        "reload": "Impossibile ricaricare gli hook.",
+        "delete": "L'eliminazione degli hook non è ancora implementata."
+      },
+      "executions": {
+        "title": "Esecuzioni Hook",
+        "filters": {
+          "status": "Stato",
+          "success": "Successo",
+          "failure": "Errore",
+          "all": "Tutti",
+          "from": "Da",
+          "to": "A"
+        },
+        "columns": {
+          "event_name": "Evento",
+          "success": "Successo",
+          "duration": "Durata (ms)",
+          "executed_at": "Eseguito il",
+          "error": "Errore"
+        },
+        "actions": {
+          "refresh": "Aggiorna",
+          "back": "Torna agli Hook"
+        },
+        "errors": {
+          "fetch": "Impossibile caricare le esecuzioni"
+        }
+      }
     }
   }
 }

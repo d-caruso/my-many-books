@@ -3,6 +3,7 @@
 // ================================================================
 
 import { Sequelize, ModelStatic, Model } from 'sequelize';
+import { getLogger } from '../../services/logger';
 
 export interface ModelRegistry {
   User: ModelStatic<Model>;
@@ -11,6 +12,11 @@ export interface ModelRegistry {
   Category: ModelStatic<Model>;
   BookAuthor: ModelStatic<Model>;
   BookCategory: ModelStatic<Model>;
+  Hook: ModelStatic<Model>;
+  HookExecution: ModelStatic<Model>;
+  AuditLog: ModelStatic<Model>;
+  Setting: ModelStatic<Model>;
+  AppSetting: ModelStatic<Model>;
 }
 
 export class ModelAssociations {
@@ -97,15 +103,21 @@ export class ModelAssociations {
     Author.hasMany(BookAuthor, { foreignKey: 'authorId' });
     Category.hasMany(BookCategory, { foreignKey: 'categoryId' });
 
-    console.log('Model associations defined successfully');
+    getLogger().info('Model associations defined successfully');
   }
 
   static async syncModels(sequelize: Sequelize, force = false): Promise<void> {
     try {
       await sequelize.sync({ force });
-      console.log('Database models synchronized successfully');
+      getLogger().info({ force }, 'Database models synchronized successfully');
     } catch (error) {
-      console.error('Error synchronizing database models:', error);
+      getLogger().error(
+        {
+          err: error instanceof Error ? error : new Error(String(error)),
+          force,
+        },
+        'Error synchronizing database models'
+      );
       throw error;
     }
   }

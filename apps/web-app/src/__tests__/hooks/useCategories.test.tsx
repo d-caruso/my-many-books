@@ -144,7 +144,7 @@ describe('useCategories', () => {
         await result.current.loadCategories();
       });
 
-      expect(result.current.error).toBe('Failed to load categories');
+      expect(result.current.error).toBe('Network error');
       expect(result.current.loading).toBe(false);
       expect(result.current.categories).toEqual([]);
     });
@@ -184,7 +184,7 @@ describe('useCategories', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
       });
 
-      expect(result.current.error).toBe('Failed to load categories');
+      expect(result.current.error).toBe('First error');
 
       // Second call succeeds
       mockCategoryAPI.getCategories.mockResolvedValue(mockCategories);
@@ -345,7 +345,7 @@ describe('useCategories', () => {
       });
 
       expect(createdCategory).toBe(null);
-      expect(result.current.error).toBe('Failed to create category');
+      expect(result.current.error).toBe('Network error');
     });
 
     test('maintains sorted order when adding multiple categories', async () => {
@@ -409,7 +409,7 @@ describe('useCategories', () => {
       });
 
       expect(result.current.categories).toEqual(categoriesBeforeCreate);
-      expect(result.current.error).toBe('Failed to create category');
+      expect(result.current.error).toBe('Create failed');
     });
   });
 });

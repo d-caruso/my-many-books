@@ -33,11 +33,11 @@ export class AuthService {
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json() as { error?: string };
         throw new Error(error.error || 'Login failed');
       }
 
-      const data: LoginResponse = await response.json();
+      const data = await response.json() as LoginResponse;
 
       // Store access token in memory (via adapter)
       const tokens: AuthTokens = {
@@ -72,11 +72,11 @@ export class AuthService {
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json() as { error?: string };
         throw new Error(error.error || 'Registration failed');
       }
 
-      return await response.json();
+      return await response.json() as RegisterResponse;
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -148,7 +148,7 @@ export class AuthService {
         return false;
       }
 
-      const data: RefreshResponse = await response.json();
+      const data = await response.json() as RefreshResponse;
 
       const tokens: AuthTokens = {
         idToken: data.idToken,
@@ -190,6 +190,7 @@ export class AuthService {
   private decodeJWT(token: string): any {
     try {
       const base64Url = token.split('.')[1];
+      if (!base64Url) throw new Error('Invalid token');
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(
         atob(base64)
@@ -198,7 +199,7 @@ export class AuthService {
           .join('')
       );
       return JSON.parse(jsonPayload);
-    } catch (error) {
+    } catch {
       throw new Error('Invalid JWT token');
     }
   }

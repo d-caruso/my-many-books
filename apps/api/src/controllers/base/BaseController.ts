@@ -8,6 +8,7 @@ import { i18n } from '@my-many-books/shared-i18n';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
+import { getLogger } from '../../services/logger';
 
 // Added the PaginationParams interface
 export interface PaginationParams {
@@ -38,7 +39,12 @@ export abstract class BaseController {
     } catch (error) {
       // Silently fail if i18n is not properly configured
       // This allows the API to work without i18n
-      console.warn('i18n initialization failed:', error);
+      getLogger().warn(
+        {
+          err: error instanceof Error ? error : new Error(String(error)),
+        },
+        'i18n initialization failed'
+      );
     }
   }
 
@@ -173,11 +179,11 @@ export abstract class BaseController {
     page: number,
     limit: number,
     total: number
-  ): { page: number; limit: number; total: number; totalPages: number } {
+  ): { currentPage: number; itemsPerPage: number; totalItems: number; totalPages: number } {
     return {
-      page,
-      limit,
-      total,
+      currentPage: page,
+      itemsPerPage: limit,
+      totalItems: total,
       totalPages: Math.ceil(total / limit),
     };
   }

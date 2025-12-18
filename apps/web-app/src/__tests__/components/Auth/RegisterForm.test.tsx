@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { RegisterForm } from '../../../components/Auth/RegisterForm';
 import { useAuth } from '@my-many-books/shared-auth';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 // Mock the useAuth hook
 vi.mock('@my-many-books/shared-auth', () => ({
@@ -11,52 +13,7 @@ vi.mock('@my-many-books/shared-auth', () => ({
 }));
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Box: ({ children, sx, ...props }: any) => (
-    <div data-testid="box" style={sx} {...props}>{children}</div>
-  ),
-  Paper: ({ children, elevation, ...props }: any) => (
-    <div data-testid="paper" data-elevation={elevation} {...props}>{children}</div>
-  ),
-  Typography: ({ children, variant, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} {...props}>{children}</div>
-  ),
-  TextField: ({ label, value, onChange, error, helperText, type, ...props }: any) => (
-    <div data-testid="text-field-container">
-      <label data-testid="text-field-label">{label}</label>
-      <input
-        data-testid="text-field"
-        data-label={label}
-        type={type}
-        value={value || ''}
-        onChange={(e) => onChange?.(e)}
-        data-error={!!error}
-        {...props}
-      />
-      {error && <div data-testid="text-field-error">{error}</div>}
-      {helperText && <div data-testid="text-field-helper">{helperText}</div>}
-    </div>
-  ),
-  Button: ({ children, onClick, variant, disabled, loading, ...props }: any) => (
-    <button
-      data-testid={`button-${variant || 'default'}`}
-      onClick={onClick}
-      disabled={disabled || loading}
-      {...props}
-    >
-      {loading ? 'Loading...' : children}
-    </button>
-  ),
-  Link: ({ children, onClick, ...props }: any) => (
-    <button data-testid="link" onClick={onClick} {...props}>{children}</button>
-  ),
-  Alert: ({ children, severity, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} {...props}>{children}</div>
-  ),
-  CircularProgress: (props: any) => (
-    <div data-testid="circular-progress" {...props} />
-  ),
-}));
+setupMuiMock();
 
 const mockUseAuth = vi.mocked(useAuth);
 
@@ -64,9 +21,14 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <BrowserRouter>{children}</BrowserRouter>
 );
 
+const getInput = (label: RegExp | string) =>
+  screen.getByLabelText(label, { selector: 'input' });
+
 describe('RegisterForm', () => {
   const mockRegister = vi.fn();
   const mockOnSwitchToLogin = vi.fn();
+  const renderRegisterForm = () =>
+    render(<RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />, { wrapper: TestWrapper });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -82,122 +44,87 @@ describe('RegisterForm', () => {
   });
 
   test('renders registration form elements', () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
     // Use getAllByText since "Create Account" appears twice (header and button)
     expect(screen.getAllByText('Create Account')[0]).toBeInTheDocument();
     expect(screen.getByText('Join My Many Books today')).toBeInTheDocument();
 
-    expect(screen.getByLabelText('First Name')).toBeInTheDocument();
-    expect(screen.getByLabelText('Last Name')).toBeInTheDocument();
-    expect(screen.getByLabelText('Email')).toBeInTheDocument();
-    expect(screen.getByLabelText('Password')).toBeInTheDocument();
-    expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument();
+    expect(getInput(/First Name/i)).toBeInTheDocument();
+    expect(getInput(/Last Name/i)).toBeInTheDocument();
+    expect(getInput(/Email/i)).toBeInTheDocument();
+    expect(getInput(/^Password\b/i)).toBeInTheDocument();
+    expect(getInput(/Confirm Password/i)).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
   });
 
   test('handles name input changes', () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
+    const nameInput = getInput(/First Name/i);
     fireEvent.change(nameInput, { target: { value: 'John' } });
 
     expect(nameInput).toHaveValue('John');
   });
 
   test('handles email input changes', () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const emailInput = screen.getByLabelText('Email');
+    const emailInput = getInput(/Email/i);
     fireEvent.change(emailInput, { target: { value: 'john@example.com' } });
 
     expect(emailInput).toHaveValue('john@example.com');
   });
 
   test('handles password input changes', () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const passwordInput = screen.getByLabelText('Password');
+    const passwordInput = getInput(/^Password\b/i);
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
     expect(passwordInput).toHaveValue('password123');
   });
 
   test('handles confirm password input changes', () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const confirmPasswordInput = getInput(/Confirm Password/i);
     fireEvent.change(confirmPasswordInput, { target: { value: 'password123' } });
 
     expect(confirmPasswordInput).toHaveValue('password123');
   });
 
   test('validates required fields', async () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
     const submitButton = screen.getByRole('button', { name: /create account/i });
     fireEvent.click(submitButton);
 
-    // RegisterForm doesn't display field-specific validation messages - it uses browser HTML5 validation
-    // The form won't submit if required fields are empty
-    expect(mockRegister).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockRegister).not.toHaveBeenCalled();
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   test('validates email format', async () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
-    const submitButton = screen.getByRole('button', { name: /create account/i });
-
-    fireEvent.change(nameInput, { target: { value: 'John' } });
-    fireEvent.change(surnameInput, { target: { value: 'Doe' } });
+    const emailInput = getInput(/Email/i);
     fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.change(confirmPasswordInput, { target: { value: 'password123' } });
-    fireEvent.click(submitButton);
 
-    // Email validation is handled by browser HTML5 validation (type="email")
-    // Form won't submit with invalid email
-    expect(mockRegister).not.toHaveBeenCalled();
+    expect(emailInput).toHaveAttribute('type', 'email');
+    expect(emailInput.validity.valid).toBe(false);
   });
 
   test('validates password length', async () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const nameInput = getInput(/First Name/i);
+    const surnameInput = getInput(/Last Name/i);
+    const emailInput = getInput(/Email/i);
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
     const submitButton = screen.getByRole('button', { name: /create account/i });
 
     fireEvent.change(nameInput, { target: { value: 'John' } });
@@ -215,16 +142,13 @@ describe('RegisterForm', () => {
   });
 
   test('validates password confirmation', async () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const nameInput = getInput(/First Name/i);
+    const surnameInput = getInput(/Last Name/i);
+    const emailInput = getInput(/Email/i);
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
     const submitButton = screen.getByRole('button', { name: /create account/i });
 
     fireEvent.change(nameInput, { target: { value: 'John' } });
@@ -244,16 +168,13 @@ describe('RegisterForm', () => {
   test('submits form with valid data', async () => {
     mockRegister.mockResolvedValue(undefined);
 
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const nameInput = getInput(/First Name/i);
+    const surnameInput = getInput(/Last Name/i);
+    const emailInput = getInput(/Email/i);
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
     const submitButton = screen.getByRole('button', { name: /create account/i });
 
     fireEvent.change(nameInput, { target: { value: 'John' } });
@@ -278,16 +199,13 @@ describe('RegisterForm', () => {
     // We need to test the button being disabled during submission
     mockRegister.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 1000)));
 
-    const { container } = render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const nameInput = getInput(/First Name/i);
+    const surnameInput = getInput(/Last Name/i);
+    const emailInput = getInput(/Email/i);
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
     const submitButton = screen.getByRole('button', { name: /create account/i });
 
     fireEvent.change(nameInput, { target: { value: 'John' } });
@@ -299,22 +217,20 @@ describe('RegisterForm', () => {
 
     // Button should be disabled during submission
     expect(submitButton).toBeDisabled();
+    expect(submitButton).toHaveTextContent('Creating Account...');
   });
 
   test('handles registration errors', async () => {
     const error = new Error('Email already exists');
     mockRegister.mockRejectedValue(error);
 
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const nameInput = getInput(/First Name/i);
+    const surnameInput = getInput(/Last Name/i);
+    const emailInput = getInput(/Email/i);
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
     const submitButton = screen.getByRole('button', { name: /create account/i });
 
     fireEvent.change(nameInput, { target: { value: 'John' } });
@@ -330,10 +246,7 @@ describe('RegisterForm', () => {
   });
 
   test('calls onSwitchToLogin when login link is clicked', () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
     const loginLink = screen.getByRole('button', { name: /sign in/i });
     fireEvent.click(loginLink);
@@ -344,16 +257,13 @@ describe('RegisterForm', () => {
   test('handles form submission on Enter key', async () => {
     mockRegister.mockResolvedValue(undefined);
 
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const nameInput = getInput(/First Name/i);
+    const surnameInput = getInput(/Last Name/i);
+    const emailInput = getInput(/Email/i);
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
 
     fireEvent.change(nameInput, { target: { value: 'John' } });
     fireEvent.change(surnameInput, { target: { value: 'Doe' } });
@@ -373,13 +283,9 @@ describe('RegisterForm', () => {
   });
 
   test('has proper form structure and styling', () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    // RegisterForm uses native HTML elements, not MUI components
-    const form = screen.getByRole('form');
+    const form = screen.getByRole('form', { name: /registration form/i });
     expect(form).toBeInTheDocument();
     expect(screen.getAllByText(/create account/i).length).toBeGreaterThan(0);
   });
@@ -388,16 +294,13 @@ describe('RegisterForm', () => {
     const error = new Error('Email already exists');
     mockRegister.mockRejectedValue(error);
 
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const nameInput = getInput(/First Name/i);
+    const surnameInput = getInput(/Last Name/i);
+    const emailInput = getInput(/Email/i);
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
     const submitButton = screen.getByRole('button', { name: /create account/i });
 
     // Trigger error
@@ -419,16 +322,13 @@ describe('RegisterForm', () => {
   });
 
   test('has correct input types', () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const nameInput = getInput(/First Name/i);
+    const surnameInput = getInput(/Last Name/i);
+    const emailInput = getInput(/Email/i);
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
 
     expect(nameInput).toHaveAttribute('type', 'text');
     expect(surnameInput).toHaveAttribute('type', 'text');
@@ -438,16 +338,13 @@ describe('RegisterForm', () => {
   });
 
   test('validates name length', async () => {
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const nameInput = getInput(/First Name/i);
+    const surnameInput = getInput(/Last Name/i);
+    const emailInput = getInput(/Email/i);
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
     const submitButton = screen.getByRole('button', { name: /create account/i });
 
     fireEvent.change(nameInput, { target: { value: 'A' } }); // Too short
@@ -468,16 +365,13 @@ describe('RegisterForm', () => {
     const networkError = new Error('Network error');
     mockRegister.mockRejectedValue(networkError);
 
-    render(
-      <RegisterForm onSwitchToLogin={mockOnSwitchToLogin} />,
-      { wrapper: TestWrapper }
-    );
+    renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('First Name');
-    const surnameInput = screen.getByLabelText('Last Name');
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText('Confirm Password');
+    const nameInput = getInput(/First Name/i);
+    const surnameInput = getInput(/Last Name/i);
+    const emailInput = getInput(/Email/i);
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
     const submitButton = screen.getByRole('button', { name: /create account/i });
 
     fireEvent.change(nameInput, { target: { value: 'John' } });

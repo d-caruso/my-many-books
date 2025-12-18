@@ -18,7 +18,7 @@ type ControllerMethod = (request: UniversalRequest) => Promise<ApiResponse>;
  * @returns An Express route handler function.
  */
 export const expressRouteWrapper = (controllerMethod: ControllerMethod) => {
-  return async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Use validated data if available, otherwise use originals
       const body: unknown = req.validated?.body ?? req.body;
@@ -48,15 +48,11 @@ export const expressRouteWrapper = (controllerMethod: ControllerMethod) => {
           ...(result.error && { error: result.error }),
           ...(result.message && { message: result.message }),
           ...(result.meta && { meta: result.meta }),
+          ...(result.pagination && { pagination: result.pagination }),
         });
       }
     } catch (error) {
-      console.error('Error in route handler:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+      next(error);
     }
   };
 };

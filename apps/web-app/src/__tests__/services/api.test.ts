@@ -1,8 +1,8 @@
-import { Book, Author, Category, User, SearchResult, PaginatedResponse } from '../../types';
+import { Book, Author, Category, User, PaginatedResponse } from '../../types';
 
 // Import after mocks are set up (avoid importing default instance to prevent axios creation)
 import { createApiService, ApiService } from '../../services/api';
-import { createApiClient, createMockApiClient } from '@my-many-books/shared-api';
+import { createMockApiClient, createApiClient } from '@my-many-books/shared-api';
 
 // Mock the shared-api library using industry standard approach
 vi.mock('@my-many-books/shared-api', () => ({
@@ -91,12 +91,13 @@ Object.defineProperty(window, 'localStorage', {
 
 // Mock window.location
 Object.defineProperty(window, 'location', {
-  value: { href: '' },
+  value: { href: '', hostname: 'localhost' },
   writable: true,
 });
 
 // Mock environment variables
 const originalEnv = process.env;
+
 
 describe('ApiService with Industry Standard Testing', () => {
   let mockApiClient: ReturnType<typeof createMockApiClient>;
@@ -332,8 +333,13 @@ describe('ApiService with Industry Standard Testing', () => {
       test('getCurrentUser delegates to API client with correct parameters', async () => {
         const mockUser: User = {
           id: 1,
-          username: 'testuser',
           email: 'test@example.com',
+          name: 'Test',
+          surname: 'User',
+          isActive: true,
+          role: 'user',
+          creationDate: new Date().toISOString(),
+          updateDate: new Date().toISOString(),
         };
         mockApiClient.users.getCurrentUser.mockResolvedValue(mockUser);
 
@@ -345,11 +351,16 @@ describe('ApiService with Industry Standard Testing', () => {
       });
 
       test('updateProfile delegates to API client with correct parameters', async () => {
-        const userUpdate = { username: 'newusername' };
+        const userUpdate = { name: 'New', surname: 'Username' };
         const mockUpdatedUser: User = {
           id: 1,
-          username: 'newusername',
           email: 'test@example.com',
+          name: 'New',
+          surname: 'Username',
+          isActive: true,
+          role: 'user',
+          creationDate: new Date().toISOString(),
+          updateDate: new Date().toISOString(),
         };
         mockApiClient.users.updateProfile.mockResolvedValue(mockUpdatedUser);
 
@@ -387,7 +398,7 @@ describe('ApiService with Industry Standard Testing', () => {
           isbnCode: '123456789',
           editionNumber: 1,
           editionDate: '2024-01-01',
-          status: 'unread' as const,
+          status: 'reading' as const,
           notes: 'Test notes',
           selectedAuthors: [{ id: 1, name: 'Test', surname: 'Author' }],
           selectedCategories: [1, 2],
@@ -397,7 +408,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'New Book',
           isbnCode: '123456789',
-          status: 'unread',
+          status: 'reading',
           userId: 1,
           authors: [],
           categories: [],
@@ -413,7 +424,7 @@ describe('ApiService with Industry Standard Testing', () => {
           isbnCode: '123456789',
           editionNumber: 1,
           editionDate: '2024-01-01',
-          status: 'unread',
+          status: 'reading',
           notes: 'Test notes',
           authorIds: [1],
           categoryIds: [1, 2],
@@ -447,7 +458,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'Test Book',
           isbnCode: '123456789',
-          status: 'unread',
+          status: 'reading',
           userId: 1,
           authors: [],
           categories: [],
@@ -474,7 +485,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'Updated Book',
           isbnCode: '123456789',
-          status: 'unread',
+          status: 'reading',
           userId: 1,
           authors: [],
           categories: [],
@@ -505,7 +516,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'Updated Title',
           isbnCode: '123456789',
-          status: 'unread',
+          status: 'reading',
           userId: 1,
           authors: [],
           categories: [],
@@ -725,7 +736,16 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('testApiService uses injected mock API client', async () => {
       // Verify that our test service is using the injected mock
-      const mockUser: User = { id: 1, username: 'test', email: 'test@example.com' };
+      const mockUser: User = {
+        id: 1,
+        email: 'test@example.com',
+        name: 'Test',
+        surname: 'User',
+        isActive: true,
+        role: 'user',
+        creationDate: new Date().toISOString(),
+        updateDate: new Date().toISOString(),
+      };
       mockApiClient.users.getCurrentUser.mockResolvedValue(mockUser);
 
       const result = await testApiService.getCurrentUser();
@@ -757,6 +777,7 @@ describe('ApiService with Industry Standard Testing', () => {
       expect(customApiService).toBeInstanceOf(ApiService);
       expect(customApiService).toBeDefined();
     });
+
   });
 
   describe('Integration Tests', () => {

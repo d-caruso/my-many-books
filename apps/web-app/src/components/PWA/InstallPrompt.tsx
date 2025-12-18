@@ -49,9 +49,9 @@ export const InstallPrompt: React.FC = () => {
     >
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Box flex={1} pr={2}>
-          <Box component="div" variant="subtitle2" fontWeight="600">
+          <Typography variant="subtitle2" fontWeight="600">
             {t('pwa:install_prompt.title')}
-          </Box>
+          </Typography>
           <Typography variant="caption" color="black">
             {t('pwa:install_prompt.message')}
           </Typography>

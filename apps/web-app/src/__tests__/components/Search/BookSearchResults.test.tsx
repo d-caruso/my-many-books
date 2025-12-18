@@ -1,73 +1,13 @@
 import React from 'react';
-import { render, screen, fireEvent } from '../../../__tests__/test-utils';
+import { render, screen, fireEvent, within } from '../../../__tests__/test-utils';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BookSearchResults } from '../../../components/Search/BookSearchResults';
 import { Book } from '../../../types';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Box: ({ children, sx, ...props }: any) => (
-    <div data-testid="box" style={sx} {...props}>{children}</div>
-  ),
-  Typography: ({ children, variant, color, fontWeight, gutterBottom, ...props }: any) => (
-    <div 
-      data-testid={`typography-${variant}`} 
-      data-color={color}
-      data-fontweight={fontWeight}
-      data-gutter-bottom={gutterBottom}
-      {...props}
-    >
-      {children}
-    </div>
-  ),
-  Card: ({ children, onClick, sx, ...props }: any) => (
-    <div 
-      data-testid="card" 
-      style={sx}
-      onClick={onClick}
-      {...props}
-    >
-      {children}
-    </div>
-  ),
-  CardContent: ({ children, sx, ...props }: any) => (
-    <div data-testid="card-content" style={sx} {...props}>{children}</div>
-  ),
-  CardMedia: ({ sx, children, ...props }: any) => (
-    <div data-testid="card-media" style={sx} {...props}>{children}</div>
-  ),
-  Chip: ({ label, color, variant, size, sx, ...props }: any) => (
-    <span 
-      data-testid="chip" 
-      data-color={color}
-      data-variant={variant}
-      data-size={size}
-      style={sx}
-      {...props}
-    >
-      {label}
-    </span>
-  ),
-  Button: ({ children, onClick, variant, color, size, startIcon, disabled, ...props }: any) => (
-    <button
-      data-testid={`button-${variant || 'default'}`}
-      onClick={onClick}
-      data-color={color}
-      data-size={size}
-      disabled={disabled}
-      {...props}
-    >
-      {startIcon && <span data-testid="start-icon">{startIcon}</span>}
-      {children}
-    </button>
-  ),
-  CircularProgress: ({ size, sx, ...props }: any) => (
-    <div data-testid="circular-progress" data-size={size} style={sx} {...props} />
-  ),
-  Alert: ({ children, severity, sx, ...props }: any) => (
-    <div data-testid={`alert-${severity}`} style={sx} {...props}>{children}</div>
-  ),
-}));
+setupMuiMock();
 
 // Mock Material-UI icons
 vi.mock('@mui/icons-material/Error', () => ({
@@ -119,7 +59,7 @@ const mockBooks: Book[] = [
     title: 'Book With String Authors',
     authors: ['Author One', 'Author Two'] as any,
     isbnCode: '9780987654321',
-    status: 'unread',
+    status: 'reading',
     categories: [{ id: 5, name: 'Non-Fiction' }],
   },
 ];
@@ -150,9 +90,10 @@ describe('BookSearchResults', () => {
       />
     );
 
-    expect(screen.getByTestId('alert-error')).toBeInTheDocument();
-    expect(screen.getByText('Search Error')).toBeInTheDocument();
-    expect(screen.getByText('Search failed')).toBeInTheDocument();
+    const alert = screen.getByRole('alert');
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveTextContent('Search Error');
+    expect(alert).toHaveTextContent('Search failed');
     expect(screen.getByTestId('error-icon')).toBeInTheDocument();
   });
 
@@ -223,8 +164,8 @@ describe('BookSearchResults', () => {
       />
     );
 
-    const bookCard = screen.getByTestId('card');
-    fireEvent.click(bookCard);
+    const bookTitle = screen.getByText('The Great Gatsby');
+    fireEvent.click(bookTitle);
 
     expect(mockOnBookSelect).toHaveBeenCalledWith(mockBooks[0]);
   });
@@ -257,11 +198,9 @@ describe('BookSearchResults', () => {
       />
     );
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
-    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
-    
-    const loadMoreButton = screen.getByTestId('button-contained');
+    const loadMoreButton = screen.getByRole('button', { name: /loading/i });
     expect(loadMoreButton).toBeDisabled();
+    expect(within(loadMoreButton).getByRole('progressbar')).toBeInTheDocument();
   });
 
   test('renders initial loading state', () => {
@@ -273,7 +212,7 @@ describe('BookSearchResults', () => {
     );
 
     expect(screen.getByText('Searching for books...')).toBeInTheDocument();
-    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   test('renders book status badges', () => {
@@ -405,14 +344,14 @@ describe('BookSearchResults', () => {
       />
     );
 
-    const statusChips = screen.getAllByTestId('chip');
-    const finishedChip = statusChips.find(chip => chip.textContent === 'Finished');
-    const readingChip = statusChips.find(chip => chip.textContent === 'Reading');
-    const pausedChip = statusChips.find(chip => chip.textContent === 'Paused');
+    const getChipClass = (label: string) => {
+      const elements = screen.getAllByText(label);
+      return elements[0].closest('.MuiChip-root')?.className || '';
+    };
 
-    expect(finishedChip).toHaveAttribute('data-color', 'success');
-    expect(readingChip).toHaveAttribute('data-color', 'primary');
-    expect(pausedChip).toHaveAttribute('data-color', 'warning');
+    expect(getChipClass('Finished')).toMatch(/MuiChip-colorSuccess/);
+    expect(getChipClass('Reading')).toMatch(/MuiChip-colorPrimary/);
+    expect(getChipClass('Paused')).toMatch(/MuiChip-colorWarning/);
   });
 
   test('truncates long titles and authors with title attribute', () => {
@@ -446,13 +385,11 @@ describe('BookSearchResults', () => {
       />
     );
 
-    // Get all Box components and check that at least one has grid display
-    const boxes = screen.getAllByTestId('box');
-    const hasGridLayout = boxes.some(box =>
-      box.style.display === 'grid' ||
-      (box.style as any).display === 'grid'
-    );
-    expect(hasGridLayout).toBe(true);
+    const cards = Array.from(document.querySelectorAll('.MuiCard-root'));
+    expect(cards.length).toBeGreaterThan(1);
+    const gridContainer = cards[0]?.parentElement?.parentElement;
+    expect(gridContainer?.className).toContain('MuiBox-root');
+    expect(gridContainer?.children.length).toBeGreaterThan(1);
   });
 
   test('handles component mount and unmount cleanly', () => {
@@ -491,7 +428,7 @@ describe('BookSearchResults', () => {
     const statusChip = screen.getByText('custom-status');
     expect(statusChip).toBeInTheDocument();
 
-    // Check that it has default color (since status is unknown)
-    expect(statusChip).toHaveAttribute('data-color', 'default');
+    const chipClass = statusChip.closest('.MuiChip-root')?.className || '';
+    expect(chipClass).toMatch(/MuiChip-colorDefault/);
   });
 });

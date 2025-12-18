@@ -8,6 +8,12 @@ if (typeof global.TextEncoder === 'undefined') {
 }
 
 // Mock window.location for tests
+type ViMock = {
+  fn: () => (...args: unknown[]) => void;
+};
+
+const vitestGlobals = globalThis as typeof globalThis & { vi?: ViMock };
+const safeVi = vitestGlobals.vi ?? { fn: () => () => undefined };
 const mockLocation = {
   href: '',
   origin: 'http://localhost:3000',
@@ -18,9 +24,9 @@ const mockLocation = {
   pathname: '/',
   search: '',
   hash: '',
-  assign: vi.fn(),
-  replace: vi.fn(),
-  reload: vi.fn(),
+  assign: safeVi.fn(),
+  replace: safeVi.fn(),
+  reload: safeVi.fn(),
 };
 
 Object.defineProperty(window, 'location', {

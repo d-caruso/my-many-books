@@ -4,7 +4,25 @@
     "types": ["node", "jest"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@/*": ["src/*"],
+      "@/types/*": ["src/types/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@/models/*": ["src/models/*"],
+      "@/services/*": ["src/services/*"],
+      "@/controllers/*": ["src/controllers/*"],
+      "@/handlers/*": ["src/handlers/*"],
+      "@my-many-books/shared-auth": ["../../libs/shared-auth/src/authorization/index.ts"],
+      "@my-many-books/shared-i18n": ["../../libs/shared-i18n/src/index.ts"],
+      "@my-many-books/shared-i18n/*": ["../../libs/shared-i18n/src/*"],
+      "@my-many-books/shared-logging": ["../../libs/shared-logging/src/index.ts"],
+      "@my-many-books/shared-logging/*": ["../../libs/shared-logging/src/*"],
+      "@my-many-books/shared-types": ["../../libs/shared-types/src/index.ts"],
+      "@my-many-books/shared-types/*": ["../../libs/shared-types/src/*"],
+      "@my-many-books/shared-validation": ["../../libs/shared-validation/src/index.ts"],
+      "@my-many-books/shared-validation/*": ["../../libs/shared-validation/src/*"]
+    }
   },
   "include": [
     "src/**/*",

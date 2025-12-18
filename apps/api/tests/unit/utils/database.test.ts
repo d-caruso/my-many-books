@@ -6,15 +6,20 @@ import { DatabaseUtils } from '../../../src/utils/database';
 import DatabaseConnection from '../../../src/config/database';
 import { ModelManager } from '../../../src/models';
 import { Sequelize } from 'sequelize';
+import { getLogger } from '../../../src/services/logger';
 
 // Mock dependencies
 jest.mock('../../../src/config/database');
 jest.mock('../../../src/models');
+jest.mock('../../../src/services/logger', () => ({
+  getLogger: jest.fn(),
+}));
 
 describe('DatabaseUtils', () => {
   let mockSequelize: jest.Mocked<Sequelize>;
   let mockDatabaseConnection: jest.Mocked<typeof DatabaseConnection>;
   let mockModelManager: jest.Mocked<typeof ModelManager>;
+  let mockLogger: { info: jest.Mock; warn: jest.Mock; error: jest.Mock };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -42,7 +47,19 @@ describe('DatabaseUtils', () => {
       Book: { count: jest.fn().mockResolvedValue(2) } as any,
       BookAuthor: { count: jest.fn().mockResolvedValue(0) } as any,
       BookCategory: { count: jest.fn().mockResolvedValue(0) } as any,
+      Hook: { count: jest.fn().mockResolvedValue(0) } as any,
+      HookExecution: { count: jest.fn().mockResolvedValue(0) } as any,
+      AuditLog: { count: jest.fn().mockResolvedValue(0) } as any,
+      Setting: { count: jest.fn().mockResolvedValue(0) } as any,
+      AppSetting: { count: jest.fn().mockResolvedValue(0) } as any,
     });
+
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    (getLogger as jest.Mock).mockReturnValue(mockLogger);
 
     // Clear any static state
     (DatabaseUtils as any).sequelize = null;
@@ -140,12 +157,11 @@ describe('DatabaseUtils', () => {
       const error = new Error('Reset failed');
       jest.spyOn(DatabaseUtils, 'syncDatabase').mockRejectedValue(error);
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
       await expect(DatabaseUtils.resetDatabase()).rejects.toThrow('Reset failed');
-      expect(consoleSpy).toHaveBeenCalledWith('Database reset failed:', error);
-
-      consoleSpy.mockRestore();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        { err: error },
+        'Database reset failed:'
+      );
     });
   });
 
@@ -206,8 +222,6 @@ describe('DatabaseUtils', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
       // Initialize database first so sequelize instance exists
       await DatabaseUtils.initialize();
       
@@ -228,8 +242,10 @@ describe('DatabaseUtils', () => {
         },
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith('Error getting database status:', expect.any(Error));
-      consoleSpy.mockRestore();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        { err: expect.any(Error) },
+        'Error getting database status:'
+      );
     });
 
     it('should return zero counts when models not initialized', async () => {

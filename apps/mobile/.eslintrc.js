@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  extends: ['expo', '@react-native'],
+  extends: ['expo'], // expo config already includes React Native and react-hooks support
   rules: {
     // TypeScript specific rules
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
@@ -10,8 +10,7 @@ module.exports = {
 
     // React specific rules
     'react/prop-types': 'off',
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn',
+    // react-hooks rules are already included in both 'expo' and '@react-native' configs
 
     // General rules
     'no-console': 'warn',
@@ -33,7 +32,6 @@ module.exports = {
     },
   },
   env: {
-    'react-native/react-native': true,
     jest: true,
   },
   overrides: [
@@ -43,6 +41,12 @@ module.exports = {
         '@typescript-eslint/no-unused-vars': 'off',
         'import/no-unresolved': 'off',
         'no-var': 'off',
+      },
+    },
+    {
+      files: ['scripts/**/*.js'],
+      env: {
+        node: true,
       },
     },
   ],

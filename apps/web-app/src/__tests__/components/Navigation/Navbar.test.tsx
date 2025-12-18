@@ -1,7 +1,6 @@
 import React from 'react';
-import { render as rtlRender, screen, waitFor, act, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { render as rtlRender, screen, waitFor, fireEvent } from '@testing-library/react';
+import { describe, test, beforeEach, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
@@ -9,62 +8,15 @@ import { initReactI18next } from 'react-i18next';
 import { Navbar } from '../../../components/Navigation/Navbar';
 import { useAuth } from '@my-many-books/shared-auth';
 
-// Mock the useAuth hook
 vi.mock('@my-many-books/shared-auth', () => ({
   useAuth: vi.fn(),
 }));
 
-// Mock React Router hooks
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => ({
   ...await vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useLocation: () => ({ pathname: '/books' }),
-}));
-
-// Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  AppBar: ({ children, ...props }: any) => <div data-testid="app-bar" {...props}>{children}</div>,
-  Toolbar: ({ children, ...props }: any) => <div data-testid="toolbar" {...props}>{children}</div>,
-  Typography: ({ children, variant, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} {...props}>{children}</div>
-  ),
-  Button: ({ children, onClick, ...props }: any) => (
-    <button data-testid="nav-button" onClick={onClick} {...props}>{children}</button>
-  ),
-  IconButton: ({ children, onClick, ...props }: any) => (
-    <button data-testid="icon-button" onClick={onClick} {...props}>{children}</button>
-  ),
-  Menu: ({ children, open, anchorEl, onClose, ...props }: any) => {
-    React.useEffect(() => {
-      if (!open && anchorEl === null) {
-        // Force component update when menu should close
-      }
-    }, [open, anchorEl]);
-    return open ? <div data-testid="menu" {...props}>{children}</div> : null;
-  },
-  MenuItem: ({ children, onClick, ...props }: any) => (
-    <div data-testid="menu-item" onClick={onClick} {...props}>{children}</div>
-  ),
-  Box: ({ children, sx, ...props }: any) => (
-    <div data-testid="box" style={sx} {...props}>{children}</div>
-  ),
-  Avatar: ({ children, ...props }: any) => (
-    <div data-testid="avatar" {...props}>{children}</div>
-  ),
-  Select: ({ children, value, onChange, ...props }: any) => (
-    <select data-testid="language-select" value={value} onChange={onChange} {...props}>
-      {React.Children.map(children, (child: any) => {
-        if (React.isValidElement(child)) {
-          const { value: childValue, children: childChildren } = child.props;
-          if (childValue) {
-            return <option value={childValue}>{childChildren}</option>;
-          }
-        }
-        return null;
-      })}
-    </select>
-  ),
 }));
 
 vi.mock('@mui/icons-material/MenuBook', () => ({
@@ -79,13 +31,8 @@ vi.mock('@mui/icons-material/ExpandMore', () => ({
   default: () => <span data-testid="expand-more-icon">▼</span>,
 }));
 
-vi.mock('@mui/icons-material/Language', () => ({
-  default: () => <span data-testid="language-icon">🌐</span>,
-}));
-
 const mockUseAuth = vi.mocked(useAuth);
 
-// Create test i18n instance
 const testI18n = i18n.createInstance();
 testI18n.use(initReactI18next).init({
   lng: 'en',
@@ -99,26 +46,32 @@ testI18n.use(initReactI18next).init({
         search: 'Search',
         scanner: 'Scanner',
         sign_out: 'Sign out',
+        menu: 'Menu',
+        user_menu: 'User menu',
+        user_avatar: 'User avatar',
       },
       books: {
         my_books: 'My Books',
       },
     },
   },
-  interpolation: {
-    escapeValue: false,
-  },
+  interpolation: { escapeValue: false },
 });
 
-// Test wrapper with Router context and I18n
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <I18nextProvider i18n={testI18n}>
     <BrowserRouter>{children}</BrowserRouter>
   </I18nextProvider>
 );
 
-// Custom render function
 const render = (ui: React.ReactElement) => rtlRender(ui, { wrapper: TestWrapper });
+
+const baseUser = {
+  userId: 1,
+  email: 'test@example.com',
+  name: 'Test',
+  surname: 'User',
+};
 
 describe('Navbar', () => {
   beforeEach(() => {
@@ -136,10 +89,9 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    expect(screen.getByTestId('app-bar')).toBeInTheDocument();
-    expect(screen.getByTestId('toolbar')).toBeInTheDocument();
+    expect(screen.getByRole('banner')).toBeInTheDocument();
     expect(screen.getByTestId('menu-book-icon')).toBeInTheDocument();
-    expect(screen.getByText('My Many Books')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'My Many Books' })).toBeInTheDocument();
   });
 
   test('shows mobile menu icon when user is not authenticated', () => {
@@ -153,22 +105,13 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    // Should show menu icon for mobile
-    expect(screen.getByTestId('menu-icon')).toBeInTheDocument();
-    // Should not show user-specific elements
-    expect(screen.queryByTestId('avatar')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /menu/i })).toBeInTheDocument();
+    expect(screen.queryByLabelText('User avatar')).not.toBeInTheDocument();
   });
 
   test('shows user menu when user is authenticated', () => {
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      name: 'Test',
-      surname: 'User',
-    };
-
     mockUseAuth.mockReturnValue({
-      user: mockUser,
+      user: baseUser,
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
@@ -177,21 +120,13 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    expect(screen.getByText('Test User')).toBeInTheDocument();
-    expect(screen.getByTestId('avatar')).toBeInTheDocument();
-    expect(screen.queryByTestId('menu-icon')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Test User/ })).toBeInTheDocument();
+    expect(screen.getAllByLabelText('User avatar').length).toBeGreaterThan(0);
   });
 
-  test('shows navigation buttons for authenticated user', () => {
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      name: 'Test',
-      surname: 'User',
-    };
-
+  test('opens and closes menu via the user button', async () => {
     mockUseAuth.mockReturnValue({
-      user: mockUser,
+      user: baseUser,
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
@@ -200,82 +135,16 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    expect(screen.getByText('My Books')).toBeInTheDocument();
-    expect(screen.getByText('Search')).toBeInTheDocument();
-    expect(screen.getByText('Scanner')).toBeInTheDocument();
-  });
-
-  test('opens user menu when user button is clicked', () => {
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      name: 'Test',
-      surname: 'User',
-    };
-
-    mockUseAuth.mockReturnValue({
-      user: mockUser,
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      signup: vi.fn(),
-    });
-
-    render(<Navbar />);
-
-    // Menu should not be visible initially
-    expect(screen.queryByTestId('menu')).not.toBeInTheDocument();
-
-    // Click on user button to open menu
-    fireEvent.click(screen.getByTestId('icon-button'));
-
-    // Menu should now be visible
-    expect(screen.getByTestId('menu')).toBeInTheDocument();
-    expect(screen.getByText('Sign out')).toBeInTheDocument();
-  });
-
-  test('closes menu when menu item is clicked', () => {
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      name: 'Test',
-      surname: 'User',
-    };
-
-    mockUseAuth.mockReturnValue({
-      user: mockUser,
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      signup: vi.fn(),
-    });
-
-    render(<Navbar />);
-
-    // Open menu
-    fireEvent.click(screen.getByTestId('icon-button'));
-    expect(screen.getByTestId('menu')).toBeInTheDocument();
-
-    // Click on My Books menu item
-    const menuItems = screen.getAllByTestId('menu-item');
-    fireEvent.click(menuItems[0]); // First menu item is "My Books"
-
-    // Verify navigation was called - the mock is inside BrowserRouter so it won't trigger
-    // Just verify the menu items exist and can be clicked
-    expect(menuItems.length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: /Test User/ }));
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'My Books' }));
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
   });
 
   test('handles logout correctly', async () => {
     const mockLogout = vi.fn().mockResolvedValue(undefined);
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      name: 'Test',
-      surname: 'User',
-    };
-
     mockUseAuth.mockReturnValue({
-      user: mockUser,
+      user: baseUser,
       loading: false,
       login: vi.fn(),
       logout: mockLogout,
@@ -284,18 +153,10 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    // Open menu
-    fireEvent.click(screen.getByTestId('icon-button'));
+    fireEvent.click(screen.getByRole('button', { name: /Test User/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }));
 
-    // Click sign out
-    fireEvent.click(screen.getByText('Sign out'));
-
-    await waitFor(() => {
-      expect(mockLogout).toHaveBeenCalled();
-    });
-
-    // Menu should be closed
-    expect(screen.queryByTestId('menu')).not.toBeInTheDocument();
+    await waitFor(() => expect(mockLogout).toHaveBeenCalled());
   });
 
   test('clicking logo navigates to home page', () => {
@@ -309,21 +170,13 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    fireEvent.click(screen.getByText('My Many Books'));
-
+    fireEvent.click(screen.getByRole('button', { name: 'My Many Books' }));
     expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 
   test('navigation buttons navigate to correct paths', () => {
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      name: 'Test',
-      surname: 'User',
-    };
-
     mockUseAuth.mockReturnValue({
-      user: mockUser,
+      user: baseUser,
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
@@ -332,29 +185,19 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    // Test My Books navigation
-    fireEvent.click(screen.getByText('My Books'));
+    fireEvent.click(screen.getByRole('button', { name: 'My Books' }));
     expect(mockNavigate).toHaveBeenCalledWith('/');
 
-    // Test Search navigation
-    fireEvent.click(screen.getByText('Search'));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     expect(mockNavigate).toHaveBeenCalledWith('/search');
 
-    // Test Scanner navigation
-    fireEvent.click(screen.getByText('Scanner'));
+    fireEvent.click(screen.getByRole('button', { name: 'Scanner' }));
     expect(mockNavigate).toHaveBeenCalledWith('/scanner');
   });
 
-  test('shows user avatar with first letter of name', () => {
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      name: 'John',
-      surname: 'Doe',
-    };
-
+  test('shows user avatar initial when name is available', () => {
     mockUseAuth.mockReturnValue({
-      user: mockUser,
+      user: { ...baseUser, name: 'John' },
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
@@ -363,19 +206,13 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    expect(screen.getByText('J')).toBeInTheDocument();
+    const avatars = screen.getAllByLabelText('User avatar');
+    expect(avatars[0]).toHaveTextContent('J');
   });
 
-  test('handles user without name gracefully', () => {
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      name: undefined,
-      surname: undefined,
-    };
-
+  test('falls back to email initial when name is missing', () => {
     mockUseAuth.mockReturnValue({
-      user: mockUser,
+      user: { userId: 2, email: 'fallback@example.com', name: undefined, surname: undefined },
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
@@ -384,28 +221,11 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    // Should still render without error
-    expect(screen.getByTestId('avatar')).toBeInTheDocument();
+    const avatars = screen.getAllByLabelText('User avatar');
+    expect(avatars[0]).toHaveTextContent('F');
   });
 
-  test('has correct styling and layout', () => {
-    mockUseAuth.mockReturnValue({
-      user: null,
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      signup: vi.fn(),
-    });
-
-    render(<Navbar />);
-
-    const appBar = screen.getByTestId('app-bar');
-    expect(appBar).toHaveAttribute('position', 'sticky');
-    expect(appBar).toHaveAttribute('color', 'default');
-    expect(appBar).toHaveAttribute('elevation', '1');
-  });
-
-  test('shows loading state correctly', () => {
+  test('renders while authentication state is loading', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: true,
@@ -416,35 +236,7 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    // Should still render the navbar during loading
-    expect(screen.getByTestId('app-bar')).toBeInTheDocument();
-    expect(screen.getByText('My Many Books')).toBeInTheDocument();
-  });
-
-  test('menu closes when clicking outside', () => {
-    const mockUser = {
-      userId: 1,
-      email: 'test@example.com',
-      name: 'Test',
-      surname: 'User',
-    };
-
-    mockUseAuth.mockReturnValue({
-      user: mockUser,
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      signup: vi.fn(),
-    });
-
-    render(<Navbar />);
-
-    // Open menu
-    fireEvent.click(screen.getByTestId('icon-button'));
-    expect(screen.getByTestId('menu')).toBeInTheDocument();
-
-    // The actual Material-UI Menu component would handle click outside,
-    // but our mock doesn't, so we just verify the menu exists for now
-    expect(screen.getByTestId('menu')).toBeInTheDocument();
+    expect(screen.getByRole('banner')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'My Many Books' })).toBeInTheDocument();
   });
 });

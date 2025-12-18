@@ -79,9 +79,9 @@ describe('AdminBookController', () => {
       expect((result.data as { books: any[] }).books).toHaveLength(1);
       expect((result.data as { books: any[] }).books[0].userName).toBe('Test User');
       expect(result.pagination).toEqual({
-        page: 1,
-        limit: 10,
-        total: 1,
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalItems: 1,
         totalPages: 1,
       });
       expect(Book.findAndCountAll).toHaveBeenCalledWith(

@@ -1,5 +1,29 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  Paper,
+  Box,
+  Typography,
+  Stack,
+  IconButton,
+  Chip,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button
+} from '@mui/material';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { SelectChangeEvent } from '@mui/material/Select';
 import { Book, Author, Category } from '../../types';
 
 interface BookDetailsProps {
@@ -28,17 +52,18 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
       typeof author === 'string' ? author : `${author.name} ${author.surname}`
     ).join(', ');
   };
+  const authorPrefix = t('books:by_author_prefix', { defaultValue: 'by' });
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'finished':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'success';
       case 'reading':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'primary';
       case 'paused':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'warning';
       default:
-        return 'bg-secondary-100 text-text-muted border-secondary-200';
+        return 'default';
     }
   };
 
@@ -55,7 +80,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
     }
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleStatusChange = (e: SelectChangeEvent) => {
     if (onStatusChange) {
       const value = e.target.value;
       const status = value === '' ? null : (value as Book['status']);
@@ -70,7 +95,8 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
     try {
       return new Date(dateString).toLocaleDateString();
     } catch {
@@ -79,204 +105,200 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
   };
 
   return (
-    <div className="bg-surface rounded-lg shadow-lg border border-secondary-200 overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-4 bg-primary-50 border-b border-secondary-200 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-text-primary">{t('books:book_details')}</h2>
-
-        <div className="flex items-center space-x-2">
-          {onEdit && (
-            <button
-              onClick={() => onEdit(book)}
-              className="p-2 text-text-muted hover:text-primary-500 transition-colors"
-              title={t('books:edit_book_title')}
-              disabled={loading}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
-          )}
-
-          {onDelete && (
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="p-2 text-text-muted hover:text-semantic-error transition-colors"
-              title={t('books:delete_book_title')}
-              disabled={loading}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          )}
-
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="p-2 text-text-muted hover:text-text-secondary transition-colors"
-              title={t('common:close')}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Book Cover */}
-          <div className="lg:col-span-1">
-            <div className="aspect-[3/4] bg-secondary-100 rounded-lg flex items-center justify-center text-text-muted">
-              <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Book Information */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Title and Authors */}
-            <div>
-              <h1 className="text-2xl font-bold text-text-primary mb-2">{book.title}</h1>
-              <p className="text-lg text-text-secondary mb-4">
-                by {formatAuthors(book.authors)}
-              </p>
-              
-              {/* Status Badge */}
-              {book.status && (
-                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(book.status)}`}>
-                  {formatStatus(book.status)}
-                </div>
-              )}
-            </div>
-
-            {/* Book Details Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* ISBN */}
-              <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-1">{t('books:isbn')}</h3>
-                <p className="text-text-primary font-mono">{book.isbnCode}</p>
-              </div>
-
-              {/* Edition */}
-              {book.editionNumber && (
-                <div>
-                  <h3 className="text-sm font-medium text-text-secondary mb-1">{t('books:edition')}</h3>
-                  <p className="text-text-primary">{book.editionNumber}</p>
-                </div>
-              )}
-
-              {/* Edition Date */}
-              {book.editionDate && (
-                <div>
-                  <h3 className="text-sm font-medium text-text-secondary mb-1">{t('books:edition_date')}</h3>
-                  <p className="text-text-primary">{formatDate(book.editionDate)}</p>
-                </div>
-              )}
-
-              {/* Added Date */}
-              <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-1">{t('books:added')}</h3>
-                <p className="text-text-primary">{formatDate(book.creationDate)}</p>
-              </div>
-
-              {/* Last Updated */}
-              {book.updateDate !== book.creationDate && (
-                <div>
-                  <h3 className="text-sm font-medium text-text-secondary mb-1">{t('books:last_updated')}</h3>
-                  <p className="text-text-primary">{formatDate(book.updateDate)}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Categories */}
-            {book.categories && book.categories.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-2">{t('books:categories')}</h3>
-                <div className="flex flex-wrap gap-2">
-                  {book.categories.map((category: Category) => (
-                    <span
-                      key={category.id}
-                      className="px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full"
-                    >
-                      {category.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
+    <>
+      <Paper elevation={3} sx={{ borderRadius: 3, overflow: 'hidden', maxWidth: 600, mx: 'auto' }}>
+        <Box
+          sx={{
+            px: 4,
+            py: 3,
+            bgcolor: 'primary.50',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+          }}
+        >
+          <Typography variant="h6">{t('books:book_details')}</Typography>
+          <Stack direction="row" spacing={1}>
+            {onEdit && (
+              <IconButton aria-label={t('books:edit_book_title')} onClick={() => onEdit(book)} disabled={loading}>
+                <EditIcon fontSize="small" />
+              </IconButton>
             )}
-
-            {/* Status Change */}
-            {onStatusChange && (
-              <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-2">{t('books:update_reading_status')}</h3>
-                <select
-                  value={book.status || ''}
-                  onChange={handleStatusChange}
-                  className="px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-background text-text-primary"
-                  disabled={loading}
-                >
-                  <option value="">&nbsp;</option>
-                  <option value="reading">{t('books:reading')}</option>
-                  <option value="paused">{t('books:paused')}</option>
-                  <option value="finished">{t('books:finished')}</option>
-                </select>
-              </div>
+            {onDelete && (
+              <IconButton
+                aria-label={t('books:delete_book_title')}
+                color="error"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={loading}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
             )}
-
-            {/* Notes */}
-            {book.notes && (
-              <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-2">{t('books:notes')}</h3>
-                <div className="bg-secondary-50 rounded-lg p-4">
-                  <p className="text-text-primary whitespace-pre-wrap">{book.notes}</p>
-                </div>
-              </div>
+            {onClose && (
+              <IconButton aria-label={t('common:close')} onClick={onClose}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
             )}
-          </div>
-        </div>
-      </div>
+          </Stack>
+        </Box>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-surface rounded-lg shadow-lg max-w-md w-full">
-            <div className="p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="flex-shrink-0">
-                  <svg className="w-6 h-6 text-semantic-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-text-primary">{t('books:delete_book')}</h3>
-                  <p className="text-text-secondary">{t('books:delete_confirm_message', { title: book.title })}</p>
-                </div>
-              </div>
+        <Box sx={{ p: 4 }}>
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={4}>
+              <Box
+                sx={{
+                  aspectRatio: '3/4',
+                  bgcolor: 'grey.100',
+                  borderRadius: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'text.disabled',
+                }}
+              >
+                <MenuBookIcon sx={{ fontSize: 72 }} />
+              </Box>
+            </Grid>
 
-              <div className="flex space-x-3 justify-end">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 border border-secondary-300 text-text-secondary rounded-lg hover:bg-secondary-50 transition-colors"
-                  disabled={loading}
-                >
-                  {t('common:cancel')}
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="px-4 py-2 bg-semantic-error text-white rounded-lg hover:bg-red-600 transition-colors"
-                  disabled={loading}
-                >
-                  {loading ? t('books:deleting') : t('books:delete_book')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+            <Grid item xs={12} md={8}>
+              <Stack spacing={3} sx={{ width: '100%' }}>
+                <Box>
+                  <Typography variant="h4" gutterBottom>
+                    {book.title}
+                  </Typography>
+                  <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                    {authorPrefix} {formatAuthors(book.authors)}
+                  </Typography>
+                  {book.status && (
+                    <Chip
+                      label={formatStatus(book.status)}
+                      color={getStatusColor(book.status) as any}
+                      sx={{ width: 'fit-content' }}
+                    />
+                  )}
+                </Box>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      {t('books:isbn')}
+                    </Typography>
+                    <Typography variant="body1" fontFamily="monospace">
+                      {book.isbnCode || 'N/A'}
+                    </Typography>
+                  </Grid>
+                  {book.editionNumber && (
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t('books:edition')}
+                      </Typography>
+                      <Typography variant="body1">{book.editionNumber}</Typography>
+                    </Grid>
+                  )}
+                  {book.editionDate && (
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t('books:edition_date')}
+                      </Typography>
+                      <Typography variant="body1">{formatDate(book.editionDate)}</Typography>
+                    </Grid>
+                  )}
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      {t('books:added')}
+                    </Typography>
+                    <Typography variant="body1">{formatDate(book.creationDate)}</Typography>
+                  </Grid>
+                  {book.updateDate !== book.creationDate && (
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t('books:last_updated')}
+                      </Typography>
+                      <Typography variant="body1">{formatDate(book.updateDate)}</Typography>
+                    </Grid>
+                  )}
+                </Grid>
+
+<Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="flex-start">
+                  {onStatusChange && (
+                    <Box sx={{ minWidth: 200 }}>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        {t('books:update_reading_status')}
+                      </Typography>
+                      <FormControl size="small" sx={{ width: 200 }}>
+                        <InputLabel id={`status-${book.id}`}>{t('books:status')}</InputLabel>
+                        <Select
+                          labelId={`status-${book.id}`}
+                          value={book.status || ''}
+                          label={t('books:status')}
+                          onChange={handleStatusChange}
+                          disabled={loading}
+                        >
+                          <MenuItem value="">
+                            <em>{t('common:none')}</em>
+                          </MenuItem>
+                          <MenuItem value="reading">{t('books:reading')}</MenuItem>
+                          <MenuItem value="paused">{t('books:paused')}</MenuItem>
+                          <MenuItem value="finished">{t('books:finished')}</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  )}
+
+                  {book.categories && book.categories.length > 0 && (
+                    <Box flex={1}>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        {t('books:categories')}
+                      </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        {book.categories.map((category: Category) => (
+                          <Chip key={category.id} label={category.name} variant="outlined" size="medium" />
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+                </Stack>
+
+                {book.notes && (
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      {t('books:notes')}
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 2, maxHeight: 200, overflow: 'auto' }}>
+                      <Typography whiteSpace="pre-wrap" sx={{ wordBreak: 'break-word' }}>
+                        {book.notes}
+                      </Typography>
+                    </Paper>
+                  </Box>
+                )}
+              </Stack>
+            </Grid>
+          </Grid>
+        </Box>
+      </Paper>
+
+      <Dialog open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningAmberIcon color="error" />
+          {t('books:delete_book')}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography color="text.secondary">
+            {t('books:delete_confirm_message', { title: book.title })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowDeleteConfirm(false)} disabled={loading}>
+            {t('common:cancel')}
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained" disabled={loading}>
+            {loading ? t('books:deleting') : t('books:delete_book')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };

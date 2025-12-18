@@ -4,16 +4,17 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  NavigationManager, 
-  Route, 
-  NavigationState, 
+import {
+  Route,
+  NavigationState,
   NavigationEvent,
   AppRouteName,
   RouteParams,
   QueryParams,
   NavigationOptions
 } from './types';
+import { NavigationManager } from './NavigationManager';
+import { generateBreadcrumb, matchRoute, buildUrl } from './routes';
 
 // Navigation context would be provided by the app
 let navigationManagerInstance: NavigationManager | null = null;
@@ -200,9 +201,7 @@ export function useBreadcrumb(): string[] {
   
   return useMemo(() => {
     if (!currentRoute) return [];
-    
-    // Import generateBreadcrumb here to avoid circular dependency
-    const { generateBreadcrumb } = require('./routes');
+
     return generateBreadcrumb(currentRoute, params);
   }, [currentRoute, params]);
 }
@@ -247,7 +246,6 @@ export function useDeepLink(): {
 } {
   const parseDeepLink = useCallback((url: string): Route | null => {
     try {
-      const { matchRoute } = require('./routes');
       const urlObj = new URL(url);
       const match = matchRoute(urlObj.pathname);
       
@@ -277,7 +275,6 @@ export function useDeepLink(): {
     params?: RouteParams,
     query?: QueryParams
   ): string => {
-    const { buildUrl } = require('./routes');
     return buildUrl(routeName, params, query);
   }, []);
   

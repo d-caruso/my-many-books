@@ -3,12 +3,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { authService } from './services/authService';
 import { ApiProvider } from './contexts/ApiContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import { PWAProvider } from './contexts/PWAContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary/ErrorBoundary';
 import { AuthErrorBoundary } from './components/ErrorBoundary/AuthErrorBoundary';
 import { PageErrorBoundary } from './components/ErrorBoundary/PageErrorBoundary';
 import { NativeLoading } from './components/NativeLoading';
+import { Box } from '@mui/material';
 
 // Defer i18n initialization until after first render
 let i18nInitialized = false;
@@ -40,13 +42,29 @@ const UpdatePrompt = lazy(() => import('./components/PWA').then(m => ({ default:
 const OfflineIndicator = lazy(() => import('./components/PWA').then(m => ({ default: m.OfflineIndicator })));
 
 // Admin pages - only loaded for admin users
-const AdminDashboardPage = lazy(() => import('./pages/Admin'));
+const AdminDashboardPage = lazy(() => import('./pages/Admin').then(m => ({ default: m.AdminDashboardPage })));
 const UserManagementPage = lazy(() => import('./pages/Admin/UserManagementPage'));
 const BookManagementPage = lazy(() => import('./pages/Admin/BookManagementPage'));
+const HooksPage = lazy(() =>
+  import('./pages/Admin/Hooks/HooksPage').then(m => ({ default: m.HooksPage }))
+);
+const HookExecutionsPage = lazy(() =>
+  import('./pages/Admin/Hooks/HookExecutions').then(m => ({ default: m.HookExecutions }))
+);
 const AdminSettingsPage = lazy(() => import('./pages/Admin/AdminSettingsPage'));
 
 function App() {
   const [appReady, setAppReady] = useState(false);
+  const visuallyHidden = {
+    border: 0,
+    clip: 'rect(0 0 0 0)',
+    height: 1,
+    margin: -1,
+    overflow: 'hidden',
+    padding: 0,
+    position: 'absolute' as const,
+    width: 1,
+  };
 
   useEffect(() => {
     // Initialize i18n (HTML loading screen shows during this)
@@ -72,17 +90,33 @@ function App() {
         <ThemedApp>
           <PWAProvider>
             <ApiProvider>
-              <AuthErrorBoundary>
-                <AuthProvider authService={authService} loadingComponent={<NativeLoading />}>
+              <SettingsProvider>
+                <AuthErrorBoundary>
+                  <AuthProvider authService={authService} loadingComponent={<NativeLoading />}>
                   <Router>
-                    <div className="min-h-screen">
+                    <Box sx={{ minHeight: '100vh', position: 'relative' }}>
                       {/* Skip to main content link for keyboard navigation */}
-                      <a
+                      <Box
+                        component="a"
                         href="#main-content"
-                        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded focus:shadow-lg"
+                        sx={{
+                          ...visuallyHidden,
+                          '&:focus-visible': {
+                            left: 16,
+                            top: 16,
+                            width: 'auto',
+                            height: 'auto',
+                            padding: '8px 16px',
+                            backgroundColor: 'primary.main',
+                            color: 'primary.contrastText',
+                            borderRadius: 1,
+                            boxShadow: 3,
+                            zIndex: 1200,
+                          },
+                        }}
                       >
                         Skip to main content
-                      </a>
+                      </Box>
 
                       {/* PWA components - lazy loaded */}
                       <Suspense fallback={null}>
@@ -121,6 +155,22 @@ function App() {
                             }
                           />
                           <Route
+                            path="/admin/hooks"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <HooksPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/hooks/:hookId/executions"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <HookExecutionsPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
                             path="/admin/settings"
                             element={
                               <ProtectedRoute requireAdmin>
@@ -135,14 +185,14 @@ function App() {
                             element={
                               <ProtectedRoute>
                                 <Navbar />
-                                <main id="main-content" tabIndex={-1}>
+                                <Box component="main" id="main-content" tabIndex={-1}>
                                   <Routes>
                                     <Route path="/" element={<PageErrorBoundary pageName="Books"><BooksPage /></PageErrorBoundary>} />
                                     <Route path="/search" element={<PageErrorBoundary pageName="Book Search"><BookSearchPage /></PageErrorBoundary>} />
                                     <Route path="/scanner" element={<ScannerModal isOpen={true} onClose={() => window.history.back()} onScanSuccess={() => {}} onScanError={() => {}} />} />
                                     <Route path="*" element={<Navigate to="/" replace />} />
                                   </Routes>
-                                </main>
+                                </Box>
                               </ProtectedRoute>
                             }
                           />
@@ -153,10 +203,11 @@ function App() {
                       <Suspense fallback={null}>
                         <InstallPrompt />
                       </Suspense>
-                    </div>
+                    </Box>
                   </Router>
-                </AuthProvider>
-              </AuthErrorBoundary>
+                  </AuthProvider>
+                </AuthErrorBoundary>
+              </SettingsProvider>
             </ApiProvider>
           </PWAProvider>
         </ThemedApp>

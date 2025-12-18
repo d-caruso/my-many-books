@@ -2,14 +2,18 @@
  * Book Validation Schemas
  *
  * Validation schemas for book-related endpoints.
- * Leverages existing book validation from utils/validation.ts
+ * Uses shared-validation library for consistent ISBN validation.
  */
 
 import Joi from 'joi';
 import { bookValidationSchema } from '../../utils/validation';
 import { commonSchemas } from './common.schema';
-import { BOOK_STATUS } from '../../utils/constants';
-import { validateIsbn } from '../../utils/isbn';
+import {
+  validateIsbn,
+  ISBN_CONSTRAINTS,
+  ISBN_PATTERNS,
+  BOOK_STATUSES,
+} from '@my-many-books/shared-validation';
 
 /**
  * Create book schema
@@ -27,7 +31,7 @@ export const createBookSchema = Joi.object({
   title: bookValidationSchema.title,
   editionNumber: bookValidationSchema.editionNumber,
   editionDate: bookValidationSchema.editionDate,
-  status: bookValidationSchema.status.default('TO_READ'),
+  status: bookValidationSchema.status,
   notes: bookValidationSchema.notes,
   authorIds: Joi.array().items(commonSchemas.id).min(1).optional(),
   categoryIds: Joi.array().items(commonSchemas.id).min(1).optional(),
@@ -42,7 +46,8 @@ export const updateBookSchema = Joi.object({
   editionNumber: bookValidationSchema.editionNumber,
   editionDate: bookValidationSchema.editionDate,
   status: Joi.string()
-    .valid(...Object.values(BOOK_STATUS))
+    .valid(...BOOK_STATUSES)
+    .allow(null)
     .optional(),
   notes: bookValidationSchema.notes,
   authorIds: Joi.array().items(commonSchemas.id).min(1).optional(),
@@ -54,7 +59,8 @@ export const updateBookSchema = Joi.object({
  */
 export const patchBookSchema = Joi.object({
   status: Joi.string()
-    .valid(...Object.values(BOOK_STATUS))
+    .valid(...BOOK_STATUSES)
+    .allow(null)
     .optional(),
   notes: bookValidationSchema.notes,
   editionNumber: bookValidationSchema.editionNumber,
@@ -77,7 +83,7 @@ export const searchBooksQuerySchema = Joi.object({
  */
 export const getBooksQuerySchema = Joi.object({
   status: Joi.string()
-    .valid(...Object.values(BOOK_STATUS))
+    .valid(...BOOK_STATUSES)
     .optional(),
   authorId: commonSchemas.id.optional(),
   categoryId: commonSchemas.id.optional(),
@@ -85,6 +91,8 @@ export const getBooksQuerySchema = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(20),
   sortBy: Joi.string().optional(),
   sortOrder: Joi.string().valid('asc', 'desc').default('asc'),
+  includeAuthors: Joi.string().optional().valid('true', 'false').default('false'),
+  includeCategories: Joi.string().optional().valid('true', 'false').default('false'),
 });
 
 /**
@@ -96,10 +104,13 @@ export const bookIdParamSchema = Joi.object({
 
 /**
  * ISBN param schema
+ * Uses shared ISBN pattern for consistency
  */
 export const isbnParamSchema = Joi.object({
   isbn: Joi.string()
-    .pattern(/^(?:\d{10}|\d{13}|[\d-]{10,17})$/)
+    .min(ISBN_CONSTRAINTS.MIN_LENGTH)
+    .max(ISBN_CONSTRAINTS.MAX_LENGTH)
+    .pattern(ISBN_PATTERNS.NORMALIZED)
     .required()
     .messages({
       'string.pattern.base': 'ISBN must be a valid ISBN-10 or ISBN-13 format',

@@ -4,7 +4,9 @@
   "private": true,
   "description": "My Many Books - Monorepo for managing personal book collections",
   "scripts": {
-    "build": "nx run-many --target=build --all",
+    "postinstall": "bash scripts/install-git-hooks.sh",
+    "sync-translations": "bash scripts/sync-translations.sh",
+    "build": "npm run sync-translations && nx run-many --target=build --all",
     "build:affected": "nx affected --target=build",
     "test": "nx run-many --target=test --projects=api,web-app",
     "test:affected": "nx affected --target=test",
@@ -18,6 +20,11 @@
     "build:web-app": "nx build web-app",
     "test:api": "nx test api",
     "test:web-app": "nx test web-app",
+    "test:web-app:components": "nx test web-app:test:components",
+    "test:web-app:pages": "nx test web-app:test:pages",
+    "test:web-app:services": "nx test web-app:test:services",
+    "test:web-app:integration": "nx test web-app:test:integration",
+    "test:web-app:hooks": "nx test web-app:test:hooks",
     "lint:api": "nx lint api",
     "lint:web-app": "nx lint web-app",
     "deploy:api": "nx run api:deploy",
@@ -42,18 +49,22 @@
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
-    "@nx/eslint": "^21.6.3",
-    "@nx/jest": "^21.6.3",
-    "@nx/js": "^21.6.3",
-    "@nx/react": "^21.6.3",
-    "@nx/webpack": "^21.6.3",
-    "@nx/workspace": "^21.6.3",
+    "@nx/eslint": "22.1.3",
+    "@nx/jest": "22.1.3",
+    "@nx/js": "22.1.3",
+    "@nx/react": "22.1.3",
+    "@nx/vite": "22.1.3",
+    "@nx/webpack": "22.1.3",
+    "@nx/workspace": "22.1.3",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.6.2",
+    "@types/express": "^5.0.6",
     "babel-jest": "^29.7.0",
     "cypress": "^14.5.4",
     "mysql2": "^3.6.5",
-    "nx": "^21.6.3",
+    "nx": "22.1.3",
     "sequelize-cli": "^6.6.3",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "workbox-webpack-plugin": "^7.4.0"
   },
   "workspaces": [
     "apps/*",
@@ -63,8 +74,13 @@
     "includedScripts": []
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.948.0",
+    "pino": "10.1.0",
+    "pino-http": "11.0.0",
+    "pino-pretty": "13.1.3",
     "serverless-http": "^4.0.0",
-    "whatwg-fetch": "^3.6.20"
+    "whatwg-fetch": "^3.6.20",
+    "zod": "^4.1.13"
   },
   "overrides": {
     "whatwg-fetch": "^3.6.20",

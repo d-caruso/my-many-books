@@ -6,7 +6,7 @@
  */
 
 import Joi from 'joi';
-import { VALIDATION_RULES } from '../../utils/constants';
+import { AUTHOR_CONSTRAINTS, AUTHOR_PATTERNS } from '@my-many-books/shared-validation';
 
 /**
  * Common field validations
@@ -52,12 +52,13 @@ export const commonSchemas = {
 
   /**
    * Person name (first name, last name, etc.)
+   * Uses shared-validation AUTHOR_CONSTRAINTS for consistency
    */
   personName: Joi.string()
-    .min(VALIDATION_RULES.AUTHOR_NAME.MIN_LENGTH)
-    .max(VALIDATION_RULES.AUTHOR_NAME.MAX_LENGTH)
+    .min(AUTHOR_CONSTRAINTS.NAME.MIN_LENGTH)
+    .max(AUTHOR_CONSTRAINTS.NAME.MAX_LENGTH)
     .trim()
-    .pattern(/^[a-zA-ZÀ-ÿ\s'-]+$/)
+    .pattern(AUTHOR_PATTERNS.NAME)
     .message('Name can only contain letters, spaces, hyphens, and apostrophes'),
 
   /**

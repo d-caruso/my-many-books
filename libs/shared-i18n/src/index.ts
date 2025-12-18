@@ -1,11 +1,5 @@
-// Export types
-export {
-  SupportedLanguage,
-  TranslationNamespace,
-  type LanguageMetadata,
-  SUPPORTED_LANGUAGES,
-  DEFAULT_LANGUAGE,
-} from './types';
+// Export shared i18n constants/types
+export * from './types';
 
 // Export i18n configuration and utilities
 export {

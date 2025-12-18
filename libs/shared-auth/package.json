@@ -2,6 +2,7 @@
   "name": "@my-many-books/shared-auth",
   "version": "1.0.0",
   "description": "Shared authentication library for My Many Books web and mobile apps",
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -24,6 +25,9 @@
   ],
   "author": "My Many Books",
   "license": "MIT",
+  "dependencies": {
+    "@casl/ability": "^6.7.3"
+  },
   "peerDependencies": {
     "react": "^18.0.0"
   },

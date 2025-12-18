@@ -60,7 +60,7 @@ npm test -- src/__tests__/accessibility/ --run
 ```
 
 ### Manual Testing:
-See `/docs/accessibility/manual-testing-protocol.md` for comprehensive manual testing procedures.
+See `/docs/guides/testing/manual-accessibility.md` for comprehensive manual testing procedures.
 
 ---
 

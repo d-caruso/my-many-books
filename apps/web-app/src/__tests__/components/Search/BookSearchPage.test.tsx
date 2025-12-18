@@ -1,12 +1,14 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { Book } from '../../../types';
 
 // Import after mocks
 import { MemoryRouter } from 'react-router-dom';
-import { BookSearchPage } from '../../../components/Search/BookSearchPage';
+import BookSearchPage from '../../../components/Search/BookSearchPage';
 import { useBookSearch } from '../../../hooks/useBookSearch';
+import { setupMuiMock } from '../../test-utils/setupMuiMock';
+
 
 const mockNavigate = vi.fn();
 
@@ -74,31 +76,7 @@ vi.mock('../../../components/Search/BookSearchResults', () => ({
 }));
 
 // Mock Material-UI components
-vi.mock('@mui/material', () => ({
-  Box: ({ children, ...props }: any) => (
-    <div data-testid="box" {...props}>{children}</div>
-  ),
-  Typography: ({ children, variant, ...props }: any) => (
-    <div data-testid={`typography-${variant}`} {...props}>{children}</div>
-  ),
-  Button: ({ children, onClick, variant, startIcon, disabled, ...props }: any) => (
-    <button
-      data-testid={`button-${variant || 'default'}`}
-      onClick={onClick}
-      disabled={disabled}
-      {...props}
-    >
-      {startIcon && <span data-testid="start-icon">{startIcon}</span>}
-      {children}
-    </button>
-  ),
-  Grid: ({ children, ...props }: any) => (
-    <div data-testid="grid" {...props}>{children}</div>
-  ),
-  Paper: ({ children, ...props }: any) => (
-    <div data-testid="paper" {...props}>{children}</div>
-  ),
-}));
+setupMuiMock();
 
 // Mock Material-UI icons
 vi.mock('@mui/icons-material/Close', () => ({

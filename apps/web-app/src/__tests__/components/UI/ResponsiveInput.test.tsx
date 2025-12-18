@@ -8,22 +8,19 @@ describe('ResponsiveInput', () => {
     expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
 
-  test('renders with label', () => {
-    render(<ResponsiveInput label="Test Label" id="test" />);
-    expect(screen.getByLabelText('Test Label')).toBeInTheDocument();
-  });
-
-  test('shows required indicator', () => {
-    render(<ResponsiveInput label="Required Field" isRequired />);
+  test('renders with label and required indicator', () => {
+    render(<ResponsiveInput label="Test Label" isRequired id="test" />);
+    expect(screen.getByLabelText(/Test Label/)).toBeInTheDocument();
     expect(screen.getByText('*')).toBeInTheDocument();
   });
 
   test('displays error message', () => {
     render(<ResponsiveInput error="Error message" />);
     expect(screen.getByText('Error message')).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true');
   });
 
-  test('displays helper text', () => {
+  test('displays helper text when no error', () => {
     render(<ResponsiveInput helperText="Helper text" />);
     expect(screen.getByText('Helper text')).toBeInTheDocument();
   });
@@ -34,32 +31,12 @@ describe('ResponsiveInput', () => {
     expect(screen.getByText('Error')).toBeInTheDocument();
   });
 
-  test('applies error styles', () => {
-    render(<ResponsiveInput error="Error" />);
-    const input = screen.getByRole('textbox');
-    expect(input).toHaveClass('border-semantic-error');
-  });
-
-  test('applies normal styles without error', () => {
-    render(<ResponsiveInput />);
-    const input = screen.getByRole('textbox');
-    expect(input).toHaveClass('border-secondary-300');
-  });
-
   test('handles input changes', () => {
     const onChange = vi.fn();
     render(<ResponsiveInput onChange={onChange} />);
-    
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'test' } });
-    
     expect(onChange).toHaveBeenCalled();
-  });
-
-  test('applies custom className', () => {
-    render(<ResponsiveInput className="custom-class" />);
-    const input = screen.getByRole('textbox');
-    expect(input).toHaveClass('custom-class');
   });
 
   test('passes through HTML props', () => {

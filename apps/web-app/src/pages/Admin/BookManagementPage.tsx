@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -30,6 +30,8 @@ import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
 import { useApi } from '../../contexts/ApiContext';
 import { DataGridErrorBoundary } from '../../components/ErrorBoundary';
+import { normalizeIsbn } from '@my-many-books/shared-validation';
+import { adminBookSchema } from '../../validation/bookSchemas';
 
 interface Book {
   id: number;
@@ -60,6 +62,7 @@ interface BookFormData {
 export const BookManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
+  const { getAdminBooks, updateAdminBook, deleteAdminBook } = apiService;
 
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,12 +90,12 @@ export const BookManagementPage: React.FC = () => {
   const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const fetchBooks = async () => {
+  const fetchBooks = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.getAdminBooks(
+      const response = await getAdminBooks(
         paginationModel.page + 1,
         paginationModel.pageSize,
         searchTerm || undefined
@@ -106,11 +109,11 @@ export const BookManagementPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAdminBooks, paginationModel.page, paginationModel.pageSize, searchTerm]);
 
   useEffect(() => {
     fetchBooks();
-  }, [paginationModel, searchTerm]);
+  }, [fetchBooks]);
 
   const handleSearch = () => {
     setPaginationModel({ ...paginationModel, page: 0 });
@@ -141,11 +144,28 @@ export const BookManagementPage: React.FC = () => {
   const handleEditSubmit = async () => {
     if (!selectedBook) return;
 
+    // Validate with Zod schema
+    const result = adminBookSchema.safeParse(formData);
+
+    if (!result.success) {
+      // Show first validation error
+      const firstError = result.error.errors[0];
+      setFormError(firstError.message);
+      return;
+    }
+
     try {
       setFormLoading(true);
       setFormError(null);
 
-      await apiService.updateAdminBook(selectedBook.id, formData);
+      // Normalize ISBN before submitting
+      const normalized = formData.isbnCode ? normalizeIsbn(formData.isbnCode) : null;
+      const submissionData = {
+        ...formData,
+        isbnCode: normalized || formData.isbnCode,
+      };
+
+      await updateAdminBook(selectedBook.id, submissionData);
 
       setEditDialogOpen(false);
       setSelectedBook(null);
@@ -174,7 +194,7 @@ export const BookManagementPage: React.FC = () => {
     try {
       setDeleteLoading(true);
 
-      await apiService.deleteAdminBook(bookToDelete.id);
+      await deleteAdminBook(bookToDelete.id);
 
       setDeleteDialogOpen(false);
       setBookToDelete(null);
@@ -195,7 +215,7 @@ export const BookManagementPage: React.FC = () => {
       field: 'authors',
       headerName: t('pages:admin.books.authors', 'Authors'),
       width: 200,
-      valueGetter: (params) => params.map((a: any) => a.fullName).join(', '),
+      valueGetter: (value: any[]) => value?.map((a: any) => a.fullName).join(', ') || '',
     },
     {
       field: 'userName',
@@ -349,7 +369,7 @@ export const BookManagementPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any || null })}
                   label={t('pages:admin.books.status', 'Status')}
                 >
-                  <MenuItem value="">{t('pages:admin.books.no_status', 'None')}</MenuItem>
+                  <MenuItem value="">&nbsp;</MenuItem>
                   <MenuItem value="reading">{t('pages:admin.books.reading', 'Reading')}</MenuItem>
                   <MenuItem value="paused">{t('pages:admin.books.paused', 'Paused')}</MenuItem>
                   <MenuItem value="finished">{t('pages:admin.books.finished', 'Finished')}</MenuItem>
@@ -411,3 +431,5 @@ export const BookManagementPage: React.FC = () => {
     </AdminLayout>
   );
 };
+
+export default BookManagementPage;

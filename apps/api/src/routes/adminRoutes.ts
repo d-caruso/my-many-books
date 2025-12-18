@@ -6,8 +6,9 @@
 import { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { statsController } from '../controllers/admin/StatsController';
-import { adminUserController } from '../controllers/admin/AdminUserController';
+import { AdminUserController } from '../controllers/admin/AdminUserController';
 import { adminBookController } from '../controllers/admin/AdminBookController';
+import { adminSettingsController } from '../controllers/admin/AdminSettingsController';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
@@ -23,8 +24,11 @@ import {
   adminStatsQuerySchema,
 } from '../validation';
 import { adminLimiter, readLimiter, writeLimiter } from '../middleware/rateLimiters';
+import { container } from '../container';
+import { TYPES } from '../container/types';
 
 const router = Router();
+const adminUserController = container.get<AdminUserController>(TYPES.AdminUserController);
 
 // All admin routes require authentication AND admin role
 router.use(authMiddleware);
@@ -122,6 +126,23 @@ router.delete(
   writeLimiter,
   validateParams(adminIdParamSchema),
   expressRouteWrapper(adminBookController.deleteBook.bind(adminBookController))
+);
+
+// ===== SETTINGS ENDPOINTS =====
+// Get audit logging status (READ)
+router.get(
+  '/settings/audit-logging',
+  readLimiter,
+  expressRouteWrapper(adminSettingsController.getAuditLoggingStatus.bind(adminSettingsController))
+);
+
+// Update audit logging status (WRITE)
+router.patch(
+  '/settings/audit-logging',
+  writeLimiter,
+  expressRouteWrapper(
+    adminSettingsController.updateAuditLoggingStatus.bind(adminSettingsController)
+  )
 );
 
 export default router;

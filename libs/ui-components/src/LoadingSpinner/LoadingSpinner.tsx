@@ -36,5 +36,3 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     },
   });
 };
-
-export type { LoadingSpinnerProps };

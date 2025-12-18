@@ -1,18 +1,26 @@
 import { BookController } from '../../../src/controllers/BookController';
 import { Book, Author, Category } from '../../../src/models';
 import { isbnService } from '../../../src/services/isbnService';
-import { BOOK_STATUS } from '../../../src/utils/constants';
+import { BOOK_STATUS } from '@my-many-books/shared-validation';
+import { container } from '../../../src/container';
+import { TYPES } from '../../../src/container/types';
+import { BookService } from '../../../src/services/book/BookService';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
 
 // Mock dependencies
 jest.mock('../../../src/models');
 jest.mock('../../../src/services/isbnService');
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
+}));
 
 interface UniversalRequest {
   body?: any;
   queryStringParameters?: { [key: string]: string | undefined };
   pathParameters?: { [key: string]: string | undefined };
   headers?: { [key: string]: string | undefined };
-  user?: { userId: number };
+  user?: { userId: number; role?: string };
 }
 
 /**
@@ -57,14 +65,30 @@ import { validateIsbn } from '../../../src/utils/isbn';
 describe('BookController', () => {
   let bookController: BookController;
   let mockRequest: UniversalRequest;
+  let createBookSpy: jest.SpyInstance;
+  let updateBookSpy: jest.SpyInstance;
+  let deleteBookSpy: jest.SpyInstance;
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
   beforeEach(() => {
-    bookController = new BookController();
+    container.snapshot();
+    createBookSpy = jest.spyOn(BookService.prototype, 'createBook');
+    updateBookSpy = jest.spyOn(BookService.prototype, 'updateBook');
+    deleteBookSpy = jest.spyOn(BookService.prototype, 'deleteBook');
+    bookController = container.get<BookController>(TYPES.BookController);
     jest.clearAllMocks();
+    emitHookEventMock.mockClear();
 
     mockRequest = {
       headers: { 'accept-language': 'en' },
     };
+  });
+
+  afterEach(() => {
+    createBookSpy.mockRestore();
+    updateBookSpy.mockRestore();
+    deleteBookSpy.mockRestore();
+    container.restore();
   });
 
   describe('createBook', () => {
@@ -79,55 +103,40 @@ describe('BookController', () => {
       categoryIds: [1],
     };
 
-    // Original mock plain data structure
-    const mockPlainBook = {
-        id: 1,
-        title: 'Test Book',
-        isbnCode: '9780140449136',
-        Authors: [{ id: 1, name: 'Author One' }],
-        Categories: [{ id: 1, name: 'Fiction' }],
-    };
-
     const mockAuthors = [{ id: 1, name: 'Author One' }];
     const mockCategories = [{ id: 1, name: 'Fiction' }];
     
-    const mockBook = createMockBookInstance({ id: 1, title: 'Test Book' });
-    
-    const mockCreatedBookInstance = createMockBookInstance(mockPlainBook);
-
     it('should create a book successfully', async () => {
       mockRequest.body = JSON.stringify(validBookData);
+      mockRequest.user = { userId: 1, role: 'user' };
 
-      (validateIsbn as jest.Mock).mockReturnValue({
-        isValid: true,
-        normalizedIsbn: '9780140449136',
-        format: 'ISBN-13'
-      });
-      (Book.findOne as jest.Mock).mockResolvedValue(null);
-      (Author.findAll as jest.Mock).mockResolvedValueOnce(mockAuthors);
-      (Category.findAll as jest.Mock).mockResolvedValueOnce(mockCategories);
-      (Book.create as jest.Mock).mockResolvedValue(mockBook);
-      (Book.findByPk as jest.Mock).mockResolvedValue(mockCreatedBookInstance);
+      createBookSpy.mockResolvedValue({
+        id: 1,
+        title: 'Test Book',
+        isbnCode: '9780140449136',
+        authors: mockAuthors,
+        categories: mockCategories,
+      } as any);
 
       const result = await bookController.createBook(mockRequest);
 
-      // Ensure the assertion contains ALL the fields that the controller actually passes.
-      expect(Book.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Test Book',
-          isbnCode: '9780140449136',
-          editionNumber: 1,
-          editionDate: expect.any(Date), // editionDate is converted to a Date object
-          status: 'reading',
-          notes: 'Test notes',
-          userId: undefined, // userId is undefined when no user in request
-        })
+      expect(createBookSpy).toHaveBeenCalledWith(
+        expect.objectContaining(validBookData),
+        expect.objectContaining({ userId: 1 })
       );
-      expect(mockBook.addAuthors).toHaveBeenCalledWith(mockAuthors);
-      expect(mockBook.addCategories).toHaveBeenCalledWith(mockCategories);
       expect(result.statusCode).toBe(201);
       expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockPlainBook);
+      expect(result.data).toMatchObject({
+        id: 1,
+        title: 'Test Book',
+      });
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.BOOK.CREATE.BEFORE,
+        expect.objectContaining({
+          user: { id: 1, role: 'user' },
+          input: expect.objectContaining({ title: 'Test Book' }),
+        })
+      );
     });
 
     // Note: ISBN validation is now handled by middleware (validateBody in bookRoutes.ts)
@@ -174,7 +183,43 @@ describe('BookController', () => {
     });
   });
 
-  // ... (Other describe blocks like 'updateBook', 'deleteBook', 'listBooks', etc. would go here)
+  describe('hook events', () => {
+    it('emits book.update.before before updating', async () => {
+      mockRequest.body = JSON.stringify({ title: 'Updated Title' });
+      mockRequest.user = { userId: 2, role: 'user' };
+      mockRequest.pathParameters = { id: '5' };
+      updateBookSpy.mockResolvedValue({
+        id: 5,
+        title: 'Updated Title',
+      } as any);
+
+      await bookController.updateBook(mockRequest);
+
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.BOOK.UPDATE.BEFORE,
+        expect.objectContaining({
+          bookId: 5,
+          user: { id: 2, role: 'user' },
+        })
+      );
+    });
+
+    it('emits book.delete.before before deleting', async () => {
+      mockRequest.user = { userId: 4, role: 'user' };
+      mockRequest.pathParameters = { id: '9' };
+      deleteBookSpy.mockResolvedValue(undefined);
+
+      await bookController.deleteBook(mockRequest);
+
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.BOOK.DELETE.BEFORE,
+        expect.objectContaining({
+          bookId: 9,
+          user: { id: 4, role: 'user' },
+        })
+      );
+    });
+  });
 
   describe('importBookFromIsbn', () => {
     // Original mock data - book data structure

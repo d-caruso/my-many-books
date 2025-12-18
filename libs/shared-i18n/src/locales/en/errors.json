@@ -60,5 +60,12 @@
   "permission_denied_resource": "You do not have permission to {{action}} this {{resource}}",
   "admin_only": "This action requires administrator privileges",
   "owner_only": "You can only modify your own {{resource}}",
-  "insufficient_permissions": "Insufficient permissions to access this resource"
+  "insufficient_permissions": "Insufficient permissions to access this resource",
+  "valid_key_required": "Valid setting key is required",
+  "setting_not_found": "Setting '{{key}}' not found",
+  "value_required": "Setting value is required",
+  "cannot_update_deleted_setting": "Cannot update deleted setting '{{key}}'",
+  "active_must_be_boolean": "Active field must be a boolean",
+  "active_field_required": "Active field is required",
+  "invalid_request_body": "Invalid request body"
 }

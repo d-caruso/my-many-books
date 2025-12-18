@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@my-many-books/shared-auth';
+import {
+  Paper,
+  Box,
+  Typography,
+  Alert,
+  Grid,
+  Button as MuiButton,
+  Stack,
+  Divider
+} from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { ResponsiveInput } from '../UI/ResponsiveInput';
 import { ResponsiveButton } from '../UI/ResponsiveButton';
 
@@ -81,135 +92,142 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   };
 
   return (
-    <div className="max-w-md mx-auto bg-surface rounded-lg shadow-lg border border-secondary-200 overflow-hidden">
-      <div className="px-6 py-4 bg-primary-50 border-b border-secondary-200">
-        <h2 className="text-xl font-semibold text-text-primary">{t('common:create_account')}</h2>
-        <p className="text-text-secondary text-sm">{t('common:join_app')}</p>
-      </div>
+    <Paper
+      elevation={3}
+      sx={{
+        maxWidth: 520,
+        margin: '0 auto',
+        borderRadius: 2,
+        overflow: 'hidden',
+      }}
+    >
+      <Box sx={{ px: 4, py: 3, bgcolor: 'primary.50', borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="h5" component="h2">
+          {t('common:create_account')}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t('common:join_app')}
+        </Typography>
+      </Box>
 
-      <form onSubmit={handleSubmit} className="p-6 space-y-4" aria-label="Registration form">
-        {error && (
-          <div
-            className="bg-red-50 border border-red-200 rounded-lg p-3"
-            role="alert"
-            aria-live="assertive"
-          >
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
-        
-        {success && (
-          <div
-            className="bg-green-50 border border-green-200 rounded-lg p-4"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-green-800 text-sm font-medium">{success}</p>
-                {requiresVerification && (
-                  <p className="text-green-700 text-xs mt-1">
-                    {t('common:verification_link_instruction')}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+      <Box component="form" onSubmit={handleSubmit} aria-label="Registration form" sx={{ p: 4 }}>
+        <Stack spacing={2}>
+          {error && (
+            <Alert severity="error" role="alert">
+              {error}
+            </Alert>
+          )}
 
-        <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
-          <ResponsiveInput
-            type="text"
-            id="name"
-            label={t('common:first_name')}
-            value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder={t('common:first_name_placeholder')}
-            required
-            disabled={loading}
-          />
-
-          <ResponsiveInput
-            type="text"
-            id="surname"
-            label={t('common:last_name')}
-            value={formData.surname}
-            onChange={(e) => handleInputChange('surname', e.target.value)}
-            placeholder={t('common:last_name_placeholder')}
-            required
-            disabled={loading}
-          />
-        </div>
-
-        <ResponsiveInput
-          type="email"
-          id="email"
-          label={t('common:email')}
-          value={formData.email}
-          onChange={(e) => handleInputChange('email', e.target.value)}
-          placeholder={t('common:enter_email')}
-          required
-          disabled={loading}
-        />
-
-        <ResponsiveInput
-          type="password"
-          id="password"
-          label={t('common:password')}
-          value={formData.password}
-          onChange={(e) => handleInputChange('password', e.target.value)}
-          placeholder={t('common:create_password')}
-          required
-          disabled={loading}
-          minLength={6}
-        />
-
-        <ResponsiveInput
-          type="password"
-          id="confirmPassword"
-          label={t('common:confirm_password')}
-          value={formData.confirmPassword}
-          onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleSubmit(e as any);
-            }
-          }}
-          placeholder={t('common:confirm_your_password')}
-          required
-          disabled={loading}
-        />
-
-        <ResponsiveButton
-          type="submit"
-          variant="primary"
-          size="lg"
-          disabled={loading}
-          loading={loading}
-          className="w-full"
-        >
-          {loading ? t('common:creating_account') : t('common:create_account')}
-        </ResponsiveButton>
-
-        <div className="text-center pt-4 border-t border-secondary-200">
-          <p className="text-text-secondary text-sm">
-            {t('common:already_have_account')}{' '}
-            <button
-              type="button"
-              onClick={onSwitchToLogin}
-              className="text-primary-700 hover:text-primary-800 font-medium"
-              disabled={loading}
+          {success && (
+            <Alert
+              severity="success"
+              icon={<CheckCircleIcon fontSize="small" />}
+              role="status"
             >
-              {t('common:sign_in')}
-            </button>
-          </p>
-        </div>
-      </form>
-    </div>
+              <Typography variant="body2" fontWeight={600}>
+                {success}
+              </Typography>
+              {requiresVerification && (
+                <Typography variant="caption" display="block">
+                  {t('common:verification_link_instruction')}
+                </Typography>
+              )}
+            </Alert>
+          )}
+
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <ResponsiveInput
+                type="text"
+                id="name"
+                label={t('common:first_name')}
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder={t('common:first_name_placeholder')}
+                required
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <ResponsiveInput
+                type="text"
+                id="surname"
+                label={t('common:last_name')}
+                value={formData.surname}
+                onChange={(e) => handleInputChange('surname', e.target.value)}
+                placeholder={t('common:last_name_placeholder')}
+                required
+                disabled={loading}
+              />
+            </Grid>
+          </Grid>
+
+          <ResponsiveInput
+            type="email"
+            id="email"
+            label={t('common:email')}
+            value={formData.email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            placeholder={t('common:enter_email')}
+            required
+            disabled={loading}
+          />
+
+          <ResponsiveInput
+            type="password"
+            id="password"
+            label={t('common:password')}
+            value={formData.password}
+            onChange={(e) => handleInputChange('password', e.target.value)}
+            placeholder={t('common:create_password')}
+            required
+            disabled={loading}
+            inputProps={{ minLength: 6 }}
+          />
+
+          <ResponsiveInput
+            type="password"
+            id="confirmPassword"
+            label={t('common:confirm_password')}
+            value={formData.confirmPassword}
+            onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSubmit(e as any);
+              }
+            }}
+            placeholder={t('common:confirm_your_password')}
+            required
+            disabled={loading}
+          />
+
+          <ResponsiveButton
+            type="submit"
+            variant="primary"
+            size="lg"
+            disabled={loading}
+            loading={loading}
+            fullWidth
+          >
+            {loading ? t('common:creating_account') : t('common:create_account')}
+          </ResponsiveButton>
+        </Stack>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="body2" color="text.secondary" textAlign="center">
+          {t('common:already_have_account')}{' '}
+          <MuiButton
+            type="button"
+            onClick={onSwitchToLogin}
+            disabled={loading}
+            variant="text"
+            size="small"
+          >
+            {t('common:sign_in')}
+          </MuiButton>
+        </Typography>
+      </Box>
+    </Paper>
   );
 };

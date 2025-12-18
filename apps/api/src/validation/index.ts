@@ -52,6 +52,23 @@ export {
   adminStatsQuerySchema,
 } from './schemas/admin.schema';
 
+// Hook schemas
+export {
+  createHookBodySchema,
+  updateHookBodySchema,
+  listHooksQuerySchema,
+  getExecutionsQuerySchema,
+  getRecentExecutionsQuerySchema,
+  hookIdParamSchema,
+} from './schemas/hook.schema';
+
+// Settings schemas
+export {
+  settingKeyParamSchema,
+  updateSettingBodySchema,
+  toggleActiveBodySchema,
+} from './schemas/settings.schema';
+
 // Re-export existing validation utilities
 export {
   baseValidationSchema,

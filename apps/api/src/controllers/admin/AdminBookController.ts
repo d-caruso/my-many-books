@@ -6,6 +6,7 @@
 import { Op, WhereOptions } from 'sequelize';
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
+import { getLogger } from '../../services/logger';
 import { UniversalRequest } from '../../types';
 import { Book } from '../../models/Book';
 import { Author } from '../../models/Author';
@@ -139,7 +140,7 @@ export class AdminBookController extends BaseController {
         this.createPaginationMeta(page, limit, count)
       );
     } catch (error) {
-      console.error('Get all books error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Get all books error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -212,7 +213,7 @@ export class AdminBookController extends BaseController {
         updatedAt: book.updateDate,
       });
     } catch (error) {
-      console.error('Get book by ID error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Get book by ID error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -299,7 +300,7 @@ export class AdminBookController extends BaseController {
         updatedAt: book.updateDate,
       });
     } catch (error) {
-      console.error('Update book error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Update book error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
@@ -332,7 +333,7 @@ export class AdminBookController extends BaseController {
         200
       );
     } catch (error) {
-      console.error('Delete book error:', error);
+      getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Delete book error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }

@@ -3,6 +3,7 @@
 // CASL-based Authorization Middleware
 // ================================================================
 
+import { getLogger } from '../services/logger';
 import { Request, Response, NextFunction } from 'express';
 import { createAbilityFor, Action, Resource } from '@my-many-books/shared-auth';
 
@@ -84,13 +85,15 @@ export const requirePermission = (action: Action, resource: Resource) => {
       return;
     } catch (error) {
       // Log error for debugging
-      console.error('[Authorization Middleware] Error:', {
-        error: error instanceof Error ? error.message : String(error),
-        action,
-        resource,
-        userId: user?.id,
-        stack: error instanceof Error ? error.stack : undefined,
-      });
+      getLogger().error(
+        {
+          err: error instanceof Error ? error : new Error(String(error)),
+          action,
+          resource,
+          userId: user?.id,
+        },
+        '[Authorization Middleware] Error'
+      );
 
       const t: TranslatorFunction =
         authReq.t ||

@@ -10,6 +10,12 @@ import { Book } from './Book';
 import { BookAuthor } from './BookAuthor';
 import { BookCategory } from './BookCategory';
 import { User } from './User';
+import { Hook } from './Hook';
+import { HookExecution } from './HookExecution';
+import { AuditLog } from './AuditLog';
+import { Setting } from './Setting';
+import { AppSetting } from './AppSetting';
+import { getLogger } from '../services/logger';
 
 export * from './interfaces/ModelInterfaces';
 export * from './base/BaseModel';
@@ -20,6 +26,11 @@ export * from './Book';
 export * from './BookAuthor';
 export * from './BookCategory';
 export * from './User';
+export * from './Hook';
+export * from './HookExecution';
+export * from './AuditLog';
+export * from './Setting';
+export * from './AppSetting';
 
 export class ModelManager {
   private static sequelize: Sequelize | null = null;
@@ -39,6 +50,11 @@ export class ModelManager {
     Book.initModel(sequelize);
     BookAuthor.initModel(sequelize);
     BookCategory.initModel(sequelize);
+    Hook.initModel(sequelize);
+    HookExecution.initModel(sequelize);
+    AuditLog.initModel(sequelize);
+    Setting.initModel(sequelize);
+    AppSetting.initModel(sequelize);
 
     // Register models for associations
     ModelAssociations.registerModel('User', User);
@@ -47,13 +63,17 @@ export class ModelManager {
     ModelAssociations.registerModel('Book', Book);
     ModelAssociations.registerModel('BookAuthor', BookAuthor);
     ModelAssociations.registerModel('BookCategory', BookCategory);
+    ModelAssociations.registerModel('Hook', Hook);
+    ModelAssociations.registerModel('HookExecution', HookExecution);
+    ModelAssociations.registerModel('AuditLog', AuditLog);
+    ModelAssociations.registerModel('Setting', Setting);
+    ModelAssociations.registerModel('AppSetting', AppSetting);
 
     // Define associations
     ModelAssociations.defineAssociations();
 
     ModelManager.initialized = true;
-    // eslint-disable-next-line no-console
-    console.log('Model manager initialized with all models and associations');
+    getLogger().info('Model manager initialized with all models and associations');
   }
 
   static getSequelize(): Sequelize {
@@ -90,6 +110,11 @@ export class ModelManager {
     Book: typeof Book;
     BookAuthor: typeof BookAuthor;
     BookCategory: typeof BookCategory;
+    Hook: typeof Hook;
+    HookExecution: typeof HookExecution;
+    AuditLog: typeof AuditLog;
+    Setting: typeof Setting;
+    AppSetting: typeof AppSetting;
   } {
     return {
       User,
@@ -98,6 +123,11 @@ export class ModelManager {
       Book,
       BookAuthor,
       BookCategory,
+      Hook,
+      HookExecution,
+      AuditLog,
+      Setting,
+      AppSetting,
     };
   }
 }

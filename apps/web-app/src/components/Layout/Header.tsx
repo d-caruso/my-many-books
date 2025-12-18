@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Box, Typography, IconButton, Stack, Avatar } from '@mui/material';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface HeaderProps {
@@ -10,6 +11,8 @@ export const Header: React.FC<HeaderProps> = ({ title }) => {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
   const displayTitle = title || t('theme:header.title');
+  const themeToggleLabel = t('theme:settings.toggle_theme', 'Toggle theme');
+  const avatarLabel = t('theme:header.user_avatar', 'User avatar');
 
   const getThemeIcon = () => {
     switch (theme) {
@@ -23,32 +26,45 @@ export const Header: React.FC<HeaderProps> = ({ title }) => {
   };
 
   return (
-    <header className="bg-surface shadow-sm border-b border-secondary-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <h1 className="text-xl font-semibold text-text-primary">
-              {displayTitle}
-            </h1>
-          </div>
+    <Box
+      component="header"
+      sx={{
+        bgcolor: 'background.paper',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        boxShadow: 1,
+      }}
+    >
+      <Box
+        sx={{
+          maxWidth: '1200px',
+          mx: 'auto',
+          px: { xs: 2, md: 4 },
+          py: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          minHeight: 64,
+        }}
+      >
+        <Typography variant="h6" component="h1">
+          {displayTitle}
+        </Typography>
 
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-md hover:bg-secondary-100 transition-colors"
-              title={t('theme:settings.toggle_theme')}
-            >
-              <span className="text-lg">{getThemeIcon()}</span>
-            </button>
-            
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">U</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <IconButton onClick={toggleTheme} title={themeToggleLabel} aria-label={themeToggleLabel}>
+            <span role="img" aria-hidden="true">
+              {getThemeIcon()}
+            </span>
+          </IconButton>
+          <Avatar
+            sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}
+            aria-label={avatarLabel}
+          >
+            U
+          </Avatar>
+        </Stack>
+      </Box>
+    </Box>
   );
 };

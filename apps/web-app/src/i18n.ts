@@ -34,8 +34,8 @@ i18n
     // These are needed immediately on app startup: common, pages, books, search, pwa
     // search is included because BookSearchForm renders on BooksPage (default landing page)
     // pwa is included because InstallPrompt renders immediately
-    // Other namespaces (scanner, admin, dialogs) will be loaded on-demand
-    ns: ['common', 'pages', 'books', 'search', 'pwa'],
+    // dialogs is now eagerly loaded to ensure modal copy is available when UI switches languages
+    ns: ['common', 'pages', 'books', 'search', 'pwa', 'dialogs'],
     defaultNS: 'common',
 
     // Prevent preloading all languages - only load detected language
@@ -64,7 +64,7 @@ i18n
     // Load other namespaces on-demand
     partialBundledLanguages: true,
 
-    debug: process.env.NODE_ENV === 'development',
+    debug: false, // Disable i18next debug logging
   });
 
 export default i18n;

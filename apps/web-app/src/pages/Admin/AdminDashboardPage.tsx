@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Grid,
   Paper,
   Typography,
   Card,
@@ -9,6 +8,7 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import PeopleIcon from '@mui/icons-material/People';
 import BookIcon from '@mui/icons-material/Book';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -49,7 +49,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
           >
             {React.cloneElement(icon, {
               sx: { fontSize: 40, color: 'white' }
-            })}
+            } as any)}
           </Box>
         </Box>
       </CardContent>
@@ -182,3 +182,5 @@ export const AdminDashboardPage: React.FC = () => {
     </AdminLayout>
   );
 };
+
+export default AdminDashboardPage;

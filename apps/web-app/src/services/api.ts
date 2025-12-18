@@ -5,9 +5,10 @@
 
 import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
 import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
-import { BookFormData } from '../components/Book/BookForm';
-import { env } from '../config/env';
+import { BookFormData as WebBookFormData } from '../components/Book/BookForm';
+import type { BookFormData as SharedBookFormData } from '@my-many-books/shared-types';
 import axios from 'axios';
+import { env } from '../config/env';
 import { authService } from './authService';
 
 
@@ -99,6 +100,37 @@ class AxiosHttpClient implements HttpClient {
   }
 }
 
+type CreateBookInput = WebBookFormData | SharedBookFormData;
+type UpdateBookInput = Partial<WebBookFormData> | Partial<SharedBookFormData>;
+
+const extractAuthorIds = (data: CreateBookInput | UpdateBookInput): number[] | undefined => {
+  if ('selectedAuthors' in data && Array.isArray(data.selectedAuthors) && data.selectedAuthors.length > 0) {
+    return data.selectedAuthors.map(author => author.id);
+  }
+  if ('authorIds' in data && Array.isArray(data.authorIds) && data.authorIds.length > 0) {
+    return data.authorIds;
+  }
+  return undefined;
+};
+
+const extractCategoryIds = (data: CreateBookInput | UpdateBookInput): number[] | undefined => {
+  if ('selectedCategories' in data && Array.isArray(data.selectedCategories) && data.selectedCategories.length > 0) {
+    return data.selectedCategories;
+  }
+  if ('categoryIds' in data && Array.isArray(data.categoryIds) && data.categoryIds.length > 0) {
+    return data.categoryIds;
+  }
+  return undefined;
+};
+
+const sanitizeString = (value?: string | null): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
 // Interface for API service dependencies
 interface ApiServiceDependencies {
   apiClient?: any;
@@ -106,24 +138,24 @@ interface ApiServiceDependencies {
   config?: ApiClientConfig;
 }
 
+export interface AuditLoggingStatus {
+  enabled: boolean;
+  source: 'force_disabled' | 'force_enabled' | 'database' | 'default';
+  canChange: boolean;
+}
+
 // Enhanced API service with dependency injection and mock data support
 class ApiService {
   private apiClient: any;
+  private httpClient: HttpClient;
+  private apiConfig: ApiClientConfig;
 
   constructor(dependencies: ApiServiceDependencies = {}) {
-    // Use injected API client if provided (for testing)
-    if (dependencies.apiClient) {
-      this.apiClient = dependencies.apiClient;
-      return;
-    }
-
+    const injectedApiClient = dependencies.apiClient;
     // Create API client configuration (use injected or default)
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    const validBaseURL = env.API_BASE_URL;
 
-    // Ensure baseURL is never empty string (fallback to default if it is)
-    const validBaseURL = baseURL && baseURL.trim() !== '' ? baseURL : 'http://localhost:3000';
-
-    const apiConfig: ApiClientConfig = dependencies.config || {
+    const apiConfig: ApiClientConfig = (dependencies.config || {
       baseURL: validBaseURL,
       timeout: 10000,
       getAuthToken: async () => authService.getIdToken(),
@@ -131,13 +163,16 @@ class ApiService {
         void authService.logout();
         window.location.href = '/auth';
       },
-    };
+    }) as ApiClientConfig;
+
+    this.apiConfig = apiConfig;
 
     // Create HTTP client (use injected or default)
     const httpClient = dependencies.httpClient || new AxiosHttpClient(apiConfig.baseURL, apiConfig.timeout);
+    this.httpClient = httpClient;
 
     // Create and configure the API client
-    this.apiClient = createApiClient(httpClient, apiConfig);
+    this.apiClient = injectedApiClient || createApiClient(httpClient, apiConfig);
   }
 
   // Mock data for development mode - preserved from old api.ts
@@ -279,7 +314,11 @@ class ApiService {
             });
             break;
           case 'date-added':
-            filteredBooks.sort((a, b) => new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime());
+            filteredBooks.sort((a, b) => {
+              const aDate = a.creationDate ? new Date(a.creationDate).getTime() : 0;
+              const bDate = b.creationDate ? new Date(b.creationDate).getTime() : 0;
+              return bDate - aDate;
+            });
             break;
         }
       }
@@ -310,23 +349,29 @@ class ApiService {
 
   // Admin methods
   async getAdminStats(): Promise<any> {
-    // Make a direct HTTP request for admin stats
-    // The apiClient is from shared-api library, so we use its HTTP client directly
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    return this.fetchAdminData('/admin/stats/summary');
+  }
+
+  private buildAdminUrl(endpoint: string): string {
+    const baseURL = env.API_BASE_URL;
+    const cleanBaseURL = baseURL.replace(/\/$/, '');
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    if (cleanBaseURL.endsWith('/api/v1')) {
+      return `${cleanBaseURL}${normalizedEndpoint}`;
+    }
+    return `${cleanBaseURL}/api/v1${normalizedEndpoint}`;
+  }
+
+  private async fetchAdminData<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = this.buildAdminUrl(endpoint);
     const token = await authService.getIdToken();
 
-    // Remove trailing slash from baseURL if present
-    const cleanBaseURL = baseURL.replace(/\/$/, '');
-    // Construct the full URL - baseURL should already include /api/v1
-    const url = cleanBaseURL.endsWith('/api/v1')
-      ? `${cleanBaseURL}/admin/stats/summary`
-      : `${cleanBaseURL}/api/v1/admin/stats/summary`;
-
     const response = await fetch(url, {
-      method: 'GET',
+      ...options,
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
+        ...(options.headers || {}),
       },
     });
 
@@ -335,13 +380,43 @@ class ApiService {
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    // Handle both {success: true, data: {...}} and direct {...} formats
-    return data.data || data;
+    const payload = await response.json();
+    return payload.data || payload;
+  }
+
+  async getAdminHooks(): Promise<{ hooks: AdminHookSummary[]; total?: number }> {
+    return this.fetchAdminData('/admin/hooks');
+  }
+
+  async getAdminHookStats(): Promise<AdminHookStats> {
+    return this.fetchAdminData('/admin/hooks/stats');
+  }
+
+  async reloadAdminHooks(): Promise<void> {
+    await this.fetchAdminData('/admin/hooks/reload', { method: 'POST' });
+  }
+
+  async getAdminHookExecutions(params: {
+    hookId?: number;
+    success?: boolean;
+    from?: string;
+    to?: string;
+    page?: number;
+    pageSize?: number;
+  }): Promise<AdminHookExecutionResponse> {
+    const query = new URLSearchParams();
+    if (params.hookId) query.append('hookId', params.hookId.toString());
+    if (params.success !== undefined) query.append('success', String(params.success));
+    if (params.from) query.append('from', params.from);
+    if (params.to) query.append('to', params.to);
+    if (params.page) query.append('page', params.page.toString());
+    if (params.pageSize) query.append('pageSize', params.pageSize.toString());
+    const queryString = query.toString() ? `?${query.toString()}` : '';
+    return this.fetchAdminData(`/admin/hooks/executions${queryString}`);
   }
 
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -375,7 +450,7 @@ class ApiService {
   }
 
   async getAdminUser(id: number): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -401,7 +476,7 @@ class ApiService {
   }
 
   async updateAdminUser(id: number, userData: any): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -428,7 +503,7 @@ class ApiService {
   }
 
   async deleteAdminUser(id: number): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -454,7 +529,7 @@ class ApiService {
   }
 
   async getAdminBooks(page: number = 1, limit: number = 10, search?: string, userId?: number): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -491,7 +566,7 @@ class ApiService {
   }
 
   async getAdminBook(id: number): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -517,7 +592,7 @@ class ApiService {
   }
 
   async updateAdminBook(id: number, bookData: any): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -544,7 +619,7 @@ class ApiService {
   }
 
   async deleteAdminBook(id: number): Promise<any> {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+    const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
@@ -588,66 +663,76 @@ class ApiService {
     return this.apiClient.books.getBook(id);
   }
 
-  async createBook(bookData: BookFormData): Promise<Book> {
-    // Transform frontend format to backend format
-    const authorIds = bookData.selectedAuthors && bookData.selectedAuthors.length > 0
-      ? bookData.selectedAuthors.map(author => author.id)
-      : undefined;
-
-    const categoryIds = bookData.selectedCategories && bookData.selectedCategories.length > 0
-      ? bookData.selectedCategories
-      : undefined;
+  async createBook(bookData: CreateBookInput): Promise<Book> {
+    const authorIds = extractAuthorIds(bookData);
+    const categoryIds = extractCategoryIds(bookData);
 
     const backendData = {
       title: bookData.title,
       isbnCode: bookData.isbnCode,
       ...(bookData.editionNumber && { editionNumber: bookData.editionNumber }),
-      ...(bookData.editionDate && bookData.editionDate.trim() && { editionDate: bookData.editionDate }),
-      ...(bookData.status && bookData.status.trim() && { status: bookData.status }),
-      ...(bookData.notes && bookData.notes.trim() && { notes: bookData.notes }),
+      ...(sanitizeString(bookData.editionDate) && { editionDate: sanitizeString(bookData.editionDate) }),
+      ...(bookData.status && { status: bookData.status }),
+      ...(sanitizeString(bookData.notes) && { notes: sanitizeString(bookData.notes) }),
       ...(authorIds && { authorIds }),
       ...(categoryIds && { categoryIds })
     };
+
     return this.apiClient.books.createBook(backendData);
   }
 
-  async updateBook(id: number, bookData: Partial<BookFormData>): Promise<Book> {
-    // Transform frontend format to backend format, filtering out empty values
-    const backendData: any = {};
+  async updateBook(id: number, bookData: UpdateBookInput): Promise<Book> {
+    const backendData: Record<string, unknown> = {};
 
-    if (bookData.title) backendData.title = bookData.title;
-    if (bookData.isbnCode) backendData.isbnCode = bookData.isbnCode;
-    if (bookData.editionNumber) backendData.editionNumber = bookData.editionNumber;
-    if (bookData.editionDate) backendData.editionDate = bookData.editionDate;
-
-    // Handle status explicitly - allow null to clear status
-    if ('status' in bookData) {
-      backendData.status = (bookData.status === '' || bookData.status === null || bookData.status === undefined) ? null : bookData.status;
+    const title = sanitizeString(bookData.title);
+    if (title) {
+      backendData.title = title;
     }
 
-    if (bookData.notes !== undefined) backendData.notes = bookData.notes;
-
-    // Handle authors
-    if (bookData.selectedAuthors) {
-      backendData.authorIds = bookData.selectedAuthors.map(author => author.id);
+    const isbnCode = sanitizeString(bookData.isbnCode);
+    if (isbnCode) {
+      backendData.isbnCode = isbnCode;
     }
 
-    // Handle categories
-    if (bookData.selectedCategories !== undefined) {
-      backendData.categoryIds = bookData.selectedCategories;
+    if (bookData.editionNumber !== undefined) {
+      backendData.editionNumber = bookData.editionNumber;
     }
 
-    // Detect if this is a partial update (e.g., status-only) or full update
-    // If only status is being updated (no title, no authors, no categories), use PATCH
+    const editionDate = sanitizeString(bookData.editionDate);
+    if (editionDate) {
+      backendData.editionDate = editionDate;
+    }
+
+    if (bookData.status) {
+      backendData.status = bookData.status;
+    }
+
+    const notes = sanitizeString(bookData.notes);
+    if (notes) {
+      backendData.notes = notes;
+    }
+
+    const authorIds = extractAuthorIds(bookData);
+    if (authorIds) {
+      backendData.authorIds = authorIds;
+    }
+
+    const categoryIds = extractCategoryIds(bookData);
+    if (categoryIds) {
+      backendData.categoryIds = categoryIds;
+    }
+
     const isPartialUpdate = Object.keys(backendData).length === 1 && backendData.status !== undefined;
 
     if (isPartialUpdate) {
-      // Use PATCH for partial updates (e.g., status-only changes)
-      return this.apiClient.books.patchBook(id, backendData);
-    } else {
-      // Use PUT for full updates from the form
-      return this.apiClient.books.updateBook(id, backendData);
+      return this.apiClient.books.patchBook(id, { status: backendData.status });
     }
+
+    return this.apiClient.books.updateBook(id, backendData);
+  }
+
+  async updateBookStatus(id: number, status: Book['status']): Promise<Book> {
+    return this.apiClient.books.updateBookStatus(id, status);
   }
 
   async deleteBook(id: number): Promise<void> {
@@ -751,6 +836,56 @@ class ApiService {
       details: error.message || 'Unknown error occurred'
     };
   }
+
+  private buildUrl(path: string): string {
+    const base = this.apiConfig.baseURL.replace(/\/$/, '');
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${normalizedPath}`;
+  }
+
+  async getAuditLoggingStatus(): Promise<AuditLoggingStatus> {
+    return this.httpClient.get<AuditLoggingStatus>(this.buildUrl('/admin/settings/audit-logging'));
+  }
+
+  async updateAuditLoggingStatus(enabled: boolean): Promise<AuditLoggingStatus> {
+    return this.httpClient.patch<AuditLoggingStatus>(this.buildUrl('/admin/settings/audit-logging'), {
+      enabled,
+    });
+  }
+}
+
+export interface AdminHookSummary {
+  id: number;
+  name: string;
+  eventPattern: string;
+  actionType: string;
+  isActive: boolean;
+  priority: number;
+  lastExecution?: string;
+}
+
+export interface AdminHookStats {
+  totalHooks: number;
+  activeHooks: number;
+  executionsToday: number;
+  lastReloadedAt?: string;
+}
+
+export interface AdminHookExecution {
+  id: number;
+  hookId: number;
+  eventName: string;
+  success: boolean;
+  executionTimeMs: number;
+  errorMessage?: string;
+  executedAt: string;
+}
+
+export interface AdminHookExecutionResponse {
+  executions: AdminHookExecution[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 // Factory function for creating API service with dependencies (useful for testing)
@@ -773,6 +908,7 @@ export const bookAPI = {
   getBook: apiService.getBook.bind(apiService),
   createBook: apiService.createBook.bind(apiService),
   updateBook: apiService.updateBook.bind(apiService),
+  updateBookStatus: apiService.updateBookStatus.bind(apiService),
   deleteBook: apiService.deleteBook.bind(apiService),
 };
 

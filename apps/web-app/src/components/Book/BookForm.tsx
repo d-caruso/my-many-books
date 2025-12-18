@@ -15,7 +15,6 @@ import {
   CircularProgress,
   Stack,
   Divider,
-  IconButton
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -27,6 +26,8 @@ import { useCategories } from '../../hooks/useCategories';
 import { AuthorAutocomplete } from '../Search/AuthorAutocomplete';
 import { AddAuthorDialog } from '../Author/AddAuthorDialog';
 import { AddCategoryDialog } from '../Category/AddCategoryDialog';
+import { normalizeIsbn } from '@my-many-books/shared-validation';
+import { createBookSchema } from '../../validation/bookSchemas';
 
 interface BookFormProps {
   book?: Book | null;
@@ -34,6 +35,7 @@ interface BookFormProps {
   onCancel: () => void;
   loading?: boolean;
   title?: string;
+  apiErrors?: Array<{ field: string; message: string }>;
 }
 
 export interface BookFormData {
@@ -52,7 +54,8 @@ export const BookForm: React.FC<BookFormProps> = ({
   onSubmit,
   onCancel,
   loading = false,
-  title
+  title,
+  apiErrors = []
 }) => {
   const { t } = useTranslation(['books', 'common']);
   const { categories, loading: categoriesLoading, loadCategories } = useCategories();
@@ -87,36 +90,59 @@ export const BookForm: React.FC<BookFormProps> = ({
     }
   }, [book]);
 
+  // Update errors when API errors change
+  useEffect(() => {
+    if (apiErrors.length > 0) {
+      const newErrors: Partial<Record<keyof BookFormData, string>> = {};
+      apiErrors.forEach((error) => {
+        const field = error.field as keyof BookFormData;
+        if (field) {
+          newErrors[field] = error.message;
+        }
+      });
+      setErrors(newErrors);
+    }
+  }, [apiErrors]);
+
   const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof BookFormData, string>> = {};
+    // Use Zod schema for validation
+    const result = createBookSchema.safeParse(formData);
 
-    if (!formData.title.trim()) {
-      newErrors.title = t('books:title_required');
+    if (!result.success) {
+      // Convert Zod errors to field-level errors
+      const newErrors: Partial<Record<keyof BookFormData, string>> = {};
+
+      result.error.errors.forEach((err) => {
+        const field = err.path[0] as keyof BookFormData;
+        if (field && !newErrors[field]) {
+          newErrors[field] = err.message;
+        }
+      });
+
+      setErrors(newErrors);
+      return false;
     }
 
-    if (!formData.isbnCode.trim()) {
-      newErrors.isbnCode = t('books:isbn_required');
-    } else if (!/^[\d\-X]{10,17}$/.test(formData.isbnCode.replace(/\s/g, ''))) {
-      newErrors.isbnCode = t('books:isbn_invalid');
-    }
-
-    if (formData.editionNumber !== undefined && formData.editionNumber < 1) {
-      newErrors.editionNumber = t('books:edition_number_min');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
-      await onSubmit(formData);
+      // Normalize ISBN before submitting (remove hyphens/spaces, uppercase)
+      const normalized = normalizeIsbn(formData.isbnCode);
+      const submissionData = {
+        ...formData,
+        isbnCode: normalized || formData.isbnCode.trim(),
+      };
+
+      await onSubmit(submissionData);
     } catch (error: any) {
       console.error('Form submission error:', error);
       console.error('Error response:', error?.response?.data);
@@ -257,7 +283,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   labelId="status-label"
                   id="status"
                   value={formData.status || ''}
-                  onChange={(e) => handleInputChange('status', e.target.value === '' ? undefined : e.target.value as Book['status'])}
+                  onChange={(e) => handleInputChange('status', !e.target.value ? undefined : e.target.value as Book['status'])}
                 >
                   <MenuItem value="">&nbsp;</MenuItem>
                   <MenuItem value="reading">{t('books:reading')}</MenuItem>

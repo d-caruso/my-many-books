@@ -1,33 +1,18 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { MenuItem } from '@mui/material';
 import { ResponsiveSelect } from '../../../components/UI/ResponsiveSelect';
 
 describe('ResponsiveSelect', () => {
-  const defaultOptions = (
-    <>
-      <option value="">Select an option</option>
-      <option value="option1">Option 1</option>
-      <option value="option2">Option 2</option>
-    </>
-  );
-
-  test('renders select element with children', () => {
-    render(
-      <ResponsiveSelect>
-        {defaultOptions}
-      </ResponsiveSelect>
-    );
-    
-    const select = screen.getByRole('combobox');
-    expect(select).toBeInTheDocument();
-    expect(screen.getByText('Select an option')).toBeInTheDocument();
-    expect(screen.getByText('Option 1')).toBeInTheDocument();
-    expect(screen.getByText('Option 2')).toBeInTheDocument();
-  });
+  const defaultOptions = [
+    <MenuItem value="" key="empty">Select an option</MenuItem>,
+    <MenuItem value="option1" key="option1">Option 1</MenuItem>,
+    <MenuItem value="option2" key="option2">Option 2</MenuItem>,
+  ];
 
   test('renders with label', () => {
     render(
-      <ResponsiveSelect label="Test Label" id="test-select">
+      <ResponsiveSelect label="Test Label" id="test-select" defaultValue="">
         {defaultOptions}
       </ResponsiveSelect>
     );
@@ -37,7 +22,7 @@ describe('ResponsiveSelect', () => {
 
   test('renders required indicator when isRequired is true', () => {
     render(
-      <ResponsiveSelect label="Required Field" isRequired>
+      <ResponsiveSelect label="Required Field" isRequired defaultValue="">
         {defaultOptions}
       </ResponsiveSelect>
     );
@@ -47,7 +32,7 @@ describe('ResponsiveSelect', () => {
 
   test('does not render required indicator when isRequired is false', () => {
     render(
-      <ResponsiveSelect label="Optional Field" isRequired={false}>
+      <ResponsiveSelect label="Optional Field" isRequired={false} defaultValue="">
         {defaultOptions}
       </ResponsiveSelect>
     );
@@ -58,18 +43,19 @@ describe('ResponsiveSelect', () => {
   test('renders error message when error prop is provided', () => {
     const errorMessage = 'This field is required';
     render(
-      <ResponsiveSelect error={errorMessage}>
+      <ResponsiveSelect error={errorMessage} defaultValue="">
         {defaultOptions}
       </ResponsiveSelect>
     );
     
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toHaveAttribute('aria-invalid', 'true');
   });
 
   test('renders helper text when provided and no error', () => {
     const helperText = 'Choose the best option';
     render(
-      <ResponsiveSelect helperText={helperText}>
+      <ResponsiveSelect helperText={helperText} defaultValue="">
         {defaultOptions}
       </ResponsiveSelect>
     );
@@ -81,7 +67,7 @@ describe('ResponsiveSelect', () => {
     const helperText = 'Choose the best option';
     const errorMessage = 'This field is required';
     render(
-      <ResponsiveSelect helperText={helperText} error={errorMessage}>
+      <ResponsiveSelect helperText={helperText} error={errorMessage} defaultValue="">
         {defaultOptions}
       </ResponsiveSelect>
     );
@@ -90,80 +76,20 @@ describe('ResponsiveSelect', () => {
     expect(screen.queryByText(helperText)).not.toBeInTheDocument();
   });
 
-  test('applies error styles when error prop is provided', () => {
-    render(
-      <ResponsiveSelect error="Error message">
-        {defaultOptions}
-      </ResponsiveSelect>
-    );
-    
-    const select = screen.getByRole('combobox');
-    expect(select).toHaveClass('border-semantic-error', 'bg-red-50');
-  });
-
-  test('applies normal styles when no error', () => {
-    render(
-      <ResponsiveSelect>
-        {defaultOptions}
-      </ResponsiveSelect>
-    );
-    
-    const select = screen.getByRole('combobox');
-    expect(select).toHaveClass('border-secondary-300');
-  });
-
-  test('passes through additional props to select element', () => {
+  test('passes through additional props to select component', () => {
     render(
       <ResponsiveSelect 
         id="test-select" 
-        name="testName" 
         defaultValue="option1"
         data-testid="custom-select"
+        aria-label="Test Select"
       >
         {defaultOptions}
       </ResponsiveSelect>
     );
     
-    const select = screen.getByRole('combobox');
-    expect(select).toHaveAttribute('id', 'test-select');
-    expect(select).toHaveAttribute('name', 'testName');
-    expect(select).toHaveAttribute('data-testid', 'custom-select');
-    expect(select).toHaveValue('option1');
-  });
-
-  test('applies custom className along with base classes', () => {
-    render(
-      <ResponsiveSelect className="custom-class">
-        {defaultOptions}
-      </ResponsiveSelect>
-    );
-    
-    const select = screen.getByRole('combobox');
-    expect(select).toHaveClass('custom-class');
-    expect(select).toHaveClass('w-full'); // base class
-  });
-
-  test('renders dropdown arrow icon', () => {
-    render(
-      <ResponsiveSelect>
-        {defaultOptions}
-      </ResponsiveSelect>
-    );
-    
-    expect(screen.getByText('▼')).toBeInTheDocument();
-  });
-
-  test('associates label with select element when id is provided', () => {
-    render(
-      <ResponsiveSelect id="test-select" label="Test Label">
-        {defaultOptions}
-      </ResponsiveSelect>
-    );
-    
-    const label = screen.getByText('Test Label');
-    const select = screen.getByRole('combobox');
-    
-    expect(label).toHaveAttribute('for', 'test-select');
-    expect(select).toHaveAttribute('id', 'test-select');
+    const select = screen.getByTestId('custom-select');
+    expect(select).toHaveAttribute('aria-label', 'Test Select');
+    expect(select).toHaveTextContent('Option 1');
   });
 });

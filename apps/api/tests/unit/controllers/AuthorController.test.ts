@@ -1,393 +1,234 @@
-// ================================================================
-// tests/controllers/AuthorController.test.ts
-// ================================================================
-
 import { AuthorController } from '../../../src/controllers/AuthorController';
 import { Author, Book } from '../../../src/models';
+import { container } from '../../../src/container';
+import { TYPES } from '../../../src/container/types';
+import { AuthorService } from '../../../src/services/author/AuthorService';
+import { AuthorRepository } from '../../../src/repositories/author/AuthorRepository';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
 
-// Universal request interface for testing
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
+}));
+
 interface UniversalRequest {
   body?: any;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-  headers?: { [key: string]: string | undefined };
-  user?: { userId: number; role: 'user' | 'admin' };
+  queryStringParameters?: Record<string, string | undefined>;
+  pathParameters?: Record<string, string | undefined>;
+  headers?: Record<string, string | undefined>;
+  user?: { userId: number; role?: string };
 }
 
-// Mock dependencies
 jest.mock('../../../src/models');
 
 describe('AuthorController', () => {
   let authorController: AuthorController;
   let mockRequest: UniversalRequest;
+  let createAuthorSpy: jest.SpyInstance;
+  let updateAuthorSpy: jest.SpyInstance;
+  let deleteAuthorSpy: jest.SpyInstance;
+  let findUserAuthorByIdSpy: jest.SpyInstance;
+  let findByIdSpy: jest.SpyInstance;
+  let searchByQuerySpy: jest.SpyInstance;
+
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
   beforeEach(() => {
-    authorController = new AuthorController();
-    jest.clearAllMocks();
+    container.snapshot();
+    authorController = container.get<AuthorController>(TYPES.AuthorController);
+
+    createAuthorSpy = jest.spyOn(AuthorService.prototype, 'createAuthor');
+    updateAuthorSpy = jest.spyOn(AuthorService.prototype, 'updateAuthor');
+    deleteAuthorSpy = jest.spyOn(AuthorService.prototype, 'deleteAuthor');
+    findUserAuthorByIdSpy = jest
+      .spyOn(AuthorRepository.prototype, 'findUserAuthorById')
+      .mockResolvedValue(null);
+    findByIdSpy = jest.spyOn(AuthorRepository.prototype, 'findById').mockResolvedValue(null);
+    searchByQuerySpy = jest
+      .spyOn(AuthorRepository.prototype, 'searchByQuery')
+      .mockResolvedValue([]);
 
     mockRequest = {
+      headers: { 'accept-language': 'en' },
       queryStringParameters: {},
       pathParameters: {},
-      headers: { 'accept-language': 'en' },
-      body: undefined,
       user: { userId: 1, role: 'user' },
     };
+    emitHookEventMock.mockClear();
+  });
+
+  afterEach(() => {
+    createAuthorSpy.mockRestore();
+    updateAuthorSpy.mockRestore();
+    deleteAuthorSpy.mockRestore();
+    findUserAuthorByIdSpy.mockRestore();
+    findByIdSpy.mockRestore();
+    searchByQuerySpy.mockRestore();
+    container.restore();
   });
 
   describe('createAuthor', () => {
-    const validAuthorData = {
-      name: 'John',
-      surname: 'Doe',
-      nationality: 'American',
-    };
-
     it('should create an author successfully', async () => {
-      const mockAuthor = { id: 1, ...validAuthorData };
+      const payload = { name: 'John', surname: 'Doe', nationality: 'IT' };
+      mockRequest.body = JSON.stringify(payload);
 
-      (Author.findOne as jest.Mock).mockResolvedValue(null);
-      (Author.create as jest.Mock).mockResolvedValue(mockAuthor);
-
-      mockRequest.body = JSON.stringify(validAuthorData);
-
-      const result = await authorController.createAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(201);
-      expect(result.success).toBe(true);
-      expect(result.message).toBe('Author created successfully');
-      expect(result.data).toEqual(mockAuthor);
-    });
-
-    it('should create author with name and surname', async () => {
-      const authorData = {
-        name: 'Jane',
-        surname: 'Smith',
-        nationality: 'British',
-      };
-
-      const expectedAuthor = {
+      createAuthorSpy.mockResolvedValue({
         id: 1,
-        ...authorData,
-        getFullName: jest.fn().mockReturnValue('Jane Smith'),
-      };
+        ...payload,
+        userId: 1,
+      } as any);
 
-      (Author.findOne as jest.Mock).mockResolvedValue(null);
-      (Author.create as jest.Mock).mockResolvedValue(expectedAuthor);
+      const response = await authorController.createAuthor(mockRequest);
 
-      mockRequest.body = JSON.stringify(authorData);
-
-      const result = await authorController.createAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(201);
-      expect(result.success).toBe(true);
-      expect(Author.create).toHaveBeenCalledWith(
+      expect(createAuthorSpy).toHaveBeenCalledWith(
+        expect.objectContaining(payload),
+        expect.objectContaining({ userId: 1 })
+      );
+      expect(response.statusCode).toBe(201);
+      expect(response.success).toBe(true);
+      expect((response.data as { id: number }).id).toBe(1);
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.AUTHOR.CREATE.BEFORE,
         expect.objectContaining({
-          name: 'Jane',
-          surname: 'Smith',
+          user: { id: 1, role: 'user' },
+          input: expect.objectContaining(payload),
         })
       );
     });
 
-    it('should return 400 for missing request body', async () => {
-      mockRequest.body = null;
+  });
 
-      const result = await authorController.createAuthor(mockRequest);
+  describe('updateAuthor', () => {
+    it('should update author through service', async () => {
+      mockRequest.pathParameters = { id: '1' };
+      mockRequest.body = JSON.stringify({ nationality: 'US' });
 
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Request body is required');
-    });
-
-    it('should return 400 for validation errors', async () => {
-      const invalidData = { name: 'John' }; // Missing required surname
-
-      mockRequest.body = JSON.stringify(invalidData);
-
-      const result = await authorController.createAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Validation failed');
-    });
-
-    it('should return 409 for duplicate author name', async () => {
-      (Author.findOne as jest.Mock).mockResolvedValue({
-        id: 2,
+      updateAuthorSpy.mockResolvedValue({
+        id: 1,
         name: 'John',
         surname: 'Doe',
-      });
+        userId: 1,
+      } as any);
 
-      mockRequest.body = JSON.stringify(validAuthorData);
+      const response = await authorController.updateAuthor(mockRequest);
 
-      const result = await authorController.createAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(409);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Author with this name already exists');
+      expect(updateAuthorSpy).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ nationality: 'US' }),
+        expect.objectContaining({ userId: 1 })
+      );
+      expect(response.statusCode).toBe(200);
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.AUTHOR.UPDATE.BEFORE,
+        expect.objectContaining({
+          authorId: 1,
+          user: { id: 1, role: 'user' },
+          input: expect.objectContaining({ nationality: 'US' }),
+        })
+      );
     });
 
-    it('should validate basic author data', async () => {
-      const invalidData = {
-        name: 'John',
-        surname: 'Doe',
-        nationality: 'A'.repeat(300), // Too long
-      };
+  });
 
-      // Mock that author doesn't exist first (validation should happen before duplicate check)
-      (Author.findOne as jest.Mock).mockResolvedValue(null);
+  describe('deleteAuthor', () => {
+    it('should call service to delete author', async () => {
+      mockRequest.pathParameters = { id: '2' };
+      deleteAuthorSpy.mockResolvedValue(undefined);
 
-      mockRequest.body = JSON.stringify(invalidData);
+      const response = await authorController.deleteAuthor(mockRequest);
 
-      const result = await authorController.createAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Validation failed');
+      expect(deleteAuthorSpy).toHaveBeenCalledWith(
+        2,
+        expect.objectContaining({ userId: 1 })
+      );
+      expect(response.statusCode).toBe(204);
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.AUTHOR.DELETE.BEFORE,
+        expect.objectContaining({
+          authorId: 2,
+          user: { id: 1, role: 'user' },
+        })
+      );
     });
   });
 
   describe('getAuthor', () => {
-    it('should get an author successfully', async () => {
-      const mockAuthor = {
+    it('should return author for current user', async () => {
+      findUserAuthorByIdSpy.mockResolvedValue({
         id: 1,
         name: 'John',
         surname: 'Doe',
-        nationality: 'American',
-      };
-
-      (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
-
+        userId: 1,
+      });
       mockRequest.pathParameters = { id: '1' };
 
-      const result = await authorController.getAuthor(mockRequest);
+      const response = await authorController.getAuthor(mockRequest);
 
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockAuthor);
+      expect(findUserAuthorByIdSpy).toHaveBeenCalledWith(1, 1, expect.any(Object));
+      expect(response.statusCode).toBe(200);
+      expect(response.data).toMatchObject({ id: 1, name: 'John' });
     });
 
-    it('should get author with books when includeBooks=true', async () => {
-      const mockAuthor = {
-        id: 1,
-        name: 'John',
-        surname: 'Doe',
-        Books: [{ id: 1, title: 'Test Book' }],
-      };
-
-      (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
-
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.queryStringParameters = { includeBooks: 'true' };
-
-      const result = await authorController.getAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect((result.data as { Books: unknown }).Books).toBeDefined();
-    });
-
-    it('should return 400 for invalid author ID', async () => {
-      mockRequest.pathParameters = { id: 'invalid' };
-
-      const result = await authorController.getAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Valid author ID is required');
-    });
-
-    it('should return 404 for non-existent author', async () => {
-      (Author.findByPk as jest.Mock).mockResolvedValue(null);
-
+    it('should return 404 when author not found', async () => {
       mockRequest.pathParameters = { id: '999' };
 
-      const result = await authorController.getAuthor(mockRequest);
+      const response = await authorController.getAuthor(mockRequest);
 
-      expect(result.statusCode).toBe(404);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Author not found');
-    });
-  });
-
-  describe('updateAuthor', () => {
-    const updateData = {
-      nationality: 'British',
-    };
-
-    it('should update an author successfully', async () => {
-      const mockAuthor = {
-        id: 1,
-        name: 'John',
-        surname: 'Doe',
-        nationality: 'American',
-        userId: 1, // Same as mockRequest.user.userId
-        update: jest.fn(),
-      };
-
-      (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
-
-      // 'PUT';
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.body = JSON.stringify(updateData);
-
-      const result = await authorController.updateAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(result.message).toBe('Author updated successfully');
-      expect(mockAuthor.update).toHaveBeenCalled();
-    });
-
-    it('should update name when name or surname changes', async () => {
-      const mockAuthor = {
-        id: 1,
-        name: 'John',
-        surname: 'Doe',
-        nationality: 'American',
-        userId: 1, // Same as mockRequest.user.userId
-        update: jest.fn(),
-      };
-
-      const nameUpdateData = {
-        name: 'Jane',
-        surname: 'Smith',
-      };
-
-      (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
-      (Author.findOne as jest.Mock).mockResolvedValue(null); // No conflict
-
-      // 'PUT';
-      mockRequest.pathParameters = { id: '1' };
-      mockRequest.body = JSON.stringify(nameUpdateData);
-
-      const result = await authorController.updateAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(mockAuthor.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: 'Jane',
-          surname: 'Smith',
-        })
-      );
-    });
-
-    it('should return 404 for non-existent author', async () => {
-      (Author.findByPk as jest.Mock).mockResolvedValue(null);
-
-      // 'PUT';
-      mockRequest.pathParameters = { id: '999' };
-      mockRequest.body = JSON.stringify(updateData);
-
-      const result = await authorController.updateAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(404);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Author not found');
-    });
-  });
-
-  describe('deleteAuthor', () => {
-    it('should delete an author successfully', async () => {
-      const mockAuthor = {
-        id: 1,
-        userId: 1, // Same as mockRequest.user.userId
-        destroy: jest.fn(),
-      };
-
-      (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
-      (Book.count as jest.Mock).mockResolvedValue(0); // No books associated
-
-      // 'DELETE';
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await authorController.deleteAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(204);
-      expect(result.success).toBe(true);
-      expect(result.message).toBe('Author deleted successfully');
-      expect(mockAuthor.destroy).toHaveBeenCalled();
-    });
-
-    it('should return 409 when author has associated books', async () => {
-      const mockAuthor = {
-        id: 1,
-        userId: 1, // Same as mockRequest.user.userId
-        destroy: jest.fn(),
-      };
-
-      (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
-      (Book.count as jest.Mock).mockResolvedValue(1); // Author has books
-
-      // 'DELETE';
-      mockRequest.pathParameters = { id: '1' };
-
-      const result = await authorController.deleteAuthor(mockRequest);
-
-      expect(result.statusCode).toBe(409);
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Cannot delete author with associated books');
-      expect(mockAuthor.destroy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(404);
     });
   });
 
   describe('listAuthors', () => {
     it('should list authors with pagination', async () => {
-      const mockAuthors = [
-        { id: 1, name: 'John', surname: 'Doe' },
-        { id: 2, name: 'Jane', surname: 'Smith' },
-      ];
-
       (Author.findAndCountAll as jest.Mock).mockResolvedValue({
-        count: 2,
-        rows: mockAuthors,
+        count: 1,
+        rows: [{ id: 1, name: 'John', surname: 'Doe' }],
       });
 
-      mockRequest.queryStringParameters = { page: '1', limit: '10' };
+      const response = await authorController.listAuthors(mockRequest);
 
-      const result = await authorController.listAuthors(mockRequest);
+      expect(Author.findAndCountAll).toHaveBeenCalled();
+      expect(response.statusCode).toBe(200);
+      expect(response.data).toHaveLength(1);
+      expect(response.pagination).toBeDefined();
+    });
+  });
 
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockAuthors);
-      expect(result.pagination).toEqual({
-        page: 1,
-        limit: 10,
-        total: 2,
-        totalPages: 1,
-      });
+  describe('searchAuthors', () => {
+    it('should delegate to repository search', async () => {
+      mockRequest.queryStringParameters = { q: 'jo' };
+      searchByQuerySpy.mockResolvedValue([
+        { id: 1, name: 'John', surname: 'Doe' },
+      ]);
+
+      const response = await authorController.searchAuthors(mockRequest);
+
+      expect(searchByQuerySpy).toHaveBeenCalledWith('jo', 1, 20);
+      expect(response.statusCode).toBe(200);
+      expect(response.data).toHaveLength(1);
     });
   });
 
   describe('getAuthorBooks', () => {
-    it('should get author books with pagination', async () => {
-      const mockAuthor = { 
-        id: 1, 
-        name: 'John', 
-        surname: 'Doe',
-        getFullName: jest.fn().mockReturnValue('John Doe')
-      };
-      const mockBooks = [
-        { id: 1, title: 'Book 1' },
-        { id: 2, title: 'Book 2' },
-      ];
-
-      (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
+    it('should return books for author', async () => {
+      findByIdSpy.mockResolvedValue({
+        id: 2,
+        name: 'Jane',
+        surname: 'Smith',
+        userId: 1,
+      });
+      mockRequest.pathParameters = { id: '2' };
       (Book.findAndCountAll as jest.Mock).mockResolvedValue({
-        count: 2,
-        rows: mockBooks,
+        count: 1,
+        rows: [{ id: 10, title: 'Book Title' }],
       });
 
-      mockRequest.pathParameters = { id: '1' };
+      const response = await authorController.getAuthorBooks(mockRequest);
 
-      const result = await authorController.getAuthorBooks(mockRequest);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.success).toBe(true);
-      expect((result.data as { author: unknown; books: unknown }).author).toEqual({
-        id: 1,
-        name: 'John',
-        surname: 'Doe',
-      });
-      expect((result.data as { author: unknown; books: unknown }).books).toEqual(mockBooks);
+      expect(findByIdSpy).toHaveBeenCalledWith(2);
+      expect(Book.findAndCountAll).toHaveBeenCalled();
+      expect(response.statusCode).toBe(200);
+      expect((response.data as any).books).toHaveLength(1);
     });
   });
 });

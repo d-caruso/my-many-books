@@ -32,10 +32,16 @@ const mockAuthors: Author[] = [
   { id: 2, name: "Harper", surname: "Lee", nationality: "American", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }
 ];
 
+const now = new Date().toISOString();
 const mockUser: User = {
   id: 1,
-  username: 'testuser',
-  email: 'test@example.com'
+  email: 'test@example.com',
+  name: 'Test',
+  surname: 'User',
+  isActive: true,
+  role: 'user',
+  creationDate: now,
+  updateDate: now,
 };
 
 // Request handlers
@@ -165,10 +171,11 @@ export const handlers = [
   }),
 
   http.put('*/api/users', async ({ request }) => {
-    const updateData = await request.json() as any;
+    const updateData = await request.json() as Partial<User>;
     const updatedUser: User = {
       ...mockUser,
-      ...updateData
+      ...updateData,
+      updateDate: new Date().toISOString(),
     };
     return HttpResponse.json(updatedUser);
   }),

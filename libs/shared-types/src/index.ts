@@ -20,3 +20,6 @@ export * from './api';
 
 // Theme-related exports
 export * from './theme';
+
+// Settings-related exports
+export * from './settings';

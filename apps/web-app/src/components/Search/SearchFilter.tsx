@@ -1,5 +1,18 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  Stack,
+  TextField,
+  IconButton,
+  InputAdornment,
+  Button,
+  Chip,
+  MenuItem,
+  Paper,
+  Typography
+} from '@mui/material';
+import ClearIcon from '@mui/icons-material/Clear';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { SearchFilters } from '../../types';
 
 interface SearchFilterProps {
@@ -21,19 +34,17 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
   totalBooks,
   filteredCount
 }) => {
-  const { t } = useTranslation(['books', 'common']);
+  const { t } = useTranslation(['books', 'search']);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({});
-  
+
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    // Debounce search
     const timeoutId = setTimeout(() => {
       onSearchChange(query);
     }, 300);
-    
     return () => clearTimeout(timeoutId);
   }, [onSearchChange]);
 
@@ -43,146 +54,158 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
   }, [onFilterChange]);
 
   return (
-    <div data-testid="search-filter" className="space-y-4">
-      {/* Search Input */}
-      <div className="relative">
-        <input
-          data-testid="search-input"
-          type="text"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          placeholder={t('books:search_books_placeholder')}
-          aria-label={t('books:search_books')}
-          className="w-full px-4 py-2 border rounded-lg"
-        />
-        {searchQuery && (
-          <button
-            data-testid="clear-search"
-            onClick={() => {
-              setSearchQuery('');
-              onSearchChange('');
-            }}
-            className="absolute right-2 top-2"
-          >
-            ×
-          </button>
-        )}
-      </div>
+    <Stack spacing={2} data-testid="search-filter">
+      <TextField
+        data-testid="search-input"
+        value={searchQuery}
+        onChange={handleSearchChange}
+        placeholder={t('books:search_books_placeholder')}
+        label={t('books:search_books')}
+        InputProps={{
+          endAdornment: searchQuery ? (
+            <InputAdornment position="end">
+              <IconButton
+                data-testid="clear-search"
+                onClick={() => {
+                  setSearchQuery('');
+                  onSearchChange('');
+                }}
+                size="small"
+              >
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : undefined,
+        }}
+      />
 
-      {/* Filter Toggle */}
-      <div className="flex justify-between items-center">
-        <button
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
+        <Button
           data-testid="filter-toggle"
+          variant="outlined"
+          startIcon={<FilterListIcon />}
           onClick={() => setShowFilters(!showFilters)}
-          aria-label={t('search:filter.toggle_filters')}
-          className="px-4 py-2 border rounded"
         >
           {t('search:filter.title')}
           {Object.keys(filters).length > 0 && (
-            <span data-testid="filter-count" className="ml-2 bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
-              {Object.keys(filters).length}
-            </span>
+            <Chip
+              data-testid="filter-count"
+              label={Object.keys(filters).length}
+              color="primary"
+              size="small"
+              sx={{ ml: 1 }}
+            />
           )}
-        </button>
+        </Button>
 
-        {/* Sort Dropdown */}
-        <select
+        <TextField
+          select
+          label={t('search:filter.sort_books')}
+          defaultValue="title-asc"
           data-testid="sort-dropdown"
+          fullWidth
           onChange={(e) => {
             const [field, direction] = e.target.value.split('-');
             onSortChange({ field, direction: direction as 'asc' | 'desc' });
           }}
-          aria-label={t('search:filter.sort_books')}
-          className="px-4 py-2 border rounded"
         >
-          <option value="title-asc">{t('search:filter.sort.title_asc')}</option>
-          <option value="title-desc">{t('search:filter.sort.title_desc')}</option>
-          <option value="author-asc">{t('search:filter.sort.author_asc')}</option>
-          <option value="author-desc">{t('search:filter.sort.author_desc')}</option>
-          <option value="dateAdded-desc">{t('search:filter.sort.date_newest')}</option>
-          <option value="rating-desc">{t('search:filter.sort.rating_highest')}</option>
-        </select>
-      </div>
+          <MenuItem value="title-asc">{t('search:filter.sort.title_asc')}</MenuItem>
+          <MenuItem value="title-desc">{t('search:filter.sort.title_desc')}</MenuItem>
+          <MenuItem value="author-asc">{t('search:filter.sort.author_asc')}</MenuItem>
+          <MenuItem value="author-desc">{t('search:filter.sort.author_desc')}</MenuItem>
+          <MenuItem value="dateAdded-desc">{t('search:filter.sort.date_newest')}</MenuItem>
+          <MenuItem value="rating-desc">{t('search:filter.sort.rating_highest')}</MenuItem>
+        </TextField>
+      </Stack>
 
-      {/* Filter Panel */}
       {showFilters && (
-        <div data-testid="filter-panel" className="border rounded-lg p-4 space-y-4">
-          {/* Status Filter */}
-          <div>
-            <label className="block text-sm font-medium mb-2">{t('search:filter.status.label')}</label>
-            <select
+        <Paper data-testid="filter-panel" variant="outlined" sx={{ p: 2 }}>
+          <Stack spacing={2}>
+            <TextField
+              select
+              label={t('search:filter.status.label')}
+              defaultValue="all"
               data-testid="status-filter"
-              onChange={(e) => handleFilterChange({ ...filters, status: e.target.value === 'all' ? undefined : e.target.value as 'reading' | 'paused' | 'finished' })}
-              className="w-full px-3 py-2 border rounded"
+              onChange={(e) =>
+                handleFilterChange({
+                  ...filters,
+                  status: e.target.value === 'all' ? undefined : (e.target.value as 'reading' | 'paused' | 'finished'),
+                })
+              }
             >
-              <option value="all">{t('search:filter.status.all')}</option>
-              <option value="reading">{t('search:filter.status.reading')}</option>
-              <option value="paused">{t('search:filter.status.paused')}</option>
-              <option value="finished">{t('search:filter.status.finished')}</option>
-            </select>
-          </div>
+              <MenuItem value="all">{t('search:filter.status.all')}</MenuItem>
+              <MenuItem value="reading">{t('search:filter.status.reading')}</MenuItem>
+              <MenuItem value="paused">{t('search:filter.status.paused')}</MenuItem>
+              <MenuItem value="finished">{t('search:filter.status.finished')}</MenuItem>
+            </TextField>
 
-          {/* Category Filter */}
-          <div>
-            <label className="block text-sm font-medium mb-2">{t('search:filter.category.label')}</label>
-            <select
+            <TextField
+              select
+              label={t('search:filter.category.label')}
+              defaultValue=""
               data-testid="category-filter"
-              onChange={(e) => handleFilterChange({ ...filters, categoryId: e.target.value ? parseInt(e.target.value) : undefined })}
-              className="w-full px-3 py-2 border rounded"
+              onChange={(e) =>
+                handleFilterChange({
+                  ...filters,
+                  categoryId: e.target.value ? parseInt(e.target.value, 10) : undefined,
+                })
+              }
             >
-              <option value="">{t('search:filter.category.all')}</option>
+              <MenuItem value="">{t('search:filter.category.all')}</MenuItem>
               {categories.map((category, index) => (
-                <option key={category} value={index + 1}>
+                <MenuItem key={category} value={index + 1}>
                   {category}
-                </option>
+                </MenuItem>
               ))}
-            </select>
-          </div>
+            </TextField>
 
-          {/* Author Filter */}
-          <div>
-            <label className="block text-sm font-medium mb-2">{t('search:filter.author.label')}</label>
-            <select
+            <TextField
+              select
+              label={t('search:filter.author.label')}
+              defaultValue=""
               data-testid="author-filter"
-              onChange={(e) => handleFilterChange({ ...filters, authorId: e.target.value ? parseInt(e.target.value) : undefined })}
-              className="w-full px-3 py-2 border rounded"
+              onChange={(e) =>
+                handleFilterChange({
+                  ...filters,
+                  authorId: e.target.value ? parseInt(e.target.value, 10) : undefined,
+                })
+              }
             >
-              <option value="">{t('search:filter.author.all')}</option>
+              <MenuItem value="">{t('search:filter.author.all')}</MenuItem>
               {authors.map((author, index) => (
-                <option key={author} value={index + 1}>{author}</option>
+                <MenuItem key={author} value={index + 1}>
+                  {author}
+                </MenuItem>
               ))}
-            </select>
-          </div>
+            </TextField>
 
-
-          {/* Clear Filters */}
-          <button
-            data-testid="clear-filters"
-            onClick={() => {
-              setFilters({});
-              handleFilterChange({});
-            }}
-            className="px-4 py-2 text-red-600 border border-red-600 rounded hover:bg-red-50"
-          >
-            {t('search:filter.clear_all')}
-          </button>
-        </div>
+            <Button
+              data-testid="clear-filters"
+              variant="outlined"
+              color="error"
+              onClick={() => {
+                setFilters({});
+                handleFilterChange({});
+              }}
+            >
+              {t('search:filter.clear_all')}
+            </Button>
+          </Stack>
+        </Paper>
       )}
 
-      {/* Results Count */}
-      <div data-testid="results-count" className="text-sm text-gray-600">
+      <Typography data-testid="results-count" variant="body2" color="text.secondary">
         {filteredCount !== undefined
           ? t('search:filter.results_count', { filtered: filteredCount, total: totalBooks })
-          : t('search:filter.results_total', { total: totalBooks })
-        }
-      </div>
+          : t('search:filter.results_total', { total: totalBooks })}
+      </Typography>
 
       {totalBooks === 0 && (
-        <div data-testid="no-results" className="text-center py-8 text-gray-500">
+        <Typography data-testid="no-results" align="center" color="text.secondary">
           {t('search:filter.no_books')}
-        </div>
+        </Typography>
       )}
-    </div>
+    </Stack>
   );
 };
 

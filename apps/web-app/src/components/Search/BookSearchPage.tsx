@@ -3,7 +3,11 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
-  Button
+  Button,
+  Container,
+  Typography,
+  Grid,
+  Paper
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
@@ -16,7 +20,7 @@ import { BookSearchResults } from './BookSearchResults';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import { Book, SearchFilters } from '../../types';
 
-export const BookSearchPage: React.FC = () => {
+const BookSearchPage: React.FC = () => {
   const { t } = useTranslation(['books', 'common']);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -80,50 +84,49 @@ export const BookSearchPage: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '1024px', margin: '0 auto', padding: '2rem 1rem' }}>
-      {/* Page header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box mb={4}>
+        <Typography variant="h4" gutterBottom>
           {t('books:search_books')}
-        </h1>
-        <p className="text-lg text-text-secondary">
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
           {t('books:find_books_description')}
-        </p>
-      </div>
+        </Typography>
+      </Box>
 
-      {/* Search form */}
-      <div className="mb-8">
+      <Box mb={4}>
         <BookSearchForm
           onSearch={handleSearch}
           loading={loading}
           initialQuery={initialQuery}
         />
-      </div>
+      </Box>
 
-      {/* Quick actions */}
       {(books.length > 0 || error) && (
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              onClick={handleClearSearch}
-              color="inherit"
-              size="small"
-              startIcon={<CloseIcon />}
-            >
-              {t('books:clear_search')}
-            </Button>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <Button
-              onClick={() => navigate('/?mode=add')}
-              variant="contained"
-              startIcon={<AddIcon />}
-            >
-              {t('books:add_new_book')}
-            </Button>
-          </div>
-        </div>
+        <Box
+          mb={4}
+          display="flex"
+          flexWrap="wrap"
+          justifyContent="space-between"
+          alignItems="center"
+          gap={2}
+        >
+          <Button
+            onClick={handleClearSearch}
+            color="inherit"
+            size="small"
+            startIcon={<CloseIcon />}
+          >
+            {t('books:clear_search')}
+          </Button>
+          <Button
+            onClick={() => navigate('/?mode=add')}
+            variant="contained"
+            startIcon={<AddIcon />}
+          >
+            {t('books:add_new_book')}
+          </Button>
+        </Box>
       )}
 
       {/* Search results */}
@@ -139,44 +142,62 @@ export const BookSearchPage: React.FC = () => {
 
       {/* Empty state for no search */}
       {!loading && books.length === 0 && !error && !searchParams.get('q') && (
-        <div className="text-center py-12">
-          <Box color="text.disabled" mb={3}>
-            <SearchIcon sx={{ fontSize: 96, mx: 'auto', mb: 2, display: 'block' }} />
+        <Box textAlign="center" py={6}>
+          <Box color="text.disabled" mb={2}>
+            <SearchIcon sx={{ fontSize: 96 }} />
           </Box>
-          <h2 className="text-2xl font-semibold text-text-primary mb-4">
+          <Typography variant="h5" gutterBottom>
             {t('books:search_your_library')}
-          </h2>
-          <p className="text-text-secondary mb-8 max-w-md mx-auto">
+          </Typography>
+          <Typography variant="body1" color="text.secondary" mb={4}>
             {t('books:use_search_form')}
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-            <div className="bg-surface p-6 rounded-lg border border-secondary-200">
-              <Box color="primary.main" mb={2} textAlign="center">
-                <BookIcon sx={{ fontSize: 32 }} />
-              </Box>
-              <h3 className="font-medium text-text-primary mb-2">{t('books:search_by_title')}</h3>
-              <p className="text-sm text-text-secondary">{t('books:find_by_title')}</p>
-            </div>
+          </Typography>
 
-            <div className="bg-surface p-6 rounded-lg border border-secondary-200">
-              <Box color="primary.main" mb={2} textAlign="center">
-                <PersonIcon sx={{ fontSize: 32 }} />
-              </Box>
-              <h3 className="font-medium text-text-primary mb-2">{t('books:search_by_author_heading')}</h3>
-              <p className="text-sm text-text-secondary">{t('books:discover_books_by_author')}</p>
-            </div>
-
-            <div className="bg-surface p-6 rounded-lg border border-secondary-200">
-              <Box color="primary.main" mb={2} textAlign="center">
-                <FilterIcon sx={{ fontSize: 32 }} />
-              </Box>
-              <h3 className="font-medium text-text-primary mb-2">{t('books:advanced_filters_heading')}</h3>
-              <p className="text-sm text-text-secondary">{t('books:filter_by_genre')}</p>
-            </div>
-          </div>
-        </div>
+          <Grid container spacing={3} maxWidth="md" mx="auto">
+            <Grid item xs={12} md={4}>
+              <Paper variant="outlined" sx={{ p: 3, height: '100%' }}>
+                <Box color="primary.main" mb={2} textAlign="center">
+                  <BookIcon sx={{ fontSize: 32 }} />
+                </Box>
+                <Typography variant="subtitle1" gutterBottom>
+                  {t('books:search_by_title')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t('books:find_by_title')}
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Paper variant="outlined" sx={{ p: 3, height: '100%' }}>
+                <Box color="primary.main" mb={2} textAlign="center">
+                  <PersonIcon sx={{ fontSize: 32 }} />
+                </Box>
+                <Typography variant="subtitle1" gutterBottom>
+                  {t('books:search_by_author_heading')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t('books:discover_books_by_author')}
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Paper variant="outlined" sx={{ p: 3, height: '100%' }}>
+                <Box color="primary.main" mb={2} textAlign="center">
+                  <FilterIcon sx={{ fontSize: 32 }} />
+                </Box>
+                <Typography variant="subtitle1" gutterBottom>
+                  {t('books:advanced_filters_heading')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t('books:filter_by_genre')}
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Box>
       )}
-    </div>
+    </Container>
   );
 };
+
+export default BookSearchPage;

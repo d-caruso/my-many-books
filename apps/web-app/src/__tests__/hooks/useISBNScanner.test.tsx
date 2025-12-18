@@ -439,7 +439,6 @@ describe('useISBNScanner', () => {
     });
 
     test('handles scan errors through callback', async () => {
-      const { NotFoundException } = require('@zxing/library');
       
       let scanCallback: ((result: any, error?: any) => void) | undefined;
 

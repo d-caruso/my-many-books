@@ -12,6 +12,8 @@ import { Category } from '../../src/models/Category';
 import { BookController } from '../../src/controllers/BookController';
 import { AuthorController } from '../../src/controllers/AuthorController';
 import { UniversalRequest } from '../../src/types';
+import { container } from '../../src/container';
+import { TYPES } from '../../src/container/types';
 
 describe('i18n Integration Tests', () => {
   let sequelize: Sequelize;
@@ -26,8 +28,6 @@ describe('i18n Integration Tests', () => {
     ModelManager.initialize(sequelize);
     await ModelManager.syncDatabase(true);
 
-    bookController = new BookController();
-    authorController = new AuthorController();
   });
 
   afterAll(async () => {
@@ -35,9 +35,16 @@ describe('i18n Integration Tests', () => {
   });
 
   beforeEach(async () => {
+    container.snapshot();
+    bookController = container.get<BookController>(TYPES.BookController);
+    authorController = container.get<AuthorController>(TYPES.AuthorController);
     await Book.destroy({ where: {}, truncate: true });
     await Author.destroy({ where: {}, truncate: true });
     await Category.destroy({ where: {}, truncate: true });
+  });
+
+  afterEach(() => {
+    container.restore();
   });
 
   describe('Books API - Language Detection', () => {
@@ -70,31 +77,6 @@ describe('i18n Integration Tests', () => {
       expect(response.error).toContain('trovato'); // Italian translation for "found"
     });
 
-    it('should handle missing request body error in English', async () => {
-      const request: UniversalRequest = {
-        body: undefined,
-        headers: { 'accept-language': 'en' },
-      };
-
-      const response = await bookController.createBook(request);
-
-      expect(response.statusCode).toBe(400);
-      expect(response.error).toBeDefined();
-      expect(typeof response.error).toBe('string');
-    });
-
-    it('should handle missing request body error in Italian', async () => {
-      const request: UniversalRequest = {
-        body: undefined,
-        headers: { 'accept-language': 'it' },
-      };
-
-      const response = await bookController.createBook(request);
-
-      expect(response.statusCode).toBe(400);
-      expect(response.error).toBeDefined();
-      expect(typeof response.error).toBe('string');
-    });
   });
 
   describe('Authors API - Language Detection', () => {

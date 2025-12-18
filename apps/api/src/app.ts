@@ -3,6 +3,7 @@
 // Express application setup with user authentication
 // ================================================================
 
+import 'reflect-metadata';
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -16,19 +17,36 @@ import categoryRoutes from './routes/categoryRoutes';
 import isbnRoutes from './routes/isbnRoutes';
 import adminRoutes from './routes/adminRoutes';
 import authRoutes from './routes/authRoutes';
+import hookRoutes from './routes/hookRoutes';
+import settingsRoutes from './routes/settingsRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
+import { expressErrorHandler } from './middleware/expressErrorHandler';
+import { initializeHookSystem } from './services/hooks/hookSystem';
+import { traceIdMiddleware, requestLoggerMiddleware } from '@my-many-books/shared-logging';
 
 import { initializeI18n } from '@my-many-books/shared-i18n';
+import { getLogger } from './services/logger';
+import { SettingsService } from './services/SettingsService';
 
 const app = express();
+const isTestEnvironment = process.env['NODE_ENV'] === 'test';
 
-// Middleware
+// ===== LOGGING MIDDLEWARE (MUST BE FIRST) =====
+// 1. TraceId middleware for request correlation
+app.use(traceIdMiddleware() as unknown as express.RequestHandler);
+
+// 2. Request logger middleware (logs all HTTP requests)
+if (!isTestEnvironment) {
+  app.use(requestLoggerMiddleware() as unknown as express.RequestHandler);
+}
+
+// ===== CORE MIDDLEWARE =====
 app.use(
   cors({
-    origin: [
-      process.env['FRONTEND_URL'],
-      /^http:\/\/localhost:\d+$/,
-    ].filter(Boolean) as (string | RegExp)[],
+    origin: [process.env['FRONTEND_URL'], /^http:\/\/localhost:\d+$/].filter(Boolean) as (
+      | string
+      | RegExp
+    )[],
     credentials: true,
   })
 );
@@ -59,7 +77,9 @@ app.use(`${BASE_PATH}/users`, userRoutes);
 app.use(`${BASE_PATH}/authors`, authorRoutes);
 app.use(`${BASE_PATH}/categories`, categoryRoutes);
 app.use(`${BASE_PATH}/isbn`, isbnRoutes);
+app.use(`${BASE_PATH}/settings`, settingsRoutes);
 app.use(`${BASE_PATH}/admin`, adminRoutes);
+app.use(`${BASE_PATH}/admin/hooks`, hookRoutes);
 
 // ===== 404 HANDLER =====
 app.use((_req, res): void => {
@@ -71,23 +91,18 @@ app.use((_req, res): void => {
 });
 
 // ===== GLOBAL ERROR HANDLER =====
-app.use(
-  (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction): void => {
-    console.error('Global error handler:', err);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      details: process.env['NODE_ENV'] === 'development' ? err.message : undefined,
-    });
-  }
-);
+app.use(expressErrorHandler);
 
 // Database initialization (for both local and Lambda cold start)
 const initializeDatabase = async (): Promise<void> => {
+  if (isTestEnvironment) {
+    return;
+  }
+
   try {
     const sequelize = DatabaseConnection.getInstance();
     await sequelize.authenticate();
-    console.log('Database connection established successfully');
+    getLogger().info('Database connection established successfully');
 
     // Initialize models
     ModelManager.initialize(sequelize);
@@ -96,11 +111,14 @@ const initializeDatabase = async (): Promise<void> => {
     // Disabled: Use migrations instead (npm run db:migrate)
     // if (process.env['NODE_ENV'] === 'development') {
     //   await ModelManager.syncDatabase(false);
-    //   // TODO: Replace with proper logging
-    //   // console.log('Database synchronized');
     // }
   } catch (error) {
-    console.error('Database initialization failed:', error);
+    getLogger().error(
+      {
+        err: error instanceof Error ? error : new Error(String(error)),
+      },
+      'Database initialization failed'
+    );
     // Don't exit in Lambda - controllers can return mock data
     // Only exit when running locally as server
     if (require.main === module) {
@@ -109,27 +127,40 @@ const initializeDatabase = async (): Promise<void> => {
   }
 };
 
-// Initialize database on module load (Lambda cold start)
+const bootstrapInfrastructure = async (): Promise<void> => {
+  await initializeDatabase();
+  await SettingsService.initialize();
+  await initializeHookSystem();
+};
+
+// Initialize database + hook system on module load (Lambda cold start)
 // Export the promise so Lambda handler can wait for it
-export const initPromise = initializeDatabase();
+export const initPromise = bootstrapInfrastructure();
 
 // Start server
 const startServer = async (): Promise<void> => {
-  await initializeDatabase();
+  await initPromise;
   await initializeI18n();
 
   const PORT = process.env['PORT'] || 3000;
+  const env = process.env['NODE_ENV'] || 'development';
+
   app.listen(PORT, (): void => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/health`);
-    console.log(`Environment: ${process.env['NODE_ENV'] || 'development'}`);
+    getLogger().info(
+      {
+        port: PORT,
+        environment: env,
+        healthCheck: `http://localhost:${PORT}/health`,
+      },
+      'Server started successfully'
+    );
   });
 };
 
 // Handle graceful shutdown
 process.on('SIGTERM', (): void => {
   void (async (): Promise<void> => {
-    console.log('SIGTERM received, shutting down gracefully');
+    getLogger().info('SIGTERM received, shutting down gracefully');
     await ModelManager.close();
     process.exit(0);
   })();
@@ -137,16 +168,15 @@ process.on('SIGTERM', (): void => {
 
 process.on('SIGINT', (): void => {
   void (async (): Promise<void> => {
-    console.log('SIGINT received, shutting down gracefully');
+    getLogger().info('SIGINT received, shutting down gracefully');
     await ModelManager.close();
     process.exit(0);
   })();
 });
 
 if (require.main === module) {
-  startServer().catch((_error: Error): void => {
-    // TODO: Replace with proper logging
-    // console.error('Failed to start server:', error);
+  startServer().catch((error: Error): void => {
+    getLogger().error({ err: error }, 'Failed to start server');
     process.exit(1);
   });
 }

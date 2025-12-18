@@ -25,6 +25,7 @@ export const RESOURCES = {
   AUTHOR: 'Author',
   CATEGORY: 'Category',
   USER: 'User',
+  SETTINGS: 'Settings',
   ALL: 'all',  // Special resource for admin "manage all"
 } as const;
 

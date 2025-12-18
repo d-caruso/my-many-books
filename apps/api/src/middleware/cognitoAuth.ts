@@ -2,6 +2,7 @@
 // src/middleware/cognitoAuth.ts
 // ================================================================
 
+import { getLogger } from '../services/logger';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { verify, JwtPayload, Algorithm } from 'jsonwebtoken';
 
@@ -114,7 +115,10 @@ export class CognitoAuthenticator {
         user,
       };
     } catch (error) {
-      console.error('Token verification failed:', error);
+      getLogger().error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Token verification failed:'
+      );
 
       if (error instanceof Error) {
         if (error.message.includes('expired')) {

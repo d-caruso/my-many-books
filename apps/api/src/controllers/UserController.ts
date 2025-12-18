@@ -3,323 +3,183 @@
 // User management controller
 // ================================================================
 
-import { Response } from 'express';
-import { WhereOptions } from 'sequelize';
-import { AuthenticatedRequest } from '../middleware/auth';
-import { Book } from '../models/Book';
-import { Author } from '../models/Author';
-import { Category } from '../models/Category';
-import { UserService } from '../middleware/auth';
-import { BookAttributes, BookStatus } from '../models/interfaces/ModelInterfaces';
+import { inject, injectable } from 'inversify';
 import { BaseController } from './base/BaseController';
+import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
+import { TYPES } from '../container/types';
+import { UpdateUserDTO } from '../dtos/user/UpdateUserDTO';
+import { toUserResponseDTO } from '../dtos/user/UserResponseDTO';
+import { UserService, UserServiceError } from '../services/user/UserService';
+import { BookEntity } from '../repositories/book/BookRepositoryTypes';
+import { BookStatus } from '@/models/interfaces/ModelInterfaces';
+import { BOOK_STATUSES } from '@my-many-books/shared-validation';
 
+const toBookView = (book: BookEntity) => ({
+  id: book.id,
+  title: book.title,
+  isbnCode: book.isbnCode,
+  editionNumber: book.editionNumber,
+  editionDate: book.editionDate,
+  status: book.status,
+  notes: book.notes,
+  authors:
+    book.authors?.map(author => ({
+      id: author.id,
+      name: author.name,
+      surname: author.surname,
+      fullName: [author.name, author.surname].filter(Boolean).join(' ').trim(),
+    })) || [],
+  categories:
+    book.categories?.map(category => ({
+      id: category.id,
+      name: category.name,
+    })) || [],
+  createdAt: book.creationDate,
+  updatedAt: book.updateDate,
+});
+
+@injectable()
 export class UserController extends BaseController {
-  /**
-   * Convert Express AuthenticatedRequest to UniversalRequest
-   * Helper method for backward compatibility with Express routes
-   */
-  private toUniversalRequest(req: AuthenticatedRequest): UniversalRequest {
-    return {
-      headers: req.headers as Record<string, string>,
-      body: req.body,
-      pathParameters: req.params,
-      queryStringParameters: req.query as Record<string, string>,
-      user: req.user,
-    };
+  constructor(@inject(TYPES.UserService) private readonly userService: UserService) {
+    super();
+    this.userService.initializeControllerContext();
   }
 
-  // Get current user profile
-  async getCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
-    await this.initializeI18n(this.toUniversalRequest(req));
+  async getCurrentUser(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
 
     try {
-      if (!req.user) {
-        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
-        return;
-      }
-
-      // Use cached user from auth middleware to avoid duplicate query
-      const user = req.user.userModel || (await UserService.getUserById(req.user.userId));
-      if (!user) {
-        res.status(404).json({ error: this.t('errors:user_not_found') });
-        return;
-      }
-
-      res.status(200).json({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        surname: user.surname,
-        fullName: user.getFullName(),
-        isActive: user.isActive,
-        role: user.role,
-        createdAt: user.creationDate,
-        updatedAt: user.updateDate,
-      });
+      const user = await this.userService.requireUser(request.user!.userId);
+      return this.createSuccessResponse(toUserResponseDTO(user));
     } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error fetching current user:', error);
-      res.status(500).json({
-        error: this.t('errors:internal_server_error'),
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+      return this.handleServiceError(error);
     }
   }
 
-  // Update current user profile
-  async updateCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
-    await this.initializeI18n(this.toUniversalRequest(req));
+  async updateCurrentUser(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    const dto = UpdateUserDTO.from(this.parseBody(request));
 
     try {
-      if (!req.user) {
-        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
-        return;
-      }
-
-      const body: unknown = req.validated?.body ?? req.body;
-      const { name, surname } = body as { name?: string; surname?: string };
-
-      // Validate input
-      if (!name || !surname) {
-        res.status(400).json({ error: this.t('errors:name_surname_required') });
-        return;
-      }
-
-      if (typeof name !== 'string' || typeof surname !== 'string') {
-        res.status(400).json({ error: this.t('errors:name_surname_strings') });
-        return;
-      }
-
-      if (name.length > 100 || surname.length > 100) {
-        res.status(400).json({ error: this.t('errors:name_surname_max_length', { max: 100 }) });
-        return;
-      }
-
-      const user = await UserService.getUserById(req.user.userId);
-      if (!user) {
-        res.status(404).json({ error: this.t('errors:user_not_found') });
-        return;
-      }
-
-      // Update user
-      await user.update({ name, surname });
-
-      res.status(200).json({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        surname: user.surname,
-        fullName: user.getFullName(),
-        isActive: user.isActive,
-        updatedAt: user.updateDate,
-      });
+      const updated = await this.userService.updateCurrentUser(
+        request.user!.userId,
+        dto.toServiceInput()
+      );
+      return this.createSuccessResponse(
+        toUserResponseDTO(updated),
+        'User profile updated successfully'
+      );
     } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error updating current user:', error);
-      res.status(500).json({
-        error: this.t('errors:internal_server_error'),
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+      return this.handleServiceError(error);
     }
   }
 
-  // Get user's books
-  async getUserBooks(req: AuthenticatedRequest, res: Response): Promise<void> {
-    await this.initializeI18n(this.toUniversalRequest(req));
+  async getUserBooks(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    const pagination = this.getPaginationParams(request);
+    const statusQuery = this.getQueryParameter(request, 'status');
+    const status = this.normalizeStatus(statusQuery);
 
     try {
-      if (!req.user) {
-        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
-        return;
+      const listOptions: Parameters<UserService['listUserBooks']>[1] = {
+        limit: pagination.limit,
+        offset: pagination.offset,
+      };
+      if (status) {
+        listOptions.status = status;
       }
 
-      const query: Record<string, unknown> =
-        req.validated?.query ?? (req.query as Record<string, unknown>);
-      const { page = 1, limit = 10, status } = query;
-      const offset = (Number(page) - 1) * Number(limit);
+      const result = await this.userService.listUserBooks(request.user!.userId, listOptions);
 
-      const whereClause: WhereOptions<BookAttributes> = { userId: req.user.userId };
-      if (
-        status &&
-        typeof status === 'string' &&
-        ['reading', 'paused', 'finished'].includes(status)
-      ) {
-        whereClause.status = status as BookStatus;
-      }
+      const meta = {
+        currentPage: pagination.page,
+        totalPages: Math.ceil(result.total / pagination.limit),
+        totalItems: result.total,
+        itemsPerPage: pagination.limit,
+      };
 
-      const { count, rows: books } = await Book.findAndCountAll({
-        where: whereClause,
-        include: [
-          {
-            model: Author,
-            as: 'authors',
-            through: { attributes: [] },
-          },
-          {
-            model: Category,
-            as: 'categories',
-            through: { attributes: [] },
-          },
-        ],
-        limit: Number(limit),
-        offset,
-        order: [['title', 'ASC']],
-      });
-
-      res.status(200).json({
-        books: books.map(book => ({
-          id: book.id,
-          title: book.title,
-          isbnCode: book.isbnCode,
-          editionNumber: book.editionNumber,
-          editionDate: book.editionDate,
-          status: book.status,
-          notes: book.notes,
-          authors:
-            book.authors?.map(author => ({
-              id: author.id,
-              name: author.name,
-              surname: author.surname,
-              fullName: `${author.name} ${author.surname}`,
-            })) || [],
-          categories:
-            book.categories?.map(category => ({
-              id: category.id,
-              name: category.name,
-            })) || [],
-          createdAt: book.creationDate,
-          updatedAt: book.updateDate,
-        })),
-        pagination: {
-          currentPage: Number(page),
-          totalPages: Math.ceil(count / Number(limit)),
-          totalItems: count,
-          itemsPerPage: Number(limit),
-        },
+      return this.createSuccessResponse({
+        books: result.rows.map(toBookView),
+        pagination: meta,
       });
     } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error fetching user books:', error);
-      res.status(500).json({
-        error: this.t('errors:internal_server_error'),
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+      return this.handleServiceError(error);
     }
   }
 
-  // Get user statistics
-  async getUserStats(req: AuthenticatedRequest, res: Response): Promise<void> {
-    await this.initializeI18n(this.toUniversalRequest(req));
+  async getUserStats(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
 
     try {
-      if (!req.user) {
-        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
-        return;
-      }
-
-      const userId = req.user.userId;
-
-      // Get book counts by status
-      const [totalBooks, readingBooks, pausedBooks, finishedBooks] = await Promise.all([
-        Book.count({ where: { userId } }),
-        Book.count({ where: { userId, status: 'reading' } }),
-        Book.count({ where: { userId, status: 'paused' } }),
-        Book.count({ where: { userId, status: 'finished' } }),
-      ]);
-
-      // Get recent activity (last 5 books added)
-      const recentBooks = await Book.findAll({
-        where: { userId },
-        order: [['creationDate', 'DESC']],
-        limit: 5,
-        attributes: ['id', 'title', 'creationDate'],
-      });
-
-      res.status(200).json({
-        totalBooks,
-        booksByStatus: {
-          reading: readingBooks,
-          paused: pausedBooks,
-          finished: finishedBooks,
-          unspecified: totalBooks - readingBooks - pausedBooks - finishedBooks,
-        },
-        completionRate: totalBooks > 0 ? Math.round((finishedBooks / totalBooks) * 100) : 0,
-        recentBooks: recentBooks.map(book => ({
-          id: book.id,
-          title: book.title,
-          addedAt: book.creationDate,
-        })),
-      });
+      const stats = await this.userService.getUserStats(request.user!.userId);
+      return this.createSuccessResponse(stats);
     } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error fetching user stats:', error);
-      res.status(500).json({
-        error: this.t('errors:internal_server_error'),
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+      return this.handleServiceError(error);
     }
   }
 
-  // Deactivate user account
-  async deactivateAccount(req: AuthenticatedRequest, res: Response): Promise<void> {
-    await this.initializeI18n(this.toUniversalRequest(req));
+  async deactivateAccount(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
 
     try {
-      if (!req.user) {
-        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
-        return;
-      }
-
-      await UserService.deactivateUser(req.user.userId);
-
-      res.status(200).json({
-        message: 'Account deactivated successfully',
-        note: 'Your books will remain in the system but will no longer be accessible',
-      });
+      await this.userService.deactivateAccount(request.user!.userId);
+      return this.createSuccessResponse(null, 'Account deactivated successfully');
     } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error deactivating user account:', error);
-      res.status(500).json({
-        error: this.t('errors:internal_server_error'),
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+      return this.handleServiceError(error);
     }
   }
 
-  // Delete user account (hard delete)
-  async deleteAccount(req: AuthenticatedRequest, res: Response): Promise<void> {
-    await this.initializeI18n(this.toUniversalRequest(req));
+  async deleteAccount(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
 
     try {
-      if (!req.user) {
-        res.status(401).json({ error: this.t('errors:user_not_authenticated') });
-        return;
-      }
-
-      const user = await UserService.getUserById(req.user.userId);
-      if (!user) {
-        res.status(404).json({ error: this.t('errors:user_not_found') });
-        return;
-      }
-
-      // Note: Books will have their userId set to NULL due to the foreign key constraint
-      await user.destroy();
-
-      res.status(200).json({
-        message: 'Account deleted successfully',
-        note: 'All personal data has been removed. Books will remain anonymized in the system.',
-      });
+      await this.userService.deleteAccount(request.user!.userId);
+      return this.createSuccessResponse(null, 'Account deleted successfully');
     } catch (error) {
-      // TODO: Replace with proper logging
-      // console.error('Error deleting user account:', error);
-      res.status(500).json({
-        error: this.t('errors:internal_server_error'),
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+      return this.handleServiceError(error);
     }
+  }
+
+  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
+    if (!request.user?.userId) {
+      return this.createErrorResponseI18n('errors:auth_required', 401);
+    }
+    return null;
+  }
+
+  private handleServiceError(error: unknown): ApiResponse {
+    if (!(error instanceof UserServiceError)) {
+      throw error;
+    }
+
+    switch (error.code) {
+      case 'USER_NOT_FOUND':
+        return this.createErrorResponseI18n('errors:user_not_found', 404);
+      default:
+        return this.createErrorResponseI18n('errors:internal_server_error', 500);
+    }
+  }
+
+
+  private normalizeStatus(value?: string | null): BookStatus | undefined {
+    if (!value) {
+      return undefined;
+    }
+    return BOOK_STATUSES.includes(value as BookStatus) ? (value as BookStatus) : undefined;
   }
 }
-
-// Export singleton instance
-export const userController = new UserController();

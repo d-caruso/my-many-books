@@ -7,7 +7,7 @@ export interface Route {
   path: string;
   name: string;
   params?: Record<string, string | number>;
-  query?: Record<string, string | number>;
+  query?: Record<string, string | number | string[]>;
   metadata?: {
     title?: string;
     requiresAuth?: boolean;
