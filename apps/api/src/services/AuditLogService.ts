@@ -223,10 +223,10 @@ export class AuditLogService {
       .then(isEnabled => {
         if (!isEnabled) return;
 
-        const user = request.user as { userId: number; role: string };
+        const user = request.user as { id: number; role: string };
 
         const auditData: AuditLogData = {
-          userId: user.userId,
+          userId: user.id,
           role: user.role,
           action,
           resourceType,

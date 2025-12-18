@@ -220,8 +220,8 @@ export class AuthorController extends BaseController {
       }
     }
 
-    if (request.user?.role !== USER_ROLES.ADMIN && request.user?.userId !== undefined) {
-      searchFilters.userId = request.user.userId;
+    if (request.user?.role !== USER_ROLES.ADMIN && request.user?.id !== undefined) {
+      searchFilters.userId = request.user.id;
     }
 
     const whereClause = this.buildWhereClauseFromFilters(searchFilters);
@@ -363,7 +363,7 @@ export class AuthorController extends BaseController {
       return null;
     }
     const context: AuthorUserContext = {
-      userId: request.user.userId,
+      userId: request.user.id,
     };
     if (request.user.role) {
       context.role = request.user.role;
@@ -398,7 +398,7 @@ export class AuthorController extends BaseController {
       return null;
     }
     const summary: { id: number; role?: string } = {
-      id: request.user.userId,
+      id: request.user.id,
     };
     if (request.user.role) {
       summary.role = request.user.role;

@@ -155,8 +155,9 @@ export interface UserUpdateAttributes
 
 // Authentication interface for middleware context
 export interface AuthUser {
-  userId: number; // Database user ID (primary key)
+  id: number; // Database user ID (primary key) - used by CASL
   email: string; // For logging/debugging
+  role: UserRole; // User role (user/admin) - used by CASL for authorization
   provider: string; // Auth provider used
   providerUserId?: string; // External auth system ID
   isNewUser?: boolean; // Helpful for onboarding flows

@@ -28,7 +28,7 @@ export const requireAdmin = async (
     }
 
     // Get full user from database to check role
-    const user = await User.findByPk(req.user.userId);
+    const user = await User.findByPk(req.user.id);
 
     if (!user) {
       res.status(401).json({ error: 'User not found' });
@@ -78,7 +78,7 @@ export const requireRole = (allowedRole: 'user' | 'admin') => {
       }
 
       // Get full user from database to check role
-      const user = await User.findByPk(req.user.userId);
+      const user = await User.findByPk(req.user.id);
 
       if (!user) {
         res.status(401).json({ error: 'User not found' });

@@ -260,7 +260,7 @@ export class CategoryController extends BaseController {
       return null;
     }
     const context: CategoryUserContext = {
-      userId: request.user.userId,
+      userId: request.user.id,
     };
     if (request.user.role) {
       context.role = request.user.role;
@@ -294,7 +294,7 @@ export class CategoryController extends BaseController {
       return null;
     }
     const summary: { id: number; role?: string } = {
-      id: request.user.userId,
+      id: request.user.id,
     };
     if (request.user.role) {
       summary.role = request.user.role;

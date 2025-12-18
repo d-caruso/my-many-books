@@ -165,8 +165,9 @@ export const authMiddleware = async (
 
     // Create AuthUser object for request context
     const authUser: AuthUser = {
-      userId: user.id,
+      id: user.id,
       email: user.email,
+      role: user.role,
       provider: provider.getProviderName(),
       providerUserId: providerUser.id,
       isNewUser,

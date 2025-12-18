@@ -225,7 +225,7 @@ export abstract class BaseController {
     }
 
     // Check if user owns the resource
-    if (resourceUserId !== request.user.userId) {
+    if (resourceUserId !== request.user.id) {
       return this.createErrorResponseI18n('errors:permission_denied', 403);
     }
 

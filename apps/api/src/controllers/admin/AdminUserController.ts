@@ -127,7 +127,7 @@ export class AdminUserController extends BaseController {
       return null;
     }
     const context: UserAdminContext = {
-      userId: request.user.userId,
+      userId: request.user.id,
     };
     if (request.user.role) {
       context.role = request.user.role;

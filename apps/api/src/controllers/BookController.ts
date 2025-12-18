@@ -125,7 +125,7 @@ export class BookController extends BaseController {
       id: Number(bookId),
     };
     if (request.user) {
-      Object.assign(whereClause, { userId: request.user.userId });
+      Object.assign(whereClause, { userId: request.user.id });
     }
 
     const book = await Book.findOne({
@@ -251,7 +251,7 @@ export class BookController extends BaseController {
 
     // Add user ID to the where clause if the user is authenticated
     if (request.user) {
-      whereConditions.push({ userId: request.user.userId });
+      whereConditions.push({ userId: request.user.id });
     }
 
     // Apply title filter
@@ -368,7 +368,7 @@ export class BookController extends BaseController {
 
     // Add user ID filter if authenticated
     if (request.user) {
-      whereConditions.push({ userId: request.user.userId });
+      whereConditions.push({ userId: request.user.id });
     }
 
     // Add text search conditions (title and ISBN)
@@ -649,7 +649,7 @@ export class BookController extends BaseController {
   // User-specific methods for route compatibility
   async getUserBooks(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
-    if (!request.user?.userId) {
+    if (!request.user?.id) {
       return this.createErrorResponseI18n('errors:auth_required', 401);
     }
 
@@ -657,7 +657,7 @@ export class BookController extends BaseController {
       ...request,
       queryStringParameters: {
         ...request.queryStringParameters,
-        userId: request.user.userId.toString(),
+        userId: request.user.id.toString(),
       },
     };
 
@@ -666,7 +666,7 @@ export class BookController extends BaseController {
 
   async getBookById(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
-    if (!request.user?.userId) {
+    if (!request.user?.id) {
       return this.createErrorResponseI18n('errors:auth_required', 401);
     }
 
@@ -714,7 +714,7 @@ export class BookController extends BaseController {
       return null;
     }
     const user: { id: number; role?: string } = {
-      id: request.user.userId,
+      id: request.user.id,
     };
     if (request.user.role) {
       user.role = request.user.role;
@@ -747,7 +747,7 @@ export class BookController extends BaseController {
       return null;
     }
     const context: BookUserContext = {
-      userId: request.user.userId,
+      userId: request.user.id,
     };
     if (request.user.role) {
       context.role = request.user.role;
