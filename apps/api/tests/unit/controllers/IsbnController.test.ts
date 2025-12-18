@@ -14,14 +14,7 @@ jest.mock('../../../src/services/isbnService');
 import { IsbnController } from '../../../src/controllers/IsbnController';
 import { isbnService } from '../../../src/services/isbnService';
 import { validateIsbn } from '../../../src/utils/isbn';
-
-interface UniversalRequest {
-  body?: any;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-  headers?: { [key: string]: string | undefined };
-  user: { id: number };
-}
+import { UniversalRequest } from '../../../src/types';
 
 describe('IsbnController', () => {
   let isbnController: IsbnController;
@@ -33,6 +26,9 @@ describe('IsbnController', () => {
 
     mockRequest = {
       headers: { 'accept-language': 'en' },
+      queryStringParameters: {},
+      pathParameters: {},
+      user: undefined,
     };
 
     // Default mock for validateIsbn
