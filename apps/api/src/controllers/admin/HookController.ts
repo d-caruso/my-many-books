@@ -95,7 +95,7 @@ export class HookController extends BaseController {
         actionConfig: body.actionConfig,
         isActive: body.isActive ?? true,
         priority: body.priority ?? 0,
-        createdBy: request.user?.userId ?? null,
+        createdBy: request.user?.id ?? null,
       };
 
       const hook = await Hook.create(hookData as CreationAttributes<Hook>);
@@ -294,7 +294,7 @@ export class HookController extends BaseController {
   }
 
   private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.userId) {
+    if (!request.user?.id) {
       return this.createErrorResponseI18n('errors:auth_required', 401);
     }
     return null;

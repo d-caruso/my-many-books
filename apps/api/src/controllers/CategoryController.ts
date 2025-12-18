@@ -249,7 +249,7 @@ export class CategoryController extends BaseController {
   }
 
   private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.userId) {
+    if (!request.user?.id) {
       return this.createErrorResponseI18n('errors:auth_required', 401);
     }
     return null;

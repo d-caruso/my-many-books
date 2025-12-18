@@ -52,7 +52,7 @@ export class UserController extends BaseController {
     if (authError) return authError;
 
     try {
-      const user = await this.userService.requireUser(request.user!.userId);
+      const user = await this.userService.requireUser(request.user!.id);
       return this.createSuccessResponse(toUserResponseDTO(user));
     } catch (error) {
       return this.handleServiceError(error);
@@ -68,7 +68,7 @@ export class UserController extends BaseController {
 
     try {
       const updated = await this.userService.updateCurrentUser(
-        request.user!.userId,
+        request.user!.id,
         dto.toServiceInput()
       );
       return this.createSuccessResponse(
@@ -98,7 +98,7 @@ export class UserController extends BaseController {
         listOptions.status = status;
       }
 
-      const result = await this.userService.listUserBooks(request.user!.userId, listOptions);
+      const result = await this.userService.listUserBooks(request.user!.id, listOptions);
 
       const meta = {
         currentPage: pagination.page,
@@ -122,7 +122,7 @@ export class UserController extends BaseController {
     if (authError) return authError;
 
     try {
-      const stats = await this.userService.getUserStats(request.user!.userId);
+      const stats = await this.userService.getUserStats(request.user!.id);
       return this.createSuccessResponse(stats);
     } catch (error) {
       return this.handleServiceError(error);
@@ -135,7 +135,7 @@ export class UserController extends BaseController {
     if (authError) return authError;
 
     try {
-      await this.userService.deactivateAccount(request.user!.userId);
+      await this.userService.deactivateAccount(request.user!.id);
       return this.createSuccessResponse(null, 'Account deactivated successfully');
     } catch (error) {
       return this.handleServiceError(error);
@@ -148,7 +148,7 @@ export class UserController extends BaseController {
     if (authError) return authError;
 
     try {
-      await this.userService.deleteAccount(request.user!.userId);
+      await this.userService.deleteAccount(request.user!.id);
       return this.createSuccessResponse(null, 'Account deleted successfully');
     } catch (error) {
       return this.handleServiceError(error);
@@ -156,7 +156,7 @@ export class UserController extends BaseController {
   }
 
   private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.userId) {
+    if (!request.user?.id) {
       return this.createErrorResponseI18n('errors:auth_required', 401);
     }
     return null;
