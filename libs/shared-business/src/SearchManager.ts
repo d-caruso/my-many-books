@@ -176,7 +176,7 @@ export class SearchManager {
           return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime();
 
         case 'status': {
-          const statusOrder = { 'in progress': 0, 'paused': 1, 'finished': 2 };
+          const statusOrder = { reading: 0, paused: 1, finished: 2 };
           const statusA = statusOrder[a.status as keyof typeof statusOrder] ?? 3;
           const statusB = statusOrder[b.status as keyof typeof statusOrder] ?? 3;
           return statusA - statusB;
