@@ -210,5 +210,112 @@ describe('FormManager', () => {
     expect(manager.getFieldError('title')).toEqual(['Server says no']);
     expect(manager.getState().isValid).toBe(false);
   });
-});
 
+  test('setValues updates multiple values and validates when validationMode=onChange', async () => {
+    const config: FormConfig = {
+      fields: [
+        createTextField({
+          name: 'title',
+          value: 'Ok',
+          validation: [FormValidator.createRequiredRule('Title required')],
+        }),
+      ],
+      validationMode: 'onChange',
+    };
+
+    const manager = new FormManager(config);
+    manager.setValues({ title: '' });
+    await flushMicrotasks();
+
+    expect(manager.getFieldValue('title')).toBe('');
+    expect(manager.getFieldError('title')).toEqual(['Title required']);
+    expect(manager.getState().isValid).toBe(false);
+  });
+
+  test('setErrors replaces errors and emits VALIDATION_ERROR', () => {
+    const manager = new FormManager({ fields: [createTextField({ name: 'title', value: 'x' })] });
+    const events: any[] = [];
+    manager.addEventListener((event) => events.push(event));
+
+    manager.setErrors({ title: ['Bad'] });
+
+    expect(manager.getState().errors).toEqual({ title: ['Bad'] });
+    expect(manager.getState().isValid).toBe(false);
+    expect(events.some((e) => e.type === 'VALIDATION_ERROR')).toBe(true);
+  });
+
+  test('updateField can update value and keeps values in sync', () => {
+    const manager = new FormManager({ fields: [createTextField({ name: 'title', value: 'x' })] });
+
+    manager.updateField('title', { value: 'y', label: 'New Label' });
+
+    expect(manager.getFieldValue('title')).toBe('y');
+    expect(manager.getState().fields.title.label).toBe('New Label');
+  });
+
+  test('addField and removeField mutate form state', async () => {
+    const validateSpy = jest.spyOn(FormValidator.prototype as any, 'validateField');
+    validateSpy.mockResolvedValue([]);
+
+    const manager = new FormManager({ fields: [createTextField({ name: 'title', value: 'x' })] });
+    manager.addField(
+      createTextField({
+        name: 'subtitle',
+        value: 'y',
+        validation: [FormValidator.createRequiredRule('Required')],
+      })
+    );
+
+    await flushMicrotasks();
+
+    expect(manager.getFieldNames().sort()).toEqual(['subtitle', 'title']);
+    expect(validateSpy).toHaveBeenCalled();
+
+    manager.removeField('subtitle');
+    expect(manager.getFieldNames()).toEqual(['title']);
+
+    validateSpy.mockRestore();
+  });
+
+  test('getDirtyFields and getTouchedFields reflect state', () => {
+    const config: FormConfig = {
+      fields: [
+        createTextField({ name: 'title', value: 'A', defaultValue: 'A' }),
+        createTextField({ name: 'subtitle', value: 'B', defaultValue: 'A' }),
+      ],
+    };
+    const manager = new FormManager(config);
+
+    expect(manager.getDirtyFields()).toEqual(['subtitle']);
+
+    manager.setFieldTouched('title', true);
+    manager.setFieldTouched('subtitle', false);
+    expect(manager.getTouchedFields()).toEqual(['title']);
+  });
+
+  test('event listener exceptions are isolated', () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const manager = new FormManager({ fields: [createTextField({ name: 'title', value: 'x' })] });
+
+    manager.addEventListener(() => {
+      throw new Error('listener fail');
+    });
+
+    expect(() => manager.setFieldValue('title', 'y')).not.toThrow();
+    expect(errorSpy).toHaveBeenCalledWith('Form event listener error:', expect.any(Error));
+    errorSpy.mockRestore();
+  });
+
+  test('addEventListener unsubscribe removes listener', () => {
+    const manager = new FormManager({ fields: [createTextField({ name: 'title', value: 'x' })] });
+    const listener = jest.fn();
+    const unsubscribe = manager.addEventListener(listener);
+
+    manager.setFieldValue('title', 'y');
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+    manager.setFieldValue('title', 'z');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+});

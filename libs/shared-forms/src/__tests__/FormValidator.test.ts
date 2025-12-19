@@ -42,6 +42,31 @@ describe('FormValidator', () => {
     await expect(validator.validateField(field, {})).resolves.toEqual(['Required']);
   });
 
+  test('required rule treats boolean values as present', async () => {
+    const validator = new FormValidator();
+    const field = createField({
+      type: 'checkbox',
+      value: false,
+      validation: [FormValidator.createRequiredRule('Required')],
+    });
+
+    await expect(validator.validateField(field, {})).resolves.toEqual([]);
+  });
+
+  test('required rule validates Date values', async () => {
+    const validator = new FormValidator();
+    const field = createField({
+      type: 'date',
+      value: new Date('invalid'),
+      validation: [FormValidator.createRequiredRule('Required')],
+    });
+
+    await expect(validator.validateField(field, {})).resolves.toEqual(['Required']);
+
+    field.value = new Date('2020-01-01');
+    await expect(validator.validateField(field, {})).resolves.toEqual([]);
+  });
+
   test('email rule validates format but treats empty as optional', async () => {
     const validator = new FormValidator();
     const field = createField({
@@ -50,6 +75,9 @@ describe('FormValidator', () => {
       validation: [FormValidator.createEmailRule('Invalid email')],
     });
 
+    await expect(validator.validateField(field, {})).resolves.toEqual([]);
+
+    field.value = 123;
     await expect(validator.validateField(field, {})).resolves.toEqual([]);
 
     field.value = 'not-an-email';
@@ -128,6 +156,16 @@ describe('FormValidator', () => {
     await expect(validator.validateField(field, {})).resolves.toEqual([]);
   });
 
+  test('min/max rules fail for non-numeric strings', async () => {
+    const validator = new FormValidator();
+    const field = createField({
+      value: 'abc',
+      validation: [FormValidator.createMinRule(1, 'Min'), FormValidator.createMaxRule(10, 'Max')],
+    });
+
+    await expect(validator.validateField(field, {})).resolves.toEqual(['Min', 'Max']);
+  });
+
   test('min/max rules validate dates using timestamps', async () => {
     const validator = new FormValidator();
     const min = new Date('2020-01-01').getTime();
@@ -198,4 +236,3 @@ describe('FormValidator', () => {
     warnSpy.mockRestore();
   });
 });
-

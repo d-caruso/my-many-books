@@ -2,12 +2,16 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { FormManager } from '../FormManager';
 import { FormValidator } from '../FormValidator';
 import {
+  useAuthForm,
+  useBookForm,
   useFieldValidation,
   useForm,
   useFormAutoSave,
   useFormField,
   useFormSubmission,
   useFormValidation,
+  useSearchForm,
+  useUserForm,
 } from '../hooks';
 import type { FormConfig, FormSubmissionResult } from '../types';
 
@@ -37,6 +41,26 @@ describe('shared-forms React hooks', () => {
 
     expect(result.current.state.values.title).toBe('New Title');
     expect(result.current.formManager.getFieldValue('title')).toBe('New Title');
+  });
+
+  test('useForm setValues() and setErrors() update state', async () => {
+    const { result } = renderHook(() => useForm(createConfig({ validationMode: 'onChange' })));
+
+    await act(async () => {
+      result.current.setValues({ title: '' });
+    });
+
+    await waitFor(() => {
+      expect(result.current.state.errors).toEqual({ title: ['Title required'] });
+      expect(result.current.state.isValid).toBe(false);
+    });
+
+    await act(async () => {
+      result.current.setErrors({ title: ['Server error'] });
+    });
+
+    expect(result.current.state.errors).toEqual({ title: ['Server error'] });
+    expect(result.current.state.isValid).toBe(false);
   });
 
   test('useFormField reflects value and touched state changes', async () => {
@@ -89,6 +113,51 @@ describe('shared-forms React hooks', () => {
     expect(handler).toHaveBeenCalled();
     expect(result.current.submissionState.hasSubmitted).toBe(true);
     expect(result.current.lastResult?.success).toBe(true);
+  });
+
+  test('useAuthForm returns login and register configs', () => {
+    const { result: login } = renderHook(() => useAuthForm('login'));
+    expect(Object.keys(login.current.state.fields).sort()).toEqual(['email', 'password', 'rememberMe']);
+
+    const { result: register } = renderHook(() => useAuthForm('register'));
+    expect(Object.keys(register.current.state.fields)).toEqual(
+      expect.arrayContaining(['firstName', 'lastName', 'email', 'password', 'confirmPassword'])
+    );
+  });
+
+  test('useBookForm and useUserForm apply initialData', async () => {
+    const { result: book } = renderHook(() => useBookForm(undefined, { title: 'My Book', language: 'it' }));
+    expect(book.current.state.values.title).toBe('My Book');
+    expect(book.current.state.values.language).toBe('it');
+
+    const { result: user } = renderHook(() => useUserForm(undefined, { firstName: 'A', lastName: 'B' }));
+    expect(user.current.state.values.firstName).toBe('A');
+    expect(user.current.state.values.lastName).toBe('B');
+  });
+
+  test('useSearchForm populates category/author options when provided', () => {
+    const { result } = renderHook(() =>
+      useSearchForm(undefined, [{ id: 1, name: 'Fiction' }], [{ id: 10, name: 'Author' }])
+    );
+
+    expect(result.current.state.fields.category.options).toEqual([
+      { label: 'All Categories', value: null },
+      { label: 'Fiction', value: 1 },
+    ]);
+
+    expect(result.current.state.fields.author.options).toEqual([
+      { label: 'All Authors', value: null },
+      { label: 'Author', value: 10 },
+    ]);
+  });
+
+  test('useBookForm and useSearchForm keep defaults when optional data is missing', () => {
+    const { result: book } = renderHook(() => useBookForm());
+    expect(book.current.state.values.title).toBe('');
+
+    const { result: search } = renderHook(() => useSearchForm());
+    expect(search.current.state.fields.category.options).toEqual([{ label: 'All Categories', value: null }]);
+    expect(search.current.state.fields.author.options).toEqual([{ label: 'All Authors', value: null }]);
   });
 
   test('useFieldValidation validates rules and updates errors', async () => {
@@ -156,4 +225,3 @@ describe('shared-forms React hooks', () => {
     expect(result.current.isSaving).toBe(false);
   });
 });
-
