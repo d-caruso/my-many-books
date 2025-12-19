@@ -72,7 +72,7 @@ describe('Category Model', () => {
         name: 'Test2',
         surname: 'User2',
         cognitoSub: 'test-sub-456',
-                isActive: true,
+        isActive: true,
       } as any);
 
       const category1 = await Category.createCategory({
@@ -113,7 +113,7 @@ describe('Category Model', () => {
         name: 'Test3',
         surname: 'User3',
         cognitoSub: 'test-sub-789',
-                isActive: true,
+        isActive: true,
       } as any);
 
       await Category.createCategory({ name: 'Fiction', userId: testUserId });

@@ -53,7 +53,7 @@ describe('BookService (integration)', () => {
         authorIds: [author.id],
         categoryIds: [category.id],
       },
-      { userId: user.id, role: 'user' }
+      { userId: user.id, role: 'user', provider: 'cognito' }
     );
 
     expect(created.title).toBe('Service Book');
@@ -65,7 +65,7 @@ describe('BookService (integration)', () => {
     );
     expect(updated.title).toBe('Updated Title');
 
-    await service.deleteBook(created.id!, { userId: user.id, role: 'user' });
+    await service.deleteBook(created.id!, { userId: user.id, role: 'user', provider: 'cognito' });
     const afterDelete = await repository.findById(created.id!);
     expect(afterDelete).toBeNull();
   });

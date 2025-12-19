@@ -72,7 +72,7 @@ describe('Author Model', () => {
         name: 'Test2',
         surname: 'User2',
         cognitoSub: 'test-sub-456',
-                isActive: true,
+        isActive: true,
       } as any);
 
       const author1 = await Author.createAuthor({
@@ -117,7 +117,7 @@ describe('Author Model', () => {
         name: 'Test3',
         surname: 'User3',
         cognitoSub: 'test-sub-789',
-                isActive: true,
+        isActive: true,
       } as any);
 
       await Author.createAuthor({ name: 'John', surname: 'Doe', userId: testUserId });

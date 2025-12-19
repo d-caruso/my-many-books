@@ -48,7 +48,7 @@ describe('i18n Integration Tests', () => {
   });
 
   describe('Books API - Language Detection', () => {
-    const mockUser = { userId: 1, email: 'test@example.com', role: 'user' };
+    const mockUser = { id: 1, email: 'test@example.com', role: 'user', provider: 'cognito' };
 
     it('should return error in English when Accept-Language is en', async () => {
       const request: UniversalRequest = {
@@ -80,7 +80,7 @@ describe('i18n Integration Tests', () => {
   });
 
   describe('Authors API - Language Detection', () => {
-    const mockUser = { userId: 1, email: 'test@example.com', role: 'user' };
+    const mockUser = { id: 1, email: 'test@example.com', role: 'user', provider: 'cognito' };
 
     it('should return error in English for non-existent author', async () => {
       const request: UniversalRequest = {
@@ -110,7 +110,7 @@ describe('i18n Integration Tests', () => {
   });
 
   describe('Default Language Handling', () => {
-    const mockUser = { userId: 1, email: 'test@example.com', role: 'user' };
+    const mockUser = { id: 1, email: 'test@example.com', role: 'user', provider: 'cognito' };
 
     it('should default to English when no Accept-Language header is provided', async () => {
       const request: UniversalRequest = {
