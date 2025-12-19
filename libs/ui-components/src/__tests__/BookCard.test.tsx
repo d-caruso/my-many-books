@@ -30,6 +30,36 @@ describe('BookCard', () => {
     expect(onPress).toHaveBeenCalledWith(book);
   });
 
+  test('action buttons call handlers and do not trigger onPress', () => {
+    const onPress = jest.fn();
+    const onEdit = jest.fn();
+    const onDelete = jest.fn();
+    const onStatusChange = jest.fn();
+
+    const { getByTestId } = render(
+      <BookCard
+        book={book}
+        testID="card"
+        onPress={onPress}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onStatusChange={onStatusChange}
+      />
+    );
+
+    fireEvent.click(getByTestId('card-edit'));
+    expect(onEdit).toHaveBeenCalledWith(book);
+    expect(onPress).not.toHaveBeenCalled();
+
+    fireEvent.click(getByTestId('card-delete'));
+    expect(onDelete).toHaveBeenCalledWith(book.id);
+    expect(onPress).not.toHaveBeenCalled();
+
+    fireEvent.click(getByTestId('card-status-paused'));
+    expect(onStatusChange).toHaveBeenCalledWith(book.id, 'paused');
+    expect(onPress).not.toHaveBeenCalled();
+  });
+
   test('compact mode truncates title and authors', () => {
     const { container, queryByText } = render(<BookCard book={book} compact />);
 
