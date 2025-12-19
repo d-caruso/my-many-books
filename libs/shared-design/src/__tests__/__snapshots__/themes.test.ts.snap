@@ -1,0 +1,160 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`themes snapshot 1`] = `
+{
+  "bookish": {
+    "colors": {
+      "accent": "#D2691E",
+      "background": "#FDF6E3",
+      "primary": "#8B4513",
+      "secondary": "#F5E6D3",
+      "semantic": {
+        "error": "#C62828",
+        "info": "#1565C0",
+        "success": "#2E7D32",
+        "warning": "#F57C00",
+      },
+      "surface": "#FFFEF7",
+      "text": {
+        "muted": "#8D6E63",
+        "primary": "#3C2415",
+        "secondary": "#5D4037",
+      },
+    },
+    "displayName": "Bookish Brown",
+    "name": "bookish",
+  },
+  "dark": {
+    "colors": {
+      "accent": "#93C5FD",
+      "background": "#111827",
+      "primary": "#60A5FA",
+      "secondary": "#1F2937",
+      "semantic": {
+        "error": "#F87171",
+        "info": "#60A5FA",
+        "success": "#34D399",
+        "warning": "#FBBF24",
+      },
+      "surface": "#111827",
+      "text": {
+        "muted": "#6B7280",
+        "primary": "#F3F4F6",
+        "secondary": "#D1D5DB",
+      },
+    },
+    "displayName": "Dark Mode",
+    "name": "dark",
+  },
+  "default": {
+    "colors": {
+      "accent": "#2563EB",
+      "background": "#F9FAFB",
+      "primary": "#3B82F6",
+      "secondary": "#F3F4F6",
+      "semantic": {
+        "error": "#EF4444",
+        "info": "#3B82F6",
+        "success": "#10B981",
+        "warning": "#F59E0B",
+      },
+      "surface": "#FFFFFF",
+      "text": {
+        "muted": "#9CA3AF",
+        "primary": "#111827",
+        "secondary": "#4B5563",
+      },
+    },
+    "displayName": "Default",
+    "name": "default",
+  },
+  "forest": {
+    "colors": {
+      "accent": "#388E3C",
+      "background": "#F1F8E9",
+      "primary": "#2E7D32",
+      "secondary": "#E8F5E8",
+      "semantic": {
+        "error": "#F44336",
+        "info": "#2196F3",
+        "success": "#4CAF50",
+        "warning": "#FF9800",
+      },
+      "surface": "#FFFFFF",
+      "text": {
+        "muted": "#66BB6A",
+        "primary": "#1B5E20",
+        "secondary": "#2E7D32",
+      },
+    },
+    "displayName": "Forest Green",
+    "name": "forest",
+  },
+  "lavender": {
+    "colors": {
+      "accent": "#8E24AA",
+      "background": "#FCE4EC",
+      "primary": "#7B1FA2",
+      "secondary": "#F3E5F5",
+      "semantic": {
+        "error": "#F44336",
+        "info": "#2196F3",
+        "success": "#4CAF50",
+        "warning": "#FF9800",
+      },
+      "surface": "#FFFFFF",
+      "text": {
+        "muted": "#BA68C8",
+        "primary": "#4A148C",
+        "secondary": "#7B1FA2",
+      },
+    },
+    "displayName": "Lavender Purple",
+    "name": "lavender",
+  },
+  "ocean": {
+    "colors": {
+      "accent": "#0288D1",
+      "background": "#E3F2FD",
+      "primary": "#0277BD",
+      "secondary": "#E1F5FE",
+      "semantic": {
+        "error": "#F44336",
+        "info": "#2196F3",
+        "success": "#00BCD4",
+        "warning": "#FF9800",
+      },
+      "surface": "#FFFFFF",
+      "text": {
+        "muted": "#4FC3F7",
+        "primary": "#01579B",
+        "secondary": "#0277BD",
+      },
+    },
+    "displayName": "Ocean Blue",
+    "name": "ocean",
+  },
+  "sunset": {
+    "colors": {
+      "accent": "#F57C00",
+      "background": "#FFF8E1",
+      "primary": "#E65100",
+      "secondary": "#FFF3E0",
+      "semantic": {
+        "error": "#F44336",
+        "info": "#2196F3",
+        "success": "#4CAF50",
+        "warning": "#FF9800",
+      },
+      "surface": "#FFFFFF",
+      "text": {
+        "muted": "#FF9800",
+        "primary": "#BF360C",
+        "secondary": "#E65100",
+      },
+    },
+    "displayName": "Sunset Orange",
+    "name": "sunset",
+  },
+}
+`;
