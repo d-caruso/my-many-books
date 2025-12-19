@@ -3,7 +3,7 @@
  * Platform-agnostic form configurations with validation
  */
 
-import { FormConfig, FormField } from './types';
+import { FormConfig } from './types';
 import { FormValidator } from './FormValidator';
 
 // Book form schema
