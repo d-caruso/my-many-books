@@ -13,6 +13,7 @@ import {
   RouteParams,
   QueryParams
 } from './types';
+import { getRouteMetadata } from './routes';
 
 export class NavigationManager {
   private adapter: NavigationAdapter;
@@ -51,7 +52,8 @@ export class NavigationManager {
       path: this.buildPath(routeName, params),
       name: routeName,
       params,
-      query
+      query,
+      metadata: getRouteMetadata(routeName)
     };
 
     this.emit({ type: 'NAVIGATE', route, options });
