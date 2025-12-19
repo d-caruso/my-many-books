@@ -7,6 +7,7 @@ import { TYPES } from '../../../src/container/types';
 import { BookService } from '../../../src/services/book/BookService';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
 import { EVENTS } from '../../../src/services/hooks/events';
+import { UniversalRequest } from '../../../src/types';
 
 // Mock dependencies
 jest.mock('../../../src/models');
@@ -14,14 +15,6 @@ jest.mock('../../../src/services/isbnService');
 jest.mock('../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
 }));
-
-interface UniversalRequest {
-  body?: any;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-  headers?: { [key: string]: string | undefined };
-  user: { id: number; role?: string };
-}
 
 /**
  * Creates a mock object that simulates a Sequelize Model Instance,
@@ -133,7 +126,7 @@ describe('BookController', () => {
       expect(emitHookEventMock).toHaveBeenCalledWith(
         EVENTS.BOOK.CREATE.BEFORE,
         expect.objectContaining({
-          user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
+          user: { id: 1, role: 'user' },
           input: expect.objectContaining({ title: 'Test Book' }),
         })
       );
@@ -199,13 +192,14 @@ describe('BookController', () => {
         EVENTS.BOOK.UPDATE.BEFORE,
         expect.objectContaining({
           bookId: 5,
-          user: { id: 2, email: "test@example.com", role: 'user', provider: "cognito" },
+          user: { id: 2, role: 'user' },
         })
       );
     });
 
     it('emits book.delete.before before deleting', async () => {
       mockRequest.pathParameters = { id: '9' };
+      mockRequest.user = { id: 4, email: "test@example.com", role: 'user', provider: "cognito" };
       deleteBookSpy.mockResolvedValue(undefined);
 
       await bookController.deleteBook(mockRequest);
@@ -214,7 +208,7 @@ describe('BookController', () => {
         EVENTS.BOOK.DELETE.BEFORE,
         expect.objectContaining({
           bookId: 9,
-          user: { id: 4, email: "test@example.com", role: 'user', provider: "cognito" },
+          user: { id: 4, role: 'user' },
         })
       );
     });
@@ -306,7 +300,7 @@ describe('BookController', () => {
     });
 
     it('should call listBooks with user context', async () => {
-      mockRequest.user = { id: 123 };
+      mockRequest.user = { id: 123, email: 'test@example.com', role: 'user', provider: 'cognito' };
       (Book.findAndCountAll as jest.Mock).mockResolvedValue({
         count: 0,
         rows: [],

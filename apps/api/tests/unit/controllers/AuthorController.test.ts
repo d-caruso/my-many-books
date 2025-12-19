@@ -6,18 +6,11 @@ import { AuthorService } from '../../../src/services/author/AuthorService';
 import { AuthorRepository } from '../../../src/repositories/author/AuthorRepository';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
 import { EVENTS } from '../../../src/services/hooks/events';
+import { UniversalRequest } from '../../../src/types';
 
 jest.mock('../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
 }));
-
-interface UniversalRequest {
-  body?: any;
-  queryStringParameters?: Record<string, string | undefined>;
-  pathParameters?: Record<string, string | undefined>;
-  headers?: Record<string, string | undefined>;
-  user: { id: number; role?: string };
-}
 
 jest.mock('../../../src/models');
 
@@ -90,7 +83,7 @@ describe('AuthorController', () => {
       expect(emitHookEventMock).toHaveBeenCalledWith(
         EVENTS.AUTHOR.CREATE.BEFORE,
         expect.objectContaining({
-          user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
+          user: { id: 1, role: 'user' },
           input: expect.objectContaining(payload),
         })
       );
@@ -122,7 +115,7 @@ describe('AuthorController', () => {
         EVENTS.AUTHOR.UPDATE.BEFORE,
         expect.objectContaining({
           authorId: 1,
-          user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
+          user: { id: 1, role: 'user' },
           input: expect.objectContaining({ nationality: 'US' }),
         })
       );
@@ -146,7 +139,7 @@ describe('AuthorController', () => {
         EVENTS.AUTHOR.DELETE.BEFORE,
         expect.objectContaining({
           authorId: 2,
-          user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
+          user: { id: 1, role: 'user' },
         })
       );
     });
