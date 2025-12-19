@@ -3,7 +3,7 @@
  * Can be used with React web and React Native
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   FormConfig,
   FormState,
@@ -387,7 +387,7 @@ export function useFormAutoSave(
 } {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [saveTimeout, setSaveTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const saveNow = useCallback(async () => {
     setIsSaving(true);
@@ -405,26 +405,20 @@ export function useFormAutoSave(
     const unsubscribe = formManager.addEventListener((event: FormEvent) => {
       if (event.type === 'FIELD_CHANGE') {
         // Clear existing timeout
-        if (saveTimeout) {
-          clearTimeout(saveTimeout);
-        }
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         
         // Set new timeout
-        const newTimeout = setTimeout(() => {
+        saveTimeoutRef.current = setTimeout(() => {
           saveNow();
         }, delay);
-        
-        setSaveTimeout(newTimeout);
       }
     });
 
     return () => {
       unsubscribe();
-      if (saveTimeout) {
-        clearTimeout(saveTimeout);
-      }
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [formManager, saveNow, delay, saveTimeout]);
+  }, [formManager, saveNow, delay]);
 
   return {
     isSaving,
