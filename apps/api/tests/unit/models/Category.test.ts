@@ -46,11 +46,11 @@ describe('Category Model', () => {
     // Create test user
     const user = await User.create({
       email: 'test@example.com',
-        role: 'user',
+      role: 'user',
       name: 'Test',
       surname: 'User',
       cognitoSub: 'test-sub-123',
-            isActive: true,
+      isActive: true,
     } as any);
     testUserId = user.id;
   });
