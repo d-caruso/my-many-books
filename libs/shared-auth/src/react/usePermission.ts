@@ -4,8 +4,9 @@
 // ================================================================
 
 import { useMemo } from 'react';
+import { subject as caslSubject } from '@casl/ability';
 import { createAbilityFor } from '../authorization/caslProvider';
-import { Action, Resource } from '../authorization/types';
+import { Action, Resource, RESOURCES } from '../authorization/types';
 import { useAuth } from './AuthProvider';
 
 /**
@@ -31,7 +32,7 @@ import { useAuth } from './AuthProvider';
 export function usePermission(
   action: Action,
   resource: Resource,
-  subject?: { userId?: number }
+  ownership?: { userId?: number }
 ): boolean {
   const { user } = useAuth();
 
@@ -47,13 +48,12 @@ export function usePermission(
   }, [user]);
 
   // Check permission based on subject (for ownership checks)
-  // CASL requires the subject to have a __typename property matching the resource
-  if (subject && subject.userId !== undefined) {
-    const typedSubject = {
-      __typename: resource,
-      userId: subject.userId,
-    } as any;
-    return ability.can(action, typedSubject);
+  if (
+    ownership &&
+    ownership.userId !== undefined &&
+    (resource === RESOURCES.BOOK || resource === RESOURCES.AUTHOR || resource === RESOURCES.CATEGORY)
+  ) {
+    return ability.can(action, caslSubject(resource, { userId: ownership.userId }));
   }
 
   // Check general permission (no conditions)

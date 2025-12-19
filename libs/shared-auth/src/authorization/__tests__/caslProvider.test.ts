@@ -3,6 +3,7 @@
 // Unit Tests for CASL Authorization Provider
 // ================================================================
 
+import { subject } from '@casl/ability';
 import { createAbilityFor } from '../caslProvider';
 import { ACTIONS, RESOURCES } from '../types';
 
@@ -32,62 +33,62 @@ describe('CASL Authorization Provider', () => {
 
     it('should allow users to update their own books', () => {
       const ability = createAbilityFor(regularUser);
-      const ownBook = { userId: regularUser.id };
+      const ownBook = subject(RESOURCES.BOOK, { userId: regularUser.id });
 
-      expect(ability.can(ACTIONS.UPDATE, RESOURCES.BOOK, ownBook)).toBe(true);
+      expect(ability.can(ACTIONS.UPDATE, ownBook)).toBe(true);
     });
 
     it('should NOT allow users to update other users books', () => {
       const ability = createAbilityFor(regularUser);
-      const otherUsersBook = { userId: 999 };  // Different user
+      const otherUsersBook = subject(RESOURCES.BOOK, { userId: 999 });  // Different user
 
-      expect(ability.can(ACTIONS.UPDATE, RESOURCES.BOOK, otherUsersBook)).toBe(false);
+      expect(ability.can(ACTIONS.UPDATE, otherUsersBook)).toBe(false);
     });
 
     it('should allow users to delete their own books', () => {
       const ability = createAbilityFor(regularUser);
-      const ownBook = { userId: regularUser.id };
+      const ownBook = subject(RESOURCES.BOOK, { userId: regularUser.id });
 
-      expect(ability.can(ACTIONS.DELETE, RESOURCES.BOOK, ownBook)).toBe(true);
+      expect(ability.can(ACTIONS.DELETE, ownBook)).toBe(true);
     });
 
     it('should NOT allow users to delete other users books', () => {
       const ability = createAbilityFor(regularUser);
-      const otherUsersBook = { userId: 999 };
+      const otherUsersBook = subject(RESOURCES.BOOK, { userId: 999 });
 
-      expect(ability.can(ACTIONS.DELETE, RESOURCES.BOOK, otherUsersBook)).toBe(false);
+      expect(ability.can(ACTIONS.DELETE, otherUsersBook)).toBe(false);
     });
 
     it('should allow users to update their own authors', () => {
       const ability = createAbilityFor(regularUser);
-      const ownAuthor = { userId: regularUser.id };
+      const ownAuthor = subject(RESOURCES.AUTHOR, { userId: regularUser.id });
 
-      expect(ability.can(ACTIONS.UPDATE, RESOURCES.AUTHOR, ownAuthor)).toBe(true);
-      expect(ability.can(ACTIONS.DELETE, RESOURCES.AUTHOR, ownAuthor)).toBe(true);
+      expect(ability.can(ACTIONS.UPDATE, ownAuthor)).toBe(true);
+      expect(ability.can(ACTIONS.DELETE, ownAuthor)).toBe(true);
     });
 
     it('should NOT allow users to update other users authors', () => {
       const ability = createAbilityFor(regularUser);
-      const otherUsersAuthor = { userId: 999 };
+      const otherUsersAuthor = subject(RESOURCES.AUTHOR, { userId: 999 });
 
-      expect(ability.can(ACTIONS.UPDATE, RESOURCES.AUTHOR, otherUsersAuthor)).toBe(false);
-      expect(ability.can(ACTIONS.DELETE, RESOURCES.AUTHOR, otherUsersAuthor)).toBe(false);
+      expect(ability.can(ACTIONS.UPDATE, otherUsersAuthor)).toBe(false);
+      expect(ability.can(ACTIONS.DELETE, otherUsersAuthor)).toBe(false);
     });
 
     it('should allow users to update their own categories', () => {
       const ability = createAbilityFor(regularUser);
-      const ownCategory = { userId: regularUser.id };
+      const ownCategory = subject(RESOURCES.CATEGORY, { userId: regularUser.id });
 
-      expect(ability.can(ACTIONS.UPDATE, RESOURCES.CATEGORY, ownCategory)).toBe(true);
-      expect(ability.can(ACTIONS.DELETE, RESOURCES.CATEGORY, ownCategory)).toBe(true);
+      expect(ability.can(ACTIONS.UPDATE, ownCategory)).toBe(true);
+      expect(ability.can(ACTIONS.DELETE, ownCategory)).toBe(true);
     });
 
     it('should NOT allow users to update other users categories', () => {
       const ability = createAbilityFor(regularUser);
-      const otherUsersCategory = { userId: 999 };
+      const otherUsersCategory = subject(RESOURCES.CATEGORY, { userId: 999 });
 
-      expect(ability.can(ACTIONS.UPDATE, RESOURCES.CATEGORY, otherUsersCategory)).toBe(false);
-      expect(ability.can(ACTIONS.DELETE, RESOURCES.CATEGORY, otherUsersCategory)).toBe(false);
+      expect(ability.can(ACTIONS.UPDATE, otherUsersCategory)).toBe(false);
+      expect(ability.can(ACTIONS.DELETE, otherUsersCategory)).toBe(false);
     });
 
     it('should NOT allow users to manage all resources', () => {
@@ -98,16 +99,16 @@ describe('CASL Authorization Provider', () => {
 
     it('should allow users to read their own profile', () => {
       const ability = createAbilityFor(regularUser);
-      const ownProfile = { id: regularUser.id };
+      const ownProfile = subject(RESOURCES.USER, { id: regularUser.id });
 
-      expect(ability.can(ACTIONS.READ, RESOURCES.USER, ownProfile)).toBe(true);
+      expect(ability.can(ACTIONS.READ, ownProfile)).toBe(true);
     });
 
     it('should NOT allow users to read other users profiles', () => {
       const ability = createAbilityFor(regularUser);
-      const otherProfile = { id: 999 };
+      const otherProfile = subject(RESOURCES.USER, { id: 999 });
 
-      expect(ability.can(ACTIONS.READ, RESOURCES.USER, otherProfile)).toBe(false);
+      expect(ability.can(ACTIONS.READ, otherProfile)).toBe(false);
     });
   });
 
@@ -162,10 +163,10 @@ describe('CASL Authorization Provider', () => {
 
     it('should allow admin to update other users resources', () => {
       const ability = createAbilityFor(adminUser);
-      const otherUsersBook = { userId: 999 };
+      const otherUsersBook = subject(RESOURCES.BOOK, { userId: 999 });
 
-      expect(ability.can(ACTIONS.UPDATE, RESOURCES.BOOK, otherUsersBook)).toBe(true);
-      expect(ability.can(ACTIONS.DELETE, RESOURCES.BOOK, otherUsersBook)).toBe(true);
+      expect(ability.can(ACTIONS.UPDATE, otherUsersBook)).toBe(true);
+      expect(ability.can(ACTIONS.DELETE, otherUsersBook)).toBe(true);
     });
   });
 

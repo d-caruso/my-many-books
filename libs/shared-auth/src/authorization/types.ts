@@ -3,6 +3,8 @@
 // Authorization Action and Resource Types
 // ================================================================
 
+import type { ForcedSubject } from '@casl/ability';
+
 /**
  * Core authorization actions following CRUD pattern
  */
@@ -32,27 +34,15 @@ export const RESOURCES = {
 export type Resource = typeof RESOURCES[keyof typeof RESOURCES];
 
 /**
- * Subject types with their fields for CASL type inference
+ * Subject types with their fields for CASL type inference.
+ *
+ * We use CASL's `ForcedSubject` typing so callers can safely use
+ * `subject(RESOURCES.BOOK, {...})` in checks.
  */
-export interface Book {
-  __typename: 'Book';
-  userId: number;
-}
-
-export interface Author {
-  __typename: 'Author';
-  userId: number;
-}
-
-export interface Category {
-  __typename: 'Category';
-  userId: number;
-}
-
-export interface User {
-  __typename: 'User';
-  id: number;
-}
+export type Book = ForcedSubject<typeof RESOURCES.BOOK> & { userId: number };
+export type Author = ForcedSubject<typeof RESOURCES.AUTHOR> & { userId: number };
+export type Category = ForcedSubject<typeof RESOURCES.CATEGORY> & { userId: number };
+export type User = ForcedSubject<typeof RESOURCES.USER> & { id: number };
 
 /**
  * Subject type for CASL - can be a string or an object with resource type
