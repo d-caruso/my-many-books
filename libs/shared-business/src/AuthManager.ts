@@ -36,8 +36,10 @@ export class AuthManager {
    * Login with validation
    */
   async login(email: string, password: string): Promise<{ user: AuthUser; token: string }> {
+    const cleanedEmail = email.toLowerCase().trim();
+
     // Validate email format
-    if (!isValidEmail(email)) {
+    if (!isValidEmail(cleanedEmail)) {
       throw new Error('Invalid email format');
     }
 
@@ -47,7 +49,7 @@ export class AuthManager {
     }
 
     try {
-      const result = await this.api.login(email.toLowerCase().trim(), password);
+      const result = await this.api.login(cleanedEmail, password);
       
       // Store token
       await this.tokenStorage.setToken(result.token);
@@ -62,8 +64,10 @@ export class AuthManager {
    * Register with validation
    */
   async register(userData: RegisterData): Promise<{ user: AuthUser; token: string }> {
+    const cleanedEmail = userData.email.toLowerCase().trim();
+
     // Validate email
-    if (!isValidEmail(userData.email)) {
+    if (!isValidEmail(cleanedEmail)) {
       throw new Error('Invalid email format');
     }
 
@@ -88,7 +92,7 @@ export class AuthManager {
 
     try {
       const cleanedData: RegisterData = {
-        email: userData.email.toLowerCase().trim(),
+        email: cleanedEmail,
         password: userData.password,
         name: userData.name.trim(),
         surname: userData.surname.trim(),
