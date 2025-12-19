@@ -27,10 +27,10 @@ export abstract class BaseAdapter implements LogStorage {
 
   constructor(config: Partial<StorageAdapterConfig>) {
     this.config = {
-      name: config.name || 'unknown',
+      name: config.name ?? 'unknown',
       enabled: config.enabled !== false,
-      timeout: config.timeout || 5000,
-      retries: config.retries || 3,
+      timeout: config.timeout ?? 5000,
+      retries: config.retries ?? 3,
     };
   }
 

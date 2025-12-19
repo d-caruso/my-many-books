@@ -49,6 +49,8 @@ describe('LogManager', () => {
   let mockAdapter1: MockAdapter;
   let mockAdapter2: MockAdapter;
   let logManager: LogManager;
+  let consoleErrorSpy: jest.SpyInstance;
+  let consoleLogSpy: jest.SpyInstance;
 
   const createMockLog = (message: string): LogEntry => ({
     timestamp: new Date(),
@@ -60,6 +62,9 @@ describe('LogManager', () => {
   });
 
   beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
     mockAdapter1 = new MockAdapter('adapter1');
     mockAdapter2 = new MockAdapter('adapter2');
     logManager = new LogManager([mockAdapter1, mockAdapter2], {
@@ -67,6 +72,11 @@ describe('LogManager', () => {
       circuitBreakerThreshold: 3,
       verboseErrors: false,
     });
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+    consoleLogSpy.mockRestore();
   });
 
   describe('write', () => {
@@ -113,6 +123,39 @@ describe('LogManager', () => {
 
       expect(mockAdapter1.writeCalls).toHaveLength(0);
       expect(mockAdapter2.writeCalls).toHaveLength(0);
+    });
+
+    it('uses default options when none are provided', async () => {
+      const lm = new LogManager([mockAdapter1]);
+      const log = createMockLog('default options');
+
+      await lm.write(log);
+      expect(mockAdapter1.writeCalls).toHaveLength(1);
+    });
+
+    it('handles non-Error rejections as Unknown error', async () => {
+      const badAdapter: LogStorage = {
+        name: 'bad',
+        write: jest.fn(async () => {
+          throw 'nope';
+        }) as any,
+        flush: jest.fn(async () => {}) as any,
+        healthCheck: jest.fn(async () => true) as any,
+      };
+
+      const lm = new LogManager([badAdapter], {
+        defaultTimeout: 1000,
+        circuitBreakerThreshold: 10,
+        verboseErrors: true,
+      });
+
+      await lm.write(createMockLog('x'));
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[LogManager]',
+        'Adapter bad failed:',
+        'Adapter bad write failed: Unknown error'
+      );
     });
   });
 
@@ -177,6 +220,93 @@ describe('LogManager', () => {
       expect(mockAdapter2.writeCalls).toHaveLength(4); // 3 from failures + 1 from final write
     });
 
+    it('records failures for the correct adapter when some are filtered out', async () => {
+      const lm = new LogManager([mockAdapter1, mockAdapter2], {
+        defaultTimeout: 1000,
+        circuitBreakerThreshold: 1,
+        verboseErrors: false,
+      });
+
+      const log = createMockLog('test message');
+      mockAdapter1.shouldFail = true;
+
+      await lm.write(log);
+      expect(lm.getCircuitBreakerStatus().get('adapter1')?.isOpen).toBe(true);
+
+      mockAdapter2.shouldFail = true;
+      await lm.write(log);
+
+      const status = lm.getCircuitBreakerStatus();
+      expect(status.get('adapter2')?.isOpen).toBe(true);
+      expect(status.get('adapter2')?.failures).toBeGreaterThanOrEqual(1);
+    });
+
+    it('resets an open circuit breaker after the reset timeout', async () => {
+      const nowSpy = jest.spyOn(Date, 'now');
+      nowSpy.mockReturnValueOnce(1000); // recordFailure timestamp
+      nowSpy.mockReturnValueOnce(1011); // isCircuitBreakerOpen check (>= reset timeout)
+
+      const lm = new LogManager([mockAdapter1, mockAdapter2], {
+        defaultTimeout: 1000,
+        circuitBreakerThreshold: 1,
+        circuitBreakerResetTimeout: 10,
+        verboseErrors: false,
+      });
+
+      const log = createMockLog('test message');
+      mockAdapter1.shouldFail = true;
+      await lm.write(log);
+
+      mockAdapter1.reset();
+      mockAdapter1.shouldFail = false;
+      await lm.write(log);
+
+      const status = lm.getCircuitBreakerStatus();
+      expect(status.get('adapter1')?.isOpen).toBe(false);
+
+      nowSpy.mockRestore();
+    });
+
+    it('logs verbose errors when enabled', async () => {
+      const lm = new LogManager([mockAdapter1], {
+        defaultTimeout: 1000,
+        circuitBreakerThreshold: 10,
+        verboseErrors: true,
+      });
+
+      const log = createMockLog('test message');
+      mockAdapter1.shouldFail = true;
+      await lm.write(log);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[LogManager]',
+        'Adapter adapter1 failed:',
+        'Adapter adapter1 write failed: Mock adapter1 write failed'
+      );
+    });
+
+    it('logs when a circuit breaker closes after a successful write', async () => {
+      const lm = new LogManager([mockAdapter1], {
+        defaultTimeout: 1000,
+        circuitBreakerThreshold: 1,
+        circuitBreakerResetTimeout: 0,
+        verboseErrors: false,
+      });
+
+      const log = createMockLog('test message');
+      mockAdapter1.shouldFail = true;
+      await lm.write(log);
+
+      mockAdapter1.reset();
+      mockAdapter1.shouldFail = false;
+      await lm.write(log);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        '[LogManager]',
+        'Circuit breaker closed for adapter adapter1'
+      );
+    });
+
     it('should reset circuit breaker on successful write', async () => {
       mockAdapter1.shouldFail = true;
       const log = createMockLog('test message');
@@ -212,6 +342,16 @@ describe('LogManager', () => {
 
       const health = await logManager.healthCheck();
 
+      expect(health.get('adapter1')).toBe(false);
+      expect(health.get('adapter2')).toBe(true);
+    });
+
+    it('marks adapter as unhealthy when healthCheck throws', async () => {
+      mockAdapter1.healthCheck = jest.fn(async () => {
+        throw new Error('boom');
+      });
+
+      const health = await logManager.healthCheck();
       expect(health.get('adapter1')).toBe(false);
       expect(health.get('adapter2')).toBe(true);
     });

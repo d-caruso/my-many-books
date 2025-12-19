@@ -106,16 +106,18 @@ export class LogManager {
   async writeMany(logs: LogEntry[]): Promise<void> {
     if (logs.length === 0) return;
 
+    const activeAdapters = this.adapters.filter(
+      (adapter) => !this.isCircuitBreakerOpen(adapter.name)
+    );
+
     // Fan out to all adapters in parallel
     const results = await Promise.allSettled(
-      this.adapters
-        .filter((adapter) => !this.isCircuitBreakerOpen(adapter.name))
-        .map((adapter) => this.writeWithTimeout(adapter, logs))
+      activeAdapters.map((adapter) => this.writeWithTimeout(adapter, logs))
     );
 
     // Process results - log failures but don't throw
     results.forEach((result, idx) => {
-      const adapter = this.adapters[idx];
+      const adapter = activeAdapters[idx];
       if (!adapter) return;
 
       if (result.status === 'rejected') {
@@ -200,15 +202,22 @@ export class LogManager {
    * Execute a promise with timeout
    */
   private withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-    return Promise.race([
-      promise,
-      new Promise<T>((_, reject) =>
-        setTimeout(
-          () => reject(new Error(`Operation timed out after ${timeoutMs}ms`)),
-          timeoutMs
-        )
-      ),
-    ]);
+    return new Promise<T>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error(`Operation timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+
+      promise.then(
+        (value) => {
+          clearTimeout(timeoutId);
+          resolve(value);
+        },
+        (error) => {
+          clearTimeout(timeoutId);
+          reject(error);
+        }
+      );
+    });
   }
 
   /**
@@ -223,9 +232,7 @@ export class LogManager {
     const timeSinceLastFailure = now - (state.lastFailureTime ?? 0);
 
     if (timeSinceLastFailure >= this.options.circuitBreakerResetTimeout) {
-      // Attempt to reset
-      state.isOpen = false;
-      state.failures = 0;
+      // Allow a trial request through; `recordSuccess` will close the circuit on success.
       return false;
     }
 
