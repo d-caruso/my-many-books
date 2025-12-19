@@ -43,7 +43,7 @@ export function useForm(
 
   // Update state when form events occur
   useEffect(() => {
-    const unsubscribe = formManager.addEventListener((event: FormEvent) => {
+    const unsubscribe = formManager.addEventListener(() => {
       setState(formManager.getState());
     });
 
