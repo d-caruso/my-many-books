@@ -10,5 +10,6 @@
     "src/**/*.spec.ts",
     "src/**/__tests__/**/*.ts",
     "src/**/__mocks__/**/*.ts"
-  ]
+  ],
+  "exclude": ["jest.config.ts"]
 }

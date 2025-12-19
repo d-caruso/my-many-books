@@ -38,12 +38,12 @@ export class BaseApiClient {
   ): Promise<T> {
     const url = `${this.config.baseURL}${endpoint}`;
     const requestConfig: RequestConfig = {
-      timeout: this.config.timeout || 10000,
+      timeout: config?.timeout ?? this.config.timeout ?? 10000,
+      params: config?.params,
       headers: {
         'Content-Type': 'application/json',
-        ...config?.headers,
+        ...(config?.headers ?? {}),
       },
-      ...config,
     };
 
     // Add auth token if available
@@ -92,7 +92,7 @@ export class BaseApiClient {
   }
 
   protected delete<T>(endpoint: string, config?: RequestConfig): Promise<T> {
-    return this.request<T>('DELETE', endpoint, config);
+    return this.request<T>('DELETE', endpoint, undefined, config);
   }
 
   public setBaseURL(baseURL: string): void {

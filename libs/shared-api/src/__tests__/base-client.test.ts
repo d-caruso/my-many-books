@@ -169,7 +169,7 @@ describe('BaseApiClient', () => {
     });
 
     it('should delegate GET requests correctly', async () => {
-      const result = await (baseClient as any).get<any>('/users');
+      const result = await (baseClient as any).get('/users');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('GET');
@@ -179,7 +179,7 @@ describe('BaseApiClient', () => {
 
     it('should delegate POST requests with data correctly', async () => {
       const postData = { name: 'John', email: 'john@example.com' };
-      const result = await (baseClient as any).post<any>('/users', postData);
+      const result = await (baseClient as any).post('/users', postData);
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('POST');
@@ -190,7 +190,7 @@ describe('BaseApiClient', () => {
 
     it('should delegate PUT requests with data correctly', async () => {
       const putData = { name: 'John Updated' };
-      const result = await (baseClient as any).put<any>('/users/1', putData);
+      const result = await (baseClient as any).put('/users/1', putData);
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('PUT');
@@ -201,7 +201,7 @@ describe('BaseApiClient', () => {
 
     it('should delegate PATCH requests with data correctly', async () => {
       const patchData = { email: 'newemail@example.com' };
-      const result = await (baseClient as any).patch<any>('/users/1', patchData);
+      const result = await (baseClient as any).patch('/users/1', patchData);
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('PATCH');
@@ -211,7 +211,7 @@ describe('BaseApiClient', () => {
     });
 
     it('should delegate DELETE requests correctly', async () => {
-      const result = await (baseClient as any).delete<any>('/users/1');
+      const result = await (baseClient as any).delete('/users/1');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('DELETE');

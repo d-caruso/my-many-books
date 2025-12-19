@@ -11,10 +11,10 @@ describe('AuthorApi', () => {
     id: 1,
     name: 'John',
     surname: 'Doe',
-    biography: 'A prolific author',
+    nationality: null,
     userId: 1,
-    createdAt: '2024-01-01T00:00:00.000Z',
-    updatedAt: '2024-01-01T00:00:00.000Z',
+    creationDate: '2024-01-01T00:00:00.000Z',
+    updateDate: '2024-01-01T00:00:00.000Z',
   };
 
   const mockAuthors: Author[] = [
@@ -23,10 +23,10 @@ describe('AuthorApi', () => {
       id: 2,
       name: 'Jane',
       surname: 'Smith',
-      biography: 'Another great author',
+      nationality: 'American',
       userId: 1,
-      createdAt: '2024-01-02T00:00:00.000Z',
-      updatedAt: '2024-01-02T00:00:00.000Z',
+      creationDate: '2024-01-02T00:00:00.000Z',
+      updateDate: '2024-01-02T00:00:00.000Z',
     },
   ];
 
@@ -159,10 +159,10 @@ describe('AuthorApi', () => {
   });
 
   describe('createAuthor', () => {
-    const newAuthorData: Omit<Author, 'id' | 'createdAt' | 'updatedAt'> = {
+    const newAuthorData: Omit<Author, 'id' | 'creationDate' | 'updateDate'> = {
       name: 'New',
       surname: 'Author',
-      biography: 'A new author biography',
+      nationality: 'Canadian',
       userId: 1,
     };
 
@@ -182,13 +182,13 @@ describe('AuthorApi', () => {
     });
 
     it('should create author with minimal required fields', async () => {
-      const minimalData: Omit<Author, 'id' | 'createdAt' | 'updatedAt'> = {
+      const minimalData: Omit<Author, 'id' | 'creationDate' | 'updateDate'> = {
         name: 'John',
         surname: 'Doe',
         userId: 1,
       };
       mockHttpClient.setResponse('/authors', {
-        data: { ...mockAuthor, biography: undefined },
+        data: { ...mockAuthor, nationality: undefined },
         status: 201,
       });
 
@@ -228,9 +228,9 @@ describe('AuthorApi', () => {
   });
 
   describe('updateAuthor', () => {
-    const updateData: Partial<Omit<Author, 'id' | 'createdAt' | 'updatedAt'>> = {
+    const updateData: Partial<Omit<Author, 'id' | 'creationDate' | 'updateDate'>> = {
       name: 'Updated',
-      biography: 'Updated biography',
+      nationality: 'Italian',
     };
 
     it('should update an author with PUT method', async () => {
@@ -243,7 +243,7 @@ describe('AuthorApi', () => {
       const result = await authorApi.updateAuthor(1, updateData);
 
       expect(result.name).toBe('Updated');
-      expect(result.biography).toBe('Updated biography');
+      expect(result.nationality).toBe('Italian');
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('PUT');
       expect(lastRequest?.url).toContain('/authors/1');

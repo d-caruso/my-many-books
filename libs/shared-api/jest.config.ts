@@ -2,6 +2,7 @@ export default {
   displayName: 'shared-api',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
+  setupFilesAfterEnv: [],
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
