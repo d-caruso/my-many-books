@@ -202,7 +202,7 @@ export function matchRoutePattern(path: string, appRoute: AppRoute): RouteMatch 
   }
   
   const params: RouteParams = {};
-  let isExact = true;
+  const isExact = true;
   
   for (let i = 0; i < patternParts.length; i++) {
     const patternPart = patternParts[i];
@@ -297,6 +297,7 @@ export function getRouteMetadata(routeName: AppRouteName) {
 
 // Breadcrumb generation
 export function generateBreadcrumb(route: Route, params?: RouteParams): string[] {
+  void params;
   const breadcrumbs: string[] = [];
   
   // Always start with Home
