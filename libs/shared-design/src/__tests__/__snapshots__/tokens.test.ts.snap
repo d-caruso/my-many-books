@@ -1,0 +1,94 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`designTokens snapshots colors snapshot 1`] = `
+{
+  "neutral": {
+    "100": "#F3F4F6",
+    "200": "#E5E7EB",
+    "300": "#D1D5DB",
+    "400": "#9CA3AF",
+    "50": "#F9FAFB",
+    "500": "#6B7280",
+    "600": "#4B5563",
+    "700": "#374151",
+    "800": "#1F2937",
+    "900": "#111827",
+  },
+  "primary": {
+    "100": "#DBEAFE",
+    "200": "#BFDBFE",
+    "300": "#93C5FD",
+    "400": "#60A5FA",
+    "50": "#EFF6FF",
+    "500": "#3B82F6",
+    "600": "#2563EB",
+    "700": "#1D4ED8",
+    "800": "#1E40AF",
+    "900": "#1E3A8A",
+  },
+  "semantic": {
+    "error": "#EF4444",
+    "info": "#3B82F6",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+  },
+  "status": {
+    "default": "#6B7280",
+    "finished": "#10B981",
+    "in-progress": "#3B82F6",
+    "paused": "#F59E0B",
+  },
+}
+`;
+
+exports[`designTokens snapshots spacing snapshot 1`] = `
+{
+  "0": 0,
+  "1": 4,
+  "10": 40,
+  "12": 48,
+  "16": 64,
+  "2": 8,
+  "20": 80,
+  "24": 96,
+  "3": 12,
+  "32": 128,
+  "4": 16,
+  "5": 20,
+  "6": 24,
+  "8": 32,
+}
+`;
+
+exports[`designTokens snapshots typography snapshot 1`] = `
+{
+  "fontFamily": {
+    "heading": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+    "mono": "JetBrains Mono, Consolas, monospace",
+    "primary": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+  },
+  "fontSize": {
+    "2xl": 24,
+    "3xl": 30,
+    "4xl": 36,
+    "5xl": 48,
+    "base": 16,
+    "lg": 18,
+    "sm": 14,
+    "xl": 20,
+    "xs": 12,
+  },
+  "fontWeight": {
+    "bold": 700,
+    "light": 300,
+    "medium": 500,
+    "normal": 400,
+    "semibold": 600,
+  },
+  "lineHeight": {
+    "normal": 1.5,
+    "relaxed": 1.6,
+    "tight": 1.2,
+  },
+}
+`;
