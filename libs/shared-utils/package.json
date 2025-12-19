@@ -1,5 +1,10 @@
 {
   "name": "@my-many-books/shared-utils",
   "version": "0.1.0",
-  "type": "commonjs"
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc --project tsconfig.lib.json",
+    "test": "jest --config jest.config.ts",
+    "lint": "eslint src/**/*.ts"
+  }
 }
