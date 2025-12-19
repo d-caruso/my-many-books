@@ -40,4 +40,25 @@ describe('useAsyncOperation', () => {
     expect(result.current.data).toBe('ok');
     expect(result.current.error).toBeNull();
   });
+
+  it('captures error message from response.data.message and returns null', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const asyncFn = jest.fn<Promise<string>, []>(() =>
+      Promise.reject({ response: { data: { message: 'boom' } } })
+    );
+
+    const { result } = renderHook(() => useAsyncOperation(asyncFn));
+
+    await act(async () => {
+      await result.current.execute();
+    });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.data).toBeNull();
+    expect(result.current.error).toBe('boom');
+    expect(consoleSpy).toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
+  });
 });
