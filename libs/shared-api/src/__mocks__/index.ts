@@ -10,24 +10,42 @@ export const createMockApiClient = () => ({
     getBook: jest.fn(),
     createBook: jest.fn(),
     updateBook: jest.fn(),
+    patchBook: jest.fn(),
     deleteBook: jest.fn(),
     searchBooks: jest.fn(),
-    searchByIsbn: jest.fn(),
+    searchByISBN: jest.fn(),
+    updateBookStatus: jest.fn(),
   },
   categories: {
     getCategories: jest.fn(),
     getCategory: jest.fn(),
     createCategory: jest.fn(),
+    updateCategory: jest.fn(),
+    deleteCategory: jest.fn(),
   },
   authors: {
     getAuthors: jest.fn(),
     getAuthor: jest.fn(),
     createAuthor: jest.fn(),
+    updateAuthor: jest.fn(),
+    deleteAuthor: jest.fn(),
     searchAuthors: jest.fn(),
   },
   users: {
     getCurrentUser: jest.fn(),
     updateProfile: jest.fn(),
+    deleteAccount: jest.fn(),
+    login: jest.fn(),
+    register: jest.fn(),
+    logout: jest.fn(),
+    refreshToken: jest.fn(),
+  },
+  settings: {
+    getSettings: jest.fn(),
+    getSetting: jest.fn(),
+    getAllSettingsAdmin: jest.fn(),
+    updateSetting: jest.fn(),
+    toggleActive: jest.fn(),
   },
 });
 
@@ -40,25 +58,12 @@ export const BookApi = jest.fn();
 export const AuthorApi = jest.fn();
 export const CategoryApi = jest.fn();
 export const UserApi = jest.fn();
+export const SettingsApi = jest.fn();
 export const BaseApiClient = jest.fn();
 
-// Export mock types (these will be ignored by Jest but needed for TypeScript)
-export interface HttpClient {
-  get<T>(url: string, config?: any): Promise<T>;
-  post<T>(url: string, data?: any, config?: any): Promise<T>;
-  put<T>(url: string, data?: any, config?: any): Promise<T>;
-  delete<T>(url: string, config?: any): Promise<T>;
-}
-
-export interface RequestConfig {
-  headers?: Record<string, string>;
-  timeout?: number;
-  params?: Record<string, any>;
-}
-
-export interface ApiClientConfig {
-  baseURL: string;
-  timeout?: number;
-  getAuthToken?: () => string | null;
-  onUnauthorized?: () => void;
-}
+// Re-export types from source (avoid duplication)
+export type {
+  HttpClient,
+  RequestConfig,
+  ApiClientConfig,
+} from '../base-client';
