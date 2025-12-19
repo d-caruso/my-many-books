@@ -4,7 +4,7 @@
  * (web with HTML/CSS, mobile with React Native) should extend this.
  */
 
-import React from 'react';
+import * as React from 'react';
 import { ButtonProps } from './Button.types';
 import { buttonStyles } from './Button.styles';
 

@@ -4,7 +4,7 @@
  * Platform-specific rendering should be implemented separately.
  */
 
-import React from 'react';
+import * as React from 'react';
 import { BookCardProps } from './BookCard.types';
 import { formatBookCardData, getStatusColor, getStatusLabel, truncateText } from './BookCard.logic';
 

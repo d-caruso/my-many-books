@@ -2,7 +2,7 @@
  * Platform-agnostic TextInput component
  */
 
-import React from 'react';
+import * as React from 'react';
 import { TextInputProps } from './TextInput.types';
 
 export const TextInput: React.FC<TextInputProps> = ({
