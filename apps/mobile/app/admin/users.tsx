@@ -6,11 +6,12 @@ import { adminAPI } from '@/services/api';
 
 interface User {
   id: number;
-  fullName: string;
+  name: string;
+  surname: string;
   email: string;
   role: string;
   isActive: boolean;
-  createdAt: string;
+  creationDate: string;
 }
 
 export default function UserManagement() {
@@ -85,17 +86,17 @@ export default function UserManagement() {
               style={styles.userCard}
               accessible={true}
               accessibilityLabel={t('accessibility:user_card_label', '{{name}}, {{email}}, {{role}} role, {{status}}, joined {{date}}', {
-                name: user.fullName,
+                name: [user.name, user.surname].filter(Boolean).join(' '),
                 email: user.email,
                 role: user.role,
                 status: user.isActive ? t('common:active', 'Active') : t('common:inactive', 'Inactive'),
-                date: new Date(user.createdAt).toLocaleDateString()
+                date: new Date(user.creationDate).toLocaleDateString()
               })}
               accessibilityRole="summary"
             >
               <Card.Content>
                 <View style={styles.userHeader}>
-                  <Text variant="titleMedium">{user.fullName}</Text>
+                  <Text variant="titleMedium">{user.name} {user.surname}</Text>
                   <Chip
                     mode="flat"
                     style={user.role === 'admin' ? styles.adminChip : styles.userChip}
@@ -116,7 +117,7 @@ export default function UserManagement() {
                     {user.isActive ? t('common:active', 'Active') : t('common:inactive', 'Inactive')}
                   </Chip>
                   <Text variant="bodySmall">
-                    {new Date(user.createdAt).toLocaleDateString()}
+                    {new Date(user.creationDate).toLocaleDateString()}
                   </Text>
                 </View>
               </Card.Content>

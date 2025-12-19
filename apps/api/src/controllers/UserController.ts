@@ -28,15 +28,14 @@ const toBookView = (book: BookEntity) => ({
       id: author.id,
       name: author.name,
       surname: author.surname,
-      fullName: [author.name, author.surname].filter(Boolean).join(' ').trim(),
     })) || [],
   categories:
     book.categories?.map(category => ({
       id: category.id,
       name: category.name,
     })) || [],
-  createdAt: book.creationDate,
-  updatedAt: book.updateDate,
+  creationDate: book.creationDate,
+  updateDate: book.updateDate,
 });
 
 @injectable()

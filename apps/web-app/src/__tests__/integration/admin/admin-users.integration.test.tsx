@@ -84,7 +84,7 @@ vi.mock('@mui/x-data-grid', () => ({
       <div data-testid="data-grid">
         {props.rows.map((row: any) => (
           <div key={row.id} data-testid={`user-row-${row.id}`}>
-            <span>{row.fullName}</span>
+            <span>{row.name} {row.surname}</span>
             <span>{row.email}</span>
             <span>{row.role}</span>
           </div>
@@ -98,27 +98,30 @@ describe('Admin User Management Integration', () => {
   const mockUsers = [
     {
       id: 1,
-      fullName: 'John Doe',
+      name: 'John',
+      surname: 'Doe',
       email: 'john@example.com',
       role: 'user',
       isActive: true,
-      createdAt: '2025-01-01T00:00:00Z',
+      creationDate: '2025-01-01T00:00:00Z',
     },
     {
       id: 2,
-      fullName: 'Jane Smith',
+      name: 'Jane',
+      surname: 'Smith',
       email: 'jane@example.com',
       role: 'admin',
       isActive: true,
-      createdAt: '2025-01-02T00:00:00Z',
+      creationDate: '2025-01-02T00:00:00Z',
     },
     {
       id: 3,
-      fullName: 'Bob Wilson',
+      name: 'Bob',
+      surname: 'Wilson',
       email: 'bob@example.com',
       role: 'user',
       isActive: false,
-      createdAt: '2025-01-03T00:00:00Z',
+      creationDate: '2025-01-03T00:00:00Z',
     },
   ];
 
@@ -211,11 +214,12 @@ describe('Admin User Management Integration', () => {
   test('handles pagination correctly', async () => {
     const largeMockUsers = Array.from({ length: 15 }, (_, i) => ({
       id: i + 10,
-      fullName: `User ${i}`,
+      name: `User`,
+      surname: String(i),
       email: `user${i}@example.com`,
       role: 'user',
       isActive: true,
-      createdAt: new Date().toISOString(),
+      creationDate: new Date().toISOString(),
     }));
 
     mockGetAdminUsers.mockResolvedValueOnce({
@@ -246,7 +250,8 @@ describe('Admin User Management Integration', () => {
   test('handles update user success', async () => {
     mockUpdateAdminUser.mockResolvedValue({
       id: 1,
-      fullName: 'Updated Name',
+      name: 'Updated',
+      surname: 'Name',
       email: 'john@example.com',
       role: 'admin',
       isActive: true,

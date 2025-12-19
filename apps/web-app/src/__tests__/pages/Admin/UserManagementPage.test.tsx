@@ -86,8 +86,8 @@ describe('UserManagementPage', () => {
 
   test('fetches and displays users', async () => {
     const users = [
-      { id: 1, fullName: 'John Doe', email: 'john@example.com', role: 'user', isActive: true, createdAt: new Date().toISOString() },
-      { id: 2, fullName: 'Jane Doe', email: 'jane@example.com', role: 'admin', isActive: false, createdAt: new Date().toISOString() },
+      { id: 1, name: 'John', surname: 'Doe', email: 'john@example.com', role: 'user', isActive: true, creationDate: new Date().toISOString() },
+      { id: 2, name: 'Jane', surname: 'Doe', email: 'jane@example.com', role: 'admin', isActive: false, creationDate: new Date().toISOString() },
     ];
     mockApiService.getAdminUsers.mockResolvedValue({ users, pagination: { total: 2 } });
     renderWithProvider(<UserManagementPage />);

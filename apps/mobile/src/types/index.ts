@@ -15,8 +15,8 @@ export interface Book extends Omit<SharedBook, 'status' | 'creationDate' | 'upda
   publishedDate?: string;
   pageCount?: number;
   rating?: number;
-  createdAt: string;
-  updatedAt: string;
+  creationDate: string;
+  updateDate: string;
 }
 
 // Enhanced User type for mobile

@@ -18,7 +18,9 @@ export class UserApi extends BaseApiClient {
     return UserSchema.parse(response);
   }
 
-  async updateProfile(userData: Partial<Omit<User, 'id' | 'creationDate' | 'updateDate'>>): Promise<User> {
+  async updateProfile(
+    userData: Pick<User, 'name' | 'surname'>
+  ): Promise<User> {
     const response = await this.put<unknown>('/users', userData);
     return UserSchema.parse(response);
   }

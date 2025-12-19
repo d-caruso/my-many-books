@@ -102,7 +102,7 @@ describe('UserApi', () => {
         status: 200,
       });
 
-      await expect(userApi.updateProfile({ name: 'Updated' })).rejects.toThrow(
+      await expect(userApi.updateProfile({ name: 'Updated', surname: 'User' })).rejects.toThrow(
         ZodError
       );
     });
@@ -226,4 +226,3 @@ describe('UserApi', () => {
     });
   });
 });
-

@@ -38,11 +38,10 @@ interface User {
   email: string;
   name: string;
   surname: string;
-  fullName: string;
   isActive: boolean;
   role: 'user' | 'admin';
-  createdAt: string;
-  updatedAt: string;
+  creationDate: string;
+  updateDate: string;
 }
 
 interface UserFormData {
@@ -186,7 +185,8 @@ export const UserManagementPage: React.FC = () => {
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'fullName', headerName: t('pages:admin.users.name', 'Name'), width: 200 },
+    { field: 'name', headerName: t('pages:admin.users.first_name', 'First Name'), width: 160 },
+    { field: 'surname', headerName: t('pages:admin.users.last_name', 'Last Name'), width: 160 },
     { field: 'email', headerName: t('pages:admin.users.email', 'Email'), width: 250 },
     {
       field: 'role',
@@ -213,7 +213,7 @@ export const UserManagementPage: React.FC = () => {
       ),
     },
     {
-      field: 'createdAt',
+      field: 'creationDate',
       headerName: t('pages:admin.users.created', 'Created'),
       width: 180,
       valueFormatter: (params) => new Date(params).toLocaleString(),
@@ -374,7 +374,7 @@ export const UserManagementPage: React.FC = () => {
               {t(
                 'pages:admin.users.delete_confirmation_message',
                 'Are you sure you want to delete user {{name}}? This action cannot be undone.',
-                { name: userToDelete?.fullName }
+                { name: [userToDelete?.name, userToDelete?.surname].filter(Boolean).join(' ') }
               )}
             </Typography>
           </DialogContent>

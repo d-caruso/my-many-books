@@ -320,7 +320,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
           const body = await request.json() as Partial<User>;
           expect(body).toEqual(updateData);
 
-          const updatedUser: User = {
+          const updatedUser = {
             id: 1,
             email: 'test@example.com',
             name: body.name ?? 'Test',

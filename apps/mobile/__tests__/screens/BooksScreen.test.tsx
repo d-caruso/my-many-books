@@ -128,8 +128,8 @@ const mockBooks = [
     authors: [{ id: 1, name: 'Author 1', books: [] }],
     categories: [],
     isbnCode: '123',
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
+    creationDate: '2023-01-01',
+    updateDate: '2023-01-01',
   },
   {
     id: 2,
@@ -138,8 +138,8 @@ const mockBooks = [
     authors: [{ id: 2, name: 'Author 2', books: [] }],
     categories: [],
     isbnCode: '456',
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
+    creationDate: '2023-01-01',
+    updateDate: '2023-01-01',
   },
 ];
 
@@ -265,8 +265,8 @@ describe('BooksScreen', () => {
         authors: [{ id: 3, name: 'Search Author', books: [] }],
         categories: [],
         isbnCode: '789',
-        createdAt: '2023-01-01',
-        updatedAt: '2023-01-01',
+        creationDate: '2023-01-01',
+        updateDate: '2023-01-01',
       },
     ];
 

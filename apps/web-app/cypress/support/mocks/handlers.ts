@@ -38,7 +38,7 @@ export const handlers = [
       ctx.json({ 
         id: Date.now(),
         ...req.body,
-        createdAt: new Date().toISOString()
+        creationDate: new Date().toISOString()
       })
     );
   }),
@@ -50,7 +50,7 @@ export const handlers = [
       ctx.json({ 
         id: parseInt(id as string),
         ...req.body,
-        updatedAt: new Date().toISOString()
+        updateDate: new Date().toISOString()
       })
     );
   }),
@@ -146,7 +146,7 @@ const mockBooks = [
     thumbnail: 'https://example.com/gatsby.jpg',
     rating: 4,
     description: 'A classic American novel about the Jazz Age.',
-    createdAt: '2023-01-01T00:00:00.000Z'
+    creationDate: '2023-01-01T00:00:00.000Z'
   },
   {
     id: 2,
@@ -159,7 +159,7 @@ const mockBooks = [
     thumbnail: 'https://example.com/mockingbird.jpg',
     rating: 5,
     description: 'A gripping tale of racial injustice and childhood.',
-    createdAt: '2023-01-02T00:00:00.000Z'
+    creationDate: '2023-01-02T00:00:00.000Z'
   },
   {
     id: 3,
@@ -172,7 +172,7 @@ const mockBooks = [
     thumbnail: 'https://example.com/1984.jpg',
     rating: 5,
     description: 'A dystopian social science fiction novel.',
-    createdAt: '2023-01-03T00:00:00.000Z'
+    creationDate: '2023-01-03T00:00:00.000Z'
   }
 ];
 

@@ -82,7 +82,6 @@ export class FallbackService {
         {
           name: 'Unknown',
           surname: 'Author',
-          fullName: 'Unknown Author',
           nationality: undefined,
         },
       ],
@@ -114,7 +113,6 @@ export class FallbackService {
         {
           name: 'Unknown',
           surname: 'Author',
-          fullName: 'Unknown Author',
           nationality: undefined,
         },
       ],

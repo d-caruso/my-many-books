@@ -10,8 +10,8 @@ interface Book {
   isbnCode: string;
   status?: 'reading' | 'paused' | 'finished' | null;
   userName?: string | null;
-  authors: { fullName: string }[];
-  createdAt: string;
+  authors: { name: string; surname: string }[];
+  creationDate: string;
 }
 
 export default function BookManagement() {
@@ -94,7 +94,9 @@ export default function BookManagement() {
           </Text>
         ) : (
           books.map((book) => {
-            const authors = book.authors.map((a) => a.fullName).join(', ');
+            const authors = book.authors
+              .map((a) => [a.name, a.surname].filter(Boolean).join(' '))
+              .join(', ');
             const status = book.status || 'N/A';
             const owner = book.userName || t('pages:admin.books.no_owner', 'No owner');
             return (

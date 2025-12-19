@@ -57,8 +57,8 @@ const mockBook: Book = {
     { id: '2', name: 'Adventure' },
   ],
   userId: 'user1',
-  createdAt: new Date('2023-01-01'),
-  updatedAt: new Date('2023-01-01'),
+  creationDate: new Date('2023-01-01'),
+  updateDate: new Date('2023-01-01'),
 };
 
 describe('BookCard Accessibility', () => {
@@ -91,8 +91,8 @@ describe('BookCard Accessibility', () => {
       status: 'paused',
       isbnCode: '',
       userId: 'user1',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      creationDate: new Date(),
+      updateDate: new Date(),
     };
 
     const { container } = render(

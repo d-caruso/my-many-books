@@ -55,7 +55,6 @@ describe('IsbnService', () => {
     authors: [{
       name: 'Homer',
       surname: '',
-      fullName: 'Homer',
       nationality: 'Ancient Greek',
     }],
     categories: [

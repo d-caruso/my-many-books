@@ -29,7 +29,6 @@ export interface TransformedBookData {
 export interface TransformedAuthorData {
   name: string;
   surname: string;
-  fullName: string;
   nationality?: string | undefined;
 }
 

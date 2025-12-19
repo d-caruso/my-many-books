@@ -141,7 +141,7 @@ export const sortBooks = (books: Book[], sortBy: 'title' | 'author' | 'date'): B
         const authorB = b.authors[0]?.name || 'Unknown';
         return authorA.localeCompare(authorB);
       case 'date':
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime();
       default:
         return 0;
     }

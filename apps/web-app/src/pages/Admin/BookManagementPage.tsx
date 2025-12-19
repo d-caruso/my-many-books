@@ -43,10 +43,10 @@ interface Book {
   notes?: string;
   userId?: number | null;
   userName?: string | null;
-  authors: Array<{ id: number; name: string; surname: string; fullName: string }>;
+  authors: Array<{ id: number; name: string; surname: string }>;
   categories: Array<{ id: number; name: string }>;
-  createdAt: string;
-  updatedAt: string;
+  creationDate: string;
+  updateDate: string;
 }
 
 interface BookFormData {
@@ -215,7 +215,8 @@ export const BookManagementPage: React.FC = () => {
       field: 'authors',
       headerName: t('pages:admin.books.authors', 'Authors'),
       width: 200,
-      valueGetter: (value: any[]) => value?.map((a: any) => a.fullName).join(', ') || '',
+      valueGetter: (value: any[]) =>
+        value?.map((a: any) => [a.name, a.surname].filter(Boolean).join(' ')).join(', ') || '',
     },
     {
       field: 'userName',
@@ -240,7 +241,7 @@ export const BookManagementPage: React.FC = () => {
       },
     },
     {
-      field: 'createdAt',
+      field: 'creationDate',
       headerName: t('pages:admin.books.created', 'Created'),
       width: 180,
       valueFormatter: (params) => new Date(params).toLocaleString(),

@@ -153,6 +153,6 @@ export interface SearchFormData {
   author?: number;
   status?: 'in-progress' | 'paused' | 'finished';
   rating?: number;
-  sortBy?: 'title' | 'author' | 'publishedDate' | 'rating' | 'createdAt';
+  sortBy?: 'title' | 'author' | 'publishedDate' | 'rating' | 'creationDate';
   sortOrder?: 'asc' | 'desc';
 }

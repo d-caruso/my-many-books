@@ -204,9 +204,9 @@ describe('Helper Utilities', () => {
   describe('groupBooksByStatus', () => {
     it('should group books by status', () => {
       const books: Book[] = [
-        { id: 1, title: 'Book 1', status: 'reading', authors: [], categories: [], createdAt: '2023-01-01', updatedAt: '2023-01-01', isbnCode: '123' },
-        { id: 2, title: 'Book 2', status: 'completed', authors: [], categories: [], createdAt: '2023-01-01', updatedAt: '2023-01-01', isbnCode: '456' },
-        { id: 3, title: 'Book 3', status: 'reading', authors: [], categories: [], createdAt: '2023-01-01', updatedAt: '2023-01-01', isbnCode: '789' },
+        { id: 1, title: 'Book 1', status: 'reading', authors: [], categories: [], creationDate: '2023-01-01', updateDate: '2023-01-01', isbnCode: '123' },
+        { id: 2, title: 'Book 2', status: 'completed', authors: [], categories: [], creationDate: '2023-01-01', updateDate: '2023-01-01', isbnCode: '456' },
+        { id: 3, title: 'Book 3', status: 'reading', authors: [], categories: [], creationDate: '2023-01-01', updateDate: '2023-01-01', isbnCode: '789' },
       ];
 
       const grouped = groupBooksByStatus(books);
@@ -219,8 +219,8 @@ describe('Helper Utilities', () => {
 
   describe('sortBooks', () => {
     const mockBooks: Book[] = [
-      { id: 1, title: 'Zebra Book', authors: [{ id: 1, name: 'Author A', books: [] }], createdAt: '2023-01-01', status: 'reading', categories: [], updatedAt: '2023-01-01', isbnCode: '123' },
-      { id: 2, title: 'Alpha Book', authors: [{ id: 2, name: 'Author Z', books: [] }], createdAt: '2023-01-02', status: 'completed', categories: [], updatedAt: '2023-01-02', isbnCode: '456' },
+      { id: 1, title: 'Zebra Book', authors: [{ id: 1, name: 'Author A', books: [] }], creationDate: '2023-01-01', status: 'reading', categories: [], updateDate: '2023-01-01', isbnCode: '123' },
+      { id: 2, title: 'Alpha Book', authors: [{ id: 2, name: 'Author Z', books: [] }], creationDate: '2023-01-02', status: 'completed', categories: [], updateDate: '2023-01-02', isbnCode: '456' },
     ];
 
     it('should sort books by title', () => {
@@ -237,8 +237,8 @@ describe('Helper Utilities', () => {
 
     it('should sort books by date', () => {
       const sorted = sortBooks(mockBooks, 'date');
-      expect(sorted[0].createdAt).toBe('2023-01-02');
-      expect(sorted[1].createdAt).toBe('2023-01-01');
+      expect(sorted[0].creationDate).toBe('2023-01-02');
+      expect(sorted[1].creationDate).toBe('2023-01-01');
     });
   });
 
@@ -250,8 +250,8 @@ describe('Helper Utilities', () => {
         status: 'reading', 
         authors: [{ id: 1, name: 'John Doe', books: [] }], 
         categories: [{ id: 1, name: 'Fiction', books: [] }], 
-        createdAt: '2023-01-01', 
-        updatedAt: '2023-01-01', 
+        creationDate: '2023-01-01', 
+        updateDate: '2023-01-01', 
         isbnCode: '123' 
       },
       { 
@@ -260,8 +260,8 @@ describe('Helper Utilities', () => {
         status: 'completed', 
         authors: [{ id: 2, name: 'Jane Smith', books: [] }], 
         categories: [{ id: 2, name: 'Non-Fiction', books: [] }], 
-        createdAt: '2023-01-02', 
-        updatedAt: '2023-01-02', 
+        creationDate: '2023-01-02', 
+        updateDate: '2023-01-02', 
         isbnCode: '456' 
       },
     ];

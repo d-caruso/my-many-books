@@ -343,7 +343,7 @@ class ApiService {
     return this.apiClient.users.getCurrentUser();
   }
 
-  async updateProfile(userData: Partial<User>): Promise<User> {
+  async updateProfile(userData: Pick<User, 'name' | 'surname'>): Promise<User> {
     return this.apiClient.users.updateProfile(userData);
   }
 

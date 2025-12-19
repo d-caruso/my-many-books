@@ -519,7 +519,7 @@ export const searchFormSchema: FormConfig = {
         { label: 'Author', value: 'author' },
         { label: 'Published Date', value: 'publishedDate' },
         { label: 'Rating', value: 'rating' },
-        { label: 'Date Added', value: 'createdAt' }
+        { label: 'Date Added', value: 'creationDate' }
       ]
     },
     {

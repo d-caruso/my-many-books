@@ -65,7 +65,6 @@ describe('FallbackService', () => {
       expect(result!.isbn).toBe(testIsbn);
       expect(result!.book).toBeDefined();
       expect(result!.book!.title).toBe('1984');
-      expect(result!.book!.authors![0]!.fullName).toBe('Unknown Author');
       expect(result!.book!.categories![0]!.name).toBe('General');
       expect(result!.source).toBe('api');
     });
@@ -84,7 +83,6 @@ describe('FallbackService', () => {
       expect(result!.isbn).toBe(testIsbn);
       expect(result!.book).toBeDefined();
       expect(result!.book!.title).toBe('Book 6789'); // Last 4 digits
-      expect(result!.book!.authors![0]!.fullName).toBe('Unknown Author');
       expect(result!.book!.categories![0]!.name).toBe('Unknown');
       expect(result!.source).toBe('api');
     });
@@ -106,7 +104,6 @@ describe('FallbackService', () => {
         authors: [{
           name: 'Unknown',
           surname: 'Author',
-          fullName: 'Unknown Author',
           nationality: undefined
         }],
         categories: [{

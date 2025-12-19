@@ -75,8 +75,8 @@ const mockBook: Book = {
   categories: ['Classic', 'Fiction'],
   publishedDate: '1925-04-10',
   thumbnail: 'https://example.com/gatsby.jpg',
-  createdAt: '2023-01-01T00:00:00.000Z',
-  updatedAt: '2023-01-01T00:00:00.000Z',
+  creationDate: '2023-01-01T00:00:00.000Z',
+  updateDate: '2023-01-01T00:00:00.000Z',
 };
 
 const mockOnPress = jest.fn();

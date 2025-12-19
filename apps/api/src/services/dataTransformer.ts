@@ -50,20 +50,19 @@ export class DataTransformer {
     }
 
     return olBook.authors.map(author => {
-      const fullName = author.name.trim();
-      const { name, surname } = DataTransformer.parseAuthorName(fullName);
+      const authorName = author.name.trim();
+      const { name, surname } = DataTransformer.parseAuthorName(authorName);
 
       return {
         name,
         surname,
-        fullName,
         nationality: undefined, // Open Library doesn't provide nationality in book API
       };
     });
   }
 
-  private static parseAuthorName(fullName: string): { name: string; surname: string } {
-    const parts = fullName.split(' ').filter(part => part.length > 0);
+  private static parseAuthorName(authorName: string): { name: string; surname: string } {
+    const parts = authorName.split(' ').filter(part => part.length > 0);
 
     if (parts.length === 0) {
       return { name: 'Unknown', surname: 'Author' };
@@ -74,8 +73,8 @@ export class DataTransformer {
     }
 
     // Handle "Last, First" format
-    if (fullName.includes(',')) {
-      const splitParts = fullName.split(',');
+    if (authorName.includes(',')) {
+      const splitParts = authorName.split(',');
       const lastName = splitParts[0];
       const firstParts = splitParts.slice(1);
       const firstName = firstParts.join(' ').trim();

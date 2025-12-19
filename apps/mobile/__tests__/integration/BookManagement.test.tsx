@@ -68,8 +68,8 @@ describe('Book Management Integration', () => {
       status: 'reading',
       authors: [],
       categories: [],
-      createdAt: '2023-01-01T00:00:00.000Z',
-      updatedAt: '2023-01-01T00:00:00.000Z',
+      creationDate: '2023-01-01T00:00:00.000Z',
+      updateDate: '2023-01-01T00:00:00.000Z',
     },
     {
       id: 2,
@@ -78,8 +78,8 @@ describe('Book Management Integration', () => {
       status: 'completed',
       authors: [],
       categories: [],
-      createdAt: '2023-01-01T00:00:00.000Z',
-      updatedAt: '2023-01-01T00:00:00.000Z',
+      creationDate: '2023-01-01T00:00:00.000Z',
+      updateDate: '2023-01-01T00:00:00.000Z',
     },
   ];
 
@@ -97,8 +97,8 @@ describe('Book Management Integration', () => {
       status: 'want-to-read' as const,
       authors: [],
       categories: [],
-      createdAt: '2023-01-01T00:00:00.000Z',
-      updatedAt: '2023-01-01T00:00:00.000Z',
+      creationDate: '2023-01-01T00:00:00.000Z',
+      updateDate: '2023-01-01T00:00:00.000Z',
     };
 
     mockBookAPI.getBooks.mockResolvedValue(mockBooks);
@@ -207,8 +207,8 @@ describe('Book Management Integration', () => {
         status: 'reading' as const,
         authors: [],
         categories: [],
-        createdAt: '2023-01-01T00:00:00.000Z',
-        updatedAt: '2023-01-01T00:00:00.000Z',
+        creationDate: '2023-01-01T00:00:00.000Z',
+        updateDate: '2023-01-01T00:00:00.000Z',
       }
     ];
 

@@ -58,25 +58,21 @@ describe('DataTransformer', () => {
       expect(result.authors[0]).toEqual({
         name: 'John',
         surname: 'Doe',
-        fullName: 'John Doe',
         nationality: undefined,
       });
       expect(result.authors[1]).toEqual({
         name: 'Jane',
         surname: 'Smith',
-        fullName: 'Smith, Jane',
         nationality: undefined,
       });
       expect(result.authors[2]).toEqual({
         name: 'Gabriel García',
         surname: 'Márquez',
-        fullName: 'Gabriel García Márquez',
         nationality: undefined,
       });
       expect(result.authors[3]).toEqual({
         name: 'Cher',
         surname: '',
-        fullName: 'Cher',
         nationality: undefined,
       });
     });

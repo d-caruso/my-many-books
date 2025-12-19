@@ -111,10 +111,10 @@ describe('Admin Book Management Integration', () => {
       status: 'reading',
       userId: 1,
       userName: 'John Doe',
-      authors: [{ id: 1, name: 'F. Scott', surname: 'Fitzgerald', fullName: 'F. Scott Fitzgerald' }],
+      authors: [{ id: 1, name: 'F. Scott', surname: 'Fitzgerald' }],
       categories: [{ id: 1, name: 'Fiction' }],
-      createdAt: '2025-01-01T00:00:00Z',
-      updatedAt: '2025-01-01T00:00:00Z',
+      creationDate: '2025-01-01T00:00:00Z',
+      updateDate: '2025-01-01T00:00:00Z',
     },
     {
       id: 2,
@@ -123,10 +123,10 @@ describe('Admin Book Management Integration', () => {
       status: 'finished',
       userId: 2,
       userName: 'Jane Smith',
-      authors: [{ id: 2, name: 'George', surname: 'Orwell', fullName: 'George Orwell' }],
+      authors: [{ id: 2, name: 'George', surname: 'Orwell' }],
       categories: [{ id: 2, name: 'Dystopian' }],
-      createdAt: '2025-01-02T00:00:00Z',
-      updatedAt: '2025-01-02T00:00:00Z',
+      creationDate: '2025-01-02T00:00:00Z',
+      updateDate: '2025-01-02T00:00:00Z',
     },
     {
       id: 3,
@@ -135,10 +135,10 @@ describe('Admin Book Management Integration', () => {
       status: null,
       userId: null,
       userName: null,
-      authors: [{ id: 3, name: 'Harper', surname: 'Lee', fullName: 'Harper Lee' }],
+      authors: [{ id: 3, name: 'Harper', surname: 'Lee' }],
       categories: [{ id: 1, name: 'Fiction' }],
-      createdAt: '2025-01-03T00:00:00Z',
-      updatedAt: '2025-01-03T00:00:00Z',
+      creationDate: '2025-01-03T00:00:00Z',
+      updateDate: '2025-01-03T00:00:00Z',
     },
   ];
 
@@ -257,8 +257,8 @@ describe('Admin Book Management Integration', () => {
       userName: 'Test User',
       authors: [],
       categories: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      creationDate: new Date().toISOString(),
+      updateDate: new Date().toISOString(),
     }));
 
     mockGetAdminBooks.mockResolvedValueOnce({

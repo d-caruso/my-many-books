@@ -121,15 +121,14 @@ export class AdminBookController extends BaseController {
                 id: author.id,
                 name: author.name,
                 surname: author.surname,
-                fullName: `${author.name} ${author.surname}`,
               })) || [],
             categories:
               book.categories?.map(category => ({
                 id: category.id,
                 name: category.name,
               })) || [],
-            createdAt: book.creationDate,
-            updatedAt: book.updateDate,
+            creationDate: book.creationDate,
+            updateDate: book.updateDate,
           };
         })
       );
@@ -202,15 +201,14 @@ export class AdminBookController extends BaseController {
             id: author.id,
             name: author.name,
             surname: author.surname,
-            fullName: `${author.name} ${author.surname}`,
           })) ?? [],
         categories:
           book.categories?.map(category => ({
             id: category.id,
             name: category.name,
           })) ?? [],
-        createdAt: book.creationDate,
-        updatedAt: book.updateDate,
+        creationDate: book.creationDate,
+        updateDate: book.updateDate,
       });
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Get book by ID error:');
@@ -289,15 +287,14 @@ export class AdminBookController extends BaseController {
             id: author.id,
             name: author.name,
             surname: author.surname,
-            fullName: `${author.name} ${author.surname}`,
           })) ?? [],
         categories:
           book.categories?.map(category => ({
             id: category.id,
             name: category.name,
           })) ?? [],
-        createdAt: book.creationDate,
-        updatedAt: book.updateDate,
+        creationDate: book.creationDate,
+        updateDate: book.updateDate,
       });
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Update book error:');

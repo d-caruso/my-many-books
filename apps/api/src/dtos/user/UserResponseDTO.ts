@@ -3,13 +3,12 @@ import { UserEntity } from '../../repositories/user/UserRepositoryTypes';
 export interface UserResponseDTO {
   id: number;
   email: string;
-  name?: string | null;
-  surname?: string | null;
-  fullName?: string;
+  name: string;
+  surname: string;
   isActive: boolean;
   role: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  creationDate: Date;
+  updateDate: Date;
 }
 
 export const toUserResponseDTO = (user: UserEntity): UserResponseDTO => {
@@ -20,19 +19,9 @@ export const toUserResponseDTO = (user: UserEntity): UserResponseDTO => {
     surname: user.surname,
     isActive: Boolean(user.isActive),
     role: user.role,
+    creationDate: user.creationDate,
+    updateDate: user.updateDate ?? user.creationDate,
   };
-
-  if (user.creationDate) {
-    dto.createdAt = user.creationDate;
-  }
-
-  if (user.updateDate) {
-    dto.updatedAt = user.updateDate;
-  }
-
-  if (user.name || user.surname) {
-    dto.fullName = `${user.name ?? ''} ${user.surname ?? ''}`.trim();
-  }
 
   return dto;
 };

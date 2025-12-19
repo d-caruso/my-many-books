@@ -234,8 +234,8 @@ describe('User Model', () => {
 
     describe('getFullName', () => {
       it('should return concatenated name and surname', () => {
-        const fullName = user.getFullName();
-        expect(fullName).toBe('John Doe');
+        const displayName = user.getFullName();
+        expect(displayName).toBe('John Doe');
       });
 
       it('should handle special characters in names', async () => {
@@ -245,8 +245,8 @@ describe('User Model', () => {
           surname: "O'Connor",
         } as any);
 
-        const fullName = specialUser.getFullName();
-        expect(fullName).toBe("José O'Connor");
+        const displayName = specialUser.getFullName();
+        expect(displayName).toBe("José O'Connor");
       });
 
       it('should handle names with spaces', async () => {
@@ -257,8 +257,8 @@ describe('User Model', () => {
           surname: 'Watson Smith',
         } as any);
 
-        const fullName = spaceUser.getFullName();
-        expect(fullName).toBe('Mary Jane Watson Smith');
+        const displayName = spaceUser.getFullName();
+        expect(displayName).toBe('Mary Jane Watson Smith');
       });
     });
   });
