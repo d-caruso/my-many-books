@@ -4,7 +4,7 @@
  * Platform-specific rendering should be implemented separately.
  */
 
-import React from 'react';
+import * as React from 'react';
 import { BookCardProps } from './BookCard.types';
 import { formatBookCardData, getStatusColor, getStatusLabel, truncateText } from './BookCard.logic';
 
@@ -80,7 +80,52 @@ export const BookCard: React.FC<BookCardProps> = ({
         }
       },
       cardContent.status.label
-    )
+    ),
+    showActions &&
+      (cardContent.actions || onStatusChange) &&
+      React.createElement(
+        'div',
+        { style: { marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' } },
+        onEdit &&
+          React.createElement(
+            'button',
+            {
+              type: 'button',
+              'data-testid': testID ? `${testID}-edit` : undefined,
+              onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+                event.stopPropagation();
+                handleEdit();
+              },
+            },
+            'Edit'
+          ),
+        onDelete &&
+          React.createElement(
+            'button',
+            {
+              type: 'button',
+              'data-testid': testID ? `${testID}-delete` : undefined,
+              onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+                event.stopPropagation();
+                handleDelete();
+              },
+            },
+            'Delete'
+          ),
+        onStatusChange &&
+          React.createElement(
+            'button',
+            {
+              type: 'button',
+              'data-testid': testID ? `${testID}-status-paused` : undefined,
+              onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+                event.stopPropagation();
+                handleStatusChange('paused');
+              },
+            },
+            'Pause'
+          )
+      )
   );
 };
 

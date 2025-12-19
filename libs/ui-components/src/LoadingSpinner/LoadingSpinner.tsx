@@ -2,7 +2,7 @@
  * Platform-agnostic LoadingSpinner component
  */
 
-import React from 'react';
+import * as React from 'react';
 
 export interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
