@@ -9,7 +9,9 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage",
+    "lint": "eslint src/**/*.ts"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.670.0",

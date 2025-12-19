@@ -18,42 +18,53 @@ import {
 
 describe('Pino Configuration', () => {
   describe('getEnvironment', () => {
-    const originalEnv = process.env.NODE_ENV;
+    const originalEnv = process.env['NODE_ENV'];
 
     afterEach(() => {
-      process.env.NODE_ENV = originalEnv;
+      if (originalEnv === undefined) {
+        delete process.env['NODE_ENV'];
+      } else {
+        process.env['NODE_ENV'] = originalEnv;
+      }
     });
 
     it('should return development by default', () => {
-      delete process.env.NODE_ENV;
+      delete process.env['NODE_ENV'];
       expect(getEnvironment()).toBe('development');
     });
 
     it('should return NODE_ENV when valid', () => {
-      process.env.NODE_ENV = 'production';
+      process.env['NODE_ENV'] = 'production';
       expect(getEnvironment()).toBe('production');
 
-      process.env.NODE_ENV = 'test';
+      process.env['NODE_ENV'] = 'test';
       expect(getEnvironment()).toBe('test');
 
-      process.env.NODE_ENV = 'staging';
+      process.env['NODE_ENV'] = 'staging';
       expect(getEnvironment()).toBe('staging');
     });
 
     it('should return development for invalid NODE_ENV', () => {
-      process.env.NODE_ENV = 'invalid';
+      process.env['NODE_ENV'] = 'invalid';
       expect(getEnvironment()).toBe('development');
     });
   });
 
   describe('getLogLevel', () => {
-    const originalLogLevel = process.env.LOG_LEVEL;
+    const originalLogLevel = process.env['LOG_LEVEL'];
+    const originalEnv = process.env['NODE_ENV'];
 
     afterEach(() => {
       if (originalLogLevel === undefined) {
-        delete process.env.LOG_LEVEL;
+        delete process.env['LOG_LEVEL'];
       } else {
-        process.env.LOG_LEVEL = originalLogLevel;
+        process.env['LOG_LEVEL'] = originalLogLevel;
+      }
+
+      if (originalEnv === undefined) {
+        delete process.env['NODE_ENV'];
+      } else {
+        process.env['NODE_ENV'] = originalEnv;
       }
     });
 
@@ -65,9 +76,15 @@ describe('Pino Configuration', () => {
     });
 
     it('should respect LOG_LEVEL environment variable', () => {
-      process.env.LOG_LEVEL = 'fatal';
+      process.env['LOG_LEVEL'] = 'fatal';
       expect(getLogLevel('development')).toBe('fatal');
       expect(getLogLevel('production')).toBe('fatal');
+    });
+
+    it('uses getEnvironment when called with no args', () => {
+      delete process.env['LOG_LEVEL'];
+      process.env['NODE_ENV'] = 'production';
+      expect(getLogLevel()).toBe('warn');
     });
   });
 
@@ -79,7 +96,7 @@ describe('Pino Configuration', () => {
       expect(serialized).toHaveProperty('type', 'Error');
       expect(serialized).toHaveProperty('message', 'Test error');
       expect(serialized).toHaveProperty('stack');
-      expect(serialized.stack).toContain('Test error');
+      expect(serialized['stack']).toContain('Test error');
     });
 
     it('should include custom error properties', () => {
@@ -118,10 +135,30 @@ describe('Pino Configuration', () => {
       expect(serialized).toHaveProperty('url', '/api/test');
       expect(serialized).toHaveProperty('params', { id: '456' });
       expect(serialized).toHaveProperty('query', { search: 'query' });
-      expect(serialized.headers).toHaveProperty('host', 'localhost:3000');
-      expect(serialized.headers).toHaveProperty('user-agent', 'test-agent');
+      expect(serialized['headers']).toHaveProperty('host', 'localhost:3000');
+      expect(serialized['headers']).toHaveProperty('user-agent', 'test-agent');
       // Should not include authorization header
-      expect(serialized.headers).not.toHaveProperty('authorization');
+      expect(serialized['headers']).not.toHaveProperty('authorization');
+    });
+
+    it('handles requests with missing headers and uses connection.remoteAddress', () => {
+      const mockReq = {
+        id: 'req-1',
+        method: 'GET',
+        url: '/x',
+        path: '/x',
+        params: {},
+        query: {},
+        connection: { remoteAddress: '10.0.0.1' },
+      };
+
+      const serialized = requestSerializer(mockReq);
+      expect(serialized['headers']).toEqual({
+        host: undefined,
+        'user-agent': undefined,
+        'content-type': undefined,
+      });
+      expect(serialized['remoteAddress']).toBe('10.0.0.1');
     });
   });
 
@@ -138,11 +175,22 @@ describe('Pino Configuration', () => {
       const serialized = responseSerializer(mockRes);
 
       expect(serialized).toHaveProperty('statusCode', 200);
-      expect(serialized.headers).toHaveProperty(
+      expect(serialized['headers']).toHaveProperty(
         'content-type',
         'application/json'
       );
-      expect(serialized.headers).toHaveProperty('content-length', '1234');
+      expect(serialized['headers']).toHaveProperty('content-length', '1234');
+    });
+
+    it('handles responses with missing headers', () => {
+      const mockRes = { statusCode: 204 };
+      const serialized = responseSerializer(mockRes);
+
+      expect(serialized['statusCode']).toBe(204);
+      expect(serialized['headers']).toEqual({
+        'content-type': undefined,
+        'content-length': undefined,
+      });
     });
   });
 
@@ -167,16 +215,47 @@ describe('Pino Configuration', () => {
       const config = createPinoConfig('production');
 
       expect(config).toHaveProperty('redact');
-      expect(config.redact).toEqual(redactionConfig);
+      expect(config['redact']).toEqual(redactionConfig);
     });
 
     it('should include serializers', () => {
       const config = createPinoConfig('production');
 
-      expect(config.serializers).toHaveProperty('err', errorSerializer);
-      expect(config.serializers).toHaveProperty('error', errorSerializer);
-      expect(config.serializers).toHaveProperty('req', requestSerializer);
-      expect(config.serializers).toHaveProperty('res', responseSerializer);
+      expect(config['serializers']).toHaveProperty('err', errorSerializer);
+      expect(config['serializers']).toHaveProperty('error', errorSerializer);
+      expect(config['serializers']).toHaveProperty('req', requestSerializer);
+      expect(config['serializers']).toHaveProperty('res', responseSerializer);
+    });
+
+    it('sets level=silent in test unless ENABLE_TEST_LOGGING is set', () => {
+      const original = process.env['ENABLE_TEST_LOGGING'];
+      delete process.env['ENABLE_TEST_LOGGING'];
+
+      const config = createPinoConfig('test');
+      expect(config.level).toBe('silent');
+
+      process.env['ENABLE_TEST_LOGGING'] = '1';
+      const config2 = createPinoConfig('test');
+      expect(config2.level).not.toBe('silent');
+
+      if (original === undefined) {
+        delete process.env['ENABLE_TEST_LOGGING'];
+      } else {
+        process.env['ENABLE_TEST_LOGGING'] = original;
+      }
+    });
+
+    it('provides timestamp and level formatter', () => {
+      const config = createPinoConfig('production');
+      expect(typeof config.timestamp).toBe('function');
+      if (typeof config.timestamp === 'function') {
+        expect(config.timestamp()).toMatch(/\"time\":\".+\"/);
+      }
+
+      expect(config.formatters?.level).toBeDefined();
+      if (config.formatters?.level) {
+        expect(config.formatters.level('info', 30)).toEqual({ level: 'info' });
+      }
     });
   });
 });
@@ -229,7 +308,7 @@ describe('Redaction Rules', () => {
     });
 
     it('should include all sensitive fields in paths', () => {
-      expect(redactionConfig.paths).toEqual(REDACTED_FIELDS);
+      expect(redactionConfig['paths']).toEqual(REDACTED_FIELDS);
     });
   });
 });

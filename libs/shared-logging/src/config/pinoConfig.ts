@@ -57,11 +57,18 @@ export function getLogLevel(env: LogEnvironment = getEnvironment()): string {
  * Ensures errors are logged with stack traces
  */
 export function errorSerializer(error: Error): Record<string, any> {
-  return {
+  const serialized: Record<string, any> = {
     type: error.name,
     message: error.message,
     stack: error.stack,
   };
+
+  // Preserve enumerable custom properties (e.g. `code`, `statusCode`)
+  for (const key of Object.keys(error as any)) {
+    serialized[key] = (error as any)[key];
+  }
+
+  return serialized;
 }
 
 /**

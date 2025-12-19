@@ -9,4 +9,12 @@ export default {
   coverageDirectory: '../../coverage/libs/shared-logging',
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/'],
   testMatch: ['**/__tests__/**/*.test.ts', '**/*.spec.ts'],
+  coverageThreshold: {
+    global: {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+  },
 };
