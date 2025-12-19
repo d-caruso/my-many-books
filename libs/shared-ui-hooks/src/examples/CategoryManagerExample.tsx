@@ -40,7 +40,7 @@ export const CategoryManagerExample: React.FC<CategoryManagerExampleProps> = ({ 
           onChange={e => setName(e.target.value)}
           size="small"
         />
-        <Button variant="contained" onClick={handleCreate}>
+        <Button variant="contained" onClick={() => void handleCreate()}>
           Add
         </Button>
       </Stack>

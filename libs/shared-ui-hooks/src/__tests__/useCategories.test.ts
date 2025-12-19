@@ -84,5 +84,68 @@ describe('useCategories', () => {
     });
     expect(api.createCategory).toHaveBeenCalledTimes(1);
   });
-});
 
+  it('captures loadCategories errors', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const api = {
+      getCategories: jest.fn().mockRejectedValue(new Error('nope')),
+      createCategory: jest.fn(),
+    };
+
+    const { result } = renderHook(() => useCategories(api, { autoLoad: false }));
+
+    await act(async () => {
+      await result.current.loadCategories();
+    });
+
+    expect(result.current.error).toBe('nope');
+    expect(result.current.loading).toBe(false);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('returns null and sets error when createCategory fails', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const api = {
+      getCategories: jest.fn().mockResolvedValue([]),
+      createCategory: jest.fn().mockRejectedValue({ response: { data: { message: 'bad' } } }),
+    };
+
+    const { result } = renderHook(() => useCategories(api, { autoLoad: false }));
+
+    await act(async () => {
+      const created = await result.current.createCategory('Alpha');
+      expect(created).toBeNull();
+    });
+
+    expect(result.current.error).toBe('bad');
+    consoleSpy.mockRestore();
+  });
+
+  it('does not auto-load when autoLoad is false', () => {
+    const api = {
+      getCategories: jest.fn(),
+      createCategory: jest.fn(),
+    };
+
+    renderHook(() => useCategories(api, { autoLoad: false }));
+    expect(api.getCategories).not.toHaveBeenCalled();
+  });
+
+  it('refreshCategories delegates to loadCategories', async () => {
+    const now = new Date().toISOString();
+    const api = {
+      getCategories: jest.fn().mockResolvedValue([{ id: 1, name: 'A', creationDate: now, updateDate: now }]),
+      createCategory: jest.fn(),
+    };
+
+    const { result } = renderHook(() => useCategories(api, { autoLoad: false }));
+
+    await act(async () => {
+      await result.current.refreshCategories();
+    });
+
+    expect(api.getCategories).toHaveBeenCalledTimes(1);
+    expect(result.current.categories.map((c) => c.name)).toEqual(['A']);
+  });
+});
