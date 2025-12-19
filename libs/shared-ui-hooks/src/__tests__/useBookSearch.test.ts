@@ -62,5 +62,83 @@ describe('useBookSearch', () => {
     expect(result.current.totalCount).toBe(0);
     expect(result.current.hasMore).toBe(false);
   });
-});
 
+  it('does not call loadMore when hasMore is false', async () => {
+    const api = {
+      searchBooks: jest.fn(),
+      searchByISBN: jest.fn(),
+    };
+
+    const { result } = renderHook(() => useBookSearch(api));
+
+    await act(async () => {
+      await result.current.loadMore();
+    });
+
+    expect(api.searchBooks).not.toHaveBeenCalled();
+  });
+
+  it('allows empty query when filters are active', async () => {
+    const api = {
+      searchBooks: jest.fn().mockResolvedValue({ books: [], total: 0, hasMore: false, page: 1 }),
+      searchByISBN: jest.fn(),
+    };
+
+    const { result } = renderHook(() => useBookSearch(api));
+
+    await act(async () => {
+      await result.current.searchBooks('  ', { status: 'reading' });
+    });
+
+    expect(api.searchBooks).toHaveBeenCalledWith({ q: '', page: 1, limit: 20, status: 'reading' });
+  });
+
+  it('returns null for blank ISBN and captures errors for failed ISBN searches', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const api = {
+      searchBooks: jest.fn(),
+      searchByISBN: jest.fn().mockRejectedValue(new Error('not found')),
+    };
+
+    const { result } = renderHook(() => useBookSearch(api));
+
+    await act(async () => {
+      const found = await result.current.searchByISBN('   ');
+      expect(found).toBeNull();
+    });
+    expect(api.searchByISBN).not.toHaveBeenCalled();
+
+    await act(async () => {
+      const found = await result.current.searchByISBN('978');
+      expect(found).toBeNull();
+    });
+    expect(api.searchByISBN).toHaveBeenCalledWith('978');
+    expect(result.current.error).toBe('not found');
+
+    consoleSpy.mockRestore();
+  });
+
+  it('captures searchBooks errors and resets state for page 1', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const api = {
+      searchBooks: jest.fn().mockRejectedValue(new Error('fail')),
+      searchByISBN: jest.fn(),
+    };
+
+    const { result } = renderHook(() => useBookSearch(api));
+
+    await act(async () => {
+      await result.current.searchBooks('hello');
+    });
+
+    expect(result.current.error).toBe('fail');
+    expect(result.current.books).toEqual([]);
+    expect(result.current.totalCount).toBe(0);
+    expect(result.current.hasMore).toBe(false);
+    expect(result.current.currentPage).toBe(1);
+
+    consoleSpy.mockRestore();
+  });
+});
