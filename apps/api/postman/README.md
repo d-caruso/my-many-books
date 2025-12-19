@@ -196,12 +196,11 @@ sequenceDiagram
 ### Authorization (CASL)
 
 **Roles:**
-- **user:** Can read all resources, manage own resources
+- **user:** Can read and manage only own resources
 - **admin:** Full access to all resources + admin endpoints
 
 **Permission Examples:**
-- Books: Public read, authenticated create, ownership/admin for update/delete
-- Authors/Categories: User-scoped (see only your own)
+- Books, Authors, Categories: User-scoped, authenticated create, ownership/admin for update/delete
 - Admin endpoints: Admin role required
 
 ### Testing Without Authentication

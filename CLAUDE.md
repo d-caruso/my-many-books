@@ -13,8 +13,10 @@ This file provides comprehensive guidance to Claude Code.
 Before typing ANY git command:
   1. Run `git branch` - check current branch
   2. If on `develop` or `main` -> CREATE A NEW BRANCH IMMEDIATELY
-  3. ALL work must be on feature/fix/refactor/* branches
-  4. Only merge to develop via explicit merge command
+  3. ALL work must be on feature/task/fix/refactor/* branches
+  4. If any branch-naming rules conflict (e.g. “only feature/*” vs a doc requiring task/*), STOP before running any git command and ask which convention is authoritative for this repo/task.
+  5. Only merge to develop and to main after asking confirmation via explicit merge command
+  6. Only merge to develop and to main via explicit merge command
 
 ## Core Development Philosophy
 
