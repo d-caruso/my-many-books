@@ -11,9 +11,8 @@ export class SettingsApi extends BaseApiClient {
    */
   async getSettings(): Promise<AppSetting[]> {
     const response = await this.get<unknown>('/settings');
-    // Parse the response
-    const settings = AppSettingSchema.parse(response);
-    return this.convertDateFields(settings);
+    const settings = AppSettingsArraySchema.parse(response);
+    return settings.map((setting) => this.convertDateFields(setting));
   }
 
   /**
@@ -21,9 +20,8 @@ export class SettingsApi extends BaseApiClient {
    */
   async getSetting(key: string): Promise<AppSetting> {
     const response = await this.get<unknown>(`/settings/${key}`);
-    // Parse the response
-    const settings = AppSettingSchema.parse(response);
-    return this.convertDateFields(settings);
+    const setting = AppSettingSchema.parse(response);
+    return this.convertDateFields(setting);
   }
 
   /**
@@ -31,9 +29,8 @@ export class SettingsApi extends BaseApiClient {
    */
   async getAllSettingsAdmin(): Promise<AppSetting[]> {
     const response = await this.get<unknown>('/settings/admin');
-    // Parse the response
     const settings = AppSettingsArraySchema.parse(response);
-    return this.convertDateFields(settings);
+    return settings.map((setting) => this.convertDateFields(setting));
   }
 
   /**
@@ -41,9 +38,8 @@ export class SettingsApi extends BaseApiClient {
    */
   async updateSetting(key: string, value: unknown): Promise<AppSetting> {
     const response = await this.patch<unknown>(`/settings/admin/${key}`, { value });
-    // Parse the response
-    const settings = AppSettingSchema.parse(response);
-    return this.convertDateFields(settings);
+    const setting = AppSettingSchema.parse(response);
+    return this.convertDateFields(setting);
   }
 
   /**
@@ -51,13 +47,12 @@ export class SettingsApi extends BaseApiClient {
    */
   async toggleActive(key: string, active: boolean): Promise<AppSetting> {
     const response = await this.patch<unknown>(`/settings/admin/${key}/toggle`, { active });
-    // Parse the response
-    const settings = AppSettingSchema.parse(response);
-    return this.convertDateFields(settings);
+    const setting = AppSettingSchema.parse(response);
+    return this.convertDateFields(setting);
   }
 
   // Convert date fields to Date objects
-  convertDateFields(settings: any): any {
+  private convertDateFields(settings: any): AppSetting {
     return {
       ...settings,
       deletedAt: settings.deletedAt ? new Date(settings.deletedAt) : undefined,
