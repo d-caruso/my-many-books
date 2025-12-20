@@ -84,8 +84,8 @@ describe('Constants', () => {
     it('should have correct database configuration', () => {
       expect(DATABASE_CONFIG.DIALECT).toBe('mysql');
       expect(DATABASE_CONFIG.TIMEZONE).toBe('+00:00');
-      expect(DATABASE_CONFIG.POOL.max).toBe(5);
-      expect(DATABASE_CONFIG.POOL.min).toBe(0);
+      expect(DATABASE_CONFIG.POOL.max).toBe(20);
+      expect(DATABASE_CONFIG.POOL.min).toBe(5);
       expect(DATABASE_CONFIG.POOL.acquire).toBe(30000);
       expect(DATABASE_CONFIG.POOL.idle).toBe(10000);
     });

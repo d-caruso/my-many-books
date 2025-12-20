@@ -33,8 +33,8 @@ export const DATABASE_CONFIG = Object.freeze({
   DIALECT: 'mysql' as const,
   TIMEZONE: '+00:00',
   POOL: Object.freeze({
-    max: 5,
-    min: 0,
+    max: 20,
+    min: 5,
     acquire: 30000,
     idle: 10000,
   }),

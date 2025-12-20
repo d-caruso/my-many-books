@@ -23,12 +23,20 @@ class DatabaseConnection {
       throw new Error('Missing required database environment variables');
     }
 
+    const parsedPoolMax = Number.parseInt(process.env['DB_POOL_MAX'] || '', 10);
+    const parsedPoolMin = Number.parseInt(process.env['DB_POOL_MIN'] || '', 10);
+    const poolConfig = {
+      ...DATABASE_CONFIG.POOL,
+      max: Number.isFinite(parsedPoolMax) ? parsedPoolMax : DATABASE_CONFIG.POOL.max,
+      min: Number.isFinite(parsedPoolMin) ? parsedPoolMin : DATABASE_CONFIG.POOL.min,
+    };
+
     const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
       host: DB_HOST,
       port: parseInt(DB_PORT || '3306', 10),
       dialect: DATABASE_CONFIG.DIALECT,
       timezone: DATABASE_CONFIG.TIMEZONE,
-      pool: DATABASE_CONFIG.POOL,
+      pool: poolConfig,
       dialectOptions: {
         ssl: DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
       },

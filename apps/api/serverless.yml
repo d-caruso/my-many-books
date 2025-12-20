@@ -28,6 +28,8 @@ provider:
     DB_USER: admin
     DB_PASSWORD: ${self:custom.dbCredentials.password}
     DB_SSL: 'true'
+    DB_POOL_MAX: ${env:DB_POOL_MAX, '20'}
+    DB_POOL_MIN: ${env:DB_POOL_MIN, '5'}
     API_VERSION: ${env:API_VERSION, '1.0.0'}
     API_PREFIX: ${env:API_PREFIX, '/api'}
     API_ROUTE_VERSION: ${env:API_ROUTE_VERSION, 'v1'}

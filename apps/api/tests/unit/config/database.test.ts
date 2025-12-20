@@ -28,6 +28,8 @@ describe('DatabaseConnection', () => {
     delete process.env['DB_PASSWORD'];
     delete process.env['DB_SSL'];
     delete process.env['NODE_ENV'];
+    delete process.env['DB_POOL_MAX'];
+    delete process.env['DB_POOL_MIN'];
 
     // Reset singleton instance
     (DatabaseConnection as any).instance = null;
@@ -80,6 +82,29 @@ describe('DatabaseConnection', () => {
           updatedAt: 'update_date',
         },
       });
+    });
+
+    it('should override pool settings from environment variables', () => {
+      process.env['DB_HOST'] = 'localhost';
+      process.env['DB_NAME'] = 'testdb';
+      process.env['DB_USER'] = 'testuser';
+      process.env['DB_PASSWORD'] = 'testpass';
+      process.env['DB_POOL_MAX'] = '30';
+      process.env['DB_POOL_MIN'] = '10';
+
+      DatabaseConnection.getInstance();
+
+      expect(MockSequelize).toHaveBeenCalledWith(
+        'testdb',
+        'testuser',
+        'testpass',
+        expect.objectContaining({
+          pool: expect.objectContaining({
+            max: 30,
+            min: 10,
+          }),
+        })
+      );
     });
 
     it('should use custom port when provided', () => {
