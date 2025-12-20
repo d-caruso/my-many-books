@@ -146,6 +146,8 @@ jobs:
             cd libs/shared-auth && npm run build && cd ../..
             echo "Building shared-i18n..."
             cd libs/shared-i18n && npm run build && cd ../..
+            echo "Building shared-logging..."
+            cd libs/shared-logging && npm run build && cd ../..
 
             # --- INSERT THE FOLLOWING LINES HERE ---
             echo "--- START DEBUG OUTPUT ---"
@@ -590,6 +592,8 @@ jobs:
           cd libs/shared-auth && npm run build && cd ../..
           echo "Building shared-i18n..."
           cd libs/shared-i18n && npm run build && cd ../..
+          echo "Building shared-logging..."
+          cd libs/shared-logging && npm run build && cd ../..
 
       - name: Build API
         # The working-directory is already set, so a simple npm run build will work.
