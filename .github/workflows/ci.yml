@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/tests-shared-libs ]
+    branches: [ main, develop, feature/architecture-improvements, feature/increase-db-pool ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, feature/tests-shared-libs ]
+    branches: [ main, develop, feature/architecture-improvements, feature/increase-db-pool ]
   workflow_dispatch:
     inputs:
       run_tests:
