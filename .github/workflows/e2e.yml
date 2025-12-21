@@ -1,0 +1,89 @@
+name: E2E
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/api/**'
+      - 'apps/web-app/**'
+      - 'libs/hookey/**'
+      - 'scripts/e2e/**'
+      - '.github/workflows/e2e.yml'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/api/**'
+      - 'apps/web-app/**'
+      - 'libs/hookey/**'
+      - 'scripts/e2e/**'
+      - '.github/workflows/e2e.yml'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22.x'
+  NODE_ENV: 'development'
+  DB_HOST: '127.0.0.1'
+  DB_PORT: '3306'
+  DB_NAME: 'my_many_books_e2e'
+  DB_USER: 'e2e'
+  DB_PASSWORD: 'e2e'
+  DB_SSL: 'false'
+  FRONTEND_URL: 'http://localhost:3000'
+  API_PREFIX: '/api'
+  API_ROUTE_VERSION: 'v1'
+  E2E_ADMIN_EMAIL: 'admin@example.com'
+  E2E_ADMIN_NAME: 'Admin'
+  E2E_ADMIN_SURNAME: 'User'
+  E2E_USER_EMAIL: 'reader@example.com'
+  E2E_USER_NAME: 'Reader'
+  E2E_USER_SURNAME: 'User'
+  CYPRESS_VIDEO: 'true'
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: e2e
+          MYSQL_DATABASE: my_many_books_e2e
+          MYSQL_USER: e2e
+          MYSQL_PASSWORD: e2e
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pe2e"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run database migrations
+        working-directory: apps/api
+        run: npm run db:migrate
+
+      - name: Run Cypress E2E tests
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+        run: npm run test:e2e
+
+      - name: Upload Cypress artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-artifacts
+          path: |
+            apps/web-app/cypress/videos
+            apps/web-app/cypress/screenshots
