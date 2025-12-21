@@ -19,19 +19,35 @@ export type LogEnvironment =
   | 'production';
 
 /**
+ * Check if running in AWS Lambda
+ */
+export function isLambda(): boolean {
+  return !!(
+    process.env['AWS_LAMBDA_FUNCTION_NAME'] ||
+    process.env['LAMBDA_TASK_ROOT'] ||
+    process.env['AWS_EXECUTION_ENV']
+  );
+}
+
+/**
  * Get current environment
  */
 export function getEnvironment(): LogEnvironment {
   const env = process.env['NODE_ENV'] || 'development';
-  if (
-    env === 'development' ||
-    env === 'test' ||
-    env === 'staging' ||
-    env === 'production'
-  ) {
-    return env;
-  }
-  return 'development';
+
+  // Map common environment values to standard names
+  const envMapping: Record<string, LogEnvironment> = {
+    'dev': 'production', // AWS Lambda dev should use production logging (no pretty print)
+    'development': 'development',
+    'test': 'test',
+    'testing': 'test',
+    'stage': 'staging',
+    'staging': 'staging',
+    'prod': 'production',
+    'production': 'production',
+  };
+
+  return envMapping[env.toLowerCase()] || 'development';
 }
 
 /**
@@ -117,12 +133,14 @@ export function responseSerializer(res: any): Record<string, any> {
 export function createPinoConfig(env: LogEnvironment = getEnvironment()): PinoLoggerOptions {
   const isDevelopment = env === 'development';
   const isTest = env === 'test';
+  const runningInLambda = isLambda();
 
   return {
     level: getLogLevel(env),
 
     // Pretty print in development for better readability
-    ...(isDevelopment && {
+    // But NEVER in Lambda (pino-pretty is not available there)
+    ...(isDevelopment && !runningInLambda && {
       transport: {
         target: 'pino-pretty',
         options: {

@@ -789,17 +789,21 @@ jobs:
         run: |
           if [ -z "${{ env.API_BASE_URL }}" ]; then
             if [ "${{ needs.deploy-api.result }}" == "success" ]; then
-              case "${{ needs.setup.outputs.environment }}" in
-                "dev")
-                  echo "API_BASE_URL=https://api.my-many-books.com/dev" >> $GITHUB_ENV
-                  ;;
-                "staging")
-                  echo "API_BASE_URL=https://api.my-many-books.com/staging" >> $GITHUB_ENV
-                  ;;
-                "prod")
-                  echo "API_BASE_URL=https://api.my-many-books.com/prod" >> $GITHUB_ENV
-                  ;;
-              esac
+              # Get API Gateway URL from CloudFormation stack outputs
+              STACK_NAME="my-many-books-api-${{ needs.setup.outputs.environment }}"
+              API_URL=$(aws cloudformation describe-stacks \
+                --stack-name "$STACK_NAME" \
+                --region ${{ env.AWS_REGION }} \
+                --query 'Stacks[0].Outputs[?OutputKey==`ServiceEndpoint`].OutputValue' \
+                --output text)
+
+              if [ -n "$API_URL" ]; then
+                echo "API_BASE_URL=$API_URL" >> $GITHUB_ENV
+                echo "Using API Gateway URL: $API_URL"
+              else
+                echo "WARNING: Could not retrieve API Gateway URL from CloudFormation"
+                echo "API_BASE_URL=" >> $GITHUB_ENV
+              fi
             else
               echo "API deployment skipped, no API URL available for testing"
               echo "API_BASE_URL=" >> $GITHUB_ENV
