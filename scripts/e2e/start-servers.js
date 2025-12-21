@@ -5,6 +5,7 @@ const resolveCommand = (command) => {
   return process.platform === 'win32' ? `${command}.cmd` : command;
 };
 
+const projectRoot = path.join(__dirname, '..', '..');
 const apiRoot = path.join(__dirname, '..', '..', 'apps', 'api');
 const webRoot = path.join(__dirname, '..', '..', 'apps', 'web-app');
 
@@ -46,8 +47,8 @@ const startProcess = (label, command, args, cwd) => {
   return child;
 };
 
-startProcess('api', resolveCommand('npm'), ['run', 'dev'], apiRoot);
-startProcess('web-app', resolveCommand('npm'), ['run', 'start', '--', '--host', 'localhost', '--port', '3000'], webRoot);
+startProcess('api', resolveCommand('npm'), ['--prefix', 'apps/api', 'run', 'dev'], projectRoot);
+startProcess('web-app', resolveCommand('npm'), ['--prefix', 'apps/web-app', 'run', 'start', '--', '--host', 'localhost', '--port', '3000'], projectRoot);
 
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
