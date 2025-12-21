@@ -2,7 +2,7 @@
 // src/models/Category.ts
 // ================================================================
 
-import { getLogger } from '../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { DataTypes, Sequelize, Op } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
 import { CategoryAttributes, CategoryCreationAttributes } from './interfaces/ModelInterfaces';

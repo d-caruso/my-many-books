@@ -5,7 +5,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { ApplicationError, BadRequestError, InternalServerError } from '../errors/ApplicationError';
-import { getLogger } from '../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { getCurrentTraceId } from '@my-many-books/shared-logging';
 
 const isJsonSyntaxError = (

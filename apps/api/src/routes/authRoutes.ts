@@ -3,7 +3,7 @@
 // Authentication routes for login, register, refresh, and logout
 // ================================================================
 
-import { getLogger } from '../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { Router, Request, Response } from 'express';
 import {
   CognitoIdentityProviderClient,

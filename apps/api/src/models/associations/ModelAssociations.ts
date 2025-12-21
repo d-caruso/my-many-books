@@ -3,7 +3,7 @@
 // ================================================================
 
 import { Sequelize, ModelStatic, Model } from 'sequelize';
-import { getLogger } from '../../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
 export interface ModelRegistry {
   User: ModelStatic<Model>;

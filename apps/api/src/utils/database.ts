@@ -1,6 +1,6 @@
 // ================================================================
 // src/utils/database.ts
-import { getLogger } from '../services/logger'; // ================================================================
+import { getLogger } from '@my-many-books/shared-logging'; // ================================================================
 
 import { Sequelize } from 'sequelize';
 import DatabaseConnection from '@/config/database';

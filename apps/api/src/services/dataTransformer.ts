@@ -2,7 +2,7 @@
 // src/services/dataTransformer.ts
 // ================================================================
 
-import { getLogger } from './logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { OpenLibraryBook } from '@/types/openLibrary';
 import {
   TransformedBookData,

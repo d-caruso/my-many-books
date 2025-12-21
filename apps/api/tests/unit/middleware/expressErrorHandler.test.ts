@@ -5,10 +5,10 @@
 import { Request, Response } from 'express';
 import { BadRequestError, InternalServerError } from '../../../src/errors/ApplicationError';
 import { expressErrorHandler } from '../../../src/middleware/expressErrorHandler';
-import { getLogger } from '../../../src/services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
-jest.mock('../../../src/services/logger', () => {
-  const actual = jest.requireActual('../../../src/services/logger');
+jest.mock('@my-many-books/shared-logging', () => {
+  const actual = jest.requireActual('@my-many-books/shared-logging');
   return {
     ...actual,
     getLogger: jest.fn(),

@@ -2,7 +2,7 @@
 // src/services/openLibraryClient.ts
 // ================================================================
 
-import { getLogger } from './logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import { OpenLibraryResponse, OpenLibraryBook } from '@/types/openLibrary';
 import { validateIsbn } from '@/utils/isbn';

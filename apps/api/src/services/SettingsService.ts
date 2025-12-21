@@ -5,7 +5,7 @@
 
 import { AppSetting, AppSettingAttributes } from '../models/AppSetting';
 import { getAllSettingDefinitions } from '@my-many-books/shared-types';
-import { getLogger } from './logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
 export class SettingsService {
   private static cache: Map<string, AppSetting> = new Map();

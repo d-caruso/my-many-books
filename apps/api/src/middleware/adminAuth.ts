@@ -3,7 +3,7 @@
 // Admin authentication middleware for role-based access control
 // ================================================================
 
-import { getLogger } from '../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from './auth';
 import { User } from '../models/User';

@@ -8,7 +8,7 @@ import { i18n } from '@my-many-books/shared-i18n';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
-import { getLogger } from '../../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
 // Added the PaginationParams interface
 export interface PaginationParams {

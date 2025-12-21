@@ -9,9 +9,9 @@ import {
   withRequestLogging,
   requestLogger,
 } from '../../../src/middleware/requestLogger';
-import { getLogger } from '../../../src/services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
-jest.mock('../../../src/services/logger', () => ({
+jest.mock('@my-many-books/shared-logging', () => ({
   getLogger: jest.fn(),
 }));
 

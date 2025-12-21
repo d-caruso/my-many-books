@@ -3,7 +3,7 @@
 // Authentication middleware with provider abstraction
 // ================================================================
 
-import { getLogger } from '../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { Request, Response, NextFunction } from 'express';
 import { AuthUser } from '../models/interfaces/ModelInterfaces';
 import { container } from '../container';

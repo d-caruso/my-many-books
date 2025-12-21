@@ -2,7 +2,7 @@
 // src/services/isbnService.ts
 // ================================================================
 
-import { getLogger } from './logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { OpenLibraryClient, openLibraryClient, FetchBookResult } from './openLibraryClient';
 import { DataTransformer } from './dataTransformer';
 import { FallbackService } from './fallbackService';

@@ -4,7 +4,7 @@
 
 import { Sequelize } from 'sequelize';
 import { DATABASE_CONFIG } from '@/utils/constants';
-import { getLogger } from '../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
 class DatabaseConnection {
   private static instance: Sequelize | null = null;

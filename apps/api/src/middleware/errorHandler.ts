@@ -3,7 +3,7 @@
 // ================================================================
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getLogger } from '../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
 export interface AppError extends Error {
   statusCode?: number;

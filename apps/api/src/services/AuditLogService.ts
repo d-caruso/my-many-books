@@ -7,8 +7,7 @@
  * - TraceId correlation
  */
 
-import pino from 'pino';
-import { AuditLogEntry, createPinoConfig } from '@my-many-books/shared-logging';
+import { AuditLogEntry, getLogger, type AppLogger } from '@my-many-books/shared-logging';
 import { AuditLog, AuditLogAttributes, AuditLogCreationAttributes, Setting } from '../models';
 import { UniversalRequest } from '../types';
 
@@ -50,17 +49,16 @@ export interface AuditLogQueryFilter {
  * - Includes traceId for correlation
  * - Switchable via environment variables and database setting
  */
-type AuditLogger = ReturnType<typeof pino>;
 
 export class AuditLogService {
-  private logger: AuditLogger;
+  private logger: AppLogger;
   private cachedEnabled: boolean | null = null;
   private cacheExpiry: number = 0;
   private readonly CACHE_TTL = 30000; // 30 seconds
 
   constructor() {
     // Initialize Pino logger
-    this.logger = pino(createPinoConfig());
+    this.logger = getLogger();
   }
 
   /**

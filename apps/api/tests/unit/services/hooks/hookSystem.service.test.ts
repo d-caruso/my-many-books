@@ -8,9 +8,9 @@ import type {
 } from '@my-many-books/hookey';
 import * as hookService from '../../../../src/services/hooks/hookSystem';
 import { EVENTS } from '../../../../src/services/hooks/events';
-import { getLogger } from '../../../../src/services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
-jest.mock('../../../../src/services/logger', () => ({
+jest.mock('@my-many-books/shared-logging', () => ({
   getLogger: jest.fn(),
 }));
 

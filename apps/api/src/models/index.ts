@@ -15,7 +15,7 @@ import { HookExecution } from './HookExecution';
 import { AuditLog } from './AuditLog';
 import { Setting } from './Setting';
 import { AppSetting } from './AppSetting';
-import { getLogger } from '../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
 export * from './interfaces/ModelInterfaces';
 export * from './base/BaseModel';

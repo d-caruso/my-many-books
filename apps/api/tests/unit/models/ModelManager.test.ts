@@ -16,7 +16,7 @@ import { HookExecution } from '../../../src/models/HookExecution';
 import { AuditLog } from '../../../src/models/AuditLog';
 import { Setting } from '../../../src/models/Setting';
 import { AppSetting } from '../../../src/models/AppSetting';
-import { getLogger } from '../../../src/services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
 // Mock all dependencies
 jest.mock('../../../src/models/associations/ModelAssociations');
@@ -31,7 +31,7 @@ jest.mock('../../../src/models/HookExecution');
 jest.mock('../../../src/models/AuditLog');
 jest.mock('../../../src/models/Setting');
 jest.mock('../../../src/models/AppSetting');
-jest.mock('../../../src/services/logger', () => ({
+jest.mock('@my-many-books/shared-logging', () => ({
   getLogger: jest.fn(),
 }));
 

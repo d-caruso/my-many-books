@@ -6,7 +6,7 @@
 import { ActionRouter, HookSystem, HookStorage } from '@my-many-books/hookey';
 import { DatabaseHookStorage } from './DatabaseHookStorage';
 import { hookConfig } from '../../config';
-import { getLogger } from '../logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
 const isTestRuntime = (): boolean => {
   return process.env['NODE_ENV'] === 'test' || Boolean(process.env['JEST_WORKER_ID']);

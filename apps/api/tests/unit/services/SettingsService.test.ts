@@ -6,7 +6,7 @@ import { getAllSettingDefinitions } from '@my-many-books/shared-types';
 jest.mock('../../../src/models/AppSetting');
 
 // Mock logger
-jest.mock('../../../src/services/logger', () => ({
+jest.mock('@my-many-books/shared-logging', () => ({
   getLogger: jest.fn(() => ({
     info: jest.fn(),
     warn: jest.fn(),

@@ -13,12 +13,17 @@
  */
 
 import pino from 'pino';
-import { createPinoConfig, getCurrentTraceId } from '@my-many-books/shared-logging';
+import type { Logger } from 'pino';
+import { createPinoConfig } from '../config/pinoConfig';
+import { getCurrentTraceId } from '../middleware/traceIdGenerator';
 
 /**
  * Singleton Pino logger instance
  */
-type AppLogger = ReturnType<typeof pino>;
+export type AppLogger = ReturnType<typeof pino>;
+
+// Re-export Logger type for consumers
+export type { Logger };
 let loggerInstance: AppLogger | undefined;
 
 /**

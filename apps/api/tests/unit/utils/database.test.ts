@@ -6,12 +6,12 @@ import { DatabaseUtils } from '../../../src/utils/database';
 import DatabaseConnection from '../../../src/config/database';
 import { ModelManager } from '../../../src/models';
 import { Sequelize } from 'sequelize';
-import { getLogger } from '../../../src/services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
 // Mock dependencies
 jest.mock('../../../src/config/database');
 jest.mock('../../../src/models');
-jest.mock('../../../src/services/logger', () => ({
+jest.mock('@my-many-books/shared-logging', () => ({
   getLogger: jest.fn(),
 }));
 

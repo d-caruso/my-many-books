@@ -10,7 +10,7 @@ import { ApiResponse } from '../common/ApiResponse';
 
 // A universal request interface to decouple the controller from the framework
 import { UniversalRequest } from '../types';
-import { getLogger } from '../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 
 /*interface UniversalRequest {
   body?: unknown;

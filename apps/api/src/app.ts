@@ -25,7 +25,7 @@ import { initializeHookSystem } from './services/hooks/hookSystem';
 import { traceIdMiddleware, requestLoggerMiddleware } from '@my-many-books/shared-logging';
 
 import { initializeI18n } from '@my-many-books/shared-i18n';
-import { getLogger } from './services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { SettingsService } from './services/SettingsService';
 
 const app = express();

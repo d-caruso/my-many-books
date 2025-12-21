@@ -8,7 +8,7 @@
  * - Error serialization
  */
 
-import { getLogger } from '../../src/services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { getCurrentTraceId } from '@my-many-books/shared-logging';
 
 describe('Logging Integration', () => {

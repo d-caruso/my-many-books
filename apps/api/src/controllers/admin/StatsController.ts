@@ -5,7 +5,7 @@
 
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
-import { getLogger } from '../../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { UniversalRequest } from '../../types';
 import { User } from '../../models/User';
 import { Book } from '../../models/Book';

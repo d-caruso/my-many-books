@@ -2,7 +2,7 @@
 // src/middleware/cognitoAuth.ts
 // ================================================================
 
-import { getLogger } from '../services/logger';
+import { getLogger } from '@my-many-books/shared-logging';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { verify, JwtPayload, Algorithm } from 'jsonwebtoken';
 
