@@ -13,6 +13,8 @@ declare global {
       login(email: string, password: string): Chainable<{ user: E2EUserProfile; tokens: E2EAuthTokens }>;
       loginAsAdmin(): Chainable<{ user: E2EUserProfile; tokens: E2EAuthTokens }>;
       loginAsUser(): Chainable<{ user: E2EUserProfile; tokens: E2EAuthTokens }>;
+      resetDatabase(): Chainable<null>;
+      seedDatabase(): Chainable<null>;
       logout(): Chainable<void>;
       addBook(book: { title: string; author: string; isbn?: string }): Chainable<void>;
       searchBooks(query: string): Chainable<void>;

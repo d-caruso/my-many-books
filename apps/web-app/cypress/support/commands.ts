@@ -44,6 +44,14 @@ Cypress.Commands.add('loginAsUser', () => {
   return loginWithUser(getE2EUser('user'));
 });
 
+Cypress.Commands.add('resetDatabase', () => {
+  return cy.task('db:reset');
+});
+
+Cypress.Commands.add('seedDatabase', () => {
+  return cy.task('db:seed');
+});
+
 Cypress.Commands.add('logout', () => {
   cy.get('[data-testid="user-menu"]').click();
   cy.get('[data-testid="logout-button"]').click();
