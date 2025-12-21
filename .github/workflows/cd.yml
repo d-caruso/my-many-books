@@ -182,6 +182,8 @@ jobs:
               if [ "$project" == "api" ]; then
                 echo "Building project: $project"
                 cd apps/api
+                # Remove any existing node_modules to prevent workspace detection issues
+                rm -rf node_modules
                 # Install dependencies individually for this project
                 if ! npm ci --ignore-scripts 2>/dev/null; then
                   echo "Lockfile incompatible for $project, regenerating..."
