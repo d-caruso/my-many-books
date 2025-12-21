@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Fiction",
+      "description": "Fictional literature",
+      "bookCount": 15
+    },
+    {
+      "id": 2,
+      "name": "Non-Fiction",
+      "description": "Factual and educational books",
+      "bookCount": 8
+    },
+    {
+      "id": 3,
+      "name": "Science Fiction",
+      "description": "Futuristic and speculative fiction",
+      "bookCount": 6
+    },
+    {
+      "id": 4,
+      "name": "Biography",
+      "description": "Life stories of notable people",
+      "bookCount": 4
+    },
+    {
+      "id": 5,
+      "name": "History",
+      "description": "Historical accounts and analysis",
+      "bookCount": 7
+    }
+  ]
+}
