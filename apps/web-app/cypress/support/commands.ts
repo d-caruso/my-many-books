@@ -1,13 +1,47 @@
 /// <reference types="cypress" />
 
+import {
+  buildAuthTokens,
+  buildLoginResponse,
+  buildUserFromCredentials,
+  getE2EUser,
+  type E2EUserProfile,
+} from './auth';
+
 // Custom commands for the My Many Books application
 
-Cypress.Commands.add('login', (username: string, password: string) => {
+const loginWithUser = (profile: E2EUserProfile) => {
+  const tokens = buildAuthTokens(profile);
+  const response = buildLoginResponse(profile, tokens);
+
+  cy.intercept('POST', '**/auth/login', {
+    statusCode: 200,
+    body: response,
+  }).as('login');
+
   cy.visit('/auth');
-  cy.get('[data-testid="username-input"]').type(username);
-  cy.get('[data-testid="password-input"]').type(password);
-  cy.get('[data-testid="login-button"]').click();
-  cy.url().should('not.include', '/auth');
+  cy.get('form[aria-label="Login form"]').within(() => {
+    cy.get('input#email').clear().type(profile.email);
+    cy.get('input#password').clear().type(profile.password, { log: false });
+    cy.get('button[type="submit"]').click();
+  });
+
+  cy.wait('@login');
+  cy.location('pathname').should('not.eq', '/auth');
+
+  return cy.wrap({ user: profile, tokens }, { log: false });
+};
+
+Cypress.Commands.add('login', (email: string, password: string) => {
+  return loginWithUser(buildUserFromCredentials(email, password));
+});
+
+Cypress.Commands.add('loginAsAdmin', () => {
+  return loginWithUser(getE2EUser('admin'));
+});
+
+Cypress.Commands.add('loginAsUser', () => {
+  return loginWithUser(getE2EUser('user'));
 });
 
 Cypress.Commands.add('logout', () => {
