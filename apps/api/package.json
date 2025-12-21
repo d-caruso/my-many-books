@@ -50,6 +50,8 @@
     "db:reset": "npm run db:migrate:undo:all && npm run db:migrate && npm run db:seed",
     "db:status": "npm run db:migrate:status",
     "db:sync": "ts-node -e \"import('./src/utils/database').then(db => db.DatabaseUtils.initialize().then(() => db.DatabaseUtils.syncDatabase({ alter: true })))\"",
+    "e2e:seed": "ts-node -r tsconfig-paths/register tests/fixtures/e2e-seed.ts seed",
+    "e2e:reset": "ts-node -r tsconfig-paths/register tests/fixtures/e2e-seed.ts reset",
     "migration:generate": "sequelize-cli migration:generate --name",
     "seed:generate": "sequelize-cli seed:generate --name",
     "test:isbn": "jest tests/utils/isbn.test.ts",
