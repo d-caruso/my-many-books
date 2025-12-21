@@ -182,11 +182,11 @@ jobs:
               if [ "$project" == "api" ]; then
                 echo "Building project: $project"
                 cd apps/api
-                # Install dependencies individually for this project
-                if ! npm ci --ignore-scripts 2>/dev/null; then
+                # Install dependencies to create workspace symlinks
+                if ! npm ci 2>/dev/null; then
                   echo "Lockfile incompatible for $project, regenerating..."
                   rm -f package-lock.json
-                  npm install --legacy-peer-deps --ignore-scripts
+                  npm install --legacy-peer-deps
                 fi
                 npm run build
                 cd ../..
