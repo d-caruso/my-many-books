@@ -13,6 +13,9 @@ import {
 } from '../../models/interfaces/ModelInterfaces';
 import { Op, CreationAttributes } from 'sequelize';
 import { getAuditLogService } from '../../services/AuditLogService';
+import { reloadHookSystem } from '../../services/hooks/hookSystem';
+
+let lastReloadedAt: string | null = null;
 
 export class HookController extends BaseController {
   async listHooks(request: UniversalRequest): Promise<ApiResponse> {
@@ -216,6 +219,23 @@ export class HookController extends BaseController {
     }
   }
 
+  async reloadHooks(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    try {
+      await reloadHookSystem();
+      lastReloadedAt = new Date().toISOString();
+      return this.createSuccessResponse({ reloadedAt: lastReloadedAt });
+    } catch (error) {
+      if (error instanceof Error) {
+        return this.createErrorResponse(error.message, 500);
+      }
+      return this.createErrorResponse('Failed to reload hooks', 500);
+    }
+  }
+
   async getHookExecutions(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
@@ -233,8 +253,30 @@ export class HookController extends BaseController {
 
     const pagination = this.getPaginationParams(request);
 
+    const successParam = this.getQueryParameter(request, 'success');
+    const fromParam = this.getQueryParameter(request, 'from');
+    const toParam = this.getQueryParameter(request, 'to');
+
+    const where: Record<string, unknown> = { hookId: Number(hookId) };
+    if (successParam === 'true') {
+      where['success'] = true;
+    } else if (successParam === 'false') {
+      where['success'] = false;
+    }
+
+    if (fromParam || toParam) {
+      const range: Record<string, Date> = {};
+      if (fromParam) {
+        range[Op.gte as unknown as string] = new Date(fromParam);
+      }
+      if (toParam) {
+        range[Op.lte as unknown as string] = new Date(toParam);
+      }
+      where['executedAt'] = range;
+    }
+
     const { count, rows: executions } = await HookExecution.findAndCountAll({
-      where: { hookId: Number(hookId) },
+      where,
       limit: pagination.limit,
       offset: pagination.offset,
       order: [['executedAt', 'DESC']],
@@ -278,6 +320,11 @@ export class HookController extends BaseController {
     const totalExecutions = await HookExecution.count();
     const successfulExecutions = await HookExecution.count({ where: { success: true } });
     const failedExecutions = await HookExecution.count({ where: { success: false } });
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const executionsToday = await HookExecution.count({
+      where: { executedAt: { [Op.gte]: startOfDay } },
+    });
 
     const stats = {
       totalHooks,
@@ -286,6 +333,8 @@ export class HookController extends BaseController {
       totalExecutions,
       successfulExecutions,
       failedExecutions,
+      executionsToday,
+      lastReloadedAt,
       successRate:
         totalExecutions > 0 ? ((successfulExecutions / totalExecutions) * 100).toFixed(2) : '0.00',
     };

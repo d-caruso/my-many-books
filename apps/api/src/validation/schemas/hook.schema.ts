@@ -98,6 +98,9 @@ export const listHooksQuerySchema = Joi.object({
 export const getExecutionsQuerySchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(50),
+  success: Joi.string().valid('true', 'false').optional(),
+  from: Joi.date().iso().optional(),
+  to: Joi.date().iso().optional(),
 });
 
 export const getRecentExecutionsQuerySchema = Joi.object({

@@ -1,153 +1,114 @@
-const hookStatsResponse = {
-  data: {
-    totalHooks: 2,
-    activeHooks: 2,
-    executionsToday: 12,
-    lastReloadedAt: new Date('2025-12-03T10:15:00Z').toISOString(),
+const getApiBaseUrl = () => Cypress.env('apiBaseUrl') as string;
+
+const buildHookPayload = (name: string, eventPattern: string) => ({
+  name,
+  description: 'E2E hook payload',
+  eventPattern,
+  actionType: 'log',
+  actionConfig: {
+    level: 'info',
+    prefix: 'E2E',
   },
+  isActive: true,
+  priority: 5,
+});
+
+const createHook = (token: string, name: string, eventPattern: string) => {
+  return cy.request({
+    method: 'POST',
+    url: `${getApiBaseUrl()}/admin/hooks`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: buildHookPayload(name, eventPattern),
+  });
 };
 
-const initialHooks = [
-  {
-    id: 101,
-    name: 'Audit Logger',
-    eventPattern: 'book.*',
-    actionType: 'log',
-    priority: 5,
-    isActive: true,
-    lastExecution: new Date('2025-12-03T08:30:00Z').toISOString(),
-  },
-  {
-    id: 102,
-    name: 'Failed Login Alert',
-    eventPattern: 'auth.login.failed',
-    actionType: 'email',
-    priority: 10,
-    isActive: true,
-    lastExecution: new Date('2025-12-03T07:45:00Z').toISOString(),
-  },
-];
+const reloadHooks = (token: string) => {
+  return cy.request({
+    method: 'POST',
+    url: `${getApiBaseUrl()}/admin/hooks/reload`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
 
-const successExecutions = [
-  {
-    id: 1,
-    eventName: 'book.create.after',
-    success: true,
-    executionTimeMs: 120,
-    executedAt: new Date('2025-12-03T09:00:00Z').toISOString(),
-    hookId: 101,
-    errorMessage: null,
-  },
-];
+const createBook = (token: string, isbnCode: string, title: string) => {
+  return cy.request({
+    method: 'POST',
+    url: `${getApiBaseUrl()}/books`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: {
+      isbnCode,
+      title,
+    },
+  });
+};
 
-const failureExecutions = [
-  {
-    id: 2,
-    eventName: 'user.login.before',
-    success: false,
-    executionTimeMs: 80,
-    executedAt: new Date('2025-12-03T09:30:00Z').toISOString(),
-    hookId: 101,
-    errorMessage: 'SMTP timeout',
-  },
-];
+describe('Admin hooks (E2E)', () => {
+  beforeEach(() => cy.resetDatabase());
 
-describe('Admin Hooks Management', () => {
-  beforeEach(() => {
-    cy.intercept('GET', '**/admin/hooks/stats', hookStatsResponse).as('getHookStats');
-    cy.intercept('GET', '**/admin/hooks', { data: { hooks: initialHooks } }).as('getHooks');
-    cy.intercept('POST', '**/admin/hooks/reload', {
-      data: { reloadedAt: new Date().toISOString() },
-    }).as('reloadHooks');
-    cy.intercept('GET', '**/admin/hooks/executions*', (req) => {
-      const url = new URL(req.url);
-      const successParam = url.searchParams.get('success');
-      if (successParam === 'false') {
-        req.reply({ data: { executions: failureExecutions, total: failureExecutions.length } });
-        return;
-      }
-      req.reply({ data: { executions: successExecutions, total: successExecutions.length } });
-    }).as('getExecutions');
-
-    cy.login('admin-user', 'secure-password');
+  it('blocks non-admin access to hooks', () => {
+    cy.loginAsUser();
     cy.visit('/admin/hooks');
-    cy.wait('@getHookStats');
-    cy.wait('@getHooks');
+    cy.contains('Access Denied').should('be.visible');
   });
 
-  it('manages hooks end-to-end through the admin UI', () => {
-    cy.contains('Hooks Administration').should('be.visible');
+  it('shows validation feedback for invalid action config', () => {
+    cy.loginAsAdmin();
+    cy.visit('/admin/hooks');
 
     cy.get('[data-testid="open-hook-form"]').click();
-    cy.get('[data-testid="hook-form-name"]').clear().type('Cypress Audit Trail');
-    cy.get('[data-testid="hook-form-description"]').type('Tracks Cypress-driven workflows');
-    cy.get('[data-testid="hook-form-event-pattern-input"]')
-      .clear()
-      .type('book.create.after');
     cy.get('[data-testid="hook-form-action-config"]')
       .clear()
-      .type('{\n  "message": "Automated audit payload"\n}');
-    cy.get('[data-testid="hook-form-save"]').click();
+      .type('{', { parseSpecialCharSequences: false });
+    cy.contains('Provide valid JSON').should('be.visible');
+    cy.get('[data-testid="hook-form-save"]').should('be.disabled');
+  });
 
-    cy.get('[data-testid="hooks-grid"]').within(() => {
-      cy.contains('Cypress Audit Trail').should('be.visible');
+  it('lists hooks created through the admin API and allows edits', () => {
+    const hookName = `E2E Hook ${Date.now()}`;
+    const updatedName = `${hookName} Updated`;
+
+    cy.loginAsAdmin().then(({ tokens }) => {
+      return createHook(tokens.idToken, hookName, 'book.create.after');
     });
-
-    cy.contains('div', 'Cypress Audit Trail')
-      .closest('[role="row"]')
-      .within(() => {
-        cy.contains('button', 'Edit').click();
-      });
-    cy.get('[data-testid="hook-form-name"]').clear().type('Cypress Audit Trail v2');
-    cy.get('[data-testid="hook-form-save"]').click();
-    cy.contains('Cypress Audit Trail v2').should('be.visible');
-
-    cy.contains('div', 'Cypress Audit Trail v2')
-      .closest('[role="row"]')
-      .within(() => {
-        cy.contains('button', 'Delete').click();
-      });
-    cy.contains('Delete action is not implemented yet').should('be.visible');
-
-    cy.get('[data-testid="reload-hooks-button"]').click();
-    cy.contains('Reloading Hooks…').should('be.visible');
-    cy.wait('@reloadHooks');
-    cy.contains('Reload Hooks').should('be.visible');
-
-    cy.contains('div', 'Audit Logger')
-      .closest('[role="row"]')
-      .within(() => {
-        cy.contains('button', 'View Executions').click();
-      });
-    cy.url().should('include', '/admin/hooks/101/executions');
-    cy.wait('@getExecutions');
-    cy.get('[data-testid="hook-executions-grid"]').within(() => {
-      cy.contains('book.create.after').should('be.visible');
-    });
-
-    cy.get('[data-testid="executions-status-filter"]').click();
-    cy.get('li[data-value="failure"]').click();
-    cy.wait('@getExecutions');
-    cy.get('[data-testid="hook-executions-grid"]').within(() => {
-      cy.contains('user.login.before').should('be.visible');
-      cy.contains('SMTP timeout').should('be.visible');
-    });
-
-    cy.get('[data-testid="executions-back-to-hooks"]').click();
-    cy.wait('@getHookStats');
-    cy.wait('@getHooks');
-
-    cy.visit('/books');
-    cy.addBook({
-      title: 'Hook Event Book',
-      author: 'QA Automation',
-      isbn: '1234567890123',
-    });
-    cy.contains('Hook Event Book').should('be.visible');
 
     cy.visit('/admin/hooks');
-    cy.wait('@getHookStats');
-    cy.wait('@getHooks');
     cy.contains('Hooks Administration').should('be.visible');
+    cy.contains('[role="row"]', hookName, { timeout: 10000 }).should('be.visible');
+
+    cy.contains('[role="row"]', hookName)
+      .find('button')
+      .contains('Edit')
+      .click();
+
+    cy.get('[data-testid="hook-form-name"]').clear().type(updatedName);
+    cy.get('[data-testid="hook-form-save"]').click();
+    cy.contains(updatedName).should('be.visible');
+  });
+
+  it('records executions when book creation triggers a hook', () => {
+    const hookName = `E2E Execution ${Date.now()}`;
+    const bookTitle = `Hook Trigger ${Date.now()}`;
+    const isbnCode = '9780132350884';
+
+    cy.loginAsAdmin().then(({ tokens }) => {
+      return createHook(tokens.idToken, hookName, 'book.create.after').then((response) => {
+        const hookId = response.body?.data?.id ?? response.body?.id;
+        expect(hookId).to.be.a('number');
+
+        return reloadHooks(tokens.idToken)
+          .then(() => createBook(tokens.idToken, isbnCode, bookTitle))
+          .then(() => {
+            cy.visit(`/admin/hooks/${hookId}/executions`);
+            cy.contains('Hook Executions').should('be.visible');
+            cy.contains('book.create.after', { timeout: 10000 }).should('be.visible');
+          });
+      });
+    });
   });
 });

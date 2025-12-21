@@ -74,6 +74,13 @@ router.delete(
   expressRouteWrapper(hookController.deleteHook.bind(hookController))
 );
 
+// Reload hooks from storage (WRITE)
+router.post(
+  '/reload',
+  writeLimiter,
+  expressRouteWrapper(hookController.reloadHooks.bind(hookController))
+);
+
 // ===== HOOK EXECUTION ENDPOINTS =====
 
 // Get execution history for specific hook (READ)

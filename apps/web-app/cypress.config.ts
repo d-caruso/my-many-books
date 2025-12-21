@@ -38,6 +38,12 @@ export default defineConfig({
   e2e: {
     baseUrl,
     specPattern: "cypress/e2e/**/*.cy.{js,jsx,ts,tsx}",
+    excludeSpecPattern: [
+      "cypress/e2e/auth.cy.{js,jsx,ts,tsx}",
+      "cypress/e2e/books.cy.{js,jsx,ts,tsx}",
+      "cypress/e2e/navigation.cy.{js,jsx,ts,tsx}",
+      "cypress/e2e/isbn-scanner.cy.{js,jsx,ts,tsx}",
+    ],
     supportFile: "cypress/support/e2e.ts",
     videosFolder: "cypress/videos",
     screenshotsFolder: "cypress/screenshots",

@@ -384,12 +384,36 @@ class ApiService {
     return payload.data || payload;
   }
 
+  private async fetchAdminPayload<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<{ data: T; pagination?: Record<string, unknown> }> {
+    const url = this.buildAdminUrl(endpoint);
+    const token = await authService.getIdToken();
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
   async getAdminHooks(): Promise<{ hooks: AdminHookSummary[]; total?: number }> {
     return this.fetchAdminData('/admin/hooks');
   }
 
   async getAdminHookStats(): Promise<AdminHookStats> {
-    return this.fetchAdminData('/admin/hooks/stats');
+    return this.fetchAdminData('/admin/hooks/stats/summary');
   }
 
   async reloadAdminHooks(): Promise<void> {
@@ -405,14 +429,28 @@ class ApiService {
     pageSize?: number;
   }): Promise<AdminHookExecutionResponse> {
     const query = new URLSearchParams();
-    if (params.hookId) query.append('hookId', params.hookId.toString());
     if (params.success !== undefined) query.append('success', String(params.success));
     if (params.from) query.append('from', params.from);
     if (params.to) query.append('to', params.to);
-    if (params.page) query.append('page', params.page.toString());
-    if (params.pageSize) query.append('pageSize', params.pageSize.toString());
+    if (params.page !== undefined) query.append('page', params.page.toString());
+    if (params.pageSize !== undefined) query.append('limit', params.pageSize.toString());
     const queryString = query.toString() ? `?${query.toString()}` : '';
-    return this.fetchAdminData(`/admin/hooks/executions${queryString}`);
+
+    const endpoint = params.hookId
+      ? `/admin/hooks/${params.hookId}/executions${queryString}`
+      : `/admin/hooks/executions/recent${queryString}`;
+
+    const payload = await this.fetchAdminPayload<{ executions: AdminHookExecution[] }>(endpoint);
+    const pagination = payload.pagination as
+      | { totalItems?: number; currentPage?: number; itemsPerPage?: number }
+      | undefined;
+
+    return {
+      executions: payload.data?.executions || [],
+      total: pagination?.totalItems ?? payload.data?.executions?.length ?? 0,
+      page: pagination?.currentPage ?? params.page ?? 1,
+      pageSize: pagination?.itemsPerPage ?? params.pageSize ?? payload.data?.executions?.length ?? 0,
+    };
   }
 
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
