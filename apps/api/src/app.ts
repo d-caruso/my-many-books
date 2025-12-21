@@ -6,6 +6,7 @@
 import 'reflect-metadata';
 import 'dotenv/config';
 import express from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { ModelManager } from './models';
@@ -23,6 +24,7 @@ import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
 import { initializeHookSystem } from './services/hooks/hookSystem';
 import { traceIdMiddleware, requestLoggerMiddleware } from '@my-many-books/shared-logging';
+import { securityHeadersConfig } from './config/securityHeaders';
 
 import { initializeI18n } from '@my-many-books/shared-i18n';
 import { getLogger } from '@my-many-books/shared-logging';
@@ -30,6 +32,7 @@ import { SettingsService } from './services/SettingsService';
 
 const app = express();
 const isTestEnvironment = process.env['NODE_ENV'] === 'test';
+const securityHeadersEnabled = process.env['SECURITY_HEADERS_ENABLED'] !== 'false';
 
 // ===== LOGGING MIDDLEWARE (MUST BE FIRST) =====
 // 1. TraceId middleware for request correlation
@@ -38,6 +41,11 @@ app.use(traceIdMiddleware() as unknown as express.RequestHandler);
 // 2. Request logger middleware (logs all HTTP requests)
 if (!isTestEnvironment) {
   app.use(requestLoggerMiddleware() as unknown as express.RequestHandler);
+}
+
+// ===== SECURITY HEADERS =====
+if (securityHeadersEnabled) {
+  app.use(helmet(securityHeadersConfig));
 }
 
 // ===== CORE MIDDLEWARE =====
