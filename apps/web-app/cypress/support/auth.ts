@@ -63,10 +63,11 @@ export const buildAuthTokens = (profile: E2EUserProfile): E2EAuthTokens => {
   const issuedAt = Math.floor(Date.now() / 1000);
   const expiresIn = 3600;
   const payload = {
-    sub: profile.subject,
+    sub: profile.id.toString(),
     email: profile.email,
     given_name: profile.name,
     family_name: profile.surname,
+    role: profile.role,
     iat: issuedAt,
     exp: issuedAt + expiresIn,
   };
