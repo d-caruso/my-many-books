@@ -138,8 +138,11 @@ const seedExecution = async (hookId: number): Promise<void> => {
 };
 
 const resetDatabase = async (): Promise<void> => {
+  console.log('[E2E Seed] Resetting database...');
   const sequelize = await initializeDatabase();
+  console.log('[E2E Seed] Database initialized, starting truncate...');
   await truncateTables(sequelize);
+  console.log('[E2E Seed] Database reset completed');
 };
 
 const seedDatabase = async (): Promise<void> => {
