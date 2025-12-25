@@ -18,6 +18,12 @@ on:
       - 'scripts/e2e/**'
       - '.github/workflows/e2e.yml'
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Enable debug logging'
+        required: false
+        default: 'false'
+        type: boolean
 
 env:
   NODE_VERSION: '22.x'
