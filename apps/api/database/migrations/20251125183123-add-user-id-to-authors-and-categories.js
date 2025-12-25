@@ -4,19 +4,21 @@ module.exports = {
 
     try {
       // ============================================================
-      // STEP 1: Find admin user (caruso.domenico@gmail.com)
+      // STEP 1: Find an admin user (if any exist)
       // ============================================================
       const [users] = await queryInterface.sequelize.query(
-        `SELECT id FROM users WHERE email = 'caruso.domenico@gmail.com' LIMIT 1;`,
+        `SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1;`,
         { transaction }
       );
 
-      if (!users || users.length === 0) {
-        throw new Error('Admin user (caruso.domenico@gmail.com) not found. Cannot proceed with migration.');
-      }
+      const hasUsers = users && users.length > 0;
+      const adminUserId = hasUsers ? users[0].id : null;
 
-      const adminUserId = users[0].id;
-      console.log(`Found admin user with ID: ${adminUserId}`);
+      if (hasUsers) {
+        console.log(`Found admin user with ID: ${adminUserId}`);
+      } else {
+        console.log('No users found. Skipping user assignment for existing authors/categories.');
+      }
 
       // ============================================================
       // STEP 2: Add user_id column to AUTHORS table
@@ -38,14 +40,15 @@ module.exports = {
       );
 
       // ============================================================
-      // STEP 3: Assign all existing authors to admin user
+      // STEP 3: Assign all existing authors to admin user (if users exist)
       // ============================================================
-      await queryInterface.sequelize.query(
-        `UPDATE authors SET user_id = ${adminUserId} WHERE user_id IS NULL;`,
-        { transaction }
-      );
-
-      console.log('Assigned all existing authors to admin user');
+      if (hasUsers) {
+        await queryInterface.sequelize.query(
+          `UPDATE authors SET user_id = ${adminUserId} WHERE user_id IS NULL;`,
+          { transaction }
+        );
+        console.log('Assigned all existing authors to admin user');
+      }
 
       // ============================================================
       // STEP 4: Add index on authors.user_id
@@ -79,14 +82,15 @@ module.exports = {
       );
 
       // ============================================================
-      // STEP 6: Assign all existing categories to admin user
+      // STEP 6: Assign all existing categories to admin user (if users exist)
       // ============================================================
-      await queryInterface.sequelize.query(
-        `UPDATE categories SET user_id = ${adminUserId} WHERE user_id IS NULL;`,
-        { transaction }
-      );
-
-      console.log('Assigned all existing categories to admin user');
+      if (hasUsers) {
+        await queryInterface.sequelize.query(
+          `UPDATE categories SET user_id = ${adminUserId} WHERE user_id IS NULL;`,
+          { transaction }
+        );
+        console.log('Assigned all existing categories to admin user');
+      }
 
       // ============================================================
       // STEP 7: Remove global unique constraint on categories.name
