@@ -74,7 +74,7 @@ const seedUsers = async (): Promise<{ adminId: number; userId: number }> => {
     surname: seedConfig.adminSurname,
     isActive: true,
     role: USER_ROLES.ADMIN,
-  });
+  } as any);
 
   const user = await User.create({
     email: seedConfig.userEmail,
@@ -82,7 +82,7 @@ const seedUsers = async (): Promise<{ adminId: number; userId: number }> => {
     surname: seedConfig.userSurname,
     isActive: true,
     role: USER_ROLES.USER,
-  });
+  } as any);
 
   return { adminId: admin.id, userId: user.id };
 };
@@ -94,7 +94,7 @@ const seedBook = async (userId: number): Promise<void> => {
     isbnCode: seedConfig.seedIsbn,
     title: 'E2E Seed Book',
     userId,
-  });
+  } as any);
 };
 
 const seedHook = async (adminId: number): Promise<number> => {
@@ -112,7 +112,7 @@ const seedHook = async (adminId: number): Promise<number> => {
     isActive: true,
     priority: 5,
     createdBy: adminId,
-  });
+  } as any);
 
   return hook.id;
 };
@@ -127,7 +127,7 @@ const seedExecution = async (hookId: number): Promise<void> => {
     success: true,
     executionTimeMs: 42,
     executedAt: new Date(),
-  });
+  } as any);
 };
 
 const resetDatabase = async (): Promise<void> => {
