@@ -41,7 +41,7 @@
     "cypress:run": "cd apps/web-app && npm run cypress:run",
     "cypress:component": "cd apps/web-app && npm run cypress:component",
     "cypress:component:open": "cd apps/web-app && npm run cypress:component:open",
-    "test:e2e": "npx start-server-and-test \"node scripts/e2e/start-servers.js\" \"http://localhost:3000 http://localhost:3001/api/v1/health\" \"node scripts/e2e/run-cypress.js\"",
+    "test:e2e": "npx start-server-and-test \"node scripts/e2e/start-servers.js\" \"http-get://localhost:3000|http-get://localhost:3001/api/v1/health\" \"node scripts/e2e/run-cypress.js\"",
     "e2e": "npm run test:e2e",
     "e2e:open": "cd apps/web-app && npm run e2e:open",
     "test:web-app:all": "cd apps/web-app && npm run test:all"
