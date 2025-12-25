@@ -3,6 +3,7 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import viteConfig from "./vite.config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,7 +101,7 @@ export default defineConfig({
     devServer: {
       framework: "react",
       bundler: "vite",
-      viteConfig: require("./vite.config.ts"),
+      viteConfig,
     },
     specPattern: "cypress/component/**/*.cy.{js,jsx,ts,tsx}",
     supportFile: "cypress/support/component.ts",
