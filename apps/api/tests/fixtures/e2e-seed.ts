@@ -148,11 +148,19 @@ const resetDatabase = async (): Promise<void> => {
 };
 
 const seedDatabase = async (): Promise<void> => {
+  console.log('[E2E Seed] Initializing database...');
   await initializeDatabase();
+  console.log('[E2E Seed] Seeding users...');
   const { adminId, userId } = await seedUsers();
+  console.log(`[E2E Seed] Created users - adminId: ${adminId}, userId: ${userId}`);
+  console.log('[E2E Seed] Seeding book...');
   await seedBook(userId);
+  console.log('[E2E Seed] Seeding hook...');
   const hookId = await seedHook(adminId);
+  console.log(`[E2E Seed] Created hook - hookId: ${hookId}`);
+  console.log('[E2E Seed] Seeding execution...');
   await seedExecution(hookId);
+  console.log('[E2E Seed] Seeding completed successfully');
 };
 
 const closeDatabase = async (): Promise<void> => {
@@ -181,7 +189,12 @@ const main = async (): Promise<void> => {
   const command = process.argv[2] || 'reset';
 
   try {
+    console.log(`[E2E Seed] Running command: ${command}`);
     await run(command);
+    console.log(`[E2E Seed] Command ${command} completed successfully`);
+  } catch (error) {
+    console.error(`[E2E Seed] Command ${command} failed:`, error);
+    throw error;
   } finally {
     await closeDatabase();
   }
@@ -189,6 +202,7 @@ const main = async (): Promise<void> => {
 
 if (require.main === module) {
   main().catch((error) => {
+    console.error('[E2E Seed] Fatal error:', error);
     logger.error(
       { err: error instanceof Error ? error : new Error(String(error)) },
       'E2E seed script failed'

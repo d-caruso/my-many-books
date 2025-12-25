@@ -1,5 +1,8 @@
 describe('Debug E2E Authentication', () => {
-  beforeEach(() => cy.resetDatabase());
+  beforeEach(() => {
+    cy.resetDatabase();
+    cy.seedDatabase();
+  });
 
   it('should login as admin and capture page state', () => {
     // Login as admin
