@@ -1,7 +1,11 @@
 import { defineConfig } from "cypress";
 import { execFile } from "node:child_process";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const baseUrl = process.env["CYPRESS_BASE_URL"] || "http://localhost:3000";
 const apiBaseUrl = process.env["CYPRESS_API_BASE_URL"] || "http://localhost:3001/api/v1";
