@@ -48,7 +48,14 @@ const truncateTables = async (sequelize: Sequelize): Promise<void> => {
     AppSetting,
   } = ModelManager.getModels();
 
-  await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+  const dialect = sequelize.getDialect();
+
+  // Disable foreign key checks (database-specific)
+  if (dialect === 'mysql' || dialect === 'mariadb') {
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+  } else if (dialect === 'sqlite') {
+    await sequelize.query('PRAGMA foreign_keys = OFF');
+  }
 
   await HookExecution.destroy({ where: {}, truncate: true });
   await Hook.destroy({ where: {}, truncate: true });
@@ -62,7 +69,12 @@ const truncateTables = async (sequelize: Sequelize): Promise<void> => {
   await AppSetting.destroy({ where: {}, truncate: true });
   await User.destroy({ where: {}, truncate: true });
 
-  await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+  // Re-enable foreign key checks (database-specific)
+  if (dialect === 'mysql' || dialect === 'mariadb') {
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+  } else if (dialect === 'sqlite') {
+    await sequelize.query('PRAGMA foreign_keys = ON');
+  }
 };
 
 const seedUsers = async (): Promise<{ adminId: number; userId: number }> => {
