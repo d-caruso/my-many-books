@@ -14,6 +14,14 @@ const loginWithUser = (profile: E2EUserProfile) => {
   const tokens = buildAuthTokens(profile);
   const response = buildLoginResponse(profile, tokens);
 
+  // Clear any existing session to ensure we start fresh
+  cy.clearCookies();
+  cy.clearLocalStorage();
+  cy.window().then((win) => {
+    win.sessionStorage.clear();
+  });
+
+  // Set up intercepts before visiting any page
   cy.intercept('POST', '**/auth/login', {
     statusCode: 200,
     body: response,
@@ -24,7 +32,10 @@ const loginWithUser = (profile: E2EUserProfile) => {
     body: response,
   }).as('refresh');
 
+  // Visit auth page - should now show login form since session is cleared
   cy.visit('/auth');
+  cy.get('form[aria-label="Login form"]', { timeout: 10000 }).should('be.visible');
+
   cy.get('form[aria-label="Login form"]').within(() => {
     cy.get('input#email').clear().type(profile.email);
     cy.get('input#password').clear().type(profile.password, { log: false });
