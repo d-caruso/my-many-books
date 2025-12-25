@@ -34,47 +34,42 @@ const initializeDatabase = async (): Promise<Sequelize> => {
 };
 
 const truncateTables = async (sequelize: Sequelize): Promise<void> => {
-  const {
-    HookExecution,
-    Hook,
-    BookAuthor,
-    BookCategory,
-    Book,
-    Author,
-    Category,
-    User,
-    AuditLog,
-    Setting,
-    AppSetting,
-  } = ModelManager.getModels();
-
   const dialect = sequelize.getDialect();
 
-  // Disable foreign key checks (database-specific)
+  console.log(`[E2E Seed] Truncating tables for dialect: ${dialect}`);
+
+  // Table names in dependency order (children first, parents last)
+  const tableNames = [
+    'hook_executions',
+    'hooks',
+    'book_authors',
+    'book_categories',
+    'books',
+    'authors',
+    'categories',
+    'audit_logs',
+    'settings',
+    'app_settings',
+    'users',
+  ];
+
   if (dialect === 'mysql' || dialect === 'mariadb') {
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
-  } else if (dialect === 'sqlite') {
-    await sequelize.query('PRAGMA foreign_keys = OFF');
-  }
-
-  await HookExecution.destroy({ where: {}, truncate: true });
-  await Hook.destroy({ where: {}, truncate: true });
-  await BookAuthor.destroy({ where: {}, truncate: true });
-  await BookCategory.destroy({ where: {}, truncate: true });
-  await Book.destroy({ where: {}, truncate: true });
-  await Author.destroy({ where: {}, truncate: true });
-  await Category.destroy({ where: {}, truncate: true });
-  await AuditLog.destroy({ where: {}, truncate: true });
-  await Setting.destroy({ where: {}, truncate: true });
-  await AppSetting.destroy({ where: {}, truncate: true });
-  await User.destroy({ where: {}, truncate: true });
-
-  // Re-enable foreign key checks (database-specific)
-  if (dialect === 'mysql' || dialect === 'mariadb') {
+    for (const tableName of tableNames) {
+      console.log(`[E2E Seed] Truncating table: ${tableName}`);
+      await sequelize.query(`TRUNCATE TABLE ${tableName}`);
+    }
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
   } else if (dialect === 'sqlite') {
+    await sequelize.query('PRAGMA foreign_keys = OFF');
+    for (const tableName of tableNames) {
+      console.log(`[E2E Seed] Deleting from table: ${tableName}`);
+      await sequelize.query(`DELETE FROM ${tableName}`);
+    }
     await sequelize.query('PRAGMA foreign_keys = ON');
   }
+
+  console.log('[E2E Seed] All tables truncated successfully');
 };
 
 const seedUsers = async (): Promise<{ adminId: number; userId: number }> => {
