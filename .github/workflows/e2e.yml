@@ -70,6 +70,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build shared libraries
+        run: |
+          echo "Building hookey library..."
+          npx nx build hookey
+          echo "Building shared-auth library..."
+          cd libs/shared-auth && npm run build && cd ../..
+          echo "Building shared-i18n library..."
+          cd libs/shared-i18n && npm run build && cd ../..
+          echo "Building shared-logging library..."
+          cd libs/shared-logging && npm run build && cd ../..
+
       - name: Run database migrations
         working-directory: apps/api
         run: npm run db:migrate
