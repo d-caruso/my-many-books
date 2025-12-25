@@ -3,8 +3,8 @@ import 'dotenv/config';
 import type { Sequelize } from 'sequelize';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { getLogger } from '@my-many-books/shared-logging';
-import DatabaseConnection from '../../config/database';
-import { ModelManager } from '../../models';
+import DatabaseConnection from '../../src/config/database';
+import { ModelManager } from '../../src/models';
 
 const logger = getLogger();
 
