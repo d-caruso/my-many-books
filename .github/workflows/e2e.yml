@@ -23,6 +23,7 @@ env:
   NODE_VERSION: '22.x'
   NODE_ENV: 'development'
   VITEST_POOL: 'forks'
+  PORT: '3001'
   DB_HOST: '127.0.0.1'
   DB_PORT: '3306'
   DB_NAME: 'my_many_books_e2e'
