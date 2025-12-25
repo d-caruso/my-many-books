@@ -6,7 +6,7 @@ on:
     paths:
       - 'apps/api/**'
       - 'apps/web-app/**'
-      - 'libs/hookey/**'
+      - 'libs/**'
       - 'scripts/e2e/**'
       - '.github/workflows/e2e.yml'
   push:
@@ -14,7 +14,7 @@ on:
     paths:
       - 'apps/api/**'
       - 'apps/web-app/**'
-      - 'libs/hookey/**'
+      - 'libs/**'
       - 'scripts/e2e/**'
       - '.github/workflows/e2e.yml'
   workflow_dispatch:
@@ -22,6 +22,7 @@ on:
 env:
   NODE_VERSION: '22.x'
   NODE_ENV: 'development'
+  VITEST_POOL: 'forks'
   DB_HOST: '127.0.0.1'
   DB_PORT: '3306'
   DB_NAME: 'my_many_books_e2e'
@@ -80,10 +81,21 @@ jobs:
           cd libs/shared-i18n && npm run build && cd ../..
           echo "Building shared-logging library..."
           cd libs/shared-logging && npm run build && cd ../..
+          echo "Building shared-validation library..."
+          cd libs/shared-validation && npm run build && cd ../..
+          echo "Building shared-types library..."
+          cd libs/shared-types && npm run build && cd ../..
+
+      - name: Rebuild SQLite3
+        run: npm rebuild sqlite3 --silent
 
       - name: Run database migrations
         working-directory: apps/api
         run: npm run db:migrate
+
+      - name: Seed database for E2E tests
+        working-directory: apps/api
+        run: npm run e2e:seed
 
       - name: Run Cypress E2E tests
         env:
