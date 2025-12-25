@@ -19,6 +19,11 @@ const loginWithUser = (profile: E2EUserProfile) => {
     body: response,
   }).as('login');
 
+  cy.intercept('POST', '**/auth/refresh', {
+    statusCode: 200,
+    body: response,
+  }).as('refresh');
+
   cy.visit('/auth');
   cy.get('form[aria-label="Login form"]').within(() => {
     cy.get('input#email').clear().type(profile.email);
