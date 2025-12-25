@@ -30,7 +30,7 @@ const runSeedCommand = async (
 ): Promise<null> => {
   await execFileAsync(
     "npx",
-    ["ts-node", "-r", "tsconfig-paths/register", "src/tests/fixtures/e2e-seed.ts", command],
+    ["ts-node", "-r", "tsconfig-paths/register", "tests/fixtures/e2e-seed.ts", command],
     {
       cwd: apiRoot,
       env: { ...process.env, ...seedEnv },
