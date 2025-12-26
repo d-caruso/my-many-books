@@ -39,8 +39,10 @@ const loginWithUser = (profile: E2EUserProfile) => {
     }));
   });
 
-  // Reload to apply authentication
+  // Reload and wait for authentication to be recognized
   cy.reload();
+  // Wait for the page to be ready by checking URL is not /auth
+  cy.url().should('not.include', '/auth');
 
   return cy.wrap({ user: profile, tokens }, { log: false });
 };
