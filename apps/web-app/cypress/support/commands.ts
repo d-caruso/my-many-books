@@ -17,8 +17,7 @@ const loginWithUser = (profile: E2EUserProfile) => {
   const authTokens = {
     idToken: tokens.idToken,
     accessToken: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
-    expiresAt: tokens.expiresAt,
+    expiresAt: Date.now() + tokens.expiresIn * 1000,
   };
 
   const authUser = {
@@ -40,7 +39,12 @@ const loginWithUser = (profile: E2EUserProfile) => {
   cy.session(
     [profile.email, profile.role],
     () => {
-      cy.visit('/');
+      cy.visit('/', {
+        onBeforeLoad(win) {
+          // Enable localStorage storage adapter for E2E tests
+          win.useLocalStorage = true;
+        }
+      });
       cy.window().then((win) => {
         win.localStorage.setItem('auth_tokens', JSON.stringify(authTokens));
         win.localStorage.setItem('auth_user', JSON.stringify(authUser));
