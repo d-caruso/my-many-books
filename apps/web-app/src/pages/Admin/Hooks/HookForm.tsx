@@ -87,7 +87,7 @@ export const HookForm: React.FC<HookFormProps> = ({
     }
   };
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     setTouchedFields((prev) => ({
       ...prev,
       name: true,
@@ -109,7 +109,7 @@ export const HookForm: React.FC<HookFormProps> = ({
       setConfigError(t('form.errors.invalid_json', 'Provide valid JSON'));
       return;
     }
-    onSave(formState);
+    await onSave(formState);
     onClose();
   }, [configError, formState, onClose, onSave, t]);
 
