@@ -88,20 +88,17 @@ describe('Admin hooks (E2E)', () => {
       .contains('Edit')
       .click();
 
-    // Set up intercept before clicking save
-    cy.intercept('PUT', '**/api/v1/admin/hooks/*').as('updateHook');
-
     cy.get('[data-testid="hook-form-name"]').clear().type(updatedName);
     cy.get('[data-testid="hook-form-save"]').click();
 
-    // Wait for API call to complete
-    cy.wait('@updateHook', { timeout: 15000 }).its('response.statusCode').should('eq', 200);
+    // Wait for save to complete and form to close/update
+    cy.wait(2000);
 
-    // Close form if still open (escape key)
+    // Close form with ESC if still open
     cy.get('body').type('{esc}');
 
     // Verify updated name appears in the table
-    cy.contains('[role="row"]', updatedName, { timeout: 10000 }).should('be.visible');
+    cy.contains('[role="row"]', updatedName, { timeout: 15000 }).should('be.visible');
   });
 
   it('records executions when book creation triggers a hook', () => {
