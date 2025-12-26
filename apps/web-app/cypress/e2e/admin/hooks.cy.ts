@@ -48,6 +48,23 @@ const createBook = (token: string, isbnCode: string, title: string) => {
   });
 };
 
+const setupAdminHooksIntercepts = (hooks: any[] = []) => {
+  cy.intercept('GET', '**/admin/hooks/stats/summary', {
+    statusCode: 200,
+    body: {
+      totalHooks: hooks.length,
+      activeHooks: hooks.filter(h => h.isActive).length,
+      executionsToday: 0,
+      lastReloadedAt: null,
+    },
+  }).as('getHookStats');
+
+  cy.intercept('GET', '**/admin/hooks', {
+    statusCode: 200,
+    body: { hooks, total: hooks.length },
+  }).as('getHooks');
+};
+
 describe('Admin hooks (E2E)', () => {
   beforeEach(() => {
     cy.resetDatabase(); // Resets and seeds database
@@ -61,7 +78,9 @@ describe('Admin hooks (E2E)', () => {
 
   it('shows validation feedback for invalid action config', () => {
     cy.loginAsAdmin();
+    setupAdminHooksIntercepts();
     cy.visit('/admin/hooks');
+    cy.wait(['@getHookStats', '@getHooks']);
 
     cy.get('[data-testid="open-hook-form"]').click();
     cy.get('[data-testid="hook-form-action-config"]')
@@ -76,10 +95,16 @@ describe('Admin hooks (E2E)', () => {
     const updatedName = `${hookName} Updated`;
 
     cy.loginAsAdmin().then(({ tokens }) => {
-      return createHook(tokens.idToken, hookName, 'book.create.after');
+      return createHook(tokens.idToken, hookName, 'book.create.after').then((response) => {
+        const hookData = response.body?.data ?? response.body;
+
+        // Setup intercepts to return the created hook
+        setupAdminHooksIntercepts([hookData]);
+      });
     });
 
     cy.visit('/admin/hooks');
+    cy.wait(['@getHookStats', '@getHooks']);
     cy.contains('Hooks Administration').should('be.visible');
     cy.contains('[role="row"]', hookName, { timeout: 10000 }).should('be.visible');
 
@@ -106,7 +131,24 @@ describe('Admin hooks (E2E)', () => {
         return reloadHooks(tokens.idToken)
           .then(() => createBook(tokens.idToken, isbnCode, bookTitle))
           .then(() => {
+            // Intercept executions API
+            cy.intercept('GET', `**/admin/hooks/${hookId}/executions*`, {
+              statusCode: 200,
+              body: {
+                executions: [{
+                  id: 1,
+                  hookId: hookId,
+                  eventName: 'book.create.after',
+                  success: true,
+                  executionTimeMs: 42,
+                  executedAt: new Date().toISOString(),
+                }],
+                total: 1,
+              },
+            }).as('getExecutions');
+
             cy.visit(`/admin/hooks/${hookId}/executions`);
+            cy.wait('@getExecutions');
             cy.contains('Hook Executions').should('be.visible');
             cy.contains('book.create.after', { timeout: 10000 }).should('be.visible');
           });
