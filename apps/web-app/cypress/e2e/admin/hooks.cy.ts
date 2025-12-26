@@ -49,7 +49,9 @@ const createBook = (token: string, isbnCode: string, title: string) => {
 };
 
 const setupAdminHooksIntercepts = (hooks: any[] = []) => {
-  cy.intercept('GET', '**/admin/hooks/stats/summary', {
+  const apiBaseUrl = getApiBaseUrl();
+
+  cy.intercept('GET', `${apiBaseUrl}/admin/hooks/stats/summary`, {
     statusCode: 200,
     body: {
       totalHooks: hooks.length,
@@ -59,7 +61,7 @@ const setupAdminHooksIntercepts = (hooks: any[] = []) => {
     },
   }).as('getHookStats');
 
-  cy.intercept('GET', '**/admin/hooks', {
+  cy.intercept('GET', `${apiBaseUrl}/admin/hooks`, {
     statusCode: 200,
     body: { hooks, total: hooks.length },
   }).as('getHooks');
@@ -131,8 +133,10 @@ describe('Admin hooks (E2E)', () => {
         return reloadHooks(tokens.idToken)
           .then(() => createBook(tokens.idToken, isbnCode, bookTitle))
           .then(() => {
+            const apiBaseUrl = getApiBaseUrl();
+
             // Intercept executions API
-            cy.intercept('GET', `**/admin/hooks/${hookId}/executions*`, {
+            cy.intercept('GET', `${apiBaseUrl}/admin/hooks/${hookId}/executions*`, {
               statusCode: 200,
               body: {
                 executions: [{
