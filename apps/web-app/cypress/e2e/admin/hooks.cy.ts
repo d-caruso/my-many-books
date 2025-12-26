@@ -90,7 +90,12 @@ describe('Admin hooks (E2E)', () => {
 
     cy.get('[data-testid="hook-form-name"]').clear().type(updatedName);
     cy.get('[data-testid="hook-form-save"]').click();
-    cy.contains(updatedName).should('be.visible');
+
+    // Wait for form to close (indicates save completed)
+    cy.get('[data-testid="hook-form-name"]').should('not.exist');
+
+    // Verify updated name appears in the table
+    cy.contains('[role="row"]', updatedName, { timeout: 10000 }).should('be.visible');
   });
 
   it('records executions when book creation triggers a hook', () => {
