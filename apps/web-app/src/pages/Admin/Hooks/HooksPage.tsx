@@ -147,6 +147,7 @@ export const HooksPage: React.FC = () => {
   };
 
   const handleSaveHook = async (data: HookFormData) => {
+    console.log('[HooksPage] handleSaveHook called', { data, editingHook });
     try {
       const payload = {
         name: data.name,
@@ -160,7 +161,9 @@ export const HooksPage: React.FC = () => {
 
       if (editingHook) {
         // Update existing hook
+        console.log('[HooksPage] Updating hook ID:', editingHook.id);
         const updatedHook = await apiService.updateAdminHook(editingHook.id, payload);
+        console.log('[HooksPage] Hook updated successfully:', updatedHook);
         setHooks((prev) =>
           prev.map((hook) => (hook.id === editingHook.id ? updatedHook : hook))
         );
@@ -178,7 +181,9 @@ export const HooksPage: React.FC = () => {
         }
       } else {
         // Create new hook
+        console.log('[HooksPage] Creating new hook');
         const newHook = await apiService.createAdminHook(payload);
+        console.log('[HooksPage] Hook created successfully:', newHook);
         setHooks((prev) => [newHook, ...prev]);
 
         // Update stats
@@ -193,7 +198,7 @@ export const HooksPage: React.FC = () => {
         );
       }
     } catch (err: any) {
-      console.error('Failed to save hook:', err);
+      console.error('[HooksPage] Failed to save hook:', err);
       const message = err?.message || t('errors.save', 'Failed to save hook');
       setError(message);
     }
