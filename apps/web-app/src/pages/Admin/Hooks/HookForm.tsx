@@ -88,6 +88,7 @@ export const HookForm: React.FC<HookFormProps> = ({
   };
 
   const handleSubmit = useCallback(async () => {
+    console.log('[HookForm] handleSubmit called', formState);
     setTouchedFields((prev) => ({
       ...prev,
       name: true,
@@ -99,17 +100,24 @@ export const HookForm: React.FC<HookFormProps> = ({
     const hasPatternError = !formState.eventPattern.trim();
     const hasPriorityError = formState.priority < 0;
 
+    console.log('[HookForm] Validation:', { hasNameError, hasPatternError, hasPriorityError, configError });
+
     if (configError || hasNameError || hasPatternError || hasPriorityError) {
+      console.log('[HookForm] Validation failed, aborting save');
       return;
     }
 
     try {
       JSON.parse(formState.actionConfig);
-    } catch {
+    } catch (err) {
+      console.log('[HookForm] Invalid JSON in actionConfig');
       setConfigError(t('form.errors.invalid_json', 'Provide valid JSON'));
       return;
     }
+
+    console.log('[HookForm] Calling onSave...');
     await onSave(formState);
+    console.log('[HookForm] onSave completed, closing form');
     onClose();
   }, [configError, formState, onClose, onSave, t]);
 
