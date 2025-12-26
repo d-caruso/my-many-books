@@ -14,35 +14,52 @@ const loginWithUser = (profile: E2EUserProfile) => {
   const tokens = buildAuthTokens(profile);
   const response = buildLoginResponse(profile, tokens);
 
+  const authTokens = {
+    idToken: tokens.idToken,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    expiresAt: tokens.expiresAt,
+  };
+
+  const authUser = {
+    id: profile.id,
+    email: profile.email,
+    name: profile.name,
+    surname: profile.surname,
+    role: profile.role,
+    isActive: true,
+  };
+
   // Set up intercept for refresh endpoint
   cy.intercept('POST', '**/auth/refresh', {
     statusCode: 200,
     body: response,
   }).as('refresh');
 
-  // Programmatic login: set tokens directly in localStorage
-  cy.visit('/');
-  cy.window().then((win) => {
-    win.localStorage.setItem('auth_tokens', JSON.stringify({
-      idToken: tokens.idToken,
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresAt: tokens.expiresAt,
-    }));
-    win.localStorage.setItem('auth_user', JSON.stringify({
-      id: profile.id,
-      email: profile.email,
-      name: profile.name,
-      surname: profile.surname,
-      role: profile.role,
-      isActive: true,
-    }));
-  });
-
-  // Reload and wait for authentication to be recognized
-  cy.reload();
-  // Wait for the page to be ready by checking URL is not /auth
-  cy.url().should('not.include', '/auth');
+  // Use cy.session to persist authentication across page visits
+  cy.session(
+    [profile.email, profile.role],
+    () => {
+      cy.visit('/');
+      cy.window().then((win) => {
+        win.localStorage.setItem('auth_tokens', JSON.stringify(authTokens));
+        win.localStorage.setItem('auth_user', JSON.stringify(authUser));
+      });
+      cy.reload();
+      cy.url().should('not.include', '/auth');
+    },
+    {
+      validate() {
+        cy.window().then((win) => {
+          const storedTokens = win.localStorage.getItem('auth_tokens');
+          const storedUser = win.localStorage.getItem('auth_user');
+          if (!storedTokens || !storedUser) {
+            throw new Error('Auth not persisted');
+          }
+        });
+      },
+    }
+  );
 
   return cy.wrap({ user: profile, tokens }, { log: false });
 };
