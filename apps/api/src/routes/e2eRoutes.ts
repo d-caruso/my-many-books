@@ -10,7 +10,7 @@ const verifyE2EToken = (
   next: express.NextFunction
 ): void => {
   const token = req.header('X-E2E-Secret');
-  const expectedToken = process.env.E2E_SECRET_TOKEN;
+  const expectedToken = process.env['E2E_SECRET_TOKEN'];
 
   if (!expectedToken) {
     res.status(503).json({ error: 'E2E endpoints not configured' });
@@ -26,7 +26,7 @@ const verifyE2EToken = (
 };
 
 // Only enable in non-production environments
-if (process.env.NODE_ENV !== 'production') {
+if (process.env['NODE_ENV'] !== 'production') {
   router.post('/reset', verifyE2EToken, resetE2EDatabase);
   router.post('/seed', verifyE2EToken, seedE2EDatabase);
 }
