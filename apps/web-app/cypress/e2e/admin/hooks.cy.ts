@@ -88,17 +88,25 @@ describe('Admin hooks (E2E)', () => {
       .contains('Edit')
       .click();
 
-    cy.get('[data-testid="hook-form-name"]').clear().type(updatedName);
-    cy.get('[data-testid="hook-form-save"]').click();
+    // Wait for form to open and update the name
+    cy.get('[data-testid="hook-form-name"]', { timeout: 5000 })
+      .should('be.visible')
+      .clear()
+      .type(updatedName);
 
-    // Wait for save to complete and form to close/update
+    // Click save and wait
+    cy.get('[data-testid="hook-form-save"]').click();
     cy.wait(2000);
 
-    // Close form with ESC if still open
+    // Close form
     cy.get('body').type('{esc}');
 
+    // Reload page to get fresh data from backend
+    cy.reload();
+    cy.contains('Hooks Administration', { timeout: 10000 }).should('be.visible');
+
     // Verify updated name appears in the table
-    cy.contains('[role="row"]', updatedName, { timeout: 15000 }).should('be.visible');
+    cy.contains('[role="row"]', updatedName, { timeout: 10000 }).should('be.visible');
   });
 
   it('records executions when book creation triggers a hook', () => {
