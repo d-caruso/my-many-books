@@ -40,12 +40,7 @@ class DatabaseConnection {
       dialectOptions: {
         ssl: DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
       },
-      logging:
-        NODE_ENV === 'development'
-          ? (msg: string): void => {
-              getLogger().debug({ sql: msg }, 'SQL query');
-            }
-          : false,
+      logging: false, // Disabled for cleaner E2E test logs
       define: {
         timestamps: true,
         underscored: true,
