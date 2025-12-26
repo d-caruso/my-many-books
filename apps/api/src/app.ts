@@ -20,6 +20,7 @@ import adminRoutes from './routes/adminRoutes';
 import authRoutes from './routes/authRoutes';
 import hookRoutes from './routes/hookRoutes';
 import settingsRoutes from './routes/settingsRoutes';
+import e2eRoutes from './routes/e2eRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
 import { initializeHookSystem } from './services/hooks/hookSystem';
@@ -88,6 +89,7 @@ app.use(`${BASE_PATH}/isbn`, isbnRoutes);
 app.use(`${BASE_PATH}/settings`, settingsRoutes);
 app.use(`${BASE_PATH}/admin`, adminRoutes);
 app.use(`${BASE_PATH}/admin/hooks`, hookRoutes);
+app.use(`${BASE_PATH}/e2e`, e2eRoutes);
 
 // ===== 404 HANDLER =====
 app.use((_req, res): void => {

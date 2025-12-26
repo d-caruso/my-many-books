@@ -50,8 +50,7 @@ const createBook = (token: string, isbnCode: string, title: string) => {
 
 describe('Admin hooks (E2E)', () => {
   beforeEach(() => {
-    cy.resetDatabase();
-    cy.seedDatabase();
+    cy.resetDatabase(); // Now resets AND seeds in one call
   });
 
   it('blocks non-admin access to hooks', () => {
