@@ -153,16 +153,16 @@ describe('DatabaseConnection', () => {
       // Sequelize constructor: new Sequelize(database, username, password, options)
       expect(MockSequelize).toHaveBeenCalled();
       
-      // Check that MockSequelize was called with proper arguments including logging function
+      // Check that MockSequelize was called with proper arguments
       const call = (MockSequelize as any).mock.calls[0];
       expect(call).toBeDefined();
       expect(call.length).toBe(4); // database, username, password, options
-      
+
       const [database, username, password, options] = call;
       expect(database).toBe('testdb');
-      expect(username).toBe('testuser');  
+      expect(username).toBe('testuser');
       expect(password).toBe('testpass');
-      expect(typeof options.logging).toBe('function');
+      expect(options.logging).toBe(false); // SQL logging disabled for cleaner E2E output
     });
 
     it('should throw error when required environment variables are missing', () => {
