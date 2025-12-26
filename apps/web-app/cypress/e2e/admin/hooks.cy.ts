@@ -79,12 +79,14 @@ describe('Admin hooks (E2E)', () => {
     // Set up intercept for ANY PUT to hooks (we'll verify hookId later)
     cy.intercept('PUT', '**/admin/hooks/*').as('updateHook');
 
-    cy.loginAsAdmin().then(({ tokens }) => {
-      return createHook(tokens.idToken, hookName, 'book.create.after').then((response) => {
+    cy.loginAsAdmin()
+      .then(({ tokens }) => {
+        return createHook(tokens.idToken, hookName, 'book.create.after');
+      })
+      .then((response) => {
         hookId = response.body?.data?.id ?? response.body?.id;
         console.log('[E2E DEBUG] Created hook with ID:', hookId);
       });
-    });
 
     cy.visit('/admin/hooks');
 
