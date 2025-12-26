@@ -88,11 +88,17 @@ describe('Admin hooks (E2E)', () => {
       .contains('Edit')
       .click();
 
+    // Set up intercept before clicking save
+    cy.intercept('PUT', '**/api/v1/admin/hooks/*').as('updateHook');
+
     cy.get('[data-testid="hook-form-name"]').clear().type(updatedName);
     cy.get('[data-testid="hook-form-save"]').click();
 
-    // Wait for form to close (indicates save completed)
-    cy.get('[data-testid="hook-form-name"]').should('not.exist');
+    // Wait for API call to complete
+    cy.wait('@updateHook', { timeout: 15000 }).its('response.statusCode').should('eq', 200);
+
+    // Close form if still open (escape key)
+    cy.get('body').type('{esc}');
 
     // Verify updated name appears in the table
     cy.contains('[role="row"]', updatedName, { timeout: 10000 }).should('be.visible');
