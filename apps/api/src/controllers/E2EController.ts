@@ -26,7 +26,7 @@ const seedConfig = {
 const truncateTables = async (sequelize: Sequelize): Promise<void> => {
   const dialect = sequelize.getDialect();
 
-  logger.info('Truncating tables for E2E tests', { dialect });
+  logger.info({ dialect }, 'Truncating tables for E2E tests');
 
   const tableNames = [
     'hook_executions',
@@ -111,15 +111,15 @@ const seedE2EData = async (): Promise<void> => {
     executedAt: new Date(),
   } as any);
 
-  logger.info('E2E data seeded successfully', {
+  logger.info({
     adminId: admin.id,
     userId: user.id,
     hookId: hook.id,
-  });
+  }, 'E2E data seeded successfully');
 };
 
 export const resetE2EDatabase = async (
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> => {
   try {
@@ -138,7 +138,7 @@ export const resetE2EDatabase = async (
 };
 
 export const seedE2EDatabase = async (
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> => {
   try {
