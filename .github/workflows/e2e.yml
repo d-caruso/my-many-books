@@ -45,7 +45,6 @@ env:
   E2E_USER_EMAIL: 'reader@example.com'
   E2E_USER_NAME: 'Reader'
   E2E_USER_SURNAME: 'User'
-  E2E_SECRET_TOKEN: 'github-actions-e2e-secret-12345'
   CYPRESS_VIDEO: 'true'
 
 jobs:

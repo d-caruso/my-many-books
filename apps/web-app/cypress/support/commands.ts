@@ -61,27 +61,11 @@ Cypress.Commands.add('loginAsUser', () => {
 });
 
 Cypress.Commands.add('resetDatabase', () => {
-  const apiBaseUrl = Cypress.env('apiBaseUrl') as string;
-  const e2eSecret = Cypress.env('e2eSecret') as string;
-  return cy.request({
-    method: 'POST',
-    url: `${apiBaseUrl}/e2e/reset`,
-    headers: {
-      'X-E2E-Secret': e2eSecret,
-    },
-  });
+  return cy.task('db:reset');
 });
 
 Cypress.Commands.add('seedDatabase', () => {
-  const apiBaseUrl = Cypress.env('apiBaseUrl') as string;
-  const e2eSecret = Cypress.env('e2eSecret') as string;
-  return cy.request({
-    method: 'POST',
-    url: `${apiBaseUrl}/e2e/seed`,
-    headers: {
-      'X-E2E-Secret': e2eSecret,
-    },
-  });
+  return cy.task('db:seed');
 });
 
 Cypress.Commands.add('logout', () => {

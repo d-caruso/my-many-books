@@ -20,7 +20,6 @@ const userEmail = process.env["E2E_USER_EMAIL"] || "reader@example.com";
 const userName = process.env["E2E_USER_NAME"] || "Reader";
 const userSurname = process.env["E2E_USER_SURNAME"] || "User";
 const userPassword = process.env["E2E_USER_PASSWORD"] || "password123";
-const e2eSecret = process.env["E2E_SECRET_TOKEN"] || "test-secret-token";
 
 const execFileAsync = promisify(execFile);
 const apiRoot = path.resolve(__dirname, "..", "api");
@@ -88,7 +87,6 @@ export default defineConfig({
   env: {
     apiUrl: apiBaseUrl,
     apiBaseUrl,
-    e2eSecret,
     adminEmail,
     adminName,
     adminSurname,
