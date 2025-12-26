@@ -91,9 +91,9 @@ describe('HookForm', () => {
     vi.useRealTimers();
   });
 
-  test('calls onSave with parsed JSON and closes dialog', () => {
+  test('calls onSave with parsed JSON and closes dialog', async () => {
     const onClose = vi.fn();
-    const onSave = vi.fn();
+    const onSave = vi.fn().mockResolvedValue(undefined);
 
     renderWithProviders(
       <HookForm open onClose={onClose} onSave={onSave} />
@@ -108,8 +108,11 @@ describe('HookForm', () => {
     const saveButton = screen.getByRole('button', { name: /Save Hook/ });
     fireEvent.click(saveButton);
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Test Hook' }));
-    expect(onClose).toHaveBeenCalled();
+    // Wait for async operation to complete
+    await vi.waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Test Hook' }));
+      expect(onClose).toHaveBeenCalled();
+    });
   });
 
   test('shows validation error when action config JSON is invalid', () => {

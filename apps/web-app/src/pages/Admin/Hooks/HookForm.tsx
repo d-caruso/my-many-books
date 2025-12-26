@@ -35,7 +35,7 @@ export interface HookFormProps {
   open: boolean;
   initialData?: Partial<HookFormData>;
   onClose: () => void;
-  onSave: (data: HookFormData) => void;
+  onSave: (data: HookFormData) => void | Promise<void>;
 }
 
 const defaultData: HookFormData = {

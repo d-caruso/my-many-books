@@ -295,9 +295,7 @@ export const HooksPage: React.FC = () => {
         open={isFormOpen}
         initialData={editingHook as any}
         onClose={handleCloseForm}
-        onSave={(data: HookFormData) => {
-          handleSaveHook(data);
-        }}
+        onSave={handleSaveHook}
       />
     </AdminLayout>
   );
