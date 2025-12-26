@@ -14,36 +14,33 @@ const loginWithUser = (profile: E2EUserProfile) => {
   const tokens = buildAuthTokens(profile);
   const response = buildLoginResponse(profile, tokens);
 
-  // Clear any existing session to ensure we start fresh
-  cy.clearCookies();
-  cy.clearLocalStorage();
-  cy.window().then((win) => {
-    win.sessionStorage.clear();
-  });
-
-  // Set up intercepts before visiting any page
-  cy.intercept('POST', '**/auth/login', {
-    statusCode: 200,
-    body: response,
-  }).as('login');
-
+  // Set up intercept for refresh endpoint
   cy.intercept('POST', '**/auth/refresh', {
     statusCode: 200,
     body: response,
   }).as('refresh');
 
-  // Visit auth page - should now show login form since session is cleared
-  cy.visit('/auth');
-  cy.get('form[aria-label="Login form"]', { timeout: 10000 }).should('be.visible');
-
-  cy.get('form[aria-label="Login form"]').within(() => {
-    cy.get('input#email').clear().type(profile.email);
-    cy.get('input#password').clear().type(profile.password, { log: false });
-    cy.get('button[type="submit"]').click();
+  // Programmatic login: set tokens directly in localStorage
+  cy.visit('/');
+  cy.window().then((win) => {
+    win.localStorage.setItem('auth_tokens', JSON.stringify({
+      idToken: tokens.idToken,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresAt: tokens.expiresAt,
+    }));
+    win.localStorage.setItem('auth_user', JSON.stringify({
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+      surname: profile.surname,
+      role: profile.role,
+      isActive: true,
+    }));
   });
 
-  cy.wait('@login');
-  cy.location('pathname').should('not.eq', '/auth');
+  // Reload to apply authentication
+  cy.reload();
 
   return cy.wrap({ user: profile, tokens }, { log: false });
 };
