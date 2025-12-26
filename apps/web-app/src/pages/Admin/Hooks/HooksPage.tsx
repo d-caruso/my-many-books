@@ -146,51 +146,57 @@ export const HooksPage: React.FC = () => {
     setEditingHook(null);
   };
 
-  const handleSaveHook = (data: HookFormData) => {
-    setHooks((prev) => {
-      if (editingHook) {
-        return prev.map((hook) =>
-          hook.id === editingHook.id
-            ? {
-                ...hook,
-                name: data.name,
-                eventPattern: data.eventPattern,
-                isActive: data.isActive,
-                priority: data.priority,
-                actionType: data.actionType,
-              }
-            : hook
-        );
-      }
-      const newHook: AdminHookSummary = {
-        id: Date.now(),
+  const handleSaveHook = async (data: HookFormData) => {
+    try {
+      const payload = {
         name: data.name,
+        description: data.description,
         eventPattern: data.eventPattern,
         actionType: data.actionType,
+        actionConfig: data.actionConfig,
         priority: data.priority,
         isActive: data.isActive,
-        lastExecution: undefined,
       };
-      return [newHook, ...prev];
-    });
 
-    setStats((prev) => {
-      if (!prev) return prev;
-      if (!editingHook) {
-        return {
-          ...prev,
-          totalHooks: prev.totalHooks + 1,
-          activeHooks: prev.activeHooks + (data.isActive ? 1 : 0),
-        };
+      if (editingHook) {
+        // Update existing hook
+        const updatedHook = await apiService.updateAdminHook(editingHook.id, payload);
+        setHooks((prev) =>
+          prev.map((hook) => (hook.id === editingHook.id ? updatedHook : hook))
+        );
+
+        // Update stats if active status changed
+        if (editingHook.isActive !== data.isActive) {
+          setStats((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  activeHooks: prev.activeHooks + (data.isActive ? 1 : -1),
+                }
+              : prev
+          );
+        }
+      } else {
+        // Create new hook
+        const newHook = await apiService.createAdminHook(payload);
+        setHooks((prev) => [newHook, ...prev]);
+
+        // Update stats
+        setStats((prev) =>
+          prev
+            ? {
+                ...prev,
+                totalHooks: prev.totalHooks + 1,
+                activeHooks: prev.activeHooks + (data.isActive ? 1 : 0),
+              }
+            : prev
+        );
       }
-      if (editingHook.isActive === data.isActive) {
-        return prev;
-      }
-      return {
-        ...prev,
-        activeHooks: prev.activeHooks + (data.isActive ? 1 : -1),
-      };
-    });
+    } catch (err: any) {
+      console.error('Failed to save hook:', err);
+      const message = err?.message || t('errors.save', 'Failed to save hook');
+      setError(message);
+    }
   };
 
   return (
