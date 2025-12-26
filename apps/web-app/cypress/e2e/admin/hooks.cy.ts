@@ -101,20 +101,38 @@ describe('Admin hooks (E2E)', () => {
       .contains('Edit')
       .click();
 
-    // Wait for form and verify it opened, then update the name
+    // Wait for form and verify it opened
+    cy.log('Verifying form opened');
+    cy.get('[data-testid="hook-form-name"]', { timeout: 5000 }).should('be.visible');
+
+    // Log all form field values for debugging
+    cy.get('[data-testid="hook-form-name"]').invoke('val').then((val) => {
+      cy.log(`Form name value: ${val}`);
+    });
+
+    // Update the name
     cy.log('Updating hook name in form');
-    cy.get('[data-testid="hook-form-name"]', { timeout: 5000 })
-      .should('be.visible')
+    cy.get('[data-testid="hook-form-name"]')
       .clear()
       .type(updatedName)
       .should('have.value', updatedName);
+
+    // Verify save button state before clicking
+    cy.log('Checking save button state');
+    cy.get('[data-testid="hook-form-save"]').then(($btn) => {
+      cy.log(`Save button disabled: ${$btn.prop('disabled')}`);
+      cy.log(`Save button visible: ${$btn.is(':visible')}`);
+    });
 
     // Click save button
     cy.log(`Saving with new name: ${updatedName}`);
     cy.get('[data-testid="hook-form-save"]')
       .should('be.visible')
       .should('not.be.disabled')
-      .click();
+      .click()
+      .then(() => {
+        cy.log('Save button clicked successfully');
+      });
 
     // Wait for PUT request and verify it succeeded
     cy.wait('@updateHook', { timeout: 10000 }).then((interception) => {
