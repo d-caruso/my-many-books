@@ -7,6 +7,11 @@ import type { E2EAuthTokens, E2EUserProfile } from './auth';
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 
+// Global setup: Enable localStorage storage adapter for all E2E tests
+Cypress.on('window:before:load', (win) => {
+  win.useLocalStorage = true;
+});
+
 declare global {
   namespace Cypress {
     interface Chainable {
