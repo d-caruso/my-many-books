@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import ErrorIcon from '@mui/icons-material/Error';
 import BookIcon from '@mui/icons-material/MenuBook';
+import PushPinIcon from '@mui/icons-material/PushPin';
 import { Book, Author, Category } from '../../types';
 
 interface BookSearchResultsProps {
@@ -132,7 +133,7 @@ interface BookCardProps {
 }
 
 const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
-  const { t } = useTranslation(['books', 'common']);
+  const { t } = useTranslation(['books', 'common', 'search']);
 
   const formatAuthors = (authors?: Author[]) => {
     if (!authors || authors.length === 0) return t('books:unknown_author');
@@ -195,16 +196,28 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
           <BookIcon sx={{ fontSize: 48 }} />
         </CardMedia>
         
-        {/* Status badge */}
-        {book.status && (
-          <Box position="absolute" top={8} right={8}>
+        {/* Badges container */}
+        <Box position="absolute" top={8} right={8} display="flex" flexDirection="column" gap={0.5}>
+          {/* Pinned badge */}
+          {(book as any).isPinned && (
+            <Chip
+              label={t('search:pinned.badge')}
+              size="small"
+              color="secondary"
+              icon={<PushPinIcon />}
+              sx={{ fontWeight: 'bold' }}
+            />
+          )}
+
+          {/* Status badge */}
+          {book.status && (
             <Chip
               label={formatStatus(book.status)}
               size="small"
               color={getStatusColor(book.status) as any}
             />
-          </Box>
-        )}
+          )}
+        </Box>
       </Box>
 
       {/* Book details */}
