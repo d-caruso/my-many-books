@@ -76,6 +76,17 @@ export const SETTING_DEFINITIONS = {
         } as SettingDefinition<'remove' | 'refresh'>
       }
     }
+  },
+  SEARCH: {
+    FULLTEXT: {
+      ENABLED: {
+        key: 'search.fulltext.enabled',
+        category: 'features',
+        type: 'boolean',
+        defaultValue: true,
+        description: 'Enable MySQL FULLTEXT search (can be overridden by SEARCH_FULLTEXT_FORCE_DISABLED or SEARCH_FULLTEXT_FORCE_ENABLED env vars)'
+      } as SettingDefinition<boolean>
+    }
   }
 } as const;
 
@@ -103,6 +114,11 @@ export const SETTING_KEYS = {
       ACTIVE: {
         ONCHANGE: SETTING_DEFINITIONS.USERS.LIST.ACTIVE.ONCHANGE.key
       }
+    }
+  },
+  SEARCH: {
+    FULLTEXT: {
+      ENABLED: SETTING_DEFINITIONS.SEARCH.FULLTEXT.ENABLED.key
     }
   }
 } as const;
