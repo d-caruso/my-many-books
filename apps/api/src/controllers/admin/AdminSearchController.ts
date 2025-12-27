@@ -19,6 +19,47 @@ export class AdminSearchController extends BaseController {
   }
 
   /**
+   * GET /admin/search/pinned?resource_type=book
+   * Get pinned results by resource type (optional filter)
+   */
+  async getPinnedResults(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    const resourceType = this.getQueryParameter(request, 'resource_type');
+
+    // If resource_type is provided, validate it
+    if (resourceType && !RESOURCE_TYPE_VALUES.includes(resourceType as any)) {
+      return this.createErrorResponse(
+        `Invalid resource_type: ${resourceType}. Must be one of: ${RESOURCE_TYPE_VALUES.join(', ')}`,
+        400
+      );
+    }
+
+    try {
+      const pinnedResults = resourceType
+        ? await this.pinnedResultsService.getPinnedResultsByType(resourceType as any)
+        : await this.pinnedResultsService.getAllPinnedResults();
+
+      return this.createSuccessResponse({
+        results: pinnedResults.map(pr => ({
+          id: pr.id,
+          resource_type: pr.resourceType,
+          resource_id: pr.resourceId,
+          priority: pr.priority,
+          active: pr.active,
+          created_at: pr.creationDate,
+          updated_at: pr.updateDate,
+        })),
+        total: pinnedResults.length,
+      });
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  /**
    * POST /admin/search/pinned
    * Create a new pinned result
    */
