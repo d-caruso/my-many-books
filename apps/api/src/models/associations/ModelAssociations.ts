@@ -17,6 +17,7 @@ export interface ModelRegistry {
   AuditLog: ModelStatic<Model>;
   Setting: ModelStatic<Model>;
   AppSetting: ModelStatic<Model>;
+  SearchPinnedResult: ModelStatic<Model>;
 }
 
 export class ModelAssociations {
