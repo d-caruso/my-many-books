@@ -50,5 +50,59 @@
     "results_count": "{{filtered}} di {{total}} libri",
     "results_total": "{{total}} libri",
     "no_books": "Nessun libro trovato"
+  },
+  "fulltext": {
+    "title": "Ricerca Full-Text",
+    "enabled": "Abilitata",
+    "disabled": "Disabilitata",
+    "status": {
+      "force_disabled": "Disabilitata dal deployment",
+      "force_enabled": "Forzata dal deployment",
+      "database": "Controllata tramite pannello admin",
+      "default": "Impostazione predefinita"
+    },
+    "help": {
+      "force_disabled": "La ricerca full-text è permanentemente disabilitata dalla configurazione dell'infrastruttura (SEARCH_FULLTEXT_FORCE_DISABLED=true). Contatta l'amministratore di sistema per abilitarla.",
+      "force_enabled": "La ricerca full-text è permanentemente abilitata dalla configurazione dell'infrastruttura (SEARCH_FULLTEXT_FORCE_ENABLED=true). Non può essere disabilitata tramite questo pannello.",
+      "database": "Puoi attivare o disattivare la ricerca full-text tramite questo pannello admin.",
+      "default": "La ricerca full-text sta utilizzando l'impostazione predefinita. Abilitala per migliorare la pertinenza della ricerca."
+    }
+  },
+  "sorting": {
+    "title": "Opzioni di Ordinamento",
+    "sortBy": "Ordina per",
+    "sortOrder": "Ordine di ordinamento",
+    "relevance": "Migliore corrispondenza",
+    "fields": {
+      "title": "Titolo",
+      "createdAt": "Data creazione",
+      "updatedAt": "Data aggiornamento",
+      "status": "Stato",
+      "isbnCode": "ISBN",
+      "editionNumber": "Edizione",
+      "editionDate": "Data edizione",
+      "name": "Nome",
+      "surname": "Cognome",
+      "nationality": "Nazionalità"
+    },
+    "directions": {
+      "asc": "Crescente",
+      "desc": "Decrescente"
+    }
+  },
+  "pinned": {
+    "title": "Risultati Bloccati",
+    "badge": "Bloccato",
+    "pin": "Blocca in cima",
+    "unpin": "Sblocca",
+    "reorder": "Riordina risultati bloccati",
+    "empty": "Nessun risultato bloccato",
+    "help": "I risultati bloccati appaiono sempre per primi nei risultati di ricerca, indipendentemente dalla pertinenza."
+  },
+  "results": {
+    "found": "{{count}} risultato trovato",
+    "found_plural": "{{count}} risultati trovati",
+    "empty": "Nessun risultato trovato per \"{{query}}\"",
+    "tryAgain": "Prova un termine di ricerca diverso"
   }
 }

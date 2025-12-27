@@ -14,6 +14,19 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
   public nationality?: string;
   public userId!: number;
 
+  // Sortable fields for search and list endpoints
+  static readonly SORTABLE_FIELDS = Object.freeze({
+    NAME: 'name',
+    SURNAME: 'surname',
+    NATIONALITY: 'nationality',
+    CREATED_AT: 'createdAt',
+    UPDATED_AT: 'updatedAt',
+  } as const);
+
+  static readonly SORTABLE_FIELD_VALUES = Object.freeze(
+    Object.values(Author.SORTABLE_FIELDS)
+  );
+
   static override getTableName(): string {
     return TABLE_NAMES.AUTHORS;
   }
