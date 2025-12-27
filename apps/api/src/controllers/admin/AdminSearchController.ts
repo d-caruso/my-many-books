@@ -166,6 +166,32 @@ export class AdminSearchController extends BaseController {
     }
   }
 
+  /**
+   * DELETE /admin/search/pinned/:id
+   * Delete a pinned result
+   */
+  async deletePinnedResult(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    const id = this.getPathParameter(request, 'id');
+    if (!id || isNaN(Number(id))) {
+      return this.createErrorResponse('Invalid pinned result ID', 400);
+    }
+
+    try {
+      await this.pinnedResultsService.deletePinnedResult(Number(id));
+
+      return this.createSuccessResponse(null, 'Pinned result deleted successfully', undefined, 204);
+    } catch (error: any) {
+      if (error.code === 'PINNED_RESULT_NOT_FOUND') {
+        return this.createErrorResponse(error.message, 404);
+      }
+      throw error;
+    }
+  }
+
   private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
     if (!request.user?.id) {
       return this.createErrorResponseI18n('errors:auth_required', 401);
