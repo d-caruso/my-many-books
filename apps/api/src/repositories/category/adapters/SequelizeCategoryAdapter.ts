@@ -250,4 +250,126 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
     const offset = options?.offset ?? 0;
     return { limit, offset };
   }
+
+  async searchFulltext(
+    query: string,
+    userId?: number,
+    limit = 20,
+    offset = 0
+  ): Promise<{
+    rows: CategoryEntity[];
+    total: number;
+    relevanceScores: Map<number, number>;
+  }> {
+    const sql = `
+      SELECT
+        c.id, c.name, c.user_id as userId,
+        c.creation_date as creationDate, c.update_date as updateDate,
+        MATCH(c.name) AGAINST(:query IN NATURAL LANGUAGE MODE) as relevance
+      FROM categories c
+      WHERE MATCH(c.name) AGAINST(:query IN NATURAL LANGUAGE MODE)
+        ${userId ? 'AND c.user_id = :userId' : ''}
+      ORDER BY relevance DESC, c.id ASC
+      LIMIT :limit OFFSET :offset
+    `;
+
+    const countSql = `
+      SELECT COUNT(*) as total
+      FROM categories c
+      WHERE MATCH(c.name) AGAINST(:query IN NATURAL LANGUAGE MODE)
+        ${userId ? 'AND c.user_id = :userId' : ''}
+    `;
+
+    const replacements: Record<string, unknown> = { query, limit, offset };
+    if (userId) {
+      replacements['userId'] = userId;
+    }
+
+    const [results, countResults] = await Promise.all([
+      Category.sequelize!.query(sql, {
+        replacements,
+        type: 'SELECT',
+        raw: true,
+      }),
+      Category.sequelize!.query(countSql, {
+        replacements: { query, ...(userId ? { userId } : {}) },
+        type: 'SELECT',
+        raw: true,
+      }),
+    ]);
+
+    const rows = results as Array<CategoryEntity & { relevance: number }>;
+    const total = (countResults as Array<{ total: number }>)[0]?.total || 0;
+
+    const relevanceScores = new Map<number, number>();
+    rows.forEach(row => {
+      relevanceScores.set(row.id, row.relevance);
+    });
+
+    return { rows, total, relevanceScores };
+  }
+
+  async searchLike(
+    query: string,
+    userId?: number,
+    limit = 20,
+    offset = 0
+  ): Promise<{
+    rows: CategoryEntity[];
+    total: number;
+  }> {
+    const where: WhereOptions<Category> = {
+      name: { [Op.like]: `%${query}%` },
+    };
+
+    if (userId !== undefined) {
+      where['userId'] = userId;
+    }
+
+    const { rows, count } = await Category.findAndCountAll({
+      where,
+      limit,
+      offset,
+      order: [
+        ['name', 'ASC'],
+        ['id', 'ASC'],
+      ],
+      raw: true,
+    });
+
+    return {
+      rows: rows as CategoryEntity[],
+      total: count,
+    };
+  }
+
+  async findPinned(userId?: number): Promise<Array<{
+    resourceId: number;
+    priority: number;
+  }>> {
+    const sql = `
+      SELECT
+        spr.resource_id as resourceId,
+        spr.priority
+      FROM search_pinned_results spr
+      INNER JOIN categories c ON spr.resource_id = c.id
+      WHERE spr.resource_type = 'category'
+        AND spr.active = true
+        ${userId ? 'AND c.user_id = :userId' : ''}
+      ORDER BY spr.priority ASC
+    `;
+
+    const replacements: Record<string, unknown> = {};
+    if (userId) {
+      replacements['userId'] = userId;
+    }
+
+    const results = await Category.sequelize!.query(sql, {
+      replacements,
+      type: 'SELECT',
+      raw: true,
+    });
+
+    return results as Array<{ resourceId: number; priority: number }>;
+  }
 }
