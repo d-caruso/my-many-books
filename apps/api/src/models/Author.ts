@@ -94,6 +94,11 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
             fields: ['nationality'],
             name: 'idx_author_nationality',
           },
+          {
+            type: 'FULLTEXT',
+            fields: ['name', 'surname'],
+            name: 'idx_author_fulltext_name_surname',
+          },
         ],
       }
     );
