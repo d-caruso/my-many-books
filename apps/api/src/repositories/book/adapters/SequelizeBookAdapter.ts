@@ -337,4 +337,149 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       name: category.name,
     }));
   }
+
+  // ===== FULLTEXT Search Methods ==========================================
+
+  /**
+   * Search using MySQL FULLTEXT index with MATCH...AGAINST
+   * Returns books with relevance scores
+   */
+  async searchFulltext(
+    query: string,
+    userId?: number,
+    limit = 20,
+    offset = 0
+  ): Promise<{ rows: BookEntity[]; total: number; relevanceScores: Map<number, number> }> {
+    const where: WhereOptions<BookAttributes> = {};
+    if (userId) {
+      where.userId = userId;
+    }
+
+    // Execute FULLTEXT search with relevance scoring
+    const sql = `
+      SELECT
+        b.*,
+        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE) as relevance_score
+      FROM books b
+      ${userId ? 'WHERE b.user_id = :userId AND' : 'WHERE'}
+        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
+      ORDER BY relevance_score DESC
+      LIMIT :limit OFFSET :offset
+    `;
+
+    const countSql = `
+      SELECT COUNT(*) as total
+      FROM books b
+      ${userId ? 'WHERE b.user_id = :userId AND' : 'WHERE'}
+        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
+    `;
+
+    const replacements: Record<string, unknown> = {
+      searchQuery: query,
+      limit,
+      offset,
+    };
+    if (userId) {
+      replacements.userId = userId;
+    }
+
+    const [results, countResults] = await Promise.all([
+      Book.sequelize!.query(sql, {
+        replacements,
+        type: 'SELECT' as any,
+      }),
+      Book.sequelize!.query(countSql, {
+        replacements,
+        type: 'SELECT' as any,
+      }),
+    ]);
+
+    const relevanceScores = new Map<number, number>();
+    const bookIds = (results as any[]).map((row: any) => {
+      relevanceScores.set(row.id, row.relevance_score);
+      return row.id;
+    });
+
+    const books = await Book.findAll({
+      where: { id: bookIds },
+      include: [
+        { model: Author, as: 'authors' },
+        { model: Category, as: 'categories' },
+      ],
+    });
+
+    const total = (countResults as any[])[0]?.total || 0;
+
+    return {
+      rows: books.map(book => this.toDomain(book)!),
+      total,
+      relevanceScores,
+    };
+  }
+
+  /**
+   * Search using LIKE operator (fallback when FULLTEXT is disabled)
+   */
+  async searchLike(
+    query: string,
+    userId?: number,
+    limit = 20,
+    offset = 0
+  ): Promise<{ rows: BookEntity[]; total: number }> {
+    const where: WhereOptions<BookAttributes> = {
+      [Op.or]: [
+        { title: { [Op.like]: `%${query}%` } },
+        { notes: { [Op.like]: `%${query}%` } },
+      ],
+    };
+
+    if (userId) {
+      where.userId = userId;
+    }
+
+    const { rows, count } = await Book.findAndCountAll({
+      where,
+      limit,
+      offset,
+      include: [
+        { model: Author, as: 'authors' },
+        { model: Category, as: 'categories' },
+      ],
+      order: [['title', 'ASC']],
+    });
+
+    return {
+      rows: rows.map(book => this.toDomain(book)!),
+      total: count,
+    };
+  }
+
+  /**
+   * Find pinned results for books
+   */
+  async findPinned(userId?: number): Promise<Array<{ resourceId: number; priority: number }>> {
+    const sql = `
+      SELECT
+        spr.resource_id as resourceId,
+        spr.priority
+      FROM search_pinned_results spr
+      INNER JOIN books b ON spr.resource_id = b.id
+      WHERE spr.resource_type = 'book'
+        AND spr.active = true
+        ${userId ? 'AND b.user_id = :userId' : ''}
+      ORDER BY spr.priority ASC
+    `;
+
+    const replacements: Record<string, unknown> = {};
+    if (userId) {
+      replacements.userId = userId;
+    }
+
+    const results = await Book.sequelize!.query(sql, {
+      replacements,
+      type: 'SELECT' as any,
+    });
+
+    return results as Array<{ resourceId: number; priority: number }>;
+  }
 }
