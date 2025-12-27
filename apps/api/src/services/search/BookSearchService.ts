@@ -150,6 +150,14 @@ export class BookSearchService {
     // Sort regular results by sortBy/sortOrder or relevance
     if (sortFields.length > 0) {
       this.sortResults(regularBooks, sortFields);
+    } else if (fulltextEnabled && relevanceScores.size > 0) {
+      // For relevance-based sorting (no explicit sortBy), add stable secondary sort
+      this.sortByRelevanceWithSecondarySort(regularBooks);
+    } else {
+      // Empty query or no FULLTEXT - use default sort (title ASC)
+      this.sortResults(regularBooks, [
+        { field: 'title', direction: SORT_DIRECTIONS.ASC },
+      ]);
     }
 
     return {
@@ -174,6 +182,32 @@ export class BookSearchService {
       field,
       direction: sortOrder,
     }));
+  }
+
+  /**
+   * Sort by relevance score with stable secondary sort
+   * Uses updatedAt DESC as secondary sort, then id ASC as final tie-breaker
+   */
+  private sortByRelevanceWithSecondarySort(results: BookSearchResult[]): void {
+    results.sort((a, b) => {
+      const aScore = a.relevanceScore ?? 0;
+      const bScore = b.relevanceScore ?? 0;
+
+      // Primary sort: relevance score (descending - higher is better)
+      if (aScore !== bScore) {
+        return bScore - aScore;
+      }
+
+      // Secondary sort: updatedAt (descending - newer first)
+      const aUpdated = a.updateDate ? new Date(a.updateDate).getTime() : 0;
+      const bUpdated = b.updateDate ? new Date(b.updateDate).getTime() : 0;
+      if (aUpdated !== bUpdated) {
+        return bUpdated - aUpdated;
+      }
+
+      // Final tie-breaker: id (ascending for deterministic pagination)
+      return a.id - b.id;
+    });
   }
 
   /**
