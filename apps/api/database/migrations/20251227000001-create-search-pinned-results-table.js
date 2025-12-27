@@ -1,11 +1,12 @@
 'use strict';
 
+// Import RESOURCE_TYPE_VALUES from built shared-types package
+// NOTE: Requires shared-types to be built before running migrations (npm run build in libs/shared-types)
+const { RESOURCE_TYPE_VALUES } = require('../../../../dist/libs/shared-types/libs/shared-types/src/constants/resource-types');
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // RESOURCE_TYPE_VALUES from libs/shared-types/src/constants/resource-types.ts
-    // Must be kept in sync with the TypeScript constants
-    const RESOURCE_TYPE_VALUES = ['book', 'author', 'category', 'user', 'hook'];
 
     await queryInterface.createTable('search_pinned_results', {
       id: {
