@@ -26,7 +26,7 @@ import { toBookResponseDTO } from '../dtos/book/BookResponseDTO';
 import { TYPES } from '../container/types';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
-import { BookSearchService } from '../services/search/BookSearchService';
+import { BookSearchService, BookSearchResult } from '../services/search/BookSearchService';
 import { SEARCH_SORT_TYPES, SEARCH_RESULT_STATUS } from '@my-many-books/shared-types';
 
 interface BookSearchFilters {
@@ -377,13 +377,17 @@ export class BookController extends BaseController {
 
     // Validate sortBy against Book.SORTABLE_FIELD_VALUES or allow 'relevance'
     let sortBy: string | undefined;
-    let sortOrder: 'asc' | 'desc' = sortOrderParam as 'asc' | 'desc';
+    const sortOrder: 'asc' | 'desc' = sortOrderParam as 'asc' | 'desc';
 
     if (sortByParam) {
       if (sortByParam === SEARCH_SORT_TYPES.RELEVANCE) {
         // Relevance sorting - no sortBy field needed
         sortBy = undefined;
-      } else if (Book.SORTABLE_FIELD_VALUES.includes(sortByParam as any)) {
+      } else if (
+        Book.SORTABLE_FIELD_VALUES.includes(
+          sortByParam as (typeof Book.SORTABLE_FIELD_VALUES)[number]
+        )
+      ) {
         sortBy = sortByParam;
       } else {
         return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
@@ -475,23 +479,22 @@ export class BookController extends BaseController {
           const books = await Book.findAll({
             where: whereConditions,
             include: includeClause,
-            distinct: true,
           });
 
           // Preserve original order from BookSearchService (pinned first, then by sortBy/relevance)
           const bookMap = new Map(books.map(b => [b.id, b.get({ plain: true })]));
           filteredResults = results
-            .map(r => bookMap.get(r.id))
-            .filter((b): b is any => b !== undefined)
-            .map((book, index) => {
-              const originalResult = results[index];
+            .map(r => {
+              const book = bookMap.get(r.id);
+              if (!book) return undefined;
               return {
                 ...book,
-                isPinned: originalResult?.isPinned,
-                status: originalResult?.isPinned ? SEARCH_RESULT_STATUS.PINNED : SEARCH_RESULT_STATUS.REGULAR,
-                relevanceScore: originalResult?.relevanceScore,
-              };
-            });
+                isPinned: r.isPinned,
+                status: r.isPinned ? SEARCH_RESULT_STATUS.PINNED : SEARCH_RESULT_STATUS.REGULAR,
+                relevanceScore: r.relevanceScore,
+              } as BookSearchResult;
+            })
+            .filter((b): b is BookSearchResult => b !== undefined);
         }
       } else {
         // No additional filters - use results as-is but mark status

@@ -380,7 +380,7 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       offset,
     };
     if (userId) {
-      replacements.userId = userId;
+      replacements['userId'] = userId;
     }
 
     const [results, countResults] = await Promise.all([
@@ -426,16 +426,21 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
     limit = 20,
     offset = 0
   ): Promise<{ rows: BookEntity[]; total: number }> {
-    const where: WhereOptions<BookAttributes> = {
-      [Op.or]: [
-        { title: { [Op.like]: `%${query}%` } },
-        { notes: { [Op.like]: `%${query}%` } },
-      ],
-    };
+    const whereConditions: WhereOptions<BookAttributes>[] = [
+      {
+        [Op.or]: [
+          { title: { [Op.like]: `%${query}%` } },
+          { notes: { [Op.like]: `%${query}%` } },
+        ],
+      },
+    ];
 
     if (userId) {
-      where.userId = userId;
+      whereConditions.push({ userId });
     }
+
+    const where: WhereOptions<BookAttributes> =
+      whereConditions.length > 1 ? { [Op.and]: whereConditions } : whereConditions[0]!;
 
     const { rows, count } = await Book.findAndCountAll({
       where,
@@ -472,7 +477,7 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
 
     const replacements: Record<string, unknown> = {};
     if (userId) {
-      replacements.userId = userId;
+      replacements['userId'] = userId;
     }
 
     const results = await Book.sequelize!.query(sql, {
@@ -480,6 +485,6 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       type: 'SELECT' as any,
     });
 
-    return results as Array<{ resourceId: number; priority: number }>;
+    return results as unknown as Array<{ resourceId: number; priority: number }>;
   }
 }

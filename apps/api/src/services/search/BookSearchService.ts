@@ -11,7 +11,7 @@
 
 import { injectable, inject } from 'inversify';
 import { getLogger, type AppLogger } from '@my-many-books/shared-logging';
-import { SORT_DIRECTIONS, SEARCH_RESULT_STATUS, RESOURCE_TYPES } from '@my-many-books/shared-types';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { Book } from '../../models/Book';
 import { SequelizeBookAdapter } from '../../repositories/book/adapters/SequelizeBookAdapter';
 import { SearchSettingsService } from '../SearchSettingsService';
