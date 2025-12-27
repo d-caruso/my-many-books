@@ -17,10 +17,15 @@ import { SequelizeBookAdapter } from '../../repositories/book/adapters/Sequelize
 import { SearchSettingsService } from '../SearchSettingsService';
 import { TYPES } from '../../container/types';
 
+export interface SortField {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+
 export interface BookSearchOptions {
   query: string;
   userId?: number;
-  sortBy?: string;
+  sortBy?: string | string[]; // Support single field or array of fields
   sortOrder?: 'asc' | 'desc';
   limit?: number;
   offset?: number;
@@ -60,16 +65,16 @@ export class BookSearchService {
     results: BookSearchResult[];
     total: number;
   }> {
-    // Validate sortBy against Book.SORTABLE_FIELD_VALUES
-    if (options.sortBy && !Book.SORTABLE_FIELD_VALUES.includes(options.sortBy as any)) {
-      throw new Error(
-        `Invalid sortBy field: ${options.sortBy}. Must be one of: ${Book.SORTABLE_FIELD_VALUES.join(', ')}`
-      );
-    }
+    // Normalize sortBy to array for consistent handling
+    const sortFields = this.normalizeSortFields(options.sortBy, options.sortOrder);
 
-    // Validate sortOrder
-    if (options.sortOrder && !['asc', 'desc'].includes(options.sortOrder)) {
-      throw new Error(`Invalid sortOrder: ${options.sortOrder}. Must be 'asc' or 'desc'`);
+    // Validate all sortBy fields against Book.SORTABLE_FIELD_VALUES
+    for (const sortField of sortFields) {
+      if (!Book.SORTABLE_FIELD_VALUES.includes(sortField.field as any)) {
+        throw new Error(
+          `Invalid sortBy field: ${sortField.field}. Must be one of: ${Book.SORTABLE_FIELD_VALUES.join(', ')}`
+        );
+      }
     }
 
     const limit = Math.min(options.limit ?? 20, 100);
@@ -143,8 +148,8 @@ export class BookSearchService {
     });
 
     // Sort regular results by sortBy/sortOrder or relevance
-    if (options.sortBy) {
-      this.sortResults(regularBooks, options.sortBy, options.sortOrder ?? SORT_DIRECTIONS.ASC);
+    if (sortFields.length > 0) {
+      this.sortResults(regularBooks, sortFields);
     }
 
     return {
@@ -154,39 +159,66 @@ export class BookSearchService {
   }
 
   /**
-   * Sort results by field and direction with tie-breaker
-   * Uses id as tie-breaker for deterministic pagination
+   * Normalize sortBy to array of SortField objects
    */
-  private sortResults(
-    results: BookSearchResult[],
-    sortBy: string,
-    sortOrder: 'asc' | 'desc'
-  ): void {
+  private normalizeSortFields(
+    sortBy?: string | string[],
+    sortOrder: 'asc' | 'desc' = SORT_DIRECTIONS.ASC
+  ): SortField[] {
+    if (!sortBy) {
+      return [];
+    }
+
+    const fields = Array.isArray(sortBy) ? sortBy : [sortBy];
+    return fields.map(field => ({
+      field,
+      direction: sortOrder,
+    }));
+  }
+
+  /**
+   * Sort results by multiple fields with tie-breaker
+   * Uses id as final tie-breaker for deterministic pagination
+   */
+  private sortResults(results: BookSearchResult[], sortFields: SortField[]): void {
     results.sort((a, b) => {
-      const aVal = (a as any)[sortBy];
-      const bVal = (b as any)[sortBy];
+      // Try each sort field in order
+      for (const { field, direction } of sortFields) {
+        const aVal = (a as any)[field];
+        const bVal = (b as any)[field];
 
-      if (aVal === undefined || aVal === null) return 1;
-      if (bVal === undefined || bVal === null) return -1;
+        // Handle null/undefined
+        if (aVal === undefined || aVal === null) {
+          if (bVal === undefined || bVal === null) continue; // Both null, try next field
+          return 1; // a is null, b is not - a comes after
+        }
+        if (bVal === undefined || bVal === null) {
+          return -1; // b is null, a is not - b comes after
+        }
 
-      let comparison = 0;
-      if (typeof aVal === 'string') {
-        comparison = aVal.localeCompare(bVal);
-      } else if (typeof aVal === 'number') {
-        comparison = aVal - bVal;
-      } else if (aVal instanceof Date) {
-        comparison = aVal.getTime() - bVal.getTime();
+        // Compare values
+        let comparison = 0;
+        if (typeof aVal === 'string') {
+          comparison = aVal.localeCompare(bVal);
+        } else if (typeof aVal === 'number') {
+          comparison = aVal - bVal;
+        } else if (aVal instanceof Date) {
+          comparison = aVal.getTime() - bVal.getTime();
+        }
+
+        // Apply sort direction
+        const directedComparison = direction === SORT_DIRECTIONS.DESC ? -comparison : comparison;
+
+        // If different, return the result
+        if (directedComparison !== 0) {
+          return directedComparison;
+        }
+
+        // Equal - continue to next sort field
       }
 
-      // Apply sort direction
-      const directedComparison = sortOrder === SORT_DIRECTIONS.DESC ? -comparison : comparison;
-
-      // Tie-breaker: if primary sort values are equal, sort by id (ascending for deterministic pagination)
-      if (directedComparison === 0) {
-        return a.id - b.id;
-      }
-
-      return directedComparison;
+      // Tie-breaker: if all sort fields are equal, sort by id (ascending for deterministic pagination)
+      return a.id - b.id;
     });
   }
 }
