@@ -154,7 +154,8 @@ export class BookSearchService {
   }
 
   /**
-   * Sort results by field and direction
+   * Sort results by field and direction with tie-breaker
+   * Uses id as tie-breaker for deterministic pagination
    */
   private sortResults(
     results: BookSearchResult[],
@@ -177,7 +178,15 @@ export class BookSearchService {
         comparison = aVal.getTime() - bVal.getTime();
       }
 
-      return sortOrder === SORT_DIRECTIONS.DESC ? -comparison : comparison;
+      // Apply sort direction
+      const directedComparison = sortOrder === SORT_DIRECTIONS.DESC ? -comparison : comparison;
+
+      // Tie-breaker: if primary sort values are equal, sort by id (ascending for deterministic pagination)
+      if (directedComparison === 0) {
+        return a.id - b.id;
+      }
+
+      return directedComparison;
     });
   }
 }
