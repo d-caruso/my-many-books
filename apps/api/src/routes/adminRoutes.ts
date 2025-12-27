@@ -145,4 +145,11 @@ router.patch(
   )
 );
 
+// Get search settings status (READ)
+router.get(
+  '/settings/search/status',
+  readLimiter,
+  expressRouteWrapper(adminSettingsController.getSearchStatus.bind(adminSettingsController))
+);
+
 export default router;

@@ -9,6 +9,7 @@ import { getLogger } from '@my-many-books/shared-logging';
 import { UniversalRequest } from '../../types';
 import { Setting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
+import { SearchSettingsService } from '../../services/SearchSettingsService';
 
 export class AdminSettingsController extends BaseController {
   /**
@@ -112,6 +113,33 @@ export class AdminSettingsController extends BaseController {
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to update audit logging setting:');
       return this.createErrorResponse('Failed to update audit logging setting', 500);
+    }
+  }
+
+  /**
+   * Get search fulltext setting status
+   *
+   * Returns:
+   * - enabled: current status (true/false)
+   * - source: where the setting comes from (force_disabled, force_enabled, database, default)
+   * - canChange: whether admin can change it via UI
+   */
+  async getSearchStatus(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    try {
+      const searchSettingsService = new SearchSettingsService();
+      const status = await searchSettingsService.getFulltextStatus();
+
+      return this.createSuccessResponse(status);
+    } catch (error) {
+      getLogger().error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Failed to get search settings status:'
+      );
+      return this.createErrorResponse('Failed to get search settings status', 500);
     }
   }
 
