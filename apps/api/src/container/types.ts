@@ -23,6 +23,7 @@ const TYPES = {
   SearchSettingsService: Symbol.for('SearchSettingsService'),
   BookSearchService: Symbol.for('BookSearchService'),
   AuthorSearchService: Symbol.for('AuthorSearchService'),
+  CategorySearchService: Symbol.for('CategorySearchService'),
 };
 
 export { TYPES };
