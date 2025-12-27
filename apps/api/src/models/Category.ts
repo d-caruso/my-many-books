@@ -69,6 +69,11 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
             unique: true,
             name: 'idx_category_user_name_unique',
           },
+          {
+            type: 'FULLTEXT',
+            fields: ['name'],
+            name: 'idx_category_fulltext_name',
+          },
         ],
       }
     );
