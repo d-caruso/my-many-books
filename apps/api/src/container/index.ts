@@ -27,6 +27,7 @@ import { UserService } from '../services/user/UserService';
 import { SettingsController } from '../controllers/SettingsController';
 import { SearchSettingsService } from '../services/SearchSettingsService';
 import { BookSearchService } from '../services/search/BookSearchService';
+import { AuthorSearchService } from '../services/search/AuthorSearchService';
 
 const container = new Container({
   defaultScope: 'Singleton',
@@ -79,6 +80,11 @@ container
 container
   .bind<BookSearchService>(TYPES.BookSearchService)
   .to(BookSearchService)
+  .inSingletonScope();
+
+container
+  .bind<AuthorSearchService>(TYPES.AuthorSearchService)
+  .to(AuthorSearchService)
   .inSingletonScope();
 
 export { container };
