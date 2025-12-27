@@ -154,7 +154,7 @@ export const HooksPage: React.FC = () => {
         description: data.description,
         eventPattern: data.eventPattern,
         actionType: data.actionType,
-        actionConfig: data.actionConfig,
+        actionConfig: JSON.parse(data.actionConfig), // Parse JSON string to object for backend
         priority: data.priority,
         isActive: data.isActive,
       };
@@ -286,7 +286,20 @@ export const HooksPage: React.FC = () => {
             loading={loading}
             onEdit={(id) => {
               const hookToEdit = hooks.find((hook) => hook.id === id) || null;
-              setEditingHook(hookToEdit);
+              if (hookToEdit) {
+                // Convert actionConfig object to JSON string for the form
+                const hookForForm = {
+                  ...hookToEdit,
+                  actionConfig: hookToEdit.actionConfig
+                    ? typeof hookToEdit.actionConfig === 'string'
+                      ? hookToEdit.actionConfig
+                      : JSON.stringify(hookToEdit.actionConfig, null, 2)
+                    : undefined,
+                };
+                setEditingHook(hookForForm as AdminHookSummary);
+              } else {
+                setEditingHook(null);
+              }
               setIsFormOpen(true);
             }}
             onViewExecutions={(id) => navigate(`/admin/hooks/${id}/executions`)}
