@@ -8,6 +8,7 @@
 import Joi from 'joi';
 import { commonSchemas } from './common.schema';
 import { validateEventPattern, safeValidateActionConfig } from '@my-many-books/hookey';
+import { SORT_DIRECTION_VALUES } from '@my-many-books/shared-types';
 
 /**
  * Custom Joi validator for event patterns
@@ -92,7 +93,7 @@ export const listHooksQuerySchema = Joi.object({
   isActive: Joi.string().valid('true', 'false').optional(),
   search: Joi.string().min(1).max(255).trim().optional(),
   sortBy: Joi.string().valid('priority', 'name', 'creationDate', 'updateDate').default('priority'),
-  sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
+  sortOrder: Joi.string().valid(...SORT_DIRECTION_VALUES).default('desc'),
 });
 
 export const getExecutionsQuerySchema = Joi.object({

@@ -12,6 +12,7 @@ import {
   ISBN_PATTERNS,
   BOOK_STATUSES,
 } from '@my-many-books/shared-validation';
+import { SORT_DIRECTION_VALUES } from '@my-many-books/shared-types';
 
 /**
  * Admin get users query schema
@@ -22,7 +23,7 @@ export const adminGetUsersQuerySchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
   sortBy: Joi.string().optional(),
-  sortOrder: Joi.string().valid('asc', 'desc').default('asc'),
+  sortOrder: Joi.string().valid(...SORT_DIRECTION_VALUES).default('asc'),
 });
 
 /**
@@ -49,7 +50,7 @@ export const adminGetBooksQuerySchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
   sortBy: Joi.string().optional(),
-  sortOrder: Joi.string().valid('asc', 'desc').default('asc'),
+  sortOrder: Joi.string().valid(...SORT_DIRECTION_VALUES).default('asc'),
 });
 
 /**
