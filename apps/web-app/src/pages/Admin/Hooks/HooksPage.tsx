@@ -146,51 +146,62 @@ export const HooksPage: React.FC = () => {
     setEditingHook(null);
   };
 
-  const handleSaveHook = (data: HookFormData) => {
-    setHooks((prev) => {
-      if (editingHook) {
-        return prev.map((hook) =>
-          hook.id === editingHook.id
-            ? {
-                ...hook,
-                name: data.name,
-                eventPattern: data.eventPattern,
-                isActive: data.isActive,
-                priority: data.priority,
-                actionType: data.actionType,
-              }
-            : hook
-        );
-      }
-      const newHook: AdminHookSummary = {
-        id: Date.now(),
+  const handleSaveHook = async (data: HookFormData) => {
+    console.log('[HooksPage] handleSaveHook called', { data, editingHook });
+    try {
+      const payload = {
         name: data.name,
+        description: data.description,
         eventPattern: data.eventPattern,
         actionType: data.actionType,
+        actionConfig: JSON.parse(data.actionConfig), // Parse JSON string to object for backend
         priority: data.priority,
         isActive: data.isActive,
-        lastExecution: undefined,
       };
-      return [newHook, ...prev];
-    });
 
-    setStats((prev) => {
-      if (!prev) return prev;
-      if (!editingHook) {
-        return {
-          ...prev,
-          totalHooks: prev.totalHooks + 1,
-          activeHooks: prev.activeHooks + (data.isActive ? 1 : 0),
-        };
+      if (editingHook) {
+        // Update existing hook
+        console.log('[HooksPage] Updating hook ID:', editingHook.id);
+        const updatedHook = await apiService.updateAdminHook(editingHook.id, payload);
+        console.log('[HooksPage] Hook updated successfully:', updatedHook);
+        setHooks((prev) =>
+          prev.map((hook) => (hook.id === editingHook.id ? updatedHook : hook))
+        );
+
+        // Update stats if active status changed
+        if (editingHook.isActive !== data.isActive) {
+          setStats((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  activeHooks: prev.activeHooks + (data.isActive ? 1 : -1),
+                }
+              : prev
+          );
+        }
+      } else {
+        // Create new hook
+        console.log('[HooksPage] Creating new hook');
+        const newHook = await apiService.createAdminHook(payload);
+        console.log('[HooksPage] Hook created successfully:', newHook);
+        setHooks((prev) => [newHook, ...prev]);
+
+        // Update stats
+        setStats((prev) =>
+          prev
+            ? {
+                ...prev,
+                totalHooks: prev.totalHooks + 1,
+                activeHooks: prev.activeHooks + (data.isActive ? 1 : 0),
+              }
+            : prev
+        );
       }
-      if (editingHook.isActive === data.isActive) {
-        return prev;
-      }
-      return {
-        ...prev,
-        activeHooks: prev.activeHooks + (data.isActive ? 1 : -1),
-      };
-    });
+    } catch (err: any) {
+      console.error('[HooksPage] Failed to save hook:', err);
+      const message = err?.message || t('errors.save', 'Failed to save hook');
+      setError(message);
+    }
   };
 
   return (
@@ -275,7 +286,20 @@ export const HooksPage: React.FC = () => {
             loading={loading}
             onEdit={(id) => {
               const hookToEdit = hooks.find((hook) => hook.id === id) || null;
-              setEditingHook(hookToEdit);
+              if (hookToEdit) {
+                // Convert actionConfig object to JSON string for the form
+                const hookForForm = {
+                  ...hookToEdit,
+                  actionConfig: hookToEdit.actionConfig
+                    ? typeof hookToEdit.actionConfig === 'string'
+                      ? hookToEdit.actionConfig
+                      : JSON.stringify(hookToEdit.actionConfig, null, 2)
+                    : undefined,
+                };
+                setEditingHook(hookForForm as AdminHookSummary);
+              } else {
+                setEditingHook(null);
+              }
               setIsFormOpen(true);
             }}
             onViewExecutions={(id) => navigate(`/admin/hooks/${id}/executions`)}
@@ -289,9 +313,7 @@ export const HooksPage: React.FC = () => {
         open={isFormOpen}
         initialData={editingHook as any}
         onClose={handleCloseForm}
-        onSave={(data: HookFormData) => {
-          handleSaveHook(data);
-        }}
+        onSave={handleSaveHook}
       />
     </AdminLayout>
   );

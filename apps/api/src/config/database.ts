@@ -17,7 +17,7 @@ class DatabaseConnection {
   }
 
   private static createConnection(): Sequelize {
-    const { DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SSL, NODE_ENV } = process.env;
+    const { DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SSL } = process.env;
 
     if (!DB_HOST || !DB_NAME || !DB_USER || !DB_PASSWORD) {
       throw new Error('Missing required database environment variables');
@@ -40,12 +40,7 @@ class DatabaseConnection {
       dialectOptions: {
         ssl: DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
       },
-      logging:
-        NODE_ENV === 'development'
-          ? (msg: string): void => {
-              getLogger().debug({ sql: msg }, 'SQL query');
-            }
-          : false,
+      logging: false, // Disabled for cleaner E2E test logs
       define: {
         timestamps: true,
         underscored: true,

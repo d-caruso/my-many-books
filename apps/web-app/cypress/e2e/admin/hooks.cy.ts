@@ -74,23 +74,88 @@ describe('Admin hooks (E2E)', () => {
   it('lists hooks created through the admin API and allows edits', () => {
     const hookName = `E2E Hook ${Date.now()}`;
     const updatedName = `${hookName} Updated`;
+    let hookId: number;
 
-    cy.loginAsAdmin().then(({ tokens }) => {
-      return createHook(tokens.idToken, hookName, 'book.create.after');
-    });
+    // Set up intercept for ANY PUT to hooks (we'll verify hookId later)
+    cy.intercept('PUT', '**/admin/hooks/*').as('updateHook');
+
+    cy.loginAsAdmin()
+      .then(({ tokens }) => {
+        return createHook(tokens.idToken, hookName, 'book.create.after');
+      })
+      .then((response) => {
+        hookId = response.body?.data?.id ?? response.body?.id;
+        console.log('[E2E DEBUG] Created hook with ID:', hookId);
+      });
 
     cy.visit('/admin/hooks');
+
+    cy.log(`Looking for hook: ${hookName}`);
     cy.contains('Hooks Administration', { timeout: 10000 }).should('be.visible');
     cy.contains('[role="row"]', hookName, { timeout: 10000 }).should('be.visible');
 
+    // Find and click edit button
+    cy.log('Clicking edit button');
     cy.contains('[role="row"]', hookName)
       .find('button')
       .contains('Edit')
       .click();
 
-    cy.get('[data-testid="hook-form-name"]').clear().type(updatedName);
-    cy.get('[data-testid="hook-form-save"]').click();
-    cy.contains(updatedName).should('be.visible');
+    // Wait for form and verify it opened
+    cy.log('Verifying form opened');
+    cy.get('[data-testid="hook-form-name"]', { timeout: 5000 }).should('be.visible');
+
+    // Log all form field values for debugging
+    cy.get('[data-testid="hook-form-name"]').invoke('val').then((val) => {
+      cy.log(`Form name value: ${val}`);
+    });
+
+    // Update the name
+    cy.log('Updating hook name in form');
+    cy.get('[data-testid="hook-form-name"]')
+      .clear()
+      .type(updatedName)
+      .should('have.value', updatedName);
+
+    // Verify save button state before clicking
+    cy.log('Checking save button state');
+    cy.get('[data-testid="hook-form-save"]').then(($btn) => {
+      cy.log(`Save button disabled: ${$btn.prop('disabled')}`);
+      cy.log(`Save button visible: ${$btn.is(':visible')}`);
+    });
+
+    // Click save button
+    cy.log(`Saving with new name: ${updatedName}`);
+    cy.get('[data-testid="hook-form-save"]')
+      .should('be.visible')
+      .should('not.be.disabled')
+      .click()
+      .then(() => {
+        cy.log('Save button clicked successfully');
+      });
+
+    // Wait for PUT request and verify it succeeded
+    cy.wait('@updateHook', { timeout: 10000 }).then((interception) => {
+      console.log('[E2E DEBUG] PUT Response Status:', interception.response?.statusCode);
+      console.log('[E2E DEBUG] PUT Response Body:', interception.response?.body);
+      console.log('[E2E DEBUG] PUT Request URL:', interception.request.url);
+
+      // Verify the response was successful
+      expect(interception.response?.statusCode).to.be.oneOf([200, 201]);
+    });
+
+    // Wait for form to close
+    cy.log('Waiting for form to close');
+    cy.get('[data-testid="hook-form-name"]', { timeout: 5000 }).should('not.exist');
+
+    // Reload page to ensure we're seeing fresh data from server
+    cy.log('Reloading page to verify persistence');
+    cy.reload();
+    cy.contains('Hooks Administration', { timeout: 10000 }).should('be.visible');
+
+    // Verify updated name appears in the table
+    cy.log(`Verifying updated name appears: ${updatedName}`);
+    cy.contains('[role="row"]', updatedName, { timeout: 10000 }).should('be.visible');
   });
 
   it('records executions when book creation triggers a hook', () => {

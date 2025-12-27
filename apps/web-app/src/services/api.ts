@@ -420,6 +420,39 @@ class ApiService {
     await this.fetchAdminData('/admin/hooks/reload', { method: 'POST' });
   }
 
+  async createAdminHook(data: {
+    name: string;
+    description: string;
+    eventPattern: string;
+    actionType: string;
+    actionConfig: Record<string, any>;
+    priority: number;
+    isActive: boolean;
+  }): Promise<AdminHookSummary> {
+    return this.fetchAdminData('/admin/hooks', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateAdminHook(
+    hookId: number,
+    data: {
+      name: string;
+      description: string;
+      eventPattern: string;
+      actionType: string;
+      actionConfig: Record<string, any>;
+      priority: number;
+      isActive: boolean;
+    }
+  ): Promise<AdminHookSummary> {
+    return this.fetchAdminData(`/admin/hooks/${hookId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   async getAdminHookExecutions(params: {
     hookId?: number;
     success?: boolean;
@@ -895,8 +928,10 @@ class ApiService {
 export interface AdminHookSummary {
   id: number;
   name: string;
+  description?: string;
   eventPattern: string;
   actionType: string;
+  actionConfig?: Record<string, any>;
   isActive: boolean;
   priority: number;
   lastExecution?: string;
