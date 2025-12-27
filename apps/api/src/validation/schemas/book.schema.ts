@@ -77,6 +77,9 @@ export const searchBooksQuerySchema = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(20),
   sortBy: Joi.string().optional(),
   sortOrder: Joi.string().valid(...SORT_DIRECTION_VALUES).default(SORT_DIRECTIONS.ASC),
+  status: Joi.string().valid(...BOOK_STATUSES).optional(),
+  authorId: Joi.number().integer().optional(),
+  categoryId: Joi.number().integer().optional(),
 });
 
 /**
