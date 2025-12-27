@@ -23,6 +23,7 @@ import { TYPES } from '../../container/types';
 import { FullTextSearchService } from './FullTextSearchService';
 import { BaseSearchOptions, SortField, SearchResult } from './ISearchable';
 import { BookSearchResultDTO, toBookSearchResultDTO } from '../../dtos/book/BookSearchResultDTO';
+import { SearchConfig } from './SearchConfig';
 
 /**
  * Book search options - extends BaseSearchOptions
@@ -40,6 +41,15 @@ export class BookSearchService extends FullTextSearchService<BookEntity> {
       new SequelizeBookAdapter(),
       searchSettingsService
     );
+
+    // Register search configuration using constants
+    SearchConfig.register({
+      resourceType: RESOURCE_TYPES.BOOK,
+      sortableFields: Book.SORTABLE_FIELD_VALUES,
+      defaultSortField: 'title',
+      defaultSortDirection: SORT_DIRECTIONS.ASC,
+      supportsFulltext: true,
+    });
   }
 
   /**
