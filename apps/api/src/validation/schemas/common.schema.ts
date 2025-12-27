@@ -7,6 +7,7 @@
 
 import Joi from 'joi';
 import { AUTHOR_CONSTRAINTS, AUTHOR_PATTERNS } from '@my-many-books/shared-validation';
+import { SORT_DIRECTION_VALUES, SORT_DIRECTIONS } from '@my-many-books/shared-types';
 
 /**
  * Common field validations
@@ -90,7 +91,7 @@ export const paginationSchema = Joi.object({
  */
 export const sortingSchema = Joi.object({
   sortBy: Joi.string().optional(),
-  sortOrder: Joi.string().valid('asc', 'desc').default('asc'),
+  sortOrder: Joi.string().valid(...SORT_DIRECTION_VALUES).default(SORT_DIRECTIONS.ASC),
 });
 
 /**
