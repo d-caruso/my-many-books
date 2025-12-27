@@ -2,17 +2,25 @@
  * Pinned Results API Integration Tests
  */
 
+import { Sequelize } from 'sequelize';
+import { ModelManager } from '../../../src/models';
 import { SearchPinnedResult } from '../../../src/models/SearchPinnedResult';
 
 describe('Pinned Results API Integration Tests', () => {
+  let sequelize: Sequelize;
+
   beforeAll(async () => {
-    // Clean up test data
-    await SearchPinnedResult.destroy({ where: {}, force: true });
+    sequelize = new Sequelize('sqlite::memory:', { logging: false });
+    ModelManager.initialize(sequelize);
+    await ModelManager.syncDatabase(true);
   });
 
-  afterEach(async () => {
-    // Clean up after each test
-    await SearchPinnedResult.destroy({ where: {}, force: true });
+  afterAll(async () => {
+    await ModelManager.close();
+  });
+
+  beforeEach(async () => {
+    await SearchPinnedResult.destroy({ where: {}, truncate: true, cascade: true });
   });
 
   describe('POST /admin/search/pinned', () => {
