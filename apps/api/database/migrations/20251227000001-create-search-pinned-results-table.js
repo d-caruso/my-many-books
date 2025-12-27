@@ -1,10 +1,12 @@
 'use strict';
 
-const { RESOURCE_TYPE_VALUES } = require('@my-many-books/shared-types');
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+    // RESOURCE_TYPE_VALUES from libs/shared-types/src/constants/resource-types.ts
+    // Must be kept in sync with the TypeScript constants
+    const RESOURCE_TYPE_VALUES = ['book', 'author', 'category', 'user', 'hook'];
+
     await queryInterface.createTable('search_pinned_results', {
       id: {
         allowNull: false,
