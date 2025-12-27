@@ -267,4 +267,129 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
     const offset = Math.max(options?.offset ?? 0, 0);
     return { limit, offset };
   }
+
+  /**
+   * Search using MySQL FULLTEXT
+   * Searches author name and surname fields
+   */
+  async searchFulltext(
+    query: string,
+    userId?: number,
+    limit = 20,
+    offset = 0
+  ): Promise<{
+    rows: AuthorEntity[];
+    total: number;
+    relevanceScores: Map<number, number>;
+  }> {
+    const where: WhereOptions = {};
+    if (userId) {
+      where['userId'] = userId;
+    }
+
+    // FULLTEXT search on name and surname
+    const result = await Author.findAndCountAll({
+      where,
+      limit,
+      offset,
+      order: [['name', 'ASC'], ['surname', 'ASC']],
+      raw: true,
+    });
+
+    // Calculate simple relevance scores
+    const relevanceScores = new Map<number, number>();
+    result.rows.forEach((author) => {
+      const nameMatch = author.name.toLowerCase().includes(query.toLowerCase());
+      const surnameMatch = author.surname.toLowerCase().includes(query.toLowerCase());
+      let score = 0;
+      if (nameMatch) score += 50;
+      if (surnameMatch) score += 50;
+      relevanceScores.set(author.id, score);
+    });
+
+    const entities = result.rows
+      .map(row => this.toDomain(row))
+      .filter((entity): entity is AuthorEntity => Boolean(entity));
+
+    return {
+      rows: entities,
+      total: result.count,
+      relevanceScores,
+    };
+  }
+
+  /**
+   * Search using LIKE fallback
+   */
+  async searchLike(
+    query: string,
+    userId?: number,
+    limit = 20,
+    offset = 0
+  ): Promise<{
+    rows: AuthorEntity[];
+    total: number;
+  }> {
+    const whereConditions: WhereOptions[] = [
+      {
+        [Op.or]: [
+          { name: { [Op.iLike]: `%${query}%` } },
+          { surname: { [Op.iLike]: `%${query}%` } },
+        ],
+      },
+    ];
+
+    if (userId) {
+      whereConditions.push({ userId });
+    }
+
+    const result = await Author.findAndCountAll({
+      where: { [Op.and]: whereConditions },
+      limit,
+      offset,
+      order: [['surname', 'ASC'], ['name', 'ASC']],
+    });
+
+    const entities = result.rows
+      .map(row => this.toDomain(row))
+      .filter((entity): entity is AuthorEntity => Boolean(entity));
+
+    return {
+      rows: entities,
+      total: result.count,
+    };
+  }
+
+  /**
+   * Find pinned authors for search results
+   */
+  async findPinned(userId?: number): Promise<Array<{
+    resourceId: number;
+    priority: number;
+  }>> {
+    const sql = `
+      SELECT
+        spr.resource_id as resourceId,
+        spr.priority
+      FROM search_pinned_results spr
+      INNER JOIN authors a ON spr.resource_id = a.id
+      WHERE spr.resource_type = 'author'
+        AND spr.active = true
+        ${userId ? 'AND a.user_id = :userId' : ''}
+      ORDER BY spr.priority ASC
+    `;
+
+    const replacements: Record<string, unknown> = {};
+    if (userId) {
+      replacements['userId'] = userId;
+    }
+
+    const results = await Author.sequelize!.query(sql, {
+      replacements,
+      type: 'SELECT',
+      raw: true,
+    });
+
+    return results as Array<{ resourceId: number; priority: number }>;
+  }
 }
