@@ -29,6 +29,7 @@ import { SearchSettingsService } from '../services/SearchSettingsService';
 import { BookSearchService } from '../services/search/BookSearchService';
 import { AuthorSearchService } from '../services/search/AuthorSearchService';
 import { CategorySearchService } from '../services/search/CategorySearchService';
+import { PinnedResultsService } from '../services/PinnedResultsService';
 
 const container = new Container({
   defaultScope: 'Singleton',
@@ -91,6 +92,11 @@ container
 container
   .bind<CategorySearchService>(TYPES.CategorySearchService)
   .to(CategorySearchService)
+  .inSingletonScope();
+
+container
+  .bind<PinnedResultsService>(TYPES.PinnedResultsService)
+  .to(PinnedResultsService)
   .inSingletonScope();
 
 export { container };
