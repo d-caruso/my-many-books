@@ -70,13 +70,16 @@
   },
   "sorting": {
     "title": "Opzioni di Ordinamento",
+    "label": "Ordina per",
+    "direction_label": "Ordine",
     "sortBy": "Ordina per",
     "sortOrder": "Ordine di ordinamento",
     "relevance": "Migliore corrispondenza",
     "fields": {
+      "relevance": "Rilevanza",
       "title": "Titolo",
-      "createdAt": "Data creazione",
-      "updatedAt": "Data aggiornamento",
+      "createdAt": "Data aggiunta",
+      "updatedAt": "Ultimo aggiornamento",
       "status": "Stato",
       "isbnCode": "ISBN",
       "editionNumber": "Edizione",
