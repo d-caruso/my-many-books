@@ -122,6 +122,50 @@ export class AdminSearchController extends BaseController {
     }
   }
 
+  /**
+   * PATCH /admin/search/pinned/:id/priority
+   * Update the priority of a pinned result
+   */
+  async updatePriority(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    const id = this.getPathParameter(request, 'id');
+    if (!id || isNaN(Number(id))) {
+      return this.createErrorResponse('Invalid pinned result ID', 400);
+    }
+
+    const body = this.parseBody(request) as any;
+    const { priority } = body;
+
+    if (priority === undefined || typeof priority !== 'number') {
+      return this.createErrorResponse('priority field is required and must be a number', 400);
+    }
+
+    try {
+      const pinnedResult = await this.pinnedResultsService.updatePriority(Number(id), { priority });
+
+      return this.createSuccessResponse({
+        id: pinnedResult.id,
+        resource_type: pinnedResult.resourceType,
+        resource_id: pinnedResult.resourceId,
+        priority: pinnedResult.priority,
+        active: pinnedResult.active,
+        created_at: pinnedResult.creationDate,
+        updated_at: pinnedResult.updateDate,
+      }, 'Priority updated successfully');
+    } catch (error: any) {
+      if (error.code === 'PINNED_RESULT_NOT_FOUND') {
+        return this.createErrorResponse(error.message, 404);
+      }
+      if (error.code === 'INVALID_PRIORITY') {
+        return this.createErrorResponse(error.message, 400);
+      }
+      throw error;
+    }
+  }
+
   private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
     if (!request.user?.id) {
       return this.createErrorResponseI18n('errors:auth_required', 401);
