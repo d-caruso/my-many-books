@@ -26,7 +26,8 @@ import { toBookResponseDTO } from '../dtos/book/BookResponseDTO';
 import { TYPES } from '../container/types';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
-import { BookSearchService, BookSearchResult } from '../services/search/BookSearchService';
+import { BookSearchService } from '../services/search/BookSearchService';
+import { BookSearchResultDTO } from '../dtos/book/BookSearchResultDTO';
 import { SEARCH_SORT_TYPES, SEARCH_RESULT_STATUS } from '@my-many-books/shared-types';
 
 interface BookSearchFilters {
@@ -492,9 +493,9 @@ export class BookController extends BaseController {
                 isPinned: r.isPinned,
                 status: r.isPinned ? SEARCH_RESULT_STATUS.PINNED : SEARCH_RESULT_STATUS.REGULAR,
                 relevanceScore: r.relevanceScore,
-              } as BookSearchResult;
+              } as BookSearchResultDTO;
             })
-            .filter((b): b is BookSearchResult => b !== undefined);
+            .filter((b): b is BookSearchResultDTO => b !== undefined);
         }
       } else {
         // No additional filters - use results as-is but mark status
