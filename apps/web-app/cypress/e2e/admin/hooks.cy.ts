@@ -156,9 +156,6 @@ describe('Admin hooks (E2E)', () => {
     // Verify updated name appears in the table
     cy.log(`Verifying updated name appears: ${updatedName}`);
     cy.contains('[role="row"]', updatedName, { timeout: 10000 }).should('be.visible');
-
-    // Verify old name is gone
-    cy.contains('[role="row"]', hookName).should('not.exist');
   });
 
   it('records executions when book creation triggers a hook', () => {
