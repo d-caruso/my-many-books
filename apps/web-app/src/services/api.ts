@@ -425,7 +425,7 @@ class ApiService {
     description: string;
     eventPattern: string;
     actionType: string;
-    actionConfig: string;
+    actionConfig: Record<string, any>;
     priority: number;
     isActive: boolean;
   }): Promise<AdminHookSummary> {
@@ -442,7 +442,7 @@ class ApiService {
       description: string;
       eventPattern: string;
       actionType: string;
-      actionConfig: string;
+      actionConfig: Record<string, any>;
       priority: number;
       isActive: boolean;
     }
@@ -928,8 +928,10 @@ class ApiService {
 export interface AdminHookSummary {
   id: number;
   name: string;
+  description?: string;
   eventPattern: string;
   actionType: string;
+  actionConfig?: Record<string, any>;
   isActive: boolean;
   priority: number;
   lastExecution?: string;
