@@ -20,6 +20,7 @@ const TYPES = {
   UserService: Symbol.for('UserService'),
   UserController: Symbol.for('UserController'),
   SettingsController: Symbol.for('SettingsController'),
+  SearchSettingsService: Symbol.for('SearchSettingsService'),
 };
 
 export { TYPES };

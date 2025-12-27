@@ -25,6 +25,7 @@ import { AdminUserService } from '../services/user/AdminUserService';
 import { UserController } from '../controllers/UserController';
 import { UserService } from '../services/user/UserService';
 import { SettingsController } from '../controllers/SettingsController';
+import { SearchSettingsService } from '../services/SearchSettingsService';
 
 const container = new Container({
   defaultScope: 'Singleton',
@@ -68,5 +69,10 @@ container
   .bind<SettingsController>(TYPES.SettingsController)
   .to(SettingsController)
   .inTransientScope();
+
+container
+  .bind<SearchSettingsService>(TYPES.SearchSettingsService)
+  .to(SearchSettingsService)
+  .inSingletonScope();
 
 export { container };
