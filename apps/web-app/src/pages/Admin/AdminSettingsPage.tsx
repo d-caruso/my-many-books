@@ -149,6 +149,19 @@ export const AdminSettingsPage: React.FC = () => {
     return 'Audit logging configuration.';
   };
 
+  const getSearchHelpText = (source: string, canChange: boolean) => {
+    if (source === 'force_disabled') {
+      return t('search.fulltext.help.force_disabled', 'Full-text search is permanently disabled by .env configuration (FULLTEXT_SEARCH_FORCE_DISABLED=true). Contact your system administrator to enable it.');
+    }
+    if (source === 'force_enabled') {
+      return t('search.fulltext.help.force_enabled', 'Full-text search is permanently enabled by .env configuration (FULLTEXT_SEARCH_FORCE_ENABLED=true). It cannot be disabled via this panel.');
+    }
+    if (canChange) {
+      return t('search.fulltext.help.database', 'Toggle full-text search on or off. This setting is stored in the database and takes effect immediately. When enabled, searches use MySQL FULLTEXT indexes for better performance.');
+    }
+    return t('search.fulltext.help.default', 'Full-text search configuration.');
+  };
+
   const fetchAppSettings = useCallback(async () => {
     try {
       setAppSettingsLoading(true);
