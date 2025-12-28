@@ -11,10 +11,15 @@ import {
   IconButton,
   Tooltip,
   Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { PushPin as PinIcon, PushPinOutlined as UnpinIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { RESOURCE_TYPES } from '@my-many-books/shared-types';
 import { AdminLayout } from './AdminLayout';
 import { useApi } from '../../contexts/ApiContext';
 
@@ -33,19 +38,22 @@ export const SearchManagementPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pinnedResults, setPinnedResults] = useState<PinnedResult[]>([]);
+  const [selectedResourceType, setSelectedResourceType] = useState<string>('all');
 
   const fetchPinnedResults = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+      const queryParam = selectedResourceType !== 'all' ? `?resource_type=${selectedResourceType}` : '';
       // TODO: Implement API call to fetch pinned results
+      // const response = await apiService.get(`/admin/search/pinned${queryParam}`);
       setPinnedResults([]);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch pinned results');
     } finally {
       setLoading(false);
     }
-  }, [apiService]);
+  }, [apiService, selectedResourceType]);
 
   useEffect(() => {
     fetchPinnedResults();
@@ -112,6 +120,31 @@ export const SearchManagementPage: React.FC = () => {
         <Typography variant="h4" gutterBottom>
           {t('search.pinned.title', 'Search Management')}
         </Typography>
+
+        <Box sx={{ mb: 3 }}>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="resource-type-label">
+              {t('search.pinned.resource_type', 'Resource Type')}
+            </InputLabel>
+            <Select
+              labelId="resource-type-label"
+              value={selectedResourceType}
+              label={t('search.pinned.resource_type', 'Resource Type')}
+              onChange={(e) => setSelectedResourceType(e.target.value)}
+            >
+              <MenuItem value="all">{t('search.pinned.all', 'All')}</MenuItem>
+              <MenuItem value={RESOURCE_TYPES.BOOK}>
+                {t('search.pinned.resource_book', 'Books')}
+              </MenuItem>
+              <MenuItem value={RESOURCE_TYPES.AUTHOR}>
+                {t('search.pinned.resource_author', 'Authors')}
+              </MenuItem>
+              <MenuItem value={RESOURCE_TYPES.CATEGORY}>
+                {t('search.pinned.resource_category', 'Categories')}
+              </MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
