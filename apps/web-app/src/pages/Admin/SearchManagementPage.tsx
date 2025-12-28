@@ -10,6 +10,7 @@ import {
   ListItemText,
   IconButton,
   Tooltip,
+  Chip,
 } from '@mui/material';
 import { PushPin as PinIcon, PushPinOutlined as UnpinIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
@@ -164,9 +165,20 @@ export const SearchManagementPage: React.FC = () => {
                               </Tooltip>
                             }
                           >
+                            <Chip
+                              label={t('search.pinned.priority_badge', `Priority {{priority}}`, {
+                                priority: item.priority,
+                              })}
+                              color="primary"
+                              size="small"
+                              sx={{ mr: 2 }}
+                            />
                             <ListItemText
                               primary={`${item.resource_type} #${item.resource_id}`}
-                              secondary={`Priority: ${item.priority}`}
+                              secondary={item.active
+                                ? t('search.pinned.active', 'Active')
+                                : t('search.pinned.inactive', 'Inactive')
+                              }
                             />
                           </ListItem>
                         )}
