@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
-import { apiService, type AuditLoggingStatus } from '../../services/api';
+import { apiService, type AuditLoggingStatus, type FullTextSearchStatus } from '../../services/api';
 import { useSettings } from '../../contexts/SettingsContext';
 import { SettingsApi } from '@my-many-books/shared-api';
 import { AppSetting, BOOK_STATUS_CHANGE_BEHAVIOR } from '@my-many-books/shared-types';
@@ -33,6 +33,12 @@ export const AdminSettingsPage: React.FC = () => {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<AuditLoggingStatus | null>(null);
+
+  // Full-text search state
+  const [searchLoading, setSearchLoading] = useState(true);
+  const [searchUpdating, setSearchUpdating] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchStatus, setSearchStatus] = useState<FullTextSearchStatus | null>(null);
 
   // App settings state
   const [appSettings, setAppSettings] = useState<AppSetting[]>([]);
@@ -53,6 +59,19 @@ export const AdminSettingsPage: React.FC = () => {
     }
   }, []);
 
+  const fetchSearchStatus = useCallback(async () => {
+    try {
+      setSearchLoading(true);
+      setSearchError(null);
+      const data = await apiService.getFullTextSearchStatus();
+      setSearchStatus(data);
+    } catch (err: any) {
+      setSearchError(err.response?.data?.message || 'Failed to fetch full-text search status');
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
   const handleToggle = async () => {
     if (!status || !status.canChange) return;
 
@@ -68,12 +87,84 @@ export const AdminSettingsPage: React.FC = () => {
     }
   };
 
+  const handleSearchToggle = async () => {
+    if (!searchStatus || !searchStatus.canChange) return;
+
+    try {
+      setSearchUpdating(true);
+      setSearchError(null);
+      const data = await apiService.updateFullTextSearchStatus({ enabled: !searchStatus.enabled });
+      setSearchStatus(data);
+    } catch (err: any) {
+      setSearchError(err.response?.data?.message || 'Failed to update full-text search status');
+    } finally {
+      setSearchUpdating(false);
+    }
+  };
+
+  const handleSortableFieldsChange = async (event: any) => {
+    if (!searchStatus) return;
+
+    try {
+      setSearchUpdating(true);
+      setSearchError(null);
+      const data = await apiService.updateFullTextSearchStatus({
+        sortableFields: event.target.value,
+      });
+      setSearchStatus(data);
+    } catch (err: any) {
+      setSearchError(err.response?.data?.message || 'Failed to update sortable fields');
+    } finally {
+      setSearchUpdating(false);
+    }
+  };
+
+  const handleDefaultSortChange = async (event: any) => {
+    if (!searchStatus) return;
+
+    try {
+      setSearchUpdating(true);
+      setSearchError(null);
+      const data = await apiService.updateFullTextSearchStatus({
+        defaultSort: event.target.value,
+      });
+      setSearchStatus(data);
+    } catch (err: any) {
+      setSearchError(err.response?.data?.message || 'Failed to update default sort');
+    } finally {
+      setSearchUpdating(false);
+    }
+  };
+
   const getSourceBadge = (source: string) => {
     const badges = {
       force_disabled: { label: 'Disabled by deployment', color: 'error' as const },
       force_enabled: { label: 'Enforced by deployment', color: 'success' as const },
       database: { label: 'Controlled via admin panel', color: 'primary' as const },
       default: { label: 'Default setting', color: 'default' as const },
+    };
+    const badge = badges[source as keyof typeof badges] || badges.default;
+    return <Chip label={badge.label} color={badge.color} size="small" sx={{ ml: 2 }} />;
+  };
+
+  const getSearchSourceBadge = (source: string) => {
+    const badges = {
+      force_disabled: {
+        label: t('search.fulltext.status.force_disabled', 'Disabled by .env'),
+        color: 'error' as const
+      },
+      force_enabled: {
+        label: t('search.fulltext.status.force_enabled', 'Enabled by .env'),
+        color: 'success' as const
+      },
+      database: {
+        label: t('search.fulltext.status.database', 'Controlled via database'),
+        color: 'primary' as const
+      },
+      default: {
+        label: t('search.fulltext.status.default', 'Default setting'),
+        color: 'default' as const
+      },
     };
     const badge = badges[source as keyof typeof badges] || badges.default;
     return <Chip label={badge.label} color={badge.color} size="small" sx={{ ml: 2 }} />;
@@ -90,6 +181,19 @@ export const AdminSettingsPage: React.FC = () => {
       return 'Toggle audit logging on or off. This setting is stored in the database and takes effect immediately (with 30-second cache). All admin actions (create, update, delete) will be logged when enabled.';
     }
     return 'Audit logging configuration.';
+  };
+
+  const getSearchHelpText = (source: string, canChange: boolean) => {
+    if (source === 'force_disabled') {
+      return t('search.fulltext.help.force_disabled', 'Full-text search is permanently disabled by .env configuration (FULLTEXT_SEARCH_FORCE_DISABLED=true). Contact your system administrator to enable it.');
+    }
+    if (source === 'force_enabled') {
+      return t('search.fulltext.help.force_enabled', 'Full-text search is permanently enabled by .env configuration (FULLTEXT_SEARCH_FORCE_ENABLED=true). It cannot be disabled via this panel.');
+    }
+    if (canChange) {
+      return t('search.fulltext.help.database', 'Toggle full-text search on or off. This setting is stored in the database and takes effect immediately. When enabled, searches use MySQL FULLTEXT indexes for better performance.');
+    }
+    return t('search.fulltext.help.default', 'Full-text search configuration.');
   };
 
   const fetchAppSettings = useCallback(async () => {
@@ -180,11 +284,12 @@ export const AdminSettingsPage: React.FC = () => {
     return descriptions[key] || 'No description available';
   };
 
-  // Fetch audit logging status and app settings
+  // Fetch audit logging status, search status, and app settings
   useEffect(() => {
     fetchStatus();
+    fetchSearchStatus();
     fetchAppSettings();
-  }, [fetchStatus, fetchAppSettings]);
+  }, [fetchStatus, fetchSearchStatus, fetchAppSettings]);
 
   return (
     <AdminLayout>
@@ -250,6 +355,91 @@ export const AdminSettingsPage: React.FC = () => {
                   <li>Timestamp and details</li>
                 </Typography>
               </Box>
+            </>
+          ) : null}
+        </Paper>
+
+        {/* Full-Text Search Settings */}
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            {t('search.fulltext.title', 'Full-Text Search')}
+          </Typography>
+
+          {searchLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : searchError ? (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {searchError}
+            </Alert>
+          ) : searchStatus ? (
+            <>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={searchStatus.enabled}
+                      onChange={handleSearchToggle}
+                      disabled={!searchStatus.canChange || searchUpdating}
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography>
+                        {searchStatus.enabled ? t('search.fulltext.enabled', 'Enabled') : t('search.fulltext.disabled', 'Disabled')}
+                        {searchUpdating && (
+                          <CircularProgress size={16} sx={{ ml: 1, verticalAlign: 'middle' }} />
+                        )}
+                      </Typography>
+                      {getSearchSourceBadge(searchStatus.source)}
+                    </Box>
+                  }
+                />
+              </Box>
+
+              <Alert severity="info" sx={{ my: 2 }}>
+                {getSearchHelpText(searchStatus.source, searchStatus.canChange)}
+              </Alert>
+
+              <Divider sx={{ my: 2 }} />
+
+              {/* Sortable Fields Multi-Select */}
+              <FormControl fullWidth sx={{ mt: 2 }} disabled={searchUpdating}>
+                <InputLabel>{t('search.fulltext.sortable_fields', 'Sortable Fields')}</InputLabel>
+                <Select
+                  multiple
+                  value={searchStatus.sortableFields || []}
+                  label={t('search.fulltext.sortable_fields', 'Sortable Fields')}
+                  onChange={handleSortableFieldsChange}
+                  disabled={searchUpdating}
+                >
+                  <MenuItem value="title">{t('search.fulltext.field.title', 'Title')}</MenuItem>
+                  <MenuItem value="createdAt">{t('search.fulltext.field.created_at', 'Created At')}</MenuItem>
+                  <MenuItem value="updatedAt">{t('search.fulltext.field.updated_at', 'Updated At')}</MenuItem>
+                  <MenuItem value="status">{t('search.fulltext.field.status', 'Status')}</MenuItem>
+                  <MenuItem value="isbnCode">{t('search.fulltext.field.isbn', 'ISBN')}</MenuItem>
+                  <MenuItem value="editionNumber">{t('search.fulltext.field.edition_number', 'Edition Number')}</MenuItem>
+                  <MenuItem value="editionDate">{t('search.fulltext.field.edition_date', 'Edition Date')}</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Default Sort Dropdown */}
+              <FormControl fullWidth sx={{ mt: 2 }} disabled={searchUpdating}>
+                <InputLabel>{t('search.fulltext.default_sort', 'Default Sort')}</InputLabel>
+                <Select
+                  value={searchStatus.defaultSort || 'title'}
+                  label={t('search.fulltext.default_sort', 'Default Sort')}
+                  onChange={handleDefaultSortChange}
+                  disabled={searchUpdating}
+                >
+                  <MenuItem value="title">{t('search.fulltext.sort.title', 'Title')}</MenuItem>
+                  <MenuItem value="createdAt">{t('search.fulltext.sort.created_at', 'Created At')}</MenuItem>
+                  <MenuItem value="updatedAt">{t('search.fulltext.sort.updated_at', 'Updated At')}</MenuItem>
+                  <MenuItem value="relevance">{t('search.fulltext.sort.relevance', 'Relevance')}</MenuItem>
+                </Select>
+              </FormControl>
             </>
           ) : null}
         </Paper>

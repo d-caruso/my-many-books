@@ -145,4 +145,18 @@ router.patch(
   )
 );
 
+// Get search settings status (READ)
+router.get(
+  '/settings/search/status',
+  readLimiter,
+  expressRouteWrapper(adminSettingsController.getSearchStatus.bind(adminSettingsController))
+);
+
+// Update search settings (WRITE)
+router.patch(
+  '/settings/search',
+  writeLimiter,
+  expressRouteWrapper(adminSettingsController.updateSearchSettings.bind(adminSettingsController))
+);
+
 export default router;

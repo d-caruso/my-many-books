@@ -77,3 +77,6 @@ jspm_packages/
 
 # TernJS port file
 .tern-port
+
+# Backfill progress files
+scripts/.backfill-progress.json

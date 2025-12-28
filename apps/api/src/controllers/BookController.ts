@@ -26,6 +26,9 @@ import { toBookResponseDTO } from '../dtos/book/BookResponseDTO';
 import { TYPES } from '../container/types';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
+import { BookSearchService } from '../services/search/BookSearchService';
+import { BookSearchResultDTO } from '../dtos/book/BookSearchResultDTO';
+import { SEARCH_SORT_TYPES, SEARCH_RESULT_STATUS } from '@my-many-books/shared-types';
 
 interface BookSearchFilters {
   title?: string;
@@ -46,7 +49,10 @@ interface BookSearchFilters {
  */
 @injectable()
 export class BookController extends BaseController {
-  constructor(@inject(TYPES.BookService) private readonly bookService: BookService) {
+  constructor(
+    @inject(TYPES.BookService) private readonly bookService: BookService,
+    @inject(TYPES.BookSearchService) private readonly bookSearchService: BookSearchService
+  ) {
     super();
     this.bookService.initializeControllerContext();
   }
@@ -346,6 +352,7 @@ export class BookController extends BaseController {
 
   /**
    * Searches books by query string (title, author, or ISBN) with advanced filters.
+   * Uses BookSearchService with FULLTEXT or LIKE search based on settings.
    * @param request The universal request object.
    * @returns An ApiResponse with matching books.
    */
@@ -355,7 +362,8 @@ export class BookController extends BaseController {
     const status = this.getQueryParameter(request, 'status');
     const authorId = this.getQueryParameter(request, 'authorId');
     const categoryId = this.getQueryParameter(request, 'categoryId');
-    const sortBy = this.getQueryParameter(request, 'sortBy') || 'title';
+    const sortByParam = this.getQueryParameter(request, 'sortBy');
+    const sortOrderParam = this.getQueryParameter(request, 'sortOrder') || 'asc';
     const pagination = this.getPaginationParams(request);
 
     // Validate query length if provided
@@ -363,22 +371,176 @@ export class BookController extends BaseController {
       return this.createErrorResponseI18n('errors:search_query_min_length', 400, { min: 2 });
     }
 
+    // If no query provided, fall back to old behavior (list books with filters)
+    if (!query) {
+      return this.searchBooksLegacy(request);
+    }
+
+    // Validate sortBy against Book.SORTABLE_FIELD_VALUES or allow 'relevance'
+    let sortBy: string | undefined;
+    const sortOrder: 'asc' | 'desc' = sortOrderParam as 'asc' | 'desc';
+
+    if (sortByParam) {
+      if (sortByParam === SEARCH_SORT_TYPES.RELEVANCE) {
+        // Relevance sorting - no sortBy field needed
+        sortBy = undefined;
+      } else if (
+        Book.SORTABLE_FIELD_VALUES.includes(
+          sortByParam as (typeof Book.SORTABLE_FIELD_VALUES)[number]
+        )
+      ) {
+        sortBy = sortByParam;
+      } else {
+        return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
+          errors: {
+            sortBy: `Invalid sortBy field: ${sortByParam}. Must be one of: ${Book.SORTABLE_FIELD_VALUES.join(', ')}, ${SEARCH_SORT_TYPES.RELEVANCE}`,
+          },
+        });
+      }
+    }
+
+    // Validate sortOrder
+    if (!['asc', 'desc'].includes(sortOrder)) {
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
+        errors: {
+          sortOrder: `Invalid sortOrder: ${sortOrder}. Must be 'asc' or 'desc'`,
+        },
+      });
+    }
+
+    try {
+      // Use BookSearchService for FULLTEXT/LIKE search
+      const { results, total } = await this.bookSearchService.search({
+        query,
+        userId: request.user?.id,
+        sortBy,
+        sortOrder,
+        limit: pagination.limit,
+        offset: pagination.offset,
+      });
+
+      // Apply post-search filters for author/category/status
+      // (BookSearchService only searches title/notes, these are additional filters)
+      let filteredResults = results;
+
+      if (status || authorId || categoryId) {
+        // Fetch full book objects with associations to apply filters
+        const bookIds = results.map(r => r.id);
+        if (bookIds.length === 0) {
+          filteredResults = [];
+        } else {
+          const includeClause: Array<Record<string, unknown>> = [];
+
+          // Add author filter/include
+          if (authorId) {
+            includeClause.push({
+              model: Author,
+              as: 'authors',
+              through: { attributes: [] },
+              where: { id: Number(authorId) },
+              required: true,
+            });
+          } else {
+            includeClause.push({
+              model: Author,
+              as: 'authors',
+              through: { attributes: [] },
+            });
+          }
+
+          // Add category filter/include
+          if (categoryId) {
+            includeClause.push({
+              model: Category,
+              as: 'categories',
+              through: { attributes: [] },
+              where: { id: Number(categoryId) },
+              required: true,
+            });
+          } else {
+            includeClause.push({
+              model: Category,
+              as: 'categories',
+              through: { attributes: [] },
+            });
+          }
+
+          const whereConditions: WhereOptions<BookAttributes> = {
+            id: { [Op.in]: bookIds },
+          };
+
+          if (status) {
+            Object.assign(whereConditions, { status: status as BookStatus });
+          }
+
+          if (request.user) {
+            Object.assign(whereConditions, { userId: request.user.id });
+          }
+
+          const books = await Book.findAll({
+            where: whereConditions,
+            include: includeClause,
+          });
+
+          // Preserve original order from BookSearchService (pinned first, then by sortBy/relevance)
+          const bookMap = new Map(books.map(b => [b.id, b.get({ plain: true })]));
+          filteredResults = results
+            .map(r => {
+              const book = bookMap.get(r.id);
+              if (!book) return undefined;
+              return {
+                ...book,
+                isPinned: r.isPinned,
+                status: r.isPinned ? SEARCH_RESULT_STATUS.PINNED : SEARCH_RESULT_STATUS.REGULAR,
+                relevanceScore: r.relevanceScore,
+              } as BookSearchResultDTO;
+            })
+            .filter((b): b is BookSearchResultDTO => b !== undefined);
+        }
+      } else {
+        // No additional filters - use results as-is but mark status
+        filteredResults = results.map(r => ({
+          ...r,
+          status: r.isPinned ? SEARCH_RESULT_STATUS.PINNED : SEARCH_RESULT_STATUS.REGULAR,
+        }));
+      }
+
+      // Return SearchResult format expected by frontend
+      const searchResult = {
+        books: filteredResults,
+        total: filteredResults.length,
+        hasMore: pagination.page * pagination.limit < total,
+        page: pagination.page,
+      };
+
+      return this.createSuccessResponse(searchResult);
+    } catch (error) {
+      if (error instanceof Error) {
+        return this.createErrorResponseI18n('errors:search_failed', 500, undefined, {
+          error: error.message,
+        });
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Legacy search for books without query string (list with filters).
+   * Used when 'q' parameter is not provided.
+   */
+  private async searchBooksLegacy(request: UniversalRequest): Promise<ApiResponse> {
+    const status = this.getQueryParameter(request, 'status');
+    const authorId = this.getQueryParameter(request, 'authorId');
+    const categoryId = this.getQueryParameter(request, 'categoryId');
+    const sortBy = this.getQueryParameter(request, 'sortBy') || 'title';
+    const pagination = this.getPaginationParams(request);
+
     // Build base where conditions
     const whereConditions: WhereOptions<BookAttributes>[] = [];
 
     // Add user ID filter if authenticated
     if (request.user) {
       whereConditions.push({ userId: request.user.id });
-    }
-
-    // Add text search conditions (title and ISBN)
-    if (query) {
-      whereConditions.push({
-        [Op.or]: [
-          { title: { [Op.like]: `%${query}%` } },
-          { isbnCode: { [Op.like]: `%${query}%` } },
-        ],
-      });
     }
 
     // Add status filter
@@ -398,10 +560,9 @@ export class BookController extends BaseController {
         as: 'authors',
         through: { attributes: [] },
         where: { id: Number(authorId) },
-        required: true, // INNER JOIN to filter by author
+        required: true,
       });
     } else {
-      // Always include all authors for each book
       includeClause.push({
         model: Author,
         as: 'authors',
@@ -416,10 +577,9 @@ export class BookController extends BaseController {
         as: 'categories',
         through: { attributes: [] },
         where: { id: Number(categoryId) },
-        required: true, // INNER JOIN to filter by category
+        required: true,
       });
     } else {
-      // Always include all categories for each book
       includeClause.push({
         model: Category,
         as: 'categories',

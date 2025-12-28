@@ -13,6 +13,17 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
   public name!: string;
   public userId!: number;
 
+  // Sortable fields for search and list endpoints
+  static readonly SORTABLE_FIELDS = Object.freeze({
+    NAME: 'name',
+    CREATED_AT: 'createdAt',
+    UPDATED_AT: 'updatedAt',
+  } as const);
+
+  static readonly SORTABLE_FIELD_VALUES = Object.freeze(
+    Object.values(Category.SORTABLE_FIELDS)
+  );
+
   static override getTableName(): string {
     return TABLE_NAMES.CATEGORIES;
   }
@@ -57,6 +68,11 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
             fields: ['user_id', 'name'],
             unique: true,
             name: 'idx_category_user_name_unique',
+          },
+          {
+            type: 'FULLTEXT',
+            fields: ['name'],
+            name: 'idx_category_fulltext_name',
           },
         ],
       }

@@ -50,5 +50,62 @@
     "results_count": "{{filtered}} of {{total}} books",
     "results_total": "{{total}} books",
     "no_books": "No books found"
+  },
+  "fulltext": {
+    "title": "Full-Text Search",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "status": {
+      "force_disabled": "Disabled by deployment",
+      "force_enabled": "Enforced by deployment",
+      "database": "Controlled via admin panel",
+      "default": "Default setting"
+    },
+    "help": {
+      "force_disabled": "Full-text search is permanently disabled by infrastructure configuration (SEARCH_FULLTEXT_FORCE_DISABLED=true). Contact your system administrator to enable it.",
+      "force_enabled": "Full-text search is permanently enabled by infrastructure configuration (SEARCH_FULLTEXT_FORCE_ENABLED=true). It cannot be disabled via this panel.",
+      "database": "You can toggle full-text search on or off via this admin panel.",
+      "default": "Full-text search is using the default setting. Enable it to improve search relevance."
+    }
+  },
+  "sorting": {
+    "title": "Sorting Options",
+    "label": "Sort by",
+    "direction_label": "Order",
+    "sortBy": "Sort by",
+    "sortOrder": "Sort order",
+    "relevance": "Best match",
+    "fields": {
+      "relevance": "Relevance",
+      "title": "Title",
+      "createdAt": "Add date",
+      "updatedAt": "Last updated",
+      "status": "Status",
+      "isbnCode": "ISBN",
+      "editionNumber": "Edition",
+      "editionDate": "Edition date",
+      "name": "Name",
+      "surname": "Surname",
+      "nationality": "Nationality"
+    },
+    "directions": {
+      "asc": "Ascending",
+      "desc": "Descending"
+    }
+  },
+  "pinned": {
+    "title": "Pinned Results",
+    "badge": "Pinned",
+    "pin": "Pin to top",
+    "unpin": "Unpin",
+    "reorder": "Reorder pinned results",
+    "empty": "No pinned results",
+    "help": "Pinned results always appear first in search results, regardless of relevance."
+  },
+  "results": {
+    "found": "{{count}} result found",
+    "found_plural": "{{count}} results found",
+    "empty": "No results found for \"{{query}}\"",
+    "tryAgain": "Try a different search term"
   }
 }

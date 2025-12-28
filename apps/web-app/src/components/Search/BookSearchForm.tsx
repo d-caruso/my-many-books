@@ -231,20 +231,47 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                 </FormControl>
               </Box>
 
-              {/* Second row - Sort By */}
-              <Box sx={{ maxWidth: { xs: '100%', sm: '300px' } }}>
+              {/* Second row - Sort By and Sort Order */}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)'
+                  },
+                  gap: 2,
+                  maxWidth: { xs: '100%', md: '600px' }
+                }}
+              >
                 <FormControl fullWidth size="small">
-                  <InputLabel id="sortBy-label">{t('form.sort_label')}</InputLabel>
+                  <InputLabel id="sortBy-label">{t('sorting.label')}</InputLabel>
                   <Select
                     labelId="sortBy-label"
                     id="sortBy"
                     value={filters.sortBy || 'title'}
                     onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                    label={t('form.sort_label')}
+                    label={t('sorting.label')}
                   >
-                    <MenuItem value="title">{t('form.sort_title')}</MenuItem>
-                    <MenuItem value="author">{t('form.sort_author')}</MenuItem>
-                    <MenuItem value="date-added">{t('form.sort_date')}</MenuItem>
+                    <MenuItem value="title">{t('sorting.fields.title')}</MenuItem>
+                    <MenuItem value="relevance">{t('sorting.fields.relevance')}</MenuItem>
+                    <MenuItem value="createdAt">{t('sorting.fields.createdAt')}</MenuItem>
+                    <MenuItem value="updatedAt">{t('sorting.fields.updatedAt')}</MenuItem>
+                    <MenuItem value="status">{t('sorting.fields.status')}</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <FormControl fullWidth size="small">
+                  <InputLabel id="sortOrder-label">{t('sorting.direction_label')}</InputLabel>
+                  <Select
+                    labelId="sortOrder-label"
+                    id="sortOrder"
+                    value={filters.sortOrder || 'asc'}
+                    onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
+                    label={t('sorting.direction_label')}
+                    disabled={filters.sortBy === 'relevance'}
+                  >
+                    <MenuItem value="asc">{t('sorting.directions.asc')}</MenuItem>
+                    <MenuItem value="desc">{t('sorting.directions.desc')}</MenuItem>
                   </Select>
                 </FormControl>
               </Box>

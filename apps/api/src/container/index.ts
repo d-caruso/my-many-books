@@ -19,12 +19,18 @@ import { Repository as CategoryRepositoryContract } from '../repositories/catego
 import { CategoryRepository } from '../repositories/category/CategoryRepository';
 import { CategoryService } from '../services/category/CategoryService';
 import { AdminUserController } from '../controllers/admin/AdminUserController';
+import { AdminSearchController } from '../controllers/admin/AdminSearchController';
 import { Repository as UserRepositoryContract } from '../repositories/user/Repository';
 import { UserRepository } from '../repositories/user/UserRepository';
 import { AdminUserService } from '../services/user/AdminUserService';
 import { UserController } from '../controllers/UserController';
 import { UserService } from '../services/user/UserService';
 import { SettingsController } from '../controllers/SettingsController';
+import { SearchSettingsService } from '../services/SearchSettingsService';
+import { BookSearchService } from '../services/search/BookSearchService';
+import { AuthorSearchService } from '../services/search/AuthorSearchService';
+import { CategorySearchService } from '../services/search/CategorySearchService';
+import { PinnedResultsService } from '../services/PinnedResultsService';
 
 const container = new Container({
   defaultScope: 'Singleton',
@@ -65,8 +71,38 @@ container
   .inTransientScope();
 
 container
+  .bind<AdminSearchController>(TYPES.AdminSearchController)
+  .to(AdminSearchController)
+  .inTransientScope();
+
+container
   .bind<SettingsController>(TYPES.SettingsController)
   .to(SettingsController)
   .inTransientScope();
+
+container
+  .bind<SearchSettingsService>(TYPES.SearchSettingsService)
+  .to(SearchSettingsService)
+  .inSingletonScope();
+
+container
+  .bind<BookSearchService>(TYPES.BookSearchService)
+  .to(BookSearchService)
+  .inSingletonScope();
+
+container
+  .bind<AuthorSearchService>(TYPES.AuthorSearchService)
+  .to(AuthorSearchService)
+  .inSingletonScope();
+
+container
+  .bind<CategorySearchService>(TYPES.CategorySearchService)
+  .to(CategorySearchService)
+  .inSingletonScope();
+
+container
+  .bind<PinnedResultsService>(TYPES.PinnedResultsService)
+  .to(PinnedResultsService)
+  .inSingletonScope();
 
 export { container };

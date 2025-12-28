@@ -23,6 +23,7 @@ import { Repository as AuthorRepositoryContract } from '../repositories/author/R
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
+import { AuthorSearchService } from '../services/search/AuthorSearchService';
 
 interface AuthorSearchFilters {
   name?: string;
@@ -40,7 +41,8 @@ interface AuthorSearchFilters {
 export class AuthorController extends BaseController {
   constructor(
     @inject(TYPES.AuthorService) private readonly authorService: AuthorService,
-    @inject(TYPES.AuthorRepository) private readonly authorRepository: AuthorRepositoryContract
+    @inject(TYPES.AuthorRepository) private readonly authorRepository: AuthorRepositoryContract,
+    @inject(TYPES.AuthorSearchService) private readonly authorSearchService: AuthorSearchService
   ) {
     super();
     this.authorService.initializeControllerContext();
@@ -255,19 +257,36 @@ export class AuthorController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const query = this.getQueryParameter(request, 'q');
+    const query = this.getQueryParameter(request, 'q') || '';
+    const sortBy = this.getQueryParameter(request, 'sortBy');
+    const sortOrder = this.getQueryParameter(request, 'sortOrder') as 'asc' | 'desc' | undefined;
+    const limit = parseInt(this.getQueryParameter(request, 'limit') || '20', 10);
+    const offset = parseInt(this.getQueryParameter(request, 'offset') || '0', 10);
 
-    if (!query || query.trim().length < 2) {
-      return this.createErrorResponseI18n('errors:search_query_min_length', 400, { min: 2 });
+    // Validate sortBy against Author.SORTABLE_FIELD_VALUES
+    if (sortBy && !(Author.SORTABLE_FIELD_VALUES as readonly string[]).includes(sortBy)) {
+      return this.createErrorResponse(
+        `Invalid sortBy field: ${sortBy}. Must be one of: ${Author.SORTABLE_FIELD_VALUES.join(', ')}`,
+        400
+      );
     }
 
-    const authors = await this.authorRepository.searchByQuery(
-      query.trim(),
-      request.user!.id,
-      20
-    );
+    // Use AuthorSearchService for FULLTEXT/LIKE search
+    const { results, total } = await this.authorSearchService.search({
+      query: query.trim(),
+      userId: request.user!.id,
+      sortBy: sortBy || undefined,
+      sortOrder,
+      limit,
+      offset,
+    });
 
-    return this.createSuccessResponse(authors);
+    return this.createSuccessResponse({
+      results,
+      total,
+      limit,
+      offset,
+    });
   }
 
   /**

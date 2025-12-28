@@ -9,6 +9,7 @@ import { getLogger } from '@my-many-books/shared-logging';
 import { UniversalRequest } from '../../types';
 import { Setting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
+import { SearchSettingsService } from '../../services/SearchSettingsService';
 
 export class AdminSettingsController extends BaseController {
   /**
@@ -112,6 +113,100 @@ export class AdminSettingsController extends BaseController {
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to update audit logging setting:');
       return this.createErrorResponse('Failed to update audit logging setting', 500);
+    }
+  }
+
+  /**
+   * Get search fulltext setting status
+   *
+   * Returns:
+   * - enabled: current status (true/false)
+   * - source: where the setting comes from (force_disabled, force_enabled, database, default)
+   * - canChange: whether admin can change it via UI
+   * - sortableFields: array of sortable field names
+   * - defaultSort: default sort field
+   */
+  async getSearchStatus(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    try {
+      const searchSettingsService = new SearchSettingsService();
+      const status = await searchSettingsService.getFulltextStatus();
+
+      return this.createSuccessResponse(status);
+    } catch (error) {
+      getLogger().error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Failed to get search settings status:'
+      );
+      return this.createErrorResponse('Failed to get search settings status', 500);
+    }
+  }
+
+  /**
+   * Update search settings
+   *
+   * Can update: enabled, sortableFields, defaultSort
+   * Only works if no FORCE_* env vars are set for enabled
+   */
+  async updateSearchSettings(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    const body = this.parseBody<{
+      enabled?: boolean;
+      sortableFields?: string[];
+      defaultSort?: string;
+    }>(request);
+
+    if (!body) {
+      return this.createErrorResponseI18n('errors:validation_failed', 400);
+    }
+
+    try {
+      const searchSettingsService = new SearchSettingsService();
+
+      // Check if enabled can be changed
+      if (body.enabled !== undefined) {
+        const forceDisabled = process.env['SEARCH_FULLTEXT_FORCE_DISABLED'] === 'true';
+        const forceEnabled = process.env['SEARCH_FULLTEXT_FORCE_ENABLED'] === 'true';
+
+        if (forceDisabled || forceEnabled) {
+          return this.createErrorResponse(
+            'Full-text search enabled status is enforced by deployment configuration and cannot be changed',
+            403
+          );
+        }
+
+        await searchSettingsService.updateFulltextEnabled(body.enabled);
+      }
+
+      if (body.sortableFields !== undefined) {
+        if (!Array.isArray(body.sortableFields)) {
+          return this.createErrorResponse('sortableFields must be an array', 400);
+        }
+        await searchSettingsService.updateSortableFields(body.sortableFields);
+      }
+
+      if (body.defaultSort !== undefined) {
+        if (typeof body.defaultSort !== 'string') {
+          return this.createErrorResponse('defaultSort must be a string', 400);
+        }
+        await searchSettingsService.updateDefaultSort(body.defaultSort);
+      }
+
+      // Return updated status
+      const status = await searchSettingsService.getFulltextStatus();
+      return this.createSuccessResponse(status);
+    } catch (error) {
+      getLogger().error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Failed to update search settings:'
+      );
+      return this.createErrorResponse('Failed to update search settings', 500);
     }
   }
 

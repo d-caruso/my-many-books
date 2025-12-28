@@ -30,6 +30,21 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
     categories: Association<Book, Category>;
   };
 
+  // Sortable fields for search and list endpoints
+  static readonly SORTABLE_FIELDS = Object.freeze({
+    TITLE: 'title',
+    CREATED_AT: 'createdAt',
+    UPDATED_AT: 'updatedAt',
+    STATUS: 'status',
+    ISBN_CODE: 'isbnCode',
+    EDITION_NUMBER: 'editionNumber',
+    EDITION_DATE: 'editionDate',
+  } as const);
+
+  static readonly SORTABLE_FIELD_VALUES = Object.freeze(
+    Object.values(Book.SORTABLE_FIELDS)
+  );
+
   static override getTableName(): string {
     return TABLE_NAMES.BOOKS;
   }

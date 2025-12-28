@@ -261,7 +261,7 @@ describe('Constants', () => {
       expect(tableNames).toContain('categories');
       expect(tableNames).toContain('book_authors');
       expect(tableNames).toContain('book_categories');
-      expect(tableNames).toHaveLength(5);
+      expect(tableNames).toHaveLength(6);
     });
   });
 });

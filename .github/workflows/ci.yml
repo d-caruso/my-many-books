@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/increase-db-pool ]
+    branches: [ main, develop, feature/architecture-improvements, feature/increase-db-pool, feature/full-text-search-and-sorting ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, feature/increase-db-pool ]
+    branches: [ main, develop, feature/architecture-improvements, feature/increase-db-pool, feature/full-text-search-and-sorting ]
   workflow_dispatch:
     inputs:
       run_tests:

@@ -8,6 +8,9 @@ import { apiService } from '../../../services/api';
 import { ApiProvider } from '../../../contexts/ApiContext';
 import { SettingsProvider } from '../../../contexts/SettingsContext';
 
+// Import the mocked apiService to configure it
+const mockedApiService = apiService as any;
+
 vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
 }));
@@ -40,12 +43,16 @@ vi.mock('../../../services/api', () => ({
   apiService: {
     getAuditLoggingStatus: vi.fn(),
     updateAuditLoggingStatus: vi.fn(),
+    getFullTextSearchStatus: vi.fn(),
+    updateFullTextSearchStatus: vi.fn(),
   },
 }));
 
 const mockApiService = {
   getAuditLoggingStatus: vi.fn(),
   updateAuditLoggingStatus: vi.fn(),
+  getFullTextSearchStatus: vi.fn(),
+  updateFullTextSearchStatus: vi.fn(),
   baseURL: 'http://localhost:3000',
   get: vi.fn(),
   post: vi.fn(),
@@ -65,7 +72,7 @@ const testI18n = i18n.createInstance();
 testI18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['pages'],
+  ns: ['pages', 'translation'],
   defaultNS: 'pages',
   resources: {
     en: {
@@ -73,6 +80,44 @@ testI18n.use(initReactI18next).init({
         admin: {
           settings: {
             page_title: 'Settings',
+          },
+        },
+      },
+      translation: {
+        search: {
+          fulltext: {
+            title: 'Full-Text Search',
+            enabled: 'Enabled',
+            disabled: 'Disabled',
+            sortable_fields: 'Sortable Fields',
+            default_sort: 'Default Sort',
+            status: {
+              force_disabled: 'Disabled by .env',
+              force_enabled: 'Enabled by .env',
+              database: 'Controlled via database',
+              default: 'Default setting',
+            },
+            help: {
+              force_disabled: 'Full-text search is permanently disabled by .env configuration (FULLTEXT_SEARCH_FORCE_DISABLED=true). Contact your system administrator to enable it.',
+              force_enabled: 'Full-text search is permanently enabled by .env configuration (FULLTEXT_SEARCH_FORCE_ENABLED=true). It cannot be disabled via this panel.',
+              database: 'Toggle full-text search on or off. This setting is stored in the database and takes effect immediately. When enabled, searches use MySQL FULLTEXT indexes for better performance.',
+              default: 'Full-text search configuration.',
+            },
+            field: {
+              title: 'Title',
+              created_at: 'Created At',
+              updated_at: 'Updated At',
+              status: 'Status',
+              isbn: 'ISBN',
+              edition_number: 'Edition Number',
+              edition_date: 'Edition Date',
+            },
+            sort: {
+              title: 'Title',
+              created_at: 'Created At',
+              updated_at: 'Updated At',
+              relevance: 'Relevance',
+            },
           },
         },
       },
@@ -95,11 +140,36 @@ const renderWithProvider = (ui: React.ReactElement) => {
 describe('AdminSettingsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Setup audit logging mock
+    mockedApiService.getAuditLoggingStatus.mockResolvedValue({
+      enabled: false,
+      source: 'default',
+      canChange: true,
+    });
     mockApiService.getAuditLoggingStatus.mockResolvedValue({
       enabled: false,
       source: 'default',
       canChange: true,
     });
+
+    // Setup full-text search mock
+    mockedApiService.getFullTextSearchStatus.mockResolvedValue({
+      enabled: true,
+      source: 'database',
+      canChange: true,
+      sortableFields: ['title', 'createdAt'],
+      defaultSort: 'title',
+    });
+    mockApiService.getFullTextSearchStatus.mockResolvedValue({
+      enabled: true,
+      source: 'database',
+      canChange: true,
+      sortableFields: ['title', 'createdAt'],
+      defaultSort: 'title',
+    });
+
+    // Setup settings mock
     mockSettingsApiInstance.getAllSettingsAdmin.mockResolvedValue([
       {
         key: 'books.list.status.onchange',
@@ -357,5 +427,138 @@ describe('AdminSettingsPage', () => {
     // The select should exist but be disabled (or there might be no combobox if FormControl is disabled)
     // Let's check for the "Inactive" label instead to verify the setting is inactive
     expect(screen.getByText('Inactive')).toBeInTheDocument();
+  });
+
+  test('displays Full-Text Search section', async () => {
+    renderWithProvider(<AdminSettingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Full-Text Search')).toBeInTheDocument();
+    });
+  });
+
+  test('displays Full-Text Search toggle switch with correct state', async () => {
+    renderWithProvider(<AdminSettingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Full-Text Search')).toBeInTheDocument();
+    });
+
+    // Wait for content to load
+    await waitFor(() => {
+      const sortableFields = screen.getAllByText('Sortable Fields');
+      expect(sortableFields.length).toBeGreaterThan(0);
+    });
+
+    const switches = screen.getAllByRole('switch');
+    // The Full-Text Search switch should be checked (enabled: true in mock)
+    const enabledSwitches = switches.filter(sw => sw.checked);
+    expect(enabledSwitches.length).toBeGreaterThan(0);
+  });
+
+  test('displays .env override badge when source is force_disabled', async () => {
+    mockedApiService.getFullTextSearchStatus.mockResolvedValue({
+      enabled: false,
+      source: 'force_disabled',
+      canChange: false,
+    });
+
+    renderWithProvider(<AdminSettingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Disabled by .env')).toBeInTheDocument();
+    });
+  });
+
+  test('displays .env override badge when source is force_enabled', async () => {
+    mockedApiService.getFullTextSearchStatus.mockResolvedValue({
+      enabled: true,
+      source: 'force_enabled',
+      canChange: false,
+    });
+
+    renderWithProvider(<AdminSettingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Enabled by .env')).toBeInTheDocument();
+    });
+  });
+
+  test('disables toggle switch when canChange is false', async () => {
+    mockedApiService.getFullTextSearchStatus.mockResolvedValue({
+      enabled: true,
+      source: 'force_enabled',
+      canChange: false,
+    });
+
+    renderWithProvider(<AdminSettingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Enabled by .env')).toBeInTheDocument();
+    });
+
+    const switches = screen.getAllByRole('switch');
+    // The Full-Text Search switch should be disabled
+    const disabledSwitches = switches.filter(sw => sw.disabled);
+    expect(disabledSwitches.length).toBeGreaterThan(0);
+  });
+
+  test('displays sortable fields multi-select', async () => {
+    renderWithProvider(<AdminSettingsPage />);
+
+    await waitFor(() => {
+      const sortableFields = screen.getAllByText('Sortable Fields');
+      expect(sortableFields.length).toBeGreaterThan(0);
+    });
+  });
+
+  test('displays default sort dropdown', async () => {
+    renderWithProvider(<AdminSettingsPage />);
+
+    await waitFor(() => {
+      const defaultSort = screen.getAllByText('Default Sort');
+      expect(defaultSort.length).toBeGreaterThan(0);
+    });
+  });
+
+  test('displays help text based on source', async () => {
+    mockedApiService.getFullTextSearchStatus.mockResolvedValue({
+      enabled: false,
+      source: 'force_disabled',
+      canChange: false,
+    });
+
+    renderWithProvider(<AdminSettingsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Full-text search is permanently disabled/i)).toBeInTheDocument();
+    });
+  });
+
+  test('calls updateFullTextSearchStatus when toggle is clicked', async () => {
+    mockedApiService.updateFullTextSearchStatus.mockResolvedValue({
+      enabled: false,
+      source: 'database',
+      canChange: true,
+    });
+
+    renderWithProvider(<AdminSettingsPage />);
+
+    await waitFor(() => {
+      const sortableFields = screen.getAllByText('Sortable Fields');
+      expect(sortableFields.length).toBeGreaterThan(0);
+    });
+
+    const switches = screen.getAllByRole('switch');
+    // Find the Full-Text Search switch (should be checked and enabled)
+    const searchSwitch = switches.find(sw => sw.checked && !sw.disabled);
+
+    if (searchSwitch) {
+      fireEvent.click(searchSwitch);
+
+      await waitFor(() => {
+        expect(mockedApiService.updateFullTextSearchStatus).toHaveBeenCalledWith({ enabled: false });
+      });
+    }
   });
 });

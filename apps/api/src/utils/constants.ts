@@ -53,4 +53,5 @@ export const TABLE_NAMES = Object.freeze({
   CATEGORIES: 'categories',
   BOOK_AUTHORS: 'book_authors',
   BOOK_CATEGORIES: 'book_categories',
+  SEARCH_PINNED_RESULTS: 'search_pinned_results',
 } as const);

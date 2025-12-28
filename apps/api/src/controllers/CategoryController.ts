@@ -18,10 +18,14 @@ import { toCategoryResponseDTO } from '../dtos/category/CategoryResponseDTO';
 import { Book, Category } from '../models';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
+import { CategorySearchService } from '../services/search/CategorySearchService';
 
 @injectable()
 export class CategoryController extends BaseController {
-  constructor(@inject(TYPES.CategoryService) private readonly categoryService: CategoryService) {
+  constructor(
+    @inject(TYPES.CategoryService) private readonly categoryService: CategoryService,
+    @inject(TYPES.CategorySearchService) private readonly categorySearchService: CategorySearchService
+  ) {
     super();
     this.categoryService.initializeControllerContext();
   }
@@ -246,6 +250,43 @@ export class CategoryController extends BaseController {
     } catch (error) {
       return this.handleCategoryServiceError(error);
     }
+  }
+
+  async searchCategories(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    const query = this.getQueryParameter(request, 'q') || '';
+    const sortBy = this.getQueryParameter(request, 'sortBy');
+    const sortOrder = this.getQueryParameter(request, 'sortOrder') as 'asc' | 'desc' | undefined;
+    const limit = parseInt(this.getQueryParameter(request, 'limit') || '20', 10);
+    const offset = parseInt(this.getQueryParameter(request, 'offset') || '0', 10);
+
+    // Validate sortBy against Category.SORTABLE_FIELD_VALUES
+    if (sortBy && !(Category.SORTABLE_FIELD_VALUES as readonly string[]).includes(sortBy)) {
+      return this.createErrorResponse(
+        `Invalid sortBy field: ${sortBy}. Must be one of: ${Category.SORTABLE_FIELD_VALUES.join(', ')}`,
+        400
+      );
+    }
+
+    // Use CategorySearchService for FULLTEXT/LIKE search
+    const { results, total } = await this.categorySearchService.search({
+      query: query.trim(),
+      userId: request.user!.id,
+      sortBy: sortBy || undefined,
+      sortOrder,
+      limit,
+      offset,
+    });
+
+    return this.createSuccessResponse({
+      results,
+      total,
+      limit,
+      offset,
+    });
   }
 
   private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {

@@ -12,7 +12,40 @@ jest.mock('../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('../../../src/models');
+// Mock Author and Book models with shared sequelize mock
+jest.mock('../../../src/models', () => {
+  const actualAuthor = jest.requireActual<typeof import('../../../src/models/Author')>('../../../src/models/Author').Author;
+
+  // Shared sequelize mock instance
+  // Return empty array for pinned results (first element of tuple)
+  const mockSequelize = {
+    query: jest.fn().mockResolvedValue([[], {}]),
+    QueryTypes: { SELECT: 'SELECT' },
+  };
+
+  const mockAuthor = {
+    SORTABLE_FIELDS: actualAuthor.SORTABLE_FIELDS,
+    SORTABLE_FIELD_VALUES: actualAuthor.SORTABLE_FIELD_VALUES,
+    sequelize: mockSequelize,
+    findAndCountAll: jest.fn(),
+  };
+
+  return {
+    Author: mockAuthor,
+    Book: {
+      findAndCountAll: jest.fn(),
+    },
+  };
+});
+
+// Also mock the individual Author model file (used by adapters via @/ alias)
+jest.mock('@/models/Author', () => {
+  const { Author: MockedAuthor } = jest.requireMock<typeof import('../../../src/models')>('../../../src/models');
+
+  return {
+    Author: MockedAuthor,
+  };
+});
 
 describe('AuthorController', () => {
   let authorController: AuthorController;
@@ -23,6 +56,7 @@ describe('AuthorController', () => {
   let findUserAuthorByIdSpy: jest.SpyInstance;
   let findByIdSpy: jest.SpyInstance;
   let searchByQuerySpy: jest.SpyInstance;
+  let authorSearchServiceSpy: jest.SpyInstance;
 
   const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
@@ -41,6 +75,10 @@ describe('AuthorController', () => {
       .spyOn(AuthorRepository.prototype, 'searchByQuery')
       .mockResolvedValue([]);
 
+    // Import and spy on AuthorSearchService
+    const { AuthorSearchService } = require('../../../src/services/search/AuthorSearchService');
+    authorSearchServiceSpy = jest.spyOn(AuthorSearchService.prototype, 'search');
+
     mockRequest = {
       headers: { 'accept-language': 'en' },
       queryStringParameters: {},
@@ -57,6 +95,7 @@ describe('AuthorController', () => {
     findUserAuthorByIdSpy.mockRestore();
     findByIdSpy.mockRestore();
     searchByQuerySpy.mockRestore();
+    authorSearchServiceSpy.mockRestore();
     container.restore();
   });
 
@@ -188,17 +227,29 @@ describe('AuthorController', () => {
   });
 
   describe('searchAuthors', () => {
-    it('should delegate to repository search', async () => {
-      mockRequest.queryStringParameters = { q: 'jo' };
-      searchByQuerySpy.mockResolvedValue([
-        { id: 1, name: 'John', surname: 'Doe' },
-      ]);
+    it('should delegate to AuthorSearchService', async () => {
+      mockRequest.queryStringParameters = { q: 'jo', limit: '10', offset: '5' };
+
+      authorSearchServiceSpy.mockResolvedValue({
+        results: [
+          { id: 1, name: 'John', surname: 'Doe', userId: 1, creationDate: new Date(), updateDate: new Date() },
+        ],
+        total: 1,
+      });
 
       const response = await authorController.searchAuthors(mockRequest);
 
-      expect(searchByQuerySpy).toHaveBeenCalledWith('jo', 1, 20);
+      expect(authorSearchServiceSpy).toHaveBeenCalledWith({
+        query: 'jo',
+        userId: 1,
+        sortBy: undefined,
+        sortOrder: null,
+        limit: 10,
+        offset: 5,
+      });
       expect(response.statusCode).toBe(200);
-      expect(response.data).toHaveLength(1);
+      expect((response.data as any).results).toHaveLength(1);
+      expect((response.data as any).total).toBe(1);
     });
   });
 

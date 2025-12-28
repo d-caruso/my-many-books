@@ -76,6 +76,31 @@ export const SETTING_DEFINITIONS = {
         } as SettingDefinition<'remove' | 'refresh'>
       }
     }
+  },
+  SEARCH: {
+    FULLTEXT: {
+      ENABLED: {
+        key: 'search.fulltext.enabled',
+        category: 'features',
+        type: 'boolean',
+        defaultValue: true,
+        description: 'Enable MySQL FULLTEXT search (can be overridden by SEARCH_FULLTEXT_FORCE_DISABLED or SEARCH_FULLTEXT_FORCE_ENABLED env vars)'
+      } as SettingDefinition<boolean>,
+      SORTABLE_FIELDS: {
+        key: 'search.fulltext.sortable_fields',
+        category: 'features',
+        type: 'json',
+        defaultValue: ['title', 'createdAt', 'updatedAt'],
+        description: 'Fields that can be used for sorting search results'
+      } as SettingDefinition<string[]>,
+      DEFAULT_SORT: {
+        key: 'search.fulltext.default_sort',
+        category: 'features',
+        type: 'string',
+        defaultValue: 'title',
+        description: 'Default sort field for search results'
+      } as SettingDefinition<string>
+    }
   }
 } as const;
 
@@ -103,6 +128,13 @@ export const SETTING_KEYS = {
       ACTIVE: {
         ONCHANGE: SETTING_DEFINITIONS.USERS.LIST.ACTIVE.ONCHANGE.key
       }
+    }
+  },
+  SEARCH: {
+    FULLTEXT: {
+      ENABLED: SETTING_DEFINITIONS.SEARCH.FULLTEXT.ENABLED.key,
+      SORTABLE_FIELDS: SETTING_DEFINITIONS.SEARCH.FULLTEXT.SORTABLE_FIELDS.key,
+      DEFAULT_SORT: SETTING_DEFINITIONS.SEARCH.FULLTEXT.DEFAULT_SORT.key
     }
   }
 } as const;
