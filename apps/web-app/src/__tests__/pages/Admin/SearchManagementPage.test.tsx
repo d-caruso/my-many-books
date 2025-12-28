@@ -1,5 +1,5 @@
 import React from 'react';
-import { render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, waitFor, fireEvent } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -25,7 +25,23 @@ testI18n.use(initReactI18next).init({
   fallbackLng: 'en',
   resources: {
     en: {
-      translation: {},
+      translation: {
+        search: {
+          pinned: {
+            title: 'Search Management',
+            resource_type: 'Resource Type',
+            all: 'All',
+            resource_book: 'Books',
+            resource_author: 'Authors',
+            resource_category: 'Categories',
+            empty: 'No pinned results yet',
+            unpin: 'Unpin',
+            priority_badge: 'Priority {{priority}}',
+            active: 'Active',
+            inactive: 'Inactive',
+          },
+        },
+      },
     },
   },
   interpolation: {
@@ -33,10 +49,10 @@ testI18n.use(initReactI18next).init({
   },
 });
 
-const render = (component: React.ReactElement) => {
+const renderWithProvider = (component: React.ReactElement) => {
   return rtlRender(
     <I18nextProvider i18n={testI18n}>
-      <ApiProvider value={{ apiService: mockApiService }}>
+      <ApiProvider apiService={mockApiService}>
         {component}
       </ApiProvider>
     </I18nextProvider>
@@ -46,51 +62,42 @@ const render = (component: React.ReactElement) => {
 describe('SearchManagementPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockApiService.get.mockResolvedValue({ data: { results: [], total: 0 } });
   });
 
-  it('should render page title', async () => {
-    render(<SearchManagementPage />);
+  test('renders page title', async () => {
+    renderWithProvider(<SearchManagementPage />);
 
     await waitFor(() => {
       expect(screen.getByText('Search Management')).toBeInTheDocument();
     });
   });
 
-  it('should show empty state when no pinned results', async () => {
-    render(<SearchManagementPage />);
+  test('renders within AdminLayout', async () => {
+    renderWithProvider(<SearchManagementPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('admin-layout')).toBeInTheDocument();
+    });
+  });
+
+  test('shows empty state when no pinned results', async () => {
+    renderWithProvider(<SearchManagementPage />);
 
     await waitFor(() => {
       expect(screen.getByText('No pinned results yet')).toBeInTheDocument();
     });
   });
 
-  it('should render resource type selector with options', async () => {
-    render(<SearchManagementPage />);
+  test('renders resource type selector with options', async () => {
+    renderWithProvider(<SearchManagementPage />);
 
     await waitFor(() => {
       expect(screen.getByLabelText('Resource Type')).toBeInTheDocument();
     });
   });
 
-  it('should call API on mount', async () => {
-    render(<SearchManagementPage />);
-
-    await waitFor(() => {
-      expect(mockApiService.get).toHaveBeenCalled();
-    });
-  });
-
-  it('should handle API errors gracefully', async () => {
-    mockApiService.get.mockRejectedValueOnce(new Error('API Error'));
-
-    render(<SearchManagementPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Failed to fetch pinned results/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should display pinned results when available', async () => {
+  test('displays pinned results when available', async () => {
     const mockResults = [
       { id: 1, resource_type: 'book', resource_id: 123, priority: 0, active: true },
       { id: 2, resource_type: 'author', resource_id: 456, priority: 1, active: true },
@@ -100,7 +107,7 @@ describe('SearchManagementPage', () => {
       data: { results: mockResults, total: 2 }
     });
 
-    render(<SearchManagementPage />);
+    renderWithProvider(<SearchManagementPage />);
 
     await waitFor(() => {
       expect(screen.getByText(/book #123/i)).toBeInTheDocument();
@@ -108,7 +115,7 @@ describe('SearchManagementPage', () => {
     });
   });
 
-  it('should show priority badges for pinned items', async () => {
+  test('shows priority badges for pinned items', async () => {
     const mockResults = [
       { id: 1, resource_type: 'book', resource_id: 123, priority: 0, active: true },
     ];
@@ -117,14 +124,32 @@ describe('SearchManagementPage', () => {
       data: { results: mockResults, total: 1 }
     });
 
-    render(<SearchManagementPage />);
+    renderWithProvider(<SearchManagementPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Priority 0/i)).toBeInTheDocument();
+      expect(screen.getByText('Priority 0')).toBeInTheDocument();
     });
   });
 
-  it('should call unpin API when unpin button clicked', async () => {
+  test('displays active/inactive status for pinned items', async () => {
+    const mockResults = [
+      { id: 1, resource_type: 'book', resource_id: 123, priority: 0, active: true },
+      { id: 2, resource_type: 'author', resource_id: 456, priority: 1, active: false },
+    ];
+
+    mockApiService.get.mockResolvedValueOnce({
+      data: { results: mockResults, total: 2 }
+    });
+
+    renderWithProvider(<SearchManagementPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Active')).toBeInTheDocument();
+      expect(screen.getByText('Inactive')).toBeInTheDocument();
+    });
+  });
+
+  test('calls unpin API when unpin button clicked', async () => {
     const mockResults = [
       { id: 1, resource_type: 'book', resource_id: 123, priority: 0, active: true },
     ];
@@ -133,16 +158,62 @@ describe('SearchManagementPage', () => {
       data: { results: mockResults, total: 1 }
     });
 
-    const { container } = render(<SearchManagementPage />);
+    renderWithProvider(<SearchManagementPage />);
 
     await waitFor(() => {
       expect(screen.getByText(/book #123/i)).toBeInTheDocument();
     });
 
-    const unpinButton = container.querySelector('[aria-label="Unpin"]');
-    if (unpinButton) {
-      unpinButton.click();
+    const unpinButton = screen.getByRole('button', { name: /Unpin/i });
+    fireEvent.click(unpinButton);
+
+    await waitFor(() => {
       expect(mockApiService.delete).toHaveBeenCalledWith('/admin/search/pinned/1');
-    }
+    });
+  });
+
+  test('handles API errors gracefully', async () => {
+    mockApiService.get.mockRejectedValueOnce({
+      response: { data: { message: 'API Error occurred' } }
+    });
+
+    renderWithProvider(<SearchManagementPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('API Error occurred')).toBeInTheDocument();
+    });
+  });
+
+  test('handles API errors without response data', async () => {
+    mockApiService.get.mockRejectedValueOnce(new Error('Network Error'));
+
+    renderWithProvider(<SearchManagementPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to fetch pinned results')).toBeInTheDocument();
+    });
+  });
+
+  test('filters by resource type when selector changes', async () => {
+    renderWithProvider(<SearchManagementPage />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Resource Type')).toBeInTheDocument();
+    });
+
+    const selector = screen.getByLabelText('Resource Type');
+
+    // Clear previous calls
+    mockApiService.get.mockClear();
+
+    // Change to 'book' filter
+    fireEvent.mouseDown(selector);
+    const bookOption = await screen.findByText('Books');
+    fireEvent.click(bookOption);
+
+    // Should trigger a new API call with resource_type filter
+    await waitFor(() => {
+      expect(mockApiService.get).toHaveBeenCalled();
+    });
   });
 });

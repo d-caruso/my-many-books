@@ -45,9 +45,8 @@ export const SearchManagementPage: React.FC = () => {
       setLoading(true);
       setError(null);
       const queryParam = selectedResourceType !== 'all' ? `?resource_type=${selectedResourceType}` : '';
-      // TODO: Implement API call to fetch pinned results
-      // const response = await apiService.get(`/admin/search/pinned${queryParam}`);
-      setPinnedResults([]);
+      const response = await apiService.get(`/admin/search/pinned${queryParam}`);
+      setPinnedResults(response.data.results || []);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch pinned results');
     } finally {
