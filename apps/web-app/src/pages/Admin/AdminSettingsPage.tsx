@@ -98,6 +98,29 @@ export const AdminSettingsPage: React.FC = () => {
     return <Chip label={badge.label} color={badge.color} size="small" sx={{ ml: 2 }} />;
   };
 
+  const getSearchSourceBadge = (source: string) => {
+    const badges = {
+      force_disabled: {
+        label: t('search.fulltext.status.force_disabled', 'Disabled by .env'),
+        color: 'error' as const
+      },
+      force_enabled: {
+        label: t('search.fulltext.status.force_enabled', 'Enabled by .env'),
+        color: 'success' as const
+      },
+      database: {
+        label: t('search.fulltext.status.database', 'Controlled via database'),
+        color: 'primary' as const
+      },
+      default: {
+        label: t('search.fulltext.status.default', 'Default setting'),
+        color: 'default' as const
+      },
+    };
+    const badge = badges[source as keyof typeof badges] || badges.default;
+    return <Chip label={badge.label} color={badge.color} size="small" sx={{ ml: 2 }} />;
+  };
+
   const getHelpText = (source: string, canChange: boolean) => {
     if (source === 'force_disabled') {
       return 'Audit logging is permanently disabled by infrastructure configuration (AUDIT_LOGGING_FORCE_DISABLED=true). Contact your system administrator to enable it.';
