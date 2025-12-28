@@ -557,7 +557,7 @@ describe('AdminSettingsPage', () => {
       fireEvent.click(searchSwitch);
 
       await waitFor(() => {
-        expect(mockedApiService.updateFullTextSearchStatus).toHaveBeenCalledWith(false);
+        expect(mockedApiService.updateFullTextSearchStatus).toHaveBeenCalledWith({ enabled: false });
       });
     }
   });

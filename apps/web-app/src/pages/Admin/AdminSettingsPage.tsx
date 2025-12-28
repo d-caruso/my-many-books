@@ -93,10 +93,44 @@ export const AdminSettingsPage: React.FC = () => {
     try {
       setSearchUpdating(true);
       setSearchError(null);
-      const data = await apiService.updateFullTextSearchStatus(!searchStatus.enabled);
+      const data = await apiService.updateFullTextSearchStatus({ enabled: !searchStatus.enabled });
       setSearchStatus(data);
     } catch (err: any) {
       setSearchError(err.response?.data?.message || 'Failed to update full-text search status');
+    } finally {
+      setSearchUpdating(false);
+    }
+  };
+
+  const handleSortableFieldsChange = async (event: any) => {
+    if (!searchStatus) return;
+
+    try {
+      setSearchUpdating(true);
+      setSearchError(null);
+      const data = await apiService.updateFullTextSearchStatus({
+        sortableFields: event.target.value,
+      });
+      setSearchStatus(data);
+    } catch (err: any) {
+      setSearchError(err.response?.data?.message || 'Failed to update sortable fields');
+    } finally {
+      setSearchUpdating(false);
+    }
+  };
+
+  const handleDefaultSortChange = async (event: any) => {
+    if (!searchStatus) return;
+
+    try {
+      setSearchUpdating(true);
+      setSearchError(null);
+      const data = await apiService.updateFullTextSearchStatus({
+        defaultSort: event.target.value,
+      });
+      setSearchStatus(data);
+    } catch (err: any) {
+      setSearchError(err.response?.data?.message || 'Failed to update default sort');
     } finally {
       setSearchUpdating(false);
     }
@@ -372,13 +406,14 @@ export const AdminSettingsPage: React.FC = () => {
               <Divider sx={{ my: 2 }} />
 
               {/* Sortable Fields Multi-Select */}
-              <FormControl fullWidth sx={{ mt: 2 }} disabled={!searchStatus.canChange || searchUpdating}>
+              <FormControl fullWidth sx={{ mt: 2 }} disabled={searchUpdating}>
                 <InputLabel>{t('search.fulltext.sortable_fields', 'Sortable Fields')}</InputLabel>
                 <Select
                   multiple
                   value={searchStatus.sortableFields || []}
                   label={t('search.fulltext.sortable_fields', 'Sortable Fields')}
-                  disabled
+                  onChange={handleSortableFieldsChange}
+                  disabled={searchUpdating}
                 >
                   <MenuItem value="title">{t('search.fulltext.field.title', 'Title')}</MenuItem>
                   <MenuItem value="createdAt">{t('search.fulltext.field.created_at', 'Created At')}</MenuItem>
@@ -391,12 +426,13 @@ export const AdminSettingsPage: React.FC = () => {
               </FormControl>
 
               {/* Default Sort Dropdown */}
-              <FormControl fullWidth sx={{ mt: 2 }} disabled={!searchStatus.canChange || searchUpdating}>
+              <FormControl fullWidth sx={{ mt: 2 }} disabled={searchUpdating}>
                 <InputLabel>{t('search.fulltext.default_sort', 'Default Sort')}</InputLabel>
                 <Select
                   value={searchStatus.defaultSort || 'title'}
                   label={t('search.fulltext.default_sort', 'Default Sort')}
-                  disabled
+                  onChange={handleDefaultSortChange}
+                  disabled={searchUpdating}
                 >
                   <MenuItem value="title">{t('search.fulltext.sort.title', 'Title')}</MenuItem>
                   <MenuItem value="createdAt">{t('search.fulltext.sort.created_at', 'Created At')}</MenuItem>

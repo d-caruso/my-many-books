@@ -16,6 +16,8 @@ export interface FulltextStatus {
   enabled: boolean;
   canChange: boolean;
   source: 'force_disabled' | 'force_enabled' | 'database' | 'default';
+  sortableFields?: string[];
+  defaultSort?: string;
 }
 
 export class SearchSettingsService {
@@ -76,10 +78,14 @@ export class SearchSettingsService {
 
       if (setting) {
         const enabled = setting.value === 'true';
+        const sortableFields = await this.getSortableFields();
+        const defaultSort = await this.getDefaultSort();
         const status: FulltextStatus = {
           enabled,
           canChange: true,
           source: 'database',
+          sortableFields,
+          defaultSort,
         };
         this.cacheStatus(status);
         return status;
@@ -89,10 +95,14 @@ export class SearchSettingsService {
     }
 
     // 4. Default: enabled (from SETTING_DEFINITIONS)
+    const sortableFields = await this.getSortableFields();
+    const defaultSort = await this.getDefaultSort();
     const status: FulltextStatus = {
       enabled: true,
       canChange: true,
       source: 'default',
+      sortableFields,
+      defaultSort,
     };
     this.cacheStatus(status);
     return status;
@@ -106,6 +116,96 @@ export class SearchSettingsService {
   async isFulltextEnabled(): Promise<boolean> {
     const status = await this.getFulltextStatus();
     return status.enabled;
+  }
+
+  /**
+   * Get sortable fields configuration
+   *
+   * @returns Array of sortable field names
+   */
+  async getSortableFields(): Promise<string[]> {
+    try {
+      const setting = await Setting.findOne({
+        where: { key: SETTING_KEYS.SEARCH.FULLTEXT.SORTABLE_FIELDS },
+      });
+
+      if (setting && setting.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        } catch (error) {
+          this.logger.warn({ err: error }, 'Failed to parse sortable fields setting');
+        }
+      }
+    } catch (error) {
+      this.logger.warn({ err: error }, 'Failed to query sortable fields setting');
+    }
+
+    // Default sortable fields
+    return ['title', 'createdAt', 'updatedAt'];
+  }
+
+  /**
+   * Get default sort field
+   *
+   * @returns Default sort field name
+   */
+  async getDefaultSort(): Promise<string> {
+    try {
+      const setting = await Setting.findOne({
+        where: { key: SETTING_KEYS.SEARCH.FULLTEXT.DEFAULT_SORT },
+      });
+
+      if (setting && setting.value) {
+        return setting.value;
+      }
+    } catch (error) {
+      this.logger.warn({ err: error }, 'Failed to query default sort setting');
+    }
+
+    // Default sort
+    return 'title';
+  }
+
+  /**
+   * Update sortable fields configuration
+   *
+   * @param fields Array of field names to allow sorting
+   */
+  async updateSortableFields(fields: string[]): Promise<void> {
+    await Setting.upsert({
+      key: SETTING_KEYS.SEARCH.FULLTEXT.SORTABLE_FIELDS,
+      value: JSON.stringify(fields),
+    });
+    this.invalidateCache();
+  }
+
+  /**
+   * Update default sort field
+   *
+   * @param field Default sort field name
+   */
+  async updateDefaultSort(field: string): Promise<void> {
+    await Setting.upsert({
+      key: SETTING_KEYS.SEARCH.FULLTEXT.DEFAULT_SORT,
+      value: field,
+    });
+    this.invalidateCache();
+  }
+
+  /**
+   * Update fulltext enabled status
+   *
+   * @param enabled Whether fulltext search should be enabled
+   */
+  async updateFulltextEnabled(enabled: boolean): Promise<void> {
+    await Setting.upsert({
+      key: SETTING_KEYS.SEARCH.FULLTEXT.ENABLED,
+      value: String(enabled),
+    });
+    this.invalidateCache();
   }
 
   /**

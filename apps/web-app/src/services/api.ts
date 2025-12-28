@@ -933,13 +933,15 @@ class ApiService {
   }
 
   async getFullTextSearchStatus(): Promise<FullTextSearchStatus> {
-    return this.httpClient.get<FullTextSearchStatus>(this.buildUrl('/admin/search/settings/status'));
+    return this.httpClient.get<FullTextSearchStatus>(this.buildUrl('/admin/settings/search/status'));
   }
 
-  async updateFullTextSearchStatus(enabled: boolean): Promise<FullTextSearchStatus> {
-    return this.httpClient.patch<FullTextSearchStatus>(this.buildUrl('/admin/search/settings'), {
-      enabled,
-    });
+  async updateFullTextSearchStatus(settings: {
+    enabled?: boolean;
+    sortableFields?: string[];
+    defaultSort?: string;
+  }): Promise<FullTextSearchStatus> {
+    return this.httpClient.patch<FullTextSearchStatus>(this.buildUrl('/admin/settings/search'), settings);
   }
 }
 
