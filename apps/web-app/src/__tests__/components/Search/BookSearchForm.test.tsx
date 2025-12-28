@@ -192,9 +192,9 @@ describe('BookSearchForm', () => {
     render(<BookSearchForm {...defaultProps} />);
 
     openAdvancedFilters();
-    await selectOption('Sort By', 'Author (A-Z)');
+    await selectOption('Sort by', 'Title');
     await waitFor(() => {
-      expect(getSelectDisplayText('Sort By')).toBe('Author (A-Z)');
+      expect(getSelectDisplayText('Sort by')).toBe('Title');
     });
   });
 
@@ -313,13 +313,13 @@ describe('BookSearchForm', () => {
     openAdvancedFilters();
     await selectOption('Category', 'Fiction');
     await selectOption('Reading Status', 'Finished');
-    await selectOption('Sort By', 'Author (A-Z)');
+    await selectOption('Sort by', 'Relevance');
     fireEvent.click(getSearchButton());
 
     expect(mockOnSearch).toHaveBeenCalledWith('test query', {
       categoryId: 1,
       status: 'finished',
-      sortBy: 'author',
+      sortBy: 'relevance',
     });
   });
 
@@ -329,7 +329,7 @@ describe('BookSearchForm', () => {
 
     expect(screen.getByLabelText('Category')).toBeInTheDocument();
     expect(screen.getByLabelText('Reading Status')).toBeInTheDocument();
-    expect(screen.getByLabelText('Sort By')).toBeInTheDocument();
+    expect(screen.getByLabelText('Sort by')).toBeInTheDocument();
     expect(screen.getByTestId('author-autocomplete')).toBeInTheDocument();
   });
 
