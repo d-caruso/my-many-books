@@ -4,7 +4,11 @@
 // ================================================================
 
 import { injectable } from 'inversify';
-import { SearchPinnedResult } from '../models/SearchPinnedResult';
+import {
+  SearchPinnedResult,
+  SearchPinnedResultCreationAttributes,
+  SearchPinnedResultAttributes
+} from '../models/SearchPinnedResult';
 import { ResourceType } from '@my-many-books/shared-types';
 
 export interface CreatePinnedResultInput {
@@ -48,12 +52,14 @@ export class PinnedResultsService {
       throw new PinnedResultsServiceError('Priority must be >= 0', 'INVALID_PRIORITY');
     }
 
-    const pinnedResult = await SearchPinnedResult.create({
+    const createData: SearchPinnedResultCreationAttributes = {
       resourceType: input.resourceType,
       resourceId: input.resourceId,
       priority: input.priority,
       active: input.active ?? true,
-    } as any);
+    };
+
+    const pinnedResult = await SearchPinnedResult.create(createData as SearchPinnedResultAttributes);
 
     return pinnedResult;
   }

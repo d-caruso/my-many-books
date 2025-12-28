@@ -266,7 +266,7 @@ describe('expressRouteWrapper', () => {
       await wrappedHandler(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockControllerMethod).toHaveBeenCalledWith({
-        body: JSON.stringify({}),
+        body: undefined,
         queryStringParameters: {},
         pathParameters: {},
         user: undefined,

@@ -264,7 +264,7 @@ export class AuthorController extends BaseController {
     const offset = parseInt(this.getQueryParameter(request, 'offset') || '0', 10);
 
     // Validate sortBy against Author.SORTABLE_FIELD_VALUES
-    if (sortBy && !Author.SORTABLE_FIELD_VALUES.includes(sortBy as any)) {
+    if (sortBy && !(Author.SORTABLE_FIELD_VALUES as readonly string[]).includes(sortBy)) {
       return this.createErrorResponse(
         `Invalid sortBy field: ${sortBy}. Must be one of: ${Author.SORTABLE_FIELD_VALUES.join(', ')}`,
         400

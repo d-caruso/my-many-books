@@ -16,6 +16,7 @@ import { HookExecution } from '../../../src/models/HookExecution';
 import { AuditLog } from '../../../src/models/AuditLog';
 import { Setting } from '../../../src/models/Setting';
 import { AppSetting } from '../../../src/models/AppSetting';
+import { SearchPinnedResult } from '../../../src/models/SearchPinnedResult';
 import { getLogger } from '@my-many-books/shared-logging';
 
 // Mock all dependencies
@@ -31,6 +32,7 @@ jest.mock('../../../src/models/HookExecution');
 jest.mock('../../../src/models/AuditLog');
 jest.mock('../../../src/models/Setting');
 jest.mock('../../../src/models/AppSetting');
+jest.mock('../../../src/models/SearchPinnedResult');
 jest.mock('@my-many-books/shared-logging', () => ({
   getLogger: jest.fn(),
 }));
@@ -68,6 +70,7 @@ describe('ModelManager', () => {
     (AuditLog.initModel as jest.Mock) = jest.fn();
     (Setting.initModel as jest.Mock) = jest.fn();
     (AppSetting.initModel as jest.Mock) = jest.fn();
+    (SearchPinnedResult.initModel as jest.Mock) = jest.fn();
 
     // Mock ModelAssociations methods
     (ModelAssociations.registerModel as jest.Mock) = jest.fn();
@@ -90,8 +93,9 @@ describe('ModelManager', () => {
       expect(AuditLog.initModel).toHaveBeenCalledWith(mockSequelize);
       expect(Setting.initModel).toHaveBeenCalledWith(mockSequelize);
       expect(AppSetting.initModel).toHaveBeenCalledWith(mockSequelize);
+      expect(SearchPinnedResult.initModel).toHaveBeenCalledWith(mockSequelize);
 
-      expect(ModelAssociations.registerModel).toHaveBeenCalledTimes(11);
+      expect(ModelAssociations.registerModel).toHaveBeenCalledTimes(12);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('User', User);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('Author', Author);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('Category', Category);
@@ -103,6 +107,7 @@ describe('ModelManager', () => {
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('AuditLog', AuditLog);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('Setting', Setting);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('AppSetting', AppSetting);
+      expect(ModelAssociations.registerModel).toHaveBeenCalledWith('SearchPinnedResult', SearchPinnedResult);
 
       expect(ModelAssociations.defineAssociations).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith('Model manager initialized with all models and associations');
@@ -207,7 +212,8 @@ describe('ModelManager', () => {
         HookExecution,
         AuditLog,
         Setting,
-        AppSetting
+        AppSetting,
+        SearchPinnedResult
       });
     });
 
@@ -226,6 +232,7 @@ describe('ModelManager', () => {
       expect(models.AuditLog).toBe(AuditLog);
       expect(models.Setting).toBe(Setting);
       expect(models.AppSetting).toBe(AppSetting);
+      expect(models.SearchPinnedResult).toBe(SearchPinnedResult);
     });
   });
 

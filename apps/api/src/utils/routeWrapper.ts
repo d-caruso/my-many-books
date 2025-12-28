@@ -30,7 +30,7 @@ export const expressRouteWrapper = (controllerMethod: ControllerMethod) => {
 
       // Convert Express request to UniversalRequest
       const universalRequest: UniversalRequest = {
-        body: body ? JSON.stringify(body) : undefined,
+        body: body && Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
         queryStringParameters: query as { [key: string]: string | undefined },
         pathParameters: params as { [key: string]: string | undefined },
         user: (req as Request & { user?: AuthUser }).user || undefined, // From auth middleware

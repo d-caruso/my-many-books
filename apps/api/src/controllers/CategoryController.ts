@@ -264,7 +264,7 @@ export class CategoryController extends BaseController {
     const offset = parseInt(this.getQueryParameter(request, 'offset') || '0', 10);
 
     // Validate sortBy against Category.SORTABLE_FIELD_VALUES
-    if (sortBy && !Category.SORTABLE_FIELD_VALUES.includes(sortBy as any)) {
+    if (sortBy && !(Category.SORTABLE_FIELD_VALUES as readonly string[]).includes(sortBy)) {
       return this.createErrorResponse(
         `Invalid sortBy field: ${sortBy}. Must be one of: ${Category.SORTABLE_FIELD_VALUES.join(', ')}`,
         400

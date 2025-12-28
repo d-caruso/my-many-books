@@ -11,6 +11,7 @@
 import { getLogger, type AppLogger } from '@my-many-books/shared-logging';
 import { SETTING_KEYS } from '@my-many-books/shared-types';
 import { Setting } from '../models';
+import { SettingAttributes } from '../models/Setting';
 
 export interface FulltextStatus {
   enabled: boolean;
@@ -131,8 +132,8 @@ export class SearchSettingsService {
 
       if (setting && setting.value) {
         try {
-          const parsed = JSON.parse(setting.value);
-          if (Array.isArray(parsed)) {
+          const parsed: unknown = JSON.parse(setting.value);
+          if (Array.isArray(parsed) && parsed.every((item): item is string => typeof item === 'string')) {
             return parsed;
           }
         } catch (error) {
@@ -178,7 +179,7 @@ export class SearchSettingsService {
     await Setting.upsert({
       key: SETTING_KEYS.SEARCH.FULLTEXT.SORTABLE_FIELDS,
       value: JSON.stringify(fields),
-    });
+    } as SettingAttributes);
     this.invalidateCache();
   }
 
@@ -191,7 +192,7 @@ export class SearchSettingsService {
     await Setting.upsert({
       key: SETTING_KEYS.SEARCH.FULLTEXT.DEFAULT_SORT,
       value: field,
-    });
+    } as SettingAttributes);
     this.invalidateCache();
   }
 
@@ -204,7 +205,7 @@ export class SearchSettingsService {
     await Setting.upsert({
       key: SETTING_KEYS.SEARCH.FULLTEXT.ENABLED,
       value: String(enabled),
-    });
+    } as SettingAttributes);
     this.invalidateCache();
   }
 

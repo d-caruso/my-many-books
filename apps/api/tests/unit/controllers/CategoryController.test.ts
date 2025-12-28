@@ -26,6 +26,7 @@ jest.mock('../../../src/models/Category', () => ({
 describe('CategoryController', () => {
   let controller: CategoryController;
   let mockService: jest.Mocked<CategoryService>;
+  let mockSearchService: any;
   let baseRequest: UniversalRequest;
   const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
@@ -49,7 +50,14 @@ describe('CategoryController', () => {
       deleteCategory: jest.fn(),
     } as unknown as jest.Mocked<CategoryService>;
 
-    controller = new CategoryController(mockService as unknown as CategoryService);
+    mockSearchService = {
+      search: jest.fn().mockResolvedValue({ results: [], total: 0 }),
+    };
+
+    controller = new CategoryController(
+      mockService as unknown as CategoryService,
+      mockSearchService
+    );
 
     baseRequest = {
       headers: { 'accept-language': 'en' },
