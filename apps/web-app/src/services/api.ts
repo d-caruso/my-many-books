@@ -144,6 +144,14 @@ export interface AuditLoggingStatus {
   canChange: boolean;
 }
 
+export interface FullTextSearchStatus {
+  enabled: boolean;
+  source: 'force_disabled' | 'force_enabled' | 'database' | 'default';
+  canChange: boolean;
+  sortableFields?: string[];
+  defaultSort?: string;
+}
+
 // Enhanced API service with dependency injection and mock data support
 class ApiService {
   private apiClient: any;
@@ -920,6 +928,16 @@ class ApiService {
 
   async updateAuditLoggingStatus(enabled: boolean): Promise<AuditLoggingStatus> {
     return this.httpClient.patch<AuditLoggingStatus>(this.buildUrl('/admin/settings/audit-logging'), {
+      enabled,
+    });
+  }
+
+  async getFullTextSearchStatus(): Promise<FullTextSearchStatus> {
+    return this.httpClient.get<FullTextSearchStatus>(this.buildUrl('/admin/search/settings/status'));
+  }
+
+  async updateFullTextSearchStatus(enabled: boolean): Promise<FullTextSearchStatus> {
+    return this.httpClient.patch<FullTextSearchStatus>(this.buildUrl('/admin/search/settings'), {
       enabled,
     });
   }

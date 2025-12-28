@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
-import { apiService, type AuditLoggingStatus } from '../../services/api';
+import { apiService, type AuditLoggingStatus, type FullTextSearchStatus } from '../../services/api';
 import { useSettings } from '../../contexts/SettingsContext';
 import { SettingsApi } from '@my-many-books/shared-api';
 import { AppSetting, BOOK_STATUS_CHANGE_BEHAVIOR } from '@my-many-books/shared-types';
@@ -33,6 +33,12 @@ export const AdminSettingsPage: React.FC = () => {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<AuditLoggingStatus | null>(null);
+
+  // Full-text search state
+  const [searchLoading, setSearchLoading] = useState(true);
+  const [searchUpdating, setSearchUpdating] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchStatus, setSearchStatus] = useState<FullTextSearchStatus | null>(null);
 
   // App settings state
   const [appSettings, setAppSettings] = useState<AppSetting[]>([]);
@@ -50,6 +56,19 @@ export const AdminSettingsPage: React.FC = () => {
       setError(err.response?.data?.message || 'Failed to fetch audit logging status');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const fetchSearchStatus = useCallback(async () => {
+    try {
+      setSearchLoading(true);
+      setSearchError(null);
+      const data = await apiService.getFullTextSearchStatus();
+      setSearchStatus(data);
+    } catch (err: any) {
+      setSearchError(err.response?.data?.message || 'Failed to fetch full-text search status');
+    } finally {
+      setSearchLoading(false);
     }
   }, []);
 
@@ -180,11 +199,12 @@ export const AdminSettingsPage: React.FC = () => {
     return descriptions[key] || 'No description available';
   };
 
-  // Fetch audit logging status and app settings
+  // Fetch audit logging status, search status, and app settings
   useEffect(() => {
     fetchStatus();
+    fetchSearchStatus();
     fetchAppSettings();
-  }, [fetchStatus, fetchAppSettings]);
+  }, [fetchStatus, fetchSearchStatus, fetchAppSettings]);
 
   return (
     <AdminLayout>
