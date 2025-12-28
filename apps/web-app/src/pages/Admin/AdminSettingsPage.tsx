@@ -325,6 +325,89 @@ export const AdminSettingsPage: React.FC = () => {
           ) : null}
         </Paper>
 
+        {/* Full-Text Search Settings */}
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            {t('search.fulltext.title', 'Full-Text Search')}
+          </Typography>
+
+          {searchLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : searchError ? (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {searchError}
+            </Alert>
+          ) : searchStatus ? (
+            <>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={searchStatus.enabled}
+                      onChange={handleSearchToggle}
+                      disabled={!searchStatus.canChange || searchUpdating}
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography>
+                        {searchStatus.enabled ? t('search.fulltext.enabled', 'Enabled') : t('search.fulltext.disabled', 'Disabled')}
+                        {searchUpdating && (
+                          <CircularProgress size={16} sx={{ ml: 1, verticalAlign: 'middle' }} />
+                        )}
+                      </Typography>
+                      {getSearchSourceBadge(searchStatus.source)}
+                    </Box>
+                  }
+                />
+              </Box>
+
+              <Alert severity="info" sx={{ my: 2 }}>
+                {getSearchHelpText(searchStatus.source, searchStatus.canChange)}
+              </Alert>
+
+              <Divider sx={{ my: 2 }} />
+
+              {/* Sortable Fields Multi-Select */}
+              <FormControl fullWidth sx={{ mt: 2 }} disabled={!searchStatus.canChange || searchUpdating}>
+                <InputLabel>{t('search.fulltext.sortable_fields', 'Sortable Fields')}</InputLabel>
+                <Select
+                  multiple
+                  value={searchStatus.sortableFields || []}
+                  label={t('search.fulltext.sortable_fields', 'Sortable Fields')}
+                  disabled
+                >
+                  <MenuItem value="title">{t('search.fulltext.field.title', 'Title')}</MenuItem>
+                  <MenuItem value="createdAt">{t('search.fulltext.field.created_at', 'Created At')}</MenuItem>
+                  <MenuItem value="updatedAt">{t('search.fulltext.field.updated_at', 'Updated At')}</MenuItem>
+                  <MenuItem value="status">{t('search.fulltext.field.status', 'Status')}</MenuItem>
+                  <MenuItem value="isbnCode">{t('search.fulltext.field.isbn', 'ISBN')}</MenuItem>
+                  <MenuItem value="editionNumber">{t('search.fulltext.field.edition_number', 'Edition Number')}</MenuItem>
+                  <MenuItem value="editionDate">{t('search.fulltext.field.edition_date', 'Edition Date')}</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Default Sort Dropdown */}
+              <FormControl fullWidth sx={{ mt: 2 }} disabled={!searchStatus.canChange || searchUpdating}>
+                <InputLabel>{t('search.fulltext.default_sort', 'Default Sort')}</InputLabel>
+                <Select
+                  value={searchStatus.defaultSort || 'title'}
+                  label={t('search.fulltext.default_sort', 'Default Sort')}
+                  disabled
+                >
+                  <MenuItem value="title">{t('search.fulltext.sort.title', 'Title')}</MenuItem>
+                  <MenuItem value="createdAt">{t('search.fulltext.sort.created_at', 'Created At')}</MenuItem>
+                  <MenuItem value="updatedAt">{t('search.fulltext.sort.updated_at', 'Updated At')}</MenuItem>
+                  <MenuItem value="relevance">{t('search.fulltext.sort.relevance', 'Relevance')}</MenuItem>
+                </Select>
+              </FormControl>
+            </>
+          ) : null}
+        </Paper>
+
         {/* Application Settings */}
         <Paper sx={{ p: 3, mt: 3 }}>
           <Typography variant="h6" gutterBottom>
