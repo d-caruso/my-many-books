@@ -87,6 +87,21 @@ export const AdminSettingsPage: React.FC = () => {
     }
   };
 
+  const handleSearchToggle = async () => {
+    if (!searchStatus || !searchStatus.canChange) return;
+
+    try {
+      setSearchUpdating(true);
+      setSearchError(null);
+      const data = await apiService.updateFullTextSearchStatus(!searchStatus.enabled);
+      setSearchStatus(data);
+    } catch (err: any) {
+      setSearchError(err.response?.data?.message || 'Failed to update full-text search status');
+    } finally {
+      setSearchUpdating(false);
+    }
+  };
+
   const getSourceBadge = (source: string) => {
     const badges = {
       force_disabled: { label: 'Disabled by deployment', color: 'error' as const },
