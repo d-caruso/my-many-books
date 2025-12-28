@@ -8,7 +8,10 @@ import {
   List,
   ListItem,
   ListItemText,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
+import { PushPin as PinIcon, PushPinOutlined as UnpinIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { AdminLayout } from './AdminLayout';
@@ -74,6 +77,34 @@ export const SearchManagementPage: React.FC = () => {
     }
   };
 
+  const handleUnpin = async (id: number) => {
+    try {
+      await apiService.delete(`/admin/search/pinned/${id}`);
+      setPinnedResults(pinnedResults.filter(item => item.id !== id));
+    } catch (err: any) {
+      setError('Failed to unpin result');
+    }
+  };
+
+  const handlePin = async (resourceType: string, resourceId: number) => {
+    try {
+      const maxPriority = pinnedResults.length > 0
+        ? Math.max(...pinnedResults.map(r => r.priority))
+        : -1;
+
+      await apiService.post('/admin/search/pinned', {
+        resource_type: resourceType,
+        resource_id: resourceId,
+        priority: maxPriority + 1,
+        active: true,
+      });
+
+      fetchPinnedResults();
+    } catch (err: any) {
+      setError('Failed to pin result');
+    }
+  };
+
   return (
     <AdminLayout>
       <Box sx={{ p: 3 }}>
@@ -121,6 +152,17 @@ export const SearchManagementPage: React.FC = () => {
                               borderColor: 'divider',
                               borderRadius: 1,
                             }}
+                            secondaryAction={
+                              <Tooltip title={t('search.pinned.unpin', 'Unpin')}>
+                                <IconButton
+                                  edge="end"
+                                  aria-label={t('search.pinned.unpin', 'Unpin')}
+                                  onClick={() => handleUnpin(item.id)}
+                                >
+                                  <UnpinIcon />
+                                </IconButton>
+                              </Tooltip>
+                            }
                           >
                             <ListItemText
                               primary={`${item.resource_type} #${item.resource_id}`}
