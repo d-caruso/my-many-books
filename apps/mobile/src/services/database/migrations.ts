@@ -23,7 +23,7 @@ export class MigrationSystem {
         );
       `);
 
-      const result = await db.getFirstAsync(
+      const result = await db.getFirstAsync<{ value: string }>(
         'SELECT value FROM migrations WHERE key = ?',
         [SCHEMA_VERSION_KEY]
       );
@@ -50,7 +50,7 @@ export class MigrationSystem {
    * Run all migrations
    */
   async runMigrations(): Promise<void> {
-    const currentVersion = await getCurrentVersion();
+    const currentVersion = await this.getCurrentVersion();
 
     if (currentVersion === CURRENT_SCHEMA_VERSION) {
       console.log('Database schema is up to date');
