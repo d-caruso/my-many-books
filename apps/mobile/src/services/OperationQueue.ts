@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { QueuedOperation, OperationType, ResourceType } from '../types/queue';
 
 const QUEUE_STORAGE_KEY = '@operation_queue';
+const MAX_QUEUE_SIZE = 100;
 
 export class OperationQueue {
   private queue: QueuedOperation[] = [];
@@ -18,8 +19,10 @@ export class OperationQueue {
         this.queue = JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Failed to initialize queue:', error);
+      console.error('Failed to initialize queue from AsyncStorage:', error);
       this.queue = [];
+      // Attempt to recover with empty queue
+      await this.persist();
     }
   }
 
