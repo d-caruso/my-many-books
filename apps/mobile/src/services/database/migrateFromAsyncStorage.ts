@@ -33,7 +33,7 @@ export async function migrateFromAsyncStorage(): Promise<{
     console.log(`Migrating ${books.length} books from AsyncStorage to SQLite...`);
 
     // Insert books into SQLite
-    let migrated = 0;
+    let migratedCount = 0;
     for (const book of books) {
       try {
         await bookRepository.create(book);
