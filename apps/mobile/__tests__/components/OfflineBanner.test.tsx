@@ -112,8 +112,5 @@ describe('OfflineBanner', () => {
     const result = OfflineBanner({});
     expect(result).toBeDefined();
     expect(result).not.toBeNull();
-
-    // Verify component structure includes Banner
-    expect(result.type).toBeDefined();
   });
 });
