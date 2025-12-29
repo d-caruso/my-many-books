@@ -41,197 +41,202 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   clear: jest.fn(() => Promise.resolve()),
 }));
 
-// Mock expo-sqlite with in-memory storage for database tests
+// Mock expo-sqlite for Jest environment (expo-sqlite requires native modules)
+// This is a functional in-memory SQLite implementation for testing
 jest.mock('expo-sqlite', () => {
-  // In-memory database storage
   const databases = new Map<string, any>();
 
   const createMockDatabase = (dbName: string) => {
     if (!databases.has(dbName)) {
       const tables = new Map<string, any[]>();
       const autoIncrementIds = new Map<string, number>();
+      let insertionCounter = 0; // Track insertion order for timestamp-based sorting
 
-      const parseInsertValues = (sql: string, params: any[]) => {
-        const row: any = {};
-        // Extract column names from INSERT statement
-        // Format: INSERT INTO table (col1, col2, col3) VALUES (?, ?, ?)
-        const columnsMatch = sql.match(/\(([^)]+)\)\s*VALUES/i);
-        if (columnsMatch) {
-          const columns = columnsMatch[1]
-            .split(',')
-            .map((c: string) => c.trim())
-            .filter((c: string) => c.length > 0);
+      const parseColumns = (sql: string): string[] => {
+        const match = sql.match(/\(([^)]+)\)\s*VALUES/i);
+        if (match) {
+          return match[1].split(',').map((c: string) => c.trim());
+        }
+        return [];
+      };
 
-          columns.forEach((col, idx) => {
-            if (idx < params.length) {
-              row[col] = params[idx];
-            }
+      const applyWhere = (rows: any[], sql: string, params: any[]): any[] => {
+        if (!sql.toLowerCase().includes('where')) {
+          return rows;
+        }
+
+        // Handle _deleted = 0
+        if (sql.includes('_deleted = 0')) {
+          rows = rows.filter(r => !r._deleted || r._deleted === 0);
+        }
+
+        // Handle simple equality: WHERE column = ?
+        const simpleMatch = sql.match(/WHERE\s+(\w+)\s*=\s*\?/i);
+        if (simpleMatch && params.length > 0) {
+          const column = simpleMatch[1];
+          const value = params[0];
+          rows = rows.filter(r => r[column] === value);
+        }
+
+        // Handle LIKE: WHERE column LIKE ?
+        const likeMatch = sql.match(/WHERE\s+.*?\((\w+)\s+LIKE\s+\?/i);
+        if (likeMatch && params.length > 0) {
+          const column = likeMatch[1];
+          const pattern = params[0].replace(/%/g, '.*');
+          const regex = new RegExp(pattern, 'i');
+          rows = rows.filter(r => r[column] && regex.test(String(r[column])));
+        }
+
+        // Handle multiple WHERE with AND
+        const multiWhere = sql.match(/WHERE\s+_deleted\s*=\s*0\s+AND\s+(\w+)\s*=\s*\?/i);
+        if (multiWhere && params.length > 0) {
+          const column = multiWhere[1];
+          const value = params[0];
+          rows = rows.filter(r => (!r._deleted || r._deleted === 0) && r[column] === value);
+        }
+
+        return rows;
+      };
+
+      const applyOrderBy = (rows: any[], sql: string): any[] => {
+        const orderMatch = sql.match(/ORDER BY\s+(\w+)\s*(ASC|DESC)?/i);
+        if (orderMatch) {
+          const column = orderMatch[1];
+          const direction = orderMatch[2]?.toUpperCase() || 'ASC';
+          return [...rows].sort((a, b) => {
+            const aVal = a[column];
+            const bVal = b[column];
+
+            if (aVal < bVal) return direction === 'ASC' ? -1 : 1;
+            if (aVal > bVal) return direction === 'ASC' ? 1 : -1;
+
+            // Tiebreaker: use insertion order
+            const aOrder = a.__insertionOrder || 0;
+            const bOrder = b.__insertionOrder || 0;
+            return direction === 'ASC' ? aOrder - bOrder : bOrder - aOrder;
           });
         }
-        return row;
+        return rows;
       };
 
       databases.set(dbName, {
-        tables,
-        execAsync: jest.fn(async (sql: string) => {
-          // Handle CREATE TABLE
+        execAsync: async (sql: string) => {
           if (sql.includes('CREATE TABLE')) {
             const match = sql.match(/CREATE TABLE (?:IF NOT EXISTS )?(\w+)/i);
-            if (match) {
-              const tableName = match[1];
-              if (!tables.has(tableName)) {
-                tables.set(tableName, []);
-                autoIncrementIds.set(tableName, 0);
-              }
+            if (match && !tables.has(match[1])) {
+              tables.set(match[1], []);
+              autoIncrementIds.set(match[1], 0);
             }
           }
-          // Handle CREATE INDEX
-          if (sql.includes('CREATE INDEX')) {
-            // No-op for indexes in mock
-          }
           return { changes: 0, lastInsertRowId: 0 };
-        }),
-        runAsync: jest.fn(async (sql: string, params: any[] = []) => {
+        },
+
+        runAsync: async (sql: string, params: any[] = []) => {
           const lowerSql = sql.toLowerCase();
 
-          // Handle INSERT
+          // INSERT
           if (lowerSql.includes('insert')) {
-            const match = sql.match(/INSERT INTO (\w+)/i);
-            if (match) {
-              const tableName = match[1];
-              if (!tables.has(tableName)) {
-                tables.set(tableName, []);
-              }
-              const table = tables.get(tableName)!;
+            const tableMatch = sql.match(/INSERT INTO (\w+)/i);
+            if (tableMatch) {
+              const tableName = tableMatch[1];
+              if (!tables.has(tableName)) tables.set(tableName, []);
 
-              // Parse column names and create row object
-              const row = parseInsertValues(sql, params);
+              const columns = parseColumns(sql);
+              const row: any = {};
+              columns.forEach((col, idx) => {
+                row[col] = idx < params.length ? params[idx] : null;
+              });
 
-              // Generate ID if not provided
               if (!row.id) {
                 const currentId = autoIncrementIds.get(tableName) || 0;
-                const newId = currentId + 1;
-                row.id = newId;
-                autoIncrementIds.set(tableName, newId);
+                row.id = currentId + 1;
+                autoIncrementIds.set(tableName, row.id);
               }
 
-              table.push(row);
+              // Add hidden insertion order for proper sorting
+              row.__insertionOrder = insertionCounter++;
+
+              tables.get(tableName)!.push(row);
               return { changes: 1, lastInsertRowId: row.id };
             }
           }
 
-          // Handle UPDATE
+          // UPDATE
           if (lowerSql.includes('update')) {
             const tableMatch = sql.match(/UPDATE (\w+)/i);
             if (tableMatch) {
-              const tableName = tableMatch[1];
-              const table = tables.get(tableName) || [];
+              const table = tables.get(tableMatch[1]) || [];
+              const setMatch = sql.match(/SET(.+?)WHERE/is);
+              const whereMatch = sql.match(/WHERE (\w+)\s*=\s*\?/i);
 
-              // Simple update: update all matching rows
-              let changes = 0;
-              if (lowerSql.includes('where')) {
-                // Extract WHERE clause id
-                const whereMatch = sql.match(/WHERE (\w+)\s*=\s*\?/i);
-                if (whereMatch && params.length > 0) {
-                  const idValue = params[params.length - 1];
-                  const rowIndex = table.findIndex((r: any) => r.id === idValue);
-                  if (rowIndex >= 0) {
-                    // Update the row with new values
-                    table[rowIndex] = { ...table[rowIndex], ...parseInsertValues(sql, params.slice(0, -1)) };
-                    changes = 1;
-                  }
+              if (whereMatch && params.length > 0) {
+                const idValue = params[params.length - 1];
+                const row = table.find((r: any) => r[whereMatch[1]] === idValue);
+                if (row) {
+                  const columns = parseColumns(`(${setMatch?.[1] || ''}) VALUES`);
+                  columns.forEach((col, idx) => {
+                    if (idx < params.length - 1) row[col] = params[idx];
+                  });
+                  return { changes: 1, lastInsertRowId: 0 };
                 }
               }
-              return { changes, lastInsertRowId: 0 };
             }
           }
 
-          // Handle DELETE
+          // DELETE
           if (lowerSql.includes('delete')) {
             const tableMatch = sql.match(/DELETE FROM (\w+)/i);
             if (tableMatch) {
-              const tableName = tableMatch[1];
-              const table = tables.get(tableName);
+              const table = tables.get(tableMatch[1]);
+              if (!table) return { changes: 0, lastInsertRowId: 0 };
 
-              if (!table) {
-                return { changes: 0, lastInsertRowId: 0 };
-              }
-
-              let changes = 0;
               if (lowerSql.includes('where')) {
                 const whereMatch = sql.match(/WHERE (\w+)\s*=\s*\?/i);
                 if (whereMatch && params.length > 0) {
-                  const idValue = params[0];
-                  const rowIndex = table.findIndex((r: any) => r.id === idValue);
-                  if (rowIndex >= 0) {
-                    table.splice(rowIndex, 1);
-                    changes = 1;
+                  const idx = table.findIndex((r: any) => r[whereMatch[1]] === params[0]);
+                  if (idx >= 0) {
+                    table.splice(idx, 1);
+                    return { changes: 1, lastInsertRowId: 0 };
                   }
                 }
               } else {
-                // DELETE without WHERE - clear all rows
-                changes = table.length;
-                tables.set(tableName, []);
+                const changes = table.length;
+                tables.set(tableMatch[1], []);
+                return { changes, lastInsertRowId: 0 };
               }
-              return { changes, lastInsertRowId: 0 };
             }
           }
 
           return { changes: 0, lastInsertRowId: 0 };
-        }),
-        getFirstAsync: jest.fn(async (sql: string, params: any[] = []) => {
-          const lowerSql = sql.toLowerCase();
+        },
 
-          if (lowerSql.includes('select')) {
-            const tableMatch = sql.match(/FROM (\w+)/i);
-            if (tableMatch) {
-              const tableName = tableMatch[1];
-              const table = tables.get(tableName) || [];
+        getFirstAsync: async (sql: string, params: any[] = []) => {
+          if (!sql.toLowerCase().includes('select')) return null;
 
-              // Handle WHERE clause
-              if (lowerSql.includes('where')) {
-                const whereMatch = sql.match(/WHERE (\w+)\s*=\s*\?/i);
-                if (whereMatch && params.length > 0) {
-                  const column = whereMatch[1];
-                  const value = params[0];
-                  const row = table.find((r: any) => r[column] === value);
-                  return row || null;
-                }
-              }
+          const tableMatch = sql.match(/FROM (\w+)/i);
+          if (!tableMatch) return null;
 
-              return table[0] || null;
-            }
-          }
+          let rows = tables.get(tableMatch[1]) || [];
+          rows = applyWhere(rows, sql, params);
+          rows = applyOrderBy(rows, sql);
 
-          return null;
-        }),
-        getAllAsync: jest.fn(async (sql: string, params: any[] = []) => {
-          const lowerSql = sql.toLowerCase();
+          return rows[0] || null;
+        },
 
-          if (lowerSql.includes('select')) {
-            const tableMatch = sql.match(/FROM (\w+)/i);
-            if (tableMatch) {
-              const tableName = tableMatch[1];
-              const table = tables.get(tableName) || [];
+        getAllAsync: async (sql: string, params: any[] = []) => {
+          if (!sql.toLowerCase().includes('select')) return [];
 
-              // Handle WHERE clause
-              if (lowerSql.includes('where')) {
-                // Simple filtering based on first WHERE condition
-                const whereMatch = sql.match(/WHERE (\w+)\s*=\s*\?/i);
-                if (whereMatch && params.length > 0) {
-                  const column = whereMatch[1];
-                  const value = params[0];
-                  return table.filter((r: any) => r[column] === value);
-                }
-              }
+          const tableMatch = sql.match(/FROM (\w+)/i);
+          if (!tableMatch) return [];
 
-              return [...table];
-            }
-          }
+          let rows = tables.get(tableMatch[1]) || [];
+          rows = applyWhere(rows, sql, params);
+          rows = applyOrderBy(rows, sql);
 
-          return [];
-        }),
-        closeAsync: jest.fn(async () => {}),
+          return [...rows];
+        },
+
+        closeAsync: async () => {},
       });
     }
 
@@ -239,12 +244,8 @@ jest.mock('expo-sqlite', () => {
   };
 
   return {
-    openDatabaseAsync: jest.fn(async (dbName: string) => {
-      return createMockDatabase(dbName);
-    }),
-    openDatabaseSync: jest.fn((dbName: string) => {
-      return createMockDatabase(dbName);
-    }),
+    openDatabaseAsync: async (dbName: string) => createMockDatabase(dbName),
+    openDatabaseSync: (dbName: string) => createMockDatabase(dbName),
   };
 });
 
