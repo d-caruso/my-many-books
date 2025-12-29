@@ -3,6 +3,9 @@ import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/sha
 import { authService } from './authService';
 import NetInfo from '@react-native-community/netinfo';
 import i18n from '../i18n';
+import { operationQueue } from './OperationQueue';
+import { isRetriableError } from './QueueExecutor';
+import type { OperationType } from '../types/queue';
 
 // Configure API base URL for mobile
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -147,15 +150,64 @@ const apiConfig: ApiClientConfig = {
 const httpClient = new FetchHttpClient(apiConfig.baseURL, apiConfig.timeout);
 const apiClient = createApiClient(httpClient, apiConfig);
 
+/**
+ * Wrapper for API write operations that automatically queues on retriable errors
+ */
+async function withQueueOnError<T>(
+  operation: () => Promise<T>,
+  operationType: OperationType,
+  resource: 'book' | 'user' | 'settings',
+  payload: any
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    // If error is retriable, enqueue the operation
+    if (isRetriableError(error)) {
+      await operationQueue.enqueue(operationType, resource, payload, 5);
+      // Re-throw to let caller know it failed
+      throw error;
+    }
+    // Non-retriable error - fail immediately
+    throw error;
+  }
+}
+
 // Export API instances with bound methods
 export const bookAPI = {
   searchBooks: apiClient.books.searchBooks.bind(apiClient.books),
   searchByISBN: apiClient.books.searchByISBN.bind(apiClient.books),
   getBooks: apiClient.books.getBooks.bind(apiClient.books),
   getBook: apiClient.books.getBook.bind(apiClient.books),
-  createBook: apiClient.books.createBook.bind(apiClient.books),
-  updateBook: apiClient.books.updateBook.bind(apiClient.books),
-  deleteBook: apiClient.books.deleteBook.bind(apiClient.books),
+
+  // Write operations with automatic queueing
+  createBook: async (book: any) => {
+    return withQueueOnError(
+      () => apiClient.books.createBook(book),
+      'CREATE',
+      'book',
+      book
+    );
+  },
+
+  updateBook: async (id: string, book: any) => {
+    return withQueueOnError(
+      () => apiClient.books.updateBook(id, book),
+      'UPDATE',
+      'book',
+      { id, ...book }
+    );
+  },
+
+  deleteBook: async (id: string) => {
+    return withQueueOnError(
+      () => apiClient.books.deleteBook(id),
+      'DELETE',
+      'book',
+      { id }
+    );
+  },
+
   updateBookStatus: apiClient.books.updateBookStatus.bind(apiClient.books),
 };
 
