@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { v4 as uuidv4 } from 'uuid';
 import { QueuedOperation, OperationType, ResourceType } from '../types/queue';
 
 const QUEUE_STORAGE_KEY = '@operation_queue';
@@ -32,7 +33,7 @@ export class OperationQueue {
     maxRetries: number = 3
   ): Promise<string> {
     const operation: QueuedOperation = {
-      id: '', // Will be set in Task 2.1.3 with uuid
+      id: uuidv4(),
       type,
       resource,
       payload,
