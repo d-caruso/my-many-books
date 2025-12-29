@@ -1,7 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Book } from '@/types';
 import { bookAPI } from '@/services/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { bookRepository } from '@/services/database/BookRepository';
+import { databaseService } from '@/services/database/DatabaseService';
+import { migrationSystem } from '@/services/database/migrations';
+import { migrateFromAsyncStorage } from '@/services/database/migrateFromAsyncStorage';
+import { v4 as uuidv4 } from 'uuid';
 
 interface UseBooksState {
   books: Book[];
@@ -19,7 +23,12 @@ interface UseBooksActions {
   updateBookStatus: (id: number, status: Book['status']) => Promise<void>;
 }
 
-const BOOKS_CACHE_KEY = 'cached_books';
+// Helper to check if error is retriable (network/server errors)
+const isRetriableError = (error: any): boolean => {
+  if (!error.response) return true; // Network error
+  const status = error.response.status;
+  return status >= 500 || status === 408 || status === 429; // Server errors, timeout, rate limit
+};
 
 export const useBooks = (): UseBooksState & UseBooksActions => {
   const [books, setBooks] = useState<Book[]>([]);
@@ -28,26 +37,35 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadCachedBooks();
-    loadBooks();
+    initDatabase();
   }, []);
 
-  const loadCachedBooks = async () => {
+  const initDatabase = async () => {
     try {
-      const cachedBooks = await AsyncStorage.getItem(BOOKS_CACHE_KEY);
-      if (cachedBooks) {
-        setBooks(JSON.parse(cachedBooks));
-      }
+      // Initialize database and run migrations
+      await databaseService.openDatabase();
+      await migrationSystem.runMigrations();
+
+      // Migrate from AsyncStorage if needed (one-time)
+      await migrateFromAsyncStorage();
+
+      // Load books from SQLite
+      await loadBooksFromDB();
+
+      // Fetch fresh data from server
+      await loadBooks();
     } catch (error) {
-      console.error('Failed to load cached books:', error);
+      console.error('Failed to initialize database:', error);
+      setError('Failed to initialize database');
     }
   };
 
-  const cacheBooks = async (booksToCache: Book[]) => {
+  const loadBooksFromDB = async () => {
     try {
-      await AsyncStorage.setItem(BOOKS_CACHE_KEY, JSON.stringify(booksToCache));
+      const dbBooks = await bookRepository.findAll();
+      setBooks(dbBooks);
     } catch (error) {
-      console.error('Failed to cache books:', error);
+      console.error('Failed to load books from database:', error);
     }
   };
 
@@ -57,11 +75,24 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
 
     try {
       const response = await bookAPI.getBooks();
+
+      // Clear and repopulate SQLite with server data
+      for (const book of response.books) {
+        await bookRepository.create({
+          ...book,
+          _syncStatus: 'synced',
+          _serverUpdatedAt: book.updateDate,
+        });
+      }
+
+      // Update local state
       setBooks(response.books);
-      await cacheBooks(response.books);
     } catch (err: any) {
       console.error('Failed to load books:', err);
       setError(err.response?.data?.message || 'Failed to load books');
+
+      // On error, load from local database
+      await loadBooksFromDB();
     } finally {
       setLoading(false);
     }
@@ -73,68 +104,205 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
 
     try {
       const response = await bookAPI.getBooks();
+
+      // Update SQLite with server data
+      for (const book of response.books) {
+        await bookRepository.create({
+          ...book,
+          _syncStatus: 'synced',
+          _serverUpdatedAt: book.updateDate,
+        });
+      }
+
+      // Update local state
       setBooks(response.books);
-      await cacheBooks(response.books);
     } catch (err: any) {
       console.error('Failed to refresh books:', err);
       setError(err.response?.data?.message || 'Failed to refresh books');
+
+      // On error, load from local database
+      await loadBooksFromDB();
     } finally {
       setRefreshing(false);
     }
   }, []);
 
   const createBook = useCallback(async (bookData: Partial<Book>): Promise<Book> => {
+    // Generate temporary ID for optimistic update
+    const tempId = `temp-${uuidv4()}`;
+    const optimisticBook: Book = {
+      ...bookData,
+      id: tempId as any,
+      _tempId: tempId,
+      _syncStatus: 'pending',
+      creationDate: new Date().toISOString(),
+      updateDate: new Date().toISOString(),
+    } as Book;
+
+    // Add to SQLite and local state immediately (optimistic update)
+    await bookRepository.create(optimisticBook);
+    setBooks(prev => [optimisticBook, ...prev]);
+
     try {
+      // Try to create on server
       const newBook = await bookAPI.createBook(bookData);
-      setBooks(prev => [newBook, ...prev]);
-      await cacheBooks([newBook, ...books]);
+
+      // Replace temp book with real book from server in SQLite
+      await bookRepository.hardDelete(tempId);
+      await bookRepository.create({
+        ...newBook,
+        _syncStatus: 'synced',
+        _serverUpdatedAt: newBook.updateDate,
+      });
+
+      // Update local state
+      setBooks(prev => prev.map(book =>
+        book._tempId === tempId ? { ...newBook, _syncStatus: 'synced' } : book
+      ));
+
       return newBook;
     } catch (err: any) {
       console.error('Failed to create book:', err);
-      throw new Error(err.response?.data?.message || 'Failed to create book');
+
+      // If error is retriable, keep optimistic book with pending status
+      if (isRetriableError(err)) {
+        await bookRepository.update(tempId, { _syncStatus: 'pending' });
+        setBooks(prev => prev.map(book =>
+          book._tempId === tempId ? { ...book, _syncStatus: 'pending' } : book
+        ));
+        return optimisticBook;
+      } else {
+        // Non-retriable error - remove optimistic book
+        await bookRepository.hardDelete(tempId);
+        setBooks(prev => prev.filter(book => book._tempId !== tempId));
+        throw new Error(err.response?.data?.message || 'Failed to create book');
+      }
     }
-  }, [books]);
+  }, []);
 
   const updateBook = useCallback(async (id: number, bookData: Partial<Book>): Promise<Book> => {
+    // Apply changes to SQLite and local state immediately (optimistic update)
+    const stringId = String(id);
+    await bookRepository.update(stringId, {
+      ...bookData,
+      _syncStatus: 'pending',
+    });
+
+    setBooks(prev => prev.map(book =>
+      book.id === id ? { ...book, ...bookData, _syncStatus: 'pending' } : book
+    ));
+
     try {
+      // Try to update on server
       const updatedBook = await bookAPI.updateBook(id, bookData);
-      setBooks(prev => prev.map(book => book.id === id ? updatedBook : book));
-      const updatedBooks = books.map(book => book.id === id ? updatedBook : book);
-      await cacheBooks(updatedBooks);
+
+      // Update SQLite with server response
+      await bookRepository.update(stringId, {
+        ...updatedBook,
+        _syncStatus: 'synced',
+        _serverUpdatedAt: updatedBook.updateDate,
+      });
+
+      // Update local state
+      setBooks(prev => prev.map(book =>
+        book.id === id ? { ...updatedBook, _syncStatus: 'synced' } : book
+      ));
+
       return updatedBook;
     } catch (err: any) {
       console.error('Failed to update book:', err);
+
+      // If error is retriable, keep pending status
+      if (isRetriableError(err)) {
+        const pendingBook = books.find(b => b.id === id);
+        if (pendingBook) {
+          return { ...pendingBook, ...bookData, _syncStatus: 'pending' };
+        }
+      } else {
+        // Non-retriable error - mark as failed
+        await bookRepository.update(stringId, { _syncStatus: 'failed' });
+        setBooks(prev => prev.map(book =>
+          book.id === id ? { ...book, _syncStatus: 'failed' } : book
+        ));
+      }
+
       throw new Error(err.response?.data?.message || 'Failed to update book');
     }
   }, [books]);
 
   const deleteBook = useCallback(async (id: number): Promise<void> => {
+    const stringId = String(id);
+
+    // Soft delete in SQLite and remove from local state immediately (optimistic)
+    await bookRepository.delete(stringId);
+    setBooks(prev => prev.filter(book => book.id !== id));
+
     try {
+      // Try to delete on server
       await bookAPI.deleteBook(id);
-      setBooks(prev => prev.filter(book => book.id !== id));
-      const filteredBooks = books.filter(book => book.id !== id);
-      await cacheBooks(filteredBooks);
+
+      // On success, permanently delete from SQLite
+      await bookRepository.hardDelete(stringId);
     } catch (err: any) {
       console.error('Failed to delete book:', err);
-      throw new Error(err.response?.data?.message || 'Failed to delete book');
+
+      // If error is retriable, keep soft-deleted with pending status
+      if (isRetriableError(err)) {
+        // Book already marked as deleted and pending in SQLite
+        return;
+      } else {
+        // Non-retriable error - restore the book
+        const deletedBook = await databaseService.getFirstAsync(
+          'SELECT * FROM books WHERE id = ?',
+          [stringId]
+        );
+        if (deletedBook) {
+          await databaseService.executeQuery(
+            'UPDATE books SET _deleted = 0, _sync_status = ? WHERE id = ?',
+            ['synced', stringId]
+          );
+          await loadBooksFromDB(); // Reload to restore the book
+        }
+        throw new Error(err.response?.data?.message || 'Failed to delete book');
+      }
     }
-  }, [books]);
+  }, []);
 
   const updateBookStatus = useCallback(async (id: number, status: Book['status']): Promise<void> => {
+    const stringId = String(id);
+
+    // Update SQLite and local state immediately (optimistic)
+    await bookRepository.update(stringId, { status, _syncStatus: 'pending' });
+    setBooks(prev => prev.map(book =>
+      book.id === id ? { ...book, status, _syncStatus: 'pending' } : book
+    ));
+
     try {
+      // Try to update on server
       await bookAPI.updateBook(id, { status });
-      setBooks(prev => prev.map(book => 
-        book.id === id ? { ...book, status } : book
+
+      // Mark as synced
+      await bookRepository.update(stringId, { _syncStatus: 'synced' });
+      setBooks(prev => prev.map(book =>
+        book.id === id ? { ...book, _syncStatus: 'synced' } : book
       ));
-      const updatedBooks = books.map(book => 
-        book.id === id ? { ...book, status } : book
-      );
-      await cacheBooks(updatedBooks);
     } catch (err: any) {
       console.error('Failed to update book status:', err);
-      throw new Error(err.response?.data?.message || 'Failed to update book status');
+
+      // If error is retriable, keep pending status
+      if (isRetriableError(err)) {
+        // Already marked as pending
+        return;
+      } else {
+        // Non-retriable error - mark as failed
+        await bookRepository.update(stringId, { _syncStatus: 'failed' });
+        setBooks(prev => prev.map(book =>
+          book.id === id ? { ...book, _syncStatus: 'failed' } : book
+        ));
+        throw new Error(err.response?.data?.message || 'Failed to update book status');
+      }
     }
-  }, [books]);
+  }, []);
 
   return {
     books,
