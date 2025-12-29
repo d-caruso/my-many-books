@@ -61,6 +61,7 @@ export const CREATE_BOOK_CATEGORIES_TABLE = `
 
 // Indexes for performance
 export const CREATE_INDEXES = [
+  // Basic indexes
   'CREATE INDEX IF NOT EXISTS idx_books_status ON books(status);',
   'CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);',
   'CREATE INDEX IF NOT EXISTS idx_books_user_id ON books(user_id);',
@@ -70,6 +71,17 @@ export const CREATE_INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_book_authors_author_id ON book_authors(author_id);',
   'CREATE INDEX IF NOT EXISTS idx_book_categories_book_id ON book_categories(book_id);',
   'CREATE INDEX IF NOT EXISTS idx_book_categories_category_id ON book_categories(category_id);',
+
+  // Performance optimization indexes for common queries
+  'CREATE INDEX IF NOT EXISTS idx_books_rating ON books(rating);',
+  'CREATE INDEX IF NOT EXISTS idx_books_update_date ON books(update_date);',
+  'CREATE INDEX IF NOT EXISTS idx_books_creation_date ON books(creation_date);',
+  'CREATE INDEX IF NOT EXISTS idx_authors_name ON authors(name);',
+  'CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name);',
+
+  // Composite indexes for common filter combinations
+  'CREATE INDEX IF NOT EXISTS idx_books_status_update_date ON books(status, update_date);',
+  'CREATE INDEX IF NOT EXISTS idx_books_deleted_sync_status ON books(_deleted, _sync_status);',
 ];
 
 export const ALL_TABLES = [
