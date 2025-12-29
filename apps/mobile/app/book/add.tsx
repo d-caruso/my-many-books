@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
+import { Text, TextInput, Button, Card, SegmentedButtons, Tooltip } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
+import { useNetworkState } from '@/hooks/useNetworkState';
 import { Book } from '@/types';
 
 export default function AddBookScreen() {
@@ -22,6 +23,7 @@ export default function AddBookScreen() {
 
   const { createBook } = useBooks();
   const { searchByISBN } = useBookSearch();
+  const { isOnline } = useNetworkState();
 
   useEffect(() => {
     if (bookData) {
@@ -185,12 +187,18 @@ export default function AddBookScreen() {
                   onPress={handleSubmit}
                   style={styles.button}
                   loading={loading}
-                  disabled={loading}
+                  disabled={loading || !isOnline}
                   accessibilityLabel="Add book to library"
+                  accessibilityHint={!isOnline ? t('offline.tooltips.offlineDisabled') : undefined}
                 >
                   {t('books:add_book')}
                 </Button>
               </View>
+              {!isOnline && (
+                <Text variant="bodySmall" style={styles.offlineHint}>
+                  {t('offline.tooltips.offlineDisabled')}
+                </Text>
+              )}
             </Card.Content>
           </Card>
         </ScrollView>
@@ -248,6 +256,11 @@ const styles = StyleSheet.create({
   },
   segmentedButtons: {
     marginBottom: 16,
+  },
+  offlineHint: {
+    color: '#757575',
+    textAlign: 'center',
+    marginTop: 8,
   },
   buttonContainer: {
     flexDirection: 'row',
