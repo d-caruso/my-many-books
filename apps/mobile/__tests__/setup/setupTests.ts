@@ -65,34 +65,72 @@ jest.mock('expo-sqlite', () => {
           return rows;
         }
 
-        // Handle _deleted = 0
+        let paramIndex = 0;
+
+        // Always filter _deleted = 0 if present
         if (sql.includes('_deleted = 0')) {
-          rows = rows.filter(r => !r._deleted || r._deleted === 0);
+          rows = rows.filter(r => !r._deleted || r._deleted === 0 || r._deleted === false);
         }
 
-        // Handle simple equality: WHERE column = ?
-        const simpleMatch = sql.match(/WHERE\s+(\w+)\s*=\s*\?/i);
-        if (simpleMatch && params.length > 0) {
-          const column = simpleMatch[1];
-          const value = params[0];
-          rows = rows.filter(r => r[column] === value);
+        // Handle: AND status = ?
+        const statusMatch = sql.match(/AND\s+status\s*=\s*\?/i);
+        if (statusMatch && paramIndex < params.length) {
+          const value = params[paramIndex++];
+          rows = rows.filter(r => r.status === value);
         }
 
-        // Handle LIKE: WHERE column LIKE ?
-        const likeMatch = sql.match(/WHERE\s+.*?\((\w+)\s+LIKE\s+\?/i);
-        if (likeMatch && params.length > 0) {
-          const column = likeMatch[1];
-          const pattern = params[0].replace(/%/g, '.*');
-          const regex = new RegExp(pattern, 'i');
-          rows = rows.filter(r => r[column] && regex.test(String(r[column])));
+        // Handle: _sync_status IN (?, ?) or IN ('pending', 'failed')
+        const inMatch = sql.match(/(\w+)\s+IN\s+\(([^)]+)\)/i);
+        if (inMatch) {
+          const column = inMatch[1];
+          const inValues = inMatch[2];
+
+          if (inValues.includes('?')) {
+            // Parameterized: IN (?, ?)
+            const placeholderCount = (inValues.match(/\?/g) || []).length;
+            const values = params.slice(paramIndex, paramIndex + placeholderCount);
+            paramIndex += placeholderCount;
+            rows = rows.filter(r => values.includes(r[column]));
+          } else {
+            // Literal: IN ('value1', 'value2')
+            const literals = inValues.split(',').map(v => v.trim().replace(/'/g, ''));
+            rows = rows.filter(r => literals.includes(r[column]));
+          }
         }
 
-        // Handle multiple WHERE with AND
-        const multiWhere = sql.match(/WHERE\s+_deleted\s*=\s*0\s+AND\s+(\w+)\s*=\s*\?/i);
-        if (multiWhere && params.length > 0) {
-          const column = multiWhere[1];
-          const value = params[0];
-          rows = rows.filter(r => (!r._deleted || r._deleted === 0) && r[column] === value);
+        // Handle: AND (title LIKE ? OR authors LIKE ?)
+        // Handle: AND (title LIKE ? OR authors LIKE ? OR description LIKE ?)
+        const orLikeMatch = sql.match(/AND\s+\((.+?)\)/i);
+        if (orLikeMatch) {
+          const orClause = orLikeMatch[1];
+          const likeColumns: string[] = [];
+          const likeMatches = orClause.matchAll(/(\w+)\s+LIKE\s+\?/gi);
+
+          for (const match of likeMatches) {
+            likeColumns.push(match[1]);
+          }
+
+          if (likeColumns.length > 0) {
+            const patterns = likeColumns.map(() => params[paramIndex++]);
+            rows = rows.filter(row => {
+              return likeColumns.some((col, idx) => {
+                const pattern = patterns[idx];
+                if (!pattern || !row[col]) return false;
+                const regex = new RegExp(pattern.replace(/%/g, '.*'), 'i');
+                return regex.test(String(row[col]));
+              });
+            });
+          }
+        }
+
+        // Handle simple: WHERE column = ? (no AND)
+        if (!sql.includes(' AND ')) {
+          const simpleMatch = sql.match(/WHERE\s+(\w+)\s*=\s*\?/i);
+          if (simpleMatch && params.length > 0) {
+            const column = simpleMatch[1];
+            const value = params[0];
+            rows = rows.filter(r => r[column] === value);
+          }
         }
 
         return rows;
@@ -166,17 +204,78 @@ jest.mock('expo-sqlite', () => {
             const tableMatch = sql.match(/UPDATE (\w+)/i);
             if (tableMatch) {
               const table = tables.get(tableMatch[1]) || [];
-              const setMatch = sql.match(/SET(.+?)WHERE/is);
+              const setMatch = sql.match(/SET\s+(.+?)\s+WHERE/is);
               const whereMatch = sql.match(/WHERE (\w+)\s*=\s*\?/i);
 
               if (whereMatch && params.length > 0) {
-                const idValue = params[params.length - 1];
-                const row = table.find((r: any) => r[whereMatch[1]] === idValue);
+                const whereColumn = whereMatch[1];
+                const whereValue = params[params.length - 1];
+                const row = table.find((r: any) => r[whereColumn] === whereValue);
+
                 if (row) {
-                  const columns = parseColumns(`(${setMatch?.[1] || ''}) VALUES`);
-                  columns.forEach((col, idx) => {
-                    if (idx < params.length - 1) row[col] = params[idx];
+                  // Parse SET clause: "col1 = value1, col2 = ?, col3 = COALESCE(?, col3)"
+                  const setPart = setMatch?.[1] || '';
+
+                  // Smart split by comma (avoiding commas inside parentheses)
+                  const setAssignments: string[] = [];
+                  let current = '';
+                  let depth = 0;
+                  for (const char of setPart) {
+                    if (char === '(') depth++;
+                    else if (char === ')') depth--;
+                    else if (char === ',' && depth === 0) {
+                      setAssignments.push(current.trim());
+                      current = '';
+                      continue;
+                    }
+                    current += char;
+                  }
+                  if (current.trim()) setAssignments.push(current.trim());
+
+                  let paramIdx = 0;
+
+                  setAssignments.forEach(assignment => {
+                    // Handle COALESCE(?, column): use param if not null, else keep current value
+                    const coalesceMatch = assignment.match(/(\w+)\s*=\s*COALESCE\(\?,\s*\w+\)/i);
+                    if (coalesceMatch) {
+                      const col = coalesceMatch[1];
+                      if (paramIdx < params.length - 1) {
+                        const newValue = params[paramIdx++];
+                        if (newValue !== null && newValue !== undefined) {
+                          row[col] = newValue;
+                        }
+                        // If null/undefined, keep current value (COALESCE behavior)
+                      }
+                      return;
+                    }
+
+                    const placeholderMatch = assignment.match(/(\w+)\s*=\s*\?/);
+                    if (placeholderMatch) {
+                      // Column = ? (use param)
+                      const col = placeholderMatch[1];
+                      if (paramIdx < params.length - 1) {
+                        row[col] = params[paramIdx++];
+                      }
+                    } else {
+                      // Column = literal value
+                      const literalMatch = assignment.match(/(\w+)\s*=\s*(.+)/);
+                      if (literalMatch) {
+                        const col = literalMatch[1];
+                        let value: any = literalMatch[2].trim();
+                        // Parse literal values
+                        if (value === 'NULL') value = null;
+                        else if (value === 'TRUE') value = true;
+                        else if (value === 'FALSE') value = false;
+                        else if (/^\d+$/.test(value)) value = parseInt(value, 10);
+                        else if (/^\d+\.\d+$/.test(value)) value = parseFloat(value);
+                        else if (value.startsWith("'") && value.endsWith("'")) {
+                          value = value.slice(1, -1); // Remove quotes
+                        }
+                        row[col] = value;
+                      }
+                    }
                   });
+
                   return { changes: 1, lastInsertRowId: 0 };
                 }
               }
