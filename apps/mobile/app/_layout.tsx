@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import '@/i18n'; // Initialize i18n
 import { authService } from '@/services/authService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { OfflineBanner } from '@/components/OfflineBanner';
 
 export default function RootLayout() {
   return (
@@ -18,6 +19,7 @@ export default function RootLayout() {
             loadingComponent={<LoadingSpinner />}
           >
             <StatusBar style="auto" />
+            <OfflineBanner />
             <Stack>
               <Stack.Screen 
                 name="(tabs)" 
