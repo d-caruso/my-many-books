@@ -145,6 +145,40 @@ export class BookRepository {
   }
 
   /**
+   * Advanced search with filters and sorting
+   */
+  async searchWithFilters(options: {
+    query?: string;
+    status?: string;
+    sortBy?: 'title' | 'update_date' | 'creation_date' | 'rating';
+    sortOrder?: 'ASC' | 'DESC';
+  }): Promise<Book[]> {
+    const { query, status, sortBy = 'update_date', sortOrder = 'DESC' } = options;
+
+    let sql = 'SELECT * FROM books WHERE _deleted = 0';
+    const params: any[] = [];
+
+    // Add search condition
+    if (query && query.trim()) {
+      sql += ' AND (title LIKE ? OR authors LIKE ? OR description LIKE ?)';
+      const searchTerm = `%${query.trim()}%`;
+      params.push(searchTerm, searchTerm, searchTerm);
+    }
+
+    // Add status filter
+    if (status) {
+      sql += ' AND status = ?';
+      params.push(status);
+    }
+
+    // Add sorting
+    sql += ` ORDER BY ${sortBy} ${sortOrder}`;
+
+    const books = await databaseService.getAllAsync(sql, params);
+    return books.map(this.mapRowToBook);
+  }
+
+  /**
    * Find pending sync operations
    */
   async findPendingSync(): Promise<Book[]> {
