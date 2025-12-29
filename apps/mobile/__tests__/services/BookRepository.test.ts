@@ -54,8 +54,15 @@ describe('BookRepository', () => {
 
   describe('findAll', () => {
     it('should return all non-deleted books', async () => {
-      await bookRepository.create({ title: 'Book 1' });
-      await bookRepository.create({ title: 'Book 2' });
+      const now = Date.now();
+      await bookRepository.create({
+        title: 'Book 1',
+        updateDate: new Date(now - 1000).toISOString()  // 1 second ago
+      });
+      await bookRepository.create({
+        title: 'Book 2',
+        updateDate: new Date(now).toISOString()  // Now
+      });
 
       const books = await bookRepository.findAll();
 

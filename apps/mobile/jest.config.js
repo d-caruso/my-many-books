@@ -7,7 +7,7 @@ module.exports = {
     '<rootDir>/__tests__/setup/setupTests.ts'
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|react-native-paper|@expo|expo|expo-.*|@react-navigation)/)'
+    'node_modules/(?!(react-native|@react-native|react-native-paper|@expo|expo|expo-.*|@react-navigation|uuid)/)'
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   transform: {

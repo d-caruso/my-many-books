@@ -1,12 +1,11 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
-import { useBooks } from '../../src/hooks/useBooks';
-import { bookAPI } from '../../src/services/api';
-import { bookRepository } from '../../src/services/database/BookRepository';
-import { databaseService } from '../../src/services/database/DatabaseService';
-import { migrationSystem } from '../../src/services/database/migrations';
+import { useBooks } from '@/hooks/useBooks';
+import { bookAPI } from '@/services/api';
+import { bookRepository } from '@/services/database/BookRepository';
+import { databaseService } from '@/services/database/DatabaseService';
+import { migrationSystem } from '@/services/database/migrations';
 
-// Mock the API
-jest.mock('../../src/services/api');
+// Use the globally mocked API from setupTests.ts
 const mockBookAPI = bookAPI as jest.Mocked<typeof bookAPI>;
 
 // Mock UUID

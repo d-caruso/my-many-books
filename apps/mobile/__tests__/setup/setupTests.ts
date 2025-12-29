@@ -165,6 +165,28 @@ jest.mock('expo-localization', () => ({
   getLocales: jest.fn(() => [{ languageCode: 'en', regionCode: 'US' }]),
 }));
 
+// Mock @react-native-community/netinfo
+jest.mock('@react-native-community/netinfo', () => ({
+  fetch: jest.fn(() =>
+    Promise.resolve({
+      type: 'wifi',
+      isConnected: true,
+      isInternetReachable: true,
+      details: {
+        isConnectionExpensive: false,
+        ssid: 'test-wifi',
+        strength: 100,
+      },
+    })
+  ),
+  addEventListener: jest.fn(() => jest.fn()),
+  useNetInfo: jest.fn(() => ({
+    type: 'wifi',
+    isConnected: true,
+    isInternetReachable: true,
+  })),
+}));
+
 // Mock Expo modules
 jest.mock('expo-camera', () => ({
   Camera: {

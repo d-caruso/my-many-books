@@ -1,4 +1,6 @@
 // Test for write operations disabled when offline
+import { render } from '@testing-library/react-native';
+import React from 'react';
 
 describe('Offline Write Operations', () => {
   let mockUseNetworkState: jest.Mock;
@@ -61,7 +63,7 @@ describe('Offline Write Operations', () => {
         authors: [{ name: 'Test Author' }],
       };
 
-      BookCard({ book: mockBook, showActions: true });
+      render(<BookCard book={mockBook} showActions={true} />);
       expect(mockUseNetworkState).toHaveBeenCalled();
     });
   });
