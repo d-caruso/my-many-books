@@ -35,6 +35,12 @@ export class OperationQueue {
     payload: any,
     maxRetries: number = 3
   ): Promise<string> {
+    // Enforce queue size limit - discard oldest if exceeded
+    if (this.queue.length >= MAX_QUEUE_SIZE) {
+      this.queue.shift(); // Remove oldest
+      console.warn(`Queue size limit (${MAX_QUEUE_SIZE}) exceeded. Discarding oldest operation.`);
+    }
+
     const operation: QueuedOperation = {
       id: uuidv4(),
       type,
@@ -49,6 +55,13 @@ export class OperationQueue {
     this.queue.push(operation);
     await this.persist();
     return operation.id;
+  }
+
+  /**
+   * Check if queue is approaching limit
+   */
+  isNearLimit(): boolean {
+    return this.queue.length >= MAX_QUEUE_SIZE * 0.8; // 80% threshold
   }
 
   /**
