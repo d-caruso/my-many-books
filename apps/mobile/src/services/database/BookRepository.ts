@@ -1,0 +1,185 @@
+import { databaseService } from './DatabaseService';
+import type { Book } from '@/types';
+
+export class BookRepository {
+  /**
+   * Find all books (excluding deleted)
+   */
+  async findAll(): Promise<Book[]> {
+    const books = await databaseService.getAllAsync(
+      'SELECT * FROM books WHERE _deleted = 0 ORDER BY update_date DESC'
+    );
+    return books.map(this.mapRowToBook);
+  }
+
+  /**
+   * Find book by ID
+   */
+  async findById(id: string): Promise<Book | null> {
+    const book = await databaseService.getFirstAsync(
+      'SELECT * FROM books WHERE id = ? AND _deleted = 0',
+      [id]
+    );
+    return book ? this.mapRowToBook(book) : null;
+  }
+
+  /**
+   * Create new book
+   */
+  async create(book: Partial<Book>): Promise<Book> {
+    const id = book.id || book._tempId || `temp-${Date.now()}`;
+    const now = new Date().toISOString();
+
+    await databaseService.executeQuery(
+      `INSERT INTO books (
+        id, title, authors, isbn, thumbnail, description, published_date,
+        page_count, rating, status, notes, user_id, creation_date, update_date,
+        _sync_status, _temp_id, _deleted, _server_updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        book.title || '',
+        book.authors || null,
+        book.isbn || null,
+        book.thumbnail || null,
+        book.description || null,
+        book.publishedDate || null,
+        book.pageCount || null,
+        book.rating || null,
+        book.status || 'want-to-read',
+        book.notes || null,
+        book.userId || null,
+        book.creationDate || now,
+        book.updateDate || now,
+        book._syncStatus || 'synced',
+        book._tempId || null,
+        book._deleted ? 1 : 0,
+        book._serverUpdatedAt || null,
+      ]
+    );
+
+    const created = await this.findById(id);
+    if (!created) {
+      throw new Error('Failed to create book');
+    }
+    return created;
+  }
+
+  /**
+   * Update book
+   */
+  async update(id: string, updates: Partial<Book>): Promise<Book> {
+    const now = new Date().toISOString();
+
+    await databaseService.executeQuery(
+      `UPDATE books SET
+        title = COALESCE(?, title),
+        authors = COALESCE(?, authors),
+        status = COALESCE(?, status),
+        rating = COALESCE(?, rating),
+        notes = COALESCE(?, notes),
+        update_date = ?,
+        _sync_status = COALESCE(?, _sync_status),
+        _server_updated_at = COALESCE(?, _server_updated_at)
+      WHERE id = ?`,
+      [
+        updates.title,
+        updates.authors,
+        updates.status,
+        updates.rating,
+        updates.notes,
+        now,
+        updates._syncStatus,
+        updates._serverUpdatedAt,
+        id,
+      ]
+    );
+
+    const updated = await this.findById(id);
+    if (!updated) {
+      throw new Error('Failed to update book');
+    }
+    return updated;
+  }
+
+  /**
+   * Delete book (soft delete)
+   */
+  async delete(id: string): Promise<void> {
+    await databaseService.executeQuery(
+      'UPDATE books SET _deleted = 1, _sync_status = ? WHERE id = ?',
+      ['pending', id]
+    );
+  }
+
+  /**
+   * Permanently delete book
+   */
+  async hardDelete(id: string): Promise<void> {
+    await databaseService.executeQuery('DELETE FROM books WHERE id = ?', [id]);
+  }
+
+  /**
+   * Search books
+   */
+  async search(query: string): Promise<Book[]> {
+    const books = await databaseService.getAllAsync(
+      `SELECT * FROM books
+       WHERE _deleted = 0
+       AND (title LIKE ? OR authors LIKE ?)
+       ORDER BY update_date DESC`,
+      [`%${query}%`, `%${query}%`]
+    );
+    return books.map(this.mapRowToBook);
+  }
+
+  /**
+   * Find books by status
+   */
+  async findByStatus(status: string): Promise<Book[]> {
+    const books = await databaseService.getAllAsync(
+      'SELECT * FROM books WHERE _deleted = 0 AND status = ? ORDER BY update_date DESC',
+      [status]
+    );
+    return books.map(this.mapRowToBook);
+  }
+
+  /**
+   * Find pending sync operations
+   */
+  async findPendingSync(): Promise<Book[]> {
+    const books = await databaseService.getAllAsync(
+      'SELECT * FROM books WHERE _sync_status IN (?, ?) ORDER BY update_date DESC',
+      ['pending', 'failed']
+    );
+    return books.map(this.mapRowToBook);
+  }
+
+  /**
+   * Map database row to Book object
+   */
+  private mapRowToBook(row: any): Book {
+    return {
+      id: row.id,
+      title: row.title,
+      authors: row.authors,
+      isbn: row.isbn,
+      thumbnail: row.thumbnail,
+      description: row.description,
+      publishedDate: row.published_date,
+      pageCount: row.page_count,
+      rating: row.rating,
+      status: row.status,
+      notes: row.notes,
+      userId: row.user_id,
+      creationDate: row.creation_date,
+      updateDate: row.update_date,
+      _syncStatus: row._sync_status,
+      _tempId: row._temp_id,
+      _deleted: row._deleted === 1,
+      _serverUpdatedAt: row._server_updated_at,
+    } as Book;
+  }
+}
+
+export const bookRepository = new BookRepository();
