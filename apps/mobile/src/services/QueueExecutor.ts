@@ -69,8 +69,13 @@ export function isRetriableError(error: any): boolean {
 
   // HTTP status codes
   if (error.status) {
-    // 4xx validation errors are NOT retriable (except 408 timeout)
-    if (error.status >= 400 && error.status < 500 && error.status !== 408) {
+    // 408 Request Timeout is retriable
+    if (error.status === 408) {
+      return true;
+    }
+
+    // 4xx validation errors are NOT retriable
+    if (error.status >= 400 && error.status < 500) {
       return false;
     }
 
