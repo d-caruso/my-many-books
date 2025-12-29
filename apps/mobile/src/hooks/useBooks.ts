@@ -2,6 +2,9 @@ import { useState, useCallback, useEffect } from 'react';
 import { Book } from '@/types';
 import { bookAPI } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { v4 as uuidv4 } from 'uuid';
+import { operationQueue } from '@/services/OperationQueue';
+import { isRetriableError } from '@/services/QueueExecutor';
 
 interface UseBooksState {
   books: Book[];
@@ -84,39 +87,147 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   }, []);
 
   const createBook = useCallback(async (bookData: Partial<Book>): Promise<Book> => {
+    // Generate temporary ID for optimistic update
+    const tempId = `temp-${uuidv4()}`;
+    const optimisticBook: Book = {
+      ...bookData,
+      id: tempId as any,
+      _tempId: tempId,
+      _syncStatus: 'pending',
+      creationDate: new Date().toISOString(),
+      updateDate: new Date().toISOString(),
+    } as Book;
+
+    // Add to local state immediately (optimistic update)
+    setBooks(prev => [optimisticBook, ...prev]);
+    await cacheBooks([optimisticBook, ...books]);
+
     try {
+      // Try to create on server
       const newBook = await bookAPI.createBook(bookData);
-      setBooks(prev => [newBook, ...prev]);
-      await cacheBooks([newBook, ...books]);
+
+      // Replace temp book with real book from server
+      setBooks(prev => prev.map(book =>
+        book._tempId === tempId ? { ...newBook, _syncStatus: 'synced' } : book
+      ));
+      const updatedBooks = books.map(book =>
+        book._tempId === tempId ? { ...newBook, _syncStatus: 'synced' } : book
+      );
+      await cacheBooks(updatedBooks);
+
       return newBook;
     } catch (err: any) {
       console.error('Failed to create book:', err);
-      throw new Error(err.response?.data?.message || 'Failed to create book');
+
+      // If error is retriable, keep optimistic book and queue for sync
+      if (isRetriableError(err)) {
+        // Operation is already queued by API service
+        // Just update sync status to show it's pending
+        setBooks(prev => prev.map(book =>
+          book._tempId === tempId ? { ...book, _syncStatus: 'pending' } : book
+        ));
+        return optimisticBook;
+      } else {
+        // Non-retriable error - remove optimistic book and throw
+        setBooks(prev => prev.filter(book => book._tempId !== tempId));
+        const filteredBooks = books.filter(book => book._tempId !== tempId);
+        await cacheBooks(filteredBooks);
+        throw new Error(err.response?.data?.message || 'Failed to create book');
+      }
     }
   }, [books]);
 
   const updateBook = useCallback(async (id: number, bookData: Partial<Book>): Promise<Book> => {
+    // Store previous state for rollback
+    const previousBook = books.find(book => book.id === id);
+    if (!previousBook) {
+      throw new Error('Book not found');
+    }
+
+    // Apply optimistic update
+    const optimisticBook: Book = {
+      ...previousBook,
+      ...bookData,
+      _syncStatus: 'pending',
+      updateDate: new Date().toISOString(),
+    };
+
+    setBooks(prev => prev.map(book => book.id === id ? optimisticBook : book));
+    const optimisticBooks = books.map(book => book.id === id ? optimisticBook : book);
+    await cacheBooks(optimisticBooks);
+
     try {
+      // Try to update on server
       const updatedBook = await bookAPI.updateBook(id, bookData);
-      setBooks(prev => prev.map(book => book.id === id ? updatedBook : book));
-      const updatedBooks = books.map(book => book.id === id ? updatedBook : book);
-      await cacheBooks(updatedBooks);
+
+      // Update with server response
+      setBooks(prev => prev.map(book =>
+        book.id === id ? { ...updatedBook, _syncStatus: 'synced', _serverUpdatedAt: updatedBook.updateDate } : book
+      ));
+      const syncedBooks = books.map(book =>
+        book.id === id ? { ...updatedBook, _syncStatus: 'synced', _serverUpdatedAt: updatedBook.updateDate } : book
+      );
+      await cacheBooks(syncedBooks);
+
       return updatedBook;
     } catch (err: any) {
       console.error('Failed to update book:', err);
-      throw new Error(err.response?.data?.message || 'Failed to update book');
+
+      // If error is retriable, keep optimistic update
+      if (isRetriableError(err)) {
+        // Operation is already queued by API service
+        return optimisticBook;
+      } else {
+        // Non-retriable error - rollback to previous state
+        setBooks(prev => prev.map(book => book.id === id ? previousBook : book));
+        const rolledBackBooks = books.map(book => book.id === id ? previousBook : book);
+        await cacheBooks(rolledBackBooks);
+        throw new Error(err.response?.data?.message || 'Failed to update book');
+      }
     }
   }, [books]);
 
   const deleteBook = useCallback(async (id: number): Promise<void> => {
+    // Store book for rollback
+    const bookToDelete = books.find(book => book.id === id);
+    if (!bookToDelete) {
+      throw new Error('Book not found');
+    }
+
+    // Optimistic delete - mark as deleted but keep in state
+    const deletedBook: Book = {
+      ...bookToDelete,
+      _deleted: true,
+      _syncStatus: 'pending',
+    };
+
+    // Don't actually remove - just mark as deleted
+    setBooks(prev => prev.map(book => book.id === id ? deletedBook : book));
+    const markedBooks = books.map(book => book.id === id ? deletedBook : book);
+    await cacheBooks(markedBooks);
+
     try {
+      // Try to delete on server
       await bookAPI.deleteBook(id);
+
+      // Now actually remove from state
       setBooks(prev => prev.filter(book => book.id !== id));
       const filteredBooks = books.filter(book => book.id !== id);
       await cacheBooks(filteredBooks);
     } catch (err: any) {
       console.error('Failed to delete book:', err);
-      throw new Error(err.response?.data?.message || 'Failed to delete book');
+
+      // If error is retriable, keep marked as deleted
+      if (isRetriableError(err)) {
+        // Operation is already queued by API service
+        return;
+      } else {
+        // Non-retriable error - rollback (restore book)
+        setBooks(prev => prev.map(book => book.id === id ? bookToDelete : book));
+        const restoredBooks = books.map(book => book.id === id ? bookToDelete : book);
+        await cacheBooks(restoredBooks);
+        throw new Error(err.response?.data?.message || 'Failed to delete book');
+      }
     }
   }, [books]);
 
@@ -137,7 +248,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   }, [books]);
 
   return {
-    books,
+    books: books.filter(book => !book._deleted), // Filter out deleted books
     loading,
     error,
     refreshing,
