@@ -64,9 +64,11 @@ describe('useNetworkState Hook', () => {
 
   it('should register network state listener on mount', () => {
     const React = require('react');
+    const originalUseState = React.useState;
     const originalUseEffect = React.useEffect;
     let effectCallback: (() => void) | undefined;
 
+    React.useState = jest.fn((initialValue: any) => [initialValue, jest.fn()]);
     React.useEffect = jest.fn((fn: () => void) => {
       effectCallback = fn;
     });
@@ -83,14 +85,17 @@ describe('useNetworkState Hook', () => {
       expect(mockAddEventListener).toHaveBeenCalled();
     }
 
+    React.useState = originalUseState;
     React.useEffect = originalUseEffect;
   });
 
   it('should cleanup listener on unmount', () => {
     const React = require('react');
+    const originalUseState = React.useState;
     const originalUseEffect = React.useEffect;
     let cleanupCallback: (() => void) | undefined;
 
+    React.useState = jest.fn((initialValue: any) => [initialValue, jest.fn()]);
     React.useEffect = jest.fn((fn: () => void) => {
       const cleanup = fn();
       if (typeof cleanup === 'function') {
@@ -108,6 +113,7 @@ describe('useNetworkState Hook', () => {
       expect(mockUnsubscribe).toHaveBeenCalled();
     }
 
+    React.useState = originalUseState;
     React.useEffect = originalUseEffect;
   });
 
