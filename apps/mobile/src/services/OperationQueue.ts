@@ -95,6 +95,56 @@ export class OperationQueue {
   }
 
   /**
+   * Process queue with retry logic
+   */
+  async processQueue(apiExecutor: (operation: QueuedOperation) => Promise<void>): Promise<void> {
+    if (this.isProcessing) {
+      return;
+    }
+
+    this.isProcessing = true;
+
+    try {
+      const pending = this.getPendingOperations();
+
+      for (const operation of pending) {
+        try {
+          await this.executeWithBackoff(operation, apiExecutor);
+          await this.dequeue(operation.id);
+        } catch (error) {
+          operation.retryCount++;
+
+          if (operation.retryCount >= operation.maxRetries) {
+            operation.status = 'failed';
+          } else {
+            operation.status = 'retrying';
+          }
+
+          await this.persist();
+        }
+      }
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  /**
+   * Execute operation with exponential backoff
+   */
+  private async executeWithBackoff(
+    operation: QueuedOperation,
+    apiExecutor: (operation: QueuedOperation) => Promise<void>
+  ): Promise<void> {
+    const delay = Math.pow(2, operation.retryCount) * 1000; // 1s, 2s, 4s, 8s
+
+    if (operation.retryCount > 0) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+
+    await apiExecutor(operation);
+  }
+
+  /**
    * Persist queue to AsyncStorage
    */
   private async persist(): Promise<void> {
