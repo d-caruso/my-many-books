@@ -1,6 +1,8 @@
 // Create API services from shared libraries with mobile-specific configurations
 import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api/';
 import { authService } from './authService';
+import NetInfo from '@react-native-community/netinfo';
+import i18n from '../i18n';
 
 // Configure API base URL for mobile
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -16,6 +18,12 @@ class FetchHttpClient implements HttpClient {
   }
 
   private async fetchWithTimeout<T>(url: string, options: RequestInit = {}, isRetry = false): Promise<T> {
+    // Check network connectivity before making request
+    const networkState = await NetInfo.fetch();
+    if (!networkState.isConnected) {
+      throw new Error(i18n.t('offline.errors.noConnection'));
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
@@ -173,23 +181,28 @@ export const adminAPI = {
 
 // Mobile-specific API utilities
 export const apiUtils = {
-  isOnline: () => {
-    // In a real app, you'd check network connectivity
-    return true;
+  isOnline: async () => {
+    const networkState = await NetInfo.fetch();
+    return networkState.isConnected ?? false;
   },
-  
+
   getAuthHeaders: () => {
     // Get auth headers for requests
     return {
       'Content-Type': 'application/json',
     };
   },
-  
-  handleOfflineError: (error: any) => {
+
+  handleOfflineError: async (error: any) => {
     // Handle offline scenarios
-    if (!apiUtils.isOnline()) {
-      throw new Error('You are offline. Please check your internet connection.');
+    const online = await apiUtils.isOnline();
+    if (!online) {
+      throw new Error(i18n.t('offline.errors.noConnection'));
     }
     throw error;
+  },
+
+  isOfflineError: (error: any): boolean => {
+    return error?.message === i18n.t('offline.errors.noConnection');
   },
 };
