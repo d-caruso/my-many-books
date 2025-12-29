@@ -10,6 +10,7 @@ import enAdmin from './locales/en/pages.json';
 import enHooks from './locales/en/hooks.json';
 import enDialogs from './locales/en/dialogs.json';
 import enSearch from './locales/en/search.json';
+import enOffline from './locales/en/offline.json';
 
 import itCommon from './locales/it/common.json';
 import itValidation from './locales/it/validation.json';
@@ -19,6 +20,7 @@ import itAdmin from './locales/it/pages.json';
 import itHooks from './locales/it/hooks.json';
 import itDialogs from './locales/it/dialogs.json';
 import itSearch from './locales/it/search.json';
+import itOffline from './locales/it/offline.json';
 
 /**
  * Initialize i18next with all translations
@@ -40,6 +42,7 @@ export const initializeI18n = async (language?: string) => {
       TranslationNamespace.HOOKS,
       TranslationNamespace.DIALOGS,
       TranslationNamespace.SEARCH,
+      TranslationNamespace.OFFLINE,
     ],
     defaultNS: TranslationNamespace.COMMON,
 
@@ -54,6 +57,7 @@ export const initializeI18n = async (language?: string) => {
         [TranslationNamespace.HOOKS]: enHooks,
         [TranslationNamespace.DIALOGS]: enDialogs,
         [TranslationNamespace.SEARCH]: enSearch,
+        [TranslationNamespace.OFFLINE]: enOffline,
       },
       it: {
         [TranslationNamespace.COMMON]: itCommon,
@@ -64,6 +68,7 @@ export const initializeI18n = async (language?: string) => {
         [TranslationNamespace.HOOKS]: itHooks,
         [TranslationNamespace.DIALOGS]: itDialogs,
         [TranslationNamespace.SEARCH]: itSearch,
+        [TranslationNamespace.OFFLINE]: itOffline,
       },
     },
 

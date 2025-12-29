@@ -1,0 +1,37 @@
+{
+  "offline": {
+    "banner": {
+      "title": "Sei offline",
+      "message": "Controlla la connessione e riprova"
+    },
+    "errors": {
+      "noConnection": "Sei offline. Controlla la connessione e riprova.",
+      "requiresInternet": "Richiede connessione internet"
+    },
+    "tooltips": {
+      "offlineDisabled": "Richiede connessione internet"
+    },
+    "sync": {
+      "badges": {
+        "notSynced": "Non sincronizzato",
+        "syncing": "Sincronizzazione...",
+        "synced": "Sincronizzato",
+        "syncFailed": "Sincronizzazione fallita"
+      },
+      "queue": {
+        "title": "Modifiche in Sospeso",
+        "syncing": "Sincronizzazione...",
+        "empty": "Nessuna modifica in sospeso"
+      },
+      "conflicts": {
+        "title": "Conflitto di Sincronizzazione",
+        "message": "Questo elemento è stato modificato su un altro dispositivo. Quale versione vuoi conservare?",
+        "useLocal": "Usa la mia versione",
+        "useServer": "Usa versione server"
+      }
+    },
+    "search": {
+      "indicator": "Offline - ricerca nei dati locali"
+    }
+  }
+}
