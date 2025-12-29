@@ -59,16 +59,16 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     // If offline, use SQLite for search
     if (isOffline) {
       try {
-        const localBooks = await bookRepository.search(query.trim());
+        // Use advanced search with filters and sorting
+        const localBooks = await bookRepository.searchWithFilters({
+          query: query.trim(),
+          status: filters.status,
+          sortBy: filters.sortBy as any || 'update_date',
+          sortOrder: filters.sortOrder as any || 'DESC',
+        });
 
-        // Apply filters if provided
-        let filteredBooks = localBooks;
-        if (filters.status) {
-          filteredBooks = filteredBooks.filter(book => book.status === filters.status);
-        }
-
-        setBooks(filteredBooks);
-        setTotalCount(filteredBooks.length);
+        setBooks(localBooks);
+        setTotalCount(localBooks.length);
         setHasMore(false); // No pagination for offline search
         setCurrentPage(1);
         setLastQuery(query);
@@ -114,7 +114,12 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
 
       // Fallback to offline search on network error
       try {
-        const localBooks = await bookRepository.search(query.trim());
+        const localBooks = await bookRepository.searchWithFilters({
+          query: query.trim(),
+          status: filters.status,
+          sortBy: filters.sortBy as any || 'update_date',
+          sortOrder: filters.sortOrder as any || 'DESC',
+        });
         setBooks(localBooks);
         setTotalCount(localBooks.length);
         setHasMore(false);
