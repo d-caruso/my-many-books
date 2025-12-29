@@ -3,6 +3,7 @@ import { View, StyleSheet, Image } from 'react-native';
 import { Card, Text, IconButton, Menu, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { Book } from '@/types';
+import { useNetworkState } from '@/hooks/useNetworkState';
 
 // Move utility functions back for direct coverage tracking
 export function getStatusColor(status: Book['status']) {
@@ -66,6 +67,7 @@ export const BookCard: React.FC<BookCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const [menuVisible, setMenuVisible] = React.useState(false);
+  const { isOnline } = useNetworkState();
 
   return (
     <Card
@@ -128,6 +130,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                     setMenuVisible(false);
                   }}
                   title={t('books:mark_as_status', { status: getStatusLabel(status, t) })}
+                  disabled={!isOnline}
                 />
               ))}
               <Menu.Item
@@ -136,7 +139,8 @@ export const BookCard: React.FC<BookCardProps> = ({
                   setMenuVisible(false);
                 }}
                 title={t('delete')}
-                titleStyle={{ color: '#f44336' }}
+                titleStyle={{ color: !isOnline ? '#9e9e9e' : '#f44336' }}
+                disabled={!isOnline}
               />
             </Menu>
           </View>
