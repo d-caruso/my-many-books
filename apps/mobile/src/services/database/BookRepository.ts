@@ -1,6 +1,9 @@
 import { databaseService } from './DatabaseService';
 import type { Book } from '@/types';
 
+// Counter to ensure unique IDs even when Date.now() returns same value
+let idCounter = 0;
+
 export class BookRepository {
   /**
    * Find all books (excluding deleted)
@@ -27,7 +30,7 @@ export class BookRepository {
    * Create new book
    */
   async create(book: Partial<Book>): Promise<Book> {
-    const id = book.id || book._tempId || `temp-${Date.now()}`;
+    const id = book.id || book._tempId || `temp-${Date.now()}-${idCounter++}`;
     const now = new Date().toISOString();
 
     await databaseService.executeQuery(
