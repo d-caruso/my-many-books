@@ -7,6 +7,9 @@ import type {
   Category as SharedCategory
 } from '@my-many-books/shared-types';
 
+// Sync status for offline operations
+export type SyncStatus = 'synced' | 'pending' | 'failed';
+
 // Enhanced Book type for mobile with additional fields
 export interface Book extends Omit<SharedBook, 'status' | 'creationDate' | 'updateDate'> {
   status: 'want-to-read' | 'reading' | 'paused' | 'completed';
@@ -17,6 +20,11 @@ export interface Book extends Omit<SharedBook, 'status' | 'creationDate' | 'upda
   rating?: number;
   creationDate: string;
   updateDate: string;
+  // Offline sync fields
+  _syncStatus?: SyncStatus;
+  _tempId?: string;
+  _deleted?: boolean;
+  _serverUpdatedAt?: string;
 }
 
 // Enhanced User type for mobile
