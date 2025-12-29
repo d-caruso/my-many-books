@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { Book, SearchQuery } from '@/types';
 import { bookAPI } from '@/services/api';
+import { bookRepository } from '@/services/database/BookRepository';
+import { useNetworkState } from './useNetworkState';
 
 interface BookSearchState {
   books: Book[];
@@ -9,6 +11,7 @@ interface BookSearchState {
   hasMore: boolean;
   totalCount: number;
   currentPage: number;
+  isOffline: boolean;
 }
 
 interface BookSearchActions {
@@ -27,13 +30,17 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
   const [currentPage, setCurrentPage] = useState(1);
   const [lastQuery, setLastQuery] = useState<string>('');
   const [lastFilters, setLastFilters] = useState<Partial<SearchQuery>>({});
-  
+
+  // Network state for offline detection
+  const { isOnline } = useNetworkState();
+  const isOffline = !isOnline;
+
   // Use ref to store the latest searchBooks function to avoid circular dependencies
   const searchBooksRef = useRef<((query: string, filters?: Partial<SearchQuery>, page?: number) => Promise<void>) | null>(null);
 
   const searchBooks = useCallback(async (
-    query: string, 
-    filters: Partial<SearchQuery> = {}, 
+    query: string,
+    filters: Partial<SearchQuery> = {},
     page: number = 1
   ): Promise<void> => {
     if (!query.trim() && !filters.category && !filters.author) {
@@ -49,6 +56,36 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     setLoading(true);
     setError(null);
 
+    // If offline, use SQLite for search
+    if (isOffline) {
+      try {
+        const localBooks = await bookRepository.search(query.trim());
+
+        // Apply filters if provided
+        let filteredBooks = localBooks;
+        if (filters.status) {
+          filteredBooks = filteredBooks.filter(book => book.status === filters.status);
+        }
+
+        setBooks(filteredBooks);
+        setTotalCount(filteredBooks.length);
+        setHasMore(false); // No pagination for offline search
+        setCurrentPage(1);
+        setLastQuery(query);
+        setLastFilters(filters);
+      } catch (err: any) {
+        console.error('Offline book search failed:', err);
+        setError('Failed to search local books');
+        setBooks([]);
+        setTotalCount(0);
+        setHasMore(false);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Online search using API
     try {
       const searchParams = {
         q: query.trim(),
@@ -58,24 +95,31 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
       };
 
       const response = await bookAPI.searchBooks(searchParams);
-      
+
       if (page === 1) {
         setBooks(response.books);
       } else {
         setBooks(prev => [...prev, ...response.books]);
       }
-      
+
       setTotalCount(response.total);
       setHasMore(response.hasMore);
       setCurrentPage(page);
       setLastQuery(query);
       setLastFilters(filters);
-      
+
     } catch (err: any) {
       console.error('Book search failed:', err);
       setError(err.response?.data?.message || 'Failed to search books');
-      
-      if (page === 1) {
+
+      // Fallback to offline search on network error
+      try {
+        const localBooks = await bookRepository.search(query.trim());
+        setBooks(localBooks);
+        setTotalCount(localBooks.length);
+        setHasMore(false);
+        setError('Showing offline results');
+      } catch (offlineErr) {
         setBooks([]);
         setTotalCount(0);
         setHasMore(false);
@@ -83,7 +127,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isOffline]);
 
   // Update the ref with the latest searchBooks function
   searchBooksRef.current = searchBooks;
@@ -134,6 +178,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     hasMore,
     totalCount,
     currentPage,
+    isOffline,
     searchBooks,
     searchByISBN,
     clearSearch,
