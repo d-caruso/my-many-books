@@ -12,12 +12,14 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useSyncQueue } from '@/hooks/useSyncQueue';
+import { useNetworkState } from '@/hooks/useNetworkState';
 import { Book } from '@/types';
 
 export default function BooksScreen() {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const { isOnline } = useNetworkState();
   
   const {
     books: userBooks,
@@ -162,6 +164,7 @@ export default function BooksScreen() {
         style={styles.fab}
         onPress={() => router.push('/book/add')}
         accessibilityLabel="Add new book"
+        accessibilityHint={!isOnline ? t('offline:offline.tooltips.willSyncLater') : undefined}
       />
     </SafeAreaView>
   );
@@ -212,5 +215,8 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 0,
+  },
+  fabDisabled: {
+    opacity: 0.5,
   },
 });

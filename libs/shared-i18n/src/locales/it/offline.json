@@ -9,7 +9,8 @@
       "requiresInternet": "Richiede connessione internet"
     },
     "tooltips": {
-      "offlineDisabled": "Richiede connessione internet"
+      "offlineDisabled": "Richiede connessione internet",
+      "willSyncLater": "Sincronizzazione al ritorno online"
     },
     "sync": {
       "badges": {
@@ -20,8 +21,15 @@
       },
       "queue": {
         "title": "Modifiche in Sospeso",
-        "syncing": "Sincronizzazione...",
-        "empty": "Nessuna modifica in sospeso"
+        "syncing": "operazioni",
+        "empty": "Nessuna modifica in sospeso",
+        "status": "Stato",
+        "retries": "Tentativi",
+        "statuses": {
+          "pending": "In attesa",
+          "retrying": "Riprovando",
+          "failed": "Fallito"
+        }
       },
       "conflicts": {
         "title": "Conflitto di Sincronizzazione",

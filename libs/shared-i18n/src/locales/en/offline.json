@@ -9,7 +9,8 @@
       "requiresInternet": "Requires internet connection"
     },
     "tooltips": {
-      "offlineDisabled": "Requires internet connection"
+      "offlineDisabled": "Requires internet connection",
+      "willSyncLater": "Will sync when online"
     },
     "sync": {
       "badges": {
@@ -20,8 +21,15 @@
       },
       "queue": {
         "title": "Pending Changes",
-        "syncing": "Syncing...",
-        "empty": "No pending changes"
+        "syncing": "operations",
+        "empty": "No pending changes",
+        "status": "Status",
+        "retries": "Retries",
+        "statuses": {
+          "pending": "Pending",
+          "retrying": "Retrying",
+          "failed": "Failed"
+        }
       },
       "conflicts": {
         "title": "Sync Conflict",
