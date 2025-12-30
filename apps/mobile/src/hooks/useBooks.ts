@@ -5,6 +5,7 @@ import { bookRepository } from '@/services/database/BookRepository';
 import { databaseService } from '@/services/database/DatabaseService';
 import { migrationSystem } from '@/services/database/migrations';
 import { migrateFromAsyncStorage, cleanupLegacyStorage } from '@/services/database/migrateFromAsyncStorage';
+import { operationQueue } from '@/services/OperationQueue';
 import { v4 as uuidv4 } from 'uuid';
 import { resolveConflict as resolveBookConflict } from '@/utils/conflictDetection';
 
@@ -175,9 +176,17 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     } catch (err: any) {
       console.error('Failed to create book:', err);
 
-      // If error is retriable, keep optimistic book with pending status
+      // If error is retriable, keep optimistic book with pending status and add to queue
       if (isRetriableError(err)) {
         await bookRepository.update(tempId, { _syncStatus: 'pending' });
+        
+        // Add to operation queue for retry when online
+        await operationQueue.enqueue('CREATE', 'book', {
+          ...bookData,
+          id: tempId,
+          _tempId: tempId,
+        });
+        
         setBooks(prev => prev.map(book =>
           book._tempId === tempId ? { ...book, _syncStatus: 'pending' } : book
         ));
@@ -262,8 +271,14 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     } catch (err: any) {
       console.error('Failed to update book:', err);
 
-      // If error is retriable, keep pending status
+      // If error is retriable, keep pending status and add to queue
       if (isRetriableError(err)) {
+        // Add to operation queue for retry when online
+        await operationQueue.enqueue('UPDATE', 'book', {
+          id,
+          ...bookData,
+        });
+        
         const pendingBook = books.find(b => b.id === id);
         if (pendingBook) {
           return { ...pendingBook, ...bookData, _syncStatus: 'pending' };
@@ -296,8 +311,11 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     } catch (err: any) {
       console.error('Failed to delete book:', err);
 
-      // If error is retriable, keep soft-deleted with pending status
+      // If error is retriable, keep soft-deleted with pending status and add to queue
       if (isRetriableError(err)) {
+        // Add to operation queue for retry when online
+        await operationQueue.enqueue('DELETE', 'book', { id });
+        
         // Book already marked as deleted and pending in SQLite
         return;
       } else {
@@ -339,8 +357,11 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     } catch (err: any) {
       console.error('Failed to update book status:', err);
 
-      // If error is retriable, keep pending status
+      // If error is retriable, keep pending status and add to queue
       if (isRetriableError(err)) {
+        // Add to operation queue for retry when online
+        await operationQueue.enqueue('UPDATE', 'book', { id, status });
+        
         // Already marked as pending
         return;
       } else {
