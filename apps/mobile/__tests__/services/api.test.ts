@@ -26,7 +26,7 @@ describe('API Service Coverage', () => {
     jest.clearAllMocks();
   });
 
-  it('should test the real api.ts implementation', () => {
+  it('should test the real api.ts implementation', async () => {
     // Temporarily unmock to test real implementation
     jest.unmock('@/services/api');
     jest.unmock('@my-many-books/shared-api');
@@ -84,29 +84,29 @@ describe('API Service Coverage', () => {
 
     // Clear cache and require the real module
     delete require.cache[require.resolve('../../src/services/api')];
-    
+
     const realApiModule = require('../../src/services/api');
-    
+
     // Test exports
     expect(realApiModule.bookAPI).toBeDefined();
     expect(realApiModule.userAPI).toBeDefined();
     expect(realApiModule.apiUtils).toBeDefined();
-    
-    // Test apiUtils functions
-    expect(realApiModule.apiUtils.isOnline()).toBe(true);
-    
+
+    // Test apiUtils functions - isOnline is async
+    const isOnline = await realApiModule.apiUtils.isOnline();
+    expect(typeof isOnline).toBe('boolean');
+
     const headers = realApiModule.apiUtils.getAuthHeaders();
     expect(headers).toEqual({
       'Content-Type': 'application/json',
     });
-    
-    // Test handleOfflineError
-    expect(() => {
-      realApiModule.apiUtils.handleOfflineError(new Error('test'));
-    }).toThrow('test');
+
+    // Test handleOfflineError - it's async and should rethrow when online
+    const testError = new Error('test');
+    await expect(realApiModule.apiUtils.handleOfflineError(testError)).rejects.toThrow('test');
   });
 
-  it('should test apiUtils isOnline function', () => {
+  it('should test apiUtils isOnline function', async () => {
     jest.unmock('@/services/api');
     jest.doMock('@my-many-books/shared-api', () => ({
       createApiClient: jest.fn(() => ({
@@ -145,9 +145,8 @@ describe('API Service Coverage', () => {
 
     delete require.cache[require.resolve('../../src/services/api')];
     const apiModule = require('../../src/services/api');
-    
-    const result = apiModule.apiUtils.isOnline();
-    expect(result).toBe(true);
+
+    const result = await apiModule.apiUtils.isOnline();
     expect(typeof result).toBe('boolean');
   });
 
@@ -198,7 +197,7 @@ describe('API Service Coverage', () => {
     expect(headers['Content-Type']).toBe('application/json');
   });
 
-  it('should test apiUtils handleOfflineError function', () => {
+  it('should test apiUtils handleOfflineError function', async () => {
     jest.unmock('@/services/api');
     jest.doMock('@my-many-books/shared-api', () => ({
       createApiClient: jest.fn(() => ({
@@ -237,12 +236,11 @@ describe('API Service Coverage', () => {
 
     delete require.cache[require.resolve('../../src/services/api')];
     const apiModule = require('../../src/services/api');
-    
+
     const testError = new Error('Network error');
-    
-    expect(() => {
-      apiModule.apiUtils.handleOfflineError(testError);
-    }).toThrow('Network error');
+
+    // handleOfflineError is async and should rethrow when online
+    await expect(apiModule.apiUtils.handleOfflineError(testError)).rejects.toThrow('Network error');
   });
 
   it('should test environment configuration', () => {

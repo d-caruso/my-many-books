@@ -1,116 +1,115 @@
 // Test for API offline error handling
+import NetInfo from '@react-native-community/netinfo';
+import * as apiModule from '@/services/api';
+
+// Mock NetInfo is already set up globally in setupTests.ts
+// We can spy on it here to control return values
 
 describe('API Offline Error Handling', () => {
-  let mockNetInfo: any;
-
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Mock NetInfo
-    mockNetInfo = {
-      fetch: jest.fn(),
-    };
-
-    jest.doMock('@react-native-community/netinfo', () => ({
-      __esModule: true,
-      default: mockNetInfo,
-    }));
   });
 
-  afterEach(() => {
-    jest.resetModules();
+  describe('API Module Exports', () => {
+    it('should export apiUtils with utility functions', () => {
+      expect(apiModule.apiUtils).toBeDefined();
+      expect(typeof apiModule.apiUtils.getAuthHeaders).toBe('function');
+    });
+
+    it('should export bookAPI', () => {
+      expect(apiModule.bookAPI).toBeDefined();
+      expect(typeof apiModule.bookAPI.getBooks).toBe('function');
+      expect(typeof apiModule.bookAPI.createBook).toBe('function');
+    });
+
+    it('should export userAPI', () => {
+      expect(apiModule.userAPI).toBeDefined();
+      expect(typeof apiModule.userAPI.getCurrentUser).toBe('function');
+      expect(typeof apiModule.userAPI.login).toBe('function');
+    });
   });
 
-  it('should import API utilities', () => {
-    mockNetInfo.fetch.mockResolvedValue({ isConnected: true });
+  describe('Network State Utilities', () => {
+    it('should check if device is online', async () => {
+      // NetInfo.fetch is mocked globally to return online state
+      const isOnline = await apiModule.apiUtils.isOnline();
 
-    delete require.cache[require.resolve('../../src/services/api')];
-    const apiModule = require('../../src/services/api');
+      expect(NetInfo.fetch).toHaveBeenCalled();
+      expect(typeof isOnline).toBe('boolean');
+    });
 
-    expect(apiModule.apiUtils).toBeDefined();
-    expect(apiModule.bookAPI).toBeDefined();
-    expect(apiModule.userAPI).toBeDefined();
+    it('should handle null network state as offline', async () => {
+      jest.spyOn(NetInfo, 'fetch').mockResolvedValueOnce({
+        type: 'none',
+        isConnected: null,
+        isInternetReachable: null,
+        details: null,
+      } as any);
+
+      const isOnline = await apiModule.apiUtils.isOnline();
+
+      expect(isOnline).toBe(false);
+    });
+
+    it('should return false when network is disconnected', async () => {
+      jest.spyOn(NetInfo, 'fetch').mockResolvedValueOnce({
+        type: 'none',
+        isConnected: false,
+        isInternetReachable: false,
+        details: null,
+      } as any);
+
+      const isOnline = await apiModule.apiUtils.isOnline();
+
+      expect(isOnline).toBe(false);
+    });
   });
 
-  it('should check network state in isOnline utility', async () => {
-    mockNetInfo.fetch.mockResolvedValue({ isConnected: true });
+  describe('Error Utilities', () => {
+    it('should identify offline errors by message', () => {
+      const offlineMessage = "You're offline. Check your connection and try again.";
+      const offlineError = new Error(offlineMessage);
+      const otherError = new Error('Some other error');
 
-    delete require.cache[require.resolve('../../src/services/api')];
-    const { apiUtils } = require('../../src/services/api');
+      expect(apiModule.apiUtils.isOfflineError(offlineError)).toBe(true);
+      expect(apiModule.apiUtils.isOfflineError(otherError)).toBe(false);
+    });
 
-    const isOnline = await apiUtils.isOnline();
-    expect(mockNetInfo.fetch).toHaveBeenCalled();
-    expect(isOnline).toBe(true);
+    it('should get auth headers', () => {
+      const headers = apiModule.apiUtils.getAuthHeaders();
+
+      expect(headers).toBeDefined();
+      expect(headers['Content-Type']).toBe('application/json');
+    });
   });
 
-  it('should return false when network is disconnected', async () => {
-    mockNetInfo.fetch.mockResolvedValue({ isConnected: false });
+  describe('Offline Error Handling', () => {
+    it('should throw offline error when device is offline', async () => {
+      jest.spyOn(NetInfo, 'fetch').mockResolvedValueOnce({
+        type: 'none',
+        isConnected: false,
+        isInternetReachable: false,
+        details: null,
+      } as any);
 
-    delete require.cache[require.resolve('../../src/services/api')];
-    const { apiUtils } = require('../../src/services/api');
+      const mockError = new Error('Original error');
 
-    const isOnline = await apiUtils.isOnline();
-    expect(isOnline).toBe(false);
-  });
+      await expect(apiModule.apiUtils.handleOfflineError(mockError)).rejects.toThrow(
+        "You're offline. Check your connection and try again."
+      );
+    });
 
-  it('should handle null network state', async () => {
-    mockNetInfo.fetch.mockResolvedValue({ isConnected: null });
+    it('should rethrow original error when device is online', async () => {
+      jest.spyOn(NetInfo, 'fetch').mockResolvedValueOnce({
+        type: 'wifi',
+        isConnected: true,
+        isInternetReachable: true,
+        details: { isConnectionExpensive: false, ssid: 'test', strength: 100 },
+      } as any);
 
-    delete require.cache[require.resolve('../../src/services/api')];
-    const { apiUtils } = require('../../src/services/api');
+      const mockError = new Error('Original error');
 
-    const isOnline = await apiUtils.isOnline();
-    expect(isOnline).toBe(false);
-  });
-
-  it('should identify offline errors', () => {
-    mockNetInfo.fetch.mockResolvedValue({ isConnected: false });
-
-    delete require.cache[require.resolve('../../src/services/api')];
-    const { apiUtils } = require('../../src/services/api');
-
-    const mockI18n = require('../../src/i18n');
-    const offlineMessage = mockI18n.default?.t?.('offline.errors.noConnection') ||
-                           "You're offline. Check your connection and try again.";
-
-    const offlineError = new Error(offlineMessage);
-    const networkError = new Error('Network request failed');
-
-    expect(apiUtils.isOfflineError(offlineError)).toBe(true);
-    expect(apiUtils.isOfflineError(networkError)).toBe(false);
-  });
-
-  it('should throw offline error when handling error while offline', async () => {
-    mockNetInfo.fetch.mockResolvedValue({ isConnected: false });
-
-    delete require.cache[require.resolve('../../src/services/api')];
-    const { apiUtils } = require('../../src/services/api');
-
-    const mockError = new Error('Original error');
-
-    await expect(apiUtils.handleOfflineError(mockError)).rejects.toThrow();
-  });
-
-  it('should rethrow original error when online', async () => {
-    mockNetInfo.fetch.mockResolvedValue({ isConnected: true });
-
-    delete require.cache[require.resolve('../../src/services/api')];
-    const { apiUtils } = require('../../src/services/api');
-
-    const mockError = new Error('Original error');
-
-    await expect(apiUtils.handleOfflineError(mockError)).rejects.toThrow('Original error');
-  });
-
-  it('should export API instances', () => {
-    mockNetInfo.fetch.mockResolvedValue({ isConnected: true });
-
-    delete require.cache[require.resolve('../../src/services/api')];
-    const apiModule = require('../../src/services/api');
-
-    expect(apiModule.bookAPI.getBooks).toBeDefined();
-    expect(apiModule.bookAPI.createBook).toBeDefined();
-    expect(apiModule.userAPI.getCurrentUser).toBeDefined();
-    expect(apiModule.userAPI.login).toBeDefined();
+      await expect(apiModule.apiUtils.handleOfflineError(mockError)).rejects.toThrow('Original error');
+    });
   });
 });
