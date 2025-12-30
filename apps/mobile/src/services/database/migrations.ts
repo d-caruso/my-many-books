@@ -2,7 +2,7 @@ import { databaseService } from './DatabaseService';
 import { ALL_TABLES } from './schema';
 
 const SCHEMA_VERSION_KEY = 'schema_version';
-const CURRENT_SCHEMA_VERSION = 1;
+const CURRENT_SCHEMA_VERSION = 2;
 
 /**
  * Database migration system
@@ -64,10 +64,10 @@ export class MigrationSystem {
         await this.createInitialSchema();
       }
 
-      // Future migrations would go here
-      // if (currentVersion < 2) {
-      //   await this.migrateToVersion2();
-      // }
+      // Migrate to version 2: Add server_id column
+      if (currentVersion < 2) {
+        await this.migrateToVersion2();
+      }
 
       await this.setVersion(CURRENT_SCHEMA_VERSION);
       console.log('Database migration completed successfully');
@@ -89,6 +89,49 @@ export class MigrationSystem {
     }
 
     console.log('Initial schema created successfully');
+  }
+
+  /**
+   * Migrate to version 2: Add server_id column (Phase 5)
+   */
+  private async migrateToVersion2(): Promise<void> {
+    console.log('Migrating to schema version 2: Adding server_id column...');
+    const db = databaseService.getDatabase();
+
+    try {
+      // Add server_id column to books table
+      await db.execAsync('ALTER TABLE books ADD COLUMN server_id INTEGER;');
+      console.log('Added server_id column to books table');
+
+      // Create index on server_id for fast lookups
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_books_server_id ON books(server_id);');
+      console.log('Created index on server_id');
+
+      // Migrate existing books: if id is numeric string, set server_id
+      // This handles books that were synced from server before Phase 5
+      const books = await db.getAllAsync<{ id: string; server_id: number | null }>(
+        'SELECT id, server_id FROM books WHERE server_id IS NULL'
+      );
+
+      for (const book of books) {
+        // Check if id is a numeric string (e.g., "42" from server)
+        const numericId = parseInt(book.id, 10);
+        if (!isNaN(numericId) && numericId.toString() === book.id) {
+          // This book came from server, set server_id
+          await db.runAsync(
+            'UPDATE books SET server_id = ? WHERE id = ?',
+            [numericId, book.id]
+          );
+        }
+        // Temp IDs (e.g., "temp-1767...") will keep server_id as NULL
+      }
+
+      console.log(`Migrated ${books.length} existing books to include server_id`);
+      console.log('Migration to version 2 completed successfully');
+    } catch (error) {
+      console.error('Migration to version 2 failed:', error);
+      throw error;
+    }
   }
 }
 
