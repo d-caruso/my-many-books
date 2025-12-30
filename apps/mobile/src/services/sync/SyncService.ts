@@ -3,6 +3,8 @@ import { bookAPI } from '../api';
 import { bookRepository } from '../database/BookRepository';
 import { idMappingService } from './IDMappingService';
 import { operationQueue } from '../OperationQueue';
+import { databaseService } from '../database/DatabaseService';
+import { executeOperation } from '../QueueExecutor';
 import { Book } from '../../types';
 
 const LAST_SYNC_KEY = '@last_sync_timestamp';
@@ -227,14 +229,10 @@ export class SyncService {
 
     // Process the queue (already implemented in Phase 2)
     // The queue will handle ID mapping via QueueExecutor (Task 5.3)
-    await operationQueue.processQueue(async (operation) => {
-      const { executeOperation } = await import('../QueueExecutor');
-      await executeOperation(operation);
-    });
+    await operationQueue.processQueue(executeOperation);
 
     // Mark local books as synced after successful push
-    const db = await import('../database/DatabaseService');
-    await db.databaseService.executeQuery(
+    await databaseService.executeQuery(
       "UPDATE books SET _sync_status = 'synced' WHERE _sync_status = 'pending'"
     );
 
