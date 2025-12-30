@@ -16,13 +16,15 @@ describe('Offline Search, Filter, and Sort', () => {
     // Clear database before each test
     await databaseService.executeQuery('DELETE FROM books');
 
-    // Populate test data
+    // Populate test data with explicit timestamps to ensure proper ordering
+    const now = Date.now();
     await bookRepository.create({
       title: 'The Great Gatsby',
       authors: 'F. Scott Fitzgerald',
       status: 'completed',
       rating: 5,
       _syncStatus: 'synced',
+      updateDate: new Date(now - 3000).toISOString(), // 3 seconds ago
     });
     await bookRepository.create({
       title: 'To Kill a Mockingbird',
@@ -30,6 +32,7 @@ describe('Offline Search, Filter, and Sort', () => {
       status: 'reading',
       rating: 4,
       _syncStatus: 'synced',
+      updateDate: new Date(now - 2000).toISOString(), // 2 seconds ago
     });
     await bookRepository.create({
       title: '1984',
@@ -37,6 +40,7 @@ describe('Offline Search, Filter, and Sort', () => {
       status: 'want-to-read',
       rating: null,
       _syncStatus: 'synced',
+      updateDate: new Date(now - 1000).toISOString(), // 1 second ago
     });
     await bookRepository.create({
       title: 'Pride and Prejudice',
@@ -44,6 +48,7 @@ describe('Offline Search, Filter, and Sort', () => {
       status: 'completed',
       rating: 5,
       _syncStatus: 'synced',
+      updateDate: new Date(now).toISOString(), // Most recent
     });
   });
 

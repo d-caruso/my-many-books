@@ -95,6 +95,31 @@ jest.mock('expo-sqlite', () => {
   };
 });
 
+// Mock src/i18n module
+jest.mock('../../src/i18n', () => ({
+  __esModule: true,
+  default: {
+    t: (key: string, params?: any) => {
+      const translations: Record<string, string> = {
+        'offline.errors.noConnection': "You're offline. Check your connection and try again.",
+        'common.loading': 'Loading...',
+        'books.my_books': 'My Books',
+      };
+      let result = translations[key] || key;
+      if (params && typeof params === 'object') {
+        Object.keys(params).forEach(param => {
+          result = result.replace(`{{${param}}}`, String(params[param]));
+        });
+      }
+      return result;
+    },
+    language: 'en',
+    changeLanguage: jest.fn(() => Promise.resolve()),
+  },
+  changeLanguage: jest.fn(() => Promise.resolve()),
+  saveLanguagePreference: jest.fn(() => Promise.resolve()),
+}));
+
 // Mock i18next for internationalization with actual translations
 jest.mock('react-i18next', () => ({
   useTranslation: (namespace?: string) => ({
@@ -268,7 +293,19 @@ jest.mock('react-native', () => {
     return React.createElement('RCTActivityIndicatorView', { ...props, ref });
   });
   ActivityIndicator.displayName = 'ActivityIndicator';
-  
+
+  const Button = React.forwardRef((props: any, ref: any) => {
+    const { onPress, title, disabled, ...otherProps } = props;
+    return React.createElement('RCTButton', {
+      ...otherProps,
+      ref,
+      onPress: disabled ? undefined : onPress,
+      title,
+      disabled
+    });
+  });
+  Button.displayName = 'Button';
+
   return {
     View,
     Text,
@@ -277,6 +314,7 @@ jest.mock('react-native', () => {
     Image,
     ScrollView,
     ActivityIndicator,
+    Button,
     StyleSheet: {
       create: (styles: any) => styles,
     },
@@ -312,9 +350,37 @@ const mockUserAPI = {
   setBaseURL: jest.fn(),
 };
 
+// Create apiUtils with real implementations for testing
+const mockApiUtils = {
+  isOnline: async () => {
+    const NetInfo = require('@react-native-community/netinfo');
+    const networkState = await NetInfo.fetch();
+    return networkState.isConnected ?? false;
+  },
+
+  getAuthHeaders: () => {
+    return {
+      'Content-Type': 'application/json',
+    };
+  },
+
+  handleOfflineError: async (error: any) => {
+    const online = await mockApiUtils.isOnline();
+    if (!online) {
+      throw new Error("You're offline. Check your connection and try again.");
+    }
+    throw error;
+  },
+
+  isOfflineError: (error: any): boolean => {
+    return error?.message === "You're offline. Check your connection and try again.";
+  },
+};
+
 jest.mock('@/services/api', () => ({
   bookAPI: mockBookAPI,
   userAPI: mockUserAPI,
+  apiUtils: mockApiUtils,
 }));
 
 jest.mock('@my-many-books/shared-api', () => ({
