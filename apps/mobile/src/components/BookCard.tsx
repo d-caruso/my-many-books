@@ -4,6 +4,7 @@ import { Card, Text, IconButton, Menu, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { Book } from '@/types';
 import { useNetworkState } from '@/hooks/useNetworkState';
+import { SyncStatusBadge } from './SyncStatusBadge';
 
 // Move utility functions back for direct coverage tracking
 export function getStatusColor(status: Book['status']) {
@@ -97,14 +98,21 @@ export const BookCard: React.FC<BookCardProps> = ({
               </Text>
             )}
             
-            <Chip
-              style={[styles.statusChip, { backgroundColor: getStatusColor(book.status) }]}
-              textStyle={styles.statusChipText}
-              compact
-              testID="book-status"
-            >
-              {getStatusLabel(book.status, t)}
-            </Chip>
+            <View style={styles.chipRow}>
+              <Chip
+                style={[styles.statusChip, { backgroundColor: getStatusColor(book.status) }]}
+                textStyle={styles.statusChipText}
+                compact
+                testID="book-status"
+              >
+                {getStatusLabel(book.status, t)}
+              </Chip>
+              <SyncStatusBadge 
+                syncStatus={book._syncStatus}
+                compact
+                testID="book-sync-status"
+              />
+            </View>
           </View>
         </View>
 
@@ -130,7 +138,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                     setMenuVisible(false);
                   }}
                   title={t('books:mark_as_status', { status: getStatusLabel(status, t) })}
-                  disabled={!isOnline}
+                  disabled={false}
                 />
               ))}
               <Menu.Item
@@ -139,8 +147,8 @@ export const BookCard: React.FC<BookCardProps> = ({
                   setMenuVisible(false);
                 }}
                 title={t('delete')}
-                titleStyle={{ color: !isOnline ? '#9e9e9e' : '#f44336' }}
-                disabled={!isOnline}
+                titleStyle={{ color: '#f44336' }}
+                disabled={false}
               />
             </Menu>
           </View>
@@ -185,6 +193,10 @@ const styles = StyleSheet.create({
     opacity: 0.6,
     fontSize: 12,
     marginBottom: 8,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   statusChip: {
     alignSelf: 'flex-start',

@@ -149,8 +149,12 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     setBooks(prev => [optimisticBook, ...prev]);
 
     try {
-      // Try to create on server
-      const newBook = await bookAPI.createBook(bookData);
+      // Try to create on server - include temp ID for queue processing
+      const newBook = await bookAPI.createBook({
+        ...bookData,
+        id: tempId, // Include temp ID so queue can map it later
+        _tempId: tempId,
+      });
 
       // Replace temp book with real book from server in SQLite
       await bookRepository.hardDelete(tempId);
@@ -186,11 +190,25 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   }, []);
 
   const updateBook = useCallback(async (id: number, bookData: Partial<Book>): Promise<Book> => {
+    // Store previous state for rollback
+    const previousBook = books.find(book => book.id === id);
+    if (!previousBook) {
+      throw new Error('Book not found');
+    }
+
     // Apply changes to SQLite and local state immediately (optimistic update)
     const stringId = String(id);
     await bookRepository.update(stringId, {
       ...bookData,
       _syncStatus: 'pending',
+      updateDate: new Date().toISOString(),
+      _rollbackData: { // Capture rollback metadata
+        previousValues: {
+          title: previousBook.title,
+          status: previousBook.status,
+          updateDate: previousBook.updateDate,
+        },
+      },
     });
 
     setBooks(prev => prev.map(book =>
@@ -201,16 +219,41 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // Try to update on server
       const updatedBook = await bookAPI.updateBook(id, bookData);
 
+      // Update with server response and check for conflicts
+      const optimisticBook = books.find(b => b.id === id);
+      const serverUpdatedAt = new Date(updatedBook.updateDate);
+      const localUpdatedAt = optimisticBook ? new Date(optimisticBook.updateDate) : new Date();
+      
+      // Simple conflict detection: if server version is newer than our optimistic update
+      const hasConflict = serverUpdatedAt > localUpdatedAt && 
+                         previousBook._serverUpdatedAt && 
+                         new Date(previousBook._serverUpdatedAt) < serverUpdatedAt;
+
+      if (hasConflict) {
+        console.warn('Conflict detected for book update:', {
+          bookId: id,
+          serverVersion: updatedBook.updateDate,
+          localVersion: optimisticBook?.updateDate,
+          lastKnownServer: previousBook._serverUpdatedAt
+        });
+      }
+
       // Update SQLite with server response
       await bookRepository.update(stringId, {
         ...updatedBook,
         _syncStatus: 'synced',
         _serverUpdatedAt: updatedBook.updateDate,
+        _hasConflict: hasConflict
       });
 
       // Update local state
       setBooks(prev => prev.map(book =>
-        book.id === id ? { ...updatedBook, _syncStatus: 'synced' } : book
+        book.id === id ? { 
+          ...updatedBook, 
+          _syncStatus: 'synced', 
+          _serverUpdatedAt: updatedBook.updateDate,
+          _hasConflict: hasConflict
+        } : book
       ));
 
       return updatedBook;
