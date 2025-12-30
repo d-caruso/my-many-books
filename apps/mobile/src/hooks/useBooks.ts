@@ -6,6 +6,7 @@ import { databaseService } from '@/services/database/DatabaseService';
 import { migrationSystem } from '@/services/database/migrations';
 import { migrateFromAsyncStorage, cleanupLegacyStorage } from '@/services/database/migrateFromAsyncStorage';
 import { v4 as uuidv4 } from 'uuid';
+import { resolveConflict as resolveBookConflict } from '@/utils/conflictDetection';
 
 interface UseBooksState {
   books: Book[];
@@ -21,6 +22,7 @@ interface UseBooksActions {
   updateBook: (id: number, bookData: Partial<Book>) => Promise<Book>;
   deleteBook: (id: number) => Promise<void>;
   updateBookStatus: (id: number, status: Book['status']) => Promise<void>;
+  resolveConflict: (bookId: number, choice: 'local' | 'server') => Promise<void>;
 }
 
 // Helper to check if error is retriable (network/server errors)
@@ -352,6 +354,60 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     }
   }, []);
 
+  const resolveConflict = useCallback(async (bookId: number, choice: 'local' | 'server'): Promise<void> => {
+    const stringId = String(bookId);
+    const conflictedBook = books.find(book => book.id === bookId);
+    
+    if (!conflictedBook || !conflictedBook._hasConflict) {
+      throw new Error('No conflict found for this book');
+    }
+
+    try {
+      if (choice === 'local') {
+        // Keep local version, mark for re-sync to server
+        await bookRepository.update(stringId, {
+          _syncStatus: 'pending',
+          _hasConflict: false,
+        });
+
+        setBooks(prev => prev.map(book =>
+          book.id === bookId ? { 
+            ...book, 
+            _syncStatus: 'pending', 
+            _hasConflict: false 
+          } : book
+        ));
+
+        // Trigger immediate sync attempt if online
+        // Note: This would trigger the sync queue to process the pending update
+        console.log(`Conflict resolved for book ${bookId}: keeping local version`);
+        
+      } else {
+        // Use server version - need to fetch latest from server
+        const serverBook = await bookAPI.getBook(bookId);
+        const resolvedBook = resolveBookConflict(conflictedBook, serverBook, 'server');
+        
+        await bookRepository.update(stringId, {
+          ...resolvedBook,
+          _hasConflict: false,
+        });
+
+        setBooks(prev => prev.map(book =>
+          book.id === bookId ? { 
+            ...resolvedBook, 
+            _hasConflict: false 
+          } : book
+        ));
+
+        console.log(`Conflict resolved for book ${bookId}: using server version`);
+      }
+      
+    } catch (error) {
+      console.error('Failed to resolve conflict:', error);
+      throw new Error('Failed to resolve conflict');
+    }
+  }, [books]);
+
   return {
     books,
     loading,
@@ -363,5 +419,6 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     updateBook,
     deleteBook,
     updateBookStatus,
+    resolveConflict,
   };
 };

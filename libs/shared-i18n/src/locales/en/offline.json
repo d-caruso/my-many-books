@@ -44,9 +44,16 @@
       },
       "conflicts": {
         "title": "Sync Conflict",
+        "subtitle": "This book \"{title}\" was changed on another device while you were editing offline.",
         "message": "This item was changed on another device. Which version do you want to keep?",
-        "useLocal": "Use my version",
-        "useServer": "Use server version"
+        "localVersion": "Your Version",
+        "serverVersion": "Server Version",
+        "local": "Local",
+        "server": "Server", 
+        "conflict": "Conflict",
+        "keepLocal": "Keep My Changes",
+        "useServer": "Use Server Version",
+        "useLocal": "Use my version"
       }
     },
     "search": {

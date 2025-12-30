@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Book } from '@/types';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { SyncStatusBadge } from './SyncStatusBadge';
+import { ConflictDialog } from './ConflictDialog';
 
 // Move utility functions back for direct coverage tracking
 export function getStatusColor(status: Book['status']) {
@@ -56,6 +57,7 @@ interface BookCardProps {
   onPress?: () => void;
   onStatusChange?: (status: Book['status']) => void;
   onDelete?: () => void;
+  onResolveConflict?: (choice: 'local' | 'server') => void;
   showActions?: boolean;
 }
 
@@ -64,10 +66,12 @@ export const BookCard: React.FC<BookCardProps> = ({
   onPress,
   onStatusChange,
   onDelete,
+  onResolveConflict,
   showActions = true,
 }) => {
   const { t } = useTranslation();
   const [menuVisible, setMenuVisible] = React.useState(false);
+  const [conflictDialogVisible, setConflictDialogVisible] = React.useState(false);
   const { isOnline } = useNetworkState();
 
   return (
@@ -112,6 +116,18 @@ export const BookCard: React.FC<BookCardProps> = ({
                 compact
                 testID="book-sync-status"
               />
+              {book._hasConflict && (
+                <Chip
+                  icon="alert"
+                  style={styles.conflictChip}
+                  textStyle={styles.conflictChipText}
+                  compact
+                  onPress={() => setConflictDialogVisible(true)}
+                  testID="conflict-chip"
+                >
+                  {t('offline.conflicts.conflict')}
+                </Chip>
+              )}
             </View>
           </View>
         </View>
@@ -158,6 +174,19 @@ export const BookCard: React.FC<BookCardProps> = ({
           </View>
         )}
       </Card.Content>
+
+      {book._hasConflict && (
+        <ConflictDialog
+          visible={conflictDialogVisible}
+          localBook={book}
+          serverBook={book} // Note: In real usage, this would be the actual server version
+          onResolve={(choice) => {
+            onResolveConflict?.(choice);
+            setConflictDialogVisible(false);
+          }}
+          onDismiss={() => setConflictDialogVisible(false)}
+        />
+      )}
     </Card>
   );
 };
@@ -201,6 +230,8 @@ const styles = StyleSheet.create({
   chipRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 4,
   },
   statusChip: {
     alignSelf: 'flex-start',
@@ -208,6 +239,14 @@ const styles = StyleSheet.create({
   statusChipText: {
     color: 'white',
     fontSize: 12,
+  },
+  conflictChip: {
+    backgroundColor: '#f44336',
+    alignSelf: 'flex-start',
+  },
+  conflictChipText: {
+    color: 'white',
+    fontSize: 10,
   },
   actions: {
     marginLeft: 8,

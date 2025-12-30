@@ -29,6 +29,7 @@ export default function BooksScreen() {
     refreshBooks,
     updateBookStatus,
     deleteBook,
+    resolveConflict,
   } = useBooks();
 
   const {
@@ -82,12 +83,21 @@ export default function BooksScreen() {
     }
   };
 
+  const handleResolveConflict = async (bookId: number, choice: 'local' | 'server') => {
+    try {
+      await resolveConflict(bookId, choice);
+    } catch (error) {
+      console.error('Failed to resolve conflict:', error);
+    }
+  };
+
   const renderBook = ({ item }: { item: Book }) => (
     <BookCard
       book={item}
       onPress={() => handleBookPress(item)}
       onStatusChange={(status) => handleStatusChange(item.id, status)}
       onDelete={() => handleDeleteBook(item.id)}
+      onResolveConflict={(choice) => handleResolveConflict(item.id, choice)}
     />
   );
 

@@ -44,9 +44,16 @@
       },
       "conflicts": {
         "title": "Conflitto di Sincronizzazione",
+        "subtitle": "Il libro \"{title}\" è stato modificato su un altro dispositivo mentre editavi offline.",
         "message": "Questo elemento è stato modificato su un altro dispositivo. Quale versione vuoi conservare?",
-        "useLocal": "Usa la mia versione",
-        "useServer": "Usa versione server"
+        "localVersion": "La Tua Versione",
+        "serverVersion": "Versione Server",
+        "local": "Locale",
+        "server": "Server",
+        "conflict": "Conflitto",
+        "keepLocal": "Mantieni Le Mie Modifiche", 
+        "useServer": "Usa Versione Server",
+        "useLocal": "Usa la mia versione"
       }
     },
     "search": {
