@@ -3,6 +3,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@my-many-books/shared-auth';
 import { Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
+import { SyncQueueBadge } from '@/components/SyncQueueBadge';
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
@@ -17,13 +19,15 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: '#757575',
-        headerShown: false,
-      }}
-    >
+    <View style={{ flex: 1 }}>
+      <SyncQueueBadge />
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: '#2196F3',
+          tabBarInactiveTintColor: '#757575',
+          headerShown: false,
+        }}
+      >
       <Tabs.Screen
         name="index"
         options={{
@@ -65,5 +69,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </View>
   );
 }

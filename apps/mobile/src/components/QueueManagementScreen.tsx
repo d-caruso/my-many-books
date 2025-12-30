@@ -49,7 +49,7 @@ export const QueueManagementScreen: React.FC = () => {
     <Surface style={styles.operationItem} elevation={1}>
       <List.Item
         title={getOperationLabel(item)}
-        description={`Status: ${item.status} | Retries: ${item.retryCount}/${item.maxRetries}`}
+        description={`${t('offline.sync.queue.status')}: ${t(`offline.sync.queue.statuses.${item.status}`)} | ${t('offline.sync.queue.retries')}: ${item.retryCount}/${item.maxRetries}`}
         left={(props) => (
           <List.Icon
             {...props}

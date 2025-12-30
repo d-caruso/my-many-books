@@ -186,7 +186,12 @@ export const bookAPI = {
       () => apiClient.books.createBook(book),
       'CREATE',
       'book',
-      book
+      {
+        ...book,
+        // Ensure temp ID is preserved for queue processing
+        id: book.id || book._tempId,
+        _tempId: book._tempId || book.id,
+      }
     );
   },
 

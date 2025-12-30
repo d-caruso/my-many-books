@@ -167,14 +167,34 @@ export function isRetriableError(error: any): boolean {
     return true;
   }
 
-  // HTTP status codes
+  // FetchHttpClient throws plain Error with "HTTP 5xx" messages - check for server errors
+  if (error.message?.match(/HTTP 5\d\d:/)) {
+    return true;
+  }
+
+  // FetchHttpClient timeout errors
+  if (error.message?.includes('HTTP 408:') || error.message?.includes('Request Timeout')) {
+    return true;
+  }
+
+  // Rate limiting (429 Too Many Requests)
+  if (error.message?.includes('HTTP 429:')) {
+    return true;
+  }
+
+  // HTTP status codes (if error object has status property)
   if (error.status) {
     // 408 Request Timeout is retriable
     if (error.status === 408) {
       return true;
     }
 
-    // 4xx validation errors are NOT retriable
+    // 429 Too Many Requests is retriable
+    if (error.status === 429) {
+      return true;
+    }
+
+    // 4xx validation errors are NOT retriable (except 408 and 429)
     if (error.status >= 400 && error.status < 500) {
       return false;
     }

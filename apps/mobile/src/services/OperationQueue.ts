@@ -35,6 +35,11 @@ export class OperationQueue {
     payload: any,
     maxRetries: number = 3
   ): Promise<string> {
+    // Warn when approaching limit (80% threshold)
+    if (this.isNearLimit()) {
+      console.warn(`Queue approaching limit: ${this.queue.length}/${MAX_QUEUE_SIZE} operations`);
+    }
+
     // Enforce queue size limit - discard oldest if exceeded
     if (this.queue.length >= MAX_QUEUE_SIZE) {
       this.queue.shift(); // Remove oldest
