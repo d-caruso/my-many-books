@@ -12,7 +12,10 @@
     "no_books_empty": "No books in your library yet",
     "loading": "Loading...",
     "load_more": "Load More Books",
-    "error_load_books": "Failed to load your books"
+    "error_load_books": "Failed to load your books",
+    "details_title": "Book Details",
+    "edit_title": "Edit Book",
+    "scan_title": "Scan Barcode"
   },
   "protected_route": {
     "loading": "Loading..."

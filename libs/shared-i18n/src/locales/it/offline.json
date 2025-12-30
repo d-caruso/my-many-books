@@ -29,7 +29,18 @@
           "pending": "In attesa",
           "retrying": "Riprovando",
           "failed": "Fallito"
-        }
+        },
+        "operations": {
+          "CREATE": "Crea",
+          "UPDATE": "Aggiorna",
+          "DELETE": "Elimina"
+        },
+        "resources": {
+          "book": "libro",
+          "user": "utente",
+          "settings": "impostazioni"
+        },
+        "unknown_item": "Sconosciuto"
       },
       "conflicts": {
         "title": "Conflitto di Sincronizzazione",
