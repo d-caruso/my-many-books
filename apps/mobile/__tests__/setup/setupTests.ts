@@ -33,12 +33,23 @@ global.console = {
   error: jest.fn(),
 };
 
-// Mock AsyncStorage properly
+// Mock AsyncStorage with in-memory storage
+const mockAsyncStorageData = new Map();
+
 jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn(() => Promise.resolve(null)),
-  setItem: jest.fn(() => Promise.resolve()),
-  removeItem: jest.fn(() => Promise.resolve()),
-  clear: jest.fn(() => Promise.resolve()),
+  getItem: jest.fn((key) => Promise.resolve(mockAsyncStorageData.get(key) || null)),
+  setItem: jest.fn((key, value) => {
+    mockAsyncStorageData.set(key, value);
+    return Promise.resolve();
+  }),
+  removeItem: jest.fn((key) => {
+    mockAsyncStorageData.delete(key);
+    return Promise.resolve();
+  }),
+  clear: jest.fn(() => {
+    mockAsyncStorageData.clear();
+    return Promise.resolve();
+  }),
 }));
 
 // Use better-sqlite3 for testing (real SQLite engine in Node.js)

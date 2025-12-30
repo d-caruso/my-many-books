@@ -1,10 +1,30 @@
+// In-memory storage for tests
+const storage = new Map();
+
 export default {
-  getItem: jest.fn(() => Promise.resolve(null)),
-  setItem: jest.fn(() => Promise.resolve()),
-  removeItem: jest.fn(() => Promise.resolve()),
-  multiGet: jest.fn(() => Promise.resolve([])),
-  multiSet: jest.fn(() => Promise.resolve()),
-  multiRemove: jest.fn(() => Promise.resolve()),
-  clear: jest.fn(() => Promise.resolve()),
-  getAllKeys: jest.fn(() => Promise.resolve([])),
+  getItem: jest.fn((key) => Promise.resolve(storage.get(key) || null)),
+  setItem: jest.fn((key, value) => {
+    storage.set(key, value);
+    return Promise.resolve();
+  }),
+  removeItem: jest.fn((key) => {
+    storage.delete(key);
+    return Promise.resolve();
+  }),
+  multiGet: jest.fn((keys) => {
+    return Promise.resolve(keys.map(key => [key, storage.get(key) || null]));
+  }),
+  multiSet: jest.fn((keyValuePairs) => {
+    keyValuePairs.forEach(([key, value]) => storage.set(key, value));
+    return Promise.resolve();
+  }),
+  multiRemove: jest.fn((keys) => {
+    keys.forEach(key => storage.delete(key));
+    return Promise.resolve();
+  }),
+  clear: jest.fn(() => {
+    storage.clear();
+    return Promise.resolve();
+  }),
+  getAllKeys: jest.fn(() => Promise.resolve(Array.from(storage.keys()))),
 };
