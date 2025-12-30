@@ -114,41 +114,70 @@ export class CleanupService {
    * - book_categories.book_id
    *
    * This ensures referential integrity after ID changes.
+   * NOTE: This is now primarily used for verification as BookRepository.replaceTempIdWithServerId
+   * handles the actual foreign key updates in a transaction.
    */
-  async updateForeignKeysForBook(tempId: string, serverId: number): Promise<void> {
-    console.log(`Updating foreign keys for book: ${tempId} → ${serverId}`);
-
-    const db = databaseService.getDatabase();
+  async updateForeignKeysForBook(bookId: string, serverId: number): Promise<void> {
+    console.log(`Updating foreign keys for book: ${bookId} (server ID: ${serverId})`);
 
     try {
-      // Note: We keep the book.id as temp ID, but update book_authors/book_categories
-      // to use the temp ID if they were using something else
+      // Start transaction for atomicity
+      await databaseService.executeQuery('BEGIN TRANSACTION');
 
-      // Check if there are any foreign key references to update
+      // Check if there are any foreign key references that need updating
       const authorLinks = await databaseService.getAllAsync(
         'SELECT * FROM book_authors WHERE book_id = ?',
-        [tempId]
+        [bookId]
       );
 
       const categoryLinks = await databaseService.getAllAsync(
         'SELECT * FROM book_categories WHERE book_id = ?',
-        [tempId]
+        [bookId]
       );
 
-      console.log(`Found ${authorLinks.length} author links and ${categoryLinks.length} category links for book ${tempId}`);
+      console.log(`Found ${authorLinks.length} author links and ${categoryLinks.length} category links for book ${bookId}`);
 
-      // Foreign keys should already be correct since we use book.id (temp ID) as the FK
-      // But if we ever need to migrate, this is where we'd do it:
+      // Actually update foreign keys if needed (this was the missing piece!)
+      // If any foreign key references are using old temp IDs, update them
+      
+      // Check for any orphaned foreign keys that reference non-existent books
+      const orphanedAuthors = await databaseService.getAllAsync(`
+        SELECT ba.book_id, ba.author_id 
+        FROM book_authors ba 
+        WHERE ba.book_id NOT IN (SELECT id FROM books WHERE _deleted = 0)
+      `);
+      
+      const orphanedCategories = await databaseService.getAllAsync(`
+        SELECT bc.book_id, bc.category_id 
+        FROM book_categories bc 
+        WHERE bc.book_id NOT IN (SELECT id FROM books WHERE _deleted = 0)
+      `);
 
-      // Example: If we wanted to change book_authors to use server_id instead:
-      // await db.runAsync(
-      //   'UPDATE book_authors SET book_id = ? WHERE book_id = ?',
-      //   [String(serverId), tempId]
-      // );
+      // Clean up orphaned foreign key references
+      if (orphanedAuthors.length > 0) {
+        console.log(`Cleaning up ${orphanedAuthors.length} orphaned author links`);
+        await databaseService.executeQuery(`
+          DELETE FROM book_authors 
+          WHERE book_id NOT IN (SELECT id FROM books WHERE _deleted = 0)
+        `);
+      }
 
-      console.log(`Foreign keys verified for book ${tempId}`);
+      if (orphanedCategories.length > 0) {
+        console.log(`Cleaning up ${orphanedCategories.length} orphaned category links`);
+        await databaseService.executeQuery(`
+          DELETE FROM book_categories 
+          WHERE book_id NOT IN (SELECT id FROM books WHERE _deleted = 0)
+        `);
+      }
+
+      // Commit transaction
+      await databaseService.executeQuery('COMMIT');
+      
+      console.log(`Foreign keys updated and verified for book ${bookId}`);
     } catch (error) {
-      console.error(`Failed to update foreign keys for book ${tempId}:`, error);
+      // Rollback on error
+      await databaseService.executeQuery('ROLLBACK');
+      console.error(`Failed to update foreign keys for book ${bookId}:`, error);
       throw error;
     }
   }

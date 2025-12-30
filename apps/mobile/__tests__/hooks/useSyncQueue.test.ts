@@ -160,14 +160,14 @@ describe('useSyncQueue Hook', () => {
       await callbackFn();
     }
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to process queue:', mockError);
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to perform full sync:', mockError);
 
     React.useEffect = originalUseEffect;
     React.useCallback = originalUseCallback;
     consoleErrorSpy.mockRestore();
   });
 
-  it('should return processQueue and isRetriableError functions', () => {
+  it('should return processQueue, performFullSync and isRetriableError functions', () => {
     const React = require('react');
     const originalUseEffect = React.useEffect;
     const originalUseCallback = React.useCallback;
@@ -182,6 +182,8 @@ describe('useSyncQueue Hook', () => {
 
     expect(result.processQueue).toBeDefined();
     expect(typeof result.processQueue).toBe('function');
+    expect(result.performFullSync).toBeDefined();
+    expect(typeof result.performFullSync).toBe('function');
     expect(result.isRetriableError).toBeDefined();
     expect(typeof result.isRetriableError).toBe('function');
 

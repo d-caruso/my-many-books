@@ -72,13 +72,14 @@ async function executeCreateBook(payload: any): Promise<void> {
     // Register ID mapping
     await idMappingService.registerTempId(tempId, serverId, 'book');
 
-    // Update local SQLite with server_id
-    await bookRepository.update(tempId, { serverId });
+    // Replace temp ID with server ID and mark as synced (Critical Fix)
+    // This also handles foreign key updates in a transaction
+    await bookRepository.replaceTempIdWithServerId(tempId, serverId);
 
-    // Update foreign keys (Task 5.5.2)
-    await cleanupService.updateForeignKeysForBook(tempId, serverId);
+    // Verify foreign key integrity (Task 5.5.2) 
+    await cleanupService.updateForeignKeysForBook(serverId.toString(), serverId);
 
-    console.log(`ID mapping registered: ${tempId} → ${serverId}`);
+    console.log(`Temp ID replaced with server ID: ${tempId} → ${serverId}`);
   }
 }
 
@@ -92,15 +93,15 @@ async function executeCreateBook(payload: any): Promise<void> {
 async function executeUpdateBook(payload: any): Promise<void> {
   const bookId = payload.id;
 
-  // Get book from local DB to check for server_id
-  const localBook = await bookRepository.findById(bookId);
+  // Get book from local DB - use mapping-aware lookup (Critical Fix)
+  const localBook = await bookRepository.findByIdOrMapping(bookId);
 
   if (!localBook) {
     throw new Error(`Book not found in local DB: ${bookId}`);
   }
 
-  // Use server_id if available, otherwise use the temp ID
-  const serverIdToUse = localBook.serverId || bookId;
+  // Use server_id if available, otherwise use the current book ID (which could be server ID after replacement)
+  const serverIdToUse = localBook.serverId || localBook.id;
 
   // Resolve foreign keys in payload
   const resolvedPayload = await idMappingService.resolveForeignKeys(payload);
@@ -118,8 +119,8 @@ async function executeUpdateBook(payload: any): Promise<void> {
 async function executeDeleteBook(payload: any): Promise<void> {
   const bookId = payload.id;
 
-  // Get book from local DB to check for server_id
-  const localBook = await bookRepository.findById(bookId);
+  // Get book from local DB - use mapping-aware lookup (Critical Fix)
+  const localBook = await bookRepository.findByIdOrMapping(bookId);
 
   if (!localBook) {
     // Book already deleted locally, just succeed

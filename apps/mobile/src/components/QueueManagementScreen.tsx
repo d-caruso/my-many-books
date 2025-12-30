@@ -14,10 +14,10 @@ export const QueueManagementScreen: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { operations, refreshQueue } = useQueueStatus();
-  const { processQueue } = useSyncQueue();
+  const { processQueue, performFullSync } = useSyncQueue();
 
   const handleRetry = async (operationId: string) => {
-    await processQueue();
+    await performFullSync();
     await refreshQueue();
   };
 

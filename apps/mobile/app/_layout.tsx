@@ -8,6 +8,7 @@ import '@/i18n'; // Initialize i18n
 import { authService } from '@/services/authService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { OfflineBanner } from '@/components/OfflineBanner';
+import { SyncProvider } from '@/components/SyncProvider';
 
 export default function RootLayout() {
   return (
@@ -18,8 +19,9 @@ export default function RootLayout() {
             authService={authService}
             loadingComponent={<LoadingSpinner />}
           >
-            <StatusBar style="auto" />
-            <OfflineBanner />
+            <SyncProvider>
+              <StatusBar style="auto" />
+              <OfflineBanner />
             <Stack>
               <Stack.Screen 
                 name="(tabs)" 
@@ -67,6 +69,7 @@ export default function RootLayout() {
                 }}
               />
             </Stack>
+            </SyncProvider>
           </AuthProvider>
         </PaperProvider>
       </ThemeProvider>

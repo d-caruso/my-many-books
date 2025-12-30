@@ -130,6 +130,138 @@ export class BookRepository {
   }
 
   /**
+   * Replace temporary ID with server ID (Phase 5 - Critical Fix)
+   * This is needed after successful CREATE operations to replace temp ID with server ID
+   * 
+   * 1. Copy all data from temp record
+   * 2. Insert new record with server ID as primary key
+   * 3. Update foreign key references
+   * 4. Delete temp record
+   */
+  async replaceTempIdWithServerId(tempId: string, serverId: number): Promise<void> {
+    const serverIdStr = serverId.toString();
+    
+    // Start transaction for atomicity
+    await databaseService.executeQuery('BEGIN TRANSACTION');
+    
+    try {
+      // 1. Get the temp record data
+      const tempRecord = await databaseService.getFirstAsync(
+        'SELECT * FROM books WHERE id = ?',
+        [tempId]
+      );
+      
+      if (!tempRecord) {
+        throw new Error(`Temp record not found: ${tempId}`);
+      }
+
+      // 2. Insert new record with server ID, copying all data except id
+      await databaseService.executeQuery(
+        `INSERT INTO books (
+          id, title, authors, isbn, thumbnail, description, published_date,
+          page_count, rating, status, notes, user_id, creation_date, update_date,
+          server_id, _sync_status, _temp_id, _deleted, _server_updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          serverIdStr,           // Use server ID as primary key
+          tempRecord.title,
+          tempRecord.authors,
+          tempRecord.isbn,
+          tempRecord.thumbnail,
+          tempRecord.description,
+          tempRecord.published_date,
+          tempRecord.page_count,
+          tempRecord.rating,
+          tempRecord.status,
+          tempRecord.notes,
+          tempRecord.user_id,
+          tempRecord.creation_date,
+          new Date().toISOString(), // Update the update_date
+          serverId,              // Set server_id 
+          'synced',              // Mark as synced
+          tempId,                // Keep reference to original temp_id
+          0,                     // Not deleted
+          new Date().toISOString() // Server updated at
+        ]
+      );
+
+      // 3. Update foreign key references in book_authors table
+      await databaseService.executeQuery(
+        'UPDATE book_authors SET book_id = ? WHERE book_id = ?',
+        [serverIdStr, tempId]
+      );
+
+      // 4. Update foreign key references in book_categories table  
+      await databaseService.executeQuery(
+        'UPDATE book_categories SET book_id = ? WHERE book_id = ?',
+        [serverIdStr, tempId]
+      );
+
+      // 5. Delete the temp record
+      await databaseService.executeQuery(
+        'DELETE FROM books WHERE id = ?',
+        [tempId]
+      );
+
+      // Commit transaction
+      await databaseService.executeQuery('COMMIT');
+      
+      console.log(`Successfully replaced temp ID ${tempId} with server ID ${serverId}`);
+      
+    } catch (error) {
+      // Rollback on error
+      await databaseService.executeQuery('ROLLBACK');
+      console.error(`Failed to replace temp ID ${tempId} with server ID ${serverId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Find book by ID or temp ID mapping (Phase 5 - Critical Fix)
+   * 
+   * This method handles the case where:
+   * 1. Book was created offline with temp ID
+   * 2. CREATE operation completed, replacing temp ID with server ID
+   * 3. Subsequent UPDATE/DELETE operations still reference the old temp ID
+   * 
+   * Strategy:
+   * 1. Try to find by direct ID lookup
+   * 2. If not found, check if this ID is a temp ID with a mapping
+   * 3. If mapping exists, find by server ID
+   */
+  async findByIdOrMapping(id: string): Promise<Book | null> {
+    // First try direct lookup
+    let book = await this.findById(id);
+    if (book) {
+      return book;
+    }
+
+    // If not found and this looks like a temp ID, check for mapping
+    if (id.startsWith('temp-')) {
+      try {
+        // Check if there's an ID mapping for this temp ID
+        const mapping = await databaseService.getFirstAsync(
+          'SELECT server_id FROM id_mappings WHERE temp_id = ?',
+          [id]
+        );
+
+        if (mapping?.server_id) {
+          // Try to find by server ID (as string)
+          book = await this.findById(mapping.server_id.toString());
+          if (book) {
+            console.log(`Found book via temp ID mapping: ${id} → ${mapping.server_id}`);
+            return book;
+          }
+        }
+      } catch (error) {
+        console.error(`Error looking up temp ID mapping for ${id}:`, error);
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Permanently delete book
    */
   async hardDelete(id: string): Promise<void> {

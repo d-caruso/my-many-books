@@ -100,17 +100,21 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const mappedServerId = await idMappingService.getServerId(tempId);
       expect(mappedServerId).toBe(serverId);
 
-      // Verify: Local book has server_id
-      const localBook = await bookRepository.findById(tempId);
+      // Verify: Local book has been replaced with server ID (Critical Fix)
+      // After temp ID replacement, the book ID is now the server ID
+      const localBook = await bookRepository.findById(serverId.toString());
+      expect(localBook?.id).toBe(serverId.toString());
       expect(localBook?.serverId).toBe(serverId);
+      expect(localBook?._syncStatus).toBe('synced');
 
-      // Step 4: Update book locally
-      await bookRepository.update(tempId, {
+      // Step 4: Update book locally - now using server ID
+      await bookRepository.update(serverId.toString(), {
         title: 'Updated Offline Book',
         _syncStatus: 'pending',
       });
 
-      // Enqueue UPDATE operation
+      // Enqueue UPDATE operation - still use tempId for queue operation lookup
+      // The QueueExecutor will use findByIdOrMapping to resolve it to server ID
       await operationQueue.enqueue('UPDATE', 'book', {
         id: tempId,
         title: 'Updated Offline Book',
@@ -131,8 +135,8 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
         expect.any(Object)
       );
 
-      // Verify: Book is marked as synced
-      const syncedBook = await bookRepository.findById(tempId);
+      // Verify: Book is marked as synced (now using server ID)
+      const syncedBook = await bookRepository.findById(serverId.toString());
       expect(syncedBook?._syncStatus).toBe('synced');
     });
 
@@ -491,9 +495,12 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       // Note: pushed count may vary based on queue processing
       expect(result.pushed).toBeGreaterThanOrEqual(0);
 
-      // Verify: Local book has server_id
-      const localBook = await bookRepository.findById(tempId);
+      // Verify: Local book has been replaced with server ID (Critical Fix)
+      // After temp ID replacement, the book ID is now the server ID
+      const localBook = await bookRepository.findById(serverId.toString());
+      expect(localBook?.id).toBe(serverId.toString());
       expect(localBook?.serverId).toBe(serverId);
+      expect(localBook?._syncStatus).toBe('synced');
 
       // Verify: Server book pulled
       const serverBook = await bookRepository.findByServerId(9008);

@@ -97,9 +97,11 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const mappedServerId = await idMappingService.getServerId(tempId);
       expect(mappedServerId).toBe(serverId);
 
-      // Verify: Local DB was updated with server_id
-      const localBook = await bookRepository.findById(tempId);
+      // Verify: Local DB - temp ID replaced with server ID (Critical Fix)
+      const localBook = await bookRepository.findById(serverId.toString());
+      expect(localBook?.id).toBe(serverId.toString());
       expect(localBook?.serverId).toBe(serverId);
+      expect(localBook?._syncStatus).toBe('synced');
     });
 
     it('should resolve foreign keys before sending to server', async () => {
