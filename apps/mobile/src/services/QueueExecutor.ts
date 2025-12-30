@@ -152,6 +152,11 @@ async function executeSettingsOperation(type: string, payload: any): Promise<voi
  * Check if error is retriable
  */
 export function isRetriableError(error: any): boolean {
+  // Handle null/undefined errors
+  if (!error) {
+    return false;
+  }
+
   // Network errors are retriable
   if (error.message?.includes('Network request failed')) {
     return true;
