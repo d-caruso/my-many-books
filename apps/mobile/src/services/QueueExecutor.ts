@@ -2,6 +2,7 @@ import { QueuedOperation } from '../types/queue';
 import { bookAPI } from './api';
 import { idMappingService } from './sync/IDMappingService';
 import { bookRepository } from './database/BookRepository';
+import { cleanupService } from './sync/CleanupService';
 
 /**
  * Execute queued operation based on resource type and operation type
@@ -73,6 +74,9 @@ async function executeCreateBook(payload: any): Promise<void> {
 
     // Update local SQLite with server_id
     await bookRepository.update(tempId, { serverId });
+
+    // Update foreign keys (Task 5.5.2)
+    await cleanupService.updateForeignKeysForBook(tempId, serverId);
 
     console.log(`ID mapping registered: ${tempId} → ${serverId}`);
   }
