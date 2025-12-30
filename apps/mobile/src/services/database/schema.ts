@@ -60,6 +60,15 @@ export const CREATE_BOOK_CATEGORIES_TABLE = `
   );
 `;
 
+export const CREATE_ID_MAPPINGS_TABLE = `
+  CREATE TABLE IF NOT EXISTS id_mappings (
+    temp_id TEXT PRIMARY KEY,
+    server_id INTEGER NOT NULL,
+    resource_type TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+`;
+
 // Indexes for performance
 export const CREATE_INDEXES = [
   // Basic indexes
@@ -92,5 +101,6 @@ export const ALL_TABLES = [
   CREATE_BOOK_AUTHORS_TABLE,
   CREATE_CATEGORIES_TABLE,
   CREATE_BOOK_CATEGORIES_TABLE,
+  CREATE_ID_MAPPINGS_TABLE,
   ...CREATE_INDEXES,
 ];
