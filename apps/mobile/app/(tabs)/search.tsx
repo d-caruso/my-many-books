@@ -22,6 +22,7 @@ export default function SearchScreen() {
     books,
     loading,
     error,
+    isOffline,
     searchBooks,
     searchByISBN,
     clearSearch,
@@ -91,6 +92,14 @@ export default function SearchScreen() {
         </View>
       )}
 
+      {isOffline && (
+        <View style={styles.offlineContainer}>
+          <Text variant="bodyMedium" style={styles.offlineText}>
+            {t('offline.search.indicator')}
+          </Text>
+        </View>
+      )}
+
       {loading && books.length === 0 && <LoadingSpinner />}
 
       <FlatList
@@ -149,6 +158,17 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#c62828',
     textAlign: 'center',
+  },
+  offlineContainer: {
+    padding: 12,
+    backgroundColor: '#fff3cd',
+    borderLeftWidth: 4,
+    borderLeftColor: '#ffc107',
+  },
+  offlineText: {
+    color: '#856404',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   listContainer: {
     padding: 16,

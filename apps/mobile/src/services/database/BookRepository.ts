@@ -269,6 +269,107 @@ export class BookRepository {
   }
 
   /**
+   * Find book by server ID (for upsert operations)
+   */
+  async findByServerId(serverId: number): Promise<Book | null> {
+    const book = await databaseService.getFirstAsync(
+      'SELECT * FROM books WHERE id = ? AND _deleted = 0',
+      [serverId.toString()]
+    );
+    return book ? this.mapRowToBook(book) : null;
+  }
+
+  /**
+   * Upsert book - insert if not exists, update if exists (Task 4.5)
+   * This prevents PRIMARY KEY conflicts during server sync
+   */
+  async upsert(book: Partial<Book>): Promise<Book> {
+    const bookId = book.id?.toString();
+    if (!bookId) {
+      throw new Error('Book ID is required for upsert operation');
+    }
+
+    // Check if book exists
+    const existingBook = await this.findById(bookId);
+    
+    if (existingBook) {
+      // Book exists - update it
+      const now = new Date().toISOString();
+      await databaseService.executeQuery(
+        `UPDATE books SET
+          title = ?,
+          authors = ?,
+          isbn = ?,
+          thumbnail = ?,
+          description = ?,
+          published_date = ?,
+          page_count = ?,
+          rating = ?,
+          status = ?,
+          notes = ?,
+          user_id = ?,
+          update_date = ?,
+          _sync_status = ?,
+          _server_updated_at = ?
+        WHERE id = ?`,
+        [
+          book.title || existingBook.title,
+          book.authors || existingBook.authors,
+          book.isbn || existingBook.isbn,
+          book.thumbnail || existingBook.thumbnail,
+          book.description || existingBook.description,
+          book.publishedDate || existingBook.publishedDate,
+          book.pageCount || existingBook.pageCount,
+          book.rating || existingBook.rating,
+          book.status || existingBook.status,
+          book.notes || existingBook.notes,
+          book.userId || existingBook.userId,
+          book.updateDate || now,
+          book._syncStatus || existingBook._syncStatus,
+          book._serverUpdatedAt || existingBook._serverUpdatedAt,
+          bookId,
+        ]
+      );
+    } else {
+      // Book doesn't exist - create it
+      const now = new Date().toISOString();
+      await databaseService.executeQuery(
+        `INSERT INTO books (
+          id, title, authors, isbn, thumbnail, description, published_date,
+          page_count, rating, status, notes, user_id, creation_date, update_date,
+          _sync_status, _temp_id, _deleted, _server_updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          bookId,
+          book.title || '',
+          book.authors || null,
+          book.isbn || null,
+          book.thumbnail || null,
+          book.description || null,
+          book.publishedDate || null,
+          book.pageCount || null,
+          book.rating || null,
+          book.status || 'want-to-read',
+          book.notes || null,
+          book.userId || null,
+          book.creationDate || now,
+          book.updateDate || now,
+          book._syncStatus || 'synced',
+          book._tempId || null,
+          book._deleted ? 1 : 0,
+          book._serverUpdatedAt || null,
+        ]
+      );
+    }
+
+    const result = await this.findById(bookId);
+    if (!result) {
+      throw new Error('Failed to upsert book');
+    }
+    return result;
+  }
+
+  /**
    * Search books
    */
   async search(query: string): Promise<Book[]> {

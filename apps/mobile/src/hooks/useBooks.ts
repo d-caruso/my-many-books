@@ -4,7 +4,7 @@ import { bookAPI } from '@/services/api';
 import { bookRepository } from '@/services/database/BookRepository';
 import { databaseService } from '@/services/database/DatabaseService';
 import { migrationSystem } from '@/services/database/migrations';
-import { migrateFromAsyncStorage } from '@/services/database/migrateFromAsyncStorage';
+import { migrateFromAsyncStorage, cleanupLegacyStorage } from '@/services/database/migrateFromAsyncStorage';
 import { v4 as uuidv4 } from 'uuid';
 
 interface UseBooksState {
@@ -47,7 +47,12 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       await migrationSystem.runMigrations();
 
       // Migrate from AsyncStorage if needed (one-time)
-      await migrateFromAsyncStorage();
+      const migrationResult = await migrateFromAsyncStorage();
+      
+      // Clean up legacy storage after successful migration (Task 4.4.2)
+      if (migrationResult.success && migrationResult.count > 0) {
+        await cleanupLegacyStorage();
+      }
 
       // Load books from SQLite
       await loadBooksFromDB();
@@ -76,9 +81,9 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     try {
       const response = await bookAPI.getBooks();
 
-      // Clear and repopulate SQLite with server data
+      // Upsert server data into SQLite (prevents PRIMARY KEY conflicts)
       for (const book of response.books) {
-        await bookRepository.create({
+        await bookRepository.upsert({
           ...book,
           _syncStatus: 'synced',
           _serverUpdatedAt: book.updateDate,
@@ -105,9 +110,9 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     try {
       const response = await bookAPI.getBooks();
 
-      // Update SQLite with server data
+      // Upsert server data into SQLite (prevents PRIMARY KEY conflicts)
       for (const book of response.books) {
-        await bookRepository.create({
+        await bookRepository.upsert({
           ...book,
           _syncStatus: 'synced',
           _serverUpdatedAt: book.updateDate,
