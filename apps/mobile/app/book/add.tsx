@@ -187,16 +187,16 @@ export default function AddBookScreen() {
                   onPress={handleSubmit}
                   style={styles.button}
                   loading={loading}
-                  disabled={loading || !isOnline}
+                  disabled={loading}
                   accessibilityLabel="Add book to library"
-                  accessibilityHint={!isOnline ? t('offline.tooltips.offlineDisabled') : undefined}
+                  accessibilityHint={!isOnline ? t('offline.tooltips.willSyncLater') : undefined}
                 >
                   {t('books:add_book')}
                 </Button>
               </View>
               {!isOnline && (
                 <Text variant="bodySmall" style={styles.offlineHint}>
-                  {t('offline.tooltips.offlineDisabled')}
+                  {t('offline.tooltips.willSyncLater')}
                 </Text>
               )}
             </Card.Content>

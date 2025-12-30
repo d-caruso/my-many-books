@@ -103,8 +103,12 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     await cacheBooks([optimisticBook, ...books]);
 
     try {
-      // Try to create on server
-      const newBook = await bookAPI.createBook(bookData);
+      // Try to create on server - include temp ID for queue processing
+      const newBook = await bookAPI.createBook({
+        ...bookData,
+        id: tempId, // Include temp ID so queue can map it later
+        _tempId: tempId,
+      });
 
       // Replace temp book with real book from server
       setBooks(prev => prev.map(book =>
@@ -150,6 +154,13 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       ...bookData,
       _syncStatus: 'pending',
       updateDate: new Date().toISOString(),
+      _rollbackData: { // Capture rollback metadata
+        previousValues: {
+          title: previousBook.title,
+          status: previousBook.status,
+          updateDate: previousBook.updateDate,
+        },
+      },
     };
 
     setBooks(prev => prev.map(book => book.id === id ? optimisticBook : book));
@@ -160,12 +171,39 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // Try to update on server
       const updatedBook = await bookAPI.updateBook(id, bookData);
 
-      // Update with server response
+      // Update with server response and check for conflicts
+      const serverUpdatedAt = new Date(updatedBook.updateDate);
+      const localUpdatedAt = new Date(optimisticBook.updateDate);
+      
+      // Simple conflict detection: if server version is newer than our optimistic update
+      const hasConflict = serverUpdatedAt > localUpdatedAt && 
+                         previousBook._serverUpdatedAt && 
+                         new Date(previousBook._serverUpdatedAt) < serverUpdatedAt;
+
+      if (hasConflict) {
+        console.warn('Conflict detected for book update:', {
+          bookId: id,
+          serverVersion: updatedBook.updateDate,
+          localVersion: optimisticBook.updateDate,
+          lastKnownServer: previousBook._serverUpdatedAt
+        });
+      }
+
       setBooks(prev => prev.map(book =>
-        book.id === id ? { ...updatedBook, _syncStatus: 'synced', _serverUpdatedAt: updatedBook.updateDate } : book
+        book.id === id ? { 
+          ...updatedBook, 
+          _syncStatus: 'synced', 
+          _serverUpdatedAt: updatedBook.updateDate,
+          _hasConflict: hasConflict
+        } : book
       ));
       const syncedBooks = books.map(book =>
-        book.id === id ? { ...updatedBook, _syncStatus: 'synced', _serverUpdatedAt: updatedBook.updateDate } : book
+        book.id === id ? { 
+          ...updatedBook, 
+          _syncStatus: 'synced', 
+          _serverUpdatedAt: updatedBook.updateDate,
+          _hasConflict: hasConflict
+        } : book
       );
       await cacheBooks(syncedBooks);
 
