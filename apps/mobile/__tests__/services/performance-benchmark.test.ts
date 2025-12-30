@@ -107,6 +107,78 @@ describe('Performance Benchmarks', () => {
     expect(syncTime).toBeLessThan(100);
   });
 
+  it('should handle 1000 books efficiently (Task 4.7.3)', async () => {
+    console.log('\n=== Testing with 1000 books (Task 4.7.3 requirement) ===');
+
+    // Create 1000 test books
+    const createStart = Date.now();
+    const promises = [];
+    for (let i = 0; i < 1000; i++) {
+      promises.push(
+        bookRepository.create({
+          title: `Book ${i}`,
+          authors: `Author ${i % 50}`, // 50 different authors
+          isbn: `ISBN-${1000000000 + i}`,
+          description: `Description for book ${i}`,
+          status: i % 4 === 0 ? 'completed' : i % 4 === 1 ? 'reading' : i % 4 === 2 ? 'want-to-read' : 'paused',
+          rating: i % 10 === 0 ? 5 : i % 10 === 1 ? 4 : i % 10 === 2 ? 3 : null,
+          _syncStatus: 'synced',
+        })
+      );
+      // Process in batches to avoid memory issues
+      if (promises.length >= 100) {
+        await Promise.all(promises);
+        promises.length = 0;
+      }
+    }
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+    const createTime = Date.now() - createStart;
+    console.log(`✅ Created 1000 books in ${createTime}ms`);
+
+    // Load all books
+    const loadStart = Date.now();
+    const allBooks = await bookRepository.findAll();
+    const loadTime = Date.now() - loadStart;
+    console.log(`✅ Loaded 1000 books in ${loadTime}ms`);
+    expect(allBooks).toHaveLength(1000);
+    expect(loadTime).toBeLessThan(2000); // Should load in under 2 seconds
+
+    // Search books
+    const searchStart = Date.now();
+    const searchResults = await bookRepository.searchWithFilters({
+      query: 'Book 5',
+      sortBy: 'title',
+      sortOrder: 'ASC',
+    });
+    const searchTime = Date.now() - searchStart;
+    console.log(`✅ Searched 1000 books in ${searchTime}ms (${searchResults.length} results)`);
+    expect(searchTime).toBeLessThan(300); // Indexed search should be fast
+
+    // Filter by status
+    const filterStart = Date.now();
+    const completedBooks = await bookRepository.findByStatus('completed');
+    const filterTime = Date.now() - filterStart;
+    console.log(`✅ Filtered 1000 books by status in ${filterTime}ms (${completedBooks.length} results)`);
+    expect(completedBooks.length).toBe(250); // 1/4 of books
+    expect(filterTime).toBeLessThan(200); // Index on status should make this very fast
+
+    // Sort by rating
+    const sortStart = Date.now();
+    const topRated = await bookRepository.searchWithFilters({
+      sortBy: 'rating',
+      sortOrder: 'DESC',
+    });
+    const sortTime = Date.now() - sortStart;
+    console.log(`✅ Sorted 1000 books by rating in ${sortTime}ms`);
+    expect(sortTime).toBeLessThan(500); // Index on rating helps
+
+    console.log('\n=== Performance Summary ===');
+    console.log(`Total time for all operations: ${createTime + loadTime + searchTime + filterTime + sortTime}ms`);
+    console.log('✅ All operations completed within performance targets');
+  }, 30000); // Increase timeout to 30 seconds for this large test
+
   it('should demonstrate SQLite > AsyncStorage benefits', () => {
     console.log('\n=== SQLite vs AsyncStorage Benefits ===');
     console.log('✅ SQLite: Indexed queries for fast search/filter');
