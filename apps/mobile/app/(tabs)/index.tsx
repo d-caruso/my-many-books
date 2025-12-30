@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
+import { useSyncQueue } from '@/hooks/useSyncQueue';
 import { Book } from '@/types';
 
 export default function BooksScreen() {
@@ -35,6 +36,8 @@ export default function BooksScreen() {
     searchBooks,
     clearSearch,
   } = useBookSearch();
+
+  const { performFullSync } = useSyncQueue();
 
   const books = isSearching ? searchResults : userBooks;
   const loading = isSearching ? searchLoading : userBooksLoading;
@@ -133,7 +136,10 @@ export default function BooksScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={refreshBooks}
+            onRefresh={async () => {
+              await performFullSync();
+              await refreshBooks();
+            }}
           />
         }
         ListEmptyComponent={
