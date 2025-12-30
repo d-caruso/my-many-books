@@ -46,8 +46,8 @@ export async function migrateFromAsyncStorage(): Promise<{
     // Mark migration as complete
     await AsyncStorage.setItem(MIGRATION_FLAG, 'true');
 
-    // Optionally delete old AsyncStorage data
-    // await AsyncStorage.removeItem(BOOKS_CACHE_KEY);
+    // Delete old AsyncStorage data after successful migration (Task 4.4.2)
+    await AsyncStorage.removeItem(BOOKS_CACHE_KEY);
 
     console.log(`Migration completed: ${migratedCount}/${books.length} books migrated`);
     return { success: true, count: migratedCount };
@@ -70,4 +70,31 @@ export async function needsMigration(): Promise<boolean> {
  */
 export async function resetMigrationFlag(): Promise<void> {
   await AsyncStorage.removeItem(MIGRATION_FLAG);
+}
+
+/**
+ * Cleanup all legacy AsyncStorage keys (Task 4.4.2)
+ * This removes any remaining cached data after migration
+ */
+export async function cleanupLegacyStorage(): Promise<void> {
+  try {
+    console.log('Cleaning up legacy AsyncStorage keys...');
+    
+    // List of known legacy keys that might exist
+    const legacyKeys = [
+      BOOKS_CACHE_KEY,
+      'user_books', // potential legacy key
+      'book_cache', // potential legacy key
+      'cached_search_results', // potential legacy key
+    ];
+
+    // Remove each legacy key
+    for (const key of legacyKeys) {
+      await AsyncStorage.removeItem(key);
+    }
+    
+    console.log('Legacy AsyncStorage cleanup completed');
+  } catch (error) {
+    console.error('Failed to cleanup legacy storage:', error);
+  }
 }
