@@ -20,6 +20,7 @@ export interface Book extends Omit<SharedBook, 'status' | 'creationDate' | 'upda
   rating?: number;
   creationDate: string;
   updateDate: string;
+  serverId?: number; // Server-assigned ID for sync (Phase 5)
   // Offline sync fields
   _syncStatus?: SyncStatus;
   _tempId?: string;

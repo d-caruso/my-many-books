@@ -27,6 +27,17 @@ export class BookRepository {
   }
 
   /**
+   * Find book by server ID (Phase 5)
+   */
+  async findByServerId(serverId: number): Promise<Book | null> {
+    const book = await databaseService.getFirstAsync(
+      'SELECT * FROM books WHERE server_id = ? AND _deleted = 0',
+      [serverId]
+    );
+    return book ? this.mapRowToBook(book) : null;
+  }
+
+  /**
    * Create new book
    */
   async create(book: Partial<Book>): Promise<Book> {
@@ -37,8 +48,8 @@ export class BookRepository {
       `INSERT INTO books (
         id, title, authors, isbn, thumbnail, description, published_date,
         page_count, rating, status, notes, user_id, creation_date, update_date,
-        _sync_status, _temp_id, _deleted, _server_updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        server_id, _sync_status, _temp_id, _deleted, _server_updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         book.title || '',
@@ -54,6 +65,7 @@ export class BookRepository {
         book.userId || null,
         book.creationDate || now,
         book.updateDate || now,
+        book.serverId || null,
         book._syncStatus || 'synced',
         book._tempId || null,
         book._deleted ? 1 : 0,
@@ -82,6 +94,7 @@ export class BookRepository {
         rating = COALESCE(?, rating),
         notes = COALESCE(?, notes),
         update_date = ?,
+        server_id = COALESCE(?, server_id),
         _sync_status = COALESCE(?, _sync_status),
         _server_updated_at = COALESCE(?, _server_updated_at)
       WHERE id = ?`,
@@ -92,6 +105,7 @@ export class BookRepository {
         updates.rating,
         updates.notes,
         now,
+        updates.serverId,
         updates._syncStatus,
         updates._serverUpdatedAt,
         id,
@@ -211,6 +225,7 @@ export class BookRepository {
       userId: row.user_id,
       creationDate: row.creation_date,
       updateDate: row.update_date,
+      serverId: row.server_id,
       _syncStatus: row._sync_status,
       _tempId: row._temp_id,
       _deleted: row._deleted === 1,

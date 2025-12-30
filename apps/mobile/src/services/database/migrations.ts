@@ -99,9 +99,17 @@ export class MigrationSystem {
     const db = databaseService.getDatabase();
 
     try {
-      // Add server_id column to books table
-      await db.execAsync('ALTER TABLE books ADD COLUMN server_id INTEGER;');
-      console.log('Added server_id column to books table');
+      // Check if server_id column already exists
+      const tableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(books)');
+      const hasServerId = tableInfo.some((col) => col.name === 'server_id');
+
+      if (!hasServerId) {
+        // Add server_id column to books table
+        await db.execAsync('ALTER TABLE books ADD COLUMN server_id INTEGER;');
+        console.log('Added server_id column to books table');
+      } else {
+        console.log('server_id column already exists, skipping ALTER TABLE');
+      }
 
       // Create index on server_id for fast lookups
       await db.execAsync('CREATE INDEX IF NOT EXISTS idx_books_server_id ON books(server_id);');
