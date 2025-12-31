@@ -3,6 +3,9 @@ import { databaseService } from './DatabaseService';
 export interface Author {
   id: number;
   name: string;
+  serverId?: number;          // Phase 5: Server ID for sync
+  _syncStatus?: 'synced' | 'pending' | 'failed';
+  _serverUpdatedAt?: string;
 }
 
 export class AuthorRepository {
@@ -134,12 +137,60 @@ export class AuthorRepository {
 
   /**
    * Map database row to Author object
+   * Phase 5: Include sync fields for server synchronization
    */
   private mapRowToAuthor(row: any): Author {
     return {
       id: row.id,
       name: row.name,
+      serverId: row.server_id,
+      _syncStatus: row._sync_status || 'synced',
+      _serverUpdatedAt: row._server_updated_at,
     };
+  }
+
+  /**
+   * Find author by server ID (Phase 5)
+   */
+  async findByServerId(serverId: number): Promise<Author | null> {
+    const author = await databaseService.getFirstAsync(
+      'SELECT * FROM authors WHERE server_id = ?',
+      [serverId]
+    );
+    return author ? this.mapRowToAuthor(author) : null;
+  }
+
+  /**
+   * Update sync fields for author (Phase 5)
+   */
+  async updateSyncFields(id: number, fields: {
+    serverId?: number;
+    _syncStatus?: 'synced' | 'pending' | 'failed';
+    _serverUpdatedAt?: string;
+  }): Promise<void> {
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (fields.serverId !== undefined) {
+      updates.push('server_id = ?');
+      values.push(fields.serverId);
+    }
+    if (fields._syncStatus !== undefined) {
+      updates.push('_sync_status = ?');
+      values.push(fields._syncStatus);
+    }
+    if (fields._serverUpdatedAt !== undefined) {
+      updates.push('_server_updated_at = ?');
+      values.push(fields._serverUpdatedAt);
+    }
+
+    if (updates.length > 0) {
+      values.push(id);
+      await databaseService.executeQuery(
+        `UPDATE authors SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+    }
   }
 }
 

@@ -245,6 +245,22 @@ export const userAPI = {
   refreshToken: apiClient.users.refreshToken.bind(apiClient.users),
 };
 
+export const authorAPI = {
+  getAuthors: apiClient.authors.getAuthors.bind(apiClient.authors),
+  getAuthor: apiClient.authors.getAuthor.bind(apiClient.authors),
+  createAuthor: apiClient.authors.createAuthor.bind(apiClient.authors),
+  updateAuthor: apiClient.authors.updateAuthor.bind(apiClient.authors),
+  deleteAuthor: apiClient.authors.deleteAuthor.bind(apiClient.authors),
+};
+
+export const categoryAPI = {
+  getCategories: apiClient.categories.getCategories.bind(apiClient.categories),
+  getCategory: apiClient.categories.getCategory.bind(apiClient.categories),
+  createCategory: apiClient.categories.createCategory.bind(apiClient.categories),
+  updateCategory: apiClient.categories.updateCategory.bind(apiClient.categories),
+  deleteCategory: apiClient.categories.deleteCategory.bind(apiClient.categories),
+};
+
 export const adminAPI = {
   getAdminStats: apiClient.admin.getAdminStats.bind(apiClient.admin),
   getAdminUsers: apiClient.admin.getAdminUsers.bind(apiClient.admin),

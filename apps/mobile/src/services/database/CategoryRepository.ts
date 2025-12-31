@@ -3,6 +3,9 @@ import { databaseService } from './DatabaseService';
 export interface Category {
   id: number;
   name: string;
+  serverId?: number;          // Phase 5: Server ID for sync
+  _syncStatus?: 'synced' | 'pending' | 'failed';
+  _serverUpdatedAt?: string;
 }
 
 export class CategoryRepository {
@@ -134,12 +137,60 @@ export class CategoryRepository {
 
   /**
    * Map database row to Category object
+   * Phase 5: Include sync fields for server synchronization
    */
   private mapRowToCategory(row: any): Category {
     return {
       id: row.id,
       name: row.name,
+      serverId: row.server_id,
+      _syncStatus: row._sync_status || 'synced',
+      _serverUpdatedAt: row._server_updated_at,
     };
+  }
+
+  /**
+   * Find category by server ID (Phase 5)
+   */
+  async findByServerId(serverId: number): Promise<Category | null> {
+    const category = await databaseService.getFirstAsync(
+      'SELECT * FROM categories WHERE server_id = ?',
+      [serverId]
+    );
+    return category ? this.mapRowToCategory(category) : null;
+  }
+
+  /**
+   * Update sync fields for category (Phase 5)
+   */
+  async updateSyncFields(id: number, fields: {
+    serverId?: number;
+    _syncStatus?: 'synced' | 'pending' | 'failed';
+    _serverUpdatedAt?: string;
+  }): Promise<void> {
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (fields.serverId !== undefined) {
+      updates.push('server_id = ?');
+      values.push(fields.serverId);
+    }
+    if (fields._syncStatus !== undefined) {
+      updates.push('_sync_status = ?');
+      values.push(fields._syncStatus);
+    }
+    if (fields._serverUpdatedAt !== undefined) {
+      updates.push('_server_updated_at = ?');
+      values.push(fields._serverUpdatedAt);
+    }
+
+    if (updates.length > 0) {
+      values.push(id);
+      await databaseService.executeQuery(
+        `UPDATE categories SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+    }
   }
 }
 

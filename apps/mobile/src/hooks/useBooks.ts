@@ -197,9 +197,9 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       await bookRepository.hardDelete(tempId);
       await bookRepository.create({
         ...newBook,
-        serverId: newBook.id, // Store server ID for future sync operations
+        serverId: Number(newBook.id), // FIXED: Ensure serverId is numeric for proper ID mapping
         _syncStatus: 'synced',
-        _serverUpdatedAt: newBook.updateDate,
+        _serverUpdatedAt: newBook.updateDate || newBook.updatedAt || new Date().toISOString(),
       });
 
       // Update local state

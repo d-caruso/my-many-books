@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { bookAPI } from '../api';
+import { bookAPI, authorAPI, categoryAPI } from '../api';
 import { bookRepository } from '../database/BookRepository';
+import { authorRepository } from '../database/AuthorRepository';
+import { categoryRepository } from '../database/CategoryRepository';
 import { idMappingService } from './IDMappingService';
 import { operationQueue } from '../OperationQueue';
 import { databaseService } from '../database/DatabaseService';
@@ -72,8 +74,11 @@ export class SyncService {
 
       // Step 2: Pull changes from server (Task 5.4.1)
       try {
-        pulledCount = await this.pullFromServer();
-        console.log(`Pulled ${pulledCount} books from server`);
+        const booksPulled = await this.pullBooksFromServer();
+        const authorsPulled = await this.pullAuthorsFromServer();
+        const categoriesPulled = await this.pullCategoriesFromServer();
+        pulledCount = booksPulled + authorsPulled + categoriesPulled;
+        console.log(`Pulled ${booksPulled} books, ${authorsPulled} authors, ${categoriesPulled} categories from server`);
       } catch (error) {
         console.error('Pull sync failed:', error);
         errorCount++;
@@ -101,7 +106,7 @@ export class SyncService {
   }
 
   /**
-   * Pull changes from server (Task 5.4.1: Server → Mobile Sync)
+   * Pull books from server (Task 5.4.1: Server → Mobile Sync)
    *
    * Flow:
    * 1. Fetch books from server (with pagination)
@@ -111,7 +116,7 @@ export class SyncService {
    *    - If not exists: INSERT with id=String(serverId), server_id=serverId
    * 3. Register ID mappings for new books
    */
-  async pullFromServer(): Promise<number> {
+  async pullBooksFromServer(): Promise<number> {
     let totalPulled = 0;
     let page = 1;
     let hasMore = true;
@@ -122,17 +127,14 @@ export class SyncService {
     while (hasMore) {
       try {
         // Fetch books from server with pagination
-        const queryParams: any = {
-          limit: SYNC_PAGE_SIZE,
-          offset: (page - 1) * SYNC_PAGE_SIZE,
-        };
-        
-        // Add incremental sync parameter if we have last sync time
-        if (lastSyncTime) {
-          queryParams.updatedSince = lastSyncTime;
-        }
-        
-        const response: any = await bookAPI.getBooks(queryParams);
+        // Note: The shared API getBooks method expects (page, limit, includeAuthors, includeCategories)
+        // We cannot pass updatedSince directly as it's not supported by the current API
+        const response: any = await bookAPI.getBooks(
+          page, 
+          SYNC_PAGE_SIZE, 
+          true,  // includeAuthors
+          true   // includeCategories
+        );
 
         const serverBooks = response.books || response.data || response;
         const booksArray = Array.isArray(serverBooks) ? serverBooks : [];
@@ -207,8 +209,12 @@ export class SyncService {
 
   /**
    * Map server book format to local Book format
+   * FIXED: Always ensure _serverUpdatedAt is populated for conflict tracking
    */
   private mapServerBookToLocal(serverBook: any): Partial<Book> {
+    // Ensure we capture server timestamp for conflict resolution
+    const serverTimestamp = serverBook.updateDate || serverBook.updated_at || serverBook.updatedAt || new Date().toISOString();
+    
     return {
       title: serverBook.title,
       status: serverBook.status,
@@ -219,9 +225,9 @@ export class SyncService {
       rating: serverBook.rating,
       notes: serverBook.notes,
       creationDate: serverBook.creationDate || serverBook.created_at || new Date().toISOString(),
-      updateDate: serverBook.updateDate || serverBook.updated_at || new Date().toISOString(),
+      updateDate: serverTimestamp,
       _syncStatus: 'synced',
-      _serverUpdatedAt: serverBook.updateDate || serverBook.updated_at || new Date().toISOString(),
+      _serverUpdatedAt: serverTimestamp, // CRITICAL: Always set for conflict detection
     };
   }
 
@@ -266,6 +272,160 @@ export class SyncService {
   async performIncrementalSync(): Promise<{ pulled: number; pushed: number; errors: number }> {
     // Use the same logic as performSync, but lastSyncTime will filter server results
     return this.performSync();
+  }
+
+  /**
+   * Pull authors from server (Phase 5 - Authors Sync)
+   */
+  async pullAuthorsFromServer(): Promise<number> {
+    try {
+      console.log('Pulling authors from server...');
+      const serverAuthors = await authorAPI.getAuthors();
+      let pulledCount = 0;
+
+      for (const serverAuthor of serverAuthors) {
+        try {
+          await this.mergeServerAuthor(serverAuthor);
+          pulledCount++;
+        } catch (error) {
+          console.error(`Failed to merge author ${serverAuthor.id}:`, error);
+        }
+      }
+
+      console.log(`Pulled ${pulledCount} authors from server`);
+      return pulledCount;
+    } catch (error) {
+      console.error('Failed to pull authors from server:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Pull categories from server (Phase 5 - Categories Sync)
+   */
+  async pullCategoriesFromServer(): Promise<number> {
+    try {
+      console.log('Pulling categories from server...');
+      const serverCategories = await categoryAPI.getCategories();
+      let pulledCount = 0;
+
+      for (const serverCategory of serverCategories) {
+        try {
+          await this.mergeServerCategory(serverCategory);
+          pulledCount++;
+        } catch (error) {
+          console.error(`Failed to merge category ${serverCategory.id}:`, error);
+        }
+      }
+
+      console.log(`Pulled ${pulledCount} categories from server`);
+      return pulledCount;
+    } catch (error) {
+      console.error('Failed to pull categories from server:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Merge server author into local database
+   */
+  private async mergeServerAuthor(serverAuthor: any): Promise<void> {
+    const serverId = serverAuthor.id;
+    const localAuthor = await authorRepository.findByServerId(serverId);
+
+    if (localAuthor) {
+      // Author exists locally - compare updateDate if available
+      if (serverAuthor.updateDate && localAuthor._serverUpdatedAt) {
+        const serverUpdateDate = new Date(serverAuthor.updateDate);
+        const localUpdateDate = new Date(localAuthor._serverUpdatedAt);
+
+        if (serverUpdateDate > localUpdateDate) {
+          // Server version is newer - update local
+          console.log(`Updating local author ${localAuthor.id} with server changes`);
+          await authorRepository.updateSyncFields(localAuthor.id, {
+            _serverUpdatedAt: serverAuthor.updateDate,
+            _syncStatus: 'synced',
+          });
+        }
+      }
+    } else {
+      // Author doesn't exist locally - find by name or create new
+      let existingByName = await authorRepository.findByName(serverAuthor.name);
+      
+      if (existingByName) {
+        // Found by name - update with server_id
+        console.log(`Updating existing author ${existingByName.id} with server_id: ${serverId}`);
+        await authorRepository.updateSyncFields(existingByName.id, {
+          serverId,
+          _serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),
+          _syncStatus: 'synced',
+        });
+        // Register ID mapping
+        await idMappingService.registerTempId(existingByName.id.toString(), serverId, 'author');
+      } else {
+        // Create new author
+        console.log(`Creating new author: ${serverAuthor.name} (server_id: ${serverId})`);
+        const newAuthor = await authorRepository.create(serverAuthor.name);
+        await authorRepository.updateSyncFields(newAuthor.id, {
+          serverId,
+          _serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),
+          _syncStatus: 'synced',
+        });
+        // Register ID mapping
+        await idMappingService.registerTempId(newAuthor.id.toString(), serverId, 'author');
+      }
+    }
+  }
+
+  /**
+   * Merge server category into local database
+   */
+  private async mergeServerCategory(serverCategory: any): Promise<void> {
+    const serverId = serverCategory.id;
+    const localCategory = await categoryRepository.findByServerId(serverId);
+
+    if (localCategory) {
+      // Category exists locally - compare updateDate if available
+      if (serverCategory.updateDate && localCategory._serverUpdatedAt) {
+        const serverUpdateDate = new Date(serverCategory.updateDate);
+        const localUpdateDate = new Date(localCategory._serverUpdatedAt);
+
+        if (serverUpdateDate > localUpdateDate) {
+          // Server version is newer - update local
+          console.log(`Updating local category ${localCategory.id} with server changes`);
+          await categoryRepository.updateSyncFields(localCategory.id, {
+            _serverUpdatedAt: serverCategory.updateDate,
+            _syncStatus: 'synced',
+          });
+        }
+      }
+    } else {
+      // Category doesn't exist locally - find by name or create new
+      let existingByName = await categoryRepository.findByName(serverCategory.name);
+      
+      if (existingByName) {
+        // Found by name - update with server_id
+        console.log(`Updating existing category ${existingByName.id} with server_id: ${serverId}`);
+        await categoryRepository.updateSyncFields(existingByName.id, {
+          serverId,
+          _serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
+          _syncStatus: 'synced',
+        });
+        // Register ID mapping
+        await idMappingService.registerTempId(existingByName.id.toString(), serverId, 'category');
+      } else {
+        // Create new category
+        console.log(`Creating new category: ${serverCategory.name} (server_id: ${serverId})`);
+        const newCategory = await categoryRepository.create(serverCategory.name);
+        await categoryRepository.updateSyncFields(newCategory.id, {
+          serverId,
+          _serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
+          _syncStatus: 'synced',
+        });
+        // Register ID mapping
+        await idMappingService.registerTempId(newCategory.id.toString(), serverId, 'category');
+      }
+    }
   }
 }
 
