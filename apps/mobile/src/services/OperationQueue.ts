@@ -40,10 +40,11 @@ export class OperationQueue {
     if (this.isNearLimit()) {
       console.warn(`Queue approaching limit: ${this.queue.length}/${MAX_QUEUE_SIZE} operations`);
       // Show user-facing warning when approaching limit
+      const { default: i18n } = await import('../i18n');
       Alert.alert(
-        'Sync Queue Nearly Full',
-        `You have ${this.queue.length} pending operations. Consider syncing soon to avoid losing data.`,
-        [{ text: 'OK' }]
+        i18n.t('queue.alerts.nearlyFullTitle', { ns: 'offline' }),
+        i18n.t('queue.alerts.nearlyFullMessage', { count: this.queue.length, ns: 'offline' }),
+        [{ text: i18n.t('queue.alerts.okButton', { ns: 'offline' }) }]
       );
     }
 
@@ -52,10 +53,11 @@ export class OperationQueue {
       this.queue.shift(); // Remove oldest
       console.warn(`Queue size limit (${MAX_QUEUE_SIZE}) exceeded. Discarding oldest operation.`);
       // Show critical user-facing alert when limit exceeded
+      const { default: i18n } = await import('../i18n');
       Alert.alert(
-        'Sync Queue Full',
-        'Your sync queue is full. The oldest pending operation was discarded. Please sync when you have internet connection.',
-        [{ text: 'OK' }]
+        i18n.t('queue.alerts.fullTitle', { ns: 'offline' }),
+        i18n.t('queue.alerts.fullMessage', { ns: 'offline' }),
+        [{ text: i18n.t('queue.alerts.okButton', { ns: 'offline' }) }]
       );
     }
 
