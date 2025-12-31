@@ -63,6 +63,8 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
         const localBooks = await bookRepository.searchWithFilters({
           query: query.trim(),
           status: filters.status,
+          author: filters.author,
+          category: filters.category,
           sortBy: filters.sortBy as any || 'update_date',
           sortOrder: filters.sortOrder as any || 'DESC',
         });
@@ -117,6 +119,8 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
         const localBooks = await bookRepository.searchWithFilters({
           query: query.trim(),
           status: filters.status,
+          author: filters.author,
+          category: filters.category,
           sortBy: filters.sortBy as any || 'update_date',
           sortOrder: filters.sortOrder as any || 'DESC',
         });

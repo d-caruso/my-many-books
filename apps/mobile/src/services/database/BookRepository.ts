@@ -254,29 +254,57 @@ export class BookRepository {
   async searchWithFilters(options: {
     query?: string;
     status?: string;
+    author?: string;
+    category?: string;
     sortBy?: 'title' | 'update_date' | 'creation_date' | 'rating';
     sortOrder?: 'ASC' | 'DESC';
   }): Promise<Book[]> {
-    const { query, status, sortBy = 'update_date', sortOrder = 'DESC' } = options;
+    const { query, status, author, category, sortBy = 'update_date', sortOrder = 'DESC' } = options;
 
-    let sql = 'SELECT * FROM books WHERE _deleted = 0';
+    let sql = 'SELECT DISTINCT b.* FROM books b';
+    let joins = '';
     const params: any[] = [];
+    let whereConditions = ['b._deleted = 0'];
+
+    // Add joins if filtering by author or category
+    if (author || category) {
+      if (author) {
+        joins += ' LEFT JOIN book_authors ba ON b.id = ba.book_id LEFT JOIN authors a ON ba.author_id = a.id';
+      }
+      if (category) {
+        joins += ' LEFT JOIN book_categories bc ON b.id = bc.book_id LEFT JOIN categories c ON bc.category_id = c.id';
+      }
+    }
+
+    sql += joins + ' WHERE ' + whereConditions.join(' AND ');
 
     // Add search condition
     if (query && query.trim()) {
-      sql += ' AND (title LIKE ? OR authors LIKE ? OR description LIKE ?)';
+      sql += ' AND (b.title LIKE ? OR b.authors LIKE ? OR b.description LIKE ?)';
       const searchTerm = `%${query.trim()}%`;
       params.push(searchTerm, searchTerm, searchTerm);
     }
 
     // Add status filter
     if (status) {
-      sql += ' AND status = ?';
+      sql += ' AND b.status = ?';
       params.push(status);
     }
 
+    // Add author filter
+    if (author) {
+      sql += ' AND a.name LIKE ?';
+      params.push(`%${author}%`);
+    }
+
+    // Add category filter
+    if (category) {
+      sql += ' AND c.name LIKE ?';
+      params.push(`%${category}%`);
+    }
+
     // Add sorting
-    sql += ` ORDER BY ${sortBy} ${sortOrder}`;
+    sql += ` ORDER BY b.${sortBy} ${sortOrder}`;
 
     const books = await databaseService.getAllAsync(sql, params);
     return books.map(this.mapRowToBook);
