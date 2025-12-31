@@ -3,6 +3,7 @@ import { Book, SearchQuery } from '@/types';
 import { bookAPI } from '@/services/api';
 import { bookRepository } from '@/services/database/BookRepository';
 import { useNetworkState } from './useNetworkState';
+import { useTranslation } from 'react-i18next';
 
 interface BookSearchState {
   books: Book[];
@@ -22,6 +23,7 @@ interface BookSearchActions {
 }
 
 export const useBookSearch = (): BookSearchState & BookSearchActions => {
+  const { t } = useTranslation('errors');
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +79,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
         setLastFilters(filters);
       } catch (err: any) {
         console.error('Offline book search failed:', err);
-        setError('Failed to search local books');
+        setError(t('search.offlineSearchFailed'));
         setBooks([]);
         setTotalCount(0);
         setHasMore(false);
@@ -112,7 +114,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
 
     } catch (err: any) {
       console.error('Book search failed:', err);
-      setError(err.response?.data?.message || 'Failed to search books');
+      setError(err.response?.data?.message || t('search.searchFailed'));
 
       // Fallback to offline search on network error
       try {
@@ -127,7 +129,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
         setBooks(localBooks);
         setTotalCount(localBooks.length);
         setHasMore(false);
-        setError('Showing offline results');
+        setError(t('search.showingOfflineResults'));
       } catch (offlineErr) {
         setBooks([]);
         setTotalCount(0);
@@ -154,7 +156,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
       return book;
     } catch (err: any) {
       console.error('ISBN search failed:', err);
-      setError(err.response?.data?.message || 'Book not found');
+      setError(err.response?.data?.message || t('search.bookNotFound'));
       return null;
     } finally {
       setLoading(false);

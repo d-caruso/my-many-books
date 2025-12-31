@@ -125,7 +125,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                   onPress={() => setConflictDialogVisible(true)}
                   testID="conflict-chip"
                 >
-                  {t('offline.conflicts.conflict')}
+                  {t('conflicts.conflict', { ns: 'offline' })}
                 </Chip>
               )}
             </View>
@@ -143,7 +143,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                   onPress={() => setMenuVisible(true)}
                   testID="book-menu-button"
                   accessibilityLabel={`More options for ${book.title}`}
-                  accessibilityHint={!isOnline ? t('offline:offline.tooltips.willSyncLater') : undefined}
+                  accessibilityHint={!isOnline ? t('tooltips.willSyncLater', { ns: 'offline' }) : undefined}
                 />
               }
             >
@@ -159,7 +159,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                   title={t('books:mark_as_status', { status: getStatusLabel(status, t) })}
                   disabled={!isOnline}
                   titleStyle={!isOnline ? { color: '#9e9e9e' } : undefined}
-                  accessibilityHint={!isOnline ? t('offline:offline.tooltips.offlineDisabled') : undefined}
+                  accessibilityHint={!isOnline ? t('tooltips.offlineDisabled', { ns: 'offline' }) : undefined}
                 />
               ))}
               <Menu.Item
@@ -172,7 +172,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                 title={t('delete')}
                 titleStyle={{ color: !isOnline ? '#9e9e9e' : '#f44336' }}
                 disabled={!isOnline}
-                accessibilityHint={!isOnline ? t('offline:offline.tooltips.offlineDisabled') : undefined}
+                accessibilityHint={!isOnline ? t('tooltips.offlineDisabled', { ns: 'offline' }) : undefined}
               />
             </Menu>
           </View>

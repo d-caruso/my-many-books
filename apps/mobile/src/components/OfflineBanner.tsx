@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNetworkState } from '../hooks/useNetworkState';
 
 export const OfflineBanner: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('offline');
   const { isOnline } = useNetworkState();
 
   if (isOnline) {
@@ -21,7 +21,7 @@ export const OfflineBanner: React.FC = () => {
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
     >
-      {t('offline.banner.message')}
+      {t('banner.message')}
     </Banner>
   );
 };
