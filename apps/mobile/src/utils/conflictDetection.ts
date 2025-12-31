@@ -3,7 +3,7 @@ import type { Book, Author, Category } from '@/types';
 /**
  * Detect if a book has a conflict with the server version
  */
-export function hasConflict(localBook: Book, serverBook: Book): boolean {
+export function hasBookConflict(localBook: Book, serverBook: Book): boolean {
   if (!localBook._serverUpdatedAt || !serverBook.updateDate) {
     return false;
   }

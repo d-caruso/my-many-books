@@ -8,7 +8,7 @@ import { operationQueue } from '../OperationQueue';
 import { databaseService } from '../database/DatabaseService';
 import { executeOperation } from '../QueueExecutor';
 import { Book } from '../../types';
-import { hasConflict, hasAuthorConflict, hasCategoryConflict } from '../../utils/conflictDetection';
+import { hasBookConflict, hasAuthorConflict, hasCategoryConflict } from '../../utils/conflictDetection';
 
 const LAST_SYNC_KEY = '@last_sync_timestamp';
 const SYNC_PAGE_SIZE = 50;
@@ -178,7 +178,7 @@ export class SyncService {
       // Book exists locally - check for conflicts
       const serverBookMapped = this.mapServerBookToLocal(serverBook);
       
-      if (hasConflict(localBook, serverBookMapped)) {
+      if (hasBookConflict(localBook, serverBookMapped)) {
         // Conflict detected - mark for user resolution
         console.log(`Conflict detected for book ${localBook.id}`);
         await bookRepository.update(localBook.id, {
