@@ -66,7 +66,11 @@
     }
   },
   "search": {
-    "indicator": "Offline - searching local data"
+    "indicator": "Offline - searching local data",
+    "offlineSearchFailed": "Failed to search local books",
+    "searchFailed": "Search failed",
+    "showingOfflineResults": "Showing offline results",
+    "bookNotFound": "Book not found"
   },
   "books": {
     "loadFailed": "Failed to load books",

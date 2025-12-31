@@ -527,13 +527,12 @@ export class BookRepository {
       
       let authorId;
       if (!authorResult) {
-        // Create new author
-        const newAuthorId = `author-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        await databaseService.executeQuery(
-          'INSERT INTO authors (id, name) VALUES (?, ?)',
-          [newAuthorId, authorName]
+        // Create new author - let SQLite auto-generate INTEGER id
+        const result = await databaseService.executeQuery(
+          'INSERT INTO authors (name) VALUES (?)',
+          [authorName]
         );
-        authorId = newAuthorId;
+        authorId = result.lastInsertRowId;
       } else {
         authorId = authorResult.id;
       }
@@ -568,13 +567,12 @@ export class BookRepository {
       
       let categoryId;
       if (!categoryResult) {
-        // Create new category
-        const newCategoryId = `category-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        await databaseService.executeQuery(
-          'INSERT INTO categories (id, name) VALUES (?, ?)',
-          [newCategoryId, categoryName]
+        // Create new category - let SQLite auto-generate INTEGER id
+        const result = await databaseService.executeQuery(
+          'INSERT INTO categories (name) VALUES (?)',
+          [categoryName]
         );
-        categoryId = newCategoryId;
+        categoryId = result.lastInsertRowId;
       } else {
         categoryId = categoryResult.id;
       }

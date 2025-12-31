@@ -23,7 +23,7 @@ interface BookSearchActions {
 }
 
 export const useBookSearch = (): BookSearchState & BookSearchActions => {
-  const { t } = useTranslation('errors');
+  const { t } = useTranslation('offline');
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
