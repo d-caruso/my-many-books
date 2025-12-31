@@ -8,6 +8,7 @@ import { operationQueue } from '../OperationQueue';
 import { databaseService } from '../database/DatabaseService';
 import { executeOperation } from '../QueueExecutor';
 import { Book } from '../../types';
+import { hasConflict } from '../../utils/conflictDetection';
 
 const LAST_SYNC_KEY = '@last_sync_timestamp';
 const SYNC_PAGE_SIZE = 50;
@@ -174,19 +175,31 @@ export class SyncService {
     const localBook = await bookRepository.findByServerId(serverId);
 
     if (localBook) {
-      // Book exists locally - compare updateDate
-      const serverUpdateDate = new Date(serverBook.updateDate || serverBook.updatedAt);
-      const localUpdateDate = new Date(localBook.updateDate);
-
-      if (serverUpdateDate > localUpdateDate) {
-        // Server version is newer - update local
-        console.log(`Updating local book ${localBook.id} with server changes`);
+      // Book exists locally - check for conflicts
+      const serverBookMapped = this.mapServerBookToLocal(serverBook);
+      
+      if (hasConflict(localBook, serverBookMapped)) {
+        // Conflict detected - mark for user resolution
+        console.log(`Conflict detected for book ${localBook.id}`);
         await bookRepository.update(localBook.id, {
-          ...this.mapServerBookToLocal(serverBook),
-          serverId, // Preserve server_id
+          _hasConflict: true,
+          _conflictData: serverBookMapped,
         });
       } else {
-        console.log(`Local book ${localBook.id} is up-to-date or newer`);
+        // No conflict - check if server version is newer
+        const serverUpdateDate = new Date(serverBook.updateDate || serverBook.updatedAt);
+        const localUpdateDate = new Date(localBook.updateDate);
+
+        if (serverUpdateDate > localUpdateDate) {
+          // Server version is newer - update local
+          console.log(`Updating local book ${localBook.id} with server changes`);
+          await bookRepository.update(localBook.id, {
+            ...serverBookMapped,
+            serverId, // Preserve server_id
+          });
+        } else {
+          console.log(`Local book ${localBook.id} is up-to-date or newer`);
+        }
       }
     } else {
       // Book doesn't exist locally - insert new
