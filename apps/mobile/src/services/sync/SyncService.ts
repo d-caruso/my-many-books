@@ -122,11 +122,14 @@ export class SyncService {
     while (hasMore) {
       try {
         // Fetch books from server with pagination
-        const response: any = await bookAPI.getBooks({
-          limit: SYNC_PAGE_SIZE,
-          offset: (page - 1) * SYNC_PAGE_SIZE,
-          // If lastSyncTime exists, only fetch books updated since then
-          updatedSince: lastSyncTime || undefined,
+        // Use empty object as first param, query params in config
+        const response: any = await bookAPI.getBooks({}, {
+          params: {
+            limit: SYNC_PAGE_SIZE,
+            offset: (page - 1) * SYNC_PAGE_SIZE,
+            // If lastSyncTime exists, only fetch books updated since then
+            updatedSince: lastSyncTime || undefined,
+          }
         });
 
         const serverBooks = response.books || response.data || response;

@@ -8,7 +8,7 @@ import { isRetriableError } from './QueueExecutor';
 import type { OperationType } from '../types/queue';
 
 // Configure API base URL for mobile
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 // Fetch-based HTTP client for React Native
 class FetchHttpClient implements HttpClient {
@@ -87,7 +87,23 @@ class FetchHttpClient implements HttpClient {
   }
 
   async get<T>(url: string, config?: any): Promise<T> {
-    return this.fetchWithTimeout<T>(url, {
+    let finalUrl = url;
+    
+    // Handle query parameters for GET requests
+    if (config?.params) {
+      const params = new URLSearchParams();
+      Object.entries(config.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value));
+        }
+      });
+      const queryString = params.toString();
+      if (queryString) {
+        finalUrl = `${url}${url.includes('?') ? '&' : '?'}${queryString}`;
+      }
+    }
+
+    return this.fetchWithTimeout<T>(finalUrl, {
       method: 'GET',
       headers: config?.headers || {},
     });
