@@ -36,7 +36,7 @@ const isRetriableError = (error: any): boolean => {
 };
 
 export const useBooks = (): UseBooksState & UseBooksActions => {
-  const { t } = useTranslation('errors');
+  const { t } = useTranslation('offline');
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

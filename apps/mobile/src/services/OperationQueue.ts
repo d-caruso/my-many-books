@@ -159,7 +159,41 @@ export class OperationQueue {
       await new Promise(resolve => setTimeout(resolve, delay));
     }
 
-    await apiExecutor(operation);
+    // Mark book as syncing before processing (Phase 3 fix)
+    if (operation.resource === 'book' && operation.payload?.id) {
+      await this.updateBookSyncStatus(operation.payload.id, 'syncing');
+    }
+
+    try {
+      await apiExecutor(operation);
+      
+      // Mark as synced on success
+      if (operation.resource === 'book' && operation.payload?.id) {
+        await this.updateBookSyncStatus(operation.payload.id, 'synced');
+      }
+    } catch (error) {
+      // Mark as failed or pending for retry
+      if (operation.resource === 'book' && operation.payload?.id) {
+        const status = operation.retryCount >= operation.maxRetries - 1 ? 'failed' : 'pending';
+        await this.updateBookSyncStatus(operation.payload.id, status);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Update book sync status in database (Phase 3 fix)
+   */
+  private async updateBookSyncStatus(bookId: string, status: 'syncing' | 'synced' | 'failed' | 'pending'): Promise<void> {
+    try {
+      const { databaseService } = await import('./database/DatabaseService');
+      await databaseService.executeQuery(
+        'UPDATE books SET _sync_status = ? WHERE id = ? OR _temp_id = ?',
+        [status, bookId, bookId]
+      );
+    } catch (error) {
+      console.error('Failed to update book sync status:', error);
+    }
   }
 
   /**
