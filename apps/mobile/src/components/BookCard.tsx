@@ -183,9 +183,9 @@ export const BookCard: React.FC<BookCardProps> = ({
         <ConflictDialog
           visible={conflictDialogVisible}
           localBook={book}
-          serverBook={book} // Note: In real usage, this would be the actual server version
+          serverBook={book._serverVersion || book} // Use server version if available, fallback to current book
           onResolve={(choice) => {
-            onResolveConflict?.(choice);
+            onResolveConflict?.(book.id, choice);
             setConflictDialogVisible(false);
           }}
           onDismiss={() => setConflictDialogVisible(false)}

@@ -419,9 +419,14 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
           } : book
         ));
 
-        // Trigger immediate sync attempt if online
-        // Note: This would trigger the sync queue to process the pending update
-        console.log(`Conflict resolved for book ${bookId}: keeping local version`);
+        // CRITICAL FIX: Queue the update operation so server receives the conflict resolution
+        try {
+          await bookAPI.updateBook(bookId, conflictedBook);
+          console.log(`Conflict resolved for book ${bookId}: keeping local version - update sent to server`);
+        } catch (error) {
+          console.log(`Conflict resolved for book ${bookId}: keeping local version - will retry via queue`);
+          // If immediate update fails, it's already marked as pending and will be queued automatically
+        }
         
       } else {
         // Use server version - need to fetch latest from server
