@@ -9,8 +9,10 @@ import { authService } from '@/services/authService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { SyncProvider } from '@/components/SyncProvider';
+import { useTranslation } from 'react-i18next';
 
 export default function RootLayout() {
+  const { t } = useTranslation();
   return (
     <SafeAreaProvider>
       <ThemeProvider>
@@ -37,28 +39,28 @@ export default function RootLayout() {
               <Stack.Screen 
                 name="book/[id]" 
                 options={{ 
-                  title: 'Book Details',
+                  title: t('pages:books.details_title'),
                   presentation: 'card'
                 }} 
               />
               <Stack.Screen 
                 name="book/edit/[id]" 
                 options={{ 
-                  title: 'Edit Book',
+                  title: t('pages:books.edit_title'),
                   presentation: 'card'
                 }} 
               />
               <Stack.Screen 
                 name="book/add" 
                 options={{ 
-                  title: 'Add Book',
+                  title: t('pages:books.add_book'),
                   presentation: 'card'
                 }} 
               />
               <Stack.Screen
                 name="scanner"
                 options={{
-                  title: 'Scan Barcode',
+                  title: t('pages:books.scan_title'),
                   presentation: 'card'
                 }}
               />

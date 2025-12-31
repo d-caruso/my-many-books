@@ -21,7 +21,25 @@
       "queue": {
         "title": "Pending Changes",
         "syncing": "Syncing...",
-        "empty": "No pending changes"
+        "empty": "No pending changes",
+        "status": "Status",
+        "retries": "Retries",
+        "statuses": {
+          "pending": "Pending",
+          "retrying": "Retrying",
+          "failed": "Failed"
+        },
+        "operations": {
+          "CREATE": "Create",
+          "UPDATE": "Update",
+          "DELETE": "Delete"
+        },
+        "resources": {
+          "book": "book",
+          "user": "user",
+          "settings": "settings"
+        },
+        "unknown_item": "Unknown"
       },
       "conflicts": {
         "title": "Sync Conflict",

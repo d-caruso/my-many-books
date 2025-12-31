@@ -21,7 +21,25 @@
       "queue": {
         "title": "Modifiche in Sospeso",
         "syncing": "Sincronizzazione...",
-        "empty": "Nessuna modifica in sospeso"
+        "empty": "Nessuna modifica in sospeso",
+        "status": "Stato",
+        "retries": "Tentativi",
+        "statuses": {
+          "pending": "In Attesa",
+          "retrying": "Ritentando",
+          "failed": "Fallito"
+        },
+        "operations": {
+          "CREATE": "Crea",
+          "UPDATE": "Aggiorna",
+          "DELETE": "Elimina"
+        },
+        "resources": {
+          "book": "libro",
+          "user": "utente",
+          "settings": "impostazioni"
+        },
+        "unknown_item": "Sconosciuto"
       },
       "conflicts": {
         "title": "Conflitto di Sincronizzazione",
