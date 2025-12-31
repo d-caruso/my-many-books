@@ -4,7 +4,6 @@ import { bookAPI } from '@/services/api';
 import { bookRepository } from '@/services/database/BookRepository';
 import { databaseService } from '@/services/database/DatabaseService';
 import { migrationSystem } from '@/services/database/migrations';
-import { migrateFromAsyncStorage, cleanupLegacyStorage } from '@/services/database/migrateFromAsyncStorage';
 import { operationQueue } from '@/services/OperationQueue';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,8 +15,6 @@ interface UseBooksState {
   loading: boolean;
   error: string | null;
   refreshing: boolean;
-  migrationError: string | null;
-  migrationRetrying: boolean;
 }
 
 interface UseBooksActions {
@@ -28,7 +25,6 @@ interface UseBooksActions {
   deleteBook: (id: number | string) => Promise<void>;
   updateBookStatus: (id: number | string, status: Book['status']) => Promise<void>;
   resolveConflict: (bookId: number | string, choice: 'local' | 'server') => Promise<void>;
-  retryMigration: () => Promise<void>;
 }
 
 // Helper to check if error is retriable (network/server errors)
@@ -44,8 +40,6 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [migrationError, setMigrationError] = useState<string | null>(null);
-  const [migrationRetrying, setMigrationRetrying] = useState(false);
   const { isOnline } = useNetworkState();
 
   useEffect(() => {
@@ -73,26 +67,6 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       await databaseService.openDatabase();
       await migrationSystem.runMigrations();
 
-      // Migrate from AsyncStorage if needed (one-time)
-      const migrationResult = await migrateFromAsyncStorage();
-      
-      if (!migrationResult.success && migrationResult.error) {
-        // Migration failed - show specific error with data preservation assurance
-        const migrationErrorMsg = t('database.migrationFailedWithRetry') + 
-          '\n\n' + t('database.dataPreservationAssurance') + 
-          '\n\n' + t('database.errorDetails') + ': ' + migrationResult.error;
-        setMigrationError(migrationErrorMsg);
-        return; // Don't continue initialization
-      }
-      
-      // Clean up legacy storage after successful migration (Task 4.4.2)
-      if (migrationResult.success && migrationResult.count > 0) {
-        await cleanupLegacyStorage();
-      }
-
-      // Clear any previous migration error
-      setMigrationError(null);
-
       // Load books from SQLite
       await loadBooksFromDB();
 
@@ -104,15 +78,6 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     }
   };
 
-  const retryMigration = async () => {
-    setMigrationRetrying(true);
-    setMigrationError(null);
-    try {
-      await initDatabase();
-    } finally {
-      setMigrationRetrying(false);
-    }
-  };
 
   const loadBooksFromDB = async () => {
     try {
@@ -487,9 +452,6 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     loading,
     error,
     refreshing,
-    migrationError,
-    migrationRetrying,
-    retryMigration,
     loadBooks,
     refreshBooks,
     createBook,
