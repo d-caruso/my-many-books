@@ -231,10 +231,9 @@ export class SyncService {
     // The queue will handle ID mapping via QueueExecutor (Task 5.3)
     await operationQueue.processQueue(executeOperation);
 
-    // Mark local books as synced after successful push
-    await databaseService.executeQuery(
-      "UPDATE books SET _sync_status = 'synced' WHERE _sync_status = 'pending'"
-    );
+    // Do NOT blindly mark all pending as synced - the queue executor handles
+    // individual operation success/failure status updates properly.
+    // This prevents hiding failed operations that need to be retried.
 
     return pendingCount;
   }
