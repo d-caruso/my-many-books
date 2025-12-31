@@ -128,7 +128,8 @@ export class SyncService {
       try {
         // Fetch books from server with pagination
         // Note: The shared API getBooks method expects (page, limit, includeAuthors, includeCategories)
-        // We cannot pass updatedSince directly as it's not supported by the current API
+        // TODO: API doesn't support updatedSince parameter yet for incremental sync
+        // For now, we fetch all books and do local filtering based on lastSyncTime
         const response: any = await bookAPI.getBooks(
           page, 
           SYNC_PAGE_SIZE, 
@@ -137,9 +138,19 @@ export class SyncService {
         );
 
         const serverBooks = response.books || response.data || response;
-        const booksArray = Array.isArray(serverBooks) ? serverBooks : [];
+        let booksArray = Array.isArray(serverBooks) ? serverBooks : [];
 
-        console.log(`Fetched page ${page}: ${booksArray.length} books`);
+        // Client-side incremental sync filtering (until API supports updatedSince)
+        if (lastSyncTime) {
+          const lastSyncDate = new Date(lastSyncTime);
+          booksArray = booksArray.filter(book => {
+            const bookUpdateDate = new Date(book.updateDate || book.updatedAt || book.updated_at);
+            return bookUpdateDate > lastSyncDate;
+          });
+          console.log(`Fetched page ${page}: ${booksArray.length} books (${(response.books || response.data || response).length} total, filtered by lastSyncTime)`);
+        } else {
+          console.log(`Fetched page ${page}: ${booksArray.length} books`);
+        }
 
         for (const serverBook of booksArray) {
           try {
