@@ -86,6 +86,9 @@
   },
   "database": {
     "initializationFailed": "Failed to initialize database",
-    "migrationFailed": "Failed to migrate data from old storage"
+    "migrationFailed": "Failed to migrate data from old storage",
+    "migrationFailedWithRetry": "Migration from previous app version failed. You can retry this process.",
+    "dataPreservationAssurance": "Your data is safe: The migration process never deletes your original data until after successful transfer to the new system.",
+    "errorDetails": "Error details"
   }
 }

@@ -16,6 +16,8 @@ interface UseBooksState {
   loading: boolean;
   error: string | null;
   refreshing: boolean;
+  migrationError: string | null;
+  migrationRetrying: boolean;
 }
 
 interface UseBooksActions {
@@ -26,6 +28,7 @@ interface UseBooksActions {
   deleteBook: (id: number | string) => Promise<void>;
   updateBookStatus: (id: number | string, status: Book['status']) => Promise<void>;
   resolveConflict: (bookId: number | string, choice: 'local' | 'server') => Promise<void>;
+  retryMigration: () => Promise<void>;
 }
 
 // Helper to check if error is retriable (network/server errors)
@@ -42,6 +45,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [migrationError, setMigrationError] = useState<string | null>(null);
+  const [migrationRetrying, setMigrationRetrying] = useState(false);
   const { isOnline } = useNetworkState();
 
   useEffect(() => {
@@ -73,8 +77,11 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       const migrationResult = await migrateFromAsyncStorage();
       
       if (!migrationResult.success && migrationResult.error) {
-        // Migration failed - show specific error with retry option
-        setMigrationError(t('database.migrationFailed') + ': ' + migrationResult.error);
+        // Migration failed - show specific error with data preservation assurance
+        const migrationErrorMsg = t('database.migrationFailedWithRetry') + 
+          '\n\n' + t('database.dataPreservationAssurance') + 
+          '\n\n' + t('database.errorDetails') + ': ' + migrationResult.error;
+        setMigrationError(migrationErrorMsg);
         return; // Don't continue initialization
       }
       
@@ -98,8 +105,13 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   };
 
   const retryMigration = async () => {
+    setMigrationRetrying(true);
     setMigrationError(null);
-    await initDatabase();
+    try {
+      await initDatabase();
+    } finally {
+      setMigrationRetrying(false);
+    }
   };
 
   const loadBooksFromDB = async () => {
@@ -476,6 +488,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     error,
     refreshing,
     migrationError,
+    migrationRetrying,
     retryMigration,
     loadBooks,
     refreshBooks,

@@ -47,12 +47,15 @@ export async function migrateFromAsyncStorage(): Promise<{
     await AsyncStorage.setItem(MIGRATION_FLAG, 'true');
 
     // Delete old AsyncStorage data after successful migration (Task 4.4.2)
+    // Only delete after marking successful to preserve data on failure
     await AsyncStorage.removeItem(BOOKS_CACHE_KEY);
 
     console.log(`Migration completed: ${migratedCount}/${books.length} books migrated`);
     return { success: true, count: migratedCount };
   } catch (error: any) {
     console.error('Migration failed:', error);
+    // IMPORTANT: Do not delete AsyncStorage data on failure to preserve user data
+    console.log('AsyncStorage data preserved due to migration failure');
     return { success: false, count: 0, error: error.message };
   }
 }
@@ -70,6 +73,27 @@ export async function needsMigration(): Promise<boolean> {
  */
 export async function resetMigrationFlag(): Promise<void> {
   await AsyncStorage.removeItem(MIGRATION_FLAG);
+}
+
+/**
+ * Check if AsyncStorage data exists to inform users about data preservation
+ */
+export async function hasAsyncStorageData(): Promise<{
+  hasData: boolean;
+  bookCount?: number;
+}> {
+  try {
+    const booksJson = await AsyncStorage.getItem(BOOKS_CACHE_KEY);
+    if (!booksJson) {
+      return { hasData: false };
+    }
+    
+    const books: Book[] = JSON.parse(booksJson);
+    return { hasData: true, bookCount: books.length };
+  } catch (error) {
+    console.error('Error checking AsyncStorage data:', error);
+    return { hasData: false };
+  }
 }
 
 /**
