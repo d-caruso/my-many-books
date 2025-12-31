@@ -25,15 +25,22 @@ export class BookApi extends BaseApiClient {
     page: number = 1,
     limit: number = 10,
     includeAuthors: boolean = true,
-    includeCategories: boolean = true
+    includeCategories: boolean = true,
+    updatedSince?: string
   ): Promise<PaginatedResponse<Book>> {
+    const params: Record<string, string> = {
+      page: page.toString(),
+      limit: limit.toString(),
+      includeAuthors: includeAuthors.toString(),
+      includeCategories: includeCategories.toString(),
+    };
+
+    if (updatedSince) {
+      params.updatedSince = updatedSince;
+    }
+
     const response = await this.get<unknown>('/books', {
-      params: {
-        page,
-        limit,
-        includeAuthors: includeAuthors.toString(),
-        includeCategories: includeCategories.toString(),
-      },
+      params,
     });
 
     return PaginatedBooksSchema.parse(response) as PaginatedResponse<Book>;

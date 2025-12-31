@@ -23,6 +23,7 @@ import { BookService, BookServiceError, BookUserContext } from '../services/book
 import { CreateBookDTO } from '../dtos/book/CreateBookDTO';
 import { UpdateBookDTO } from '../dtos/book/UpdateBookDTO';
 import { toBookResponseDTO } from '../dtos/book/BookResponseDTO';
+import { Repository as BookRepositoryContract } from '../repositories/book/Repository';
 import { TYPES } from '../container/types';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
@@ -51,7 +52,8 @@ interface BookSearchFilters {
 export class BookController extends BaseController {
   constructor(
     @inject(TYPES.BookService) private readonly bookService: BookService,
-    @inject(TYPES.BookSearchService) private readonly bookSearchService: BookSearchService
+    @inject(TYPES.BookSearchService) private readonly bookSearchService: BookSearchService,
+    @inject(TYPES.BookRepository) private readonly bookRepository: BookRepositoryContract
   ) {
     super();
     this.bookService.initializeControllerContext();
@@ -232,6 +234,7 @@ export class BookController extends BaseController {
 
     const includeAuthors = this.getQueryParameter(request, 'includeAuthors') === 'true';
     const includeCategories = this.getQueryParameter(request, 'includeCategories') === 'true';
+    const updatedSince = this.getQueryParameter(request, 'updatedSince');
 
     let searchFilters: BookSearchFilters = {};
     if (filters) {
@@ -252,97 +255,33 @@ export class BookController extends BaseController {
       }
     }
 
-    const whereConditions: WhereOptions<BookAttributes>[] = [];
-    const includeClause = [];
+    // Add updatedSince filter for incremental sync
+    if (updatedSince) {
+      searchFilters.updatedSince = updatedSince;
+    }
 
-    // Add user ID to the where clause if the user is authenticated
+    // Add user ID filter for user-specific books
     if (request.user) {
-      whereConditions.push({ userId: request.user.id });
+      searchFilters.userId = request.user.id;
     }
 
-    // Apply title filter
-    if (searchFilters.title) {
-      whereConditions.push({ title: { [Op.iLike]: `%${searchFilters.title}%` } });
-    }
-
-    // Apply ISBN filter
-    if (searchFilters.isbnCode) {
-      whereConditions.push({ isbnCode: searchFilters.isbnCode });
-    }
-
-    // Apply edition number filter
-    if (searchFilters.editionNumber) {
-      whereConditions.push({ editionNumber: searchFilters.editionNumber });
-    }
-
-    // Apply edition date filter
-    if (searchFilters.editionDate) {
-      whereConditions.push({ editionDate: searchFilters.editionDate });
-    }
-
-    // Apply notes filter
-    if (searchFilters.notes) {
-      whereConditions.push({ notes: { [Op.iLike]: `%${searchFilters.notes}%` } });
-    }
-
-    // Apply status filter
-    if (searchFilters.status) {
-      whereConditions.push({ status: searchFilters.status });
-    }
-
-    // Add author and category filters as includes
-    if (searchFilters.author) {
-      includeClause.push({
-        model: Author,
-        as: 'authors',
-        through: { attributes: [] },
-        where: {
-          [Op.or]: [
-            { name: { [Op.iLike]: `%${searchFilters.author}%` } },
-            { surname: { [Op.iLike]: `%${searchFilters.author}%` } },
-          ],
-        },
-      });
-    }
-
-    if (searchFilters.category) {
-      includeClause.push({
-        model: Category,
-        as: 'categories',
-        through: { attributes: [] },
-        where: {
-          name: { [Op.iLike]: `%${searchFilters.category}%` },
-        },
-      });
-    }
-
-    // Include authors and categories if requested
-    if (includeAuthors && !searchFilters.author) {
-      includeClause.push({ model: Author, as: 'authors', through: { attributes: [] } });
-    }
-    if (includeCategories && !searchFilters.category) {
-      includeClause.push({ model: Category, as: 'categories', through: { attributes: [] } });
-    }
-
-    const whereClause = whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
-
-    const { count, rows: books } = await Book.findAndCountAll({
-      where: whereClause,
-      include: includeClause,
+    // Use repository layer for consistent filtering and query logic
+    const listOptions = {
       limit: pagination.limit,
       offset: pagination.offset,
-      order: [['title', 'ASC']],
-      distinct: true, // Required for correct counting with includes
-    });
+      includeAssociations: includeAuthors || includeCategories,
+      filters: searchFilters,
+      orderBy: 'title',
+      orderDirection: 'ASC' as const,
+    };
 
-    // Convert Sequelize models to plain objects to ensure associations are serialized
-    const plainBooks = books.map(book => book.get({ plain: true }));
-
-    const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
+    const result = await this.bookRepository.listUserBooks(request.user?.id || 0, listOptions);
+    
+    const meta = this.createPaginationMeta(pagination.page, pagination.limit, result.total);
 
     return this.createSuccessResponse(
       {
-        books: plainBooks,
+        books: result.rows,
         pagination: meta,
       },
       undefined,

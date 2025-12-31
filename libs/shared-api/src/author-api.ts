@@ -8,8 +8,16 @@ import { Author, AuthorSchema } from '@my-many-books/shared-types';
 const AuthorsArraySchema = AuthorSchema.array();
 
 export class AuthorApi extends BaseApiClient {
-  async getAuthors(): Promise<Author[]> {
-    const response = await this.get<unknown>('/authors');
+  async getAuthors(updatedSince?: string): Promise<Author[]> {
+    const params: Record<string, string> = {};
+    
+    if (updatedSince) {
+      params.updatedSince = updatedSince;
+    }
+
+    const response = await this.get<unknown>('/authors', {
+      params: Object.keys(params).length > 0 ? params : undefined,
+    });
     return AuthorsArraySchema.parse(response);
   }
 

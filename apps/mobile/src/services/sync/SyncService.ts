@@ -126,31 +126,21 @@ export class SyncService {
 
     while (hasMore) {
       try {
-        // Fetch books from server with pagination
-        // Note: The shared API getBooks method expects (page, limit, includeAuthors, includeCategories)
-        // TODO: API doesn't support updatedSince parameter yet for incremental sync
-        // For now, we fetch all books and do local filtering based on lastSyncTime
+        // Fetch books from server with incremental sync support
         const response: any = await bookAPI.getBooks(
           page, 
           SYNC_PAGE_SIZE, 
           true,  // includeAuthors
-          true   // includeCategories
+          true,  // includeCategories
+          lastSyncTime  // updatedSince for incremental sync
         );
 
         const serverBooks = response.books || response.data || response;
-        let booksArray = Array.isArray(serverBooks) ? serverBooks : [];
+        const booksArray = Array.isArray(serverBooks) ? serverBooks : [];
 
-        // Client-side incremental sync filtering (until API supports updatedSince)
-        if (lastSyncTime) {
-          const lastSyncDate = new Date(lastSyncTime);
-          booksArray = booksArray.filter(book => {
-            const bookUpdateDate = new Date(book.updateDate || book.updatedAt || book.updated_at);
-            return bookUpdateDate > lastSyncDate;
-          });
-          console.log(`Fetched page ${page}: ${booksArray.length} books (${(response.books || response.data || response).length} total, filtered by lastSyncTime)`);
-        } else {
-          console.log(`Fetched page ${page}: ${booksArray.length} books`);
-        }
+        console.log(`Fetched page ${page}: ${booksArray.length} books ${lastSyncTime ? `(updated since ${lastSyncTime})` : '(full sync)'}`);
+        
+        // No need for client-side filtering anymore since API handles incremental sync
 
         for (const serverBook of booksArray) {
           try {
@@ -291,7 +281,8 @@ export class SyncService {
   async pullAuthorsFromServer(): Promise<number> {
     try {
       console.log('Pulling authors from server...');
-      const serverAuthors = await authorAPI.getAuthors();
+      const lastSyncTime = await this.getLastSyncTime();
+      const serverAuthors = await authorAPI.getAuthors(lastSyncTime || undefined);
       let pulledCount = 0;
 
       for (const serverAuthor of serverAuthors) {
@@ -317,7 +308,8 @@ export class SyncService {
   async pullCategoriesFromServer(): Promise<number> {
     try {
       console.log('Pulling categories from server...');
-      const serverCategories = await categoryAPI.getCategories();
+      const lastSyncTime = await this.getLastSyncTime();
+      const serverCategories = await categoryAPI.getCategories(lastSyncTime || undefined);
       let pulledCount = 0;
 
       for (const serverCategory of serverCategories) {

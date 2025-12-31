@@ -33,6 +33,7 @@ export interface BookSearchFilters extends SearchFilters {
   author?: string;
   category?: string;
   userId?: number;
+  updatedSince?: string;
 }
 
 export interface BookListOptions extends ListOptions {

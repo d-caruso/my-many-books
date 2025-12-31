@@ -8,8 +8,16 @@ import { Category, CategorySchema } from '@my-many-books/shared-types';
 const CategoriesArraySchema = CategorySchema.array();
 
 export class CategoryApi extends BaseApiClient {
-  async getCategories(): Promise<Category[]> {
-    const response = await this.get<unknown>('/categories');
+  async getCategories(updatedSince?: string): Promise<Category[]> {
+    const params: Record<string, string> = {};
+    
+    if (updatedSince) {
+      params.updatedSince = updatedSince;
+    }
+
+    const response = await this.get<unknown>('/categories', {
+      params: Object.keys(params).length > 0 ? params : undefined,
+    });
     return CategoriesArraySchema.parse(response);
   }
 

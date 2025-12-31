@@ -124,13 +124,26 @@ export class CleanupService {
     // Step 1: Cleanup orphaned data
     const counts = await this.cleanupOrphanedTempIds();
 
-    // Step 2: Cleanup failed operations from queue
+    // Step 2: Cleanup failed operations from queue (only permanently failed ones)
     const { operationQueue } = await import('../OperationQueue');
     const failedOps = operationQueue.getFailedOperations();
+    let permanentlyFailedCount = 0;
+    
     for (const op of failedOps) {
-      await operationQueue.dequeue(op.id);
+      // Only remove operations that are:
+      // 1. Beyond max retry attempts AND
+      // 2. Older than the cutoff date
+      const isPermanentlyFailed = (op.retries || 0) >= 3; // Assume max retries is 3
+      const isStale = op.timestamp < cutoffDate;
+      
+      if (isPermanentlyFailed && isStale) {
+        console.log(`Removing permanently failed operation: ${op.id} (retries: ${op.retries || 0}, age: ${Math.floor((Date.now() - op.timestamp) / (24 * 60 * 60 * 1000))} days)`);
+        await operationQueue.dequeue(op.id);
+        permanentlyFailedCount++;
+      }
     }
-    counts.deletedOperations += failedOps.length;
+    
+    counts.deletedOperations += permanentlyFailedCount;
 
     // Step 3: Verify all ID mappings have correct foreign keys
     const mappings = await idMappingService.getAllMappings();
@@ -142,6 +155,9 @@ export class CleanupService {
         console.error(`Failed to update foreign keys for ${mapping.tempId}:`, error);
       }
     }
+
+    // Step 4: Handle edge case - books marked as 'pending' but with failed operations
+    await this.fixInconsistentSyncStates();
 
     console.log('Full cleanup complete');
     return counts;
@@ -223,6 +239,85 @@ export class CleanupService {
     }
   }
 
+
+  /**
+   * Fix inconsistent sync states (Edge case handler)
+   *
+   * Handles books that might be in 'pending' state but have no corresponding
+   * operation in the queue, or books marked as 'failed' but should be retried.
+   */
+  async fixInconsistentSyncStates(): Promise<void> {
+    console.log('Fixing inconsistent sync states...');
+
+    const db = databaseService.getDatabase();
+
+    // Find books marked as 'pending' but with no operation in queue
+    const pendingBooks = await databaseService.getAllAsync<{
+      id: string;
+      title: string;
+      _sync_status: string;
+    }>(`
+      SELECT id, title, _sync_status
+      FROM books
+      WHERE _sync_status = 'pending'
+    `);
+
+    const { operationQueue } = await import('../OperationQueue');
+    const allOperations = operationQueue.getAllOperations();
+
+    for (const book of pendingBooks) {
+      // Check if there's a corresponding operation
+      const hasOperation = allOperations.some(
+        op => op.resource === 'book' && op.payload?.id === book.id
+      );
+
+      if (!hasOperation) {
+        console.log(`Found book ${book.id} marked as pending but no operation in queue - marking as failed`);
+        
+        // Mark as failed since sync attempt is lost
+        await databaseService.executeQuery(
+          'UPDATE books SET _sync_status = ? WHERE id = ?',
+          ['failed', book.id]
+        );
+      }
+    }
+
+    // Find books marked as 'failed' that might be recoverable
+    const failedBooks = await databaseService.getAllAsync<{
+      id: string;
+      server_id: number | null;
+      _sync_status: string;
+      creation_date: string;
+    }>(`
+      SELECT id, server_id, _sync_status, creation_date
+      FROM books
+      WHERE _sync_status = 'failed'
+    `);
+
+    for (const book of failedBooks) {
+      const ageInDays = Math.floor(
+        (Date.now() - new Date(book.creation_date).getTime()) / (24 * 60 * 60 * 1000)
+      );
+
+      // If book has server_id, it was successfully synced at some point
+      if (book.server_id) {
+        console.log(`Book ${book.id} has server_id ${book.server_id} but marked as failed - correcting to synced`);
+        await databaseService.executeQuery(
+          'UPDATE books SET _sync_status = ? WHERE id = ?',
+          ['synced', book.id]
+        );
+      } else if (ageInDays < 1) {
+        // Recent failures might be retryable - reset to pending for retry
+        console.log(`Recent failed book ${book.id} might be retryable - marking as pending`);
+        await databaseService.executeQuery(
+          'UPDATE books SET _sync_status = ? WHERE id = ?',
+          ['pending', book.id]
+        );
+      }
+    }
+
+    console.log('Inconsistent sync states fixed');
+  }
 
   /**
    * Check data integrity

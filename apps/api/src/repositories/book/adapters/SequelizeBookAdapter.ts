@@ -289,6 +289,14 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       conditions.push({ notes: { [Op.like]: `%${filters.notes}%` } });
     }
 
+    // Incremental sync support for mobile clients
+    if (filters?.updatedSince) {
+      const since = new Date(filters.updatedSince);
+      if (!isNaN(since.getTime())) {
+        conditions.push({ updateDate: { [Op.gt]: since } });
+      }
+    }
+
     return conditions.length > 0 ? { [Op.and]: conditions } : {};
   }
 

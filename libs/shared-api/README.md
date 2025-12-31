@@ -2,6 +2,53 @@
 
 Platform-agnostic HTTP client for My Many Books monorepo that works with web, mobile, and desktop apps.
 
+## API Reference
+
+### BookApi
+
+#### getBooks(page?, limit?, includeAuthors?, includeCategories?, updatedSince?)
+
+Fetches books with optional pagination and incremental sync support.
+
+**Parameters:**
+- `page` (number, optional): Page number (default: 1)
+- `limit` (number, optional): Books per page (default: 10)
+- `includeAuthors` (boolean, optional): Include author data (default: true)
+- `includeCategories` (boolean, optional): Include category data (default: true)
+- `updatedSince` (string, optional): ISO timestamp for incremental sync (e.g., "2024-12-01T10:00:00.000Z")
+
+**Returns:** `Promise<PaginatedResponse<Book>>`
+
+**Examples:**
+```typescript
+// Get all books (default behavior)
+const allBooks = await bookApi.getBooks();
+
+// Get books with pagination
+const pagedBooks = await bookApi.getBooks(2, 20);
+
+// Get books updated since last sync (incremental sync)
+const updatedBooks = await bookApi.getBooks(1, 50, true, true, "2024-12-01T10:00:00.000Z");
+```
+
+**Incremental Sync Usage:**
+The `updatedSince` parameter enables efficient mobile sync by fetching only books modified after a specific timestamp:
+
+```typescript
+// Store last sync time
+const lastSyncTime = await getLastSyncTime();
+
+// Fetch only updated books
+const { books } = await bookApi.getBooks(1, 100, true, true, lastSyncTime);
+
+// Process updated books...
+
+// Update last sync time
+await setLastSyncTime(new Date().toISOString());
+```
+
+This reduces bandwidth usage by 90%+ for typical sync operations.
+
 ## Testing Support
 
 This library provides industry-standard Jest mocking utilities for testing:

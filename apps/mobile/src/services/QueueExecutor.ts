@@ -76,6 +76,14 @@ async function executeCreateBook(payload: any): Promise<void> {
     // This also handles foreign key updates in a transaction
     await bookRepository.replaceTempIdWithServerId(tempId, serverId);
 
+    // Update server timestamp for consistency (Phase 5 fix)
+    if (serverResponse.updateDate || serverResponse.updatedAt) {
+      await bookRepository.updateSyncFields(serverId.toString(), {
+        _serverUpdatedAt: serverResponse.updateDate || serverResponse.updatedAt,
+        _syncStatus: 'synced'
+      });
+    }
+
     // Verify foreign key integrity (Task 5.5.2) 
     await cleanupService.updateForeignKeysForBook(serverId.toString(), serverId);
 
@@ -108,7 +116,15 @@ async function executeUpdateBook(payload: any): Promise<void> {
 
   // Send to server using server ID
   // Use raw apiClient to avoid double-queueing
-  await apiClient.books.updateBook(String(serverIdToUse), resolvedPayload);
+  const updateResponse: any = await apiClient.books.updateBook(String(serverIdToUse), resolvedPayload);
+
+  // Update server timestamp for consistency (Phase 5 fix)
+  if (updateResponse.updateDate || updateResponse.updatedAt) {
+    await bookRepository.updateSyncFields(bookId, {
+      _serverUpdatedAt: updateResponse.updateDate || updateResponse.updatedAt,
+      _syncStatus: 'synced'
+    });
+  }
 }
 
 /**
