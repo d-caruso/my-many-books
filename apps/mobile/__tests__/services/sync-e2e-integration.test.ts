@@ -16,7 +16,7 @@ import { bookRepository } from '../../src/services/database/BookRepository';
 import { operationQueue } from '../../src/services/OperationQueue';
 import { databaseService } from '../../src/services/database/DatabaseService';
 import { migrationSystem } from '../../src/services/database/migrations';
-import { bookAPI } from '../../src/services/api';
+import { bookAPI, authorAPI, categoryAPI } from '../../src/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Mock the bookAPI
@@ -26,6 +26,18 @@ jest.mock('../../src/services/api', () => ({
     createBook: jest.fn(),
     updateBook: jest.fn(),
     deleteBook: jest.fn(),
+  },
+  authorAPI: {
+    getAuthors: jest.fn(),
+    createAuthor: jest.fn(),
+    updateAuthor: jest.fn(),
+    deleteAuthor: jest.fn(),
+  },
+  categoryAPI: {
+    getCategories: jest.fn(),
+    createCategory: jest.fn(),
+    updateCategory: jest.fn(),
+    deleteCategory: jest.fn(),
   },
 }));
 
@@ -60,6 +72,64 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
   afterAll(async () => {
     await databaseService.closeDatabase();
+  });
+
+  describe('Incremental sync tests', () => {
+    it('should perform incremental sync with updatedSince parameter', async () => {
+      const lastSyncTime = '2024-01-01T00:00:00.000Z';
+      const recentBook = {
+        id: 1001,
+        title: 'Recent Book',
+        updateDate: '2024-01-02T10:00:00.000Z',
+      };
+
+      // Mock incremental sync response
+      (bookAPI.getBooks as jest.Mock).mockResolvedValue({
+        books: [recentBook],
+        pagination: { page: 1, totalCount: 1, hasNext: false },
+      });
+
+      // Set last sync time
+      await syncService.setLastSyncTime(lastSyncTime);
+
+      // Perform sync
+      await syncService.pullFromServer();
+
+      // Verify API was called with updatedSince parameter
+      expect(bookAPI.getBooks).toHaveBeenCalledWith(
+        1, // page
+        50, // limit
+        true, // includeAuthors
+        true, // includeCategories
+        lastSyncTime // updatedSince
+      );
+    });
+
+    it('should sync authors with incremental support', async () => {
+      const lastSyncTime = '2024-01-01T00:00:00.000Z';
+      
+      (authorAPI.getAuthors as jest.Mock).mockResolvedValue([
+        { id: 201, name: 'John', surname: 'Doe', updateDate: '2024-01-02T10:00:00.000Z' }
+      ]);
+
+      await syncService.setLastSyncTime(lastSyncTime);
+      await syncService.pullAuthorsFromServer();
+
+      expect(authorAPI.getAuthors).toHaveBeenCalledWith(lastSyncTime);
+    });
+
+    it('should sync categories with incremental support', async () => {
+      const lastSyncTime = '2024-01-01T00:00:00.000Z';
+      
+      (categoryAPI.getCategories as jest.Mock).mockResolvedValue([
+        { id: 301, name: 'Fiction', updateDate: '2024-01-02T10:00:00.000Z' }
+      ]);
+
+      await syncService.setLastSyncTime(lastSyncTime);
+      await syncService.pullCategoriesFromServer();
+
+      expect(categoryAPI.getCategories).toHaveBeenCalledWith(lastSyncTime);
+    });
   });
 
   describe('Full sync lifecycle', () => {

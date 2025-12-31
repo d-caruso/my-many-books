@@ -322,4 +322,53 @@ describe('BookController', () => {
       expect(result.error).toBe('User authentication required');
     });
   });
+
+  describe('listBooks with incremental sync', () => {
+    let mockBookRepository: any;
+
+    beforeEach(() => {
+      mockBookRepository = {
+        listUserBooks: jest.fn().mockResolvedValue({
+          rows: [],
+          total: 0,
+        }),
+      };
+      (container.get as jest.Mock).mockImplementation((type) => {
+        if (type === TYPES.BookRepository) return mockBookRepository;
+        return jest.fn();
+      });
+    });
+
+    it('should support updatedSince parameter for incremental sync', async () => {
+      mockRequest.user = { id: 123, email: 'test@example.com', role: 'user', provider: 'cognito' };
+      mockRequest.queryStringParameters = { updatedSince: '2024-01-01T00:00:00.000Z' };
+
+      await bookController.listBooks(mockRequest);
+
+      expect(mockBookRepository.listUserBooks).toHaveBeenCalledWith(123, expect.objectContaining({
+        filters: expect.objectContaining({
+          updatedSince: '2024-01-01T00:00:00.000Z',
+          userId: 123,
+        }),
+      }));
+    });
+
+    it('should work without updatedSince parameter', async () => {
+      mockRequest.user = { id: 123, email: 'test@example.com', role: 'user', provider: 'cognito' };
+      mockRequest.queryStringParameters = {};
+
+      await bookController.listBooks(mockRequest);
+
+      expect(mockBookRepository.listUserBooks).toHaveBeenCalledWith(123, expect.objectContaining({
+        filters: expect.objectContaining({
+          userId: 123,
+        }),
+      }));
+      expect(mockBookRepository.listUserBooks).toHaveBeenCalledWith(123, expect.not.objectContaining({
+        filters: expect.objectContaining({
+          updatedSince: expect.anything(),
+        }),
+      }));
+    });
+  });
 });

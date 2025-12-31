@@ -99,6 +99,36 @@ describe('AuthorController', () => {
     container.restore();
   });
 
+  describe('listAuthors with incremental sync', () => {
+    let mockAuthorRepository: any;
+
+    beforeEach(() => {
+      mockAuthorRepository = {
+        list: jest.fn().mockResolvedValue({
+          rows: [],
+          total: 0,
+        }),
+      };
+      (container.get as jest.Mock).mockImplementation((type) => {
+        if (type === TYPES.AuthorRepository) return mockAuthorRepository;
+        return jest.fn();
+      });
+    });
+
+    it('should support updatedSince parameter for incremental sync', async () => {
+      mockRequest.queryStringParameters = { updatedSince: '2024-01-01T00:00:00.000Z' };
+
+      await authorController.listAuthors(mockRequest);
+
+      expect(mockAuthorRepository.list).toHaveBeenCalledWith(expect.objectContaining({
+        filters: expect.objectContaining({
+          updatedSince: '2024-01-01T00:00:00.000Z',
+          userId: 1,
+        }),
+      }));
+    });
+  });
+
   describe('createAuthor', () => {
     it('should create an author successfully', async () => {
       const payload = { name: 'John', surname: 'Doe', nationality: 'IT' };

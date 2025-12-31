@@ -259,5 +259,35 @@ describe('CategoryController', () => {
         books: [{ id: 10, title: 'Book' }],
       });
   });
+
+  describe('listCategories with incremental sync', () => {
+    let mockCategoryRepository: any;
+
+    beforeEach(() => {
+      mockCategoryRepository = {
+        list: jest.fn().mockResolvedValue({
+          rows: [],
+          total: 0,
+        }),
+      };
+      (container.get as jest.Mock).mockImplementation((type) => {
+        if (type === TYPES.CategoryRepository) return mockCategoryRepository;
+        return jest.fn();
+      });
+    });
+
+    it('should support updatedSince parameter for incremental sync', async () => {
+      baseRequest.queryStringParameters = { updatedSince: '2024-01-01T00:00:00.000Z' };
+
+      await controller.listCategories(baseRequest);
+
+      expect(mockCategoryRepository.list).toHaveBeenCalledWith(expect.objectContaining({
+        filters: expect.objectContaining({
+          updatedSince: '2024-01-01T00:00:00.000Z',
+          userId: 1,
+        }),
+      }));
+    });
+  });
 });
 });
