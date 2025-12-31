@@ -61,11 +61,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="queue"
         options={{
-          title: t('offline:offline.sync.queue.title'),
+          title: t('sync.queue.title', { ns: 'offline' }),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="sync" size={size} color={color} />
           ),
-          tabBarAccessibilityLabel: `${t('offline:offline.sync.queue.title')} tab`,
+          tabBarAccessibilityLabel: `${t('sync.queue.title', { ns: 'offline' })} tab`,
         }}
       />
       <Tabs.Screen
