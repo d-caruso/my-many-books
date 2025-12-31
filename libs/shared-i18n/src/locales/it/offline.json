@@ -85,10 +85,6 @@
     "notFound": "Libro non trovato"
   },
   "database": {
-    "initializationFailed": "Inizializzazione database fallita",
-    "migrationFailed": "Migrazione dati dal vecchio storage fallita",
-    "migrationFailedWithRetry": "Migrazione dalla versione precedente dell'app fallita. Puoi riprovare questo processo.",
-    "dataPreservationAssurance": "I tuoi dati sono al sicuro: Il processo di migrazione non elimina mai i dati originali fino a dopo il trasferimento riuscito al nuovo sistema.",
-    "errorDetails": "Dettagli errore"
+    "initializationFailed": "Inizializzazione database fallita"
   }
 }
