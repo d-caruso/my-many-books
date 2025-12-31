@@ -21,13 +21,13 @@
       },
       "queue": {
         "title": "Modifiche in Sospeso",
-        "syncing": "operazioni",
+        "syncing": "Sincronizzazione...",
         "empty": "Nessuna modifica in sospeso",
         "status": "Stato",
         "retries": "Tentativi",
         "statuses": {
-          "pending": "In attesa",
-          "retrying": "Riprovando",
+          "pending": "In Attesa",
+          "retrying": "Ritentando",
           "failed": "Fallito"
         },
         "operations": {

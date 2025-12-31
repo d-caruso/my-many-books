@@ -59,6 +59,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="queue"
+        options={{
+          title: t('offline:offline.sync.queue.title'),
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="sync" size={size} color={color} />
+          ),
+          tabBarAccessibilityLabel: `${t('offline:offline.sync.queue.title')} tab`,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: t('profile'),

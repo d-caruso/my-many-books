@@ -21,7 +21,7 @@
       },
       "queue": {
         "title": "Pending Changes",
-        "syncing": "operations",
+        "syncing": "Syncing...",
         "empty": "No pending changes",
         "status": "Status",
         "retries": "Retries",
