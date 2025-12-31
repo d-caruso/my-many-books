@@ -268,16 +268,6 @@ export class BookRepository {
     await databaseService.executeQuery('DELETE FROM books WHERE id = ?', [id]);
   }
 
-  /**
-   * Find book by server ID (for upsert operations)
-   */
-  async findByServerId(serverId: number): Promise<Book | null> {
-    const book = await databaseService.getFirstAsync(
-      'SELECT * FROM books WHERE id = ? AND _deleted = 0',
-      [serverId.toString()]
-    );
-    return book ? this.mapRowToBook(book) : null;
-  }
 
   /**
    * Upsert book - insert if not exists, update if exists (Task 4.5)
