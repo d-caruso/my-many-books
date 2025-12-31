@@ -100,6 +100,17 @@ export class OperationQueue {
   }
 
   /**
+   * Get all operations that can be processed (pending, retrying, and retryable failed)
+   */
+  getProcessableOperations(): QueuedOperation[] {
+    return this.queue.filter(op => 
+      op.status === 'pending' || 
+      op.status === 'retrying' ||
+      (op.status === 'failed' && op.retryCount < op.maxRetries)
+    );
+  }
+
+  /**
    * Get queue size
    */
   size(): number {
@@ -125,9 +136,9 @@ export class OperationQueue {
     this.isProcessing = true;
 
     try {
-      const pending = this.getPendingOperations();
+      const processable = this.getProcessableOperations();
 
-      for (const operation of pending) {
+      for (const operation of processable) {
         try {
           await this.executeWithBackoff(operation, apiExecutor);
           await this.dequeue(operation.id);
@@ -136,8 +147,10 @@ export class OperationQueue {
 
           if (operation.retryCount >= operation.maxRetries) {
             operation.status = 'failed';
+            console.log(`Operation ${operation.id} failed permanently after ${operation.maxRetries} retries`);
           } else {
             operation.status = 'retrying';
+            console.log(`Operation ${operation.id} will retry (attempt ${operation.retryCount + 1}/${operation.maxRetries})`);
           }
 
           await this.persist();
