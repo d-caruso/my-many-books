@@ -219,6 +219,7 @@ export class SyncService {
       creationDate: serverBook.creationDate || serverBook.created_at || new Date().toISOString(),
       updateDate: serverBook.updateDate || serverBook.updated_at || new Date().toISOString(),
       _syncStatus: 'synced',
+      _serverUpdatedAt: serverBook.updateDate || serverBook.updated_at || new Date().toISOString(),
     };
   }
 
