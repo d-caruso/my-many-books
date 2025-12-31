@@ -14,7 +14,7 @@ import { Book } from '@my-many-books/shared-types';
 type SearchMode = 'title' | 'author' | 'isbn';
 
 export default function SearchScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('offline');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMode, setSearchMode] = useState<SearchMode>('title');
 
@@ -95,7 +95,7 @@ export default function SearchScreen() {
       {isOffline && (
         <View style={styles.offlineContainer}>
           <Text variant="bodyMedium" style={styles.offlineText}>
-            {t('search.indicator', { ns: 'offline' })}
+            {t('search.indicator')}
           </Text>
         </View>
       )}

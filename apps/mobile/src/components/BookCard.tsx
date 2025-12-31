@@ -69,7 +69,7 @@ export const BookCard: React.FC<BookCardProps> = ({
   onResolveConflict,
   showActions = true,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('offline');
   const [menuVisible, setMenuVisible] = React.useState(false);
   const [conflictDialogVisible, setConflictDialogVisible] = React.useState(false);
   const { isOnline } = useNetworkState();
@@ -125,7 +125,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                   onPress={() => setConflictDialogVisible(true)}
                   testID="conflict-chip"
                 >
-                  {t('conflicts.conflict', { ns: 'offline' })}
+                  {t('conflicts.conflict')}
                 </Chip>
               )}
             </View>

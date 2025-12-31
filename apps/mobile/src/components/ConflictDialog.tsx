@@ -22,7 +22,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
   onResolve,
   onDismiss,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('offline');
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
@@ -68,18 +68,18 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
         style={styles.dialog}
       >
         <Dialog.Title style={styles.title}>
-          {t('offline.conflicts.title')}
+          {t('conflicts.title')}
         </Dialog.Title>
         
         <Dialog.Content>
           <Text variant="bodyMedium" style={styles.subtitle}>
-            {t('offline.conflicts.subtitle', { title: localBook.title })}
+            {t('conflicts.subtitle', { title: localBook.title })}
           </Text>
 
           <View style={styles.timestampContainer}>
             <View style={styles.timestampItem}>
               <Chip icon="phone" style={styles.localChip}>
-                {t('offline.conflicts.localVersion')}
+                {t('conflicts.localVersion')}
               </Chip>
               <Text variant="bodySmall" style={styles.timestamp}>
                 {formatDate(localBook.updateDate)}
@@ -88,7 +88,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
             
             <View style={styles.timestampItem}>
               <Chip icon="cloud" style={styles.serverChip}>
-                {t('offline.conflicts.serverVersion')}
+                {t('conflicts.serverVersion')}
               </Chip>
               <Text variant="bodySmall" style={styles.timestamp}>
                 {formatDate(serverBook.updateDate)}
@@ -106,7 +106,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
                 <View style={styles.comparisonRow}>
                   <View style={styles.versionColumn}>
                     <Text variant="labelSmall" style={styles.versionLabel}>
-                      {t('offline.conflicts.local')}
+                      {t('conflicts.local')}
                     </Text>
                     <Text 
                       variant="bodyMedium" 
@@ -119,7 +119,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
                   
                   <View style={styles.versionColumn}>
                     <Text variant="labelSmall" style={styles.versionLabel}>
-                      {t('offline.conflicts.server')}
+                      {t('conflicts.server')}
                     </Text>
                     <Text 
                       variant="bodyMedium" 
@@ -144,7 +144,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
             style={styles.button}
             icon="phone"
           >
-            {t('offline.conflicts.keepLocal')}
+            {t('conflicts.keepLocal')}
           </Button>
           <Button 
             mode="contained" 
@@ -152,7 +152,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
             style={styles.button}
             icon="cloud-download"
           >
-            {t('offline.conflicts.useServer')}
+            {t('conflicts.useServer')}
           </Button>
         </Dialog.Actions>
       </Dialog>
