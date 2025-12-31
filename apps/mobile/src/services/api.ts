@@ -61,7 +61,8 @@ class FetchHttpClient implements HttpClient {
 
           // Token refresh failed - logout user
           await authService.logout();
-          throw new Error('Session expired. Please login again.');
+          const { default: i18n } = await import('../i18n');
+          throw new Error(i18n.t('errors.sessionExpired', { ns: 'offline' }));
         }
 
         // Handle authorization errors (403 Forbidden)

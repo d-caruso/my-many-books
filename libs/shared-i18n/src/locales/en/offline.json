@@ -1,63 +1,85 @@
 {
-  "offline": {
-    "banner": {
-      "title": "You're offline",
-      "message": "Check your connection and try again"
+  "banner": {
+    "title": "You're offline",
+    "message": "Check your connection and try again"
+  },
+  "errors": {
+    "noConnection": "You're offline. Check your connection and try again.",
+    "requiresInternet": "Requires internet connection",
+    "sessionExpired": "Session expired. Please login again."
+  },
+  "tooltips": {
+    "offlineDisabled": "Requires internet connection",
+    "willSyncLater": "Will sync when online"
+  },
+  "sync": {
+    "badges": {
+      "notSynced": "Not synced",
+      "syncing": "Syncing...",
+      "synced": "Synced",
+      "syncFailed": "Sync failed"
     },
-    "errors": {
-      "noConnection": "You're offline. Check your connection and try again.",
-      "requiresInternet": "Requires internet connection"
-    },
-    "tooltips": {
-      "offlineDisabled": "Requires internet connection",
-      "willSyncLater": "Will sync when online"
-    },
-    "sync": {
-      "badges": {
-        "notSynced": "Not synced",
-        "syncing": "Syncing...",
-        "synced": "Synced",
-        "syncFailed": "Sync failed"
+    "queue": {
+      "title": "Pending Changes",
+      "syncing": "Syncing...",
+      "empty": "No pending changes",
+      "status": "Status",
+      "retries": "Retries",
+      "statuses": {
+        "pending": "Pending",
+        "retrying": "Retrying",
+        "failed": "Failed"
       },
-      "queue": {
-        "title": "Pending Changes",
-        "syncing": "Syncing...",
-        "empty": "No pending changes",
-        "status": "Status",
-        "retries": "Retries",
-        "statuses": {
-          "pending": "Pending",
-          "retrying": "Retrying",
-          "failed": "Failed"
-        },
-        "operations": {
-          "CREATE": "Create",
-          "UPDATE": "Update",
-          "DELETE": "Delete"
-        },
-        "resources": {
-          "book": "book",
-          "user": "user",
-          "settings": "settings"
-        },
-        "unknown_item": "Unknown"
+      "operations": {
+        "CREATE": "Create",
+        "UPDATE": "Update",
+        "DELETE": "Delete"
       },
-      "conflicts": {
-        "title": "Sync Conflict",
-        "subtitle": "This book \"{title}\" was changed on another device while you were editing offline.",
-        "message": "This item was changed on another device. Which version do you want to keep?",
-        "localVersion": "Your Version",
-        "serverVersion": "Server Version",
-        "local": "Local",
-        "server": "Server", 
-        "conflict": "Conflict",
-        "keepLocal": "Keep My Changes",
-        "useServer": "Use Server Version",
-        "useLocal": "Use my version"
+      "resources": {
+        "book": "book",
+        "user": "user",
+        "settings": "settings"
+      },
+      "unknown_item": "Unknown",
+      "alerts": {
+        "nearlyFullTitle": "Queue Nearly Full",
+        "nearlyFullMessage": "Queue has {{count}} operations. Consider syncing when online.",
+        "fullTitle": "Queue Full",
+        "fullMessage": "Queue is full. Oldest operation was discarded.",
+        "okButton": "OK"
       }
     },
-    "search": {
-      "indicator": "Offline - searching local data"
+    "conflicts": {
+      "title": "Sync Conflict",
+      "subtitle": "This book \"{title}\" was changed on another device while you were editing offline.",
+      "message": "This item was changed on another device. Which version do you want to keep?",
+      "localVersion": "Your Version",
+      "serverVersion": "Server Version",
+      "local": "Local",
+      "server": "Server", 
+      "conflict": "Conflict",
+      "keepLocal": "Keep My Changes",
+      "useServer": "Use Server Version",
+      "useLocal": "Use my version"
     }
+  },
+  "search": {
+    "indicator": "Offline - searching local data"
+  },
+  "books": {
+    "loadFailed": "Failed to load books",
+    "refreshFailed": "Failed to refresh books",
+    "createFailed": "Failed to create book",
+    "updateFailed": "Failed to update book",
+    "deleteFailed": "Failed to delete book",
+    "updateStatusFailed": "Failed to update book status",
+    "notFound": "Book not found"
+  },
+  "conflicts": {
+    "notFound": "Conflict not found",
+    "resolutionFailed": "Failed to resolve conflict"
+  },
+  "database": {
+    "initializationFailed": "Failed to initialize database"
   }
 }
