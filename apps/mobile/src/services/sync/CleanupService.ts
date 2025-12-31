@@ -31,7 +31,7 @@ export class CleanupService {
     let deletedOperations = 0;
 
     // Step 1: Clean up old failed operations
-    const failedOps = operationQueue.getPendingOperations().filter((op) => op.status === 'failed');
+    const failedOps = operationQueue.getFailedOperations();
 
     const cutoffDate = Date.now() - MAX_OPERATION_AGE_DAYS * 24 * 60 * 60 * 1000;
 
