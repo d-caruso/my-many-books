@@ -163,6 +163,13 @@ export class OperationQueue {
   }
 
   /**
+   * Get failed operations for cleanup service access (Phase 5 fix)
+   */
+  getFailedOperations(): Operation[] {
+    return this.queue.filter(op => op.status === 'failed');
+  }
+
+  /**
    * Persist queue to AsyncStorage
    */
   private async persist(): Promise<void> {
