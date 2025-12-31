@@ -41,6 +41,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [migrationError, setMigrationError] = useState<string | null>(null);
   const { isOnline } = useNetworkState();
 
   useEffect(() => {
@@ -71,10 +72,19 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // Migrate from AsyncStorage if needed (one-time)
       const migrationResult = await migrateFromAsyncStorage();
       
+      if (!migrationResult.success && migrationResult.error) {
+        // Migration failed - show specific error with retry option
+        setMigrationError(t('database.migrationFailed') + ': ' + migrationResult.error);
+        return; // Don't continue initialization
+      }
+      
       // Clean up legacy storage after successful migration (Task 4.4.2)
       if (migrationResult.success && migrationResult.count > 0) {
         await cleanupLegacyStorage();
       }
+
+      // Clear any previous migration error
+      setMigrationError(null);
 
       // Load books from SQLite
       await loadBooksFromDB();
@@ -85,6 +95,11 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       console.error('Failed to initialize database:', error);
       setError(t('database.initializationFailed'));
     }
+  };
+
+  const retryMigration = async () => {
+    setMigrationError(null);
+    await initDatabase();
   };
 
   const loadBooksFromDB = async () => {
@@ -459,6 +474,8 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     loading,
     error,
     refreshing,
+    migrationError,
+    retryMigration,
     loadBooks,
     refreshBooks,
     createBook,

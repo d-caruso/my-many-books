@@ -85,6 +85,7 @@
     "notFound": "Book not found"
   },
   "database": {
-    "initializationFailed": "Failed to initialize database"
+    "initializationFailed": "Failed to initialize database",
+    "migrationFailed": "Failed to migrate data from old storage"
   }
 }

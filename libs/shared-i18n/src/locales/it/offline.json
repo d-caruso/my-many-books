@@ -85,6 +85,7 @@
     "notFound": "Libro non trovato"
   },
   "database": {
-    "initializationFailed": "Inizializzazione database fallita"
+    "initializationFailed": "Inizializzazione database fallita",
+    "migrationFailed": "Migrazione dati dal vecchio storage fallita"
   }
 }
