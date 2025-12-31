@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, FlatList } from 'react-native';
-import { Searchbar, Text, SegmentedButtons } from 'react-native-paper';
+import { View, FlatList, ScrollView } from 'react-native';
+import { Searchbar, Text, SegmentedButtons, Chip, Menu, Button, IconButton } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -12,11 +12,17 @@ import { useBookSearch } from '@/hooks/useBookSearch';
 import { Book } from '@my-many-books/shared-types';
 
 type SearchMode = 'title' | 'author' | 'isbn';
+type SortOption = 'title' | 'author' | 'date_added' | 'date_updated';
+type SortDirection = 'asc' | 'desc';
 
 export default function SearchScreen() {
   const { t } = useTranslation('offline');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMode, setSearchMode] = useState<SearchMode>('title');
+  const [statusFilter, setStatusFilter] = useState<Book['status'] | 'all'>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('title');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   const {
     books,
@@ -82,6 +88,62 @@ export default function SearchScreen() {
           style={styles.searchbar}
           accessibilityLabel="Search books by title, author, or ISBN"
         />
+
+        {/* Status Filter */}
+        <Text variant="labelMedium" style={styles.filterLabel}>
+          {t('books:filter_by_status')}
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
+          {['all', 'want-to-read', 'reading', 'paused', 'completed'].map((status) => (
+            <Chip
+              key={status}
+              selected={statusFilter === status}
+              onPress={() => setStatusFilter(status as Book['status'] | 'all')}
+              style={styles.filterChip}
+              accessibilityLabel={`Filter by ${status === 'all' ? 'all books' : t(`books:${status}`)}`}
+            >
+              {status === 'all' ? t('books:all') : t(`books:${status}`)}
+            </Chip>
+          ))}
+        </ScrollView>
+
+        {/* Sort Controls */}
+        <View style={styles.sortContainer}>
+          <Text variant="labelMedium" style={styles.sortLabel}>
+            {t('books:sort_by')}
+          </Text>
+          <Menu
+            visible={showSortMenu}
+            onDismiss={() => setShowSortMenu(false)}
+            anchor={
+              <Button
+                mode="outlined"
+                onPress={() => setShowSortMenu(true)}
+                contentStyle={styles.sortButtonContent}
+                style={styles.sortButton}
+              >
+                {t(`books:sort_${sortBy}`)} ({sortDirection === 'asc' ? '↑' : '↓'})
+              </Button>
+            }
+          >
+            {(['title', 'author', 'date_added', 'date_updated'] as SortOption[]).map((option) => (
+              <Menu.Item
+                key={option}
+                onPress={() => {
+                  setSortBy(option);
+                  setShowSortMenu(false);
+                }}
+                title={t(`books:sort_${option}`)}
+                titleStyle={sortBy === option ? { fontWeight: 'bold' } : undefined}
+              />
+            ))}
+          </Menu>
+          <IconButton
+            icon={sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}
+            onPress={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+            accessibilityLabel={`Sort ${sortDirection === 'asc' ? 'descending' : 'ascending'}`}
+          />
+        </View>
       </View>
 
       {error && (
@@ -173,5 +235,32 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
     flexGrow: 1,
+  },
+  filterLabel: {
+    marginTop: 16,
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  filterContainer: {
+    marginBottom: 16,
+  },
+  filterChip: {
+    marginRight: 8,
+  },
+  sortContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sortLabel: {
+    marginRight: 12,
+    fontWeight: '500',
+  },
+  sortButton: {
+    flex: 1,
+    marginRight: 8,
+  },
+  sortButtonContent: {
+    paddingHorizontal: 8,
   },
 });
