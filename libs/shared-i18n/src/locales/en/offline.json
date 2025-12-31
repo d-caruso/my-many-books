@@ -60,7 +60,9 @@
       "conflict": "Conflict",
       "keepLocal": "Keep My Changes",
       "useServer": "Use Server Version",
-      "useLocal": "Use my version"
+      "useLocal": "Use my version",
+      "notFound": "Conflict not found",
+      "resolutionFailed": "Failed to resolve conflict"
     }
   },
   "search": {
@@ -74,10 +76,6 @@
     "deleteFailed": "Failed to delete book",
     "updateStatusFailed": "Failed to update book status",
     "notFound": "Book not found"
-  },
-  "conflicts": {
-    "notFound": "Conflict not found",
-    "resolutionFailed": "Failed to resolve conflict"
   },
   "database": {
     "initializationFailed": "Failed to initialize database"

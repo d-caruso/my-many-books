@@ -8,7 +8,7 @@ import type {
 } from '@my-many-books/shared-types';
 
 // Sync status for offline operations
-export type SyncStatus = 'synced' | 'pending' | 'failed';
+export type SyncStatus = 'synced' | 'pending' | 'failed' | 'syncing';
 
 // Enhanced Book type for mobile with additional fields
 export interface Book extends Omit<SharedBook, 'status' | 'creationDate' | 'updateDate'> {

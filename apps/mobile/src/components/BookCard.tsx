@@ -151,28 +151,22 @@ export const BookCard: React.FC<BookCardProps> = ({
                 <Menu.Item
                   key={status}
                   onPress={() => {
-                    if (isOnline) {
-                      onStatusChange?.(status);
-                      setMenuVisible(false);
-                    }
+                    onStatusChange?.(status);
+                    setMenuVisible(false);
                   }}
                   title={t('books:mark_as_status', { status: getStatusLabel(status, t) })}
-                  disabled={!isOnline}
-                  titleStyle={!isOnline ? { color: '#9e9e9e' } : undefined}
-                  accessibilityHint={!isOnline ? t('tooltips.offlineDisabled', { ns: 'offline' }) : undefined}
+                  titleStyle={!isOnline ? { color: '#ff9800' } : undefined}
+                  accessibilityHint={!isOnline ? t('tooltips.willSyncLater', { ns: 'offline' }) : undefined}
                 />
               ))}
               <Menu.Item
                 onPress={() => {
-                  if (isOnline) {
-                    onDelete?.();
-                    setMenuVisible(false);
-                  }
+                  onDelete?.();
+                  setMenuVisible(false);
                 }}
                 title={t('delete')}
-                titleStyle={{ color: !isOnline ? '#9e9e9e' : '#f44336' }}
-                disabled={!isOnline}
-                accessibilityHint={!isOnline ? t('tooltips.offlineDisabled', { ns: 'offline' }) : undefined}
+                titleStyle={{ color: !isOnline ? '#ff9800' : '#f44336' }}
+                accessibilityHint={!isOnline ? t('tooltips.willSyncLater', { ns: 'offline' }) : undefined}
               />
             </Menu>
           </View>
