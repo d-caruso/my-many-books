@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, FlatList, ScrollView } from 'react-native';
 import { Searchbar, Text, SegmentedButtons, Chip, Menu, Button, IconButton } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
@@ -23,6 +23,8 @@ export default function SearchScreen() {
   const [sortBy, setSortBy] = useState<SortOption>('title');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const {
     books,
@@ -34,25 +36,68 @@ export default function SearchScreen() {
     clearSearch,
   } = useBookSearch();
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    
-    if (!query.trim()) {
+  const performSearch = useCallback(async () => {
+    if (!searchQuery.trim()) {
       clearSearch();
       return;
     }
 
     if (searchMode === 'isbn') {
-      const book = await searchByISBN(query);
+      const book = await searchByISBN(searchQuery);
       if (book) {
         // For ISBN search, we just show the single result
         // This would need to be handled differently in the actual implementation
       }
     } else {
-      const filters = searchMode === 'author' ? { author: query } : {};
-      await searchBooks(query, filters);
+      const filters: any = {};
+      
+      // Apply search mode filter
+      if (searchMode === 'author') {
+        filters.author = searchQuery;
+      }
+      
+      // Apply status filter
+      if (statusFilter !== 'all') {
+        filters.status = statusFilter;
+      }
+      
+      // Apply author filter
+      if (selectedAuthor) {
+        filters.author = selectedAuthor;
+      }
+      
+      // Apply category filter
+      if (selectedCategory) {
+        filters.category = selectedCategory;
+      }
+      
+      // Apply sort options
+      filters.sortBy = sortBy;
+      filters.sortDirection = sortDirection;
+      
+      await searchBooks(searchQuery, filters);
     }
+  }, [searchQuery, searchMode, statusFilter, selectedAuthor, selectedCategory, sortBy, sortDirection, searchBooks, searchByISBN, clearSearch]);
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
   };
+
+  // Trigger search when filters change
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      performSearch();
+    }
+  }, [statusFilter, selectedAuthor, selectedCategory, sortBy, sortDirection, performSearch]);
+
+  // Trigger search when query changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      performSearch();
+    }, 300); // Debounce search
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, performSearch]);
 
   const renderBook = ({ item }: { item: Book }) => (
     <BookCard
@@ -105,6 +150,36 @@ export default function SearchScreen() {
               {status === 'all' ? t('books:all') : t(`books:${status}`)}
             </Chip>
           ))}
+        </ScrollView>
+
+        {/* Author Filter */}
+        <Text variant="labelMedium" style={styles.filterLabel}>
+          {t('books:filter_by_author')}
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
+          <Chip
+            selected={selectedAuthor === null}
+            onPress={() => setSelectedAuthor(null)}
+            style={styles.filterChip}
+          >
+            {t('books:all_authors')}
+          </Chip>
+          {/* Note: In a real implementation, you'd fetch available authors from the database */}
+        </ScrollView>
+
+        {/* Category Filter */}
+        <Text variant="labelMedium" style={styles.filterLabel}>
+          {t('books:filter_by_category')}
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
+          <Chip
+            selected={selectedCategory === null}
+            onPress={() => setSelectedCategory(null)}
+            style={styles.filterChip}
+          >
+            {t('books:all_categories')}
+          </Chip>
+          {/* Note: In a real implementation, you'd fetch available categories from the database */}
         </ScrollView>
 
         {/* Sort Controls */}
