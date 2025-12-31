@@ -23,6 +23,7 @@ export interface CategoryQueryOptions extends QueryOptions {
 export interface CategoryListFilters extends SearchFilters {
   name?: string;
   userId?: number;
+  updatedSince?: string;
 }
 
 export interface CategoryListOptions extends ListOptions {

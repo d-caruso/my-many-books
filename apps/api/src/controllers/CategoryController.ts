@@ -16,6 +16,7 @@ import { CreateCategoryDTO } from '../dtos/category/CreateCategoryDTO';
 import { UpdateCategoryDTO } from '../dtos/category/UpdateCategoryDTO';
 import { toCategoryResponseDTO } from '../dtos/category/CategoryResponseDTO';
 import { Book, Category } from '../models';
+import { Repository as CategoryRepositoryContract } from '../repositories/category/Repository';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
 import { CategorySearchService } from '../services/search/CategorySearchService';
@@ -24,7 +25,8 @@ import { CategorySearchService } from '../services/search/CategorySearchService'
 export class CategoryController extends BaseController {
   constructor(
     @inject(TYPES.CategoryService) private readonly categoryService: CategoryService,
-    @inject(TYPES.CategorySearchService) private readonly categorySearchService: CategorySearchService
+    @inject(TYPES.CategorySearchService) private readonly categorySearchService: CategorySearchService,
+    @inject(TYPES.CategoryRepository) private readonly categoryRepository: CategoryRepositoryContract
   ) {
     super();
     this.categoryService.initializeControllerContext();
@@ -161,18 +163,31 @@ export class CategoryController extends BaseController {
 
     const pagination = this.getPaginationParams(request);
     const search = this.getQueryParameter(request, 'search') ?? undefined;
+    const updatedSince = this.getQueryParameter(request, 'updatedSince');
 
     try {
-      const result = await this.categoryService.listCategories(
-        {
-          limit: pagination.limit,
-          offset: pagination.offset,
-          orderBy: 'name',
-          orderDirection: 'ASC',
-          search,
-        },
-        this.getUserContext(request)!
-      );
+      // Use repository layer for consistent filtering and incremental sync support
+      const filters: any = {};
+      if (search) {
+        filters.name = search;
+      }
+      if (updatedSince) {
+        filters.updatedSince = updatedSince;
+      }
+      
+      // Add user filter
+      const userContext = this.getUserContext(request)!;
+      filters.userId = userContext.userId;
+
+      const listOptions = {
+        limit: pagination.limit,
+        offset: pagination.offset,
+        orderBy: 'name',
+        orderDirection: 'ASC' as const,
+        filters,
+      };
+
+      const result = await this.categoryRepository.list(listOptions);
 
       const page = pagination.page;
       const totalPages = Math.ceil(result.total / pagination.limit) || 1;

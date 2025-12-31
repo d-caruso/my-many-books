@@ -41,6 +41,8 @@ interface BookSearchFilters {
   author?: string;
   category?: string;
   userId?: number;
+  updatedSince?: string;
+  [key: string]: any;
 }
 
 /**

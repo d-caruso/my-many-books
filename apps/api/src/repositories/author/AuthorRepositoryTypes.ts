@@ -28,6 +28,7 @@ export interface AuthorListFilters extends SearchFilters {
   surname?: string;
   nationality?: string;
   userId?: number;
+  updatedSince?: string;
 }
 
 export interface AuthorListOptions extends ListOptions {

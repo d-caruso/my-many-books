@@ -4,11 +4,9 @@
 
 import Joi from 'joi';
 import { inject, injectable } from 'inversify';
-import { Op, WhereOptions, Order } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book } from '../models';
 import { ApiResponse } from '../common/ApiResponse';
-import { AuthorAttributes } from '../models/interfaces/ModelInterfaces';
 import { UniversalRequest } from '../types';
 import { TYPES } from '../container/types';
 import {
@@ -30,6 +28,8 @@ interface AuthorSearchFilters {
   surname?: string;
   nationality?: string;
   userId?: number;
+  updatedSince?: string;
+  [key: string]: any;
 }
 
 /**
@@ -202,6 +202,7 @@ export class AuthorController extends BaseController {
     const pagination = this.getPaginationParams(request);
     const filters = this.getQueryParameter(request, 'filters');
     const includeBooks = this.getQueryParameter(request, 'includeBooks') === 'true';
+    const updatedSince = this.getQueryParameter(request, 'updatedSince');
 
     let searchFilters: AuthorSearchFilters = {};
     if (filters) {
@@ -222,29 +223,29 @@ export class AuthorController extends BaseController {
       }
     }
 
+    // Add updatedSince filter for incremental sync
+    if (updatedSince) {
+      searchFilters.updatedSince = updatedSince;
+    }
+
     if (request.user?.role !== USER_ROLES.ADMIN && request.user?.id !== undefined) {
       searchFilters.userId = request.user.id;
     }
 
-    const whereClause = this.buildWhereClauseFromFilters(searchFilters);
-
-    const includeClause = includeBooks ? [{ model: Book, through: { attributes: [] } }] : [];
-
-    const queryOptions = {
-      where: whereClause,
-      include: includeClause,
+    // Use repository layer for consistent filtering and query logic
+    const listOptions = {
       limit: pagination.limit,
       offset: pagination.offset,
-      order: [
-        ['surname', 'ASC'],
-        ['name', 'ASC'],
-      ] as Order,
+      includeBooks,
+      filters: searchFilters,
+      orderBy: 'surname',
+      orderDirection: 'ASC' as const,
     };
 
-    const { count, rows: authors } = await Author.findAndCountAll(queryOptions);
-
-    const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
-    return this.createSuccessResponse(authors, undefined, meta);
+    const result = await this.authorRepository.list(listOptions);
+    
+    const meta = this.createPaginationMeta(pagination.page, pagination.limit, result.total);
+    return this.createSuccessResponse(result.rows, undefined, meta);
   }
 
   /**
@@ -339,35 +340,6 @@ export class AuthorController extends BaseController {
       undefined,
       meta
     );
-  }
-  private buildWhereClauseFromFilters(
-    searchFilters: AuthorSearchFilters
-  ): WhereOptions<AuthorAttributes> {
-    const whereConditions: WhereOptions<AuthorAttributes>[] = [];
-
-    if (searchFilters.name && searchFilters.surname) {
-      whereConditions.push({ name: { [Op.iLike]: `%${searchFilters.name}%` } });
-      whereConditions.push({ surname: { [Op.iLike]: `%${searchFilters.surname}%` } });
-    } else if (searchFilters.name) {
-      whereConditions.push({
-        [Op.or]: [
-          { name: { [Op.iLike]: `%${searchFilters.name}%` } },
-          { surname: { [Op.iLike]: `%${searchFilters.name}%` } },
-        ],
-      });
-    } else if (searchFilters.surname) {
-      whereConditions.push({ surname: { [Op.iLike]: `%${searchFilters.surname}%` } });
-    }
-
-    if (searchFilters.nationality) {
-      whereConditions.push({ nationality: { [Op.iLike]: `%${searchFilters.nationality}%` } });
-    }
-
-    if (searchFilters.userId !== undefined) {
-      whereConditions.push({ userId: searchFilters.userId });
-    }
-
-    return whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
   }
 
   private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {

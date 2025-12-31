@@ -248,6 +248,14 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
       conditions.push({ nationality: { [Op.iLike]: `%${filters.nationality}%` } });
     }
 
+    // Incremental sync support for mobile clients
+    if (filters?.updatedSince) {
+      const since = new Date(filters.updatedSince);
+      if (!isNaN(since.getTime())) {
+        conditions.push({ updateDate: { [Op.gt]: since } });
+      }
+    }
+
     return conditions.length > 0 ? { [Op.and]: conditions } : {};
   }
 

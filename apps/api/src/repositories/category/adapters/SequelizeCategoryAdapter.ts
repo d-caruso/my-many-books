@@ -236,6 +236,14 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
       where.userId = filters.userId;
     }
 
+    // Incremental sync support for mobile clients
+    if (filters?.updatedSince) {
+      const since = new Date(filters.updatedSince);
+      if (!isNaN(since.getTime())) {
+        where.updateDate = { [Op.gt]: since };
+      }
+    }
+
     return where;
   }
 
