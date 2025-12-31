@@ -174,6 +174,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       console.error('Failed to create book:', err);
 
       // If error is retriable, keep optimistic book with pending status
+      // Note: API service already handles queueing via withQueueOnError, so we don't queue again here
       if (isRetriableError(err)) {
         await bookRepository.update(tempId, { _syncStatus: 'pending' });
         setBooks(prev => prev.map(book =>
@@ -260,7 +261,8 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     } catch (err: any) {
       console.error('Failed to update book:', err);
 
-      // If error is retriable, keep pending status
+      // If error is retriable, keep pending status  
+      // Note: API service already handles queueing via withQueueOnError, so we don't queue again here
       if (isRetriableError(err)) {
         const pendingBook = books.find(b => b.id === id);
         if (pendingBook) {
@@ -295,6 +297,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       console.error('Failed to delete book:', err);
 
       // If error is retriable, keep soft-deleted with pending status
+      // Note: API service already handles queueing via withQueueOnError, so we don't queue again here
       if (isRetriableError(err)) {
         // Book already marked as deleted and pending in SQLite
         return;
@@ -338,6 +341,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       console.error('Failed to update book status:', err);
 
       // If error is retriable, keep pending status
+      // Note: API service already handles queueing via withQueueOnError, so we don't queue again here
       if (isRetriableError(err)) {
         // Already marked as pending
         return;
