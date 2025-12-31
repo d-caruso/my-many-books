@@ -123,7 +123,7 @@ export default function AddBookScreen() {
                   onPress={handleISBNLookup}
                   disabled={loading || !isbnCode.trim()}
                   style={styles.lookupButton}
-                  accessibilityLabel="Lookup book by ISBN"
+                  accessibilityLabel={t('books:lookup_isbn')}
                 >
                   {t('books:lookup')}
                 </Button>
@@ -159,7 +159,7 @@ export default function AddBookScreen() {
                   { value: 'completed', label: t('books:completed') },
                 ]}
                 style={styles.segmentedButtons}
-                accessibilityLabel="Select reading status"
+                accessibilityLabel={t('books:select_status')}
               />
 
               <TextInput
@@ -178,7 +178,7 @@ export default function AddBookScreen() {
                   onPress={() => router.back()}
                   style={styles.button}
                   disabled={loading}
-                  accessibilityLabel="Cancel adding book"
+                  accessibilityLabel={t('cancel')}
                 >
                   {t('cancel')}
                 </Button>
@@ -188,7 +188,7 @@ export default function AddBookScreen() {
                   style={styles.button}
                   loading={loading}
                   disabled={loading}
-                  accessibilityLabel="Add book to library"
+                  accessibilityLabel={t('books:add_book')}
                   accessibilityHint={!isOnline ? t('offline.tooltips.willSyncLater') : undefined}
                 >
                   {t('books:add_book')}

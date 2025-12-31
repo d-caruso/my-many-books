@@ -17,7 +17,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   onRetry,
   onDismiss,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('offline');
 
   if (!error) {
     return null;
@@ -33,8 +33,8 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
     <Surface style={styles.container} elevation={2}>
       <View style={styles.content}>
         <Text variant="titleMedium" style={styles.title}>
-          {isValidationError ? 'Validation Error' :
-           isNetworkError ? 'Network Error' : 'Error'}
+          {isValidationError ? t('errors.validationError') :
+           isNetworkError ? t('errors.networkError') : t('errors.generalError')}
         </Text>
         <Text variant="bodyMedium" style={styles.message}>
           {error.message}

@@ -1,63 +1,90 @@
 {
-  "offline": {
-    "banner": {
-      "title": "Sei offline",
-      "message": "Controlla la connessione e riprova"
+  "banner": {
+    "title": "Sei offline",
+    "message": "Controlla la connessione e riprova"
+  },
+  "errors": {
+    "noConnection": "Sei offline. Controlla la connessione e riprova.",
+    "requiresInternet": "Richiede connessione internet",
+    "sessionExpired": "Sessione scaduta. Effettua nuovamente il login.",
+    "validationError": "Errore di Validazione",
+    "networkError": "Errore di Rete",
+    "generalError": "Errore"
+  },
+  "tooltips": {
+    "offlineDisabled": "Richiede connessione internet",
+    "willSyncLater": "Sincronizzazione al ritorno online"
+  },
+  "sync": {
+    "badges": {
+      "notSynced": "Non sincronizzato",
+      "syncing": "Sincronizzazione...",
+      "synced": "Sincronizzato",
+      "syncFailed": "Sincronizzazione fallita"
     },
-    "errors": {
-      "noConnection": "Sei offline. Controlla la connessione e riprova.",
-      "requiresInternet": "Richiede connessione internet"
-    },
-    "tooltips": {
-      "offlineDisabled": "Richiede connessione internet",
-      "willSyncLater": "Sincronizzazione al ritorno online"
-    },
-    "sync": {
-      "badges": {
-        "notSynced": "Non sincronizzato",
-        "syncing": "Sincronizzazione...",
-        "synced": "Sincronizzato",
-        "syncFailed": "Sincronizzazione fallita"
+    "queue": {
+      "title": "Modifiche in Sospeso",
+      "syncing": "Sincronizzazione...",
+      "empty": "Nessuna modifica in sospeso",
+      "status": "Stato",
+      "retries": "Tentativi",
+      "statuses": {
+        "pending": "In Attesa",
+        "retrying": "Ritentando",
+        "failed": "Fallito"
       },
-      "queue": {
-        "title": "Modifiche in Sospeso",
-        "syncing": "Sincronizzazione...",
-        "empty": "Nessuna modifica in sospeso",
-        "status": "Stato",
-        "retries": "Tentativi",
-        "statuses": {
-          "pending": "In Attesa",
-          "retrying": "Ritentando",
-          "failed": "Fallito"
-        },
-        "operations": {
-          "CREATE": "Crea",
-          "UPDATE": "Aggiorna",
-          "DELETE": "Elimina"
-        },
-        "resources": {
-          "book": "libro",
-          "user": "utente",
-          "settings": "impostazioni"
-        },
-        "unknown_item": "Sconosciuto"
+      "operations": {
+        "CREATE": "Crea",
+        "UPDATE": "Aggiorna",
+        "DELETE": "Elimina"
       },
-      "conflicts": {
-        "title": "Conflitto di Sincronizzazione",
-        "subtitle": "Il libro \"{title}\" è stato modificato su un altro dispositivo mentre editavi offline.",
-        "message": "Questo elemento è stato modificato su un altro dispositivo. Quale versione vuoi conservare?",
-        "localVersion": "La Tua Versione",
-        "serverVersion": "Versione Server",
-        "local": "Locale",
-        "server": "Server",
-        "conflict": "Conflitto",
-        "keepLocal": "Mantieni Le Mie Modifiche", 
-        "useServer": "Usa Versione Server",
-        "useLocal": "Usa la mia versione"
+      "resources": {
+        "book": "libro",
+        "user": "utente",
+        "settings": "impostazioni"
+      },
+      "unknown_item": "Sconosciuto",
+      "alerts": {
+        "nearlyFullTitle": "Coda Quasi Piena",
+        "nearlyFullMessage": "La coda ha {{count}} operazioni. Considera la sincronizzazione quando online.",
+        "fullTitle": "Coda Piena",
+        "fullMessage": "La coda è piena. L'operazione più vecchia è stata scartata.",
+        "okButton": "OK"
       }
     },
-    "search": {
-      "indicator": "Offline - ricerca nei dati locali"
+    "conflicts": {
+      "title": "Conflitto di Sincronizzazione",
+      "subtitle": "Il libro \"{title}\" è stato modificato su un altro dispositivo mentre editavi offline.",
+      "message": "Questo elemento è stato modificato su un altro dispositivo. Quale versione vuoi conservare?",
+      "localVersion": "La Tua Versione",
+      "serverVersion": "Versione Server",
+      "local": "Locale",
+      "server": "Server",
+      "conflict": "Conflitto",
+      "keepLocal": "Mantieni Le Mie Modifiche", 
+      "useServer": "Usa Versione Server",
+      "useLocal": "Usa la mia versione",
+      "notFound": "Conflitto non trovato",
+      "resolutionFailed": "Risoluzione del conflitto fallita"
     }
+  },
+  "search": {
+    "indicator": "Offline - ricerca nei dati locali",
+    "offlineSearchFailed": "Ricerca nei libri locali fallita",
+    "searchFailed": "Ricerca fallita",
+    "showingOfflineResults": "Visualizzazione risultati offline",
+    "bookNotFound": "Libro non trovato"
+  },
+  "books": {
+    "loadFailed": "Caricamento libri fallito",
+    "refreshFailed": "Aggiornamento libri fallito",
+    "createFailed": "Creazione libro fallita",
+    "updateFailed": "Aggiornamento libro fallito",
+    "deleteFailed": "Eliminazione libro fallita",
+    "updateStatusFailed": "Aggiornamento stato libro fallito",
+    "notFound": "Libro non trovato"
+  },
+  "database": {
+    "initializationFailed": "Inizializzazione database fallita"
   }
 }

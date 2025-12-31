@@ -6,7 +6,10 @@
   "errors": {
     "noConnection": "You're offline. Check your connection and try again.",
     "requiresInternet": "Requires internet connection",
-    "sessionExpired": "Session expired. Please login again."
+    "sessionExpired": "Session expired. Please login again.",
+    "validationError": "Validation Error",
+    "networkError": "Network Error",
+    "generalError": "Error"
   },
   "tooltips": {
     "offlineDisabled": "Requires internet connection",

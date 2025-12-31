@@ -173,9 +173,13 @@ export default function BooksScreen() {
         icon="plus"
         style={styles.fab}
         onPress={() => {
-          router.push('/book/add');
+          if (isOnline) {
+            router.push('/book/add');
+          }
         }}
-        accessibilityLabel="Add new book"
+        disabled={!isOnline}
+        accessibilityLabel={isOnline ? t('books:add_book') : t('tooltips.offlineDisabled', { ns: 'offline' })}
+        accessibilityHint={!isOnline ? t('tooltips.offlineDisabled', { ns: 'offline' }) : undefined}
       />
     </SafeAreaView>
   );
