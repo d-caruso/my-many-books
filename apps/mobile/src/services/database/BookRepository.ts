@@ -44,34 +44,55 @@ export class BookRepository {
     const id = book.id || book._tempId || `temp-${Date.now()}-${idCounter++}`;
     const now = new Date().toISOString();
 
-    await databaseService.executeQuery(
-      `INSERT INTO books (
-        id, title, authors, isbn, thumbnail, description, published_date,
-        page_count, rating, status, notes, user_id, creation_date, update_date,
-        server_id, _sync_status, _temp_id, _deleted, _server_updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        book.title || '',
-        book.authors || null,
-        book.isbn || null,
-        book.thumbnail || null,
-        book.description || null,
-        book.publishedDate || null,
-        book.pageCount || null,
-        book.rating || null,
-        book.status || 'want-to-read',
-        book.notes || null,
-        book.userId || null,
-        book.creationDate || now,
-        book.updateDate || now,
-        book.serverId || null,
-        book._syncStatus || 'synced',
-        book._tempId || null,
-        book._deleted ? 1 : 0,
-        book._serverUpdatedAt || null,
-      ]
-    );
+    // Start transaction for atomic book + relations creation
+    await databaseService.executeQuery('BEGIN TRANSACTION');
+    
+    try {
+      // Insert main book record
+      await databaseService.executeQuery(
+        `INSERT INTO books (
+          id, title, authors, isbn, thumbnail, description, published_date,
+          page_count, rating, status, notes, user_id, creation_date, update_date,
+          server_id, _sync_status, _temp_id, _deleted, _server_updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          book.title || '',
+          book.authors || null,
+          book.isbn || null,
+          book.thumbnail || null,
+          book.description || null,
+          book.publishedDate || null,
+          book.pageCount || null,
+          book.rating || null,
+          book.status || 'want-to-read',
+          book.notes || null,
+          book.userId || null,
+          book.creationDate || now,
+          book.updateDate || now,
+          book.serverId || null,
+          book._syncStatus || 'synced',
+          book._tempId || null,
+          book._deleted ? 1 : 0,
+          book._serverUpdatedAt || null,
+        ]
+      );
+
+      // Handle author relationships
+      if (book.authors) {
+        await this.createAuthorRelationships(id, book.authors);
+      }
+
+      // Handle category relationships  
+      if (book.categories) {
+        await this.createCategoryRelationships(id, book.categories);
+      }
+
+      await databaseService.executeQuery('COMMIT');
+    } catch (error) {
+      await databaseService.executeQuery('ROLLBACK');
+      throw error;
+    }
 
     const created = await this.findById(id);
     if (!created) {
@@ -482,6 +503,88 @@ export class BookRepository {
       _deleted: row._deleted === 1,
       _serverUpdatedAt: row._server_updated_at,
     } as Book;
+  }
+
+  /**
+   * Create author relationships for a book (Phase 4 fix)
+   */
+  private async createAuthorRelationships(bookId: string, authors: any): Promise<void> {
+    if (!authors) return;
+    
+    // Handle different author formats (string, array of strings, array of objects)
+    const authorNames = Array.isArray(authors) 
+      ? authors.map(a => typeof a === 'string' ? a : a.name).filter(Boolean)
+      : typeof authors === 'string' 
+        ? [authors]
+        : [];
+
+    for (const authorName of authorNames) {
+      // Insert or get author
+      let authorResult = await databaseService.getFirstAsync(
+        'SELECT id FROM authors WHERE name = ?',
+        [authorName]
+      );
+      
+      let authorId;
+      if (!authorResult) {
+        // Create new author
+        const newAuthorId = `author-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        await databaseService.executeQuery(
+          'INSERT INTO authors (id, name) VALUES (?, ?)',
+          [newAuthorId, authorName]
+        );
+        authorId = newAuthorId;
+      } else {
+        authorId = authorResult.id;
+      }
+
+      // Create book-author relationship
+      await databaseService.executeQuery(
+        'INSERT OR IGNORE INTO book_authors (book_id, author_id) VALUES (?, ?)',
+        [bookId, authorId]
+      );
+    }
+  }
+
+  /**
+   * Create category relationships for a book (Phase 4 fix)
+   */
+  private async createCategoryRelationships(bookId: string, categories: any): Promise<void> {
+    if (!categories) return;
+    
+    // Handle different category formats
+    const categoryNames = Array.isArray(categories)
+      ? categories.map(c => typeof c === 'string' ? c : c.name).filter(Boolean)
+      : typeof categories === 'string'
+        ? [categories]
+        : [];
+
+    for (const categoryName of categoryNames) {
+      // Insert or get category
+      let categoryResult = await databaseService.getFirstAsync(
+        'SELECT id FROM categories WHERE name = ?',
+        [categoryName]
+      );
+      
+      let categoryId;
+      if (!categoryResult) {
+        // Create new category
+        const newCategoryId = `category-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        await databaseService.executeQuery(
+          'INSERT INTO categories (id, name) VALUES (?, ?)',
+          [newCategoryId, categoryName]
+        );
+        categoryId = newCategoryId;
+      } else {
+        categoryId = categoryResult.id;
+      }
+
+      // Create book-category relationship
+      await databaseService.executeQuery(
+        'INSERT OR IGNORE INTO book_categories (book_id, category_id) VALUES (?, ?)',
+        [bookId, categoryId]
+      );
+    }
   }
 }
 

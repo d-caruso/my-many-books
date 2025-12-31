@@ -43,7 +43,7 @@ export default function SearchScreen() {
         // This would need to be handled differently in the actual implementation
       }
     } else {
-      const filters = searchMode === 'author' ? { authorName: query } : {};
+      const filters = searchMode === 'author' ? { author: query } : {};
       await searchBooks(query, filters);
     }
   };
