@@ -2,6 +2,8 @@ import { QueuedOperation } from '../types/queue';
 import { apiClient } from './api';
 import { idMappingService } from './sync/IDMappingService';
 import { bookRepository } from './database/BookRepository';
+import { authorRepository } from './database/AuthorRepository';
+import { categoryRepository } from './database/CategoryRepository';
 import { cleanupService } from './sync/CleanupService';
 
 /**
@@ -13,6 +15,12 @@ export async function executeOperation(operation: QueuedOperation): Promise<void
   switch (resource) {
     case 'book':
       await executeBookOperation(type, payload);
+      break;
+    case 'author':
+      await executeAuthorOperation(type, payload);
+      break;
+    case 'category':
+      await executeCategoryOperation(type, payload);
       break;
     case 'user':
       await executeUserOperation(type, payload);
@@ -161,8 +169,137 @@ async function executeUserOperation(type: string, payload: any): Promise<void> {
   throw new Error('User operations not yet implemented');
 }
 
+async function executeAuthorOperation(type: string, payload: any): Promise<void> {
+  switch (type) {
+    case 'CREATE':
+      await executeCreateAuthor(payload);
+      break;
+    case 'UPDATE':
+      await executeUpdateAuthor(payload);
+      break;
+    case 'DELETE':
+      await executeDeleteAuthor(payload);
+      break;
+    default:
+      throw new Error(`Unknown operation type: ${type}`);
+  }
+}
+
+async function executeCategoryOperation(type: string, payload: any): Promise<void> {
+  switch (type) {
+    case 'CREATE':
+      await executeCreateCategory(payload);
+      break;
+    case 'UPDATE':
+      await executeUpdateCategory(payload);
+      break;
+    case 'DELETE':
+      await executeDeleteCategory(payload);
+      break;
+    default:
+      throw new Error(`Unknown operation type: ${type}`);
+  }
+}
+
+async function executeCreateAuthor(payload: any): Promise<void> {
+  const tempId = payload.id;
+  const serverResponse: any = await apiClient.authors.createAuthor({
+    name: payload.name,
+    surname: payload.surname,
+    nationality: payload.nationality,
+  });
+
+  const serverId = serverResponse.id;
+  if (serverId && tempId) {
+    await idMappingService.registerTempId(tempId, serverId, 'author');
+    await authorRepository.updateSyncFields(tempId, {
+      serverId,
+      _serverUpdatedAt: serverResponse.updateDate || new Date().toISOString(),
+      _syncStatus: 'synced',
+    });
+  }
+}
+
+async function executeUpdateAuthor(payload: any): Promise<void> {
+  const authorId = payload.id;
+  const localAuthor = await authorRepository.findById(authorId);
+  if (!localAuthor) {
+    throw new Error(`Author not found: ${authorId}`);
+  }
+
+  const serverIdToUse = localAuthor.serverId || localAuthor.id;
+  const updateResponse: any = await apiClient.authors.updateAuthor(Number(serverIdToUse), {
+    name: payload.name,
+    surname: payload.surname,
+    nationality: payload.nationality,
+  });
+
+  if (updateResponse.updateDate) {
+    await authorRepository.updateSyncFields(authorId, {
+      _serverUpdatedAt: updateResponse.updateDate,
+      _syncStatus: 'synced',
+    });
+  }
+}
+
+async function executeDeleteAuthor(payload: any): Promise<void> {
+  const authorId = payload.id;
+  const localAuthor = await authorRepository.findById(authorId);
+  if (!localAuthor) return;
+
+  if (localAuthor.serverId) {
+    await apiClient.authors.deleteAuthor(localAuthor.serverId);
+  }
+}
+
+async function executeCreateCategory(payload: any): Promise<void> {
+  const tempId = payload.id;
+  const serverResponse: any = await apiClient.categories.createCategory({
+    name: payload.name,
+  });
+
+  const serverId = serverResponse.id;
+  if (serverId && tempId) {
+    await idMappingService.registerTempId(tempId, serverId, 'category');
+    await categoryRepository.updateSyncFields(tempId, {
+      serverId,
+      _serverUpdatedAt: serverResponse.updateDate || new Date().toISOString(),
+      _syncStatus: 'synced',
+    });
+  }
+}
+
+async function executeUpdateCategory(payload: any): Promise<void> {
+  const categoryId = payload.id;
+  const localCategory = await categoryRepository.findById(categoryId);
+  if (!localCategory) {
+    throw new Error(`Category not found: ${categoryId}`);
+  }
+
+  const serverIdToUse = localCategory.serverId || localCategory.id;
+  const updateResponse: any = await apiClient.categories.updateCategory(Number(serverIdToUse), {
+    name: payload.name,
+  });
+
+  if (updateResponse.updateDate) {
+    await categoryRepository.updateSyncFields(categoryId, {
+      _serverUpdatedAt: updateResponse.updateDate,
+      _syncStatus: 'synced',
+    });
+  }
+}
+
+async function executeDeleteCategory(payload: any): Promise<void> {
+  const categoryId = payload.id;
+  const localCategory = await categoryRepository.findById(categoryId);
+  if (!localCategory) return;
+
+  if (localCategory.serverId) {
+    await apiClient.categories.deleteCategory(localCategory.serverId);
+  }
+}
+
 async function executeSettingsOperation(type: string, payload: any): Promise<void> {
-  // Settings operations not yet implemented
   throw new Error('Settings operations not yet implemented');
 }
 
