@@ -12,10 +12,10 @@ export function useQueueStatus() {
 
   const refreshQueue = async () => {
     await operationQueue.initialize();
-    const pending = operationQueue.getPendingOperations();
+    const processable = operationQueue.getProcessableOperations();
     const allOps = operationQueue['queue']; // Access private queue for full list
     
-    setPendingCount(pending.length);
+    setPendingCount(processable.length); // Use processable count instead of just pending
     setOperations(allOps);
     
     // Check if any operations are currently being processed/syncing
