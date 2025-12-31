@@ -8,7 +8,7 @@ import { operationQueue } from '../OperationQueue';
 import { databaseService } from '../database/DatabaseService';
 import { executeOperation } from '../QueueExecutor';
 import { Book } from '../../types';
-import { hasConflict } from '../../utils/conflictDetection';
+import { hasConflict, hasAuthorConflict, hasCategoryConflict } from '../../utils/conflictDetection';
 
 const LAST_SYNC_KEY = '@last_sync_timestamp';
 const SYNC_PAGE_SIZE = 50;
@@ -350,8 +350,15 @@ export class SyncService {
     const localAuthor = await authorRepository.findByServerId(serverId);
 
     if (localAuthor) {
-      // Author exists locally - compare updateDate if available
-      if (serverAuthor.updateDate && localAuthor._serverUpdatedAt) {
+      // Author exists locally - check for conflicts
+      if (hasAuthorConflict(localAuthor, serverAuthor)) {
+        // Conflict detected - mark for user resolution
+        console.log(`Author conflict detected for ${localAuthor.id}`);
+        await authorRepository.updateSyncFields(localAuthor.id, {
+          _hasConflict: true,
+          _conflictData: serverAuthor,
+        });
+      } else if (serverAuthor.updateDate && localAuthor._serverUpdatedAt) {
         const serverUpdateDate = new Date(serverAuthor.updateDate);
         const localUpdateDate = new Date(localAuthor._serverUpdatedAt);
 
@@ -401,8 +408,15 @@ export class SyncService {
     const localCategory = await categoryRepository.findByServerId(serverId);
 
     if (localCategory) {
-      // Category exists locally - compare updateDate if available
-      if (serverCategory.updateDate && localCategory._serverUpdatedAt) {
+      // Category exists locally - check for conflicts
+      if (hasCategoryConflict(localCategory, serverCategory)) {
+        // Conflict detected - mark for user resolution
+        console.log(`Category conflict detected for ${localCategory.id}`);
+        await categoryRepository.updateSyncFields(localCategory.id, {
+          _hasConflict: true,
+          _conflictData: serverCategory,
+        });
+      } else if (serverCategory.updateDate && localCategory._serverUpdatedAt) {
         const serverUpdateDate = new Date(serverCategory.updateDate);
         const localUpdateDate = new Date(localCategory._serverUpdatedAt);
 

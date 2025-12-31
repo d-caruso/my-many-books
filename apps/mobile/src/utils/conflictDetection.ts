@@ -1,4 +1,4 @@
-import type { Book } from '@/types';
+import type { Book, Author, Category } from '@/types';
 
 /**
  * Detect if a book has a conflict with the server version
@@ -37,4 +37,32 @@ export function resolveConflict(
       _syncStatus: 'pending', // Will trigger re-sync
     };
   }
+}
+
+/**
+ * Detect if an author has a conflict with the server version
+ */
+export function hasAuthorConflict(localAuthor: Author, serverAuthor: Author): boolean {
+  if (!localAuthor._serverUpdatedAt || !serverAuthor.updateDate) {
+    return false;
+  }
+
+  const localServerTimestamp = new Date(localAuthor._serverUpdatedAt).getTime();
+  const serverTimestamp = new Date(serverAuthor.updateDate).getTime();
+
+  return serverTimestamp > localServerTimestamp;
+}
+
+/**
+ * Detect if a category has a conflict with the server version
+ */
+export function hasCategoryConflict(localCategory: Category, serverCategory: Category): boolean {
+  if (!localCategory._serverUpdatedAt || !serverCategory.updateDate) {
+    return false;
+  }
+
+  const localServerTimestamp = new Date(localCategory._serverUpdatedAt).getTime();
+  const serverTimestamp = new Date(serverCategory.updateDate).getTime();
+
+  return serverTimestamp > localServerTimestamp;
 }
