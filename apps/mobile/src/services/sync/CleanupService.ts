@@ -107,6 +107,23 @@ export class CleanupService {
   }
 
   /**
+   * Perform full cleanup (Phase 5 fix)
+   * 
+   * This is the main method that should be called periodically to clean up:
+   * - Old failed operations
+   * - Orphaned temp IDs
+   * - Stale ID mappings
+   */
+  async performFullCleanup(): Promise<{
+    deletedBooks: number;
+    deletedMappings: number;
+    deletedOperations: number;
+  }> {
+    console.log('Starting scheduled cleanup...');
+    return await this.cleanupOrphanedTempIds();
+  }
+
+  /**
    * Update foreign keys after ID mapping (Task 5.5.2)
    *
    * When a book's temp ID is mapped to a server ID, update:

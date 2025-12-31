@@ -84,6 +84,15 @@ export class SyncService {
         await this.setLastSyncTime(new Date().toISOString());
       }
 
+      // Step 4: Perform cleanup after successful sync (Phase 5 fix)
+      try {
+        const { cleanupService } = await import('./CleanupService');
+        const cleanupResult = await cleanupService.performFullCleanup();
+        console.log(`Cleanup completed:`, cleanupResult);
+      } catch (error) {
+        console.error('Cleanup failed:', error);
+      }
+
       console.log(`Sync complete: pulled=${pulledCount}, pushed=${pushedCount}, errors=${errorCount}`);
       return { pulled: pulledCount, pushed: pushedCount, errors: errorCount };
     } finally {
