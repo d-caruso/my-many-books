@@ -42,9 +42,9 @@ export class OperationQueue {
       // Show user-facing warning when approaching limit
       const { default: i18n } = await import('../i18n');
       Alert.alert(
-        i18n.t('queue.alerts.nearlyFullTitle', { ns: 'offline' }),
-        i18n.t('queue.alerts.nearlyFullMessage', { count: this.queue.length, ns: 'offline' }),
-        [{ text: i18n.t('queue.alerts.okButton', { ns: 'offline' }) }]
+        i18n.t('sync.queue.alerts.nearlyFullTitle', { ns: 'offline' }),
+        i18n.t('sync.queue.alerts.nearlyFullMessage', { count: this.queue.length, ns: 'offline' }),
+        [{ text: i18n.t('sync.queue.alerts.okButton', { ns: 'offline' }) }]
       );
     }
 
@@ -55,9 +55,9 @@ export class OperationQueue {
       // Show critical user-facing alert when limit exceeded
       const { default: i18n } = await import('../i18n');
       Alert.alert(
-        i18n.t('queue.alerts.fullTitle', { ns: 'offline' }),
-        i18n.t('queue.alerts.fullMessage', { ns: 'offline' }),
-        [{ text: i18n.t('queue.alerts.okButton', { ns: 'offline' }) }]
+        i18n.t('sync.queue.alerts.fullTitle', { ns: 'offline' }),
+        i18n.t('sync.queue.alerts.fullMessage', { ns: 'offline' }),
+        [{ text: i18n.t('sync.queue.alerts.okButton', { ns: 'offline' }) }]
       );
     }
 
@@ -201,7 +201,7 @@ export class OperationQueue {
   /**
    * Get failed operations for cleanup service access (Phase 5 fix)
    */
-  getFailedOperations(): Operation[] {
+  getFailedOperations(): QueuedOperation[] {
     return this.queue.filter(op => op.status === 'failed');
   }
 

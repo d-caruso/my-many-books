@@ -41,9 +41,9 @@ export const QueueManagementScreen: React.FC = () => {
 
   const getOperationLabel = (operation: QueuedOperation) => {
     const { type, resource, payload } = operation;
-    const title = payload?.title || payload?.id || t('offline.sync.queue.unknown_item');
-    const operationType = t(`offline.sync.queue.operations.${type}`);
-    const resourceType = t(`offline.sync.queue.resources.${resource}`);
+    const title = payload?.title || payload?.id || t('sync.queue.unknown_item');
+    const operationType = t(`sync.queue.operations.${type}`);
+    const resourceType = t(`sync.queue.resources.${resource}`);
     return `${operationType} ${resourceType}: ${title}`;
   };
 
@@ -51,7 +51,7 @@ export const QueueManagementScreen: React.FC = () => {
     <Surface style={styles.operationItem} elevation={1}>
       <List.Item
         title={getOperationLabel(item)}
-        description={`${t('offline.sync.queue.status')}: ${t(`offline.sync.queue.statuses.${item.status}`)} | ${t('offline.sync.queue.retries')}: ${item.retryCount}/${item.maxRetries}`}
+        description={`${t('sync.queue.status')}: ${t(`sync.queue.statuses.${item.status}`)} | ${t('sync.queue.retries')}: ${item.retryCount}/${item.maxRetries}`}
         left={(props) => (
           <List.Icon
             {...props}
