@@ -28,6 +28,8 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
     switch (syncStatus) {
       case 'pending':
         return '#FF9800'; // Orange
+      case 'syncing':
+        return '#2196F3'; // Blue
       case 'failed':
         return '#F44336'; // Red
       default:
@@ -39,6 +41,8 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
     switch (syncStatus) {
       case 'pending':
         return t('sync.badges.notSynced');
+      case 'syncing':
+        return t('sync.badges.syncing');
       case 'failed':
         return t('sync.badges.syncFailed');
       default:
@@ -50,6 +54,8 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
     switch (syncStatus) {
       case 'pending':
         return 'cloud-upload-outline';
+      case 'syncing':
+        return 'sync';
       case 'failed':
         return 'cloud-alert';
       default:
