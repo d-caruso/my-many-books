@@ -2,7 +2,7 @@ import { databaseService } from './DatabaseService';
 import { ALL_TABLES } from './schema';
 
 const SCHEMA_VERSION_KEY = 'schema_version';
-const CURRENT_SCHEMA_VERSION = 2;
+const CURRENT_SCHEMA_VERSION = 3;
 
 /**
  * Database migration system
@@ -67,6 +67,11 @@ export class MigrationSystem {
       // Migrate to version 2: Add server_id column
       if (currentVersion < 2) {
         await this.migrateToVersion2();
+      }
+
+      // Migrate to version 3: Add server_id to authors and categories
+      if (currentVersion < 3) {
+        await this.migrateToVersion3();
       }
 
       await this.setVersion(CURRENT_SCHEMA_VERSION);
@@ -138,6 +143,54 @@ export class MigrationSystem {
       console.log('Migration to version 2 completed successfully');
     } catch (error) {
       console.error('Migration to version 2 failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Migrate to version 3: Add server_id to authors and categories (Phase 5)
+   */
+  private async migrateToVersion3(): Promise<void> {
+    console.log('Migrating to schema version 3: Adding server_id to authors and categories...');
+    const db = databaseService.getDatabase();
+
+    try {
+      // Check if server_id column already exists in authors table
+      const authorTableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(authors)');
+      const authorHasServerId = authorTableInfo.some((col) => col.name === 'server_id');
+
+      if (!authorHasServerId) {
+        // Add server_id and sync columns to authors table
+        await db.execAsync('ALTER TABLE authors ADD COLUMN server_id INTEGER;');
+        await db.execAsync('ALTER TABLE authors ADD COLUMN _sync_status TEXT DEFAULT "synced";');
+        await db.execAsync('ALTER TABLE authors ADD COLUMN _server_updated_at TEXT;');
+        console.log('Added server_id and sync columns to authors table');
+      } else {
+        console.log('server_id column already exists in authors table, skipping ALTER TABLE');
+      }
+
+      // Check if server_id column already exists in categories table
+      const categoryTableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(categories)');
+      const categoryHasServerId = categoryTableInfo.some((col) => col.name === 'server_id');
+
+      if (!categoryHasServerId) {
+        // Add server_id and sync columns to categories table
+        await db.execAsync('ALTER TABLE categories ADD COLUMN server_id INTEGER;');
+        await db.execAsync('ALTER TABLE categories ADD COLUMN _sync_status TEXT DEFAULT "synced";');
+        await db.execAsync('ALTER TABLE categories ADD COLUMN _server_updated_at TEXT;');
+        console.log('Added server_id and sync columns to categories table');
+      } else {
+        console.log('server_id column already exists in categories table, skipping ALTER TABLE');
+      }
+
+      // Create indexes for fast lookups
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_authors_server_id ON authors(server_id);');
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_categories_server_id ON categories(server_id);');
+      console.log('Created indexes on server_id columns');
+
+      console.log('Migration to version 3 completed successfully');
+    } catch (error) {
+      console.error('Migration to version 3 failed:', error);
       throw error;
     }
   }

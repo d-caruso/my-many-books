@@ -29,7 +29,10 @@ export const CREATE_BOOKS_TABLE = `
 export const CREATE_AUTHORS_TABLE = `
   CREATE TABLE IF NOT EXISTS authors (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE
+    name TEXT NOT NULL UNIQUE,
+    server_id INTEGER,
+    _sync_status TEXT DEFAULT 'synced',
+    _server_updated_at TEXT
   );
 `;
 
@@ -46,7 +49,10 @@ export const CREATE_BOOK_AUTHORS_TABLE = `
 export const CREATE_CATEGORIES_TABLE = `
   CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE
+    name TEXT NOT NULL UNIQUE,
+    server_id INTEGER,
+    _sync_status TEXT DEFAULT 'synced',
+    _server_updated_at TEXT
   );
 `;
 

@@ -119,8 +119,32 @@ export class CleanupService {
     deletedMappings: number;
     deletedOperations: number;
   }> {
-    console.log('Starting scheduled cleanup...');
-    return await this.cleanupOrphanedTempIds();
+    console.log('Performing full cleanup...');
+
+    // Step 1: Cleanup orphaned data
+    const counts = await this.cleanupOrphanedTempIds();
+
+    // Step 2: Cleanup failed operations from queue
+    const { operationQueue } = await import('../OperationQueue');
+    const failedOps = operationQueue.getFailedOperations();
+    for (const op of failedOps) {
+      await operationQueue.dequeue(op.id);
+    }
+    counts.deletedOperations += failedOps.length;
+
+    // Step 3: Verify all ID mappings have correct foreign keys
+    const mappings = await idMappingService.getAllMappings();
+
+    for (const mapping of mappings) {
+      try {
+        await this.updateForeignKeysForBook(mapping.tempId, mapping.serverId);
+      } catch (error) {
+        console.error(`Failed to update foreign keys for ${mapping.tempId}:`, error);
+      }
+    }
+
+    console.log('Full cleanup complete');
+    return counts;
   }
 
   /**
@@ -199,30 +223,6 @@ export class CleanupService {
     }
   }
 
-  /**
-   * Perform full cleanup (Task 5.5.1 + 5.5.2)
-   *
-   * This should be called periodically (e.g., once per day)
-   */
-  async performFullCleanup(): Promise<void> {
-    console.log('Performing full cleanup...');
-
-    // Step 1: Cleanup orphaned data
-    await this.cleanupOrphanedTempIds();
-
-    // Step 2: Verify all ID mappings have correct foreign keys
-    const mappings = await idMappingService.getAllMappings();
-
-    for (const mapping of mappings) {
-      try {
-        await this.updateForeignKeysForBook(mapping.tempId, mapping.serverId);
-      } catch (error) {
-        console.error(`Failed to update foreign keys for ${mapping.tempId}:`, error);
-      }
-    }
-
-    console.log('Full cleanup complete');
-  }
 
   /**
    * Check data integrity
