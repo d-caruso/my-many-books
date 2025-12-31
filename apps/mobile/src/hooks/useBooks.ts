@@ -6,6 +6,7 @@ import { databaseService } from '@/services/database/DatabaseService';
 import { migrationSystem } from '@/services/database/migrations';
 import { migrateFromAsyncStorage, cleanupLegacyStorage } from '@/services/database/migrateFromAsyncStorage';
 import { operationQueue } from '@/services/OperationQueue';
+import { useNetworkState } from '@/hooks/useNetworkState';
 import { v4 as uuidv4 } from 'uuid';
 import { resolveConflict as resolveBookConflict } from '@/utils/conflictDetection';
 
@@ -38,10 +39,26 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const { isOnline } = useNetworkState();
 
   useEffect(() => {
     initDatabase();
   }, []);
+
+  // Reload from database when coming back online to reflect queue processing changes
+  useEffect(() => {
+    if (isOnline) {
+      // Add a small delay to allow queue processing to complete first
+      const timer = setTimeout(async () => {
+        // First reload from database to get any queue processing results
+        await loadBooksFromDB();
+        // Then fetch from server to get the latest data
+        await loadBooks();
+      }, 3000); // Wait 3 seconds for queue to process
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline, loadBooks]);
 
   const initDatabase = async () => {
     try {
