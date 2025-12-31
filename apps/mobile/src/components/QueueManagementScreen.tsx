@@ -11,7 +11,7 @@ import { useSyncQueue } from '../hooks/useSyncQueue';
  * Screen for managing queued operations
  */
 export const QueueManagementScreen: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('offline');
   const theme = useTheme();
   const { operations, refreshQueue } = useQueueStatus();
   const { processQueue, performFullSync } = useSyncQueue();
@@ -84,12 +84,12 @@ export const QueueManagementScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text variant="headlineSmall" style={styles.title}>
-        {t('offline.sync.queue.title')}
+        {t('sync.queue.title')}
       </Text>
 
       {operations.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text variant="bodyLarge">{t('offline.sync.queue.empty')}</Text>
+          <Text variant="bodyLarge">{t('sync.queue.empty')}</Text>
         </View>
       ) : (
         <FlatList

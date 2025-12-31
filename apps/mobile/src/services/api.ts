@@ -24,7 +24,7 @@ class FetchHttpClient implements HttpClient {
     // Check network connectivity before making request
     const networkState = await NetInfo.fetch();
     if (!networkState.isConnected) {
-      throw new Error(i18n.t('offline.errors.noConnection'));
+      throw new Error(i18n.t('offline.errors.noConnection', { ns: 'offline' }));
     }
 
     const controller = new AbortController();
@@ -254,12 +254,12 @@ export const apiUtils = {
     // Handle offline scenarios
     const online = await apiUtils.isOnline();
     if (!online) {
-      throw new Error(i18n.t('offline.errors.noConnection'));
+      throw new Error(i18n.t('offline.errors.noConnection', { ns: 'offline' }));
     }
     throw error;
   },
 
   isOfflineError: (error: any): boolean => {
-    return error?.message === i18n.t('offline.errors.noConnection');
+    return error?.message === i18n.t('offline.errors.noConnection', { ns: 'offline' });
   },
 };

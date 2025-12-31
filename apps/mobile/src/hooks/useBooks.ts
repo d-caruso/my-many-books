@@ -8,6 +8,7 @@ import { migrateFromAsyncStorage, cleanupLegacyStorage } from '@/services/databa
 import { operationQueue } from '@/services/OperationQueue';
 import { v4 as uuidv4 } from 'uuid';
 import { resolveConflict as resolveBookConflict } from '@/utils/conflictDetection';
+import { useTranslation } from 'react-i18next';
 
 interface UseBooksState {
   books: Book[];
@@ -34,6 +35,7 @@ const isRetriableError = (error: any): boolean => {
 };
 
 export const useBooks = (): UseBooksState & UseBooksActions => {
+  const { t } = useTranslation('errors');
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       await loadBooks();
     } catch (error) {
       console.error('Failed to initialize database:', error);
-      setError('Failed to initialize database');
+      setError(t('database.initializationFailed'));
     }
   };
 
@@ -97,7 +99,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       setBooks(response.books);
     } catch (err: any) {
       console.error('Failed to load books:', err);
-      setError(err.response?.data?.message || 'Failed to load books');
+      setError(err.response?.data?.message || t('books.loadFailed'));
 
       // On error, load from local database
       await loadBooksFromDB();
@@ -126,7 +128,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       setBooks(response.books);
     } catch (err: any) {
       console.error('Failed to refresh books:', err);
-      setError(err.response?.data?.message || 'Failed to refresh books');
+      setError(err.response?.data?.message || t('books.refreshFailed'));
 
       // On error, load from local database
       await loadBooksFromDB();
@@ -195,7 +197,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         // Non-retriable error - remove optimistic book
         await bookRepository.hardDelete(tempId);
         setBooks(prev => prev.filter(book => book._tempId !== tempId));
-        throw new Error(err.response?.data?.message || 'Failed to create book');
+        throw new Error(err.response?.data?.message || t('books.createFailed'));
       }
     }
   }, []);
@@ -204,7 +206,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     // Store previous state for rollback
     const previousBook = books.find(book => book.id === id);
     if (!previousBook) {
-      throw new Error('Book not found');
+      throw new Error(t('books.notFound'));
     }
 
     // Apply changes to SQLite and local state immediately (optimistic update)
@@ -291,7 +293,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         ));
       }
 
-      throw new Error(err.response?.data?.message || 'Failed to update book');
+      throw new Error(err.response?.data?.message || t('books.updateFailed'));
     }
   }, [books]);
 
@@ -331,7 +333,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
           );
           await loadBooksFromDB(); // Reload to restore the book
         }
-        throw new Error(err.response?.data?.message || 'Failed to delete book');
+        throw new Error(err.response?.data?.message || t('books.deleteFailed'));
       }
     }
   }, []);
@@ -370,7 +372,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         setBooks(prev => prev.map(book =>
           book.id === id ? { ...book, _syncStatus: 'failed' } : book
         ));
-        throw new Error(err.response?.data?.message || 'Failed to update book status');
+        throw new Error(err.response?.data?.message || t('books.updateStatusFailed'));
       }
     }
   }, []);
@@ -380,7 +382,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     const conflictedBook = books.find(book => book.id === bookId);
     
     if (!conflictedBook || !conflictedBook._hasConflict) {
-      throw new Error('No conflict found for this book');
+      throw new Error(t('conflicts.notFound'));
     }
 
     try {
@@ -425,7 +427,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       
     } catch (error) {
       console.error('Failed to resolve conflict:', error);
-      throw new Error('Failed to resolve conflict');
+      throw new Error(t('conflicts.resolutionFailed'));
     }
   }, [books]);
 

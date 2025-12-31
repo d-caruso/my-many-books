@@ -95,7 +95,7 @@ export default function SearchScreen() {
       {isOffline && (
         <View style={styles.offlineContainer}>
           <Text variant="bodyMedium" style={styles.offlineText}>
-            {t('offline.search.indicator')}
+            {t('search.indicator', { ns: 'offline' })}
           </Text>
         </View>
       )}

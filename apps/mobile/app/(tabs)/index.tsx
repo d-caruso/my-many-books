@@ -179,7 +179,7 @@ export default function BooksScreen() {
         }}
         disabled={!isOnline}
         accessibilityLabel="Add new book"
-        accessibilityHint={!isOnline ? t('offline:offline.tooltips.offlineDisabled') : undefined}
+        accessibilityHint={!isOnline ? t('tooltips.offlineDisabled', { ns: 'offline' }) : undefined}
       />
     </SafeAreaView>
   );

@@ -8,7 +8,7 @@ import { useQueueStatus } from '../hooks/useQueueStatus';
  * Badge showing pending sync operations count
  */
 export const SyncQueueBadge: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('offline');
   const { pendingCount } = useQueueStatus();
 
   if (pendingCount === 0) {
@@ -20,7 +20,7 @@ export const SyncQueueBadge: React.FC = () => {
       style={styles.badge}
       testID="sync-queue-badge"
       accessibilityRole="text"
-      accessibilityLabel={`${pendingCount} ${t('offline.sync.queue.syncing')}`}
+      accessibilityLabel={`${pendingCount} ${t('sync.queue.syncing')}`}
     >
       {pendingCount}
     </Badge>

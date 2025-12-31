@@ -18,7 +18,7 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
   onRetry,
   compact = false,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('offline');
 
   if (!syncStatus || syncStatus === 'synced') {
     return null;
@@ -38,9 +38,9 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
   const getBadgeText = () => {
     switch (syncStatus) {
       case 'pending':
-        return t('offline.sync.badges.notSynced');
+        return t('sync.badges.notSynced');
       case 'failed':
-        return t('offline.sync.badges.syncFailed');
+        return t('sync.badges.syncFailed');
       default:
         return '';
     }
