@@ -18,6 +18,7 @@
   "isbn_parameter_required": "ISBN parameter is required",
   "invalid_isbn": "Invalid ISBN: {{error}}",
   "search_query_min_length": "Search query must be at least {{min}} characters",
+  "invalid_date_format": "Invalid date format for {{field}}. Expected ISO 8601 format (e.g., 2024-01-01T10:00:00.000Z)",
   "author_not_found": "Author not found",
   "author_has_books": "Cannot delete author with associated books. Remove book associations first",
   "category_not_found": "Category not found",
