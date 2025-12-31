@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import { QueuedOperation, OperationType, ResourceType } from '../types/queue';
+import { Alert } from 'react-native';
 
 const QUEUE_STORAGE_KEY = '@operation_queue';
 const MAX_QUEUE_SIZE = 100;
@@ -38,12 +39,24 @@ export class OperationQueue {
     // Warn when approaching limit (80% threshold)
     if (this.isNearLimit()) {
       console.warn(`Queue approaching limit: ${this.queue.length}/${MAX_QUEUE_SIZE} operations`);
+      // Show user-facing warning when approaching limit
+      Alert.alert(
+        'Sync Queue Nearly Full',
+        `You have ${this.queue.length} pending operations. Consider syncing soon to avoid losing data.`,
+        [{ text: 'OK' }]
+      );
     }
 
     // Enforce queue size limit - discard oldest if exceeded
     if (this.queue.length >= MAX_QUEUE_SIZE) {
       this.queue.shift(); // Remove oldest
       console.warn(`Queue size limit (${MAX_QUEUE_SIZE}) exceeded. Discarding oldest operation.`);
+      // Show critical user-facing alert when limit exceeded
+      Alert.alert(
+        'Sync Queue Full',
+        'Your sync queue is full. The oldest pending operation was discarded. Please sync when you have internet connection.',
+        [{ text: 'OK' }]
+      );
     }
 
     const operation: QueuedOperation = {
