@@ -1,5 +1,5 @@
 import { QueuedOperation } from '../types/queue';
-import { bookAPI } from './api';
+import { apiClient } from './api';
 import { idMappingService } from './sync/IDMappingService';
 import { bookRepository } from './database/BookRepository';
 import { cleanupService } from './sync/CleanupService';
@@ -62,8 +62,8 @@ async function executeCreateBook(payload: any): Promise<void> {
     _tempId: tempId,
   };
 
-  // Send to server
-  const serverResponse: any = await bookAPI.createBook(serverPayload);
+  // Send to server (using raw apiClient to avoid double-queueing)
+  const serverResponse: any = await apiClient.books.createBook(serverPayload);
 
   // Extract server-assigned ID from response
   const serverId = serverResponse.id;
@@ -107,7 +107,8 @@ async function executeUpdateBook(payload: any): Promise<void> {
   const resolvedPayload = await idMappingService.resolveForeignKeys(payload);
 
   // Send to server using server ID
-  await bookAPI.updateBook(String(serverIdToUse), resolvedPayload);
+  // Use raw apiClient to avoid double-queueing
+  await apiClient.books.updateBook(String(serverIdToUse), resolvedPayload);
 }
 
 /**
@@ -135,7 +136,8 @@ async function executeDeleteBook(payload: any): Promise<void> {
   }
 
   // Send delete request using server_id
-  await bookAPI.deleteBook(String(localBook.serverId));
+  // Use raw apiClient to avoid double-queueing
+  await apiClient.books.deleteBook(String(localBook.serverId));
 }
 
 async function executeUserOperation(type: string, payload: any): Promise<void> {

@@ -17,7 +17,8 @@ export const QueueManagementScreen: React.FC = () => {
   const { processQueue, performFullSync } = useSyncQueue();
 
   const handleRetry = async (operationId: string) => {
-    await performFullSync();
+    await operationQueue.retryOperation(operationId);
+    await processQueue(); // Process the queue to attempt the retry
     await refreshQueue();
   };
 

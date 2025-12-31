@@ -13,8 +13,14 @@ export function useQueueStatus() {
   const refreshQueue = async () => {
     await operationQueue.initialize();
     const pending = operationQueue.getPendingOperations();
+    const allOps = operationQueue['queue']; // Access private queue for full list
+    
     setPendingCount(pending.length);
-    setOperations(operationQueue['queue']); // Access private queue for full list
+    setOperations(allOps);
+    
+    // Check if any operations are currently being processed/syncing
+    const hasProcessingOps = allOps.some(op => op.status === 'retrying' || op._syncStatus === 'syncing');
+    setIsProcessing(hasProcessingOps);
   };
 
   useEffect(() => {

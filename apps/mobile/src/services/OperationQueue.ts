@@ -206,6 +206,30 @@ export class OperationQueue {
   }
 
   /**
+   * Retry a failed operation by resetting its status to pending
+   */
+  async retryOperation(operationId: string): Promise<void> {
+    const operation = this.queue.find(op => op.id === operationId);
+    if (operation && operation.status === 'failed') {
+      operation.status = 'pending';
+      operation.retryCount = 0; // Reset retry count for manual retry
+      await this.persist();
+    }
+  }
+
+  /**
+   * Retry all failed operations
+   */
+  async retryAllFailedOperations(): Promise<void> {
+    const failedOps = this.getFailedOperations();
+    for (const operation of failedOps) {
+      operation.status = 'pending';
+      operation.retryCount = 0; // Reset retry count for manual retry
+    }
+    await this.persist();
+  }
+
+  /**
    * Persist queue to AsyncStorage
    */
   private async persist(): Promise<void> {
