@@ -157,14 +157,16 @@ async function withQueueOnError<T>(
   operation: () => Promise<T>,
   operationType: OperationType,
   resource: 'book' | 'user' | 'settings',
-  payload: any
+  payload: any,
+  maxRetries?: number
 ): Promise<T> {
   try {
     return await operation();
   } catch (error) {
     // If error is retriable, enqueue the operation
     if (isRetriableError(error)) {
-      await operationQueue.enqueue(operationType, resource, payload, 5);
+      const retries = maxRetries ?? (operationType === 'CREATE' ? 5 : 3);
+      await operationQueue.enqueue(operationType, resource, payload, retries);
       // Re-throw to let caller know it failed
       throw error;
     }
