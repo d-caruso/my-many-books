@@ -70,7 +70,7 @@ async function executeCreateBook(payload: any): Promise<void> {
     _tempId: tempId,
   };
 
-  // Send to server (using raw apiClient to avoid double-queueing)
+  // CRITICAL: Use raw apiClient to avoid double-queueing (bookAPI wraps withQueueOnError)
   const serverResponse: any = await apiClient.books.createBook(serverPayload);
 
   // Extract server-assigned ID from response
@@ -122,8 +122,7 @@ async function executeUpdateBook(payload: any): Promise<void> {
   // Resolve foreign keys in payload
   const resolvedPayload = await idMappingService.resolveForeignKeys(payload);
 
-  // Send to server using server ID
-  // Use raw apiClient to avoid double-queueing
+  // CRITICAL: Use raw apiClient to avoid double-queueing (bookAPI wraps withQueueOnError)
   const updateResponse: any = await apiClient.books.updateBook(String(serverIdToUse), resolvedPayload);
 
   // Update server timestamp for consistency (Phase 5 fix)
@@ -159,8 +158,7 @@ async function executeDeleteBook(payload: any): Promise<void> {
     return;
   }
 
-  // Send delete request using server_id
-  // Use raw apiClient to avoid double-queueing
+  // CRITICAL: Use raw apiClient to avoid double-queueing (bookAPI wraps withQueueOnError)
   await apiClient.books.deleteBook(String(localBook.serverId));
 }
 
@@ -203,6 +201,7 @@ async function executeCategoryOperation(type: string, payload: any): Promise<voi
 
 async function executeCreateAuthor(payload: any): Promise<void> {
   const tempId = payload.id;
+  // CRITICAL: Use raw apiClient to avoid double-queueing (authorAPI would wrap withQueueOnError)
   const serverResponse: any = await apiClient.authors.createAuthor({
     name: payload.name,
     surname: payload.surname,
@@ -228,6 +227,7 @@ async function executeUpdateAuthor(payload: any): Promise<void> {
   }
 
   const serverIdToUse = localAuthor.serverId || localAuthor.id;
+  // CRITICAL: Use raw apiClient to avoid double-queueing (authorAPI would wrap withQueueOnError)
   const updateResponse: any = await apiClient.authors.updateAuthor(Number(serverIdToUse), {
     name: payload.name,
     surname: payload.surname,
@@ -248,12 +248,14 @@ async function executeDeleteAuthor(payload: any): Promise<void> {
   if (!localAuthor) return;
 
   if (localAuthor.serverId) {
+    // CRITICAL: Use raw apiClient to avoid double-queueing (authorAPI would wrap withQueueOnError)
     await apiClient.authors.deleteAuthor(localAuthor.serverId);
   }
 }
 
 async function executeCreateCategory(payload: any): Promise<void> {
   const tempId = payload.id;
+  // CRITICAL: Use raw apiClient to avoid double-queueing (categoryAPI would wrap withQueueOnError)
   const serverResponse: any = await apiClient.categories.createCategory({
     name: payload.name,
   });
@@ -277,6 +279,7 @@ async function executeUpdateCategory(payload: any): Promise<void> {
   }
 
   const serverIdToUse = localCategory.serverId || localCategory.id;
+  // CRITICAL: Use raw apiClient to avoid double-queueing (categoryAPI would wrap withQueueOnError)
   const updateResponse: any = await apiClient.categories.updateCategory(Number(serverIdToUse), {
     name: payload.name,
   });
@@ -295,6 +298,7 @@ async function executeDeleteCategory(payload: any): Promise<void> {
   if (!localCategory) return;
 
   if (localCategory.serverId) {
+    // CRITICAL: Use raw apiClient to avoid double-queueing (categoryAPI would wrap withQueueOnError)
     await apiClient.categories.deleteCategory(localCategory.serverId);
   }
 }
