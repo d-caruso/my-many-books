@@ -1,21 +1,22 @@
 import { UserApi } from '../user-api';
 import { MockHttpClient } from '../__mocks__/MockHttpClient';
 import { ZodError } from 'zod';
-import { AuthSession, RefreshTokenResponse, User } from '@my-many-books/shared-types';
+import { AuthSession, RefreshTokenResponse, UserProfile } from '@my-many-books/shared-types';
 
 describe('UserApi', () => {
   let mockHttpClient: MockHttpClient;
   let userApi: UserApi;
 
-  const mockUser: User = {
+  const mockUser: UserProfile = {
     id: 1,
     email: 'user@example.com',
     name: 'Jane',
     surname: 'Doe',
+    fullName: 'Jane Doe',
     isActive: true,
     role: 'user',
-    creationDate: '2024-01-01T00:00:00.000Z',
-    updateDate: '2024-01-02T00:00:00.000Z',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-02T00:00:00.000Z',
   };
 
   const mockAuthSession: AuthSession = {

@@ -20,6 +20,23 @@ export const UserSchema = z.object({
 
 export type User = z.infer<typeof UserSchema>;
 
+/**
+ * API user profile response schema (apps/api UserResponseDTO)
+ */
+export const UserProfileSchema = z.object({
+  id: z.number().int(),
+  email: z.string().email(),
+  name: z.string().min(1),
+  surname: z.string().min(1),
+  fullName: z.string().min(1),
+  isActive: z.boolean(),
+  role: UserRoleSchema,
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type UserProfile = z.infer<typeof UserProfileSchema>;
+
 export const AuthUserSchema = z.object({
   userId: z.number().int(),
   email: z.string().email(),
