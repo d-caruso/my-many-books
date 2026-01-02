@@ -137,7 +137,8 @@ export function createMobileHandler<T>(
       // Show notification if enabled
       if (mobileOptions.notifyOnQueue) {
         // This would integrate with notification system
-        console.log(`Operation queued: ${operationType} ${resourceType}`);
+        // TODO: Integrate with proper notification system
+        // console.log(`Operation queued: ${operationType} ${resourceType}`);
       }
 
       return tempId;
@@ -174,7 +175,8 @@ export function createMobileHandler<T>(
                            error.message.includes('Network Error');
 
         if (shouldQueue) {
-          console.warn(`Online operation failed, queueing: ${error.message}`);
+          // TODO: Integrate with proper logging system
+          // console.warn(`Online operation failed, queueing: ${error.message}`);
           return await queueFallback();
         } else {
           throw error;
@@ -224,8 +226,9 @@ export function createMobileHandler<T>(
           try {
             // This would integrate with cache/SQLite storage
             // original = await getCachedResource(resourceType, id);
-          } catch (error) {
-            console.warn('Could not retrieve cached data for optimistic update');
+          } catch {
+            // TODO: Integrate with proper logging system
+            // console.warn('Could not retrieve cached data for optimistic update');
           }
         }
         
@@ -260,7 +263,8 @@ export function createMobileHandler<T>(
         } catch (error) {
           if (mobileOptions.offlineCacheFallback) {
             // Try cache fallback
-            console.warn('Online read failed, attempting cache fallback');
+            // TODO: Integrate with proper logging system
+            // console.warn('Online read failed, attempting cache fallback');
             // This would integrate with cache/SQLite storage
             throw new Error('Cache fallback not implemented yet');
           }
@@ -289,7 +293,8 @@ export function createMobileHandler<T>(
         } catch (error) {
           if (mobileOptions.offlineCacheFallback) {
             // Try cache fallback
-            console.warn('Online list failed, attempting cache fallback');
+            // TODO: Integrate with proper logging system
+            // console.warn('Online list failed, attempting cache fallback');
             // This would integrate with cache/SQLite storage
             return [];
           }
@@ -311,8 +316,15 @@ export function createMobileHandler<T>(
 /**
  * Default Mobile Handler configuration
  */
+interface DefaultHttpClient {
+  get<T>(url: string, config?: Record<string, unknown>): Promise<T>;
+  post<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T>;
+  put<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T>;
+  delete<T>(url: string, config?: Record<string, unknown>): Promise<T>;
+}
+
 export const createDefaultMobileHandlerConfig = (
-  httpClient: any,
+  httpClient: DefaultHttpClient,
   queue: OperationQueue,
   networkProvider: NetworkStateProvider
 ): MobileHandlerConfig => ({

@@ -20,10 +20,10 @@ import { ClientGatewayOptions, DEFAULT_GATEWAY_CONFIG } from '../types/GatewayTy
  * Uses existing apiClient from mobile app
  */
 interface HttpClient {
-  get<T>(url: string, config?: any): Promise<T>;
-  post<T>(url: string, data?: unknown, config?: any): Promise<T>;
-  put<T>(url: string, data?: unknown, config?: any): Promise<T>;
-  delete<T>(url: string, config?: any): Promise<T>;
+  get<T>(url: string, config?: Record<string, unknown>): Promise<T>;
+  post<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T>;
+  put<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T>;
+  delete<T>(url: string, config?: Record<string, unknown>): Promise<T>;
 }
 
 /**
@@ -59,7 +59,7 @@ export function createClientGateway<T>(
   /**
    * Create request configuration with defaults
    */
-  const createRequestConfig = (overrides?: any): any => ({
+  const createRequestConfig = (overrides?: Record<string, unknown>): Record<string, unknown> => ({
     timeout,
     headers: { ...defaultHeaders, ...overrides?.headers },
     ...overrides,
@@ -197,7 +197,7 @@ export function createClientGateway<T>(
           if (filters.sortBy) queryParams.append('sortBy', String(filters.sortBy));
           if (filters.sortDirection) queryParams.append('sortDirection', filters.sortDirection);
           if (filters.limit) queryParams.append('limit', String(filters.limit));
-          if (filters.offset) queryParams.append('offset', String(filters.offset));
+          if (filters.offset !== undefined) queryParams.append('offset', String(filters.offset));
           
           // Add other filter properties
           Object.entries(filters).forEach(([key, value]) => {
