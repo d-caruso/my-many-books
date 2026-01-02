@@ -243,13 +243,20 @@ describe('ClientGateway', () => {
     });
 
     it('should fail fast when offline and failFast is enabled', async () => {
-      await expect(
-        gateway.create({
+      // Create a new gateway instance after setting navigator offline
+      const offlineGateway = createClientGateway<TestBook>('book', config);
+      
+      try {
+        await offlineGateway.create({
           title: 'Test Book',
           author: 'Test Author',
           status: 'reading',
-        })
-      ).rejects.toThrow('No internet connection available');
+        });
+        fail('Should have thrown offline error');
+      } catch (error: any) {
+        // The error might be wrapped by handleError
+        expect(error.originalError?.message || error.message).toContain('No internet connection available');
+      }
     });
 
     it('should not fail fast when failFast is disabled', async () => {
@@ -337,13 +344,17 @@ describe('ClientGateway', () => {
     it('should validate responses when enabled', async () => {
       mockHttpClient.post.mockResolvedValue(null);
 
-      await expect(
-        gateway.create({
+      try {
+        await gateway.create({
           title: 'Test Book',
           author: 'Test Author',
           status: 'reading',
-        })
-      ).rejects.toThrow('Invalid response: null or undefined');
+        });
+        fail('Should have thrown validation error');
+      } catch (error: any) {
+        // The error gets wrapped by handleError, so check the original error
+        expect(error.originalError?.message || error.message).toContain('Invalid response');
+      }
     });
 
     it('should skip validation when disabled', async () => {

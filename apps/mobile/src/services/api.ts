@@ -167,6 +167,9 @@ const apiConfig: ApiClientConfig = {
 const httpClient = new FetchHttpClient(apiConfig.baseURL, apiConfig.timeout);
 const apiClient = createApiClient(httpClient, apiConfig);
 
+// Export raw apiClient for internal use (e.g., QueueExecutor)
+export { apiClient };
+
 /**
  * Wrapper for API write operations that automatically queues on retriable errors
  */

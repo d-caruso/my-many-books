@@ -289,6 +289,34 @@ export class BookRepository {
     await databaseService.executeQuery('DELETE FROM books WHERE id = ?', [id]);
   }
 
+  /**
+   * Update sync-related fields for a book
+   */
+  async updateSyncFields(id: string, fields: {
+    _serverUpdatedAt?: string;
+    _syncStatus?: string;
+  }): Promise<void> {
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (fields._serverUpdatedAt !== undefined) {
+      updates.push('_server_updated_at = ?');
+      values.push(fields._serverUpdatedAt);
+    }
+
+    if (fields._syncStatus !== undefined) {
+      updates.push('_sync_status = ?');
+      values.push(fields._syncStatus);
+    }
+
+    if (updates.length > 0) {
+      values.push(id);
+      await databaseService.executeQuery(
+        `UPDATE books SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+    }
+  }
 
   /**
    * Upsert book - insert if not exists, update if exists (Task 4.5)

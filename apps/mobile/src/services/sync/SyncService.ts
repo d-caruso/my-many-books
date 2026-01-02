@@ -295,7 +295,7 @@ export class SyncService {
     try {
       console.log('Pulling authors from server...');
       const lastSyncTime = await this.getLastSyncTime();
-      const serverAuthors = await authorAPI.getAuthors(lastSyncTime || undefined);
+      const serverAuthors = await authorAPI.getAuthors(lastSyncTime);
       let pulledCount = 0;
 
       for (const serverAuthor of serverAuthors) {
@@ -322,7 +322,7 @@ export class SyncService {
     try {
       console.log('Pulling categories from server...');
       const lastSyncTime = await this.getLastSyncTime();
-      const serverCategories = await categoryAPI.getCategories(lastSyncTime || undefined);
+      const serverCategories = await categoryAPI.getCategories(lastSyncTime);
       let pulledCount = 0;
 
       for (const serverCategory of serverCategories) {
@@ -456,6 +456,13 @@ export class SyncService {
         await idMappingService.registerTempId(newCategory.id.toString(), serverId, 'category');
       }
     }
+  }
+
+  /**
+   * Alias for pullBooksFromServer() for backwards compatibility
+   */
+  async pullFromServer(): Promise<number> {
+    return this.pullBooksFromServer();
   }
 }
 

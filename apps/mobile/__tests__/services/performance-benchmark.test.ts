@@ -110,29 +110,23 @@ describe('Performance Benchmarks', () => {
   it('should handle 1000 books efficiently (Task 4.7.3)', async () => {
     console.log('\n=== Testing with 1000 books (Task 4.7.3 requirement) ===');
 
-    // Create 1000 test books
+    // Create 1000 test books sequentially to avoid transaction conflicts
     const createStart = Date.now();
-    const promises = [];
     for (let i = 0; i < 1000; i++) {
-      promises.push(
-        bookRepository.create({
-          title: `Book ${i}`,
-          authors: `Author ${i % 50}`, // 50 different authors
-          isbn: `ISBN-${1000000000 + i}`,
-          description: `Description for book ${i}`,
-          status: i % 4 === 0 ? 'completed' : i % 4 === 1 ? 'reading' : i % 4 === 2 ? 'want-to-read' : 'paused',
-          rating: i % 10 === 0 ? 5 : i % 10 === 1 ? 4 : i % 10 === 2 ? 3 : null,
-          _syncStatus: 'synced',
-        })
-      );
-      // Process in batches to avoid memory issues
-      if (promises.length >= 100) {
-        await Promise.all(promises);
-        promises.length = 0;
+      await bookRepository.create({
+        title: `Book ${i}`,
+        authors: `Author ${i % 50}`, // 50 different authors
+        isbn: `ISBN-${1000000000 + i}`,
+        description: `Description for book ${i}`,
+        status: i % 4 === 0 ? 'completed' : i % 4 === 1 ? 'reading' : i % 4 === 2 ? 'want-to-read' : 'paused',
+        rating: i % 10 === 0 ? 5 : i % 10 === 1 ? 4 : i % 10 === 2 ? 3 : null,
+        _syncStatus: 'synced',
+      });
+      
+      // Progress logging every 200 books
+      if ((i + 1) % 200 === 0) {
+        console.log(`Created ${i + 1} books...`);
       }
-    }
-    if (promises.length > 0) {
-      await Promise.all(promises);
     }
     const createTime = Date.now() - createStart;
     console.log(`✅ Created 1000 books in ${createTime}ms`);

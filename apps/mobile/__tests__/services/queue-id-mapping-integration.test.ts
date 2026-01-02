@@ -10,14 +10,31 @@ import { idMappingService } from '../../src/services/sync/IDMappingService';
 import { bookRepository } from '../../src/services/database/BookRepository';
 import { databaseService } from '../../src/services/database/DatabaseService';
 import { migrationSystem } from '../../src/services/database/migrations';
-import { bookAPI } from '../../src/services/api';
+import { bookAPI, apiClient } from '../../src/services/api';
 
-// Mock the bookAPI
+// Mock the bookAPI and apiClient
 jest.mock('../../src/services/api', () => ({
   bookAPI: {
     createBook: jest.fn(),
     updateBook: jest.fn(),
     deleteBook: jest.fn(),
+  },
+  apiClient: {
+    books: {
+      createBook: jest.fn(),
+      updateBook: jest.fn(),
+      deleteBook: jest.fn(),
+    },
+    authors: {
+      createAuthor: jest.fn(),
+      updateAuthor: jest.fn(),
+      deleteAuthor: jest.fn(),
+    },
+    categories: {
+      createCategory: jest.fn(),
+      updateCategory: jest.fn(),
+      deleteCategory: jest.fn(),
+    },
   },
 }));
 
@@ -65,6 +82,13 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
         title: 'Test Book',
         status: 'want-to-read',
       });
+      
+      // Also mock apiClient.books.createBook since QueueExecutor uses this
+      (apiClient.books.createBook as jest.Mock).mockResolvedValue({
+        id: serverId,
+        title: 'Test Book',
+        status: 'want-to-read',
+      });
 
       // Enqueue CREATE operation
       const operation = {
@@ -86,7 +110,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(operation);
 
       // Verify: API was called with _tempId field
-      expect(bookAPI.createBook).toHaveBeenCalledWith(
+      expect(apiClient.books.createBook).toHaveBeenCalledWith(
         expect.objectContaining({
           _tempId: tempId,
           title: 'Test Book',
@@ -126,6 +150,11 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
         id: 5002,
         title: 'Book with Author Reference',
       });
+      
+      (apiClient.books.createBook as jest.Mock).mockResolvedValue({
+        id: 5002,
+        title: 'Book with Author Reference',
+      });
 
       // Enqueue CREATE operation with foreign key reference
       const operation = {
@@ -147,7 +176,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(operation);
 
       // Verify: Foreign key was resolved in API call
-      expect(bookAPI.createBook).toHaveBeenCalledWith(
+      expect(apiClient.books.createBook).toHaveBeenCalledWith(
         expect.objectContaining({
           _tempId: tempBookId,
           authorId: serverAuthorId, // Should be resolved
@@ -179,6 +208,11 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
         id: serverId,
         title: 'Updated Title',
       });
+      
+      (apiClient.books.updateBook as jest.Mock).mockResolvedValue({
+        id: serverId,
+        title: 'Updated Title',
+      });
 
       // Enqueue UPDATE operation
       const operation = {
@@ -199,7 +233,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(operation);
 
       // Verify: API was called with server ID
-      expect(bookAPI.updateBook).toHaveBeenCalledWith(
+      expect(apiClient.books.updateBook).toHaveBeenCalledWith(
         String(serverId),
         expect.objectContaining({
           title: 'Updated Title',
@@ -224,6 +258,11 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
         id: tempId,
         title: 'Updated Title',
       });
+      
+      (apiClient.books.updateBook as jest.Mock).mockResolvedValue({
+        id: tempId,
+        title: 'Updated Title',
+      });
 
       // Enqueue UPDATE operation
       const operation = {
@@ -244,7 +283,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(operation);
 
       // Verify: API was called with temp ID
-      expect(bookAPI.updateBook).toHaveBeenCalledWith(
+      expect(apiClient.books.updateBook).toHaveBeenCalledWith(
         tempId,
         expect.objectContaining({
           title: 'Updated Title',
@@ -271,6 +310,8 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
 
       // Setup: Mock API
       (bookAPI.updateBook as jest.Mock).mockResolvedValue({ id: tempBookId });
+      
+      (apiClient.books.updateBook as jest.Mock).mockResolvedValue({ id: tempBookId });
 
       // Enqueue UPDATE operation with foreign key
       const operation = {
@@ -291,7 +332,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(operation);
 
       // Verify: Foreign key was resolved
-      expect(bookAPI.updateBook).toHaveBeenCalledWith(
+      expect(apiClient.books.updateBook).toHaveBeenCalledWith(
         tempBookId,
         expect.objectContaining({
           categoryId: serverCategoryId,
@@ -320,6 +361,8 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
 
       // Setup: Mock API
       (bookAPI.deleteBook as jest.Mock).mockResolvedValue(undefined);
+      
+      (apiClient.books.deleteBook as jest.Mock).mockResolvedValue(undefined);
 
       // Enqueue DELETE operation
       const operation = {
@@ -337,7 +380,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(operation);
 
       // Verify: API was called with server ID
-      expect(bookAPI.deleteBook).toHaveBeenCalledWith(String(serverId));
+      expect(apiClient.books.deleteBook).toHaveBeenCalledWith(String(serverId));
     });
 
     it('should skip server DELETE when book never synced (no server_id)', async () => {
@@ -354,6 +397,8 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
 
       // Setup: Mock API
       (bookAPI.deleteBook as jest.Mock).mockResolvedValue(undefined);
+      
+      (apiClient.books.deleteBook as jest.Mock).mockResolvedValue(undefined);
 
       // Enqueue DELETE operation
       const operation = {
@@ -371,7 +416,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(operation);
 
       // Verify: API was NOT called (book never synced)
-      expect(bookAPI.deleteBook).not.toHaveBeenCalled();
+      expect(apiClient.books.deleteBook).not.toHaveBeenCalled();
     });
 
     it('should succeed when book already deleted locally', async () => {
@@ -379,6 +424,8 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
 
       // Setup: Mock API
       (bookAPI.deleteBook as jest.Mock).mockResolvedValue(undefined);
+      
+      (apiClient.books.deleteBook as jest.Mock).mockResolvedValue(undefined);
 
       // Enqueue DELETE operation for non-existent book
       const operation = {
@@ -396,7 +443,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(operation);
 
       // Verify: API was NOT called
-      expect(bookAPI.deleteBook).not.toHaveBeenCalled();
+      expect(apiClient.books.deleteBook).not.toHaveBeenCalled();
     });
   });
 
@@ -415,6 +462,11 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       });
 
       (bookAPI.createBook as jest.Mock).mockResolvedValue({
+        id: serverId,
+        title: 'E2E Test Book',
+      });
+      
+      (apiClient.books.createBook as jest.Mock).mockResolvedValue({
         id: serverId,
         title: 'E2E Test Book',
       });
@@ -440,6 +492,11 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
         id: serverId,
         title: 'Updated E2E Book',
       });
+      
+      (apiClient.books.updateBook as jest.Mock).mockResolvedValue({
+        id: serverId,
+        title: 'Updated E2E Book',
+      });
 
       const updateOp = {
         id: 'op-update',
@@ -455,13 +512,15 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(updateOp);
 
       // Verify: UPDATE used server_id
-      expect(bookAPI.updateBook).toHaveBeenCalledWith(
+      expect(apiClient.books.updateBook).toHaveBeenCalledWith(
         String(serverId),
         expect.any(Object)
       );
 
       // Step 3: DELETE book (should use server_id)
       (bookAPI.deleteBook as jest.Mock).mockResolvedValue(undefined);
+      
+      (apiClient.books.deleteBook as jest.Mock).mockResolvedValue(undefined);
 
       const deleteOp = {
         id: 'op-delete',
@@ -477,7 +536,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(deleteOp);
 
       // Verify: DELETE used server_id
-      expect(bookAPI.deleteBook).toHaveBeenCalledWith(String(serverId));
+      expect(apiClient.books.deleteBook).toHaveBeenCalledWith(String(serverId));
     });
   });
 });

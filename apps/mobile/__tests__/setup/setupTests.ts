@@ -388,15 +388,48 @@ const mockApiUtils = {
   },
 };
 
+// Create mock apiClient with proper structure
+const mockApiClient = {
+  books: mockBookAPI,
+  users: mockUserAPI,
+  authors: {
+    getAuthors: jest.fn(() => Promise.resolve({ authors: [] })),
+    getAuthor: jest.fn(),
+    createAuthor: jest.fn(),
+    updateAuthor: jest.fn(),
+    deleteAuthor: jest.fn(),
+  },
+  categories: {
+    getCategories: jest.fn(() => Promise.resolve({ categories: [] })),
+    getCategory: jest.fn(),
+    createCategory: jest.fn(),
+    updateCategory: jest.fn(),
+    deleteCategory: jest.fn(),
+  },
+  admin: {
+    getAdminStats: jest.fn(),
+    getAdminUsers: jest.fn(),
+    updateAdminUser: jest.fn(),
+    deleteAdminUser: jest.fn(),
+    getAdminBooks: jest.fn(),
+    updateAdminBook: jest.fn(),
+    deleteAdminBook: jest.fn(),
+  },
+};
+
 jest.mock('@/services/api', () => ({
   bookAPI: mockBookAPI,
   userAPI: mockUserAPI,
+  authorAPI: mockApiClient.authors,
+  categoryAPI: mockApiClient.categories,
   apiUtils: mockApiUtils,
+  apiClient: mockApiClient,
 }));
 
 jest.mock('@my-many-books/shared-api', () => ({
   bookAPI: mockBookAPI,
   userAPI: mockUserAPI,
+  createApiClient: jest.fn(() => mockApiClient),
 }));
 
 // Mock our hooks
@@ -406,4 +439,13 @@ jest.mock('@/hooks/useBooks', () => ({
 
 jest.mock('@/hooks/useBookSearch', () => ({
   useBookSearch: jest.fn(),
+}));
+
+// Mock the useNetworkState hook specifically
+jest.mock('@/hooks/useNetworkState', () => ({
+  useNetworkState: jest.fn(() => ({
+    isOnline: true,
+    isInternetReachable: true,
+    connectionType: 'wifi',
+  })),
 }));

@@ -27,6 +27,7 @@ module.exports = {
     '^expo-camera$': '<rootDir>/__mocks__/expo-camera.js',
     '^@expo/vector-icons$': '<rootDir>/__mocks__/@expo/vector-icons.js',
     '^expo-router$': '<rootDir>/__mocks__/expo-router.js',
+    '^../i18n$': '<rootDir>/__mocks__/i18n.js',
     // Remove testing library mocks - use real library with proper setup
   },
   testMatch: [

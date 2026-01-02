@@ -1,6 +1,14 @@
 import type { Book, Author, Category } from '@/types';
 
 /**
+ * Generic conflict detection function for backwards compatibility
+ * Alias for hasBookConflict
+ */
+export function hasConflict(localBook: Book, serverBook: Book): boolean {
+  return hasBookConflict(localBook, serverBook);
+}
+
+/**
  * Detect if a book has a conflict with the server version
  */
 export function hasBookConflict(localBook: Book, serverBook: Book): boolean {

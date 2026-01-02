@@ -127,7 +127,7 @@ async function executeUpdateBook(payload: any): Promise<void> {
 
   // Update server timestamp for consistency (Phase 5 fix)
   if (updateResponse.updateDate || updateResponse.updatedAt) {
-    await bookRepository.updateSyncFields(bookId, {
+    await bookRepository.updateSyncFields(String(serverIdToUse), {
       _serverUpdatedAt: updateResponse.updateDate || updateResponse.updatedAt,
       _syncStatus: 'synced'
     });
