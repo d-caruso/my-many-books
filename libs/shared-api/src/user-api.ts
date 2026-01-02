@@ -4,8 +4,8 @@
 
 import { BaseApiClient } from './base-client';
 import {
-  User,
-  UserSchema,
+  UserProfile,
+  UserProfileSchema,
   AuthSession,
   AuthSessionSchema,
   RefreshTokenResponse,
@@ -13,20 +13,18 @@ import {
 } from '@my-many-books/shared-types';
 
 export class UserApi extends BaseApiClient {
-  async getCurrentUser(): Promise<User> {
+  async getCurrentUser(): Promise<UserProfile> {
     const response = await this.get<unknown>('/users');
-    return UserSchema.parse(response);
+    return UserProfileSchema.parse(response);
   }
 
-  async updateProfile(
-    userData: Pick<User, 'name' | 'surname'>
-  ): Promise<User> {
+  async updateProfile(userData: Partial<{ email: string; name: string; surname: string }>): Promise<UserProfile> {
     const response = await this.put<unknown>('/users', userData);
-    return UserSchema.parse(response);
+    return UserProfileSchema.parse(response);
   }
 
   async deleteAccount(): Promise<void> {
-    return this.delete<void>('/users');
+    await this.delete<unknown>('/users');
   }
 
   // Auth methods

@@ -3,6 +3,7 @@ export default {
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   setupFilesAfterEnv: [],
+  testMatch: ['<rootDir>/src/**/?(*.)+(spec|test).ts'],
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },

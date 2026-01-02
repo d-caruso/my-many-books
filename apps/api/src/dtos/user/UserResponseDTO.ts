@@ -5,10 +5,11 @@ export interface UserResponseDTO {
   email: string;
   name: string;
   surname: string;
+  fullName: string;
   isActive: boolean;
   role: string;
-  creationDate: Date;
-  updateDate: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const toUserResponseDTO = (user: UserEntity): UserResponseDTO => {
@@ -19,8 +20,9 @@ export const toUserResponseDTO = (user: UserEntity): UserResponseDTO => {
     surname: user.surname,
     isActive: Boolean(user.isActive),
     role: user.role,
-    creationDate: user.creationDate,
-    updateDate: user.updateDate ?? user.creationDate,
+    createdAt: user.creationDate,
+    updatedAt: user.updateDate ?? user.creationDate,
+    fullName: `${user.name} ${user.surname}`.trim(),
   };
 
   return dto;
