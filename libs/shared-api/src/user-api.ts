@@ -18,13 +18,7 @@ export class UserApi extends BaseApiClient {
     return UserProfileSchema.parse(response);
   }
 
-<<<<<<< Updated upstream
-  async updateProfile(
-    userData: Pick<User, 'name' | 'surname'>
-  ): Promise<User> {
-=======
   async updateProfile(userData: Partial<{ email: string; name: string; surname: string }>): Promise<UserProfile> {
->>>>>>> Stashed changes
     const response = await this.put<unknown>('/users', userData);
     return UserProfileSchema.parse(response);
   }
