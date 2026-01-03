@@ -8,13 +8,20 @@ import {
   QueueHandlerFactory,
   QueueHandlerConfig,
 } from '../../../../services/handlers/gateways/queueHandler';
-import { QueueHandlerType } from '../../../../services/handlers/types/HandlerTypes';
+import { QueueHandlerType, CreatePayload } from '../../../../services/handlers/types/HandlerTypes';
 
 // Mock queue implementation
+interface MockOperation {
+  id: string;
+  type: string;
+  resourceType: string;
+  data?: unknown;
+}
+
 const createMockQueue = () => {
-  let operations: Record<string, string | number | boolean | null>[] = [];
+  let operations: MockOperation[] = [];
   return {
-    add: jest.fn((operation) => {
+    add: jest.fn((operation: MockOperation) => {
       operations.push(operation);
       return Promise.resolve(operation.id);
     }),
@@ -337,9 +344,9 @@ describe('Handler Integration', () => {
 
     const operations = mockQueue.getOperations();
     expect(operations).toHaveLength(3);
-    expect(operations[0].type).toBe('CREATE');
-    expect(operations[1].type).toBe('UPDATE');
-    expect(operations[2].type).toBe('DELETE');
+    expect(operations[0]?.type).toBe('CREATE');
+    expect(operations[1]?.type).toBe('UPDATE');
+    expect(operations[2]?.type).toBe('DELETE');
   });
 });
 

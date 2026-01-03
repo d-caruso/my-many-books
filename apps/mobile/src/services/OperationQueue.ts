@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
-import { QueuedOperation, OperationType, ResourceType } from '../types/queue';
+import { QueuedOperation, OperationType, ResourceType, BookOperationPayload, AuthorOperationPayload, CategoryOperationPayload, UserOperationPayload, SettingsOperationPayload } from '../types/queue';
 import { Alert } from 'react-native';
 import i18n from '../i18n';
 import { databaseService } from './database/DatabaseService';
@@ -30,12 +30,42 @@ export class OperationQueue {
   }
 
   /**
-   * Add operation to queue
+   * Add operation to queue - overloaded for type safety
    */
   async enqueue(
     type: OperationType,
+    resource: 'book',
+    payload: BookOperationPayload,
+    maxRetries?: number
+  ): Promise<string>;
+  async enqueue(
+    type: OperationType,
+    resource: 'author',
+    payload: AuthorOperationPayload,
+    maxRetries?: number
+  ): Promise<string>;
+  async enqueue(
+    type: OperationType,
+    resource: 'category',
+    payload: CategoryOperationPayload,
+    maxRetries?: number
+  ): Promise<string>;
+  async enqueue(
+    type: OperationType,
+    resource: 'user',
+    payload: UserOperationPayload,
+    maxRetries?: number
+  ): Promise<string>;
+  async enqueue(
+    type: OperationType,
+    resource: 'settings',
+    payload: SettingsOperationPayload,
+    maxRetries?: number
+  ): Promise<string>;
+  async enqueue(
+    type: OperationType,
     resource: ResourceType,
-    payload: Record<string, string | number | boolean | null>,
+    payload: BookOperationPayload | AuthorOperationPayload | CategoryOperationPayload | UserOperationPayload | SettingsOperationPayload,
     maxRetries: number = 3
   ): Promise<string> {
     // Warn when approaching limit (80% threshold)
@@ -146,7 +176,7 @@ export class OperationQueue {
         try {
           await this.executeWithBackoff(operation, apiExecutor);
           await this.dequeue(operation.id);
-        } catch (error) {
+        } catch {
           operation.retryCount++;
 
           if (operation.retryCount >= operation.maxRetries) {
@@ -180,7 +210,7 @@ export class OperationQueue {
 
     // Mark book as syncing before processing (Phase 3 fix)
     if (operation.resource === 'book' && operation.payload?.id) {
-      await this.updateBookSyncStatus(operation.payload.id, 'syncing');
+      await this.updateBookSyncStatus(String(operation.payload.id), 'syncing');
     }
 
     try {
@@ -188,13 +218,13 @@ export class OperationQueue {
       
       // Mark as synced on success
       if (operation.resource === 'book' && operation.payload?.id) {
-        await this.updateBookSyncStatus(operation.payload.id, 'synced');
+        await this.updateBookSyncStatus(String(operation.payload.id), 'synced');
       }
     } catch (error) {
       // Mark as failed or pending for retry
       if (operation.resource === 'book' && operation.payload?.id) {
         const status = operation.retryCount >= operation.maxRetries - 1 ? 'failed' : 'pending';
-        await this.updateBookSyncStatus(operation.payload.id, status);
+        await this.updateBookSyncStatus(String(operation.payload.id), status);
       }
       throw error;
     }

@@ -14,7 +14,7 @@ import {
 import { QueueHandlerOptions } from '../types/GatewayTypes';
 import { ApiError, ErrorCode } from '../../../types/errors';
 import { operationQueue } from '../../OperationQueue';
-import { OperationType, ResourceType } from '../../../types/queue';
+import { OperationType, ResourceType, BaseOperationPayload } from '../../../types/queue';
 
 /**
  * Queue interface for operations
@@ -33,7 +33,7 @@ interface QueueOperation {
   type: 'CREATE' | 'UPDATE' | 'DELETE';
   resourceType: string;
   resourceId?: string;
-  data?: Record<string, string | number | boolean | null>;
+  data?: BaseOperationPayload;
   timestamp: Date;
   retryCount: number;
 }
@@ -50,9 +50,11 @@ class OperationQueueAdapter implements OperationQueue {
     const payload = {
       id: operation.resourceId,
       ...operation.data,
-    };
+    } as BaseOperationPayload;
     
-    const queuedId = await operationQueue.enqueue(
+    const queuedId = await (operationQueue as unknown as {
+      enqueue: (type: OperationType, resource: ResourceType, payload: BaseOperationPayload, maxRetries: number) => Promise<string>
+    }).enqueue(
       operationType,
       resourceType,
       payload,
@@ -131,7 +133,7 @@ export function createQueueHandler<T>(
   /**
    * Validate operation before queueing
    */
-  const validateOperation = (data: Record<string, string | number | boolean | null> | undefined, operationType: string): void => {
+  const validateOperation = (data: BaseOperationPayload | undefined, operationType: string): void => {
     if (!queueOptions.validateBeforeQueue) {
       return;
     }
@@ -182,7 +184,7 @@ export function createQueueHandler<T>(
   const queueOperation = async (
     operationType: 'CREATE' | 'UPDATE' | 'DELETE',
     resourceId?: string,
-    data?: Record<string, string | number | boolean | null>
+    data?: BaseOperationPayload
   ): Promise<string> => {
     const tempId = queueOptions.generateOptimisticIds ? generateTempId() : 
                    (resourceId && operationType !== 'CREATE') ? resourceId : generateTempId();
