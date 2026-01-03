@@ -341,3 +341,67 @@ describe('Handler Integration', () => {
     expect(operations[2].type).toBe('DELETE');
   });
 });
+
+describe('Real OperationQueue Integration', () => {
+  it('should integrate with real OperationQueue via adapter', async () => {
+    // Use default config which uses OperationQueueAdapter
+    const config = createDefaultQueueHandlerConfig('book');
+    const handler = createQueueHandler<TestBook>('book', config);
+
+    // Clear queue before test
+    await config.queue.clear();
+    
+    const initialSize = config.queue.size();
+    expect(initialSize).toBe(0);
+
+    // Add operations
+    const createId = await handler.create({
+      title: 'Test Book',
+      author: 'Test Author', 
+      status: 'reading',
+    });
+
+    const updateId = await handler.update('test-book-1', {
+      title: 'Updated Book',
+    });
+
+    const deleteId = await handler.delete('test-book-2');
+
+    // Verify operations were added to real queue
+    expect(config.queue.size()).toBe(3);
+    expect(createId).toMatch(/^[a-f0-9-]+$/); // UUID format from real operationQueue
+    expect(updateId).toMatch(/^[a-f0-9-]+$/);
+    expect(deleteId).toMatch(/^[a-f0-9-]+$/);
+
+    // Clean up
+    await config.queue.clear();
+  });
+
+  it('should handle deduplication with real queue', async () => {
+    const config = createDefaultQueueHandlerConfig('book');
+    config.queueOptions.deduplicateOperations = false; // Disable for this test
+    const handler = createQueueHandler<TestBook>('book', config);
+
+    // Clear queue before test
+    await config.queue.clear();
+
+    // Add same operation multiple times
+    await handler.create({
+      title: 'Duplicate Book',
+      author: 'Test Author',
+      status: 'reading',
+    });
+    
+    await handler.create({
+      title: 'Duplicate Book',
+      author: 'Test Author', 
+      status: 'reading',
+    });
+
+    // Should have 2 operations (no deduplication)
+    expect(config.queue.size()).toBe(2);
+
+    // Clean up
+    await config.queue.clear();
+  });
+});

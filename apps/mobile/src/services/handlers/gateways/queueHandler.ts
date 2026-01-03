@@ -13,6 +13,8 @@ import {
 } from '../types/HandlerTypes';
 import { QueueHandlerOptions } from '../types/GatewayTypes';
 import { ApiError, ErrorCode } from '../../../types/errors';
+import { operationQueue } from '../../OperationQueue';
+import { OperationType, ResourceType } from '../../../types/queue';
 
 /**
  * Queue interface for operations
@@ -31,9 +33,42 @@ interface QueueOperation {
   type: 'CREATE' | 'UPDATE' | 'DELETE';
   resourceType: string;
   resourceId?: string;
-  data?: unknown;
+  data?: Record<string, string | number | boolean | null>;
   timestamp: Date;
   retryCount: number;
+}
+
+/**
+ * Adapter that wraps OperationQueue to match QueueHandler interface
+ */
+class OperationQueueAdapter implements OperationQueue {
+  async add(operation: QueueOperation): Promise<string> {
+    const operationType = operation.type as OperationType;
+    const resourceType = operation.resourceType as ResourceType;
+    
+    // Map QueueOperation to OperationQueue.enqueue parameters
+    const payload = {
+      id: operation.resourceId,
+      ...operation.data,
+    };
+    
+    const queuedId = await operationQueue.enqueue(
+      operationType,
+      resourceType,
+      payload,
+      3 // default maxRetries
+    );
+    
+    return queuedId;
+  }
+
+  size(): number {
+    return operationQueue.size();
+  }
+
+  clear(): void {
+    operationQueue.clear();
+  }
 }
 
 /**
@@ -80,7 +115,7 @@ export function createQueueHandler<T>(
   /**
    * Validate operation before queueing
    */
-  const validateOperation = (data: unknown, operationType: string): void => {
+  const validateOperation = (data: Record<string, string | number | boolean | null> | undefined, operationType: string): void => {
     if (!queueOptions.validateBeforeQueue) {
       return;
     }
@@ -113,7 +148,7 @@ export function createQueueHandler<T>(
   const queueOperation = async (
     operationType: 'CREATE' | 'UPDATE' | 'DELETE',
     resourceId?: string,
-    data?: unknown
+    data?: Record<string, string | number | boolean | null>
   ): Promise<string> => {
     const tempId = queueOptions.generateOptimisticIds ? generateTempId() : 
                    (resourceId && operationType !== 'CREATE') ? resourceId : generateTempId();
@@ -191,10 +226,10 @@ export function createQueueHandler<T>(
  */
 export const createDefaultQueueHandlerConfig = (
   resourceType: string,
-  queue: OperationQueue
+  queue?: OperationQueue
 ): QueueHandlerConfig => ({
   resourceType,
-  queue,
+  queue: queue || new OperationQueueAdapter(),
   queueOptions: {
     generateOptimisticIds: true,
     idGenerationStrategy: 'uuid',

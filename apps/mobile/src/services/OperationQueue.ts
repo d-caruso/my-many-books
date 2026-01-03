@@ -35,7 +35,7 @@ export class OperationQueue {
   async enqueue(
     type: OperationType,
     resource: ResourceType,
-    payload: any,
+    payload: Record<string, string | number | boolean | null>,
     maxRetries: number = 3
   ): Promise<string> {
     // Warn when approaching limit (80% threshold)

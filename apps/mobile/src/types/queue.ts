@@ -6,7 +6,7 @@ export interface QueuedOperation {
   id: string;              // UUID
   type: OperationType;
   resource: ResourceType;
-  payload: any;            // Operation data
+  payload: Record<string, string | number | boolean | null>;            // Operation data
   timestamp: number;       // When queued
   retryCount: number;      // Attempts so far
   maxRetries: number;      // Max attempts (default: 3)
