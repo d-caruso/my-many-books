@@ -14,6 +14,7 @@ import {
   HandlerError,
 } from '../types/HandlerTypes';
 import { QueueHandlerOptions, DEFAULT_GATEWAY_CONFIG } from '../types/GatewayTypes';
+import { OperationType } from '../../../types/queue';
 
 /**
  * Queue interface for operations
@@ -150,9 +151,9 @@ export function createQueueHandler<T>(
   /**
    * Create operation context for tracking
    */
-  const createContext = (operationType: string, resourceId?: string): HandlerContext => ({
+  const createContext = (operationType: OperationType, resourceId?: string): HandlerContext => ({
     operationId: generateTempId(),
-    operationType: operationType as any,
+    operationType,
     resourceType,
     isOnline: false, // Queue handler is offline-only
     timestamp: new Date(),

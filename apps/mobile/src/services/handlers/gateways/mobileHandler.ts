@@ -16,6 +16,7 @@ import {
 } from '../types/HandlerTypes';
 import { MobileHandlerOptions, DEFAULT_GATEWAY_CONFIG } from '../types/GatewayTypes';
 import { ClientGatewayConfig, createClientGateway } from './clientGateway';
+import { OperationType } from '../../../types/queue';
 
 /**
  * Queue interface for offline operations
@@ -191,9 +192,9 @@ export function createMobileHandler<T>(
   /**
    * Create operation context
    */
-  const createContext = (operationType: string, resourceId?: string): HandlerContext => ({
+  const createContext = (operationType: OperationType, resourceId?: string): HandlerContext => ({
     operationId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    operationType: operationType as any,
+    operationType,
     resourceType,
     isOnline: networkProvider.isOnline(),
     timestamp: new Date(),

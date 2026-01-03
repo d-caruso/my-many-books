@@ -14,6 +14,7 @@ import {
   HandlerContext,
 } from '../types/HandlerTypes';
 import { ClientGatewayOptions, DEFAULT_GATEWAY_CONFIG } from '../types/GatewayTypes';
+import { OperationType } from '../../../types/queue';
 
 /**
  * HTTP Client interface for making requests
@@ -106,9 +107,9 @@ export function createClientGateway<T>(
   /**
    * Create operation context for error handling
    */
-  const createContext = (operationType: string, resourceId?: string): HandlerContext => ({
+  const createContext = (operationType: OperationType, resourceId?: string): HandlerContext => ({
     operationId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    operationType: operationType as any,
+    operationType,
     resourceType,
     isOnline: true, // Client gateway assumes online
     timestamp: new Date(),
