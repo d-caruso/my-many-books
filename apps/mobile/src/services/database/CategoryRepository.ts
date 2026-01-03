@@ -139,7 +139,7 @@ export class CategoryRepository {
    * Map database row to Category object
    * Phase 5: Include sync fields for server synchronization
    */
-  private mapRowToCategory(row: any): Category {
+  private mapRowToCategory(row: Record<string, unknown>): Category {
     return {
       id: row.id,
       name: row.name,
@@ -169,7 +169,7 @@ export class CategoryRepository {
     _serverUpdatedAt?: string;
   }): Promise<void> {
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
 
     if (fields.serverId !== undefined) {
       updates.push('server_id = ?');

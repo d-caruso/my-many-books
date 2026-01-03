@@ -104,7 +104,8 @@ The mobile app follows a component-based architecture with:
 
 - **Expo Router** for navigation
 - **React Native Paper** for UI components
-- **AsyncStorage** for local data persistence
+- **SQLite** for local data persistence
+- **AsyncStorage** for settings and preferences
 - **Shared libraries** for business logic and API integration
 
 ## API Integration

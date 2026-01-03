@@ -5,13 +5,39 @@ import { authorRepository } from '../database/AuthorRepository';
 import { categoryRepository } from '../database/CategoryRepository';
 import { idMappingService } from './IDMappingService';
 import { operationQueue } from '../OperationQueue';
-import { databaseService } from '../database/DatabaseService';
 import { executeOperation } from '../QueueExecutor';
 import { Book } from '../../types';
 import { hasBookConflict, hasAuthorConflict, hasCategoryConflict } from '../../utils/conflictDetection';
 
 const LAST_SYNC_KEY = '@last_sync_timestamp';
 const SYNC_PAGE_SIZE = 50;
+
+interface ServerBook {
+  id: number;
+  title: string;
+  status: string;
+  thumbnail?: string;
+  description?: string;
+  publishedDate?: string;
+  pageCount?: number;
+  rating?: number;
+  notes?: string;
+  creationDate?: string;
+  updateDate?: string;
+  updatedAt?: string;
+}
+
+interface ServerAuthor {
+  id: number;
+  name: string;
+  updateDate?: string;
+}
+
+interface ServerCategory {
+  id: number;
+  name: string;
+  updateDate?: string;
+}
 
 /**
  * Bidirectional Sync Service (Phase 5 - Task 5.4)
@@ -128,7 +154,7 @@ export class SyncService {
     while (hasMore) {
       try {
         // Fetch books from server with incremental sync support
-        const response: any = await bookAPI.getBooks(
+        const response: { books?: ServerBook[]; data?: ServerBook[] } = await bookAPI.getBooks(
           page, 
           SYNC_PAGE_SIZE, 
           true,  // includeAuthors
@@ -168,7 +194,7 @@ export class SyncService {
    * Merge a server book into local database
    * Handles conflict resolution based on updateDate
    */
-  private async mergeServerBook(serverBook: any): Promise<void> {
+  private async mergeServerBook(serverBook: ServerBook): Promise<void> {
     const serverId = serverBook.id;
 
     // Check if book exists locally by server_id
@@ -225,7 +251,7 @@ export class SyncService {
    * Map server book format to local Book format
    * FIXED: Always ensure _serverUpdatedAt is populated for conflict tracking
    */
-  private mapServerBookToLocal(serverBook: any): Partial<Book> {
+  private mapServerBookToLocal(serverBook: ServerBook): Partial<Book> {
     // Ensure we capture server timestamp for conflict resolution
     const serverTimestamp = serverBook.updateDate || serverBook.updated_at || serverBook.updatedAt || new Date().toISOString();
     
@@ -345,7 +371,7 @@ export class SyncService {
   /**
    * Merge server author into local database
    */
-  private async mergeServerAuthor(serverAuthor: any): Promise<void> {
+  private async mergeServerAuthor(serverAuthor: ServerAuthor): Promise<void> {
     const serverId = serverAuthor.id;
     const localAuthor = await authorRepository.findByServerId(serverId);
 
@@ -403,7 +429,7 @@ export class SyncService {
   /**
    * Merge server category into local database
    */
-  private async mergeServerCategory(serverCategory: any): Promise<void> {
+  private async mergeServerCategory(serverCategory: ServerCategory): Promise<void> {
     const serverId = serverCategory.id;
     const localCategory = await categoryRepository.findByServerId(serverId);
 

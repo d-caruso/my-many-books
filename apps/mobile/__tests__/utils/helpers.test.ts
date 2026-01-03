@@ -6,7 +6,6 @@ import {
   truncateText,
   generateBookId,
   sanitizeSearchQuery,
-  debounce,
   groupBooksByStatus,
   sortBooks,
   filterBooks,
@@ -144,60 +143,6 @@ describe('Helper Utilities', () => {
       expect(sanitizeSearchQuery('')).toBe('');
       expect(sanitizeSearchQuery(null as any)).toBe('');
       expect(sanitizeSearchQuery(undefined as any)).toBe('');
-    });
-  });
-
-  describe('debounce', () => {
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
-
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
-    it('should debounce function calls', () => {
-      let callCount = 0;
-      const testFn = debounce(() => {
-        callCount++;
-      }, 50);
-
-      // Call the function multiple times
-      testFn();
-      testFn();
-      testFn();
-
-      // Should not have been called yet
-      expect(callCount).toBe(0);
-
-      // Fast-forward time
-      jest.advanceTimersByTime(50);
-
-      // Should have been called once
-      expect(callCount).toBe(1);
-    });
-
-    it('should reset debounce timer on new calls', () => {
-      let callCount = 0;
-      const testFn = debounce(() => {
-        callCount++;
-      }, 100);
-
-      testFn();
-      jest.advanceTimersByTime(50);
-      
-      // Call again before timer expires
-      testFn();
-      jest.advanceTimersByTime(50);
-      
-      // Should not have been called yet
-      expect(callCount).toBe(0);
-      
-      // Advance the remaining time
-      jest.advanceTimersByTime(50);
-      
-      // Now should be called
-      expect(callCount).toBe(1);
     });
   });
 

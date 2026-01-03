@@ -297,7 +297,7 @@ export class BookRepository {
     _syncStatus?: string;
   }): Promise<void> {
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
 
     if (fields._serverUpdatedAt !== undefined) {
       updates.push('_server_updated_at = ?');
@@ -448,7 +448,7 @@ export class BookRepository {
 
     let sql = 'SELECT DISTINCT b.* FROM books b';
     let joins = '';
-    const params: any[] = [];
+    const params: unknown[] = [];
     const whereConditions = ['b._deleted = 0'];
 
     // Add joins if filtering by author or category
@@ -509,7 +509,7 @@ export class BookRepository {
   /**
    * Map database row to Book object
    */
-  private mapRowToBook(row: any): Book {
+  private mapRowToBook(row: Record<string, unknown>): Book {
     return {
       id: row.id,
       title: row.title,
@@ -536,7 +536,7 @@ export class BookRepository {
   /**
    * Create author relationships for a book (Phase 4 fix)
    */
-  private async createAuthorRelationships(bookId: string, authors: any): Promise<void> {
+  private async createAuthorRelationships(bookId: string, authors: string[]): Promise<void> {
     if (!authors) return;
     
     // Handle different author formats (string, array of strings, array of objects)
@@ -576,7 +576,7 @@ export class BookRepository {
   /**
    * Create category relationships for a book (Phase 4 fix)
    */
-  private async createCategoryRelationships(bookId: string, categories: any): Promise<void> {
+  private async createCategoryRelationships(bookId: string, categories: string[]): Promise<void> {
     if (!categories) return;
     
     // Handle different category formats

@@ -1,5 +1,6 @@
 import { databaseService } from '../database/DatabaseService';
 
+
 /**
  * ID Mapping Service (Phase 5)
  *
@@ -90,7 +91,7 @@ export class IDMappingService {
    * Resolve foreign keys in data payload before sending to server
    * Converts any temp IDs found in the data to their server IDs
    */
-  async resolveForeignKeys(data: any): Promise<any> {
+  async resolveForeignKeys(data: unknown): Promise<unknown> {
     await this.initialize();
 
     if (!data || typeof data !== 'object') {
@@ -103,7 +104,7 @@ export class IDMappingService {
     }
 
     // Handle objects
-    const resolved: any = {};
+    const resolved: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
       // Check if this looks like a temp ID field
       if (

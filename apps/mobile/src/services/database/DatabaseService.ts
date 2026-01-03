@@ -47,7 +47,7 @@ class DatabaseService {
   /**
    * Execute SQL query
    */
-  async executeQuery(sql: string, params: any[] = []): Promise<any> {
+  async executeQuery(sql: string, params: unknown[] = []): Promise<{ changes: number; lastInsertRowId: number }> {
     const db = this.getDatabase();
     try {
       const result = await db.runAsync(sql, params);
@@ -61,7 +61,7 @@ class DatabaseService {
   /**
    * Execute SQL query and return all rows
    */
-  async getAllAsync(sql: string, params: any[] = []): Promise<any[]> {
+  async getAllAsync<T = Record<string, unknown>>(sql: string, params: unknown[] = []): Promise<T[]> {
     const db = this.getDatabase();
     try {
       const result = await db.getAllAsync(sql, params);
@@ -75,7 +75,7 @@ class DatabaseService {
   /**
    * Execute SQL query and return first row
    */
-  async getFirstAsync(sql: string, params: any[] = []): Promise<any> {
+  async getFirstAsync<T = Record<string, unknown>>(sql: string, params: unknown[] = []): Promise<T | null> {
     const db = this.getDatabase();
     try {
       const result = await db.getFirstAsync(sql, params);

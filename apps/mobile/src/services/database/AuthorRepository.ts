@@ -139,7 +139,7 @@ export class AuthorRepository {
    * Map database row to Author object
    * Phase 5: Include sync fields for server synchronization
    */
-  private mapRowToAuthor(row: any): Author {
+  private mapRowToAuthor(row: Record<string, unknown>): Author {
     return {
       id: row.id,
       name: row.name,
@@ -169,7 +169,7 @@ export class AuthorRepository {
     _serverUpdatedAt?: string;
   }): Promise<void> {
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
 
     if (fields.serverId !== undefined) {
       updates.push('server_id = ?');

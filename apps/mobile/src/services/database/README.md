@@ -7,11 +7,10 @@
 - ✅ Schema definitions with indexes
 - ✅ Migration system
 - ✅ BookRepository with full CRUD
-- ✅ Migration script from AsyncStorage
 
 ## Integration with useBooks Hook
 
-To integrate SQLite with the useBooks hook, replace AsyncStorage calls with BookRepository:
+To integrate SQLite with the useBooks hook, use BookRepository for all data operations:
 
 ### Changes Needed:
 
@@ -31,7 +30,6 @@ useEffect(() => {
 const initDatabase = async () => {
   await databaseService.openDatabase();
   await migrationSystem.runMigrations();
-  await migrateFromAsyncStorage(); // One-time migration
   loadBooks();
 };
 ```
