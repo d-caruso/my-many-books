@@ -149,10 +149,10 @@ export class IDMappingService {
   /**
    * Get all mappings for debugging
    */
-  async getAllMappings(): Promise<Array<{ tempId: string; serverId: number }>> {
+  async getAllMappings(): Promise<{ tempId: string; serverId: number }[]> {
     await this.initialize();
 
-    const mappings: Array<{ tempId: string; serverId: number }> = [];
+    const mappings: { tempId: string; serverId: number }[] = [];
     this.tempToServerMap.forEach((serverId, tempId) => {
       mappings.push({ tempId, serverId });
     });

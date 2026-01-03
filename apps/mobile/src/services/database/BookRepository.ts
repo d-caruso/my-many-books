@@ -449,7 +449,7 @@ export class BookRepository {
     let sql = 'SELECT DISTINCT b.* FROM books b';
     let joins = '';
     const params: any[] = [];
-    let whereConditions = ['b._deleted = 0'];
+    const whereConditions = ['b._deleted = 0'];
 
     // Add joins if filtering by author or category
     if (author || category) {
@@ -548,7 +548,7 @@ export class BookRepository {
 
     for (const authorName of authorNames) {
       // Insert or get author
-      let authorResult = await databaseService.getFirstAsync(
+      const authorResult = await databaseService.getFirstAsync(
         'SELECT id FROM authors WHERE name = ?',
         [authorName]
       );
@@ -588,7 +588,7 @@ export class BookRepository {
 
     for (const categoryName of categoryNames) {
       // Insert or get category
-      let categoryResult = await databaseService.getFirstAsync(
+      const categoryResult = await databaseService.getFirstAsync(
         'SELECT id FROM categories WHERE name = ?',
         [categoryName]
       );

@@ -3,6 +3,8 @@ import React from 'react';
 import renderer from 'react-test-renderer';
 import type { Book } from '@/types';
 
+import { BookCard } from '@/components/BookCard';
+
 // Mock react-native-paper (copied from BookCard.test.tsx)
 jest.mock('react-native-paper', () => {
   const React = require('react');
@@ -38,8 +40,6 @@ jest.mock('react-native-paper', () => {
     Portal: ({ children }: any) => <>{children}</>,
   };
 });
-
-import { BookCard } from '@/components/BookCard';
 
 describe('Offline Write Operations', () => {
   const mockBook: Book = {

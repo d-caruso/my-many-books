@@ -373,7 +373,7 @@ export class SyncService {
       }
     } else {
       // Author doesn't exist locally - find by name or create new
-      let existingByName = await authorRepository.findByName(serverAuthor.name);
+      const existingByName = await authorRepository.findByName(serverAuthor.name);
       
       if (existingByName) {
         // Found by name - update with server_id
@@ -431,7 +431,7 @@ export class SyncService {
       }
     } else {
       // Category doesn't exist locally - find by name or create new
-      let existingByName = await categoryRepository.findByName(serverCategory.name);
+      const existingByName = await categoryRepository.findByName(serverCategory.name);
       
       if (existingByName) {
         // Found by name - update with server_id

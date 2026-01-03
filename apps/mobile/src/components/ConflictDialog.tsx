@@ -29,7 +29,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
   };
 
   const getFieldDifferences = () => {
-    const differences: Array<{field: string, local: any, server: any}> = [];
+    const differences: {field: string, local: any, server: any}[] = [];
     
     if (localBook.title !== serverBook.title) {
       differences.push({

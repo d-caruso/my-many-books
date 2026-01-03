@@ -2,6 +2,11 @@ import React from 'react';
 import renderer from 'react-test-renderer';
 import type { Book } from '@/types';
 
+// Import after mocks
+import { useBookSearch } from '@/hooks/useBookSearch';
+import { bookAPI } from '@/services/api';
+import { Text, View, TouchableOpacity } from 'react-native';
+
 // Unmock the hook so we can test the real implementation
 jest.unmock('@/hooks/useBookSearch');
 
@@ -43,11 +48,6 @@ jest.mock('@/hooks/useNetworkState', () => ({
     connectionType: mockIsOnline ? 'wifi' : 'none',
   }),
 }));
-
-// Import after mocks
-import { useBookSearch } from '@/hooks/useBookSearch';
-import { bookAPI } from '@/services/api';
-import { Text, View, TouchableOpacity } from 'react-native';
 
 // Test component that uses the hook
 function BookSearchTestComponent({ testId }: { testId: string }) {

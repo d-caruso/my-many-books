@@ -1,12 +1,12 @@
 // Unmock the hook to test real implementation
-jest.unmock('@/hooks/useBooks');
-
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useBooks } from '@/hooks/useBooks';
 import { bookAPI } from '@/services/api';
 import { bookRepository } from '@/services/database/BookRepository';
 import { databaseService } from '@/services/database/DatabaseService';
 import { migrationSystem } from '@/services/database/migrations';
+
+jest.unmock('@/hooks/useBooks');
 
 // Use the globally mocked API from setupTests.ts
 const mockBookAPI = bookAPI as jest.Mocked<typeof bookAPI>;
