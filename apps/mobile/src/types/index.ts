@@ -44,10 +44,6 @@ export interface UserPreferences {
 export type { SharedAuthor as Author, SharedCategory as Category };
 
 // Mobile-specific types
-export interface NavigationParams {
-  screen?: string;
-  params?: Record<string, any>;
-}
 
 export interface CameraPermission {
   status: 'granted' | 'denied' | 'undetermined';
@@ -78,7 +74,7 @@ export interface AppTheme {
 export type StatusBarStyle = 'auto' | 'light' | 'dark';
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = object> {
   data?: T;
   error?: string;
   success: boolean;
