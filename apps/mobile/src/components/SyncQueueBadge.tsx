@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import { Badge, Text } from 'react-native-paper';
+import { Badge } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useQueueStatus } from '../hooks/useQueueStatus';
 

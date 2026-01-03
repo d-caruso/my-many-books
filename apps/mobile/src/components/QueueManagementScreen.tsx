@@ -14,7 +14,7 @@ export const QueueManagementScreen: React.FC = () => {
   const { t } = useTranslation('offline');
   const theme = useTheme();
   const { operations, refreshQueue } = useQueueStatus();
-  const { processQueue, performFullSync } = useSyncQueue();
+  const { processQueue } = useSyncQueue();
 
   const handleRetry = async (operationId: string) => {
     await operationQueue.retryOperation(operationId);
@@ -60,7 +60,7 @@ export const QueueManagementScreen: React.FC = () => {
             color={getStatusColor(item.status)}
           />
         )}
-        right={(props) => (
+        right={() => (
           <View style={styles.actions}>
             {(item.status === 'failed' || item.status === 'retrying') && (
               <IconButton

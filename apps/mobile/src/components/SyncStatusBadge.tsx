@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Badge, IconButton, ActivityIndicator } from 'react-native-paper';
+import { Badge, IconButton } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { SyncStatus } from '@/types';
 

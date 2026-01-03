@@ -67,8 +67,8 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
           status: filters.status,
           author: filters.author,
           category: filters.category,
-          sortBy: filters.sortBy as any || 'update_date',
-          sortOrder: filters.sortOrder as any || 'DESC',
+          sortBy: (filters.sortBy as string) || 'update_date',
+          sortOrder: (filters.sortOrder as string) || 'DESC',
         });
 
         setBooks(localBooks);
@@ -77,7 +77,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
         setCurrentPage(1);
         setLastQuery(query);
         setLastFilters(filters);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Offline book search failed:', err);
         setError(t('search.offlineSearchFailed'));
         setBooks([]);
@@ -112,7 +112,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
       setLastQuery(query);
       setLastFilters(filters);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Book search failed:', err);
       setError(err.response?.data?.message || t('search.searchFailed'));
 
@@ -123,14 +123,14 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
           status: filters.status,
           author: filters.author,
           category: filters.category,
-          sortBy: filters.sortBy as any || 'update_date',
-          sortOrder: filters.sortOrder as any || 'DESC',
+          sortBy: (filters.sortBy as string) || 'update_date',
+          sortOrder: (filters.sortOrder as string) || 'DESC',
         });
         setBooks(localBooks);
         setTotalCount(localBooks.length);
         setHasMore(false);
         setError(t('search.showingOfflineResults'));
-      } catch (offlineErr) {
+      } catch {
         setBooks([]);
         setTotalCount(0);
         setHasMore(false);
@@ -154,7 +154,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     try {
       const book = await bookAPI.searchByISBN(isbn);
       return book;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('ISBN search failed:', err);
       setError(err.response?.data?.message || t('search.bookNotFound'));
       return null;

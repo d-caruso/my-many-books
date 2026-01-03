@@ -4,7 +4,6 @@ import { bookAPI } from '@/services/api';
 import { bookRepository } from '@/services/database/BookRepository';
 import { databaseService } from '@/services/database/DatabaseService';
 import { migrationSystem } from '@/services/database/migrations';
-import { operationQueue } from '@/services/OperationQueue';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { v4 as uuidv4 } from 'uuid';
 import { resolveConflict as resolveBookConflict } from '@/utils/conflictDetection';
@@ -28,9 +27,12 @@ interface UseBooksActions {
 }
 
 // Helper to check if error is retriable (network/server errors)
-const isRetriableError = (error: any): boolean => {
-  if (!error.response) return true; // Network error
-  const status = error.response.status;
+const isRetriableError = (error: unknown): boolean => {
+  if (!error || typeof error !== 'object') return true; // Network error
+  if (!('response' in error)) return true; // Network error
+  const response = (error as { response?: { status?: number } }).response;
+  if (!response?.status) return true; // Network error
+  const status = response.status;
   return status >= 500 || status === 408 || status === 429; // Server errors, timeout, rate limit
 };
 
@@ -106,9 +108,12 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
 
       // Update local state
       setBooks(response.books);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load books:', err);
-      setError(err.response?.data?.message || t('books.loadFailed'));
+      const errorMessage = (err && typeof err === 'object' && 'response' in err) 
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      setError(errorMessage || t('books.loadFailed'));
 
       // On error, load from local database
       await loadBooksFromDB();
@@ -135,9 +140,12 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
 
       // Update local state
       setBooks(response.books);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to refresh books:', err);
-      setError(err.response?.data?.message || t('books.refreshFailed'));
+      const errorMessage = (err && typeof err === 'object' && 'response' in err) 
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      setError(errorMessage || t('books.refreshFailed'));
 
       // On error, load from local database
       await loadBooksFromDB();
@@ -151,7 +159,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     const tempId = `temp-${uuidv4()}`;
     const optimisticBook: Book = {
       ...bookData,
-      id: tempId as any,
+      id: tempId as string,
       _tempId: tempId,
       _syncStatus: 'pending',
       creationDate: new Date().toISOString(),
@@ -185,7 +193,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       ));
 
       return newBook;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create book:', err);
 
       // If error is retriable, keep optimistic book with pending status
@@ -273,7 +281,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       ));
 
       return updatedBook;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update book:', err);
 
       // If error is retriable, keep pending status  
@@ -325,7 +333,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
 
       // On success, permanently delete from SQLite
       await bookRepository.hardDelete(stringId);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete book:', err);
 
       // If error is retriable, keep soft-deleted with pending status
@@ -369,7 +377,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       setBooks(prev => prev.map(book =>
         book.id == id ? { ...book, _syncStatus: 'synced' } : book
       ));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update book status:', err);
 
       // If error is retriable, keep pending status
@@ -416,7 +424,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         try {
           await bookAPI.updateBook(bookId, conflictedBook);
           console.log(`Conflict resolved for book ${bookId}: keeping local version - update sent to server`);
-        } catch (error) {
+        } catch {
           console.log(`Conflict resolved for book ${bookId}: keeping local version - will retry via queue`);
           // If immediate update fails, it's already marked as pending and will be queued automatically
         }
