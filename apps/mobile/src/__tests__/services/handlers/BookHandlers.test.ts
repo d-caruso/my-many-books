@@ -75,7 +75,7 @@ describe('BookHandlerFactory', () => {
 });
 
 describe('Book Handler Validation', () => {
-  let handler: any;
+  let handler: ReturnType<typeof BookHandlerFactory.createClientGateway>;
   let mockHttpClient: ReturnType<typeof createMockHttpClient>;
 
   beforeEach(() => {
@@ -103,7 +103,7 @@ describe('Book Handler Validation', () => {
       };
 
       // We need to mock the actual implementation
-      const originalCreate = handler.create;
+      const _originalCreate = handler.create;
       handler.create = jest.fn().mockResolvedValue(mockBook);
 
       const result = await handler.create(validBookData);
@@ -138,11 +138,15 @@ describe('Book Handler Validation', () => {
     });
 
     it('should throw validation error for invalid status', async () => {
-      const invalidData = {
+      const invalidData: {
+        title: string;
+        author: string;
+        status: string; // Allow any string for testing invalid values
+      } = {
         title: 'Test Book',
         author: 'Test Author',
         status: 'invalid-status',
-      } as any;
+      };
 
       await expect(handler.create(invalidData)).rejects.toThrow(BookValidationError);
     });
@@ -258,9 +262,11 @@ describe('Book Handler Validation', () => {
     });
 
     it('should throw validation error for invalid status in update', async () => {
-      const invalidData: UpdateBookPayload = {
+      const invalidData: {
+        status: string; // Allow any string for testing invalid values
+      } = {
         status: 'invalid-status',
-      } as any;
+      };
 
       await expect(handler.update('1', invalidData)).rejects.toThrow(BookValidationError);
     });
@@ -302,7 +308,8 @@ describe('Book Handler Validation', () => {
     });
 
     it('should throw validation error for null ID', async () => {
-      await expect(handler.delete(null as any)).rejects.toThrow(BookValidationError);
+      // Test with null by casting to string (which is what the delete method expects)
+      await expect(handler.delete(null as unknown as string)).rejects.toThrow(BookValidationError);
     });
   });
 

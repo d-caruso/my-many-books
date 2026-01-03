@@ -11,15 +11,13 @@ import {
 
 import { 
   createClientGateway,
-  createDefaultClientGatewayConfig,
-  ClientGatewayFactory 
+  createDefaultClientGatewayConfig
 } from '../../../../services/handlers/gateways/clientGateway';
 
 import { 
   ClientGatewayHandler, 
   QueueHandlerType,
-  CreatePayload,
-  UpdatePayload 
+  CreatePayload
 } from '../../../../services/handlers/types/HandlerTypes';
 
 // Test book type

@@ -27,8 +27,8 @@ describe('Book Validation', () => {
 
     describe('title validation', () => {
       it('should require title', () => {
-        const data = { ...validBookData };
-        delete (data as any).title;
+        const data = { ...validBookData } as Partial<typeof validBookData>;
+        delete data.title;
         
         const errors = validateCreateBook(data);
         expect(errors).toEqual([
@@ -76,8 +76,8 @@ describe('Book Validation', () => {
 
     describe('author validation', () => {
       it('should require author', () => {
-        const data = { ...validBookData };
-        delete (data as any).author;
+        const data = { ...validBookData } as Partial<typeof validBookData>;
+        delete data.author;
         
         const errors = validateCreateBook(data);
         expect(errors).toEqual([
@@ -118,8 +118,8 @@ describe('Book Validation', () => {
 
     describe('status validation', () => {
       it('should require status', () => {
-        const data = { ...validBookData };
-        delete (data as any).status;
+        const data = { ...validBookData } as Partial<typeof validBookData>;
+        delete data.status;
         
         const errors = validateCreateBook(data);
         expect(errors).toEqual([
@@ -132,7 +132,7 @@ describe('Book Validation', () => {
       });
 
       it('should reject invalid status', () => {
-        const data = { ...validBookData, status: 'invalid-status' as any };
+        const data: typeof validBookData & { status: string } = { ...validBookData, status: 'invalid-status' };
         
         const errors = validateCreateBook(data);
         expect(errors).toEqual([
@@ -276,7 +276,7 @@ describe('Book Validation', () => {
         });
 
         it('should reject non-numeric rating', () => {
-          const data = { ...validBookData, rating: 'five' as any };
+          const data: typeof validBookData & { rating: string } = { ...validBookData, rating: 'five' };
           const errors = validateCreateBook(data);
           expect(errors).toEqual([
             expect.objectContaining({
@@ -314,10 +314,16 @@ describe('Book Validation', () => {
     });
 
     it('should collect multiple validation errors', () => {
-      const invalidData = {
+      const invalidData: {
+        title: string;
+        author: string;
+        status: string; // Allow invalid string status
+        isbn: string;
+        rating: number;
+      } = {
         title: '',
         author: '',
-        status: 'invalid' as any,
+        status: 'invalid',
         isbn: 'invalid-isbn',
         rating: 10,
       };
@@ -345,9 +351,13 @@ describe('Book Validation', () => {
     });
 
     it('should validate provided fields', () => {
-      const invalidData: UpdateBookPayload = {
+      const invalidData: {
+        title: string;
+        status: string; // Allow invalid string status
+        rating: number;
+      } = {
         title: '',
-        status: 'invalid' as any,
+        status: 'invalid',
         rating: 10,
       };
       

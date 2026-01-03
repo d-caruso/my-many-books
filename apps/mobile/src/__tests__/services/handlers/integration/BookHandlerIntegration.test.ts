@@ -51,8 +51,8 @@ describe('BookHandlerIntegration', () => {
     mockOperationQueue = createMockOperationQueue();
     mockIDMappingService = createMockIDMappingService();
     integration = new BookHandlerIntegration(
-      mockOperationQueue as any,
-      mockIDMappingService as any
+      mockOperationQueue as jest.Mocked<OperationQueue>,
+      mockIDMappingService as jest.Mocked<IDMappingService>
     );
     jest.clearAllMocks();
   });
@@ -217,8 +217,8 @@ describe('BookHandlerIntegration', () => {
       const queue1 = createMockOperationQueue();
       const idMapping1 = createMockIDMappingService();
 
-      const instance1 = getBookHandlerIntegration(queue1 as any, idMapping1 as any);
-      const instance2 = getBookHandlerIntegration(queue1 as any, idMapping1 as any);
+      const instance1 = getBookHandlerIntegration(queue1 as jest.Mocked<OperationQueue>, idMapping1 as jest.Mocked<IDMappingService>);
+      const instance2 = getBookHandlerIntegration(queue1 as jest.Mocked<OperationQueue>, idMapping1 as jest.Mocked<IDMappingService>);
 
       expect(instance1).toBe(instance2);
     });
@@ -234,8 +234,8 @@ describe('BookHandlerIntegration', () => {
       const handlers = await createIntegratedBookHandlers(
         httpClient,
         networkProvider,
-        operationQueue as any,
-        idMappingService as any
+        operationQueue as jest.Mocked<OperationQueue>,
+        idMappingService as jest.Mocked<IDMappingService>
       );
 
       expect(handlers.clientGateway).toBeDefined();

@@ -253,9 +253,9 @@ describe('ClientGateway', () => {
           status: 'reading',
         });
         fail('Should have thrown offline error');
-      } catch (error: any) {
+      } catch (error: unknown) {
         // The error might be wrapped by handleError
-        expect(error.originalError?.message || error.message).toContain('No internet connection available');
+        expect((error as { originalError?: { message?: string }; message?: string }).originalError?.message || (error as Error).message).toContain('No internet connection available');
       }
     });
 
@@ -301,9 +301,9 @@ describe('ClientGateway', () => {
           status: 'reading',
         });
         fail('Expected network error');
-      } catch (error: any) {
+      } catch (error: unknown) {
         // ClientGateway just re-throws the original error
-        expect(error.message).toBe('Network Error');
+        expect((error as Error).message).toBe('Network Error');
         expect(error).toBe(networkError);
       }
     });
@@ -319,9 +319,9 @@ describe('ClientGateway', () => {
           status: 'reading',
         });
         fail('Expected server error');
-      } catch (error: any) {
+      } catch (error: unknown) {
         // ClientGateway just re-throws the original error
-        expect(error.message).toBe('500 Internal Server Error');
+        expect((error as Error).message).toBe('500 Internal Server Error');
         expect(error).toBe(serverError);
       }
     });
@@ -337,9 +337,9 @@ describe('ClientGateway', () => {
           status: 'reading',
         });
         fail('Expected validation error');
-      } catch (error: any) {
+      } catch (error: unknown) {
         // ClientGateway just re-throws the original error
-        expect(error.message).toBe('400 Bad Request');
+        expect((error as Error).message).toBe('400 Bad Request');
         expect(error).toBe(validationError);
       }
     });
@@ -356,9 +356,9 @@ describe('ClientGateway', () => {
           status: 'reading',
         });
         fail('Should have thrown validation error');
-      } catch (error: any) {
+      } catch (error: unknown) {
         // The error gets wrapped by handleError, so check the original error
-        expect(error.originalError?.message || error.message).toContain('Invalid response');
+        expect((error as { originalError?: { message?: string }; message?: string }).originalError?.message || (error as Error).message).toContain('Invalid response');
       }
     });
 

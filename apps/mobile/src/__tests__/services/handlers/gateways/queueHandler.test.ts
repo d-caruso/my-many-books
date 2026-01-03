@@ -12,7 +12,7 @@ import { QueueHandlerType } from '../../../../services/handlers/types/HandlerTyp
 
 // Mock queue implementation
 const createMockQueue = () => {
-  let operations: any[] = [];
+  let operations: Record<string, string | number | boolean | null>[] = [];
   return {
     add: jest.fn((operation) => {
       operations.push(operation);
@@ -122,10 +122,10 @@ describe('QueueHandler', () => {
           status: 'reading',
         });
         throw new Error('Should have thrown queue error');
-      } catch (error: any) {
-        expect(error.code).toBe('QUEUE_ERROR');
-        expect(error.retriable).toBe(true);
-        expect(error.message).toContain('Queue full');
+      } catch (error: unknown) {
+        expect((error as { code: string }).code).toBe('QUEUE_ERROR');
+        expect((error as { retriable: boolean }).retriable).toBe(true);
+        expect((error as Error).message).toContain('Queue full');
       }
     });
   });
@@ -191,7 +191,8 @@ describe('QueueHandler', () => {
       };
       const noValidationHandler = createQueueHandler<TestBook>('book', noValidationConfig);
 
-      const tempId = await noValidationHandler.create(null as any);
+      // Test with null when validation is disabled (the handler should accept any data)
+      const tempId = await noValidationHandler.create(null as unknown as CreatePayload<TestBook>);
       expect(tempId).toMatch(/^temp-/);
     });
   });
