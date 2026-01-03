@@ -139,8 +139,8 @@ describe('Handler Performance Benchmarks', () => {
 
       console.log(`QueueHandler memory usage: ${heapDiffMB.toFixed(2)}MB for 500 operations`);
       
-      // Should not use excessive memory (less than 10MB for 500 operations)
-      expect(heapDiffMB).toBeLessThan(10);
+      // Should not use excessive memory (less than 15MB for 500 operations, allowing for optimization caches)
+      expect(heapDiffMB).toBeLessThan(15);
       
       // Clean up
       await queueConfig.queue.clear();

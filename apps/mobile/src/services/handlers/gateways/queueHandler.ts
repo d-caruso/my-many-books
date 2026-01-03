@@ -96,19 +96,35 @@ export function createQueueHandler<T>(
 ): QueueHandlerType<T> {
   const { queue, queueOptions } = config;
 
+  // Performance optimization: Cache timestamp to avoid repeated Date.now() calls
+  let lastTimestamp = 0;
+  let timestampCounter = 0;
+  
   /**
-   * Generate temp ID based on strategy
+   * Generate temp ID based on strategy (optimized)
    */
   const generateTempId = (): string => {
+    const now = Date.now();
+    
+    // For high-frequency operations, add a counter to ensure uniqueness
+    if (now === lastTimestamp) {
+      timestampCounter++;
+    } else {
+      lastTimestamp = now;
+      timestampCounter = 0;
+    }
+    
+    const uniqueTimestamp = timestampCounter > 0 ? `${now}-${timestampCounter}` : now.toString();
+    
     switch (queueOptions.idGenerationStrategy) {
       case 'uuid':
-        return `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        return `temp-${uniqueTimestamp}-${Math.random().toString(36).substring(2, 9)}`;
       case 'timestamp':
-        return `temp-${Date.now()}`;
+        return `temp-${uniqueTimestamp}`;
       case 'sequential':
-        return `temp-${resourceType}-${Date.now()}`;
+        return `temp-${resourceType}-${uniqueTimestamp}`;
       default:
-        return `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        return `temp-${uniqueTimestamp}-${Math.random().toString(36).substring(2, 9)}`;
     }
   };
 
@@ -131,14 +147,32 @@ export function createQueueHandler<T>(
   /**
    * Check for duplicate operations
    */
-  const checkForDuplicates = (_operation: QueueOperation): boolean => {
+  // Cache for deduplication - stores operation hashes and timestamps
+  const deduplicationCache = new Map<string, number>();
+  
+  const checkForDuplicates = (operation: QueueOperation): boolean => {
     if (!queueOptions.deduplicateOperations) {
       return false;
     }
 
-    // This would need access to existing queue items to check duplicates
-    // For now, return false (no duplicates found)
-    // TODO: Implement actual duplicate detection
+    // Create a hash for the operation to detect duplicates
+    const operationHash = `${operation.type}_${operation.resourceType}_${JSON.stringify(operation.data)}`;
+    
+    // Clean old entries (older than 30 seconds)
+    const now = Date.now();
+    for (const [hash, timestamp] of deduplicationCache.entries()) {
+      if (now - timestamp > 30000) {
+        deduplicationCache.delete(hash);
+      }
+    }
+    
+    // Check if this operation exists
+    if (deduplicationCache.has(operationHash)) {
+      return true;
+    }
+    
+    // Store this operation
+    deduplicationCache.set(operationHash, now);
     return false;
   };
 

@@ -25,6 +25,20 @@ interface HttpClient {
 }
 
 /**
+ * Client Gateway Options
+ */
+interface ClientGatewayOptions {
+  /** Fail fast when offline */
+  failFast: boolean;
+  /** Enable response validation */
+  validateResponses: boolean;
+  /** Enable response caching */
+  enableCaching: boolean;
+  /** Cache TTL in milliseconds */
+  cacheTTL: number;
+}
+
+/**
  * Client Gateway Configuration
  */
 export interface ClientGatewayConfig {
@@ -55,15 +69,34 @@ export function createClientGateway<T>(
   const resourceEndpoint = `${baseURL}/${resourceType}s`;
 
   /**
-   * Create request configuration with defaults
+   * Create request configuration with defaults (optimized)
    */
-  const createRequestConfig = (overrides?: Record<string, unknown>): Record<string, unknown> => ({
+  // Cache the base config to avoid repeated object creation
+  const baseRequestConfig: Record<string, unknown> = {
     timeout,
-    headers: { ...defaultHeaders, ...overrides?.headers },
-    ...overrides,
-  });
+    headers: { ...defaultHeaders },
+  };
+  
+  const createRequestConfig = (overrides?: Record<string, unknown>): Record<string, unknown> => {
+    // If no overrides, return cached config
+    if (!overrides) {
+      return baseRequestConfig;
+    }
+    
+    // Only create new object when needed
+    return {
+      ...baseRequestConfig,
+      headers: { ...baseRequestConfig.headers, ...overrides.headers },
+      ...overrides,
+    };
+  };
 
 
+  /**
+   * Simple cache for GET requests (if caching is enabled)
+   */
+  const responseCache = new Map<string, { data: unknown; timestamp: number }>();
+  
   /**
    * Validate response against schema if enabled
    */
@@ -75,6 +108,36 @@ export function createClientGateway<T>(
       }
     }
     return data;
+  };
+  
+  /**
+   * Check cache for GET requests
+   */
+  const getCachedResponse = <R>(cacheKey: string): R | null => {
+    if (!options.enableCaching) {
+      return null;
+    }
+    
+    const cached = responseCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < options.cacheTTL) {
+      return cached.data as R;
+    }
+    
+    // Clean up expired entry
+    if (cached) {
+      responseCache.delete(cacheKey);
+    }
+    
+    return null;
+  };
+  
+  /**
+   * Cache response for GET requests
+   */
+  const setCachedResponse = (cacheKey: string, data: unknown): void => {
+    if (options.enableCaching) {
+      responseCache.set(cacheKey, { data, timestamp: Date.now() });
+    }
   };
 
 
@@ -133,10 +196,22 @@ export function createClientGateway<T>(
           throw new Error('No internet connection available');
         }
 
+        // Check cache first for read operations
+        const cacheKey = `read_${id}`;
+        const cachedResponse = getCachedResponse<T>(cacheKey);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
         const config = createRequestConfig();
         const response = await httpClient.get<T>(`${resourceEndpoint}/${id}`, config);
         
-        return validateResponse(response);
+        const validatedResponse = validateResponse(response);
+        
+        // Cache the response
+        setCachedResponse(cacheKey, validatedResponse);
+        
+        return validatedResponse;
       } catch (error) {
         throw error;
       }
