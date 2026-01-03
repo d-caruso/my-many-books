@@ -10,11 +10,9 @@ import {
   QueueHandlerType,
   CreatePayload,
   UpdatePayload,
-  HandlerContext,
-  HandlerError,
 } from '../types/HandlerTypes';
-import { QueueHandlerOptions, DEFAULT_GATEWAY_CONFIG } from '../types/GatewayTypes';
-import { OperationType } from '../../../types/queue';
+import { QueueHandlerOptions } from '../types/GatewayTypes';
+import { ApiError, ErrorCode } from '../../../types/errors';
 
 /**
  * Queue interface for operations
@@ -89,7 +87,7 @@ export function createQueueHandler<T>(
 
     // Basic validation
     if (data === null || data === undefined || typeof data !== 'object') {
-      throw new Error(`Invalid ${operationType} data for ${resourceType}`);
+      throw new ApiError(ErrorCode.VALIDATION_ERROR, `Invalid ${operationType} data for ${resourceType}`);
     }
 
     // Type-specific validation could be added here
@@ -98,7 +96,7 @@ export function createQueueHandler<T>(
   /**
    * Check for duplicate operations
    */
-  const checkForDuplicates = (operation: QueueOperation): boolean => {
+  const checkForDuplicates = (_operation: QueueOperation): boolean => {
     if (!queueOptions.deduplicateOperations) {
       return false;
     }
@@ -144,77 +142,45 @@ export function createQueueHandler<T>(
       const queuedId = await queue.add(operation);
       return queuedId;
     } catch (error) {
-      throw new Error(`Failed to queue ${operationType} operation: ${error.message}`);
+      throw new ApiError(
+        ErrorCode.QUEUE_ERROR,
+        `Failed to queue ${operationType} operation: ${error.message}`,
+        undefined,
+        true // Queue errors are retriable
+      );
     }
   };
 
-  /**
-   * Create operation context for tracking
-   */
-  const createContext = (operationType: OperationType, resourceId?: string): HandlerContext => ({
-    operationId: generateTempId(),
-    operationType,
-    resourceType,
-    isOnline: false, // Queue handler is offline-only
-    timestamp: new Date(),
-  });
 
   // Return the queue handler implementation
   return {
     async create(data: CreatePayload<T>): Promise<string> {
-      const context = createContext('CREATE');
       
       try {
         const tempId = await queueOperation('CREATE', undefined, data);
         return tempId;
       } catch (error) {
-        const handlerError: HandlerError = {
-          name: 'QueueHandlerError',
-          message: error.message,
-          code: 'QUEUE_ERROR',
-          context,
-          originalError: error as Error,
-          retryable: true,
-        };
-        throw handlerError;
+        throw error;
       }
     },
 
     async update(id: string, data: UpdatePayload<T>): Promise<string> {
-      const context = createContext('UPDATE', id);
       
       try {
         const tempId = await queueOperation('UPDATE', id, data);
         return tempId;
       } catch (error) {
-        const handlerError: HandlerError = {
-          name: 'QueueHandlerError',
-          message: error.message,
-          code: 'QUEUE_ERROR',
-          context,
-          originalError: error as Error,
-          retryable: true,
-        };
-        throw handlerError;
+        throw error;
       }
     },
 
     async delete(id: string): Promise<string> {
-      const context = createContext('DELETE', id);
       
       try {
         const tempId = await queueOperation('DELETE', id);
         return tempId;
       } catch (error) {
-        const handlerError: HandlerError = {
-          name: 'QueueHandlerError',
-          message: error.message,
-          code: 'QUEUE_ERROR',
-          context,
-          originalError: error as Error,
-          retryable: true,
-        };
-        throw handlerError;
+        throw error;
       }
     },
   };

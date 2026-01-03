@@ -10,13 +10,10 @@ import {
   CreatePayload,
   UpdatePayload,
   FilterOptions,
-  HandlerError,
-  HandlerContext,
   NetworkState,
 } from '../types/HandlerTypes';
 import { MobileHandlerOptions, DEFAULT_GATEWAY_CONFIG } from '../types/GatewayTypes';
 import { ClientGatewayConfig, createClientGateway } from './clientGateway';
-import { OperationType } from '../../../types/queue';
 
 /**
  * Queue interface for offline operations
@@ -153,8 +150,7 @@ export function createMobileHandler<T>(
    */
   const tryOnlineOrQueue = async <R>(
     onlineOperation: () => Promise<R>,
-    queueFallback: () => Promise<R>,
-    context: HandlerContext
+    queueFallback: () => Promise<R>
   ): Promise<R> => {
     const isOnline = networkProvider.isOnline();
     
@@ -170,10 +166,9 @@ export function createMobileHandler<T>(
         return result;
       } catch (error) {
         // Check if we should fallback to queue
-        const handlerError = error as HandlerError;
-        const shouldQueue = handlerError.retryable || 
-                           error.message.includes('timeout') ||
-                           error.message.includes('Network Error');
+        const shouldQueue = error.message.includes('timeout') ||
+                           error.message.includes('Network Error') ||
+                           error.message.includes('No internet connection');
 
         if (shouldQueue) {
           // TODO: Integrate with proper logging system
@@ -189,21 +184,10 @@ export function createMobileHandler<T>(
     }
   };
 
-  /**
-   * Create operation context
-   */
-  const createContext = (operationType: OperationType, resourceId?: string): HandlerContext => ({
-    operationId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    operationType,
-    resourceType,
-    isOnline: networkProvider.isOnline(),
-    timestamp: new Date(),
-  });
 
   // Return the mobile handler implementation
   return {
     async create(data: CreatePayload<T>): Promise<T> {
-      const context = createContext('CREATE');
 
       const onlineOperation = () => clientGateway.create!(data);
       const queueFallback = async () => {
@@ -211,11 +195,10 @@ export function createMobileHandler<T>(
         return createOptimisticResponse(data, tempId);
       };
 
-      return tryOnlineOrQueue(onlineOperation, queueFallback, context);
+      return tryOnlineOrQueue(onlineOperation, queueFallback);
     },
 
     async update(id: string, data: UpdatePayload<T>): Promise<T> {
-      const context = createContext('UPDATE', id);
 
       const onlineOperation = () => clientGateway.update!(id, data);
       const queueFallback = async () => {
@@ -236,11 +219,10 @@ export function createMobileHandler<T>(
         return createOptimisticUpdate(id, data, original);
       };
 
-      return tryOnlineOrQueue(onlineOperation, queueFallback, context);
+      return tryOnlineOrQueue(onlineOperation, queueFallback);
     },
 
     async delete(id: string): Promise<void> {
-      const context = createContext('DELETE', id);
 
       const onlineOperation = () => clientGateway.delete!(id);
       const queueFallback = async () => {
@@ -249,11 +231,10 @@ export function createMobileHandler<T>(
         return undefined;
       };
 
-      await tryOnlineOrQueue(onlineOperation, queueFallback, context);
+      await tryOnlineOrQueue(onlineOperation, queueFallback);
     },
 
     async read(id: string): Promise<T> {
-      const context = createContext('READ', id);
       
       // Read operations try online first, then fallback to cache
       const isOnline = networkProvider.isOnline();
@@ -283,7 +264,6 @@ export function createMobileHandler<T>(
     },
 
     async list(filters?: FilterOptions<T>): Promise<T[]> {
-      const context = createContext('LIST');
       
       // List operations try online first, then fallback to cache
       const isOnline = networkProvider.isOnline();

@@ -7,7 +7,7 @@
  * - QueueHandler: Queue-only (no HTTP, no double-queueing)
  */
 
-import { OperationType } from '../../queue/OperationQueue';
+import { OperationType } from '../../../types/queue';
 
 /**
  * Pure HTTP handler - no queue, fails when offline

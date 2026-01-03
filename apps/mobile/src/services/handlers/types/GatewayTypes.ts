@@ -5,7 +5,7 @@
  * network state handling and retry policies
  */
 
-import { HandlerStrategy, NetworkState } from './HandlerTypes';
+import { HandlerStrategy } from './HandlerTypes';
 
 /**
  * Gateway configuration for handler behavior

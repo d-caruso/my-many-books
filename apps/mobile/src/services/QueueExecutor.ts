@@ -5,6 +5,11 @@ import { bookRepository } from './database/BookRepository';
 import { authorRepository } from './database/AuthorRepository';
 import { categoryRepository } from './database/CategoryRepository';
 import { cleanupService } from './sync/CleanupService';
+import { ApiError } from '../types/errors';
+import { Book } from '@my-many-books/shared-types';
+import { Author } from '@my-many-books/shared-types';
+import { Category } from '@my-many-books/shared-types';
+import { CreatePayload, UpdatePayload } from './handlers/types/HandlerTypes';
 
 /**
  * Execute queued operation based on resource type and operation type
@@ -33,16 +38,16 @@ export async function executeOperation(operation: QueuedOperation): Promise<void
   }
 }
 
-async function executeBookOperation(type: string, payload: any): Promise<void> {
+async function executeBookOperation(type: string, payload: CreatePayload<Book> | UpdatePayload<Book> | { id: string }): Promise<void> {
   switch (type) {
     case 'CREATE':
-      await executeCreateBook(payload);
+      await executeCreateBook(payload as CreatePayload<Book>);
       break;
     case 'UPDATE':
-      await executeUpdateBook(payload);
+      await executeUpdateBook(payload as UpdatePayload<Book> & { id: string });
       break;
     case 'DELETE':
-      await executeDeleteBook(payload);
+      await executeDeleteBook(payload as { id: string });
       break;
     default:
       throw new Error(`Unknown operation type: ${type}`);
@@ -58,8 +63,8 @@ async function executeBookOperation(type: string, payload: any): Promise<void> {
  * 4. Register temp → server ID mapping
  * 5. Update local SQLite with server_id
  */
-async function executeCreateBook(payload: any): Promise<void> {
-  const tempId = payload.id; // Store original temp ID
+async function executeCreateBook(payload: CreatePayload<Book>): Promise<void> {
+  const tempId = (payload as { id?: string }).id; // Store original temp ID
 
   // Resolve foreign keys before sending to server
   const resolvedPayload = await idMappingService.resolveForeignKeys(payload);
@@ -71,7 +76,7 @@ async function executeCreateBook(payload: any): Promise<void> {
   };
 
   // CRITICAL: Use raw apiClient to avoid double-queueing (bookAPI wraps withQueueOnError)
-  const serverResponse: any = await apiClient.books.createBook(serverPayload);
+  const serverResponse = await apiClient.books.createBook(serverPayload) as Record<string, unknown>;
 
   // Extract server-assigned ID from response
   const serverId = serverResponse.id;
@@ -95,7 +100,7 @@ async function executeCreateBook(payload: any): Promise<void> {
     // Verify foreign key integrity (Task 5.5.2) 
     await cleanupService.updateForeignKeysForBook(serverId.toString(), serverId);
 
-    console.log(`Temp ID replaced with server ID: ${tempId} → ${serverId}`);
+    // Temp ID replaced with server ID successfully
   }
 }
 
@@ -106,7 +111,7 @@ async function executeCreateBook(payload: any): Promise<void> {
  * 2. Resolve foreign keys in payload
  * 3. Send to server
  */
-async function executeUpdateBook(payload: any): Promise<void> {
+async function executeUpdateBook(payload: UpdatePayload<Book> & { id: string }): Promise<void> {
   const bookId = payload.id;
 
   // Get book from local DB - use mapping-aware lookup (Critical Fix)
@@ -123,7 +128,7 @@ async function executeUpdateBook(payload: any): Promise<void> {
   const resolvedPayload = await idMappingService.resolveForeignKeys(payload);
 
   // CRITICAL: Use raw apiClient to avoid double-queueing (bookAPI wraps withQueueOnError)
-  const updateResponse: any = await apiClient.books.updateBook(String(serverIdToUse), resolvedPayload);
+  const updateResponse = await apiClient.books.updateBook(String(serverIdToUse), resolvedPayload) as Record<string, unknown>;
 
   // Update server timestamp for consistency (Phase 5 fix)
   if (updateResponse.updateDate || updateResponse.updatedAt) {
@@ -140,7 +145,7 @@ async function executeUpdateBook(payload: any): Promise<void> {
  * 1. Use server_id for server request
  * 2. Handle case where book never synced (server_id=NULL)
  */
-async function executeDeleteBook(payload: any): Promise<void> {
+async function executeDeleteBook(payload: { id: string }): Promise<void> {
   const bookId = payload.id;
 
   // Get book from local DB - use mapping-aware lookup (Critical Fix)
@@ -148,13 +153,13 @@ async function executeDeleteBook(payload: any): Promise<void> {
 
   if (!localBook) {
     // Book already deleted locally, just succeed
-    console.log(`Book ${bookId} not found locally, assuming already deleted`);
+    // Book not found locally, assuming already deleted
     return;
   }
 
   // If book never synced to server (no server_id), no need to delete from server
   if (!localBook.serverId) {
-    console.log(`Book ${bookId} never synced to server, skipping server delete`);
+    // Book never synced to server, skipping server delete
     return;
   }
 
@@ -162,51 +167,51 @@ async function executeDeleteBook(payload: any): Promise<void> {
   await apiClient.books.deleteBook(String(localBook.serverId));
 }
 
-async function executeUserOperation(type: string, payload: any): Promise<void> {
+async function executeUserOperation(_type: string, _payload: unknown): Promise<void> {
   // User operations not yet implemented
   throw new Error('User operations not yet implemented');
 }
 
-async function executeAuthorOperation(type: string, payload: any): Promise<void> {
+async function executeAuthorOperation(type: string, payload: CreatePayload<Author> | UpdatePayload<Author> | { id: string }): Promise<void> {
   switch (type) {
     case 'CREATE':
-      await executeCreateAuthor(payload);
+      await executeCreateAuthor(payload as CreatePayload<Author>);
       break;
     case 'UPDATE':
-      await executeUpdateAuthor(payload);
+      await executeUpdateAuthor(payload as UpdatePayload<Author> & { id: string });
       break;
     case 'DELETE':
-      await executeDeleteAuthor(payload);
+      await executeDeleteAuthor(payload as { id: string });
       break;
     default:
       throw new Error(`Unknown operation type: ${type}`);
   }
 }
 
-async function executeCategoryOperation(type: string, payload: any): Promise<void> {
+async function executeCategoryOperation(type: string, payload: CreatePayload<Category> | UpdatePayload<Category> | { id: string }): Promise<void> {
   switch (type) {
     case 'CREATE':
-      await executeCreateCategory(payload);
+      await executeCreateCategory(payload as CreatePayload<Category>);
       break;
     case 'UPDATE':
-      await executeUpdateCategory(payload);
+      await executeUpdateCategory(payload as UpdatePayload<Category> & { id: string });
       break;
     case 'DELETE':
-      await executeDeleteCategory(payload);
+      await executeDeleteCategory(payload as { id: string });
       break;
     default:
       throw new Error(`Unknown operation type: ${type}`);
   }
 }
 
-async function executeCreateAuthor(payload: any): Promise<void> {
-  const tempId = payload.id;
+async function executeCreateAuthor(payload: CreatePayload<Author>): Promise<void> {
+  const tempId = (payload as { id?: string }).id;
   // CRITICAL: Use raw apiClient to avoid double-queueing (authorAPI would wrap withQueueOnError)
-  const serverResponse: any = await apiClient.authors.createAuthor({
+  const serverResponse = await apiClient.authors.createAuthor({
     name: payload.name,
     surname: payload.surname,
     nationality: payload.nationality,
-  });
+  }) as Record<string, unknown>;
 
   const serverId = serverResponse.id;
   if (serverId && tempId) {
@@ -219,7 +224,7 @@ async function executeCreateAuthor(payload: any): Promise<void> {
   }
 }
 
-async function executeUpdateAuthor(payload: any): Promise<void> {
+async function executeUpdateAuthor(payload: UpdatePayload<Author> & { id: string }): Promise<void> {
   const authorId = payload.id;
   const localAuthor = await authorRepository.findById(authorId);
   if (!localAuthor) {
@@ -228,11 +233,11 @@ async function executeUpdateAuthor(payload: any): Promise<void> {
 
   const serverIdToUse = localAuthor.serverId || localAuthor.id;
   // CRITICAL: Use raw apiClient to avoid double-queueing (authorAPI would wrap withQueueOnError)
-  const updateResponse: any = await apiClient.authors.updateAuthor(Number(serverIdToUse), {
+  const updateResponse = await apiClient.authors.updateAuthor(Number(serverIdToUse), {
     name: payload.name,
     surname: payload.surname,
     nationality: payload.nationality,
-  });
+  }) as Record<string, unknown>;
 
   if (updateResponse.updateDate) {
     await authorRepository.updateSyncFields(authorId, {
@@ -242,7 +247,7 @@ async function executeUpdateAuthor(payload: any): Promise<void> {
   }
 }
 
-async function executeDeleteAuthor(payload: any): Promise<void> {
+async function executeDeleteAuthor(payload: { id: string }): Promise<void> {
   const authorId = payload.id;
   const localAuthor = await authorRepository.findById(authorId);
   if (!localAuthor) return;
@@ -253,12 +258,12 @@ async function executeDeleteAuthor(payload: any): Promise<void> {
   }
 }
 
-async function executeCreateCategory(payload: any): Promise<void> {
-  const tempId = payload.id;
+async function executeCreateCategory(payload: CreatePayload<Category>): Promise<void> {
+  const tempId = (payload as { id?: string }).id;
   // CRITICAL: Use raw apiClient to avoid double-queueing (categoryAPI would wrap withQueueOnError)
-  const serverResponse: any = await apiClient.categories.createCategory({
+  const serverResponse = await apiClient.categories.createCategory({
     name: payload.name,
-  });
+  }) as Record<string, unknown>;
 
   const serverId = serverResponse.id;
   if (serverId && tempId) {
@@ -271,7 +276,7 @@ async function executeCreateCategory(payload: any): Promise<void> {
   }
 }
 
-async function executeUpdateCategory(payload: any): Promise<void> {
+async function executeUpdateCategory(payload: UpdatePayload<Category> & { id: string }): Promise<void> {
   const categoryId = payload.id;
   const localCategory = await categoryRepository.findById(categoryId);
   if (!localCategory) {
@@ -280,9 +285,9 @@ async function executeUpdateCategory(payload: any): Promise<void> {
 
   const serverIdToUse = localCategory.serverId || localCategory.id;
   // CRITICAL: Use raw apiClient to avoid double-queueing (categoryAPI would wrap withQueueOnError)
-  const updateResponse: any = await apiClient.categories.updateCategory(Number(serverIdToUse), {
+  const updateResponse = await apiClient.categories.updateCategory(Number(serverIdToUse), {
     name: payload.name,
-  });
+  }) as Record<string, unknown>;
 
   if (updateResponse.updateDate) {
     await categoryRepository.updateSyncFields(categoryId, {
@@ -292,7 +297,7 @@ async function executeUpdateCategory(payload: any): Promise<void> {
   }
 }
 
-async function executeDeleteCategory(payload: any): Promise<void> {
+async function executeDeleteCategory(payload: { id: string }): Promise<void> {
   const categoryId = payload.id;
   const localCategory = await categoryRepository.findById(categoryId);
   if (!localCategory) return;
@@ -303,18 +308,27 @@ async function executeDeleteCategory(payload: any): Promise<void> {
   }
 }
 
-async function executeSettingsOperation(type: string, payload: any): Promise<void> {
+async function executeSettingsOperation(_type: string, _payload: unknown): Promise<void> {
   throw new Error('Settings operations not yet implemented');
 }
 
 /**
  * Check if error is retriable
+ * Now supports both structured ApiError and legacy Error checking
  */
-export function isRetriableError(error: any): boolean {
+export function isRetriableError(error: unknown): boolean {
   // Handle null/undefined errors
   if (!error) {
     return false;
   }
+
+  // Structured ApiError - use built-in retriable property
+  if (error instanceof ApiError) {
+    return error.retriable;
+  }
+
+  // Legacy fallback for generic Error objects (third-party libraries, existing code)
+  // This maintains backward compatibility while we migrate to structured errors
 
   // Network errors are retriable
   if (error.message?.includes('Network request failed')) {

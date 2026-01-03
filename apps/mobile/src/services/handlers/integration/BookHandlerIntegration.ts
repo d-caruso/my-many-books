@@ -189,7 +189,7 @@ export class BookHandlerIntegration {
     this.ensureInitialized();
     // This would trigger the existing queue processing system
     // The implementation depends on how QueueExecutor is structured
-    console.log('Triggering sync for pending book operations...');
+    // TODO: Implement with proper logging via hookey when added to mobile
   }
 
   /**

@@ -6,6 +6,11 @@ import i18n from '../i18n';
 import { operationQueue } from './OperationQueue';
 import { isRetriableError } from './QueueExecutor';
 import type { OperationType } from '../types/queue';
+import {
+  ApiError,
+  ErrorCode,
+  getClientErrorCode
+} from '../types/errors';
 
 // Configure API base URL for mobile
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
@@ -24,7 +29,7 @@ class FetchHttpClient implements HttpClient {
     // Check network connectivity before making request
     const networkState = await NetInfo.fetch();
     if (!networkState.isConnected) {
-      throw new Error(i18n.t('offline.errors.noConnection', { ns: 'offline' }));
+      throw new ApiError(ErrorCode.NETWORK_OFFLINE, i18n.t('offline.errors.noConnection', { ns: 'offline' }));
     }
 
     const controller = new AbortController();
@@ -77,17 +82,40 @@ class FetchHttpClient implements HttpClient {
           throw authError;
         }
 
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // Create structured error based on status code
+        if (response.status >= 500) {
+          throw new ApiError(ErrorCode.HTTP_SERVER_ERROR, `HTTP ${response.status}: ${response.statusText}`, response.status);
+        } else {
+          const code = getClientErrorCode(response.status);
+          throw new ApiError(code, `HTTP ${response.status}: ${response.statusText}`, response.status);
+        }
       }
 
       return await response.json();
     } catch (error) {
       clearTimeout(timeoutId);
+      
+      // Convert generic errors to ApiError if they're not already
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      
+      // Handle AbortController timeout
+      if (error.name === 'AbortError') {
+        throw new ApiError(ErrorCode.NETWORK_TIMEOUT, 'Request timeout');
+      }
+      
+      // Handle other network errors
+      if (error.message?.includes('Network request failed') || error.message?.includes('fetch')) {
+        throw new ApiError(ErrorCode.NETWORK_FAILED, error.message || 'Network request failed');
+      }
+      
+      // Re-throw unknown errors as generic Error (for third-party compatibility)
       throw error;
     }
   }
 
-  async get<T>(url: string, config?: any): Promise<T> {
+  async get<T>(url: string, config?: Record<string, unknown>): Promise<T> {
     let finalUrl = url;
     
     // Handle query parameters for GET requests
@@ -110,7 +138,7 @@ class FetchHttpClient implements HttpClient {
     });
   }
 
-  async post<T>(url: string, data?: any, config?: any): Promise<T> {
+  async post<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T> {
     return this.fetchWithTimeout<T>(url, {
       method: 'POST',
       headers: {
@@ -121,7 +149,7 @@ class FetchHttpClient implements HttpClient {
     });
   }
 
-  async put<T>(url: string, data?: any, config?: any): Promise<T> {
+  async put<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T> {
     return this.fetchWithTimeout<T>(url, {
       method: 'PUT',
       headers: {
@@ -132,7 +160,7 @@ class FetchHttpClient implements HttpClient {
     });
   }
 
-  async patch<T>(url: string, data?: any, config?: any): Promise<T> {
+  async patch<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T> {
     return this.fetchWithTimeout<T>(url, {
       method: 'PATCH',
       headers: {
@@ -143,7 +171,7 @@ class FetchHttpClient implements HttpClient {
     });
   }
 
-  async delete<T>(url: string, config?: any): Promise<T> {
+  async delete<T>(url: string, config?: Record<string, unknown>): Promise<T> {
     return this.fetchWithTimeout<T>(url, {
       method: 'DELETE',
       headers: config?.headers || {},
@@ -177,7 +205,7 @@ async function withQueueOnError<T>(
   operation: () => Promise<T>,
   operationType: OperationType,
   resource: 'book' | 'user' | 'settings',
-  payload: any,
+  payload: unknown,
   maxRetries?: number
 ): Promise<T> {
   try {
@@ -203,26 +231,28 @@ export const bookAPI = {
   getBook: apiClient.books.getBook.bind(apiClient.books),
 
   // Write operations with automatic queueing
-  createBook: async (book: any) => {
+  createBook: async (book: unknown) => {
+    const bookData = book as Record<string, unknown>;
     return withQueueOnError(
       () => apiClient.books.createBook(book),
       'CREATE',
       'book',
       {
-        ...book,
+        ...bookData,
         // Ensure temp ID is preserved for queue processing
-        id: book.id || book._tempId,
-        _tempId: book._tempId || book.id,
+        id: bookData.id || bookData._tempId,
+        _tempId: bookData._tempId || bookData.id,
       }
     );
   },
 
-  updateBook: async (id: string, book: any) => {
+  updateBook: async (id: string, book: unknown) => {
+    const bookData = book as Record<string, unknown>;
     return withQueueOnError(
       () => apiClient.books.updateBook(id, book),
       'UPDATE',
       'book',
-      { id, ...book }
+      { id, ...bookData }
     );
   },
 
@@ -288,7 +318,7 @@ export const apiUtils = {
     };
   },
 
-  handleOfflineError: async (error: any) => {
+  handleOfflineError: async (error: unknown) => {
     // Handle offline scenarios
     const online = await apiUtils.isOnline();
     if (!online) {
@@ -297,7 +327,7 @@ export const apiUtils = {
     throw error;
   },
 
-  isOfflineError: (error: any): boolean => {
+  isOfflineError: (error: unknown): boolean => {
     return error?.message === i18n.t('offline.errors.noConnection', { ns: 'offline' });
   },
 };

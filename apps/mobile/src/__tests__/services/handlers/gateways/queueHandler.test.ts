@@ -124,7 +124,7 @@ describe('QueueHandler', () => {
         throw new Error('Should have thrown queue error');
       } catch (error: any) {
         expect(error.code).toBe('QUEUE_ERROR');
-        expect(error.retryable).toBe(true);
+        expect(error.retriable).toBe(true);
         expect(error.message).toContain('Queue full');
       }
     });

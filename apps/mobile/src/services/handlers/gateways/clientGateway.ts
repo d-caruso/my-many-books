@@ -10,11 +10,8 @@ import {
   CreatePayload,
   UpdatePayload,
   FilterOptions,
-  HandlerError,
-  HandlerContext,
 } from '../types/HandlerTypes';
 import { ClientGatewayOptions, DEFAULT_GATEWAY_CONFIG } from '../types/GatewayTypes';
-import { OperationType } from '../../../types/queue';
 
 /**
  * HTTP Client interface for making requests
@@ -66,30 +63,6 @@ export function createClientGateway<T>(
     ...overrides,
   });
 
-  /**
-   * Handle HTTP errors and convert to HandlerError
-   */
-  const handleError = (error: Error, context: HandlerContext): HandlerError => {
-    const handlerError: HandlerError = {
-      name: 'ClientGatewayError',
-      message: error.message,
-      code: 'HTTP_ERROR',
-      context,
-      originalError: error,
-      retryable: false,
-    };
-
-    // Determine if error is retryable based on type
-    if (error.message.includes('Network Error') || error.message.includes('timeout')) {
-      handlerError.code = 'NETWORK_ERROR';
-      handlerError.retryable = true;
-    } else if (error.message.includes('500') || error.message.includes('502')) {
-      handlerError.code = 'SERVER_ERROR';
-      handlerError.retryable = true;
-    }
-
-    return handlerError;
-  };
 
   /**
    * Validate response against schema if enabled
@@ -104,21 +77,10 @@ export function createClientGateway<T>(
     return data;
   };
 
-  /**
-   * Create operation context for error handling
-   */
-  const createContext = (operationType: OperationType, resourceId?: string): HandlerContext => ({
-    operationId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    operationType,
-    resourceType,
-    isOnline: true, // Client gateway assumes online
-    timestamp: new Date(),
-  });
 
   // Return the handler implementation
   return {
     async create(data: CreatePayload<T>): Promise<T> {
-      const context = createContext('CREATE');
       
       try {
         if (options.failFast && !navigator.onLine) {
@@ -130,12 +92,11 @@ export function createClientGateway<T>(
         
         return validateResponse(response);
       } catch (error) {
-        throw handleError(error as Error, context);
+        throw error;
       }
     },
 
     async update(id: string, data: UpdatePayload<T>): Promise<T> {
-      const context = createContext('UPDATE', id);
       
       try {
         if (options.failFast && !navigator.onLine) {
@@ -147,12 +108,11 @@ export function createClientGateway<T>(
         
         return validateResponse(response);
       } catch (error) {
-        throw handleError(error as Error, context);
+        throw error;
       }
     },
 
     async delete(id: string): Promise<void> {
-      const context = createContext('DELETE', id);
       
       try {
         if (options.failFast && !navigator.onLine) {
@@ -162,12 +122,11 @@ export function createClientGateway<T>(
         const config = createRequestConfig();
         await httpClient.delete<void>(`${resourceEndpoint}/${id}`, config);
       } catch (error) {
-        throw handleError(error as Error, context);
+        throw error;
       }
     },
 
     async read(id: string): Promise<T> {
-      const context = createContext('READ', id);
       
       try {
         if (options.failFast && !navigator.onLine) {
@@ -179,12 +138,11 @@ export function createClientGateway<T>(
         
         return validateResponse(response);
       } catch (error) {
-        throw handleError(error as Error, context);
+        throw error;
       }
     },
 
     async list(filters?: FilterOptions<T>): Promise<T[]> {
-      const context = createContext('LIST');
       
       try {
         if (options.failFast && !navigator.onLine) {
@@ -215,7 +173,7 @@ export function createClientGateway<T>(
         
         return validateResponse(response);
       } catch (error) {
-        throw handleError(error as Error, context);
+        throw error;
       }
     },
   };
