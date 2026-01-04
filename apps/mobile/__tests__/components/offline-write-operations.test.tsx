@@ -10,7 +10,7 @@ jest.mock('react-native-paper', () => {
   const React = require('react');
   const actual = jest.requireActual('react-native-paper');
 
-  const MenuItem = (props: any) => {
+  const MenuItem = (props: unknown) => {
     return React.createElement(
       'RCTView',
       props,
@@ -18,7 +18,7 @@ jest.mock('react-native-paper', () => {
     );
   };
 
-  const Menu = ({ anchor, children }: any) => {
+  const Menu = ({ anchor, children }: unknown) => {
     const anchorElement =
       typeof anchor === 'function'
         ? anchor({ onPress: jest.fn() })
@@ -37,7 +37,7 @@ jest.mock('react-native-paper', () => {
   return {
     ...actual,
     Menu,
-    Portal: ({ children }: any) => <>{children}</>,
+    Portal: ({ children }: unknown) => <>{children}</>,
   };
 });
 

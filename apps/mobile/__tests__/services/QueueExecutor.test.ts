@@ -168,7 +168,7 @@ describe('QueueExecutor', () => {
       });
 
       it('should handle the default case correctly', () => {
-        // Errors that don\'t match any criteria should be non-retriable
+        // Errors that don\'t match unknown criteria should be non-retriable
         const unknownError = new Error('Something unexpected happened');
         expect(isRetriableError(unknownError)).toBe(false);
         

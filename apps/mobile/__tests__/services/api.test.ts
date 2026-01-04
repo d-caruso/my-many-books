@@ -67,20 +67,6 @@ describe('API Service Coverage', () => {
           updateCategory: jest.fn(),
           deleteCategory: jest.fn(),
         },
-        authors: {
-          getAuthors: jest.fn(),
-          getAuthor: jest.fn(),
-          createAuthor: jest.fn(),
-          updateAuthor: jest.fn(),
-          deleteAuthor: jest.fn(),
-        },
-        categories: {
-          getCategories: jest.fn(),
-          getCategory: jest.fn(),
-          createCategory: jest.fn(),
-          updateCategory: jest.fn(),
-          deleteCategory: jest.fn(),
-        },
         admin: {
           getAdminStats: jest.fn(),
           getAdminUsers: jest.fn(),

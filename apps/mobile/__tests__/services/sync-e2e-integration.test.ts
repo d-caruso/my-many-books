@@ -503,8 +503,8 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const opId = await operationQueue.enqueue('CREATE', 'book', { id: 'temp-old', title: 'Old Book' });
 
       // Manually set old timestamp and failed status
-      const queue = operationQueue as any;
-      const op = queue.queue.find((o: any) => o.id === opId);
+      const queue = operationQueue as unknown;
+      const op = queue.queue.find((o: unknown) => o.id === opId);
       if (op) {
         op.timestamp = oldTimestamp;
         op.status = 'failed';
@@ -517,7 +517,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Verify operation is in queue
       const beforeCleanup = operationQueue.getPendingOperations();
-      const hasFailed = beforeCleanup.some((o: any) => o.status === 'failed');
+      const hasFailed = beforeCleanup.some((o: unknown) => o.status === 'failed');
 
       // Perform cleanup (may be 0 or 1 depending on implementation)
       const result = await cleanupService.cleanupOrphanedTempIds();

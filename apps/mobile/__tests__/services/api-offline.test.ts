@@ -44,7 +44,7 @@ describe('API Offline Error Handling', () => {
         isConnected: null,
         isInternetReachable: null,
         details: null,
-      } as any);
+      } as unknown);
 
       const isOnline = await apiModule.apiUtils.isOnline();
 
@@ -57,7 +57,7 @@ describe('API Offline Error Handling', () => {
         isConnected: false,
         isInternetReachable: false,
         details: null,
-      } as any);
+      } as unknown);
 
       const isOnline = await apiModule.apiUtils.isOnline();
 
@@ -90,7 +90,7 @@ describe('API Offline Error Handling', () => {
         isConnected: false,
         isInternetReachable: false,
         details: null,
-      } as any);
+      } as unknown);
 
       const mockError = new Error('Original error');
 
@@ -105,7 +105,7 @@ describe('API Offline Error Handling', () => {
         isConnected: true,
         isInternetReachable: true,
         details: { isConnectionExpensive: false, ssid: 'test', strength: 100 },
-      } as any);
+      } as unknown);
 
       const mockError = new Error('Original error');
 

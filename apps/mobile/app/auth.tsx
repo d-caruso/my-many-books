@@ -52,7 +52,7 @@ import React, { useState } from 'react';
 
         // Navigation handled after successful auth
         router.replace('/(tabs)');
-      } catch (err: any) {
+      } catch (err: Error) {
         setError(err.message || t('common:auth_failed'));
       }
     };

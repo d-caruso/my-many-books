@@ -2,7 +2,7 @@
 // Using direct module import to avoid React Native Testing Library timeout issues
 
 // Direct import to ensure coverage tracking works
-const EmptyStateModule = require('../../src/components/EmptyState');
+const EmptyStateModule = jest.requireActual('../../src/components/EmptyState');
 
 describe('EmptyState', () => {
   it('should export EmptyState component', () => {

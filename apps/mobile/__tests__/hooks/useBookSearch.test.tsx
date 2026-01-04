@@ -22,20 +22,20 @@ const mockDbMocks = {
 
 jest.mock('@/services/api', () => ({
   bookAPI: {
-    searchBooks: (...args: any[]) => mockApiMocks.searchBooks(...args),
-    searchByISBN: (...args: any[]) => mockApiMocks.searchByISBN(...args),
+    searchBooks: (...args: unknown[]) => mockApiMocks.searchBooks(...args),
+    searchByISBN: (...args: unknown[]) => mockApiMocks.searchByISBN(...args),
   },
   apiUtils: {
     isOnline: jest.fn(() => Promise.resolve(true)),
     getAuthHeaders: jest.fn(() => ({ 'Content-Type': 'application/json' })),
-    handleOfflineError: jest.fn((error: any) => Promise.reject(error)),
-    isOfflineError: jest.fn((error: any) => false),
+    handleOfflineError: jest.fn((error: unknown) => Promise.reject(error)),
+    isOfflineError: jest.fn((error: unknown) => false),
   },
 }));
 
 jest.mock('@/services/database/BookRepository', () => ({
   bookRepository: {
-    searchWithFilters: (...args: any[]) => mockDbMocks.searchWithFilters(...args),
+    searchWithFilters: (...args: unknown[]) => mockDbMocks.searchWithFilters(...args),
   },
 }));
 

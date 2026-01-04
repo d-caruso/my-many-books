@@ -270,15 +270,15 @@ export class HandlerResourceManager {
   getMemoryStats(): {
     totalCaches: number;
     totalPools: number;
-    cacheStats: Array<{ name: string; size: number; ttl: number }>;
-    poolStats: Array<{ name: string; poolSize: number; maxSize: number }>;
+    cacheStats: { name: string; size: number; ttl: number }[];
+    poolStats: { name: string; poolSize: number; maxSize: number }[];
   } {
     const cacheStats = Array.from(this.caches.entries()).map(([name, cache]) => ({
       name,
       ...cache.getStats()
     }));
 
-    const poolStats = Array.from(this.pools.entries()).map(([name, pool]) => ({
+    const poolStats = [...this.pools.entries()].map(([name, pool]) => ({
       name,
       ...pool.getStats()
     }));
@@ -339,7 +339,7 @@ export class MemoryMonitor {
   /**
    * Get all measurements
    */
-  static getMeasurements(): Array<{ timestamp: number; heapUsed: number; label: string }> {
+  static getMeasurements(): { timestamp: number; heapUsed: number; label: string }[] {
     return [...this.measurements];
   }
 }

@@ -9,7 +9,7 @@ jest.mock('react-native-paper', () => {
   const actual = jest.requireActual('react-native-paper');
 
   // Create a testable Menu.Item component that exposes its props
-  const MenuItem = (props: any) => {
+  const MenuItem = (props: { title?: string; onPress?: () => void }) => {
     // Return an element with all props exposed for testing
     return React.createElement(
       'RCTView',
@@ -18,7 +18,7 @@ jest.mock('react-native-paper', () => {
     );
   };
 
-  const Menu = ({ anchor, children }: any) => {
+  const Menu = ({ anchor, children }: { anchor?: unknown; children?: React.ReactNode }) => {
     // Simulate react-native-paper behavior: call anchor with onPress prop
     const anchorElement =
       typeof anchor === 'function'
@@ -38,14 +38,14 @@ jest.mock('react-native-paper', () => {
   return {
     ...actual,
     Menu,
-    Portal: ({ children }: any) => <>{children}</>,
+    Portal: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   };
 });
 
 // Mock the translation function to return mock strings for testing
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, options?: any) => {
+    t: (key: string, options?: Record<string, unknown>) => {
       if (key.includes('books:mark_as_status') && options?.status) {
         return `Mark as ${options.status}`;
       }
@@ -63,7 +63,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 // Keep destructure for util coverage
-const { BookCard: _BookCardComponent, ...BookCardModule } = require('../../src/components/BookCard');
+const { BookCard: _BookCardComponent, ...BookCardModule } = jest.requireActual('../../src/components/BookCard');
 
 // ✅ Fix: match component prop names (thumbnail instead of thumbnailUrl, authors as objects)
 const mockBook: Book = {
@@ -108,7 +108,7 @@ describe('BookCard', () => {
     });
 
     it('should return default gray for unknown status', () => {
-      const result = BookCardModule.getStatusColor('unknown' as any);
+      const result = BookCardModule.getStatusColor('unknown' as 'reading' | 'completed' | 'want-to-read' | 'paused');
       expect(result).toBe('#757575');
     });
 
@@ -119,7 +119,7 @@ describe('BookCard', () => {
       });
 
       it('should return the raw status string for unknown status (no t function)', () => {
-        const result = BookCardModule.getStatusLabel('unknown' as any);
+        const result = BookCardModule.getStatusLabel('unknown' as 'reading' | 'completed' | 'want-to-read' | 'paused');
         expect(result).toBe('unknown');
       });
 
@@ -173,7 +173,7 @@ describe('BookCard', () => {
         );
       });
       const testInstance = tree!.root;
-      const cardWithPress = testInstance.find((el: any) => el.props.onPress === mockOnPress);
+      const cardWithPress = testInstance.find((el: { props?: { onPress?: () => void } }) => el.props?.onPress === mockOnPress);
       cardWithPress.props.onPress();
       expect(mockOnPress).toHaveBeenCalledTimes(1);
     });

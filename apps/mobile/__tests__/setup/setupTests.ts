@@ -58,14 +58,14 @@ jest.mock('expo-sqlite', () => {
   const Database = require('better-sqlite3');
 
   // Shared database instance per dbName for test persistence
-  let currentDb: any = null;
+  let currentDb: unknown = null;
 
-  const createDbWrapper = (db: any) => ({
+  const createDbWrapper = (db: unknown) => ({
     execAsync: async (sql: string) => {
       db.exec(sql);
       return { changes: 0, lastInsertRowId: 0 };
     },
-    runAsync: async (sql: string, params: any[] = []) => {
+    runAsync: async (sql: string, params: unknown[] = []) => {
       const stmt = db.prepare(sql);
       const result = params.length > 0 ? stmt.run(...params) : stmt.run();
       return {
@@ -73,11 +73,11 @@ jest.mock('expo-sqlite', () => {
         lastInsertRowId: result.lastInsertRowid
       };
     },
-    getFirstAsync: async (sql: string, params: any[] = []) => {
+    getFirstAsync: async (sql: string, params: unknown[] = []) => {
       const stmt = db.prepare(sql);
       return stmt.get(...params) || null;
     },
-    getAllAsync: async (sql: string, params: any[] = []) => {
+    getAllAsync: async (sql: string, params: unknown[] = []) => {
       const stmt = db.prepare(sql);
       return stmt.all(...params);
     },
@@ -110,7 +110,7 @@ jest.mock('expo-sqlite', () => {
 jest.mock('../../src/i18n', () => ({
   __esModule: true,
   default: {
-    t: (key: string, params?: any) => {
+    t: (key: string, params?: unknown) => {
       const translations: Record<string, string> = {
         'offline.errors.noConnection': "You're offline. Check your connection and try again.",
         'common.loading': 'Loading...',
@@ -134,7 +134,7 @@ jest.mock('../../src/i18n', () => ({
 // Mock i18next for internationalization with actual translations
 jest.mock('react-i18next', () => ({
   useTranslation: (namespace?: string) => ({
-    t: (key: string, params?: any) => {
+    t: (key: string, params?: unknown) => {
       // Map of translation keys to actual English translations for testing
       const translations: Record<string, string> = {
         // Common
@@ -189,7 +189,7 @@ jest.mock('react-i18next', () => ({
       changeLanguage: jest.fn(() => Promise.resolve()),
     },
   }),
-  Trans: ({ children }: any) => children,
+  Trans: ({ children }: { children: unknown }) => children,
   initReactI18next: {
     type: '3rdParty',
     init: jest.fn(),
@@ -234,7 +234,7 @@ jest.mock('expo-camera', () => ({
 }));
 
 jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: ({ name, size, color, style }: any) => 
+  MaterialIcons: ({ name, size, color, style }: { name?: string; size?: number; color?: string; style?: unknown }) => 
     require('react').createElement('Text', { style }, `Icon-${name}`),
 }));
 
@@ -258,17 +258,17 @@ jest.mock('react-native', () => {
   const React = require('react');
   
   // Create proper React Native component mocks with displayName for Testing Library compatibility
-  const View = React.forwardRef((props: any, ref: any) => {
+  const View = React.forwardRef((props: unknown, ref: unknown) => {
     return React.createElement('RCTView', { ...props, ref });
   });
   View.displayName = 'View';
   
-  const Text = React.forwardRef((props: any, ref: any) => {
+  const Text = React.forwardRef((props: unknown, ref: unknown) => {
     return React.createElement('RCTText', { ...props, ref });
   });
   Text.displayName = 'Text';
   
-  const TouchableOpacity = React.forwardRef((props: any, ref: any) => {
+  const TouchableOpacity = React.forwardRef((props: unknown, ref: unknown) => {
     const { onPress, disabled, ...otherProps } = props;
     return React.createElement('RCTTouchableOpacity', { 
       ...otherProps, 
@@ -279,7 +279,7 @@ jest.mock('react-native', () => {
   });
   TouchableOpacity.displayName = 'TouchableOpacity';
   
-  const TextInput = React.forwardRef((props: any, ref: any) => {
+  const TextInput = React.forwardRef((props: unknown, ref: unknown) => {
     const { onChangeText, value, ...otherProps } = props;
     return React.createElement('RCTTextInput', { 
       ...otherProps, 
@@ -290,22 +290,22 @@ jest.mock('react-native', () => {
   });
   TextInput.displayName = 'TextInput';
   
-  const Image = React.forwardRef((props: any, ref: any) => {
+  const Image = React.forwardRef((props: unknown, ref: unknown) => {
     return React.createElement('RCTImageView', { ...props, ref });
   });
   Image.displayName = 'Image';
   
-  const ScrollView = React.forwardRef((props: any, ref: any) => {
+  const ScrollView = React.forwardRef((props: unknown, ref: unknown) => {
     return React.createElement('RCTScrollView', { ...props, ref });
   });
   ScrollView.displayName = 'ScrollView';
   
-  const ActivityIndicator = React.forwardRef((props: any, ref: any) => {
+  const ActivityIndicator = React.forwardRef((props: unknown, ref: unknown) => {
     return React.createElement('RCTActivityIndicatorView', { ...props, ref });
   });
   ActivityIndicator.displayName = 'ActivityIndicator';
 
-  const Button = React.forwardRef((props: any, ref: any) => {
+  const Button = React.forwardRef((props: unknown, ref: unknown) => {
     const { onPress, title, disabled, ...otherProps } = props;
     return React.createElement('RCTButton', {
       ...otherProps,
@@ -327,7 +327,7 @@ jest.mock('react-native', () => {
     ActivityIndicator,
     Button,
     StyleSheet: {
-      create: (styles: any) => styles,
+      create: (styles: unknown) => styles,
     },
     Dimensions: {
       get: jest.fn(() => ({ width: 375, height: 667 })),
@@ -375,7 +375,7 @@ const mockApiUtils = {
     };
   },
 
-  handleOfflineError: async (error: any) => {
+  handleOfflineError: async (error: unknown) => {
     const online = await mockApiUtils.isOnline();
     if (!online) {
       throw new Error("You're offline. Check your connection and try again.");
@@ -383,7 +383,7 @@ const mockApiUtils = {
     throw error;
   },
 
-  isOfflineError: (error: any): boolean => {
+  isOfflineError: (error: unknown): boolean => {
     return error?.message === "You're offline. Check your connection and try again.";
   },
 };

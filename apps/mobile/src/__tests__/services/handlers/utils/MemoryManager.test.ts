@@ -225,6 +225,10 @@ describe('Memory Management Utilities', () => {
 
       bookCache.set('key1', 'value1');
       bookCache.set('key2', 'value2');
+      
+      // Use the pool to ensure it's properly tracked
+      expect(bookPool).toBeDefined();
+      expect(typeof bookPool.acquire).toBe('function');
 
       const stats = manager.getMemoryStats();
 

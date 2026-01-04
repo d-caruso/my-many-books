@@ -27,7 +27,7 @@ export default function UserManagement() {
       setLoading(true);
       const response = await adminAPI.getAdminUsers(page, 50, searchQuery || undefined);
       setUsers(response.users);
-    } catch (err: any) {
+    } catch (err: Error) {
       console.error('Failed to fetch users:', err);
     } finally {
       setLoading(false);

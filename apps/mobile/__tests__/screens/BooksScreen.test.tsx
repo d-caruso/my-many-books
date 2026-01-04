@@ -15,8 +15,8 @@ const booksScreenState = {
 
 // Simplified BooksScreen test double that works with our mock system
 const BooksScreen = () => {
-  const booksHook = (useBooks as any)();
-  const searchHook = (useBookSearch as any)();
+  const booksHook = useBooks();
+  const searchHook = useBookSearch();
 
   // Search handlers that update global state and call hooks
   const handleSearchChange = (text: string) => {
@@ -92,7 +92,7 @@ const BooksScreen = () => {
     }
     
     // Add books
-    booksToShow.forEach((book: any) => {
+    booksToShow.forEach((book: unknown) => {
       elements.push(React.createElement(Text, { key: `book-${book.id}` }, book.title));
     });
   }

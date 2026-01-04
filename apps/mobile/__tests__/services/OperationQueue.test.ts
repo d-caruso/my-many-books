@@ -1,15 +1,32 @@
 // Test for OperationQueue service
+import type { QueuedOperation, OperationType, ResourceType, BookOperationPayload } from '../../src/types/queue';
+import type { OperationQueue } from '../../src/services/OperationQueue';
+
+// Mock interfaces
+interface MockAsyncStorage {
+  getItem: jest.MockedFunction<(key: string) => Promise<string | null>>;
+  setItem: jest.MockedFunction<(key: string, value: string) => Promise<void>>;
+  removeItem: jest.MockedFunction<(key: string) => Promise<void>>;
+}
+
+interface MockApiExecutor {
+  (operation: QueuedOperation): Promise<void>;
+}
+
+// Timer ID type for setTimeout mock
+type TimerId = ReturnType<typeof setTimeout>;
 
 describe('OperationQueue', () => {
-  let mockAsyncStorage: any;
+  let mockAsyncStorage: MockAsyncStorage;
+  let OperationQueueClass: typeof OperationQueue;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
     mockAsyncStorage = {
-      getItem: jest.fn(),
-      setItem: jest.fn(),
-      removeItem: jest.fn(),
+      getItem: jest.fn() as jest.MockedFunction<(key: string) => Promise<string | null>>,
+      setItem: jest.fn() as jest.MockedFunction<(key: string, value: string) => Promise<void>>,
+      removeItem: jest.fn() as jest.MockedFunction<(key: string) => Promise<void>>,
     };
 
     jest.doMock('@react-native-async-storage/async-storage', () => ({
@@ -25,10 +42,12 @@ describe('OperationQueue', () => {
   it('should initialize with empty queue', async () => {
     mockAsyncStorage.getItem.mockResolvedValue(null);
 
+    // Import OperationQueue after mocking AsyncStorage  
     delete require.cache[require.resolve('../../src/services/OperationQueue')];
     const { OperationQueue } = require('../../src/services/OperationQueue');
+    OperationQueueClass = OperationQueue;
 
-    const queue = new OperationQueue();
+    const queue = new OperationQueueClass();
     await queue.initialize();
 
     expect(queue.size()).toBe(0);
@@ -38,9 +57,9 @@ describe('OperationQueue', () => {
     const storedQueue = JSON.stringify([
       {
         id: 'test-1',
-        type: 'CREATE',
-        resource: 'book',
-        payload: {},
+        type: 'CREATE' as OperationType,
+        resource: 'book' as ResourceType,
+        payload: {} as BookOperationPayload,
         timestamp: Date.now(),
         retryCount: 0,
         maxRetries: 3,
@@ -49,10 +68,12 @@ describe('OperationQueue', () => {
     ]);
     mockAsyncStorage.getItem.mockResolvedValue(storedQueue);
 
+    // Import OperationQueue after mocking AsyncStorage  
     delete require.cache[require.resolve('../../src/services/OperationQueue')];
     const { OperationQueue } = require('../../src/services/OperationQueue');
+    OperationQueueClass = OperationQueue;
 
-    const queue = new OperationQueue();
+    const queue = new OperationQueueClass();
     await queue.initialize();
 
     expect(queue.size()).toBe(1);
@@ -61,10 +82,12 @@ describe('OperationQueue', () => {
   it('should handle AsyncStorage errors gracefully', async () => {
     mockAsyncStorage.getItem.mockRejectedValue(new Error('Storage error'));
 
+    // Import OperationQueue after mocking AsyncStorage  
     delete require.cache[require.resolve('../../src/services/OperationQueue')];
     const { OperationQueue } = require('../../src/services/OperationQueue');
+    OperationQueueClass = OperationQueue;
 
-    const queue = new OperationQueue();
+    const queue = new OperationQueueClass();
     await queue.initialize();
 
     expect(queue.size()).toBe(0);
@@ -222,7 +245,7 @@ describe('OperationQueue', () => {
     global.setTimeout = jest.fn().mockImplementation((callback, delay) => {
       actualDelay = delay;
       callback();
-      return 'timeout-id' as any;
+      return 'timeout-id' as unknown;
     });
 
     delete require.cache[require.resolve('../../src/services/OperationQueue')];

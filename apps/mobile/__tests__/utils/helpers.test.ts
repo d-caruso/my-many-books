@@ -29,8 +29,8 @@ describe('Helper Utilities', () => {
     });
 
     it('should handle null/undefined dates', () => {
-      expect(formatDate(null as any)).toBe('Invalid Date');
-      expect(formatDate(undefined as any)).toBe('Invalid Date');
+      expect(formatDate(null as string)).toBe('Invalid Date');
+      expect(formatDate(undefined as string)).toBe('Invalid Date');
     });
   });
 
@@ -42,7 +42,7 @@ describe('Helper Utilities', () => {
     });
 
     it('should handle unknown status', () => {
-      expect(getStatusLabel('unknown' as any)).toBe('Unknown');
+      expect(getStatusLabel('unknown' as 'want-to-read' | 'reading' | 'completed')).toBe('Unknown');
     });
   });
 
@@ -54,7 +54,7 @@ describe('Helper Utilities', () => {
     });
 
     it('should handle unknown status', () => {
-      expect(getStatusColor('unknown' as any)).toBe('#757575');
+      expect(getStatusColor('unknown' as 'want-to-read' | 'reading' | 'completed')).toBe('#757575');
     });
   });
 
@@ -77,8 +77,8 @@ describe('Helper Utilities', () => {
     });
 
     it('should handle null/undefined', () => {
-      expect(validateISBN(null as any)).toBe(false);
-      expect(validateISBN(undefined as any)).toBe(false);
+      expect(validateISBN(null as string)).toBe(false);
+      expect(validateISBN(undefined as string)).toBe(false);
     });
   });
 
@@ -110,8 +110,8 @@ describe('Helper Utilities', () => {
     });
 
     it('should handle null/undefined', () => {
-      expect(truncateText(null as any, 10)).toBe('');
-      expect(truncateText(undefined as any, 10)).toBe('');
+      expect(truncateText(null as string, 10)).toBe('');
+      expect(truncateText(undefined as string, 10)).toBe('');
     });
 
     it('should handle very small limits', () => {
@@ -141,8 +141,8 @@ describe('Helper Utilities', () => {
 
     it('should handle empty/invalid input', () => {
       expect(sanitizeSearchQuery('')).toBe('');
-      expect(sanitizeSearchQuery(null as any)).toBe('');
-      expect(sanitizeSearchQuery(undefined as any)).toBe('');
+      expect(sanitizeSearchQuery(null as string)).toBe('');
+      expect(sanitizeSearchQuery(undefined as string)).toBe('');
     });
   });
 

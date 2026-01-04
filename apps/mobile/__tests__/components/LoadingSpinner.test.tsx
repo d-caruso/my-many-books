@@ -8,7 +8,7 @@ jest.mock('react-native', () => ({
   Text: 'Text',
   ActivityIndicator: 'ActivityIndicator',
   StyleSheet: {
-    create: (styles: any) => styles,
+    create: (styles: unknown) => styles,
   },
 }));
 
@@ -38,7 +38,7 @@ describe('LoadingSpinner', () => {
     });
     const testInstance = (tree as renderer.ReactTestRenderer).root;
 
-    const textElement = testInstance.findByType(require('react-native').Text);
+    const textElement = testInstance.findByType('Text');
     expect(textElement.props.children).toBe('Loading...');
 
     const activityIndicator = testInstance.findByProps({ testID: 'loading' });
@@ -53,7 +53,7 @@ describe('LoadingSpinner', () => {
     });
     const testInstance = (tree as renderer.ReactTestRenderer).root;
 
-    const textElement = testInstance.findByType(require('react-native').Text);
+    const textElement = testInstance.findByType('Text');
     expect(textElement.props.children).toBe(customMessage);
   });
 
@@ -65,7 +65,7 @@ describe('LoadingSpinner', () => {
     const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     // Empty string falls back to default 'Loading...' translation
-    const textElement = testInstance.findByType(require('react-native').Text);
+    const textElement = testInstance.findByType('Text');
     expect(textElement.props.children).toBe('Loading...');
   });
 
@@ -77,7 +77,7 @@ describe('LoadingSpinner', () => {
     });
     const testInstance = (tree as renderer.ReactTestRenderer).root;
 
-    const textElement = testInstance.findByType(require('react-native').Text);
+    const textElement = testInstance.findByType('Text');
     expect(textElement.props.children).toBe(longMessage);
   });
 
@@ -100,7 +100,7 @@ describe('LoadingSpinner', () => {
     const testInstance = (tree as renderer.ReactTestRenderer).root;
 
     // Check for container View
-    const containerView = testInstance.findByType(require('react-native').View);
+    const containerView = testInstance.findByType('View');
     expect(containerView).toBeTruthy();
 
     // Check if the loading indicator is there

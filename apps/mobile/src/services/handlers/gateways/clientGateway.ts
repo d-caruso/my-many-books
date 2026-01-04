@@ -24,19 +24,6 @@ interface HttpClient {
   delete<T>(url: string, config?: Record<string, unknown>): Promise<T>;
 }
 
-/**
- * Client Gateway Options
- */
-interface ClientGatewayOptions {
-  /** Fail fast when offline */
-  failFast: boolean;
-  /** Enable response validation */
-  validateResponses: boolean;
-  /** Enable response caching */
-  enableCaching: boolean;
-  /** Cache TTL in milliseconds */
-  cacheTTL: number;
-}
 
 /**
  * Client Gateway Configuration

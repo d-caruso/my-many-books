@@ -11,10 +11,6 @@ jest.unmock('@/hooks/useBooks');
 // Use the globally mocked API from setupTests.ts
 const mockBookAPI = bookAPI as jest.Mocked<typeof bookAPI>;
 
-// Mock migrateFromAsyncStorage to avoid issues
-jest.mock('@/services/database/migrateFromAsyncStorage', () => ({
-  migrateFromAsyncStorage: jest.fn().mockResolvedValue(undefined),
-}));
 
 // Mock UUID
 jest.mock('uuid', () => ({
@@ -133,8 +129,8 @@ describe('useBooks with SQLite', () => {
 
     it('should keep optimistic book on retriable error', async () => {
       const newBookData = { title: 'Offline Book' };
-      const networkError = new Error('Network error');
-      (networkError as any).response = undefined; // Network error has no response
+      const networkError = new Error('Network error') as Error & { response?: unknown };
+      networkError.response = undefined; // Network error has no response
 
       mockBookAPI.createBook.mockRejectedValueOnce(networkError);
 
@@ -154,8 +150,8 @@ describe('useBooks with SQLite', () => {
 
     it('should remove optimistic book on non-retriable error', async () => {
       const newBookData = { title: 'Invalid Book' };
-      const validationError = new Error('Validation failed');
-      (validationError as any).response = { status: 400, data: { message: 'Invalid data' } };
+      const validationError = new Error('Validation failed') as Error & { response?: { status: number; data: { message: string } } };
+      validationError.response = { status: 400, data: { message: 'Invalid data' } };
 
       mockBookAPI.createBook.mockRejectedValueOnce(validationError);
 
@@ -229,8 +225,8 @@ describe('useBooks with SQLite', () => {
         _syncStatus: 'synced',
       });
 
-      const networkError = new Error('Server error');
-      (networkError as any).response = { status: 500 };
+      const networkError = new Error('Server error') as Error & { response?: { status: number } };
+      networkError.response = { status: 500 };
 
       // Return initial book from getBooks
       mockBookAPI.getBooks.mockResolvedValueOnce({
@@ -319,8 +315,8 @@ describe('useBooks with SQLite', () => {
         _syncStatus: 'synced',
       });
 
-      const forbiddenError = new Error('Forbidden');
-      (forbiddenError as any).response = { status: 403, data: { message: 'Cannot delete' } };
+      const forbiddenError = new Error('Forbidden') as Error & { response?: { status: number; data: { message: string } } };
+      forbiddenError.response = { status: 403, data: { message: 'Cannot delete' } };
 
       // Return book from getBooks
       mockBookAPI.getBooks.mockResolvedValueOnce({

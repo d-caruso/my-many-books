@@ -49,7 +49,12 @@ export default function SearchScreen() {
         // This would need to be handled differently in the actual implementation
       }
     } else {
-      const filters: any = {};
+      const filters: {
+        author?: string;
+        status?: string;
+        category?: string;
+        query?: string;
+      } = {};
       
       // Apply search mode filter
       if (searchMode === 'author') {

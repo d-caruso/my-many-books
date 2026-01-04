@@ -103,7 +103,6 @@ describe('Book Handler Validation', () => {
       };
 
       // We need to mock the actual implementation
-      const _originalCreate = handler.create;
       handler.create = jest.fn().mockResolvedValue(mockBook);
 
       const result = await handler.create(validBookData);

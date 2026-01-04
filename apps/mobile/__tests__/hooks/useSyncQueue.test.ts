@@ -257,9 +257,9 @@ describe('useSyncQueue Hook', () => {
       const { useSyncQueue } = require('../../src/hooks/useSyncQueue');
       
       mockNetworkState = {
-        isOnline: undefined as any,
-        isInternetReachable: undefined as any,
-        connectionType: undefined as any,
+        isOnline: undefined as boolean,
+        isInternetReachable: undefined as boolean,
+        connectionType: undefined as string,
       };
 
       expect(() => {

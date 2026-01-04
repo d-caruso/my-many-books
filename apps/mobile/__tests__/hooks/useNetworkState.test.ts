@@ -38,13 +38,13 @@ describe('useNetworkState Hook', () => {
     const originalUseState = React.useState;
     const originalUseEffect = React.useEffect;
 
-    const stateValues: Record<string, any> = {
+    const stateValues: Record<string, boolean | string> = {
       isOnline: true,
       isInternetReachable: true,
       connectionType: 'wifi',
     };
 
-    React.useState = jest.fn((initialValue: any) => {
+    React.useState = jest.fn((initialValue: unknown) => {
       return [stateValues[Object.keys(stateValues)[0]], jest.fn()];
     });
 
@@ -83,7 +83,7 @@ describe('useNetworkState Hook', () => {
     let cleanupCallback: (() => void) | undefined;
 
     jest.doMock('react', () => ({
-      useState: jest.fn((initialValue: any) => [initialValue, jest.fn()]),
+      useState: jest.fn((initialValue: unknown) => [initialValue, jest.fn()]),
       useEffect: jest.fn((fn: () => void) => {
         const cleanup = fn();
         if (typeof cleanup === 'function') {
@@ -111,17 +111,17 @@ describe('useNetworkState Hook', () => {
     };
 
     let stateIndex = 0;
-    let networkCallback: ((state: any) => void) | undefined;
+    let networkCallback: ((state: unknown) => void) | undefined;
     
     jest.doMock('react', () => ({
-      useState: jest.fn((initialValue: any) => {
+      useState: jest.fn((initialValue: unknown) => {
         const setterKeys = Object.keys(setters);
         const setter = setters[setterKeys[stateIndex]];
         stateIndex++;
         return [initialValue, setter];
       }),
       useEffect: jest.fn((fn: () => void) => {
-        mockAddEventListener.mockImplementation((callback: (state: any) => void) => {
+        mockAddEventListener.mockImplementation((callback: (state: unknown) => void) => {
           networkCallback = callback;
           return mockUnsubscribe;
         });
@@ -156,17 +156,17 @@ describe('useNetworkState Hook', () => {
     };
 
     let stateIndex = 0;
-    let networkCallback: ((state: any) => void) | undefined;
+    let networkCallback: ((state: unknown) => void) | undefined;
     
     jest.doMock('react', () => ({
-      useState: jest.fn((initialValue: any) => {
+      useState: jest.fn((initialValue: unknown) => {
         const setterKeys = Object.keys(setters);
         const setter = setters[setterKeys[stateIndex]];
         stateIndex++;
         return [initialValue, setter];
       }),
       useEffect: jest.fn((fn: () => void) => {
-        mockAddEventListener.mockImplementation((callback: (state: any) => void) => {
+        mockAddEventListener.mockImplementation((callback: (state: unknown) => void) => {
           networkCallback = callback;
           return mockUnsubscribe;
         });

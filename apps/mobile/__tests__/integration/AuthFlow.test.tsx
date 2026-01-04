@@ -61,7 +61,7 @@ describe('Auth Integration Flow', () => {
     const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
     const mockLoginResponse = { token: 'auth-token', user: mockUser };
 
-    mockUserAPI.login.mockResolvedValue(mockLoginResponse as any);
+    mockUserAPI.login.mockResolvedValue(mockLoginResponse);
 
     let tree: renderer.ReactTestRenderer | undefined;
     renderer.act(() => {
@@ -92,7 +92,7 @@ describe('Auth Integration Flow', () => {
     const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
     const mockRegisterResponse = { token: 'reg-token', user: mockUser };
 
-    mockUserAPI.register.mockResolvedValue(mockRegisterResponse as any);
+    mockUserAPI.register.mockResolvedValue(mockRegisterResponse);
 
     let tree: renderer.ReactTestRenderer | undefined;
     renderer.act(() => {
@@ -119,7 +119,7 @@ describe('Auth Integration Flow', () => {
     const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
 
     mockAsyncStorage.getItem.mockResolvedValue('stored-token');
-    mockUserAPI.getCurrentUser.mockResolvedValue(mockUser as any);
+    mockUserAPI.getCurrentUser.mockResolvedValue(mockUser);
 
     let tree: renderer.ReactTestRenderer | undefined;
     renderer.act(() => {

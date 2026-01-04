@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, Card, SegmentedButtons, Tooltip } from 'react-native-paper';
+import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -30,7 +30,7 @@ export default function AddBookScreen() {
       try {
         const book = JSON.parse(decodeURIComponent(bookData));
         setTitle(book.title || '');
-        setAuthor(book.authors?.map((a: any) => a.name).join(', ') || '');
+        setAuthor(book.authors?.map((a: { name: string }) => a.name).join(', ') || '');
         setIsbnCode(book.isbnCode || '');
       } catch (error) {
         console.error('Failed to parse book data:', error);
@@ -57,7 +57,7 @@ export default function AddBookScreen() {
       });
 
       router.back();
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || 'Failed to add book');
     } finally {
       setLoading(false);
@@ -81,7 +81,7 @@ export default function AddBookScreen() {
       } else {
         setError(t('books:book_not_found_for_isbn'));
       }
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || t('books:failed_to_lookup_book'));
     } finally {
       setLoading(false);

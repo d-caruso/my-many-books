@@ -26,7 +26,7 @@ const AddBookScreen = () => {
         setTitle(result.title || '');
         setAuthor(result.authors?.[0]?.name || '');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setShowCreationError(true);
     }
   };
@@ -41,11 +41,11 @@ const AddBookScreen = () => {
       await createBook({
         title,
         isbnCode: isbn,
-        status: status as any,
+        status: status as "want-to-read" | "reading" | "completed",
         notes: '',
       });
       router.back();
-    } catch (error: any) {
+    } catch (error: unknown) {
       setShowCreationError(true);
     }
   };
@@ -225,7 +225,7 @@ describe('AddBookScreen', () => {
       categories: [],
     };
 
-    mockCreateBook.mockResolvedValue(mockBook as any);
+    mockCreateBook.mockResolvedValue(mockBook);
 
     let tree: renderer.ReactTestRenderer | undefined;
     renderer.act(() => {
@@ -269,7 +269,7 @@ describe('AddBookScreen', () => {
       isbnCode: '1234567890',
     };
 
-    mockSearchByISBN.mockResolvedValue(mockBookData as any);
+    mockSearchByISBN.mockResolvedValue(mockBookData);
 
     let tree: renderer.ReactTestRenderer | undefined;
     renderer.act(() => {

@@ -1,7 +1,7 @@
 // Test for API service integration with operation queue
 // Tests automatic queueing of failed operations
 
-// Mock uuid before any imports
+// Mock uuid before unknown imports
 jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mock-uuid-1234'),
 }));

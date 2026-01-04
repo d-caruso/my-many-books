@@ -249,8 +249,6 @@ export class CleanupService {
   async fixInconsistentSyncStates(): Promise<void> {
     console.log('Fixing inconsistent sync states...');
 
-    const _db = databaseService.getDatabase();
-
     // Find books marked as 'pending' but with no operation in queue
     const pendingBooks = await databaseService.getAllAsync<{
       id: string;
@@ -329,8 +327,6 @@ export class CleanupService {
     orphanedCategories: number;
     missingBooks: number;
   }> {
-    const _db = databaseService.getDatabase();
-
     // Find book_authors entries that reference non-existent books
     const orphanedAuthors = await databaseService.getAllAsync(`
       SELECT ba.book_id, ba.author_id

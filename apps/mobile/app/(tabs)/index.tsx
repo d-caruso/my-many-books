@@ -40,7 +40,7 @@ export default function BooksScreen() {
     clearSearch,
   } = useBookSearch();
 
-  const { processQueue, performFullSync } = useSyncQueue();
+  const { performFullSync } = useSyncQueue();
 
   const books = isSearching ? searchResults : userBooks;
   const loading = isSearching ? searchLoading : userBooksLoading;
