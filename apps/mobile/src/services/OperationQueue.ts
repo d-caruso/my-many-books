@@ -377,6 +377,88 @@ export class OperationQueue {
   }
 
   /**
+   * Get queue health metrics
+   */
+  getQueueHealth(): {
+    total: number;
+    pending: number;
+    retrying: number;
+    failed: number;
+    healthScore: number;
+    isHealthy: boolean;
+    oldestOperation?: number;
+  } {
+    const pending = this.queue.filter(op => op.status === OPERATION_STATUSES.PENDING).length;
+    const retrying = this.queue.filter(op => op.status === OPERATION_STATUSES.RETRYING).length;
+    const failed = this.getFailedOperations().length;
+    const total = this.queue.length;
+
+    // Calculate health score (0-100, higher is better)
+    // Healthy queue has few failed operations and doesn't approach size limit
+    const failureRate = total > 0 ? (failed / total) : 0;
+    const capacityUsage = total / MAX_QUEUE_SIZE;
+    const healthScore = Math.round((1 - failureRate) * (1 - capacityUsage) * 100);
+
+    // Find oldest operation timestamp for staleness detection
+    const oldestOperation = this.queue.length > 0 
+      ? Math.min(...this.queue.map(op => op.timestamp))
+      : undefined;
+
+    const isHealthy = healthScore > 70 && failureRate < 0.2 && capacityUsage < 0.8;
+
+    const metrics = {
+      total,
+      pending,
+      retrying,
+      failed,
+      healthScore,
+      isHealthy,
+      oldestOperation,
+    };
+
+    // Emit queue health metrics
+    mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+      ...metrics,
+      maxSize: MAX_QUEUE_SIZE,
+      capacityUsage,
+      failureRate,
+      timestamp: new Date().toISOString(),
+      status: isHealthy ? 'healthy' : 'degraded'
+    });
+
+    return metrics;
+  }
+
+  /**
+   * Monitor queue health and emit warnings
+   */
+  monitorQueueHealth(): void {
+    const health = this.getQueueHealth();
+    const now = Date.now();
+
+    // Check for stale operations (older than 1 hour)
+    if (health.oldestOperation && (now - health.oldestOperation) > (60 * 60 * 1000)) {
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+        ...health,
+        status: 'stale_operations',
+        staleDuration: now - health.oldestOperation,
+        timestamp: new Date().toISOString(),
+        warning: 'operations_aging'
+      });
+    }
+
+    // Check for high failure rate
+    if (health.failed > 0 && (health.failed / health.total) > 0.3) {
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+        ...health,
+        status: 'high_failure_rate',
+        timestamp: new Date().toISOString(),
+        warning: 'excessive_failures'
+      });
+    }
+  }
+
+  /**
    * Persist queue to AsyncStorage
    */
   private async persist(): Promise<void> {
