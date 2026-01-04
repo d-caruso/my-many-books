@@ -18,26 +18,161 @@ import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
  */
 export async function executeOperation(operation: QueuedOperation): Promise<void> {
   const { type, resource, payload } = operation;
+  const startTime = Date.now();
 
-  switch (resource) {
-    case RESOURCE_TYPES.BOOK:
-      await executeBookOperation(type, payload);
-      break;
-    case RESOURCE_TYPES.AUTHOR:
-      await executeAuthorOperation(type, payload);
-      break;
-    case RESOURCE_TYPES.CATEGORY:
-      await executeCategoryOperation(type, payload);
-      break;
-    case RESOURCE_TYPES.USER:
-      await executeUserOperation(type, payload);
-      break;
-    case 'settings':
-      await executeSettingsOperation(type, payload);
-      break;
-    default:
-      throw new Error(`Unknown resource type: ${resource}`);
+  // Emit operation start event
+  mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.OPERATION.START, {
+    operationId: operation.id,
+    type,
+    resource,
+    retryCount: operation.retryCount,
+    timestamp: new Date().toISOString(),
+    sessionId: `executor-${startTime}`
+  });
+
+  try {
+    switch (resource) {
+      case RESOURCE_TYPES.BOOK:
+        await executeBookOperation(type, payload);
+        break;
+      case RESOURCE_TYPES.AUTHOR:
+        await executeAuthorOperation(type, payload);
+        break;
+      case RESOURCE_TYPES.CATEGORY:
+        await executeCategoryOperation(type, payload);
+        break;
+      case RESOURCE_TYPES.USER:
+        await executeUserOperation(type, payload);
+        break;
+      case 'settings':
+        await executeSettingsOperation(type, payload);
+        break;
+      default:
+        throw new Error(`Unknown resource type: ${resource}`);
+    }
+
+    const endTime = Date.now();
+    const executionDuration = endTime - startTime;
+
+    // Emit operation success event
+    mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.OPERATION.SUCCESS, {
+      operationId: operation.id,
+      type,
+      resource,
+      retryCount: operation.retryCount,
+      executionDuration,
+      timestamp: new Date().toISOString(),
+      sessionId: `executor-${startTime}`
+    });
+
+    // Emit performance metrics
+    mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.PERFORMANCE_METRIC, {
+      operationId: operation.id,
+      type,
+      resource,
+      executionDuration,
+      retryCount: operation.retryCount,
+      timestamp: new Date().toISOString(),
+      performanceData: {
+        startTime,
+        endTime,
+        success: true
+      }
+    });
+
+  } catch (error) {
+    const endTime = Date.now();
+    const executionDuration = endTime - startTime;
+
+    // Categorize error type
+    const isNetworkError = isNetworkRelatedError(error);
+    const isValidationError = isValidationRelatedError(error);
+
+    // Emit appropriate error event
+    if (isNetworkError) {
+      mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.NETWORK_ERROR, {
+        operationId: operation.id,
+        type,
+        resource,
+        retryCount: operation.retryCount,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: 'network',
+        executionDuration,
+        timestamp: new Date().toISOString(),
+        sessionId: `executor-${startTime}`
+      });
+    } else if (isValidationError) {
+      mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.VALIDATION_ERROR, {
+        operationId: operation.id,
+        type,
+        resource,
+        retryCount: operation.retryCount,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: 'validation',
+        executionDuration,
+        timestamp: new Date().toISOString(),
+        sessionId: `executor-${startTime}`
+      });
+    } else {
+      // General operation failed event
+      mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.OPERATION.FAILED, {
+        operationId: operation.id,
+        type,
+        resource,
+        retryCount: operation.retryCount,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: 'unknown',
+        executionDuration,
+        timestamp: new Date().toISOString(),
+        sessionId: `executor-${startTime}`
+      });
+    }
+
+    // Emit performance metrics for failed operations too
+    mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.PERFORMANCE_METRIC, {
+      operationId: operation.id,
+      type,
+      resource,
+      executionDuration,
+      retryCount: operation.retryCount,
+      timestamp: new Date().toISOString(),
+      performanceData: {
+        startTime,
+        endTime,
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      }
+    });
+
+    throw error;
   }
+}
+
+/**
+ * Check if error is network-related
+ */
+function isNetworkRelatedError(error: unknown): boolean {
+  if (!error) return false;
+  
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('Network') || 
+         message.includes('timeout') || 
+         message.includes('offline') ||
+         message.includes('connection') ||
+         message.includes('HTTP 5');
+}
+
+/**
+ * Check if error is validation-related
+ */
+function isValidationRelatedError(error: unknown): boolean {
+  if (!error) return false;
+  
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('validation') || 
+         message.includes('required') || 
+         message.includes('invalid') ||
+         message.includes('HTTP 4');
 }
 
 async function executeBookOperation(type: string, payload: CreatePayload<Book> | UpdatePayload<Book> | { id: string }): Promise<void> {
