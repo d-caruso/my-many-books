@@ -71,6 +71,7 @@ const schema = {
   // Queue Events
   QUEUE: {
     ENQUEUE: null,
+    DEQUEUE: null,
     PROCESS: {
       START: null,
       COMPLETE: null,

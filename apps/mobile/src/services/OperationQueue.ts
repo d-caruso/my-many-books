@@ -148,7 +148,20 @@ export class OperationQueue {
    * Remove operation from queue
    */
   async dequeue(operationId: string): Promise<void> {
+    const operation = this.queue.find(op => op.id === operationId);
     this.queue = this.queue.filter(op => op.id !== operationId);
+    
+    // Emit dequeue event
+    if (operation) {
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.DEQUEUE, {
+        operationId: operation.id,
+        type: operation.type,
+        resource: operation.resource,
+        queueSize: this.queue.length,
+        remainingOperations: this.queue.length
+      });
+    }
+    
     await this.persist();
   }
 
@@ -181,7 +194,17 @@ export class OperationQueue {
    * Clear all operations
    */
   async clear(): Promise<void> {
+    const clearedCount = this.queue.length;
     this.queue = [];
+    
+    // Emit queue cleared event
+    mobileHooks.emit(MOBILE_EVENTS.QUEUE.CLEARED, {
+      clearedOperations: clearedCount,
+      queueSize: 0,
+      timestamp: new Date().toISOString(),
+      reason: 'manual_clear'
+    });
+    
     await this.persist();
   }
 
@@ -195,15 +218,29 @@ export class OperationQueue {
 
     this.isProcessing = true;
 
-    try {
-      const processable = this.getProcessableOperations();
+    const processable = this.getProcessableOperations();
+    const startTime = Date.now();
+    
+    // Emit queue processing start event
+    mobileHooks.emit(MOBILE_EVENTS.QUEUE.PROCESS.START, {
+      queueSize: this.queue.length,
+      processableOperations: processable.length,
+      timestamp: new Date().toISOString(),
+      sessionId: `process-${startTime}`
+    });
 
+    let processedCount = 0;
+    let failedCount = 0;
+
+    try {
       for (const operation of processable) {
         try {
           await this.executeWithBackoff(operation, apiExecutor);
           await this.dequeue(operation.id);
+          processedCount++;
         } catch {
           operation.retryCount++;
+          failedCount++;
 
           if (operation.retryCount >= operation.maxRetries) {
             operation.status = OPERATION_STATUSES.FAILED;
@@ -231,6 +268,19 @@ export class OperationQueue {
         }
       }
     } finally {
+      const endTime = Date.now();
+      const processingDuration = endTime - startTime;
+      
+      // Emit queue processing complete event
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.PROCESS.COMPLETE, {
+        queueSize: this.queue.length,
+        processedOperations: processedCount,
+        failedOperations: failedCount,
+        processingDuration,
+        timestamp: new Date().toISOString(),
+        sessionId: `process-${startTime}`
+      });
+      
       this.isProcessing = false;
     }
   }

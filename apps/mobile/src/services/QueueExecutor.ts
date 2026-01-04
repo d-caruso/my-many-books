@@ -11,6 +11,7 @@ import { Author } from '@my-many-books/shared-types';
 import { Category } from '@my-many-books/shared-types';
 import { CreatePayload, UpdatePayload } from './handlers/types/HandlerTypes';
 import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/events';
+import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
 
 /**
  * Execute queued operation based on resource type and operation type
