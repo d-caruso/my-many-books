@@ -4,6 +4,7 @@ import { QueuedOperation, OperationType, ResourceType, BookOperationPayload, Aut
 import { Alert } from 'react-native';
 import i18n from '../i18n';
 import { databaseService } from './database/DatabaseService';
+import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
 
 const QUEUE_STORAGE_KEY = '@operation_queue';
 const MAX_QUEUE_SIZE = 100;
@@ -22,7 +23,11 @@ export class OperationQueue {
         this.queue = JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Failed to initialize queue from AsyncStorage:', error);
+      await mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+        operation: 'queue_initialize',
+        error: error instanceof Error ? error.message : String(error),
+        recovery: 'empty_queue_created'
+      });
       this.queue = [];
       // Attempt to recover with empty queue
       await this.persist();
@@ -70,7 +75,12 @@ export class OperationQueue {
   ): Promise<string> {
     // Warn when approaching limit (80% threshold)
     if (this.isNearLimit()) {
-      console.warn(`Queue approaching limit: ${this.queue.length}/${MAX_QUEUE_SIZE} operations`);
+      await mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+        queueSize: this.queue.length,
+        maxSize: MAX_QUEUE_SIZE,
+        status: 'approaching_limit',
+        threshold: 0.8
+      });
       // Show user-facing warning when approaching limit (skip in test environment)
       if (process.env.NODE_ENV !== 'test') {
         Alert.alert(
@@ -83,8 +93,14 @@ export class OperationQueue {
 
     // Enforce queue size limit - discard oldest if exceeded
     if (this.queue.length >= MAX_QUEUE_SIZE) {
-      this.queue.shift(); // Remove oldest
-      console.warn(`Queue size limit (${MAX_QUEUE_SIZE}) exceeded. Discarding oldest operation.`);
+      const discarded = this.queue.shift(); // Remove oldest
+      await mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+        queueSize: this.queue.length,
+        maxSize: MAX_QUEUE_SIZE,
+        status: 'limit_exceeded',
+        action: 'discarded_oldest',
+        discardedOperation: discarded?.id
+      });
       // Show critical user-facing alert when limit exceeded (skip in test environment)
       if (process.env.NODE_ENV !== 'test') {
         Alert.alert(
@@ -107,6 +123,16 @@ export class OperationQueue {
     };
 
     this.queue.push(operation);
+    
+    // Emit enqueue event
+    await mobileHooks.emit(MOBILE_EVENTS.QUEUE.ENQUEUE, {
+      operationId: operation.id,
+      type: operation.type,
+      resource: operation.resource,
+      queueSize: this.queue.length,
+      maxRetries: operation.maxRetries
+    });
+    
     await this.persist();
     return operation.id;
   }
@@ -181,10 +207,24 @@ export class OperationQueue {
 
           if (operation.retryCount >= operation.maxRetries) {
             operation.status = 'failed';
-            console.log(`Operation ${operation.id} failed permanently after ${operation.maxRetries} retries`);
+            await mobileHooks.emit(MOBILE_EVENTS.QUEUE.FAILED, {
+              operationId: operation.id,
+              type: operation.type,
+              resource: operation.resource,
+              retryCount: operation.retryCount,
+              maxRetries: operation.maxRetries,
+              reason: 'max_retries_exceeded'
+            });
           } else {
             operation.status = 'retrying';
-            console.log(`Operation ${operation.id} will retry (attempt ${operation.retryCount + 1}/${operation.maxRetries})`);
+            await mobileHooks.emit(MOBILE_EVENTS.QUEUE.RETRY, {
+              operationId: operation.id,
+              type: operation.type,
+              resource: operation.resource,
+              retryCount: operation.retryCount,
+              maxRetries: operation.maxRetries,
+              nextAttempt: operation.retryCount + 1
+            });
           }
 
           await this.persist();
@@ -287,7 +327,11 @@ export class OperationQueue {
     try {
       await AsyncStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(this.queue));
     } catch (error) {
-      console.error('Failed to persist queue:', error);
+      await mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+        operation: 'queue_persist',
+        error: error instanceof Error ? error.message : String(error),
+        queueSize: this.queue.length
+      });
     }
   }
 }
