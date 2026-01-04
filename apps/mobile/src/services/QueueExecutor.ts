@@ -450,76 +450,109 @@ async function executeSettingsOperation(_type: string, _payload: unknown): Promi
 }
 
 /**
- * Check if error is retriable
+ * Check if error is retriable and emit retry scheduling events
  * Now supports both structured ApiError and legacy Error checking
  */
-export function isRetriableError(error: unknown): boolean {
+export function isRetriableError(error: unknown, operationId?: string, currentRetryCount?: number, maxRetries?: number): boolean {
   // Handle null/undefined errors
   if (!error) {
     return false;
   }
 
+  let isRetriable = false;
+  let retryReason = '';
+
   // Structured ApiError - use built-in retriable property
   if (error instanceof ApiError) {
-    return error.retriable;
-  }
-
-  // Legacy fallback for generic Error objects (third-party libraries, existing code)
-  // This maintains backward compatibility while we migrate to structured errors
-
-  // Network errors are retriable
-  if (error.message?.includes('Network request failed')) {
-    return true;
-  }
-
-  // Timeout errors are retriable
-  if (error.name === 'AbortError' || error.message?.includes('timeout')) {
-    return true;
-  }
-
-  // Offline errors are retriable
-  if (error.message?.includes('offline') || error.message?.includes('no connection')) {
-    return true;
-  }
-
-  // FetchHttpClient throws plain Error with "HTTP 5xx" messages - check for server errors
-  if (error.message?.match(/HTTP 5\d\d:/)) {
-    return true;
-  }
-
-  // FetchHttpClient timeout errors
-  if (error.message?.includes('HTTP 408:') || error.message?.includes('Request Timeout')) {
-    return true;
-  }
-
-  // Rate limiting (429 Too Many Requests)
-  if (error.message?.includes('HTTP 429:')) {
-    return true;
-  }
-
-  // HTTP status codes (if error object has status property)
-  if (error.status) {
-    // 408 Request Timeout is retriable
-    if (error.status === 408) {
-      return true;
+    isRetriable = error.retriable;
+    retryReason = 'structured_api_error';
+  } else {
+    // Legacy fallback for generic Error objects (third-party libraries, existing code)
+    const message = error instanceof Error ? error.message : String(error);
+    
+    // Network errors are retriable
+    if (message?.includes('Network request failed')) {
+      isRetriable = true;
+      retryReason = 'network_request_failed';
     }
-
-    // 429 Too Many Requests is retriable
-    if (error.status === 429) {
-      return true;
+    // Timeout errors are retriable
+    else if (error.name === 'AbortError' || message?.includes('timeout')) {
+      isRetriable = true;
+      retryReason = 'timeout_error';
     }
-
-    // 4xx validation errors are NOT retriable (except 408 and 429)
-    if (error.status >= 400 && error.status < 500) {
-      return false;
+    // Offline errors are retriable
+    else if (message?.includes('offline') || message?.includes('no connection')) {
+      isRetriable = true;
+      retryReason = 'offline_error';
     }
-
-    // 5xx server errors ARE retriable
-    if (error.status >= 500) {
-      return true;
+    // FetchHttpClient throws plain Error with "HTTP 5xx" messages - check for server errors
+    else if (message?.match(/HTTP 5\d\d:/)) {
+      isRetriable = true;
+      retryReason = 'server_error_5xx';
+    }
+    // FetchHttpClient timeout errors
+    else if (message?.includes('HTTP 408:') || message?.includes('Request Timeout')) {
+      isRetriable = true;
+      retryReason = 'request_timeout';
+    }
+    // Rate limiting (429 Too Many Requests)
+    else if (message?.includes('HTTP 429:')) {
+      isRetriable = true;
+      retryReason = 'rate_limit_exceeded';
+    }
+    // HTTP status codes (if error object has status property)
+    else if (error.status) {
+      // 408 Request Timeout is retriable
+      if (error.status === 408) {
+        isRetriable = true;
+        retryReason = 'timeout_408';
+      }
+      // 429 Too Many Requests is retriable
+      else if (error.status === 429) {
+        isRetriable = true;
+        retryReason = 'rate_limit_429';
+      }
+      // 4xx validation errors are NOT retriable (except 408 and 429)
+      else if (error.status >= 400 && error.status < 500) {
+        isRetriable = false;
+        retryReason = 'client_error_4xx';
+      }
+      // 5xx server errors ARE retriable
+      else if (error.status >= 500) {
+        isRetriable = true;
+        retryReason = 'server_error_5xx';
+      }
     }
   }
 
-  // Default: not retriable
-  return false;
+  // Emit retry scheduling or max retries events if operation details provided
+  if (operationId && currentRetryCount !== undefined && maxRetries !== undefined) {
+    if (isRetriable && currentRetryCount < maxRetries) {
+      // Calculate backoff delay
+      const backoffDelay = Math.pow(2, currentRetryCount) * 1000; // 1s, 2s, 4s, 8s
+      
+      mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.RETRY_SCHEDULED, {
+        operationId,
+        retryCount: currentRetryCount,
+        maxRetries,
+        nextRetryIn: backoffDelay,
+        retryReason,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+        backoffStrategy: 'exponential'
+      });
+    } else if (currentRetryCount >= maxRetries) {
+      mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.MAX_RETRIES_REACHED, {
+        operationId,
+        retryCount: currentRetryCount,
+        maxRetries,
+        finalError: error instanceof Error ? error.message : String(error),
+        retryReason,
+        timestamp: new Date().toISOString(),
+        abandoned: true
+      });
+    }
+  }
+
+  return isRetriable;
 }
