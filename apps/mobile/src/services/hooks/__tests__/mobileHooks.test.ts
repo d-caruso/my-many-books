@@ -78,8 +78,10 @@ describe('MobileHookSystemManager', () => {
 
     it('should handle emit failures gracefully', async () => {
       // Force an error by passing invalid data
+      const circular: Record<string, unknown> = {};
+      circular.self = circular; // Create circular reference
       await expect(manager.emit('invalid.event', {
-        circular: {} as any,
+        circular,
       })).resolves.not.toThrow();
 
       // Should not crash the app
@@ -89,10 +91,10 @@ describe('MobileHookSystemManager', () => {
     it('should add default metadata to events', async () => {
       const mockSystem = {
         trigger: jest.fn().mockResolvedValue(undefined),
-      } as any;
+      };
 
       // Replace the system instance
-      (manager as any).hookSystem = mockSystem;
+      (manager as unknown as { hookSystem: typeof mockSystem }).hookSystem = mockSystem;
 
       await manager.emit(MOBILE_EVENTS.BOOK.CREATE.START, {
         operationId: 'test-123',

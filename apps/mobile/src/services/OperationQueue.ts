@@ -23,7 +23,7 @@ export class OperationQueue {
         this.queue = JSON.parse(stored);
       }
     } catch (error) {
-      await mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
         operation: 'queue_initialize',
         error: error instanceof Error ? error.message : String(error),
         recovery: 'empty_queue_created'
@@ -75,7 +75,7 @@ export class OperationQueue {
   ): Promise<string> {
     // Warn when approaching limit (80% threshold)
     if (this.isNearLimit()) {
-      await mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
         queueSize: this.queue.length,
         maxSize: MAX_QUEUE_SIZE,
         status: 'approaching_limit',
@@ -94,7 +94,7 @@ export class OperationQueue {
     // Enforce queue size limit - discard oldest if exceeded
     if (this.queue.length >= MAX_QUEUE_SIZE) {
       const discarded = this.queue.shift(); // Remove oldest
-      await mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
         queueSize: this.queue.length,
         maxSize: MAX_QUEUE_SIZE,
         status: 'limit_exceeded',
@@ -125,7 +125,7 @@ export class OperationQueue {
     this.queue.push(operation);
     
     // Emit enqueue event
-    await mobileHooks.emit(MOBILE_EVENTS.QUEUE.ENQUEUE, {
+    mobileHooks.emit(MOBILE_EVENTS.QUEUE.ENQUEUE, {
       operationId: operation.id,
       type: operation.type,
       resource: operation.resource,
@@ -207,7 +207,7 @@ export class OperationQueue {
 
           if (operation.retryCount >= operation.maxRetries) {
             operation.status = 'failed';
-            await mobileHooks.emit(MOBILE_EVENTS.QUEUE.FAILED, {
+            mobileHooks.emit(MOBILE_EVENTS.QUEUE.FAILED, {
               operationId: operation.id,
               type: operation.type,
               resource: operation.resource,
@@ -217,7 +217,7 @@ export class OperationQueue {
             });
           } else {
             operation.status = 'retrying';
-            await mobileHooks.emit(MOBILE_EVENTS.QUEUE.RETRY, {
+            mobileHooks.emit(MOBILE_EVENTS.QUEUE.RETRY, {
               operationId: operation.id,
               type: operation.type,
               resource: operation.resource,
@@ -327,7 +327,7 @@ export class OperationQueue {
     try {
       await AsyncStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(this.queue));
     } catch (error) {
-      await mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
         operation: 'queue_persist',
         error: error instanceof Error ? error.message : String(error),
         queueSize: this.queue.length

@@ -39,14 +39,14 @@ export interface UpdateCategoryPayload {
 
 // Simple validation for categories
 class CategoryValidationError extends Error {
-  constructor(public errors: Array<{ field: string; code: string; message: string }>, message: string) {
+  constructor(public errors: { field: string; code: string; message: string }[], message: string) {
     super(message);
     this.name = 'CategoryValidationError';
   }
 }
 
 const validateCreateCategory = (data: CreateCategoryPayload): void => {
-  const errors: Array<{ field: string; code: string; message: string }> = [];
+  const errors: { field: string; code: string; message: string }[] = [];
   
   if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
     errors.push({ field: 'name', code: 'NAME_REQUIRED', message: 'validation.category.name.required' });
@@ -62,7 +62,7 @@ const validateCreateCategory = (data: CreateCategoryPayload): void => {
 };
 
 const validateUpdateCategory = (data: UpdateCategoryPayload): void => {
-  const errors: Array<{ field: string; code: string; message: string }> = [];
+  const errors: { field: string; code: string; message: string }[] = [];
   
   if (data.name !== undefined && (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0)) {
     errors.push({ field: 'name', code: 'NAME_REQUIRED', message: 'validation.category.name.required' });
@@ -109,14 +109,14 @@ class ValidatedCategoryHandler<THandler extends Record<string, unknown>> {
     const eventMetadata = createEventMetadata(operationId, data);
     
     // Emit start event
-    await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.START, eventMetadata);
+    mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.START, eventMetadata);
     
     try {
       validateCreateCategory(data);
       const result = await (this.handler as unknown as { create: (data: CreateCategoryPayload) => Promise<Category | string> }).create(data);
       
       // Emit success event
-      await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS, {
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS, {
         ...eventMetadata,
         result: typeof result === 'string' ? { tempId: result } : { category: result },
       });
@@ -124,7 +124,7 @@ class ValidatedCategoryHandler<THandler extends Record<string, unknown>> {
       return result;
     } catch (error) {
       // Emit failure event
-      await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.FAILED, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof CategoryValidationError ? 'validation' : 'unknown',
@@ -140,7 +140,7 @@ class ValidatedCategoryHandler<THandler extends Record<string, unknown>> {
     const eventMetadata = createEventMetadata(operationId, { ...data, id });
     
     // Emit start event
-    await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.START, eventMetadata);
+    mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.START, eventMetadata);
     
     try {
       if (!hasUpdateFields(data)) {
@@ -154,7 +154,7 @@ class ValidatedCategoryHandler<THandler extends Record<string, unknown>> {
       const result = await (this.handler as unknown as { update: (id: string, data: UpdateCategoryPayload) => Promise<Category | string> }).update(id, data);
       
       // Emit success event
-      await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.SUCCESS, {
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.SUCCESS, {
         ...eventMetadata,
         result: typeof result === 'string' ? { tempId: result } : { category: result },
       });
@@ -162,7 +162,7 @@ class ValidatedCategoryHandler<THandler extends Record<string, unknown>> {
       return result;
     } catch (error) {
       // Emit failure event
-      await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.FAILED, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof CategoryValidationError ? 'validation' : 'unknown',
@@ -178,7 +178,7 @@ class ValidatedCategoryHandler<THandler extends Record<string, unknown>> {
     const eventMetadata = createEventMetadata(operationId, { id });
     
     // Emit start event
-    await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.START, eventMetadata);
+    mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.START, eventMetadata);
     
     try {
       if (!id || typeof id !== 'string' || id.trim().length === 0) {
@@ -191,10 +191,10 @@ class ValidatedCategoryHandler<THandler extends Record<string, unknown>> {
       await (this.handler as unknown as { delete: (id: string) => Promise<void> }).delete(id);
       
       // Emit success event
-      await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.SUCCESS, eventMetadata);
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.SUCCESS, eventMetadata);
     } catch (error) {
       // Emit failure event
-      await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.FAILED, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof CategoryValidationError ? 'validation' : 'unknown',
@@ -209,7 +209,7 @@ class ValidatedCategoryHandler<THandler extends Record<string, unknown>> {
     const eventMetadata = createEventMetadata(operationId, { id });
     
     // Emit start event
-    await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.READ.START, eventMetadata);
+    mobileHooks.emit(MOBILE_EVENTS.CATEGORY.READ.START, eventMetadata);
     
     try {
       if (!id || typeof id !== 'string' || id.trim().length === 0) {
@@ -223,7 +223,7 @@ class ValidatedCategoryHandler<THandler extends Record<string, unknown>> {
       const result = await handler.read!(id);
       
       // Emit success event
-      await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.READ.SUCCESS, {
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.READ.SUCCESS, {
         ...eventMetadata,
         result: { category: result },
       });
@@ -231,7 +231,7 @@ class ValidatedCategoryHandler<THandler extends Record<string, unknown>> {
       return result;
     } catch (error) {
       // Emit failure event
-      await mobileHooks.emit(MOBILE_EVENTS.CATEGORY.READ.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.READ.FAILED, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof CategoryValidationError ? 'validation' : 'unknown',

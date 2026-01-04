@@ -42,14 +42,14 @@ export interface UpdateAuthorPayload {
 
 // Simple validation for authors
 class AuthorValidationError extends Error {
-  constructor(public errors: Array<{ field: string; code: string; message: string }>, message: string) {
+  constructor(public errors: { field: string; code: string; message: string }[], message: string) {
     super(message);
     this.name = 'AuthorValidationError';
   }
 }
 
 const validateCreateAuthor = (data: CreateAuthorPayload): void => {
-  const errors: Array<{ field: string; code: string; message: string }> = [];
+  const errors: { field: string; code: string; message: string }[] = [];
   
   if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
     errors.push({ field: 'name', code: 'NAME_REQUIRED', message: 'validation.author.name.required' });
@@ -65,7 +65,7 @@ const validateCreateAuthor = (data: CreateAuthorPayload): void => {
 };
 
 const validateUpdateAuthor = (data: UpdateAuthorPayload): void => {
-  const errors: Array<{ field: string; code: string; message: string }> = [];
+  const errors: { field: string; code: string; message: string }[] = [];
   
   if (data.name !== undefined && (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0)) {
     errors.push({ field: 'name', code: 'NAME_REQUIRED', message: 'validation.author.name.required' });
@@ -112,14 +112,14 @@ class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
     const eventMetadata = createEventMetadata(operationId, data);
     
     // Emit start event
-    await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.START, eventMetadata);
+    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.START, eventMetadata);
     
     try {
       validateCreateAuthor(data);
       const result = await (this.handler as unknown as { create: (data: CreateAuthorPayload) => Promise<Author | string> }).create(data);
       
       // Emit success event
-      await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS, {
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS, {
         ...eventMetadata,
         result: typeof result === 'string' ? { tempId: result } : { author: result },
       });
@@ -127,7 +127,7 @@ class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
       return result;
     } catch (error) {
       // Emit failure event
-      await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.FAILED, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof AuthorValidationError ? 'validation' : 'unknown',
@@ -143,7 +143,7 @@ class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
     const eventMetadata = createEventMetadata(operationId, { ...data, id });
     
     // Emit start event
-    await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.START, eventMetadata);
+    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.START, eventMetadata);
     
     try {
       if (!hasUpdateFields(data)) {
@@ -157,7 +157,7 @@ class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
       const result = await (this.handler as unknown as { update: (id: string, data: UpdateAuthorPayload) => Promise<Author | string> }).update(id, data);
       
       // Emit success event
-      await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.SUCCESS, {
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.SUCCESS, {
         ...eventMetadata,
         result: typeof result === 'string' ? { tempId: result } : { author: result },
       });
@@ -165,7 +165,7 @@ class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
       return result;
     } catch (error) {
       // Emit failure event
-      await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.FAILED, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof AuthorValidationError ? 'validation' : 'unknown',
@@ -181,7 +181,7 @@ class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
     const eventMetadata = createEventMetadata(operationId, { id });
     
     // Emit start event
-    await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.START, eventMetadata);
+    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.START, eventMetadata);
     
     try {
       if (!id || typeof id !== 'string' || id.trim().length === 0) {
@@ -194,10 +194,10 @@ class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
       await (this.handler as unknown as { delete: (id: string) => Promise<void> }).delete(id);
       
       // Emit success event
-      await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.SUCCESS, eventMetadata);
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.SUCCESS, eventMetadata);
     } catch (error) {
       // Emit failure event
-      await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.FAILED, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof AuthorValidationError ? 'validation' : 'unknown',
@@ -212,7 +212,7 @@ class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
     const eventMetadata = createEventMetadata(operationId, { id });
     
     // Emit start event
-    await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.READ.START, eventMetadata);
+    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.READ.START, eventMetadata);
     
     try {
       if (!id || typeof id !== 'string' || id.trim().length === 0) {
@@ -226,7 +226,7 @@ class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
       const result = await handler.read!(id);
       
       // Emit success event
-      await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.READ.SUCCESS, {
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.READ.SUCCESS, {
         ...eventMetadata,
         result: { author: result },
       });
@@ -234,7 +234,7 @@ class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
       return result;
     } catch (error) {
       // Emit failure event
-      await mobileHooks.emit(MOBILE_EVENTS.AUTHOR.READ.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.READ.FAILED, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof AuthorValidationError ? 'validation' : 'unknown',

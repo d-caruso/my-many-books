@@ -3,15 +3,15 @@ import { MOBILE_EVENTS } from '../events';
 describe('Mobile Events', () => {
   describe('Event Structure', () => {
     it('should have all required event categories', () => {
-      expect(MOBILE_EVENTS).toHaveProperty('BOOK');
-      expect(MOBILE_EVENTS).toHaveProperty('AUTHOR');
-      expect(MOBILE_EVENTS).toHaveProperty('CATEGORY');
-      expect(MOBILE_EVENTS).toHaveProperty('QUEUE');
-      expect(MOBILE_EVENTS).toHaveProperty('EXECUTOR');
-      expect(MOBILE_EVENTS).toHaveProperty('SYNC');
-      expect(MOBILE_EVENTS).toHaveProperty('NETWORK');
-      expect(MOBILE_EVENTS).toHaveProperty('APP');
-      expect(MOBILE_EVENTS).toHaveProperty('ERROR');
+      expect(MOBILE_EVENTS.BOOK).toBeDefined();
+      expect(MOBILE_EVENTS.AUTHOR).toBeDefined();
+      expect(MOBILE_EVENTS.CATEGORY).toBeDefined();
+      expect(MOBILE_EVENTS.QUEUE).toBeDefined();
+      expect(MOBILE_EVENTS.EXECUTOR).toBeDefined();
+      expect(MOBILE_EVENTS.SYNC).toBeDefined();
+      expect(MOBILE_EVENTS.NETWORK).toBeDefined();
+      expect(MOBILE_EVENTS.APP).toBeDefined();
+      expect(MOBILE_EVENTS.ERROR).toBeDefined();
     });
 
     it('should generate correct event names for CRUD operations', () => {

@@ -10,7 +10,7 @@ const join = (parts: string[]): string => parts.join('.');
 
 function build<T extends SchemaMap>(schema: T, parents: string[] = []): BuildResult<T> {
   const result: Record<string, unknown> = {};
-  const keys = Object.keys(schema) as Array<keyof T>;
+  const keys = Object.keys(schema) as (keyof T)[];
 
   for (const key of keys) {
     const value = schema[key];
