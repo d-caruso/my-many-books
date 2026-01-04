@@ -193,3 +193,23 @@ const schema = {
 export const MOBILE_EVENTS = Object.freeze(build(schema));
 
 export type EventsTree = typeof MOBILE_EVENTS;
+
+// Re-export from shared-types for convenience
+export { RESOURCE_TYPES } from '@my-many-books/shared-types';
+
+// Operation type constants for queue operations
+export const OPERATION_TYPES = Object.freeze({
+  CREATE: 'CREATE',
+  UPDATE: 'UPDATE',
+  DELETE: 'DELETE',
+} as const);
+
+// Operation status constants for queue operations
+export const OPERATION_STATUSES = Object.freeze({
+  PENDING: 'pending',
+  RETRYING: 'retrying',
+  FAILED: 'failed',
+} as const);
+
+export type OperationType = typeof OPERATION_TYPES[keyof typeof OPERATION_TYPES];
+export type OperationStatus = typeof OPERATION_STATUSES[keyof typeof OPERATION_STATUSES];

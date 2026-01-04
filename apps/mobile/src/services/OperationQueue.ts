@@ -4,7 +4,7 @@ import { QueuedOperation, OperationType, ResourceType, BookOperationPayload, Aut
 import { Alert } from 'react-native';
 import i18n from '../i18n';
 import { databaseService } from './database/DatabaseService';
-import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
+import { mobileHooks, MOBILE_EVENTS, OPERATION_STATUSES } from './hooks/mobileHooks';
 
 const QUEUE_STORAGE_KEY = '@operation_queue';
 const MAX_QUEUE_SIZE = 100;
@@ -119,7 +119,7 @@ export class OperationQueue {
       timestamp: Date.now(),
       retryCount: 0,
       maxRetries,
-      status: 'pending',
+      status: OPERATION_STATUSES.PENDING,
     };
 
     this.queue.push(operation);
@@ -156,7 +156,7 @@ export class OperationQueue {
    * Get all pending operations
    */
   getPendingOperations(): QueuedOperation[] {
-    return this.queue.filter(op => op.status === 'pending' || op.status === 'retrying');
+    return this.queue.filter(op => op.status === OPERATION_STATUSES.PENDING || op.status === OPERATION_STATUSES.RETRYING);
   }
 
   /**
@@ -164,9 +164,9 @@ export class OperationQueue {
    */
   getProcessableOperations(): QueuedOperation[] {
     return this.queue.filter(op => 
-      op.status === 'pending' || 
-      op.status === 'retrying' ||
-      (op.status === 'failed' && op.retryCount < op.maxRetries)
+      op.status === OPERATION_STATUSES.PENDING || 
+      op.status === OPERATION_STATUSES.RETRYING ||
+      (op.status === OPERATION_STATUSES.FAILED && op.retryCount < op.maxRetries)
     );
   }
 
@@ -206,7 +206,7 @@ export class OperationQueue {
           operation.retryCount++;
 
           if (operation.retryCount >= operation.maxRetries) {
-            operation.status = 'failed';
+            operation.status = OPERATION_STATUSES.FAILED;
             mobileHooks.emit(MOBILE_EVENTS.QUEUE.FAILED, {
               operationId: operation.id,
               type: operation.type,
@@ -216,7 +216,7 @@ export class OperationQueue {
               reason: 'max_retries_exceeded'
             });
           } else {
-            operation.status = 'retrying';
+            operation.status = OPERATION_STATUSES.RETRYING;
             mobileHooks.emit(MOBILE_EVENTS.QUEUE.RETRY, {
               operationId: operation.id,
               type: operation.type,
@@ -263,7 +263,7 @@ export class OperationQueue {
     } catch (error) {
       // Mark as failed or pending for retry
       if (operation.resource === 'book' && operation.payload?.id) {
-        const status = operation.retryCount >= operation.maxRetries - 1 ? 'failed' : 'pending';
+        const status = operation.retryCount >= operation.maxRetries - 1 ? OPERATION_STATUSES.FAILED : OPERATION_STATUSES.PENDING;
         await this.updateBookSyncStatus(String(operation.payload.id), status);
       }
       throw error;
@@ -285,7 +285,13 @@ export class OperationQueue {
         [status, bookId, bookId]
       );
     } catch (error) {
-      console.error('Failed to update book sync status:', error);
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+        operation: 'update_book_sync_status',
+        error: error instanceof Error ? error.message : String(error),
+        bookId,
+        status,
+        source: 'OperationQueue'
+      });
     }
   }
 
@@ -293,7 +299,7 @@ export class OperationQueue {
    * Get failed operations for cleanup service access (Phase 5 fix)
    */
   getFailedOperations(): QueuedOperation[] {
-    return this.queue.filter(op => op.status === 'failed');
+    return this.queue.filter(op => op.status === OPERATION_STATUSES.FAILED);
   }
 
   /**
@@ -301,8 +307,8 @@ export class OperationQueue {
    */
   async retryOperation(operationId: string): Promise<void> {
     const operation = this.queue.find(op => op.id === operationId);
-    if (operation && operation.status === 'failed') {
-      operation.status = 'pending';
+    if (operation && operation.status === OPERATION_STATUSES.FAILED) {
+      operation.status = OPERATION_STATUSES.PENDING;
       operation.retryCount = 0; // Reset retry count for manual retry
       await this.persist();
     }
@@ -314,7 +320,7 @@ export class OperationQueue {
   async retryAllFailedOperations(): Promise<void> {
     const failedOps = this.getFailedOperations();
     for (const operation of failedOps) {
-      operation.status = 'pending';
+      operation.status = OPERATION_STATUSES.PENDING;
       operation.retryCount = 0; // Reset retry count for manual retry
     }
     await this.persist();

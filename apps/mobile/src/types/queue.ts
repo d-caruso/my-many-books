@@ -1,7 +1,8 @@
 import type { Book, Author, Category } from './index';
+import type { OperationType, OperationStatus } from '../services/hooks/events';
+import { RESOURCE_TYPES } from '@my-many-books/shared-types';
 
-export type OperationType = 'CREATE' | 'UPDATE' | 'DELETE';
-export type OperationStatus = 'pending' | 'retrying' | 'failed';
+export type { OperationType, OperationStatus };
 export type ResourceType = 'book' | 'author' | 'category' | 'user' | 'settings';
 
 // Base interface for all operation payloads

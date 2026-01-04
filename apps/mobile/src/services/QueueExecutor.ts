@@ -10,6 +10,7 @@ import { Book } from '@my-many-books/shared-types';
 import { Author } from '@my-many-books/shared-types';
 import { Category } from '@my-many-books/shared-types';
 import { CreatePayload, UpdatePayload } from './handlers/types/HandlerTypes';
+import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/events';
 
 /**
  * Execute queued operation based on resource type and operation type
@@ -18,16 +19,16 @@ export async function executeOperation(operation: QueuedOperation): Promise<void
   const { type, resource, payload } = operation;
 
   switch (resource) {
-    case 'book':
+    case RESOURCE_TYPES.BOOK:
       await executeBookOperation(type, payload);
       break;
-    case 'author':
+    case RESOURCE_TYPES.AUTHOR:
       await executeAuthorOperation(type, payload);
       break;
-    case 'category':
+    case RESOURCE_TYPES.CATEGORY:
       await executeCategoryOperation(type, payload);
       break;
-    case 'user':
+    case RESOURCE_TYPES.USER:
       await executeUserOperation(type, payload);
       break;
     case 'settings':
@@ -40,13 +41,13 @@ export async function executeOperation(operation: QueuedOperation): Promise<void
 
 async function executeBookOperation(type: string, payload: CreatePayload<Book> | UpdatePayload<Book> | { id: string }): Promise<void> {
   switch (type) {
-    case 'CREATE':
+    case OPERATION_TYPES.CREATE:
       await executeCreateBook(payload as CreatePayload<Book>);
       break;
-    case 'UPDATE':
+    case OPERATION_TYPES.UPDATE:
       await executeUpdateBook(payload as UpdatePayload<Book> & { id: string });
       break;
-    case 'DELETE':
+    case OPERATION_TYPES.DELETE:
       await executeDeleteBook(payload as { id: string });
       break;
     default:
@@ -174,13 +175,13 @@ async function executeUserOperation(_type: string, _payload: unknown): Promise<v
 
 async function executeAuthorOperation(type: string, payload: CreatePayload<Author> | UpdatePayload<Author> | { id: string }): Promise<void> {
   switch (type) {
-    case 'CREATE':
+    case OPERATION_TYPES.CREATE:
       await executeCreateAuthor(payload as CreatePayload<Author>);
       break;
-    case 'UPDATE':
+    case OPERATION_TYPES.UPDATE:
       await executeUpdateAuthor(payload as UpdatePayload<Author> & { id: string });
       break;
-    case 'DELETE':
+    case OPERATION_TYPES.DELETE:
       await executeDeleteAuthor(payload as { id: string });
       break;
     default:
@@ -190,13 +191,13 @@ async function executeAuthorOperation(type: string, payload: CreatePayload<Autho
 
 async function executeCategoryOperation(type: string, payload: CreatePayload<Category> | UpdatePayload<Category> | { id: string }): Promise<void> {
   switch (type) {
-    case 'CREATE':
+    case OPERATION_TYPES.CREATE:
       await executeCreateCategory(payload as CreatePayload<Category>);
       break;
-    case 'UPDATE':
+    case OPERATION_TYPES.UPDATE:
       await executeUpdateCategory(payload as UpdatePayload<Category> & { id: string });
       break;
-    case 'DELETE':
+    case OPERATION_TYPES.DELETE:
       await executeDeleteCategory(payload as { id: string });
       break;
     default:

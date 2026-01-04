@@ -8,6 +8,7 @@ import { useNetworkState } from '@/hooks/useNetworkState';
 import { v4 as uuidv4 } from 'uuid';
 import { resolveConflict as resolveBookConflict } from '@/utils/conflictDetection';
 import { useTranslation } from 'react-i18next';
+import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
 
 interface UseBooksState {
   books: Book[];
@@ -75,7 +76,11 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // Fetch fresh data from server
       await loadBooks();
     } catch (error) {
-      console.error('Failed to initialize database:', error);
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+        operation: 'initialize_database',
+        error: error instanceof Error ? error.message : String(error),
+        source: 'useBooks_initializeDatabase'
+      });
       setError(t('database.initializationFailed'));
     }
   };
@@ -86,7 +91,11 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       const dbBooks = await bookRepository.findAll();
       setBooks(dbBooks);
     } catch (error) {
-      console.error('Failed to load books from database:', error);
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+        operation: 'load_books_from_db',
+        error: error instanceof Error ? error.message : String(error),
+        source: 'useBooks_loadBooksFromDB'
+      });
     }
   };
 
@@ -208,7 +217,8 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         // Non-retriable error - remove optimistic book
         await bookRepository.hardDelete(tempId);
         setBooks(prev => prev.filter(book => book._tempId !== tempId));
-        throw new Error(err.response?.data?.message || t('books.createFailed'));
+        console.error('Book creation error:', err.response?.data?.message || err.message);
+        throw new Error(t('books.createFailed'));
       }
     }
   }, []);
@@ -316,7 +326,8 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         }
       }
 
-      throw new Error(err.response?.data?.message || t('books.updateFailed'));
+      console.error('Book update error:', err.response?.data?.message || err.message);
+      throw new Error(t('books.updateFailed'));
     }
   }, [books]);
 
@@ -354,7 +365,8 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
           );
           await loadBooksFromDB(); // Reload to restore the book
         }
-        throw new Error(err.response?.data?.message || t('books.deleteFailed'));
+        console.error('Book deletion error:', err.response?.data?.message || err.message);
+        throw new Error(t('books.deleteFailed'));
       }
     }
   }, []);
@@ -391,7 +403,14 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         setBooks(prev => prev.map(book =>
           book.id == id ? { ...book, _syncStatus: 'failed' } : book
         ));
-        throw new Error(err.response?.data?.message || t('books.updateStatusFailed'));
+        mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+          operation: OPERATION_TYPES.UPDATE,
+          resource: RESOURCE_TYPES.BOOK,
+          error: err.response?.data?.message || err.message,
+          statusCode: err.response?.status,
+          source: 'useBooks_updateBookStatus'
+        });
+        throw new Error(t('books.updateStatusFailed'));
       }
     }
   }, []);

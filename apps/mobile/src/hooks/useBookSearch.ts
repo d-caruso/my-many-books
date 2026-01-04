@@ -4,6 +4,7 @@ import { bookAPI } from '@/services/api';
 import { bookRepository } from '@/services/database/BookRepository';
 import { useNetworkState } from './useNetworkState';
 import { useTranslation } from 'react-i18next';
+import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
 
 interface BookSearchState {
   books: Book[];
@@ -113,8 +114,15 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
       setLastFilters(filters);
 
     } catch (err: unknown) {
-      console.error('Book search failed:', err);
-      setError(err.response?.data?.message || t('search.searchFailed'));
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+        operation: 'search',
+        resource: RESOURCE_TYPES.BOOK,
+        error: err.response?.data?.message || err.message,
+        statusCode: err.response?.status,
+        query,
+        source: 'useBookSearch_searchBooks'
+      });
+      setError(t('search.searchFailed'));
 
       // Fallback to offline search on network error
       try {
@@ -155,8 +163,15 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
       const book = await bookAPI.searchByISBN(isbn);
       return book;
     } catch (err: unknown) {
-      console.error('ISBN search failed:', err);
-      setError(err.response?.data?.message || t('search.bookNotFound'));
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+        operation: 'isbn_search',
+        resource: RESOURCE_TYPES.BOOK,
+        error: err.response?.data?.message || err.message,
+        statusCode: err.response?.status,
+        isbn,
+        source: 'useBookSearch_searchByISBN'
+      });
+      setError(t('search.bookNotFound'));
       return null;
     } finally {
       setLoading(false);
