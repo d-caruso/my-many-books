@@ -16,13 +16,24 @@ jest.mock('../hooks/mobileHooks', () => ({
   MOBILE_EVENTS: {
     QUEUE: {
       ENQUEUE: 'queue.enqueue',
+      DEQUEUE: 'queue.dequeue',
+      PROCESS: {
+        START: 'queue.process.start',
+        COMPLETE: 'queue.process.complete',
+      },
       RETRY: 'queue.retry',
       FAILED: 'queue.failed',
+      CLEARED: 'queue.cleared',
       SIZE_CHANGED: 'queue.size_changed',
     },
     ERROR: {
       STORAGE: 'error.storage',
     },
+  },
+  OPERATION_STATUSES: {
+    PENDING: 'pending',
+    RETRYING: 'retrying',
+    FAILED: 'failed',
   },
 }));
 
@@ -40,7 +51,26 @@ jest.mock('../i18n', () => ({
 // Mock database service
 jest.mock('../database/DatabaseService', () => ({
   databaseService: {
-    query: jest.fn(),
+    executeQuery: jest.fn(),
+  },
+}));
+
+// Mock the hooks/events module to include operation statuses
+jest.mock('../hooks/events', () => ({
+  OPERATION_STATUSES: {
+    PENDING: 'pending',
+    RETRYING: 'retrying',
+    FAILED: 'failed',
+  },
+  OPERATION_TYPES: {
+    CREATE: 'CREATE',
+    UPDATE: 'UPDATE',
+    DELETE: 'DELETE',
+  },
+  RESOURCE_TYPES: {
+    BOOK: 'book',
+    AUTHOR: 'author',
+    CATEGORY: 'category',
   },
 }));
 
@@ -424,6 +454,194 @@ describe('OperationQueue Hookey Integration', () => {
       
       // Verify hooks were called during processing
       expect(mockMobileHooks.emit).toHaveBeenCalled();
+    });
+  });
+
+  describe('new queue event integration', () => {
+    beforeEach(async () => {
+      await queue.initialize();
+      mockMobileHooks.emit.mockClear();
+    });
+
+    it('should emit QUEUE.DEQUEUE event when operation is removed', async () => {
+      // First add an operation
+      const operationId = await queue.enqueue('create', 'book', {
+        id: 'book-123',
+        title: 'Test Book'
+      });
+
+      mockMobileHooks.emit.mockClear(); // Clear enqueue events
+
+      // Remove the operation
+      await queue.dequeue(operationId);
+
+      expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+        MOBILE_EVENTS.QUEUE.DEQUEUE,
+        expect.objectContaining({
+          operationId: operationId,
+          type: 'create',
+          resource: 'book',
+          queueSize: 0,
+          remainingOperations: 0
+        })
+      );
+    });
+
+    it('should emit QUEUE.CLEARED event when queue is cleared', async () => {
+      // Add some operations
+      await queue.enqueue('create', 'book', { title: 'Book 1' });
+      await queue.enqueue('create', 'author', { name: 'Author 1' });
+      
+      mockMobileHooks.emit.mockClear(); // Clear enqueue events
+
+      // Clear the queue
+      await queue.clear();
+
+      expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+        MOBILE_EVENTS.QUEUE.CLEARED,
+        expect.objectContaining({
+          clearedOperations: 2,
+          queueSize: 0,
+          timestamp: expect.any(String),
+          reason: 'manual_clear'
+        })
+      );
+    });
+
+    it('should emit QUEUE.PROCESS.START and QUEUE.PROCESS.COMPLETE events during processing', async () => {
+      // Add operations
+      await queue.enqueue('create', 'book', { title: 'Book 1' });
+      await queue.enqueue('create', 'author', { name: 'Author 1' });
+
+      // Mock successful API executor
+      const mockApiExecutor = jest.fn().mockResolvedValue({ success: true });
+
+      mockMobileHooks.emit.mockClear(); // Clear enqueue events
+
+      // Process the queue
+      await queue.processQueue(mockApiExecutor);
+
+      // Check for PROCESS.START event
+      const startCalls = mockMobileHooks.emit.mock.calls.filter(
+        ([eventName]) => eventName === MOBILE_EVENTS.QUEUE.PROCESS.START
+      );
+      expect(startCalls).toHaveLength(1);
+      expect(startCalls[0][1]).toEqual(expect.objectContaining({
+        queueSize: expect.any(Number),
+        processableOperations: expect.any(Number),
+        timestamp: expect.any(String),
+        sessionId: expect.stringMatching(/^process-\d+$/)
+      }));
+
+      // Check for PROCESS.COMPLETE event
+      const completeCalls = mockMobileHooks.emit.mock.calls.filter(
+        ([eventName]) => eventName === MOBILE_EVENTS.QUEUE.PROCESS.COMPLETE
+      );
+      expect(completeCalls).toHaveLength(1);
+      expect(completeCalls[0][1]).toEqual(expect.objectContaining({
+        queueSize: expect.any(Number),
+        processedOperations: expect.any(Number),
+        failedOperations: expect.any(Number),
+        processingDuration: expect.any(Number),
+        timestamp: expect.any(String),
+        sessionId: expect.stringMatching(/^process-\d+$/)
+      }));
+    });
+
+    it('should track processing metrics correctly', async () => {
+      // Add operations with mixed success/failure
+      await queue.enqueue('create', 'book', { title: 'Book 1' }, 1);
+      await queue.enqueue('create', 'book', { title: 'Book 2' }, 1);
+
+      // Mock API executor with one success, one failure
+      let callCount = 0;
+      const mockApiExecutor = jest.fn().mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve({ success: true });
+        } else {
+          return Promise.reject(new Error('API Error'));
+        }
+      });
+
+      mockMobileHooks.emit.mockClear();
+
+      // Process the queue
+      await queue.processQueue(mockApiExecutor);
+
+      // Check PROCESS.COMPLETE event has correct metrics
+      const completeCalls = mockMobileHooks.emit.mock.calls.filter(
+        ([eventName]) => eventName === MOBILE_EVENTS.QUEUE.PROCESS.COMPLETE
+      );
+      expect(completeCalls).toHaveLength(1);
+      expect(completeCalls[0][1]).toEqual(expect.objectContaining({
+        processedOperations: 1,
+        failedOperations: 1,
+        processingDuration: expect.any(Number)
+      }));
+    });
+  });
+
+  describe('queue health monitoring events', () => {
+    beforeEach(async () => {
+      await queue.initialize();
+      mockMobileHooks.emit.mockClear();
+    });
+
+    it('should emit health metrics when getQueueHealth is called', () => {
+      const health = queue.getQueueHealth();
+
+      expect(health).toEqual(expect.objectContaining({
+        total: expect.any(Number),
+        pending: expect.any(Number),
+        retrying: expect.any(Number),
+        failed: expect.any(Number),
+        healthScore: expect.any(Number),
+        isHealthy: expect.any(Boolean)
+      }));
+
+      // Verify health metrics event was emitted
+      expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+        MOBILE_EVENTS.QUEUE.SIZE_CHANGED,
+        expect.objectContaining({
+          total: expect.any(Number),
+          healthScore: expect.any(Number),
+          isHealthy: expect.any(Boolean),
+          status: expect.stringMatching(/^(healthy|degraded)$/),
+          timestamp: expect.any(String)
+        })
+      );
+    });
+
+    it('should monitor queue health and emit warnings for stale operations', () => {
+      // Mock an old operation (simulate stale)
+      const staleTimestamp = Date.now() - (2 * 60 * 60 * 1000); // 2 hours ago
+      queue['queue'] = [{
+        id: 'old-op',
+        type: 'create',
+        resource: 'book',
+        payload: { title: 'Old Book' },
+        timestamp: staleTimestamp,
+        retryCount: 0,
+        maxRetries: 3,
+        status: 'pending'
+      }];
+
+      mockMobileHooks.emit.mockClear();
+
+      // Monitor health
+      queue.monitorQueueHealth();
+
+      // Should emit warning about stale operations
+      const staleCalls = mockMobileHooks.emit.mock.calls.filter(
+        ([_, payload]) => payload.status === 'stale_operations'
+      );
+      expect(staleCalls).toHaveLength(1);
+      expect(staleCalls[0][1]).toEqual(expect.objectContaining({
+        status: 'stale_operations',
+        staleDuration: expect.any(Number),
+        warning: 'operations_aging'
+      }));
     });
   });
 });
