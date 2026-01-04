@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/increase-db-pool, feature/full-text-search-and-sorting ]
+    branches: [ main, develop, feature/architecture-improvements, feature/mobile-hookey-integration ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, feature/increase-db-pool, feature/full-text-search-and-sorting ]
+    branches: [ main, develop, feature/architecture-improvements, feature/mobile-hookey-integration ]
   workflow_dispatch:
     inputs:
       run_tests:
