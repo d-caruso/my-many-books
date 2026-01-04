@@ -29,7 +29,7 @@ interface AuthorSearchFilters {
   nationality?: string;
   userId?: number;
   updatedSince?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
