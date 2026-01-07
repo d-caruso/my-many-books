@@ -31,12 +31,14 @@ describe('API Queue Integration', () => {
 
   it('should verify isRetriableError detects network errors', () => {
     const { isRetriableError } = require('../../src/services/QueueExecutor');
+    const { ApiError } = require('../../src/types/errors');
 
-    // Network errors are retriable
-    expect(isRetriableError(new Error('Network request failed'))).toBe(true);
-    expect(isRetriableError({ message: 'timeout' })).toBe(true);
-    expect(isRetriableError({ status: 408 })).toBe(true);
-    expect(isRetriableError({ status: 500 })).toBe(true);
+    // Network errors are retriable via ApiError
+    const { ErrorCode } = require('../../src/types/errors');
+    expect(isRetriableError(new ApiError(ErrorCode.NETWORK_FAILED, 'Network request failed', undefined, true))).toBe(true);
+    expect(isRetriableError(new ApiError(ErrorCode.NETWORK_TIMEOUT, 'timeout', undefined, true))).toBe(true);
+    expect(isRetriableError(new ApiError(ErrorCode.NETWORK_TIMEOUT, 'Request timeout', undefined, true))).toBe(true);
+    expect(isRetriableError(new ApiError(ErrorCode.HTTP_SERVER_ERROR, 'Server error', 500, true))).toBe(true);
   });
 
   it('should verify isRetriableError rejects validation errors', () => {

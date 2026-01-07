@@ -1,6 +1,7 @@
 import { executeOperation, isRetriableError } from '../QueueExecutor';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
-import { OPERATION_STATUSES } from '../hooks/events';
+import { OPERATION_STATUSES } from '../hooks/eventsSchema';
+import { ApiError, ErrorCode } from '../../types/errors';
 import type { QueuedOperation } from '../../types/queue';
 
 // Mock all external dependencies
@@ -24,23 +25,16 @@ jest.mock('../hooks/mobileHooks', () => ({
   },
 }));
 
-jest.mock('../hooks/events', () => ({
-  OPERATION_STATUSES: {
-    PENDING: 'pending',
-    RETRYING: 'retrying',
-    FAILED: 'failed',
-  },
-  OPERATION_TYPES: {
-    CREATE: 'CREATE',
-    UPDATE: 'UPDATE',
-    DELETE: 'DELETE',
-  },
-  RESOURCE_TYPES: {
-    BOOK: 'book',
-    AUTHOR: 'author',
-    CATEGORY: 'category',
-  },
-}));
+jest.mock('../hooks/eventsSchema', () => {
+  // Import the actual constants
+  const actualEventsSchema = jest.requireActual('../hooks/eventsSchema');
+  
+  return {
+    OPERATION_STATUSES: actualEventsSchema.OPERATION_STATUSES,
+    OPERATION_TYPES: actualEventsSchema.OPERATION_TYPES,
+    RESOURCE_TYPES: actualEventsSchema.RESOURCE_TYPES,
+  };
+});
 
 // Mock API client
 jest.mock('../api', () => ({
@@ -292,7 +286,7 @@ describe('QueueExecutor Hookey Integration', () => {
 
   describe('isRetriableError with hookey integration', () => {
     it('should emit EXECUTOR.RETRY_SCHEDULED for retriable errors within retry limit', () => {
-      const error = new Error('Network request failed');
+      const error = new ApiError(ErrorCode.NETWORK_FAILED, 'Network request failed', undefined, true);
       const operationId = 'test-op-456';
       const currentRetryCount = 1;
       const maxRetries = 3;
@@ -311,7 +305,7 @@ describe('QueueExecutor Hookey Integration', () => {
         retryCount: 1,
         maxRetries: 3,
         nextRetryIn: 2000, // 2^1 * 1000 = 2s
-        retryReason: 'network_request_failed',
+        retryReason: 'structured_api_error',
         error: 'Network request failed',
         timestamp: expect.any(String),
         backoffStrategy: 'exponential'
@@ -319,7 +313,7 @@ describe('QueueExecutor Hookey Integration', () => {
     });
 
     it('should emit EXECUTOR.MAX_RETRIES_REACHED when retry limit exceeded', () => {
-      const error = new Error('Persistent timeout');
+      const error = new ApiError(ErrorCode.NETWORK_TIMEOUT, 'Persistent timeout', undefined, true);
       const operationId = 'test-op-789';
       const currentRetryCount = 3;
       const maxRetries = 3;
@@ -338,7 +332,7 @@ describe('QueueExecutor Hookey Integration', () => {
         retryCount: 3,
         maxRetries: 3,
         finalError: 'Persistent timeout',
-        retryReason: 'timeout_error',
+        retryReason: 'structured_api_error',
         timestamp: expect.any(String),
         abandoned: true
       }));
@@ -374,7 +368,7 @@ describe('QueueExecutor Hookey Integration', () => {
     });
 
     it('should not emit events when operation details not provided', () => {
-      const error = new Error('Network request failed');
+      const error = new ApiError(ErrorCode.NETWORK_FAILED, 'Network request failed', undefined, true);
       
       const result = isRetriableError(error); // No operation details
       
@@ -384,12 +378,12 @@ describe('QueueExecutor Hookey Integration', () => {
 
     it('should categorize different error types correctly', () => {
       const testCases = [
-        { error: new Error('Network request failed'), expectedReason: 'network_request_failed' },
-        { error: new Error('timeout'), expectedReason: 'timeout_error' },
-        { error: new Error('offline'), expectedReason: 'offline_error' },
-        { error: new Error('HTTP 500: Server Error'), expectedReason: 'server_error_5xx' },
-        { error: new Error('HTTP 408: Request Timeout'), expectedReason: 'request_timeout' },
-        { error: new Error('HTTP 429: Too Many Requests'), expectedReason: 'rate_limit_exceeded' },
+        { error: new ApiError(ErrorCode.NETWORK_FAILED, 'Network request failed', undefined, true), expectedReason: 'structured_api_error' },
+        { error: new ApiError(ErrorCode.NETWORK_TIMEOUT, 'timeout', undefined, true), expectedReason: 'structured_api_error' },
+        { error: new ApiError(ErrorCode.NETWORK_OFFLINE, 'offline', undefined, true), expectedReason: 'structured_api_error' },
+        { error: new Error('HTTP 500: Server Error'), expectedReason: 'server_error_message' },
+        { error: new Error('HTTP 408: Request Timeout'), expectedReason: 'request_timeout_message' },
+        { error: new Error('HTTP 429: Too Many Requests'), expectedReason: 'rate_limit_message' },
       ];
 
       testCases.forEach(({ error, expectedReason }, index) => {

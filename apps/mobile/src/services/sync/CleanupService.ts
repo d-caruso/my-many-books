@@ -1,6 +1,7 @@
 import { databaseService } from '../database/DatabaseService';
 import { operationQueue } from '../OperationQueue';
 import { idMappingService } from './IDMappingService';
+import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 
 const MAX_OPERATION_AGE_DAYS = 7; // Clean up operations older than 7 days
 const MAX_TEMP_ID_AGE_DAYS = 30; // Clean up temp IDs older than 30 days
@@ -24,7 +25,12 @@ export class CleanupService {
     deletedMappings: number;
     deletedOperations: number;
   }> {
-    console.log('Starting cleanup of orphaned temp IDs...');
+    // Emit cleanup start event for orphaned data
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.START, {
+      operation: 'cleanup_orphaned',
+      stage: 'orphaned_temp_ids',
+      timestamp: new Date().toISOString()
+    });
 
     let deletedBooks = 0;
     let deletedMappings = 0;
@@ -37,7 +43,16 @@ export class CleanupService {
 
     for (const op of failedOps) {
       if (op.timestamp < cutoffDate) {
-        console.log(`Removing old failed operation: ${op.id} (age: ${Math.floor((Date.now() - op.timestamp) / (24 * 60 * 60 * 1000))} days)`);
+        const ageInDays = Math.floor((Date.now() - op.timestamp) / (24 * 60 * 60 * 1000));
+        
+        mobileHooks.emit(MOBILE_EVENTS.QUEUE.DEQUEUE, {
+          operationId: op.id,
+          reason: 'age_exceeded',
+          ageInDays: ageInDays,
+          message: `Removing old failed operation: ${op.id} (age: ${ageInDays} days)`,
+          timestamp: new Date().toISOString()
+        });
+        
         await operationQueue.dequeue(op.id);
         deletedOperations++;
       }
@@ -63,12 +78,25 @@ export class CleanupService {
       );
 
       if (ageInDays > MAX_TEMP_ID_AGE_DAYS) {
-        console.log(`Deleting orphaned book: ${book.id} (age: ${ageInDays} days)`);
+        mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.START, {
+          bookId: book.id,
+          reason: 'orphaned_cleanup',
+          ageInDays: ageInDays,
+          message: `Deleting orphaned book: ${book.id} (age: ${ageInDays} days)`,
+          timestamp: new Date().toISOString()
+        });
 
         // Delete book and related records
         await db.runAsync('DELETE FROM books WHERE id = ?', [book.id]);
         await db.runAsync('DELETE FROM book_authors WHERE book_id = ?', [book.id]);
         await db.runAsync('DELETE FROM book_categories WHERE book_id = ?', [book.id]);
+        
+        mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.SUCCESS, {
+          bookId: book.id,
+          reason: 'orphaned_cleanup',
+          ageInDays: ageInDays,
+          timestamp: new Date().toISOString()
+        });
 
         deletedBooks++;
       }
@@ -95,13 +123,40 @@ export class CleanupService {
 
       // If book doesn't exist and mapping is old, remove it
       if (!bookExists && ageInDays > MAX_TEMP_ID_AGE_DAYS) {
-        console.log(`Removing stale ID mapping: ${mapping.temp_id} (age: ${ageInDays} days)`);
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.START, {
+          operation: 'remove_stale_mapping',
+          tempId: mapping.temp_id,
+          ageInDays: ageInDays,
+          message: `Removing stale ID mapping: ${mapping.temp_id} (age: ${ageInDays} days)`,
+          timestamp: new Date().toISOString()
+        });
+        
         await db.runAsync('DELETE FROM id_mappings WHERE temp_id = ?', [mapping.temp_id]);
+        
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
+          operation: 'remove_stale_mapping',
+          tempId: mapping.temp_id,
+          timestamp: new Date().toISOString()
+        });
+        
         deletedMappings++;
       }
     }
 
-    console.log(`Cleanup complete: ${deletedBooks} books, ${deletedMappings} mappings, ${deletedOperations} operations`);
+    // Emit cleanup complete event for orphaned data
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.CLEANUP.COMPLETE, {
+      operation: 'cleanup_orphaned',
+      stage: 'orphaned_temp_ids',
+      results: { deletedBooks, deletedMappings, deletedOperations },
+      timestamp: new Date().toISOString()
+    });
+    
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.COMPLETE, {
+      operation: 'cleanup_orphaned',
+      stage: 'orphaned_temp_ids',
+      results: { deletedBooks, deletedMappings, deletedOperations },
+      timestamp: new Date().toISOString()
+    });
 
     return { deletedBooks, deletedMappings, deletedOperations };
   }
@@ -119,15 +174,34 @@ export class CleanupService {
     deletedMappings: number;
     deletedOperations: number;
   }> {
-    console.log('Performing full cleanup...');
+    const cleanupSessionId = `cleanup-${Date.now()}`;
+    
+    // Emit cleanup start event
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.START, {
+      sessionId: cleanupSessionId,
+      operation: 'cleanup',
+      stage: 'full_cleanup',
+      timestamp: new Date().toISOString()
+    });
 
     // Step 1: Cleanup orphaned data
-    const counts = await this.cleanupOrphanedTempIds();
+    let counts = { deletedBooks: 0, deletedMappings: 0, deletedOperations: 0 };
+    try {
+      counts = await this.cleanupOrphanedTempIds();
+    } catch (error) {
+      mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+        sessionId: cleanupSessionId,
+        operation: 'cleanup_orphaned_temp_ids',
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
+      // Continue with default counts
+    }
 
     // Step 2: Cleanup failed operations from queue (only permanently failed ones)
-    const { operationQueue } = await import('../OperationQueue');
     const failedOps = operationQueue.getFailedOperations();
     let permanentlyFailedCount = 0;
+    const cutoffDate = Date.now() - MAX_OPERATION_AGE_DAYS * 24 * 60 * 60 * 1000;
     
     for (const op of failedOps) {
       // Only remove operations that are:
@@ -137,7 +211,17 @@ export class CleanupService {
       const isStale = op.timestamp < cutoffDate;
       
       if (isPermanentlyFailed && isStale) {
-        console.log(`Removing permanently failed operation: ${op.id} (retries: ${op.retries || 0}, age: ${Math.floor((Date.now() - op.timestamp) / (24 * 60 * 60 * 1000))} days)`);
+        const ageInDays = Math.floor((Date.now() - op.timestamp) / (24 * 60 * 60 * 1000));
+        
+        mobileHooks.emit(MOBILE_EVENTS.QUEUE.DEQUEUE, {
+          operationId: op.id,
+          reason: 'permanently_failed',
+          retries: op.retries || 0,
+          ageInDays: ageInDays,
+          message: `Removing permanently failed operation: ${op.id} (retries: ${op.retries || 0}, age: ${ageInDays} days)`,
+          timestamp: new Date().toISOString()
+        });
+        
         await operationQueue.dequeue(op.id);
         permanentlyFailedCount++;
       }
@@ -152,14 +236,36 @@ export class CleanupService {
       try {
         await this.updateForeignKeysForBook(mapping.tempId, mapping.serverId);
       } catch (error) {
-        console.error(`Failed to update foreign keys for ${mapping.tempId}:`, error);
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+          operation: 'update_foreign_keys',
+          tempId: mapping.tempId,
+          serverId: mapping.serverId,
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString()
+        });
       }
     }
 
     // Step 4: Handle edge case - books marked as 'pending' but with failed operations
     await this.fixInconsistentSyncStates();
 
-    console.log('Full cleanup complete');
+    // Emit cleanup complete events
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.CLEANUP.COMPLETE, {
+      sessionId: cleanupSessionId,
+      operation: 'cleanup',
+      stage: 'full_cleanup',
+      results: counts,
+      timestamp: new Date().toISOString()
+    });
+    
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.COMPLETE, {
+      sessionId: cleanupSessionId,
+      operation: 'cleanup',
+      stage: 'full_cleanup',
+      results: counts,
+      timestamp: new Date().toISOString()
+    });
+    
     return counts;
   }
 
@@ -175,7 +281,13 @@ export class CleanupService {
    * handles the actual foreign key updates in a transaction.
    */
   async updateForeignKeysForBook(bookId: string, serverId: number): Promise<void> {
-    console.log(`Updating foreign keys for book: ${bookId} (server ID: ${serverId})`);
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.START, {
+      operation: 'update_foreign_keys',
+      bookId: bookId,
+      serverId: serverId,
+      message: `Starting foreign key update for book: ${bookId} (server ID: ${serverId})`,
+      timestamp: new Date().toISOString()
+    });
 
     try {
       // Start transaction for atomicity
@@ -192,7 +304,14 @@ export class CleanupService {
         [bookId]
       );
 
-      console.log(`Found ${authorLinks.length} author links and ${categoryLinks.length} category links for book ${bookId}`);
+      mobileHooks.emit(MOBILE_EVENTS.SYNC.COMPLETE, {
+        operation: 'foreign_key_analysis',
+        bookId: bookId,
+        authorLinks: authorLinks.length,
+        categoryLinks: categoryLinks.length,
+        message: `Found ${authorLinks.length} author links and ${categoryLinks.length} category links for book ${bookId}`,
+        timestamp: new Date().toISOString()
+      });
 
       // Actually update foreign keys if needed (this was the missing piece!)
       // If any foreign key references are using old temp IDs, update them
@@ -212,29 +331,67 @@ export class CleanupService {
 
       // Clean up orphaned foreign key references
       if (orphanedAuthors.length > 0) {
-        console.log(`Cleaning up ${orphanedAuthors.length} orphaned author links`);
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.START, {
+          operation: 'cleanup_orphaned_links',
+          count: orphanedAuthors.length,
+          message: `Cleaning up ${orphanedAuthors.length} orphaned author links`,
+          timestamp: new Date().toISOString()
+        });
+        
         await databaseService.executeQuery(`
           DELETE FROM book_authors 
           WHERE book_id NOT IN (SELECT id FROM books WHERE _deleted = 0)
         `);
+        
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.SUCCESS, {
+          operation: 'cleanup_orphaned_links',
+          count: orphanedAuthors.length,
+          timestamp: new Date().toISOString()
+        });
       }
 
       if (orphanedCategories.length > 0) {
-        console.log(`Cleaning up ${orphanedCategories.length} orphaned category links`);
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.START, {
+          operation: 'cleanup_orphaned_links',
+          count: orphanedCategories.length,
+          message: `Cleaning up ${orphanedCategories.length} orphaned category links`,
+          timestamp: new Date().toISOString()
+        });
+        
         await databaseService.executeQuery(`
           DELETE FROM book_categories 
           WHERE book_id NOT IN (SELECT id FROM books WHERE _deleted = 0)
         `);
+        
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.SUCCESS, {
+          operation: 'cleanup_orphaned_links',
+          count: orphanedCategories.length,
+          timestamp: new Date().toISOString()
+        });
       }
 
       // Commit transaction
       await databaseService.executeQuery('COMMIT');
       
-      console.log(`Foreign keys updated and verified for book ${bookId}`);
+      mobileHooks.emit(MOBILE_EVENTS.SYNC.COMPLETE, {
+        operation: 'update_foreign_keys',
+        bookId: bookId,
+        serverId: serverId,
+        message: `Foreign keys updated and verified for book ${bookId}`,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       // Rollback on error
       await databaseService.executeQuery('ROLLBACK');
-      console.error(`Failed to update foreign keys for book ${bookId}:`, error);
+      
+      mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+        operation: 'update_foreign_keys',
+        bookId: bookId,
+        serverId: serverId,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
+      
       throw error;
     }
   }
@@ -247,7 +404,12 @@ export class CleanupService {
    * operation in the queue, or books marked as 'failed' but should be retried.
    */
   async fixInconsistentSyncStates(): Promise<void> {
-    console.log('Fixing inconsistent sync states...');
+    // Emit cleanup start event for sync state fixes
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.START, {
+      operation: 'fix_sync_states',
+      stage: 'inconsistent_states',
+      timestamp: new Date().toISOString()
+    });
 
     // Find books marked as 'pending' but with no operation in queue
     const pendingBooks = await databaseService.getAllAsync<{
@@ -260,7 +422,6 @@ export class CleanupService {
       WHERE _sync_status = 'pending'
     `);
 
-    const { operationQueue } = await import('../OperationQueue');
     const allOperations = operationQueue.getAllOperations();
 
     for (const book of pendingBooks) {
@@ -270,7 +431,15 @@ export class CleanupService {
       );
 
       if (!hasOperation) {
-        console.log(`Found book ${book.id} marked as pending but no operation in queue - marking as failed`);
+        // Emit validation failed event
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.VALIDATION_FAILED, {
+          resourceType: 'book',
+          resourceId: book.id,
+          validationType: 'sync_state_consistency',
+          issue: 'pending_without_operation',
+          action: 'marked_as_failed',
+          timestamp: new Date().toISOString()
+        });
         
         // Mark as failed since sync attempt is lost
         await databaseService.executeQuery(
@@ -299,14 +468,34 @@ export class CleanupService {
 
       // If book has server_id, it was successfully synced at some point
       if (book.server_id) {
-        console.log(`Book ${book.id} has server_id ${book.server_id} but marked as failed - correcting to synced`);
+        // Emit validation failed event for incorrect sync status
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.VALIDATION_FAILED, {
+          resourceType: 'book',
+          resourceId: book.id,
+          serverId: book.server_id,
+          validationType: 'sync_status_correction',
+          issue: 'failed_with_server_id',
+          action: 'corrected_to_synced',
+          timestamp: new Date().toISOString()
+        });
+        
         await databaseService.executeQuery(
           'UPDATE books SET _sync_status = ? WHERE id = ?',
           ['synced', book.id]
         );
       } else if (ageInDays < 1) {
         // Recent failures might be retryable - reset to pending for retry
-        console.log(`Recent failed book ${book.id} might be retryable - marking as pending`);
+        // Emit validation event for retry attempt
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.VALIDATION_FAILED, {
+          resourceType: 'book',
+          resourceId: book.id,
+          validationType: 'retry_eligibility',
+          issue: 'recent_failure',
+          action: 'reset_to_pending',
+          ageInDays,
+          timestamp: new Date().toISOString()
+        });
+        
         await databaseService.executeQuery(
           'UPDATE books SET _sync_status = ? WHERE id = ?',
           ['pending', book.id]
@@ -314,7 +503,12 @@ export class CleanupService {
       }
     }
 
-    console.log('Inconsistent sync states fixed');
+    // Emit cleanup complete event for sync state fixes
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.COMPLETE, {
+      operation: 'fix_sync_states',
+      stage: 'inconsistent_states',
+      timestamp: new Date().toISOString()
+    });
   }
 
   /**
@@ -353,7 +547,16 @@ export class CleanupService {
       )
     `);
 
-    console.log(`Data integrity check: ${orphanedAuthors.length} orphaned authors, ${orphanedCategories.length} orphaned categories, ${booksWithoutMapping.length} books without mapping`);
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.COMPLETE, {
+      operation: 'data_integrity_check',
+      results: {
+        orphanedAuthors: orphanedAuthors.length,
+        orphanedCategories: orphanedCategories.length,
+        booksWithoutMapping: booksWithoutMapping.length
+      },
+      message: `Data integrity check completed: ${orphanedAuthors.length} orphaned authors, ${orphanedCategories.length} orphaned categories, ${booksWithoutMapping.length} books without mapping`,
+      timestamp: new Date().toISOString()
+    });
 
     return {
       orphanedAuthors: orphanedAuthors.length,

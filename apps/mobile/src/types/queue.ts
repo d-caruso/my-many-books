@@ -1,5 +1,5 @@
 import type { Book, Author, Category } from './index';
-import type { OperationType, OperationStatus } from '../services/hooks/events';
+import type { OperationType, OperationStatus } from '../services/hooks/eventsSchema';
 import { RESOURCE_TYPES } from '@my-many-books/shared-types';
 
 export type { OperationType, OperationStatus };

@@ -4,7 +4,8 @@ import { QueuedOperation, OperationType, ResourceType, BookOperationPayload, Aut
 import { Alert } from 'react-native';
 import i18n from '../i18n';
 import { databaseService } from './database/DatabaseService';
-import { mobileHooks, MOBILE_EVENTS, OPERATION_STATUSES } from './hooks/mobileHooks';
+import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
+import { OPERATION_STATUSES } from './hooks/eventsSchema';
 
 const QUEUE_STORAGE_KEY = '@operation_queue';
 const MAX_QUEUE_SIZE = 100;

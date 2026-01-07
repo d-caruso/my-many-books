@@ -1,4 +1,5 @@
 import { databaseService } from '../database/DatabaseService';
+import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 
 
 /**
@@ -51,6 +52,15 @@ export class IDMappingService {
   ): Promise<void> {
     await this.initialize();
 
+    // Emit ID mapping start event
+    await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.START, {
+      tempId,
+      serverId,
+      resourceType,
+      operation: 'register',
+      timestamp: new Date().toISOString()
+    });
+
     // Update in-memory cache
     this.tempToServerMap.set(tempId, serverId);
     this.serverToTempMap.set(serverId, tempId);
@@ -65,8 +75,30 @@ export class IDMappingService {
       );
 
       console.log(`Registered ID mapping: ${tempId} → ${serverId} (${resourceType})`);
+      
+      // Emit ID mapping complete event
+      await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
+        tempId,
+        serverId,
+        resourceType,
+        operation: 'register',
+        success: true,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Failed to persist ID mapping:', error);
+      
+      // Emit ID mapping failed event  
+      await mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+        stage: 'id_mapping',
+        operation: 'register',
+        tempId,
+        serverId,
+        resourceType,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
+      
       throw error;
     }
   }
@@ -94,6 +126,13 @@ export class IDMappingService {
   async resolveForeignKeys(data: unknown): Promise<unknown> {
     await this.initialize();
 
+    // Emit ID mapping start event for resolution
+    await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.START, {
+      operation: 'resolve_foreign_keys',
+      dataType: typeof data,
+      timestamp: new Date().toISOString()
+    });
+
     if (!data || typeof data !== 'object') {
       return data;
     }
@@ -117,9 +156,30 @@ export class IDMappingService {
           // Replace temp ID with server ID
           resolved[key] = serverId;
           console.log(`Resolved foreign key: ${key}: ${value} → ${serverId}`);
+          
+          // Emit successful resolution event
+          await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
+            operation: 'resolve_foreign_key',
+            field: key,
+            tempId: value,
+            serverId: serverId,
+            success: true,
+            timestamp: new Date().toISOString()
+          });
         } else {
           // Keep temp ID if no mapping exists yet
           resolved[key] = value;
+          
+          // Emit unresolved ID event (not necessarily an error)
+          await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
+            operation: 'resolve_foreign_key',
+            field: key,
+            tempId: value,
+            serverId: null,
+            success: false,
+            reason: 'mapping_not_found',
+            timestamp: new Date().toISOString()
+          });
         }
       } else if (typeof value === 'object' && value !== null) {
         // Recursively resolve nested objects
@@ -129,6 +189,14 @@ export class IDMappingService {
       }
     }
 
+    // Final emit for completion of full resolution process
+    await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
+      operation: 'resolve_foreign_keys',
+      dataType: typeof data,
+      resolvedKeys: Object.keys(resolved).length,
+      timestamp: new Date().toISOString()
+    });
+    
     return resolved;
   }
 

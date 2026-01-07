@@ -4,7 +4,6 @@
 // ================================================================
 
 import { HookSystem, InMemoryHookStorage } from '@my-many-books/hookey';
-import { MOBILE_EVENTS } from './events';
 
 const isTestRuntime = (): boolean => {
   return __DEV__ || Boolean(process.env.JEST_WORKER_ID);
@@ -129,7 +128,7 @@ export const mobileHooks = {
 };
 
 // Export events for easy access
-export { MOBILE_EVENTS };
+export { MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_STATUSES } from './eventsSchema';
 
 // Export types
-export type { EventsTree } from './events';
+export type { EventsTree } from './eventsSchema';

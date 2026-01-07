@@ -9,33 +9,19 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 // Mock mobile hooks to capture emitted events
-jest.mock('../hooks/mobileHooks', () => ({
-  mobileHooks: {
-    emit: jest.fn().mockResolvedValue(undefined),
-  },
-  MOBILE_EVENTS: {
-    QUEUE: {
-      ENQUEUE: 'queue.enqueue',
-      DEQUEUE: 'queue.dequeue',
-      PROCESS: {
-        START: 'queue.process.start',
-        COMPLETE: 'queue.process.complete',
-      },
-      RETRY: 'queue.retry',
-      FAILED: 'queue.failed',
-      CLEARED: 'queue.cleared',
-      SIZE_CHANGED: 'queue.size_changed',
+jest.mock('../hooks/mobileHooks', () => {
+  // Import the actual event tree and constants
+  const actualMobileHooks = jest.requireActual('../hooks/mobileHooks');
+  
+  return {
+    mobileHooks: {
+      emit: jest.fn().mockResolvedValue(undefined),
     },
-    ERROR: {
-      STORAGE: 'error.storage',
-    },
-  },
-  OPERATION_STATUSES: {
-    PENDING: 'pending',
-    RETRYING: 'retrying',
-    FAILED: 'failed',
-  },
-}));
+    // Use the actual event tree instead of hard-coded strings
+    MOBILE_EVENTS: actualMobileHooks.MOBILE_EVENTS,
+    OPERATION_STATUSES: actualMobileHooks.OPERATION_STATUSES,
+  };
+});
 
 // Mock Alert and i18n to avoid React Native dependencies
 jest.mock('react-native', () => ({
@@ -55,24 +41,6 @@ jest.mock('../database/DatabaseService', () => ({
   },
 }));
 
-// Mock the hooks/events module to include operation statuses
-jest.mock('../hooks/events', () => ({
-  OPERATION_STATUSES: {
-    PENDING: 'pending',
-    RETRYING: 'retrying',
-    FAILED: 'failed',
-  },
-  OPERATION_TYPES: {
-    CREATE: 'CREATE',
-    UPDATE: 'UPDATE',
-    DELETE: 'DELETE',
-  },
-  RESOURCE_TYPES: {
-    BOOK: 'book',
-    AUTHOR: 'author',
-    CATEGORY: 'category',
-  },
-}));
 
 const mockMobileHooks = mobileHooks as jest.Mocked<typeof mobileHooks>;
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;

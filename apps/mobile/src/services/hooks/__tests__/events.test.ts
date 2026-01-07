@@ -1,4 +1,4 @@
-import { MOBILE_EVENTS } from '../events';
+import { MOBILE_EVENTS } from '../eventsSchema';
 
 describe('Mobile Events', () => {
   describe('Event Structure', () => {

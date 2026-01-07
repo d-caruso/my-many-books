@@ -8,6 +8,7 @@ import { operationQueue } from '../OperationQueue';
 import { executeOperation } from '../QueueExecutor';
 import { Book } from '../../types';
 import { hasBookConflict, hasAuthorConflict, hasCategoryConflict } from '../../utils/conflictDetection';
+import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 
 const LAST_SYNC_KEY = '@last_sync_timestamp';
 const SYNC_PAGE_SIZE = 50;
@@ -55,7 +56,11 @@ export class SyncService {
     try {
       return await AsyncStorage.getItem(LAST_SYNC_KEY);
     } catch (error) {
-      console.error('Failed to get last sync time:', error);
+      mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+        operation: 'getLastSyncTime',
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
       return null;
     }
   }
@@ -66,9 +71,19 @@ export class SyncService {
   async setLastSyncTime(timestamp: string): Promise<void> {
     try {
       await AsyncStorage.setItem(LAST_SYNC_KEY, timestamp);
-      console.log(`Last sync time updated: ${timestamp}`);
+      
+      // Note: Using a different event to avoid conflict with main sync complete
+      mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
+        operation: 'setLastSyncTime',
+        timestamp: timestamp,
+        message: 'Last sync time updated successfully'
+      });
     } catch (error) {
-      console.error('Failed to set last sync time:', error);
+      mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+        operation: 'setLastSyncTime',
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -78,37 +93,119 @@ export class SyncService {
    */
   async performSync(): Promise<{ pulled: number; pushed: number; errors: number }> {
     if (this.isSyncing) {
-      console.log('Sync already in progress, skipping');
+      mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+        operation: 'performSync',
+        error: 'Sync already in progress',
+        reason: 'duplicate_sync_attempt',
+        timestamp: new Date().toISOString()
+      });
       return { pulled: 0, pushed: 0, errors: 0 };
     }
 
     this.isSyncing = true;
+    const syncSessionId = `sync-session-${Date.now()}`;
     let pulledCount = 0;
     let pushedCount = 0;
     let errorCount = 0;
 
-    try {
-      console.log('Starting bidirectional sync...');
+    // Emit sync start event
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.START, {
+      sessionId: syncSessionId,
+      syncType: 'bidirectional',
+      lastSyncTime: await this.getLastSyncTime(),
+      timestamp: new Date().toISOString()
+    });
 
+    try {
       // Step 1: Push pending changes to server (Task 5.4.2)
       try {
         pushedCount = await this.pushToServer();
-        console.log(`Pushed ${pushedCount} operations to server`);
+        
+        // Emit upload complete event
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.UPLOAD.COMPLETE, {
+          sessionId: syncSessionId,
+          uploadedOperations: pushedCount,
+          timestamp: new Date().toISOString()
+        });
       } catch (error) {
-        console.error('Push sync failed:', error);
         errorCount++;
+        
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+          sessionId: syncSessionId,
+          stage: 'push',
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString()
+        });
+        
+        // Emit upload failed event
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+          sessionId: syncSessionId,
+          stage: 'upload',
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString()
+        });
       }
 
       // Step 2: Pull changes from server (Task 5.4.1)
       try {
+        // Emit download start event
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.DOWNLOAD.START, {
+          sessionId: syncSessionId,
+          downloadType: 'incremental',
+          timestamp: new Date().toISOString()
+        });
+        
+        // Emit book sync pull start event
+        mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.PULL.START, {
+          sessionId: syncSessionId,
+          timestamp: new Date().toISOString()
+        });
+        
         const booksPulled = await this.pullBooksFromServer();
         const authorsPulled = await this.pullAuthorsFromServer();
         const categoriesPulled = await this.pullCategoriesFromServer();
         pulledCount = booksPulled + authorsPulled + categoriesPulled;
-        console.log(`Pulled ${booksPulled} books, ${authorsPulled} authors, ${categoriesPulled} categories from server`);
+        
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.DOWNLOAD.COMPLETE, {
+          sessionId: syncSessionId,
+          totalPulled: pulledCount,
+          breakdown: {
+            books: booksPulled,
+            authors: authorsPulled,
+            categories: categoriesPulled
+          },
+          message: `Successfully pulled ${pulledCount} total records from server`,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Emit download complete event
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.DOWNLOAD.COMPLETE, {
+          sessionId: syncSessionId,
+          downloadedRecords: pulledCount,
+          breakdown: {
+            books: booksPulled,
+            authors: authorsPulled,
+            categories: categoriesPulled
+          },
+          timestamp: new Date().toISOString()
+        });
       } catch (error) {
-        console.error('Pull sync failed:', error);
         errorCount++;
+        
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+          sessionId: syncSessionId,
+          stage: 'pull',
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString()
+        });
+        
+        // Emit download failed event
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+          sessionId: syncSessionId,
+          stage: 'download',
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString()
+        });
       }
 
       // Step 3: Update last sync time (Task 5.4.3)
@@ -120,12 +217,42 @@ export class SyncService {
       try {
         const { cleanupService } = await import('./CleanupService');
         const cleanupResult = await cleanupService.performFullCleanup();
-        console.log(`Cleanup completed:`, cleanupResult);
+        
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.CLEANUP.COMPLETE, {
+          sessionId: syncSessionId,
+          cleanupResults: cleanupResult,
+          message: 'Sync cleanup completed successfully',
+          timestamp: new Date().toISOString()
+        });
       } catch (error) {
-        console.error('Cleanup failed:', error);
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+          sessionId: syncSessionId,
+          stage: 'cleanup',
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString()
+        });
       }
 
-      console.log(`Sync complete: pulled=${pulledCount}, pushed=${pushedCount}, errors=${errorCount}`);
+      // Emit sync complete event
+      if (errorCount === 0) {
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.COMPLETE, {
+          sessionId: syncSessionId,
+          syncType: 'bidirectional',
+          pulledCount,
+          pushedCount,
+          duration: Date.now() - parseInt(syncSessionId.split('-')[2]),
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+          sessionId: syncSessionId,
+          stage: 'completion',
+          errorCount,
+          partialResults: { pulledCount, pushedCount },
+          timestamp: new Date().toISOString()
+        });
+      }
+      
       return { pulled: pulledCount, pushed: pushedCount, errors: errorCount };
     } finally {
       this.isSyncing = false;
@@ -149,7 +276,13 @@ export class SyncService {
     let hasMore = true;
 
     const lastSyncTime = await this.getLastSyncTime();
-    console.log(`Pull sync starting (last sync: ${lastSyncTime || 'never'})`);
+    
+    mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.PULL.START, {
+      lastSyncTime: lastSyncTime || 'never',
+      syncType: lastSyncTime ? 'incremental' : 'full',
+      message: `Book pull sync starting (last sync: ${lastSyncTime || 'never'})`,
+      timestamp: new Date().toISOString()
+    });
 
     while (hasMore) {
       try {
@@ -165,7 +298,14 @@ export class SyncService {
         const serverBooks = response.books || response.data || response;
         const booksArray = Array.isArray(serverBooks) ? serverBooks : [];
 
-        console.log(`Fetched page ${page}: ${booksArray.length} books ${lastSyncTime ? `(updated since ${lastSyncTime})` : '(full sync)'}`);
+        mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.PULL.SUCCESS, {
+          page: page,
+          count: booksArray.length,
+          syncType: lastSyncTime ? 'incremental' : 'full',
+          lastSyncTime: lastSyncTime,
+          message: `Fetched page ${page}: ${booksArray.length} books ${lastSyncTime ? `(updated since ${lastSyncTime})` : '(full sync)'}`,
+          timestamp: new Date().toISOString()
+        });
         
         // No need for client-side filtering anymore since API handles incremental sync
 
@@ -174,7 +314,11 @@ export class SyncService {
             await this.mergeServerBook(serverBook);
             totalPulled++;
           } catch (error) {
-            console.error(`Failed to merge book ${serverBook.id}:`, error);
+            mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.MERGE.FAILED, {
+              bookId: serverBook.id,
+              error: error instanceof Error ? error.message : String(error),
+              timestamp: new Date().toISOString()
+            });
           }
         }
 
@@ -182,7 +326,11 @@ export class SyncService {
         hasMore = booksArray.length === SYNC_PAGE_SIZE;
         page++;
       } catch (error) {
-        console.error(`Failed to fetch page ${page}:`, error);
+        mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.PULL.FAILED, {
+          page: page,
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString()
+        });
         throw error;
       }
     }
@@ -206,7 +354,18 @@ export class SyncService {
       
       if (hasBookConflict(localBook, serverBookMapped)) {
         // Conflict detected - mark for user resolution
-        console.log(`Conflict detected for book ${localBook.id}`);
+        
+        // Emit book-specific conflict detected event
+        mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.CONFLICT.DETECTED, {
+          resourceType: 'book',
+          resourceId: localBook.id,
+          serverId: serverId,
+          conflictType: 'data_mismatch',
+          localData: localBook,
+          serverData: serverBookMapped,
+          timestamp: new Date().toISOString()
+        });
+        
         await bookRepository.update(localBook.id, {
           _hasConflict: true,
           _conflictData: serverBookMapped,
@@ -218,13 +377,33 @@ export class SyncService {
 
         if (serverUpdateDate > localUpdateDate) {
           // Server version is newer - update local
-          console.log(`Updating local book ${localBook.id} with server changes`);
+          // Emit book update event
+          mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.START, {
+            bookId: localBook.id,
+            serverId,
+            reason: 'server_sync',
+            timestamp: new Date().toISOString()
+          });
+          
           await bookRepository.update(localBook.id, {
             ...serverBookMapped,
             serverId, // Preserve server_id
           });
+          
+          // Emit book update success event
+          mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.SUCCESS, {
+            bookId: localBook.id,
+            serverId,
+            reason: 'server_sync',
+            timestamp: new Date().toISOString()
+          });
         } else {
-          console.log(`Local book ${localBook.id} is up-to-date or newer`);
+          mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.PULL.SUCCESS, {
+            bookId: localBook.id,
+            reason: 'local_up_to_date',
+            message: `Local book ${localBook.id} is up-to-date or newer`,
+            timestamp: new Date().toISOString()
+          });
         }
       }
     } else {
@@ -234,12 +413,26 @@ export class SyncService {
       // Use server ID as local ID (converted to string)
       const localId = String(serverId);
 
-      console.log(`Inserting new book from server: ${localId} (server_id: ${serverId})`);
+      // Emit book creation event
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.START, {
+        bookId: localId,
+        serverId,
+        source: 'server_sync',
+        timestamp: new Date().toISOString()
+      });
 
       await bookRepository.create({
         ...newBook,
         id: localId,
         serverId,
+      });
+      
+      // Emit book creation success event
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.SUCCESS, {
+        bookId: localId,
+        serverId,
+        source: 'server_sync',
+        timestamp: new Date().toISOString()
       });
 
       // Register ID mapping
@@ -282,11 +475,20 @@ export class SyncService {
     const pendingCount = pendingOps.length;
 
     if (pendingCount === 0) {
-      console.log('No pending operations to push');
+      mobileHooks.emit(MOBILE_EVENTS.SYNC.UPLOAD.COMPLETE, {
+        pendingOperations: 0,
+        message: 'No pending operations to push',
+        timestamp: new Date().toISOString()
+      });
       return 0;
     }
 
-    console.log(`Pushing ${pendingCount} pending operations to server`);
+    // Emit upload start event
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.UPLOAD.START, {
+      pendingOperations: pendingCount,
+      queueSize: operationQueue.size(),
+      timestamp: new Date().toISOString()
+    });
 
     // Process the queue (already implemented in Phase 2)
     // The queue will handle ID mapping via QueueExecutor (Task 5.3)
@@ -319,7 +521,11 @@ export class SyncService {
    */
   async pullAuthorsFromServer(): Promise<number> {
     try {
-      console.log('Pulling authors from server...');
+      // Emit author sync pull start event
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.SYNC.PULL.START, {
+        timestamp: new Date().toISOString()
+      });
+      
       const lastSyncTime = await this.getLastSyncTime();
       const serverAuthors = await authorAPI.getAuthors(lastSyncTime);
       let pulledCount = 0;
@@ -329,14 +535,27 @@ export class SyncService {
           await this.mergeServerAuthor(serverAuthor);
           pulledCount++;
         } catch (error) {
-          console.error(`Failed to merge author ${serverAuthor.id}:`, error);
+          // Emit author sync merge failed event
+          mobileHooks.emit(MOBILE_EVENTS.AUTHOR.SYNC.MERGE.FAILED, {
+            authorId: serverAuthor.id,
+            error: error instanceof Error ? error.message : String(error),
+            timestamp: new Date().toISOString()
+          });
         }
       }
 
-      console.log(`Pulled ${pulledCount} authors from server`);
+      // Emit author sync pull success event
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.SYNC.PULL.SUCCESS, {
+        pulledCount,
+        timestamp: new Date().toISOString()
+      });
+      
       return pulledCount;
     } catch (error) {
-      console.error('Failed to pull authors from server:', error);
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.SYNC.PULL.FAILED, {
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
       throw error;
     }
   }
@@ -346,7 +565,11 @@ export class SyncService {
    */
   async pullCategoriesFromServer(): Promise<number> {
     try {
-      console.log('Pulling categories from server...');
+      // Emit category sync pull start event
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.SYNC.PULL.START, {
+        timestamp: new Date().toISOString()
+      });
+      
       const lastSyncTime = await this.getLastSyncTime();
       const serverCategories = await categoryAPI.getCategories(lastSyncTime);
       let pulledCount = 0;
@@ -356,14 +579,27 @@ export class SyncService {
           await this.mergeServerCategory(serverCategory);
           pulledCount++;
         } catch (error) {
-          console.error(`Failed to merge category ${serverCategory.id}:`, error);
+          // Emit category sync merge failed event
+          mobileHooks.emit(MOBILE_EVENTS.CATEGORY.SYNC.MERGE.FAILED, {
+            categoryId: serverCategory.id,
+            error: error instanceof Error ? error.message : String(error),
+            timestamp: new Date().toISOString()
+          });
         }
       }
 
-      console.log(`Pulled ${pulledCount} categories from server`);
+      // Emit category sync pull success event
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.SYNC.PULL.SUCCESS, {
+        pulledCount,
+        timestamp: new Date().toISOString()
+      });
+      
       return pulledCount;
     } catch (error) {
-      console.error('Failed to pull categories from server:', error);
+      mobileHooks.emit(MOBILE_EVENTS.CATEGORY.SYNC.PULL.FAILED, {
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
       throw error;
     }
   }
@@ -379,7 +615,18 @@ export class SyncService {
       // Author exists locally - check for conflicts
       if (hasAuthorConflict(localAuthor, serverAuthor)) {
         // Conflict detected - mark for user resolution
-        console.log(`Author conflict detected for ${localAuthor.id}`);
+        
+        // Emit author-specific conflict detected event
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.SYNC.CONFLICT.DETECTED, {
+          resourceType: 'author',
+          resourceId: localAuthor.id,
+          serverId: serverId,
+          conflictType: 'data_mismatch',
+          localData: localAuthor,
+          serverData: serverAuthor,
+          timestamp: new Date().toISOString()
+        });
+        
         await authorRepository.updateSyncFields(localAuthor.id, {
           _hasConflict: true,
           _conflictData: serverAuthor,
@@ -390,10 +637,24 @@ export class SyncService {
 
         if (serverUpdateDate > localUpdateDate) {
           // Server version is newer - update local
-          console.log(`Updating local author ${localAuthor.id} with server changes`);
+          mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.START, {
+            authorId: localAuthor.id,
+            serverId: serverAuthor.id,
+            reason: 'server_sync',
+            message: `Updating local author ${localAuthor.id} with server changes`,
+            timestamp: new Date().toISOString()
+          });
+          
           await authorRepository.updateSyncFields(localAuthor.id, {
             _serverUpdatedAt: serverAuthor.updateDate,
             _syncStatus: 'synced',
+          });
+          
+          mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.SUCCESS, {
+            authorId: localAuthor.id,
+            serverId: serverAuthor.id,
+            reason: 'server_sync',
+            timestamp: new Date().toISOString()
           });
         }
       }
@@ -403,7 +664,14 @@ export class SyncService {
       
       if (existingByName) {
         // Found by name - update with server_id
-        console.log(`Updating existing author ${existingByName.id} with server_id: ${serverId}`);
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.START, {
+          authorId: existingByName.id,
+          serverId: serverId,
+          reason: 'server_id_mapping',
+          message: `Updating existing author ${existingByName.id} with server_id: ${serverId}`,
+          timestamp: new Date().toISOString()
+        });
+        
         await authorRepository.updateSyncFields(existingByName.id, {
           serverId,
           _serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),
@@ -413,13 +681,28 @@ export class SyncService {
         await idMappingService.registerTempId(existingByName.id.toString(), serverId, 'author');
       } else {
         // Create new author
-        console.log(`Creating new author: ${serverAuthor.name} (server_id: ${serverId})`);
+        // Emit author creation event
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.START, {
+          authorName: serverAuthor.name,
+          serverId,
+          timestamp: new Date().toISOString()
+        });
+        
         const newAuthor = await authorRepository.create(serverAuthor.name);
         await authorRepository.updateSyncFields(newAuthor.id, {
           serverId,
           _serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),
           _syncStatus: 'synced',
         });
+        
+        // Emit author creation success event
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS, {
+          authorId: newAuthor.id,
+          authorName: serverAuthor.name,
+          serverId,
+          timestamp: new Date().toISOString()
+        });
+        
         // Register ID mapping
         await idMappingService.registerTempId(newAuthor.id.toString(), serverId, 'author');
       }
@@ -437,7 +720,18 @@ export class SyncService {
       // Category exists locally - check for conflicts
       if (hasCategoryConflict(localCategory, serverCategory)) {
         // Conflict detected - mark for user resolution
-        console.log(`Category conflict detected for ${localCategory.id}`);
+        
+        // Emit category-specific conflict detected event
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.SYNC.CONFLICT.DETECTED, {
+          resourceType: 'category',
+          resourceId: localCategory.id,
+          serverId: serverId,
+          conflictType: 'data_mismatch',
+          localData: localCategory,
+          serverData: serverCategory,
+          timestamp: new Date().toISOString()
+        });
+        
         await categoryRepository.updateSyncFields(localCategory.id, {
           _hasConflict: true,
           _conflictData: serverCategory,
@@ -448,10 +742,24 @@ export class SyncService {
 
         if (serverUpdateDate > localUpdateDate) {
           // Server version is newer - update local
-          console.log(`Updating local category ${localCategory.id} with server changes`);
+          mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.START, {
+            categoryId: localCategory.id,
+            serverId: serverCategory.id,
+            reason: 'server_sync',
+            message: `Updating local category ${localCategory.id} with server changes`,
+            timestamp: new Date().toISOString()
+          });
+          
           await categoryRepository.updateSyncFields(localCategory.id, {
             _serverUpdatedAt: serverCategory.updateDate,
             _syncStatus: 'synced',
+          });
+          
+          mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.SUCCESS, {
+            categoryId: localCategory.id,
+            serverId: serverCategory.id,
+            reason: 'server_sync',
+            timestamp: new Date().toISOString()
           });
         }
       }
@@ -461,7 +769,14 @@ export class SyncService {
       
       if (existingByName) {
         // Found by name - update with server_id
-        console.log(`Updating existing category ${existingByName.id} with server_id: ${serverId}`);
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.START, {
+          categoryId: existingByName.id,
+          serverId: serverId,
+          reason: 'server_id_mapping',
+          message: `Updating existing category ${existingByName.id} with server_id: ${serverId}`,
+          timestamp: new Date().toISOString()
+        });
+        
         await categoryRepository.updateSyncFields(existingByName.id, {
           serverId,
           _serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
@@ -471,13 +786,28 @@ export class SyncService {
         await idMappingService.registerTempId(existingByName.id.toString(), serverId, 'category');
       } else {
         // Create new category
-        console.log(`Creating new category: ${serverCategory.name} (server_id: ${serverId})`);
+        // Emit category creation event
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.START, {
+          categoryName: serverCategory.name,
+          serverId,
+          timestamp: new Date().toISOString()
+        });
+        
         const newCategory = await categoryRepository.create(serverCategory.name);
         await categoryRepository.updateSyncFields(newCategory.id, {
           serverId,
           _serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
           _syncStatus: 'synced',
         });
+        
+        // Emit category creation success event
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS, {
+          categoryId: newCategory.id,
+          categoryName: serverCategory.name,
+          serverId,
+          timestamp: new Date().toISOString()
+        });
+        
         // Register ID mapping
         await idMappingService.registerTempId(newCategory.id.toString(), serverId, 'category');
       }

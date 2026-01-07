@@ -1,0 +1,210 @@
+import { buildEventSchema } from '@my-many-books/hookey';
+
+// ================================================================
+// REUSABLE EVENT PATTERNS
+// ================================================================
+// These patterns ensure consistency across all entities and enable
+// easy extensibility without duplication.
+
+/**
+ * Base operation states used by all CRUD and sync operations
+ * 
+ * Usage examples:
+ * - New operation state? Add to OPERATION_STATES once (affects all operations)
+ * - Custom timing? Add TIMEOUT: null here
+ */
+const OPERATION_STATES = {
+  START: null,
+  SUCCESS: null,
+  FAILED: null,
+} as const;
+
+/**
+ * Sync-specific operations for all entities
+ * 
+ * All entities automatically inherit these sync capabilities:
+ * - PULL: Download data from server 
+ * - CONFLICT: Handle data conflicts during sync
+ * - MERGE: Merge server data with local data
+ */
+const SYNC_OPERATIONS = {
+  PULL: OPERATION_STATES,
+  CONFLICT: {
+    DETECTED: null,
+    RESOLVED: null,
+  },
+  MERGE: OPERATION_STATES,
+} as const;
+
+/**
+ * Complete entity operation pattern
+ * 
+ * All entities inherit this exact structure for perfect consistency:
+ * - Standard CRUD operations (CREATE, READ, UPDATE, DELETE)
+ * - Sync operations for offline/online data management
+ * 
+ * Extensibility examples:
+ * - New entity? Just add: USER: ENTITY_OPERATIONS
+ * - Custom entity? Use: ADMIN: { ...ENTITY_OPERATIONS, SPECIAL: { AUDIT: OPERATION_STATES } }
+ * - All entities get new features automatically when patterns are extended
+ */
+const ENTITY_OPERATIONS = {
+  CREATE: OPERATION_STATES,
+  READ: OPERATION_STATES,
+  UPDATE: OPERATION_STATES,
+  DELETE: OPERATION_STATES,
+  SYNC: SYNC_OPERATIONS,
+} as const;
+
+// ================================================================
+// EVENT SCHEMA DEFINITION
+// ================================================================
+
+const schema = {
+  // ================================================================
+  // ENTITY EVENTS (Business Domain Objects)
+  // ================================================================
+  // All entities use the same operation pattern for perfect consistency.
+  // This guarantees that every entity supports the same CRUD + Sync operations.
+  
+  /**
+   * Book entity events
+   * Supports: CREATE, READ, UPDATE, DELETE + SYNC operations
+   * 
+   * Example events generated:
+   * - MOBILE_EVENTS.BOOK.CREATE.START ("book.create.start")
+   * - MOBILE_EVENTS.BOOK.SYNC.PULL.SUCCESS ("book.sync.pull.success")
+   * - MOBILE_EVENTS.BOOK.SYNC.CONFLICT.DETECTED ("book.sync.conflict.detected")
+   */
+  BOOK: ENTITY_OPERATIONS,
+  
+  /**
+   * Author entity events
+   * Inherits all standard entity operations automatically
+   */
+  AUTHOR: ENTITY_OPERATIONS,
+  
+  /**
+   * Category entity events  
+   * Inherits all standard entity operations automatically
+   */
+  CATEGORY: ENTITY_OPERATIONS,
+  // Queue Events
+  QUEUE: {
+    ENQUEUE: null,
+    DEQUEUE: null,
+    PROCESS: {
+      START: null,
+      COMPLETE: null,
+    },
+    RETRY: null,
+    FAILED: null,
+    CLEARED: null,
+    SIZE_CHANGED: null,
+  },
+  // Executor Events  
+  EXECUTOR: {
+    OPERATION: {
+      START: null,
+      SUCCESS: null,
+      FAILED: null,
+    },
+    RETRY_SCHEDULED: null,
+    MAX_RETRIES_REACHED: null,
+    NETWORK_ERROR: null,
+    VALIDATION_ERROR: null,
+    PERFORMANCE_METRIC: null,
+  },
+  // Sync Events
+  SYNC: {
+    START: null,
+    UPLOAD: {
+      START: null,
+      COMPLETE: null,
+    },
+    DOWNLOAD: {
+      START: null,
+      COMPLETE: null,
+    },
+    CONFLICT: {
+      DETECTED: null,
+      RESOLVED: null,
+    },
+    ID_MAPPING: {
+      START: null,
+      COMPLETE: null,
+    },
+    VALIDATION_FAILED: null,
+    COMPLETE: null,
+    FAILED: null,
+    CLEANUP: {
+      COMPLETE: null,  // Emitted when sync cleanup operations finish
+    },
+  },
+  // Network Events
+  NETWORK: {
+    ONLINE: null,
+    OFFLINE: null,
+    TYPE_CHANGED: null,
+    QUALITY_CHANGED: null,
+    REACHABLE: null,
+    UNREACHABLE: null,
+    TIMEOUT: null,
+    RESTORED: null,
+  },
+  // App Lifecycle Events
+  APP: {
+    STARTUP: null,
+    INITIALIZATION: {
+      START: null,
+      COMPLETE: null,
+    },
+    FOREGROUND: null,
+    BACKGROUND: null,
+    ACTIVE: null,
+    INACTIVE: null,
+    TERMINATION: null,
+    MEMORY_WARNING: null,
+    SESSION: {
+      START: null,
+      END: null,
+    },
+  },
+  // Error Events
+  ERROR: {
+    UNHANDLED: null,
+    PROMISE_REJECTION: null,
+    REACT_NATIVE: null,
+    NETWORK_TIMEOUT: null,
+    API_RESPONSE: null,
+    VALIDATION: null,
+    STORAGE: null,
+    PERMISSION: null,
+    USER_FACING: null,
+    RECOVERED: null,
+  },
+} as const;
+
+export const MOBILE_EVENTS = Object.freeze(buildEventSchema(schema));
+
+export type EventsTree = typeof MOBILE_EVENTS;
+
+// Re-export from shared-types for convenience
+export { RESOURCE_TYPES } from '@my-many-books/shared-types';
+
+// Operation type constants for queue operations
+export const OPERATION_TYPES = Object.freeze({
+  CREATE: 'CREATE',
+  UPDATE: 'UPDATE',
+  DELETE: 'DELETE',
+} as const);
+
+// Operation status constants for queue operations
+export const OPERATION_STATUSES = Object.freeze({
+  PENDING: 'pending',
+  RETRYING: 'retrying',
+  FAILED: 'failed',
+} as const);
+
+export type OperationType = typeof OPERATION_TYPES[keyof typeof OPERATION_TYPES];
+export type OperationStatus = typeof OPERATION_STATUSES[keyof typeof OPERATION_STATUSES];

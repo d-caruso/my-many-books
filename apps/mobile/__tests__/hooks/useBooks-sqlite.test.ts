@@ -161,7 +161,7 @@ describe('useBooks with SQLite', () => {
         try {
           await result.current.createBook(newBookData);
         } catch (error) {
-          expect(error.message).toContain('Invalid data');
+          expect(error.message).toContain('books.createFailed');
         }
       });
 

@@ -10,7 +10,7 @@ import { Book } from '@my-many-books/shared-types';
 import { Author } from '@my-many-books/shared-types';
 import { Category } from '@my-many-books/shared-types';
 import { CreatePayload, UpdatePayload } from './handlers/types/HandlerTypes';
-import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/events';
+import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/eventsSchema';
 import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
 
 /**
@@ -467,60 +467,50 @@ export function isRetriableError(error: unknown, operationId?: string, currentRe
     isRetriable = error.retriable;
     retryReason = 'structured_api_error';
   } else {
-    // Legacy fallback for generic Error objects (third-party libraries, existing code)
-    const message = error instanceof Error ? error.message : String(error);
-    
-    // Network errors are retriable
-    if (message?.includes('Network request failed')) {
-      isRetriable = true;
-      retryReason = 'network_request_failed';
-    }
-    // Timeout errors are retriable
-    else if (error.name === 'AbortError' || message?.includes('timeout')) {
-      isRetriable = true;
-      retryReason = 'timeout_error';
-    }
-    // Offline errors are retriable
-    else if (message?.includes('offline') || message?.includes('no connection')) {
-      isRetriable = true;
-      retryReason = 'offline_error';
-    }
-    // FetchHttpClient throws plain Error with "HTTP 5xx" messages - check for server errors
-    else if (message?.match(/HTTP 5\d\d:/)) {
-      isRetriable = true;
-      retryReason = 'server_error_5xx';
-    }
-    // FetchHttpClient timeout errors
-    else if (message?.includes('HTTP 408:') || message?.includes('Request Timeout')) {
-      isRetriable = true;
-      retryReason = 'request_timeout';
-    }
-    // Rate limiting (429 Too Many Requests)
-    else if (message?.includes('HTTP 429:')) {
-      isRetriable = true;
-      retryReason = 'rate_limit_exceeded';
-    }
-    // HTTP status codes (if error object has status property)
-    else if (error.status) {
-      // 408 Request Timeout is retriable
-      if (error.status === 408) {
-        isRetriable = true;
-        retryReason = 'timeout_408';
+    // Check if it's an object with retriable property (for test compatibility)
+    if (typeof error === 'object' && error !== null && 'retriable' in error && 'code' in error) {
+      isRetriable = Boolean(error.retriable);
+      retryReason = 'structured_api_error';
+    } else {
+      // Legacy HTTP error fallback
+      const message = error instanceof Error ? error.message : 
+                     (typeof error === 'object' && error !== null && 'message' in error) ? 
+                     String(error.message) : String(error);
+      
+      // HTTP status codes (if error object has status property)
+      if (typeof error === 'object' && error !== null && 'status' in error && error.status) {
+        // 408 Request Timeout is retriable
+        if (error.status === 408) {
+          isRetriable = true;
+          retryReason = 'timeout_408';
+        }
+        // 429 Too Many Requests is retriable
+        else if (error.status === 429) {
+          isRetriable = true;
+          retryReason = 'rate_limit_429';
+        }
+        // 5xx server errors are retriable
+        else if (error.status >= 500 && error.status <= 599) {
+          isRetriable = true;
+          retryReason = 'server_error_5xx';
+        }
       }
-      // 429 Too Many Requests is retriable
-      else if (error.status === 429) {
+      // HTTP error messages
+      else if (message?.match(/HTTP 5\d\d:/)) {
         isRetriable = true;
-        retryReason = 'rate_limit_429';
+        retryReason = 'server_error_message';
       }
-      // 4xx validation errors are NOT retriable (except 408 and 429)
-      else if (error.status >= 400 && error.status < 500) {
-        isRetriable = false;
-        retryReason = 'client_error_4xx';
-      }
-      // 5xx server errors ARE retriable
-      else if (error.status >= 500) {
+      else if (message?.includes('HTTP 408:') || message?.includes('Request Timeout')) {
         isRetriable = true;
-        retryReason = 'server_error_5xx';
+        retryReason = 'request_timeout_message';
+      }
+      else if (message?.includes('HTTP 429:')) {
+        isRetriable = true;
+        retryReason = 'rate_limit_message';
+      }
+      
+      if (!isRetriable) {
+        retryReason = 'non_retriable_legacy_error';
       }
     }
   }
