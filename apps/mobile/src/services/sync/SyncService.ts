@@ -8,7 +8,9 @@ import { operationQueue } from '../OperationQueue';
 import { executeOperation } from '../QueueExecutor';
 import { Book } from '../../types';
 import { hasBookConflict, hasAuthorConflict, hasCategoryConflict } from '../../utils/conflictDetection';
+import { getErrorMessage } from '../../utils/helpers';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
+import { RESOURCE_TYPES, CONFLICT_RESOLUTION_METHODS, VALIDATION_TYPES } from '../hooks/eventsSchema';
 
 const LAST_SYNC_KEY = '@last_sync_timestamp';
 const SYNC_PAGE_SIZE = 50;
@@ -314,9 +316,18 @@ export class SyncService {
             await this.mergeServerBook(serverBook);
             totalPulled++;
           } catch (error) {
+            // Emit validation failed event for data consistency issues
+            mobileHooks.emit(MOBILE_EVENTS.SYNC.VALIDATION_FAILED, {
+              resourceType: RESOURCE_TYPES.BOOK,
+              resourceId: serverBook.id,
+              validationType: VALIDATION_TYPES.MERGE_OPERATION,
+              error: getErrorMessage(error),
+              timestamp: new Date().toISOString()
+            });
+            
             mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.MERGE.FAILED, {
               bookId: serverBook.id,
-              error: error instanceof Error ? error.message : String(error),
+              error: getErrorMessage(error),
               timestamp: new Date().toISOString()
             });
           }
@@ -369,6 +380,15 @@ export class SyncService {
         await bookRepository.update(localBook.id, {
           _hasConflict: true,
           _conflictData: serverBookMapped,
+        });
+        
+        // Emit conflict resolution event
+        mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.CONFLICT.RESOLVED, {
+          resourceType: RESOURCE_TYPES.BOOK,
+          resourceId: localBook.id,
+          serverId: serverId,
+          resolutionMethod: CONFLICT_RESOLUTION_METHODS.FLAG_FOR_MANUAL_RESOLUTION,
+          timestamp: new Date().toISOString()
         });
       } else {
         // No conflict - check if server version is newer
@@ -535,10 +555,19 @@ export class SyncService {
           await this.mergeServerAuthor(serverAuthor);
           pulledCount++;
         } catch (error) {
+          // Emit validation failed event for data consistency issues
+          mobileHooks.emit(MOBILE_EVENTS.SYNC.VALIDATION_FAILED, {
+            resourceType: RESOURCE_TYPES.AUTHOR,
+            resourceId: serverAuthor.id,
+            validationType: VALIDATION_TYPES.MERGE_OPERATION,
+            error: getErrorMessage(error),
+            timestamp: new Date().toISOString()
+          });
+          
           // Emit author sync merge failed event
           mobileHooks.emit(MOBILE_EVENTS.AUTHOR.SYNC.MERGE.FAILED, {
             authorId: serverAuthor.id,
-            error: error instanceof Error ? error.message : String(error),
+            error: getErrorMessage(error),
             timestamp: new Date().toISOString()
           });
         }
@@ -579,10 +608,19 @@ export class SyncService {
           await this.mergeServerCategory(serverCategory);
           pulledCount++;
         } catch (error) {
+          // Emit validation failed event for data consistency issues
+          mobileHooks.emit(MOBILE_EVENTS.SYNC.VALIDATION_FAILED, {
+            resourceType: RESOURCE_TYPES.CATEGORY,
+            resourceId: serverCategory.id,
+            validationType: VALIDATION_TYPES.MERGE_OPERATION,
+            error: getErrorMessage(error),
+            timestamp: new Date().toISOString()
+          });
+          
           // Emit category sync merge failed event
           mobileHooks.emit(MOBILE_EVENTS.CATEGORY.SYNC.MERGE.FAILED, {
             categoryId: serverCategory.id,
-            error: error instanceof Error ? error.message : String(error),
+            error: getErrorMessage(error),
             timestamp: new Date().toISOString()
           });
         }
@@ -630,6 +668,15 @@ export class SyncService {
         await authorRepository.updateSyncFields(localAuthor.id, {
           _hasConflict: true,
           _conflictData: serverAuthor,
+        });
+        
+        // Emit conflict resolution event
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.SYNC.CONFLICT.RESOLVED, {
+          resourceType: RESOURCE_TYPES.AUTHOR,
+          resourceId: localAuthor.id,
+          serverId: serverId,
+          resolutionMethod: CONFLICT_RESOLUTION_METHODS.FLAG_FOR_MANUAL_RESOLUTION,
+          timestamp: new Date().toISOString()
         });
       } else if (serverAuthor.updateDate && localAuthor._serverUpdatedAt) {
         const serverUpdateDate = new Date(serverAuthor.updateDate);
@@ -735,6 +782,15 @@ export class SyncService {
         await categoryRepository.updateSyncFields(localCategory.id, {
           _hasConflict: true,
           _conflictData: serverCategory,
+        });
+        
+        // Emit conflict resolution event
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.SYNC.CONFLICT.RESOLVED, {
+          resourceType: RESOURCE_TYPES.CATEGORY,
+          resourceId: localCategory.id,
+          serverId: serverId,
+          resolutionMethod: CONFLICT_RESOLUTION_METHODS.FLAG_FOR_MANUAL_RESOLUTION,
+          timestamp: new Date().toISOString()
         });
       } else if (serverCategory.updateDate && localCategory._serverUpdatedAt) {
         const serverUpdateDate = new Date(serverCategory.updateDate);

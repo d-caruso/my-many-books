@@ -206,5 +206,23 @@ export const OPERATION_STATUSES = Object.freeze({
   FAILED: 'failed',
 } as const);
 
+// Conflict resolution method constants
+export const CONFLICT_RESOLUTION_METHODS = Object.freeze({
+  FLAG_FOR_MANUAL_RESOLUTION: 'flag_for_manual_resolution',
+  SERVER_WINS: 'server_wins',
+  LOCAL_WINS: 'local_wins',
+  MERGE_DATA: 'merge_data',
+} as const);
+
+// Validation type constants for sync operations
+export const VALIDATION_TYPES = Object.freeze({
+  MERGE_OPERATION: 'merge_operation',
+  DATA_CONSISTENCY: 'data_consistency',
+  FOREIGN_KEY_INTEGRITY: 'foreign_key_integrity',
+  SCHEMA_VALIDATION: 'schema_validation',
+} as const);
+
 export type OperationType = typeof OPERATION_TYPES[keyof typeof OPERATION_TYPES];
 export type OperationStatus = typeof OPERATION_STATUSES[keyof typeof OPERATION_STATUSES];
+export type ConflictResolutionMethod = typeof CONFLICT_RESOLUTION_METHODS[keyof typeof CONFLICT_RESOLUTION_METHODS];
+export type ValidationType = typeof VALIDATION_TYPES[keyof typeof VALIDATION_TYPES];
