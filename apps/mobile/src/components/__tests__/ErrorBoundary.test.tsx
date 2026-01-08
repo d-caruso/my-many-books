@@ -4,6 +4,20 @@ import { Text } from 'react-native';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { errorTrackingService } from '../../services/errors/ErrorTrackingService';
 
+// Mock React Native components
+jest.mock('react-native', () => ({
+  View: 'View',
+  Text: 'Text',
+  TouchableOpacity: 'TouchableOpacity',
+}));
+
+// Mock react-native-paper
+jest.mock('react-native-paper', () => ({
+  Button: ({ children, onPress, ...props }: any) => (
+    <button onClick={onPress} {...props}>{children}</button>
+  ),
+}));
+
 // Mock the error tracking service
 jest.mock('../../services/errors/ErrorTrackingService', () => ({
   errorTrackingService: {

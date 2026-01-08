@@ -188,58 +188,148 @@ class ErrorTrackingService {
   }
 
   /**
-   * Setup global JavaScript error handling
+   * Setup global JavaScript error handling using React Native's ErrorUtils
    */
   private setupGlobalErrorHandling(): void {
-    const originalErrorHandler = global.ErrorUtils?.getGlobalHandler();
+    // Check if ErrorUtils is available (React Native environment)
+    if (typeof global !== 'undefined' && global.ErrorUtils) {
+      const originalErrorHandler = global.ErrorUtils.getGlobalHandler();
 
-    this.globalErrorHandler = (error: any, isFatal: boolean) => {
-      // Track the error
-      this.trackError(
-        error instanceof Error ? error : new Error(String(error)),
-        'UNHANDLED',
-        {
-          severity: isFatal ? 'critical' : 'high',
-          additionalData: { 
-            isFatal,
-            handlerType: 'global'
+      this.globalErrorHandler = (error: any, isFatal: boolean) => {
+        try {
+          // Ensure we have a proper Error object
+          const normalizedError = error instanceof Error 
+            ? error 
+            : new Error(error?.message || String(error) || 'Unknown error');
+
+          // Track the error with proper context
+          this.trackError(normalizedError, 'UNHANDLED', {
+            severity: isFatal ? 'critical' : 'high',
+            additionalData: { 
+              isFatal,
+              handlerType: 'global_error_utils',
+              originalErrorType: typeof error,
+              hasStack: Boolean(error?.stack)
+            }
+          });
+        } catch (trackingError) {
+          // Fallback: Log to console if tracking fails
+          console.error('Error tracking failed:', trackingError);
+          console.error('Original error:', error);
+        }
+
+        // Always call original handler to maintain app stability
+        if (originalErrorHandler) {
+          try {
+            originalErrorHandler(error, isFatal);
+          } catch (handlerError) {
+            console.error('Original error handler failed:', handlerError);
           }
         }
-      );
+      };
 
-      // Call original handler if it exists
-      if (originalErrorHandler) {
-        originalErrorHandler(error, isFatal);
-      }
-    };
-
-    // Set our custom error handler
-    global.ErrorUtils?.setGlobalHandler(this.globalErrorHandler);
+      // Set our custom error handler
+      global.ErrorUtils.setGlobalHandler(this.globalErrorHandler);
+      
+      // Store cleanup function
+      this.errorHandlers.push(() => {
+        if (global.ErrorUtils) {
+          global.ErrorUtils.setGlobalHandler(originalErrorHandler);
+        }
+      });
+    } else {
+      // Web/Jest environment fallback
+      this.setupWebErrorHandling();
+    }
   }
 
   /**
-   * Setup unhandled promise rejection handling
+   * Setup error handling for web/Jest environments
+   */
+  private setupWebErrorHandling(): void {
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      const errorHandler = (event: ErrorEvent) => {
+        const error = new Error(event.message);
+        error.stack = `${event.filename}:${event.lineno}:${event.colno}`;
+        
+        this.trackError(error, 'UNHANDLED', {
+          severity: 'high',
+          additionalData: {
+            handlerType: 'window_error',
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno
+          }
+        });
+      };
+
+      window.addEventListener('error', errorHandler);
+      
+      this.errorHandlers.push(() => {
+        window.removeEventListener('error', errorHandler);
+      });
+    }
+  }
+
+  /**
+   * Setup unhandled promise rejection handling for multiple environments
    */
   private setupPromiseRejectionHandling(): void {
     const handlePromiseRejection = (event: any) => {
-      const reason = event.reason || event;
-      const error = reason instanceof Error ? reason : new Error(String(reason));
+      try {
+        // Extract the rejection reason
+        const reason = event.reason || event.detail?.reason || event;
+        
+        // Normalize to Error object
+        const error = reason instanceof Error 
+          ? reason 
+          : new Error(reason?.message || String(reason) || 'Unhandled promise rejection');
 
-      this.trackError(error, 'PROMISE_REJECTION', {
-        severity: 'high',
-        additionalData: {
-          handlerType: 'promise_rejection',
-          reason: String(reason)
-        }
-      });
+        this.trackError(error, 'PROMISE_REJECTION', {
+          severity: 'high',
+          additionalData: {
+            handlerType: 'promise_rejection',
+            reasonType: typeof reason,
+            hasPromise: Boolean(event.promise),
+            eventType: event.type || 'unknown'
+          }
+        });
+      } catch (trackingError) {
+        console.error('Promise rejection tracking failed:', trackingError);
+        console.error('Original rejection:', event);
+      }
     };
 
-    // Add promise rejection listener
-    if (global.addEventListener) {
+    // React Native / Node.js environment
+    if (typeof global !== 'undefined' && global.addEventListener) {
       global.addEventListener('unhandledrejection', handlePromiseRejection);
-      this.promiseRejectionHandler = () => {
-        global.removeEventListener('unhandledrejection', handlePromiseRejection);
+      this.errorHandlers.push(() => {
+        if (global.removeEventListener) {
+          global.removeEventListener('unhandledrejection', handlePromiseRejection);
+        }
+      });
+    }
+    
+    // Web environment fallback
+    else if (typeof window !== 'undefined' && window.addEventListener) {
+      window.addEventListener('unhandledrejection', handlePromiseRejection);
+      this.errorHandlers.push(() => {
+        window.removeEventListener('unhandledrejection', handlePromiseRejection);
+      });
+    }
+    
+    // Node.js process events (for testing environments)
+    else if (typeof process !== 'undefined' && process.on) {
+      const processHandler = (reason: any, promise: Promise<any>) => {
+        handlePromiseRejection({ reason, promise, type: 'process_unhandled_rejection' });
       };
+      
+      process.on('unhandledRejection', processHandler);
+      this.errorHandlers.push(() => {
+        if (process.removeListener) {
+          process.removeListener('unhandledRejection', processHandler);
+        }
+      });
     }
   }
 
@@ -247,21 +337,17 @@ class ErrorTrackingService {
    * Clean up error handlers
    */
   private cleanupErrorHandlers(): void {
-    // Restore original global error handler
-    if (this.globalErrorHandler) {
-      global.ErrorUtils?.setGlobalHandler(null);
-      this.globalErrorHandler = null;
-    }
-
-    // Remove promise rejection handler
-    if (this.promiseRejectionHandler) {
-      this.promiseRejectionHandler();
-      this.promiseRejectionHandler = null;
-    }
-
-    // Clean up any other handlers
-    this.errorHandlers.forEach(cleanup => cleanup());
+    // Clean up all registered handlers
+    this.errorHandlers.forEach(cleanup => {
+      try {
+        cleanup();
+      } catch (cleanupError) {
+        console.warn('Error handler cleanup failed:', cleanupError);
+      }
+    });
+    
     this.errorHandlers = [];
+    this.globalErrorHandler = null;
   }
 
   /**

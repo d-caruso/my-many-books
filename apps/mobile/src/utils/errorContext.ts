@@ -38,11 +38,39 @@ export async function getUserAgent(): Promise<string> {
 }
 
 /**
- * Get app version information
+ * Get app version information from package.json or expo config
  */
 export async function getAppVersion(): Promise<string> {
   try {
-    // In a real app, this could be imported from package.json or app config
+    // Try to get from Expo Constants if available
+    if (typeof require !== 'undefined') {
+      try {
+        const Constants = require('expo-constants');
+        if (Constants.default?.expoConfig?.version) {
+          const version = Constants.default.expoConfig.version;
+          const buildNumber = Constants.default?.expoConfig?.ios?.buildNumber || 
+                             Constants.default?.expoConfig?.android?.versionCode || 
+                             '1';
+          return `${version} (${buildNumber})`;
+        }
+      } catch (expoError) {
+        // Expo not available, continue with fallback
+      }
+
+      try {
+        const packageJson = require('../../package.json');
+        return `${packageJson.version} (1)`;
+      } catch (packageError) {
+        // Package.json not accessible
+      }
+    }
+    
+    // Environment variable fallback
+    if (typeof process !== 'undefined' && process.env) {
+      const version = process.env.npm_package_version || process.env.EXPO_VERSION;
+      if (version) return `${version} (1)`;
+    }
+    
     return '1.0.0 (1)';
   } catch (error) {
     return 'unknown';
@@ -50,12 +78,26 @@ export async function getAppVersion(): Promise<string> {
 }
 
 /**
- * Get memory usage information (if available)
+ * Get memory usage information using performance APIs where available
  */
 export async function getMemoryUsage(): Promise<number | undefined> {
   try {
-    // React Native doesn't provide direct memory APIs
-    // This would need to be implemented with native modules if needed
+    // Web environment: Use performance.memory if available
+    if (typeof performance !== 'undefined' && 
+        performance.memory && 
+        typeof performance.memory.usedJSHeapSize === 'number') {
+      return Math.round(performance.memory.usedJSHeapSize / 1024 / 1024); // MB
+    }
+
+    // Node.js environment: Use process.memoryUsage if available  
+    if (typeof process !== 'undefined' && 
+        typeof process.memoryUsage === 'function') {
+      const usage = process.memoryUsage();
+      return Math.round(usage.heapUsed / 1024 / 1024); // MB
+    }
+
+    // React Native: Would require native module implementation
+    // For now, return undefined to indicate unavailable
     return undefined;
   } catch (error) {
     return undefined;

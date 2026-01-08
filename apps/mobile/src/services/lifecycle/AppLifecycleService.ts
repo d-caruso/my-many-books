@@ -20,7 +20,7 @@ export interface AppLifecycleEventData {
 }
 
 class AppLifecycleService {
-  private isListening = false;
+  private isMonitoringEnabled = false;
   private currentSession: SessionData | null = null;
   private currentAppState: AppStateStatus = 'unknown';
   private backgroundStartTime: number | null = null;
@@ -31,11 +31,11 @@ class AppLifecycleService {
    * Start monitoring app lifecycle events
    */
   startMonitoring(): void {
-    if (this.isListening) {
+    if (this.isMonitoringEnabled) {
       return;
     }
 
-    this.isListening = true;
+    this.isMonitoringEnabled = true;
     this.currentAppState = AppState.currentState;
     this.startSession();
 
@@ -76,11 +76,11 @@ class AppLifecycleService {
    * Stop monitoring app lifecycle events
    */
   stopMonitoring(): void {
-    if (!this.isListening) {
+    if (!this.isMonitoringEnabled) {
       return;
     }
 
-    this.isListening = false;
+    this.isMonitoringEnabled = false;
 
     // Remove listeners
     if (this.appStateChangeListener) {
@@ -109,7 +109,7 @@ class AppLifecycleService {
    * Mark app initialization as complete
    */
   markInitializationComplete(): void {
-    if (!this.isListening) {
+    if (!this.isMonitoringEnabled) {
       return;
     }
 
@@ -132,7 +132,7 @@ class AppLifecycleService {
    * Check if lifecycle monitoring is active
    */
   isMonitoring(): boolean {
-    return this.isListening;
+    return this.isMonitoringEnabled;
   }
 
   /**
