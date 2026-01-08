@@ -184,6 +184,8 @@ const schema = {
     PERMISSION: null,
     USER_FACING: null,
     RECOVERED: null,
+    TRACKING_START: null,
+    TRACKING_STOP: null,
   },
 } as const;
 
