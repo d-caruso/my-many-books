@@ -117,7 +117,7 @@ export class MobileHookSystemManager {
 // Create singleton instance
 const mobileHookSystemManager = new MobileHookSystemManager();
 
-// Initialize the system
+// Initialize the system - listeners will be registered separately
 mobileHookSystemManager.initialize();
 
 // Export singleton methods
@@ -127,7 +127,7 @@ export const mobileHooks = {
   isOperational: () => mobileHookSystemManager.isOperational(),
 };
 
-// Export events for easy access
+// Export events for easy access  
 export { MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_STATUSES } from './eventsSchema';
 
 // Export types
