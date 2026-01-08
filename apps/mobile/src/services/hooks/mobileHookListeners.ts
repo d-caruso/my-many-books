@@ -149,13 +149,14 @@ class ErrorReportingListener {
   }
 
   private getErrorSeverity(eventType: string): string {
-    if (eventType.includes('UNHANDLED') || eventType.includes('PROMISE_REJECTION')) {
+    const upperEventType = eventType.toUpperCase();
+    if (upperEventType.includes('UNHANDLED') || upperEventType.includes('PROMISE_REJECTION')) {
       return 'critical';
     }
-    if (eventType.includes('NETWORK') || eventType.includes('TIMEOUT')) {
+    if (upperEventType.includes('NETWORK') || upperEventType.includes('TIMEOUT')) {
       return 'high';
     }
-    if (eventType.includes('VALIDATION') || eventType.includes('USER_FACING')) {
+    if (upperEventType.includes('VALIDATION') || upperEventType.includes('USER_FACING')) {
       return 'medium';
     }
     return 'low';
@@ -261,10 +262,12 @@ class PerformanceMonitoringListener {
       const duration = Date.now() - startTime;
       this.performanceStartTimes.delete(operationKey);
 
+      const dataAsRecord = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+
       const performanceEvent = {
         eventType: `${operationKey}.PERFORMANCE_METRIC`,
         data: {
-          ...(data as Record<string, unknown>),
+          ...dataAsRecord,
           duration,
           operationType: operationKey,
           timestamp: new Date().toISOString(),
@@ -362,7 +365,15 @@ export class MobileHookListenersManager {
           },
         };
 
-        await hookSystem.registerHook(analyticsHookConfig, analyticsAction);
+        // Use a proper hook config with ID for registration
+        const analyticsHookWithId: HookConfig = {
+          ...analyticsHookConfig,
+          id: 'mobile-analytics-listener',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        await hookSystem.registerExistingHook(analyticsHookWithId, analyticsAction);
       }
 
       // Register error reporting listener for error events
@@ -382,7 +393,14 @@ export class MobileHookListenersManager {
           },
         };
 
-        await hookSystem.registerHook(errorReportingHookConfig, errorReportingAction);
+        const errorReportingHookWithId: HookConfig = {
+          ...errorReportingHookConfig,
+          id: 'mobile-error-reporting-listener',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        await hookSystem.registerExistingHook(errorReportingHookWithId, errorReportingAction);
       }
 
       // Register offline storage listener for all events
@@ -402,7 +420,14 @@ export class MobileHookListenersManager {
           },
         };
 
-        await hookSystem.registerHook(offlineStorageHookConfig, offlineStorageAction);
+        const offlineStorageHookWithId: HookConfig = {
+          ...offlineStorageHookConfig,
+          id: 'mobile-offline-storage-listener',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        await hookSystem.registerExistingHook(offlineStorageHookWithId, offlineStorageAction);
       }
 
       // Register performance monitoring listener for performance events
@@ -422,7 +447,14 @@ export class MobileHookListenersManager {
           },
         };
 
-        await hookSystem.registerHook(performanceMonitoringHookConfig, performanceMonitoringAction);
+        const performanceMonitoringHookWithId: HookConfig = {
+          ...performanceMonitoringHookConfig,
+          id: 'mobile-performance-monitoring-listener',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        await hookSystem.registerExistingHook(performanceMonitoringHookWithId, performanceMonitoringAction);
       }
 
       if (__DEV__) {
