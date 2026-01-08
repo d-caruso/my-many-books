@@ -151,6 +151,8 @@ const schema = {
     UNREACHABLE: null,
     TIMEOUT: null,
     RESTORED: null,
+    MONITORING_START: null,
+    MONITORING_STOP: null,
   },
   // App Lifecycle Events
   APP: {
