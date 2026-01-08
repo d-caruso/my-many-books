@@ -290,9 +290,10 @@ describe('OperationQueue Hookey Integration', () => {
           operationId: operationId,
           type: 'create',
           resource: 'book',
-          retryCount: 1,
+          retryCount: 0, // Reset to 0 for cross-session retry capability
           maxRetries: 1,
-          reason: 'max_retries_exceeded'
+          reason: 'max_retries_exceeded',
+          crossSessionRetries: 0
         })
       );
     });

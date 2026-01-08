@@ -69,6 +69,8 @@ export interface QueuedOperation {
   retryCount: number;      // Attempts so far
   maxRetries: number;      // Max attempts (default: 3)
   status: OperationStatus;
+  lastFailedAt?: number;   // Timestamp when last marked as FAILED
+  crossSessionRetries?: number; // Cross-session retry attempts (default: 0)
 }
 
 // Typed operations for each resource

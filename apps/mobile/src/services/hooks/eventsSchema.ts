@@ -222,7 +222,16 @@ export const VALIDATION_TYPES = Object.freeze({
   SCHEMA_VALIDATION: 'schema_validation',
 } as const);
 
+// Retry reason constants for queue operations
+export const RETRY_REASONS = Object.freeze({
+  MAX_RETRIES_EXCEEDED: 'max_retries_exceeded',
+  CROSS_SESSION_RETRY: 'cross_session_retry',
+  AUTO_RETRY: 'auto_retry',
+  MANUAL_RETRY: 'manual_retry',
+} as const);
+
 export type OperationType = typeof OPERATION_TYPES[keyof typeof OPERATION_TYPES];
 export type OperationStatus = typeof OPERATION_STATUSES[keyof typeof OPERATION_STATUSES];
 export type ConflictResolutionMethod = typeof CONFLICT_RESOLUTION_METHODS[keyof typeof CONFLICT_RESOLUTION_METHODS];
 export type ValidationType = typeof VALIDATION_TYPES[keyof typeof VALIDATION_TYPES];
+export type RetryReason = typeof RETRY_REASONS[keyof typeof RETRY_REASONS];

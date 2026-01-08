@@ -2,10 +2,7 @@
 import { operationQueue } from '../../services/OperationQueue';
 import { syncService } from '../../services/sync/SyncService';
 import { mobileHooks, MOBILE_EVENTS } from '../../services/hooks/mobileHooks';
-import { idMappingService } from '../../services/sync/IDMappingService';
-import { cleanupService } from '../../services/sync/CleanupService';
-import type { QueuedOperation } from '../../types/queue';
-import { OPERATION_TYPES, OPERATION_STATUSES, RESOURCE_TYPES } from '../../services/hooks/eventsSchema';
+import { OPERATION_TYPES, RESOURCE_TYPES } from '../../services/hooks/eventsSchema';
 
 // Import AsyncStorage from setup
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,8 +20,7 @@ const { authorRepository } = require('../../services/database/AuthorRepository')
 const { categoryRepository } = require('../../services/database/CategoryRepository');
 
 describe('Queue-Sync Hookey Integration (End-to-End)', () => {
-  const mockEmit = jest.fn();
-  const eventLog: Array<{ eventType: string; data: any; timestamp: number }> = [];
+  const eventLog: { eventType: string; data: unknown; timestamp: number }[] = [];
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -259,9 +255,9 @@ describe('Queue-Sync Hookey Integration (End-to-End)', () => {
 
     it('should maintain event chronological order in complex scenarios', async () => {
       // Create multiple operations of different types
-      const bookOp = await operationQueue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, { title: 'Book 1' });
-      const authorOp = await operationQueue.enqueue(OPERATION_TYPES.UPDATE, RESOURCE_TYPES.AUTHOR, { name: 'Author 1' });
-      const categoryOp = await operationQueue.enqueue(OPERATION_TYPES.DELETE, RESOURCE_TYPES.CATEGORY, { id: 'cat-1' });
+      await operationQueue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, { title: 'Book 1' });
+      await operationQueue.enqueue(OPERATION_TYPES.UPDATE, RESOURCE_TYPES.AUTHOR, { name: 'Author 1' });
+      await operationQueue.enqueue(OPERATION_TYPES.DELETE, RESOURCE_TYPES.CATEGORY, { id: 'cat-1' });
 
       eventLog.length = 0; // Clear previous events
 

@@ -5,7 +5,7 @@ import { Alert } from 'react-native';
 import i18n from '../i18n';
 import { databaseService } from './database/DatabaseService';
 import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
-import { OPERATION_STATUSES } from './hooks/eventsSchema';
+import { OPERATION_STATUSES, RETRY_REASONS } from './hooks/eventsSchema';
 
 const QUEUE_STORAGE_KEY = '@operation_queue';
 const MAX_QUEUE_SIZE = 100;
@@ -180,7 +180,7 @@ export class OperationQueue {
     return this.queue.filter(op => 
       op.status === OPERATION_STATUSES.PENDING || 
       op.status === OPERATION_STATUSES.RETRYING ||
-      (op.status === OPERATION_STATUSES.FAILED && op.retryCount < op.maxRetries)
+      (op.status === OPERATION_STATUSES.FAILED && this.shouldRetryFailedOperation(op))
     );
   }
 
@@ -235,6 +235,22 @@ export class OperationQueue {
 
     try {
       for (const operation of processable) {
+        // Handle cross-session retry - increment counter if this is a failed operation being retried
+        if (operation.status === OPERATION_STATUSES.FAILED) {
+          operation.crossSessionRetries = (operation.crossSessionRetries || 0) + 1;
+          operation.status = OPERATION_STATUSES.RETRYING;
+          
+          mobileHooks.emit(MOBILE_EVENTS.QUEUE.RETRY, {
+            operationId: operation.id,
+            type: operation.type,
+            resource: operation.resource,
+            retryCount: operation.retryCount,
+            maxRetries: operation.maxRetries,
+            crossSessionRetries: operation.crossSessionRetries,
+            reason: RETRY_REASONS.CROSS_SESSION_RETRY
+          });
+        }
+        
         try {
           await this.executeWithBackoff(operation, apiExecutor);
           await this.dequeue(operation.id);
@@ -245,13 +261,18 @@ export class OperationQueue {
 
           if (operation.retryCount >= operation.maxRetries) {
             operation.status = OPERATION_STATUSES.FAILED;
+            operation.lastFailedAt = Date.now();
+            operation.crossSessionRetries = (operation.crossSessionRetries || 0);
+            operation.retryCount = 0; // Reset for cross-session retry
+            
             mobileHooks.emit(MOBILE_EVENTS.QUEUE.FAILED, {
               operationId: operation.id,
               type: operation.type,
               resource: operation.resource,
               retryCount: operation.retryCount,
               maxRetries: operation.maxRetries,
-              reason: 'max_retries_exceeded'
+              reason: RETRY_REASONS.MAX_RETRIES_EXCEEDED,
+              crossSessionRetries: operation.crossSessionRetries
             });
           } else {
             operation.status = OPERATION_STATUSES.RETRYING;
@@ -457,6 +478,28 @@ export class OperationQueue {
         warning: 'excessive_failures'
       });
     }
+  }
+
+  /**
+   * Check if a failed operation should be retried based on cross-session backoff
+   */
+  private shouldRetryFailedOperation(operation: QueuedOperation): boolean {
+    if (!operation.lastFailedAt) {
+      return false; // No failure timestamp, don't retry
+    }
+
+    const crossSessionRetries = operation.crossSessionRetries || 0;
+    const maxCrossSessionRetries = 3; // Maximum cross-session retry attempts
+
+    if (crossSessionRetries >= maxCrossSessionRetries) {
+      return false; // Exceeded max cross-session retries
+    }
+
+    // Exponential backoff: 1 hour, 4 hours, 16 hours
+    const timeSinceFailure = Date.now() - operation.lastFailedAt;
+    const backoffDelayMs = Math.pow(4, crossSessionRetries) * 60 * 60 * 1000; // hours in milliseconds
+
+    return timeSinceFailure > backoffDelayMs;
   }
 
   /**
