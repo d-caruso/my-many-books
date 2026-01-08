@@ -9,6 +9,7 @@ import { authService } from '@/services/authService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { SyncProvider } from '@/components/SyncProvider';
+import { LifecycleProvider } from '@/components/LifecycleProvider';
 import { useTranslation } from 'react-i18next';
 
 export default function RootLayout() {
@@ -23,8 +24,9 @@ export default function RootLayout() {
             loadingComponent={<LoadingSpinner />}
           >
             <SyncProvider>
-              <StatusBar style="auto" />
-              <OfflineBanner />
+              <LifecycleProvider>
+                <StatusBar style="auto" />
+                <OfflineBanner />
             <Stack>
               <Stack.Screen 
                 name="(tabs)" 
@@ -72,6 +74,7 @@ export default function RootLayout() {
                 }}
               />
             </Stack>
+              </LifecycleProvider>
             </SyncProvider>
           </AuthProvider>
         </PaperProvider>
