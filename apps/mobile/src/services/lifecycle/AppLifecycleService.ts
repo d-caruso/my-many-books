@@ -24,8 +24,8 @@ class AppLifecycleService {
   private currentSession: SessionData | null = null;
   private currentAppState: AppStateStatus = 'unknown';
   private backgroundStartTime: number | null = null;
-  private appStateChangeListener: any = null;
-  private memoryWarningListener: any = null;
+  private appStateChangeListener: { remove: () => void } | null = null;
+  private memoryWarningListener: { remove: () => void } | null = null;
 
   /**
    * Start monitoring app lifecycle events
@@ -53,7 +53,7 @@ class AppLifecycleService {
           'memoryWarning',
           this.handleMemoryWarning.bind(this)
         );
-      } catch (error) {
+      } catch {
         // Memory warning events might not be available on all platforms
       }
     }

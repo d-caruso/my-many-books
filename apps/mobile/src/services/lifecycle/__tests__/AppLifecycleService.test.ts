@@ -279,7 +279,7 @@ describe('AppLifecycleService', () => {
 
     it('should end session when monitoring stops', () => {
       appLifecycleService.startMonitoring();
-      const session = appLifecycleService.getCurrentSession();
+      const _session = appLifecycleService.getCurrentSession();
       
       appLifecycleService.stopMonitoring();
 

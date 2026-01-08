@@ -13,7 +13,7 @@ export async function collectErrorContext(): Promise<Partial<ErrorContext>> {
     };
 
     return context;
-  } catch (error) {
+  } catch {
     // If context collection fails, return minimal context
     return {
       timestamp: Date.now(),
@@ -32,7 +32,7 @@ export async function getUserAgent(): Promise<string> {
     const scale = Dimensions.get('window').scale;
     
     return `${Platform.OS}/${Platform.Version} (${width}x${height}@${scale}x) MyManyBooks/1.0.0`;
-  } catch (error) {
+  } catch {
     return `${Platform.OS}/unknown MyManyBooks/unknown`;
   }
 }
@@ -53,14 +53,14 @@ export async function getAppVersion(): Promise<string> {
                              '1';
           return `${version} (${buildNumber})`;
         }
-      } catch (expoError) {
+      } catch {
         // Expo not available, continue with fallback
       }
 
       try {
         const packageJson = require('../../package.json');
         return `${packageJson.version} (1)`;
-      } catch (packageError) {
+      } catch {
         // Package.json not accessible
       }
     }
@@ -72,7 +72,7 @@ export async function getAppVersion(): Promise<string> {
     }
     
     return '1.0.0 (1)';
-  } catch (error) {
+  } catch {
     return 'unknown';
   }
 }
@@ -99,7 +99,7 @@ export async function getMemoryUsage(): Promise<number | undefined> {
     // React Native: Would require native module implementation
     // For now, return undefined to indicate unavailable
     return undefined;
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }
@@ -107,12 +107,12 @@ export async function getMemoryUsage(): Promise<number | undefined> {
 /**
  * Sanitize user data for error reporting (remove PII)
  */
-export function sanitizeUserData(data: any): any {
+export function sanitizeUserData(data: unknown): unknown {
   if (typeof data !== 'object' || data === null) {
     return data;
   }
 
-  const sensitiveKeys = [
+  const _sensitiveKeys = [
     'password', 'token', 'secret', 'key', 'auth', 'session',
     'email', 'phone', 'address', 'ssn', 'credit', 'card'
   ];
@@ -120,7 +120,7 @@ export function sanitizeUserData(data: any): any {
   const sanitized = { ...data };
 
   for (const key in sanitized) {
-    if (sanitiveKeys.some(sensitive => 
+    if (_sensitiveKeys.some(sensitive => 
       key.toLowerCase().includes(sensitive.toLowerCase())
     )) {
       sanitized[key] = '[REDACTED]';
@@ -157,7 +157,7 @@ export function containsSensitiveInfo(error: Error): boolean {
 /**
  * Create error-safe string representation of any value
  */
-export function safeStringify(value: any, maxLength: number = 1000): string {
+export function safeStringify(value: unknown, maxLength: number = 1000): string {
   try {
     if (value === null || value === undefined) {
       return String(value);
@@ -176,7 +176,7 @@ export function safeStringify(value: any, maxLength: number = 1000): string {
     }
 
     return String(value);
-  } catch (error) {
+  } catch {
     return '[Error stringifying value]';
   }
 }
