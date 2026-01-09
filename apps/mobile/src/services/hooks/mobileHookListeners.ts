@@ -5,6 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HookSystem, HookConfig, HookAction, HookActionContext } from '@my-many-books/hookey';
+import { mobileHookConfigService } from './mobileHookConfigService';
 
 export interface MobileHookListenerConfig {
   analyticsEnabled: boolean;
@@ -32,6 +33,12 @@ class AnalyticsListener {
   }
 
   async handleEvent(eventType: string, data: unknown): Promise<void> {
+    // 2-Level Priority System Check
+    const shouldProcess = await mobileHookConfigService.shouldProcessHooks('analytics');
+    if (!shouldProcess) {
+      return; // Skip based on priority system
+    }
+
     if (!this.config.analyticsEnabled) {
       return;
     }
@@ -93,6 +100,12 @@ class ErrorReportingListener {
   }
 
   async handleEvent(eventType: string, data: unknown): Promise<void> {
+    // 2-Level Priority System Check
+    const shouldProcess = await mobileHookConfigService.shouldProcessHooks('error_reporting');
+    if (!shouldProcess) {
+      return; // Skip based on priority system
+    }
+
     if (!this.config.errorReportingEnabled) {
       return;
     }
@@ -172,6 +185,12 @@ class OfflineStorageListener {
   }
 
   async handleEvent(eventType: string, data: unknown): Promise<void> {
+    // 2-Level Priority System Check
+    const shouldProcess = await mobileHookConfigService.shouldProcessHooks('offline_storage');
+    if (!shouldProcess) {
+      return; // Skip based on priority system
+    }
+
     if (!this.config.offlineStorageEnabled) {
       return;
     }
@@ -229,6 +248,12 @@ class PerformanceMonitoringListener {
   }
 
   async handleEvent(eventType: string, data: unknown): Promise<void> {
+    // 2-Level Priority System Check
+    const shouldProcess = await mobileHookConfigService.shouldProcessHooks('performance_monitoring');
+    if (!shouldProcess) {
+      return; // Skip based on priority system
+    }
+
     if (!this.config.performanceMonitoringEnabled) {
       return;
     }

@@ -1,5 +1,5 @@
 import { ErrorBoundary } from '../ErrorBoundary';
-import { errorTrackingService } from '../../services/errors/ErrorTrackingService';
+// ErrorTrackingService is mocked below, no direct import needed
 
 // Mock the error tracking service
 jest.mock('../../services/errors/ErrorTrackingService', () => ({

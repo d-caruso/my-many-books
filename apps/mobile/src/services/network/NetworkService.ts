@@ -1,5 +1,6 @@
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
+import { getErrorMessage } from '../../utils/helpers';
 
 export interface NetworkEventData {
   isOnline: boolean;
@@ -13,12 +14,16 @@ export interface NetworkEventData {
   };
 }
 
-class NetworkService {
+export class NetworkService {
   private currentState: NetInfoState | null = null;
   private isListening = false;
   private unsubscribe: (() => void) | null = null;
   private lastEventTime = 0;
-  private readonly DEBOUNCE_MS = 500; // Prevent excessive event emission
+  private readonly debounceMs: number;
+
+  constructor(debounceMs: number = 500) {
+    this.debounceMs = debounceMs;
+  }
 
   /**
    * Start monitoring network state changes and emitting hookey events
@@ -46,7 +51,7 @@ class NetworkService {
 
     } catch (error) {
       mobileHooks.emit(MOBILE_EVENTS.ERROR.NETWORK_TIMEOUT, {
-        error: 'Failed to initialize network monitoring',
+        error: `Failed to initialize network monitoring: ${getErrorMessage(error)}`,
         timestamp: Date.now(),
         context: { service: 'NetworkService', method: 'startMonitoring' }
       });
@@ -97,12 +102,6 @@ class NetworkService {
     this.lastEventTime = 0;
   }
 
-  /**
-   * Set debounce timing (for testing)
-   */
-  setDebounceMs(ms: number): void {
-    (this as any).DEBOUNCE_MS = ms;
-  }
 
   /**
    * Handle network state changes with debouncing
@@ -111,7 +110,7 @@ class NetworkService {
     const now = Date.now();
     
     // Debounce rapid network state changes
-    if (now - this.lastEventTime < this.DEBOUNCE_MS) {
+    if (now - this.lastEventTime < this.debounceMs) {
       return;
     }
 
@@ -201,8 +200,8 @@ class NetworkService {
 
     // Check for cellular signal strength changes
     if (current.type === 'cellular' && previous.type === 'cellular') {
-      const currentDetails = current.details as any;
-      const previousDetails = previous.details as any;
+      const currentDetails = current.details as Record<string, unknown>;
+      const previousDetails = previous.details as Record<string, unknown>;
 
       if (currentDetails?.strength !== previousDetails?.strength) {
         return true;
@@ -211,8 +210,8 @@ class NetworkService {
 
     // Check for wifi signal strength changes
     if (current.type === 'wifi' && previous.type === 'wifi') {
-      const currentDetails = current.details as any;
-      const previousDetails = previous.details as any;
+      const currentDetails = current.details as Record<string, unknown>;
+      const previousDetails = previous.details as Record<string, unknown>;
 
       if (currentDetails?.strength !== previousDetails?.strength) {
         return true;
@@ -225,9 +224,9 @@ class NetworkService {
   /**
    * Extract quality metrics from NetInfoState
    */
-  private extractQualityMetrics(state: NetInfoState): Record<string, any> {
-    const details = state.details as any;
-    const metrics: Record<string, any> = {
+  private extractQualityMetrics(state: NetInfoState): Record<string, unknown> {
+    const details = state.details as Record<string, unknown>;
+    const metrics: Record<string, unknown> = {
       connectionType: state.type
     };
 

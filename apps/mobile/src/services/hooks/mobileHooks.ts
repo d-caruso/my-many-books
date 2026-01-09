@@ -4,6 +4,7 @@
 // ================================================================
 
 import { HookSystem, InMemoryHookStorage } from '@my-many-books/hookey';
+import { mobileHookConfigService } from './mobileHookConfigService';
 
 const isTestRuntime = (): boolean => {
   return __DEV__ || Boolean(process.env.JEST_WORKER_ID);
@@ -69,8 +70,15 @@ export class MobileHookSystemManager {
   }
 
   async emit(eventName: string, payload?: unknown): Promise<void> {
+    // Level 1: Check test environment and local config
     if (this.shouldSkipHooks()) {
       return;
+    }
+
+    // Level 2 & 3: Check 2-Level Priority System (Environment + Database + Individual Controls)
+    const shouldProcess = await mobileHookConfigService.shouldProcessHooks(eventName);
+    if (!shouldProcess) {
+      return; // Skip based on priority system
     }
 
     const system = this.getInstance();

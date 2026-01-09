@@ -1,6 +1,7 @@
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 import { appLifecycleService } from '../lifecycle/AppLifecycleService';
 import { networkService } from '../network/NetworkService';
+import { getErrorMessage } from '../../utils/helpers';
 
 export interface ErrorContext {
   timestamp: number;
@@ -10,11 +11,11 @@ export interface ErrorContext {
   sessionId?: string;
   userId?: string;
   appState?: string;
-  networkState?: any;
+  networkState?: Record<string, unknown>;
   memoryUsage?: number;
   stackTrace?: string;
   userActions?: string[];
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }
 
 export interface ErrorEventData extends ErrorContext {
@@ -24,7 +25,7 @@ export interface ErrorEventData extends ErrorContext {
   filename?: string;
   lineno?: number;
   colno?: number;
-  originalError?: any;
+  originalError?: Error | Record<string, unknown>;
   recoveryAttempted?: boolean;
   severity: 'low' | 'medium' | 'high' | 'critical';
 }
@@ -34,8 +35,8 @@ class ErrorTrackingService {
   private errorHandlers: Array<() => void> = [];
   private userActionHistory: string[] = [];
   private readonly MAX_USER_ACTIONS = 10;
-  private globalErrorHandler: any = null;
-  private promiseRejectionHandler: any = null;
+  private globalErrorHandler: ((error: unknown, isFatal: boolean) => void) | null = null;
+  private promiseRejectionHandler: ((event: { reason?: unknown; preventDefault?: () => void }) => void) | null = null;
 
   /**
    * Start tracking errors and monitoring for unhandled exceptions
@@ -195,12 +196,12 @@ class ErrorTrackingService {
     if (typeof global !== 'undefined' && global.ErrorUtils) {
       const originalErrorHandler = global.ErrorUtils.getGlobalHandler();
 
-      this.globalErrorHandler = (error: any, isFatal: boolean) => {
+      this.globalErrorHandler = (error: unknown, isFatal: boolean) => {
         try {
           // Ensure we have a proper Error object
           const normalizedError = error instanceof Error 
             ? error 
-            : new Error(error?.message || String(error) || 'Unknown error');
+            : new Error(getErrorMessage(error));
 
           // Track the error with proper context
           this.trackError(normalizedError, 'UNHANDLED', {
@@ -275,7 +276,7 @@ class ErrorTrackingService {
    * Setup unhandled promise rejection handling for multiple environments
    */
   private setupPromiseRejectionHandling(): void {
-    const handlePromiseRejection = (event: any) => {
+    const handlePromiseRejection = (event: { reason?: unknown; preventDefault?: () => void }) => {
       try {
         // Extract the rejection reason
         const reason = event.reason || event.detail?.reason || event;
@@ -320,8 +321,8 @@ class ErrorTrackingService {
     
     // Node.js process events (for testing environments)
     else if (typeof process !== 'undefined' && process.on) {
-      const processHandler = (reason: any, promise: Promise<any>) => {
-        handlePromiseRejection({ reason, promise, type: 'process_unhandled_rejection' });
+      const processHandler = (reason: unknown, promise: Promise<unknown>) => {
+        handlePromiseRejection({ reason, promise: promise as unknown, type: 'process_unhandled_rejection' } as { reason?: unknown; preventDefault?: () => void });
       };
       
       process.on('unhandledRejection', processHandler);
@@ -399,6 +400,9 @@ class ErrorTrackingService {
         }
       };
     } catch (error) {
+      if (__DEV__) {
+        console.warn('Failed to collect network context:', getErrorMessage(error));
+      }
       return {};
     }
   }
@@ -418,6 +422,9 @@ class ErrorTrackingService {
         } : null
       };
     } catch (error) {
+      if (__DEV__) {
+        console.warn('Failed to collect app context:', getErrorMessage(error));
+      }
       return {};
     }
   }
@@ -448,7 +455,7 @@ class ErrorTrackingService {
   /**
    * Sanitize error object to remove sensitive data
    */
-  private sanitizeError(error: Error): any {
+  private sanitizeError(error: Error): { name: string; message: string } {
     return {
       name: error.name,
       message: error.message,

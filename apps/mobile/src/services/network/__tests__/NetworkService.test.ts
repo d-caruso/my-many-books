@@ -1,5 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
-import { networkService } from '../NetworkService';
+import { NetworkService } from '../NetworkService';
 import { mobileHooks, MOBILE_EVENTS } from '../../hooks/mobileHooks';
 
 // Mock NetInfo
@@ -32,6 +32,7 @@ jest.mock('../../hooks/mobileHooks', () => ({
 }));
 
 describe('NetworkService', () => {
+  let networkService: NetworkService;
   let mockAddEventListener: jest.Mock;
   let mockFetch: jest.Mock;
   let mockUnsubscribe: jest.Mock;
@@ -39,9 +40,8 @@ describe('NetworkService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Reset service state and disable debouncing for tests
-    networkService.reset();
-    networkService.setDebounceMs(0);
+    // Create fresh service instance with no debouncing for tests
+    networkService = new NetworkService(0);
     
     mockUnsubscribe = jest.fn();
     mockAddEventListener = jest.mocked(NetInfo.addEventListener);
@@ -99,7 +99,7 @@ describe('NetworkService', () => {
       expect(mobileHooks.emit).toHaveBeenCalledWith(
         MOBILE_EVENTS.ERROR.NETWORK_TIMEOUT,
         expect.objectContaining({
-          error: 'Failed to initialize network monitoring',
+          error: 'Failed to initialize network monitoring: Network error',
           timestamp: expect.any(Number),
           context: { service: 'NetworkService', method: 'startMonitoring' }
         })
@@ -137,7 +137,7 @@ describe('NetworkService', () => {
   });
 
   describe('network state change events', () => {
-    let networkStateListener: (state: any) => void;
+    let networkStateListener: (state: { type: string; isConnected: boolean }) => void;
 
     beforeEach(async () => {
       await networkService.startMonitoring();

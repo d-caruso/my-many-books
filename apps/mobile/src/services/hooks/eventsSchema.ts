@@ -234,8 +234,53 @@ export const RETRY_REASONS = Object.freeze({
   MANUAL_RETRY: 'manual_retry',
 } as const);
 
+// Mobile configuration constants
+export const MOBILE_CONFIG_KEYS = Object.freeze({
+  ANALYTICS_ENABLED: 'mobile.hooks.analytics.enabled',
+  ERROR_REPORTING_ENABLED: 'mobile.hooks.errorReporting.enabled',
+  OFFLINE_STORAGE_ENABLED: 'mobile.hooks.offlineStorage.enabled',
+  PERFORMANCE_MONITORING_ENABLED: 'mobile.hooks.performanceMonitoring.enabled',
+  BATCH_UPLOAD_INTERVAL: 'mobile.hooks.batchUploadInterval',
+  MAX_OFFLINE_EVENTS: 'mobile.hooks.maxOfflineEvents',
+} as const);
+
+export const MOBILE_CONFIG_CONSTANTS = Object.freeze({
+  CATEGORY: 'mobile_hooks',
+  DATA_TYPE: 'string',
+  VERSION: '1.0.0',
+  ENTITY_ID: 'mobile_hook_listeners',
+} as const);
+
+export const MOBILE_CONFIG_LIMITS = Object.freeze({
+  MIN_BATCH_INTERVAL: 60,
+  MAX_BATCH_INTERVAL: 3600,
+  MIN_OFFLINE_EVENTS: 100,
+  MAX_OFFLINE_EVENTS: 10000,
+  BASE_MEMORY_KB: 50,
+  ANALYTICS_MEMORY_KB: 20,
+  ERROR_REPORTING_MEMORY_KB: 15,
+  OFFLINE_EVENT_MEMORY_KB: 0.1,
+  PERFORMANCE_MEMORY_KB: 30,
+  MEMORY_THRESHOLD_KB: 1000,
+} as const);
+
+export const HEALTH_SCORE_THRESHOLDS = Object.freeze({
+  HEALTHY: 80,
+  WARNING: 60,
+  BATCH_INTERVAL_PENALTY: 10,
+  HIGH_EVENTS_PENALTY: 5,
+  DISABLED_FEATURES_PENALTY: 15,
+} as const);
+
+export const MOBILE_CONFIG_ACTIONS = Object.freeze({
+  UPDATE: 'update',
+  RESET: 'reset',
+} as const);
+
 export type OperationType = typeof OPERATION_TYPES[keyof typeof OPERATION_TYPES];
 export type OperationStatus = typeof OPERATION_STATUSES[keyof typeof OPERATION_STATUSES];
 export type ConflictResolutionMethod = typeof CONFLICT_RESOLUTION_METHODS[keyof typeof CONFLICT_RESOLUTION_METHODS];
 export type ValidationType = typeof VALIDATION_TYPES[keyof typeof VALIDATION_TYPES];
 export type RetryReason = typeof RETRY_REASONS[keyof typeof RETRY_REASONS];
+export type MobileConfigKey = typeof MOBILE_CONFIG_KEYS[keyof typeof MOBILE_CONFIG_KEYS];
+export type MobileConfigAction = typeof MOBILE_CONFIG_ACTIONS[keyof typeof MOBILE_CONFIG_ACTIONS];
