@@ -30,10 +30,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Install dependencies
         run: |
-          npm ci
+          npm ci --prefer-offline --no-audit --no-progress
+        timeout-minutes: 15
 
   lint:
     name: Lint
@@ -47,9 +49,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit --no-progress
+        timeout-minutes: 10
 
       - name: Build hookey library
         run: npx nx build hookey
@@ -81,9 +85,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit --no-progress
+        timeout-minutes: 10
 
       - name: Build hookey library
         run: npx nx build hookey
@@ -240,9 +246,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit --no-progress
+        timeout-minutes: 10
 
       - name: Build hookey library
         run: npx nx build hookey
