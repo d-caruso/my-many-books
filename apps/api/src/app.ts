@@ -20,6 +20,7 @@ import adminRoutes from './routes/adminRoutes';
 import authRoutes from './routes/authRoutes';
 import hookRoutes from './routes/hookRoutes';
 import settingsRoutes from './routes/settingsRoutes';
+import mobileAnalyticsRoutes from './routes/mobileAnalyticsRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
 import { initializeHookSystem } from './services/hooks/hookSystem';
@@ -86,6 +87,7 @@ app.use(`${BASE_PATH}/authors`, authorRoutes);
 app.use(`${BASE_PATH}/categories`, categoryRoutes);
 app.use(`${BASE_PATH}/isbn`, isbnRoutes);
 app.use(`${BASE_PATH}/settings`, settingsRoutes);
+app.use(`${BASE_PATH}/mobile-analytics`, mobileAnalyticsRoutes);
 app.use(`${BASE_PATH}/admin`, adminRoutes);
 app.use(`${BASE_PATH}/admin/hooks`, hookRoutes);
 

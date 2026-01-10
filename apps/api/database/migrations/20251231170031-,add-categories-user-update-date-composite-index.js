@@ -4,8 +4,7 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.addIndex('categories', ['user_id', 'update_date'], {
-      name: 'idx_categories_user_update_date',
-      type: 'BTREE'
+      name: 'idx_categories_user_update_date'
     });
   },
 
