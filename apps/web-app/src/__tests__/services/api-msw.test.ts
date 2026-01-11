@@ -323,12 +323,13 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
           const updatedUser = {
             id: 1,
             email: 'test@example.com',
-            name: body.name ?? 'Test',
-            surname: body.surname ?? 'User',
+            name: body.name ?? 'New',
+            surname: body.surname ?? 'Username',
+            fullName: `${body.name ?? 'New'} ${body.surname ?? 'Username'}`.trim(),
             isActive: true,
             role: 'user',
-            creationDate: new Date().toISOString(),
-            updateDate: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           };
 
           return HttpResponse.json(updatedUser);

@@ -9,6 +9,7 @@ import { AuthUser } from '../models/interfaces/ModelInterfaces';
 import { container } from '../container';
 import { TYPES } from '../container/types';
 import { UserService as DomainUserService } from '../services/user/UserService';
+import { UserEntity } from '../domain/entities/User';
 
 // Extended Request interface to include authenticated user
 export interface AuthenticatedRequest extends Request {
@@ -110,7 +111,7 @@ const resolveUserService = (): DomainUserService =>
   container.get<DomainUserService>(TYPES.UserService);
 
 export const UserService = {
-  findOrCreateUser(providerUser: AuthProviderUser, provider: string) {
+  findOrCreateUser(providerUser: AuthProviderUser, provider: string): Promise<{ user: UserEntity; isNewUser: boolean }> {
     return resolveUserService().findOrCreateUser(
       {
         email: providerUser.email,
@@ -120,10 +121,10 @@ export const UserService = {
       provider
     );
   },
-  getUserById(userId: number) {
+  getUserById(userId: number): Promise<UserEntity | null> {
     return resolveUserService().getUserById(userId);
   },
-  deactivateUser(userId: number) {
+  deactivateUser(userId: number): Promise<void> {
     return resolveUserService().deactivateAccount(userId);
   },
 };

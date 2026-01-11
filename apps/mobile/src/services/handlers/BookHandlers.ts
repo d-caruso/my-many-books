@@ -1,10 +1,12 @@
 /**
- * Book Handler Variants
+ * Book Handler Variants with Hookey Integration
  * 
  * Three handler patterns for different use cases:
  * - bookClientGateway: Pure HTTP (web-app pattern, fail-fast when offline)
  * - bookMobileHandler: Auto-queueing hybrid (try online first, queue when offline)
  * - bookQueueHandler: Queue-only (no HTTP, prevents double-queueing)
+ * 
+ * All handlers emit hookey events for observability and tracking.
  */
 
 import { createClientGateway, createDefaultClientGatewayConfig } from './gateways/clientGateway';
@@ -17,6 +19,7 @@ import {
   hasUpdateFields,
   BookValidationError 
 } from './validation/BookValidation';
+import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 
 // Book type definition (will be replaced with shared types in Phase 2)
 export interface Book {
@@ -52,48 +55,164 @@ export interface UpdateBookPayload {
   rating?: number;
 }
 
-// Validated book handler wrappers
+// Helper function to generate unique operation IDs
+const generateOperationId = (): string => {
+  return `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
+// Helper function to create event metadata
+const createEventMetadata = (operationId: string, bookData?: Partial<Book | CreateBookPayload | UpdateBookPayload>) => ({
+  operationId,
+  resourceType: 'book' as const,
+  timestamp: new Date().toISOString(),
+  metadata: bookData ? {
+    bookId: 'id' in bookData ? bookData.id : undefined,
+    title: bookData.title,
+    author: bookData.author,
+    status: bookData.status,
+  } : undefined,
+});
+
+// Validated book handler wrappers with hookey integration
 class ValidatedBookHandler<THandler extends Record<string, unknown>> {
   constructor(private handler: THandler) {}
 
-  // Wrap create method with validation
+  // Wrap create method with validation and hookey events
   async create(data: CreateBookPayload): Promise<Book | string> {
-    validateCreateBookAndThrow(data);
-    return (this.handler as unknown as { create: (data: CreateBookPayload) => Promise<Book | string> }).create(data);
+    const operationId = generateOperationId();
+    const eventMetadata = createEventMetadata(operationId, data);
+    
+    // Emit start event (fire and forget)
+    mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.START, eventMetadata);
+    
+    try {
+      validateCreateBookAndThrow(data);
+      const result = await (this.handler as unknown as { create: (data: CreateBookPayload) => Promise<Book | string> }).create(data);
+      
+      // Emit success event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.SUCCESS, {
+        ...eventMetadata,
+        result: typeof result === 'string' ? { tempId: result } : { book: result },
+      });
+      
+      return result;
+    } catch (error) {
+      // Emit failure event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.FAILED, {
+        ...eventMetadata,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof BookValidationError ? 'validation' : 'unknown',
+      });
+      
+      throw error;
+    }
   }
 
-  // Wrap update method with validation
+  // Wrap update method with validation and hookey events
   async update(id: string, data: UpdateBookPayload): Promise<Book | string> {
-    if (!hasUpdateFields(data)) {
-      throw new BookValidationError(
-        [{ field: 'data', code: 'NO_UPDATE_FIELDS', message: 'validation.book.update.noFields' }],
-        'No fields provided for update'
-      );
+    const operationId = generateOperationId();
+    const eventMetadata = createEventMetadata(operationId, { ...data, id });
+    
+    // Emit start event (fire and forget)
+    mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.START, eventMetadata);
+    
+    try {
+      if (!hasUpdateFields(data)) {
+        throw new BookValidationError(
+          [{ field: 'data', code: 'NO_UPDATE_FIELDS', message: 'validation.book.update.noFields' }],
+          'No fields provided for update'
+        );
+      }
+      
+      validateUpdateBookAndThrow(data);
+      const result = await (this.handler as unknown as { update: (id: string, data: UpdateBookPayload) => Promise<Book | string> }).update(id, data);
+      
+      // Emit success event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.SUCCESS, {
+        ...eventMetadata,
+        result: typeof result === 'string' ? { tempId: result } : { book: result },
+      });
+      
+      return result;
+    } catch (error) {
+      // Emit failure event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.FAILED, {
+        ...eventMetadata,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof BookValidationError ? 'validation' : 'unknown',
+      });
+      
+      throw error;
     }
-    validateUpdateBookAndThrow(data);
-    return (this.handler as unknown as { update: (id: string, data: UpdateBookPayload) => Promise<Book | string> }).update(id, data);
   }
 
-  // Pass through other methods without validation
+  // Wrap delete method with validation and hookey events
   async delete(id: string): Promise<void> {
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      throw new BookValidationError(
-        [{ field: 'id', code: 'ID_REQUIRED', message: 'validation.book.id.required' }],
-        'Book ID is required for delete operation'
-      );
+    const operationId = generateOperationId();
+    const eventMetadata = createEventMetadata(operationId, { id });
+    
+    // Emit start event (fire and forget)
+    mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.START, eventMetadata);
+    
+    try {
+      if (!id || typeof id !== 'string' || id.trim().length === 0) {
+        throw new BookValidationError(
+          [{ field: 'id', code: 'ID_REQUIRED', message: 'validation.book.id.required' }],
+          'Book ID is required for delete operation'
+        );
+      }
+      
+      await (this.handler as unknown as { delete: (id: string) => Promise<void> }).delete(id);
+      
+      // Emit success event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.SUCCESS, eventMetadata);
+    } catch (error) {
+      // Emit failure event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.FAILED, {
+        ...eventMetadata,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof BookValidationError ? 'validation' : 'unknown',
+      });
+      
+      throw error;
     }
-    return (this.handler as unknown as { delete: (id: string) => Promise<void> }).delete(id);
   }
 
   async read?(id: string): Promise<Book> {
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      throw new BookValidationError(
-        [{ field: 'id', code: 'ID_REQUIRED', message: 'validation.book.id.required' }],
-        'Book ID is required for read operation'
-      );
+    const operationId = generateOperationId();
+    const eventMetadata = createEventMetadata(operationId, { id });
+    
+    // Emit start event (fire and forget)
+    mobileHooks.emit(MOBILE_EVENTS.BOOK.READ.START, eventMetadata);
+    
+    try {
+      if (!id || typeof id !== 'string' || id.trim().length === 0) {
+        throw new BookValidationError(
+          [{ field: 'id', code: 'ID_REQUIRED', message: 'validation.book.id.required' }],
+          'Book ID is required for read operation'
+        );
+      }
+      
+      const handler = this.handler as unknown as { read?: (id: string) => Promise<Book> };
+      const result = await handler.read!(id);
+      
+      // Emit success event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.READ.SUCCESS, {
+        ...eventMetadata,
+        result: { book: result },
+      });
+      
+      return result;
+    } catch (error) {
+      // Emit failure event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.READ.FAILED, {
+        ...eventMetadata,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof BookValidationError ? 'validation' : 'unknown',
+      });
+      
+      throw error;
     }
-    const handler = this.handler as unknown as { read?: (id: string) => Promise<Book> };
-    return handler.read!(id);
   }
 
   async list?(filters?: Record<string, unknown>): Promise<Book[]> {

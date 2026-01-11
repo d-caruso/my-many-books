@@ -20,6 +20,8 @@ import adminRoutes from './routes/adminRoutes';
 import authRoutes from './routes/authRoutes';
 import hookRoutes from './routes/hookRoutes';
 import settingsRoutes from './routes/settingsRoutes';
+import mobileConfigRoutes from './routes/mobileConfigRoutes';
+import mobileAnalyticsRoutes from './routes/mobileAnalyticsRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
 import { initializeHookSystem } from './services/hooks/hookSystem';
@@ -29,8 +31,9 @@ import { securityHeadersConfig } from './config/securityHeaders';
 import { initializeI18n } from '@my-many-books/shared-i18n';
 import { getLogger } from '@my-many-books/shared-logging';
 import { SettingsService } from './services/SettingsService';
+import { parseTextPlainJson } from './middleware/parseTextPlainJson';
 
-const app = express();
+const app: express.Express = express();
 const isTestEnvironment = process.env['NODE_ENV'] === 'test';
 const securityHeadersEnabled = process.env['SECURITY_HEADERS_ENABLED'] !== 'false';
 
@@ -62,6 +65,9 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Custom middleware to handle text/plain JSON payloads (for mobile analytics)
+app.use('/api/v1/mobile-analytics', express.text({ limit: '10mb' }), parseTextPlainJson);
+
 // API base path from environment
 const API_PREFIX = process.env['API_PREFIX'] || '/api';
 const API_ROUTE_VERSION = process.env['API_ROUTE_VERSION'] || 'v1';
@@ -86,8 +92,10 @@ app.use(`${BASE_PATH}/authors`, authorRoutes);
 app.use(`${BASE_PATH}/categories`, categoryRoutes);
 app.use(`${BASE_PATH}/isbn`, isbnRoutes);
 app.use(`${BASE_PATH}/settings`, settingsRoutes);
+app.use(`${BASE_PATH}/mobile-analytics`, mobileAnalyticsRoutes);
 app.use(`${BASE_PATH}/admin`, adminRoutes);
 app.use(`${BASE_PATH}/admin/hooks`, hookRoutes);
+app.use(`${BASE_PATH}`, mobileConfigRoutes);
 
 // ===== 404 HANDLER =====
 app.use((_req, res): void => {

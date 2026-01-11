@@ -4,11 +4,11 @@
 // ================================================================
 
 export type SettingType = 'string' | 'number' | 'boolean' | 'enum' | 'json';
-export type SettingCategory = 'ui' | 'api' | 'features' | 'business' | 'security';
+export type SettingCategory = 'ui' | 'api' | 'features' | 'business' | 'security' | 'mobile_hooks' | 'emergency' | 'mobile_hook_actions' | 'user_mobile_config';
 
 // Arrays for Zod enum validation
 export const SettingTypeValues = ['string', 'number', 'boolean', 'enum', 'json'] as const;
-export const SettingCategoryValues = ['ui', 'api', 'features', 'business', 'security'] as const;
+export const SettingCategoryValues = ['ui', 'api', 'features', 'business', 'security', 'mobile_hooks', 'emergency', 'mobile_hook_actions', 'user_mobile_config'] as const;
 
 // Book list status change behavior constants
 export const BOOK_STATUS_CHANGE_BEHAVIOR = {

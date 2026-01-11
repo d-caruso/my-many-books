@@ -4,6 +4,7 @@ import { Text, Card, ActivityIndicator, Button } from 'react-native-paper';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { adminAPI } from '@/services/api';
+import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
 interface DashboardStats {
   totalUsers: number;
@@ -25,8 +26,13 @@ export default function AdminDashboard() {
       const data = await adminAPI.getAdminStats();
       setStats(data);
     } catch (err: Error) {
-      console.error('Failed to fetch admin stats:', err);
-      setError(err.message || 'Failed to load statistics');
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+        operation: 'fetch_admin_stats',
+        error: err.message,
+        statusCode: err.status,
+        source: 'admin_dashboard'
+      });
+      setError(t('pages:admin.dashboard.failed_to_load_statistics', 'Failed to load statistics'));
     } finally {
       setLoading(false);
     }

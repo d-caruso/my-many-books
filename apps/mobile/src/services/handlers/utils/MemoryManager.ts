@@ -296,7 +296,7 @@ export class HandlerResourceManager {
  * Memory monitoring utilities
  */
 export class MemoryMonitor {
-  private static measurements: Array<{ timestamp: number; heapUsed: number; label: string }> = [];
+  private static measurements: { timestamp: number; heapUsed: number; label: string }[] = [];
 
   /**
    * Take a memory measurement

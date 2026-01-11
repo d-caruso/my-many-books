@@ -167,17 +167,17 @@ export class CategoryController extends BaseController {
 
     try {
       // Use repository layer for consistent filtering and incremental sync support
-      const filters: any = {};
+      const filters: Record<string, unknown> = {};
       if (search) {
-        filters.name = search;
+        filters['name'] = search;
       }
       if (updatedSince) {
-        filters.updatedSince = updatedSince;
+        filters['updatedSince'] = updatedSince;
       }
       
       // Add user filter
       const userContext = this.getUserContext(request)!;
-      filters.userId = userContext.userId;
+      filters['userId'] = userContext.userId;
 
       const listOptions = {
         limit: pagination.limit,

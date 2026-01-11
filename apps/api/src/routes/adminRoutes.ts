@@ -3,7 +3,7 @@
 // Admin-only routes - all require authentication + admin role
 // ================================================================
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { statsController } from '../controllers/admin/StatsController';
 import { AdminUserController } from '../controllers/admin/AdminUserController';
@@ -27,7 +27,7 @@ import { adminLimiter, readLimiter, writeLimiter } from '../middleware/rateLimit
 import { container } from '../container';
 import { TYPES } from '../container/types';
 
-const router = Router();
+const router: express.Router = Router();
 const adminUserController = container.get<AdminUserController>(TYPES.AdminUserController);
 
 // All admin routes require authentication AND admin role

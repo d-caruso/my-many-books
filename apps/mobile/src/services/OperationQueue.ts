@@ -4,6 +4,8 @@ import { QueuedOperation, OperationType, ResourceType, BookOperationPayload, Aut
 import { Alert } from 'react-native';
 import i18n from '../i18n';
 import { databaseService } from './database/DatabaseService';
+import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
+import { OPERATION_STATUSES, RETRY_REASONS } from './hooks/eventsSchema';
 
 const QUEUE_STORAGE_KEY = '@operation_queue';
 const MAX_QUEUE_SIZE = 100;
@@ -22,7 +24,11 @@ export class OperationQueue {
         this.queue = JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Failed to initialize queue from AsyncStorage:', error);
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+        operation: 'queue_initialize',
+        error: error instanceof Error ? error.message : String(error),
+        recovery: 'empty_queue_created'
+      });
       this.queue = [];
       // Attempt to recover with empty queue
       await this.persist();
@@ -70,7 +76,12 @@ export class OperationQueue {
   ): Promise<string> {
     // Warn when approaching limit (80% threshold)
     if (this.isNearLimit()) {
-      console.warn(`Queue approaching limit: ${this.queue.length}/${MAX_QUEUE_SIZE} operations`);
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+        queueSize: this.queue.length,
+        maxSize: MAX_QUEUE_SIZE,
+        status: 'approaching_limit',
+        threshold: 0.8
+      });
       // Show user-facing warning when approaching limit (skip in test environment)
       if (process.env.NODE_ENV !== 'test') {
         Alert.alert(
@@ -83,8 +94,14 @@ export class OperationQueue {
 
     // Enforce queue size limit - discard oldest if exceeded
     if (this.queue.length >= MAX_QUEUE_SIZE) {
-      this.queue.shift(); // Remove oldest
-      console.warn(`Queue size limit (${MAX_QUEUE_SIZE}) exceeded. Discarding oldest operation.`);
+      const discarded = this.queue.shift(); // Remove oldest
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+        queueSize: this.queue.length,
+        maxSize: MAX_QUEUE_SIZE,
+        status: 'limit_exceeded',
+        action: 'discarded_oldest',
+        discardedOperation: discarded?.id
+      });
       // Show critical user-facing alert when limit exceeded (skip in test environment)
       if (process.env.NODE_ENV !== 'test') {
         Alert.alert(
@@ -103,10 +120,20 @@ export class OperationQueue {
       timestamp: Date.now(),
       retryCount: 0,
       maxRetries,
-      status: 'pending',
+      status: OPERATION_STATUSES.PENDING,
     };
 
     this.queue.push(operation);
+    
+    // Emit enqueue event
+    mobileHooks.emit(MOBILE_EVENTS.QUEUE.ENQUEUE, {
+      operationId: operation.id,
+      type: operation.type,
+      resource: operation.resource,
+      queueSize: this.queue.length,
+      maxRetries: operation.maxRetries
+    });
+    
     await this.persist();
     return operation.id;
   }
@@ -122,7 +149,20 @@ export class OperationQueue {
    * Remove operation from queue
    */
   async dequeue(operationId: string): Promise<void> {
+    const operation = this.queue.find(op => op.id === operationId);
     this.queue = this.queue.filter(op => op.id !== operationId);
+    
+    // Emit dequeue event
+    if (operation) {
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.DEQUEUE, {
+        operationId: operation.id,
+        type: operation.type,
+        resource: operation.resource,
+        queueSize: this.queue.length,
+        remainingOperations: this.queue.length
+      });
+    }
+    
     await this.persist();
   }
 
@@ -130,7 +170,7 @@ export class OperationQueue {
    * Get all pending operations
    */
   getPendingOperations(): QueuedOperation[] {
-    return this.queue.filter(op => op.status === 'pending' || op.status === 'retrying');
+    return this.queue.filter(op => op.status === OPERATION_STATUSES.PENDING || op.status === OPERATION_STATUSES.RETRYING);
   }
 
   /**
@@ -138,9 +178,9 @@ export class OperationQueue {
    */
   getProcessableOperations(): QueuedOperation[] {
     return this.queue.filter(op => 
-      op.status === 'pending' || 
-      op.status === 'retrying' ||
-      (op.status === 'failed' && op.retryCount < op.maxRetries)
+      op.status === OPERATION_STATUSES.PENDING || 
+      op.status === OPERATION_STATUSES.RETRYING ||
+      (op.status === OPERATION_STATUSES.FAILED && this.shouldRetryFailedOperation(op))
     );
   }
 
@@ -155,7 +195,17 @@ export class OperationQueue {
    * Clear all operations
    */
   async clear(): Promise<void> {
+    const clearedCount = this.queue.length;
     this.queue = [];
+    
+    // Emit queue cleared event
+    mobileHooks.emit(MOBILE_EVENTS.QUEUE.CLEARED, {
+      clearedOperations: clearedCount,
+      queueSize: 0,
+      timestamp: new Date().toISOString(),
+      reason: 'manual_clear'
+    });
+    
     await this.persist();
   }
 
@@ -169,28 +219,90 @@ export class OperationQueue {
 
     this.isProcessing = true;
 
-    try {
-      const processable = this.getProcessableOperations();
+    const processable = this.getProcessableOperations();
+    const startTime = Date.now();
+    
+    // Emit queue processing start event
+    mobileHooks.emit(MOBILE_EVENTS.QUEUE.PROCESS.START, {
+      queueSize: this.queue.length,
+      processableOperations: processable.length,
+      timestamp: new Date().toISOString(),
+      sessionId: `process-${startTime}`
+    });
 
+    let processedCount = 0;
+    let failedCount = 0;
+
+    try {
       for (const operation of processable) {
+        // Handle cross-session retry - increment counter if this is a failed operation being retried
+        if (operation.status === OPERATION_STATUSES.FAILED) {
+          operation.crossSessionRetries = (operation.crossSessionRetries || 0) + 1;
+          operation.status = OPERATION_STATUSES.RETRYING;
+          
+          mobileHooks.emit(MOBILE_EVENTS.QUEUE.RETRY, {
+            operationId: operation.id,
+            type: operation.type,
+            resource: operation.resource,
+            retryCount: operation.retryCount,
+            maxRetries: operation.maxRetries,
+            crossSessionRetries: operation.crossSessionRetries,
+            reason: RETRY_REASONS.CROSS_SESSION_RETRY
+          });
+        }
+        
         try {
           await this.executeWithBackoff(operation, apiExecutor);
           await this.dequeue(operation.id);
+          processedCount++;
         } catch {
           operation.retryCount++;
+          failedCount++;
 
           if (operation.retryCount >= operation.maxRetries) {
-            operation.status = 'failed';
-            console.log(`Operation ${operation.id} failed permanently after ${operation.maxRetries} retries`);
+            operation.status = OPERATION_STATUSES.FAILED;
+            operation.lastFailedAt = Date.now();
+            operation.crossSessionRetries = (operation.crossSessionRetries || 0);
+            operation.retryCount = 0; // Reset for cross-session retry
+            
+            mobileHooks.emit(MOBILE_EVENTS.QUEUE.FAILED, {
+              operationId: operation.id,
+              type: operation.type,
+              resource: operation.resource,
+              retryCount: operation.retryCount,
+              maxRetries: operation.maxRetries,
+              reason: RETRY_REASONS.MAX_RETRIES_EXCEEDED,
+              crossSessionRetries: operation.crossSessionRetries
+            });
           } else {
-            operation.status = 'retrying';
-            console.log(`Operation ${operation.id} will retry (attempt ${operation.retryCount + 1}/${operation.maxRetries})`);
+            operation.status = OPERATION_STATUSES.RETRYING;
+            mobileHooks.emit(MOBILE_EVENTS.QUEUE.RETRY, {
+              operationId: operation.id,
+              type: operation.type,
+              resource: operation.resource,
+              retryCount: operation.retryCount,
+              maxRetries: operation.maxRetries,
+              nextAttempt: operation.retryCount + 1
+            });
           }
 
           await this.persist();
         }
       }
     } finally {
+      const endTime = Date.now();
+      const processingDuration = endTime - startTime;
+      
+      // Emit queue processing complete event
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.PROCESS.COMPLETE, {
+        queueSize: this.queue.length,
+        processedOperations: processedCount,
+        failedOperations: failedCount,
+        processingDuration,
+        timestamp: new Date().toISOString(),
+        sessionId: `process-${startTime}`
+      });
+      
       this.isProcessing = false;
     }
   }
@@ -223,7 +335,7 @@ export class OperationQueue {
     } catch (error) {
       // Mark as failed or pending for retry
       if (operation.resource === 'book' && operation.payload?.id) {
-        const status = operation.retryCount >= operation.maxRetries - 1 ? 'failed' : 'pending';
+        const status = operation.retryCount >= operation.maxRetries - 1 ? OPERATION_STATUSES.FAILED : OPERATION_STATUSES.PENDING;
         await this.updateBookSyncStatus(String(operation.payload.id), status);
       }
       throw error;
@@ -245,7 +357,13 @@ export class OperationQueue {
         [status, bookId, bookId]
       );
     } catch (error) {
-      console.error('Failed to update book sync status:', error);
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+        operation: 'update_book_sync_status',
+        error: error instanceof Error ? error.message : String(error),
+        bookId,
+        status,
+        source: 'OperationQueue'
+      });
     }
   }
 
@@ -253,7 +371,7 @@ export class OperationQueue {
    * Get failed operations for cleanup service access (Phase 5 fix)
    */
   getFailedOperations(): QueuedOperation[] {
-    return this.queue.filter(op => op.status === 'failed');
+    return this.queue.filter(op => op.status === OPERATION_STATUSES.FAILED);
   }
 
   /**
@@ -261,8 +379,8 @@ export class OperationQueue {
    */
   async retryOperation(operationId: string): Promise<void> {
     const operation = this.queue.find(op => op.id === operationId);
-    if (operation && operation.status === 'failed') {
-      operation.status = 'pending';
+    if (operation && operation.status === OPERATION_STATUSES.FAILED) {
+      operation.status = OPERATION_STATUSES.PENDING;
       operation.retryCount = 0; // Reset retry count for manual retry
       await this.persist();
     }
@@ -274,10 +392,114 @@ export class OperationQueue {
   async retryAllFailedOperations(): Promise<void> {
     const failedOps = this.getFailedOperations();
     for (const operation of failedOps) {
-      operation.status = 'pending';
+      operation.status = OPERATION_STATUSES.PENDING;
       operation.retryCount = 0; // Reset retry count for manual retry
     }
     await this.persist();
+  }
+
+  /**
+   * Get queue health metrics
+   */
+  getQueueHealth(): {
+    total: number;
+    pending: number;
+    retrying: number;
+    failed: number;
+    healthScore: number;
+    isHealthy: boolean;
+    oldestOperation?: number;
+  } {
+    const pending = this.queue.filter(op => op.status === OPERATION_STATUSES.PENDING).length;
+    const retrying = this.queue.filter(op => op.status === OPERATION_STATUSES.RETRYING).length;
+    const failed = this.getFailedOperations().length;
+    const total = this.queue.length;
+
+    // Calculate health score (0-100, higher is better)
+    // Healthy queue has few failed operations and doesn't approach size limit
+    const failureRate = total > 0 ? (failed / total) : 0;
+    const capacityUsage = total / MAX_QUEUE_SIZE;
+    const healthScore = Math.round((1 - failureRate) * (1 - capacityUsage) * 100);
+
+    // Find oldest operation timestamp for staleness detection
+    const oldestOperation = this.queue.length > 0 
+      ? Math.min(...this.queue.map(op => op.timestamp))
+      : undefined;
+
+    const isHealthy = healthScore > 70 && failureRate < 0.2 && capacityUsage < 0.8;
+
+    const metrics = {
+      total,
+      pending,
+      retrying,
+      failed,
+      healthScore,
+      isHealthy,
+      oldestOperation,
+    };
+
+    // Emit queue health metrics
+    mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+      ...metrics,
+      maxSize: MAX_QUEUE_SIZE,
+      capacityUsage,
+      failureRate,
+      timestamp: new Date().toISOString(),
+      status: isHealthy ? 'healthy' : 'degraded'
+    });
+
+    return metrics;
+  }
+
+  /**
+   * Monitor queue health and emit warnings
+   */
+  monitorQueueHealth(): void {
+    const health = this.getQueueHealth();
+    const now = Date.now();
+
+    // Check for stale operations (older than 1 hour)
+    if (health.oldestOperation && (now - health.oldestOperation) > (60 * 60 * 1000)) {
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+        ...health,
+        status: 'stale_operations',
+        staleDuration: now - health.oldestOperation,
+        timestamp: new Date().toISOString(),
+        warning: 'operations_aging'
+      });
+    }
+
+    // Check for high failure rate
+    if (health.failed > 0 && (health.failed / health.total) > 0.3) {
+      mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
+        ...health,
+        status: 'high_failure_rate',
+        timestamp: new Date().toISOString(),
+        warning: 'excessive_failures'
+      });
+    }
+  }
+
+  /**
+   * Check if a failed operation should be retried based on cross-session backoff
+   */
+  private shouldRetryFailedOperation(operation: QueuedOperation): boolean {
+    if (!operation.lastFailedAt) {
+      return false; // No failure timestamp, don't retry
+    }
+
+    const crossSessionRetries = operation.crossSessionRetries || 0;
+    const maxCrossSessionRetries = 3; // Maximum cross-session retry attempts
+
+    if (crossSessionRetries >= maxCrossSessionRetries) {
+      return false; // Exceeded max cross-session retries
+    }
+
+    // Exponential backoff: 1 hour, 4 hours, 16 hours
+    const timeSinceFailure = Date.now() - operation.lastFailedAt;
+    const backoffDelayMs = Math.pow(4, crossSessionRetries) * 60 * 60 * 1000; // hours in milliseconds
+
+    return timeSinceFailure > backoffDelayMs;
   }
 
   /**
@@ -287,7 +509,11 @@ export class OperationQueue {
     try {
       await AsyncStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(this.queue));
     } catch (error) {
-      console.error('Failed to persist queue:', error);
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+        operation: 'queue_persist',
+        error: error instanceof Error ? error.message : String(error),
+        queueSize: this.queue.length
+      });
     }
   }
 }

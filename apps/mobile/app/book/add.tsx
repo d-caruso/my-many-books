@@ -9,6 +9,7 @@ import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { Book } from '@/types';
+import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
 
 export default function AddBookScreen() {
   const { t } = useTranslation();
@@ -33,7 +34,11 @@ export default function AddBookScreen() {
         setAuthor(book.authors?.map((a: { name: string }) => a.name).join(', ') || '');
         setIsbnCode(book.isbnCode || '');
       } catch (error) {
-        console.error('Failed to parse book data:', error);
+        mobileHooks.emit(MOBILE_EVENTS.ERROR.VALIDATION, {
+          operation: 'parse_book_data',
+          error: error instanceof Error ? error.message : String(error),
+          source: 'book_add_useEffect'
+        });
       }
     }
   }, [bookData]);
@@ -58,7 +63,14 @@ export default function AddBookScreen() {
 
       router.back();
     } catch (err: Error) {
-      setError(err.message || 'Failed to add book');
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+        operation: OPERATION_TYPES.CREATE,
+        resource: RESOURCE_TYPES.BOOK,
+        error: err.message,
+        statusCode: err.status,
+        source: 'book_add_submit'
+      });
+      setError(t('books:createFailed'));
     } finally {
       setLoading(false);
     }
@@ -82,7 +94,14 @@ export default function AddBookScreen() {
         setError(t('books:book_not_found_for_isbn'));
       }
     } catch (err: Error) {
-      setError(err.message || t('books:failed_to_lookup_book'));
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+        operation: 'isbn_lookup',
+        resource: RESOURCE_TYPES.BOOK,
+        error: err.message,
+        isbn: isbnCode.trim(),
+        source: 'book_add_isbn_lookup'
+      });
+      setError(t('books:failed_to_lookup_book'));
     } finally {
       setLoading(false);
     }

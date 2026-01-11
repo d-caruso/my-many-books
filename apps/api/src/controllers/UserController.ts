@@ -15,7 +15,7 @@ import { BookEntity } from '../repositories/book/BookRepositoryTypes';
 import { BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { BOOK_STATUSES } from '@my-many-books/shared-validation';
 
-const toBookView = (book: BookEntity) => ({
+const toBookView = (book: BookEntity): object => ({
   id: book.id,
   title: book.title,
   isbnCode: book.isbnCode,

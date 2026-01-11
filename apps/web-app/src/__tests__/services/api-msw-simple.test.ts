@@ -105,8 +105,8 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
         }),
         timeout: 10000,
         params: {
-          page: 1,
-          limit: 10,
+          page: '1',
+          limit: '10',
           includeAuthors: 'true',
           includeCategories: 'true',
         }
@@ -197,8 +197,8 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
         }),
         timeout: 10000,
         params: {
-          page: 1,
-          limit: 5,
+          page: '1',
+          limit: '5',
           includeAuthors: 'true',
           includeCategories: 'true',
         }

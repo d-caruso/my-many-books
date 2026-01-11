@@ -4,6 +4,7 @@ export const RESOURCE_TYPES = Object.freeze({
   CATEGORY: 'category',
   USER: 'user',
   HOOK: 'hook',
+  MOBILE_CONFIG: 'mobile_config',
 } as const);
 
 export const RESOURCE_TYPE_VALUES = Object.freeze(

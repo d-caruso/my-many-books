@@ -213,8 +213,20 @@ describe('OperationQueue', () => {
     expect(queue.size()).toBe(0);
   });
 
-  it('should warn when approaching queue limit', async () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+  it('should emit SIZE_CHANGED event when approaching queue limit', async () => {
+    // Mock mobile hooks
+    const mockEmit = jest.fn();
+    jest.doMock('../../src/services/hooks/mobileHooks', () => {
+      // Import the actual event constants
+      const actualMobileHooks = jest.requireActual('../../src/services/hooks/mobileHooks');
+      
+      return {
+        mobileHooks: { emit: mockEmit },
+        // Use actual MOBILE_EVENTS instead of hard-coded strings
+        MOBILE_EVENTS: actualMobileHooks.MOBILE_EVENTS,
+      };
+    });
+    
     mockAsyncStorage.getItem.mockResolvedValue(null);
     mockAsyncStorage.setItem.mockResolvedValue(undefined);
 
@@ -229,11 +241,14 @@ describe('OperationQueue', () => {
       await queue.enqueue('CREATE', 'book', { title: `Book ${i}` });
     }
 
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Queue approaching limit: 80/100 operations')
+    const { MOBILE_EVENTS } = require('../../src/services/hooks/mobileHooks');
+    expect(mockEmit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.QUEUE.SIZE_CHANGED,
+      expect.objectContaining({
+        status: 'approaching_limit',
+        threshold: 0.8
+      })
     );
-
-    consoleWarnSpy.mockRestore();
   });
 
   it('should test exponential backoff behavior', async () => {

@@ -10,43 +10,180 @@ import { Book } from '@my-many-books/shared-types';
 import { Author } from '@my-many-books/shared-types';
 import { Category } from '@my-many-books/shared-types';
 import { CreatePayload, UpdatePayload } from './handlers/types/HandlerTypes';
+import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/eventsSchema';
+import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
 
 /**
  * Execute queued operation based on resource type and operation type
  */
 export async function executeOperation(operation: QueuedOperation): Promise<void> {
   const { type, resource, payload } = operation;
+  const startTime = Date.now();
 
-  switch (resource) {
-    case 'book':
-      await executeBookOperation(type, payload);
-      break;
-    case 'author':
-      await executeAuthorOperation(type, payload);
-      break;
-    case 'category':
-      await executeCategoryOperation(type, payload);
-      break;
-    case 'user':
-      await executeUserOperation(type, payload);
-      break;
-    case 'settings':
-      await executeSettingsOperation(type, payload);
-      break;
-    default:
-      throw new Error(`Unknown resource type: ${resource}`);
+  // Emit operation start event
+  mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.OPERATION.START, {
+    operationId: operation.id,
+    type,
+    resource,
+    retryCount: operation.retryCount,
+    timestamp: new Date().toISOString(),
+    sessionId: `executor-${startTime}`
+  });
+
+  try {
+    switch (resource) {
+      case RESOURCE_TYPES.BOOK:
+        await executeBookOperation(type, payload);
+        break;
+      case RESOURCE_TYPES.AUTHOR:
+        await executeAuthorOperation(type, payload);
+        break;
+      case RESOURCE_TYPES.CATEGORY:
+        await executeCategoryOperation(type, payload);
+        break;
+      case RESOURCE_TYPES.USER:
+        await executeUserOperation(type, payload);
+        break;
+      case 'settings':
+        await executeSettingsOperation(type, payload);
+        break;
+      default:
+        throw new Error(`Unknown resource type: ${resource}`);
+    }
+
+    const endTime = Date.now();
+    const executionDuration = endTime - startTime;
+
+    // Emit operation success event
+    mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.OPERATION.SUCCESS, {
+      operationId: operation.id,
+      type,
+      resource,
+      retryCount: operation.retryCount,
+      executionDuration,
+      timestamp: new Date().toISOString(),
+      sessionId: `executor-${startTime}`
+    });
+
+    // Emit performance metrics
+    mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.PERFORMANCE_METRIC, {
+      operationId: operation.id,
+      type,
+      resource,
+      executionDuration,
+      retryCount: operation.retryCount,
+      timestamp: new Date().toISOString(),
+      performanceData: {
+        startTime,
+        endTime,
+        success: true
+      }
+    });
+
+  } catch (error) {
+    const endTime = Date.now();
+    const executionDuration = endTime - startTime;
+
+    // Categorize error type
+    const isNetworkError = isNetworkRelatedError(error);
+    const isValidationError = isValidationRelatedError(error);
+
+    // Emit appropriate error event
+    if (isNetworkError) {
+      mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.NETWORK_ERROR, {
+        operationId: operation.id,
+        type,
+        resource,
+        retryCount: operation.retryCount,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: 'network',
+        executionDuration,
+        timestamp: new Date().toISOString(),
+        sessionId: `executor-${startTime}`
+      });
+    } else if (isValidationError) {
+      mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.VALIDATION_ERROR, {
+        operationId: operation.id,
+        type,
+        resource,
+        retryCount: operation.retryCount,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: 'validation',
+        executionDuration,
+        timestamp: new Date().toISOString(),
+        sessionId: `executor-${startTime}`
+      });
+    } else {
+      // General operation failed event
+      mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.OPERATION.FAILED, {
+        operationId: operation.id,
+        type,
+        resource,
+        retryCount: operation.retryCount,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: 'unknown',
+        executionDuration,
+        timestamp: new Date().toISOString(),
+        sessionId: `executor-${startTime}`
+      });
+    }
+
+    // Emit performance metrics for failed operations too
+    mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.PERFORMANCE_METRIC, {
+      operationId: operation.id,
+      type,
+      resource,
+      executionDuration,
+      retryCount: operation.retryCount,
+      timestamp: new Date().toISOString(),
+      performanceData: {
+        startTime,
+        endTime,
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      }
+    });
+
+    throw error;
   }
+}
+
+/**
+ * Check if error is network-related
+ */
+function isNetworkRelatedError(error: unknown): boolean {
+  if (!error) return false;
+  
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('Network') || 
+         message.includes('timeout') || 
+         message.includes('offline') ||
+         message.includes('connection') ||
+         message.includes('HTTP 5');
+}
+
+/**
+ * Check if error is validation-related
+ */
+function isValidationRelatedError(error: unknown): boolean {
+  if (!error) return false;
+  
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('validation') || 
+         message.includes('required') || 
+         message.includes('invalid') ||
+         message.includes('HTTP 4');
 }
 
 async function executeBookOperation(type: string, payload: CreatePayload<Book> | UpdatePayload<Book> | { id: string }): Promise<void> {
   switch (type) {
-    case 'CREATE':
+    case OPERATION_TYPES.CREATE:
       await executeCreateBook(payload as CreatePayload<Book>);
       break;
-    case 'UPDATE':
+    case OPERATION_TYPES.UPDATE:
       await executeUpdateBook(payload as UpdatePayload<Book> & { id: string });
       break;
-    case 'DELETE':
+    case OPERATION_TYPES.DELETE:
       await executeDeleteBook(payload as { id: string });
       break;
     default:
@@ -174,13 +311,13 @@ async function executeUserOperation(_type: string, _payload: unknown): Promise<v
 
 async function executeAuthorOperation(type: string, payload: CreatePayload<Author> | UpdatePayload<Author> | { id: string }): Promise<void> {
   switch (type) {
-    case 'CREATE':
+    case OPERATION_TYPES.CREATE:
       await executeCreateAuthor(payload as CreatePayload<Author>);
       break;
-    case 'UPDATE':
+    case OPERATION_TYPES.UPDATE:
       await executeUpdateAuthor(payload as UpdatePayload<Author> & { id: string });
       break;
-    case 'DELETE':
+    case OPERATION_TYPES.DELETE:
       await executeDeleteAuthor(payload as { id: string });
       break;
     default:
@@ -190,13 +327,13 @@ async function executeAuthorOperation(type: string, payload: CreatePayload<Autho
 
 async function executeCategoryOperation(type: string, payload: CreatePayload<Category> | UpdatePayload<Category> | { id: string }): Promise<void> {
   switch (type) {
-    case 'CREATE':
+    case OPERATION_TYPES.CREATE:
       await executeCreateCategory(payload as CreatePayload<Category>);
       break;
-    case 'UPDATE':
+    case OPERATION_TYPES.UPDATE:
       await executeUpdateCategory(payload as UpdatePayload<Category> & { id: string });
       break;
-    case 'DELETE':
+    case OPERATION_TYPES.DELETE:
       await executeDeleteCategory(payload as { id: string });
       break;
     default:
@@ -313,76 +450,99 @@ async function executeSettingsOperation(_type: string, _payload: unknown): Promi
 }
 
 /**
- * Check if error is retriable
+ * Check if error is retriable and emit retry scheduling events
  * Now supports both structured ApiError and legacy Error checking
  */
-export function isRetriableError(error: unknown): boolean {
+export function isRetriableError(error: unknown, operationId?: string, currentRetryCount?: number, maxRetries?: number): boolean {
   // Handle null/undefined errors
   if (!error) {
     return false;
   }
 
+  let isRetriable = false;
+  let retryReason = '';
+
   // Structured ApiError - use built-in retriable property
   if (error instanceof ApiError) {
-    return error.retriable;
-  }
-
-  // Legacy fallback for generic Error objects (third-party libraries, existing code)
-  // This maintains backward compatibility while we migrate to structured errors
-
-  // Network errors are retriable
-  if (error.message?.includes('Network request failed')) {
-    return true;
-  }
-
-  // Timeout errors are retriable
-  if (error.name === 'AbortError' || error.message?.includes('timeout')) {
-    return true;
-  }
-
-  // Offline errors are retriable
-  if (error.message?.includes('offline') || error.message?.includes('no connection')) {
-    return true;
-  }
-
-  // FetchHttpClient throws plain Error with "HTTP 5xx" messages - check for server errors
-  if (error.message?.match(/HTTP 5\d\d:/)) {
-    return true;
-  }
-
-  // FetchHttpClient timeout errors
-  if (error.message?.includes('HTTP 408:') || error.message?.includes('Request Timeout')) {
-    return true;
-  }
-
-  // Rate limiting (429 Too Many Requests)
-  if (error.message?.includes('HTTP 429:')) {
-    return true;
-  }
-
-  // HTTP status codes (if error object has status property)
-  if (error.status) {
-    // 408 Request Timeout is retriable
-    if (error.status === 408) {
-      return true;
-    }
-
-    // 429 Too Many Requests is retriable
-    if (error.status === 429) {
-      return true;
-    }
-
-    // 4xx validation errors are NOT retriable (except 408 and 429)
-    if (error.status >= 400 && error.status < 500) {
-      return false;
-    }
-
-    // 5xx server errors ARE retriable
-    if (error.status >= 500) {
-      return true;
+    isRetriable = error.retriable;
+    retryReason = 'structured_api_error';
+  } else {
+    // Check if it's an object with retriable property (for test compatibility)
+    if (typeof error === 'object' && error !== null && 'retriable' in error && 'code' in error) {
+      isRetriable = Boolean(error.retriable);
+      retryReason = 'structured_api_error';
+    } else {
+      // Legacy HTTP error fallback
+      const message = error instanceof Error ? error.message : 
+                     (typeof error === 'object' && error !== null && 'message' in error) ? 
+                     String(error.message) : String(error);
+      
+      // HTTP status codes (if error object has status property)
+      if (typeof error === 'object' && error !== null && 'status' in error && error.status) {
+        // 408 Request Timeout is retriable
+        if (error.status === 408) {
+          isRetriable = true;
+          retryReason = 'timeout_408';
+        }
+        // 429 Too Many Requests is retriable
+        else if (error.status === 429) {
+          isRetriable = true;
+          retryReason = 'rate_limit_429';
+        }
+        // 5xx server errors are retriable
+        else if (error.status >= 500 && error.status <= 599) {
+          isRetriable = true;
+          retryReason = 'server_error_5xx';
+        }
+      }
+      // HTTP error messages
+      else if (message?.match(/HTTP 5\d\d:/)) {
+        isRetriable = true;
+        retryReason = 'server_error_message';
+      }
+      else if (message?.includes('HTTP 408:') || message?.includes('Request Timeout')) {
+        isRetriable = true;
+        retryReason = 'request_timeout_message';
+      }
+      else if (message?.includes('HTTP 429:')) {
+        isRetriable = true;
+        retryReason = 'rate_limit_message';
+      }
+      
+      if (!isRetriable) {
+        retryReason = 'non_retriable_legacy_error';
+      }
     }
   }
 
-  // Default: not retriable
-  return false;
+  // Emit retry scheduling or max retries events if operation details provided
+  if (operationId && currentRetryCount !== undefined && maxRetries !== undefined) {
+    if (isRetriable && currentRetryCount < maxRetries) {
+      // Calculate backoff delay
+      const backoffDelay = Math.pow(2, currentRetryCount) * 1000; // 1s, 2s, 4s, 8s
+      
+      mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.RETRY_SCHEDULED, {
+        operationId,
+        retryCount: currentRetryCount,
+        maxRetries,
+        nextRetryIn: backoffDelay,
+        retryReason,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+        backoffStrategy: 'exponential'
+      });
+    } else if (currentRetryCount >= maxRetries) {
+      mobileHooks.emit(MOBILE_EVENTS.EXECUTOR.MAX_RETRIES_REACHED, {
+        operationId,
+        retryCount: currentRetryCount,
+        maxRetries,
+        finalError: error instanceof Error ? error.message : String(error),
+        retryReason,
+        timestamp: new Date().toISOString(),
+        abandoned: true
+      });
+    }
+  }
+
+  return isRetriable;
 }

@@ -12,6 +12,7 @@ export default tseslint.config(
 
   // Project-specific configuration
   {
+    files: ['**/*.{js,ts}'],
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -30,6 +31,15 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-call': 'error',
       '@typescript-eslint/no-unsafe-member-access': 'error',
       '@typescript-eslint/no-unsafe-return': 'error',
+      
+      // Fix CI compatibility issue with @typescript-eslint/no-unused-expressions
+      '@typescript-eslint/no-unused-expressions': [
+        'error',
+        {
+          allowShortCircuit: true,
+          allowTernary: true,
+        },
+      ],
 
       // Prevent console usage - use structured logging (Pino) instead
       'no-console': 'error',

@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
   import { useTranslation } from 'react-i18next';
   import { useAuth } from '@my-many-books/shared-auth';
+  import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
   type AuthMode = 'login' | 'register';
 
@@ -53,7 +54,13 @@ import React, { useState } from 'react';
         // Navigation handled after successful auth
         router.replace('/(tabs)');
       } catch (err: Error) {
-        setError(err.message || t('common:auth_failed'));
+        mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+          operation: authMode,
+          error: err.message,
+          statusCode: err.status,
+          source: 'auth_screen'
+        });
+        setError(t('common:auth_failed'));
       }
     };
 

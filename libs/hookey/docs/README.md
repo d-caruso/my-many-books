@@ -9,6 +9,7 @@ Hookey is the lightweight, plug-and-play hook runtime powering the event-driven 
 - **HookAction / LogAction** – actions are the units of work run when events match. `LogAction` is shipped out of the box, but you can implement custom actions that call other services.
 - **HookStorage** – persistence layer for hooks and executions. The library includes `InMemoryHookStorage` for tests and `SequelizeHookStorage` for production-grade persistence.
 - **Adapters** – helpers, such as `expressHookEmitter` and database adapters, that translate framework-level events into Hookey events.
+- **Event Schema Builder** – utility for creating type-safe, hierarchical event schemas with automatic dot-notation generation and wildcard support.
 
 ## Getting started
 
@@ -43,6 +44,80 @@ hookSystem.trigger('book.created', { bookId: 42, title: '1984' });
 ```
 
 Every registered hook logs its execution in the chosen `HookStorage` implementation, keeps execution timing, and records success/failure.
+
+## Event Schema Builder
+
+Hookey includes a powerful `buildEventSchema` utility for creating type-safe, hierarchical event schemas. This eliminates code duplication and ensures consistent event naming across your application.
+
+### Basic Usage
+
+```ts
+import { buildEventSchema } from '@my-many-books/hookey';
+
+const schema = {
+  BOOK: {
+    CREATE: {
+      START: null,
+      SUCCESS: null,
+      FAILED: null,
+    },
+    UPDATE: {
+      START: null,
+      SUCCESS: null,
+      FAILED: null,
+    },
+    DELETE: null,
+  },
+  USER: {
+    LOGIN: null,
+    LOGOUT: null,
+  }
+} as const;
+
+const EVENTS = buildEventSchema(schema);
+
+// Results in fully typed event tree:
+// {
+//   BOOK: {
+//     CREATE: {
+//       START: "book.create.start",
+//       SUCCESS: "book.create.success", 
+//       FAILED: "book.create.failed",
+//       ANY: "book.create.*"
+//     },
+//     UPDATE: { ... },
+//     DELETE: "book.delete",
+//     ANY: "book.*"
+//   },
+//   USER: {
+//     LOGIN: "user.login",
+//     LOGOUT: "user.logout", 
+//     ANY: "user.*"
+//   },
+//   ANY: "*"
+// }
+```
+
+### Type-Safe Event Emission
+
+```ts
+// Full TypeScript support
+hookSystem.trigger(EVENTS.BOOK.CREATE.SUCCESS, { bookId: 123 });
+hookSystem.trigger(EVENTS.USER.LOGIN, { userId: 456 });
+
+// Wildcard listening
+hookSystem.on(EVENTS.BOOK.ANY, (data) => {
+  console.log('Any book event:', data);
+});
+```
+
+### Features
+
+- **Type Safety**: Full TypeScript inference and autocomplete
+- **Dot Notation**: Automatic generation of hierarchical event strings
+- **Wildcard Support**: Built-in `ANY` properties for pattern matching
+- **Immutable**: Works with `Object.freeze()` for runtime protection
+- **Scalable**: Supports arbitrary nesting depth
 
 ## Storage adapters
 
@@ -109,6 +184,7 @@ Hookey ships with jest + Vitest helpers already configured in `libs/hookey/src/_
 - `libs/hookey/src/storage` – storage implementations
 - `libs/hookey/src/actions` – ready-made actions (logging) and infrastructure for future actions
 - `libs/hookey/src/adapters` – Express middleware, Sequelize persistence, and future adapters
+- `libs/hookey/src/utils/eventSchemaBuilder.ts` – event schema building utility with full test coverage
 - `libs/hookey/examples` – practical flows for Express servers and CLI scripts
 
 ## What to do next

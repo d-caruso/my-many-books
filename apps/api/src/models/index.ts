@@ -16,6 +16,7 @@ import { AuditLog } from './AuditLog';
 import { Setting } from './Setting';
 import { AppSetting } from './AppSetting';
 import { SearchPinnedResult } from './SearchPinnedResult';
+import { MobileAnalyticsEvent } from './MobileAnalyticsEvent';
 import { getLogger } from '@my-many-books/shared-logging';
 
 export * from './interfaces/ModelInterfaces';
@@ -33,6 +34,7 @@ export * from './AuditLog';
 export * from './Setting';
 export * from './AppSetting';
 export * from './SearchPinnedResult';
+export * from './MobileAnalyticsEvent';
 
 export class ModelManager {
   private static sequelize: Sequelize | null = null;
@@ -58,6 +60,7 @@ export class ModelManager {
     Setting.initModel(sequelize);
     AppSetting.initModel(sequelize);
     SearchPinnedResult.initModel(sequelize);
+    MobileAnalyticsEvent.initModel(sequelize);
 
     // Register models for associations
     ModelAssociations.registerModel('User', User);
@@ -72,6 +75,7 @@ export class ModelManager {
     ModelAssociations.registerModel('Setting', Setting);
     ModelAssociations.registerModel('AppSetting', AppSetting);
     ModelAssociations.registerModel('SearchPinnedResult', SearchPinnedResult);
+    ModelAssociations.registerModel('MobileAnalyticsEvent', MobileAnalyticsEvent);
 
     // Define associations
     ModelAssociations.defineAssociations();
@@ -120,6 +124,7 @@ export class ModelManager {
     Setting: typeof Setting;
     AppSetting: typeof AppSetting;
     SearchPinnedResult: typeof SearchPinnedResult;
+    MobileAnalyticsEvent: typeof MobileAnalyticsEvent;
   } {
     return {
       User,
@@ -134,6 +139,7 @@ export class ModelManager {
       Setting,
       AppSetting,
       SearchPinnedResult,
+      MobileAnalyticsEvent,
     };
   }
 }
