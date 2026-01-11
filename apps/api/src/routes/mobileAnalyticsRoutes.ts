@@ -3,11 +3,11 @@
 // Routes for mobile analytics API endpoints
 // ================================================================
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { mobileAnalyticsController } from '../controllers/mobile/MobileAnalyticsController';
 
-const router = Router();
+const router: express.Router = Router();
 
 // ================================================================
 // Mobile Analytics Event Ingestion Routes

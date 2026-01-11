@@ -131,7 +131,7 @@ export class MobileAnalyticsEvent extends Model<
             fields: ['processing_status'],
           },
           {
-            fields: ['created_at'],
+            fields: [FIELD_NAMES.CREATION_DATE],
           },
         ],
       }

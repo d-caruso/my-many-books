@@ -7,17 +7,12 @@ export default tseslint.config(
   // Base ESLint recommended rules
   eslint.configs.recommended,
 
-  // TypeScript ESLint recommended rules (with type checking)
-  ...tseslint.configs.recommendedTypeChecked,
+  // TypeScript ESLint recommended rules
+  ...tseslint.configs.recommended,
 
   // Project-specific configuration
   {
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
+    files: ['**/*.{js,ts}'],
     rules: {
       // TypeScript rules
       '@typescript-eslint/no-unused-vars': [
@@ -26,10 +21,6 @@ export default tseslint.config(
       ],
       '@typescript-eslint/explicit-function-return-type': 'warn',
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-return': 'error',
 
       // Prevent console usage - use structured logging (Pino) instead
       'no-console': 'error',

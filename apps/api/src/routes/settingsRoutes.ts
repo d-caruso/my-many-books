@@ -3,7 +3,7 @@
 // Settings routes - public and admin endpoints
 // ================================================================
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { SettingsController } from '../controllers/SettingsController';
 import { authMiddleware } from '../middleware/auth';
@@ -22,7 +22,7 @@ import { readLimiter, writeLimiter } from '../middleware/rateLimiters';
 import { container } from '../container';
 import { TYPES } from '../container/types';
 
-const router = Router();
+const router: express.Router = Router();
 const settingsController = container.get<SettingsController>(TYPES.SettingsController);
 
 // ===== PUBLIC ENDPOINTS (NO AUTH) =====

@@ -633,6 +633,7 @@ describe('Mobile Analytics Integration Tests', () => {
 
       const response = await request(app)
         .post(`${BASE_URL}/events`)
+        .type('text/plain')
         .send(JSON.stringify(validPayload))
         .expect(200);
 

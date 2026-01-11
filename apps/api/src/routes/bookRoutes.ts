@@ -3,7 +3,7 @@
 // Book management routes for authenticated users
 // ================================================================
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { BookController } from '../controllers/BookController';
 import { authMiddleware } from '../middleware/auth';
@@ -30,7 +30,7 @@ import {
 import { container } from '../container';
 import { TYPES } from '../container/types';
 
-const router = Router();
+const router: express.Router = Router();
 const bookController = container.get<BookController>(TYPES.BookController);
 
 // All book routes require authentication

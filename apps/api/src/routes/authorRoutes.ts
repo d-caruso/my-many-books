@@ -3,7 +3,7 @@
 // Author management routes
 // ================================================================
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { AuthorController } from '../controllers/AuthorController';
 import { authMiddleware } from '../middleware/auth';
@@ -13,7 +13,7 @@ import { standardLimiter } from '../middleware/rateLimiters';
 import { container } from '../container';
 import { TYPES } from '../container/types';
 
-const router = Router();
+const router: express.Router = Router();
 const authorController = container.get<AuthorController>(TYPES.AuthorController);
 
 // Apply authentication middleware to all author routes

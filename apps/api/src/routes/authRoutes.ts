@@ -4,7 +4,7 @@
 // ================================================================
 
 import { getLogger } from '@my-many-books/shared-logging';
-import { Router, Request, Response } from 'express';
+import express, { Router, Request, Response } from 'express';
 import {
   CognitoIdentityProviderClient,
   InitiateAuthCommand,
@@ -14,7 +14,7 @@ import {
 } from '@aws-sdk/client-cognito-identity-provider';
 import { UserService } from '../middleware/auth';
 
-const router = Router();
+const router: express.Router = Router();
 
 const cognitoClient = new CognitoIdentityProviderClient({
   region: process.env['AWS_REGION'] || 'us-east-1',

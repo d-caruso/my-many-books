@@ -3,12 +3,12 @@
 // ISBN service routes for book lookup and validation
 // ================================================================
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { IsbnController } from '../controllers/IsbnController';
 import { publicLimiter } from '../middleware/rateLimiters';
 
-const router = Router();
+const router: express.Router = Router();
 const isbnController = new IsbnController();
 
 // Public ISBN service routes (no authentication required for lookups)

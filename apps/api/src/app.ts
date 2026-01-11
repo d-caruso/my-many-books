@@ -31,8 +31,9 @@ import { securityHeadersConfig } from './config/securityHeaders';
 import { initializeI18n } from '@my-many-books/shared-i18n';
 import { getLogger } from '@my-many-books/shared-logging';
 import { SettingsService } from './services/SettingsService';
+import { parseTextPlainJson } from './middleware/parseTextPlainJson';
 
-const app = express();
+const app: express.Express = express();
 const isTestEnvironment = process.env['NODE_ENV'] === 'test';
 const securityHeadersEnabled = process.env['SECURITY_HEADERS_ENABLED'] !== 'false';
 
@@ -63,6 +64,9 @@ app.use(
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Custom middleware to handle text/plain JSON payloads (for mobile analytics)
+app.use('/api/v1/mobile-analytics', express.text({ limit: '10mb' }), parseTextPlainJson);
 
 // API base path from environment
 const API_PREFIX = process.env['API_PREFIX'] || '/api';

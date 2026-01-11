@@ -3,7 +3,7 @@
 // Category management routes
 // ================================================================
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
@@ -13,7 +13,7 @@ import { container } from '../container';
 import { TYPES } from '../container/types';
 import { CategoryController } from '../controllers/CategoryController';
 
-const router = Router();
+const router: express.Router = Router();
 const categoryController = container.get<CategoryController>(TYPES.CategoryController);
 
 router.use(authMiddleware);

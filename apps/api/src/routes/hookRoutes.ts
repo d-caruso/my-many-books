@@ -3,7 +3,7 @@
 // Hook management routes - admin only
 // ================================================================
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { hookController } from '../controllers/admin/HookController';
 import { authMiddleware } from '../middleware/auth';
@@ -22,7 +22,7 @@ import {
   hookIdParamSchema,
 } from '../validation';
 
-const router = Router();
+const router: express.Router = Router();
 
 // All hook routes require authentication AND admin role
 router.use(authMiddleware);

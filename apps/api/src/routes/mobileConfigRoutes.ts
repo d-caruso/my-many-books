@@ -3,14 +3,17 @@
 // Routes for mobile hook configuration endpoints
 // ================================================================
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { mobileConfigController } from '../controllers/mobile/MobileConfigController';
 import { emergencyController } from '../controllers/mobile/EmergencyController';
 import { adminMobileHooksController } from '../controllers/admin/AdminMobileHooksController';
 import { userMobileConfigController } from '../controllers/mobile/UserMobileConfigController';
+import { authMiddleware } from '../middleware/auth';
+import { requirePermission } from '../middleware/authorization';
+import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
 
-const router = Router();
+const router: express.Router = Router();
 
 // ================================================================
 // Mobile Hook Configuration Routes (Public API)
@@ -36,13 +39,13 @@ router.put('/config/mobile', expressRouteWrapper(mobileConfigController.updateMo
  * GET /api/config/emergency
  * Get emergency kill switches
  */
-router.get('/config/emergency', expressRouteWrapper(emergencyController.getEmergencyConfig.bind(emergencyController)));
+router.get('/config/emergency', authMiddleware, expressRouteWrapper(emergencyController.getEmergencyConfig.bind(emergencyController)));
 
 /**
  * PUT /api/config/emergency
  * Update emergency settings
  */
-router.put('/config/emergency', expressRouteWrapper(emergencyController.updateEmergencyConfig.bind(emergencyController)));
+router.put('/config/emergency', authMiddleware, expressRouteWrapper(emergencyController.updateEmergencyConfig.bind(emergencyController)));
 
 // ================================================================
 // Admin Hook Action Configuration Routes
@@ -52,25 +55,25 @@ router.put('/config/emergency', expressRouteWrapper(emergencyController.updateEm
  * GET /api/admin/mobile-hooks/config
  * Get hook action mappings
  */
-router.get('/admin/mobile-hooks/config', expressRouteWrapper(adminMobileHooksController.getHookActionConfig.bind(adminMobileHooksController)));
+router.get('/admin/mobile-hooks/config', authMiddleware, requirePermission(ACTIONS.MANAGE, RESOURCES.ALL), expressRouteWrapper(adminMobileHooksController.getHookActionConfig.bind(adminMobileHooksController)));
 
 /**
  * PUT /api/admin/mobile-hooks/config
  * Update hook action mappings
  */
-router.put('/admin/mobile-hooks/config', expressRouteWrapper(adminMobileHooksController.updateHookActionConfig.bind(adminMobileHooksController)));
+router.put('/admin/mobile-hooks/config', authMiddleware, requirePermission(ACTIONS.MANAGE, RESOURCES.ALL), expressRouteWrapper(adminMobileHooksController.updateHookActionConfig.bind(adminMobileHooksController)));
 
 /**
  * GET /api/admin/mobile-hooks/actions
  * Get available action types
  */
-router.get('/admin/mobile-hooks/actions', expressRouteWrapper(adminMobileHooksController.getAvailableActions.bind(adminMobileHooksController)));
+router.get('/admin/mobile-hooks/actions', authMiddleware, requirePermission(ACTIONS.MANAGE, RESOURCES.ALL), expressRouteWrapper(adminMobileHooksController.getAvailableActions.bind(adminMobileHooksController)));
 
 /**
  * PUT /api/admin/mobile-hooks/actions/:action_type
  * Update action settings for specific action type
  */
-router.put('/admin/mobile-hooks/actions/:action_type', expressRouteWrapper(adminMobileHooksController.updateActionSettings.bind(adminMobileHooksController)));
+router.put('/admin/mobile-hooks/actions/:action_type', authMiddleware, requirePermission(ACTIONS.MANAGE, RESOURCES.ALL), expressRouteWrapper(adminMobileHooksController.updateActionSettings.bind(adminMobileHooksController)));
 
 // ================================================================
 // User-specific Mobile Configuration Routes
@@ -80,12 +83,12 @@ router.put('/admin/mobile-hooks/actions/:action_type', expressRouteWrapper(admin
  * GET /api/users/:id/mobile-config
  * Get user's mobile hook config
  */
-router.get('/users/:id/mobile-config', expressRouteWrapper(userMobileConfigController.getUserMobileConfig.bind(userMobileConfigController)));
+router.get('/users/:id/mobile-config', authMiddleware, expressRouteWrapper(userMobileConfigController.getUserMobileConfig.bind(userMobileConfigController)));
 
 /**
  * PUT /api/users/:id/mobile-config
  * Update user's mobile hook config
  */
-router.put('/users/:id/mobile-config', expressRouteWrapper(userMobileConfigController.updateUserMobileConfig.bind(userMobileConfigController)));
+router.put('/users/:id/mobile-config', authMiddleware, expressRouteWrapper(userMobileConfigController.updateUserMobileConfig.bind(userMobileConfigController)));
 
 export default router;

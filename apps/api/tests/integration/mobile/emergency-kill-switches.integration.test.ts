@@ -63,10 +63,12 @@ jest.mock('../../../src/middleware/authorization', () => ({
 }));
 
 // Mock audit log service to track emergency actions
+const mockAuditLogService = {
+  logActionFromRequest: jest.fn().mockResolvedValue(undefined),
+};
+
 jest.mock('../../../src/services/AuditLogService', () => ({
-  getAuditLogService: jest.fn(() => ({
-    logActionFromRequest: jest.fn().mockResolvedValue(undefined),
-  })),
+  getAuditLogService: jest.fn(() => mockAuditLogService),
 }));
 
 describe('Emergency Kill Switches Integration Tests', () => {
@@ -426,9 +428,6 @@ describe('Emergency Kill Switches Integration Tests', () => {
         { key: 'emergency.api_hooks.enabled', value: 'true' },
       ]);
 
-      const { getAuditLogService } = require('../../../src/services/AuditLogService');
-      const mockAuditLog = getAuditLogService();
-
       const response = await request(app)
         .put('/api/v1/config/emergency')
         .send(criticalEmergency)
@@ -437,7 +436,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       expect(response.body.success).toBe(true);
 
       // Verify audit logging captured emergency activation
-      expect(mockAuditLog.logActionFromRequest).toHaveBeenCalledWith(
+      expect(mockAuditLogService.logActionFromRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           user: expect.objectContaining({
             id: 'admin_emergency_123',
@@ -472,9 +471,6 @@ describe('Emergency Kill Switches Integration Tests', () => {
         { key: 'emergency.global_kill_switch', value: 'true' },
       ]);
 
-      const { getAuditLogService } = require('../../../src/services/AuditLogService');
-      const mockAuditLog = getAuditLogService();
-
       const response = await request(app)
         .put('/api/v1/config/emergency')
         .send(emergencyRecovery)
@@ -483,7 +479,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       expect(response.body.success).toBe(true);
 
       // Verify audit logging captured emergency deactivation
-      expect(mockAuditLog.logActionFromRequest).toHaveBeenCalledWith(
+      expect(mockAuditLogService.logActionFromRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           user: expect.objectContaining({
             id: 'admin_emergency_123',
@@ -631,12 +627,31 @@ describe('Emergency Kill Switches Integration Tests', () => {
       };
 
       (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
-      (AppSetting.findAll as jest.Mock).mockResolvedValue([
-        { key: 'emergency.global_kill_switch', value: 'false' },
-        { key: 'emergency.mobile_hooks.enabled', value: 'true' },
-        { key: 'emergency.api_hooks.enabled', value: 'true' },
-        { key: 'emergency.contacts', value: JSON.stringify(incidentResponse.emergency_contacts) },
-      ]);
+      
+      // Mock initial state (for oldConfig call in PUT)
+      (AppSetting.findAll as jest.Mock)
+        .mockResolvedValueOnce([
+          { key: 'emergency.global_kill_switch', value: 'false' },
+          { key: 'emergency.mobile_hooks.enabled', value: 'true' },
+          { key: 'emergency.api_hooks.enabled', value: 'true' },
+          { key: 'emergency.contacts', value: JSON.stringify(incidentResponse.emergency_contacts) },
+        ])
+        // Mock updated state (for newConfig call in PUT)
+        .mockResolvedValueOnce([
+          { key: 'emergency.global_kill_switch', value: 'true' },
+          { key: 'emergency.mobile_hooks.enabled', value: 'false' },
+          { key: 'emergency.api_hooks.enabled', value: 'false' },
+          { key: 'emergency.contacts', value: JSON.stringify(incidentResponse.emergency_contacts) },
+          { key: 'emergency.reason', value: incidentResponse.emergency_reason },
+        ])
+        // Mock updated state (for GET request)
+        .mockResolvedValueOnce([
+          { key: 'emergency.global_kill_switch', value: 'true' },
+          { key: 'emergency.mobile_hooks.enabled', value: 'false' },
+          { key: 'emergency.api_hooks.enabled', value: 'false' },
+          { key: 'emergency.contacts', value: JSON.stringify(incidentResponse.emergency_contacts) },
+          { key: 'emergency.reason', value: incidentResponse.emergency_reason },
+        ]);
 
       const response = await request(app)
         .put('/api/v1/config/emergency')

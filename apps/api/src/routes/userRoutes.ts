@@ -3,7 +3,7 @@
 // User management routes
 // ================================================================
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { readLimiter, writeLimiter } from '../middleware/rateLimiters';
 import {
@@ -17,7 +17,7 @@ import { container } from '../container';
 import { TYPES } from '../container/types';
 import { UserController } from '../controllers/UserController';
 
-const router = Router();
+const router: express.Router = Router();
 const userController = container.get<UserController>(TYPES.UserController);
 
 // All user routes require authentication
