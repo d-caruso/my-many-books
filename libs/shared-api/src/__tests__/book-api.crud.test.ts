@@ -55,8 +55,8 @@ describe('BookApi (CRUD)', () => {
       expect(lastRequest?.method).toBe('GET');
       expect(lastRequest?.url).toContain('/books');
       expect(lastRequest?.config?.params).toEqual({
-        page: 1,
-        limit: 10,
+        page: '1',
+        limit: '10',
         includeAuthors: 'true',
         includeCategories: 'true',
       });
@@ -71,8 +71,8 @@ describe('BookApi (CRUD)', () => {
       await bookApi.getBooks(2, 20);
 
       const lastRequest = mockHttpClient.getLastRequest();
-      expect(lastRequest?.config?.params?.page).toBe(2);
-      expect(lastRequest?.config?.params?.limit).toBe(20);
+      expect(lastRequest?.config?.params?.page).toBe('2');
+      expect(lastRequest?.config?.params?.limit).toBe('20');
     });
 
     it('should exclude authors when includeAuthors is false', async () => {

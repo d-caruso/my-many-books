@@ -8,6 +8,7 @@ import {
   UserProfileSchema,
   createPaginatedResponseSchema,
 } from '@my-many-books/shared-types';
+import { expect } from '@jest/globals';
 
 export const API_BASE_URL = 'http://localhost';
 
@@ -136,13 +137,13 @@ export const handlers = [
     return res(ctx.json(booksResponse));
   }),
 
-  rest.get(`${API_BASE_URL}/authors`, (_req, res, ctx) => res(ctx.json(authorsResponse))),
+  rest.get(`${API_BASE_URL}/authors`, (req, res, ctx) => res(ctx.json(authorsResponse))),
 
-  rest.get(`${API_BASE_URL}/categories`, (_req, res, ctx) => res(ctx.json(categoriesResponse))),
+  rest.get(`${API_BASE_URL}/categories`, (req, res, ctx) => res(ctx.json(categoriesResponse))),
 
-  rest.get(`${API_BASE_URL}/settings`, (_req, res, ctx) => res(ctx.json(settingsResponse))),
+  rest.get(`${API_BASE_URL}/settings`, (req, res, ctx) => res(ctx.json(settingsResponse))),
 
-  rest.get(`${API_BASE_URL}/settings/admin`, (_req, res, ctx) => res(ctx.json(settingsResponse))),
+  rest.get(`${API_BASE_URL}/settings/admin`, (req, res, ctx) => res(ctx.json(settingsResponse))),
 
   rest.patch(`${API_BASE_URL}/settings/admin/:key`, async (req, res, ctx) => {
     const body = (await req.json()) as { value?: unknown };
@@ -186,7 +187,7 @@ export const handlers = [
       return res(ctx.json(response));
     }),
 
-  rest.get(`${API_BASE_URL}/users`, (_req, res, ctx) => res(ctx.json(userProfileResponse))),
+  rest.get(`${API_BASE_URL}/users`, (req, res, ctx) => res(ctx.json(userProfileResponse))),
 
   rest.put(`${API_BASE_URL}/users`, async (req, res, ctx) => {
     const body = (await req.json()) as Partial<{
@@ -214,7 +215,7 @@ export const handlers = [
     return res(ctx.json(response));
   }),
 
-  rest.delete(`${API_BASE_URL}/users`, (_req, res, ctx) =>
+  rest.delete(`${API_BASE_URL}/users`, (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ success: true, data: null, message: 'Account deleted successfully' }))
   ),
 ];

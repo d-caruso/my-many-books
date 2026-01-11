@@ -110,10 +110,11 @@ describe('shared-api contract (success envelope)', () => {
       email: 'user@example.com',
       name: 'Jane',
       surname: 'Doe',
+      fullName: 'Jane Doe',
       isActive: true,
       role: 'user',
-      creationDate: now,
-      updateDate: now,
+      createdAt: now,
+      updatedAt: now,
     };
 
     const categories = [
@@ -195,8 +196,8 @@ describe('shared-api contract (success envelope)', () => {
     const user = await api.users.getCurrentUser();
     expect(user.name).toBe('Jane');
     expect(user.surname).toBe('Doe');
-    expect(user.creationDate).toBeTruthy();
-    expect(user.updateDate).toBeTruthy();
+    expect(user.createdAt).toBeTruthy();
+    expect(user.updatedAt).toBeTruthy();
   });
 
   it('unwraps and validates categories', async () => {
