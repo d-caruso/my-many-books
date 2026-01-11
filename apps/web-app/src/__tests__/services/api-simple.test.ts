@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import * as apiModule from '../../services/api';
+import { USER_RESPONSE_FIELDS } from '@my-many-books/shared-types';
 
 // Mock environment variables using Vitest
 vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000');
@@ -106,10 +107,11 @@ describe('API Service Simple Tests', () => {
       email: 'test@example.com',
       name: 'Test',
       surname: 'User',
+      [USER_RESPONSE_FIELDS.FULL_NAME]: 'Test User',
       isActive: true,
       role: 'user',
-      creationDate: new Date().toISOString(),
-      updateDate: new Date().toISOString(),
+      [USER_RESPONSE_FIELDS.CREATED_AT]: new Date().toISOString(),
+      [USER_RESPONSE_FIELDS.UPDATED_AT]: new Date().toISOString(),
     };
 
     // Mock returns just the data (response interceptor extracts .data)
@@ -140,7 +142,7 @@ describe('API Service Simple Tests', () => {
     expect(mockAxiosInstance.get).toHaveBeenCalled();
     const [url, config] = mockAxiosInstance.get.mock.calls[0];
     expect(url).toContain('/books');
-    expect(config.params).toEqual({ page: 1, limit: 5, includeAuthors: 'true', includeCategories: 'true' });
+    expect(config.params).toEqual({ page: '1', limit: '5', includeAuthors: 'true', includeCategories: 'true' });
     expect(result).toEqual(mockResponse);
   });
 

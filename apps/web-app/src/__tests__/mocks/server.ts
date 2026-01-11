@@ -6,6 +6,7 @@
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { Book, Author, Category, User, PaginatedResponse } from '../../types';
+import { USER_RESPONSE_FIELDS, DATABASE_FIELDS } from '@my-many-books/shared-types';
 
 // Mock data
 const mockBooks: Book[] = [
@@ -42,6 +43,19 @@ const mockUser: User = {
   role: 'user',
   creationDate: now,
   updateDate: now,
+};
+
+// Mock user response DTO format (matches API UserResponseDTO)
+const mockUserResponse = {
+  id: 1,
+  email: 'test@example.com',
+  name: 'Test',
+  surname: 'User',
+  [USER_RESPONSE_FIELDS.FULL_NAME]: 'Test User',
+  isActive: true,
+  role: 'user',
+  [USER_RESPONSE_FIELDS.CREATED_AT]: now,
+  [USER_RESPONSE_FIELDS.UPDATED_AT]: now,
 };
 
 // Request handlers
@@ -167,17 +181,20 @@ export const handlers = [
 
   // Users endpoints
   http.get('*/api/users', () => {
-    return HttpResponse.json(mockUser);
+    return HttpResponse.json(mockUserResponse);
   }),
 
   http.put('*/api/users', async ({ request }) => {
-    const updateData = await request.json() as Partial<User>;
-    const updatedUser: User = {
-      ...mockUser,
+    const updateData = await request.json() as Partial<typeof mockUserResponse>;
+    const updatedUserResponse = {
+      ...mockUserResponse,
       ...updateData,
-      updateDate: new Date().toISOString(),
+      [USER_RESPONSE_FIELDS.UPDATED_AT]: new Date().toISOString(),
+      [USER_RESPONSE_FIELDS.FULL_NAME]: updateData.name && updateData.surname 
+        ? `${updateData.name} ${updateData.surname}`.trim()
+        : mockUserResponse[USER_RESPONSE_FIELDS.FULL_NAME],
     };
-    return HttpResponse.json(updatedUser);
+    return HttpResponse.json(updatedUserResponse);
   }),
 
   // ISBN search - matches shared-api endpoint /books/search/{isbn}

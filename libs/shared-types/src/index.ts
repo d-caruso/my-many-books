@@ -29,3 +29,4 @@ export * from './constants/resource-types';
 export * from './constants/sort-directions';
 export * from './constants/search-result-status';
 export * from './constants/search-sort-types';
+export * from './constants/field-names';
