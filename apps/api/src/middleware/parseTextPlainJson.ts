@@ -8,7 +8,7 @@ export const parseTextPlainJson = (req: Request, res: Response, next: NextFuncti
   
   if (req.get('Content-Type') === 'text/plain' && req.body && typeof req.body === 'string') {
     try {
-      req.body = JSON.parse(req.body);
+      req.body = JSON.parse(req.body) as Record<string, unknown>;
     } catch {
       // Keep original body if not valid JSON
     }
