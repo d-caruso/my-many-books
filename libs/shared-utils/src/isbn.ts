@@ -24,10 +24,10 @@ export const validateISBN = (isbn: string): ISBNValidationResult => {
 const validateISBN10 = (isbn: string): boolean => {
   let sum = 0;
   for (let i = 0; i < 9; i++) {
-    sum += parseInt(isbn[i]) * (10 - i);
+    sum += parseInt(isbn.charAt(i)) * (10 - i);
   }
   
-  const checkDigit = isbn[9] === 'X' ? 10 : parseInt(isbn[9]);
+  const checkDigit = isbn.charAt(9) === 'X' ? 10 : parseInt(isbn.charAt(9));
   sum += checkDigit;
   
   return sum % 11 === 0;
@@ -36,11 +36,11 @@ const validateISBN10 = (isbn: string): boolean => {
 const validateISBN13 = (isbn: string): boolean => {
   let sum = 0;
   for (let i = 0; i < 12; i++) {
-    const digit = parseInt(isbn[i]);
+    const digit = parseInt(isbn.charAt(i));
     sum += i % 2 === 0 ? digit : digit * 3;
   }
   
-  const checkDigit = parseInt(isbn[12]);
+  const checkDigit = parseInt(isbn.charAt(12));
   const calculatedCheckDigit = (10 - (sum % 10)) % 10;
   
   return checkDigit === calculatedCheckDigit;
@@ -71,7 +71,7 @@ export const convertISBN10to13 = (isbn10: string): string | null => {
   // Calculate new check digit
   let sum = 0;
   for (let i = 0; i < 12; i++) {
-    const digit = parseInt(isbn13WithoutCheck[i]);
+    const digit = parseInt(isbn13WithoutCheck.charAt(i));
     sum += i % 2 === 0 ? digit : digit * 3;
   }
   

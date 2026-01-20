@@ -19,6 +19,7 @@ module.exports = {
     '^@my-many-books/shared-i18n$': '<rootDir>/../../libs/shared-i18n/src/index.ts',
     '^@my-many-books/shared-logging$': '<rootDir>/../../libs/shared-logging/src/index.ts',
     '^@my-many-books/shared-types$': '<rootDir>/../../libs/shared-types/src/index.ts',
+    '^@my-many-books/shared-utils$': '<rootDir>/../../libs/shared-utils/src/index.ts',
     '^@my-many-books/shared-validation$': '<rootDir>/../../libs/shared-validation/src/index.ts',
   },
   transformIgnorePatterns: [

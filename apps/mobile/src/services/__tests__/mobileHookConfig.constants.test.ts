@@ -8,10 +8,10 @@ import {
   RESOURCE_TYPES,
   OPERATION_TYPES,
   OPERATION_STATUSES,
-  MOBILE_CONFIG_KEYS,
-  MOBILE_CONFIG_ACTIONS,
   MOBILE_CONFIG_LIMITS
 } from '../hooks/eventsSchema';
+
+import { MOBILE_HOOKS } from '@my-many-books/shared-types';
 
 describe('Mobile Hook Configuration Constants', () => {
   describe('Event constants are properly exported', () => {
@@ -72,24 +72,16 @@ describe('Mobile Hook Configuration Constants', () => {
 
   describe('Mobile configuration constants', () => {
     it('should have mobile config keys properly defined', () => {
-      expect(MOBILE_CONFIG_KEYS).toBeDefined();
-      expect(Object.isFrozen(MOBILE_CONFIG_KEYS)).toBe(true);
+      expect(MOBILE_HOOKS).toBeDefined();
+      expect(Object.isFrozen(MOBILE_HOOKS)).toBe(true);
       
       // Check all expected config keys exist
-      expect(MOBILE_CONFIG_KEYS.ANALYTICS_ENABLED).toBe('mobile.hooks.analytics.enabled');
-      expect(MOBILE_CONFIG_KEYS.ERROR_REPORTING_ENABLED).toBe('mobile.hooks.errorReporting.enabled');
-      expect(MOBILE_CONFIG_KEYS.OFFLINE_STORAGE_ENABLED).toBe('mobile.hooks.offlineStorage.enabled');
-      expect(MOBILE_CONFIG_KEYS.PERFORMANCE_MONITORING_ENABLED).toBe('mobile.hooks.performanceMonitoring.enabled');
-      expect(MOBILE_CONFIG_KEYS.BATCH_UPLOAD_INTERVAL).toBe('mobile.hooks.batchUploadInterval');
-      expect(MOBILE_CONFIG_KEYS.MAX_OFFLINE_EVENTS).toBe('mobile.hooks.maxOfflineEvents');
-    });
-
-    it('should have mobile config actions properly defined', () => {
-      expect(MOBILE_CONFIG_ACTIONS).toBeDefined();
-      expect(Object.isFrozen(MOBILE_CONFIG_ACTIONS)).toBe(true);
-      
-      expect(MOBILE_CONFIG_ACTIONS.UPDATE).toBe('update');
-      expect(MOBILE_CONFIG_ACTIONS.RESET).toBe('reset');
+      expect(MOBILE_HOOKS.ANALYTICS_ENABLED).toBe('mobile.hooks.analytics.enabled');
+      expect(MOBILE_HOOKS.ERROR_REPORTING_ENABLED).toBe('mobile.hooks.errorReporting.enabled');
+      expect(MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED).toBe('mobile.hooks.offlineStorage.enabled');
+      expect(MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED).toBe('mobile.hooks.performanceMonitoring.enabled');
+      expect(MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL).toBe('mobile.hooks.batchUploadInterval');
+      expect(MOBILE_HOOKS.MAX_OFFLINE_EVENTS).toBe('mobile.hooks.maxOfflineEvents');
     });
 
     it('should have mobile config limits properly defined', () => {
@@ -156,16 +148,15 @@ describe('Mobile Hook Configuration Constants', () => {
       expect(Object.isFrozen(RESOURCE_TYPES)).toBe(true);
       expect(Object.isFrozen(OPERATION_TYPES)).toBe(true);
       expect(Object.isFrozen(OPERATION_STATUSES)).toBe(true);
-      expect(Object.isFrozen(MOBILE_CONFIG_KEYS)).toBe(true);
-      expect(Object.isFrozen(MOBILE_CONFIG_ACTIONS)).toBe(true);
+      expect(Object.isFrozen(MOBILE_HOOKS)).toBe(true);
       expect(Object.isFrozen(MOBILE_CONFIG_LIMITS)).toBe(true);
 
       // Attempting to modify should fail silently or throw in strict mode
       expect(() => {
-        (MOBILE_CONFIG_KEYS as Record<string, unknown>).NEW_KEY = 'test';
+        (MOBILE_HOOKS as Record<string, unknown>).NEW_KEY = 'test';
       }).not.toThrow(); // Will fail silently in non-strict mode
       
-      expect((MOBILE_CONFIG_KEYS as Record<string, unknown>).NEW_KEY).toBeUndefined();
+      expect((MOBILE_HOOKS as Record<string, unknown>).NEW_KEY).toBeUndefined();
     });
   });
 

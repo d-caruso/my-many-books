@@ -1,7 +1,7 @@
 /**
- * Event Schema Builder Utility
- * 
- * Builds type-safe, hierarchical event trees from schema definitions.
+ * Tree Schema Builder Utility
+ *
+ * Builds type-safe, hierarchical trees from schema definitions.
  * Supports nested structures with automatic dot-notation generation and wildcard selectors.
  */
 
@@ -20,11 +20,11 @@ const join = (parts: string[]): string => parts.join('.');
 
 /**
  * Recursively builds an event tree from a schema definition
- * 
+ *
  * @param schema - The schema object defining the event hierarchy
  * @param parents - Array of parent path segments (used for recursion)
  * @returns A fully-typed event tree with dot-notation strings and wildcard selectors
- * 
+ *
  * @example
  * ```typescript
  * const schema = {
@@ -41,14 +41,14 @@ const join = (parts: string[]): string => parts.join('.');
  *     LOGOUT: null
  *   }
  * } as const;
- * 
- * const events = buildEventSchema(schema);
+ *
+ * const events = buildTreeSchema(schema);
  * // Result:
  * // {
  * //   BOOK: {
  * //     CREATE: {
  * //       START: "book.create.start",
- * //       SUCCESS: "book.create.success", 
+ * //       SUCCESS: "book.create.success",
  * //       FAILED: "book.create.failed",
  * //       ANY: "book.create.*"
  * //     },
@@ -64,7 +64,7 @@ const join = (parts: string[]): string => parts.join('.');
  * // }
  * ```
  */
-export function buildEventSchema<T extends SchemaMap>(schema: T, parents: string[] = []): BuildResult<T> {
+export function buildTreeSchema<T extends SchemaMap>(schema: T, parents: string[] = []): BuildResult<T> {
   const result: Record<string, unknown> = {};
   const keys = Object.keys(schema) as (keyof T)[];
 
@@ -77,7 +77,7 @@ export function buildEventSchema<T extends SchemaMap>(schema: T, parents: string
       result[key as string] = join(path);
     } else {
       // Branch node - recursively build subtree
-      result[key as string] = buildEventSchema(value as Extract<typeof value, SchemaMap>, path);
+      result[key as string] = buildTreeSchema(value as Extract<typeof value, SchemaMap>, path);
     }
   }
 
@@ -92,8 +92,8 @@ export function buildEventSchema<T extends SchemaMap>(schema: T, parents: string
 /**
  * Type utility to extract the event names from a built event schema
  */
-export type ExtractEventNames<T> = T extends string 
-  ? T 
+export type ExtractEventNames<T> = T extends string
+  ? T
   : T extends Record<string, unknown>
     ? { [K in keyof T]: ExtractEventNames<T[K]> }[keyof T]
     : never;

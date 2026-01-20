@@ -1,4 +1,4 @@
-import { buildEventSchema } from '@my-many-books/hookey';
+import { buildTreeSchema } from '@my-many-books/shared-utils';
 
 // ================================================================
 // REUSABLE EVENT PATTERNS
@@ -89,6 +89,7 @@ const schema = {
    * Inherits all standard entity operations automatically
    */
   CATEGORY: ENTITY_OPERATIONS,
+
   // Queue Events
   QUEUE: {
     ENQUEUE: null,
@@ -189,7 +190,7 @@ const schema = {
   },
 } as const;
 
-export const MOBILE_EVENTS = Object.freeze(buildEventSchema(schema));
+export const MOBILE_EVENTS = Object.freeze(buildTreeSchema(schema));
 
 export type EventsTree = typeof MOBILE_EVENTS;
 
@@ -234,23 +235,6 @@ export const RETRY_REASONS = Object.freeze({
   MANUAL_RETRY: 'manual_retry',
 } as const);
 
-// Mobile configuration constants
-export const MOBILE_CONFIG_KEYS = Object.freeze({
-  ANALYTICS_ENABLED: 'mobile.hooks.analytics.enabled',
-  ERROR_REPORTING_ENABLED: 'mobile.hooks.errorReporting.enabled',
-  OFFLINE_STORAGE_ENABLED: 'mobile.hooks.offlineStorage.enabled',
-  PERFORMANCE_MONITORING_ENABLED: 'mobile.hooks.performanceMonitoring.enabled',
-  BATCH_UPLOAD_INTERVAL: 'mobile.hooks.batchUploadInterval',
-  MAX_OFFLINE_EVENTS: 'mobile.hooks.maxOfflineEvents',
-} as const);
-
-export const MOBILE_CONFIG_CONSTANTS = Object.freeze({
-  CATEGORY: 'mobile_hooks',
-  DATA_TYPE: 'string',
-  VERSION: '1.0.0',
-  ENTITY_ID: 'mobile_hook_listeners',
-} as const);
-
 export const MOBILE_CONFIG_LIMITS = Object.freeze({
   MIN_BATCH_INTERVAL: 60,
   MAX_BATCH_INTERVAL: 3600,
@@ -272,15 +256,9 @@ export const HEALTH_SCORE_THRESHOLDS = Object.freeze({
   DISABLED_FEATURES_PENALTY: 15,
 } as const);
 
-export const MOBILE_CONFIG_ACTIONS = Object.freeze({
-  UPDATE: 'update',
-  RESET: 'reset',
-} as const);
-
 export type OperationType = typeof OPERATION_TYPES[keyof typeof OPERATION_TYPES];
 export type OperationStatus = typeof OPERATION_STATUSES[keyof typeof OPERATION_STATUSES];
 export type ConflictResolutionMethod = typeof CONFLICT_RESOLUTION_METHODS[keyof typeof CONFLICT_RESOLUTION_METHODS];
 export type ValidationType = typeof VALIDATION_TYPES[keyof typeof VALIDATION_TYPES];
 export type RetryReason = typeof RETRY_REASONS[keyof typeof RETRY_REASONS];
-export type MobileConfigKey = typeof MOBILE_CONFIG_KEYS[keyof typeof MOBILE_CONFIG_KEYS];
 export type MobileConfigAction = typeof MOBILE_CONFIG_ACTIONS[keyof typeof MOBILE_CONFIG_ACTIONS];

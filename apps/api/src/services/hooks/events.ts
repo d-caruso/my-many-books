@@ -1,4 +1,4 @@
-import { buildEventSchema } from '@my-many-books/hookey';
+import { buildTreeSchema } from '@my-many-books/shared-utils';
 
 const schema = {
   BOOK: {
@@ -88,6 +88,6 @@ const schema = {
   },
 } as const;
 
-export const EVENTS = Object.freeze(buildEventSchema(schema));
+export const EVENTS = Object.freeze(buildTreeSchema(schema));
 
 export type EventsTree = typeof EVENTS;

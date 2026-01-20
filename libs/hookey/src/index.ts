@@ -12,10 +12,4 @@ export {
   EmailActionConfigSchema,
   DatabaseActionConfigSchema,
 } from './utils/validation';
-export { 
-  buildEventSchema, 
-  type SchemaMap, 
-  type BuildResult, 
-  type EventPaths 
-} from './utils/eventSchemaBuilder';
 export { SequelizeHookStorage } from './adapters/sequelizeHookStorage';

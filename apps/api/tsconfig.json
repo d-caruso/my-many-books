@@ -43,6 +43,8 @@
       "@my-many-books/shared-logging/*": ["../../libs/shared-logging/src/*"],
       "@my-many-books/shared-types": ["../../libs/shared-types/src/index.ts"],
       "@my-many-books/shared-types/*": ["../../libs/shared-types/src/*"],
+      "@my-many-books/shared-utils": ["../../libs/shared-utils/src/index.ts"],
+      "@my-many-books/shared-utils/*": ["../../libs/shared-utils/src/*"],
       "@my-many-books/shared-validation": ["../../libs/shared-validation/src/index.ts"],
       "@my-many-books/shared-validation/*": ["../../libs/shared-validation/src/*"]
     }

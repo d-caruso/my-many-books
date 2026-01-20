@@ -6,15 +6,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HookSystem, HookConfig, HookAction, HookActionContext } from '@my-many-books/hookey';
 import { mobileHookConfigService } from './mobileHookConfigService';
-
-export interface MobileHookListenerConfig {
-  analyticsEnabled: boolean;
-  errorReportingEnabled: boolean;
-  offlineStorageEnabled: boolean;
-  performanceMonitoringEnabled: boolean;
-  batchUploadInterval: number; // seconds
-  maxOfflineEvents: number;
-}
+import { MobileHookListenerConfig } from '@my-many-books/shared-types';
 
 export interface HookEventData {
   eventType: string;

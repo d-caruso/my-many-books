@@ -1,6 +1,7 @@
 // ================================================================
-// src/controllers/admin/MobileConfigController.ts
+// src/controllers/admin/AdminMobileConfigController.ts
 // Mobile hook configuration management controller
+// manages listener-level mobile config and operational state—fetch/update listener flags and limits, reset defaults, emergency enable/disable, health/status reporting
 // ================================================================
 
 import { BaseController } from '../base/BaseController';
@@ -8,15 +9,12 @@ import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
-
-export interface MobileHookListenerConfig {
-  analyticsEnabled: boolean;
-  errorReportingEnabled: boolean;
-  offlineStorageEnabled: boolean;
-  performanceMonitoringEnabled: boolean;
-  batchUploadInterval: number;
-  maxOfflineEvents: number;
-}
+import {
+  MOBILE_HOOKS,
+  MOBILE_CONFIG_CONSTANTS,
+  MOBILE_CONFIG_ACTIONS,
+  MobileHookListenerConfig,
+} from '@my-many-books/shared-types';
 
 export interface MobileConfigUpdateRequest {
   analyticsEnabled?: boolean;
@@ -27,47 +25,10 @@ export interface MobileConfigUpdateRequest {
   maxOfflineEvents?: number;
 }
 
-// Mobile configuration setting keys
-export const MOBILE_CONFIG_KEYS = {
-  ANALYTICS_ENABLED: 'mobile.hooks.analytics.enabled',
-  ERROR_REPORTING_ENABLED: 'mobile.hooks.errorReporting.enabled',
-  OFFLINE_STORAGE_ENABLED: 'mobile.hooks.offlineStorage.enabled',
-  PERFORMANCE_MONITORING_ENABLED: 'mobile.hooks.performanceMonitoring.enabled',
-  BATCH_UPLOAD_INTERVAL: 'mobile.hooks.batchUploadInterval',
-  MAX_OFFLINE_EVENTS: 'mobile.hooks.maxOfflineEvents',
-} as const;
-
-// Mobile configuration categories and types
-export const MOBILE_CONFIG_CONSTANTS = {
-  CATEGORY: 'mobile_hooks',
-  DATA_TYPE: 'string',
-  VERSION: '1.0.0',
-  RESOURCE_TYPE: 'mobile_config',
-  ENTITY_ID: 'mobile_hook_listeners',
-} as const;
-
-// Configuration validation constants
-export const MOBILE_CONFIG_LIMITS = {
-  MIN_BATCH_INTERVAL: 60,
-  MAX_BATCH_INTERVAL: 3600,
-  MIN_OFFLINE_EVENTS: 100,
-  MAX_OFFLINE_EVENTS: 10000,
-  BASE_MEMORY_KB: 50,
-  ANALYTICS_MEMORY_KB: 20,
-  ERROR_REPORTING_MEMORY_KB: 15,
-  OFFLINE_EVENT_MEMORY_KB: 0.1,
-  PERFORMANCE_MEMORY_KB: 30,
-  MEMORY_THRESHOLD_KB: 1000,
-} as const;
-
-// Health score thresholds
-export const HEALTH_SCORE_THRESHOLDS = {
-  HEALTHY: 80,
-  WARNING: 60,
-  BATCH_INTERVAL_PENALTY: 10,
-  HIGH_EVENTS_PENALTY: 5,
-  DISABLED_FEATURES_PENALTY: 15,
-} as const;
+export interface EmergencyStatusRequest {
+  enabled: boolean;
+  reason?: string;
+}
 
 // Configuration messages
 export const MOBILE_CONFIG_MESSAGES = {
@@ -90,12 +51,6 @@ export const MOBILE_CONFIG_MESSAGES = {
   },
 } as const;
 
-// Configuration actions for audit logging
-export const MOBILE_CONFIG_ACTIONS = {
-  UPDATE: 'update',
-  RESET: 'reset',
-} as const;
-
 const DEFAULT_MOBILE_CONFIG: MobileHookListenerConfig = {
   analyticsEnabled: true,
   errorReportingEnabled: true,
@@ -105,7 +60,7 @@ const DEFAULT_MOBILE_CONFIG: MobileHookListenerConfig = {
   maxOfflineEvents: 1000,
 };
 
-export class MobileConfigController extends BaseController {
+export class AdminMobileConfigController extends BaseController {
   /**
    * Get current mobile hook listener configuration
    */
@@ -116,7 +71,7 @@ export class MobileConfigController extends BaseController {
 
     try {
       const config = await this.loadMobileConfig();
-      
+
       return this.createSuccessResponse({
         config,
         lastUpdated: await this.getLastUpdated(),
@@ -155,32 +110,62 @@ export class MobileConfigController extends BaseController {
 
       // Update each configuration value that was provided
       if (typeof body.analyticsEnabled === 'boolean') {
-        await this.updateConfigSetting(MOBILE_CONFIG_KEYS.ANALYTICS_ENABLED, String(body.analyticsEnabled));
+        await this.updateConfigSetting(
+          MOBILE_HOOKS.ANALYTICS_ENABLED,
+          String(body.analyticsEnabled)
+        );
         updatedSettings.push({ key: 'analyticsEnabled', value: String(body.analyticsEnabled) });
       }
 
       if (typeof body.errorReportingEnabled === 'boolean') {
-        await this.updateConfigSetting(MOBILE_CONFIG_KEYS.ERROR_REPORTING_ENABLED, String(body.errorReportingEnabled));
-        updatedSettings.push({ key: 'errorReportingEnabled', value: String(body.errorReportingEnabled) });
+        await this.updateConfigSetting(
+          MOBILE_HOOKS.ERROR_REPORTING_ENABLED,
+          String(body.errorReportingEnabled)
+        );
+        updatedSettings.push({
+          key: 'errorReportingEnabled',
+          value: String(body.errorReportingEnabled),
+        });
       }
 
       if (typeof body.offlineStorageEnabled === 'boolean') {
-        await this.updateConfigSetting(MOBILE_CONFIG_KEYS.OFFLINE_STORAGE_ENABLED, String(body.offlineStorageEnabled));
-        updatedSettings.push({ key: 'offlineStorageEnabled', value: String(body.offlineStorageEnabled) });
+        await this.updateConfigSetting(
+          MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED,
+          String(body.offlineStorageEnabled)
+        );
+        updatedSettings.push({
+          key: 'offlineStorageEnabled',
+          value: String(body.offlineStorageEnabled),
+        });
       }
 
       if (typeof body.performanceMonitoringEnabled === 'boolean') {
-        await this.updateConfigSetting(MOBILE_CONFIG_KEYS.PERFORMANCE_MONITORING_ENABLED, String(body.performanceMonitoringEnabled));
-        updatedSettings.push({ key: 'performanceMonitoringEnabled', value: String(body.performanceMonitoringEnabled) });
+        await this.updateConfigSetting(
+          MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED,
+          String(body.performanceMonitoringEnabled)
+        );
+        updatedSettings.push({
+          key: 'performanceMonitoringEnabled',
+          value: String(body.performanceMonitoringEnabled),
+        });
       }
 
       if (typeof body.batchUploadInterval === 'number') {
-        await this.updateConfigSetting(MOBILE_CONFIG_KEYS.BATCH_UPLOAD_INTERVAL, String(body.batchUploadInterval));
-        updatedSettings.push({ key: 'batchUploadInterval', value: String(body.batchUploadInterval) });
+        await this.updateConfigSetting(
+          MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL,
+          String(body.batchUploadInterval)
+        );
+        updatedSettings.push({
+          key: 'batchUploadInterval',
+          value: String(body.batchUploadInterval),
+        });
       }
 
       if (typeof body.maxOfflineEvents === 'number') {
-        await this.updateConfigSetting(MOBILE_CONFIG_KEYS.MAX_OFFLINE_EVENTS, String(body.maxOfflineEvents));
+        await this.updateConfigSetting(
+          MOBILE_HOOKS.MAX_OFFLINE_EVENTS,
+          String(body.maxOfflineEvents)
+        );
         updatedSettings.push({ key: 'maxOfflineEvents', value: String(body.maxOfflineEvents) });
       }
 
@@ -199,11 +184,14 @@ export class MobileConfigController extends BaseController {
 
       const newConfig = await this.loadMobileConfig();
 
-      return this.createSuccessResponse({
-        config: newConfig,
-        updated: updatedSettings.map(s => s.key),
-        lastUpdated: new Date().toISOString(),
-      }, MOBILE_CONFIG_MESSAGES.SUCCESS.UPDATED);
+      return this.createSuccessResponse(
+        {
+          config: newConfig,
+          updated: updatedSettings.map(s => s.key),
+          lastUpdated: new Date().toISOString(),
+        },
+        MOBILE_CONFIG_MESSAGES.SUCCESS.UPDATED
+      );
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
@@ -224,12 +212,30 @@ export class MobileConfigController extends BaseController {
       const oldConfig = await this.loadMobileConfig();
 
       // Reset all settings to defaults
-      await this.updateConfigSetting(MOBILE_CONFIG_KEYS.ANALYTICS_ENABLED, String(DEFAULT_MOBILE_CONFIG.analyticsEnabled));
-      await this.updateConfigSetting(MOBILE_CONFIG_KEYS.ERROR_REPORTING_ENABLED, String(DEFAULT_MOBILE_CONFIG.errorReportingEnabled));
-      await this.updateConfigSetting(MOBILE_CONFIG_KEYS.OFFLINE_STORAGE_ENABLED, String(DEFAULT_MOBILE_CONFIG.offlineStorageEnabled));
-      await this.updateConfigSetting(MOBILE_CONFIG_KEYS.PERFORMANCE_MONITORING_ENABLED, String(DEFAULT_MOBILE_CONFIG.performanceMonitoringEnabled));
-      await this.updateConfigSetting(MOBILE_CONFIG_KEYS.BATCH_UPLOAD_INTERVAL, String(DEFAULT_MOBILE_CONFIG.batchUploadInterval));
-      await this.updateConfigSetting(MOBILE_CONFIG_KEYS.MAX_OFFLINE_EVENTS, String(DEFAULT_MOBILE_CONFIG.maxOfflineEvents));
+      await this.updateConfigSetting(
+        MOBILE_HOOKS.ANALYTICS_ENABLED,
+        String(DEFAULT_MOBILE_CONFIG.analyticsEnabled)
+      );
+      await this.updateConfigSetting(
+        MOBILE_HOOKS.ERROR_REPORTING_ENABLED,
+        String(DEFAULT_MOBILE_CONFIG.errorReportingEnabled)
+      );
+      await this.updateConfigSetting(
+        MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED,
+        String(DEFAULT_MOBILE_CONFIG.offlineStorageEnabled)
+      );
+      await this.updateConfigSetting(
+        MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED,
+        String(DEFAULT_MOBILE_CONFIG.performanceMonitoringEnabled)
+      );
+      await this.updateConfigSetting(
+        MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL,
+        String(DEFAULT_MOBILE_CONFIG.batchUploadInterval)
+      );
+      await this.updateConfigSetting(
+        MOBILE_HOOKS.MAX_OFFLINE_EVENTS,
+        String(DEFAULT_MOBILE_CONFIG.maxOfflineEvents)
+      );
 
       // Log audit event
       getAuditLogService().logActionFromRequest(
@@ -243,11 +249,14 @@ export class MobileConfigController extends BaseController {
         }
       );
 
-      return this.createSuccessResponse({
-        config: DEFAULT_MOBILE_CONFIG,
-        resetToDefaults: true,
-        lastUpdated: new Date().toISOString(),
-      }, 'Mobile configuration reset to defaults successfully');
+      return this.createSuccessResponse(
+        {
+          config: DEFAULT_MOBILE_CONFIG,
+          resetToDefaults: true,
+          lastUpdated: new Date().toISOString(),
+        },
+        'Mobile configuration reset to defaults successfully'
+      );
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
@@ -322,7 +331,7 @@ export class MobileConfigController extends BaseController {
     try {
       const config = await this.loadMobileConfig();
       const lastUpdated = await this.getLastUpdated();
-      
+
       // Calculate configuration health score
       let healthScore = 100;
       const issues: string[] = [];
@@ -332,7 +341,7 @@ export class MobileConfigController extends BaseController {
         healthScore -= 10;
         issues.push('Batch upload interval is too low (< 60 seconds)');
       }
-      
+
       if (config.maxOfflineEvents > 5000) {
         healthScore -= 5;
         issues.push('High offline events limit may impact performance');
@@ -378,19 +387,37 @@ export class MobileConfigController extends BaseController {
   private async loadMobileConfig(): Promise<MobileHookListenerConfig> {
     const settings = await AppSetting.findAll({
       where: {
-        key: Object.values(MOBILE_CONFIG_KEYS),
+        key: Object.values(MOBILE_HOOKS),
       },
     });
 
     const settingsMap = new Map(settings.map(s => [s.key, s.value]));
 
     return {
-      analyticsEnabled: this.parseBoolean(settingsMap.get(MOBILE_CONFIG_KEYS.ANALYTICS_ENABLED), DEFAULT_MOBILE_CONFIG.analyticsEnabled),
-      errorReportingEnabled: this.parseBoolean(settingsMap.get(MOBILE_CONFIG_KEYS.ERROR_REPORTING_ENABLED), DEFAULT_MOBILE_CONFIG.errorReportingEnabled),
-      offlineStorageEnabled: this.parseBoolean(settingsMap.get(MOBILE_CONFIG_KEYS.OFFLINE_STORAGE_ENABLED), DEFAULT_MOBILE_CONFIG.offlineStorageEnabled),
-      performanceMonitoringEnabled: this.parseBoolean(settingsMap.get(MOBILE_CONFIG_KEYS.PERFORMANCE_MONITORING_ENABLED), DEFAULT_MOBILE_CONFIG.performanceMonitoringEnabled),
-      batchUploadInterval: this.parseNumber(settingsMap.get(MOBILE_CONFIG_KEYS.BATCH_UPLOAD_INTERVAL), DEFAULT_MOBILE_CONFIG.batchUploadInterval),
-      maxOfflineEvents: this.parseNumber(settingsMap.get(MOBILE_CONFIG_KEYS.MAX_OFFLINE_EVENTS), DEFAULT_MOBILE_CONFIG.maxOfflineEvents),
+      analyticsEnabled: this.parseBoolean(
+        settingsMap.get(MOBILE_HOOKS.ANALYTICS_ENABLED),
+        DEFAULT_MOBILE_CONFIG.analyticsEnabled
+      ),
+      errorReportingEnabled: this.parseBoolean(
+        settingsMap.get(MOBILE_HOOKS.ERROR_REPORTING_ENABLED),
+        DEFAULT_MOBILE_CONFIG.errorReportingEnabled
+      ),
+      offlineStorageEnabled: this.parseBoolean(
+        settingsMap.get(MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED),
+        DEFAULT_MOBILE_CONFIG.offlineStorageEnabled
+      ),
+      performanceMonitoringEnabled: this.parseBoolean(
+        settingsMap.get(MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED),
+        DEFAULT_MOBILE_CONFIG.performanceMonitoringEnabled
+      ),
+      batchUploadInterval: this.parseNumber(
+        settingsMap.get(MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL),
+        DEFAULT_MOBILE_CONFIG.batchUploadInterval
+      ),
+      maxOfflineEvents: this.parseNumber(
+        settingsMap.get(MOBILE_HOOKS.MAX_OFFLINE_EVENTS),
+        DEFAULT_MOBILE_CONFIG.maxOfflineEvents
+      ),
     };
   }
 
@@ -418,12 +445,77 @@ export class MobileConfigController extends BaseController {
   }
 
   /**
+   * Get current emergency status
+   */
+  async getEmergencyStatus(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    try {
+      const setting = await AppSetting.findOne({
+        where: { key: MOBILE_HOOKS.EMERGENCY_ENABLED },
+      });
+
+      return this.createSuccessResponse({
+        enabled: setting?.value !== 'false',
+        disabledAt: setting?.value === 'false' ? setting.updateDate : null,
+        disabledReason: await this.getEmergencyReason(),
+      });
+    } catch (error) {
+      return this.createErrorResponse('Failed to get emergency status', 500);
+    }
+  }
+
+  /**
+   * Update emergency status (enable/disable all mobile hooks)
+   */
+  async updateEmergencyStatus(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    const body = this.parseBody<EmergencyStatusRequest>(request);
+    if (body === null || typeof body.enabled !== 'boolean') {
+      return this.createErrorResponse('Invalid request: enabled (boolean) is required', 400);
+    }
+
+    try {
+      await this.updateConfigSetting(MOBILE_HOOKS.EMERGENCY_ENABLED, String(body.enabled));
+
+      if (body.reason) {
+        await this.updateConfigSetting(MOBILE_HOOKS.EMERGENCY_REASON, body.reason);
+      }
+
+      // Log audit event
+      getAuditLogService().logActionFromRequest(
+        request,
+        body.enabled ? 'emergency_enable' : 'emergency_disable',
+        MOBILE_CONFIG_CONSTANTS.RESOURCE_TYPE,
+        MOBILE_CONFIG_CONSTANTS.ENTITY_ID,
+        { enabled: body.enabled, reason: body.reason }
+      );
+
+      return this.createSuccessResponse({
+        enabled: body.enabled,
+        updatedAt: new Date().toISOString(),
+        message: body.enabled ? 'Mobile hooks enabled' : 'Mobile hooks disabled (emergency)',
+      });
+    } catch (error) {
+      return this.createErrorResponse('Failed to update emergency status', 500);
+    }
+  }
+
+  /**
    * Validate mobile configuration values
    */
   private validateMobileConfig(config: MobileConfigUpdateRequest): ApiResponse | null {
     if (typeof config.batchUploadInterval === 'number') {
       if (config.batchUploadInterval < 60 || config.batchUploadInterval > 3600) {
-        return this.createErrorResponse('Batch upload interval must be between 60 and 3600 seconds', 400);
+        return this.createErrorResponse(
+          'Batch upload interval must be between 60 and 3600 seconds',
+          400
+        );
       }
     }
 
@@ -437,12 +529,67 @@ export class MobileConfigController extends BaseController {
   }
 
   /**
+   * Get mobile hooks health status
+   */
+  async getHealth(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    try {
+      const config = await this.loadMobileConfig();
+      const emergencyEnabled = await this.isEmergencyEnabled();
+
+      const checks = {
+        configLoaded: true,
+        emergencyEnabled,
+        analyticsActive: config.analyticsEnabled && emergencyEnabled,
+        errorReportingActive: config.errorReportingEnabled && emergencyEnabled,
+        offlineStorageActive: config.offlineStorageEnabled && emergencyEnabled,
+        performanceMonitoringActive: config.performanceMonitoringEnabled && emergencyEnabled,
+      };
+
+      const activeCount = Object.values(checks).filter(v => v === true).length;
+      const totalCount = Object.keys(checks).length;
+      const healthScore = Math.round((activeCount / totalCount) * 100);
+
+      return this.createSuccessResponse({
+        status: emergencyEnabled ? (healthScore >= 80 ? 'healthy' : 'degraded') : 'disabled',
+        healthScore,
+        checks,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      return this.createSuccessResponse({
+        status: 'error',
+        healthScore: 0,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  private async isEmergencyEnabled(): Promise<boolean> {
+    const setting = await AppSetting.findOne({
+      where: { key: MOBILE_HOOKS.EMERGENCY_ENABLED },
+    });
+    return setting?.value !== 'false';
+  }
+
+  private async getEmergencyReason(): Promise<string | null> {
+    const setting = await AppSetting.findOne({
+      where: { key: MOBILE_HOOKS.EMERGENCY_REASON },
+    });
+    return setting?.value || null;
+  }
+
+  /**
    * Get the last updated timestamp for mobile configuration
    */
   private async getLastUpdated(): Promise<string | null> {
     const lastSetting = await AppSetting.findOne({
       where: {
-        key: Object.values(MOBILE_CONFIG_KEYS),
+        key: Object.values(MOBILE_HOOKS),
       },
       order: [['updateDate', 'DESC']],
     });
@@ -496,4 +643,4 @@ export class MobileConfigController extends BaseController {
   }
 }
 
-export const mobileConfigController = new MobileConfigController();
+export const adminMobileConfigController = new AdminMobileConfigController();

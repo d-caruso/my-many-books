@@ -11,3 +11,6 @@ export * from './validation';
 
 // Formatting utilities
 export * from './formatting';
+
+// Build Tree Schema utility
+export * from './buildTreeSchema';
