@@ -261,4 +261,3 @@ export type OperationStatus = typeof OPERATION_STATUSES[keyof typeof OPERATION_S
 export type ConflictResolutionMethod = typeof CONFLICT_RESOLUTION_METHODS[keyof typeof CONFLICT_RESOLUTION_METHODS];
 export type ValidationType = typeof VALIDATION_TYPES[keyof typeof VALIDATION_TYPES];
 export type RetryReason = typeof RETRY_REASONS[keyof typeof RETRY_REASONS];
-export type MobileConfigAction = typeof MOBILE_CONFIG_ACTIONS[keyof typeof MOBILE_CONFIG_ACTIONS];

@@ -7,7 +7,7 @@ import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { mobileConfigController } from '../controllers/mobile/MobileConfigController';
 import { emergencyController } from '../controllers/mobile/EmergencyController';
-import { adminMobileHooksController } from '../controllers/admin/AdminMobileHooksController';
+import { adminMobileHooksActionsConfigController } from '../controllers/admin/AdminMobileHooksActionsConfigController';
 import { userMobileConfigController } from '../controllers/mobile/UserMobileConfigController';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
@@ -25,16 +25,7 @@ const router: express.Router = Router();
  */
 router.get(
   '/config/mobile',
-  expressRouteWrapper(mobileConfigController.getMobileConfig.bind(mobileConfigController))
-);
-
-/**
- * PUT /api/config/mobile
- * Update mobile hook settings
- */
-router.put(
-  '/config/mobile',
-  expressRouteWrapper(mobileConfigController.updateMobileConfig.bind(mobileConfigController))
+  expressRouteWrapper(mobileConfigController.getListenerSettings.bind(mobileConfigController))
 );
 
 // ================================================================
@@ -66,28 +57,28 @@ router.put(
 // ================================================================
 
 /**
- * GET /api/admin/mobile-hooks/config
+ * GET /api/admin/mobile-hooks/settings/listeners
  * Get hook action mappings
  */
 router.get(
-  '/admin/mobile-hooks/config',
+  '/admin/mobile-hooks/settings/listeners',
   authMiddleware,
   requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
   expressRouteWrapper(
-    adminMobileHooksController.getHookActionConfig.bind(adminMobileHooksController)
+    adminMobileHooksActionsConfigController.getHookActionConfig.bind(adminMobileHooksActionsConfigController)
   )
 );
 
 /**
- * PUT /api/admin/mobile-hooks/config
+ * PUT /api/admin/mobile-hooks/settings/listeners
  * Update hook action mappings
  */
 router.put(
-  '/admin/mobile-hooks/config',
+  '/admin/mobile-hooks/settings/listeners',
   authMiddleware,
   requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
   expressRouteWrapper(
-    adminMobileHooksController.updateHookActionConfig.bind(adminMobileHooksController)
+    adminMobileHooksActionsConfigController.updateHookActionConfig.bind(adminMobileHooksActionsConfigController)
   )
 );
 
@@ -100,7 +91,7 @@ router.get(
   authMiddleware,
   requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
   expressRouteWrapper(
-    adminMobileHooksController.getAvailableActions.bind(adminMobileHooksController)
+    adminMobileHooksActionsConfigController.getAvailableActions.bind(adminMobileHooksActionsConfigController)
   )
 );
 
@@ -113,7 +104,7 @@ router.put(
   authMiddleware,
   requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
   expressRouteWrapper(
-    adminMobileHooksController.updateActionSettings.bind(adminMobileHooksController)
+    adminMobileHooksActionsConfigController.updateActionSettings.bind(adminMobileHooksActionsConfigController)
   )
 );
 

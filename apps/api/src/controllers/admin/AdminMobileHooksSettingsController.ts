@@ -1,7 +1,7 @@
 // ================================================================
-// src/controllers/admin/AdminMobileConfigController.ts
-// Mobile hook configuration management controller
-// manages listener-level mobile config and operational state—fetch/update listener flags and limits, reset defaults, emergency enable/disable, health/status reporting
+// src/controllers/admin/AdminMobileHooksSettingsController.ts
+// Mobile hook settings management controller
+// manages listener-level mobile settings and operational state—fetch/update listener flags and limits, reset defaults, emergency enable/disable, health/status reporting
 // ================================================================
 
 import { BaseController } from '../base/BaseController';
@@ -11,36 +11,27 @@ import { AppSetting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
 import {
   MOBILE_HOOKS,
-  MOBILE_CONFIG_CONSTANTS,
-  MOBILE_CONFIG_ACTIONS,
-  MobileHookListenerConfig,
+  MOBILE_HOOKS_METADATA,
+  MOBILE_HOOKS_SETTINGS_ACTIONS,
+  MobileHooksListenerSettings,
 } from '@my-many-books/shared-types';
-
-export interface MobileConfigUpdateRequest {
-  analyticsEnabled?: boolean;
-  errorReportingEnabled?: boolean;
-  offlineStorageEnabled?: boolean;
-  performanceMonitoringEnabled?: boolean;
-  batchUploadInterval?: number;
-  maxOfflineEvents?: number;
-}
 
 export interface EmergencyStatusRequest {
   enabled: boolean;
   reason?: string;
 }
 
-// Configuration messages
-export const MOBILE_CONFIG_MESSAGES = {
+// settings messages
+const MOBILE_SETTINGS_MESSAGES = {
   SUCCESS: {
-    UPDATED: 'Mobile configuration updated successfully',
-    RESET: 'Mobile configuration reset to defaults successfully',
+    UPDATED: 'Mobile settings updated successfully',
+    RESET: 'Mobile settings reset to defaults successfully',
   },
   ERRORS: {
-    FETCH_FAILED: 'Failed to fetch mobile configuration',
-    UPDATE_FAILED: 'Failed to update mobile configuration',
-    RESET_FAILED: 'Failed to reset mobile configuration',
-    STATUS_FAILED: 'Failed to get mobile configuration status',
+    FETCH_FAILED: 'Failed to fetch mobile settings',
+    UPDATE_FAILED: 'Failed to update mobile settings',
+    RESET_FAILED: 'Failed to reset mobile settings',
+    STATUS_FAILED: 'Failed to get mobile settings status',
     BATCH_INTERVAL_INVALID: 'Batch upload interval must be between 60 and 3600 seconds',
     MAX_EVENTS_INVALID: 'Max offline events must be between 100 and 10000',
   },
@@ -51,7 +42,7 @@ export const MOBILE_CONFIG_MESSAGES = {
   },
 } as const;
 
-const DEFAULT_MOBILE_CONFIG: MobileHookListenerConfig = {
+const DEFAULT_LISTENER_SETTINGS: MobileHooksListenerSettings = {
   analyticsEnabled: true,
   errorReportingEnabled: true,
   offlineStorageEnabled: true,
@@ -60,57 +51,57 @@ const DEFAULT_MOBILE_CONFIG: MobileHookListenerConfig = {
   maxOfflineEvents: 1000,
 };
 
-export class AdminMobileConfigController extends BaseController {
+export class AdminMobileHooksSettingsController extends BaseController {
   /**
-   * Get current mobile hook listener configuration
+   * Get current mobile hook listener settings
    */
-  async getMobileConfig(request: UniversalRequest): Promise<ApiResponse> {
+  async getListenerSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
     try {
-      const config = await this.loadMobileConfig();
+      const settings = await this.loadSettings();
 
       return this.createSuccessResponse({
-        config,
+        settings,
         lastUpdated: await this.getLastUpdated(),
-        version: MOBILE_CONFIG_CONSTANTS.VERSION,
+        version: MOBILE_HOOKS_METADATA.VERSION,
       });
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse(MOBILE_CONFIG_MESSAGES.ERRORS.FETCH_FAILED, 500);
+      return this.createErrorResponse(MOBILE_SETTINGS_MESSAGES.ERRORS.FETCH_FAILED, 500);
     }
   }
 
   /**
-   * Update mobile hook listener configuration
+   * Update mobile hook listener settings
    */
-  async updateMobileConfig(request: UniversalRequest): Promise<ApiResponse> {
+  async updateListenerSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<MobileConfigUpdateRequest>(request);
+    const body = this.parseBody<MobileHooksListenerSettings>(request);
     if (!body) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
-    // Validate configuration values
-    const validationError = this.validateMobileConfig(body);
+    // Validate settings values
+    const validationError = this.validateMobileSettings(body);
     if (validationError) {
       return validationError;
     }
 
     try {
-      const oldConfig = await this.loadMobileConfig();
+      const previousSettings = await this.loadSettings();
       const updatedSettings: Array<{ key: string; value: string }> = [];
 
-      // Update each configuration value that was provided
+      // Update each settings value that was provided
       if (typeof body.analyticsEnabled === 'boolean') {
-        await this.updateConfigSetting(
+        await this.saveSetting(
           MOBILE_HOOKS.ANALYTICS_ENABLED,
           String(body.analyticsEnabled)
         );
@@ -118,7 +109,7 @@ export class AdminMobileConfigController extends BaseController {
       }
 
       if (typeof body.errorReportingEnabled === 'boolean') {
-        await this.updateConfigSetting(
+        await this.saveSetting(
           MOBILE_HOOKS.ERROR_REPORTING_ENABLED,
           String(body.errorReportingEnabled)
         );
@@ -129,7 +120,7 @@ export class AdminMobileConfigController extends BaseController {
       }
 
       if (typeof body.offlineStorageEnabled === 'boolean') {
-        await this.updateConfigSetting(
+        await this.saveSetting(
           MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED,
           String(body.offlineStorageEnabled)
         );
@@ -140,7 +131,7 @@ export class AdminMobileConfigController extends BaseController {
       }
 
       if (typeof body.performanceMonitoringEnabled === 'boolean') {
-        await this.updateConfigSetting(
+        await this.saveSetting(
           MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED,
           String(body.performanceMonitoringEnabled)
         );
@@ -151,7 +142,7 @@ export class AdminMobileConfigController extends BaseController {
       }
 
       if (typeof body.batchUploadInterval === 'number') {
-        await this.updateConfigSetting(
+        await this.saveSetting(
           MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL,
           String(body.batchUploadInterval)
         );
@@ -162,7 +153,7 @@ export class AdminMobileConfigController extends BaseController {
       }
 
       if (typeof body.maxOfflineEvents === 'number') {
-        await this.updateConfigSetting(
+        await this.saveSetting(
           MOBILE_HOOKS.MAX_OFFLINE_EVENTS,
           String(body.maxOfflineEvents)
         );
@@ -172,103 +163,103 @@ export class AdminMobileConfigController extends BaseController {
       // Log audit event
       getAuditLogService().logActionFromRequest(
         request,
-        MOBILE_CONFIG_ACTIONS.UPDATE,
-        MOBILE_CONFIG_CONSTANTS.RESOURCE_TYPE,
-        MOBILE_CONFIG_CONSTANTS.ENTITY_ID,
+        MOBILE_HOOKS_SETTINGS_ACTIONS.UPDATE,
+        MOBILE_HOOKS_METADATA.RESOURCE_TYPE,
+        MOBILE_HOOKS_METADATA.ENTITY_ID,
         {
           changes: updatedSettings,
-          oldConfig,
-          newConfig: body,
+          previousSettings,
+          newSettings: body,
         }
       );
 
-      const newConfig = await this.loadMobileConfig();
+      const newSettings = await this.loadSettings();
 
       return this.createSuccessResponse(
         {
-          config: newConfig,
+          settings: newSettings,
           updated: updatedSettings.map(s => s.key),
           lastUpdated: new Date().toISOString(),
         },
-        MOBILE_CONFIG_MESSAGES.SUCCESS.UPDATED
+        MOBILE_SETTINGS_MESSAGES.SUCCESS.UPDATED
       );
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse(MOBILE_CONFIG_MESSAGES.ERRORS.UPDATE_FAILED, 500);
+      return this.createErrorResponse(MOBILE_SETTINGS_MESSAGES.ERRORS.UPDATE_FAILED, 500);
     }
   }
 
   /**
-   * Reset mobile hook listener configuration to defaults
+   * Reset mobile hook listener settings to defaults
    */
-  async resetMobileConfig(request: UniversalRequest): Promise<ApiResponse> {
+  async resetMobileSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
     try {
-      const oldConfig = await this.loadMobileConfig();
+      const previousSettings = await this.loadSettings();
 
       // Reset all settings to defaults
-      await this.updateConfigSetting(
+      await this.saveSetting(
         MOBILE_HOOKS.ANALYTICS_ENABLED,
-        String(DEFAULT_MOBILE_CONFIG.analyticsEnabled)
+        String(DEFAULT_LISTENER_SETTINGS.analyticsEnabled)
       );
-      await this.updateConfigSetting(
+      await this.saveSetting(
         MOBILE_HOOKS.ERROR_REPORTING_ENABLED,
-        String(DEFAULT_MOBILE_CONFIG.errorReportingEnabled)
+        String(DEFAULT_LISTENER_SETTINGS.errorReportingEnabled)
       );
-      await this.updateConfigSetting(
+      await this.saveSetting(
         MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED,
-        String(DEFAULT_MOBILE_CONFIG.offlineStorageEnabled)
+        String(DEFAULT_LISTENER_SETTINGS.offlineStorageEnabled)
       );
-      await this.updateConfigSetting(
+      await this.saveSetting(
         MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED,
-        String(DEFAULT_MOBILE_CONFIG.performanceMonitoringEnabled)
+        String(DEFAULT_LISTENER_SETTINGS.performanceMonitoringEnabled)
       );
-      await this.updateConfigSetting(
+      await this.saveSetting(
         MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL,
-        String(DEFAULT_MOBILE_CONFIG.batchUploadInterval)
+        String(DEFAULT_LISTENER_SETTINGS.batchUploadInterval)
       );
-      await this.updateConfigSetting(
+      await this.saveSetting(
         MOBILE_HOOKS.MAX_OFFLINE_EVENTS,
-        String(DEFAULT_MOBILE_CONFIG.maxOfflineEvents)
+        String(DEFAULT_LISTENER_SETTINGS.maxOfflineEvents)
       );
 
       // Log audit event
       getAuditLogService().logActionFromRequest(
         request,
         'reset',
-        'mobile_config',
-        'mobile_hook_listeners',
+        MOBILE_HOOKS_METADATA.RESOURCE_TYPE,
+        MOBILE_HOOKS_METADATA.ENTITY_ID,
         {
-          oldConfig,
-          resetToDefaults: DEFAULT_MOBILE_CONFIG,
+          previousSettings,
+          resetToDefaults: DEFAULT_LISTENER_SETTINGS,
         }
       );
 
       return this.createSuccessResponse(
         {
-          config: DEFAULT_MOBILE_CONFIG,
+          settings: DEFAULT_LISTENER_SETTINGS,
           resetToDefaults: true,
           lastUpdated: new Date().toISOString(),
         },
-        'Mobile configuration reset to defaults successfully'
+        'Mobile settings reset to defaults successfully'
       );
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to reset mobile configuration', 500);
+      return this.createErrorResponse('Failed to reset mobile settings', 500);
     }
   }
 
   /**
-   * Get mobile configuration validation rules
+   * Get mobile settings validation rules
    */
-  async getMobileConfigSchema(request: UniversalRequest): Promise<ApiResponse> {
+  async getMobileSettingsSchema(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
@@ -311,7 +302,7 @@ export class AdminMobileConfigController extends BaseController {
         },
       },
       required: [],
-      defaults: DEFAULT_MOBILE_CONFIG,
+      defaults: DEFAULT_LISTENER_SETTINGS,
     };
 
     return this.createSuccessResponse({
@@ -321,39 +312,39 @@ export class AdminMobileConfigController extends BaseController {
   }
 
   /**
-   * Get mobile configuration status and health
+   * Get mobile settings status and health
    */
-  async getMobileConfigStatus(request: UniversalRequest): Promise<ApiResponse> {
+  async getMobileSettingsStatus(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
     try {
-      const config = await this.loadMobileConfig();
+      const settings = await this.loadSettings();
       const lastUpdated = await this.getLastUpdated();
 
-      // Calculate configuration health score
+      // Calculate settings health score
       let healthScore = 100;
       const issues: string[] = [];
 
-      // Check for potential configuration issues
-      if (config.batchUploadInterval < 60) {
+      // Check for potential settings issues
+      if (settings.batchUploadInterval < 60) {
         healthScore -= 10;
         issues.push('Batch upload interval is too low (< 60 seconds)');
       }
 
-      if (config.maxOfflineEvents > 5000) {
+      if (settings.maxOfflineEvents > 5000) {
         healthScore -= 5;
         issues.push('High offline events limit may impact performance');
       }
 
-      if (!config.analyticsEnabled && !config.errorReportingEnabled) {
+      if (!settings.analyticsEnabled && !settings.errorReportingEnabled) {
         healthScore -= 15;
         issues.push('Both analytics and error reporting are disabled');
       }
 
       const status = {
-        config,
+        settings,
         lastUpdated,
         health: {
           score: Math.max(0, healthScore),
@@ -361,14 +352,14 @@ export class AdminMobileConfigController extends BaseController {
           issues,
         },
         enabledFeatures: {
-          analytics: config.analyticsEnabled,
-          errorReporting: config.errorReportingEnabled,
-          offlineStorage: config.offlineStorageEnabled,
-          performanceMonitoring: config.performanceMonitoringEnabled,
+          analytics: settings.analyticsEnabled,
+          errorReporting: settings.errorReportingEnabled,
+          offlineStorage: settings.offlineStorageEnabled,
+          performanceMonitoring: settings.performanceMonitoringEnabled,
         },
         statistics: {
-          totalListeners: Object.values(config).filter(v => typeof v === 'boolean' && v).length,
-          estimatedMemoryUsage: this.estimateMemoryUsage(config),
+          totalListeners: Object.values(settings).filter(v => typeof v === 'boolean' && v).length,
+          estimatedMemoryUsage: this.estimateMemoryUsage(settings),
         },
       };
 
@@ -377,14 +368,14 @@ export class AdminMobileConfigController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to get mobile configuration status', 500);
+      return this.createErrorResponse('Failed to get mobile settings status', 500);
     }
   }
 
   /**
-   * Load current mobile configuration from database
+   * Load current mobile settings from database
    */
-  private async loadMobileConfig(): Promise<MobileHookListenerConfig> {
+  private async loadSettings(): Promise<MobileHooksListenerSettings> {
     const settings = await AppSetting.findAll({
       where: {
         key: Object.values(MOBILE_HOOKS),
@@ -396,45 +387,45 @@ export class AdminMobileConfigController extends BaseController {
     return {
       analyticsEnabled: this.parseBoolean(
         settingsMap.get(MOBILE_HOOKS.ANALYTICS_ENABLED),
-        DEFAULT_MOBILE_CONFIG.analyticsEnabled
+        DEFAULT_LISTENER_SETTINGS.analyticsEnabled
       ),
       errorReportingEnabled: this.parseBoolean(
         settingsMap.get(MOBILE_HOOKS.ERROR_REPORTING_ENABLED),
-        DEFAULT_MOBILE_CONFIG.errorReportingEnabled
+        DEFAULT_LISTENER_SETTINGS.errorReportingEnabled
       ),
       offlineStorageEnabled: this.parseBoolean(
         settingsMap.get(MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED),
-        DEFAULT_MOBILE_CONFIG.offlineStorageEnabled
+        DEFAULT_LISTENER_SETTINGS.offlineStorageEnabled
       ),
       performanceMonitoringEnabled: this.parseBoolean(
         settingsMap.get(MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED),
-        DEFAULT_MOBILE_CONFIG.performanceMonitoringEnabled
+        DEFAULT_LISTENER_SETTINGS.performanceMonitoringEnabled
       ),
       batchUploadInterval: this.parseNumber(
         settingsMap.get(MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL),
-        DEFAULT_MOBILE_CONFIG.batchUploadInterval
+        DEFAULT_LISTENER_SETTINGS.batchUploadInterval
       ),
       maxOfflineEvents: this.parseNumber(
         settingsMap.get(MOBILE_HOOKS.MAX_OFFLINE_EVENTS),
-        DEFAULT_MOBILE_CONFIG.maxOfflineEvents
+        DEFAULT_LISTENER_SETTINGS.maxOfflineEvents
       ),
     };
   }
 
   /**
-   * Update a single configuration setting
+   * Update a single setting
    */
-  private async updateConfigSetting(key: string, value: string): Promise<void> {
+  private async saveSetting(key: string, value: string): Promise<void> {
     const [setting] = await AppSetting.findOrCreate({
       where: { key },
       defaults: {
         key,
         value,
         active: true,
-        category: 'mobile_hooks',
-        type: 'string',
+        category: MOBILE_HOOKS_METADATA.CATEGORY,
+        type: MOBILE_HOOKS_METADATA.DATA_TYPE,
         defaultValue: value,
-        description: `Mobile hook listener configuration: ${key}`,
+        description: `Mobile hook settings: ${key}`,
         deleted: false,
       } as any,
     });
@@ -481,18 +472,18 @@ export class AdminMobileConfigController extends BaseController {
     }
 
     try {
-      await this.updateConfigSetting(MOBILE_HOOKS.EMERGENCY_ENABLED, String(body.enabled));
+      await this.saveSetting(MOBILE_HOOKS.EMERGENCY_ENABLED, String(body.enabled));
 
       if (body.reason) {
-        await this.updateConfigSetting(MOBILE_HOOKS.EMERGENCY_REASON, body.reason);
+        await this.saveSetting(MOBILE_HOOKS.EMERGENCY_REASON, body.reason);
       }
 
       // Log audit event
       getAuditLogService().logActionFromRequest(
         request,
         body.enabled ? 'emergency_enable' : 'emergency_disable',
-        MOBILE_CONFIG_CONSTANTS.RESOURCE_TYPE,
-        MOBILE_CONFIG_CONSTANTS.ENTITY_ID,
+        MOBILE_HOOKS_METADATA.RESOURCE_TYPE,
+        MOBILE_HOOKS_METADATA.ENTITY_ID,
         { enabled: body.enabled, reason: body.reason }
       );
 
@@ -507,11 +498,11 @@ export class AdminMobileConfigController extends BaseController {
   }
 
   /**
-   * Validate mobile configuration values
+   * Validate mobile settings values
    */
-  private validateMobileConfig(config: MobileConfigUpdateRequest): ApiResponse | null {
-    if (typeof config.batchUploadInterval === 'number') {
-      if (config.batchUploadInterval < 60 || config.batchUploadInterval > 3600) {
+  private validateMobileSettings(settings: MobileHooksListenerSettings): ApiResponse | null {
+    if (typeof settings.batchUploadInterval === 'number') {
+      if (settings.batchUploadInterval < 60 || settings.batchUploadInterval > 3600) {
         return this.createErrorResponse(
           'Batch upload interval must be between 60 and 3600 seconds',
           400
@@ -519,8 +510,8 @@ export class AdminMobileConfigController extends BaseController {
       }
     }
 
-    if (typeof config.maxOfflineEvents === 'number') {
-      if (config.maxOfflineEvents < 100 || config.maxOfflineEvents > 10000) {
+    if (typeof settings.maxOfflineEvents === 'number') {
+      if (settings.maxOfflineEvents < 100 || settings.maxOfflineEvents > 10000) {
         return this.createErrorResponse('Max offline events must be between 100 and 10000', 400);
       }
     }
@@ -537,16 +528,16 @@ export class AdminMobileConfigController extends BaseController {
     if (authError) return authError;
 
     try {
-      const config = await this.loadMobileConfig();
+      const settings = await this.loadSettings();
       const emergencyEnabled = await this.isEmergencyEnabled();
 
       const checks = {
-        configLoaded: true,
+        settingsLoaded: true,
         emergencyEnabled,
-        analyticsActive: config.analyticsEnabled && emergencyEnabled,
-        errorReportingActive: config.errorReportingEnabled && emergencyEnabled,
-        offlineStorageActive: config.offlineStorageEnabled && emergencyEnabled,
-        performanceMonitoringActive: config.performanceMonitoringEnabled && emergencyEnabled,
+        analyticsActive: settings.analyticsEnabled && emergencyEnabled,
+        errorReportingActive: settings.errorReportingEnabled && emergencyEnabled,
+        offlineStorageActive: settings.offlineStorageEnabled && emergencyEnabled,
+        performanceMonitoringActive: settings.performanceMonitoringEnabled && emergencyEnabled,
       };
 
       const activeCount = Object.values(checks).filter(v => v === true).length;
@@ -584,7 +575,7 @@ export class AdminMobileConfigController extends BaseController {
   }
 
   /**
-   * Get the last updated timestamp for mobile configuration
+   * Get the last updated timestamp for mobile settings
    */
   private async getLastUpdated(): Promise<string | null> {
     const lastSetting = await AppSetting.findOne({
@@ -598,15 +589,15 @@ export class AdminMobileConfigController extends BaseController {
   }
 
   /**
-   * Estimate memory usage based on configuration
+   * Estimate memory usage based on settings
    */
-  private estimateMemoryUsage(config: MobileHookListenerConfig): string {
+  private estimateMemoryUsage(settings: MobileHooksListenerSettings): string {
     let estimatedKB = 50; // Base usage
 
-    if (config.analyticsEnabled) estimatedKB += 20;
-    if (config.errorReportingEnabled) estimatedKB += 15;
-    if (config.offlineStorageEnabled) estimatedKB += config.maxOfflineEvents * 0.1;
-    if (config.performanceMonitoringEnabled) estimatedKB += 30;
+    if (settings.analyticsEnabled) estimatedKB += 20;
+    if (settings.errorReportingEnabled) estimatedKB += 15;
+    if (settings.offlineStorageEnabled) estimatedKB += settings.maxOfflineEvents * 0.1;
+    if (settings.performanceMonitoringEnabled) estimatedKB += 30;
 
     if (estimatedKB < 1000) {
       return `${Math.round(estimatedKB)} KB`;
@@ -643,4 +634,4 @@ export class AdminMobileConfigController extends BaseController {
   }
 }
 
-export const adminMobileConfigController = new AdminMobileConfigController();
+export const adminMobileHooksSettingsController = new AdminMobileHooksSettingsController();

@@ -6,7 +6,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HookSystem, HookConfig, HookAction, HookActionContext } from '@my-many-books/hookey';
 import { mobileHookConfigService } from './mobileHookConfigService';
-import { MobileHookListenerConfig } from '@my-many-books/shared-types';
+import { MobileHooksListenerSettings } from '@my-many-books/shared-types';
 
 export interface HookEventData {
   eventType: string;
@@ -18,9 +18,9 @@ export interface HookEventData {
 
 // Analytics listener for user behavior tracking
 class AnalyticsListener {
-  private config: MobileHookListenerConfig;
+  private config: MobileHooksListenerSettings;
 
-  constructor(config: MobileHookListenerConfig) {
+  constructor(config: MobileHooksListenerSettings) {
     this.config = config;
   }
 
@@ -85,9 +85,9 @@ class AnalyticsListener {
 
 // Error reporting listener for crash and error tracking
 class ErrorReportingListener {
-  private config: MobileHookListenerConfig;
+  private config: MobileHooksListenerSettings;
 
-  constructor(config: MobileHookListenerConfig) {
+  constructor(config: MobileHooksListenerSettings) {
     this.config = config;
   }
 
@@ -170,9 +170,9 @@ class ErrorReportingListener {
 
 // Offline storage listener for event queuing
 class OfflineStorageListener {
-  private config: MobileHookListenerConfig;
+  private config: MobileHooksListenerSettings;
 
-  constructor(config: MobileHookListenerConfig) {
+  constructor(config: MobileHooksListenerSettings) {
     this.config = config;
   }
 
@@ -232,10 +232,10 @@ class OfflineStorageListener {
 
 // Performance monitoring listener for app metrics
 class PerformanceMonitoringListener {
-  private config: MobileHookListenerConfig;
+  private config: MobileHooksListenerSettings;
   private performanceStartTimes: Map<string, number> = new Map();
 
-  constructor(config: MobileHookListenerConfig) {
+  constructor(config: MobileHooksListenerSettings) {
     this.config = config;
   }
 
@@ -338,14 +338,14 @@ class PerformanceMonitoringListener {
 
 // Main mobile hook listeners manager
 export class MobileHookListenersManager {
-  private config: MobileHookListenerConfig;
+  private config: MobileHooksListenerSettings;
   private analyticsListener: AnalyticsListener;
   private errorReportingListener: ErrorReportingListener;
   private offlineStorageListener: OfflineStorageListener;
   private performanceMonitoringListener: PerformanceMonitoringListener;
   private hookSystem: HookSystem | null = null;
 
-  constructor(config: Partial<MobileHookListenerConfig> = {}) {
+  constructor(config: Partial<MobileHooksListenerSettings> = {}) {
     this.config = {
       analyticsEnabled: config.analyticsEnabled ?? true,
       errorReportingEnabled: config.errorReportingEnabled ?? true,
@@ -485,11 +485,11 @@ export class MobileHookListenersManager {
     }
   }
 
-  updateConfig(newConfig: Partial<MobileHookListenerConfig>): void {
+  updateConfig(newConfig: Partial<MobileHooksListenerSettings>): void {
     this.config = { ...this.config, ...newConfig };
   }
 
-  getConfig(): MobileHookListenerConfig {
+  getConfig(): MobileHooksListenerSettings {
     return { ...this.config };
   }
 

@@ -1,5 +1,5 @@
 // ================================================================
-// src/controllers/admin/AdminMobileHooksController.ts
+// src/controllers/admin/AdminMobileHooksActionsConfigController.ts
 // Admin hook action configuration endpoints
 // manages hook actions/mappings/settings—get/update action mappings, action settings, listener/action lists, tests; no emergency/health logic.
 // ================================================================
@@ -26,19 +26,29 @@ export const ACTION_TYPES = {
   SMS: 'sms',
 } as const;
 
-export type ActionType = (typeof ACTION_TYPES)[keyof typeof ACTION_TYPES];
+const ACTION_DESCRIPTIONS: Record<ActionType, string> = {
+    email: 'Send email notifications to configured recipients',
+    slack: 'Send messages to Slack channels with optional user mentions',
+    webhook: 'Send HTTP POST requests to external webhook endpoints',
+    database: 'Store events in database tables for analytics',
+    push_notification: 'Send push notifications to mobile devices',
+    sms: 'Send SMS messages for critical alerts',
+  };
 
-export interface HookActionMapping {
+type ActionType = (typeof ACTION_TYPES)[keyof typeof ACTION_TYPES];
+
+interface HookActionMapping {
   [eventName: string]: ActionType[];
 }
 
-export type ActionSettings = {
+type ActionSettings = {
   [ACTION_TYPES.EMAIL]: {
     enabled: boolean;
     recipients: string[];
     rate_limit_minutes: number;
     template: string;
     priority: 'low' | 'medium' | 'high' | 'critical';
+    expected_fields: string[];
   };
   [ACTION_TYPES.SLACK]: {
     enabled: boolean;
@@ -46,6 +56,7 @@ export type ActionSettings = {
     rate_limit_minutes: number;
     mention_users: string[];
     webhook_url?: string;
+    expected_fields: string[];
   };
   [ACTION_TYPES.WEBHOOK]: {
     enabled: boolean;
@@ -54,23 +65,27 @@ export type ActionSettings = {
     timeout_seconds: number;
     retry_attempts: number;
     webhook_url?: string;
+    expected_fields: string[];
   };
   [ACTION_TYPES.DATABASE]: {
     enabled: boolean;
     table: string;
     batch_size: number;
     retention_days: number;
+    expected_fields: string[];
   };
   [ACTION_TYPES.PUSH_NOTIFICATION]: {
     enabled: boolean;
     rate_limit_minutes: number;
     priority: 'low' | 'medium' | 'high' | 'critical';
+    expected_fields: string[];
   };
   [ACTION_TYPES.SMS]: {
     enabled: boolean;
     recipients: string[];
     rate_limit_minutes: number;
     emergency_only: boolean;
+    expected_fields: string[];
   };
 };
 
@@ -95,19 +110,19 @@ const AVAILABLE_EVENTS = [
   'performance.slow',
 ] as const;
 
-export interface HookActionConfigResponse {
+interface HookActionConfigResponse {
   actions: HookActionMapping;
   action_settings: ActionSettings;
   available_events: string[];
   last_updated: string | null;
 }
 
-export interface HookActionConfigUpdateRequest {
+interface HookActionConfigUpdateRequest {
   actions?: HookActionMapping;
   action_settings?: Partial<ActionSettings>;
 }
 
-export interface ActionSettingsUpdateRequest {
+interface ActionSettingsUpdateRequest {
   enabled?: boolean;
   [key: string]: any;
 }
@@ -119,7 +134,7 @@ interface HookListenerUpdateRequest {
   performanceMonitoring?: boolean;
 }
 
-export class AdminMobileHooksController extends BaseController {
+export class AdminMobileHooksActionsConfigController extends BaseController {
   /**
    * GET /api/admin/mobile-hooks/config - Get current mobile hook configuration
    */
@@ -367,20 +382,23 @@ export class AdminMobileHooksController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const availableActions = {
-      action_types: ACTION_TYPES,
-      action_descriptions: {
-        [ACTION_TYPES.EMAIL]: 'Send email notifications to configured recipients',
-        [ACTION_TYPES.SLACK]: 'Send messages to Slack channels with optional user mentions',
-        [ACTION_TYPES.WEBHOOK]: 'Send HTTP POST requests to external webhook endpoints',
-        [ACTION_TYPES.DATABASE]: 'Store events in database tables for analytics',
-        [ACTION_TYPES.PUSH_NOTIFICATION]: 'Send push notifications to mobile devices',
-        [ACTION_TYPES.SMS]: 'Send SMS messages for critical alerts',
-      },
-      default_settings: this.getDefaultActionSettings(),
-    };
+    const config = await this.loadHookActionConfig();
+    const actions: Record<string, unknown> = {};
 
-    return this.createSuccessResponse(availableActions);
+    for (const actionType of Object.values(ACTION_TYPES)) {
+      const settings = config.action_settings[actionType];
+      const warnings = this.getActionWarnings(settings);
+
+      actions[actionType] = {
+        description: ACTION_DESCRIPTIONS[actionType],
+        enabled: settings.enabled,
+        configured: warnings.length === 0,
+        warnings,
+        settings,
+      };
+    }
+
+    return this.createSuccessResponse({ actions });
   }
 
   /**
@@ -892,17 +910,19 @@ export class AdminMobileHooksController extends BaseController {
   private getDefaultActionSettings(): ActionSettings {
     return {
       email: {
-        enabled: true,
-        recipients: ['dev-team@company.com'],
+        enabled: false,
+        recipients: [],
         rate_limit_minutes: 5,
         template: 'mobile_alert',
         priority: 'medium',
+        expected_fields: ['recipients'],
       },
       slack: {
-        enabled: true,
-        channel: '#mobile-alerts',
+        enabled: false,
+        channel: '',
         rate_limit_minutes: 2,
-        mention_users: ['@dev-team'],
+        mention_users: [],
+        expected_fields: ['channel'],
       },
       webhook: {
         enabled: false,
@@ -910,25 +930,58 @@ export class AdminMobileHooksController extends BaseController {
         rate_limit_minutes: 1,
         timeout_seconds: 10,
         retry_attempts: 3,
+        expected_fields: ['webhook'],
       },
       database: {
         enabled: true,
         table: 'mobile_analytics',
         batch_size: 100,
         retention_days: 90,
+        expected_fields: ['table'],
       },
       push_notification: {
         enabled: false,
         rate_limit_minutes: 10,
         priority: 'medium',
+        expected_fields: [],
       },
       sms: {
         enabled: false,
         recipients: [],
         rate_limit_minutes: 60,
         emergency_only: true,
+        expected_fields: ['recipients'],
       },
     };
+  }
+
+  /**
+   * Validate action settings and generate warnings, based on the "expected_fields" field value
+   */
+  private getActionWarnings(
+    settings: ActionSettings[ActionType]
+  ): string[] {
+    const warnings: string[] = [];
+    const expectedFields = settings.expected_fields || [];
+
+    for (const field of expectedFields) {
+      const value = (settings as Record<string, unknown>)[field];
+
+      // Check empty array
+      if (Array.isArray(value) && value.length === 0) {
+        warnings.push(`No ${field} configured`);
+      }
+      // Check empty string
+      else if (typeof value === 'string' && value.trim() === '') {
+        warnings.push(`No ${field} configured`);
+      }
+      // Check null/undefined
+      else if (value === null || value === undefined) {
+        warnings.push(`Missing ${field}`);
+      }
+    }
+
+    return warnings;
   }
 
   /**
@@ -1004,4 +1057,4 @@ export class AdminMobileHooksController extends BaseController {
   }
 }
 
-export const adminMobileHooksController = new AdminMobileHooksController();
+export const adminMobileHooksActionsConfigController = new AdminMobileHooksActionsConfigController();

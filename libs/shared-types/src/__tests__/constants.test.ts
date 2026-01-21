@@ -3,16 +3,16 @@
 // Test use constants consistently
 // ================================================================
 
-import { MOBILE_CONFIG_ACTIONS } from "../index";
+import { MOBILE_HOOKS_SETTINGS_ACTIONS } from "../index";
 
 describe("Mobile Configuration Constants", () => {
 
     it("should have mobile config actions properly defined", () => {
-      expect(MOBILE_CONFIG_ACTIONS).toBeDefined();
-      expect(Object.isFrozen(MOBILE_CONFIG_ACTIONS)).toBe(true);
+      expect(MOBILE_HOOKS_SETTINGS_ACTIONS).toBeDefined();
+      expect(Object.isFrozen(MOBILE_HOOKS_SETTINGS_ACTIONS)).toBe(true);
 
-      expect(MOBILE_CONFIG_ACTIONS.UPDATE).toBe("update");
-      expect(MOBILE_CONFIG_ACTIONS.RESET).toBe("reset");
+      expect(MOBILE_HOOKS_SETTINGS_ACTIONS.UPDATE).toBe("update");
+      expect(MOBILE_HOOKS_SETTINGS_ACTIONS.RESET).toBe("reset");
     });
   });
 });

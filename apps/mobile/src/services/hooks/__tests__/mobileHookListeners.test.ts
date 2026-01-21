@@ -4,7 +4,7 @@
 // ================================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MobileHookListenersManager, MobileHookListenerConfig } from '../mobileHookListeners';
+import { MobileHookListenersManager, MobileHooksListenerSettings } from '../mobileHookListeners';
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -17,7 +17,7 @@ const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 
 describe('MobileHookListenersManager', () => {
   let listenersManager: MobileHookListenersManager;
-  let defaultConfig: MobileHookListenerConfig;
+  let defaultConfig: MobileHooksListenerSettings;
 
   beforeEach(() => {
     jest.clearAllMocks();

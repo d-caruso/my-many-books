@@ -3,6 +3,8 @@
 // Mobile hook configuration priority system service
 // ================================================================
 
+import { MobileHooksListenerSettings } from '@my-many-books/shared-types';
+
 export interface MobileHookDBConfig {
   hooks_enabled: boolean;
   hook_listeners: {
@@ -10,14 +12,7 @@ export interface MobileHookDBConfig {
       enabled: boolean;
     };
   };
-  config: {
-    analyticsEnabled: boolean;
-    errorReportingEnabled: boolean;
-    offlineStorageEnabled: boolean;
-    performanceMonitoringEnabled: boolean;
-    batchUploadInterval: number;
-    maxOfflineEvents: number;
-  };
+  config: MobileHooksListenerSettings;
 }
 
 export class MobileHookConfigService {

@@ -24,7 +24,7 @@ jest.mock('@my-many-books/shared-i18n', () => ({
 import request from 'supertest';
 import app from '../../../src/app';
 import { AppSetting } from '../../../src/models';
-import { ACTION_TYPES } from '../../../src/controllers/admin/AdminMobileHooksController';
+import { ACTION_TYPES } from '../../../src/controllers/admin/AdminMobileHooksActionsConfigController';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({

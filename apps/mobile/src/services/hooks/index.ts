@@ -52,4 +52,4 @@ export { mobileHooks } from './mobileHooks';
 export { mobileHookListenersManager } from './mobileHookListeners';
 export { MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_STATUSES } from './eventsSchema';
 export type { EventsTree } from './eventsSchema';
-export type { MobileHookListenerConfig, HookEventData } from './mobileHookListeners';
+export type { MobileHooksListenerSettings, HookEventData } from './mobileHookListeners';
