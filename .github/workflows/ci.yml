@@ -10,7 +10,7 @@ on:
       run_tests:
         description: 'Run tests'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 env:

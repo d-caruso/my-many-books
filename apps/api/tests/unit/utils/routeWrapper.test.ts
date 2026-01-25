@@ -297,7 +297,7 @@ describe('expressRouteWrapper', () => {
 
       expect(mockControllerMethod).toHaveBeenCalledWith({
         body: undefined,
-        queryStringParameters: { 
+        queryStringParameters: {
           filters: '{"title":"test"}',
           includeAuthors: 'true',
           includeCategories: 'false',

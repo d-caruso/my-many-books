@@ -165,21 +165,21 @@ router.patch(
 
 // Mobile Hook Management
 
-// Get current mobile hook settings
+// Get current mobile hook listeners settings
 router.get(
   '/mobile-hooks/settings/listeners',
   authMiddleware,
   expressRouteWrapper(
-    adminMobileHooksActionsConfigController.getHookActionConfig.bind(adminMobileHooksActionsConfigController)
+    adminMobileHooksSettingsController.getListenerSettings.bind(adminMobileHooksSettingsController)
   )
 );
 
-// Update mobile hook settings
+// Update mobile hook listeners settings
 router.put(
   '/mobile-hooks/settings/listeners',
   authMiddleware,
   expressRouteWrapper(
-    adminMobileHooksActionsConfigController.updateHookActionConfig.bind(adminMobileHooksActionsConfigController)
+    adminMobileHooksSettingsController.updateListenerSettings.bind(adminMobileHooksSettingsController)
   )
 );
 
@@ -203,10 +203,10 @@ router.put(
 
 // Test hook configuration
 router.post(
-  '/mobile-hooks/test',
+  '/mobile-hooks/actions-config/test',
   authMiddleware,
   expressRouteWrapper(
-    adminMobileHooksActionsConfigController.testHookActionConfig.bind(adminMobileHooksActionsConfigController)
+    adminMobileHooksActionsConfigController.testConfig.bind(adminMobileHooksActionsConfigController)
   )
 );
 
@@ -214,28 +214,28 @@ router.post(
 
 // Get action configurations
 router.get(
-  '/mobile-hooks/actions',
+  '/mobile-hooks/actions-config/types',
   authMiddleware,
   expressRouteWrapper(
-    adminMobileHooksActionsConfigController.getAvailableActions.bind(adminMobileHooksActionsConfigController)
+    adminMobileHooksActionsConfigController.getActionTypes.bind(adminMobileHooksActionsConfigController)
   )
 );
 
 // Update action configurations
 router.put(
-  '/mobile-hooks/actions/:action_type',
+  '/mobile-hooks/actions-config/types/:action_type',
   authMiddleware,
   expressRouteWrapper(
-    adminMobileHooksActionsConfigController.updateActionSettings.bind(adminMobileHooksActionsConfigController)
+    adminMobileHooksActionsConfigController.updateActionTypeSettings.bind(adminMobileHooksActionsConfigController)
   )
 );
 
 // Test action execution TO DO
 router.post(
-  '/mobile-hooks/actions/test',
+  '/mobile-hooks/actions-config/types/:action_type/test',
   authMiddleware,
   expressRouteWrapper(
-    adminMobileHooksActionsConfigController.testActionExecution.bind(adminMobileHooksActionsConfigController)
+    adminMobileHooksActionsConfigController.testActionType.bind(adminMobileHooksActionsConfigController)
   )
 );
 

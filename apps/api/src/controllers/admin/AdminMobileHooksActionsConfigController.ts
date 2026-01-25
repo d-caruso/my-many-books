@@ -138,13 +138,13 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   /**
    * GET /api/admin/mobile-hooks/config - Get current mobile hook configuration
    */
-  async getHookActionConfig(request: UniversalRequest): Promise<ApiResponse> {
+  async getActionMappings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
     try {
-      const config = await this.loadHookActionConfig();
+      const config = await this.loadConfig();
       return this.createSuccessResponse(config);
     } catch (error) {
       if (error instanceof Error) {
@@ -157,7 +157,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   /**
    * PUT /api/admin/mobile-hooks/config - Update mobile hook configuration
    */
-  async updateHookActionConfig(request: UniversalRequest): Promise<ApiResponse> {
+  async updateActionMappings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
@@ -168,7 +168,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     }
 
     try {
-      const oldConfig = await this.loadHookActionConfig();
+      const oldConfig = await this.loadConfig();
       const updatedSettings: string[] = [];
 
       // Update action mappings
@@ -199,7 +199,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         }
       );
 
-      const newConfig = await this.loadHookActionConfig();
+      const newConfig = await this.loadConfig();
 
       return this.createSuccessResponse(
         {
@@ -280,10 +280,10 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   }
 
   /**
-   * POST /api/admin/mobile-hooks/test - Test hook configuration
+   * POST /api/admin/mobile-hooks/actions-config/test - Test hook configuration
    * Triggers a test event through the hook system to verify configuration works
    */
-  async testHookActionConfig(request: UniversalRequest): Promise<ApiResponse> {
+  async testConfig(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
@@ -298,7 +298,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     };
 
     try {
-      const config = await this.loadHookActionConfig();
+      const config = await this.loadConfig();
 
       // Check if the event type has any actions mapped
       const mappedActions = config.actions[testEventType] || [];
@@ -377,12 +377,12 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   /**
    * GET /api/admin/mobile-hooks/actions - Get action configurations
    */
-  async getAvailableActions(request: UniversalRequest): Promise<ApiResponse> {
+  async getActionTypes(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const config = await this.loadHookActionConfig();
+    const config = await this.loadConfig();
     const actions: Record<string, unknown> = {};
 
     for (const actionType of Object.values(ACTION_TYPES)) {
@@ -404,7 +404,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   /**
    * PUT /api/admin/mobile-hooks/actions/{action_type} - Update action settings
    */
-  async updateActionSettings(request: UniversalRequest): Promise<ApiResponse> {
+  async updateActionTypeSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
@@ -421,7 +421,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
     try {
       // Get current settings for this action type
-      const currentConfig = await this.loadHookActionConfig();
+      const currentConfig = await this.loadConfig();
       const currentSettings = currentConfig.action_settings[actionType];
 
       // Merge with new settings
@@ -471,7 +471,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
    * POST /api/admin/mobile-hooks/actions/test - Test action execution
    * Tests a specific action type with sample data to verify it's configured correctly
    */
-  async testActionExecution(request: UniversalRequest): Promise<ApiResponse> {
+  async testActionType(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
@@ -489,7 +489,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     const { actionType, dryRun = true, testData = {} } = body;
 
     try {
-      const config = await this.loadHookActionConfig();
+      const config = await this.loadConfig();
       const actionSettings = config.action_settings[actionType] as ActionSettings[ActionType];
 
       if (!actionSettings) {
@@ -757,7 +757,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   /**
    * Load hook action configuration from database
    */
-  private async loadHookActionConfig(): Promise<HookActionConfigResponse> {
+  private async loadConfig(): Promise<HookActionConfigResponse> {
     const settings = await AppSetting.findAll({
       where: {
         key: {

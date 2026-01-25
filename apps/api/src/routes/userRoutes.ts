@@ -16,6 +16,7 @@ import { expressRouteWrapper } from '../utils/routeWrapper';
 import { container } from '../container';
 import { TYPES } from '../container/types';
 import { UserController } from '../controllers/UserController';
+import { userMobileHooksSettingsController } from '../controllers/mobile/UserMobileHooksSettingsController'
 
 const router: express.Router = Router();
 const userController = container.get<UserController>(TYPES.UserController);
@@ -63,5 +64,19 @@ router.patch(
   writeLimiter,
   expressRouteWrapper(userController.deactivateAccount.bind(userController))
 ); // PATCH to deactivate account
+
+// User mobile hooks settings (READ)
+router.get(
+  '/mobile-hooks/settings',
+  readLimiter,
+  expressRouteWrapper(userMobileHooksSettingsController.getSettings.bind(userMobileHooksSettingsController))
+);
+
+// User mobile hooks settings (WRITE)
+router.put(
+  '/mobile-hooks/settings',
+  writeLimiter,
+  expressRouteWrapper(userMobileHooksSettingsController.updateSettings.bind(userMobileHooksSettingsController))
+);
 
 export default router;

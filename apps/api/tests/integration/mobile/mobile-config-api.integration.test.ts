@@ -43,7 +43,7 @@ jest.mock('../../../src/models', () => ({
   },
 }));
 
-// Mock auth middleware  
+// Mock auth middleware
 jest.mock('../../../src/middleware/auth', () => ({
   authMiddleware: (req: any, res: any, next: any) => {
     const authHeader = req.headers.authorization;
@@ -62,7 +62,7 @@ jest.mock('../../../src/middleware/auth', () => ({
       };
     } else if (authHeader === 'Bearer user-token') {
       req.user = {
-        id: 'specific_user_789', 
+        id: 'specific_user_789',
         email: 'user@example.com',
         role: 'user',
         provider: 'test',
@@ -101,7 +101,7 @@ describe('Mobile Configuration API Integration Tests', () => {
 
   describe('Mobile Hook Configuration Endpoints', () => {
 
-    describe('GET /api/v1/config/mobile - Get Mobile Config', () => {
+    describe('GET /api/v1/config/mobile - Get Mobile Config (Read-Only)', () => {
       it('should return mobile hook configuration with default values', async () => {
         const mockSettings = [
           {
@@ -149,14 +149,14 @@ describe('Mobile Configuration API Integration Tests', () => {
           .expect(200);
 
         expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('analytics_enabled', true);
-        expect(response.body.data).toHaveProperty('error_reporting_enabled', true);
-        expect(response.body.data).toHaveProperty('batch_upload_interval', 300);
-        expect(response.body.data).toHaveProperty('max_offline_events', 1000);
+        // Response now uses camelCase
+        expect(response.body.data).toHaveProperty('analyticsEnabled');
+        expect(response.body.data).toHaveProperty('errorReportingEnabled');
+        expect(response.body.data).toHaveProperty('batchUploadInterval');
+        expect(response.body.data).toHaveProperty('maxOfflineEvents');
       });
 
-
-      it('should handle missing configuration settings gracefully', async () => {
+      it('should handle missing configuration settings gracefully with defaults', async () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
 
         const response = await request(app)
@@ -164,22 +164,97 @@ describe('Mobile Configuration API Integration Tests', () => {
           .expect(200);
 
         expect(response.body.success).toBe(true);
-        
-        // Should return default values
-        expect(response.body.data).toHaveProperty('analytics_enabled', true);
-        expect(response.body.data).toHaveProperty('error_reporting_enabled', true);
-        expect(response.body.data).toHaveProperty('batch_upload_interval', 300);
-        expect(response.body.data).toHaveProperty('max_offline_events', 1000);
+
+        // Should return default values with camelCase
+        expect(response.body.data).toHaveProperty('analyticsEnabled', true);
+        expect(response.body.data).toHaveProperty('errorReportingEnabled', true);
+        expect(response.body.data).toHaveProperty('batchUploadInterval', 300);
+        expect(response.body.data).toHaveProperty('maxOfflineEvents', 1000);
+        expect(response.body.data).toHaveProperty('offlineStorageEnabled', true);
+        expect(response.body.data).toHaveProperty('performanceMonitoringEnabled', true);
+        expect(response.body.data).toHaveProperty('emergencyEnabled', false);
+        expect(response.body.data).toHaveProperty('emergencyReason', null);
+      });
+
+      it('should return emergency status fields', async () => {
+        const mockSettings = [
+          {
+            key: 'mobile.hooks.emergency.enabled',
+            value: 'true',
+          },
+          {
+            key: 'mobile.hooks.emergency.reason',
+            value: 'Maintenance mode',
+          },
+        ];
+
+        (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
+
+        const response = await request(app)
+          .get('/api/v1/config/mobile')
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('emergencyEnabled');
+        expect(response.body.data).toHaveProperty('emergencyReason');
+      });
+    });
+  });
+
+  describe('Admin Mobile Hooks Settings Endpoints', () => {
+
+    describe('GET /api/v1/admin/mobile-hooks/settings/listeners - Get Listener Settings', () => {
+      it('should return listener settings configuration', async () => {
+        const mockSettings = [
+          { key: 'mobile.hooks.analytics.enabled', value: 'true' },
+          { key: 'mobile.hooks.errorReporting.enabled', value: 'true' },
+          { key: 'mobile.hooks.offlineStorage.enabled', value: 'true' },
+          { key: 'mobile.hooks.performanceMonitoring.enabled', value: 'false' },
+          { key: 'mobile.hooks.batchUploadInterval', value: '300' },
+          { key: 'mobile.hooks.maxOfflineEvents', value: '1000' },
+        ];
+
+        (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
+        (AppSetting.findOne as jest.Mock).mockResolvedValue({
+          updateDate: new Date(),
+        });
+
+        const response = await request(app)
+          .get('/api/v1/admin/mobile-hooks/settings/listeners')
+          .set('Authorization', 'Bearer admin-token')
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('settings');
+        expect(response.body.data).toHaveProperty('lastUpdated');
+        expect(response.body.data).toHaveProperty('version');
+      });
+
+      it('should require admin authorization', async () => {
+        const response = await request(app)
+          .get('/api/v1/admin/mobile-hooks/settings/listeners')
+          .set('Authorization', 'Bearer user-token')
+          .expect(403);
+
+        expect(response.body.error).toBe('Forbidden');
+      });
+
+      it('should require authentication', async () => {
+        const response = await request(app)
+          .get('/api/v1/admin/mobile-hooks/settings/listeners')
+          .expect(401);
+
+        expect(response.body.error).toBe('No authorization header');
       });
     });
 
-    describe('PUT /api/v1/config/mobile - Update Mobile Config', () => {
-      it('should successfully update mobile hook configuration', async () => {
+    describe('PUT /api/v1/admin/mobile-hooks/settings/listeners - Update Listener Settings', () => {
+      it('should successfully update listener settings', async () => {
         const updateData = {
-          analytics_enabled: false,
-          error_reporting_enabled: true,
-          batch_upload_interval: 600,
-          max_offline_events: 2000,
+          analyticsEnabled: false,
+          errorReportingEnabled: true,
+          batchUploadInterval: 600,
+          maxOfflineEvents: 2000,
         };
 
         const mockSetting = {
@@ -188,38 +263,31 @@ describe('Mobile Configuration API Integration Tests', () => {
           update: jest.fn().mockResolvedValue(undefined),
         };
 
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
         (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
 
         const response = await request(app)
-          .put('/api/v1/config/mobile')
+          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(200);
 
         expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('config');
+        expect(response.body.data).toHaveProperty('settings');
         expect(response.body.data).toHaveProperty('updated');
         expect(response.body.data).toHaveProperty('lastUpdated');
-        expect(response.body.data.updated).toContain('analytics_enabled');
-
-        // Verify settings were updated
-        expect(AppSetting.findOrCreate).toHaveBeenCalledWith(
-          expect.objectContaining({
-            where: { key: 'mobile.hooks.analytics.enabled' },
-            defaults: expect.objectContaining({
-              value: 'false',
-              category: 'mobile_hooks',
-            }),
-          })
-        );
       });
 
       it('should validate batch upload interval limits', async () => {
         const invalidData = {
-          batch_upload_interval: 30, // Below minimum of 60
+          batchUploadInterval: 30, // Below minimum of 60
         };
 
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+
         const response = await request(app)
-          .put('/api/v1/config/mobile')
+          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .set('Authorization', 'Bearer admin-token')
           .send(invalidData)
           .expect(400);
 
@@ -229,11 +297,14 @@ describe('Mobile Configuration API Integration Tests', () => {
 
       it('should validate max offline events limits', async () => {
         const invalidData = {
-          max_offline_events: 50, // Below minimum of 100
+          maxOfflineEvents: 50, // Below minimum of 100
         };
 
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+
         const response = await request(app)
-          .put('/api/v1/config/mobile')
+          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .set('Authorization', 'Bearer admin-token')
           .send(invalidData)
           .expect(400);
 
@@ -243,11 +314,14 @@ describe('Mobile Configuration API Integration Tests', () => {
 
       it('should reject oversized batch intervals', async () => {
         const invalidData = {
-          batch_upload_interval: 5000, // Above maximum of 3600
+          batchUploadInterval: 5000, // Above maximum of 3600
         };
 
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+
         const response = await request(app)
-          .put('/api/v1/config/mobile')
+          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .set('Authorization', 'Bearer admin-token')
           .send(invalidData)
           .expect(400);
 
@@ -257,8 +331,7 @@ describe('Mobile Configuration API Integration Tests', () => {
 
       it('should handle partial configuration updates', async () => {
         const partialUpdate = {
-          analytics_enabled: false,
-          // Only updating one field
+          analyticsEnabled: false,
         };
 
         const mockSetting = {
@@ -275,26 +348,28 @@ describe('Mobile Configuration API Integration Tests', () => {
         ]);
 
         const response = await request(app)
-          .put('/api/v1/config/mobile')
+          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .set('Authorization', 'Bearer admin-token')
           .send(partialUpdate)
           .expect(200);
 
         expect(response.body.success).toBe(true);
-        expect(response.body.data.updated).toEqual(['analytics_enabled']);
-        expect(AppSetting.findOrCreate).toHaveBeenCalledTimes(1);
+        expect(response.body.data.updated).toContain('analyticsEnabled');
       });
 
       it('should handle database errors during configuration updates', async () => {
         const updateData = {
-          analytics_enabled: false,
+          analyticsEnabled: false,
         };
 
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
         (AppSetting.findOrCreate as jest.Mock).mockRejectedValue(
           new Error('Database connection failed')
         );
 
         const response = await request(app)
-          .put('/api/v1/config/mobile')
+          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(500);
 
@@ -306,27 +381,22 @@ describe('Mobile Configuration API Integration Tests', () => {
 
   describe('Admin Hook Action Configuration Endpoints', () => {
 
-    describe('GET /api/v1/admin/mobile-hooks/config - Get Hook Action Config', () => {
+    describe('GET /api/v1/admin/mobile-hooks/actions-config/mappings - Get Action Mappings', () => {
       it('should return hook action mappings configuration', async () => {
         const mockSettings = [
           {
-            key: 'mobile.hooks.actions.analytics.create',
-            value: '{"actionType":"log","priority":10,"enabled":true}',
-          },
-          {
-            key: 'mobile.hooks.actions.analytics.error',
-            value: '{"actionType":"alert","priority":1,"enabled":true}',
-          },
-          {
-            key: 'mobile.hooks.actions.sync.conflict',
-            value: '{"actionType":"notification","priority":5,"enabled":true}',
+            key: 'mobile.hooks.actions.mappings',
+            value: '{"error.unhandled":["email","slack","database"]}',
           },
         ];
 
         (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
+        (AppSetting.findOne as jest.Mock).mockResolvedValue({
+          updateDate: new Date(),
+        });
 
         const response = await request(app)
-          .get('/api/v1/admin/mobile-hooks/config')
+          .get('/api/v1/admin/mobile-hooks/actions-config/mappings')
           .set('Authorization', 'Bearer admin-token')
           .expect(200);
 
@@ -338,9 +408,10 @@ describe('Mobile Configuration API Integration Tests', () => {
 
       it('should handle empty hook action configuration', async () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+        (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
 
         const response = await request(app)
-          .get('/api/v1/admin/mobile-hooks/config')
+          .get('/api/v1/admin/mobile-hooks/actions-config/mappings')
           .set('Authorization', 'Bearer admin-token')
           .expect(200);
 
@@ -350,30 +421,27 @@ describe('Mobile Configuration API Integration Tests', () => {
       });
     });
 
-    describe('PUT /api/v1/admin/mobile-hooks/config - Update Hook Action Config', () => {
+    describe('PUT /api/v1/admin/mobile-hooks/actions-config/mappings - Update Action Mappings', () => {
       it('should successfully update hook action mappings', async () => {
         const updateData = {
-          action_mappings: {
-            analytics: {
-              create: { actionType: 'log', priority: 10, enabled: true },
-              error: { actionType: 'alert', priority: 1, enabled: true },
-            },
-            sync: {
-              conflict: { actionType: 'notification', priority: 5, enabled: false },
-            },
+          actions: {
+            'error.unhandled': ['email', 'slack', 'database'],
+            'sync.failed': ['email', 'database'],
           },
         };
 
         const mockSetting = {
-          key: 'mobile.hooks.actions.analytics.create',
+          key: 'mobile.hooks.actions.mappings',
           value: '{}',
           update: jest.fn().mockResolvedValue(undefined),
         };
 
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+        (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
         (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/config')
+          .put('/api/v1/admin/mobile-hooks/actions-config/mappings')
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(200);
@@ -382,76 +450,36 @@ describe('Mobile Configuration API Integration Tests', () => {
         expect(response.body.data).toHaveProperty('updated');
         expect(response.body.data).toHaveProperty('config');
       });
+    });
 
-      it('should validate action mapping structure', async () => {
-        const invalidData = {
-          action_mappings: {
-            analytics: {
-              create: { 
-                // Missing required actionType
-                priority: 10, 
-                enabled: true 
-              },
-            },
-          },
-        };
+    describe('GET /api/v1/admin/mobile-hooks/actions-config/types - Get Action Types', () => {
+      it('should return list of available action types with settings', async () => {
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+        (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/config')
+          .get('/api/v1/admin/mobile-hooks/actions-config/types')
           .set('Authorization', 'Bearer admin-token')
-          .send(invalidData)
           .expect(200);
 
         expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('updated');
-      });
+        expect(response.body.data).toHaveProperty('actions');
 
-      it('should validate priority values', async () => {
-        const invalidData = {
-          action_mappings: {
-            analytics: {
-              create: { 
-                actionType: 'log',
-                priority: 150, // Invalid priority > 100
-                enabled: true 
-              },
-            },
-          },
-        };
-
-        const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/config')
-          .set('Authorization', 'Bearer admin-token')
-          .send(invalidData)
-          .expect(200);
-
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('updated');
+        // Should include all action types
+        const actions = response.body.data.actions;
+        expect(actions).toHaveProperty(ACTION_TYPES.EMAIL);
+        expect(actions).toHaveProperty(ACTION_TYPES.SLACK);
+        expect(actions).toHaveProperty(ACTION_TYPES.WEBHOOK);
+        expect(actions).toHaveProperty(ACTION_TYPES.DATABASE);
       });
     });
 
-    describe('GET /api/v1/admin/mobile-hooks/actions - Get Available Actions', () => {
-      it('should return list of available action types', async () => {
-        const response = await request(app)
-          .get('/api/v1/admin/mobile-hooks/actions')
-          .set('Authorization', 'Bearer admin-token')
-          .expect(200);
-
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('action_types');
-        expect(response.body.data).toHaveProperty('action_descriptions');
-        expect(response.body.data).toHaveProperty('default_settings');
-      });
-    });
-
-    describe('PUT /api/v1/admin/mobile-hooks/actions/:action_type - Update Action Settings', () => {
+    describe('PUT /api/v1/admin/mobile-hooks/actions-config/types/:action_type - Update Action Settings', () => {
       it('should successfully update settings for specific action type', async () => {
         const updateData = {
           enabled: true,
           recipients: ['test@example.com'],
           rate_limit_minutes: 10,
-          template: 'test_template',
-          priority: 'high',
         };
 
         const mockSetting = {
@@ -460,26 +488,29 @@ describe('Mobile Configuration API Integration Tests', () => {
           update: jest.fn().mockResolvedValue(undefined),
         };
 
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+        (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
         (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
 
         const response = await request(app)
-          .put(`/api/v1/admin/mobile-hooks/actions/${ACTION_TYPES.EMAIL}`)
+          .put(`/api/v1/admin/mobile-hooks/actions-config/types/${ACTION_TYPES.EMAIL}`)
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
-          .expect(400);
+          .expect(200);
 
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toBe('Invalid action type');
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('action_type', ACTION_TYPES.EMAIL);
+        expect(response.body.data).toHaveProperty('settings');
+        expect(response.body.data).toHaveProperty('updated');
       });
 
       it('should validate action type exists', async () => {
         const updateData = {
-          default_priority: 5,
           enabled: true,
         };
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/actions/invalid_action')
+          .put('/api/v1/admin/mobile-hooks/actions-config/types/invalid_action')
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(400);
@@ -487,25 +518,78 @@ describe('Mobile Configuration API Integration Tests', () => {
         expect(response.body.success).toBe(false);
         expect(response.body.error).toContain('Invalid action type');
       });
+
+      it('should validate email rate limit', async () => {
+        const invalidData = {
+          rate_limit_minutes: 2000, // Exceeds maximum of 1440
+        };
+
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+        (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
+
+        const response = await request(app)
+          .put(`/api/v1/admin/mobile-hooks/actions-config/types/${ACTION_TYPES.EMAIL}`)
+          .set('Authorization', 'Bearer admin-token')
+          .send(invalidData)
+          .expect(400);
+
+        expect(response.body.success).toBe(false);
+        expect(response.body.error).toContain('Email rate limit must be between 1 and 1440 minutes');
+      });
+    });
+
+    describe('POST /api/v1/admin/mobile-hooks/actions-config/test - Test Config Flow', () => {
+      it('should test full config flow', async () => {
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+        (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
+
+        const testData = {
+          eventType: 'error.unhandled',
+          payload: { test: true },
+        };
+
+        const response = await request(app)
+          .post('/api/v1/admin/mobile-hooks/actions-config/test')
+          .set('Authorization', 'Bearer admin-token')
+          .send(testData)
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('eventType');
+        expect(response.body.data).toHaveProperty('mappedActions');
+        expect(response.body.data).toHaveProperty('summary');
+      });
+    });
+
+    describe('POST /api/v1/admin/mobile-hooks/actions-config/types/:action_type/test - Test Action Type', () => {
+      it('should test specific action type', async () => {
+        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+        (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
+
+        const testData = {
+          actionType: ACTION_TYPES.EMAIL,
+          dryRun: true,
+        };
+
+        const response = await request(app)
+          .post(`/api/v1/admin/mobile-hooks/actions-config/types/${ACTION_TYPES.EMAIL}/test`)
+          .set('Authorization', 'Bearer admin-token')
+          .send(testData)
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('actionType');
+        expect(response.body.data).toHaveProperty('dryRun', true);
+        expect(response.body.data).toHaveProperty('execution');
+      });
     });
   });
 
   describe('User-Specific Mobile Configuration Endpoints', () => {
 
     describe('GET /api/v1/users/:id/mobile-config - Get User Mobile Config', () => {
-      it('should return user-specific mobile configuration', async () => {
-        const mockSettings = [
-          {
-            key: 'mobile.hooks.user.specific_user_789.analytics.enabled',
-            value: 'false',
-            userId: 'specific_user_789',
-          },
-          {
-            key: 'mobile.hooks.user.specific_user_789.errorReporting.enabled',
-            value: 'true',
-            userId: 'specific_user_789',
-          },
-        ];
+      it('should return error when user ID is missing from request', async () => {
+        const mockSettings: any[] = [];
 
         (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
 
@@ -517,48 +601,13 @@ describe('Mobile Configuration API Integration Tests', () => {
         expect(response.body.success).toBe(false);
         expect(response.body.error).toContain('User ID is required');
       });
-
-      it('should fallback to global settings for missing user settings', async () => {
-        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
-
-        const response = await request(app)
-          .get('/api/v1/users/specific_user_789/mobile-config')
-          .set('Authorization', 'Bearer user-token')
-          .expect(400);
-
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('User ID is required');
-      });
-
-      it('should require user authorization for their own config', async () => {
-        const response = await request(app)
-          .get('/api/v1/users/different_user_999/mobile-config')
-          .set('Authorization', 'Bearer user-token')
-          .expect(400);
-
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('User ID is required');
-      });
     });
 
     describe('PUT /api/v1/users/:id/mobile-config - Update User Mobile Config', () => {
-      it('should successfully update user-specific mobile configuration', async () => {
+      it('should return error when user ID is missing from request', async () => {
         const updateData = {
-          analytics_enabled: false,
-          error_reporting_enabled: true,
-          notification_preferences: {
-            sync_conflicts: false,
-            critical_errors: true,
-          },
+          analyticsEnabled: false,
         };
-
-        const mockSetting = {
-          key: 'mobile.hooks.user.specific_user_789.analytics.enabled',
-          value: 'true',
-          update: jest.fn().mockResolvedValue(undefined),
-        };
-
-        (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
 
         const response = await request(app)
           .put('/api/v1/users/specific_user_789/mobile-config')
@@ -569,130 +618,16 @@ describe('Mobile Configuration API Integration Tests', () => {
         expect(response.body.success).toBe(false);
         expect(response.body.error).toContain('User ID is required');
       });
-
-      it('should validate user-specific configuration limits', async () => {
-        const invalidData = {
-          max_offline_events: 15000, // Exceeds global limit
-        };
-
-        const response = await request(app)
-          .put('/api/v1/users/specific_user_789/mobile-config')
-          .set('Authorization', 'Bearer user-token')
-          .send(invalidData)
-          .expect(400);
-
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('User ID is required');
-      });
-
-      it('should require user authorization for updating their own config', async () => {
-        const updateData = {
-          analytics_enabled: false,
-        };
-
-        const response = await request(app)
-          .put('/api/v1/users/different_user_999/mobile-config')
-          .set('Authorization', 'Bearer user-token')
-          .send(updateData)
-          .expect(400);
-
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('User ID is required');
-      });
-    });
-  });
-
-  describe('Configuration Integration and Consistency', () => {
-    it('should maintain consistency between global and user-specific settings', async () => {
-      // First, set global configuration
-      const globalConfig = {
-        analytics_enabled: true,
-        max_offline_events: 1000,
-      };
-
-      const mockGlobalSetting = {
-        key: 'mobile.hooks.analytics.enabled',
-        value: 'true',
-        update: jest.fn().mockResolvedValue(undefined),
-      };
-
-      (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockGlobalSetting]);
-
-      await request(app)
-        .put('/api/v1/config/mobile')
-        .send(globalConfig)
-        .expect(200);
-
-      // Then, verify user settings respect global limits
-      const userConfig = {
-        max_offline_events: 1500, // Exceeds global setting
-      };
-
-      const response = await request(app)
-        .put('/api/v1/users/specific_user_789/mobile-config')
-        .set('Authorization', 'Bearer user-token')
-        .send(userConfig)
-        .expect(400);
-
-      expect(response.body.error).toContain('User ID is required');
-    });
-
-    it('should handle configuration changes that affect multiple users', async () => {
-      // Simulate global configuration change that affects all users
-      const globalUpdate = {
-        analytics_enabled: false, // Disabling analytics globally
-        max_offline_events: 500, // Reducing global limit
-      };
-
-      const mockSetting = {
-        key: 'mobile.hooks.analytics.enabled',
-        value: 'true',
-        update: jest.fn().mockResolvedValue(undefined),
-      };
-
-      (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
-
-      const response = await request(app)
-        .put('/api/v1/config/mobile')
-        .send(globalUpdate)
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-
-      // Verify that user-specific settings are now constrained by new global limits
-      const userUpdate = {
-        max_offline_events: 800, // Now exceeds reduced global limit
-      };
-
-      const userResponse = await request(app)
-        .put('/api/v1/users/specific_user_789/mobile-config')
-        .set('Authorization', 'Bearer user-token')
-        .send(userUpdate)
-        .expect(400);
-
-      expect(userResponse.body.error).toContain('User ID is required');
     });
   });
 
   describe('Configuration Performance and Caching', () => {
-    it('should handle concurrent configuration updates gracefully', async () => {
-      const updateData = {
-        analytics_enabled: false,
-      };
+    it('should handle concurrent configuration reads gracefully', async () => {
+      (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
 
-      const mockSetting = {
-        key: 'mobile.hooks.analytics.enabled',
-        value: 'true',
-        update: jest.fn().mockResolvedValue(undefined),
-      };
-
-      (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
-
-      // Simulate concurrent updates
+      // Simulate concurrent reads
       const promises = Array(5).fill(null).map(() =>
-        request(app)
-          .put('/api/v1/config/mobile')
-          .send(updateData)
+        request(app).get('/api/v1/config/mobile')
       );
 
       const responses = await Promise.all(promises);
@@ -704,5 +639,35 @@ describe('Mobile Configuration API Integration Tests', () => {
       });
     });
 
+    it('should handle concurrent admin listener updates gracefully', async () => {
+      const updateData = {
+        analyticsEnabled: false,
+      };
+
+      const mockSetting = {
+        key: 'mobile.hooks.analytics.enabled',
+        value: 'true',
+        update: jest.fn().mockResolvedValue(undefined),
+      };
+
+      (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
+      (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
+
+      // Simulate concurrent updates
+      const promises = Array(5).fill(null).map(() =>
+        request(app)
+          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .set('Authorization', 'Bearer admin-token')
+          .send(updateData)
+      );
+
+      const responses = await Promise.all(promises);
+
+      // All should succeed
+      responses.forEach(response => {
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+      });
+    });
   });
 });

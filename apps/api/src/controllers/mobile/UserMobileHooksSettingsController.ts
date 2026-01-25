@@ -1,6 +1,6 @@
 // ================================================================
-// src/controllers/UserMobileConfigController.ts
-// User-specific mobile hook configuration endpoints
+// src/controllers/UserMobileHooksSettingsController.ts
+// User-specific mobile hook settings endpoints (overrides admin defaults)
 // ================================================================
 
 import { BaseController } from '../base/BaseController';
@@ -12,40 +12,18 @@ import { Op } from 'sequelize';
 interface UserMobileConfigResponse {
   userId: string;
   analyticsEnabled: boolean;
-  notificationPreferences: {
-    emailEnabled: boolean;
-    pushEnabled: boolean;
-    smsEnabled: boolean;
-    emailFrequency: 'immediate' | 'daily' | 'weekly' | 'never';
-  };
-  privacySettings: {
-    dataCollectionEnabled: boolean;
-    analyticsSharingEnabled: boolean;
-    crashReportingEnabled: boolean;
-  };
   lastUpdated: string | null;
 }
 
 export interface UserMobileConfigUpdateRequest {
   analyticsEnabled?: boolean;
-  notificationPreferences?: {
-    emailEnabled?: boolean;
-    pushEnabled?: boolean;
-    smsEnabled?: boolean;
-    emailFrequency?: 'immediate' | 'daily' | 'weekly' | 'never';
-  };
-  privacySettings?: {
-    dataCollectionEnabled?: boolean;
-    analyticsSharingEnabled?: boolean;
-    crashReportingEnabled?: boolean;
-  };
 }
 
-export class UserMobileConfigController extends BaseController {
+export class UserMobileHooksSettingsController extends BaseController {
   /**
-   * GET /api/users/{id}/mobile-config - Get user's mobile hook config
+   * GET /api/users/{id}/mobile-hooks/settings - Get user's mobile hooks settings
    */
-  async getUserMobileConfig(request: UniversalRequest): Promise<ApiResponse> {
+  async getSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
 
     const userId = request.params?.['id'];
@@ -69,9 +47,9 @@ export class UserMobileConfigController extends BaseController {
   }
 
   /**
-   * PUT /api/users/{id}/mobile-config - Update user's mobile hook config
+   * PUT /api/users/{id}/mobile-hooks/settings - Update user's mobile hooks settings
    */
-  async updateUserMobileConfig(request: UniversalRequest): Promise<ApiResponse> {
+  async updateSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
 
     const userId = request.params?.['id'];
@@ -96,22 +74,6 @@ export class UserMobileConfigController extends BaseController {
       if (typeof body.analyticsEnabled === 'boolean') {
         await this.updateUserConfigSetting(userId, 'analytics_enabled', String(body.analyticsEnabled));
         updatedSettings.push('analytics_enabled');
-      }
-
-      // Update notification preferences
-      if (body.notificationPreferences) {
-        for (const [key, value] of Object.entries(body.notificationPreferences)) {
-          await this.updateUserConfigSetting(userId, `notification_preferences.${key}`, String(value));
-          updatedSettings.push(`notification_preferences.${key}`);
-        }
-      }
-
-      // Update privacy settings
-      if (body.privacySettings) {
-        for (const [key, value] of Object.entries(body.privacySettings)) {
-          await this.updateUserConfigSetting(userId, `privacy_settings.${key}`, String(value));
-          updatedSettings.push(`privacy_settings.${key}`);
-        }
       }
 
       const newConfig = await this.loadUserMobileConfig(userId);
@@ -171,17 +133,6 @@ export class UserMobileConfigController extends BaseController {
     return {
       userId: userId,
       analyticsEnabled: getUserSetting('analytics_enabled', true) as boolean,
-      notificationPreferences: {
-        emailEnabled: getUserSetting('notification_preferences.email_enabled', true) as boolean,
-        pushEnabled: getUserSetting('notification_preferences.push_enabled', true) as boolean,
-        smsEnabled: getUserSetting('notification_preferences.sms_enabled', false) as boolean,
-        emailFrequency: (getUserSetting('notification_preferences.email_frequency', 'immediate') as string) as 'immediate' | 'daily' | 'weekly' | 'never',
-      },
-      privacySettings: {
-        dataCollectionEnabled: getUserSetting('privacy_settings.data_collection_enabled', true) as boolean,
-        analyticsSharingEnabled: getUserSetting('privacy_settings.analytics_sharing_enabled', true) as boolean,
-        crashReportingEnabled: getUserSetting('privacy_settings.crash_reporting_enabled', true) as boolean,
-      },
       lastUpdated: lastUpdatedSetting?.updateDate?.toISOString() || null,
     };
   }
@@ -237,4 +188,4 @@ export class UserMobileConfigController extends BaseController {
   }
 }
 
-export const userMobileConfigController = new UserMobileConfigController();
+export const userMobileHooksSettingsController = new UserMobileHooksSettingsController();

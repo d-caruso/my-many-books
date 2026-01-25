@@ -10,24 +10,24 @@ import { AppSetting, AppSettingAttributes } from '../../models';
 import { Op } from 'sequelize';
 import { getAuditLogService } from '../../services/AuditLogService';
 
-export interface EmergencyConfigResponse {
-  mobile_hooks_enabled: boolean;
-  api_hooks_enabled: boolean;
-  global_kill_switch: boolean;
-  emergency_contacts: string[];
-  last_emergency_action: string | null;
-  emergency_reason: string | null;
-  emergency_activated_by: string | null;
-  emergency_activated_at: string | null;
-}
+interface EmergencyConfigResponse {
+    mobileHooksEnabled: boolean;
+    apiHooksEnabled: boolean;
+    globalKillSwitch: boolean;
+    emergencyContacts: string[];
+    lastEmergencyAction: string | null;
+    emergencyReason: string | null;
+    emergencyActivatedBy: string | null;
+    emergencyActivatedAt: string | null;
+  }
 
-export interface EmergencyConfigUpdateRequest {
-  mobile_hooks_enabled?: boolean;
-  api_hooks_enabled?: boolean;
-  global_kill_switch?: boolean;
-  emergency_contacts?: string[];
-  emergency_reason?: string;
-}
+interface EmergencyConfigUpdateRequest {
+    mobileHooksEnabled?: boolean;
+    apiHooksEnabled?: boolean;
+    globalKillSwitch?: boolean;
+    emergencyContacts?: string[];
+    emergencyReason?: string | null;
+  }
 
 export class EmergencyController extends BaseController {
   /**
@@ -60,27 +60,27 @@ export class EmergencyController extends BaseController {
       const updatedSettings: string[] = [];
 
       // Update emergency settings
-      if (typeof body.mobile_hooks_enabled === 'boolean') {
-        await this.updateConfigSetting('emergency.mobile_hooks.enabled', String(body.mobile_hooks_enabled));
+      if (typeof body.mobileHooksEnabled === 'boolean') {
+        await this.updateConfigSetting('emergency.mobile_hooks.enabled', String(body.mobileHooksEnabled));
         updatedSettings.push('mobile_hooks_enabled');
       }
 
-      if (typeof body.api_hooks_enabled === 'boolean') {
-        await this.updateConfigSetting('emergency.api_hooks.enabled', String(body.api_hooks_enabled));
+      if (typeof body.apiHooksEnabled === 'boolean') {
+        await this.updateConfigSetting('emergency.api_hooks.enabled', String(body.apiHooksEnabled));
         updatedSettings.push('api_hooks_enabled');
       }
 
-      if (typeof body.global_kill_switch === 'boolean') {
-        await this.updateConfigSetting('emergency.global_kill_switch', String(body.global_kill_switch));
+      if (typeof body.globalKillSwitch === 'boolean') {
+        await this.updateConfigSetting('emergency.global_kill_switch', String(body.globalKillSwitch));
         updatedSettings.push('global_kill_switch');
         
         // Track emergency activation
-        if (body.global_kill_switch) {
+        if (body.globalKillSwitch) {
           await this.updateConfigSetting('emergency.last_action', 'GLOBAL_KILL_SWITCH_ACTIVATED');
           await this.updateConfigSetting('emergency.activated_by', String(request.user?.id || 'system'));
           await this.updateConfigSetting('emergency.activated_at', new Date().toISOString());
-          if (body.emergency_reason) {
-            await this.updateConfigSetting('emergency.reason', body.emergency_reason);
+          if (body.emergencyReason) {
+            await this.updateConfigSetting('emergency.reason', body.emergencyReason);
           }
         } else {
           await this.updateConfigSetting('emergency.last_action', 'GLOBAL_KILL_SWITCH_DEACTIVATED');
@@ -89,25 +89,25 @@ export class EmergencyController extends BaseController {
         }
       }
 
-      if (body.emergency_contacts !== undefined) {
-        if (!Array.isArray(body.emergency_contacts)) {
+      if (body.emergencyContacts !== undefined) {
+        if (!Array.isArray(body.emergencyContacts)) {
           return this.createErrorResponse('emergency_contacts must be an array', 400);
         }
-        await this.updateConfigSetting('emergency.contacts', JSON.stringify(body.emergency_contacts));
+        await this.updateConfigSetting('emergency.contacts', JSON.stringify(body.emergencyContacts));
         updatedSettings.push('emergency_contacts');
       }
 
       // Log critical emergency actions
-      if (body.global_kill_switch !== undefined) {
+      if (body.globalKillSwitch !== undefined) {
         getAuditLogService().logActionFromRequest(
           request,
-          body.global_kill_switch ? 'EMERGENCY_ACTIVATE' : 'EMERGENCY_DEACTIVATE',
+          body.globalKillSwitch ? 'EMERGENCY_ACTIVATE' : 'EMERGENCY_DEACTIVATE',
           'emergency_config',
           'global_kill_switch',
           {
             oldConfig,
             newConfig: body,
-            reason: body.emergency_reason || 'No reason provided',
+            reason: body.emergencyReason || 'No reason provided',
             changes: updatedSettings,
           }
         );
@@ -156,14 +156,14 @@ export class EmergencyController extends BaseController {
     }
 
     return {
-      mobile_hooks_enabled: this.parseBoolean(settingsMap.get('emergency.mobile_hooks.enabled'), true),
-      api_hooks_enabled: this.parseBoolean(settingsMap.get('emergency.api_hooks.enabled'), true),
-      global_kill_switch: this.parseBoolean(settingsMap.get('emergency.global_kill_switch'), false),
-      emergency_contacts: emergencyContacts,
-      last_emergency_action: settingsMap.get('emergency.last_action') || null,
-      emergency_reason: settingsMap.get('emergency.reason') || null,
-      emergency_activated_by: settingsMap.get('emergency.activated_by') || null,
-      emergency_activated_at: settingsMap.get('emergency.activated_at') || null,
+      mobileHooksEnabled: this.parseBoolean(settingsMap.get('emergency.mobile_hooks.enabled'), true),
+      apiHooksEnabled: this.parseBoolean(settingsMap.get('emergency.api_hooks.enabled'), true),
+      globalKillSwitch: this.parseBoolean(settingsMap.get('emergency.global_kill_switch'), false),
+      emergencyContacts: emergencyContacts,
+      lastEmergencyAction: settingsMap.get('emergency.last_action') || null,
+      emergencyReason: settingsMap.get('emergency.reason') || null,
+      emergencyActivatedBy: settingsMap.get('emergency.activated_by') || null,
+      emergencyActivatedAt: settingsMap.get('emergency.activated_at') || null,
     };
   }
 
