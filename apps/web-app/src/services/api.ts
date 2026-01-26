@@ -520,6 +520,52 @@ class ApiService {
     });
   }
 
+  async testAdminMobileHooksActionsConfig(
+    request: AdminMobileHooksActionsConfigTestRequest = {}
+  ): Promise<AdminMobileHooksActionsConfigTestResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/actions-config/test', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async getAdminMobileHooksActionTypes(): Promise<AdminMobileHooksActionTypesResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/actions-config/types');
+  }
+
+  async updateAdminMobileHooksActionTypeSettings(
+    actionType: string,
+    settings: AdminMobileHooksActionTypeSettingsUpdateRequest
+  ): Promise<AdminMobileHooksActionTypeSettingsUpdateResponse> {
+    const payload = await this.fetchAdminData<any>(
+      `/admin/mobile-hooks/actions-config/types/${encodeURIComponent(actionType)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(settings),
+      }
+    );
+
+    return {
+      actionType: payload.actionType ?? payload.action_type ?? actionType,
+      settings: payload.settings,
+      updated: payload.updated,
+      lastUpdated: payload.lastUpdated,
+    };
+  }
+
+  async testAdminMobileHooksActionType(
+    actionType: string,
+    request: Omit<AdminMobileHooksActionTypeTestRequest, 'actionType'> = {}
+  ): Promise<AdminMobileHooksActionTypeTestResponse> {
+    return this.fetchAdminData(
+      `/admin/mobile-hooks/actions-config/types/${encodeURIComponent(actionType)}/test`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ actionType, ...request }),
+      }
+    );
+  }
+
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
     const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
@@ -1002,6 +1048,73 @@ export interface AdminMobileHooksConfigListenersUpdateRequest {
 export interface AdminMobileHooksConfigListenersUpdateResponse {
   updated: string[];
   lastUpdated: string;
+}
+
+export interface AdminMobileHooksActionsConfigTestRequest {
+  eventType?: string;
+  payload?: Record<string, unknown>;
+}
+
+export interface AdminMobileHooksActionsConfigTestResponse {
+  success: boolean;
+  eventType: string;
+  payload: Record<string, unknown>;
+  mappedActions: string[];
+  actionResults: Array<{
+    actionType: string;
+    enabled: boolean;
+    wouldExecute: boolean;
+    settings: Record<string, unknown>;
+  }>;
+  summary: {
+    totalActions: number;
+    enabledActions: number;
+    wouldExecute: number;
+  };
+  testedAt: string;
+}
+
+export interface AdminMobileHooksActionTypeInfo {
+  description: string;
+  enabled: boolean;
+  configured: boolean;
+  warnings: string[];
+  settings: Record<string, unknown>;
+}
+
+export interface AdminMobileHooksActionTypesResponse {
+  actions: Record<string, AdminMobileHooksActionTypeInfo>;
+}
+
+export type AdminMobileHooksActionTypeSettingsUpdateRequest = Record<string, unknown> & {
+  enabled?: boolean;
+};
+
+export interface AdminMobileHooksActionTypeSettingsUpdateResponse {
+  actionType: string;
+  settings: Record<string, unknown>;
+  updated: string[];
+  lastUpdated: string;
+}
+
+export interface AdminMobileHooksActionTypeTestRequest {
+  actionType: string;
+  dryRun?: boolean;
+  testData?: Record<string, unknown>;
+}
+
+export interface AdminMobileHooksActionTypeTestResponse {
+  actionType: string;
+  enabled: boolean;
+  dryRun: boolean;
+  testPayload: Record<string, unknown>;
+  execution: {
+    success: boolean;
+    message: string;
+    details?: Record<string, unknown>;
+  };
+  settings: Record<string, unknown>;
+  testedAt: string;
 }
 
 export interface AdminHookSummary {
