@@ -6,7 +6,7 @@
 import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
 import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
 import { BookFormData as WebBookFormData } from '../components/Book/BookForm';
-import type { BookFormData as SharedBookFormData } from '@my-many-books/shared-types';
+import type { BookFormData as SharedBookFormData, MobileHooksListenerSettings } from '@my-many-books/shared-types';
 import axios from 'axios';
 import { env } from '../config/env';
 import { authService } from './authService';
@@ -494,6 +494,19 @@ class ApiService {
     };
   }
 
+  async getAdminMobileHooksListenerSettings(): Promise<AdminMobileHooksListenerSettingsResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/settings/listeners');
+  }
+
+  async updateAdminMobileHooksListenerSettings(
+    settings: Partial<MobileHooksListenerSettings>
+  ): Promise<AdminMobileHooksListenerSettingsUpdateResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/settings/listeners', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+  }
+
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
     const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
@@ -943,6 +956,18 @@ class ApiService {
   }): Promise<FullTextSearchStatus> {
     return this.httpClient.patch<FullTextSearchStatus>(this.buildUrl('/admin/settings/search'), settings);
   }
+}
+
+export interface AdminMobileHooksListenerSettingsResponse {
+  settings: MobileHooksListenerSettings;
+  lastUpdated: string | null;
+  version: string;
+}
+
+export interface AdminMobileHooksListenerSettingsUpdateResponse {
+  settings: MobileHooksListenerSettings;
+  updated: string[];
+  lastUpdated: string;
 }
 
 export interface AdminHookSummary {
