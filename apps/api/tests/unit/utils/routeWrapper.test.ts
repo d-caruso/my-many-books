@@ -216,7 +216,7 @@ describe('expressRouteWrapper', () => {
       expect(mockControllerMethod).toHaveBeenCalledWith({
         body: JSON.stringify({ title: 'Test Book', isbnCode: '123456' }),
         queryStringParameters: { page: '1', limit: '10' },
-        pathParameters: { id: '123' },
+        params: { id: '123' },
         user: { id: 456 },
       });
     });
@@ -242,7 +242,7 @@ describe('expressRouteWrapper', () => {
       expect(mockControllerMethod).toHaveBeenCalledWith({
         body: undefined,
         queryStringParameters: {},
-        pathParameters: {},
+        params: {},
         user: undefined,
       });
     });
@@ -268,7 +268,7 @@ describe('expressRouteWrapper', () => {
       expect(mockControllerMethod).toHaveBeenCalledWith({
         body: undefined,
         queryStringParameters: {},
-        pathParameters: {},
+        params: {},
         user: undefined,
       });
     });
@@ -276,7 +276,7 @@ describe('expressRouteWrapper', () => {
     it('should handle request with complex query parameters', async () => {
       mockReq = {
         body: undefined,
-        query: { 
+        query: {
           filters: '{"title":"test"}',
           includeAuthors: 'true',
           includeCategories: 'false',
@@ -302,7 +302,7 @@ describe('expressRouteWrapper', () => {
           includeAuthors: 'true',
           includeCategories: 'false',
         },
-        pathParameters: {},
+        params: {},
         user: undefined,
       });
     });

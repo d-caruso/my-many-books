@@ -21,7 +21,7 @@ export const lambdaAdapter = (controllerMethod: ControllerMethod) => {
       const universalRequest: UniversalRequest = {
         body: parsedBody,
         queryStringParameters: event.queryStringParameters || undefined,
-        pathParameters: event.pathParameters || undefined,
+        params: event.pathParameters || undefined,
         headers: event.headers || undefined,
         user:
           (

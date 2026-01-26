@@ -168,7 +168,7 @@ export abstract class BaseController {
   }
 
   protected getPathParameter(request: UniversalRequest, paramName: string): string | null {
-    return request.pathParameters?.[paramName] || null;
+    return request.params?.[paramName] || null;
   }
 
   protected getQueryParameter(request: UniversalRequest, paramName: string): string | null {

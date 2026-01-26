@@ -588,35 +588,37 @@ describe('Mobile Configuration API Integration Tests', () => {
   describe('User-Specific Mobile Configuration Endpoints', () => {
 
     describe('GET /api/v1/users/:id/mobile-config - Get User Mobile Config', () => {
-      it('should return error when user ID is missing from request', async () => {
+      it('should return access denied when accessing another user config', async () => {
         const mockSettings: any[] = [];
 
         (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
 
+        // user-token authenticates as 'specific_user_789', but trying to access 'other_user_999'
         const response = await request(app)
-          .get('/api/v1/users/specific_user_789/mobile-config')
+          .get('/api/v1/users/other_user_999/mobile-config')
           .set('Authorization', 'Bearer user-token')
-          .expect(400);
+          .expect(403);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('User ID is required');
+        expect(response.body.error).toContain('errors:access_denied');
       });
     });
 
     describe('PUT /api/v1/users/:id/mobile-config - Update User Mobile Config', () => {
-      it('should return error when user ID is missing from request', async () => {
+      it('should return access denied when updating another user config', async () => {
         const updateData = {
           analyticsEnabled: false,
         };
 
+        // user-token authenticates as 'specific_user_789', but trying to update 'other_user_999'
         const response = await request(app)
-          .put('/api/v1/users/specific_user_789/mobile-config')
+          .put('/api/v1/users/other_user_999/mobile-config')
           .set('Authorization', 'Bearer user-token')
           .send(updateData)
-          .expect(400);
+          .expect(403);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('User ID is required');
+        expect(response.body.error).toContain('errors:access_denied');
       });
     });
   });
