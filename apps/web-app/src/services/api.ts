@@ -507,6 +507,19 @@ class ApiService {
     });
   }
 
+  async getAdminMobileHooksConfigListeners(): Promise<AdminMobileHooksConfigListenersResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/config/listeners');
+  }
+
+  async updateAdminMobileHooksConfigListeners(
+    listeners: AdminMobileHooksConfigListenersUpdateRequest
+  ): Promise<AdminMobileHooksConfigListenersUpdateResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/config/listeners', {
+      method: 'PUT',
+      body: JSON.stringify(listeners),
+    });
+  }
+
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
     const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
@@ -966,6 +979,27 @@ export interface AdminMobileHooksListenerSettingsResponse {
 
 export interface AdminMobileHooksListenerSettingsUpdateResponse {
   settings: MobileHooksListenerSettings;
+  updated: string[];
+  lastUpdated: string;
+}
+
+export type AdminMobileHooksConfigListenerMap = Record<string, { enabled: boolean }>;
+
+export interface AdminMobileHooksConfigListenersResponse {
+  listeners: AdminMobileHooksConfigListenerMap;
+  categories: AdminMobileHooksConfigListenerMap;
+  availableEvents: string[];
+  lastUpdated: string | null;
+}
+
+export interface AdminMobileHooksConfigListenersUpdateRequest {
+  analytics?: boolean;
+  errorReporting?: boolean;
+  offlineStorage?: boolean;
+  performanceMonitoring?: boolean;
+}
+
+export interface AdminMobileHooksConfigListenersUpdateResponse {
   updated: string[];
   lastUpdated: string;
 }

@@ -94,8 +94,8 @@ type HookListenerMap = Record<string, { enabled: boolean }>;
 interface HookListenersResponse {
   listeners: HookListenerMap;
   categories: HookListenerMap;
-  available_events: string[];
-  last_updated: string | null;
+  availableEvents: string[];
+  lastUpdated: string | null;
 }
 
 const AVAILABLE_EVENTS = [
@@ -113,8 +113,8 @@ const AVAILABLE_EVENTS = [
 interface HookActionConfigResponse {
   actions: HookActionMapping;
   action_settings: ActionSettings;
-  available_events: string[];
-  last_updated: string | null;
+  availableEvents: string[];
+  lastUpdated: string | null;
 }
 
 interface HookActionConfigUpdateRequest {
@@ -821,8 +821,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     return {
       actions,
       action_settings: actionSettings,
-      available_events: availableEvents,
-      last_updated: lastUpdatedSetting?.updateDate?.toISOString() || null,
+      availableEvents: availableEvents,
+      lastUpdated: lastUpdatedSetting?.updateDate?.toISOString() || null,
     };
   }
 
@@ -885,8 +885,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     return {
       listeners,
       categories,
-      available_events: [...AVAILABLE_EVENTS],
-      last_updated: latestUpdate ? new Date(latestUpdate).toISOString() : null,
+      availableEvents: [...AVAILABLE_EVENTS],
+      lastUpdated: latestUpdate ? new Date(latestUpdate).toISOString() : null,
     };
   }
 
