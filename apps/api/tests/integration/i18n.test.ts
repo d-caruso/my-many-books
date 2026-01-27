@@ -52,7 +52,7 @@ describe('i18n Integration Tests', () => {
 
     it('should return error in English when Accept-Language is en', async () => {
       const request: UniversalRequest = {
-        pathParameters: { id: '99999' },
+        params: { id: '99999' },
         headers: { 'accept-language': 'en' },
         user: mockUser,
       };
@@ -66,7 +66,7 @@ describe('i18n Integration Tests', () => {
 
     it('should return error in Italian when Accept-Language is it', async () => {
       const request: UniversalRequest = {
-        pathParameters: { id: '99999' },
+        params: { id: '99999' },
         headers: { 'accept-language': 'it' },
         user: mockUser,
       };
@@ -84,7 +84,7 @@ describe('i18n Integration Tests', () => {
 
     it('should return error in English for non-existent author', async () => {
       const request: UniversalRequest = {
-        pathParameters: { id: '99999' },
+        params: { id: '99999' },
         headers: { 'accept-language': 'en' },
         user: mockUser,
       };
@@ -97,7 +97,7 @@ describe('i18n Integration Tests', () => {
 
     it('should return error in Italian for non-existent author', async () => {
       const request: UniversalRequest = {
-        pathParameters: { id: '99999' },
+        params: { id: '99999' },
         headers: { 'accept-language': 'it' },
         user: mockUser,
       };
@@ -114,7 +114,7 @@ describe('i18n Integration Tests', () => {
 
     it('should default to English when no Accept-Language header is provided', async () => {
       const request: UniversalRequest = {
-        pathParameters: { id: '99999' },
+        params: { id: '99999' },
         headers: {},
         user: mockUser,
       };
@@ -127,7 +127,7 @@ describe('i18n Integration Tests', () => {
 
     it('should handle unsupported language by falling back to English', async () => {
       const request: UniversalRequest = {
-        pathParameters: { id: '99999' },
+        params: { id: '99999' },
         headers: { 'accept-language': 'fr' }, // French - not supported
         user: mockUser,
       };

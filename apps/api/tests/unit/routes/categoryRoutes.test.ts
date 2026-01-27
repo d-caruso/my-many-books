@@ -129,7 +129,7 @@ describe('Category Routes', () => {
     await request(app).get('/api/categories/3/books').expect(200);
 
     expect(mockCategoryController.getCategoryBooks).toHaveBeenCalledWith(
-      expect.objectContaining({ pathParameters: { id: '3' } })
+      expect.objectContaining({ params: { id: '3' } })
     );
   });
 });

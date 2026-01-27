@@ -84,7 +84,7 @@ describe('AuthorController', () => {
     mockRequest = {
       headers: { 'accept-language': 'en' },
       queryStringParameters: {},
-      pathParameters: {},
+      params: {},
       user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
     };
     emitHookEventMock.mockClear();
@@ -153,7 +153,7 @@ describe('AuthorController', () => {
 
   describe('updateAuthor', () => {
     it('should update author through service', async () => {
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
       mockRequest.body = JSON.stringify({ nationality: 'US' });
 
       updateAuthorSpy.mockResolvedValue({
@@ -185,7 +185,7 @@ describe('AuthorController', () => {
 
   describe('deleteAuthor', () => {
     it('should call service to delete author', async () => {
-      mockRequest.pathParameters = { id: '2' };
+      mockRequest.params = { id: '2' };
       deleteAuthorSpy.mockResolvedValue(undefined);
 
       const response = await authorController.deleteAuthor(mockRequest);
@@ -213,7 +213,7 @@ describe('AuthorController', () => {
         surname: 'Doe',
         userId: 1,
       });
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
 
       const response = await authorController.getAuthor(mockRequest);
 
@@ -223,7 +223,7 @@ describe('AuthorController', () => {
     });
 
     it('should return 404 when author not found', async () => {
-      mockRequest.pathParameters = { id: '999' };
+      mockRequest.params = { id: '999' };
 
       const response = await authorController.getAuthor(mockRequest);
 
@@ -282,7 +282,7 @@ describe('AuthorController', () => {
         surname: 'Smith',
         userId: 1,
       });
-      mockRequest.pathParameters = { id: '2' };
+      mockRequest.params = { id: '2' };
       (Book.findAndCountAll as jest.Mock).mockResolvedValue({
         count: 1,
         rows: [{ id: 10, title: 'Book Title' }],

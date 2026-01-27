@@ -5,9 +5,11 @@
 import { z } from 'zod';
 import { AuthorSchema } from './author';
 import { CategorySchema } from './category';
-import { BOOK_STATUS } from '@my-many-books/shared-types'
+import { BOOK_STATUSES } from './constants/book.constants'
 
-export const BookStatusSchema = z.enum(BOOK_STATUS).nullable();
+export const BookStatusSchema = z.enum(
+    BOOK_STATUSES as readonly [string, ...string[]] as [typeof BOOK_STATUSES[number], ...typeof BOOK_STATUSES[number][]]
+  ).nullable();
 type InferredBookStatus = z.infer<typeof BookStatusSchema>;
 
 export const BookSchema = z.object({

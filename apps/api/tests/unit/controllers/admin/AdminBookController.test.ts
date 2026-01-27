@@ -39,7 +39,7 @@ describe('AdminBookController', () => {
 
     mockRequest = {
       queryStringParameters: {},
-      pathParameters: {},
+      params: {},
       headers: { 'accept-language': 'en' },
       body: undefined,
     };
@@ -202,7 +202,7 @@ describe('AdminBookController', () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
       (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
 
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
 
       const result = await adminBookController.getBookById(mockRequest);
 
@@ -214,7 +214,7 @@ describe('AdminBookController', () => {
     });
 
     it('should return 400 if book ID is missing', async () => {
-      mockRequest.pathParameters = {};
+      mockRequest.params = {};
 
       const result = await adminBookController.getBookById(mockRequest);
 
@@ -226,7 +226,7 @@ describe('AdminBookController', () => {
     it('should return 404 if book is not found', async () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(null);
 
-      mockRequest.pathParameters = { id: '999' };
+      mockRequest.params = { id: '999' };
 
       const result = await adminBookController.getBookById(mockRequest);
 
@@ -238,7 +238,7 @@ describe('AdminBookController', () => {
     it('should handle errors during book retrieval by ID', async () => {
       (Book.findByPk as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
 
       const result = await adminBookController.getBookById(mockRequest);
 
@@ -273,7 +273,7 @@ describe('AdminBookController', () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
       (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
 
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
       mockRequest.body = JSON.stringify({ title: 'New Title', userId: 1 });
 
       const result = await adminBookController.updateBook(mockRequest);
@@ -287,7 +287,7 @@ describe('AdminBookController', () => {
     });
 
     it('should return 400 if book ID is missing', async () => {
-      mockRequest.pathParameters = {};
+      mockRequest.params = {};
       mockRequest.body = JSON.stringify({ title: 'New Title' });
 
       const result = await adminBookController.updateBook(mockRequest);
@@ -298,7 +298,7 @@ describe('AdminBookController', () => {
     });
 
     it('should return 400 if request body is missing', async () => {
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
       mockRequest.body = null;
 
       const result = await adminBookController.updateBook(mockRequest);
@@ -314,7 +314,7 @@ describe('AdminBookController', () => {
     it('should return 404 if book to update is not found', async () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(null);
 
-      mockRequest.pathParameters = { id: '999' };
+      mockRequest.params = { id: '999' };
       mockRequest.body = JSON.stringify({ title: 'New Title' });
 
       const result = await adminBookController.updateBook(mockRequest);
@@ -341,7 +341,7 @@ describe('AdminBookController', () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
       (User.findByPk as jest.Mock).mockResolvedValue(null); // User not found
 
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
       mockRequest.body = JSON.stringify({ userId: 999 });
 
       const result = await adminBookController.updateBook(mockRequest);
@@ -369,7 +369,7 @@ describe('AdminBookController', () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
       (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
 
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
       mockRequest.body = JSON.stringify({ title: 'New Title' });
 
       const result = await adminBookController.updateBook(mockRequest);
@@ -388,7 +388,7 @@ describe('AdminBookController', () => {
       };
       (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
 
       const result = await adminBookController.deleteBook(mockRequest);
 
@@ -399,7 +399,7 @@ describe('AdminBookController', () => {
     });
 
     it('should return 400 if book ID is missing', async () => {
-      mockRequest.pathParameters = {};
+      mockRequest.params = {};
 
       const result = await adminBookController.deleteBook(mockRequest);
 
@@ -411,7 +411,7 @@ describe('AdminBookController', () => {
     it('should return 404 if book to delete is not found', async () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(null);
 
-      mockRequest.pathParameters = { id: '999' };
+      mockRequest.params = { id: '999' };
 
       const result = await adminBookController.deleteBook(mockRequest);
 
@@ -427,7 +427,7 @@ describe('AdminBookController', () => {
       };
       (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
 
       const result = await adminBookController.deleteBook(mockRequest);
 

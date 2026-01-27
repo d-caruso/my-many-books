@@ -15,4 +15,3 @@ describe("Mobile Configuration Constants", () => {
       expect(MOBILE_HOOKS_SETTINGS_ACTIONS.RESET).toBe("reset");
     });
   });
-});

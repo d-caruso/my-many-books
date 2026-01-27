@@ -77,7 +77,7 @@ describe('CategoryController', () => {
     baseRequest = {
       headers: { 'accept-language': 'en' },
       queryStringParameters: {},
-      pathParameters: {},
+      params: {},
       user: { id: 1, email: 'test@example.com', role: 'user', provider: 'cognito' },
     };
 
@@ -135,7 +135,7 @@ describe('CategoryController', () => {
 
       const response = await controller.getCategory({
         ...baseRequest,
-        pathParameters: { id: '10' },
+        params: { id: '10' },
       });
 
       expect(mockService.getCategory).toHaveBeenCalledWith(10, expect.any(Object), false);
@@ -145,7 +145,7 @@ describe('CategoryController', () => {
     it('validates id parameter', async () => {
       const response = await controller.getCategory({
         ...baseRequest,
-        pathParameters: { id: 'abc' },
+        params: { id: 'abc' },
       });
 
       expect(response.statusCode).toBe(400);
@@ -159,7 +159,7 @@ describe('CategoryController', () => {
 
       const response = await controller.getCategory({
         ...baseRequest,
-        pathParameters: { id: '99' },
+        params: { id: '99' },
       });
 
       expect(response.statusCode).toBe(404);
@@ -174,7 +174,7 @@ describe('CategoryController', () => {
 
       const response = await controller.updateCategory({
         ...baseRequest,
-        pathParameters: { id: '2' },
+        params: { id: '2' },
         body: { name: 'Updated' },
       });
 
@@ -202,7 +202,7 @@ describe('CategoryController', () => {
 
       const response = await controller.deleteCategory({
         ...baseRequest,
-        pathParameters: { id: '3' },
+        params: { id: '3' },
         queryStringParameters: { force: 'true' },
       });
 
@@ -266,7 +266,7 @@ describe('CategoryController', () => {
 
       const response = await controller.getCategoryBooks({
         ...baseRequest,
-        pathParameters: { id: '5' },
+        params: { id: '5' },
       });
 
       expect(mockService.getCategory).toHaveBeenCalledWith(5, expect.any(Object));

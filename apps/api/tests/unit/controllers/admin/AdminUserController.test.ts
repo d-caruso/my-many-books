@@ -37,7 +37,7 @@ describe('AdminUserController', () => {
     baseRequest = {
       headers: { 'accept-language': 'en' },
       queryStringParameters: {},
-      pathParameters: {},
+      params: {},
       user: { id: 99, email: "test@example.com", role: 'admin', provider: "cognito" },
     };
   });
@@ -73,7 +73,7 @@ describe('AdminUserController', () => {
 
       const response = await controller.getUserById({
         ...baseRequest,
-        pathParameters: { id: '10' },
+        params: { id: '10' },
       });
 
       expect(service.getUserById).toHaveBeenCalledWith(10);
@@ -92,7 +92,7 @@ describe('AdminUserController', () => {
 
       const response = await controller.updateUser({
         ...baseRequest,
-        pathParameters: { id: '5' },
+        params: { id: '5' },
         body: { name: 'Jane', email: 'new@example.com' },
       });
 
@@ -110,7 +110,7 @@ describe('AdminUserController', () => {
 
       const response = await controller.updateUser({
         ...baseRequest,
-        pathParameters: { id: '5' },
+        params: { id: '5' },
         body: { email: 'taken@example.com' },
       });
 
@@ -122,7 +122,7 @@ describe('AdminUserController', () => {
     it('deletes via service', async () => {
       const response = await controller.deleteUser({
         ...baseRequest,
-        pathParameters: { id: '6' },
+        params: { id: '6' },
       });
 
       expect(service.deleteUser).toHaveBeenCalledWith(6, expect.any(Object));
@@ -134,7 +134,7 @@ describe('AdminUserController', () => {
 
       const response = await controller.deleteUser({
         ...baseRequest,
-        pathParameters: { id: '6' },
+        params: { id: '6' },
       });
 
       expect(response.statusCode).toBe(400);

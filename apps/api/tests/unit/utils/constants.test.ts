@@ -13,7 +13,6 @@ import {
 } from '../../../src/utils/constants';
 
 import {
-  BOOK_STATUS,
   ISBN_CONSTRAINTS,
   ISBN_PATTERNS,
   ISBN_ERROR_MESSAGES,
@@ -21,6 +20,8 @@ import {
   AUTHOR_CONSTRAINTS,
   CATEGORY_CONSTRAINTS,
 } from '@my-many-books/shared-validation';
+
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 
 describe('Constants', () => {
   describe('HTTP_STATUS', () => {

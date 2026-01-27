@@ -10,7 +10,7 @@ import { ApiResponse } from '../../../src/common/ApiResponse';
 // interface UniversalRequest {
 //   body?: any;
 //   queryStringParameters?: { [key: string]: string | undefined };
-//   pathParameters?: { [key: string]: string | undefined };
+//   params?: { [key: string]: string | undefined };
 //   user: { id: number };
 // }
 

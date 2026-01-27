@@ -178,7 +178,7 @@ describe('BookController', () => {
 
     it('should get a book successfully', async () => {
       (Book.findOne as jest.Mock).mockResolvedValue(mockBookInstance);
-      mockRequest.pathParameters = { id: '1' };
+      mockRequest.params = { id: '1' };
 
       const result = await bookController.getBook(mockRequest);
 
@@ -194,7 +194,7 @@ describe('BookController', () => {
 
     it('should return 404 if book not found', async () => {
       (Book.findOne as jest.Mock).mockResolvedValue(null);
-      mockRequest.pathParameters = { id: '999' };
+      mockRequest.params = { id: '999' };
 
       const result = await bookController.getBook(mockRequest);
 
@@ -208,7 +208,7 @@ describe('BookController', () => {
     it('emits book.update.before before updating', async () => {
       mockRequest.body = JSON.stringify({ title: 'Updated Title' });
       mockRequest.user = { id: 2, email: "test@example.com", role: 'user', provider: "cognito" };
-      mockRequest.pathParameters = { id: '5' };
+      mockRequest.params = { id: '5' };
       updateBookSpy.mockResolvedValue({
         id: 5,
         title: 'Updated Title',
@@ -226,7 +226,7 @@ describe('BookController', () => {
     });
 
     it('emits book.delete.before before deleting', async () => {
-      mockRequest.pathParameters = { id: '9' };
+      mockRequest.params = { id: '9' };
       mockRequest.user = { id: 4, email: "test@example.com", role: 'user', provider: "cognito" };
       deleteBookSpy.mockResolvedValue(undefined);
 

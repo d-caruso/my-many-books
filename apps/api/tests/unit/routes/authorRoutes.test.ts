@@ -72,7 +72,7 @@ describe('Author Routes', () => {
       expect(mockAuthorController.listAuthors).toHaveBeenCalledWith({
         body: undefined,
         queryStringParameters: {},
-        pathParameters: {},
+        params: {},
         user: { id: 123 },
       });
       
@@ -100,7 +100,7 @@ describe('Author Routes', () => {
       expect(mockAuthorController.listAuthors).toHaveBeenCalledWith({
         body: undefined,
         queryStringParameters: { page: '1', limit: '5' },
-        pathParameters: {},
+        params: {},
         user: { id: 123 },
       });
     });
@@ -121,7 +121,7 @@ describe('Author Routes', () => {
       expect(mockAuthorController.getAuthor).toHaveBeenCalledWith({
         body: undefined,
         queryStringParameters: {},
-        pathParameters: { id: '1' },
+        params: { id: '1' },
         user: { id: 123 },
       });
       
@@ -172,7 +172,7 @@ describe('Author Routes', () => {
       expect(mockAuthorController.createAuthor).toHaveBeenCalledWith({
         body: JSON.stringify(authorData),
         queryStringParameters: {},
-        pathParameters: {},
+        params: {},
         user: { id: 123 },
       });
       
@@ -221,7 +221,7 @@ describe('Author Routes', () => {
       expect(mockAuthorController.updateAuthor).toHaveBeenCalledWith({
         body: JSON.stringify(updateData),
         queryStringParameters: {},
-        pathParameters: { id: '1' },
+        params: { id: '1' },
         user: { id: 123 },
       });
       
@@ -266,7 +266,7 @@ describe('Author Routes', () => {
       expect(mockAuthorController.deleteAuthor).toHaveBeenCalledWith({
         body: undefined,
         queryStringParameters: {},
-        pathParameters: { id: '1' },
+        params: { id: '1' },
         user: { id: 123 },
       });
     });
@@ -307,7 +307,7 @@ describe('Author Routes', () => {
       expect(mockAuthorController.getAuthorBooks).toHaveBeenCalledWith({
         body: undefined,
         queryStringParameters: {},
-        pathParameters: { id: '1' },
+        params: { id: '1' },
         user: { id: 123 },
       });
       

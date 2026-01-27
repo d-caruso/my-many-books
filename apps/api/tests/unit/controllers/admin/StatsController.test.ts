@@ -21,7 +21,7 @@ describe('StatsController', () => {
 
     mockRequest = {
       queryStringParameters: {},
-      pathParameters: {},
+      params: {},
       headers: { 'accept-language': 'en' },
       body: undefined,
     };

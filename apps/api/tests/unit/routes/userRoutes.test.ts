@@ -33,7 +33,7 @@ jest.mock('../../../src/utils/routeWrapper', () => ({
         const universalRequest = {
           body: JSON.stringify(req.body || {}),
           queryStringParameters: req.query,
-          pathParameters: req.params,
+          params: req.params,
           user: req.user,
         };
         const result = await controllerMethod(universalRequest);
