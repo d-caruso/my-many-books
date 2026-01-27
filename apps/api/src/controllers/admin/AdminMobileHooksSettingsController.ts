@@ -10,7 +10,7 @@ import { UniversalRequest } from '../../types';
 import { AppSetting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
 import {
-  MOBILE_HOOKS,
+  MOBILE_HOOK_SETTING_KEYS,
   MOBILE_HOOKS_METADATA,
   MOBILE_HOOKS_SETTINGS_ACTIONS,
   MobileHooksListenerSettings,
@@ -102,7 +102,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
       // Update each settings value that was provided
       if (typeof body.analyticsEnabled === 'boolean') {
         await this.saveSetting(
-          MOBILE_HOOKS.ANALYTICS_ENABLED,
+          MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED,
           String(body.analyticsEnabled)
         );
         updatedSettings.push({ key: 'analyticsEnabled', value: String(body.analyticsEnabled) });
@@ -110,7 +110,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
       if (typeof body.errorReportingEnabled === 'boolean') {
         await this.saveSetting(
-          MOBILE_HOOKS.ERROR_REPORTING_ENABLED,
+          MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED,
           String(body.errorReportingEnabled)
         );
         updatedSettings.push({
@@ -121,7 +121,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
       if (typeof body.offlineStorageEnabled === 'boolean') {
         await this.saveSetting(
-          MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED,
+          MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
           String(body.offlineStorageEnabled)
         );
         updatedSettings.push({
@@ -132,7 +132,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
       if (typeof body.performanceMonitoringEnabled === 'boolean') {
         await this.saveSetting(
-          MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED,
+          MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
           String(body.performanceMonitoringEnabled)
         );
         updatedSettings.push({
@@ -143,7 +143,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
       if (typeof body.batchUploadInterval === 'number') {
         await this.saveSetting(
-          MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL,
+          MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL,
           String(body.batchUploadInterval)
         );
         updatedSettings.push({
@@ -154,7 +154,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
       if (typeof body.maxOfflineEvents === 'number') {
         await this.saveSetting(
-          MOBILE_HOOKS.MAX_OFFLINE_EVENTS,
+          MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS,
           String(body.maxOfflineEvents)
         );
         updatedSettings.push({ key: 'maxOfflineEvents', value: String(body.maxOfflineEvents) });
@@ -204,27 +204,27 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
       // Reset all settings to defaults
       await this.saveSetting(
-        MOBILE_HOOKS.ANALYTICS_ENABLED,
+        MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED,
         String(DEFAULT_LISTENER_SETTINGS.analyticsEnabled)
       );
       await this.saveSetting(
-        MOBILE_HOOKS.ERROR_REPORTING_ENABLED,
+        MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED,
         String(DEFAULT_LISTENER_SETTINGS.errorReportingEnabled)
       );
       await this.saveSetting(
-        MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED,
+        MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
         String(DEFAULT_LISTENER_SETTINGS.offlineStorageEnabled)
       );
       await this.saveSetting(
-        MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED,
+        MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
         String(DEFAULT_LISTENER_SETTINGS.performanceMonitoringEnabled)
       );
       await this.saveSetting(
-        MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL,
+        MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL,
         String(DEFAULT_LISTENER_SETTINGS.batchUploadInterval)
       );
       await this.saveSetting(
-        MOBILE_HOOKS.MAX_OFFLINE_EVENTS,
+        MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS,
         String(DEFAULT_LISTENER_SETTINGS.maxOfflineEvents)
       );
 
@@ -378,7 +378,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
   private async loadSettings(): Promise<MobileHooksListenerSettings> {
     const settings = await AppSetting.findAll({
       where: {
-        key: Object.values(MOBILE_HOOKS),
+        key: Object.values(MOBILE_HOOK_SETTING_KEYS),
       },
     });
 
@@ -386,27 +386,27 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
     return {
       analyticsEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOKS.ANALYTICS_ENABLED),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED),
         DEFAULT_LISTENER_SETTINGS.analyticsEnabled
       ),
       errorReportingEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOKS.ERROR_REPORTING_ENABLED),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED),
         DEFAULT_LISTENER_SETTINGS.errorReportingEnabled
       ),
       offlineStorageEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED),
         DEFAULT_LISTENER_SETTINGS.offlineStorageEnabled
       ),
       performanceMonitoringEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED),
         DEFAULT_LISTENER_SETTINGS.performanceMonitoringEnabled
       ),
       batchUploadInterval: this.parseNumber(
-        settingsMap.get(MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL),
         DEFAULT_LISTENER_SETTINGS.batchUploadInterval
       ),
       maxOfflineEvents: this.parseNumber(
-        settingsMap.get(MOBILE_HOOKS.MAX_OFFLINE_EVENTS),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS),
         DEFAULT_LISTENER_SETTINGS.maxOfflineEvents
       ),
     };
@@ -445,7 +445,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
     try {
       const setting = await AppSetting.findOne({
-        where: { key: MOBILE_HOOKS.EMERGENCY_ENABLED },
+        where: { key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED },
       });
 
       return this.createSuccessResponse({
@@ -472,10 +472,10 @@ export class AdminMobileHooksSettingsController extends BaseController {
     }
 
     try {
-      await this.saveSetting(MOBILE_HOOKS.EMERGENCY_ENABLED, String(body.enabled));
+      await this.saveSetting(MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED, String(body.enabled));
 
       if (body.reason) {
-        await this.saveSetting(MOBILE_HOOKS.EMERGENCY_REASON, body.reason);
+        await this.saveSetting(MOBILE_HOOK_SETTING_KEYS.EMERGENCY_REASON, body.reason);
       }
 
       // Log audit event
@@ -562,14 +562,14 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
   private async isEmergencyEnabled(): Promise<boolean> {
     const setting = await AppSetting.findOne({
-      where: { key: MOBILE_HOOKS.EMERGENCY_ENABLED },
+      where: { key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED },
     });
     return setting?.value !== 'false';
   }
 
   private async getEmergencyReason(): Promise<string | null> {
     const setting = await AppSetting.findOne({
-      where: { key: MOBILE_HOOKS.EMERGENCY_REASON },
+      where: { key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_REASON },
     });
     return setting?.value || null;
   }
@@ -580,7 +580,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
   private async getLastUpdated(): Promise<string | null> {
     const lastSetting = await AppSetting.findOne({
       where: {
-        key: Object.values(MOBILE_HOOKS),
+        key: Object.values(MOBILE_HOOK_SETTING_KEYS),
       },
       order: [['updateDate', 'DESC']],
     });

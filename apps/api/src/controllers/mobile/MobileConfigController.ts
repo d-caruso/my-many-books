@@ -8,7 +8,7 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting } from '../../models';
-import { MOBILE_HOOKS } from '@my-many-books/shared-types';
+import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 
 export interface MobileConfigResponse {
@@ -69,34 +69,34 @@ export class MobileConfigController extends BaseController {
 
     return {
       analyticsEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOKS.ANALYTICS_ENABLED),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED),
         defaults.analyticsEnabled
       ),
       errorReportingEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOKS.ERROR_REPORTING_ENABLED),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED),
         defaults.errorReportingEnabled
       ),
       offlineStorageEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED),
         defaults.offlineStorageEnabled
       ),
       performanceMonitoringEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED),
         defaults.performanceMonitoringEnabled
       ),
       batchUploadInterval: this.parseNumber(
-        settingsMap.get(MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL),
         defaults.batchUploadInterval
       ),
       maxOfflineEvents: this.parseNumber(
-        settingsMap.get(MOBILE_HOOKS.MAX_OFFLINE_EVENTS),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS),
         defaults.maxOfflineEvents
       ),
       emergencyEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOKS.EMERGENCY_ENABLED),
+        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED),
         defaults.emergencyEnabled
       ),
-      emergencyReason: settingsMap.get(MOBILE_HOOKS.EMERGENCY_REASON) || defaults.emergencyReason,
+      emergencyReason: settingsMap.get(MOBILE_HOOK_SETTING_KEYS.EMERGENCY_REASON) || defaults.emergencyReason,
     };
   }
 

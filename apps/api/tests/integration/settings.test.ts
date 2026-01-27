@@ -39,7 +39,7 @@ jest.mock('../../src/container', () => {
         return { statusCode: 200, success: true, data: settings };
       },
       getSetting: async (req: any) => {
-        const key = req.pathParameters?.key;
+        const key = req.params?.key;
         const value = SettingsService.getSetting(key);
         const allSettings = SettingsService.getAllSettings();
         const setting = allSettings.find((s: any) => s.key === key);
@@ -53,7 +53,7 @@ jest.mock('../../src/container', () => {
         return { statusCode: 200, success: true, data: settings };
       },
       updateSetting: async (req: any) => {
-        const key = req.pathParameters?.key;
+        const key = req.params?.key;
         const body = req.body ? JSON.parse(req.body) : {};
         const { value } = body;
         const updated = await SettingsService.updateSetting(key, value);

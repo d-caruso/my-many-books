@@ -9,7 +9,7 @@ import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
-import { MOBILE_HOOKS } from '@my-many-books/shared-types';
+import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 
 const ACTIONS_BASE = 'mobile.hooks.actions';
@@ -112,14 +112,14 @@ const AVAILABLE_EVENTS = [
 
 interface HookActionConfigResponse {
   actions: HookActionMapping;
-  action_settings: ActionSettings;
+  actionSettings: ActionSettings;
   availableEvents: string[];
   lastUpdated: string | null;
 }
 
 interface HookActionConfigUpdateRequest {
   actions?: HookActionMapping;
-  action_settings?: Partial<ActionSettings>;
+  actionSettings?: Partial<ActionSettings>;
 }
 
 interface ActionSettingsUpdateRequest {
@@ -178,11 +178,11 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       }
 
       // Update action settings
-      if (body.action_settings) {
-        for (const [actionType, settings] of Object.entries(body.action_settings)) {
+      if (body.actionSettings) {
+        for (const [actionType, settings] of Object.entries(body.actionSettings)) {
           const key = `${ACTIONS_BASE}.settings.${actionType}`;
           await this.updateConfigSetting(key, JSON.stringify(settings));
-          updatedSettings.push(`action_settings.${actionType}`);
+          updatedSettings.push(`actionSettings.${actionType}`);
         }
       }
 
@@ -253,13 +253,13 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       const updatedSettings: string[] = [];
 
       if (typeof body.analytics === 'boolean') {
-        await this.updateConfigSetting(MOBILE_HOOKS.ANALYTICS_ENABLED, String(body.analytics));
+        await this.updateConfigSetting(MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED, String(body.analytics));
         updatedSettings.push('analytics');
       }
 
       if (typeof body.errorReporting === 'boolean') {
         await this.updateConfigSetting(
-          MOBILE_HOOKS.ERROR_REPORTING_ENABLED,
+          MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED,
           String(body.errorReporting)
         );
         updatedSettings.push('errorReporting');
@@ -312,7 +312,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       }> = [];
 
       for (const actionType of mappedActions) {
-        const actionSettings = config.action_settings[actionType] as ActionSettings[ActionType];
+        const actionSettings = config.actionSettings[actionType] as ActionSettings[ActionType];
         let settings: Record<string, unknown> = { ...actionSettings };
 
         switch (actionType) {
@@ -386,7 +386,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     const actions: Record<string, unknown> = {};
 
     for (const actionType of Object.values(ACTION_TYPES)) {
-      const settings = config.action_settings[actionType];
+      const settings = config.actionSettings[actionType];
       const warnings = this.getActionWarnings(settings);
 
       actions[actionType] = {
@@ -422,7 +422,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     try {
       // Get current settings for this action type
       const currentConfig = await this.loadConfig();
-      const currentSettings = currentConfig.action_settings[actionType];
+      const currentSettings = currentConfig.actionSettings[actionType];
 
       // Merge with new settings
       const updatedSettings = { ...currentSettings, ...body };
@@ -440,7 +440,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       // Log audit event
       getAuditLogService().logActionFromRequest(
         request,
-        'UPDATE_ACTION_SETTINGS',
+        'UPDATE_actionSettings',
         'mobile_hook_action_settings',
         actionType,
         {
@@ -490,7 +490,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
     try {
       const config = await this.loadConfig();
-      const actionSettings = config.action_settings[actionType] as ActionSettings[ActionType];
+      const actionSettings = config.actionSettings[actionType] as ActionSettings[ActionType];
 
       if (!actionSettings) {
         return this.createErrorResponse(`No settings found for action type: ${actionType}`, 404);
@@ -820,7 +820,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
     return {
       actions,
-      action_settings: actionSettings,
+      actionSettings: actionSettings,
       availableEvents: availableEvents,
       lastUpdated: lastUpdatedSetting?.updateDate?.toISOString() || null,
     };

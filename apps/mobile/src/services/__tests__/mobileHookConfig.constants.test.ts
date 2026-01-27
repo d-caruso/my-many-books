@@ -11,7 +11,7 @@ import {
   MOBILE_CONFIG_LIMITS
 } from '../hooks/eventsSchema';
 
-import { MOBILE_HOOKS } from '@my-many-books/shared-types';
+import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 
 describe('Mobile Hook Configuration Constants', () => {
   describe('Event constants are properly exported', () => {
@@ -72,16 +72,16 @@ describe('Mobile Hook Configuration Constants', () => {
 
   describe('Mobile configuration constants', () => {
     it('should have mobile config keys properly defined', () => {
-      expect(MOBILE_HOOKS).toBeDefined();
-      expect(Object.isFrozen(MOBILE_HOOKS)).toBe(true);
+      expect(MOBILE_HOOK_SETTING_KEYS).toBeDefined();
+      expect(Object.isFrozen(MOBILE_HOOK_SETTING_KEYS)).toBe(true);
       
       // Check all expected config keys exist
-      expect(MOBILE_HOOKS.ANALYTICS_ENABLED).toBe('mobile.hooks.analytics.enabled');
-      expect(MOBILE_HOOKS.ERROR_REPORTING_ENABLED).toBe('mobile.hooks.errorReporting.enabled');
-      expect(MOBILE_HOOKS.OFFLINE_STORAGE_ENABLED).toBe('mobile.hooks.offlineStorage.enabled');
-      expect(MOBILE_HOOKS.PERFORMANCE_MONITORING_ENABLED).toBe('mobile.hooks.performanceMonitoring.enabled');
-      expect(MOBILE_HOOKS.BATCH_UPLOAD_INTERVAL).toBe('mobile.hooks.batchUploadInterval');
-      expect(MOBILE_HOOKS.MAX_OFFLINE_EVENTS).toBe('mobile.hooks.maxOfflineEvents');
+      expect(MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED).toBe('mobile.hooks.analytics.enabled');
+      expect(MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED).toBe('mobile.hooks.errorReporting.enabled');
+      expect(MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED).toBe('mobile.hooks.offlineStorage.enabled');
+      expect(MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED).toBe('mobile.hooks.performanceMonitoring.enabled');
+      expect(MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL).toBe('mobile.hooks.batchUploadInterval');
+      expect(MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS).toBe('mobile.hooks.maxOfflineEvents');
     });
 
     it('should have mobile config limits properly defined', () => {
@@ -148,15 +148,15 @@ describe('Mobile Hook Configuration Constants', () => {
       expect(Object.isFrozen(RESOURCE_TYPES)).toBe(true);
       expect(Object.isFrozen(OPERATION_TYPES)).toBe(true);
       expect(Object.isFrozen(OPERATION_STATUSES)).toBe(true);
-      expect(Object.isFrozen(MOBILE_HOOKS)).toBe(true);
+      expect(Object.isFrozen(MOBILE_HOOK_SETTING_KEYS)).toBe(true);
       expect(Object.isFrozen(MOBILE_CONFIG_LIMITS)).toBe(true);
 
       // Attempting to modify should fail silently or throw in strict mode
       expect(() => {
-        (MOBILE_HOOKS as Record<string, unknown>).NEW_KEY = 'test';
+        (MOBILE_HOOK_SETTING_KEYS as Record<string, unknown>).NEW_KEY = 'test';
       }).not.toThrow(); // Will fail silently in non-strict mode
       
-      expect((MOBILE_HOOKS as Record<string, unknown>).NEW_KEY).toBeUndefined();
+      expect((MOBILE_HOOK_SETTING_KEYS as Record<string, unknown>).NEW_KEY).toBeUndefined();
     });
   });
 
@@ -173,21 +173,18 @@ describe('Mobile Hook Configuration Constants', () => {
       expect(cacheStatus.ttl).toBe(5 * 60 * 1000); // 5 minute TTL should be consistent
     });
 
-    it('should validate event type strings match MOBILE_EVENTS structure', () => {
-      // Common event types that mobile config service should recognize
-      const commonEventTypes = [
-        'analytics',
-        'error_reporting',
-        'offline_storage',
-        'performance_monitoring'
+    it('should have setting keys for common event types', () => {
+      const requiredKeys = [
+        'ANALYTICS_ENABLED',
+        'ERROR_REPORTING_ENABLED',
+        'OFFLINE_STORAGE_ENABLED',
+        'PERFORMANCE_MONITORING_ENABLED'
       ];
 
-      // These should map to our MOBILE_EVENTS structure
-      for (const eventType of commonEventTypes) {
-        // The mobile hook config service should be able to handle these event types
-        // This validates that the constants are properly structured for service consumption
-        expect(typeof eventType).toBe('string');
-        expect(eventType.length).toBeGreaterThan(0);
+      // These should map to our MOBILE_HOOK_SETTING_KEYS structure
+      for (const key of requiredKeys) {
+        expect(MOBILE_HOOK_SETTING_KEYS).toHaveProperty(key);
+        expect(MOBILE_HOOK_SETTING_KEYS[key]).toMatch(/^mobile\.hooks\./);
       }
     });
 

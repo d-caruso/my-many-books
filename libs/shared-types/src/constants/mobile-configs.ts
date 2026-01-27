@@ -4,7 +4,7 @@
 
 const BASE = 'mobile.hooks';
 
-export const MOBILE_HOOKS = {
+export const MOBILE_HOOK_SETTING_KEYS = {
     ENABLED: `${BASE}.enabled`,
     ACTIONS_MAPPINGS: `${BASE}.actions.mappings`,
     ACTIONS_SETTINGS: `${BASE}.actions.settings`,

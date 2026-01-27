@@ -25,6 +25,7 @@ import request from 'supertest';
 import app from '../../../src/app';
 import { AppSetting } from '../../../src/models';
 import { ACTION_TYPES } from '../../../src/controllers/admin/AdminMobileHooksActionsConfigController';
+import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -105,37 +106,37 @@ describe('Mobile Configuration API Integration Tests', () => {
       it('should return mobile hook configuration with default values', async () => {
         const mockSettings = [
           {
-            key: 'mobile.hooks.analytics.enabled',
+            key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED,
             value: 'true',
             category: 'mobile_hooks',
             type: 'boolean',
           },
           {
-            key: 'mobile.hooks.errorReporting.enabled',
+            key: MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED,
             value: 'true',
             category: 'mobile_hooks',
             type: 'boolean',
           },
           {
-            key: 'mobile.hooks.offlineStorage.enabled',
+            key: MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
             value: 'true',
             category: 'mobile_hooks',
             type: 'boolean',
           },
           {
-            key: 'mobile.hooks.performanceMonitoring.enabled',
+            key: MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
             value: 'false',
             category: 'mobile_hooks',
             type: 'boolean',
           },
           {
-            key: 'mobile.hooks.batchUploadInterval',
+            key: MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL,
             value: '300',
             category: 'mobile_hooks',
             type: 'number',
           },
           {
-            key: 'mobile.hooks.maxOfflineEvents',
+            key: MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS,
             value: '1000',
             category: 'mobile_hooks',
             type: 'number',
@@ -179,11 +180,11 @@ describe('Mobile Configuration API Integration Tests', () => {
       it('should return emergency status fields', async () => {
         const mockSettings = [
           {
-            key: 'mobile.hooks.emergency.enabled',
+            key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED,
             value: 'true',
           },
           {
-            key: 'mobile.hooks.emergency.reason',
+            key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_REASON,
             value: 'Maintenance mode',
           },
         ];
@@ -206,12 +207,12 @@ describe('Mobile Configuration API Integration Tests', () => {
     describe('GET /api/v1/admin/mobile-hooks/settings/listeners - Get Listener Settings', () => {
       it('should return listener settings configuration', async () => {
         const mockSettings = [
-          { key: 'mobile.hooks.analytics.enabled', value: 'true' },
-          { key: 'mobile.hooks.errorReporting.enabled', value: 'true' },
-          { key: 'mobile.hooks.offlineStorage.enabled', value: 'true' },
-          { key: 'mobile.hooks.performanceMonitoring.enabled', value: 'false' },
-          { key: 'mobile.hooks.batchUploadInterval', value: '300' },
-          { key: 'mobile.hooks.maxOfflineEvents', value: '1000' },
+          { key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED, value: 'true' },
+          { key: MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED, value: 'true' },
+          { key: MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED, value: 'true' },
+          { key: MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED, value: 'false' },
+          { key: MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL, value: '300' },
+          { key: MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS, value: '1000' },
         ];
 
         (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
@@ -258,7 +259,7 @@ describe('Mobile Configuration API Integration Tests', () => {
         };
 
         const mockSetting = {
-          key: 'mobile.hooks.analytics.enabled',
+          key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED,
           value: 'true',
           update: jest.fn().mockResolvedValue(undefined),
         };
@@ -335,16 +336,16 @@ describe('Mobile Configuration API Integration Tests', () => {
         };
 
         const mockSetting = {
-          key: 'mobile.hooks.analytics.enabled',
+          key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED,
           value: 'true',
           update: jest.fn().mockResolvedValue(undefined),
         };
 
         (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
         (AppSetting.findAll as jest.Mock).mockResolvedValue([
-          { key: 'mobile.hooks.analytics.enabled', value: 'false' },
-          { key: 'mobile.hooks.errorReporting.enabled', value: 'true' },
-          { key: 'mobile.hooks.batchUploadInterval', value: '300' },
+          { key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED, value: 'false' },
+          { key: MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED, value: 'true' },
+          { key: MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL, value: '300' },
         ]);
 
         const response = await request(app)
@@ -385,7 +386,7 @@ describe('Mobile Configuration API Integration Tests', () => {
       it('should return hook action mappings configuration', async () => {
         const mockSettings = [
           {
-            key: 'mobile.hooks.actions.mappings',
+            key: MOBILE_HOOK_SETTING_KEYS.ACTIONS_MAPPINGS,
             value: '{"error.unhandled":["email","slack","database"]}',
           },
         ];
@@ -401,9 +402,9 @@ describe('Mobile Configuration API Integration Tests', () => {
           .expect(200);
 
         expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('action_settings');
+        expect(response.body.data).toHaveProperty('actionSettings');
         expect(response.body.data).toHaveProperty('actions');
-        expect(response.body.data).toHaveProperty('available_events');
+        expect(response.body.data).toHaveProperty('availableEvents');
       });
 
       it('should handle empty hook action configuration', async () => {
@@ -416,7 +417,7 @@ describe('Mobile Configuration API Integration Tests', () => {
           .expect(200);
 
         expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('action_settings');
+        expect(response.body.data).toHaveProperty('actionSettings');
         expect(response.body.data).toHaveProperty('actions');
       });
     });
@@ -431,7 +432,7 @@ describe('Mobile Configuration API Integration Tests', () => {
         };
 
         const mockSetting = {
-          key: 'mobile.hooks.actions.mappings',
+          key: MOBILE_HOOK_SETTING_KEYS.ACTIONS_MAPPINGS,
           value: '{}',
           update: jest.fn().mockResolvedValue(undefined),
         };
@@ -483,7 +484,7 @@ describe('Mobile Configuration API Integration Tests', () => {
         };
 
         const mockSetting = {
-          key: `mobile.hooks.actions.settings.${ACTION_TYPES.EMAIL}`,
+          key: `${MOBILE_HOOK_SETTING_KEYS.ACTIONS_SETTINGS}.${ACTION_TYPES.EMAIL}`,
           value: '{}',
           update: jest.fn().mockResolvedValue(undefined),
         };
@@ -647,7 +648,7 @@ describe('Mobile Configuration API Integration Tests', () => {
       };
 
       const mockSetting = {
-        key: 'mobile.hooks.analytics.enabled',
+        key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED,
         value: 'true',
         update: jest.fn().mockResolvedValue(undefined),
       };
