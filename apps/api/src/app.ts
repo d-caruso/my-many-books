@@ -32,6 +32,7 @@ import { initializeI18n } from '@my-many-books/shared-i18n';
 import { getLogger } from '@my-many-books/shared-logging';
 import { SettingsService } from './services/SettingsService';
 import { parseTextPlainJson } from './middleware/parseTextPlainJson';
+import { HEALTH_STATUS } from '@my-many-books/shared-types';
 
 const app: express.Express = express();
 const isTestEnvironment = process.env['NODE_ENV'] === 'test';
@@ -77,7 +78,7 @@ const BASE_PATH = `${API_PREFIX}/${API_ROUTE_VERSION}`;
 // Apply public rate limiter to health check
 app.get(`${BASE_PATH}/health`, publicLimiter, (_req, res): void => {
   res.status(200).json({
-    status: 'healthy',
+    status: HEALTH_STATUS.HEALTHY,
     timestamp: new Date().toISOString(),
     version: process.env['API_VERSION'] || '1.0.0',
     environment: process.env['NODE_ENV'] || 'development',

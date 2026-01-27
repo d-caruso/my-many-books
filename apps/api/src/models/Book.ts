@@ -6,7 +6,7 @@ import { DataTypes, Sequelize, Association } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
 import { BookAttributes, BookCreationAttributes, BookStatus } from './interfaces/ModelInterfaces';
 import { TABLE_NAMES } from '@/utils/constants';
-import { BOOK_STATUS, BOOK_STATUSES } from '@my-many-books/shared-validation';
+import { BOOK_STATUS, BOOK_STATUSES } from '@my-many-books/shared-types';
 import { Author } from './Author';
 import { Category } from './Category';
 import { createModel } from '../utils/sequelize-helpers';

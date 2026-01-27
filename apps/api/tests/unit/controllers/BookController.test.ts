@@ -1,7 +1,7 @@
 import { BookController } from '../../../src/controllers/BookController';
 import { Book, Author, Category } from '../../../src/models';
 import { isbnService } from '../../../src/services/isbnService';
-import { BOOK_STATUS } from '@my-many-books/shared-validation';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 import { container } from '../../../src/container';
 import { TYPES } from '../../../src/container/types';
 import { BookService } from '../../../src/services/book/BookService';

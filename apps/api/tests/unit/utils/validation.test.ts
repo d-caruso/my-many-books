@@ -8,7 +8,7 @@ import {
   validateBook,
   validatePagination,
 } from '@/utils/validation';
-import { BOOK_STATUS } from '@my-many-books/shared-validation';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 
 describe('Validation Utils', () => {
   describe('validateAuthor', () => {

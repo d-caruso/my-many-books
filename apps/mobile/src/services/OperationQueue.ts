@@ -6,6 +6,7 @@ import i18n from '../i18n';
 import { databaseService } from './database/DatabaseService';
 import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
 import { OPERATION_STATUSES, RETRY_REASONS } from './hooks/eventsSchema';
+import { HEALTH_STATUS } from '@my-many-books/shared-types';
 
 const QUEUE_STORAGE_KEY = '@operation_queue';
 const MAX_QUEUE_SIZE = 100;
@@ -445,7 +446,7 @@ export class OperationQueue {
       capacityUsage,
       failureRate,
       timestamp: new Date().toISOString(),
-      status: isHealthy ? 'healthy' : 'degraded'
+      status: isHealthy ? HEALTH_STATUS.HEALTHY : HEALTH_STATUS.DEGRADED
     });
 
     return metrics;

@@ -1,3 +1,5 @@
+import { BOOK_STATUSES } from '@my-many-books/shared-types';
+
 /**
  * Book Validation Constants
  *
@@ -22,23 +24,6 @@ export const BOOK_CONSTRAINTS = Object.freeze({
 } as const);
 
 /**
- * Book status enum values
- */
-export const BOOK_STATUS = Object.freeze({
-  READING: 'reading',
-  PAUSED: 'paused',
-  FINISHED: 'finished',
-} as const);
-
-/**
- * Array of all book status values (derived from BOOK_STATUS)
- * Used for validation schemas
- */
-export const BOOK_STATUSES = Object.freeze(
-  Object.values(BOOK_STATUS)
-) as readonly (typeof BOOK_STATUS[keyof typeof BOOK_STATUS])[];
-
-/**
  * Book validation error messages
  */
 export const BOOK_ERROR_MESSAGES = Object.freeze({
@@ -50,8 +35,3 @@ export const BOOK_ERROR_MESSAGES = Object.freeze({
   EDITION_NUMBER_INVALID: 'Edition number must be a positive integer',
   EDITION_DATE_INVALID: 'Edition date must be a valid date',
 } as const);
-
-/**
- * Type exports
- */
-export type BookStatus = typeof BOOK_STATUSES[number];

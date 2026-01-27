@@ -15,6 +15,7 @@ import { IsbnController } from '../../../src/controllers/IsbnController';
 import { isbnService } from '../../../src/services/isbnService';
 import { validateIsbn } from '../../../src/utils/isbn';
 import { UniversalRequest } from '../../../src/types';
+import { HEALTH_STATUS } from '@my-many-books/shared-types';
 
 describe('IsbnController', () => {
   let isbnController: IsbnController;
@@ -27,7 +28,7 @@ describe('IsbnController', () => {
     mockRequest = {
       headers: { 'accept-language': 'en' },
       queryStringParameters: {},
-      pathParameters: {},
+      params: {},
       user: undefined,
     };
 
@@ -50,7 +51,7 @@ describe('IsbnController', () => {
 
       (isbnService.lookupBook as jest.Mock).mockResolvedValue(mockResult);
 
-      mockRequest.pathParameters = { isbn: '9780140449136' };
+      mockRequest.params = { isbn: '9780140449136' };
 
       const result = await isbnController.lookupBook(mockRequest);
 
@@ -260,12 +261,12 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect((result.data as { status: string; available: boolean; responseTime: number }).status).toBe('healthy');
+      expect((result.data as { status: string; available: boolean; responseTime: number }).status).toBe(HEALTH_STATUS.HEALTHY);
       expect((result.data as { status: string; available: boolean; responseTime: number }).available).toBe(true);
       expect((result.data as { status: string; available: boolean; responseTime: number }).responseTime).toBe(150);
     });
 
-    it('should return unhealthy status', async () => {
+    it('should return degraded status', async () => {
       const mockHealthResult = {
         available: false,
         error: 'Service unavailable',
@@ -278,7 +279,7 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(503);
       expect(result.success).toBe(true);
-      expect((result.data as { status: string; available: boolean; error: string }).status).toBe('unhealthy');
+      expect((result.data as { status: string; available: boolean; error: string }).status).toBe(HEALTH_STATUS.DEGRADED);
       expect((result.data as { status: string; available: boolean; error: string }).available).toBe(false);
       expect((result.data as { status: string; available: boolean; error: string }).error).toBe('Service unavailable');
     });

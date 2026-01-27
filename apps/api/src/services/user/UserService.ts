@@ -16,7 +16,7 @@ import {
 } from '../../repositories/book/BookRepositoryTypes';
 import { ApplicationError } from '../../errors/ApplicationError';
 import { UserCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
-import { BOOK_STATUS } from '@my-many-books/shared-validation';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 
 export type UserServiceErrorCode = 'USER_NOT_FOUND';
 

@@ -18,7 +18,7 @@ import { validateIsbn } from '../utils/isbn';
 import { isbnService } from '../services/isbnService';
 import { UniversalRequest } from '../types';
 import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
-import { BOOK_STATUSES } from '@my-many-books/shared-validation';
+import { BOOK_STATUSES } from '@my-many-books/shared-types';
 import { BookService, BookServiceError, BookUserContext } from '../services/book/BookService';
 import { CreateBookDTO } from '../dtos/book/CreateBookDTO';
 import { UpdateBookDTO } from '../dtos/book/UpdateBookDTO';

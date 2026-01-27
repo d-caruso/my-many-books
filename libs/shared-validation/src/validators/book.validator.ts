@@ -5,15 +5,12 @@
  * Framework-agnostic, can be used by Joi, Zod, or custom validators.
  */
 
-import {
-  BOOK_CONSTRAINTS,
-  BOOK_STATUSES,
-  BOOK_ERROR_MESSAGES,
-  BookStatus,
-} from '../constants/book.constants';
+import { BOOK_CONSTRAINTS, BOOK_ERROR_MESSAGES } from '../constants/book.constants';
+import { BOOK_STATUSES } from '@my-many-books/shared-types';
 import { ValidationResult } from '../types/validation.types';
 import { isEmpty, trim } from '../utils/string.utils';
 import { getI18nKey } from '../errors/i18n-keys';
+import { BookStatus } from '@my-many-books/shared-types'
 
 /**
  * Validate book title

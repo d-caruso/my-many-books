@@ -1,9 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OperationQueue } from '../OperationQueue';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
+import { HEALTH_STATUS, RESOURCE_TYPES } from '@my-many-books/shared-types';
+import { OPERATION_TYPES } from '../hooks/eventsSchema';
 
 // Mock AsyncStorage
-jest.mock('@react-native-async-storage/async-storage', () => ({
+jest.mock('@react-native-async-storage/async-storage', () => ({ 
   getItem: jest.fn(),
   setItem: jest.fn(),
 }));
@@ -85,8 +87,8 @@ describe('OperationQueue Hookey Integration', () => {
     it('should handle existing queue data without errors', async () => {
       const existingQueue = [{
         id: 'op-123',
-        type: 'create',
-        resource: 'book',
+        type: OPERATION_TYPES.CREATE,
+        resource: RESOURCE_TYPES.BOOK,
         payload: { title: 'Test Book' },
         timestamp: Date.now(),
         retryCount: 0,
@@ -109,7 +111,7 @@ describe('OperationQueue Hookey Integration', () => {
     });
 
     it('should emit QUEUE.ENQUEUE event when operation is added', async () => {
-      const operationId = await queue.enqueue('create', 'book', {
+      const operationId = await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
         author: 'Test Author',
@@ -120,8 +122,8 @@ describe('OperationQueue Hookey Integration', () => {
         MOBILE_EVENTS.QUEUE.ENQUEUE,
         expect.objectContaining({
           operationId: operationId,
-          type: 'create',
-          resource: 'book',
+          type: OPERATION_TYPES.CREATE,
+          resource: RESOURCE_TYPES.BOOK,
           queueSize: 1,
           maxRetries: 3
         })
@@ -132,7 +134,7 @@ describe('OperationQueue Hookey Integration', () => {
       // Mock isNearLimit to return true
       jest.spyOn(queue, 'isNearLimit').mockReturnValue(true);
 
-      await queue.enqueue('create', 'book', {
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
         author: 'Test Author',
@@ -154,8 +156,8 @@ describe('OperationQueue Hookey Integration', () => {
       // Fill queue to capacity (mock scenario)
       const mockQueue = Array.from({ length: 100 }, (_, i) => ({
         id: `op-${i}`,
-        type: 'create',
-        resource: 'book',
+        type: OPERATION_TYPES.CREATE,
+        resource: RESOURCE_TYPES.BOOK,
         payload: { title: `Book ${i}` },
         timestamp: Date.now(),
         retryCount: 0,
@@ -166,7 +168,7 @@ describe('OperationQueue Hookey Integration', () => {
       // Set the queue to be at capacity
       (queue as unknown as { queue: typeof mockQueue }).queue = mockQueue;
 
-      await queue.enqueue('create', 'book', {
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-new',
         title: 'New Book',
         author: 'New Author',
@@ -194,7 +196,7 @@ describe('OperationQueue Hookey Integration', () => {
       const error = new Error('Storage write failed');
       mockAsyncStorage.setItem.mockRejectedValue(error);
 
-      await queue.enqueue('create', 'book', {
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
         author: 'Test Author',
@@ -214,7 +216,7 @@ describe('OperationQueue Hookey Integration', () => {
     it('should not emit storage error when persistence succeeds', async () => {
       mockAsyncStorage.setItem.mockResolvedValue(undefined);
 
-      await queue.enqueue('create', 'book', {
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
         author: 'Test Author',
@@ -237,7 +239,7 @@ describe('OperationQueue Hookey Integration', () => {
 
     it('should emit QUEUE.RETRY when operation retries', async () => {
       // Add operation to queue
-      await queue.enqueue('create', 'book', {
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
         author: 'Test Author', 
@@ -257,8 +259,8 @@ describe('OperationQueue Hookey Integration', () => {
         MOBILE_EVENTS.QUEUE.RETRY,
         expect.objectContaining({
           operationId: expect.any(String),
-          type: 'create',
-          resource: 'book',
+          type: OPERATION_TYPES.CREATE,
+          resource: RESOURCE_TYPES.BOOK,
           retryCount: 1,
           maxRetries: 3,
           nextAttempt: 2
@@ -268,7 +270,7 @@ describe('OperationQueue Hookey Integration', () => {
 
     it('should emit QUEUE.FAILED when operation exceeds max retries', async () => {
       // Add operation to queue
-      const operationId = await queue.enqueue('create', 'book', {
+      const operationId = await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
         author: 'Test Author',
@@ -288,8 +290,8 @@ describe('OperationQueue Hookey Integration', () => {
         MOBILE_EVENTS.QUEUE.FAILED,
         expect.objectContaining({
           operationId: operationId,
-          type: 'create',
-          resource: 'book',
+          type: OPERATION_TYPES.CREATE,
+          resource: RESOURCE_TYPES.BOOK,
           retryCount: 0, // Reset to 0 for cross-session retry capability
           maxRetries: 1,
           reason: 'max_retries_exceeded',
@@ -300,7 +302,7 @@ describe('OperationQueue Hookey Integration', () => {
 
     it('should not emit retry/failed events for successful operations', async () => {
       // Add operation to queue
-      await queue.enqueue('create', 'book', {
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
         author: 'Test Author',
@@ -331,7 +333,7 @@ describe('OperationQueue Hookey Integration', () => {
     });
 
     it('should include operation details in all queue events', async () => {
-      const operationId = await queue.enqueue('update', 'author', {
+      const operationId = await queue.enqueue(OPERATION_TYPES.UPDATE, RESOURCE_TYPES.AUTHOR, {
         id: 'author-123',
         name: 'Updated Author'
       }, 5);
@@ -343,19 +345,19 @@ describe('OperationQueue Hookey Integration', () => {
       expect(enqueueCalls).toHaveLength(1);
       expect(enqueueCalls[0][1]).toEqual(expect.objectContaining({
         operationId: operationId,
-        type: 'update',
-        resource: 'author',
+        type: OPERATION_TYPES.UPDATE,
+        resource: RESOURCE_TYPES.AUTHOR,
         queueSize: 1,
         maxRetries: 5
       }));
     });
 
     it('should handle different resource types correctly', async () => {
-      const bookOperationId = await queue.enqueue('create', 'book', {
+      const bookOperationId = await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         title: 'Test Book'
       });
 
-      const categoryOperationId = await queue.enqueue('delete', 'category', {
+      const categoryOperationId = await queue.enqueue(OPERATION_TYPES.DELETE, RESOURCE_TYPES.CATEGORY, {
         id: 'cat-123'
       });
 
@@ -363,14 +365,14 @@ describe('OperationQueue Hookey Integration', () => {
       
       expect(calls[0][1]).toEqual(expect.objectContaining({
         operationId: bookOperationId,
-        resource: 'book',
-        type: 'create'
+        resource: RESOURCE_TYPES.BOOK,
+        type: OPERATION_TYPES.CREATE
       }));
 
       expect(calls[1][1]).toEqual(expect.objectContaining({
         operationId: categoryOperationId,
-        resource: 'category',
-        type: 'delete'
+        resource: RESOURCE_TYPES.CATEGORY,
+        type: OPERATION_TYPES.DELETE
       }));
     });
   });
@@ -383,7 +385,7 @@ describe('OperationQueue Hookey Integration', () => {
 
     it('should emit events and continue queue operations normally', async () => {
       // Should be able to enqueue and emit events
-      const operationId = await queue.enqueue('create', 'book', {
+      const operationId = await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         title: 'Test Book',
         author: 'Test Author',
         status: 'reading'
@@ -400,15 +402,15 @@ describe('OperationQueue Hookey Integration', () => {
         MOBILE_EVENTS.QUEUE.ENQUEUE,
         expect.objectContaining({
           operationId: operationId,
-          type: 'create',
-          resource: 'book'
+          type: OPERATION_TYPES.CREATE,
+          resource: RESOURCE_TYPES.BOOK
         })
       );
     });
 
     it('should handle queue processing with fire-and-forget hooks', async () => {
       // Add operation
-      await queue.enqueue('create', 'book', {
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         title: 'Test Book'
       });
 
@@ -434,7 +436,7 @@ describe('OperationQueue Hookey Integration', () => {
 
     it('should emit QUEUE.DEQUEUE event when operation is removed', async () => {
       // First add an operation
-      const operationId = await queue.enqueue('create', 'book', {
+      const operationId = await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book'
       });
@@ -448,8 +450,8 @@ describe('OperationQueue Hookey Integration', () => {
         MOBILE_EVENTS.QUEUE.DEQUEUE,
         expect.objectContaining({
           operationId: operationId,
-          type: 'create',
-          resource: 'book',
+          type: OPERATION_TYPES.CREATE,
+          resource: RESOURCE_TYPES.BOOK,
           queueSize: 0,
           remainingOperations: 0
         })
@@ -458,8 +460,8 @@ describe('OperationQueue Hookey Integration', () => {
 
     it('should emit QUEUE.CLEARED event when queue is cleared', async () => {
       // Add some operations
-      await queue.enqueue('create', 'book', { title: 'Book 1' });
-      await queue.enqueue('create', 'author', { name: 'Author 1' });
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, { title: 'Book 1' });
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.AUTHOR, { name: 'Author 1' });
       
       mockMobileHooks.emit.mockClear(); // Clear enqueue events
 
@@ -479,8 +481,8 @@ describe('OperationQueue Hookey Integration', () => {
 
     it('should emit QUEUE.PROCESS.START and QUEUE.PROCESS.COMPLETE events during processing', async () => {
       // Add operations
-      await queue.enqueue('create', 'book', { title: 'Book 1' });
-      await queue.enqueue('create', 'author', { name: 'Author 1' });
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, { title: 'Book 1' });
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.AUTHOR, { name: 'Author 1' });
 
       // Mock successful API executor
       const mockApiExecutor = jest.fn().mockResolvedValue({ success: true });
@@ -519,8 +521,8 @@ describe('OperationQueue Hookey Integration', () => {
 
     it('should track processing metrics correctly', async () => {
       // Add operations with mixed success/failure
-      await queue.enqueue('create', 'book', { title: 'Book 1' }, 1);
-      await queue.enqueue('create', 'book', { title: 'Book 2' }, 1);
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, { title: 'Book 1' }, 1);
+      await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, { title: 'Book 2' }, 1);
 
       // Mock API executor with one success, one failure
       let callCount = 0;
@@ -576,7 +578,9 @@ describe('OperationQueue Hookey Integration', () => {
           total: expect.any(Number),
           healthScore: expect.any(Number),
           isHealthy: expect.any(Boolean),
-          status: expect.stringMatching(/^(healthy|degraded)$/),
+          status: expect.stringMatching(
+            new RegExp(`^(${HEALTH_STATUS.HEALTHY}|${HEALTH_STATUS.DEGRADED})$`)
+          ),
           timestamp: expect.any(String)
         })
       );
@@ -587,8 +591,8 @@ describe('OperationQueue Hookey Integration', () => {
       const staleTimestamp = Date.now() - (2 * 60 * 60 * 1000); // 2 hours ago
       queue['queue'] = [{
         id: 'old-op',
-        type: 'create',
-        resource: 'book',
+        type: OPERATION_TYPES.CREATE,
+        resource: RESOURCE_TYPES.BOOK,
         payload: { title: 'Old Book' },
         timestamp: staleTimestamp,
         retryCount: 0,

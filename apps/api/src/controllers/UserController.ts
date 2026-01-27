@@ -13,7 +13,7 @@ import { toUserResponseDTO } from '../dtos/user/UserResponseDTO';
 import { UserService, UserServiceError } from '../services/user/UserService';
 import { BookEntity } from '../repositories/book/BookRepositoryTypes';
 import { BookStatus } from '@/models/interfaces/ModelInterfaces';
-import { BOOK_STATUSES } from '@my-many-books/shared-validation';
+import { BOOK_STATUSES } from '@my-many-books/shared-types';
 
 const toBookView = (book: BookEntity): object => ({
   id: book.id,

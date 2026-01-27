@@ -5,6 +5,7 @@
 
 import request from 'supertest';
 import app from '../../src/app';
+import { HEALTH_STATUS } from '@my-many-books/shared-types';
 
 describe('Express App Integration', () => {
   describe('Health endpoint', () => {
@@ -13,7 +14,7 @@ describe('Express App Integration', () => {
         .get('/api/v1/health')
         .expect(200);
 
-      expect(response.body).toHaveProperty('status', 'healthy');
+      expect(response.body).toHaveProperty('status', HEALTH_STATUS.HEALTHY);
       expect(response.body).toHaveProperty('timestamp');
       expect(response.body).toHaveProperty('version');
       expect(response.body.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
@@ -79,7 +80,7 @@ describe('Express App Integration', () => {
         .get('/api/v1/health')
         .expect(200);
 
-      expect(response.body.status).toBe('healthy');
+      expect(response.body.status).toBe(HEALTH_STATUS.HEALTHY);
     });
 
     it('should limit request size appropriately', async () => {

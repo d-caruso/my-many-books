@@ -3,7 +3,7 @@ import { ModelManager } from '../../../src/models';
 import { BookRepository } from '../../../src/repositories/book/BookRepository';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
-import { BOOK_STATUS } from '@my-many-books/shared-validation';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 import { Book } from '../../../src/models/Book';
 import { User } from '../../../src/models/User';
 

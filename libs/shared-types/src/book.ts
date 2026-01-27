@@ -5,9 +5,10 @@
 import { z } from 'zod';
 import { AuthorSchema } from './author';
 import { CategorySchema } from './category';
+import { BOOK_STATUS } from '@my-many-books/shared-types'
 
-export const BookStatusSchema = z.enum(['reading', 'paused', 'finished']).nullable();
-export type BookStatus = z.infer<typeof BookStatusSchema>;
+export const BookStatusSchema = z.enum(BOOK_STATUS).nullable();
+type InferredBookStatus = z.infer<typeof BookStatusSchema>;
 
 export const BookSchema = z.object({
   id: z.number().int(),
@@ -43,5 +44,5 @@ export interface BookCardProps {
   book: Book;
   onEdit?: (book: Book) => void;
   onDelete?: (bookId: number) => void;
-  onStatusChange?: (bookId: number, status: BookStatus) => void;
+  onStatusChange?: (bookId: number, status: InferredBookStatus) => void;
 }

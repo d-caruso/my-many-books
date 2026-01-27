@@ -12,8 +12,9 @@ import {
   CATEGORY_CONSTRAINTS,
   BOOK_CONSTRAINTS,
   ISBN_CONSTRAINTS,
-  BOOK_STATUSES,
 } from '@my-many-books/shared-validation';
+import { BOOK_STATUSES } from '@my-many-books/shared-types';
+
 
 // Base validation schemas
 export const baseValidationSchema = {

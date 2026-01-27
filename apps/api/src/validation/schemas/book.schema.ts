@@ -12,9 +12,8 @@ import {
   validateIsbn,
   ISBN_CONSTRAINTS,
   ISBN_PATTERNS,
-  BOOK_STATUSES,
 } from '@my-many-books/shared-validation';
-import { SORT_DIRECTION_VALUES, SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import { BOOK_STATUSES, SORT_DIRECTION_VALUES, SORT_DIRECTIONS } from '@my-many-books/shared-types';
 
 /**
  * Create book schema

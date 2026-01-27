@@ -11,6 +11,7 @@ import { ApiResponse } from '../common/ApiResponse';
 // A universal request interface to decouple the controller from the framework
 import { UniversalRequest } from '../types';
 import { getLogger } from '@my-many-books/shared-logging';
+import { HEALTH_STATUS } from '@my-many-books/shared-types';
 
 /*interface UniversalRequest {
   body?: unknown;
@@ -213,7 +214,7 @@ export class IsbnController extends BaseController {
     try {
       const healthResult = await isbnService.checkServiceHealth();
 
-      const status = healthResult.available ? 'healthy' : 'unhealthy';
+      const status = healthResult.available ? HEALTH_STATUS.HEALTHY : HEALTH_STATUS.DEGRADED;
       const statusCode = healthResult.available ? 200 : 503;
 
       return this.createSuccessResponse(

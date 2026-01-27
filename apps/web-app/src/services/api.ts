@@ -6,7 +6,7 @@
 import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
 import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
 import { BookFormData as WebBookFormData } from '../components/Book/BookForm';
-import type { BookFormData as SharedBookFormData, MobileHooksListenerSettings } from '@my-many-books/shared-types';
+import type { BookFormData as SharedBookFormData, MobileHooksListenerSettings, HealthStatus } from '@my-many-books/shared-types';
 import axios from 'axios';
 import { env } from '../config/env';
 import { authService } from './authService';
@@ -566,6 +566,23 @@ class ApiService {
     );
   }
 
+  async getAdminMobileHooksEmergencyStatus(): Promise<AdminMobileHooksEmergencyStatusResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/emergency');
+  }
+
+  async updateAdminMobileHooksEmergencyStatus(
+    request: AdminMobileHooksEmergencyStatusUpdateRequest
+  ): Promise<AdminMobileHooksEmergencyStatusUpdateResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/emergency', {
+      method: 'PUT',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async getAdminMobileHooksHealth(): Promise<AdminMobileHooksHealthResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/health');
+  }
+
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
     const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
@@ -1115,6 +1132,40 @@ export interface AdminMobileHooksActionTypeTestResponse {
   };
   settings: Record<string, unknown>;
   testedAt: string;
+}
+
+export interface AdminMobileHooksEmergencyStatusResponse {
+  enabled: boolean;
+  disabledAt: string | null;
+  disabledReason: string | null;
+}
+
+export interface AdminMobileHooksEmergencyStatusUpdateRequest {
+  enabled: boolean;
+  reason?: string;
+}
+
+export interface AdminMobileHooksEmergencyStatusUpdateResponse {
+  enabled: boolean;
+  updatedAt: string;
+  message: string;
+}
+
+export interface AdminMobileHooksHealthChecks {
+  settingsLoaded: boolean;
+  emergencyEnabled: boolean;
+  analyticsActive: boolean;
+  errorReportingActive: boolean;
+  offlineStorageActive: boolean;
+  performanceMonitoringActive: boolean;
+}
+
+export interface AdminMobileHooksHealthResponse {
+  status: HealthStatus;
+  healthScore: number;
+  checks?: AdminMobileHooksHealthChecks;
+  error?: string;
+  timestamp: string;
 }
 
 export interface AdminHookSummary {
