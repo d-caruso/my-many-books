@@ -13,6 +13,10 @@ import { userMobileConfigController } from '../controllers/mobile/UserMobileConf
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
+import {
+  validateBody,
+  emergencyConfigSchema,
+} from '../validation';
 
 const router: express.Router = Router();
 
@@ -50,6 +54,7 @@ router.get(
 router.put(
   '/config/emergency',
   authMiddleware,
+  validateBody(emergencyConfigSchema),
   expressRouteWrapper(emergencyController.updateEmergencyConfig.bind(emergencyController))
 );
 

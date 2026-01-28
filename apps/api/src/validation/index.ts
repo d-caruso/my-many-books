@@ -69,6 +69,9 @@ export {
   toggleActiveBodySchema,
 } from './schemas/settings.schema';
 
+// Emergency config update schema
+export { emergencyConfigSchema } from './schemas/emergency.schema';
+
 // Re-export existing validation utilities
 export {
   baseValidationSchema,
