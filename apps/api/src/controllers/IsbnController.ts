@@ -13,12 +13,6 @@ import { UniversalRequest } from '../types';
 import { getLogger } from '@my-many-books/shared-logging';
 import { HEALTH_STATUS } from '@my-many-books/shared-types';
 
-/*interface UniversalRequest {
-  body?: unknown;
-  queryStringParameters?: { [key: string]: string | undefined };
-  pathParameters?: { [key: string]: string | undefined };
-}*/
-
 interface IsbnLookupRequest {
   isbn: string;
 }

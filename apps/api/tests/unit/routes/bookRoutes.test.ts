@@ -18,7 +18,7 @@ jest.mock('../../../src/controllers/BookController', () => ({
     getBookById: jest.fn(async (req) => ({
       statusCode: 200,
       success: true,
-      data: { id: parseInt(req.pathParameters?.id || '1'), title: 'Test Book' }
+      data: { id: parseInt(req.params?.id || '1'), title: 'Test Book' }
     })),
     createBookForUser: jest.fn(async (_req) => ({
       statusCode: 201,
@@ -29,12 +29,12 @@ jest.mock('../../../src/controllers/BookController', () => ({
     updateBookForUser: jest.fn(async (req) => ({
       statusCode: 200,
       success: true,
-      data: { id: parseInt(req.pathParameters?.id || '1'), title: 'Updated Book' }
+      data: { id: parseInt(req.params?.id || '1'), title: 'Updated Book' }
     })),
     patchBookForUser: jest.fn(async (req) => ({
       statusCode: 200,
       success: true,
-      data: { id: parseInt(req.pathParameters?.id || '1'), title: 'Patched Book' }
+      data: { id: parseInt(req.params?.id || '1'), title: 'Patched Book' }
     })),
     deleteBookForUser: jest.fn(async (_req) => ({
       statusCode: 204,
@@ -43,7 +43,7 @@ jest.mock('../../../src/controllers/BookController', () => ({
     searchByIsbnForUser: jest.fn(async (req) => ({
       statusCode: 200,
       success: true,
-      data: { isbn: req.pathParameters?.isbn, title: 'ISBN Book' }
+      data: { isbn: req.params?.isbn, title: 'ISBN Book' }
     })),
     searchBooks: jest.fn(async (_req) => ({
       statusCode: 200,
@@ -84,7 +84,7 @@ jest.mock('../../../src/utils/routeWrapper', () => ({
         const universalRequest = {
           body: JSON.stringify(req.body || {}),
           queryStringParameters: req.query,
-          pathParameters: req.params,
+          params: req.params,
           user: req.user
         };
         

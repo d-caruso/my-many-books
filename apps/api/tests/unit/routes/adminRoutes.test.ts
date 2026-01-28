@@ -236,7 +236,7 @@ describe('Admin Routes', () => {
 
       expect(mockAdminUserController.getUserById).toHaveBeenCalledWith(
         expect.objectContaining({
-          pathParameters: { id: '1' },
+          params: { id: '1' },
           user: { id: 1, email: 'admin@test.com', role: 'admin' },
         })
       );
@@ -260,7 +260,7 @@ describe('Admin Routes', () => {
 
       expect(mockAdminUserController.updateUser).toHaveBeenCalledWith(
         expect.objectContaining({
-          pathParameters: { id: '1' },
+          params: { id: '1' },
           body: JSON.stringify({ name: 'Updated Admin' }),
           user: { id: 1, email: 'admin@test.com', role: 'admin' },
         })
@@ -284,7 +284,7 @@ describe('Admin Routes', () => {
 
       expect(mockAdminUserController.deleteUser).toHaveBeenCalledWith(
         expect.objectContaining({
-          pathParameters: { id: '1' },
+          params: { id: '1' },
           user: { id: 1, email: 'admin@test.com', role: 'admin' },
         })
       );
@@ -331,7 +331,7 @@ describe('Admin Routes', () => {
 
       expect(mockAdminBookController.getBookById).toHaveBeenCalledWith(
         expect.objectContaining({
-          pathParameters: { id: '1' },
+          params: { id: '1' },
           user: { id: 1, email: 'admin@test.com', role: 'admin' },
         })
       );
@@ -355,7 +355,7 @@ describe('Admin Routes', () => {
 
       expect(mockAdminBookController.updateBook).toHaveBeenCalledWith(
         expect.objectContaining({
-          pathParameters: { id: '1' },
+          params: { id: '1' },
           body: JSON.stringify({ title: 'Updated Admin Book' }),
           user: { id: 1, email: 'admin@test.com', role: 'admin' },
         })
@@ -379,7 +379,7 @@ describe('Admin Routes', () => {
 
       expect(mockAdminBookController.deleteBook).toHaveBeenCalledWith(
         expect.objectContaining({
-          pathParameters: { id: '1' },
+          params: { id: '1' },
           user: { id: 1, email: 'admin@test.com', role: 'admin' },
         })
       );
