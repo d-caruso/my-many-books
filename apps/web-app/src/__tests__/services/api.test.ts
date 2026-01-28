@@ -1,65 +1,92 @@
 import { Book, Author, Category, User, PaginatedResponse } from '../../types';
+import type { AuthorApi, BookApi, CategoryApi, UserApi } from '@my-many-books/shared-api';
 
 // Import after mocks are set up (avoid importing default instance to prevent axios creation)
 import { createApiService, ApiService } from '../../services/api';
-import { createMockApiClient, createApiClient } from '@my-many-books/shared-api';
+import { beforeEach, describe, vi } from 'vitest';
+
+type ApiClientContract = {
+  books: Pick<
+    BookApi,
+    | 'getBooks'
+    | 'getBook'
+    | 'createBook'
+    | 'updateBook'
+    | 'patchBook'
+    | 'deleteBook'
+    | 'searchBooks'
+    | 'searchByISBN'
+    | 'updateBookStatus'
+  >;
+  categories: Pick<
+    CategoryApi,
+    'getCategories' | 'getCategory' | 'createCategory' | 'updateCategory' | 'deleteCategory'
+  >;
+  authors: Pick<
+    AuthorApi,
+    'getAuthors' | 'getAuthor' | 'createAuthor' | 'updateAuthor' | 'deleteAuthor' | 'searchAuthors'
+  >;
+  users: Pick<
+    UserApi,
+    | 'getCurrentUser'
+    | 'updateProfile'
+    | 'deleteAccount'
+    | 'login'
+    | 'register'
+    | 'logout'
+    | 'refreshToken'
+  >;
+};
+
+function createMockApiClient() {
+  return {
+    books: {
+      getBooks: vi.fn(),
+      getBook: vi.fn(),
+      createBook: vi.fn(),
+      updateBook: vi.fn(),
+      patchBook: vi.fn(),
+      deleteBook: vi.fn(),
+      searchBooks: vi.fn(),
+      searchByISBN: vi.fn(),
+      updateBookStatus: vi.fn(),
+    },
+    categories: {
+      getCategories: vi.fn(),
+      getCategory: vi.fn(),
+      createCategory: vi.fn(),
+      updateCategory: vi.fn(),
+      deleteCategory: vi.fn(),
+    },
+    authors: {
+      getAuthors: vi.fn(),
+      getAuthor: vi.fn(),
+      createAuthor: vi.fn(),
+      updateAuthor: vi.fn(),
+      deleteAuthor: vi.fn(),
+      searchAuthors: vi.fn(),
+    },
+    users: {
+      getCurrentUser: vi.fn(),
+      updateProfile: vi.fn(),
+      deleteAccount: vi.fn(),
+      login: vi.fn(),
+      register: vi.fn(),
+      logout: vi.fn(),
+      refreshToken: vi.fn(),
+    },
+  } satisfies ApiClientContract;
+}
 
 // Mock the shared-api library using industry standard approach
-vi.mock('@my-many-books/shared-api', () => ({
-  createApiClient: vi.fn(() => ({
-    books: {
-      getBooks: vi.fn(),
-      getBook: vi.fn(),
-      createBook: vi.fn(),
-      updateBook: vi.fn(),
-      deleteBook: vi.fn(),
-      searchBooks: vi.fn(),
-      searchByISBN: vi.fn(),
-    },
-    categories: {
-      getCategories: vi.fn(),
-      getCategory: vi.fn(),
-      createCategory: vi.fn(),
-    },
-    authors: {
-      getAuthors: vi.fn(),
-      getAuthor: vi.fn(),
-      createAuthor: vi.fn(),
-      searchAuthors: vi.fn(),
-    },
-    users: {
-      getCurrentUser: vi.fn(),
-      updateProfile: vi.fn(),
-    },
-  })),
-  createMockApiClient: () => ({
-    books: {
-      getBooks: vi.fn(),
-      getBook: vi.fn(),
-      createBook: vi.fn(),
-      updateBook: vi.fn(),
-      deleteBook: vi.fn(),
-      searchBooks: vi.fn(),
-      searchByISBN: vi.fn(),
-    },
-    categories: {
-      getCategories: vi.fn(),
-      getCategory: vi.fn(),
-      createCategory: vi.fn(),
-    },
-    authors: {
-      getAuthors: vi.fn(),
-      getAuthor: vi.fn(),
-      createAuthor: vi.fn(),
-      searchAuthors: vi.fn(),
-    },
-    users: {
-      getCurrentUser: vi.fn(),
-      updateProfile: vi.fn(),
-    },
-  }),
-  resetApiClientMocks: vi.fn(),
-}));
+vi.mock('@my-many-books/shared-api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@my-many-books/shared-api')>();
+
+  return {
+    ...actual,
+    createApiClient: vi.fn(() => createMockApiClient()),
+  };
+});
 
 // Mock axios for the AxiosHttpClient
 vi.mock('axios', () => ({

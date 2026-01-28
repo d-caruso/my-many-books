@@ -1,5 +1,5 @@
 /**
- * ApiService unit tests for admin mobile-hooks endpoints.
+ * ApiService unit tests for admin mobile-hooks endpoints (Task 5.2).
  * Validates URL/method/body/headers and success/error handling via mocked fetch/auth.
  */
 import { beforeEach, describe, it, vi } from 'vitest';
