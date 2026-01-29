@@ -183,7 +183,7 @@ router.put(
   )
 );
 
-// Get hook listener status TO DO
+// Get hook listener status
 router.get(
   '/mobile-hooks/config/listeners',
   authMiddleware,
@@ -192,7 +192,7 @@ router.get(
   )
 );
 
-// Enable/disable specific listeners TO DO
+// Enable/disable specific listeners (events) + categories
 router.put(
   '/mobile-hooks/config/listeners',
   authMiddleware,

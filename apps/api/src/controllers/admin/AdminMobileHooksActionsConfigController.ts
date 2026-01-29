@@ -135,8 +135,12 @@ interface HookListenerUpdateRequest {
 }
 
 export class AdminMobileHooksActionsConfigController extends BaseController {
-  /**
-   * GET /api/admin/mobile-hooks/config - Get current mobile hook configuration
+   /**
+   * GET /api/admin/mobile-hooks/actions-config/mappings
+   * Get current mobile hooks actions configuration:
+   * - `actions`: eventType → actionType[] mappings (hook-to-action mapping)
+   * - `actionSettings`: per-action-type settings (email/slack/webhook/etc.)
+   * - `availableEvents`, `lastUpdated`
    */
   async getActionMappings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
@@ -155,7 +159,12 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   }
 
   /**
-   * PUT /api/admin/mobile-hooks/config - Update mobile hook configuration
+   * PUT /api/admin/mobile-hooks/actions-config/mappings
+   * Update mobile hooks actions configuration.
+   * Accepts optional:
+   * - `actions` (eventType → actionType[] mappings)
+   * - `actionSettings` (partial per-action-type settings)
+   * Returns updated config + list of updated keys + `lastUpdated`.
    */
   async updateActionMappings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
@@ -217,8 +226,12 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     }
   }
 
-  /**
-   * GET /api/admin/mobile-hooks/listeners - Get hook listener status
+   /**
+   * GET /api/admin/mobile-hooks/config/listeners
+   * Get hook listeners + categories enablement:
+   * - `listeners`: per-event enabled flags
+   * - `categories`: per-category enabled flags
+   * - `availableEvents`, `lastUpdated`
    */
   async getHookListeners(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
@@ -237,7 +250,10 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   }
 
   /**
-   * PUT /api/admin/mobile-hooks/listeners - Enable/disable specific listeners
+   * PUT /api/admin/mobile-hooks/config/listeners
+   * Update listener feature flags (currently implemented: `analytics`, `errorReporting`).
+   * Returns list of updated flags + `lastUpdated`.
+   * Note: per-event listeners / categories toggles are not updated by this endpoint yet.
    */
   async updateHookActionListeners(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
