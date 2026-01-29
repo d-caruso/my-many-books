@@ -380,6 +380,76 @@ describe('Mobile Configuration API Integration Tests', () => {
     });
   });
 
+  describe('Admin Mobile Hooks Listener Configuration Endpoints', () => {
+    describe('PUT /api/v1/admin/mobile-hooks/config/listeners - Update Hook Listeners', () => {
+      it('should persist per-event listener + category toggles', async () => {
+        const updateData = {
+          listeners: {
+            'error.unhandled': { enabled: false },
+            'sync.failed': true,
+          },
+          categories: {
+            analytics_listeners: { enabled: false },
+          },
+        };
+
+        (AppSetting.findOrCreate as jest.Mock).mockImplementation(async ({ where, defaults }) => {
+          return [
+            {
+              key: where.key,
+              value: defaults?.value ?? '',
+              update: jest.fn().mockResolvedValue(undefined),
+            },
+          ];
+        });
+
+        const response = await request(app)
+          .put('/api/v1/admin/mobile-hooks/config/listeners')
+          .set('Authorization', 'Bearer admin-token')
+          .send(updateData)
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('updated');
+
+        const updatedKeys = response.body.data.updated as string[];
+        expect(updatedKeys).toEqual(
+          expect.arrayContaining([
+            'listeners.error.unhandled',
+            'listeners.sync.failed',
+            'categories.analytics_listeners',
+          ])
+        );
+
+        const keys = (AppSetting.findOrCreate as jest.Mock).mock.calls.map(call => call[0].where.key);
+        expect(keys).toEqual(
+          expect.arrayContaining([
+            'mobile.hooks.listeners.error.unhandled.enabled',
+            'mobile.hooks.listeners.sync.failed.enabled',
+            'mobile.hooks.categories.analytics_listeners.enabled',
+          ])
+        );
+      });
+
+      it('should reject invalid listener toggle payloads', async () => {
+        const invalidData = {
+          listeners: {
+            'error.unhandled': { enabled: 'nope' },
+          },
+        };
+
+        const response = await request(app)
+          .put('/api/v1/admin/mobile-hooks/config/listeners')
+          .set('Authorization', 'Bearer admin-token')
+          .send(invalidData)
+          .expect(400);
+
+        expect(response.body.success).toBe(false);
+        expect(response.body.error).toContain('Invalid listener toggle for: error.unhandled');
+      });
+    });
+  });
+
   describe('Admin Hook Action Configuration Endpoints', () => {
 
     describe('GET /api/v1/admin/mobile-hooks/actions-config/mappings - Get Action Mappings', () => {

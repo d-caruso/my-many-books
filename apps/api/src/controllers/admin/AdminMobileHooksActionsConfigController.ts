@@ -128,6 +128,8 @@ interface ActionSettingsUpdateRequest {
 }
 
 interface HookListenerUpdateRequest {
+  listeners?: Record<string, unknown>;
+  categories?: Record<string, unknown>;
   analytics?: boolean;
   errorReporting?: boolean;
   offlineStorage?: boolean;
@@ -137,7 +139,7 @@ interface HookListenerUpdateRequest {
 export class AdminMobileHooksActionsConfigController extends BaseController {
    /**
    * GET /api/admin/mobile-hooks/actions-config/mappings
-   * Get current mobile hooks actions configuration:
+   * Get current mobile hooks actions mappings:
    * - `actions`: eventType → actionType[] mappings (hook-to-action mapping)
    * - `actionSettings`: per-action-type settings (email/slack/webhook/etc.)
    * - `availableEvents`, `lastUpdated`
@@ -160,7 +162,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
   /**
    * PUT /api/admin/mobile-hooks/actions-config/mappings
-   * Update mobile hooks actions configuration.
+   * Update mobile hooks actions mappings.
    * Accepts optional:
    * - `actions` (eventType → actionType[] mappings)
    * - `actionSettings` (partial per-action-type settings)
@@ -251,9 +253,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
   /**
    * PUT /api/admin/mobile-hooks/config/listeners
-   * Update listener feature flags (currently implemented: `analytics`, `errorReporting`).
+   * Update listener + category enablement (per-event + per-category).
    * Returns list of updated flags + `lastUpdated`.
-   * Note: per-event listeners / categories toggles are not updated by this endpoint yet.
    */
   async updateHookActionListeners(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
@@ -267,6 +268,60 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
     try {
       const updatedSettings: string[] = [];
+
+      if (body.listeners !== undefined) {
+        if (!body.listeners || typeof body.listeners !== 'object' || Array.isArray(body.listeners)) {
+          return this.createErrorResponse('Invalid listeners payload', 400);
+        }
+
+        for (const [eventName, toggle] of Object.entries(body.listeners)) {
+          let enabled: boolean | null = null;
+
+          if (typeof toggle === 'boolean') {
+            enabled = toggle;
+          } else if (
+            toggle &&
+            typeof toggle === 'object' &&
+            typeof (toggle as { enabled?: unknown }).enabled === 'boolean'
+          ) {
+            enabled = (toggle as { enabled: boolean }).enabled;
+          }
+
+          if (enabled === null) {
+            return this.createErrorResponse(`Invalid listener toggle for: ${eventName}`, 400);
+          }
+
+          await this.updateConfigSetting(`${LISTENERS_BASE}.${eventName}.enabled`, String(enabled));
+          updatedSettings.push(`listeners.${eventName}`);
+        }
+      }
+
+      if (body.categories !== undefined) {
+        if (!body.categories || typeof body.categories !== 'object' || Array.isArray(body.categories)) {
+          return this.createErrorResponse('Invalid categories payload', 400);
+        }
+
+        for (const [categoryName, toggle] of Object.entries(body.categories)) {
+          let enabled: boolean | null = null;
+
+          if (typeof toggle === 'boolean') {
+            enabled = toggle;
+          } else if (
+            toggle &&
+            typeof toggle === 'object' &&
+            typeof (toggle as { enabled?: unknown }).enabled === 'boolean'
+          ) {
+            enabled = (toggle as { enabled: boolean }).enabled;
+          }
+
+          if (enabled === null) {
+            return this.createErrorResponse(`Invalid category toggle for: ${categoryName}`, 400);
+          }
+
+          await this.updateConfigSetting(`${CATEGORIES_BASE}.${categoryName}.enabled`, String(enabled));
+          updatedSettings.push(`categories.${categoryName}`);
+        }
+      }
 
       if (typeof body.analytics === 'boolean') {
         await this.updateConfigSetting(MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED, String(body.analytics));
