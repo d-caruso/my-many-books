@@ -80,3 +80,5 @@ apps/web-app/public/locales/**/*.json
 
 # React Component Preview
 previewConfig.json
+
+reports

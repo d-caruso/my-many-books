@@ -7,6 +7,8 @@ This directory contains automation scripts for the project.
 | Script | Purpose | Usage |
 |--------|---------|-------|
 | **check-model-drift.ts** | Detect type inconsistencies across apps | `npm run check-model-drift` |
+| **benchmark-hookey-handlers.sh** | Run the Hookey admin handler benchmarks (Postman/Newman) | `npm run benchmark:hookey-handlers` |
+| **benchmark-hookey-queue-sync.sh** | Run the Hookey queue/sync benchmarks (Postman/Newman) | `npm run benchmark:hookey-queue-sync` |
 
 ## Script Documentation
 
@@ -24,7 +26,7 @@ This directory contains automation scripts for the project.
 Scripts require the following development dependencies:
 
 ```bash
-npm install --save-dev ts-morph
+npm install --save-dev newman ts-morph
 ```
 
 ## Usage Patterns
@@ -41,6 +43,21 @@ npx ts-node scripts/check-model-drift.ts
 # With debugging
 DEBUG=1 npx ts-node scripts/check-model-drift.ts
 ```
+
+### Hookey Benchmark Scripts
+
+Two shell helpers exist for running the Postman benchmark collections via Newman:
+
+```bash
+npm run benchmark:hookey-handlers
+npm run benchmark:hookey-queue-sync
+```
+
+They rely on the Postman environment files (`apps/api/postman/environments/...`) that already define `baseUrl` and `apiVersion`, so no extra CLI overrides should be needed unless you want to target a different endpoint.
+
+Both scripts call `scripts/newman-runner.sh`, which accepts the collection file, report prefix, and an optional `--environment` path (or set `POSTMAN_ENVIRONMENT`).
+
+Generated reports go under `reports/` with a timestamped prefix.
 
 ### Script Development
 

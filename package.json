@@ -47,9 +47,12 @@
     "test:web-app:all": "cd apps/web-app && npm run test:all",
     "check-model-drift": "npx ts-node --esm scripts/check-model-drift.ts",
     "check-drift": "npm run check-model-drift",
-    "scripts:help": "echo 'Available scripts: check-model-drift' && echo 'See scripts/README.md for details'"
+    "scripts:help": "echo 'Available scripts: check-model-drift, benchmark:hookey-handlers, benchmark:hookey-queue-sync' && echo 'See scripts/README.md for details'",
+    "benchmark:hookey-handlers": "bash scripts/benchmark-hookey-handlers.sh",
+    "benchmark:hookey-queue-sync": "bash scripts/benchmark-hookey-queue-sync.sh"
   },
   "devDependencies": {
+    "newman": "^5.3.1",
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",

@@ -1,202 +1,206 @@
 {
- "info": {
-  "_postman_id": "hookey-mobile-hooks-collection",
-  "name": "Hookey Mobile Hooks",
-  "description": "Dedicated collection for admin mobile hooks endpoints and benchmark scripts.",
-  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
- },
- "item": [
-  {
-   "name": "Hook Listeners",
-   "item": [
-    {
-     "name": "Get hook listener config",
-     "request": {
-      "method": "GET",
-      "header": [
-       {
-        "key": "Accept",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/config/listeners"
-      }
-     }
-    },
-    {
-     "name": "Update hook listeners",
-     "request": {
-      "method": "PUT",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"listeners\": {},\n  \"categories\": {}\n}"
-      },
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/config/listeners"
-      }
-     }
-    }
-   ]
+  "info": {
+    "_postman_id": "hookey-mobile-hooks-collection",
+    "name": "Hookey Mobile Hooks",
+    "description": "Dedicated collection for admin mobile hooks endpoints and benchmark scripts.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  {
-   "name": "Action Mappings",
-   "item": [
+  "item": [
     {
-     "name": "Get action mappings",
-     "request": {
-      "method": "GET",
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/actions-config/mappings"
-      }
-     }
+      "name": "Hook Listeners",
+      "item": [
+        {
+          "name": "Get hook listener config",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/config/listeners"
+          }
+        },
+        {
+          "name": "Update hook listeners",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"listeners\": {},\n  \"categories\": {}\n}"
+            },
+            "url": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/config/listeners"
+          }
+        }
+      ]
     },
     {
-     "name": "Update action mappings",
-     "request": {
-      "method": "PUT",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"actions\": {},\n  \"actionSettings\": {}\n}"
-      },
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/actions-config/mappings"
-      }
-     }
+      "name": "Action Mappings",
+      "item": [
+        {
+          "name": "Get action mappings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/actions-config/mappings"
+          }
+        },
+        {
+          "name": "Update action mappings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"actions\": {},\n  \"actionSettings\": {}\n}"
+            },
+            "url": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/actions-config/mappings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Action Types",
+      "item": [
+        {
+          "name": "Get action types",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/actions-config/types"
+          }
+        },
+        {
+          "name": "Test action type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"actionType\": \"webhook\",\n  \"dryRun\": false\n}"
+            },
+            "url": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/actions-config/types/{{actionType}}/test"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Emergency",
+      "item": [
+        {
+          "name": "Get emergency status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/emergency"
+          }
+        },
+        {
+          "name": "Update emergency status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}"
+            },
+            "url": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/emergency"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health & Analytics",
+      "item": [
+        {
+          "name": "Get health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/health"
+          }
+        },
+        {
+          "name": "Get analytics stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/stats"
+          }
+        },
+        {
+          "name": "Get recent hook events",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/analytics/events/recent?limit=10"
+          }
+        }
+      ]
     }
-   ]
-  },
-  {
-   "name": "Action Types",
-   "item": [
+  ],
+  "event": [
     {
-     "name": "Get action types",
-     "request": {
-      "method": "GET",
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/actions-config/types"
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get('baseUrl')) {",
+          "    pm.environment.set('baseUrl', 'http://127.0.0.1:8080');",
+          "}",
+          "if (!pm.environment.get('apiVersion')) {",
+          "    pm.environment.set('apiVersion', 'v1');",
+          "}"
+        ]
       }
-     }
     },
     {
-     "name": "Test action type",
-     "request": {
-      "method": "POST",
-      "header": [
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"actionType\": \"webhook\",\n  \"dryRun\": false\n}"
-      },
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/actions-config/types/{{actionType}}/test"
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const key='hookeyBenchmarkResults';",
+          "const previous = pm.environment.get(key);",
+          "const results = previous ? JSON.parse(previous) : [];",
+          "results.push({ request: pm.info.requestName, responseTime: pm.response.responseTime, status: pm.response.code, timestamp: new Date().toISOString() });",
+          "pm.environment.set(key, JSON.stringify(results));",
+          "pm.test('Hookey response time under 10s', () => pm.expect(pm.response.responseTime).to.be.below(10000));"
+        ]
       }
-     }
     }
-   ]
-  },
-  {
-   "name": "Emergency"
-  ,"item": [
+  ],
+  "variable": [
     {
-     "name": "Get emergency status",
-     "request": {
-      "method": "GET",
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/emergency"
-      }
-     }
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080",
+      "type": "string"
     },
     {
-     "name": "Update emergency status",
-     "request": {
-      "method": "PUT",
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"enabled\": true\n}"
-      },
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/emergency"
-      }
-     }
+      "key": "apiVersion",
+      "value": "v1",
+      "type": "string"
     }
-   ]
-  },
-  {
-   "name": "Health & Analytics",
-   "item": [
-    {
-     "name": "Get health",
-     "request": {
-      "method": "GET",
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/health"
-      }
-     }
-    },
-    {
-     "name": "Get analytics stats",
-     "request": {
-      "method": "GET",
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/stats"
-      }
-     }
-    },
-    {
-     "name": "Get recent hook events",
-     "request": {
-      "method": "GET",
-      "url": {
-       "raw": "{{baseUrl}}/{{apiVersion}}/admin/mobile-hooks/analytics/events/recent?limit=10"
-      }
-     }
-    }
-   ]
-  }
- ],
- "event": [
-  {
-   "listen": "test",
-   "script": {
-    "type": "text/javascript",
-    "exec": [
-     "const key='hookeyBenchmarkResults';",
-     "const previous = pm.environment.get(key);",
-     "const results = previous ? JSON.parse(previous) : [];",
-     "results.push({ request: pm.info.requestName, responseTime: pm.response.responseTime, status: pm.response.code, timestamp: new Date().toISOString() });",
-     "pm.environment.set(key, JSON.stringify(results));",
-     "pm.test('Hookey response time under 10s', () => pm.expect(pm.response.responseTime).to.be.below(10000));"
-    ]
-   }
-  }
- ],
- "variable": [
-  {
-   "key": "baseUrl",
-   "value": "http://localhost:3000/api/v1",
-   "type": "string"
-  },
-  {
-   "key": "apiVersion",
-   "value": "api/v1",
-   "type": "string"
-  }
- ]
+  ]
 }
