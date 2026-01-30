@@ -1,1425 +1,1664 @@
 {
-	"info": {
-		"_postman_id": "a1b2c3d4-e5f6-4789-a0b1-c2d3e4f5g6h7",
-		"name": "My Many Books API",
-		"description": "Comprehensive API testing collection for My Many Books. Includes authentication (AWS Cognito), authorization (CASL), audit logging, hooks system, and all CRUD operations.\n\n**Latest Update:** December 2025 - Added authentication flows, admin endpoints, audit logging, hooks management, and traceId correlation.",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "12345678"
-	},
-	"auth": {
-		"type": "bearer",
-		"bearer": [
-			{
-				"key": "token",
-				"value": "{{idToken}}",
-				"type": "string"
-			}
-		]
-	},
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					"// Generate trace ID for request correlation",
-					"if (!pm.environment.get('traceId')) {",
-					"    pm.environment.set('traceId', pm.variables.replaceIn('{{$guid}}'));",
-					"}",
-					"",
-					"// Check if token is expired (simple check)",
-					"const tokenExpiry = pm.environment.get('tokenExpiry');",
-					"if (tokenExpiry && Date.now() > tokenExpiry) {",
-					"    console.log('Token expired, please refresh');",
-					"}"
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					"// Global test validations",
-					"pm.test('Response time is acceptable', function() {",
-					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
-					"});",
-					"",
-					"// Check for traceId in response logs (if available)",
-					"pm.test('Status code is valid', function() {",
-					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204, 400, 401, 403, 404, 422, 500]);",
-					"});"
-				]
-			}
-		}
-	],
-	"item": [
-		{
-			"name": "Authentication",
-			"description": "AWS Cognito authentication endpoints with automatic token management",
-			"item": [
-				{
-					"name": "Register",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Registration successful', function() {",
-									"    pm.response.to.have.status(201);",
-									"});",
-									"",
-									"pm.test('Response has user data', function() {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property('user');",
-									"    pm.expect(jsonData.user).to.have.property('email');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}",
-								"description": "Request correlation ID"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"name\": \"Test\",\n  \"surname\": \"User\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/register",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "register"]
-						},
-						"description": "Register a new user with email and password"
-					},
-					"response": []
-				},
-				{
-					"name": "Login",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Login successful', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('Response contains tokens', function() {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property('idToken');",
-									"    pm.expect(jsonData).to.have.property('accessToken');",
-									"    pm.expect(jsonData).to.have.property('user');",
-									"",
-									"    // Store tokens for subsequent requests",
-									"    pm.environment.set('idToken', jsonData.idToken);",
-									"    pm.environment.set('accessToken', jsonData.accessToken);",
-									"    ",
-									"    // Store token expiry (1 hour from now)",
-									"    pm.environment.set('tokenExpiry', Date.now() + 3600000);",
-									"    ",
-									"    // Store user info",
-									"    pm.environment.set('userId', jsonData.user.id);",
-									"    pm.environment.set('userRole', jsonData.user.role);",
-									"});",
-									"",
-									"pm.test('User has valid role', function() {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.user.role).to.be.oneOf(['user', 'admin']);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "login"]
-						},
-						"description": "Login with email and password. Returns ID token, access token, and refresh token (HttpOnly cookie)."
-					},
-					"response": []
-				},
-				{
-					"name": "Refresh Token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Token refresh successful', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('New tokens received', function() {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property('idToken');",
-									"    pm.expect(jsonData).to.have.property('accessToken');",
-									"",
-									"    // Update stored tokens",
-									"    pm.environment.set('idToken', jsonData.idToken);",
-									"    pm.environment.set('accessToken', jsonData.accessToken);",
-									"    pm.environment.set('tokenExpiry', Date.now() + 3600000);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/auth/refresh",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "refresh"]
-						},
-						"description": "Refresh expired tokens using refresh token from HttpOnly cookie. Returns new ID and access tokens."
-					},
-					"response": []
-				},
-				{
-					"name": "Logout",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Logout successful', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"// Clear stored tokens",
-									"pm.environment.unset('idToken');",
-									"pm.environment.unset('accessToken');",
-									"pm.environment.unset('tokenExpiry');",
-									"pm.environment.unset('userId');",
-									"pm.environment.unset('userRole');"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/auth/logout",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "logout"]
-						},
-						"description": "Logout current user and invalidate tokens"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Health Check",
-			"item": [
-				{
-					"name": "API Health Check",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/health",
-							"host": ["{{baseUrl}}"],
-							"path": ["health"]
-						},
-						"description": "Check if the API is healthy and responsive"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Books",
-			"description": "CRUD operations for books with authorization",
-			"item": [
-				{
-					"name": "List All Books",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Books list retrieved', function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('Response has books array', function() {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property('data');",
-									"    pm.expect(jsonData.data).to.be.an('array');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/books",
-							"host": ["{{baseUrl}}"],
-							"path": ["books"]
-						},
-						"description": "List all books (public read access)"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Book by ID",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/books/{{bookId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["books", "{{bookId}}"]
-						},
-						"description": "Get a specific book by ID"
-					},
-					"response": []
-				},
-				{
-					"name": "Create Book",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Book created successfully', function() {",
-									"    pm.response.to.have.status(201);",
-									"});",
-									"",
-									"pm.test('Response contains book ID', function() {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data).to.have.property('id');",
-									"    ",
-									"    // Store book ID for subsequent tests",
-									"    pm.environment.set('createdBookId', jsonData.data.id);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"title\": \"Test Book\",\n  \"isbnCode\": \"978-3-16-148410-0\",\n  \"editionDate\": \"2024-01-01\",\n  \"publishers\": [\"Test Publisher\"],\n  \"authors\": [\n    {\n      \"name\": \"John\",\n      \"surname\": \"Doe\"\n    }\n  ],\n  \"categories\": [\n    {\n      \"name\": \"Fiction\"\n    }\n  ]\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/books",
-							"host": ["{{baseUrl}}"],
-							"path": ["books"]
-						},
-						"description": "Create a new book (requires authentication)"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Book",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"title\": \"Updated Test Book\",\n  \"description\": \"This book has been updated\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/books/{{createdBookId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["books", "{{createdBookId}}"]
-						},
-						"description": "Update an existing book (requires ownership or admin role)"
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Book",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/books/{{createdBookId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["books", "{{createdBookId}}"]
-						},
-						"description": "Delete a book (requires ownership or admin role)"
-					},
-					"response": []
-				},
-				{
-					"name": "Search Books",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/books/search?title={{searchTitle}}&author={{searchAuthor}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["books", "search"],
-							"query": [
-								{
-									"key": "title",
-									"value": "{{searchTitle}}",
-									"description": "Search by book title"
-								},
-								{
-									"key": "author",
-									"value": "{{searchAuthor}}",
-									"description": "Search by author name"
-								},
-								{
-									"key": "category",
-									"value": "Fiction",
-									"description": "Filter by category",
-									"disabled": true
-								},
-								{
-									"key": "status",
-									"value": "read",
-									"description": "Filter by status",
-									"disabled": true
-								}
-							]
-						},
-						"description": "Search books in user's library"
-					},
-					"response": []
-				},
-				{
-					"name": "Search Books by ISBN",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/books/search/isbn?isbn={{testIsbn}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["books", "search", "isbn"],
-							"query": [
-								{
-									"key": "isbn",
-									"value": "{{testIsbn}}"
-								}
-							]
-						},
-						"description": "Search for a book by ISBN in user's library"
-					},
-					"response": []
-				},
-				{
-					"name": "Import Book from ISBN",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const jsonData = pm.response.json();",
-									"    pm.environment.set('importedBookId', jsonData.data.id);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"isbn\": \"{{testIsbn}}\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/books/import/isbn",
-							"host": ["{{baseUrl}}"],
-							"path": ["books", "import", "isbn"]
-						},
-						"description": "Import a book from Open Library using ISBN"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Authors",
-			"item": [
-				{
-					"name": "List Authors",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/authors",
-							"host": ["{{baseUrl}}"],
-							"path": ["authors"]
-						},
-						"description": "List all authors (user-scoped)"
-					},
-					"response": []
-				},
-				{
-					"name": "Create Author",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const jsonData = pm.response.json();",
-									"    pm.environment.set('createdAuthorId', jsonData.data.id);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Jane\",\n  \"surname\": \"Smith\",\n  \"nationality\": \"USA\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/authors",
-							"host": ["{{baseUrl}}"],
-							"path": ["authors"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Author by ID",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/authors/{{createdAuthorId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["authors", "{{createdAuthorId}}"]
-						},
-						"description": "Get a specific author by ID"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Author",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nationality\": \"United Kingdom\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/authors/{{createdAuthorId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["authors", "{{createdAuthorId}}"]
-						},
-						"description": "Update an existing author (requires ownership or admin role)"
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Author",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/authors/{{createdAuthorId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["authors", "{{createdAuthorId}}"]
-						},
-						"description": "Delete an author (requires ownership or admin role)"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Author's Books",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/authors/{{createdAuthorId}}/books",
-							"host": ["{{baseUrl}}"],
-							"path": ["authors", "{{createdAuthorId}}", "books"]
-						},
-						"description": "Get all books by a specific author"
-					},
-					"response": []
-				},
-				{
-					"name": "Search Authors",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/authors/search?query={{searchAuthor}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["authors", "search"],
-							"query": [
-								{
-									"key": "query",
-									"value": "{{searchAuthor}}"
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Categories",
-			"item": [
-				{
-					"name": "List Categories",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/categories",
-							"host": ["{{baseUrl}}"],
-							"path": ["categories"]
-						},
-						"description": "List all categories (user-scoped)"
-					},
-					"response": []
-				},
-				{
-					"name": "Create Category",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const jsonData = pm.response.json();",
-									"    pm.environment.set('createdCategoryId', jsonData.data.id);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Science Fiction\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/categories",
-							"host": ["{{baseUrl}}"],
-							"path": ["categories"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Category by ID",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/categories/{{createdCategoryId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["categories", "{{createdCategoryId}}"]
-						},
-						"description": "Get a specific category by ID"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Category",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Sci-Fi\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/categories/{{createdCategoryId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["categories", "{{createdCategoryId}}"]
-						},
-						"description": "Update an existing category (requires ownership or admin role)"
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Category",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/categories/{{createdCategoryId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["categories", "{{createdCategoryId}}"]
-						},
-						"description": "Delete a category (requires ownership or admin role)"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Category's Books",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/categories/{{createdCategoryId}}/books",
-							"host": ["{{baseUrl}}"],
-							"path": ["categories", "{{createdCategoryId}}", "books"]
-						},
-						"description": "Get all books in a specific category"
-					},
-					"response": []
-				},
-				{
-					"name": "Search Categories",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/categories/search?query={{searchCategory}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["categories", "search"],
-							"query": [
-								{
-									"key": "query",
-									"value": "{{searchCategory}}"
-								}
-							]
-						},
-						"description": "Search categories by name"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "ISBN Lookup",
-			"item": [
-				{
-					"name": "Lookup ISBN",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/isbn/{{testIsbn}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["isbn", "{{testIsbn}}"]
-						},
-						"description": "Lookup book information by ISBN from Open Library"
-					},
-					"response": []
-				},
-				{
-					"name": "Validate ISBN",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/isbn/validate/{{testIsbn}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["isbn", "validate", "{{testIsbn}}"]
-						},
-						"description": "Validate ISBN format and checksum"
-					},
-					"response": []
-				},
-				{
-					"name": "Search Books by Title",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/isbn/search?title={{searchTitle}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["isbn", "search"],
-							"query": [
-								{
-									"key": "title",
-									"value": "{{searchTitle}}",
-									"description": "Search by book title"
-								},
-								{
-									"key": "author",
-									"value": "{{searchAuthor}}",
-									"description": "Filter by author name",
-									"disabled": true
-								}
-							]
-						},
-						"description": "Search for books by title in Open Library"
-					},
-					"response": []
-				},
-				{
-					"name": "Batch ISBN Lookup",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"isbns\": [\n    \"978-0-596-52068-7\",\n    \"978-1-491-91758-9\",\n    \"978-0-13-468599-1\"\n  ]\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/isbn/batch",
-							"host": ["{{baseUrl}}"],
-							"path": ["isbn", "batch"]
-						},
-						"description": "Lookup multiple ISBNs in a single request"
-					},
-					"response": []
-				},
-				{
-					"name": "Get ISBN Service Stats",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{idToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/isbn/stats",
-							"host": ["{{baseUrl}}"],
-							"path": ["isbn", "stats"]
-						},
-						"description": "Get ISBN service statistics (cache hits, API calls, errors)"
-					},
-					"response": []
-				},
-				{
-					"name": "Clear ISBN Cache",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{idToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-trace-id",
-								"value": "{{traceId}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/isbn/cache",
-							"host": ["{{baseUrl}}"],
-							"path": ["isbn", "cache"]
-						},
-						"description": "Clear the ISBN lookup cache (requires authentication)"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Admin",
-			"description": "Admin-only endpoints (requires admin role)",
-			"item": [
-				{
-					"name": "User Management",
-					"item": [
-						{
-							"name": "List All Users",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/admin/users",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "users"]
-								},
-								"description": "List all users in the system (admin only)"
-							},
-							"response": []
-						},
-						{
-							"name": "Update User Role",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"role\": \"admin\"\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/admin/users/{{userId}}/role",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "users", "{{userId}}", "role"]
-								},
-								"description": "Update a user's role (admin only)"
-							},
-							"response": []
-						},
-						{
-							"name": "Toggle User Active Status",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"isActive\": false\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/admin/users/{{userId}}/active",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "users", "{{userId}}", "active"]
-								},
-								"description": "Activate or deactivate a user (admin only)"
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Hooks Management",
-					"item": [
-						{
-							"name": "List All Hooks",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/admin/hooks",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "hooks"]
-								},
-								"description": "List all hooks in the system"
-							},
-							"response": []
-						},
-						{
-							"name": "Get Hook Stats",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/admin/hooks/stats",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "hooks", "stats"]
-								},
-								"description": "Get hook execution statistics"
-							},
-							"response": []
-						},
-						{
-							"name": "Create Hook",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"name\": \"Log Book Creation\",\n  \"eventPattern\": \"book.create.after\",\n  \"actionType\": \"log\",\n  \"actionConfig\": {\n    \"level\": \"info\",\n    \"message\": \"New book created: {{book.title}}\"\n  },\n  \"enabled\": true,\n  \"priority\": 100\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/admin/hooks",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "hooks"]
-								},
-								"description": "Create a new hook"
-							},
-							"response": []
-						},
-						{
-							"name": "Get Hook Executions",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/admin/hooks/{{hookId}}/executions",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "hooks", "{{hookId}}", "executions"]
-								},
-								"description": "Get execution history for a specific hook"
-							},
-							"response": []
-						},
-						{
-							"name": "Reload Hooks",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/admin/hooks/reload",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "hooks", "reload"]
-								},
-								"description": "Reload all hooks from database without restart"
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Audit Logs",
-					"item": [
-						{
-							"name": "Query Audit Logs",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/admin/audit-logs?userId={{userId}}&action=create&limit=50",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "audit-logs"],
-									"query": [
-										{
-											"key": "userId",
-											"value": "{{userId}}",
-											"description": "Filter by user ID"
-										},
-										{
-											"key": "action",
-											"value": "create",
-											"description": "Filter by action type"
-										},
-										{
-											"key": "resourceType",
-											"value": "book",
-											"description": "Filter by resource type",
-											"disabled": true
-										},
-										{
-											"key": "startDate",
-											"value": "2025-12-01",
-											"description": "Start date (YYYY-MM-DD)",
-											"disabled": true
-										},
-										{
-											"key": "endDate",
-											"value": "2025-12-31",
-											"description": "End date (YYYY-MM-DD)",
-											"disabled": true
-										},
-										{
-											"key": "limit",
-											"value": "50",
-											"description": "Number of results"
-										},
-										{
-											"key": "offset",
-											"value": "0",
-											"description": "Pagination offset",
-											"disabled": true
-										}
-									]
-								},
-								"description": "Query audit logs with filters (admin only)"
-							},
-							"response": []
-						},
-						{
-							"name": "Get Audit Log by TraceId",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/admin/audit-logs/trace/{{traceId}}",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "audit-logs", "trace", "{{traceId}}"]
-								},
-								"description": "Get all audit logs for a specific trace ID (request correlation)"
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Settings",
-					"item": [
-						{
-							"name": "Get All Settings",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/admin/settings",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "settings"]
-								},
-								"description": "Get all system settings"
-							},
-							"response": []
-						},
-						{
-							"name": "Update Setting",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"value\": \"true\"\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/admin/settings/audit_logging_enabled",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "settings", "audit_logging_enabled"]
-								},
-								"description": "Update a system setting (e.g., audit_logging_enabled)"
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Statistics",
-					"item": [
-						{
-							"name": "Get System Stats",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "x-trace-id",
-										"value": "{{traceId}}"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/admin/stats",
-									"host": ["{{baseUrl}}"],
-									"path": ["admin", "stats"]
-								},
-								"description": "Get system statistics (users, books, authors, categories)"
-							},
-							"response": []
-						}
-					]
-				}
-			]
-		}
-	],
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "http://localhost:3000/api/v1",
-			"type": "string"
-		}
-	]
+ "info": {
+  "_postman_id": "a1b2c3d4-e5f6-4789-a0b1-c2d3e4f5g6h7",
+  "name": "My Many Books API",
+  "description": "Comprehensive API testing collection for My Many Books. Includes authentication (AWS Cognito), authorization (CASL), audit logging, hooks system, and all CRUD operations.\n\n**Latest Update:** December 2025 - Added authentication flows, admin endpoints, audit logging, hooks management, and traceId correlation.",
+  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+  "_exporter_id": "12345678"
+ },
+ "auth": {
+  "type": "bearer",
+  "bearer": [
+   {
+    "key": "token",
+    "value": "{{idToken}}",
+    "type": "string"
+   }
+  ]
+ },
+ "event": [
+  {
+   "listen": "prerequest",
+   "script": {
+    "type": "text/javascript",
+    "exec": [
+     "// Generate trace ID for request correlation",
+     "if (!pm.environment.get('traceId')) {",
+     "    pm.environment.set('traceId', pm.variables.replaceIn('{{$guid}}'));",
+     "}",
+     "",
+     "// Check if token is expired (simple check)",
+     "const tokenExpiry = pm.environment.get('tokenExpiry');",
+     "if (tokenExpiry && Date.now() > tokenExpiry) {",
+     "    console.log('Token expired, please refresh');",
+     "}"
+    ]
+   }
+  },
+  {
+   "listen": "test",
+   "script": {
+    "type": "text/javascript",
+    "exec": [
+     "// Global test validations",
+     "pm.test('Response time is acceptable', function() {",
+     "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+     "});",
+     "",
+     "// Check for traceId in response logs (if available)",
+     "pm.test('Status code is valid', function() {",
+     "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204, 400, 401, 403, 404, 422, 500]);",
+     "});"
+    ]
+   }
+  }
+ ],
+ "item": [
+  {
+   "name": "Authentication",
+   "description": "AWS Cognito authentication endpoints with automatic token management",
+   "item": [
+    {
+     "name": "Register",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('Registration successful', function() {",
+         "    pm.response.to.have.status(201);",
+         "});",
+         "",
+         "pm.test('Response has user data', function() {",
+         "    const jsonData = pm.response.json();",
+         "    pm.expect(jsonData).to.have.property('user');",
+         "    pm.expect(jsonData.user).to.have.property('email');",
+         "});"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}",
+        "description": "Request correlation ID"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"name\": \"Test\",\n  \"surname\": \"User\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/auth/register",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "auth",
+        "register"
+       ]
+      },
+      "description": "Register a new user with email and password"
+     },
+     "response": []
+    },
+    {
+     "name": "Login",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('Login successful', function() {",
+         "    pm.response.to.have.status(200);",
+         "});",
+         "",
+         "pm.test('Response contains tokens', function() {",
+         "    const jsonData = pm.response.json();",
+         "    pm.expect(jsonData).to.have.property('idToken');",
+         "    pm.expect(jsonData).to.have.property('accessToken');",
+         "    pm.expect(jsonData).to.have.property('user');",
+         "",
+         "    // Store tokens for subsequent requests",
+         "    pm.environment.set('idToken', jsonData.idToken);",
+         "    pm.environment.set('accessToken', jsonData.accessToken);",
+         "    ",
+         "    // Store token expiry (1 hour from now)",
+         "    pm.environment.set('tokenExpiry', Date.now() + 3600000);",
+         "    ",
+         "    // Store user info",
+         "    pm.environment.set('userId', jsonData.user.id);",
+         "    pm.environment.set('userRole', jsonData.user.role);",
+         "});",
+         "",
+         "pm.test('User has valid role', function() {",
+         "    const jsonData = pm.response.json();",
+         "    pm.expect(jsonData.user.role).to.be.oneOf(['user', 'admin']);",
+         "});"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/auth/login",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "auth",
+        "login"
+       ]
+      },
+      "description": "Login with email and password. Returns ID token, access token, and refresh token (HttpOnly cookie)."
+     },
+     "response": []
+    },
+    {
+     "name": "Refresh Token",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('Token refresh successful', function() {",
+         "    pm.response.to.have.status(200);",
+         "});",
+         "",
+         "pm.test('New tokens received', function() {",
+         "    const jsonData = pm.response.json();",
+         "    pm.expect(jsonData).to.have.property('idToken');",
+         "    pm.expect(jsonData).to.have.property('accessToken');",
+         "",
+         "    // Update stored tokens",
+         "    pm.environment.set('idToken', jsonData.idToken);",
+         "    pm.environment.set('accessToken', jsonData.accessToken);",
+         "    pm.environment.set('tokenExpiry', Date.now() + 3600000);",
+         "});"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/auth/refresh",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "auth",
+        "refresh"
+       ]
+      },
+      "description": "Refresh expired tokens using refresh token from HttpOnly cookie. Returns new ID and access tokens."
+     },
+     "response": []
+    },
+    {
+     "name": "Logout",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('Logout successful', function() {",
+         "    pm.response.to.have.status(200);",
+         "});",
+         "",
+         "// Clear stored tokens",
+         "pm.environment.unset('idToken');",
+         "pm.environment.unset('accessToken');",
+         "pm.environment.unset('tokenExpiry');",
+         "pm.environment.unset('userId');",
+         "pm.environment.unset('userRole');"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/auth/logout",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "auth",
+        "logout"
+       ]
+      },
+      "description": "Logout current user and invalidate tokens"
+     },
+     "response": []
+    }
+   ]
+  },
+  {
+   "name": "Health Check",
+   "item": [
+    {
+     "name": "API Health Check",
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/health",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "health"
+       ]
+      },
+      "description": "Check if the API is healthy and responsive"
+     },
+     "response": []
+    }
+   ]
+  },
+  {
+   "name": "Books",
+   "description": "CRUD operations for books with authorization",
+   "item": [
+    {
+     "name": "List All Books",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('Books list retrieved', function() {",
+         "    pm.response.to.have.status(200);",
+         "});",
+         "",
+         "pm.test('Response has books array', function() {",
+         "    const jsonData = pm.response.json();",
+         "    pm.expect(jsonData).to.have.property('data');",
+         "    pm.expect(jsonData.data).to.be.an('array');",
+         "});"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/books",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "books"
+       ]
+      },
+      "description": "List all books (public read access)"
+     },
+     "response": []
+    },
+    {
+     "name": "Get Book by ID",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/books/{{bookId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "books",
+        "{{bookId}}"
+       ]
+      },
+      "description": "Get a specific book by ID"
+     },
+     "response": []
+    },
+    {
+     "name": "Create Book",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('Book created successfully', function() {",
+         "    pm.response.to.have.status(201);",
+         "});",
+         "",
+         "pm.test('Response contains book ID', function() {",
+         "    const jsonData = pm.response.json();",
+         "    pm.expect(jsonData.data).to.have.property('id');",
+         "    ",
+         "    // Store book ID for subsequent tests",
+         "    pm.environment.set('createdBookId', jsonData.data.id);",
+         "});"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"title\": \"Test Book\",\n  \"isbnCode\": \"978-3-16-148410-0\",\n  \"editionDate\": \"2024-01-01\",\n  \"publishers\": [\"Test Publisher\"],\n  \"authors\": [\n    {\n      \"name\": \"John\",\n      \"surname\": \"Doe\"\n    }\n  ],\n  \"categories\": [\n    {\n      \"name\": \"Fiction\"\n    }\n  ]\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/books",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "books"
+       ]
+      },
+      "description": "Create a new book (requires authentication)"
+     },
+     "response": []
+    },
+    {
+     "name": "Update Book",
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"title\": \"Updated Test Book\",\n  \"description\": \"This book has been updated\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/books/{{createdBookId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "books",
+        "{{createdBookId}}"
+       ]
+      },
+      "description": "Update an existing book (requires ownership or admin role)"
+     },
+     "response": []
+    },
+    {
+     "name": "Delete Book",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/books/{{createdBookId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "books",
+        "{{createdBookId}}"
+       ]
+      },
+      "description": "Delete a book (requires ownership or admin role)"
+     },
+     "response": []
+    },
+    {
+     "name": "Search Books",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/books/search?title={{searchTitle}}&author={{searchAuthor}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "books",
+        "search"
+       ],
+       "query": [
+        {
+         "key": "title",
+         "value": "{{searchTitle}}",
+         "description": "Search by book title"
+        },
+        {
+         "key": "author",
+         "value": "{{searchAuthor}}",
+         "description": "Search by author name"
+        },
+        {
+         "key": "category",
+         "value": "Fiction",
+         "description": "Filter by category",
+         "disabled": true
+        },
+        {
+         "key": "status",
+         "value": "read",
+         "description": "Filter by status",
+         "disabled": true
+        }
+       ]
+      },
+      "description": "Search books in user's library"
+     },
+     "response": []
+    },
+    {
+     "name": "Search Books by ISBN",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/books/search/isbn?isbn={{testIsbn}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "books",
+        "search",
+        "isbn"
+       ],
+       "query": [
+        {
+         "key": "isbn",
+         "value": "{{testIsbn}}"
+        }
+       ]
+      },
+      "description": "Search for a book by ISBN in user's library"
+     },
+     "response": []
+    },
+    {
+     "name": "Import Book from ISBN",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "if (pm.response.code === 201) {",
+         "    const jsonData = pm.response.json();",
+         "    pm.environment.set('importedBookId', jsonData.data.id);",
+         "}"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"isbn\": \"{{testIsbn}}\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/books/import/isbn",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "books",
+        "import",
+        "isbn"
+       ]
+      },
+      "description": "Import a book from Open Library using ISBN"
+     },
+     "response": []
+    }
+   ]
+  },
+  {
+   "name": "Authors",
+   "item": [
+    {
+     "name": "List Authors",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/authors",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "authors"
+       ]
+      },
+      "description": "List all authors (user-scoped)"
+     },
+     "response": []
+    },
+    {
+     "name": "Create Author",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "if (pm.response.code === 201) {",
+         "    const jsonData = pm.response.json();",
+         "    pm.environment.set('createdAuthorId', jsonData.data.id);",
+         "}"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"name\": \"Jane\",\n  \"surname\": \"Smith\",\n  \"nationality\": \"USA\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/authors",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "authors"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "Get Author by ID",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/authors/{{createdAuthorId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "authors",
+        "{{createdAuthorId}}"
+       ]
+      },
+      "description": "Get a specific author by ID"
+     },
+     "response": []
+    },
+    {
+     "name": "Update Author",
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"nationality\": \"United Kingdom\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/authors/{{createdAuthorId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "authors",
+        "{{createdAuthorId}}"
+       ]
+      },
+      "description": "Update an existing author (requires ownership or admin role)"
+     },
+     "response": []
+    },
+    {
+     "name": "Delete Author",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/authors/{{createdAuthorId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "authors",
+        "{{createdAuthorId}}"
+       ]
+      },
+      "description": "Delete an author (requires ownership or admin role)"
+     },
+     "response": []
+    },
+    {
+     "name": "Get Author's Books",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/authors/{{createdAuthorId}}/books",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "authors",
+        "{{createdAuthorId}}",
+        "books"
+       ]
+      },
+      "description": "Get all books by a specific author"
+     },
+     "response": []
+    },
+    {
+     "name": "Search Authors",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/authors/search?query={{searchAuthor}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "authors",
+        "search"
+       ],
+       "query": [
+        {
+         "key": "query",
+         "value": "{{searchAuthor}}"
+        }
+       ]
+      }
+     },
+     "response": []
+    }
+   ]
+  },
+  {
+   "name": "Categories",
+   "item": [
+    {
+     "name": "List Categories",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/categories",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "categories"
+       ]
+      },
+      "description": "List all categories (user-scoped)"
+     },
+     "response": []
+    },
+    {
+     "name": "Create Category",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "if (pm.response.code === 201) {",
+         "    const jsonData = pm.response.json();",
+         "    pm.environment.set('createdCategoryId', jsonData.data.id);",
+         "}"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"name\": \"Science Fiction\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/categories",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "categories"
+       ]
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "Get Category by ID",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/categories/{{createdCategoryId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "categories",
+        "{{createdCategoryId}}"
+       ]
+      },
+      "description": "Get a specific category by ID"
+     },
+     "response": []
+    },
+    {
+     "name": "Update Category",
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"name\": \"Sci-Fi\"\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/categories/{{createdCategoryId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "categories",
+        "{{createdCategoryId}}"
+       ]
+      },
+      "description": "Update an existing category (requires ownership or admin role)"
+     },
+     "response": []
+    },
+    {
+     "name": "Delete Category",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/categories/{{createdCategoryId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "categories",
+        "{{createdCategoryId}}"
+       ]
+      },
+      "description": "Delete a category (requires ownership or admin role)"
+     },
+     "response": []
+    },
+    {
+     "name": "Get Category's Books",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/categories/{{createdCategoryId}}/books",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "categories",
+        "{{createdCategoryId}}",
+        "books"
+       ]
+      },
+      "description": "Get all books in a specific category"
+     },
+     "response": []
+    },
+    {
+     "name": "Search Categories",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/categories/search?query={{searchCategory}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "categories",
+        "search"
+       ],
+       "query": [
+        {
+         "key": "query",
+         "value": "{{searchCategory}}"
+        }
+       ]
+      },
+      "description": "Search categories by name"
+     },
+     "response": []
+    }
+   ]
+  },
+  {
+   "name": "ISBN Lookup",
+   "item": [
+    {
+     "name": "Lookup ISBN",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/isbn/{{testIsbn}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "isbn",
+        "{{testIsbn}}"
+       ]
+      },
+      "description": "Lookup book information by ISBN from Open Library"
+     },
+     "response": []
+    },
+    {
+     "name": "Validate ISBN",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/isbn/validate/{{testIsbn}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "isbn",
+        "validate",
+        "{{testIsbn}}"
+       ]
+      },
+      "description": "Validate ISBN format and checksum"
+     },
+     "response": []
+    },
+    {
+     "name": "Search Books by Title",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/isbn/search?title={{searchTitle}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "isbn",
+        "search"
+       ],
+       "query": [
+        {
+         "key": "title",
+         "value": "{{searchTitle}}",
+         "description": "Search by book title"
+        },
+        {
+         "key": "author",
+         "value": "{{searchAuthor}}",
+         "description": "Filter by author name",
+         "disabled": true
+        }
+       ]
+      },
+      "description": "Search for books by title in Open Library"
+     },
+     "response": []
+    },
+    {
+     "name": "Batch ISBN Lookup",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"isbns\": [\n    \"978-0-596-52068-7\",\n    \"978-1-491-91758-9\",\n    \"978-0-13-468599-1\"\n  ]\n}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/isbn/batch",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "isbn",
+        "batch"
+       ]
+      },
+      "description": "Lookup multiple ISBNs in a single request"
+     },
+     "response": []
+    },
+    {
+     "name": "Get ISBN Service Stats",
+     "request": {
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{idToken}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/isbn/stats",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "isbn",
+        "stats"
+       ]
+      },
+      "description": "Get ISBN service statistics (cache hits, API calls, errors)"
+     },
+     "response": []
+    },
+    {
+     "name": "Clear ISBN Cache",
+     "request": {
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{idToken}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "x-trace-id",
+        "value": "{{traceId}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/isbn/cache",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "isbn",
+        "cache"
+       ]
+      },
+      "description": "Clear the ISBN lookup cache (requires authentication)"
+     },
+     "response": []
+    }
+   ]
+  },
+  {
+   "name": "Admin",
+   "description": "Admin-only endpoints (requires admin role)",
+   "item": [
+    {
+     "name": "User Management",
+     "item": [
+      {
+       "name": "List All Users",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "url": {
+         "raw": "{{baseUrl}}/admin/users",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "users"
+         ]
+        },
+        "description": "List all users in the system (admin only)"
+       },
+       "response": []
+      },
+      {
+       "name": "Update User Role",
+       "request": {
+        "method": "PUT",
+        "header": [
+         {
+          "key": "Content-Type",
+          "value": "application/json"
+         },
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "body": {
+         "mode": "raw",
+         "raw": "{\n  \"role\": \"admin\"\n}"
+        },
+        "url": {
+         "raw": "{{baseUrl}}/admin/users/{{userId}}/role",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "users",
+          "{{userId}}",
+          "role"
+         ]
+        },
+        "description": "Update a user's role (admin only)"
+       },
+       "response": []
+      },
+      {
+       "name": "Toggle User Active Status",
+       "request": {
+        "method": "PUT",
+        "header": [
+         {
+          "key": "Content-Type",
+          "value": "application/json"
+         },
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "body": {
+         "mode": "raw",
+         "raw": "{\n  \"isActive\": false\n}"
+        },
+        "url": {
+         "raw": "{{baseUrl}}/admin/users/{{userId}}/active",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "users",
+          "{{userId}}",
+          "active"
+         ]
+        },
+        "description": "Activate or deactivate a user (admin only)"
+       },
+       "response": []
+      }
+     ]
+    },
+    {
+     "name": "Hooks Management",
+     "item": [
+      {
+       "name": "List All Hooks",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "url": {
+         "raw": "{{baseUrl}}/admin/hooks",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "hooks"
+         ]
+        },
+        "description": "List all hooks in the system"
+       },
+       "response": []
+      },
+      {
+       "name": "Get Hook Stats",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "url": {
+         "raw": "{{baseUrl}}/admin/hooks/stats",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "hooks",
+          "stats"
+         ]
+        },
+        "description": "Get hook execution statistics"
+       },
+       "response": []
+      },
+      {
+       "name": "Create Hook",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "Content-Type",
+          "value": "application/json"
+         },
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "body": {
+         "mode": "raw",
+         "raw": "{\n  \"name\": \"Log Book Creation\",\n  \"eventPattern\": \"book.create.after\",\n  \"actionType\": \"log\",\n  \"actionConfig\": {\n    \"level\": \"info\",\n    \"message\": \"New book created: {{book.title}}\"\n  },\n  \"enabled\": true,\n  \"priority\": 100\n}"
+        },
+        "url": {
+         "raw": "{{baseUrl}}/admin/hooks",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "hooks"
+         ]
+        },
+        "description": "Create a new hook"
+       },
+       "response": []
+      },
+      {
+       "name": "Get Hook Executions",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "url": {
+         "raw": "{{baseUrl}}/admin/hooks/{{hookId}}/executions",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "hooks",
+          "{{hookId}}",
+          "executions"
+         ]
+        },
+        "description": "Get execution history for a specific hook"
+       },
+       "response": []
+      },
+      {
+       "name": "Reload Hooks",
+       "request": {
+        "method": "POST",
+        "header": [
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "url": {
+         "raw": "{{baseUrl}}/admin/hooks/reload",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "hooks",
+          "reload"
+         ]
+        },
+        "description": "Reload all hooks from database without restart"
+       },
+       "response": []
+      }
+     ]
+    },
+    {
+     "name": "Audit Logs",
+     "item": [
+      {
+       "name": "Query Audit Logs",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "url": {
+         "raw": "{{baseUrl}}/admin/audit-logs?userId={{userId}}&action=create&limit=50",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "audit-logs"
+         ],
+         "query": [
+          {
+           "key": "userId",
+           "value": "{{userId}}",
+           "description": "Filter by user ID"
+          },
+          {
+           "key": "action",
+           "value": "create",
+           "description": "Filter by action type"
+          },
+          {
+           "key": "resourceType",
+           "value": "book",
+           "description": "Filter by resource type",
+           "disabled": true
+          },
+          {
+           "key": "startDate",
+           "value": "2025-12-01",
+           "description": "Start date (YYYY-MM-DD)",
+           "disabled": true
+          },
+          {
+           "key": "endDate",
+           "value": "2025-12-31",
+           "description": "End date (YYYY-MM-DD)",
+           "disabled": true
+          },
+          {
+           "key": "limit",
+           "value": "50",
+           "description": "Number of results"
+          },
+          {
+           "key": "offset",
+           "value": "0",
+           "description": "Pagination offset",
+           "disabled": true
+          }
+         ]
+        },
+        "description": "Query audit logs with filters (admin only)"
+       },
+       "response": []
+      },
+      {
+       "name": "Get Audit Log by TraceId",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "url": {
+         "raw": "{{baseUrl}}/admin/audit-logs/trace/{{traceId}}",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "audit-logs",
+          "trace",
+          "{{traceId}}"
+         ]
+        },
+        "description": "Get all audit logs for a specific trace ID (request correlation)"
+       },
+       "response": []
+      }
+     ]
+    },
+    {
+     "name": "Settings",
+     "item": [
+      {
+       "name": "Get All Settings",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "url": {
+         "raw": "{{baseUrl}}/admin/settings",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "settings"
+         ]
+        },
+        "description": "Get all system settings"
+       },
+       "response": []
+      },
+      {
+       "name": "Update Setting",
+       "request": {
+        "method": "PUT",
+        "header": [
+         {
+          "key": "Content-Type",
+          "value": "application/json"
+         },
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "body": {
+         "mode": "raw",
+         "raw": "{\n  \"value\": \"true\"\n}"
+        },
+        "url": {
+         "raw": "{{baseUrl}}/admin/settings/audit_logging_enabled",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "settings",
+          "audit_logging_enabled"
+         ]
+        },
+        "description": "Update a system setting (e.g., audit_logging_enabled)"
+       },
+       "response": []
+      }
+     ]
+    },
+    {
+     "name": "Statistics",
+     "item": [
+      {
+       "name": "Get System Stats",
+       "request": {
+        "method": "GET",
+        "header": [
+         {
+          "key": "x-trace-id",
+          "value": "{{traceId}}"
+         }
+        ],
+        "url": {
+         "raw": "{{baseUrl}}/admin/stats",
+         "host": [
+          "{{baseUrl}}"
+         ],
+         "path": [
+          "admin",
+          "stats"
+         ]
+        },
+        "description": "Get system statistics (users, books, authors, categories)"
+       },
+       "response": []
+      }
+     ]
+    }
+   ]
+  },
+ ],
+ "variable": [
+  {
+   "key": "baseUrl",
+   "value": "http://localhost:3000/api/v1",
+   "type": "string"
+  }
+ ]
 }
