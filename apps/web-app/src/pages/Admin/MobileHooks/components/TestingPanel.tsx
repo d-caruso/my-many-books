@@ -1,0 +1,254 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { useApi } from '../../../../contexts/ApiContext';
+import type {
+  AdminMobileHooksActionsConfigTestResponse,
+  AdminMobileHooksActionTypeTestResponse,
+  AdminMobileHooksActionTypesResponse,
+} from '../../../../services/api';
+
+const safeJsonParse = (value: string): { ok: true; data: any } | { ok: false; error: string } => {
+  try {
+    const parsed = value ? JSON.parse(value) : {};
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return { ok: false, error: 'JSON must be an object.' };
+    }
+    return { ok: true, data: parsed };
+  } catch (e: any) {
+    return { ok: false, error: e?.message || 'Invalid JSON' };
+  }
+};
+
+export const TestingPanel: React.FC = () => {
+  const { apiService } = useApi();
+
+  const [loadingTypes, setLoadingTypes] = useState(true);
+  const [typesError, setTypesError] = useState<string | null>(null);
+  const [actionTypes, setActionTypes] = useState<AdminMobileHooksActionTypesResponse | null>(null);
+
+  const [eventType, setEventType] = useState('error.unhandled');
+  const [eventPayloadJson, setEventPayloadJson] = useState('{\n  "test": true\n}');
+  const [configTestLoading, setConfigTestLoading] = useState(false);
+  const [configTestError, setConfigTestError] = useState<string | null>(null);
+  const [configTestResult, setConfigTestResult] = useState<AdminMobileHooksActionsConfigTestResponse | null>(null);
+
+  const [selectedActionType, setSelectedActionType] = useState<string>('');
+  const [dryRun, setDryRun] = useState(true);
+  const [testDataJson, setTestDataJson] = useState('{\n  "test": true\n}');
+  const [actionTestLoading, setActionTestLoading] = useState(false);
+  const [actionTestError, setActionTestError] = useState<string | null>(null);
+  const [actionTestResult, setActionTestResult] = useState<AdminMobileHooksActionTypeTestResponse | null>(null);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setLoadingTypes(true);
+        setTypesError(null);
+
+        const payload = await apiService.getAdminMobileHooksActionTypes();
+        setActionTypes(payload);
+        const first = Object.keys(payload.actions)[0] ?? '';
+        setSelectedActionType(first);
+      } catch (err: any) {
+        setTypesError(err?.message || 'Failed to load action types');
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+
+    void run();
+  }, [apiService]);
+
+  const actionTypeOptions = useMemo(() => {
+    if (!actionTypes) return [];
+    return Object.keys(actionTypes.actions).sort();
+  }, [actionTypes]);
+
+  const runConfigTest = async () => {
+    setConfigTestLoading(true);
+    setConfigTestError(null);
+    setConfigTestResult(null);
+
+    try {
+      const payloadParse = safeJsonParse(eventPayloadJson);
+      if (!payloadParse.ok) throw new Error(payloadParse.error);
+
+      const result = await apiService.testAdminMobileHooksActionsConfig({
+        eventType: eventType || undefined,
+        payload: payloadParse.data,
+      });
+      setConfigTestResult(result);
+    } catch (err: any) {
+      setConfigTestError(err?.message || 'Config test failed');
+    } finally {
+      setConfigTestLoading(false);
+    }
+  };
+
+  const runActionTest = async () => {
+    if (!selectedActionType) return;
+    setActionTestLoading(true);
+    setActionTestError(null);
+    setActionTestResult(null);
+
+    try {
+      const dataParse = safeJsonParse(testDataJson);
+      if (!dataParse.ok) throw new Error(dataParse.error);
+
+      const result = await apiService.testAdminMobileHooksActionType(selectedActionType, {
+        dryRun,
+        testData: dataParse.data,
+      });
+      setActionTestResult(result);
+    } catch (err: any) {
+      setActionTestError(err?.message || 'Action type test failed');
+    } finally {
+      setActionTestLoading(false);
+    }
+  };
+
+  return (
+    <Box display="flex" flexDirection="column" gap={2}>
+      <Paper sx={{ p: 2 }}>
+        <Typography variant="h6">Configuration test</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Simulates an event through the mapping (preview what actions would run).
+        </Typography>
+
+        {configTestError ? (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {configTestError}
+          </Alert>
+        ) : null}
+
+        <Box sx={{ mt: 2 }} display="flex" gap={2} flexWrap="wrap">
+          <TextField
+            label="Event type"
+            value={eventType}
+            onChange={(e) => setEventType(e.target.value)}
+            sx={{ minWidth: 320 }}
+          />
+          <Button
+            variant="contained"
+            onClick={() => void runConfigTest()}
+            disabled={configTestLoading}
+          >
+            {configTestLoading ? <CircularProgress size={16} /> : 'Run test'}
+          </Button>
+        </Box>
+
+        <Box sx={{ mt: 2 }}>
+          <TextField
+            label="Payload (JSON)"
+            value={eventPayloadJson}
+            onChange={(e) => setEventPayloadJson(e.target.value)}
+            fullWidth
+            multiline
+            minRows={6}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+          />
+        </Box>
+
+        {configTestResult ? (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle2">Result</Typography>
+            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: 'background.default' }}>
+              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                {JSON.stringify(configTestResult, null, 2)}
+              </pre>
+            </Paper>
+          </Box>
+        ) : null}
+      </Paper>
+
+      <Paper sx={{ p: 2 }}>
+        <Typography variant="h6">Action type test</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Validates action settings. Use dry-run for preview (non-dry-run execution may be simulated depending on backend).
+        </Typography>
+
+        {typesError ? (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {typesError}
+          </Alert>
+        ) : null}
+
+        {actionTestError ? (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {actionTestError}
+          </Alert>
+        ) : null}
+
+        <Box sx={{ mt: 2 }} display="flex" gap={2} flexWrap="wrap" alignItems="center">
+          <FormControl sx={{ minWidth: 240 }}>
+            <InputLabel id="test-action-type-label">Action type</InputLabel>
+            <Select
+              labelId="test-action-type-label"
+              label="Action type"
+              value={selectedActionType}
+              disabled={loadingTypes}
+              onChange={(e) => setSelectedActionType(e.target.value)}
+            >
+              {actionTypeOptions.map((actionType) => (
+                <MenuItem key={actionType} value={actionType}>
+                  {actionType}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControlLabel
+            control={<Switch checked={dryRun} onChange={(e) => setDryRun(e.target.checked)} />}
+            label="Dry run"
+          />
+
+          <Button
+            variant="contained"
+            onClick={() => void runActionTest()}
+            disabled={actionTestLoading || !selectedActionType}
+          >
+            {actionTestLoading ? <CircularProgress size={16} /> : 'Run test'}
+          </Button>
+        </Box>
+
+        <Box sx={{ mt: 2 }}>
+          <TextField
+            label="Test data (JSON)"
+            value={testDataJson}
+            onChange={(e) => setTestDataJson(e.target.value)}
+            fullWidth
+            multiline
+            minRows={6}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+          />
+        </Box>
+
+        {actionTestResult ? (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle2">Result</Typography>
+            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: 'background.default' }}>
+              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                {JSON.stringify(actionTestResult, null, 2)}
+              </pre>
+            </Paper>
+          </Box>
+        ) : null}
+      </Paper>
+    </Box>
+  );
+};
+
