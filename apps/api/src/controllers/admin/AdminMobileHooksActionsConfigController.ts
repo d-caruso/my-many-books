@@ -15,6 +15,7 @@ import { databaseActionTestService } from '../../services/DatabaseActionTestServ
 import { emailService } from '../../services/EmailService';
 import { pushNotificationService } from '../../services/PushNotificationService';
 import { slackService } from '../../services/SlackService';
+import { smsService } from '../../services/SmsService';
 import { webhookService } from '../../services/WebhookService';
 
 const ACTIONS_BASE = 'mobile.hooks.actions';
@@ -888,11 +889,25 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         };
 
       case ACTION_TYPES.SMS:
+        const smsSettings = settings as ActionSettings[typeof ACTION_TYPES.SMS];
+        const smsEndpoint = process.env['SMS_TEST_ENDPOINT'];
+        if (!smsEndpoint) {
+          return {
+            success: false,
+            message: 'SMS test endpoint is not configured',
+          };
+        }
+
+        const smsResult = await smsService.sendTestSms(smsEndpoint, smsSettings.recipients, testPayload);
+
         return {
-          success: true,
-          message: 'Test SMS would be sent (not implemented)',
+          success: smsResult.success,
+          message: smsResult.success
+            ? 'SMS test executed successfully'
+            : 'SMS test failed',
           details: {
-            recipients: (settings as ActionSettings[typeof ACTION_TYPES.SMS]).recipients.length,
+            recipients: smsSettings.recipients.length,
+            result: smsResult,
           },
         };
 
