@@ -17,7 +17,7 @@ describe('WebhookService', () => {
       interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
     } as any);
 
-    const service = new (require('../../../src/services/WebhookService').WebhookService)();
+    const service = new (require('../../../src/services/action-tests/WebhookService').WebhookService)();
     const results = await service.executeTestEndpoints(['https://hooks.test/success'], { foo: 'bar' });
 
     expect(results).toHaveLength(1);
@@ -35,7 +35,7 @@ describe('WebhookService', () => {
       interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
     } as any);
 
-    const service = new (require('../../../src/services/WebhookService').WebhookService)();
+    const service = new (require('../../../src/services/action-tests/WebhookService').WebhookService)();
     const results = await service.executeTestEndpoints(['https://hooks.test/retry'], {});
 
     expect(postMock).toHaveBeenCalledTimes(2);
@@ -51,7 +51,7 @@ describe('WebhookService', () => {
       interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
     } as any);
 
-    const service = new (require('../../../src/services/WebhookService').WebhookService)();
+    const service = new (require('../../../src/services/action-tests/WebhookService').WebhookService)();
     const results = await service.executeTestEndpoints(['https://blocked.example.com/hook'], {});
 
     expect(results[0].success).toBe(false);

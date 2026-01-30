@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { SmsService } from '../../../src/services/SmsService';
+import { SmsService } from '../../../src/services/action-tests/SmsService';
 
 jest.mock('axios');
 

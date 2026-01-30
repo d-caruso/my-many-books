@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { PushNotificationService } from '../../../src/services/PushNotificationService';
+import { PushNotificationService } from '../../../src/services/action-tests/PushNotificationService';
 
 jest.mock('axios');
 

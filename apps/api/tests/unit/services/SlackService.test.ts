@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { SlackService } from '../../../src/services/SlackService';
+import { SlackService } from '../../../src/services/action-tests/SlackService';
 
 jest.mock('axios');
 

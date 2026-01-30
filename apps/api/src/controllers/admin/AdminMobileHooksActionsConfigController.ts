@@ -12,11 +12,11 @@ import { getAuditLogService } from '../../services/AuditLogService';
 import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 import { databaseActionTestService } from '../../services/DatabaseActionTestService';
-import { emailService } from '../../services/EmailService';
-import { pushNotificationService } from '../../services/PushNotificationService';
-import { slackService } from '../../services/SlackService';
-import { smsService } from '../../services/SmsService';
-import { webhookService } from '../../services/WebhookService';
+import { emailService } from '../../services/action-tests/EmailService';
+import { pushNotificationService } from '../../services/action-tests/PushNotificationService';
+import { slackService } from '../../services/action-tests/SlackService';
+import { smsService } from '../../services/action-tests/SmsService';
+import { webhookService } from '../../services/action-tests/WebhookService';
 
 const ACTIONS_BASE = 'mobile.hooks.actions';
 const LISTENERS_BASE = 'mobile.hooks.listeners';

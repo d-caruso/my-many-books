@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { EmailService } from '../../../src/services/EmailService';
+import { EmailService } from '../../../src/services/action-tests/EmailService';
 
 jest.mock('axios');
 
@@ -29,14 +29,10 @@ describe('EmailService', () => {
 
     expect(result.success).toBe(true);
     expect(result.status).toBe(200);
-    expect(postMock).toHaveBeenCalledWith(
-      'https://email-provider.test/send',
-      expect.objectContaining({
-        to: ['user@example.com'],
-        subject: 'Subject',
-      }),
-      expect.any(Object)
-    );
+    expect(postMock).toHaveBeenCalledTimes(1);
+    const [url, payload] = postMock.mock.calls[0];
+    expect(url).toBe('https://email-provider.test/send');
+    expect(payload).toEqual({ to: ['user@example.com'], subject: 'Subject', body: 'body' });
   });
 
   it('returns failure when provider responds with error status', async () => {
