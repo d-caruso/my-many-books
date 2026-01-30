@@ -1,0 +1,123 @@
+{
+  "info": {
+    "_postman_id": "hookey-queue-sync-collection",
+    "name": "Hookey Queue & Sync Benchmarks",
+    "description": "Benchmark queue ingestion and sync operations for the mobile hook system.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Queue Ingestion",
+      "description": "Measure latency for event ingestion requests that are queued for processing.",
+      "item": [
+        {
+          "name": "Ingest single event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventType\": \"queue.operation\",\n  \"payload\": {\n    \"resource\": \"book\",\n    \"operation\": \"create\",\n    \"metadata\": {\n      \"source\": \"benchmark\",\n      \"timestamp\": \"{{timestamp}}\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/events"
+            }
+          }
+        },
+        {
+          "name": "Ingest batch events",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"events\": [\n    {\n      \"eventType\": \"queue.operation\",\n      \"payload\": { \"resource\": \"book\", \"operation\": \"update\" },\n      \"timestamp\": \"{{timestamp}}\"\n    },\n    {\n      \"eventType\": \"queue.operation\",\n      \"payload\": { \"resource\": \"author\", \"operation\": \"delete\" },\n      \"timestamp\": \"{{timestamp}}\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/events/batch"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sync Benchmarks",
+      "description": "Measure sync execution when triggered from the mobile client.",
+      "item": [
+        {
+          "name": "Trigger sync status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/health"
+            }
+          }
+        },
+        {
+          "name": "Fetch analytics stats (sync view)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/stats"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const key = 'hookeyQueueSyncResults';",
+          "const previous = pm.environment.get(key);",
+          "const results = previous ? JSON.parse(previous) : [];",
+          "results.push({ request: pm.info.requestName, responseTime: pm.response.responseTime, status: pm.response.code, timestamp: new Date().toISOString() });",
+          "pm.environment.set(key, JSON.stringify(results));",
+          "pm.test('Queue/Sync latency under 10s', () => pm.expect(pm.response.responseTime).to.be.below(10000));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "apiVersion",
+      "value": "api/v1",
+      "type": "string"
+    },
+    {
+      "key": "timestamp",
+      "value": "{{timestamp}}",
+      "type": "string"
+    }
+  ]
+}
