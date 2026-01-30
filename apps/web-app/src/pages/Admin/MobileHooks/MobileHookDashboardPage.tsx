@@ -35,6 +35,10 @@ export const MobileHookDashboardPage: React.FC = () => {
   const [actionTypes, setActionTypes] = useState<AdminMobileHooksActionTypesResponse | null>(null);
   const [recentEvents, setRecentEvents] = useState<AdminMobileHooksRecentEventsResponse | null>(null);
 
+  const listenersAbortRef = useRef<AbortController | null>(null);
+  const [listenersLoading, setListenersLoading] = useState(false);
+  const [listenersError, setListenersError] = useState<string | null>(null);
+
   const recentEventsAbortRef = useRef<AbortController | null>(null);
   const [recentEventsLoading, setRecentEventsLoading] = useState(false);
   const [recentEventsRefreshing, setRecentEventsRefreshing] = useState(false);
@@ -42,37 +46,54 @@ export const MobileHookDashboardPage: React.FC = () => {
 
   const loadDashboard = useCallback(async () => {
     setError(null);
-    const [healthRes, emergencyRes, listenersRes, mappingsRes, actionTypesRes, recentEventsRes] =
+    const [healthRes, emergencyRes, mappingsRes, actionTypesRes] =
       await Promise.all([
         apiService.getAdminMobileHooksHealth(),
         apiService.getAdminMobileHooksEmergencyStatus(),
-        apiService.getAdminMobileHooksConfigListeners(),
         apiService.getAdminMobileHooksActionsConfigMappings(),
         apiService.getAdminMobileHooksActionTypes(),
-        apiService.getAdminMobileHooksRecentEvents(50),
       ]);
 
     setHealth(healthRes);
     setEmergency(emergencyRes);
-    setListenersConfig(listenersRes);
     setMappingsConfig(mappingsRes);
     setActionTypes(actionTypesRes);
-    setRecentEvents(recentEventsRes);
+  }, [apiService]);
+
+  const loadListeners = useCallback(async () => {
+    listenersAbortRef.current?.abort();
+    const controller = new AbortController();
+    listenersAbortRef.current = controller;
+
+    setListenersLoading(true);
+    setListenersError(null);
+
+    try {
+      const payload = await apiService.getAdminMobileHooksConfigListeners(controller.signal);
+      if (controller.signal.aborted) return;
+      setListenersConfig(payload);
+    } catch (err: any) {
+      if (controller.signal.aborted) return;
+      setListenersError(err?.message || 'Failed to load listeners configuration');
+    } finally {
+      if (controller.signal.aborted) return;
+      setListenersLoading(false);
+    }
   }, [apiService]);
 
   const loadRecentEvents = useCallback(
     async (opts?: { background?: boolean }) => {
-      if (loading || reloading) return;
-
       recentEventsAbortRef.current?.abort();
       const controller = new AbortController();
       recentEventsAbortRef.current = controller;
 
-      if (!opts?.background) {
+      const isBackground = opts?.background === true;
+
+      if (!isBackground) {
         setRecentEventsLoading(true);
+        setRecentEventsRefreshing(true);
+        setRecentEventsError(null);
       }
-      setRecentEventsRefreshing(true);
-      setRecentEventsError(null);
 
       try {
         const payload = await apiService.getAdminMobileHooksRecentEvents(50, controller.signal);
@@ -83,11 +104,13 @@ export const MobileHookDashboardPage: React.FC = () => {
         setRecentEventsError(err?.message || 'Failed to load recent events');
       } finally {
         if (controller.signal.aborted) return;
-        setRecentEventsLoading(false);
-        setRecentEventsRefreshing(false);
+        if (!isBackground) {
+          setRecentEventsLoading(false);
+          setRecentEventsRefreshing(false);
+        }
       }
     },
-    [apiService, loading, reloading]
+    [apiService]
   );
 
   useEffect(() => {
@@ -99,30 +122,34 @@ export const MobileHookDashboardPage: React.FC = () => {
         setError(err?.message || 'Failed to load mobile hooks dashboard');
       } finally {
         setLoading(false);
+        void loadListeners();
+        void loadRecentEvents();
       }
     };
 
     void run();
     return () => {
+      listenersAbortRef.current?.abort();
       recentEventsAbortRef.current?.abort();
     };
-  }, [loadDashboard]);
+  }, [loadDashboard, loadListeners, loadRecentEvents]);
 
   useEffect(() => {
     if (loading) return;
     const intervalId = window.setInterval(() => {
+      if (reloading || recentEventsRefreshing || recentEventsLoading) return;
       void loadRecentEvents({ background: true });
     }, RECENT_EVENTS_POLL_INTERVAL_MS);
 
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [loadRecentEvents, loading]);
+  }, [loadRecentEvents, loading, reloading, recentEventsLoading, recentEventsRefreshing]);
 
   const handleReload = async () => {
     try {
       setReloading(true);
-      await loadDashboard();
+      await Promise.all([loadDashboard(), loadListeners(), loadRecentEvents()]);
     } catch (err: any) {
       setError(err?.message || 'Failed to refresh mobile hooks dashboard');
     } finally {
@@ -131,7 +158,7 @@ export const MobileHookDashboardPage: React.FC = () => {
   };
 
   const updateListener = async (eventName: string, enabled: boolean) => {
-    setError(null);
+    setListenersError(null);
     try {
       await apiService.updateAdminMobileHooksConfigListeners({
         listeners: { [eventName]: { enabled } },
@@ -149,12 +176,12 @@ export const MobileHookDashboardPage: React.FC = () => {
           : prev
       );
     } catch (err: any) {
-      setError(err?.message || `Failed to update listener: ${eventName}`);
+      setListenersError(err?.message || `Failed to update listener: ${eventName}`);
     }
   };
 
   const updateCategory = async (categoryName: string, enabled: boolean) => {
-    setError(null);
+    setListenersError(null);
     try {
       await apiService.updateAdminMobileHooksConfigListeners({
         categories: { [categoryName]: { enabled } },
@@ -172,7 +199,7 @@ export const MobileHookDashboardPage: React.FC = () => {
           : prev
       );
     } catch (err: any) {
-      setError(err?.message || `Failed to update category: ${categoryName}`);
+      setListenersError(err?.message || `Failed to update category: ${categoryName}`);
     }
   };
 
@@ -224,17 +251,17 @@ export const MobileHookDashboardPage: React.FC = () => {
               <HookOverviewCard health={health} emergency={emergency} listenersConfig={listenersConfig} />
             </Grid>
 
-            {listenersConfig ? (
-              <Grid item xs={12} md={6}>
-                <HookListenersTable
-                  listeners={listenersConfig.listeners}
-                  categories={listenersConfig.categories}
-                  disabled={reloading}
-                  onToggleListener={updateListener}
-                  onToggleCategory={updateCategory}
-                />
-              </Grid>
-            ) : null}
+            <Grid item xs={12} md={6}>
+              <HookListenersTable
+                listeners={listenersConfig?.listeners}
+                categories={listenersConfig?.categories}
+                loading={listenersLoading}
+                error={listenersError}
+                disabled={reloading}
+                onToggleListener={updateListener}
+                onToggleCategory={updateCategory}
+              />
+            </Grid>
 
             {mappingsConfig && actionTypes ? (
               <Grid item xs={12} md={6}>
@@ -251,17 +278,15 @@ export const MobileHookDashboardPage: React.FC = () => {
               <EmergencyControlsPanel emergency={emergency} onUpdate={updateEmergency} />
             </Grid>
 
-            {recentEvents ? (
-              <Grid item xs={12}>
-                <RecentHookEventsPanel
-                  events={recentEvents.events}
-                  loading={recentEventsLoading}
-                  refreshing={recentEventsRefreshing}
-                  error={recentEventsError}
-                  onRefresh={() => loadRecentEvents()}
-                />
-              </Grid>
-            ) : null}
+            <Grid item xs={12}>
+              <RecentHookEventsPanel
+                events={recentEvents?.events ?? []}
+                loading={recentEventsLoading}
+                refreshing={recentEventsRefreshing}
+                error={recentEventsError}
+                onRefresh={() => loadRecentEvents()}
+              />
+            </Grid>
           </Grid>
         )}
       </Box>

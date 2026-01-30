@@ -69,6 +69,8 @@ export const RecentHookEventsPanel: React.FC<RecentHookEventsPanelProps> = ({
   error = null,
   onRefresh,
 }) => {
+  const showEmptyState = !loading && events.length === 0;
+
   return (
     <Paper sx={{ p: 2 }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
@@ -163,11 +165,11 @@ export const RecentHookEventsPanel: React.FC<RecentHookEventsPanelProps> = ({
             </TableBody>
           </Table>
         </Box>
-      ) : (
+      ) : showEmptyState ? (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
           No recent events.
         </Typography>
-      )}
+      ) : null}
     </Paper>
   );
 };

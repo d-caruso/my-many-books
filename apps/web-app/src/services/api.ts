@@ -516,8 +516,10 @@ class ApiService {
     });
   }
 
-  async getAdminMobileHooksConfigListeners(): Promise<AdminMobileHooksConfigListenersResponse> {
-    return this.fetchAdminData('/admin/mobile-hooks/config/listeners');
+  async getAdminMobileHooksConfigListeners(
+    signal?: AbortSignal
+  ): Promise<AdminMobileHooksConfigListenersResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/config/listeners', { signal });
   }
 
   async getAdminMobileHooksActionsConfigMappings(): Promise<AdminMobileHooksActionsConfigMappingsResponse> {
