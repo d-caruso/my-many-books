@@ -12,6 +12,15 @@ export interface MobileAnalyticsEventTypeCount {
   count: number;
 }
 
+export interface MobileAnalyticsEventTypeBreakdown {
+  eventType: string;
+  attempted: number;
+  successful: number;
+  failed: number;
+  successRate: number;
+  errorRate: number;
+}
+
 export interface MobileAnalyticsActionTypeBreakdown {
   actionType: string;
   attempted: number;
@@ -28,6 +37,7 @@ export interface MobileAnalyticsStats {
   errorRate: number;
   avgProcessingTimeMs: number;
   topEventTypes: MobileAnalyticsEventTypeCount[];
+  eventTypeBreakdown: MobileAnalyticsEventTypeBreakdown[];
   lastProcessed: string | null;
   systemStatus: HealthStatus;
   timeSeries: MobileAnalyticsTimeSeriesPoint[];

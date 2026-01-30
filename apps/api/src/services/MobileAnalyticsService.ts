@@ -171,6 +171,7 @@ export class MobileAnalyticsService {
       if (errorRate > 0.3) systemStatus = HEALTH_STATUS.ERROR;
 
       const timeSeries = this.buildTimeSeries(bucketStart, bucketEnd, recentEvents);
+      const eventTypeBreakdown = this.buildEventTypeBreakdown(recentEvents);
       const actionTypeBreakdown = this.buildActionTypeBreakdown(recentEvents, actionMappings);
 
       const avgProcessingTimeMs = this.calculateAvgProcessingTimeFromEvents(recentEvents);
@@ -182,6 +183,7 @@ export class MobileAnalyticsService {
         errorRate: Math.round(errorRate * 100) / 100,
         avgProcessingTimeMs,
         topEventTypes,
+        eventTypeBreakdown,
         lastProcessed: lastProcessed?.updateDate?.toISOString() || null,
         systemStatus,
         timeSeries,
@@ -318,6 +320,41 @@ export class MobileAnalyticsService {
         };
       })
       .sort((a, b) => a.actionType.localeCompare(b.actionType));
+  }
+
+  private buildEventTypeBreakdown(
+    events: Array<{
+      eventType: string;
+      processingStatus: 'processed' | 'failed';
+    }>
+  ) {
+    const stats = new Map<string, { attempted: number; successful: number; failed: number }>();
+
+    for (const event of events) {
+      const eventType = event.eventType;
+      if (!eventType) continue;
+
+      const entry = stats.get(eventType) ?? { attempted: 0, successful: 0, failed: 0 };
+      entry.attempted += 1;
+      if (event.processingStatus === 'processed') entry.successful += 1;
+      if (event.processingStatus === 'failed') entry.failed += 1;
+      stats.set(eventType, entry);
+    }
+
+    return Array.from(stats.entries())
+      .map(([eventType, entry]) => {
+        const errorRate = entry.attempted ? entry.failed / entry.attempted : 0;
+        const successRate = entry.attempted ? entry.successful / entry.attempted : 0;
+        return {
+          eventType,
+          attempted: entry.attempted,
+          successful: entry.successful,
+          failed: entry.failed,
+          successRate: Math.round(successRate * 100) / 100,
+          errorRate: Math.round(errorRate * 100) / 100,
+        };
+      })
+      .sort((a, b) => a.eventType.localeCompare(b.eventType));
   }
 
   private async loadActionMappings(): Promise<Record<string, string[]>> {

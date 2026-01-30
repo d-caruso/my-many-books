@@ -158,6 +158,7 @@ describe('MobileAnalyticsController', () => {
           { eventType: 'user_action', count: 500 },
           { eventType: 'page_view', count: 300 }
         ],
+        eventTypeBreakdown: [],
         lastProcessed: '2026-01-09T18:00:00.000Z',
         systemStatus: HEALTH_STATUS.HEALTHY,
         timeSeries: [],
