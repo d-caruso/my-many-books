@@ -11,6 +11,7 @@ import { AppSetting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
+import { slackService } from '../../services/SlackService';
 import { webhookService } from '../../services/WebhookService';
 
 const ACTIONS_BASE = 'mobile.hooks.actions';
@@ -789,12 +790,27 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         };
 
       case ACTION_TYPES.SLACK:
-        // TODO: Integrate with Slack service
+        const slackSettings = settings as ActionSettings[typeof ACTION_TYPES.SLACK];
+        if (!slackSettings.webhook_url) {
+          return {
+            success: false,
+            message: 'Slack webhook URL is missing',
+          };
+        }
+
+        const slackResult = await slackService.postTestMessage(
+          slackSettings.webhook_url,
+          testPayload
+        );
+
         return {
-          success: true,
-          message: 'Test Slack message would be sent (not implemented)',
+          success: slackResult.success,
+          message: slackResult.success
+            ? 'Slack webhook test executed successfully'
+            : 'Slack webhook test failed',
           details: {
-            channel: (settings as ActionSettings[typeof ACTION_TYPES.SLACK]).channel,
+            channel: slackSettings.channel,
+            result: slackResult,
           },
         };
 
