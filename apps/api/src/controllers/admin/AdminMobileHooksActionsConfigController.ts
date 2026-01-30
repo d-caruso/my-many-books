@@ -11,6 +11,7 @@ import { AppSetting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
+import { databaseActionTestService } from '../../services/DatabaseActionTestService';
 import { emailService } from '../../services/EmailService';
 import { slackService } from '../../services/SlackService';
 import { webhookService } from '../../services/WebhookService';
@@ -850,12 +851,18 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         };
 
       case ACTION_TYPES.DATABASE:
-        // TODO: Insert test record
+        const dbSettings = settings as ActionSettings[typeof ACTION_TYPES.DATABASE];
+        const tableName = dbSettings.table;
+        const dbResult = await databaseActionTestService.insertTestRecord(tableName, testPayload);
+
         return {
-          success: true,
-          message: 'Test database record would be inserted (not implemented)',
+          success: dbResult.success,
+          message: dbResult.success
+            ? 'Database test record inserted successfully'
+            : 'Database test record insertion failed',
           details: {
-            table: (settings as ActionSettings[typeof ACTION_TYPES.DATABASE]).table,
+            table: tableName,
+            result: dbResult,
           },
         };
 
