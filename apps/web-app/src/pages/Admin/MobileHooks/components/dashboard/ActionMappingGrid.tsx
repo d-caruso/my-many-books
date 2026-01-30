@@ -16,7 +16,7 @@ import type {
   AdminMobileHooksActionMappings,
   AdminMobileHooksActionTypesResponse,
   AdminMobileHooksActionsConfigMappingsResponse,
-} from '../../../../services/api';
+} from '../../../../../services/api';
 
 export interface ActionMappingGridProps {
   config: AdminMobileHooksActionsConfigMappingsResponse;
@@ -120,4 +120,3 @@ export const ActionMappingGrid: React.FC<ActionMappingGridProps> = ({
     </Paper>
   );
 };
-

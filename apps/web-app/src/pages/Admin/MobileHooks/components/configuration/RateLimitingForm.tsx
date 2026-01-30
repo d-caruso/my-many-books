@@ -13,8 +13,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useApi } from '../../../../contexts/ApiContext';
-import type { AdminMobileHooksActionTypesResponse } from '../../../../services/api';
+import { useApi } from '../../../../../contexts/ApiContext';
+import type { AdminMobileHooksActionTypesResponse } from '../../../../../services/api';
 
 type RateLimitDrafts = Record<string, number | null>;
 
@@ -199,4 +199,3 @@ export const RateLimitingForm: React.FC = () => {
     </Paper>
   );
 };
-

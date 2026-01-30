@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Card, CardContent, Divider, Typography } from '@mui/material';
-import type { MobileAnalyticsStatsResponse } from '../../../../services/api';
+import type { MobileAnalyticsStatsResponse } from '../../../../../services/api';
 
 export interface PerformanceMetricsProps {
   stats: MobileAnalyticsStatsResponse | null;
@@ -38,4 +38,3 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ stats })
     </Card>
   );
 };
-

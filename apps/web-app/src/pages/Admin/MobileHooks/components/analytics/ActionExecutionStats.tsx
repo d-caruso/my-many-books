@@ -12,7 +12,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import type { MobileAnalyticsStatsResponse } from '../../../../services/api';
+import type { MobileAnalyticsStatsResponse } from '../../../../../services/api';
 
 export interface ActionExecutionStatsProps {
   stats: MobileAnalyticsStatsResponse | null;
@@ -101,4 +101,3 @@ export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ stat
     </Card>
   );
 };
-

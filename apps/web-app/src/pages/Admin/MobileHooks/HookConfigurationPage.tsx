@@ -2,10 +2,10 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import { AdminLayout } from '../AdminLayout';
-import { HookListenerForm } from './components/HookListenerForm';
-import { ActionSettingsForm } from './components/ActionSettingsForm';
-import { RateLimitingForm } from './components/RateLimitingForm';
-import { TestingPanel } from './components/TestingPanel';
+import { HookListenerForm } from './components/configuration/HookListenerForm';
+import { ActionSettingsForm } from './components/configuration/ActionSettingsForm';
+import { RateLimitingForm } from './components/configuration/RateLimitingForm';
+import { TestingPanel } from './components/configuration/TestingPanel';
 
 export const HookConfigurationPage: React.FC = () => {
   return (
@@ -35,4 +35,3 @@ export const HookConfigurationPage: React.FC = () => {
 };
 
 export default HookConfigurationPage;
-

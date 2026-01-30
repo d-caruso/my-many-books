@@ -10,7 +10,7 @@ import {
 import type {
   AdminMobileHooksEmergencyStatusResponse,
   AdminMobileHooksEmergencyStatusUpdateRequest,
-} from '../../../../services/api';
+} from '../../../../../services/api';
 
 export interface EmergencyControlsPanelProps {
   emergency: AdminMobileHooksEmergencyStatusResponse | null;
@@ -129,4 +129,3 @@ export const EmergencyControlsPanel: React.FC<EmergencyControlsPanelProps> = ({
     </Paper>
   );
 };
-

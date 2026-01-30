@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Card, CardContent, Chip, LinearProgress, Typography } from '@mui/material';
-import type { MobileAnalyticsStatsResponse } from '../../../../services/api';
+import type { MobileAnalyticsStatsResponse } from '../../../../../services/api';
 
 export interface ErrorRateMonitorProps {
   stats: MobileAnalyticsStatsResponse | null;
@@ -56,4 +56,3 @@ export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => 
     </Card>
   );
 };
-

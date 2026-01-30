@@ -4,7 +4,7 @@ import type {
   AdminMobileHooksConfigListenersResponse,
   AdminMobileHooksEmergencyStatusResponse,
   AdminMobileHooksHealthResponse,
-} from '../../../../services/api';
+} from '../../../../../services/api';
 
 export interface HookOverviewCardProps {
   health: AdminMobileHooksHealthResponse | null;
@@ -105,4 +105,3 @@ export const HookOverviewCard: React.FC<HookOverviewCardProps> = ({
     </Card>
   );
 };
-

@@ -13,8 +13,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useApi } from '../../../../contexts/ApiContext';
-import type { AdminMobileHooksActionTypesResponse } from '../../../../services/api';
+import { useApi } from '../../../../../contexts/ApiContext';
+import type { AdminMobileHooksActionTypesResponse } from '../../../../../services/api';
 
 export const ActionSettingsForm: React.FC = () => {
   const { apiService } = useApi();
@@ -205,4 +205,3 @@ export const ActionSettingsForm: React.FC = () => {
     </Paper>
   );
 };
-

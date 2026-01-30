@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Card, CardContent, Divider, LinearProgress, Typography } from '@mui/material';
-import type { MobileAnalyticsStatsResponse } from '../../../../services/api';
+import type { MobileAnalyticsStatsResponse } from '../../../../../services/api';
 
 export interface EventVolumeChartProps {
   stats: MobileAnalyticsStatsResponse | null;
@@ -65,4 +65,3 @@ export const EventVolumeChart: React.FC<EventVolumeChartProps> = ({ stats }) => 
     </Card>
   );
 };
-

@@ -12,10 +12,10 @@ import type {
   AdminMobileHooksEmergencyStatusResponse,
   AdminMobileHooksHealthResponse,
 } from '../../../services/api';
-import { HookOverviewCard } from './components/HookOverviewCard';
-import { HookListenersTable } from './components/HookListenersTable';
-import { ActionMappingGrid } from './components/ActionMappingGrid';
-import { EmergencyControlsPanel } from './components/EmergencyControlsPanel';
+import { HookOverviewCard } from './components/dashboard/HookOverviewCard';
+import { HookListenersTable } from './components/dashboard/HookListenersTable';
+import { ActionMappingGrid } from './components/dashboard/ActionMappingGrid';
+import { EmergencyControlsPanel } from './components/dashboard/EmergencyControlsPanel';
 
 export const MobileHookDashboardPage: React.FC = () => {
   const { apiService } = useApi();
@@ -201,4 +201,3 @@ export const MobileHookDashboardPage: React.FC = () => {
 };
 
 export default MobileHookDashboardPage;
-

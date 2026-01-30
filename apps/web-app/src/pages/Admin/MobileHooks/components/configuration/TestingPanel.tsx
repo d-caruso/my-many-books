@@ -14,12 +14,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useApi } from '../../../../contexts/ApiContext';
+import { useApi } from '../../../../../contexts/ApiContext';
 import type {
   AdminMobileHooksActionsConfigTestResponse,
   AdminMobileHooksActionTypeTestResponse,
   AdminMobileHooksActionTypesResponse,
-} from '../../../../services/api';
+} from '../../../../../services/api';
 
 const safeJsonParse = (value: string): { ok: true; data: any } | { ok: false; error: string } => {
   try {
@@ -251,4 +251,3 @@ export const TestingPanel: React.FC = () => {
     </Box>
   );
 };
-

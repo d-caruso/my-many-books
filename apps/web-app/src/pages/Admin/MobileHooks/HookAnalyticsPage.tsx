@@ -5,10 +5,10 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { AdminLayout } from '../AdminLayout';
 import { useApi } from '../../../contexts/ApiContext';
 import type { MobileAnalyticsStatsResponse } from '../../../services/api';
-import { EventVolumeChart } from './components/EventVolumeChart';
-import { ActionExecutionStats } from './components/ActionExecutionStats';
-import { ErrorRateMonitor } from './components/ErrorRateMonitor';
-import { PerformanceMetrics } from './components/PerformanceMetrics';
+import { EventVolumeChart } from './components/analytics/EventVolumeChart';
+import { ActionExecutionStats } from './components/analytics/ActionExecutionStats';
+import { ErrorRateMonitor } from './components/analytics/ErrorRateMonitor';
+import { PerformanceMetrics } from './components/analytics/PerformanceMetrics';
 
 export const HookAnalyticsPage: React.FC = () => {
   const { apiService } = useApi();
@@ -97,4 +97,3 @@ export const HookAnalyticsPage: React.FC = () => {
 };
 
 export default HookAnalyticsPage;
-

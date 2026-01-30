@@ -10,7 +10,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import type { AdminMobileHooksConfigListenerMap } from '../../../../services/api';
+import type { AdminMobileHooksConfigListenerMap } from '../../../../../services/api';
 
 export interface HookListenersTableProps {
   listeners: AdminMobileHooksConfigListenerMap;
@@ -92,4 +92,3 @@ export const HookListenersTable: React.FC<HookListenersTableProps> = ({
     </Box>
   );
 };
-
