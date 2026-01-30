@@ -1,6 +1,5 @@
 import { getLogger } from '@my-many-books/shared-logging';
-import { Sequelize } from 'sequelize';
-import { MobileHookActionExecution } from '../models';
+import { Sequelize, QueryTypes } from 'sequelize';
 
 interface DatabaseExecutionResult {
   success: boolean;
@@ -22,7 +21,7 @@ export class DatabaseActionTestService {
         `INSERT INTO ${table} (payload, createdAt, updatedAt) VALUES (:payload, NOW(), NOW()) RETURNING id`,
         {
           replacements: { payload: JSON.stringify(payload) },
-          type: this.sequelize.QueryTypes.INSERT,
+          type: QueryTypes.INSERT,
         }
       );
 
