@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Snackbar, Typography } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { AdminLayout } from '../AdminLayout';
@@ -27,6 +27,9 @@ export const MobileHookDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [reloading, setReloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successSnackbar, setSuccessSnackbar] = useState<{ message: string; key: number } | null>(
+    null
+  );
 
   const [health, setHealth] = useState<AdminMobileHooksHealthResponse | null>(null);
   const [emergency, setEmergency] = useState<AdminMobileHooksEmergencyStatusResponse | null>(null);
@@ -43,6 +46,10 @@ export const MobileHookDashboardPage: React.FC = () => {
   const [recentEventsLoading, setRecentEventsLoading] = useState(false);
   const [recentEventsRefreshing, setRecentEventsRefreshing] = useState(false);
   const [recentEventsError, setRecentEventsError] = useState<string | null>(null);
+
+  const showSuccess = useCallback((message: string) => {
+    setSuccessSnackbar({ message, key: Date.now() });
+  }, []);
 
   const loadDashboard = useCallback(async () => {
     setError(null);
@@ -175,6 +182,7 @@ export const MobileHookDashboardPage: React.FC = () => {
             }
           : prev
       );
+      showSuccess('Saved');
     } catch (err: any) {
       setListenersError(err?.message || `Failed to update listener: ${eventName}`);
     }
@@ -198,6 +206,7 @@ export const MobileHookDashboardPage: React.FC = () => {
             }
           : prev
       );
+      showSuccess('Saved');
     } catch (err: any) {
       setListenersError(err?.message || `Failed to update category: ${categoryName}`);
     }
@@ -207,6 +216,7 @@ export const MobileHookDashboardPage: React.FC = () => {
     setError(null);
     const payload = await apiService.updateAdminMobileHooksActionsConfigMappings({ actions });
     setMappingsConfig(payload.config);
+    showSuccess('Saved');
   };
 
   const updateEmergency = async (request: { enabled: boolean; reason?: string }) => {
@@ -218,6 +228,7 @@ export const MobileHookDashboardPage: React.FC = () => {
     ]);
     setEmergency(nextEmergency);
     setHealth(nextHealth);
+    showSuccess('Updated');
   };
 
   return (
@@ -290,6 +301,25 @@ export const MobileHookDashboardPage: React.FC = () => {
           </Grid>
         )}
       </Box>
+
+      <Snackbar
+        key={successSnackbar?.key}
+        open={Boolean(successSnackbar)}
+        autoHideDuration={3000}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        onClose={(_event, reason) => {
+          if (reason === 'clickaway') return;
+          setSuccessSnackbar(null);
+        }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setSuccessSnackbar(null)}
+        >
+          {successSnackbar?.message}
+        </Alert>
+      </Snackbar>
     </AdminLayout>
   );
 };
