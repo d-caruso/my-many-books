@@ -13,6 +13,7 @@ import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 import { databaseActionTestService } from '../../services/DatabaseActionTestService';
 import { emailService } from '../../services/EmailService';
+import { pushNotificationService } from '../../services/PushNotificationService';
 import { slackService } from '../../services/SlackService';
 import { webhookService } from '../../services/WebhookService';
 
@@ -867,9 +868,23 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         };
 
       case ACTION_TYPES.PUSH_NOTIFICATION:
+        const pushEndpoint = process.env['PUSH_NOTIFICATION_TEST_ENDPOINT'];
+        if (!pushEndpoint) {
+          return {
+            success: false,
+            message: 'Push notification test endpoint is not configured',
+          };
+        }
+
+        const pushResult = await pushNotificationService.sendTestNotification(pushEndpoint, testPayload);
         return {
-          success: true,
-          message: 'Test push notification would be sent (not implemented)',
+          success: pushResult.success,
+          message: pushResult.success
+            ? 'Push notification test executed successfully'
+            : 'Push notification test failed',
+          details: {
+            result: pushResult,
+          },
         };
 
       case ACTION_TYPES.SMS:
