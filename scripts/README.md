@@ -9,6 +9,7 @@ This directory contains automation scripts for the project.
 | **check-model-drift.ts** | Detect type inconsistencies across apps | `npm run check-model-drift` |
 | **benchmark-hookey-handlers.sh** | Run the Hookey admin handler benchmarks (Postman/Newman) | `npm run benchmark:hookey-handlers` |
 | **benchmark-hookey-queue-sync.sh** | Run the Hookey queue/sync benchmarks (Postman/Newman) | `npm run benchmark:hookey-queue-sync` |
+| **benchmark-hookey-lifecycle.sh** | Run the Hookey lifecycle event performance benchmarks (Postman/Newman) | `npm run benchmark:hookey-lifecycle` |
 
 ## Script Documentation
 

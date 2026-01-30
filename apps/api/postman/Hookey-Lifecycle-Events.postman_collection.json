@@ -1,0 +1,243 @@
+{
+  "info": {
+    "_postman_id": "f0d3e5a4-5f9d-4b2f-8e22-1c7f9b6e2d42",
+    "name": "Hookey Lifecycle Events",
+    "description": "Performance benchmarks that exercise the lifecycle-oriented hookey events (network state, error tracking, session heartbeats, and resource cleanup) plus analytics validation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Lifecycle \u00b7 Network State Change",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event_type\": \"lifecycle.network_state_change\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"data\": {\n    \"connectivity\": \"online\",\n    \"signalStrength\": \"excellent\",\n    \"source\": \"benchmark\"\n  }\n}"
+        },
+        "url": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/events"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const runtime = pm.response.responseTime;",
+              "const label = 'network-state-change';",
+              "const stored = JSON.parse(pm.collectionVariables.get('lifecycleResponseTimes') || '[]');",
+              "stored.push({ label, time: runtime });",
+              "pm.collectionVariables.set('lifecycleResponseTimes', JSON.stringify(stored));",
+              "pm.collectionVariables.set('lifecycleResponseCount', `${Number(pm.collectionVariables.get('lifecycleResponseCount') || '0') + 1}`);",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Latency under 1000ms', () => pm.expect(runtime).to.be.below(1000));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lifecycle \u00b7 Error/Crash Tracking",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event_type\": \"lifecycle.error_tracking\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"data\": {\n    \"errorCode\": \"LT-001\",\n    \"severity\": \"critical\",\n    \"message\": \"Simulated crash benchmark\",\n    \"stack\": \"benchmark-stack\",\n    \"source\": \"benchmark\"\n  }\n}"
+        },
+        "url": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/events"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const runtime = pm.response.responseTime;",
+              "const label = 'error-tracking';",
+              "const stored = JSON.parse(pm.collectionVariables.get('lifecycleResponseTimes') || '[]');",
+              "stored.push({ label, time: runtime });",
+              "pm.collectionVariables.set('lifecycleResponseTimes', JSON.stringify(stored));",
+              "pm.collectionVariables.set('lifecycleResponseCount', `${Number(pm.collectionVariables.get('lifecycleResponseCount') || '0') + 1}`);",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Latency within bounds', () => pm.expect(runtime).to.be.below(1200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lifecycle \u00b7 Session Heartbeat",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event_type\": \"lifecycle.session_heartbeat\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"data\": {\n    \"sessionId\": \"benchmark-session-{{uniqueId}}\",\n    \"heartbeatIntervalMs\": 15000,\n    \"source\": \"benchmark\"\n  }\n}"
+        },
+        "url": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/events"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.variables.set('uniqueId', Math.floor(Math.random() * 1000000));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const runtime = pm.response.responseTime;",
+              "const label = 'session-heartbeat';",
+              "const stored = JSON.parse(pm.collectionVariables.get('lifecycleResponseTimes') || '[]');",
+              "stored.push({ label, time: runtime });",
+              "pm.collectionVariables.set('lifecycleResponseTimes', JSON.stringify(stored));",
+              "pm.collectionVariables.set('lifecycleResponseCount', `${Number(pm.collectionVariables.get('lifecycleResponseCount') || '0') + 1}`);",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Heartbeat latency under 800ms', () => pm.expect(runtime).to.be.below(800));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lifecycle \u00b7 Resource Cleanup",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event_type\": \"lifecycle.resource_cleanup\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"data\": {\n    \"resources\": [\"db-connection\", \"file-handle\"],\n    \"cleaned\": true,\n    \"source\": \"benchmark\"\n  }\n}"
+        },
+        "url": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/events"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const runtime = pm.response.responseTime;",
+              "const label = 'resource-cleanup';",
+              "const stored = JSON.parse(pm.collectionVariables.get('lifecycleResponseTimes') || '[]');",
+              "stored.push({ label, time: runtime });",
+              "pm.collectionVariables.set('lifecycleResponseTimes', JSON.stringify(stored));",
+              "pm.collectionVariables.set('lifecycleResponseCount', `${Number(pm.collectionVariables.get('lifecycleResponseCount') || '0') + 1}`);",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Cleanup latency under 1200ms', () => pm.expect(runtime).to.be.below(1200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lifecycle \u00b7 High-Volume Event Burst",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{{lifecycleBatchPayload}}"
+        },
+        "url": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/events/batch"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const events = [];",
+              "for (let i = 0; i < 30; i += 1) {",
+              "  events.push({",
+              "    event_type: 'lifecycle.resource_cleanup',",
+              "    timestamp: new Date().toISOString(),",
+              "    data: { iteration: i, load: 'high', source: 'benchmark' }",
+              "  });",
+              "}",
+              "pm.environment.set('lifecycleBatchPayload', JSON.stringify({ events }));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Bulk processed', () => pm.expect(body.processed).to.be.above(0));",
+              "pm.test('No validation failures', () => pm.expect(body.failed).to.equal(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lifecycle \u00b7 Analytics Snapshot",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/{{apiVersion}}/mobile-analytics/stats"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const stats = pm.response.json();",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('No error rate regression', () => pm.expect(stats.errorRate).to.be.at.least(0));",
+              "pm.test('System status defined', () => pm.expect(stats).to.have.property('systemStatus'));"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "lifecycleResponseTimes",
+      "value": "[]"
+    },
+    {
+      "key": "lifecycleResponseCount",
+      "value": "0"
+    },
+    {
+      "key": "lifecycleBatchPayload",
+      "value": "{\"events\":[]}"
+    }
+  ]
+}

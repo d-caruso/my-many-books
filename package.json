@@ -49,7 +49,8 @@
     "check-drift": "npm run check-model-drift",
     "scripts:help": "echo 'Available scripts: check-model-drift, benchmark:hookey-handlers, benchmark:hookey-queue-sync' && echo 'See scripts/README.md for details'",
     "benchmark:hookey-handlers": "bash scripts/benchmark-hookey-handlers.sh",
-    "benchmark:hookey-queue-sync": "bash scripts/benchmark-hookey-queue-sync.sh"
+    "benchmark:hookey-queue-sync": "bash scripts/benchmark-hookey-queue-sync.sh",
+    "benchmark:hookey-lifecycle": "bash scripts/benchmark-hookey-lifecycle.sh"
   },
   "devDependencies": {
     "newman": "^5.3.1",
