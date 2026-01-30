@@ -6,7 +6,7 @@
 import { MobileAnalyticsEvent } from '../models/MobileAnalyticsEvent';
 import { Op } from 'sequelize';
 import { getLogger } from '@my-many-books/shared-logging';
-import { AppSetting } from '../models';
+import { AppSetting, MobileHookActionExecution } from '../models';
 import {
   MobileAnalyticsStats,
   MOBILE_HOOK_SETTING_KEYS,
@@ -388,14 +388,68 @@ export class MobileAnalyticsService {
    */
   private async processEventAsync(eventId: number): Promise<void> {
     try {
-      // Simulate processing time
-      await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
-      
-      // Mark as processed
-      await MobileAnalyticsEvent.update(
-        { processingStatus: 'processed' },
-        { where: { id: eventId } }
-      );
+      const event = await MobileAnalyticsEvent.findByPk(eventId);
+      if (!event) return;
+
+      const [actionMappings, listenerEnabled, emergency] = await Promise.all([
+        this.loadActionMappings(),
+        this.isListenerEnabled(event.eventType),
+        this.loadEmergencyStatus(),
+      ]);
+
+      const actionTypes = actionMappings[event.eventType] || [];
+      const actionEnabledMap = await this.loadActionEnabledMap(actionTypes);
+
+      const executedAt = new Date();
+      const executions = actionTypes.map(actionType => {
+        const actionEnabled = actionEnabledMap[actionType] ?? this.defaultActionEnabled(actionType);
+
+        const blockedByEmergency = emergency.enabled;
+        const blockedByListener = !listenerEnabled;
+
+        if (blockedByEmergency) {
+          return {
+            mobileAnalyticsEventId: event.id,
+            actionType,
+            status: 'skipped' as const,
+            errorMessage: emergency.reason ? `Emergency enabled: ${emergency.reason}` : 'Emergency enabled',
+            executedAt,
+          };
+        }
+
+        if (blockedByListener) {
+          return {
+            mobileAnalyticsEventId: event.id,
+            actionType,
+            status: 'skipped' as const,
+            errorMessage: `Listener disabled for eventType: ${event.eventType}`,
+            executedAt,
+          };
+        }
+
+        if (!actionEnabled) {
+          return {
+            mobileAnalyticsEventId: event.id,
+            actionType,
+            status: 'skipped' as const,
+            errorMessage: `Action disabled: ${actionType}`,
+            executedAt,
+          };
+        }
+
+        return {
+          mobileAnalyticsEventId: event.id,
+          actionType,
+          status: 'success' as const,
+          executedAt,
+        };
+      });
+
+      if (executions.length) {
+        await MobileHookActionExecution.bulkCreate(executions, { validate: true });
+      }
+
+      await event.update({ processingStatus: 'processed', processingError: null });
     } catch (error) {
       // Mark as failed with error
       await MobileAnalyticsEvent.update(
@@ -406,6 +460,75 @@ export class MobileAnalyticsService {
         { where: { id: eventId } }
       );
     }
+  }
+
+  private parseBooleanSetting(value: unknown, defaultValue: boolean): boolean {
+    if (value === null || value === undefined) return defaultValue;
+    const normalized = String(value).trim().toLowerCase();
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
+    return defaultValue;
+  }
+
+  private defaultActionEnabled(actionType: string): boolean {
+    // Keep database enabled by default so we persist analytics even if settings are missing.
+    if (actionType === 'database') return true;
+    return false;
+  }
+
+  private async isListenerEnabled(eventType: string): Promise<boolean> {
+    const key = `mobile.hooks.listeners.${eventType}.enabled`;
+    const setting = await AppSetting.findOne({ where: { key } });
+    return setting ? this.parseBooleanSetting(setting.value, true) : true;
+  }
+
+  private async loadEmergencyStatus(): Promise<{ enabled: boolean; reason: string | null }> {
+    const [enabledSetting, reasonSetting] = await Promise.all([
+      AppSetting.findOne({ where: { key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED } }),
+      AppSetting.findOne({ where: { key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_REASON } }),
+    ]);
+
+    return {
+      enabled: this.parseBooleanSetting(enabledSetting?.value, false),
+      reason: reasonSetting?.value || null,
+    };
+  }
+
+  private async loadActionEnabledMap(actionTypes: string[]): Promise<Record<string, boolean>> {
+    const enabledMap: Record<string, boolean> = {};
+    if (!actionTypes.length) return enabledMap;
+
+    const base = MOBILE_HOOK_SETTING_KEYS.ACTIONS_SETTINGS;
+    const keys = actionTypes.map(actionType => `${base}.${actionType}`);
+
+    const settings = await AppSetting.findAll({
+      where: {
+        key: {
+          [Op.in]: keys,
+        },
+      },
+    });
+    const byKey = new Map(settings.map(record => [record.key, record.value]));
+
+    for (const actionType of actionTypes) {
+      const raw = byKey.get(`${base}.${actionType}`);
+      if (!raw) {
+        enabledMap[actionType] = this.defaultActionEnabled(actionType);
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(raw) as { enabled?: unknown } | null;
+        enabledMap[actionType] =
+          parsed && typeof parsed === 'object' && typeof parsed.enabled === 'boolean'
+            ? parsed.enabled
+            : this.defaultActionEnabled(actionType);
+      } catch {
+        enabledMap[actionType] = this.defaultActionEnabled(actionType);
+      }
+    }
+
+    return enabledMap;
   }
 
   /**

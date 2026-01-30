@@ -19,6 +19,7 @@ export interface ModelRegistry {
   AppSetting: ModelStatic<Model>;
   SearchPinnedResult: ModelStatic<Model>;
   MobileAnalyticsEvent: ModelStatic<Model>;
+  MobileHookActionExecution: ModelStatic<Model>;
 }
 
 export class ModelAssociations {

@@ -17,6 +17,7 @@ import { Setting } from './Setting';
 import { AppSetting } from './AppSetting';
 import { SearchPinnedResult } from './SearchPinnedResult';
 import { MobileAnalyticsEvent } from './MobileAnalyticsEvent';
+import { MobileHookActionExecution } from './MobileHookActionExecution';
 import { getLogger } from '@my-many-books/shared-logging';
 
 export * from './interfaces/ModelInterfaces';
@@ -35,6 +36,7 @@ export * from './Setting';
 export * from './AppSetting';
 export * from './SearchPinnedResult';
 export * from './MobileAnalyticsEvent';
+export * from './MobileHookActionExecution';
 
 export class ModelManager {
   private static sequelize: Sequelize | null = null;
@@ -61,6 +63,7 @@ export class ModelManager {
     AppSetting.initModel(sequelize);
     SearchPinnedResult.initModel(sequelize);
     MobileAnalyticsEvent.initModel(sequelize);
+    MobileHookActionExecution.initModel(sequelize);
 
     // Register models for associations
     ModelAssociations.registerModel('User', User);
@@ -76,6 +79,7 @@ export class ModelManager {
     ModelAssociations.registerModel('AppSetting', AppSetting);
     ModelAssociations.registerModel('SearchPinnedResult', SearchPinnedResult);
     ModelAssociations.registerModel('MobileAnalyticsEvent', MobileAnalyticsEvent);
+    ModelAssociations.registerModel('MobileHookActionExecution', MobileHookActionExecution);
 
     // Define associations
     ModelAssociations.defineAssociations();
@@ -111,35 +115,37 @@ export class ModelManager {
     }
   }
 
-  static getModels(): {
-    User: typeof User;
-    Author: typeof Author;
-    Category: typeof Category;
-    Book: typeof Book;
-    BookAuthor: typeof BookAuthor;
-    BookCategory: typeof BookCategory;
-    Hook: typeof Hook;
-    HookExecution: typeof HookExecution;
-    AuditLog: typeof AuditLog;
-    Setting: typeof Setting;
-    AppSetting: typeof AppSetting;
-    SearchPinnedResult: typeof SearchPinnedResult;
-    MobileAnalyticsEvent: typeof MobileAnalyticsEvent;
-  } {
-    return {
-      User,
-      Author,
-      Category,
-      Book,
-      BookAuthor,
-      BookCategory,
-      Hook,
-      HookExecution,
-      AuditLog,
-      Setting,
-      AppSetting,
-      SearchPinnedResult,
-      MobileAnalyticsEvent,
-    };
-  }
-}
+	  static getModels(): {
+	    User: typeof User;
+	    Author: typeof Author;
+	    Category: typeof Category;
+	    Book: typeof Book;
+	    BookAuthor: typeof BookAuthor;
+	    BookCategory: typeof BookCategory;
+	    Hook: typeof Hook;
+	    HookExecution: typeof HookExecution;
+	    AuditLog: typeof AuditLog;
+	    Setting: typeof Setting;
+	    AppSetting: typeof AppSetting;
+	    SearchPinnedResult: typeof SearchPinnedResult;
+	    MobileAnalyticsEvent: typeof MobileAnalyticsEvent;
+	    MobileHookActionExecution: typeof MobileHookActionExecution;
+	  } {
+	    return {
+	      User,
+	      Author,
+	      Category,
+	      Book,
+	      BookAuthor,
+	      BookCategory,
+	      Hook,
+	      HookExecution,
+	      AuditLog,
+	      Setting,
+	      AppSetting,
+	      SearchPinnedResult,
+	      MobileAnalyticsEvent,
+	      MobileHookActionExecution,
+	    };
+	  }
+	}

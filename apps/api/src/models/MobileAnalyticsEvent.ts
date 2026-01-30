@@ -16,7 +16,7 @@ export interface MobileAnalyticsEventAttributes {
   appVersion?: string;
   deviceInfo?: object;
   processingStatus: 'pending' | 'processed' | 'failed';
-  processingError?: string;
+  processingError?: string | null;
   creationDate: Date;
   updateDate: Date;
 }
@@ -39,7 +39,7 @@ export class MobileAnalyticsEvent extends Model<
   public appVersion?: string;
   public deviceInfo?: object;
   public processingStatus!: 'pending' | 'processed' | 'failed';
-  public processingError?: string;
+  public processingError?: string | null;
   public creationDate!: Date;
   public updateDate!: Date;
 

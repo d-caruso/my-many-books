@@ -11,6 +11,7 @@ import { adminBookController } from '../controllers/admin/AdminBookController';
 import { adminSettingsController } from '../controllers/admin/AdminSettingsController';
 import { adminMobileHooksActionsConfigController } from '../controllers/admin/AdminMobileHooksActionsConfigController';
 import { adminMobileHooksSettingsController } from '../controllers/admin/AdminMobileHooksSettingsController';
+import { adminMobileHooksAnalyticsController } from '../controllers/admin/AdminMobileHooksAnalyticsController';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
@@ -257,6 +258,15 @@ router.put(
 router.get(
   '/mobile-hooks/health',
   adminMobileHooksSettingsController.getHealth.bind(adminMobileHooksSettingsController)
+);
+
+// Recent events (polling-friendly "real-time" monitoring)
+router.get(
+  '/mobile-hooks/analytics/events/recent',
+  readLimiter,
+  expressRouteWrapper(
+    adminMobileHooksAnalyticsController.getRecentEvents.bind(adminMobileHooksAnalyticsController)
+  )
 );
 
 export default router;

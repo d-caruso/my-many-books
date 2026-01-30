@@ -55,6 +55,7 @@ export const TABLE_NAMES = Object.freeze({
   BOOK_CATEGORIES: 'book_categories',
   SEARCH_PINNED_RESULTS: 'search_pinned_results',
   MOBILE_ANALYTICS_EVENTS: 'mobile_analytics_events',
+  MOBILE_HOOK_ACTION_EXECUTIONS: 'mobile_hook_action_executions',
 } as const);
 
 // Database field names
