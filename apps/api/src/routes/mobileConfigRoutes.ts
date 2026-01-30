@@ -17,6 +17,7 @@ import {
   validateBody,
   emergencyConfigSchema,
 } from '../validation';
+import { adminMobileHooksAnalyticsController } from '@/controllers/admin/AdminMobileHooksAnalyticsController';
 
 const router: express.Router = Router();
 
@@ -91,6 +92,86 @@ router.put(
 // ================================================================
 // Admin Mobile Hooks Actions Config Routes (AdminMobileHooksActionsConfigController)
 // ================================================================
+
+/**
+ * GET /admin/mobile-hooks/config/listeners
+ * Get hook listener status
+ */
+router.get(
+  '/mobile-hooks/config/listeners',
+  authMiddleware,
+  requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
+  expressRouteWrapper(
+    adminMobileHooksActionsConfigController.getHookListeners.bind(adminMobileHooksActionsConfigController)
+  )
+);
+
+/**
+ * PUT /admin/mobile-hooks/config/listeners
+ * Enable/disable specific listeners (events) + categories
+ */
+router.put(
+  '/mobile-hooks/config/listeners',
+  authMiddleware,
+  requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
+  expressRouteWrapper(
+    adminMobileHooksActionsConfigController.updateHookActionListeners.bind(adminMobileHooksActionsConfigController)
+  )
+);
+
+// Emergency Controls via adminMobileHooksSettingsController
+
+/**
+ * GET /admin/mobile-hooks/emergency
+ * Get emergency status
+ */
+router.get(
+  '/mobile-hooks/emergency',
+  authMiddleware,
+  requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
+  expressRouteWrapper(
+    adminMobileHooksSettingsController.getEmergencyStatus.bind(adminMobileHooksSettingsController)
+  )
+);
+
+/**
+ * PUT /admin/mobile-hooks/emergency
+ * Emergency enable/disable all mobile hooks
+ */
+router.put(
+  '/mobile-hooks/emergency',
+  authMiddleware,
+  requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
+  expressRouteWrapper(
+    adminMobileHooksSettingsController.updateEmergencyStatus.bind(adminMobileHooksSettingsController)
+  )
+);
+
+/**
+ * GET /admin/mobile-hooks/health
+ * Hook system health check
+ */
+router.get(
+  '/mobile-hooks/health',
+  authMiddleware,
+  requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
+  expressRouteWrapper(
+    adminMobileHooksSettingsController.getHealth.bind(adminMobileHooksSettingsController)
+  )
+);
+
+/**
+ * GET /admin/mobile-hooks/analytics/events/recent
+ * Recent events (polling-friendly "real-time" monitoring)
+ */
+router.get(
+  '/mobile-hooks/analytics/events/recent',
+  authMiddleware,
+  requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
+  expressRouteWrapper(
+    adminMobileHooksAnalyticsController.getRecentEvents.bind(adminMobileHooksAnalyticsController)
+  )
+);
 
 /**
  * GET /api/admin/mobile-hooks/actions-config/mappings

@@ -9,9 +9,6 @@ import { statsController } from '../controllers/admin/StatsController';
 import { AdminUserController } from '../controllers/admin/AdminUserController';
 import { adminBookController } from '../controllers/admin/AdminBookController';
 import { adminSettingsController } from '../controllers/admin/AdminSettingsController';
-import { adminMobileHooksActionsConfigController } from '../controllers/admin/AdminMobileHooksActionsConfigController';
-import { adminMobileHooksSettingsController } from '../controllers/admin/AdminMobileHooksSettingsController';
-import { adminMobileHooksAnalyticsController } from '../controllers/admin/AdminMobileHooksAnalyticsController';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
@@ -160,113 +157,6 @@ router.patch(
   '/settings/search',
   writeLimiter,
   expressRouteWrapper(adminSettingsController.updateSearchSettings.bind(adminSettingsController))
-);
-
-// ===== MOBILE ADMIN ENDPOINTS =====
-
-// Mobile Hook Management
-
-// Get current mobile hook listeners settings
-router.get(
-  '/mobile-hooks/settings/listeners',
-  authMiddleware,
-  expressRouteWrapper(
-    adminMobileHooksSettingsController.getListenerSettings.bind(adminMobileHooksSettingsController)
-  )
-);
-
-// Update mobile hook listeners settings
-router.put(
-  '/mobile-hooks/settings/listeners',
-  authMiddleware,
-  expressRouteWrapper(
-    adminMobileHooksSettingsController.updateListenerSettings.bind(adminMobileHooksSettingsController)
-  )
-);
-
-// Get hook listener status
-router.get(
-  '/mobile-hooks/config/listeners',
-  authMiddleware,
-  expressRouteWrapper(
-    adminMobileHooksActionsConfigController.getHookListeners.bind(adminMobileHooksActionsConfigController)
-  )
-);
-
-// Enable/disable specific listeners (events) + categories
-router.put(
-  '/mobile-hooks/config/listeners',
-  authMiddleware,
-  expressRouteWrapper(
-    adminMobileHooksActionsConfigController.updateHookActionListeners.bind(adminMobileHooksActionsConfigController)
-  )
-);
-
-// Test hook configuration
-router.post(
-  '/mobile-hooks/actions-config/test',
-  authMiddleware,
-  expressRouteWrapper(
-    adminMobileHooksActionsConfigController.testConfig.bind(adminMobileHooksActionsConfigController)
-  )
-);
-
-// Hook Action Management
-
-// Get action configurations
-router.get(
-  '/mobile-hooks/actions-config/types',
-  authMiddleware,
-  expressRouteWrapper(
-    adminMobileHooksActionsConfigController.getActionTypes.bind(adminMobileHooksActionsConfigController)
-  )
-);
-
-// Update action configurations
-router.put(
-  '/mobile-hooks/actions-config/types/:action_type',
-  authMiddleware,
-  expressRouteWrapper(
-    adminMobileHooksActionsConfigController.updateActionTypeSettings.bind(adminMobileHooksActionsConfigController)
-  )
-);
-
-// Test action execution TO DO
-router.post(
-  '/mobile-hooks/actions-config/types/:action_type/test',
-  authMiddleware,
-  expressRouteWrapper(
-    adminMobileHooksActionsConfigController.testActionType.bind(adminMobileHooksActionsConfigController)
-  )
-);
-
-// Emergency Controls via adminMobileHooksSettingsController
-
-// Get emergency status
-router.get(
-  '/mobile-hooks/emergency',
-  adminMobileHooksSettingsController.getEmergencyStatus.bind(adminMobileHooksSettingsController)
-);
-
-// Emergency enable/disable all mobile hooks
-router.put(
-  '/mobile-hooks/emergency',
-  adminMobileHooksSettingsController.updateEmergencyStatus.bind(adminMobileHooksSettingsController)
-);
-
-// Hook system health check
-router.get(
-  '/mobile-hooks/health',
-  adminMobileHooksSettingsController.getHealth.bind(adminMobileHooksSettingsController)
-);
-
-// Recent events (polling-friendly "real-time" monitoring)
-router.get(
-  '/mobile-hooks/analytics/events/recent',
-  readLimiter,
-  expressRouteWrapper(
-    adminMobileHooksAnalyticsController.getRecentEvents.bind(adminMobileHooksAnalyticsController)
-  )
 );
 
 export default router;
