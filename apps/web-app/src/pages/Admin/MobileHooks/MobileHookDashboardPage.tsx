@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -19,6 +19,8 @@ import { ActionMappingGrid } from './components/dashboard/ActionMappingGrid';
 import { EmergencyControlsPanel } from './components/dashboard/EmergencyControlsPanel';
 import { RecentHookEventsPanel } from './components/dashboard/RecentHookEventsPanel';
 
+const RECENT_EVENTS_POLL_INTERVAL_MS = 10_000;
+
 export const MobileHookDashboardPage: React.FC = () => {
   const { apiService } = useApi();
 
@@ -33,17 +35,22 @@ export const MobileHookDashboardPage: React.FC = () => {
   const [actionTypes, setActionTypes] = useState<AdminMobileHooksActionTypesResponse | null>(null);
   const [recentEvents, setRecentEvents] = useState<AdminMobileHooksRecentEventsResponse | null>(null);
 
+  const recentEventsAbortRef = useRef<AbortController | null>(null);
+  const [recentEventsLoading, setRecentEventsLoading] = useState(false);
+  const [recentEventsRefreshing, setRecentEventsRefreshing] = useState(false);
+  const [recentEventsError, setRecentEventsError] = useState<string | null>(null);
+
   const loadDashboard = useCallback(async () => {
     setError(null);
     const [healthRes, emergencyRes, listenersRes, mappingsRes, actionTypesRes, recentEventsRes] =
       await Promise.all([
-      apiService.getAdminMobileHooksHealth(),
-      apiService.getAdminMobileHooksEmergencyStatus(),
-      apiService.getAdminMobileHooksConfigListeners(),
-      apiService.getAdminMobileHooksActionsConfigMappings(),
-      apiService.getAdminMobileHooksActionTypes(),
-      apiService.getAdminMobileHooksRecentEvents(50),
-    ]);
+        apiService.getAdminMobileHooksHealth(),
+        apiService.getAdminMobileHooksEmergencyStatus(),
+        apiService.getAdminMobileHooksConfigListeners(),
+        apiService.getAdminMobileHooksActionsConfigMappings(),
+        apiService.getAdminMobileHooksActionTypes(),
+        apiService.getAdminMobileHooksRecentEvents(50),
+      ]);
 
     setHealth(healthRes);
     setEmergency(emergencyRes);
@@ -52,6 +59,36 @@ export const MobileHookDashboardPage: React.FC = () => {
     setActionTypes(actionTypesRes);
     setRecentEvents(recentEventsRes);
   }, [apiService]);
+
+  const loadRecentEvents = useCallback(
+    async (opts?: { background?: boolean }) => {
+      if (loading || reloading) return;
+
+      recentEventsAbortRef.current?.abort();
+      const controller = new AbortController();
+      recentEventsAbortRef.current = controller;
+
+      if (!opts?.background) {
+        setRecentEventsLoading(true);
+      }
+      setRecentEventsRefreshing(true);
+      setRecentEventsError(null);
+
+      try {
+        const payload = await apiService.getAdminMobileHooksRecentEvents(50, controller.signal);
+        if (controller.signal.aborted) return;
+        setRecentEvents(payload);
+      } catch (err: any) {
+        if (controller.signal.aborted) return;
+        setRecentEventsError(err?.message || 'Failed to load recent events');
+      } finally {
+        if (controller.signal.aborted) return;
+        setRecentEventsLoading(false);
+        setRecentEventsRefreshing(false);
+      }
+    },
+    [apiService, loading, reloading]
+  );
 
   useEffect(() => {
     const run = async () => {
@@ -66,7 +103,21 @@ export const MobileHookDashboardPage: React.FC = () => {
     };
 
     void run();
+    return () => {
+      recentEventsAbortRef.current?.abort();
+    };
   }, [loadDashboard]);
+
+  useEffect(() => {
+    if (loading) return;
+    const intervalId = window.setInterval(() => {
+      void loadRecentEvents({ background: true });
+    }, RECENT_EVENTS_POLL_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [loadRecentEvents, loading]);
 
   const handleReload = async () => {
     try {
@@ -202,7 +253,13 @@ export const MobileHookDashboardPage: React.FC = () => {
 
             {recentEvents ? (
               <Grid item xs={12}>
-                <RecentHookEventsPanel events={recentEvents.events} />
+                <RecentHookEventsPanel
+                  events={recentEvents.events}
+                  loading={recentEventsLoading}
+                  refreshing={recentEventsRefreshing}
+                  error={recentEventsError}
+                  onRefresh={() => loadRecentEvents()}
+                />
               </Grid>
             ) : null}
           </Grid>

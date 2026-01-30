@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -10,6 +10,8 @@ import { ActionExecutionStats } from './components/analytics/ActionExecutionStat
 import { ErrorRateMonitor } from './components/analytics/ErrorRateMonitor';
 import { PerformanceMetrics } from './components/analytics/PerformanceMetrics';
 
+const STATS_POLL_INTERVAL_MS = 10_000;
+
 export const HookAnalyticsPage: React.FC = () => {
   const { apiService } = useApi();
 
@@ -18,10 +20,22 @@ export const HookAnalyticsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<MobileAnalyticsStatsResponse | null>(null);
 
+  const abortRef = useRef<AbortController | null>(null);
+
   const loadStats = useCallback(async () => {
-    setError(null);
-    const payload = await apiService.getMobileAnalyticsStats();
-    setStats(payload);
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      const payload = await apiService.getMobileAnalyticsStats(controller.signal);
+      if (controller.signal.aborted) return;
+      setStats(payload);
+      setError(null);
+    } catch (err: any) {
+      if (controller.signal.aborted) return;
+      setError(err?.message || 'Failed to load mobile hook analytics');
+    }
   }, [apiService]);
 
   useEffect(() => {
@@ -29,22 +43,32 @@ export const HookAnalyticsPage: React.FC = () => {
       try {
         setLoading(true);
         await loadStats();
-      } catch (err: any) {
-        setError(err?.message || 'Failed to load mobile hook analytics');
       } finally {
         setLoading(false);
       }
     };
 
     void run();
+    return () => {
+      abortRef.current?.abort();
+    };
   }, [loadStats]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      if (loading || reloading) return;
+      void loadStats();
+    }, STATS_POLL_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [loadStats, loading, reloading]);
 
   const handleReload = async () => {
     try {
       setReloading(true);
       await loadStats();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to refresh analytics');
     } finally {
       setReloading(false);
     }

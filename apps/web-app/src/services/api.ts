@@ -365,8 +365,8 @@ class ApiService {
     return this.fetchAdminData('/admin/stats/summary');
   }
 
-  async getMobileAnalyticsStats(): Promise<MobileAnalyticsStatsResponse> {
-    return this.fetchAdminData('/mobile-analytics/stats');
+  async getMobileAnalyticsStats(signal?: AbortSignal): Promise<MobileAnalyticsStatsResponse> {
+    return this.fetchAdminData('/mobile-analytics/stats', { signal });
   }
 
   private buildAdminUrl(endpoint: string): string {
@@ -606,11 +606,13 @@ class ApiService {
   }
 
   async getAdminMobileHooksRecentEvents(
-    limit: number = 50
+    limit: number = 50,
+    signal?: AbortSignal
   ): Promise<AdminMobileHooksRecentEventsResponse> {
     const safeLimit = Math.min(200, Math.max(1, Math.floor(limit)));
     return this.fetchAdminData(
-      `/admin/mobile-hooks/analytics/events/recent?limit=${encodeURIComponent(safeLimit)}`
+      `/admin/mobile-hooks/analytics/events/recent?limit=${encodeURIComponent(safeLimit)}`,
+      { signal }
     );
   }
 
