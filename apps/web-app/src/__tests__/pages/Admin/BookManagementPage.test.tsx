@@ -6,21 +6,11 @@ import { initReactI18next } from 'react-i18next';
 import { BookManagementPage } from '../../../pages/Admin/BookManagementPage';
 import { ApiProvider } from '../../../contexts/ApiContext';
 
-// Mock dependencies
 const mockApiService = {
   getAdminBooks: vi.fn(),
   updateAdminBook: vi.fn(),
   deleteAdminBook: vi.fn(),
 };
-
-vi.mock('../../../contexts/ApiContext', async () => {
-  const originalModule = await vi.importActual('../../../contexts/ApiContext');
-  const useApi = () => ({ apiService: mockApiService });
-  return {
-    ...originalModule,
-    useApi,
-  };
-});
 
 vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
@@ -83,7 +73,7 @@ testI18n.use(initReactI18next).init({
 const renderWithProvider = (ui: React.ReactElement) => {
   return rtlRender(
     <I18nextProvider i18n={testI18n}>
-      <ApiProvider>
+      <ApiProvider apiService={mockApiService as any}>
         {ui}
       </ApiProvider>
     </I18nextProvider>

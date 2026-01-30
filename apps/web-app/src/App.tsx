@@ -55,6 +55,15 @@ const AdminSettingsPage = lazy(() => import('./pages/Admin/AdminSettingsPage'));
 const MobileHookDashboardPage = lazy(() =>
   import('./pages/Admin/MobileHooks/MobileHookDashboardPage').then(m => ({ default: m.MobileHookDashboardPage }))
 );
+const HookConfigurationPage = lazy(() =>
+  import('./pages/Admin/MobileHooks/HookConfigurationPage').then(m => ({ default: m.HookConfigurationPage }))
+);
+const HookAnalyticsPage = lazy(() =>
+  import('./pages/Admin/MobileHooks/HookAnalyticsPage').then(m => ({ default: m.HookAnalyticsPage }))
+);
+const MobileHookTestingPage = lazy(() =>
+  import('./pages/Admin/MobileHooks/MobileHookTestingPage').then(m => ({ default: m.MobileHookTestingPage }))
+);
 
 function App() {
   const [appReady, setAppReady] = useState(false);
@@ -194,6 +203,30 @@ function App() {
                             element={
                               <ProtectedRoute requireAdmin>
                                 <MobileHookDashboardPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/mobile-hooks/configuration"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <HookConfigurationPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/mobile-hooks/analytics"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <HookAnalyticsPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/mobile-hooks/testing"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <MobileHookTestingPage />
                               </ProtectedRoute>
                             }
                           />

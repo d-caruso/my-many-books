@@ -14,7 +14,7 @@ export default defineConfig({
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.json'],
     alias: {
-      '@my-many-books/shared-types': path.resolve(__dirname, '../../libs/shared-types/src'),
+      '@my-many-books/shared-types': path.resolve(__dirname, '../../libs/shared-types/src/index.ts'),
       '@my-many-books/shared-api': path.resolve(__dirname, '../../libs/shared-api/src'),
       '@my-many-books/shared-utils': path.resolve(__dirname, '../../libs/shared-utils/src'),
       '@my-many-books/shared-auth': path.resolve(__dirname, '../../libs/shared-auth/src'),

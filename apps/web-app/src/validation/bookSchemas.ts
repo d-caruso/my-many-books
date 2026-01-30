@@ -9,7 +9,7 @@ import { z } from 'zod';
 import {
   isValidIsbnFormat,
   ISBN_CONSTRAINTS,
-  BOOK_CONSTRAINTS,q
+  BOOK_CONSTRAINTS,
 } from '@my-many-books/shared-validation';
 import { BOOK_STATUSES } from '@my-many-books/shared-types';
 

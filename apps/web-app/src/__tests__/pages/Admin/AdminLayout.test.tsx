@@ -8,12 +8,13 @@ import { AdminLayout } from '../../../pages/Admin/AdminLayout';
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
+let mockPathname = '/admin';
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useLocation: () => ({ pathname: '/admin' }),
+    useLocation: () => ({ pathname: mockPathname }),
   };
 });
 
@@ -57,6 +58,7 @@ const renderWithProvider = (ui: React.ReactElement) => {
 describe('AdminLayout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPathname = '/admin';
   });
 
   test('renders admin panel title', () => {
@@ -87,6 +89,7 @@ describe('AdminLayout', () => {
     expect(screen.getByText('Users')).toBeInTheDocument();
     expect(screen.getByText('Books')).toBeInTheDocument();
     expect(screen.getByText('Hooks')).toBeInTheDocument();
+    expect(screen.getByText('Mobile Hooks')).toBeInTheDocument();
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 
@@ -175,5 +178,22 @@ describe('AdminLayout', () => {
     fireEvent.click(settingsButton);
 
     expect(mockNavigate).toHaveBeenCalledWith('/admin/settings');
+  });
+
+  test('shows Mobile Hooks sub-navigation and navigates to child route', () => {
+    mockPathname = '/admin/mobile-hooks/dashboard';
+
+    renderWithProvider(
+      <AdminLayout>
+        <div>Test Content</div>
+      </AdminLayout>
+    );
+
+    expect(screen.getByText('Configuration')).toBeInTheDocument();
+    expect(screen.getByText('Analytics')).toBeInTheDocument();
+    expect(screen.getByText('Testing')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Configuration'));
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/mobile-hooks/configuration');
   });
 });
