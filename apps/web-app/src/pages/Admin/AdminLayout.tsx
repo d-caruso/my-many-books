@@ -11,7 +11,8 @@ import {
   Typography,
   AppBar,
   IconButton,
-  Divider
+  Divider,
+  Collapse
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
@@ -20,6 +21,8 @@ import WebhookIcon from '@mui/icons-material/Webhook';
 import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AdminErrorBoundary } from '../../components/ErrorBoundary';
@@ -30,10 +33,16 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
+interface MenuChildItem {
+  label: string;
+  path: string;
+}
+
 interface MenuItem {
   label: string;
   icon: React.ReactElement;
   path: string;
+  children?: MenuChildItem[];
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
@@ -65,7 +74,25 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     {
       label: t('pages:admin.menu.mobile_hooks', 'Mobile Hooks'),
       icon: <PhoneIphoneIcon />,
-      path: '/admin/mobile-hooks/dashboard'
+      path: '/admin/mobile-hooks',
+      children: [
+        {
+          label: t('pages:admin.menu.mobile_hooks_dashboard', 'Dashboard'),
+          path: '/admin/mobile-hooks/dashboard',
+        },
+        {
+          label: t('pages:admin.menu.mobile_hooks_configuration', 'Configuration'),
+          path: '/admin/mobile-hooks/configuration',
+        },
+        {
+          label: t('pages:admin.menu.mobile_hooks_analytics', 'Analytics'),
+          path: '/admin/mobile-hooks/analytics',
+        },
+        {
+          label: t('pages:admin.menu.mobile_hooks_testing', 'Testing'),
+          path: '/admin/mobile-hooks/testing',
+        },
+      ],
     },
     {
       label: t('pages:admin.menu.settings', 'Settings'),
@@ -123,17 +150,64 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <Divider />
         <Box component="nav" aria-label="Admin navigation">
           <List>
-            {menuItems.map((item) => (
-              <ListItem key={item.path} disablePadding>
-                <ListItemButton
-                  selected={location.pathname === item.path}
-                  onClick={() => navigate(item.path)}
-                >
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.label} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {menuItems.map((item) => {
+              const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+              const parentSelected = hasChildren
+                ? location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+                : location.pathname === item.path;
+
+              if (!hasChildren) {
+                return (
+                  <ListItem key={item.path} disablePadding>
+                    <ListItemButton
+                      selected={parentSelected}
+                      onClick={() => navigate(item.path)}
+                    >
+                      <ListItemIcon>{item.icon}</ListItemIcon>
+                      <ListItemText primary={item.label} />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              }
+
+              const open = parentSelected;
+
+              return (
+                <React.Fragment key={item.path}>
+                  <ListItem disablePadding>
+                    <ListItemButton
+                      selected={parentSelected}
+                      onClick={() => {
+                        navigate(item.path);
+                      }}
+                    >
+                      <ListItemIcon>{item.icon}</ListItemIcon>
+                      <ListItemText primary={item.label} />
+                      {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </ListItemButton>
+                  </ListItem>
+                  <Collapse
+                    in={open}
+                    timeout="auto"
+                    unmountOnExit
+                  >
+                    <List component="div" disablePadding>
+                      {(item.children ?? []).map((child) => (
+                        <ListItem key={child.path} disablePadding>
+                          <ListItemButton
+                            selected={location.pathname === child.path}
+                            onClick={() => navigate(child.path)}
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemText primary={child.label} />
+                          </ListItemButton>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Collapse>
+                </React.Fragment>
+              );
+            })}
           </List>
         </Box>
       </Drawer>

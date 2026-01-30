@@ -360,6 +360,25 @@ class ApiService {
     return this.fetchAdminData('/admin/stats/summary');
   }
 
+  async getMobileAnalyticsStats(): Promise<MobileAnalyticsStatsResponse> {
+    const payload = await this.fetchAdminData<any>('/mobile-analytics/stats');
+
+    return {
+      eventsProcessedToday: payload.events_processed_today ?? 0,
+      eventsProcessedTotal: payload.events_processed_total ?? 0,
+      errorRate: payload.error_rate ?? 0,
+      avgProcessingTimeMs: payload.avg_processing_time_ms ?? 0,
+      topEventTypes: Array.isArray(payload.top_event_types)
+        ? payload.top_event_types.map((item: any) => ({
+            eventType: item.event_type,
+            count: item.count,
+          }))
+        : [],
+      lastProcessed: payload.last_processed ?? null,
+      systemStatus: payload.system_status ?? 'active',
+    };
+  }
+
   private buildAdminUrl(endpoint: string): string {
     const baseURL = env.API_BASE_URL;
     const cleanBaseURL = baseURL.replace(/\/$/, '');
@@ -1201,6 +1220,23 @@ export interface AdminMobileHooksHealthResponse {
   checks?: AdminMobileHooksHealthChecks;
   error?: string;
   timestamp: string;
+}
+
+export type MobileAnalyticsSystemStatus = 'active' | 'degraded' | 'error';
+
+export interface MobileAnalyticsTopEventType {
+  eventType: string;
+  count: number;
+}
+
+export interface MobileAnalyticsStatsResponse {
+  eventsProcessedToday: number;
+  eventsProcessedTotal: number;
+  errorRate: number;
+  avgProcessingTimeMs: number;
+  topEventTypes: MobileAnalyticsTopEventType[];
+  lastProcessed: string | null;
+  systemStatus: MobileAnalyticsSystemStatus;
 }
 
 export interface AdminHookSummary {
