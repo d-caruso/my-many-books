@@ -8,6 +8,10 @@ vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
 }));
 
+vi.mock('../../../pages/Admin/AdminLayout', () => ({
+  AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
+}));
+
 const buildApiService = (overrides: Record<string, any> = {}) => {
   const apiService = {
     getAdminMobileHooksHealth: vi.fn().mockResolvedValue({
