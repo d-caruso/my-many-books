@@ -11,6 +11,7 @@ import { AppSetting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
+import { webhookService } from '../../services/WebhookService';
 
 const ACTIONS_BASE = 'mobile.hooks.actions';
 const LISTENERS_BASE = 'mobile.hooks.listeners';
@@ -600,7 +601,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         executionResult = this.validateActionExecution(actionType, actionSettings);
       } else {
         // Actually execute the test action
-        executionResult = await this.executeTestAction(actionType, actionSettings);
+      executionResult = await this.executeTestAction(actionType, actionSettings, testPayload);
       }
 
       // Log audit event
@@ -764,7 +765,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
    */
   private async executeTestAction<T extends ActionType>(
     actionType: T,
-    settings: ActionSettings[T]
+    settings: ActionSettings[T],
+    testPayload: Record<string, unknown>
   ): Promise<{ success: boolean; message: string; details?: Record<string, unknown> }> {
     // First validate
     const validation = this.validateActionExecution(actionType, settings);
@@ -797,12 +799,21 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         };
 
       case ACTION_TYPES.WEBHOOK:
-        // TODO: Make actual HTTP request to test endpoint
+        const webhookSettings = settings as ActionSettings[typeof ACTION_TYPES.WEBHOOK];
+        const webhookResults = await webhookService.executeTestEndpoints(
+          webhookSettings.endpoints,
+          testPayload
+        );
+        const webhookSuccess = webhookResults.every(result => result.success);
+
         return {
-          success: true,
-          message: 'Test webhook would be called (not implemented)',
+          success: webhookSuccess,
+          message: webhookSuccess
+            ? 'Webhook test executed successfully'
+            : 'One or more webhook endpoints failed',
           details: {
-            endpoints: (settings as ActionSettings[typeof ACTION_TYPES.WEBHOOK]).endpoints.length,
+            endpoints: webhookSettings.endpoints.length,
+            results: webhookResults,
           },
         };
 
