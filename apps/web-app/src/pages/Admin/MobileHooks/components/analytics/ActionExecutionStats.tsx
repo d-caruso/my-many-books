@@ -20,9 +20,11 @@ export interface ActionExecutionStatsProps {
 
 const statusColor = (status: MobileAnalyticsStatsResponse['systemStatus']): 'success' | 'warning' | 'error' => {
   switch (status) {
-    case 'active':
+    case 'healthy':
       return 'success';
     case 'degraded':
+      return 'warning';
+    case 'disabled':
       return 'warning';
     case 'error':
     default:
@@ -33,6 +35,7 @@ const statusColor = (status: MobileAnalyticsStatsResponse['systemStatus']): 'suc
 export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ stats }) => {
   const errorRate = stats?.errorRate ?? 0;
   const successRate = Math.max(0, 1 - errorRate);
+  const breakdown = stats?.actionTypeBreakdown ?? [];
 
   return (
     <Card>
@@ -69,26 +72,32 @@ export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ stat
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
-          Top event types (processed)
+          By action type (last 24h)
         </Typography>
 
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Event type</TableCell>
-              <TableCell align="right">Count</TableCell>
+              <TableCell>Action type</TableCell>
+              <TableCell align="right">Attempted</TableCell>
+              <TableCell align="right">Success</TableCell>
+              <TableCell align="right">Failed</TableCell>
+              <TableCell align="right">Error rate</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {(stats?.topEventTypes ?? []).map((row) => (
-              <TableRow key={row.eventType} hover>
-                <TableCell sx={{ fontFamily: 'monospace' }}>{row.eventType}</TableCell>
-                <TableCell align="right">{row.count}</TableCell>
+            {breakdown.map((row) => (
+              <TableRow key={row.actionType} hover>
+                <TableCell sx={{ fontFamily: 'monospace' }}>{row.actionType}</TableCell>
+                <TableCell align="right">{row.attempted}</TableCell>
+                <TableCell align="right">{row.successful}</TableCell>
+                <TableCell align="right">{row.failed}</TableCell>
+                <TableCell align="right">{Math.round(row.errorRate * 100)}%</TableCell>
               </TableRow>
             ))}
-            {(!stats?.topEventTypes || stats.topEventTypes.length === 0) ? (
+            {breakdown.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={2}>
+                <TableCell colSpan={5}>
                   <Typography variant="body2" color="text.secondary">
                     No data available.
                   </Typography>

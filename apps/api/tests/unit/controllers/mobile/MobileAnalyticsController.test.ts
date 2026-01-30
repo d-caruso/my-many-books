@@ -7,6 +7,8 @@ import request from 'supertest';
 import express from 'express';
 import { mobileAnalyticsController } from '../../../../src/controllers/mobile/MobileAnalyticsController';
 import { mobileAnalyticsService } from '../../../../src/services/MobileAnalyticsService';
+import { HEALTH_STATUS } from '@my-many-books/shared-types';
+import type { MobileAnalyticsStats } from '@my-many-books/shared-types';
 
 // Mock the service
 jest.mock('../../../../src/services/MobileAnalyticsService');
@@ -146,17 +148,21 @@ describe('MobileAnalyticsController', () => {
 
   describe('GET /stats', () => {
     it('should return analytics statistics', async () => {
-      const mockStats = {
-        events_processed_today: 150,
-        events_processed_total: 1000,
-        error_rate: 0.02,
-        avg_processing_time_ms: 45,
-        top_event_types: [
-          { event_type: 'user_action', count: 500 },
-          { event_type: 'page_view', count: 300 }
+      const mockStats: MobileAnalyticsStats = {
+        eventsProcessedToday: 150,
+        eventsProcessedTotal: 1000,
+        failedEventsTotal: 20,
+        errorRate: 0.02,
+        avgProcessingTimeMs: 45,
+        topEventTypes: [
+          { eventType: 'user_action', count: 500 },
+          { eventType: 'page_view', count: 300 }
         ],
-        last_processed: '2026-01-09T18:00:00.000Z',
-        system_status: 'active' as const
+        lastProcessed: '2026-01-09T18:00:00.000Z',
+        systemStatus: HEALTH_STATUS.HEALTHY,
+        timeSeries: [],
+        actionTypeBreakdown: [],
+        generatedAt: '2026-01-09T18:05:00.000Z',
       };
 
       mockedService.getAnalyticsStats.mockResolvedValue(mockStats);
@@ -170,9 +176,11 @@ describe('MobileAnalyticsController', () => {
         .get('/stats')
         .expect(200);
 
+      const data = response.body.data as MobileAnalyticsStats;
+
       expect(response.body.success).toBe(true);
-      expect(response.body.data.events_processed_today).toBe(150);
-      expect(response.body.data.system_status).toBe('active');
+      expect(data.eventsProcessedToday).toBe(150);
+      expect(data.systemStatus).toBe(HEALTH_STATUS.HEALTHY);
       expect(mockedService.getAnalyticsStats).toHaveBeenCalledTimes(1);
     });
   });

@@ -6,12 +6,14 @@ export interface ErrorRateMonitorProps {
   stats: MobileAnalyticsStatsResponse | null;
 }
 
-const statusColor = (status: MobileAnalyticsStatsResponse['systemStatus']): 'success' | 'warning' | 'error' => {
+const statusColor = (status: MobileAnalyticsStatsResponse['systemStatus']): 'success' | 'warning' | 'error' | 'default' => {
   switch (status) {
-    case 'active':
+    case 'healthy':
       return 'success';
     case 'degraded':
       return 'warning';
+    case 'disabled':
+      return 'default';
     case 'error':
     default:
       return 'error';
@@ -21,7 +23,7 @@ const statusColor = (status: MobileAnalyticsStatsResponse['systemStatus']): 'suc
 export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => {
   const errorRate = stats?.errorRate ?? 0;
   const percent = Math.min(100, Math.max(0, errorRate * 100));
-  const status = stats?.systemStatus ?? 'active';
+  const status = stats?.systemStatus ?? 'healthy';
 
   return (
     <Card>
@@ -44,7 +46,7 @@ export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => 
               <LinearProgress
                 variant="determinate"
                 value={percent}
-                color={status === 'active' ? 'success' : status === 'degraded' ? 'warning' : 'error'}
+                color={status === 'healthy' ? 'success' : status === 'degraded' ? 'warning' : 'error'}
               />
             </Box>
             <Typography variant="body2" sx={{ minWidth: 52, textAlign: 'right' }}>

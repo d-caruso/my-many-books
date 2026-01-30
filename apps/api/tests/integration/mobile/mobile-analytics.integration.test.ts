@@ -24,6 +24,7 @@ jest.mock('@my-many-books/shared-i18n', () => ({
 import request from 'supertest';
 import app from '../../../src/app';
 import { mobileAnalyticsService } from '../../../src/services/MobileAnalyticsService';
+import type { MobileAnalyticsStats } from '@my-many-books/shared-types';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -352,37 +353,22 @@ describe('Mobile Analytics Integration Tests', () => {
   describe('Analytics Retrieval Flow', () => {
     describe('GET /mobile-analytics/stats - Analytics Statistics', () => {
       it('should return comprehensive analytics statistics', async () => {
-        const mockStats = {
-          totalEvents: 1250,
-          eventsToday: 85,
-          eventsThisWeek: 420,
-          eventsThisMonth: 1850,
+        const mockStats: MobileAnalyticsStats = {
+          eventsProcessedToday: 85,
+          eventsProcessedTotal: 1250,
+          failedEventsTotal: 25,
+          errorRate: 0.02,
+          avgProcessingTimeMs: 45,
           topEventTypes: [
             { eventType: 'app_launch', count: 450 },
             { eventType: 'button_click', count: 380 },
             { eventType: 'page_view', count: 320 },
           ],
-          userActivity: {
-            activeUsersToday: 15,
-            activeUsersThisWeek: 75,
-            activeUsersThisMonth: 180,
-          },
-          deviceMetrics: {
-            totalDevices: 95,
-            platformDistribution: {
-              ios: 58,
-              android: 37,
-            },
-          },
-          performanceMetrics: {
-            avgProcessingTime: 45,
-            avgEventSize: 1.2,
-            successRate: 98.5,
-          },
-          timeRange: {
-            earliest: '2024-01-01T00:00:00Z',
-            latest: '2024-01-10T10:30:00Z',
-          },
+          lastProcessed: '2024-01-10T10:30:00Z',
+          systemStatus: 'healthy',
+          timeSeries: [],
+          actionTypeBreakdown: [],
+          generatedAt: '2024-01-10T10:35:00Z',
         };
 
         (mobileAnalyticsService.getAnalyticsStats as jest.Mock).mockResolvedValue(mockStats);
@@ -391,39 +377,29 @@ describe('Mobile Analytics Integration Tests', () => {
           .get(`${BASE_URL}/stats`)
           .expect(200);
 
+        const data = response.body.data as MobileAnalyticsStats;
+
         expect(response.body.success).toBe(true);
-        expect(response.body.data).toEqual(mockStats);
-        expect(response.body.data).toHaveProperty('totalEvents', 1250);
-        expect(response.body.data).toHaveProperty('topEventTypes');
-        expect(response.body.data).toHaveProperty('userActivity');
-        expect(response.body.data).toHaveProperty('performanceMetrics');
+        expect(data).toEqual(mockStats);
+        expect(data.eventsProcessedTotal).toBe(1250);
+        expect(data.topEventTypes).toBeDefined();
+        expect(data.timeSeries).toBeDefined();
+        expect(data.actionTypeBreakdown).toBeDefined();
       });
 
       it('should handle empty analytics data gracefully', async () => {
-        const emptyStats = {
-          totalEvents: 0,
-          eventsToday: 0,
-          eventsThisWeek: 0,
-          eventsThisMonth: 0,
+        const emptyStats: MobileAnalyticsStats = {
+          eventsProcessedToday: 0,
+          eventsProcessedTotal: 0,
+          failedEventsTotal: 0,
+          errorRate: 0,
+          avgProcessingTimeMs: 0,
           topEventTypes: [],
-          userActivity: {
-            activeUsersToday: 0,
-            activeUsersThisWeek: 0,
-            activeUsersThisMonth: 0,
-          },
-          deviceMetrics: {
-            totalDevices: 0,
-            platformDistribution: {},
-          },
-          performanceMetrics: {
-            avgProcessingTime: 0,
-            avgEventSize: 0,
-            successRate: 0,
-          },
-          timeRange: {
-            earliest: null,
-            latest: null,
-          },
+          lastProcessed: null,
+          systemStatus: 'healthy',
+          timeSeries: [],
+          actionTypeBreakdown: [],
+          generatedAt: '2024-01-10T10:35:00Z',
         };
 
         (mobileAnalyticsService.getAnalyticsStats as jest.Mock).mockResolvedValue(emptyStats);
@@ -432,9 +408,11 @@ describe('Mobile Analytics Integration Tests', () => {
           .get(`${BASE_URL}/stats`)
           .expect(200);
 
+        const data = response.body.data as MobileAnalyticsStats;
+
         expect(response.body.success).toBe(true);
-        expect(response.body.data.totalEvents).toBe(0);
-        expect(response.body.data.topEventTypes).toEqual([]);
+        expect(data.eventsProcessedTotal).toBe(0);
+        expect(data.topEventTypes).toEqual([]);
       });
 
       it('should handle analytics service errors', async () => {

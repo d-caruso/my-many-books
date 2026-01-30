@@ -6,6 +6,12 @@
 import { MobileAnalyticsEvent } from '../models/MobileAnalyticsEvent';
 import { Op } from 'sequelize';
 import { getLogger } from '@my-many-books/shared-logging';
+import { AppSetting } from '../models';
+import {
+  MobileAnalyticsStats,
+  MOBILE_HOOK_SETTING_KEYS,
+  HEALTH_STATUS,
+} from '@my-many-books/shared-types';
 
 export interface MobileEventData {
   eventId: string;
@@ -15,16 +21,6 @@ export interface MobileEventData {
   data: Record<string, unknown>;
   appVersion?: string;
   deviceInfo?: Record<string, unknown>;
-}
-
-export interface AnalyticsStats {
-  events_processed_today: number;
-  events_processed_total: number;
-  error_rate: number;
-  avg_processing_time_ms: number;
-  top_event_types: Array<{ event_type: string; count: number }>;
-  last_processed: string | null;
-  system_status: 'active' | 'degraded' | 'error';
 }
 
 export class MobileAnalyticsService {
@@ -95,23 +91,40 @@ export class MobileAnalyticsService {
   /**
    * Get analytics statistics
    */
-  async getAnalyticsStats(): Promise<AnalyticsStats> {
+  async getAnalyticsStats(): Promise<MobileAnalyticsStats> {
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const now = new Date();
+
+      const startOfToday = new Date(now);
+      startOfToday.setHours(0, 0, 0, 0);
+
+      const bucketEnd = new Date(now);
+      bucketEnd.setMinutes(0, 0, 0);
+
+      const bucketStart = new Date(bucketEnd);
+      bucketStart.setHours(bucketStart.getHours() - 23);
       
+      type RecentEventRow = {
+        eventType: string;
+        processingStatus: 'processed' | 'failed';
+        creationDate: Date;
+        updateDate: Date;
+      };
+
       const [
         eventsToday,
-        eventsTotal,
-        failedEvents,
+        processedEventsTotal,
+        failedEventsTotal,
         topEventTypes,
-        lastProcessed
+        lastProcessed,
+        recentEvents,
+        actionMappings
       ] = await Promise.all([
         // Events processed today
         MobileAnalyticsEvent.count({
           where: {
             processingStatus: 'processed',
-            creationDate: { [Op.gte]: today }
+            creationDate: { [Op.gte]: startOfToday }
           }
         }),
         
@@ -133,25 +146,47 @@ export class MobileAnalyticsService {
           where: { processingStatus: 'processed' },
           order: [['updateDate', 'DESC']],
           attributes: ['updateDate']
-        })
+        }),
+
+        // Recent events for time series + action-type breakdown
+        MobileAnalyticsEvent.findAll({
+          where: {
+            creationDate: { [Op.gte]: bucketStart },
+            processingStatus: { [Op.in]: ['processed', 'failed'] },
+          },
+          attributes: ['eventType', 'processingStatus', 'creationDate', 'updateDate'],
+          raw: true,
+        }) as unknown as Promise<RecentEventRow[]>,
+
+        // Mobile hook mappings (eventType → actionType[])
+        this.loadActionMappings(),
       ]);
 
-      const totalEvents = eventsTotal + failedEvents;
-      const errorRate = totalEvents > 0 ? (failedEvents / totalEvents) : 0;
+      const totalEvents = processedEventsTotal + failedEventsTotal;
+      const errorRate = totalEvents > 0 ? (failedEventsTotal / totalEvents) : 0;
 
       // Determine system status
-      let systemStatus: 'active' | 'degraded' | 'error' = 'active';
-      if (errorRate > 0.1) systemStatus = 'degraded';
-      if (errorRate > 0.3) systemStatus = 'error';
+      let systemStatus: MobileAnalyticsStats['systemStatus'] = HEALTH_STATUS.HEALTHY;
+      if (errorRate > 0.1) systemStatus = HEALTH_STATUS.DEGRADED;
+      if (errorRate > 0.3) systemStatus = HEALTH_STATUS.ERROR;
+
+      const timeSeries = this.buildTimeSeries(bucketStart, bucketEnd, recentEvents);
+      const actionTypeBreakdown = this.buildActionTypeBreakdown(recentEvents, actionMappings);
+
+      const avgProcessingTimeMs = this.calculateAvgProcessingTimeFromEvents(recentEvents);
 
       return {
-        events_processed_today: eventsToday,
-        events_processed_total: eventsTotal,
-        error_rate: Math.round(errorRate * 100) / 100,
-        avg_processing_time_ms: await this.calculateAvgProcessingTime(),
-        top_event_types: topEventTypes,
-        last_processed: lastProcessed?.updateDate?.toISOString() || null,
-        system_status: systemStatus
+        eventsProcessedToday: eventsToday,
+        eventsProcessedTotal: processedEventsTotal,
+        failedEventsTotal,
+        errorRate: Math.round(errorRate * 100) / 100,
+        avgProcessingTimeMs,
+        topEventTypes,
+        lastProcessed: lastProcessed?.updateDate?.toISOString() || null,
+        systemStatus,
+        timeSeries,
+        actionTypeBreakdown,
+        generatedAt: now.toISOString(),
       };
     } catch (error) {
       throw new Error(`Failed to get analytics stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -161,7 +196,7 @@ export class MobileAnalyticsService {
   /**
    * Get top event types by count
    */
-  private async getTopEventTypes(): Promise<Array<{ event_type: string; count: number }>> {
+  private async getTopEventTypes(): Promise<Array<{ eventType: string; count: number }>> {
     try {
       const results = await MobileAnalyticsEvent.findAll({
         attributes: [
@@ -178,7 +213,7 @@ export class MobileAnalyticsService {
       const typedResults = results as unknown as Array<{ eventType: string; count: string }>;
 
       return typedResults.map(result => ({
-        event_type: result.eventType,
+        eventType: result.eventType,
         count: parseInt(result.count, 10)
       }));
     } catch (error) {
@@ -189,30 +224,125 @@ export class MobileAnalyticsService {
     }
   }
 
-  /**
-   * Calculate average processing time
-   */
-  private async calculateAvgProcessingTime(): Promise<number> {
-    try {
-      const result = await MobileAnalyticsEvent.findOne({
-        attributes: [
-          [MobileAnalyticsEvent.sequelize!.fn('AVG', 
-            MobileAnalyticsEvent.sequelize!.literal('EXTRACT(EPOCH FROM (update_date - creation_date)) * 1000')
-          ), 'avgTime']
-        ],
-        where: { 
-          processingStatus: 'processed',
-          updateDate: { [Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
-        },
-        raw: true
-      }) as { avgTime: string } | null;
+  private buildTimeSeries(
+    start: Date,
+    end: Date,
+    events: Array<{
+      eventType: string;
+      processingStatus: 'processed' | 'failed';
+      creationDate: Date;
+      updateDate: Date;
+    }>
+  ) {
+    const bucketMap = new Map<
+      string,
+      { bucketStart: string; processed: number; failed: number; total: number }
+    >();
 
-      return result?.avgTime ? Math.round(parseFloat(result.avgTime)) : 0;
+    const cursor = new Date(start);
+    cursor.setMinutes(0, 0, 0);
+    while (cursor.getTime() <= end.getTime()) {
+      const key = cursor.toISOString();
+      bucketMap.set(key, { bucketStart: key, processed: 0, failed: 0, total: 0 });
+      cursor.setHours(cursor.getHours() + 1);
+    }
+
+    for (const event of events) {
+      const bucket = new Date(event.creationDate);
+      bucket.setMinutes(0, 0, 0);
+      const key = bucket.toISOString();
+      const entry = bucketMap.get(key);
+      if (!entry) continue;
+
+      if (event.processingStatus === 'processed') entry.processed += 1;
+      if (event.processingStatus === 'failed') entry.failed += 1;
+      entry.total += 1;
+    }
+
+    return Array.from(bucketMap.values()).sort((a, b) => a.bucketStart.localeCompare(b.bucketStart));
+  }
+
+  private calculateAvgProcessingTimeFromEvents(
+    events: Array<{
+      processingStatus: 'processed' | 'failed';
+      creationDate: Date;
+      updateDate: Date;
+    }>
+  ): number {
+    const processed = events.filter(e => e.processingStatus === 'processed');
+    if (!processed.length) return 0;
+
+    const totalMs = processed.reduce((sum, e) => {
+      const start = new Date(e.creationDate).getTime();
+      const end = new Date(e.updateDate).getTime();
+      return sum + Math.max(0, end - start);
+    }, 0);
+
+    return Math.round(totalMs / processed.length);
+  }
+
+  private buildActionTypeBreakdown(
+    events: Array<{
+      eventType: string;
+      processingStatus: 'processed' | 'failed';
+    }>,
+    mappings: Record<string, string[]>
+  ) {
+    const stats = new Map<string, { attempted: number; successful: number; failed: number }>();
+
+    for (const event of events) {
+      const actionTypes = mappings[event.eventType];
+      if (!Array.isArray(actionTypes) || actionTypes.length === 0) continue;
+
+      for (const actionType of actionTypes) {
+        if (typeof actionType !== 'string' || !actionType) continue;
+        const entry = stats.get(actionType) ?? { attempted: 0, successful: 0, failed: 0 };
+        entry.attempted += 1;
+        if (event.processingStatus === 'processed') entry.successful += 1;
+        if (event.processingStatus === 'failed') entry.failed += 1;
+        stats.set(actionType, entry);
+      }
+    }
+
+    return Array.from(stats.entries())
+      .map(([actionType, entry]) => {
+        const errorRate = entry.attempted ? entry.failed / entry.attempted : 0;
+        const successRate = entry.attempted ? entry.successful / entry.attempted : 0;
+        return {
+          actionType,
+          attempted: entry.attempted,
+          successful: entry.successful,
+          failed: entry.failed,
+          successRate: Math.round(successRate * 100) / 100,
+          errorRate: Math.round(errorRate * 100) / 100,
+        };
+      })
+      .sort((a, b) => a.actionType.localeCompare(b.actionType));
+  }
+
+  private async loadActionMappings(): Promise<Record<string, string[]>> {
+    try {
+      const record = await AppSetting.findOne({
+        where: { key: MOBILE_HOOK_SETTING_KEYS.ACTIONS_MAPPINGS },
+      });
+
+      if (!record?.value) return {};
+
+      const parsed = JSON.parse(record.value);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+
+      const mappings: Record<string, string[]> = {};
+      for (const [eventType, actionTypes] of Object.entries(parsed as Record<string, unknown>)) {
+        if (!Array.isArray(actionTypes)) continue;
+        mappings[eventType] = actionTypes.filter((v): v is string => typeof v === 'string' && v.length > 0);
+      }
+      return mappings;
     } catch (error) {
-      getLogger().error({ 
-        err: error instanceof Error ? error : new Error(String(error))
-      }, 'Failed to calculate avg processing time');
-      return 0;
+      getLogger().error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Failed to load action mappings'
+      );
+      return {};
     }
   }
 

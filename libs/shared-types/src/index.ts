@@ -24,6 +24,9 @@ export * from './theme';
 // Settings-related exports
 export * from './settings';
 
+// Mobile analytics exports
+export * from './mobile-analytics';
+
 // Constants exports
 export * from './constants/resource-types';
 export * from './constants/sort-directions';
