@@ -22,6 +22,8 @@ export interface HookListenersTableProps {
   disabled?: boolean;
   onToggleListener: (eventName: string, enabled: boolean) => void | Promise<void>;
   onToggleCategory: (categoryName: string, enabled: boolean) => void | Promise<void>;
+  savingListeners?: Record<string, boolean>;
+  savingCategories?: Record<string, boolean>;
 }
 
 export const HookListenersTable: React.FC<HookListenersTableProps> = ({
@@ -32,6 +34,8 @@ export const HookListenersTable: React.FC<HookListenersTableProps> = ({
   disabled = false,
   onToggleListener,
   onToggleCategory,
+  savingListeners = {},
+  savingCategories = {},
 }) => {
   const listenerNames = Object.keys(listeners).sort();
   const categoryNames = Object.keys(categories).sort();
@@ -75,19 +79,25 @@ export const HookListenersTable: React.FC<HookListenersTableProps> = ({
                 </TableCell>
               </TableRow>
             ) : (
-              listenerNames.map((eventName) => (
-                <TableRow key={eventName} hover>
-                  <TableCell sx={{ fontFamily: 'monospace' }}>{eventName}</TableCell>
-                  <TableCell align="right">
-                    <Switch
-                      checked={listeners[eventName]?.enabled ?? false}
-                      disabled={disabled || loading}
-                      onChange={(e) => onToggleListener(eventName, e.target.checked)}
-                      inputProps={{ 'aria-label': `Toggle ${eventName}` }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
+              listenerNames.map((eventName) => {
+                const isSaving = Boolean(savingListeners[eventName]);
+                return (
+                  <TableRow key={eventName} hover>
+                    <TableCell sx={{ fontFamily: 'monospace' }}>{eventName}</TableCell>
+                    <TableCell align="right">
+                      <Box display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
+                        <Switch
+                          checked={listeners[eventName]?.enabled ?? false}
+                          disabled={disabled || loading || isSaving}
+                          onChange={(e) => onToggleListener(eventName, e.target.checked)}
+                          inputProps={{ 'aria-label': `Toggle ${eventName}` }}
+                        />
+                        {isSaving ? <CircularProgress size={16} /> : null}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -126,19 +136,25 @@ export const HookListenersTable: React.FC<HookListenersTableProps> = ({
                 </TableCell>
               </TableRow>
             ) : (
-              categoryNames.map((categoryName) => (
-                <TableRow key={categoryName} hover>
-                  <TableCell sx={{ fontFamily: 'monospace' }}>{categoryName}</TableCell>
-                  <TableCell align="right">
-                    <Switch
-                      checked={categories[categoryName]?.enabled ?? false}
-                      disabled={disabled || loading}
-                      onChange={(e) => onToggleCategory(categoryName, e.target.checked)}
-                      inputProps={{ 'aria-label': `Toggle ${categoryName}` }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
+              categoryNames.map((categoryName) => {
+                const isSaving = Boolean(savingCategories[categoryName]);
+                return (
+                  <TableRow key={categoryName} hover>
+                    <TableCell sx={{ fontFamily: 'monospace' }}>{categoryName}</TableCell>
+                    <TableCell align="right">
+                      <Box display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
+                        <Switch
+                          checked={categories[categoryName]?.enabled ?? false}
+                          disabled={disabled || loading || isSaving}
+                          onChange={(e) => onToggleCategory(categoryName, e.target.checked)}
+                          inputProps={{ 'aria-label': `Toggle ${categoryName}` }}
+                        />
+                        {isSaving ? <CircularProgress size={16} /> : null}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

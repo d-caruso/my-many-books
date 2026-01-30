@@ -43,6 +43,8 @@ export const MobileHookDashboardPage: React.FC = () => {
   const listenersAbortRef = useRef<AbortController | null>(null);
   const [listenersLoading, setListenersLoading] = useState(false);
   const [listenersError, setListenersError] = useState<string | null>(null);
+  const [savingListeners, setSavingListeners] = useState<Record<string, boolean>>({});
+  const [savingCategories, setSavingCategories] = useState<Record<string, boolean>>({});
 
   const recentEventsAbortRef = useRef<AbortController | null>(null);
   const [recentEventsLoading, setRecentEventsLoading] = useState(false);
@@ -88,7 +90,7 @@ export const MobileHookDashboardPage: React.FC = () => {
       if (controller.signal.aborted) return;
       setListenersLoading(false);
     }
-  }, [apiService]);
+  }, [apiService, t]);
 
   const loadRecentEvents = useCallback(
     async (opts?: { background?: boolean }) => {
@@ -168,6 +170,7 @@ export const MobileHookDashboardPage: React.FC = () => {
 
   const updateListener = async (eventName: string, enabled: boolean) => {
     setListenersError(null);
+    setSavingListeners(prev => ({ ...prev, [eventName]: true }));
     try {
       await apiService.updateAdminMobileHooksConfigListeners({
         listeners: { [eventName]: { enabled } },
@@ -187,11 +190,18 @@ export const MobileHookDashboardPage: React.FC = () => {
       showSuccess(t('admin.mobile_hooks.success.saved'));
     } catch (err: any) {
       setListenersError(t('admin.mobile_hooks.errors.listeners.save_listener', { name: eventName }));
+    } finally {
+      setSavingListeners(prev => {
+        const next = { ...prev };
+        delete next[eventName];
+        return next;
+      });
     }
   };
 
   const updateCategory = async (categoryName: string, enabled: boolean) => {
     setListenersError(null);
+    setSavingCategories(prev => ({ ...prev, [categoryName]: true }));
     try {
       await apiService.updateAdminMobileHooksConfigListeners({
         categories: { [categoryName]: { enabled } },
@@ -211,6 +221,12 @@ export const MobileHookDashboardPage: React.FC = () => {
       showSuccess(t('admin.mobile_hooks.success.saved'));
     } catch (err: any) {
       setListenersError(t('admin.mobile_hooks.errors.listeners.save_category', { name: categoryName }));
+    } finally {
+      setSavingCategories(prev => {
+        const next = { ...prev };
+        delete next[categoryName];
+        return next;
+      });
     }
   };
 
@@ -273,6 +289,8 @@ export const MobileHookDashboardPage: React.FC = () => {
                 disabled={reloading}
                 onToggleListener={updateListener}
                 onToggleCategory={updateCategory}
+                savingListeners={savingListeners}
+                savingCategories={savingCategories}
               />
             </Grid>
 
