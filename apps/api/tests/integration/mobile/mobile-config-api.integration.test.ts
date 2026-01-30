@@ -431,6 +431,43 @@ describe('Mobile Configuration API Integration Tests', () => {
         );
       });
 
+      it('should persist offlineStorage/performanceMonitoring flags', async () => {
+        const updateData = {
+          offlineStorage: false,
+          performanceMonitoring: false,
+        };
+
+        (AppSetting.findOrCreate as jest.Mock).mockImplementation(async ({ where, defaults }) => {
+          return [
+            {
+              key: where.key,
+              value: defaults?.value ?? '',
+              update: jest.fn().mockResolvedValue(undefined),
+            },
+          ];
+        });
+
+        const response = await request(app)
+          .put('/api/v1/admin/mobile-hooks/config/listeners')
+          .set('Authorization', 'Bearer admin-token')
+          .send(updateData)
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        const updatedKeys = response.body.data.updated as string[];
+        expect(updatedKeys).toEqual(
+          expect.arrayContaining(['offlineStorage', 'performanceMonitoring'])
+        );
+
+        const keys = (AppSetting.findOrCreate as jest.Mock).mock.calls.map(call => call[0].where.key);
+        expect(keys).toEqual(
+          expect.arrayContaining([
+            MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
+            MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
+          ])
+        );
+      });
+
       it('should reject invalid listener toggle payloads', async () => {
         const invalidData = {
           listeners: {
