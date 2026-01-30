@@ -216,6 +216,61 @@ describe('ApiService (admin mobile-hooks)', () => {
     });
   });
 
+  describe('getAdminMobileHooksActionsConfigMappings', () => {
+    it('success: returns action mappings config', async () => {
+      const { createApiService } = await import('../../services/api');
+      const apiService = createApiService();
+
+      const expected = {
+        actions: {
+          'error.unhandled': ['email', 'slack'],
+        },
+        actionSettings: {
+          email: { enabled: true },
+        },
+        availableEvents: ['error.unhandled'],
+        lastUpdated: null,
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn(async () => ({ success: true, data: expected })),
+      });
+
+      const result = await apiService.getAdminMobileHooksActionsConfigMappings();
+
+      expect(result).toEqual(expected);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toContain('/api/v1/admin/mobile-hooks/actions-config/mappings');
+      expect(options).toEqual(
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer test-token',
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
+    });
+
+    it('error: throws on non-OK response', async () => {
+      const { createApiService } = await import('../../services/api');
+      const apiService = createApiService();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: vi.fn(async () => ({ error: 'Failed to load mappings' })),
+      });
+
+      await expect(apiService.getAdminMobileHooksActionsConfigMappings()).rejects.toThrow(
+        'Failed to load mappings'
+      );
+    });
+  });
+
   describe('updateAdminMobileHooksConfigListeners', () => {
     it('success: updates config listeners', async () => {
       const { createApiService } = await import('../../services/api');
@@ -269,6 +324,70 @@ describe('ApiService (admin mobile-hooks)', () => {
       await expect(
         apiService.updateAdminMobileHooksConfigListeners({ analytics: true })
       ).rejects.toThrow('Invalid listener config');
+    });
+  });
+
+  describe('updateAdminMobileHooksActionsConfigMappings', () => {
+    it('success: updates action mappings config', async () => {
+      const { createApiService } = await import('../../services/api');
+      const apiService = createApiService();
+
+      const updateRequest = {
+        actions: {
+          'error.unhandled': ['email'],
+          'sync.failed': ['database'],
+        },
+      };
+
+      const expected = {
+        config: {
+          actions: updateRequest.actions,
+          actionSettings: {},
+          availableEvents: ['error.unhandled', 'sync.failed'],
+          lastUpdated: null,
+        },
+        updated: ['actions'],
+        lastUpdated: new Date().toISOString(),
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn(async () => ({ success: true, data: expected })),
+      });
+
+      const result = await apiService.updateAdminMobileHooksActionsConfigMappings(updateRequest);
+
+      expect(result).toEqual(expected);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toContain('/api/v1/admin/mobile-hooks/actions-config/mappings');
+      expect(options).toEqual(
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify(updateRequest),
+          headers: expect.objectContaining({
+            Authorization: 'Bearer test-token',
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
+    });
+
+    it('error: throws on non-OK response', async () => {
+      const { createApiService } = await import('../../services/api');
+      const apiService = createApiService();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        json: vi.fn(async () => ({ error: 'Invalid mappings' })),
+      });
+
+      await expect(
+        apiService.updateAdminMobileHooksActionsConfigMappings({ actions: {} })
+      ).rejects.toThrow('Invalid mappings');
     });
   });
 

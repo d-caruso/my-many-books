@@ -52,6 +52,9 @@ const HookExecutionsPage = lazy(() =>
   import('./pages/Admin/Hooks/HookExecutions').then(m => ({ default: m.HookExecutions }))
 );
 const AdminSettingsPage = lazy(() => import('./pages/Admin/AdminSettingsPage'));
+const MobileHookDashboardPage = lazy(() =>
+  import('./pages/Admin/MobileHooks/MobileHookDashboardPage').then(m => ({ default: m.MobileHookDashboardPage }))
+);
 
 function App() {
   const [appReady, setAppReady] = useState(false);
@@ -175,6 +178,22 @@ function App() {
                             element={
                               <ProtectedRoute requireAdmin>
                                 <AdminSettingsPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/mobile-hooks"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <Navigate to="/admin/mobile-hooks/dashboard" replace />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/mobile-hooks/dashboard"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <MobileHookDashboardPage />
                               </ProtectedRoute>
                             }
                           />

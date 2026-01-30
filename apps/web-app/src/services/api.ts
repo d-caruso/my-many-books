@@ -511,12 +511,25 @@ class ApiService {
     return this.fetchAdminData('/admin/mobile-hooks/config/listeners');
   }
 
+  async getAdminMobileHooksActionsConfigMappings(): Promise<AdminMobileHooksActionsConfigMappingsResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/actions-config/mappings');
+  }
+
   async updateAdminMobileHooksConfigListeners(
     listeners: AdminMobileHooksConfigListenersUpdateRequest
   ): Promise<AdminMobileHooksConfigListenersUpdateResponse> {
     return this.fetchAdminData('/admin/mobile-hooks/config/listeners', {
       method: 'PUT',
       body: JSON.stringify(listeners),
+    });
+  }
+
+  async updateAdminMobileHooksActionsConfigMappings(
+    request: AdminMobileHooksActionsConfigMappingsUpdateRequest
+  ): Promise<AdminMobileHooksActionsConfigMappingsUpdateResponse> {
+    return this.fetchAdminData('/admin/mobile-hooks/actions-config/mappings', {
+      method: 'PUT',
+      body: JSON.stringify(request),
     });
   }
 
@@ -1056,6 +1069,8 @@ export interface AdminMobileHooksConfigListenersResponse {
 }
 
 export interface AdminMobileHooksConfigListenersUpdateRequest {
+  listeners?: Record<string, { enabled: boolean }>;
+  categories?: Record<string, { enabled: boolean }>;
   analytics?: boolean;
   errorReporting?: boolean;
   offlineStorage?: boolean;
@@ -1063,6 +1078,26 @@ export interface AdminMobileHooksConfigListenersUpdateRequest {
 }
 
 export interface AdminMobileHooksConfigListenersUpdateResponse {
+  updated: string[];
+  lastUpdated: string;
+}
+
+export type AdminMobileHooksActionMappings = Record<string, string[]>;
+
+export interface AdminMobileHooksActionsConfigMappingsResponse {
+  actions: AdminMobileHooksActionMappings;
+  actionSettings: Record<string, unknown>;
+  availableEvents: string[];
+  lastUpdated: string | null;
+}
+
+export interface AdminMobileHooksActionsConfigMappingsUpdateRequest {
+  actions?: AdminMobileHooksActionMappings;
+  actionSettings?: Record<string, unknown>;
+}
+
+export interface AdminMobileHooksActionsConfigMappingsUpdateResponse {
+  config: AdminMobileHooksActionsConfigMappingsResponse;
   updated: string[];
   lastUpdated: string;
 }

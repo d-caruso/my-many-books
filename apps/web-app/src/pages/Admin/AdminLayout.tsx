@@ -17,6 +17,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import BookIcon from '@mui/icons-material/Book';
 import WebhookIcon from '@mui/icons-material/Webhook';
+import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -60,6 +61,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       label: t('pages:admin.menu.hooks', 'Hooks'),
       icon: <WebhookIcon />,
       path: '/admin/hooks'
+    },
+    {
+      label: t('pages:admin.menu.mobile_hooks', 'Mobile Hooks'),
+      icon: <PhoneIphoneIcon />,
+      path: '/admin/mobile-hooks/dashboard'
     },
     {
       label: t('pages:admin.menu.settings', 'Settings'),
