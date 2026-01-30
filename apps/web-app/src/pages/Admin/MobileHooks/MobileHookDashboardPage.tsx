@@ -11,11 +11,13 @@ import type {
   AdminMobileHooksConfigListenersResponse,
   AdminMobileHooksEmergencyStatusResponse,
   AdminMobileHooksHealthResponse,
+  AdminMobileHooksRecentEventsResponse,
 } from '../../../services/api';
 import { HookOverviewCard } from './components/dashboard/HookOverviewCard';
 import { HookListenersTable } from './components/dashboard/HookListenersTable';
 import { ActionMappingGrid } from './components/dashboard/ActionMappingGrid';
 import { EmergencyControlsPanel } from './components/dashboard/EmergencyControlsPanel';
+import { RecentHookEventsPanel } from './components/dashboard/RecentHookEventsPanel';
 
 export const MobileHookDashboardPage: React.FC = () => {
   const { apiService } = useApi();
@@ -29,15 +31,18 @@ export const MobileHookDashboardPage: React.FC = () => {
   const [listenersConfig, setListenersConfig] = useState<AdminMobileHooksConfigListenersResponse | null>(null);
   const [mappingsConfig, setMappingsConfig] = useState<AdminMobileHooksActionsConfigMappingsResponse | null>(null);
   const [actionTypes, setActionTypes] = useState<AdminMobileHooksActionTypesResponse | null>(null);
+  const [recentEvents, setRecentEvents] = useState<AdminMobileHooksRecentEventsResponse | null>(null);
 
   const loadDashboard = useCallback(async () => {
     setError(null);
-    const [healthRes, emergencyRes, listenersRes, mappingsRes, actionTypesRes] = await Promise.all([
+    const [healthRes, emergencyRes, listenersRes, mappingsRes, actionTypesRes, recentEventsRes] =
+      await Promise.all([
       apiService.getAdminMobileHooksHealth(),
       apiService.getAdminMobileHooksEmergencyStatus(),
       apiService.getAdminMobileHooksConfigListeners(),
       apiService.getAdminMobileHooksActionsConfigMappings(),
       apiService.getAdminMobileHooksActionTypes(),
+      apiService.getAdminMobileHooksRecentEvents(50),
     ]);
 
     setHealth(healthRes);
@@ -45,6 +50,7 @@ export const MobileHookDashboardPage: React.FC = () => {
     setListenersConfig(listenersRes);
     setMappingsConfig(mappingsRes);
     setActionTypes(actionTypesRes);
+    setRecentEvents(recentEventsRes);
   }, [apiService]);
 
   useEffect(() => {
@@ -193,6 +199,12 @@ export const MobileHookDashboardPage: React.FC = () => {
             <Grid item xs={12}>
               <EmergencyControlsPanel emergency={emergency} onUpdate={updateEmergency} />
             </Grid>
+
+            {recentEvents ? (
+              <Grid item xs={12}>
+                <RecentHookEventsPanel events={recentEvents.events} />
+              </Grid>
+            ) : null}
           </Grid>
         )}
       </Box>

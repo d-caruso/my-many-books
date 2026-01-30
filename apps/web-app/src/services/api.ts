@@ -605,6 +605,15 @@ class ApiService {
     return this.fetchAdminData('/admin/mobile-hooks/health');
   }
 
+  async getAdminMobileHooksRecentEvents(
+    limit: number = 50
+  ): Promise<AdminMobileHooksRecentEventsResponse> {
+    const safeLimit = Math.min(200, Math.max(1, Math.floor(limit)));
+    return this.fetchAdminData(
+      `/admin/mobile-hooks/analytics/events/recent?limit=${encodeURIComponent(safeLimit)}`
+    );
+  }
+
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
     const baseURL = env.API_BASE_URL;
     const token = await authService.getIdToken();
@@ -1210,6 +1219,31 @@ export interface AdminMobileHooksHealthResponse {
   checks?: AdminMobileHooksHealthChecks;
   error?: string;
   timestamp: string;
+}
+
+export interface AdminMobileHooksRecentEventActionExecution {
+  actionType: string;
+  status: 'success' | 'failed' | 'skipped';
+  errorMessage: string | null;
+  executionTimeMs: number | null;
+  executedAt: string;
+  details?: Record<string, unknown>;
+}
+
+export interface AdminMobileHooksRecentEvent {
+  eventId: string;
+  eventType: string;
+  userId: string | null;
+  timestamp: string;
+  processingStatus: 'pending' | 'processed' | 'failed';
+  processingError: string | null;
+  createdAt: string;
+  updatedAt: string;
+  actionExecutions: AdminMobileHooksRecentEventActionExecution[];
+}
+
+export interface AdminMobileHooksRecentEventsResponse {
+  events: AdminMobileHooksRecentEvent[];
 }
 
 export type MobileAnalyticsStatsResponse = MobileAnalyticsStats;
