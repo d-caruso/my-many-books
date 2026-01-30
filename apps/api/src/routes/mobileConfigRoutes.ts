@@ -26,7 +26,7 @@ const router: express.Router = Router();
 // ================================================================
 
 /**
- * GET /api/config/mobile
+ * GET /api/<version>/config/mobile
  * Mobile app fetches its configuration (read-only)
  */
 router.get(
@@ -39,7 +39,7 @@ router.get(
 // ================================================================
 
 /**
- * GET /api/config/emergency
+ * GET /api/<version>/config/emergency
  * Get emergency kill switch status
  */
 router.get(
@@ -49,7 +49,7 @@ router.get(
 );
 
 /**
- * PUT /api/config/emergency
+ * PUT /api/<version>/config/emergency
  * Update emergency kill switch
  */
 router.put(
@@ -64,7 +64,7 @@ router.put(
 // ================================================================
 
 /**
- * GET /api/admin/mobile-hooks/settings/listeners
+ * GET /api/<version>/admin/mobile-hooks/settings/listeners
  * Get listener feature flags (analyticsEnabled, errorReportingEnabled, etc.)
  */
 router.get(
@@ -77,7 +77,7 @@ router.get(
 );
 
 /**
- * PUT /api/admin/mobile-hooks/settings/listeners
+ * PUT /api/<version>/admin/mobile-hooks/settings/listeners
  * Update listener feature flags
  */
 router.put(
@@ -94,11 +94,11 @@ router.put(
 // ================================================================
 
 /**
- * GET /admin/mobile-hooks/config/listeners
+ * GET /api/<version>/admin/mobile-hooks/config/listeners
  * Get hook listener status
  */
 router.get(
-  '/mobile-hooks/config/listeners',
+  '/admin/mobile-hooks/config/listeners',
   authMiddleware,
   requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
   expressRouteWrapper(
@@ -107,11 +107,11 @@ router.get(
 );
 
 /**
- * PUT /admin/mobile-hooks/config/listeners
+ * PUT /api/<version>/admin/mobile-hooks/config/listeners
  * Enable/disable specific listeners (events) + categories
  */
 router.put(
-  '/mobile-hooks/config/listeners',
+  '/admin/mobile-hooks/config/listeners',
   authMiddleware,
   requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
   expressRouteWrapper(
@@ -122,11 +122,11 @@ router.put(
 // Emergency Controls via adminMobileHooksSettingsController
 
 /**
- * GET /admin/mobile-hooks/emergency
+ * GET /api/<version>/admin/mobile-hooks/emergency
  * Get emergency status
  */
 router.get(
-  '/mobile-hooks/emergency',
+  '/admin/mobile-hooks/emergency',
   authMiddleware,
   requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
   expressRouteWrapper(
@@ -135,11 +135,11 @@ router.get(
 );
 
 /**
- * PUT /admin/mobile-hooks/emergency
+ * PUT /api/<version>/admin/mobile-hooks/emergency
  * Emergency enable/disable all mobile hooks
  */
 router.put(
-  '/mobile-hooks/emergency',
+  '/admin/mobile-hooks/emergency',
   authMiddleware,
   requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
   expressRouteWrapper(
@@ -148,11 +148,11 @@ router.put(
 );
 
 /**
- * GET /admin/mobile-hooks/health
+ * GET /api/<version>/admin/mobile-hooks/health
  * Hook system health check
  */
 router.get(
-  '/mobile-hooks/health',
+  '/admin/mobile-hooks/health',
   authMiddleware,
   requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
   expressRouteWrapper(
@@ -161,11 +161,11 @@ router.get(
 );
 
 /**
- * GET /admin/mobile-hooks/analytics/events/recent
+ * GET /api/<version>/admin/mobile-hooks/analytics/events/recent
  * Recent events (polling-friendly "real-time" monitoring)
  */
 router.get(
-  '/mobile-hooks/analytics/events/recent',
+  '/admin/mobile-hooks/analytics/events/recent',
   authMiddleware,
   requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
   expressRouteWrapper(
@@ -174,7 +174,7 @@ router.get(
 );
 
 /**
- * GET /api/admin/mobile-hooks/actions-config/mappings
+ * GET /api/<version>/admin/mobile-hooks/actions-config/mappings
  * Get action mappings (event → actions)
  */
 router.get(
@@ -187,7 +187,7 @@ router.get(
 );
 
 /**
- * PUT /api/admin/mobile-hooks/actions-config/mappings
+ * PUT /api/<version>/admin/mobile-hooks/actions-config/mappings
  * Update action mappings
  */
 router.put(
@@ -200,7 +200,7 @@ router.put(
 );
 
 /**
- * GET /api/admin/mobile-hooks/actions-config/types
+ * GET /api/<version>/admin/mobile-hooks/actions-config/types
  * Get available action types with warnings
  */
 router.get(
@@ -213,7 +213,7 @@ router.get(
 );
 
 /**
- * PUT /api/admin/mobile-hooks/actions-config/types/:action_type
+ * PUT /api/<version>/admin/mobile-hooks/actions-config/types/:action_type
  * Update settings for specific action type
  */
 router.put(
@@ -226,7 +226,7 @@ router.put(
 );
 
 /**
- * POST /api/admin/mobile-hooks/actions-config/types/:action_type/test
+ * POST /api/<version>/admin/mobile-hooks/actions-config/types/:action_type/test
  * Test specific action type (e.g., test email sending)
  */
 router.post(
@@ -239,7 +239,7 @@ router.post(
 );
 
 /**
- * POST /api/admin/mobile-hooks/actions-config/test
+ * POST /api/<version>/admin/mobile-hooks/actions-config/test
  * Test full config flow (event → action mappings)
  */
 router.post(
@@ -256,7 +256,7 @@ router.post(
 // ================================================================
 
 /**
- * GET /api/users/:id/mobile-config
+ * GET /api/<version>/users/:id/mobile-config
  * Get user's mobile preferences (notifications, privacy)
  */
 router.get(
@@ -268,7 +268,7 @@ router.get(
 );
 
 /**
- * PUT /api/users/:id/mobile-config
+ * PUT /api/<version>/users/:id/mobile-config
  * Update user's mobile preferences
  */
 router.put(

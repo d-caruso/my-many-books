@@ -336,7 +336,21 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         updatedSettings.push('errorReporting');
       }
 
-      // ... similar for offlineStorage, performanceMonitoring
+      if (typeof body.offlineStorage === 'boolean') {
+        await this.updateConfigSetting(
+          MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
+          String(body.offlineStorage)
+        );
+        updatedSettings.push('offlineStorage');
+      }
+
+      if (typeof body.performanceMonitoring === 'boolean') {
+        await this.updateConfigSetting(
+          MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
+          String(body.performanceMonitoring)
+        );
+        updatedSettings.push('performanceMonitoring');
+      }
 
       return this.createSuccessResponse({
         updated: updatedSettings,

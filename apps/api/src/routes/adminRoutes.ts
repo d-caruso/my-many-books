@@ -39,6 +39,10 @@ router.use(adminLimiter);
 
 // ===== STATS ENDPOINTS (READ-ONLY) =====
 // Dashboard summary statistics
+/**
+ * GET /api/<version>/stats/summary
+ * Dashboard summary statistics
+ */
 router.get(
   '/stats/summary',
   readLimiter,
@@ -47,6 +51,10 @@ router.get(
 );
 
 // Detailed user statistics (future)
+/**
+ * GET /api/<version>/stats/users
+ * Detailed user statistics
+ */
 router.get(
   '/stats/users',
   readLimiter,
@@ -55,6 +63,10 @@ router.get(
 );
 
 // Detailed book statistics (future)
+/**
+ * GET /api/<version>/stats/books
+ * Detailed book statistics
+ */
 router.get(
   '/stats/books',
   readLimiter,
@@ -63,7 +75,10 @@ router.get(
 );
 
 // ===== USER MANAGEMENT ENDPOINTS =====
-// Get all users with pagination and search
+/**
+ * GET /api/<version>/users
+ * Get all users with pagination and search
+ */
 router.get(
   '/users',
   validateQuery(adminGetUsersQuerySchema),
@@ -71,6 +86,10 @@ router.get(
 );
 
 // Get single user by ID
+/**
+ * GET /api/<version>/users/:id
+ * Get single user by ID
+ */
 router.get(
   '/users/:id',
   validateQuery(adminStatsQuerySchema),
@@ -78,6 +97,10 @@ router.get(
 );
 
 // Update user details (WRITE)
+/**
+ * PUT /api/<version>/users/:id
+ * Update user details by ID
+ */
 router.put(
   '/users/:id',
   writeLimiter,
@@ -87,6 +110,10 @@ router.put(
 );
 
 // Delete user (WRITE)
+/**
+ * DELETE /api/<version>/users/:id
+ * Delete a user by ID
+ */
 router.delete(
   '/users/:id',
   writeLimiter,
@@ -95,7 +122,10 @@ router.delete(
 );
 
 // ===== BOOK MANAGEMENT ENDPOINTS =====
-// Get all books with pagination and search (READ)
+/**
+ * GET /api/<version>/books
+ * Get all books with pagination and search
+ */
 router.get(
   '/books',
   readLimiter,
@@ -103,7 +133,10 @@ router.get(
   expressRouteWrapper(adminBookController.getAllBooks.bind(adminBookController))
 );
 
-// Get single book by ID (READ)
+/**
+ * GET /api/<version>/books/:id
+ * Get single book by ID
+ */
 router.get(
   '/books/:id',
   readLimiter,
@@ -111,7 +144,10 @@ router.get(
   expressRouteWrapper(adminBookController.getBookById.bind(adminBookController))
 );
 
-// Update book details (WRITE)
+/**
+ * PUT /api/<version>/books/:id
+ * Update book details by ID
+ */
 router.put(
   '/books/:id',
   writeLimiter,
@@ -120,7 +156,10 @@ router.put(
   expressRouteWrapper(adminBookController.updateBook.bind(adminBookController))
 );
 
-// Delete book (WRITE)
+/**
+ * DELETE /api/<version>/books/:id
+ * Delete a book by ID
+ */
 router.delete(
   '/books/:id',
   writeLimiter,
@@ -129,14 +168,20 @@ router.delete(
 );
 
 // ===== SETTINGS ENDPOINTS =====
-// Get audit logging status (READ)
+/**
+ * GET /api/<version>/settings/audit-logging
+ * Get audit logging status
+ */
 router.get(
   '/settings/audit-logging',
   readLimiter,
   expressRouteWrapper(adminSettingsController.getAuditLoggingStatus.bind(adminSettingsController))
 );
 
-// Update audit logging status (WRITE)
+/**
+ * PATCH /api/<version>/settings/audit-logging
+ * Update audit logging status
+ */
 router.patch(
   '/settings/audit-logging',
   writeLimiter,
@@ -145,14 +190,20 @@ router.patch(
   )
 );
 
-// Get search settings status (READ)
+/**
+ * GET /api/<version>/settings/search/status
+ * Get search settings status
+ */
 router.get(
   '/settings/search/status',
   readLimiter,
   expressRouteWrapper(adminSettingsController.getSearchStatus.bind(adminSettingsController))
 );
 
-// Update search settings (WRITE)
+/**
+ * PATCH /api/<version>/settings/search
+ * Update search settings
+ */
 router.patch(
   '/settings/search',
   writeLimiter,
