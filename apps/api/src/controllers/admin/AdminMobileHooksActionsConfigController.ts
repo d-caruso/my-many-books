@@ -11,6 +11,7 @@ import { AppSetting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
+import { emailService } from '../../services/EmailService';
 import { slackService } from '../../services/SlackService';
 import { webhookService } from '../../services/WebhookService';
 
@@ -779,13 +780,28 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     // In production, this would actually send emails, Slack messages, etc.
     switch (actionType) {
       case ACTION_TYPES.EMAIL:
-        // TODO: Integrate with email service
+        const emailSettings = settings as ActionSettings[typeof ACTION_TYPES.EMAIL];
+        const emailEndpoint = process.env['EMAIL_TEST_ENDPOINT'];
+        if (!emailEndpoint) {
+          return {
+            success: false,
+            message: 'Email test endpoint is not configured',
+          };
+        }
+
+        const emailResult = await emailService.sendTestEmail(
+          emailEndpoint,
+          emailSettings.recipients,
+          `[TEST] ${emailSettings.template || 'Mobile Hook Alert'}`,
+          testPayload
+        );
+
         return {
-          success: true,
-          message: 'Test email would be sent (not implemented)',
+          success: emailResult.success,
+          message: emailResult.success ? 'Email test executed successfully' : 'Email test failed',
           details: {
-            recipients: (settings as ActionSettings[typeof ACTION_TYPES.EMAIL]).recipients.length,
-            subject: `[TEST] Mobile Hook Alert`,
+            recipients: emailSettings.recipients.length,
+            result: emailResult,
           },
         };
 
