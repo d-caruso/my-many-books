@@ -14,6 +14,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useApi } from '../../../../../contexts/ApiContext';
 import type {
   AdminMobileHooksActionsConfigTestResponse,
@@ -21,20 +22,23 @@ import type {
   AdminMobileHooksActionTypesResponse,
 } from '../../../../../services/api';
 
-const safeJsonParse = (value: string): { ok: true; data: any } | { ok: false; error: string } => {
-  try {
-    const parsed = value ? JSON.parse(value) : {};
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      return { ok: false, error: 'JSON must be an object.' };
-    }
-    return { ok: true, data: parsed };
-  } catch (e: any) {
-    return { ok: false, error: e?.message || 'Invalid JSON' };
-  }
-};
-
 export const TestingPanel: React.FC = () => {
   const { apiService } = useApi();
+  const { t } = useTranslation('pages');
+
+  const safeJsonParse = (
+    value: string
+  ): { ok: true; data: any } | { ok: false; error: string } => {
+    try {
+      const parsed = value ? JSON.parse(value) : {};
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return { ok: false, error: t('admin.mobile_hooks.errors.validation.json_object') };
+      }
+      return { ok: true, data: parsed };
+    } catch {
+      return { ok: false, error: t('admin.mobile_hooks.errors.validation.invalid_json') };
+    }
+  };
 
   const [loadingTypes, setLoadingTypes] = useState(true);
   const [typesError, setTypesError] = useState<string | null>(null);
@@ -64,14 +68,14 @@ export const TestingPanel: React.FC = () => {
         const first = Object.keys(payload.actions)[0] ?? '';
         setSelectedActionType(first);
       } catch (err: any) {
-        setTypesError(err?.message || 'Failed to load action types');
+        setTypesError(t('admin.mobile_hooks.errors.action_types.load'));
       } finally {
         setLoadingTypes(false);
       }
     };
 
     void run();
-  }, [apiService]);
+  }, [apiService, t]);
 
   const actionTypeOptions = useMemo(() => {
     if (!actionTypes) return [];
@@ -83,17 +87,21 @@ export const TestingPanel: React.FC = () => {
     setConfigTestError(null);
     setConfigTestResult(null);
 
-    try {
-      const payloadParse = safeJsonParse(eventPayloadJson);
-      if (!payloadParse.ok) throw new Error(payloadParse.error);
+    const payloadParse = safeJsonParse(eventPayloadJson);
+    if (!payloadParse.ok) {
+      setConfigTestError(payloadParse.error);
+      setConfigTestLoading(false);
+      return;
+    }
 
+    try {
       const result = await apiService.testAdminMobileHooksActionsConfig({
         eventType: eventType || undefined,
         payload: payloadParse.data,
       });
       setConfigTestResult(result);
     } catch (err: any) {
-      setConfigTestError(err?.message || 'Config test failed');
+      setConfigTestError(t('admin.mobile_hooks.errors.testing.config_test'));
     } finally {
       setConfigTestLoading(false);
     }
@@ -105,17 +113,21 @@ export const TestingPanel: React.FC = () => {
     setActionTestError(null);
     setActionTestResult(null);
 
-    try {
-      const dataParse = safeJsonParse(testDataJson);
-      if (!dataParse.ok) throw new Error(dataParse.error);
+    const dataParse = safeJsonParse(testDataJson);
+    if (!dataParse.ok) {
+      setActionTestError(dataParse.error);
+      setActionTestLoading(false);
+      return;
+    }
 
+    try {
       const result = await apiService.testAdminMobileHooksActionType(selectedActionType, {
         dryRun,
         testData: dataParse.data,
       });
       setActionTestResult(result);
     } catch (err: any) {
-      setActionTestError(err?.message || 'Action type test failed');
+      setActionTestError(t('admin.mobile_hooks.errors.testing.action_test'));
     } finally {
       setActionTestLoading(false);
     }

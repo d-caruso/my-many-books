@@ -144,10 +144,68 @@
           "refresh": "Aggiorna",
           "back": "Torna agli Hook"
         },
-        "errors": {
-          "fetch": "Impossibile caricare le esecuzioni"
-        }
-      }
-    }
-  }
-}
+	        "errors": {
+	          "fetch": "Impossibile caricare le esecuzioni"
+	        }
+	      }
+	    },
+	    "mobile_hooks": {
+	      "errors": {
+	        "dashboard": {
+	          "load": "Impossibile caricare la dashboard degli hook mobile.",
+	          "refresh": "Impossibile aggiornare la dashboard degli hook mobile."
+	        },
+	        "listeners": {
+	          "load": "Impossibile caricare la configurazione dei listener.",
+	          "save_listener": "Impossibile salvare il listener \"{{name}}\".",
+	          "save_category": "Impossibile salvare la categoria \"{{name}}\"."
+	        },
+	        "recent_events": {
+	          "load": "Impossibile caricare gli eventi recenti."
+	        },
+	        "mappings": {
+	          "save": "Impossibile salvare le mappature."
+	        },
+	        "emergency": {
+	          "enable": "Impossibile abilitare gli hook mobile.",
+	          "disable": "Impossibile disabilitare gli hook mobile."
+	        },
+	        "analytics": {
+	          "load": "Impossibile caricare le analitiche degli hook mobile."
+	        },
+	        "action_types": {
+	          "load": "Impossibile caricare i tipi di azione."
+	        },
+	        "action_settings": {
+	          "save": "Impossibile aggiornare le impostazioni dell'azione."
+	        },
+	        "rate_limits": {
+	          "load": "Impossibile caricare i limiti di frequenza.",
+	          "save": "Impossibile aggiornare i limiti di frequenza."
+	        },
+	        "listener_settings": {
+	          "load": "Impossibile caricare le impostazioni dei listener.",
+	          "save": "Impossibile aggiornare le impostazioni dei listener."
+	        },
+	        "validation": {
+	          "json_object": "Il JSON deve essere un oggetto.",
+	          "invalid_json": "JSON non valido.",
+	          "batch_upload_interval_range": "L'intervallo di upload in batch deve essere compreso tra {{min}} e {{max}} secondi.",
+	          "max_offline_events_range": "Il numero massimo di eventi offline deve essere compreso tra {{min}} e {{max}}."
+	        },
+	        "testing": {
+	          "config_test": "Impossibile eseguire il test di configurazione.",
+	          "action_test": "Impossibile eseguire il test del tipo di azione."
+	        }
+	      },
+	      "success": {
+	        "saved": "Salvato.",
+	        "updated": "Aggiornato.",
+	        "action_settings_updated": "Impostazioni di {{actionType}} aggiornate.",
+	        "listener_settings_updated": "Impostazioni dei listener aggiornate.",
+	        "rate_limits_updated": "Limiti di frequenza aggiornati.",
+	        "no_changes_to_save": "Nessuna modifica da salvare."
+	      }
+	    }
+	  }
+	}

@@ -7,6 +7,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type {
   AdminMobileHooksEmergencyStatusResponse,
   AdminMobileHooksEmergencyStatusUpdateRequest,
@@ -21,6 +22,7 @@ export const EmergencyControlsPanel: React.FC<EmergencyControlsPanelProps> = ({
   emergency,
   onUpdate,
 }) => {
+  const { t } = useTranslation('pages');
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export const EmergencyControlsPanel: React.FC<EmergencyControlsPanelProps> = ({
     try {
       await onUpdate({ enabled: false, reason: reason || undefined });
     } catch (err: any) {
-      setError(err?.message || 'Failed to disable mobile hooks');
+      setError(t('admin.mobile_hooks.errors.emergency.disable'));
     } finally {
       setSaving(false);
     }
@@ -58,7 +60,7 @@ export const EmergencyControlsPanel: React.FC<EmergencyControlsPanelProps> = ({
     try {
       await onUpdate({ enabled: true });
     } catch (err: any) {
-      setError(err?.message || 'Failed to enable mobile hooks');
+      setError(t('admin.mobile_hooks.errors.emergency.enable'));
     } finally {
       setSaving(false);
     }

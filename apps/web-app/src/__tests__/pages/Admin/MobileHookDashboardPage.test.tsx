@@ -1,5 +1,6 @@
 import React from 'react';
-import { render as rtlRender, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render as rtlRender, screen, waitFor, fireEvent, within } from '@testing-library/react';
+import i18n from 'i18next';
 import { ApiProvider } from '../../../contexts/ApiContext';
 import { MobileHookDashboardPage } from '../../../pages/Admin/MobileHooks/MobileHookDashboardPage';
 
@@ -117,13 +118,13 @@ describe('MobileHookDashboardPage', () => {
   });
 
   it('shows error message when loading fails', async () => {
-    const message = 'Boom';
+    const expected = i18n.t('admin.mobile_hooks.errors.dashboard.load', { ns: 'pages' });
     renderWithApi({
-      getAdminMobileHooksHealth: vi.fn().mockRejectedValue(new Error(message)),
+      getAdminMobileHooksHealth: vi.fn().mockRejectedValue(new Error('Boom')),
     });
 
     await waitFor(() => {
-      expect(screen.getByText(message)).toBeInTheDocument();
+      expect(screen.getByText(expected)).toBeInTheDocument();
     });
   });
 
@@ -231,7 +232,9 @@ describe('MobileHookDashboardPage', () => {
     await screen.findByText('Mobile Hooks Overview');
     expect(getAdminMobileHooksHealth).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+    const header = screen.getByText('Mobile Hooks').closest('div');
+    if (!header) throw new Error('Dashboard header not found');
+    fireEvent.click(within(header).getByRole('button', { name: 'Refresh' }));
 
     await waitFor(() => {
       expect(getAdminMobileHooksHealth).toHaveBeenCalledTimes(2);

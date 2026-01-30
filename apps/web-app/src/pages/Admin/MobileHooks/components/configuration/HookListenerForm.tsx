@@ -10,6 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useApi } from '../../../../../contexts/ApiContext';
 import type { MobileHooksListenerSettings } from '@my-many-books/shared-types';
 
@@ -20,6 +21,7 @@ type ListenerSettingsFormState = MobileHooksListenerSettings & {
 
 export const HookListenerForm: React.FC = () => {
   const { apiService } = useApi();
+  const { t } = useTranslation('pages');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -47,38 +49,45 @@ export const HookListenerForm: React.FC = () => {
         setForm({
           ...payload.settings,
           lastUpdated: payload.lastUpdated,
-          version: payload.version,
-        });
+	          version: payload.version,
+	        });
       } catch (err: any) {
-        setError(err?.message || 'Failed to load listener settings');
+        setError(t('admin.mobile_hooks.errors.listener_settings.load'));
       } finally {
         setLoading(false);
       }
     };
 
     void run();
-  }, [apiService]);
+  }, [apiService, t]);
 
   const validationError = useMemo(() => {
     if (form.batchUploadInterval < 60 || form.batchUploadInterval > 3600) {
-      return 'Batch upload interval must be between 60 and 3600 seconds.';
+      return t('admin.mobile_hooks.errors.validation.batch_upload_interval_range', {
+        min: 60,
+        max: 3600,
+      });
     }
     if (form.maxOfflineEvents < 100 || form.maxOfflineEvents > 10000) {
-      return 'Max offline events must be between 100 and 10000.';
+      return t('admin.mobile_hooks.errors.validation.max_offline_events_range', {
+        min: 100,
+        max: 10000,
+      });
     }
     return null;
-  }, [form.batchUploadInterval, form.maxOfflineEvents]);
+  }, [form.batchUploadInterval, form.maxOfflineEvents, t]);
 
   const save = async () => {
-    setSaving(true);
     setError(null);
     setSuccess(null);
 
     try {
       if (validationError) {
-        throw new Error(validationError);
+        setError(validationError);
+        return;
       }
 
+      setSaving(true);
       const result = await apiService.updateAdminMobileHooksListenerSettings({
         analyticsEnabled: form.analyticsEnabled,
         errorReportingEnabled: form.errorReportingEnabled,
@@ -93,9 +102,9 @@ export const HookListenerForm: React.FC = () => {
         ...result.settings,
         lastUpdated: result.lastUpdated,
       }));
-      setSuccess('Listener settings updated.');
+      setSuccess(t('admin.mobile_hooks.success.listener_settings_updated'));
     } catch (err: any) {
-      setError(err?.message || 'Failed to update listener settings');
+      setError(t('admin.mobile_hooks.errors.listener_settings.save'));
     } finally {
       setSaving(false);
     }

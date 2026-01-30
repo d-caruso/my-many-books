@@ -12,6 +12,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type {
   AdminMobileHooksActionMappings,
   AdminMobileHooksActionTypesResponse,
@@ -31,6 +32,7 @@ export const ActionMappingGrid: React.FC<ActionMappingGridProps> = ({
   disabled = false,
   onUpdateMappings,
 }) => {
+  const { t } = useTranslation('pages');
   const columns = useMemo(() => Object.keys(actionTypes.actions).sort(), [actionTypes.actions]);
   const events = useMemo(() => config.availableEvents.slice().sort(), [config.availableEvents]);
 
@@ -60,7 +62,7 @@ export const ActionMappingGrid: React.FC<ActionMappingGridProps> = ({
     try {
       await onUpdateMappings(nextActions);
     } catch (err: any) {
-      setError(err?.message || 'Failed to update mappings');
+      setError(t('admin.mobile_hooks.errors.mappings.save'));
       setActions(actions);
     } finally {
       setSaving(false);

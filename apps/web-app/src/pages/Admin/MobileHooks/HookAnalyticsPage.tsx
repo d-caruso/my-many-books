@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { useTranslation } from 'react-i18next';
 import { AdminLayout } from '../AdminLayout';
 import { useApi } from '../../../contexts/ApiContext';
 import type { MobileAnalyticsStatsResponse } from '../../../services/api';
@@ -14,6 +15,7 @@ const STATS_POLL_INTERVAL_MS = 10_000;
 
 export const HookAnalyticsPage: React.FC = () => {
   const { apiService } = useApi();
+  const { t } = useTranslation('pages');
 
   const [loading, setLoading] = useState(true);
   const [reloading, setReloading] = useState(false);
@@ -34,9 +36,9 @@ export const HookAnalyticsPage: React.FC = () => {
       setError(null);
     } catch (err: any) {
       if (controller.signal.aborted) return;
-      setError(err?.message || 'Failed to load mobile hook analytics');
+      setError(t('admin.mobile_hooks.errors.analytics.load'));
     }
-  }, [apiService]);
+  }, [apiService, t]);
 
   useEffect(() => {
     const run = async () => {

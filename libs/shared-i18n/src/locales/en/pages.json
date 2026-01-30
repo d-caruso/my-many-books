@@ -144,10 +144,68 @@
           "refresh": "Refresh",
           "back": "Back to Hooks"
         },
-        "errors": {
-          "fetch": "Failed to load executions"
-        }
-      }
-    }
-  }
-}
+	        "errors": {
+	          "fetch": "Failed to load executions"
+	        }
+	      }
+	    },
+	    "mobile_hooks": {
+	      "errors": {
+	        "dashboard": {
+	          "load": "Failed to load mobile hooks dashboard.",
+	          "refresh": "Failed to refresh mobile hooks dashboard."
+	        },
+	        "listeners": {
+	          "load": "Failed to load listeners configuration.",
+	          "save_listener": "Failed to save listener \"{{name}}\".",
+	          "save_category": "Failed to save category \"{{name}}\"."
+	        },
+	        "recent_events": {
+	          "load": "Failed to load recent events."
+	        },
+	        "mappings": {
+	          "save": "Failed to save mappings."
+	        },
+	        "emergency": {
+	          "enable": "Failed to enable mobile hooks.",
+	          "disable": "Failed to disable mobile hooks."
+	        },
+	        "analytics": {
+	          "load": "Failed to load mobile hook analytics."
+	        },
+	        "action_types": {
+	          "load": "Failed to load action types."
+	        },
+	        "action_settings": {
+	          "save": "Failed to update action settings."
+	        },
+	        "rate_limits": {
+	          "load": "Failed to load rate limits.",
+	          "save": "Failed to update rate limits."
+	        },
+	        "listener_settings": {
+	          "load": "Failed to load listener settings.",
+	          "save": "Failed to update listener settings."
+	        },
+	        "validation": {
+	          "json_object": "JSON must be an object.",
+	          "invalid_json": "Invalid JSON.",
+	          "batch_upload_interval_range": "Batch upload interval must be between {{min}} and {{max}} seconds.",
+	          "max_offline_events_range": "Max offline events must be between {{min}} and {{max}}."
+	        },
+	        "testing": {
+	          "config_test": "Failed to run configuration test.",
+	          "action_test": "Failed to run action type test."
+	        }
+	      },
+	      "success": {
+	        "saved": "Saved.",
+	        "updated": "Updated.",
+	        "action_settings_updated": "Updated {{actionType}} settings.",
+	        "listener_settings_updated": "Listener settings updated.",
+	        "rate_limits_updated": "Rate limits updated.",
+	        "no_changes_to_save": "No changes to save."
+	      }
+	    }
+	  }
+	}

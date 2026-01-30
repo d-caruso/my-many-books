@@ -1,5 +1,6 @@
 import React from 'react';
 import { render as rtlRender, screen, waitFor, fireEvent, within } from '@testing-library/react';
+import i18n from 'i18next';
 import { ApiProvider } from '../../../contexts/ApiContext';
 import { HookAnalyticsPage } from '../../../pages/Admin/MobileHooks/HookAnalyticsPage';
 
@@ -84,13 +85,13 @@ describe('HookAnalyticsPage', () => {
   });
 
   it('shows error message when analytics fetch fails', async () => {
-    const message = 'No analytics';
+    const expected = i18n.t('admin.mobile_hooks.errors.analytics.load', { ns: 'pages' });
     renderWithApi({
-      getMobileAnalyticsStats: vi.fn().mockRejectedValue(new Error(message)),
+      getMobileAnalyticsStats: vi.fn().mockRejectedValue(new Error('No analytics')),
     });
 
     await waitFor(() => {
-      expect(screen.getByText(message)).toBeInTheDocument();
+      expect(screen.getByText(expected)).toBeInTheDocument();
     });
   });
 

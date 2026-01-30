@@ -13,11 +13,13 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useApi } from '../../../../../contexts/ApiContext';
 import type { AdminMobileHooksActionTypesResponse } from '../../../../../services/api';
 
 export const ActionSettingsForm: React.FC = () => {
   const { apiService } = useApi();
+  const { t } = useTranslation('pages');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,14 +43,14 @@ export const ActionSettingsForm: React.FC = () => {
         const first = Object.keys(payload.actions)[0] ?? '';
         setSelectedActionType(first);
       } catch (err: any) {
-        setError(err?.message || 'Failed to load action types');
+        setError(t('admin.mobile_hooks.errors.action_types.load'));
       } finally {
         setLoading(false);
       }
     };
 
     void run();
-  }, [apiService]);
+  }, [apiService, t]);
 
   const selected = useMemo(() => {
     if (!actionTypes || !selectedActionType) return null;
@@ -68,13 +70,13 @@ export const ActionSettingsForm: React.FC = () => {
     try {
       const parsed = JSON.parse(settingsJson || '{}');
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        return { ok: false as const, error: 'Settings must be a JSON object.' };
+        return { ok: false as const, error: t('admin.mobile_hooks.errors.validation.json_object') };
       }
       return { ok: true as const, value: parsed as Record<string, unknown> };
     } catch (e: any) {
-      return { ok: false as const, error: e?.message || 'Invalid JSON' };
+      return { ok: false as const, error: t('admin.mobile_hooks.errors.validation.invalid_json') };
     }
-  }, [settingsJson]);
+  }, [settingsJson, t]);
 
   const save = async () => {
     if (!actionTypes || !selectedActionType) return;
@@ -84,7 +86,8 @@ export const ActionSettingsForm: React.FC = () => {
 
     try {
       if (!parsedSettings.ok) {
-        throw new Error(parsedSettings.error);
+        setError(parsedSettings.error);
+        return;
       }
 
       const payload: Record<string, unknown> = {
@@ -94,12 +97,12 @@ export const ActionSettingsForm: React.FC = () => {
 
       const result = await apiService.updateAdminMobileHooksActionTypeSettings(selectedActionType, payload);
 
-      setSuccess(`Updated ${result.actionType} settings.`);
+      setSuccess(t('admin.mobile_hooks.success.action_settings_updated', { actionType: result.actionType }));
       // refresh local cached actionTypes
       const refreshed = await apiService.getAdminMobileHooksActionTypes();
       setActionTypes(refreshed);
     } catch (err: any) {
-      setError(err?.message || 'Failed to update action settings');
+      setError(t('admin.mobile_hooks.errors.action_settings.save'));
     } finally {
       setSaving(false);
     }
@@ -119,7 +122,7 @@ export const ActionSettingsForm: React.FC = () => {
   if (!actionTypes) {
     return (
       <Paper sx={{ p: 2 }}>
-        <Alert severity="error">Failed to load action types.</Alert>
+        <Alert severity="error">{t('admin.mobile_hooks.errors.action_types.load')}</Alert>
       </Paper>
     );
   }

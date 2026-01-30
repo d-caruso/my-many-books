@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Snackbar, Typography } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { useTranslation } from 'react-i18next';
 import { AdminLayout } from '../AdminLayout';
 import { useApi } from '../../../contexts/ApiContext';
 import type {
@@ -23,6 +24,7 @@ const RECENT_EVENTS_POLL_INTERVAL_MS = 10_000;
 
 export const MobileHookDashboardPage: React.FC = () => {
   const { apiService } = useApi();
+  const { t } = useTranslation('pages');
 
   const [loading, setLoading] = useState(true);
   const [reloading, setReloading] = useState(false);
@@ -65,7 +67,7 @@ export const MobileHookDashboardPage: React.FC = () => {
     setEmergency(emergencyRes);
     setMappingsConfig(mappingsRes);
     setActionTypes(actionTypesRes);
-  }, [apiService]);
+  }, [apiService, t]);
 
   const loadListeners = useCallback(async () => {
     listenersAbortRef.current?.abort();
@@ -81,7 +83,7 @@ export const MobileHookDashboardPage: React.FC = () => {
       setListenersConfig(payload);
     } catch (err: any) {
       if (controller.signal.aborted) return;
-      setListenersError(err?.message || 'Failed to load listeners configuration');
+      setListenersError(t('admin.mobile_hooks.errors.listeners.load'));
     } finally {
       if (controller.signal.aborted) return;
       setListenersLoading(false);
@@ -108,7 +110,7 @@ export const MobileHookDashboardPage: React.FC = () => {
         setRecentEvents(payload);
       } catch (err: any) {
         if (controller.signal.aborted) return;
-        setRecentEventsError(err?.message || 'Failed to load recent events');
+        setRecentEventsError(t('admin.mobile_hooks.errors.recent_events.load'));
       } finally {
         if (controller.signal.aborted) return;
         if (!isBackground) {
@@ -117,7 +119,7 @@ export const MobileHookDashboardPage: React.FC = () => {
         }
       }
     },
-    [apiService]
+    [apiService, t]
   );
 
   useEffect(() => {
@@ -126,7 +128,7 @@ export const MobileHookDashboardPage: React.FC = () => {
         setLoading(true);
         await loadDashboard();
       } catch (err: any) {
-        setError(err?.message || 'Failed to load mobile hooks dashboard');
+        setError(t('admin.mobile_hooks.errors.dashboard.load'));
       } finally {
         setLoading(false);
         void loadListeners();
@@ -158,7 +160,7 @@ export const MobileHookDashboardPage: React.FC = () => {
       setReloading(true);
       await Promise.all([loadDashboard(), loadListeners(), loadRecentEvents()]);
     } catch (err: any) {
-      setError(err?.message || 'Failed to refresh mobile hooks dashboard');
+      setError(t('admin.mobile_hooks.errors.dashboard.refresh'));
     } finally {
       setReloading(false);
     }
@@ -182,9 +184,9 @@ export const MobileHookDashboardPage: React.FC = () => {
             }
           : prev
       );
-      showSuccess('Saved');
+      showSuccess(t('admin.mobile_hooks.success.saved'));
     } catch (err: any) {
-      setListenersError(err?.message || `Failed to update listener: ${eventName}`);
+      setListenersError(t('admin.mobile_hooks.errors.listeners.save_listener', { name: eventName }));
     }
   };
 
@@ -206,9 +208,9 @@ export const MobileHookDashboardPage: React.FC = () => {
             }
           : prev
       );
-      showSuccess('Saved');
+      showSuccess(t('admin.mobile_hooks.success.saved'));
     } catch (err: any) {
-      setListenersError(err?.message || `Failed to update category: ${categoryName}`);
+      setListenersError(t('admin.mobile_hooks.errors.listeners.save_category', { name: categoryName }));
     }
   };
 
@@ -216,7 +218,7 @@ export const MobileHookDashboardPage: React.FC = () => {
     setError(null);
     const payload = await apiService.updateAdminMobileHooksActionsConfigMappings({ actions });
     setMappingsConfig(payload.config);
-    showSuccess('Saved');
+    showSuccess(t('admin.mobile_hooks.success.saved'));
   };
 
   const updateEmergency = async (request: { enabled: boolean; reason?: string }) => {
@@ -228,7 +230,7 @@ export const MobileHookDashboardPage: React.FC = () => {
     ]);
     setEmergency(nextEmergency);
     setHealth(nextHealth);
-    showSuccess('Updated');
+    showSuccess(t('admin.mobile_hooks.success.updated'));
   };
 
   return (

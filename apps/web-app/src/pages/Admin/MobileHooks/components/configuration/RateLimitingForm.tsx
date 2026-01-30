@@ -13,6 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useApi } from '../../../../../contexts/ApiContext';
 import type { AdminMobileHooksActionTypesResponse } from '../../../../../services/api';
 
@@ -25,6 +26,7 @@ const extractRateLimitMinutes = (settings: Record<string, unknown>): number | nu
 
 export const RateLimitingForm: React.FC = () => {
   const { apiService } = useApi();
+  const { t } = useTranslation('pages');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,14 +52,14 @@ export const RateLimitingForm: React.FC = () => {
         }
         setDrafts(nextDrafts);
       } catch (err: any) {
-        setError(err?.message || 'Failed to load rate limits');
+        setError(t('admin.mobile_hooks.errors.rate_limits.load'));
       } finally {
         setLoading(false);
       }
     };
 
     void run();
-  }, [apiService]);
+  }, [apiService, t]);
 
   const hasAnyEditable = useMemo(() => {
     if (!actionTypes) return false;
@@ -93,9 +95,13 @@ export const RateLimitingForm: React.FC = () => {
       }
       setDrafts(nextDrafts);
 
-      setSuccess(updates.length ? 'Rate limits updated.' : 'No changes to save.');
+      setSuccess(
+        updates.length
+          ? t('admin.mobile_hooks.success.rate_limits_updated')
+          : t('admin.mobile_hooks.success.no_changes_to_save')
+      );
     } catch (err: any) {
-      setError(err?.message || 'Failed to update rate limits');
+      setError(t('admin.mobile_hooks.errors.rate_limits.save'));
     } finally {
       setSaving(false);
     }
@@ -115,7 +121,7 @@ export const RateLimitingForm: React.FC = () => {
   if (!actionTypes) {
     return (
       <Paper sx={{ p: 2 }}>
-        <Alert severity="error">Failed to load rate limits.</Alert>
+        <Alert severity="error">{t('admin.mobile_hooks.errors.rate_limits.load')}</Alert>
       </Paper>
     );
   }
