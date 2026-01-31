@@ -898,7 +898,11 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
           };
         }
 
-        const smsResult = await smsService.sendTestSms(smsEndpoint, smsSettings.recipients, testPayload);
+        const smsResult = await smsService.sendTestSms(
+          smsEndpoint,
+          smsSettings.recipients,
+          typeof testPayload === 'string' ? testPayload : JSON.stringify(testPayload)
+        );
 
         return {
           success: smsResult.success,

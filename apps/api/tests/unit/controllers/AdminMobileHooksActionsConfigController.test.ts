@@ -1,6 +1,7 @@
 import { adminMobileHooksActionsConfigController, ACTION_TYPES } from '../../../src/controllers/admin/AdminMobileHooksActionsConfigController';
 import { AppSetting } from '../../../src/models';
-import { webhookService } from '../../../src/services/WebhookService';
+import { webhookService } from '../../../src/services/action-tests/WebhookService';
+import DatabaseConnection from '../../../src/config/database';
 
 jest.mock('@my-many-books/shared-i18n', () => ({
   initializeI18n: jest.fn(),
@@ -18,7 +19,7 @@ jest.mock('../../../src/services/AuditLogService', () => ({
   }),
 }));
 
-jest.mock('../../../src/services/WebhookService', () => ({
+jest.mock('../../../src/services/action-tests/WebhookService', () => ({
   webhookService: {
     executeTestEndpoints: jest.fn().mockResolvedValue([
       { endpoint: 'https://hooks.example.com/1', success: true, status: 200 },
@@ -38,7 +39,18 @@ describe('AdminMobileHooksActionsConfigController - webhook tests', () => {
   const mockedWebhook = webhookService as jest.Mocked<typeof webhookService>;
 
   beforeEach(() => {
+    const mockSequelize = ({
+      sync: jest.fn(),
+      authenticate: jest.fn().mockResolvedValue(true),
+      close: jest.fn(),
+    } as unknown) as import('sequelize').Sequelize;
+    DatabaseConnection.setConnectionFactory(() => mockSequelize);
+
     jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    DatabaseConnection.resetConnectionFactory();
   });
 
   it('executes webhook endpoints when dryRun is false', async () => {
