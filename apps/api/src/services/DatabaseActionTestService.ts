@@ -7,6 +7,10 @@ interface DatabaseExecutionResult {
   recordId?: number;
 }
 
+interface InsertResult {
+  id: number;
+}
+
 export class DatabaseActionTestService {
   private readonly logger = getLogger();
   private readonly sequelize: Sequelize;
@@ -25,7 +29,12 @@ export class DatabaseActionTestService {
         }
       );
 
-      const id = Array.isArray(result) && typeof result[0] === 'object' ? (result[0] as any).id : undefined;
+      const id = Array.isArray(result) &&
+                 result[0] &&
+                 typeof result[0] === 'object' &&
+                 'id' in result[0]
+        ? (result[0] as InsertResult).id
+        : undefined;
 
       return {
         success: true,

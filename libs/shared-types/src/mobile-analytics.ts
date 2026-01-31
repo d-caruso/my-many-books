@@ -12,8 +12,7 @@ export interface MobileAnalyticsEventTypeCount {
   count: number;
 }
 
-export interface MobileAnalyticsEventTypeBreakdown {
-  eventType: string;
+interface MobileAnalyticsBreakdown {
   attempted: number;
   successful: number;
   failed: number;
@@ -21,13 +20,12 @@ export interface MobileAnalyticsEventTypeBreakdown {
   errorRate: number;
 }
 
-export interface MobileAnalyticsActionTypeBreakdown {
+export interface MobileAnalyticsEventTypeBreakdown extends MobileAnalyticsBreakdown {
+  eventType: string;
+}
+
+export interface MobileAnalyticsActionTypeBreakdown extends MobileAnalyticsBreakdown {
   actionType: string;
-  attempted: number;
-  successful: number;
-  failed: number;
-  successRate: number;
-  errorRate: number;
 }
 
 export interface MobileAnalyticsStats {

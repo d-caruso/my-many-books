@@ -11,6 +11,8 @@ import {
   MobileAnalyticsStats,
   MOBILE_HOOK_SETTING_KEYS,
   HEALTH_STATUS,
+  MobileAnalyticsActionTypeBreakdown,
+  MobileAnalyticsEventTypeBreakdown,
 } from '@my-many-books/shared-types';
 
 export interface MobileEventData {
@@ -235,7 +237,7 @@ export class MobileAnalyticsService {
       creationDate: Date;
       updateDate: Date;
     }>
-  ) {
+  ): Array<{ bucketStart: string; processed: number; failed: number; total: number }> {
     const bucketMap = new Map<
       string,
       { bucketStart: string; processed: number; failed: number; total: number }
@@ -289,7 +291,7 @@ export class MobileAnalyticsService {
       processingStatus: 'processed' | 'failed';
     }>,
     mappings: Record<string, string[]>
-  ) {
+  ): MobileAnalyticsActionTypeBreakdown[] {
     const stats = new Map<string, { attempted: number; successful: number; failed: number }>();
 
     for (const event of events) {
@@ -327,7 +329,7 @@ export class MobileAnalyticsService {
       eventType: string;
       processingStatus: 'processed' | 'failed';
     }>
-  ) {
+  ): MobileAnalyticsEventTypeBreakdown[] {
     const stats = new Map<string, { attempted: number; successful: number; failed: number }>();
 
     for (const event of events) {
@@ -365,7 +367,7 @@ export class MobileAnalyticsService {
 
       if (!record?.value) return {};
 
-      const parsed = JSON.parse(record.value);
+      const parsed: unknown = JSON.parse(record.value);
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
 
       const mappings: Record<string, string[]> = {};
@@ -464,6 +466,9 @@ export class MobileAnalyticsService {
 
   private parseBooleanSetting(value: unknown, defaultValue: boolean): boolean {
     if (value === null || value === undefined) return defaultValue;
+    if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') {
+      return defaultValue;
+    }
     const normalized = String(value).trim().toLowerCase();
     if (normalized === 'true') return true;
     if (normalized === 'false') return false;

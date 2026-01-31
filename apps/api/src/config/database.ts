@@ -8,7 +8,7 @@ import { getLogger } from '@my-many-books/shared-logging';
 
 class DatabaseConnection {
   private static instance: Sequelize | null = null;
-  private static connectionFactory: () => Sequelize = DatabaseConnection.createDefaultConnection;
+  private static connectionFactory: () => Sequelize = (): Sequelize => DatabaseConnection.createDefaultConnection();
 
   static getInstance(): Sequelize {
     if (!DatabaseConnection.instance) {
@@ -23,17 +23,13 @@ class DatabaseConnection {
   }
 
   static resetConnectionFactory(): void {
-    DatabaseConnection.connectionFactory = DatabaseConnection.createDefaultConnection;
+    DatabaseConnection.connectionFactory = (): Sequelize => DatabaseConnection.createDefaultConnection();
     DatabaseConnection.instance = null;
   }
 
   private static createDefaultConnection(): Sequelize {
     const { DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SSL } = process.env;
     const isTestEnv = process.env['NODE_ENV'] === 'test';
-
-    if (!isTestEnv && (!DB_HOST || !DB_NAME || !DB_USER || !DB_PASSWORD)) {
-      throw new Error('Missing required database environment variables');
-    }
 
     if (isTestEnv) {
       const testUri = process.env['DB_TEST_URI'] || 'sqlite::memory:';
@@ -44,6 +40,10 @@ class DatabaseConnection {
       });
     }
 
+    if (!DB_HOST || !DB_NAME || !DB_USER || !DB_PASSWORD) {
+      throw new Error('Missing required database environment variables');
+    }
+
     const parsedPoolMax = Number.parseInt(process.env['DB_POOL_MAX'] || '', 10);
     const parsedPoolMin = Number.parseInt(process.env['DB_POOL_MIN'] || '', 10);
     const poolConfig = {
@@ -52,7 +52,7 @@ class DatabaseConnection {
       min: Number.isFinite(parsedPoolMin) ? parsedPoolMin : DATABASE_CONFIG.POOL.min,
     };
 
-    const sequelize = new Sequelize(DB_NAME!, DB_USER!, DB_PASSWORD!, {
+    const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
       host: DB_HOST,
       port: parseInt(DB_PORT || '3306', 10),
       dialect: DATABASE_CONFIG.DIALECT,
