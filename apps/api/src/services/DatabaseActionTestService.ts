@@ -51,4 +51,13 @@ export class DatabaseActionTestService {
   }
 }
 
-export const databaseActionTestService = new DatabaseActionTestService(DatabaseConnection.getInstance());
+let instance: DatabaseActionTestService | undefined;
+
+export const databaseActionTestService = {
+  insertTestRecord(table: string, payload: Record<string, unknown>): Promise<DatabaseExecutionResult> {
+    if (!instance) {
+      instance = new DatabaseActionTestService(DatabaseConnection.getInstance());
+    }
+    return instance.insertTestRecord(table, payload);
+  },
+};
