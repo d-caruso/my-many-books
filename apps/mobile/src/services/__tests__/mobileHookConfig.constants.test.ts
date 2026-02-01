@@ -77,11 +77,11 @@ describe('Mobile Hook Configuration Constants', () => {
       
       // Check all expected config keys exist
       expect(MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED).toBe('mobile.hooks.analytics.enabled');
-      expect(MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED).toBe('mobile.hooks.errorReporting.enabled');
-      expect(MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED).toBe('mobile.hooks.offlineStorage.enabled');
-      expect(MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED).toBe('mobile.hooks.performanceMonitoring.enabled');
-      expect(MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL).toBe('mobile.hooks.batchUploadInterval');
-      expect(MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS).toBe('mobile.hooks.maxOfflineEvents');
+      expect(MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED).toBe('mobile.hooks.error_reporting.enabled');
+      expect(MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED).toBe('mobile.hooks.offline_storage.enabled');
+      expect(MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED).toBe('mobile.hooks.performance_monitoring.enabled');
+      expect(MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL).toBe('mobile.hooks.batch_upload_interval');
+      expect(MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS).toBe('mobile.hooks.max_offline_events');
     });
 
     it('should have mobile config limits properly defined', () => {
