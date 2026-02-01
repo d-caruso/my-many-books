@@ -17,6 +17,8 @@ import { pushNotificationService } from '../../services/action-tests/PushNotific
 import { slackService } from '../../services/action-tests/SlackService';
 import { smsService } from '../../services/action-tests/SmsService';
 import { webhookService } from '../../services/action-tests/WebhookService';
+import { TABLE_NAMES } from '../../utils/constants'
+
 
 const ACTIONS_BASE = 'mobile.hooks.actions';
 const LISTENERS_BASE = 'mobile.hooks.listeners';
@@ -1103,7 +1105,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       },
       database: {
         enabled: true,
-        table: 'mobile_analytics',
+        table: TABLE_NAMES.MOBILE_ANALYTICS_EVENTS,
         batch_size: 100,
         retention_days: 90,
         expected_fields: ['table'],

@@ -164,7 +164,7 @@ After completing a feature, verify:
 ## ⚠️ Important Notes
 
 - **NEVER ASSUME OR GUESS** - When in doubt, ask for clarification
-- **STRAIGHT TO THE POINT** - Do not include unsolicited output, small talk, flattery, platitudes, or long-winded introductions.
+- **STRAIGHT TO THE POINT** - Do not include unsolicited output, small talk, flattery, platitudes, or long-winded introductions. (e.g.: no things like "Excellent questions" or " Let me investigate")
 - **FIX ISSUES AND BUGS PROPERLY** - not quickly.
 - **Use industry standard** approach for the code, do not use workarounds unless asked for
 - **Always verify file paths and module names** before use
