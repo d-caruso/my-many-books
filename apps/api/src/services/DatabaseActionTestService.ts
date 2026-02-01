@@ -1,5 +1,6 @@
 import { getLogger } from '@my-many-books/shared-logging';
 import { Sequelize, QueryTypes } from 'sequelize';
+import DatabaseConnection from '../config/database';
 
 interface DatabaseExecutionResult {
   success: boolean;
@@ -50,4 +51,4 @@ export class DatabaseActionTestService {
   }
 }
 
-export const databaseActionTestService = new DatabaseActionTestService(require('../config/database').default.getInstance());
+export const databaseActionTestService = new DatabaseActionTestService(DatabaseConnection.getInstance());
