@@ -115,13 +115,6 @@ export class AdminUserController extends BaseController {
     }
   }
 
-  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.id) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-    return null;
-  }
-
   private getAdminContext(request: UniversalRequest): UserAdminContext | null {
     if (!request.user) {
       return null;

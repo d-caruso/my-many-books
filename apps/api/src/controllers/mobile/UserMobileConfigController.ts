@@ -7,7 +7,7 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting, AppSettingAttributes } from '../../models';
-import { USER_MOBILE_APP_SETTING_KEYS, EMAIL_NOTIFICATION_FREQUENCY } from '@my-many-books/shared-types';
+import { MOBILE_APP_SETTING_KEYS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 
 interface UserMobileConfigResponse {
@@ -102,8 +102,8 @@ export class UserMobileConfigController extends BaseController {
       }
 
       if (typeof body.offlineStorageEnabled === 'boolean') {
-        await this.updateUserConfigSetting(userId, 'offline_storage.enabled', String(body.offlineStorageEnabled));
-        updatedSettings.push('offline_storage.enabled');
+        await this.updateUserConfigSetting(userId, MOBILE_APP_SETTING_KEYS.OFFLINE_STORAGE_ENABLED, String(body.offlineStorageEnabled));
+        updatedSettings.push(MOBILE_APP_SETTING_KEYS.OFFLINE_STORAGE_ENABLED);
       }
 
       // Update notification preferences

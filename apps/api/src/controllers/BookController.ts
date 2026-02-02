@@ -836,13 +836,6 @@ export class BookController extends BaseController {
     return this.searchBooksByIsbn(request);
   }
 
-  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.id) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-    return null;
-  }
-
   private getUserContext(request: UniversalRequest): BookUserContext | null {
     if (!request.user) {
       return null;

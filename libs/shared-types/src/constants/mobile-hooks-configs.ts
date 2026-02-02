@@ -8,8 +8,6 @@
     ANALYTICS: 'analytics.enabled',
     ERROR_REPORTING: 'error_reporting.enabled',
     PERFORMANCE_MONITORING: 'performance_monitoring.enabled',
-    BATCH_UPLOAD_INTERVAL: 'batch_upload_interval',
-    MAX_OFFLINE_EVENTS: 'max_offline_events',
   } as const;
 
 // Export base patterns for dynamic key building
@@ -25,8 +23,6 @@ export const MOBILE_HOOK_SETTING_KEYS = Object.freeze({
   ANALYTICS_ENABLED: `${BASE_HOOKS}.${GLOBAL_SCOPE}.${HOOK_SUFFIXES.ANALYTICS}`,
   ERROR_REPORTING_ENABLED: `${BASE_HOOKS}.${GLOBAL_SCOPE}.${HOOK_SUFFIXES.ERROR_REPORTING}`,
   PERFORMANCE_MONITORING_ENABLED: `${BASE_HOOKS}.${GLOBAL_SCOPE}.${HOOK_SUFFIXES.PERFORMANCE_MONITORING}`,
-  BATCH_UPLOAD_INTERVAL: `${BASE_HOOKS}.${GLOBAL_SCOPE}.${HOOK_SUFFIXES.BATCH_UPLOAD_INTERVAL}`,
-  MAX_OFFLINE_EVENTS: `${BASE_HOOKS}.${GLOBAL_SCOPE}.${HOOK_SUFFIXES.MAX_OFFLINE_EVENTS}`,
   
   EMERGENCY_ENABLED: `${BASE_HOOKS}.${GLOBAL_SCOPE}.emergency.enabled`,
   EMERGENCY_REASON: `${BASE_HOOKS}.${GLOBAL_SCOPE}.emergency.reason`,
@@ -50,8 +46,6 @@ export interface MobileHooksListenerSettings {
   analyticsEnabled: boolean;
   errorReportingEnabled: boolean;
   performanceMonitoringEnabled: boolean;
-  batchUploadInterval: number; // seconds
-  maxOfflineEvents: number;
 }
 
 // User hook setting overrides (without user.{userId} part, that's injected at runtime)
@@ -59,8 +53,6 @@ export const USER_HOOK_SETTING_KEYS = Object.freeze({
   ANALYTICS_ENABLED: `${BASE_HOOKS}.${USER_SCOPE}.${HOOK_SUFFIXES.ANALYTICS}`,
   ERROR_REPORTING_ENABLED: `${BASE_HOOKS}.${USER_SCOPE}.${HOOK_SUFFIXES.ERROR_REPORTING}`,
   PERFORMANCE_MONITORING_ENABLED: `${BASE_HOOKS}.${USER_SCOPE}.${HOOK_SUFFIXES.PERFORMANCE_MONITORING}`,
-  BATCH_UPLOAD_INTERVAL: `${BASE_HOOKS}.${USER_SCOPE}.${HOOK_SUFFIXES.BATCH_UPLOAD_INTERVAL}`,
-  MAX_OFFLINE_EVENTS: `${BASE_HOOKS}.${USER_SCOPE}.${HOOK_SUFFIXES.MAX_OFFLINE_EVENTS}`,
 } as const);
 
 // Base patterns for dynamic keys (exported for controllers)

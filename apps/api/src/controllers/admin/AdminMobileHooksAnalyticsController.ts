@@ -130,13 +130,6 @@ export class AdminMobileHooksAnalyticsController extends BaseController {
 
     return this.createSuccessResponse(data);
   }
-
-  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.id) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-    return null;
-  }
 }
 
 export const adminMobileHooksAnalyticsController = new AdminMobileHooksAnalyticsController();

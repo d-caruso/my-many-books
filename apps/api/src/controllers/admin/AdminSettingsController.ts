@@ -209,13 +209,6 @@ export class AdminSettingsController extends BaseController {
       return this.createErrorResponse('Failed to update search settings', 500);
     }
   }
-
-  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.id) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-    return null;
-  }
 }
 
 export const adminSettingsController = new AdminSettingsController();

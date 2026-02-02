@@ -2,7 +2,7 @@ import { adminMobileHooksActionsConfigController, ACTION_TYPES } from '../../../
 import { AppSetting } from '../../../src/models';
 import { webhookService } from '../../../src/services/action-tests/WebhookService';
 import DatabaseConnection from '../../../src/config/database';
-import { BASE_HOOKS, GLOBAL_SCOPE, HOOK_KEY_PATTERNS } from '@my-many-books/shared-types';
+import { HOOK_KEY_PATTERNS } from '@my-many-books/shared-types';
 
 jest.mock('@my-many-books/shared-i18n', () => ({
   initializeI18n: jest.fn(),

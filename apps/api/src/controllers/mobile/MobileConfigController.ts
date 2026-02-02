@@ -8,7 +8,7 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting } from '../../models';
-import { MOBILE_HOOK_SETTING_KEYS, BASE_HOOKS } from '@my-many-books/shared-types';
+import { MOBILE_HOOK_SETTING_KEYS, MOBILE_APP_SETTING_KEYS, BASE_HOOKS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 
 export interface MobileConfigResponse {
@@ -48,7 +48,10 @@ export class MobileConfigController extends BaseController {
     const settings = await AppSetting.findAll({
       where: {
         key: {
-          [Op.like]: `${BASE_HOOKS}.%`
+          [Op.or]: [
+            { [Op.like]: `${BASE_HOOKS}.%` },
+            { [Op.like]: `mobile.app.%` }
+          ]
         },
       },
     });
@@ -77,7 +80,7 @@ export class MobileConfigController extends BaseController {
         defaults.errorReportingEnabled
       ),
       offlineStorageEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED),
+        settingsMap.get(MOBILE_APP_SETTING_KEYS.OFFLINE_STORAGE_ENABLED),
         defaults.offlineStorageEnabled
       ),
       performanceMonitoringEnabled: this.parseBoolean(
@@ -98,23 +101,6 @@ export class MobileConfigController extends BaseController {
       ),
       emergencyReason: settingsMap.get(MOBILE_HOOK_SETTING_KEYS.EMERGENCY_REASON) || defaults.emergencyReason,
     };
-  }
-
-  /**
-   * Parse boolean value from string
-   */
-  private parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
-    if (value === undefined) return defaultValue;
-    return value === 'true';
-  }
-
-  /**
-   * Parse number value from string
-   */
-  private parseNumber(value: string | undefined, defaultValue: number): number {
-    if (value === undefined) return defaultValue;
-    const parsed = parseInt(value, 10);
-    return isNaN(parsed) ? defaultValue : parsed;
   }
 }
 

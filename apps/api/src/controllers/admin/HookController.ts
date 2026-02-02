@@ -341,13 +341,6 @@ export class HookController extends BaseController {
 
     return this.createSuccessResponse(stats);
   }
-
-  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.id) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-    return null;
-  }
 }
 
 export const hookController = new HookController();

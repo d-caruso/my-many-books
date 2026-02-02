@@ -76,12 +76,11 @@ describe('Mobile Hook Configuration Constants', () => {
       expect(Object.isFrozen(MOBILE_HOOK_SETTING_KEYS)).toBe(true);
       
       // Check all expected config keys exist
-      expect(MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED).toBe('mobile.hooks.analytics.enabled');
-      expect(MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED).toBe('mobile.hooks.error_reporting.enabled');
-      expect(MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED).toBe('mobile.hooks.offline_storage.enabled');
-      expect(MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED).toBe('mobile.hooks.performance_monitoring.enabled');
-      expect(MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL).toBe('mobile.hooks.batch_upload_interval');
-      expect(MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS).toBe('mobile.hooks.max_offline_events');
+      expect(MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED).toBe('mobile.hooks.global.analytics.enabled');
+      expect(MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED).toBe('mobile.hooks.global.error_reporting.enabled');
+      expect(MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED).toBe('mobile.hooks.global.performance_monitoring.enabled');
+      expect(MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL).toBe('mobile.hooks.global.batch_upload_interval');
+      expect(MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS).toBe('mobile.hooks.global.max_offline_events');
     });
 
     it('should have mobile config limits properly defined', () => {
@@ -177,7 +176,6 @@ describe('Mobile Hook Configuration Constants', () => {
       const requiredKeys = [
         'ANALYTICS_ENABLED',
         'ERROR_REPORTING_ENABLED',
-        'OFFLINE_STORAGE_ENABLED',
         'PERFORMANCE_MONITORING_ENABLED'
       ];
 

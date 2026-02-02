@@ -344,14 +344,6 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         updatedSettings.push('errorReporting');
       }
 
-      if (typeof body.offlineStorage === 'boolean') {
-        await this.updateConfigSetting(
-          MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
-          String(body.offlineStorage)
-        );
-        updatedSettings.push('offlineStorage');
-      }
-
       if (typeof body.performanceMonitoring === 'boolean') {
         await this.updateConfigSetting(
           MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
@@ -1215,16 +1207,6 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     if (setting.value !== value) {
       await setting.update({ value });
     }
-  }
-
-  /**
-   * Ensure user is authenticated
-   */
-  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.id) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-    return null;
   }
 }
 

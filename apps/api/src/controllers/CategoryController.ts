@@ -304,13 +304,6 @@ export class CategoryController extends BaseController {
     });
   }
 
-  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.id) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-    return null;
-  }
-
   private getUserContext(request: UniversalRequest): CategoryUserContext | null {
     if (!request.user) {
       return null;

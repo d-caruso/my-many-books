@@ -23,22 +23,18 @@ export interface EmergencyStatusRequest {
 }
 
 // settings messages
-const MOBILE_SETTINGS_MESSAGES = {
+const MOBILE_HOOKS_SETTINGS_MESSAGES = {
   SUCCESS: {
-    UPDATED: 'Mobile settings updated successfully',
-    RESET: 'Mobile settings reset to defaults successfully',
+    UPDATED: 'Mobile hooks settings updated successfully',
+    RESET: 'Mobile hooks settings reset to defaults successfully',
   },
   ERRORS: {
-    FETCH_FAILED: 'Failed to fetch mobile settings',
-    UPDATE_FAILED: 'Failed to update mobile settings',
-    RESET_FAILED: 'Failed to reset mobile settings',
+    FETCH_FAILED: 'Failed to fetch mobile hooks settings',
+    UPDATE_FAILED: 'Failed to update mobile hooks settings',
+    RESET_FAILED: 'Failed to reset mobile hooks settings',
     STATUS_FAILED: 'Failed to get mobile settings status',
-    BATCH_INTERVAL_INVALID: 'Batch upload interval must be between 60 and 3600 seconds',
-    MAX_EVENTS_INVALID: 'Max offline events must be between 100 and 10000',
   },
   HEALTH_ISSUES: {
-    LOW_BATCH_INTERVAL: 'Batch upload interval is too low (< 60 seconds)',
-    HIGH_EVENTS_LIMIT: 'High offline events limit may impact performance',
     DISABLED_FEATURES: 'Both analytics and error reporting are disabled',
   },
 } as const;
@@ -46,10 +42,7 @@ const MOBILE_SETTINGS_MESSAGES = {
 const DEFAULT_LISTENER_SETTINGS: MobileHooksListenerSettings = {
   analyticsEnabled: true,
   errorReportingEnabled: true,
-  offlineStorageEnabled: true,
   performanceMonitoringEnabled: true,
-  batchUploadInterval: 300, // 5 minutes
-  maxOfflineEvents: 1000,
 };
 
 export class AdminMobileHooksSettingsController extends BaseController {
@@ -73,7 +66,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse(MOBILE_SETTINGS_MESSAGES.ERRORS.FETCH_FAILED, 500);
+      return this.createErrorResponse(MOBILE_HOOKS_SETTINGS_MESSAGES.ERRORS.FETCH_FAILED, 500);
     }
   }
 
@@ -88,12 +81,6 @@ export class AdminMobileHooksSettingsController extends BaseController {
     const body = this.parseBody<MobileHooksListenerSettings>(request);
     if (!body) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
-    }
-
-    // Validate settings values
-    const validationError = this.validateMobileSettings(body);
-    if (validationError) {
-      return validationError;
     }
 
     try {
@@ -120,17 +107,6 @@ export class AdminMobileHooksSettingsController extends BaseController {
         });
       }
 
-      if (typeof body.offlineStorageEnabled === 'boolean') {
-        await this.saveSetting(
-          MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
-          String(body.offlineStorageEnabled)
-        );
-        updatedSettings.push({
-          key: 'offlineStorageEnabled',
-          value: String(body.offlineStorageEnabled),
-        });
-      }
-
       if (typeof body.performanceMonitoringEnabled === 'boolean') {
         await this.saveSetting(
           MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
@@ -140,25 +116,6 @@ export class AdminMobileHooksSettingsController extends BaseController {
           key: 'performanceMonitoringEnabled',
           value: String(body.performanceMonitoringEnabled),
         });
-      }
-
-      if (typeof body.batchUploadInterval === 'number') {
-        await this.saveSetting(
-          MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL,
-          String(body.batchUploadInterval)
-        );
-        updatedSettings.push({
-          key: 'batchUploadInterval',
-          value: String(body.batchUploadInterval),
-        });
-      }
-
-      if (typeof body.maxOfflineEvents === 'number') {
-        await this.saveSetting(
-          MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS,
-          String(body.maxOfflineEvents)
-        );
-        updatedSettings.push({ key: 'maxOfflineEvents', value: String(body.maxOfflineEvents) });
       }
 
       // Log audit event
@@ -182,13 +139,13 @@ export class AdminMobileHooksSettingsController extends BaseController {
           updated: updatedSettings.map(s => s.key),
           lastUpdated: new Date().toISOString(),
         },
-        MOBILE_SETTINGS_MESSAGES.SUCCESS.UPDATED
+        MOBILE_HOOKS_SETTINGS_MESSAGES.SUCCESS.UPDATED
       );
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse(MOBILE_SETTINGS_MESSAGES.ERRORS.UPDATE_FAILED, 500);
+      return this.createErrorResponse(MOBILE_HOOKS_SETTINGS_MESSAGES.ERRORS.UPDATE_FAILED, 500);
     }
   }
 
@@ -213,20 +170,8 @@ export class AdminMobileHooksSettingsController extends BaseController {
         String(DEFAULT_LISTENER_SETTINGS.errorReportingEnabled)
       );
       await this.saveSetting(
-        MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
-        String(DEFAULT_LISTENER_SETTINGS.offlineStorageEnabled)
-      );
-      await this.saveSetting(
         MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
         String(DEFAULT_LISTENER_SETTINGS.performanceMonitoringEnabled)
-      );
-      await this.saveSetting(
-        MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL,
-        String(DEFAULT_LISTENER_SETTINGS.batchUploadInterval)
-      );
-      await this.saveSetting(
-        MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS,
-        String(DEFAULT_LISTENER_SETTINGS.maxOfflineEvents)
       );
 
       // Log audit event
@@ -277,29 +222,10 @@ export class AdminMobileHooksSettingsController extends BaseController {
           description: 'Enable error and crash reporting',
           default: true,
         },
-        offlineStorageEnabled: {
-          type: 'boolean',
-          description: 'Enable offline event storage',
-          default: true,
-        },
         performanceMonitoringEnabled: {
           type: 'boolean',
           description: 'Enable performance monitoring',
           default: true,
-        },
-        batchUploadInterval: {
-          type: 'number',
-          description: 'Batch upload interval in seconds',
-          minimum: 60,
-          maximum: 3600,
-          default: 300,
-        },
-        maxOfflineEvents: {
-          type: 'number',
-          description: 'Maximum number of offline events to store',
-          minimum: 100,
-          maximum: 10000,
-          default: 1000,
         },
       },
       required: [],
@@ -310,67 +236,6 @@ export class AdminMobileHooksSettingsController extends BaseController {
       schema,
       version: '1.0.0',
     });
-  }
-
-  /**
-   * Get mobile settings status and health
-   */
-  async getMobileSettingsStatus(request: UniversalRequest): Promise<ApiResponse> {
-    await this.initializeI18n(request);
-    const authError = this.ensureAuthenticated(request);
-    if (authError) return authError;
-
-    try {
-      const settings = await this.loadSettings();
-      const lastUpdated = await this.getLastUpdated();
-
-      // Calculate settings health score
-      let healthScore = 100;
-      const issues: string[] = [];
-
-      // Check for potential settings issues
-      if (settings.batchUploadInterval < 60) {
-        healthScore -= 10;
-        issues.push('Batch upload interval is too low (< 60 seconds)');
-      }
-
-      if (settings.maxOfflineEvents > 5000) {
-        healthScore -= 5;
-        issues.push('High offline events limit may impact performance');
-      }
-
-      if (!settings.analyticsEnabled && !settings.errorReportingEnabled) {
-        healthScore -= 15;
-        issues.push('Both analytics and error reporting are disabled');
-      }
-
-      const status = {
-        settings,
-        lastUpdated,
-        health: {
-          score: Math.max(0, healthScore),
-          status: healthScore >= 80 ? 'healthy' : healthScore >= 60 ? 'warning' : 'critical',
-          issues,
-        },
-        enabledFeatures: {
-          analytics: settings.analyticsEnabled,
-          errorReporting: settings.errorReportingEnabled,
-          offlineStorage: settings.offlineStorageEnabled,
-          performanceMonitoring: settings.performanceMonitoringEnabled,
-        },
-        statistics: {
-          totalListeners: Object.values(settings).filter(v => typeof v === 'boolean' && v).length,
-          estimatedMemoryUsage: this.estimateMemoryUsage(settings),
-        },
-      };
-
-      return this.createSuccessResponse(status);
-    } catch (error) {
-      if (error instanceof Error) {
-        return this.createErrorResponse(error.message, 500);
-      }
-      return this.createErrorResponse('Failed to get mobile settings status', 500);
-    }
   }
 
   /**
@@ -394,21 +259,9 @@ export class AdminMobileHooksSettingsController extends BaseController {
         settingsMap.get(MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED),
         DEFAULT_LISTENER_SETTINGS.errorReportingEnabled
       ),
-      offlineStorageEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED),
-        DEFAULT_LISTENER_SETTINGS.offlineStorageEnabled
-      ),
       performanceMonitoringEnabled: this.parseBoolean(
         settingsMap.get(MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED),
         DEFAULT_LISTENER_SETTINGS.performanceMonitoringEnabled
-      ),
-      batchUploadInterval: this.parseNumber(
-        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL),
-        DEFAULT_LISTENER_SETTINGS.batchUploadInterval
-      ),
-      maxOfflineEvents: this.parseNumber(
-        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS),
-        DEFAULT_LISTENER_SETTINGS.maxOfflineEvents
       ),
     };
   }
@@ -499,28 +352,6 @@ export class AdminMobileHooksSettingsController extends BaseController {
   }
 
   /**
-   * Validate mobile settings values
-   */
-  private validateMobileSettings(settings: MobileHooksListenerSettings): ApiResponse | null {
-    if (typeof settings.batchUploadInterval === 'number') {
-      if (settings.batchUploadInterval < 60 || settings.batchUploadInterval > 3600) {
-        return this.createErrorResponse(
-          'Batch upload interval must be between 60 and 3600 seconds',
-          400
-        );
-      }
-    }
-
-    if (typeof settings.maxOfflineEvents === 'number') {
-      if (settings.maxOfflineEvents < 100 || settings.maxOfflineEvents > 10000) {
-        return this.createErrorResponse('Max offline events must be between 100 and 10000', 400);
-      }
-    }
-
-    return null;
-  }
-
-  /**
    * Get mobile hooks health status
    */
   async getHealth(request: UniversalRequest): Promise<ApiResponse> {
@@ -537,7 +368,6 @@ export class AdminMobileHooksSettingsController extends BaseController {
         emergencyEnabled,
         analyticsActive: settings.analyticsEnabled && emergencyEnabled,
         errorReportingActive: settings.errorReportingEnabled && emergencyEnabled,
-        offlineStorageActive: settings.offlineStorageEnabled && emergencyEnabled,
         performanceMonitoringActive: settings.performanceMonitoringEnabled && emergencyEnabled,
       };
 
@@ -587,51 +417,6 @@ export class AdminMobileHooksSettingsController extends BaseController {
     });
 
     return lastSetting?.updateDate?.toISOString() || null;
-  }
-
-  /**
-   * Estimate memory usage based on settings
-   */
-  private estimateMemoryUsage(settings: MobileHooksListenerSettings): string {
-    let estimatedKB = 50; // Base usage
-
-    if (settings.analyticsEnabled) estimatedKB += 20;
-    if (settings.errorReportingEnabled) estimatedKB += 15;
-    if (settings.offlineStorageEnabled) estimatedKB += settings.maxOfflineEvents * 0.1;
-    if (settings.performanceMonitoringEnabled) estimatedKB += 30;
-
-    if (estimatedKB < 1000) {
-      return `${Math.round(estimatedKB)} KB`;
-    } else {
-      return `${(estimatedKB / 1000).toFixed(1)} MB`;
-    }
-  }
-
-  /**
-   * Parse boolean value from string
-   */
-  private parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
-    if (value === undefined) return defaultValue;
-    return value === 'true';
-  }
-
-  /**
-   * Parse number value from string
-   */
-  private parseNumber(value: string | undefined, defaultValue: number): number {
-    if (value === undefined) return defaultValue;
-    const parsed = parseInt(value, 10);
-    return isNaN(parsed) ? defaultValue : parsed;
-  }
-
-  /**
-   * Ensure user is authenticated
-   */
-  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.id) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-    return null;
   }
 }
 

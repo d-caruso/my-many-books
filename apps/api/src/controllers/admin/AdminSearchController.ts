@@ -191,11 +191,4 @@ export class AdminSearchController extends BaseController {
       throw error;
     }
   }
-
-  private ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
-    if (!request.user?.id) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-    return null;
-  }
 }

@@ -232,4 +232,33 @@ export abstract class BaseController {
     // Ownership verified
     return null;
   }
+
+
+
+  /**
+   * Parse boolean value from string
+   */
+  protected parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
+    if (value === undefined) return defaultValue;
+    return value === 'true';
+  }
+
+  /**
+   * Parse number value from string
+   */
+  protected parseNumber(value: string | undefined, defaultValue: number): number {
+    if (value === undefined) return defaultValue;
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? defaultValue : parsed;
+  }
+
+  /**
+   * Ensure user is authenticated
+   */
+  protected ensureAuthenticated(request: UniversalRequest): ApiResponse | null {
+    if (!request.user?.id) {
+      return this.createErrorResponseI18n('errors:auth_required', 401);
+    }
+    return null;
+  }
 }

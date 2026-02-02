@@ -190,14 +190,6 @@ export class EmergencyController extends BaseController {
       await setting.update({ value });
     }
   }
-
-  /**
-   * Parse boolean value from string
-   */
-  private parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
-    if (value === undefined) return defaultValue;
-    return value === 'true';
-  }
 }
 
 export const emergencyController = new EmergencyController();

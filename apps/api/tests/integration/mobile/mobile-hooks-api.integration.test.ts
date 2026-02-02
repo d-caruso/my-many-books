@@ -1,6 +1,6 @@
 // ================================================================
-// tests/integration/mobile/mobile-config-api.integration.test.ts
-// Integration tests for mobile configuration API endpoints
+// tests/integration/mobile/mobile-hooks-api.integration.test.ts
+// Integration tests for mobile hooks configuration API endpoints
 // ================================================================
 
 // Mock dependencies BEFORE imports
@@ -25,7 +25,7 @@ import request from 'supertest';
 import app from '../../../src/app';
 import { AppSetting } from '../../../src/models';
 import { ACTION_TYPES } from '../../../src/controllers/admin/AdminMobileHooksActionsConfigController';
-import { MOBILE_HOOK_SETTING_KEYS, MOBILE_APP_SETTING_KEYS, MOBILE_HOOKS_METADATA } from '@my-many-books/shared-types';
+import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -95,111 +95,9 @@ jest.mock('../../../src/services/AuditLogService', () => ({
   })),
 }));
 
-describe('Mobile Configuration API Integration Tests', () => {
+describe('Mobile Hooks Configuration API Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('Mobile Hook Configuration Endpoints', () => {
-
-    describe('GET /api/v1/config/mobile - Get Mobile Config (Read-Only)', () => {
-      it('should return mobile hook configuration with default values', async () => {
-        const mockSettings = [
-          {
-            key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED,
-            value: 'true',
-            category: MOBILE_HOOKS_METADATA.CATEGORY,
-            type: 'boolean',
-          },
-          {
-            key: MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED,
-            value: 'true',
-            category: MOBILE_HOOKS_METADATA.CATEGORY,
-            type: 'boolean',
-          },
-          {
-            key: MOBILE_APP_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
-            value: 'true',
-            category: MOBILE_HOOKS_METADATA.CATEGORY,
-            type: 'boolean',
-          },
-          {
-            key: MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
-            value: 'false',
-            category: MOBILE_HOOKS_METADATA.CATEGORY,
-            type: 'boolean',
-          },
-          {
-            key: MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL,
-            value: '300',
-            category: MOBILE_HOOKS_METADATA.CATEGORY,
-            type: 'number',
-          },
-          {
-            key: MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS,
-            value: '1000',
-            category: MOBILE_HOOKS_METADATA.CATEGORY,
-            type: 'number',
-          },
-        ];
-
-        (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
-
-        const response = await request(app)
-          .get('/api/v1/config/mobile')
-          .expect(200);
-
-        expect(response.body.success).toBe(true);
-        // Response now uses camelCase
-        expect(response.body.data).toHaveProperty('analyticsEnabled');
-        expect(response.body.data).toHaveProperty('errorReportingEnabled');
-        expect(response.body.data).toHaveProperty('batchUploadInterval');
-        expect(response.body.data).toHaveProperty('maxOfflineEvents');
-      });
-
-      it('should handle missing configuration settings gracefully with defaults', async () => {
-        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
-
-        const response = await request(app)
-          .get('/api/v1/config/mobile')
-          .expect(200);
-
-        expect(response.body.success).toBe(true);
-
-        // Should return default values with camelCase
-        expect(response.body.data).toHaveProperty('analyticsEnabled', true);
-        expect(response.body.data).toHaveProperty('errorReportingEnabled', true);
-        expect(response.body.data).toHaveProperty('batchUploadInterval', 300);
-        expect(response.body.data).toHaveProperty('maxOfflineEvents', 1000);
-        expect(response.body.data).toHaveProperty('offlineStorageEnabled', true);
-        expect(response.body.data).toHaveProperty('performanceMonitoringEnabled', true);
-        expect(response.body.data).toHaveProperty('emergencyEnabled', false);
-        expect(response.body.data).toHaveProperty('emergencyReason', null);
-      });
-
-      it('should return emergency status fields', async () => {
-        const mockSettings = [
-          {
-            key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED,
-            value: 'true',
-          },
-          {
-            key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_REASON,
-            value: 'Maintenance mode',
-          },
-        ];
-
-        (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
-
-        const response = await request(app)
-          .get('/api/v1/config/mobile')
-          .expect(200);
-
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('emergencyEnabled');
-        expect(response.body.data).toHaveProperty('emergencyReason');
-      });
-    });
   });
 
   describe('Admin Mobile Hooks Settings Endpoints', () => {
@@ -209,7 +107,6 @@ describe('Mobile Configuration API Integration Tests', () => {
         const mockSettings = [
           { key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED, value: 'true' },
           { key: MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED, value: 'true' },
-          { key: MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED, value: 'true' },
           { key: MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED, value: 'false' },
           { key: MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL, value: '300' },
           { key: MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS, value: '1000' },
@@ -424,16 +321,15 @@ describe('Mobile Configuration API Integration Tests', () => {
         const keys = (AppSetting.findOrCreate as jest.Mock).mock.calls.map(call => call[0].where.key);
         expect(keys).toEqual(
           expect.arrayContaining([
-            'mobile.hooks.listeners.error.unhandled.enabled',
-            'mobile.hooks.listeners.sync.failed.enabled',
-            'mobile.hooks.categories.analytics_listeners.enabled',
+            'mobile.hooks.global.listeners.error.unhandled.enabled',
+            'mobile.hooks.global.listeners.sync.failed.enabled',
+            'mobile.hooks.global.categories.analytics_listeners.enabled',
           ])
         );
       });
 
-      it('should persist offlineStorage/performanceMonitoring flags', async () => {
+      it('should persist performanceMonitoring flag', async () => {
         const updateData = {
-          offlineStorage: false,
           performanceMonitoring: false,
         };
 
@@ -456,13 +352,12 @@ describe('Mobile Configuration API Integration Tests', () => {
         expect(response.body.success).toBe(true);
         const updatedKeys = response.body.data.updated as string[];
         expect(updatedKeys).toEqual(
-          expect.arrayContaining(['offlineStorage', 'performanceMonitoring'])
+          expect.arrayContaining(['performanceMonitoring'])
         );
 
         const keys = (AppSetting.findOrCreate as jest.Mock).mock.calls.map(call => call[0].where.key);
         expect(keys).toEqual(
           expect.arrayContaining([
-            MOBILE_HOOK_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
             MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
           ])
         );
@@ -693,62 +588,7 @@ describe('Mobile Configuration API Integration Tests', () => {
     });
   });
 
-  describe('User-Specific Mobile Configuration Endpoints', () => {
-
-    describe('GET /api/v1/users/:id/mobile-config - Get User Mobile Config', () => {
-      it('should return access denied when accessing another user config', async () => {
-        const mockSettings: any[] = [];
-
-        (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
-
-        // user-token authenticates as 'specific_user_789', but trying to access 'other_user_999'
-        const response = await request(app)
-          .get('/api/v1/users/other_user_999/mobile-config')
-          .set('Authorization', 'Bearer user-token')
-          .expect(403);
-
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('errors:access_denied');
-      });
-    });
-
-    describe('PUT /api/v1/users/:id/mobile-config - Update User Mobile Config', () => {
-      it('should return access denied when updating another user config', async () => {
-        const updateData = {
-          analyticsEnabled: false,
-        };
-
-        // user-token authenticates as 'specific_user_789', but trying to update 'other_user_999'
-        const response = await request(app)
-          .put('/api/v1/users/other_user_999/mobile-config')
-          .set('Authorization', 'Bearer user-token')
-          .send(updateData)
-          .expect(403);
-
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('errors:access_denied');
-      });
-    });
-  });
-
   describe('Configuration Performance and Caching', () => {
-    it('should handle concurrent configuration reads gracefully', async () => {
-      (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
-
-      // Simulate concurrent reads
-      const promises = Array(5).fill(null).map(() =>
-        request(app).get('/api/v1/config/mobile')
-      );
-
-      const responses = await Promise.all(promises);
-
-      // All should succeed
-      responses.forEach(response => {
-        expect(response.status).toBe(200);
-        expect(response.body.success).toBe(true);
-      });
-    });
-
     it('should handle concurrent admin listener updates gracefully', async () => {
       const updateData = {
         analyticsEnabled: false,

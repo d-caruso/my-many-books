@@ -43,6 +43,20 @@ export const EMAIL_NOTIFICATION_FREQUENCY = Object.freeze({
 
 export type EmailNotificationFrequency = typeof EMAIL_NOTIFICATION_FREQUENCY[keyof typeof EMAIL_NOTIFICATION_FREQUENCY];
 
+// Mobile app metadata
+export const MOBILE_APP_METADATA = {
+  CATEGORY: "mobile_app",
+  DATA_TYPE: "string",
+  VERSION: "1.0.0",
+  RESOURCE_TYPE: "mobile_app_settings",
+  ENTITY_ID: "mobile_app",
+} as const;
+
+export const MOBILE_APP_SETTINGS_ACTIONS = Object.freeze({
+  UPDATE: 'update',
+  RESET: 'reset',
+} as const);
+
 // Types (matching UserMobileConfigResponse from controller)
 export interface NotificationPreferences {
     emailEnabled: boolean;
@@ -59,7 +73,7 @@ export interface PrivacySettings {
 
 export interface MobileAppSettings {
     offlineStorageEnabled: boolean;
-    batchUploadInterval: number;
+    batchUploadInterval: number; // seconds
     maxOfflineEvents: number;
 }
 
