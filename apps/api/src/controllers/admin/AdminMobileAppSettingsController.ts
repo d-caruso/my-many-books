@@ -171,7 +171,7 @@ export class AdminMobileAppSettingsController extends BaseController {
         );
     } catch (error) {
         if (error instanceof Error) {
-        return this.createErrorResponse(error.message, 500);
+          return this.createErrorResponse(error.message, 500);
         }
         return this.createErrorResponse(MOBILE_APP_SETTINGS_MESSAGES.ERRORS.UPDATE_FAILED, 500);
     }

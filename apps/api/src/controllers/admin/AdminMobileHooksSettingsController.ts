@@ -308,6 +308,9 @@ export class AdminMobileHooksSettingsController extends BaseController {
         disabledReason: await this.getEmergencyReason(),
       });
     } catch (error) {
+      if (error instanceof Error) {
+        return this.createErrorResponse(error.message, 500);
+      }
       return this.createErrorResponse('Failed to get emergency status', 500);
     }
   }
@@ -347,6 +350,9 @@ export class AdminMobileHooksSettingsController extends BaseController {
         message: body.enabled ? 'Mobile hooks enabled' : 'Mobile hooks disabled (emergency)',
       });
     } catch (error) {
+      if (error instanceof Error) {
+        return this.createErrorResponse(error.message, 500);
+      }
       return this.createErrorResponse('Failed to update emergency status', 500);
     }
   }
@@ -382,12 +388,12 @@ export class AdminMobileHooksSettingsController extends BaseController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      return this.createSuccessResponse({
-        status: 'error',
-        healthScore: 0,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-      });
+        return this.createSuccessResponse({
+          status: 'error',
+          healthScore: 0,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+        });
     }
   }
 

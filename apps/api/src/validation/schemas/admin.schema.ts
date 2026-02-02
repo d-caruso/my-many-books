@@ -91,3 +91,9 @@ export const adminStatsQuerySchema = Joi.object({
   endDate: commonSchemas.date.optional(),
   groupBy: Joi.string().valid('day', 'week', 'month', 'year').optional(),
 });
+
+export const adminUpdateMobileAppSettingsSchema = Joi.object({
+  offlineStorageEnabled: Joi.boolean().optional(),
+  batchUploadInterval: Joi.number().integer().min(60).max(3600).optional(),
+  maxOfflineEvents: Joi.number().integer().min(100).max(10000).optional(),
+}).min(1);

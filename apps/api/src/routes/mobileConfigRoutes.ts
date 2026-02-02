@@ -89,6 +89,16 @@ router.put(
   )
 );
 
+/**
+ * GET /api/<version>/admin/mobile-hooks/settings/schema
+ * Get mobile hooks settings validation schema
+ */
+router.get(
+  '/admin/mobile-hooks/settings/schema',
+  requirePermission(ACTIONS.MANAGE, RESOURCES.ALL),
+  expressRouteWrapper(adminMobileHooksSettingsController.getMobileSettingsSchema.bind(adminMobileHooksSettingsController))
+);
+
 // ================================================================
 // Admin Mobile Hooks Actions Config Routes (AdminMobileHooksActionsConfigController)
 // ================================================================

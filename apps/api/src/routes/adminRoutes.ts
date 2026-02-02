@@ -27,6 +27,7 @@ import {
 import { adminLimiter, readLimiter, writeLimiter } from '../middleware/rateLimiters';
 import { container } from '../container';
 import { TYPES } from '../container/types';
+import { adminUpdateMobileAppSettingsSchema } from '@/validation/schemas/admin.schema';
 
 const router: express.Router = Router();
 const adminUserController = container.get<AdminUserController>(TYPES.AdminUserController);
@@ -213,8 +214,7 @@ router.patch(
  */
 router.get(
   '/mobile-app/settings',
-  validateQuery(adminStatsQuerySchema),
-  expressRouteWrapper(adminMobileAppSettingsController.getMobileSettingsSchema.bind(adminMobileAppSettingsController))
+  expressRouteWrapper(adminMobileAppSettingsController.getSettings.bind(adminMobileAppSettingsController))
 );
 
 /**
@@ -224,8 +224,7 @@ router.get(
 router.put(
   '/mobile-app/settings',
   writeLimiter,
-  validateParams(adminIdParamSchema),
-  validateBody(adminUpdateUserSchema),
+  validateBody(adminUpdateMobileAppSettingsSchema),
   expressRouteWrapper(adminMobileAppSettingsController.updateSettings.bind(adminMobileAppSettingsController))
 );
 
@@ -236,8 +235,16 @@ router.put(
 router.post(
   '/mobile-app/settings/reset',
   writeLimiter,
-  validateParams(adminIdParamSchema),
   expressRouteWrapper(adminMobileAppSettingsController.resetSettings.bind(adminMobileAppSettingsController))
+);
+
+/**
+ * GET /api/<version>/admin/mobile-app/settings/schema
+ * Get mobile app settings validation schema
+ */
+router.get(
+  '/mobile-app/settings/schema',
+  expressRouteWrapper(adminMobileAppSettingsController.getMobileSettingsSchema.bind(adminMobileAppSettingsController))
 );
 
 export default router;
