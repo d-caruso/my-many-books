@@ -14,6 +14,7 @@ import {
   MOBILE_HOOKS_METADATA,
   MOBILE_HOOKS_SETTINGS_ACTIONS,
   MobileHooksListenerSettings,
+  HEALTH_STATUS
 } from '@my-many-books/shared-types';
 
 export interface EmergencyStatusRequest {
@@ -545,7 +546,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
       const healthScore = Math.round((activeCount / totalCount) * 100);
 
       return this.createSuccessResponse({
-        status: emergencyEnabled ? (healthScore >= 80 ? 'healthy' : 'degraded') : 'disabled',
+        status: emergencyEnabled ? (healthScore >= 80 ? HEALTH_STATUS.HEALTHY : HEALTH_STATUS.DEGRADED) : HEALTH_STATUS.DISABLED,
         healthScore,
         checks,
         timestamp: new Date().toISOString(),

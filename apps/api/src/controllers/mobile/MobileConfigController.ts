@@ -8,7 +8,7 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting } from '../../models';
-import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
+import { MOBILE_HOOK_SETTING_KEYS, BASE_HOOKS } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 
 export interface MobileConfigResponse {
@@ -48,7 +48,7 @@ export class MobileConfigController extends BaseController {
     const settings = await AppSetting.findAll({
       where: {
         key: {
-          [Op.like]: 'mobile.hooks.%'
+          [Op.like]: `${BASE_HOOKS}.%`
         },
       },
     });

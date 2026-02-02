@@ -9,7 +9,7 @@ import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
-import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
+import { MOBILE_HOOK_SETTING_KEYS, BASE_HOOKS, GLOBAL_SCOPE } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 import { databaseActionTestService } from '../../services/DatabaseActionTestService';
 import { emailService } from '../../services/action-tests/EmailService';
@@ -20,9 +20,9 @@ import { webhookService } from '../../services/action-tests/WebhookService';
 import { TABLE_NAMES } from '../../utils/constants'
 
 
-const ACTIONS_BASE = 'mobile.hooks.actions';
-const LISTENERS_BASE = 'mobile.hooks.listeners';
-const CATEGORIES_BASE = 'mobile.hooks.categories';
+const ACTIONS_BASE = `${BASE_HOOKS}.${GLOBAL_SCOPE}.actions`;
+const LISTENERS_BASE = `${BASE_HOOKS}.${GLOBAL_SCOPE}.listeners`;
+const CATEGORIES_BASE = `${BASE_HOOKS}.${GLOBAL_SCOPE}.categories`;
 
 // Action types available for mobile hooks
 export const ACTION_TYPES = {

@@ -1,17 +1,19 @@
 // ================================================================
 // src/controllers/UserMobileConfigController.ts
-// User-specific mobile hook configuration endpoints
+// User-specific general mobile configuration endpoints
 // ================================================================
 
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting, AppSettingAttributes } from '../../models';
+import { USER_MOBILE_APP_SETTING_KEYS, EMAIL_NOTIFICATION_FREQUENCY } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 
 interface UserMobileConfigResponse {
   userId: string;
   analyticsEnabled: boolean;
+  offlineStorageEnabled: boolean;
   notificationPreferences: {
     emailEnabled: boolean;
     pushEnabled: boolean;
@@ -28,6 +30,7 @@ interface UserMobileConfigResponse {
 
 export interface UserMobileConfigUpdateRequest {
   analyticsEnabled?: boolean;
+  offlineStorageEnabled?: boolean;
   notificationPreferences?: {
     emailEnabled?: boolean;
     pushEnabled?: boolean;
@@ -96,6 +99,11 @@ export class UserMobileConfigController extends BaseController {
       if (typeof body.analyticsEnabled === 'boolean') {
         await this.updateUserConfigSetting(userId, 'analytics_enabled', String(body.analyticsEnabled));
         updatedSettings.push('analytics_enabled');
+      }
+
+      if (typeof body.offlineStorageEnabled === 'boolean') {
+        await this.updateUserConfigSetting(userId, 'offline_storage.enabled', String(body.offlineStorageEnabled));
+        updatedSettings.push('offline_storage.enabled');
       }
 
       // Update notification preferences
@@ -171,6 +179,7 @@ export class UserMobileConfigController extends BaseController {
     return {
       userId: userId,
       analyticsEnabled: getUserSetting('analytics_enabled', true) as boolean,
+      offlineStorageEnabled: getUserSetting('offline_storage.enabled', true) as boolean,
       notificationPreferences: {
         emailEnabled: getUserSetting('notification_preferences.email_enabled', true) as boolean,
         pushEnabled: getUserSetting('notification_preferences.push_enabled', true) as boolean,

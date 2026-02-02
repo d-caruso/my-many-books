@@ -2,6 +2,7 @@ import { adminMobileHooksActionsConfigController, ACTION_TYPES } from '../../../
 import { AppSetting } from '../../../src/models';
 import { webhookService } from '../../../src/services/action-tests/WebhookService';
 import DatabaseConnection from '../../../src/config/database';
+import { BASE_HOOKS, GLOBAL_SCOPE, HOOK_KEY_PATTERNS } from '@my-many-books/shared-types';
 
 jest.mock('@my-many-books/shared-i18n', () => ({
   initializeI18n: jest.fn(),
@@ -56,7 +57,7 @@ describe('AdminMobileHooksActionsConfigController - webhook tests', () => {
   it('executes webhook endpoints when dryRun is false', async () => {
     (AppSetting.findAll as jest.Mock).mockResolvedValue([
       {
-        key: 'mobile.hooks.actions.settings.webhook',
+        key: `${HOOK_KEY_PATTERNS.ACTIONS_BASE}.settings.webhook`,
         value: JSON.stringify({
           enabled: true,
           endpoints: ['https://hooks.example.com/test'],
@@ -92,7 +93,7 @@ describe('AdminMobileHooksActionsConfigController - webhook tests', () => {
   it('does not execute webhook endpoints when dryRun is true', async () => {
     (AppSetting.findAll as jest.Mock).mockResolvedValue([
       {
-        key: 'mobile.hooks.actions.settings.webhook',
+        key: `${HOOK_KEY_PATTERNS.ACTIONS_BASE}.settings.webhook`,
         value: JSON.stringify({
           enabled: true,
           endpoints: ['https://hooks.example.com/test'],
