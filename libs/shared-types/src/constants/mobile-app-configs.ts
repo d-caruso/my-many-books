@@ -6,6 +6,40 @@
 const BASE_APP = 'mobile.app';
 const GLOBAL_SCOPE = 'global';
 const USER_SCOPE = 'user';
+export const BASE_USER_PREFIX = `${BASE_APP}.${USER_SCOPE}` as const;
+export const NOTIFICATION = 'notification';
+export const PRIVACY = 'privacy';
+
+// SOURCE OF TRUTH: Define suffixes FIRST
+export const USER_MOBILE_APP_SETTING_SUFFIXES = Object.freeze({
+    // General app settings
+    OFFLINE_STORAGE_ENABLED: 'offline_storage.enabled',
+
+    // Notification preferences
+    NOTIFICATION_EMAIL_ENABLED: `${NOTIFICATION}.email_enabled`,
+    NOTIFICATION_PUSH_ENABLED: `${NOTIFICATION}.push_enabled`,
+    NOTIFICATION_SMS_ENABLED: `${NOTIFICATION}.sms_enabled`,
+    NOTIFICATION_EMAIL_FREQUENCY: `${NOTIFICATION}.email_frequency`,
+
+    // Privacy settings
+    PRIVACY_DATA_COLLECTION_ENABLED: `${PRIVACY}.data_collection_enabled`,
+    PRIVACY_ANALYTICS_SHARING_ENABLED: `${PRIVACY}.analytics_sharing_enabled`,
+    PRIVACY_CRASH_REPORTING_ENABLED: `${PRIVACY}.crash_reporting_enabled`,
+} as const);
+
+// BUILD full keys FROM suffixes
+const createFullKeys = <T extends Record<string, string>>(suffixes: T) => {
+    return Object.fromEntries(
+        Object.entries(suffixes).map(([key, suffix]) => [
+        key,
+        `${BASE_USER_PREFIX}.${suffix}`
+        ])
+    ) as { [K in keyof T]: string };
+};
+
+export const USER_MOBILE_APP_SETTING_KEYS = Object.freeze(
+    createFullKeys(USER_MOBILE_APP_SETTING_SUFFIXES)
+);
 
 // Admin global mobile app settings
 export const MOBILE_APP_SETTING_KEYS = Object.freeze({
@@ -13,25 +47,6 @@ export const MOBILE_APP_SETTING_KEYS = Object.freeze({
     BATCH_UPLOAD_INTERVAL: `${BASE_APP}.${GLOBAL_SCOPE}.batch_upload_interval`,
     MAX_OFFLINE_EVENTS: `${BASE_APP}.${GLOBAL_SCOPE}.max_offline_events`,
 } as const);
-
-const NOTIFICATION = 'notification';
-const PRIVACY = 'privacy';
-
-export const USER_MOBILE_APP_SETTING_KEYS = Object.freeze({
-    // General app settings
-    OFFLINE_STORAGE_ENABLED: `${BASE_APP}.${USER_SCOPE}.offline_storage.enabled`,
-
-    // Notification preferences
-    NOTIFICATION_EMAIL_ENABLED: `${BASE_APP}.${USER_SCOPE}.${NOTIFICATION}.email_enabled`,
-    NOTIFICATION_PUSH_ENABLED: `${BASE_APP}.${USER_SCOPE}.${NOTIFICATION}.push_enabled`,
-    NOTIFICATION_SMS_ENABLED: `${BASE_APP}.${USER_SCOPE}.${NOTIFICATION}.sms_enabled`,
-    NOTIFICATION_EMAIL_FREQUENCY: `${BASE_APP}.${USER_SCOPE}.${NOTIFICATION}.email_frequency`,
-
-    // Privacy settings
-    PRIVACY_DATA_COLLECTION: `${BASE_APP}.${USER_SCOPE}.${PRIVACY}.data_collection_enabled`,
-    PRIVACY_ANALYTICS_SHARING: `${BASE_APP}.${USER_SCOPE}.${PRIVACY}.analytics_sharing_enabled`,
-    PRIVACY_CRASH_REPORTING: `${BASE_APP}.${USER_SCOPE}.${PRIVACY}.crash_reporting_enabled`,
-    } as const);
 
 // Email notification frequency options
 export const EMAIL_NOTIFICATION_FREQUENCY = Object.freeze({

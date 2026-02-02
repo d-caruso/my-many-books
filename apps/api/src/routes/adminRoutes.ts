@@ -9,6 +9,7 @@ import { statsController } from '../controllers/admin/StatsController';
 import { AdminUserController } from '../controllers/admin/AdminUserController';
 import { adminBookController } from '../controllers/admin/AdminBookController';
 import { adminSettingsController } from '../controllers/admin/AdminSettingsController';
+import { adminMobileAppSettingsController } from '../controllers/admin/AdminMobileAppSettingsController';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
@@ -38,7 +39,6 @@ router.use(requirePermission(ACTIONS.MANAGE, RESOURCES.ALL));
 router.use(adminLimiter);
 
 // ===== STATS ENDPOINTS (READ-ONLY) =====
-// Dashboard summary statistics
 /**
  * GET /api/<version>/stats/summary
  * Dashboard summary statistics
@@ -50,7 +50,6 @@ router.get(
   expressRouteWrapper(statsController.getSummary.bind(statsController))
 );
 
-// Detailed user statistics (future)
 /**
  * GET /api/<version>/stats/users
  * Detailed user statistics
@@ -62,7 +61,6 @@ router.get(
   expressRouteWrapper(statsController.getUserStats.bind(statsController))
 );
 
-// Detailed book statistics (future)
 /**
  * GET /api/<version>/stats/books
  * Detailed book statistics
@@ -85,7 +83,6 @@ router.get(
   expressRouteWrapper(adminUserController.getAllUsers.bind(adminUserController))
 );
 
-// Get single user by ID
 /**
  * GET /api/<version>/users/:id
  * Get single user by ID
@@ -96,7 +93,6 @@ router.get(
   expressRouteWrapper(adminUserController.getUserById.bind(adminUserController))
 );
 
-// Update user details (WRITE)
 /**
  * PUT /api/<version>/users/:id
  * Update user details by ID
@@ -109,7 +105,6 @@ router.put(
   expressRouteWrapper(adminUserController.updateUser.bind(adminUserController))
 );
 
-// Delete user (WRITE)
 /**
  * DELETE /api/<version>/users/:id
  * Delete a user by ID
@@ -208,6 +203,41 @@ router.patch(
   '/settings/search',
   writeLimiter,
   expressRouteWrapper(adminSettingsController.updateSearchSettings.bind(adminSettingsController))
+);
+
+// ===== MOBILE APP SETTINGS ENDPOINTS =====
+
+/**
+ * GET /api/<version>/mobile-app/settings
+ * Get mobile app settings
+ */
+router.get(
+  '/mobile-app/settings',
+  validateQuery(adminStatsQuerySchema),
+  expressRouteWrapper(adminMobileAppSettingsController.getMobileSettingsSchema.bind(adminMobileAppSettingsController))
+);
+
+/**
+ * PUT /api/<version>/mobile-app/settings
+ * Update mobile app settings
+ */
+router.put(
+  '/mobile-app/settings',
+  writeLimiter,
+  validateParams(adminIdParamSchema),
+  validateBody(adminUpdateUserSchema),
+  expressRouteWrapper(adminMobileAppSettingsController.updateSettings.bind(adminMobileAppSettingsController))
+);
+
+/**
+ * POST /api/<version>/mobile-app/settings
+ * Reset mobile app settings to default
+ */
+router.post(
+  '/mobile-app/settings/reset',
+  writeLimiter,
+  validateParams(adminIdParamSchema),
+  expressRouteWrapper(adminMobileAppSettingsController.resetSettings.bind(adminMobileAppSettingsController))
 );
 
 export default router;

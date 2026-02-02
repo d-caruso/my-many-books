@@ -7,6 +7,7 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting, AppSettingAttributes } from '../../models';
+import { BASE_USER_PREFIX } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 
 interface UserMobileConfigResponse {
@@ -98,7 +99,7 @@ export class UserMobileHooksSettingsController extends BaseController {
     const settings = await AppSetting.findAll({
       where: {
         key: {
-          [Op.like]: `user.${userId}.mobile.%`
+          [Op.like]: `${BASE_USER_PREFIX}.${userId}.%`
         },
       },
     });
@@ -107,7 +108,7 @@ export class UserMobileHooksSettingsController extends BaseController {
 
     // Helper function to get user setting with fallback to default
     const getUserSetting = (settingName: string, defaultValue: string | boolean | number): string | boolean | number => {
-      const key = `user.${userId}.mobile.${settingName}`;
+      const key = `${BASE_USER_PREFIX}.${userId}.${settingName}`;
       const value = settingsMap.get(key);
       if (value === undefined) return defaultValue;
       if (typeof defaultValue === 'boolean') {
@@ -124,7 +125,7 @@ export class UserMobileHooksSettingsController extends BaseController {
     const lastUpdatedSetting = await AppSetting.findOne({
       where: {
         key: {
-          [Op.like]: `user.${userId}.mobile.%`
+          [Op.like]: `${BASE_USER_PREFIX}.${userId}.%`
         },
       },
       order: [['updateDate', 'DESC']],
@@ -141,7 +142,7 @@ export class UserMobileHooksSettingsController extends BaseController {
    * Update a user-specific configuration setting
    */
   private async updateUserConfigSetting(userId: string, settingName: string, value: string): Promise<void> {
-    const key = `user.${userId}.mobile.${settingName}`;
+    const key = `${BASE_USER_PREFIX}.${userId}.${settingName}`;
     
     const [setting] = await AppSetting.findOrCreate({
       where: { key },
