@@ -3,7 +3,7 @@
 // User-specific general mobile configuration endpoints
 // ================================================================
 
-import { BaseController } from '../base/BaseController';
+import { UserBaseController } from '../base/UserBaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting, AppSettingAttributes } from '../../models';
@@ -11,7 +11,7 @@ import { BASE_USER_PREFIX, USER_MOBILE_APP_SETTING_SUFFIXES, EmailNotificationFr
 import { Op } from 'sequelize';
 
 interface UserMobileConfigResponse {
-  userId: string;
+  userId: number;
   offlineStorageEnabled: boolean;
   notificationPreferences: {
     emailEnabled: boolean;
@@ -42,7 +42,7 @@ export interface UserMobileConfigUpdateRequest {
   };
 }
 
-export class UserMobileConfigController extends BaseController {
+export class UserMobileConfigController extends UserBaseController {
   /**
    * GET /api/users/{id}/mobile-config - Get user's mobile config
    */
@@ -55,8 +55,9 @@ export class UserMobileConfigController extends BaseController {
     }
 
     // Check if user can access this config (self or admin)
-    const accessError = this.checkUserAccess(request, userId);
-    if (accessError) return accessError;
+    if (!this.hasUserAccess(request, userId)) {
+      return this.createAccessDeniedResponse(request);
+    }
 
     try {
       const config = await this.loadUserMobileConfig(userId);
@@ -81,8 +82,9 @@ export class UserMobileConfigController extends BaseController {
     }
 
     // Check if user can update this config (self or admin)
-    const accessError = this.checkUserAccess(request, userId);
-    if (accessError) return accessError;
+    if (!this.hasUserAccess(request, userId)) {
+      return this.createAccessDeniedResponse(request);
+    }
 
     const body = this.parseBody<UserMobileConfigUpdateRequest>(request);
     if (!body) {
@@ -151,7 +153,7 @@ export class UserMobileConfigController extends BaseController {
   /**
    * Load user-specific mobile configuration from database
    */
-  private async loadUserMobileConfig(userId: string): Promise<UserMobileConfigResponse> {
+  private async loadUserMobileConfig(userId: number): Promise<UserMobileConfigResponse> {
     const settings = await AppSetting.findAll({
       where: {
         key: {
@@ -208,7 +210,7 @@ export class UserMobileConfigController extends BaseController {
   /**
    * Update a user-specific configuration setting
    */
-  private async updateUserConfigSetting(userId: string, settingName: string, value: string): Promise<void> {
+  private async updateUserConfigSetting(userId: number, settingName: string, value: string): Promise<void> {
     const key = `${BASE_USER_PREFIX}.${userId}.${settingName}`;
     
     const [setting] = await AppSetting.findOrCreate({
@@ -228,31 +230,6 @@ export class UserMobileConfigController extends BaseController {
     if (setting.value !== value) {
       await setting.update({ value });
     }
-  }
-
-  /**
-   * Check if user has access to view/update this configuration
-   */
-  private checkUserAccess(request: UniversalRequest, targetUserId: string): ApiResponse | null {
-    const currentUserId = request.user?.id;
-    
-    // Must be logged in
-    if (!currentUserId) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-    
-    // User can access their own config
-    if (String(currentUserId) === targetUserId) {
-      return null;
-    }
-    
-    // Admin users can access any config (simplified check - in real app, check proper roles)
-    if (request.user?.isAdmin) {
-      return null;
-    }
-    
-    // No access
-    return this.createErrorResponseI18n('errors:access_denied', 403);
   }
 }
 

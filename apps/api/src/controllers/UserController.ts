@@ -4,7 +4,7 @@
 // ================================================================
 
 import { inject, injectable } from 'inversify';
-import { BaseController } from './base/BaseController';
+import { UserBaseController } from './base/UserBaseController';
 import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
 import { TYPES } from '../container/types';
@@ -39,7 +39,7 @@ const toBookView = (book: BookEntity): object => ({
 });
 
 @injectable()
-export class UserController extends BaseController {
+export class UserController extends UserBaseController {
   constructor(@inject(TYPES.UserService) private readonly userService: UserService) {
     super();
     this.userService.initializeControllerContext();
@@ -77,8 +77,10 @@ export class UserController extends BaseController {
       return this.createErrorResponse('User ID is required', 400);
     }
 
-    const accessError = this.checkUserAccess(request, userId);
-    if (accessError) return accessError;
+    // Check if user can update this config (self or admin)
+    if (!this.hasUserAccess(request, userId)) {
+      return this.createAccessDeniedResponse(request);
+    }
 
     const dto = UpdateUserDTO.from(this.parseBody(request));
 
@@ -103,8 +105,10 @@ export class UserController extends BaseController {
       return this.createErrorResponse('User ID is required', 400);
     }
 
-    const accessError = this.checkUserAccess(request, userId);
-    if (accessError) return accessError;
+    // Check if user can update this config (self or admin)
+    if (!this.hasUserAccess(request, userId)) {
+      return this.createAccessDeniedResponse(request);
+    }
 
     const pagination = this.getPaginationParams(request);
     const statusQuery = this.getQueryParameter(request, 'status');
@@ -147,8 +151,10 @@ export class UserController extends BaseController {
       return this.createErrorResponse('User ID is required', 400);
     }
 
-    const accessError = this.checkUserAccess(request, userId);
-    if (accessError) return accessError;
+    // Check if user can update this config (self or admin)
+    if (!this.hasUserAccess(request, userId)) {
+      return this.createAccessDeniedResponse(request);
+    }
 
     try {
       const stats = await this.userService.getUserStats(userId);
@@ -168,9 +174,10 @@ export class UserController extends BaseController {
       return this.createErrorResponse('User ID is required', 400);
     }
 
-    // ✅ ADDED: Check access
-    const accessError = this.checkUserAccess(request, userId);
-    if (accessError) return accessError;
+    // Check if user can update this config (self or admin)
+    if (!this.hasUserAccess(request, userId)) {
+      return this.createAccessDeniedResponse(request);
+    }
 
     try {
       await this.userService.deactivateAccount(userId);
@@ -190,8 +197,10 @@ export class UserController extends BaseController {
       return this.createErrorResponse('User ID is required', 400);
     }
 
-    const accessError = this.checkUserAccess(request, userId);
-    if (accessError) return accessError;
+    // Check if user can update this config (self or admin)
+    if (!this.hasUserAccess(request, userId)) {
+      return this.createAccessDeniedResponse(request);
+    }
 
     try {
       await this.userService.deleteAccount(userId);
@@ -220,27 +229,5 @@ export class UserController extends BaseController {
       return undefined;
     }
     return BOOK_STATUSES.includes(value as BookStatus) ? (value as BookStatus) : undefined;
-  }
-
-  // Access control helper method
-  private checkUserAccess(request: UniversalRequest, targetUserId: number): ApiResponse | null {
-    const currentUserId = request.user?.id;
-
-    if (!currentUserId) {
-      return this.createErrorResponseI18n('errors:auth_required', 401);
-    }
-
-    // User can access their own resources
-    if (currentUserId === targetUserId) {
-      return null;
-    }
-
-    // Admin can access any user's resources
-    if (request.user?.isAdmin) {
-      return null;
-    }
-
-    // No access
-    return this.createErrorResponseI18n('errors:access_denied', 403);
   }
 }
