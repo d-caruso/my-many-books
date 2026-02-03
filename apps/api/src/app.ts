@@ -17,10 +17,11 @@ import authorRoutes from './routes/authorRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import isbnRoutes from './routes/isbnRoutes';
 import adminRoutes from './routes/adminRoutes';
+import adminMobileAppRoutes from './routes/adminMobileAppRoutes';
 import authRoutes from './routes/authRoutes';
 import hookRoutes from './routes/hookRoutes';
 import settingsRoutes from './routes/settingsRoutes';
-import mobileConfigRoutes from './routes/mobileConfigRoutes';
+import adminMobileHooksRoutes from './routes/adminMobileHooksRoutes';
 import mobileAnalyticsRoutes from './routes/mobileAnalyticsRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
@@ -96,7 +97,8 @@ app.use(`${BASE_PATH}/settings`, settingsRoutes);
 app.use(`${BASE_PATH}/mobile-analytics`, mobileAnalyticsRoutes);
 app.use(`${BASE_PATH}/admin`, adminRoutes);
 app.use(`${BASE_PATH}/admin/hooks`, hookRoutes);
-app.use(`${BASE_PATH}`, mobileConfigRoutes);
+app.use(`${BASE_PATH}/admin/mobile-app`, adminMobileAppRoutes);
+app.use(`${BASE_PATH}/admin/mobile-hooks`, adminMobileHooksRoutes);
 
 // ===== 404 HANDLER =====
 app.use((_req, res): void => {

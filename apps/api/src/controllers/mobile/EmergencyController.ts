@@ -41,6 +41,9 @@ export class EmergencyController extends BaseController {
       const config = await this.loadEmergencyConfig();
       return this.createSuccessResponse(config);
     } catch (error) {
+      if (error instanceof Error) {
+        return this.createErrorResponse(error.message, 500);
+      }
       return this.createErrorResponse('Failed to fetch emergency configuration', 500);
     }
   }
@@ -122,6 +125,9 @@ export class EmergencyController extends BaseController {
         lastUpdated: new Date().toISOString(),
       }, 'Emergency configuration updated successfully');
     } catch (error) {
+      if (error instanceof Error) {
+        return this.createErrorResponse(error.message, 500);
+      }
       return this.createErrorResponse('Failed to update emergency configuration', 500);
     }
   }

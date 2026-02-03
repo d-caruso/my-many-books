@@ -49,8 +49,8 @@ export class UserMobileConfigController extends BaseController {
   async getUserMobileConfig(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
 
-    const userId = request.params?.['id'];
-    if (!userId) {
+    const userId = this.getIdParam(request);
+    if (userId === null) {
       return this.createErrorResponse('User ID is required', 400);
     }
 
@@ -75,8 +75,8 @@ export class UserMobileConfigController extends BaseController {
   async updateUserMobileConfig(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
 
-    const userId = request.params?.['id'];
-    if (!userId) {
+    const userId = this.getIdParam(request);
+    if (userId === null) {
       return this.createErrorResponse('User ID is required', 400);
     }
 

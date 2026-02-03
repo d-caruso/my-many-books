@@ -50,8 +50,17 @@ export class UserController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
+    const userId = this.getIdParam(request);
+    if (userId === null) {
+      return this.createErrorResponse('User ID is required', 400);
+    }
+
+    if (!this.hasUserAccess(request, userId)) {
+      return this.createAccessDeniedResponse(request);
+    }
+
     try {
-      const user = await this.userService.requireUser(request.user!.id);
+      const user = await this.userService.requireUser(userId);
       return this.createSuccessResponse(toUserResponseDTO(user));
     } catch (error) {
       return this.handleServiceError(error);
@@ -63,13 +72,18 @@ export class UserController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
+    const userId = this.getIdParam(request);
+    if (userId === null) {
+      return this.createErrorResponse('User ID is required', 400);
+    }
+
+    const accessError = this.checkUserAccess(request, userId);
+    if (accessError) return accessError;
+
     const dto = UpdateUserDTO.from(this.parseBody(request));
 
     try {
-      const updated = await this.userService.updateCurrentUser(
-        request.user!.id,
-        dto.toServiceInput()
-      );
+      const updated = await this.userService.updateCurrentUser(userId, dto.toServiceInput());
       return this.createSuccessResponse(
         toUserResponseDTO(updated),
         'User profile updated successfully'
@@ -84,6 +98,14 @@ export class UserController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
+    const userId = this.getIdParam(request);
+    if (userId === null) {
+      return this.createErrorResponse('User ID is required', 400);
+    }
+
+    const accessError = this.checkUserAccess(request, userId);
+    if (accessError) return accessError;
+
     const pagination = this.getPaginationParams(request);
     const statusQuery = this.getQueryParameter(request, 'status');
     const status = this.normalizeStatus(statusQuery);
@@ -97,7 +119,7 @@ export class UserController extends BaseController {
         listOptions.status = status;
       }
 
-      const result = await this.userService.listUserBooks(request.user!.id, listOptions);
+      const result = await this.userService.listUserBooks(userId, listOptions);
 
       const meta = {
         currentPage: pagination.page,
@@ -120,8 +142,16 @@ export class UserController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
+    const userId = this.getIdParam(request);
+    if (userId === null) {
+      return this.createErrorResponse('User ID is required', 400);
+    }
+
+    const accessError = this.checkUserAccess(request, userId);
+    if (accessError) return accessError;
+
     try {
-      const stats = await this.userService.getUserStats(request.user!.id);
+      const stats = await this.userService.getUserStats(userId);
       return this.createSuccessResponse(stats);
     } catch (error) {
       return this.handleServiceError(error);
@@ -133,8 +163,17 @@ export class UserController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
+    const userId = this.getIdParam(request);
+    if (userId === null) {
+      return this.createErrorResponse('User ID is required', 400);
+    }
+
+    // ✅ ADDED: Check access
+    const accessError = this.checkUserAccess(request, userId);
+    if (accessError) return accessError;
+
     try {
-      await this.userService.deactivateAccount(request.user!.id);
+      await this.userService.deactivateAccount(userId);
       return this.createSuccessResponse(null, 'Account deactivated successfully');
     } catch (error) {
       return this.handleServiceError(error);
@@ -146,8 +185,16 @@ export class UserController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
+    const userId = this.getIdParam(request);
+    if (userId === null) {
+      return this.createErrorResponse('User ID is required', 400);
+    }
+
+    const accessError = this.checkUserAccess(request, userId);
+    if (accessError) return accessError;
+
     try {
-      await this.userService.deleteAccount(request.user!.id);
+      await this.userService.deleteAccount(userId);
       return this.createSuccessResponse(null, 'Account deleted successfully');
     } catch (error) {
       return this.handleServiceError(error);
@@ -173,5 +220,27 @@ export class UserController extends BaseController {
       return undefined;
     }
     return BOOK_STATUSES.includes(value as BookStatus) ? (value as BookStatus) : undefined;
+  }
+
+  // Access control helper method
+  private checkUserAccess(request: UniversalRequest, targetUserId: number): ApiResponse | null {
+    const currentUserId = request.user?.id;
+
+    if (!currentUserId) {
+      return this.createErrorResponseI18n('errors:auth_required', 401);
+    }
+
+    // User can access their own resources
+    if (currentUserId === targetUserId) {
+      return null;
+    }
+
+    // Admin can access any user's resources
+    if (request.user?.isAdmin) {
+      return null;
+    }
+
+    // No access
+    return this.createErrorResponseI18n('errors:access_denied', 403);
   }
 }

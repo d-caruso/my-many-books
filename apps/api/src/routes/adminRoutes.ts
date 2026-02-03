@@ -1,6 +1,6 @@
 // ================================================================
 // src/routes/adminRoutes.ts
-// Admin-only routes - all require authentication + admin role
+// Admin-only app routes - all require authentication + admin role
 // ================================================================
 
 import express, { Router } from 'express';
@@ -9,7 +9,6 @@ import { statsController } from '../controllers/admin/StatsController';
 import { AdminUserController } from '../controllers/admin/AdminUserController';
 import { adminBookController } from '../controllers/admin/AdminBookController';
 import { adminSettingsController } from '../controllers/admin/AdminSettingsController';
-import { adminMobileAppSettingsController } from '../controllers/admin/AdminMobileAppSettingsController';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';
@@ -27,7 +26,6 @@ import {
 import { adminLimiter, readLimiter, writeLimiter } from '../middleware/rateLimiters';
 import { container } from '../container';
 import { TYPES } from '../container/types';
-import { adminUpdateMobileAppSettingsSchema } from '@/validation/schemas/admin.schema';
 
 const router: express.Router = Router();
 const adminUserController = container.get<AdminUserController>(TYPES.AdminUserController);
@@ -204,47 +202,6 @@ router.patch(
   '/settings/search',
   writeLimiter,
   expressRouteWrapper(adminSettingsController.updateSearchSettings.bind(adminSettingsController))
-);
-
-// ===== MOBILE APP SETTINGS ENDPOINTS =====
-
-/**
- * GET /api/<version>/mobile-app/settings
- * Get mobile app settings
- */
-router.get(
-  '/mobile-app/settings',
-  expressRouteWrapper(adminMobileAppSettingsController.getSettings.bind(adminMobileAppSettingsController))
-);
-
-/**
- * PUT /api/<version>/mobile-app/settings
- * Update mobile app settings
- */
-router.put(
-  '/mobile-app/settings',
-  writeLimiter,
-  validateBody(adminUpdateMobileAppSettingsSchema),
-  expressRouteWrapper(adminMobileAppSettingsController.updateSettings.bind(adminMobileAppSettingsController))
-);
-
-/**
- * POST /api/<version>/mobile-app/settings
- * Reset mobile app settings to default
- */
-router.post(
-  '/mobile-app/settings/reset',
-  writeLimiter,
-  expressRouteWrapper(adminMobileAppSettingsController.resetSettings.bind(adminMobileAppSettingsController))
-);
-
-/**
- * GET /api/<version>/admin/mobile-app/settings/schema
- * Get mobile app settings validation schema
- */
-router.get(
-  '/mobile-app/settings/schema',
-  expressRouteWrapper(adminMobileAppSettingsController.getMobileSettingsSchema.bind(adminMobileAppSettingsController))
 );
 
 export default router;

@@ -27,8 +27,8 @@ export class UserMobileHooksSettingsController extends BaseController {
   async getSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
 
-    const userId = request.params?.['id'];
-    if (!userId) {
+    const userId = this.getIdParam(request);
+    if (userId === null) {
       return this.createErrorResponse('User ID is required', 400);
     }
 
@@ -53,8 +53,8 @@ export class UserMobileHooksSettingsController extends BaseController {
   async updateSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
 
-    const userId = request.params?.['id'];
-    if (!userId) {
+    const userId = this.getIdParam(request);
+    if (userId === null) {
       return this.createErrorResponse('User ID is required', 400);
     }
 
