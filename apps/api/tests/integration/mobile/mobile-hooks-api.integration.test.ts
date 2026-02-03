@@ -25,7 +25,7 @@ import request from 'supertest';
 import app from '../../../src/app';
 import { AppSetting } from '../../../src/models';
 import { ACTION_TYPES } from '../../../src/controllers/admin/AdminMobileHooksActionsConfigController';
-import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
+import { MOBILE_APP_SETTING_KEYS, MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -108,8 +108,8 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
           { key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED, value: 'true' },
           { key: MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED, value: 'true' },
           { key: MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED, value: 'false' },
-          { key: MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL, value: '300' },
-          { key: MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS, value: '1000' },
+          { key: MOBILE_APP_SETTING_KEYS.BATCH_UPLOAD_INTERVAL, value: '300' },
+          { key: MOBILE_APP_SETTING_KEYS.MAX_OFFLINE_EVENTS, value: '1000' },
         ];
 
         (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
@@ -242,7 +242,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue([
           { key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED, value: 'false' },
           { key: MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED, value: 'true' },
-          { key: MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL, value: '300' },
+          { key: MOBILE_APP_SETTING_KEYS.BATCH_UPLOAD_INTERVAL, value: '300' },
         ]);
 
         const response = await request(app)

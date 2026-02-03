@@ -129,13 +129,13 @@ describe('Mobile App Configuration API Integration Tests', () => {
             type: 'boolean',
           },
           {
-            key: MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL,
+            key: MOBILE_APP_SETTING_KEYS.BATCH_UPLOAD_INTERVAL,
             value: '300',
             category: MOBILE_HOOKS_METADATA.CATEGORY,
             type: 'number',
           },
           {
-            key: MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS,
+            key: MOBILE_APP_SETTING_KEYS.MAX_OFFLINE_EVENTS,
             value: '1000',
             category: MOBILE_HOOKS_METADATA.CATEGORY,
             type: 'number',

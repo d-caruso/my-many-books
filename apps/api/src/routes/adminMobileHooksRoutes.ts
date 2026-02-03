@@ -7,7 +7,6 @@ import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { adminMobileHooksSettingsController } from '../controllers/admin/AdminMobileHooksSettingsController';
 import { adminMobileHooksActionsConfigController } from '../controllers/admin/AdminMobileHooksActionsConfigController';
-import { userMobileConfigController } from '../controllers/mobile/UserMobileConfigController';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
 import { ACTIONS, RESOURCES } from '@my-many-books/shared-auth';

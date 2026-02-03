@@ -11,7 +11,7 @@ import {
   MOBILE_CONFIG_LIMITS
 } from '../hooks/eventsSchema';
 
-import { MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
+import { MOBILE_APP_SETTING_KEYS, MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
 
 describe('Mobile Hook Configuration Constants', () => {
   describe('Event constants are properly exported', () => {
@@ -79,8 +79,8 @@ describe('Mobile Hook Configuration Constants', () => {
       expect(MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED).toBe('mobile.hooks.global.analytics.enabled');
       expect(MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED).toBe('mobile.hooks.global.error_reporting.enabled');
       expect(MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED).toBe('mobile.hooks.global.performance_monitoring.enabled');
-      expect(MOBILE_HOOK_SETTING_KEYS.BATCH_UPLOAD_INTERVAL).toBe('mobile.hooks.global.batch_upload_interval');
-      expect(MOBILE_HOOK_SETTING_KEYS.MAX_OFFLINE_EVENTS).toBe('mobile.hooks.global.max_offline_events');
+      expect(MOBILE_APP_SETTING_KEYS.BATCH_UPLOAD_INTERVAL).toBe('mobile.app.global.batch_upload_interval');
+      expect(MOBILE_APP_SETTING_KEYS.MAX_OFFLINE_EVENTS).toBe('mobile.app.global.max_offline_events');
     });
 
     it('should have mobile config limits properly defined', () => {
