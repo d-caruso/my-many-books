@@ -119,7 +119,6 @@ export class MobileAnalyticsService {
         topEventTypes,
         lastProcessed,
         recentEvents,
-        actionMappings
       ] = await Promise.all([
         // Events processed today
         MobileAnalyticsEvent.count({

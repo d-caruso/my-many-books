@@ -25,4 +25,20 @@ router.post('/events', expressRouteWrapper(mobileAnalyticsController.uploadEvent
  */
 router.post('/events/batch', expressRouteWrapper(mobileAnalyticsController.uploadEventBatch.bind(mobileAnalyticsController)));
 
+// ================================================================
+// Mobile Analytics Retrieval Routes
+// ================================================================
+
+/**
+ * GET /api/mobile-analytics/stats
+ * Event statistics
+ */
+router.get('/stats', expressRouteWrapper(mobileAnalyticsController.getStats.bind(mobileAnalyticsController)));
+
+/**
+ * GET /api/mobile-analytics/health
+ * Analytics system health check
+ */
+router.get('/health', expressRouteWrapper(mobileAnalyticsController.getHealth.bind(mobileAnalyticsController)));
+
 export default router;

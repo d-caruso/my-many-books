@@ -87,36 +87,36 @@ describe('User Routes', () => {
   });
 
   it('GET /api/users returns current user', async () => {
-    const response = await request(app).get('/api/users').expect(200);
+    const response = await request(app).get('/api/users/1').expect(200);
     expect(response.body.data).toMatchObject({ id: 1 });
     expect(mockController.getCurrentUser).toHaveBeenCalled();
   });
 
   it('PUT /api/users updates current user', async () => {
     await request(app)
-      .put('/api/users')
+      .put('/api/users/1')
       .send({ name: 'Jane', surname: 'Doe' })
       .expect(200);
     expect(mockController.updateCurrentUser).toHaveBeenCalled();
   });
 
   it('DELETE /api/users removes account', async () => {
-    await request(app).delete('/api/users').expect(200);
+    await request(app).delete('/api/users/1').expect(200);
     expect(mockController.deleteAccount).toHaveBeenCalled();
   });
 
   it('GET /api/users/books returns user books', async () => {
-    await request(app).get('/api/users/books').expect(200);
+    await request(app).get('/api/users/1/books').expect(200);
     expect(mockController.getUserBooks).toHaveBeenCalled();
   });
 
   it('GET /api/users/stats returns stats', async () => {
-    await request(app).get('/api/users/stats').expect(200);
+    await request(app).get('/api/users/1/stats').expect(200);
     expect(mockController.getUserStats).toHaveBeenCalled();
   });
 
   it('PATCH /api/users deactivates account', async () => {
-    await request(app).patch('/api/users').expect(200);
+    await request(app).patch('/api/users/1').expect(200);
     expect(mockController.deactivateAccount).toHaveBeenCalled();
   });
 });

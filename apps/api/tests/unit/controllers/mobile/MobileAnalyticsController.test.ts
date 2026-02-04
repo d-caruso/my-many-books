@@ -162,7 +162,6 @@ describe('MobileAnalyticsController', () => {
         lastProcessed: '2026-01-09T18:00:00.000Z',
         systemStatus: HEALTH_STATUS.HEALTHY,
         timeSeries: [],
-        actionTypeBreakdown: [],
         generatedAt: '2026-01-09T18:05:00.000Z',
       };
 

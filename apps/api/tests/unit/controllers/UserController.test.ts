@@ -5,7 +5,7 @@ import { UniversalRequest } from '../../../src/types';
 const buildRequest = (overrides: Partial<UniversalRequest> = {}): UniversalRequest => ({
   headers: { 'accept-language': 'en' },
   queryStringParameters: {},
-  params: {},
+  params: { id: '1' },
   user: { id: 1, email: 'test@example.com', role: 'user', provider: 'cognito' },
   ...overrides,
 });

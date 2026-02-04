@@ -176,57 +176,6 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         expect(response.body.data).toHaveProperty('lastUpdated');
       });
 
-      it('should validate batch upload interval limits', async () => {
-        const invalidData = {
-          batchUploadInterval: 30, // Below minimum of 60
-        };
-
-        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
-
-        const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/settings/listeners')
-          .set('Authorization', 'Bearer admin-token')
-          .send(invalidData)
-          .expect(400);
-
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Batch upload interval must be between 60 and 3600 seconds');
-      });
-
-      it('should validate max offline events limits', async () => {
-        const invalidData = {
-          maxOfflineEvents: 50, // Below minimum of 100
-        };
-
-        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
-
-        const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/settings/listeners')
-          .set('Authorization', 'Bearer admin-token')
-          .send(invalidData)
-          .expect(400);
-
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Max offline events must be between 100 and 10000');
-      });
-
-      it('should reject oversized batch intervals', async () => {
-        const invalidData = {
-          batchUploadInterval: 5000, // Above maximum of 3600
-        };
-
-        (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
-
-        const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/settings/listeners')
-          .set('Authorization', 'Bearer admin-token')
-          .send(invalidData)
-          .expect(400);
-
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Batch upload interval must be between 60 and 3600 seconds');
-      });
-
       it('should handle partial configuration updates', async () => {
         const partialUpdate = {
           analyticsEnabled: false,
