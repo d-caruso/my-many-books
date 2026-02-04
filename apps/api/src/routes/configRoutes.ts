@@ -1,5 +1,5 @@
 // ================================================================
-// src/routes/mobileAppRoutes.ts
+// src/routes/configRoutes.ts
 // Routes for mobile hook configuration endpoints
 // ================================================================
 
@@ -20,11 +20,11 @@ const router: express.Router = Router();
 // ================================================================
 
 /**
- * GET /api/config/mobile
+ * GET /api/<version>/config/mobile
  * Mobile app fetches its configuration (read-only)
  */
 router.get(
-  '/config/mobile',
+  '/mobile',
   expressRouteWrapper(mobileConfigController.getMobileConfig.bind(mobileConfigController))
 );
 
@@ -33,21 +33,21 @@ router.get(
 // ================================================================
 
 /**
- * GET /api/config/emergency
+ * GET /api/<version>/config/emergency
  * Get emergency kill switch status
  */
 router.get(
-  '/config/emergency',
+  '/emergency',
   authMiddleware,
   expressRouteWrapper(emergencyController.getEmergencyConfig.bind(emergencyController))
 );
 
 /**
- * PUT /api/config/emergency
+ * PUT /api/<version>/config/emergency
  * Update emergency kill switch
  */
 router.put(
-  '/config/emergency',
+  '/emergency',
   authMiddleware,
   validateBody(emergencyConfigSchema),
   expressRouteWrapper(emergencyController.updateEmergencyConfig.bind(emergencyController))

@@ -126,6 +126,17 @@ router.get(
 );
 
 /**
+ * GET /api/<version>/admin/mobile-hooks/analytics/stats
+ * Action stats (success rate, error rate, etc.)
+ */
+router.get(
+  '/analytics/stats',
+  expressRouteWrapper(
+    adminMobileHooksAnalyticsController.getActionStats.bind(adminMobileHooksAnalyticsController)
+  )
+);
+
+/**
  * GET /api/<version>/admin/mobile-hooks/actions-config/mappings
  * Get action mappings (event → actions)
  */

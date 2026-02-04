@@ -129,6 +129,43 @@ export class AdminMobileHooksAnalyticsController extends BaseController {
     };
 
     return this.createSuccessResponse(data);
+  } 
+
+  async getActionStats(request: UniversalRequest): Promise<ApiResponse> {
+    await this.initializeI18n(request);
+    const authError = this.ensureAuthenticated(request);
+    if (authError) return authError;
+
+    const rows = (await MobileHookActionExecution.findAll({
+      attributes: [
+        'actionType',
+        [MobileHookActionExecution.sequelize!.fn('COUNT', '*'), 'attempted'],
+        [MobileHookActionExecution.sequelize!.fn('SUM',
+          MobileHookActionExecution.sequelize!.literal("CASE WHEN \"status\" = 'success' THEN 1 ELSE 0 END")
+        ), 'successful'],
+        [MobileHookActionExecution.sequelize!.fn('SUM',
+          MobileHookActionExecution.sequelize!.literal("CASE WHEN \"status\" = 'failed' THEN 1 ELSE 0 END")
+        ), 'failed'],
+      ],
+      group: ['actionType'],
+      raw: true,
+    })) as unknown as Array<{ actionType: string; attempted: string; successful: string; failed: string }>;
+
+    const breakdown = rows.map(row => {
+      const attempted = Number(row.attempted);
+      const successful = Number(row.successful);
+      const failed = Number(row.failed);
+      return {
+        actionType: row.actionType,
+        attempted,
+        successful,
+        failed,
+        successRate: attempted ? Math.round((successful / attempted) * 100) / 100 : 0,
+        errorRate: attempted ? Math.round((failed / attempted) * 100) / 100 : 0,
+      };
+    });
+
+    return this.createSuccessResponse({ actionTypeBreakdown: breakdown });
   }
 }
 

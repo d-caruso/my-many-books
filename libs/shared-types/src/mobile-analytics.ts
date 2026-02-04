@@ -39,6 +39,5 @@ export interface MobileAnalyticsStats {
   lastProcessed: string | null;
   systemStatus: HealthStatus;
   timeSeries: MobileAnalyticsTimeSeriesPoint[];
-  actionTypeBreakdown: MobileAnalyticsActionTypeBreakdown[];
   generatedAt: string;
 }

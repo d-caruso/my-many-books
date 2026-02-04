@@ -11,7 +11,6 @@ import {
   MobileAnalyticsStats,
   MOBILE_HOOK_SETTING_KEYS,
   HEALTH_STATUS,
-  MobileAnalyticsActionTypeBreakdown,
   MobileAnalyticsEventTypeBreakdown,
 } from '@my-many-books/shared-types';
 
@@ -159,9 +158,6 @@ export class MobileAnalyticsService {
           attributes: ['eventType', 'processingStatus', 'creationDate', 'updateDate'],
           raw: true,
         }) as unknown as Promise<RecentEventRow[]>,
-
-        // Mobile hook mappings (eventType → actionType[])
-        this.loadActionMappings(),
       ]);
 
       const totalEvents = processedEventsTotal + failedEventsTotal;
@@ -174,7 +170,6 @@ export class MobileAnalyticsService {
 
       const timeSeries = this.buildTimeSeries(bucketStart, bucketEnd, recentEvents);
       const eventTypeBreakdown = this.buildEventTypeBreakdown(recentEvents);
-      const actionTypeBreakdown = this.buildActionTypeBreakdown(recentEvents, actionMappings);
 
       const avgProcessingTimeMs = this.calculateAvgProcessingTimeFromEvents(recentEvents);
 
@@ -189,7 +184,6 @@ export class MobileAnalyticsService {
         lastProcessed: lastProcessed?.updateDate?.toISOString() || null,
         systemStatus,
         timeSeries,
-        actionTypeBreakdown,
         generatedAt: now.toISOString(),
       };
     } catch (error) {
@@ -283,45 +277,6 @@ export class MobileAnalyticsService {
     }, 0);
 
     return Math.round(totalMs / processed.length);
-  }
-
-  private buildActionTypeBreakdown(
-    events: Array<{
-      eventType: string;
-      processingStatus: 'processed' | 'failed';
-    }>,
-    mappings: Record<string, string[]>
-  ): MobileAnalyticsActionTypeBreakdown[] {
-    const stats = new Map<string, { attempted: number; successful: number; failed: number }>();
-
-    for (const event of events) {
-      const actionTypes = mappings[event.eventType];
-      if (!Array.isArray(actionTypes) || actionTypes.length === 0) continue;
-
-      for (const actionType of actionTypes) {
-        if (typeof actionType !== 'string' || !actionType) continue;
-        const entry = stats.get(actionType) ?? { attempted: 0, successful: 0, failed: 0 };
-        entry.attempted += 1;
-        if (event.processingStatus === 'processed') entry.successful += 1;
-        if (event.processingStatus === 'failed') entry.failed += 1;
-        stats.set(actionType, entry);
-      }
-    }
-
-    return Array.from(stats.entries())
-      .map(([actionType, entry]) => {
-        const errorRate = entry.attempted ? entry.failed / entry.attempted : 0;
-        const successRate = entry.attempted ? entry.successful / entry.attempted : 0;
-        return {
-          actionType,
-          attempted: entry.attempted,
-          successful: entry.successful,
-          failed: entry.failed,
-          successRate: Math.round(successRate * 100) / 100,
-          errorRate: Math.round(errorRate * 100) / 100,
-        };
-      })
-      .sort((a, b) => a.actionType.localeCompare(b.actionType));
   }
 
   private buildEventTypeBreakdown(

@@ -31,7 +31,7 @@ router.use(adminLimiter);
  * Get mobile app settings
  */
 router.get(
-  '/mobile-app/settings',
+  '/settings',
   expressRouteWrapper(adminMobileAppSettingsController.getSettings.bind(adminMobileAppSettingsController))
 );
 
@@ -40,7 +40,7 @@ router.get(
  * Update mobile app settings
  */
 router.put(
-  '/mobile-app/settings',
+  '/settings',
   writeLimiter,
   validateBody(adminUpdateMobileAppSettingsSchema),
   expressRouteWrapper(adminMobileAppSettingsController.updateSettings.bind(adminMobileAppSettingsController))
@@ -51,7 +51,7 @@ router.put(
  * Reset mobile app settings to default
  */
 router.post(
-  '/mobile-app/settings/reset',
+  '/settings/reset',
   writeLimiter,
   expressRouteWrapper(adminMobileAppSettingsController.resetSettings.bind(adminMobileAppSettingsController))
 );
@@ -61,7 +61,7 @@ router.post(
  * Get mobile app settings validation schema
  */
 router.get(
-  '/mobile-app/settings/schema',
+  '/settings/schema',
   expressRouteWrapper(adminMobileAppSettingsController.getMobileSettingsSchema.bind(adminMobileAppSettingsController))
 );
 

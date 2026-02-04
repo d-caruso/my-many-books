@@ -32,7 +32,7 @@ interface EmergencyConfigUpdateRequest {
 
 export class EmergencyController extends BaseController {
   /**
-   * GET /api/config/emergency - Get emergency kill switches
+   * GET /api/<version>/config/emergency - Get emergency kill switches
    */
   async getEmergencyConfig(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
@@ -49,7 +49,7 @@ export class EmergencyController extends BaseController {
   }
 
   /**
-   * PUT /api/config/emergency - Update emergency settings
+   * PUT /api/<version>/config/emergency - Update emergency settings
    */
   async updateEmergencyConfig(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
