@@ -16,6 +16,10 @@ import { UserService } from '../middleware/auth';
 
 const router: express.Router = Router();
 
+const API_PREFIX = process.env['API_PREFIX'] || '/api';
+const API_ROUTE_VERSION = process.env['API_ROUTE_VERSION'] || 'v1';
+const AUTH_COOKIE_PATH = `${API_PREFIX}/${API_ROUTE_VERSION}/auth`;
+
 const cognitoClient = new CognitoIdentityProviderClient({
   region: process.env['AWS_REGION'] || 'us-east-1',
 });
@@ -95,7 +99,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       secure: process.env['NODE_ENV'] === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/api/v1/auth',
+      path: AUTH_COOKIE_PATH,
     });
 
     // Return access token and user info
@@ -159,7 +163,7 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
     const response: InitiateAuthCommandOutput = await cognitoClient.send(command);
 
     if (!response.AuthenticationResult) {
-      res.clearCookie('refresh_token', { path: '/api/v1/auth' });
+      res.clearCookie('refresh_token', { path: AUTH_COOKIE_PATH });
       res.status(401).json({ error: 'Refresh token invalid' });
       return;
     }
@@ -177,7 +181,7 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
       { err: error instanceof Error ? error : new Error(String(error)) },
       'Refresh token error:'
     );
-    res.clearCookie('refresh_token', { path: '/api/v1/auth' });
+    res.clearCookie('refresh_token', { path: AUTH_COOKIE_PATH });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(401).json({ error: 'Refresh failed', details: errorMessage });
@@ -186,7 +190,7 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
 
 // Logout endpoint
 router.post('/logout', (_req: Request, res: Response): void => {
-  res.clearCookie('refresh_token', { path: '/api/v1/auth' });
+  res.clearCookie('refresh_token', { path: AUTH_COOKIE_PATH });
   res.json({ success: true });
 });
 

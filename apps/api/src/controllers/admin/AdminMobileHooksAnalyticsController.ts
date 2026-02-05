@@ -30,7 +30,7 @@ type RecentMobileHookEvent = {
 
 export class AdminMobileHooksAnalyticsController extends BaseController {
   /**
-   * GET /api/v1/admin/mobile-hooks/analytics/events/recent
+   * GET /api/<version>/admin/mobile-hooks/analytics/events/recent
    * Returns the last N mobile analytics events with per-action execution results.
    */
   async getRecentEvents(request: UniversalRequest): Promise<ApiResponse> {
