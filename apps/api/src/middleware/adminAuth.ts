@@ -5,6 +5,7 @@
 
 import { getLogger } from '@my-many-books/shared-logging';
 import { Response, NextFunction } from 'express';
+import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 import { AuthenticatedRequest } from './auth';
 import { User } from '../models/User';
 
@@ -23,7 +24,9 @@ export const requireAdmin = async (
   try {
     // Check if user is authenticated
     if (!req.user) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json(
+        createErrorResponse(ERROR_CODES.AUTH_TOKEN_MISSING, 'Authentication required')
+      );
       return;
     }
 
@@ -31,16 +34,17 @@ export const requireAdmin = async (
     const user = await User.findByPk(req.user.id);
 
     if (!user) {
-      res.status(401).json({ error: 'User not found' });
+      res.status(401).json(
+        createErrorResponse(ERROR_CODES.AUTH_TOKEN_INVALID, 'User not found')
+      );
       return;
     }
 
     // Check if user has admin role
     if (!user.isAdmin()) {
-      res.status(403).json({
-        error: 'Forbidden',
-        message: 'Admin access required',
-      });
+      res.status(403).json(
+        createErrorResponse(ERROR_CODES.ADMIN_REQUIRED, 'Admin access required')
+      );
       return;
     }
 
@@ -51,10 +55,11 @@ export const requireAdmin = async (
       { err: error instanceof Error ? error : new Error(String(error)) },
       'Admin authorization error:'
     );
-    res.status(500).json({
-      error: 'Authorization check failed',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    });
+    res.status(500).json(
+      createErrorResponse(ERROR_CODES.INTERNAL_ERROR, 'Authorization check failed', {
+        details: error instanceof Error ? error.message : 'Unknown error',
+      })
+    );
   }
 };
 
@@ -73,7 +78,9 @@ export const requireRole = (allowedRole: 'user' | 'admin') => {
     try {
       // Check if user is authenticated
       if (!req.user) {
-        res.status(401).json({ error: 'Authentication required' });
+        res.status(401).json(
+          createErrorResponse(ERROR_CODES.AUTH_TOKEN_MISSING, 'Authentication required')
+        );
         return;
       }
 
@@ -81,16 +88,19 @@ export const requireRole = (allowedRole: 'user' | 'admin') => {
       const user = await User.findByPk(req.user.id);
 
       if (!user) {
-        res.status(401).json({ error: 'User not found' });
+        res.status(401).json(
+          createErrorResponse(ERROR_CODES.AUTH_TOKEN_INVALID, 'User not found')
+        );
         return;
       }
 
       // Check if user has the required role
       if (user.role !== allowedRole) {
-        res.status(403).json({
-          error: 'Forbidden',
-          message: `${allowedRole} role required`,
-        });
+        res.status(403).json(
+          createErrorResponse(ERROR_CODES.ROLE_REQUIRED, `${allowedRole} role required`, {
+            requiredRole: allowedRole,
+          })
+        );
         return;
       }
 
@@ -101,10 +111,11 @@ export const requireRole = (allowedRole: 'user' | 'admin') => {
         { err: error instanceof Error ? error : new Error(String(error)) },
         'Role authorization error:'
       );
-      res.status(500).json({
-        error: 'Authorization check failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+      res.status(500).json(
+        createErrorResponse(ERROR_CODES.INTERNAL_ERROR, 'Authorization check failed', {
+          details: error instanceof Error ? error.message : 'Unknown error',
+        })
+      );
     }
   };
 };

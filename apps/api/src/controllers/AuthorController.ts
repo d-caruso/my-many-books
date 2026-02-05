@@ -80,7 +80,7 @@ export class AuthorController extends BaseController {
       );
       return this.createSuccessResponse(
         toAuthorResponseDTO(createdAuthor),
-        'Author created successfully',
+        this.t('common:author_created'),
         undefined,
         201
       );
@@ -153,7 +153,7 @@ export class AuthorController extends BaseController {
       );
       return this.createSuccessResponse(
         toAuthorResponseDTO(updated),
-        'Author updated successfully'
+        this.t('common:author_updated')
       );
     } catch (error) {
       return this.handleAuthorServiceError(error);
@@ -183,7 +183,7 @@ export class AuthorController extends BaseController {
 
     try {
       await this.authorService.deleteAuthor(numericAuthorId, this.getUserContext(request)!);
-      return this.createSuccessResponse(null, 'Author deleted successfully', undefined, 204);
+      return this.createSuccessResponse(null, this.t('common:author_deleted'), undefined, 204);
     } catch (error) {
       return this.handleAuthorServiceError(error);
     }

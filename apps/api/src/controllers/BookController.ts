@@ -110,7 +110,7 @@ export class BookController extends BaseController {
       const createdBook = await this.bookService.createBook(serviceInput, userContext);
       return this.createSuccessResponse(
         toBookResponseDTO(createdBook),
-        'Book created successfully',
+        this.t('common:book_created'),
         undefined,
         201
       );
@@ -218,7 +218,7 @@ export class BookController extends BaseController {
         bookId: numericBookId,
       });
       await this.bookService.deleteBook(numericBookId, this.getUserContext(request)!);
-      return this.createSuccessResponse(null, 'Book deleted successfully', undefined, 204);
+      return this.createSuccessResponse(null, this.t('common:book_deleted'), undefined, 204);
     } catch (error) {
       return this.handleBookServiceError(error);
     }
@@ -719,7 +719,7 @@ export class BookController extends BaseController {
         source: result.source,
         responseTime: result.responseTime,
       },
-      'Book imported successfully',
+      this.t('common:book_created'),
       undefined,
       201
     );
@@ -804,7 +804,7 @@ export class BookController extends BaseController {
         updateInput,
         this.getUserContext(request)!
       );
-      return this.createSuccessResponse(toBookResponseDTO(updated), 'Book updated successfully');
+      return this.createSuccessResponse(toBookResponseDTO(updated), this.t('common:book_updated'));
     } catch (error) {
       return this.handleBookServiceError(error);
     }

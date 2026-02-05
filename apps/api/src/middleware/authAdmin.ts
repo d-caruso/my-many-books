@@ -3,6 +3,7 @@
 // ================================================================
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 
 export const authAdminMiddleware = (
   handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
@@ -13,14 +14,26 @@ export const authAdminMiddleware = (
     if (!authorizer || !authorizer['userId']) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ success: false, message: 'Unauthorized' }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify(
+          createErrorResponse(ERROR_CODES.AUTH_TOKEN_MISSING, 'Authentication required')
+        ),
       };
     }
 
     if (authorizer['role'] !== 'admin') {
       return {
         statusCode: 403,
-        body: JSON.stringify({ success: false, message: 'Forbidden' }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify(
+          createErrorResponse(ERROR_CODES.ADMIN_REQUIRED, 'Admin access required')
+        ),
       };
     }
 

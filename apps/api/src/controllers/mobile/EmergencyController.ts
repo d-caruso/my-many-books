@@ -120,7 +120,7 @@ export class EmergencyController extends BaseController {
         config: newConfig,
         updated: updatedSettings,
         lastUpdated: new Date().toISOString(),
-      }, 'Emergency configuration updated successfully');
+      }, this.t('common:emergency_config_updated'));
     } catch {
       return this.createErrorResponse('Failed to update emergency configuration', 500);
     }

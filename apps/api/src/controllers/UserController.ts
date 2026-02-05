@@ -88,7 +88,7 @@ export class UserController extends UserBaseController {
       const updated = await this.userService.updateCurrentUser(userId, dto.toServiceInput());
       return this.createSuccessResponse(
         toUserResponseDTO(updated),
-        'User profile updated successfully'
+        this.t('common:profile_updated')
       );
     } catch (error) {
       return this.handleServiceError(error);
@@ -181,7 +181,7 @@ export class UserController extends UserBaseController {
 
     try {
       await this.userService.deactivateAccount(userId);
-      return this.createSuccessResponse(null, 'Account deactivated successfully');
+      return this.createSuccessResponse(null, this.t('common:account_deactivated'));
     } catch (error) {
       return this.handleServiceError(error);
     }
@@ -204,7 +204,7 @@ export class UserController extends UserBaseController {
 
     try {
       await this.userService.deleteAccount(userId);
-      return this.createSuccessResponse(null, 'Account deleted successfully');
+      return this.createSuccessResponse(null, this.t('common:account_deleted'));
     } catch (error) {
       return this.handleServiceError(error);
     }

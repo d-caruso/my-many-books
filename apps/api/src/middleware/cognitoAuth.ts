@@ -5,6 +5,7 @@
 import { getLogger } from '@my-many-books/shared-logging';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { verify, JwtPayload, Algorithm } from 'jsonwebtoken';
+import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 
 export interface CognitoConfig {
   enabled: boolean;
@@ -50,6 +51,7 @@ export interface CognitoAuthResult {
   isAuthenticated: boolean;
   user?: CognitoUser;
   error?: string;
+  errorCode?: string;
   statusCode?: number;
 }
 
@@ -77,6 +79,7 @@ export class CognitoAuthenticator {
       return {
         isAuthenticated: false,
         error: 'Authorization token is required',
+        errorCode: ERROR_CODES.AUTH_TOKEN_MISSING,
         statusCode: 401,
       };
     }
@@ -89,6 +92,7 @@ export class CognitoAuthenticator {
         return {
           isAuthenticated: false,
           error: 'Invalid token format',
+          errorCode: ERROR_CODES.AUTH_TOKEN_INVALID,
           statusCode: 401,
         };
       }
@@ -105,6 +109,7 @@ export class CognitoAuthenticator {
           return {
             isAuthenticated: false,
             error: 'Insufficient permissions',
+            errorCode: ERROR_CODES.FORBIDDEN,
             statusCode: 403,
           };
         }
@@ -125,6 +130,7 @@ export class CognitoAuthenticator {
           return {
             isAuthenticated: false,
             error: 'Token has expired',
+            errorCode: ERROR_CODES.AUTH_TOKEN_EXPIRED,
             statusCode: 401,
           };
         }
@@ -133,6 +139,7 @@ export class CognitoAuthenticator {
           return {
             isAuthenticated: false,
             error: 'Invalid token signature',
+            errorCode: ERROR_CODES.AUTH_TOKEN_INVALID,
             statusCode: 401,
           };
         }
@@ -141,6 +148,7 @@ export class CognitoAuthenticator {
       return {
         isAuthenticated: false,
         error: 'Token verification failed',
+        errorCode: ERROR_CODES.AUTH_FAILED,
         statusCode: 401,
       };
     }
@@ -317,11 +325,12 @@ export const withCognitoAuth = (
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify({
-          success: false,
-          error: authResult.error,
-          code: 'AUTHENTICATION_FAILED',
-        }),
+        body: JSON.stringify(
+          createErrorResponse(
+            authResult.errorCode || ERROR_CODES.AUTH_FAILED,
+            authResult.error || 'Authentication failed'
+          )
+        ),
       };
     }
 
@@ -338,12 +347,11 @@ export const withCognitoAuth = (
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
           },
-          body: JSON.stringify({
-            success: false,
-            error: 'Insufficient permissions',
-            code: 'AUTHORIZATION_FAILED',
-            requiredPermissions,
-          }),
+          body: JSON.stringify(
+            createErrorResponse(ERROR_CODES.FORBIDDEN, 'Insufficient permissions', {
+              requiredPermissions,
+            })
+          ),
         };
       }
     }

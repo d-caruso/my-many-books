@@ -39,3 +39,6 @@ export * from './constants/health-status';
 export * from './constants/book.constants';
 export * from './constants/emergency.constants';
 export * from './constants/audit-actions.constants';
+
+// Error handling exports
+export * from './errors';

@@ -6,9 +6,10 @@
 import { getLogger } from '@my-many-books/shared-logging';
 import { Request, Response, NextFunction } from 'express';
 import { createAbilityFor, Action, Resource } from '@my-many-books/shared-auth';
+import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 
 /**
- * Extended Request type with user and i18n translator
+ * Extended Request type with user
  */
 interface AuthRequest extends Request {
   user?: {
@@ -16,13 +17,7 @@ interface AuthRequest extends Request {
     email: string;
     role: 'user' | 'admin';
   };
-  t?: (key: string) => string;
 }
-
-/**
- * Type for fallback translator function
- */
-type TranslatorFunction = (key: string) => string;
 
 /**
  * Middleware to check if user has required permission
@@ -53,30 +48,14 @@ export const requirePermission = (action: Action, resource: Resource) => {
 
       // Check if user can perform action on resource
       if (!ability.can(action, resource)) {
-        // Get i18n translator from request (if available)
-        // Falls back to English key if translator not available
-        const t: TranslatorFunction =
-          authReq.t ||
-          ((key: string): string => {
-            // Fallback to English messages
-            const fallbackMessages: Record<string, string> = {
-              'errors:permission_denied': 'You do not have permission to perform this action',
-              'errors:admin_only': 'This action requires administrator privileges',
-              'errors:internal_server_error': 'Internal server error',
-            };
-            return fallbackMessages[key] || key;
-          });
-
-        res.status(403).json({
-          success: false,
-          error: t('errors:permission_denied'),
-          details: {
+        res.status(403).json(
+          createErrorResponse(ERROR_CODES.FORBIDDEN, 'You do not have permission to perform this action', {
             action,
             resource,
             authenticated: !!user,
             role: user?.role || 'anonymous',
-          },
-        });
+          })
+        );
         return;
       }
 
@@ -95,16 +74,9 @@ export const requirePermission = (action: Action, resource: Resource) => {
         '[Authorization Middleware] Error'
       );
 
-      const t: TranslatorFunction =
-        authReq.t ||
-        ((key: string): string => {
-          return key === 'errors:internal_server_error' ? 'Internal server error' : key;
-        });
-
-      res.status(500).json({
-        success: false,
-        error: t('errors:internal_server_error'),
-      });
+      res.status(500).json(
+        createErrorResponse(ERROR_CODES.INTERNAL_ERROR, 'Internal server error')
+      );
       return;
     }
   };

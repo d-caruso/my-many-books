@@ -4,15 +4,22 @@
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { getLogger } from '@my-many-books/shared-logging';
+import {
+  ERROR_CODES,
+  createErrorResponse as createStandardizedErrorResponse,
+  type ErrorCode,
+} from '@my-many-books/shared-types';
 
 export interface AppError extends Error {
   statusCode?: number;
   isOperational?: boolean;
+  errorCode?: ErrorCode;
 }
 
 export class ValidationError extends Error implements AppError {
   statusCode = 400;
   isOperational = true;
+  errorCode = ERROR_CODES.VALIDATION_FAILED;
 
   constructor(
     message: string,
@@ -26,6 +33,7 @@ export class ValidationError extends Error implements AppError {
 export class NotFoundError extends Error implements AppError {
   statusCode = 404;
   isOperational = true;
+  errorCode = ERROR_CODES.NOT_FOUND;
 
   constructor(message: string = 'Resource not found') {
     super(message);
@@ -46,6 +54,7 @@ export class ConflictError extends Error implements AppError {
 export class UnauthorizedError extends Error implements AppError {
   statusCode = 401;
   isOperational = true;
+  errorCode = ERROR_CODES.AUTH_TOKEN_INVALID;
 
   constructor(message: string = 'Unauthorized') {
     super(message);
@@ -56,6 +65,7 @@ export class UnauthorizedError extends Error implements AppError {
 export class ForbiddenError extends Error implements AppError {
   statusCode = 403;
   isOperational = true;
+  errorCode = ERROR_CODES.FORBIDDEN;
 
   constructor(message: string = 'Forbidden') {
     super(message);
@@ -66,6 +76,7 @@ export class ForbiddenError extends Error implements AppError {
 export class ServiceUnavailableError extends Error implements AppError {
   statusCode = 503;
   isOperational = true;
+  errorCode = ERROR_CODES.SERVICE_UNAVAILABLE;
 
   constructor(message: string = 'Service temporarily unavailable') {
     super(message);
@@ -80,6 +91,7 @@ export const createErrorResponse = (
   const appError = error as AppError;
   const statusCode = appError.statusCode || 500;
   const isOperational = appError.isOperational || false;
+  const errorCode = appError.errorCode || ERROR_CODES.INTERNAL_ERROR;
 
   // Log error details
   getLogger().error(
@@ -87,6 +99,7 @@ export const createErrorResponse = (
       err: error,
       statusCode,
       isOperational,
+      errorCode,
       path: event?.resource,
       method: event?.httpMethod,
       requestId: event?.requestContext?.requestId,
@@ -98,22 +111,26 @@ export const createErrorResponse = (
   const isProduction = process.env['NODE_ENV'] === 'production';
   const errorMessage = isOperational || !isProduction ? error.message : 'Internal server error';
 
-  const response: Record<string, unknown> = {
-    success: false,
-    error: errorMessage,
-  };
+  // Build details object
+  const details: Record<string, unknown> = {};
 
   if (error instanceof ValidationError && error.details) {
-    response['details'] = error.details;
+    details['validation'] = error.details;
   }
 
   if (event?.requestContext?.requestId) {
-    response['requestId'] = event.requestContext.requestId;
+    details['requestId'] = event.requestContext.requestId;
   }
 
   if (!isProduction && !isOperational && error.stack) {
-    response['stack'] = error.stack;
+    details['stack'] = error.stack;
   }
+
+  const response = createStandardizedErrorResponse(
+    errorCode,
+    errorMessage,
+    Object.keys(details).length > 0 ? details : undefined
+  );
 
   return {
     statusCode,

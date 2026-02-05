@@ -5,6 +5,7 @@
 
 import { getLogger } from '@my-many-books/shared-logging';
 import { Request, Response, NextFunction } from 'express';
+import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 import { AuthUser } from '../models/interfaces/ModelInterfaces';
 import { container } from '../container';
 import { TYPES } from '../container/types';
@@ -139,7 +140,12 @@ export const authMiddleware = async (
     // Extract token from Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'Missing or invalid authorization header' });
+      res.status(401).json(
+        createErrorResponse(
+          ERROR_CODES.AUTH_HEADER_INVALID,
+          'Missing or invalid authorization header'
+        )
+      );
       return;
     }
 
@@ -160,7 +166,9 @@ export const authMiddleware = async (
 
     // Check if user is active
     if (!user.isActive) {
-      res.status(403).json({ error: 'Account is deactivated' });
+      res.status(403).json(
+        createErrorResponse(ERROR_CODES.ACCOUNT_DEACTIVATED, 'Account is deactivated')
+      );
       return;
     }
 
@@ -183,10 +191,11 @@ export const authMiddleware = async (
       { err: error instanceof Error ? error : new Error(String(error)) },
       'AuthMiddleware: Authentication error:'
     );
-    res.status(401).json({
-      error: 'Authentication failed',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    });
+    res.status(401).json(
+      createErrorResponse(ERROR_CODES.AUTH_FAILED, 'Authentication failed', {
+        details: error instanceof Error ? error.message : 'Unknown error',
+      })
+    );
   }
 };
 

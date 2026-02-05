@@ -3,6 +3,7 @@
 // ================================================================
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 
 export interface ApiKeyConfig {
   enabled: boolean;
@@ -36,6 +37,7 @@ export class ApiKeyAuthenticator {
       return {
         isAuthenticated: false,
         error: 'API key is required',
+        errorCode: ERROR_CODES.API_KEY_MISSING,
         statusCode: 401,
       };
     }
@@ -44,6 +46,7 @@ export class ApiKeyAuthenticator {
       return {
         isAuthenticated: false,
         error: 'Invalid API key',
+        errorCode: ERROR_CODES.API_KEY_INVALID,
         statusCode: 401,
       };
     }
@@ -53,6 +56,7 @@ export class ApiKeyAuthenticator {
       return {
         isAuthenticated: false,
         error: 'API key tier not found',
+        errorCode: ERROR_CODES.API_KEY_TIER_NOT_FOUND,
         statusCode: 500,
       };
     }
@@ -63,6 +67,7 @@ export class ApiKeyAuthenticator {
       return {
         isAuthenticated: false,
         error: usageCheck.error || 'Usage limit exceeded',
+        errorCode: usageCheck.errorCode || ERROR_CODES.USAGE_LIMIT_EXCEEDED,
         statusCode: 429,
         retryAfter: usageCheck.retryAfter || 60,
       };
@@ -104,8 +109,10 @@ export class ApiKeyAuthenticator {
 
       return {
         allowed: false,
-        error: `Rate limit exceeded. Maximum ${tier.rateLimit} requests per minute.`,
+        error: 'Rate limit exceeded',
+        errorCode: ERROR_CODES.RATE_LIMIT_EXCEEDED,
         retryAfter,
+        details: { limit: tier.rateLimit, windowSeconds: 60 },
       };
     }
 
@@ -125,8 +132,10 @@ export class ApiKeyAuthenticator {
 
       return {
         allowed: false,
-        error: `Monthly quota exceeded. Maximum ${tier.quotaLimit} requests per month.`,
+        error: 'Monthly quota exceeded',
+        errorCode: ERROR_CODES.QUOTA_EXCEEDED,
         retryAfter,
+        details: { limit: tier.quotaLimit },
       };
     }
 
@@ -177,6 +186,7 @@ export interface AuthenticationResult {
   apiKey?: string;
   permissions?: string[];
   error?: string;
+  errorCode?: string;
   statusCode?: number;
   retryAfter?: number;
 }
@@ -184,7 +194,9 @@ export interface AuthenticationResult {
 export interface UsageCheckResult {
   allowed: boolean;
   error?: string;
+  errorCode?: string;
   retryAfter?: number;
+  details?: Record<string, unknown>;
 }
 
 export interface ApiKeyUsage {
@@ -219,11 +231,12 @@ export const withApiKeyAuth = (
           'Access-Control-Allow-Origin': '*',
           ...(authResult.retryAfter && { 'Retry-After': authResult.retryAfter.toString() }),
         },
-        body: JSON.stringify({
-          success: false,
-          error: authResult.error,
-          code: 'AUTHENTICATION_FAILED',
-        }),
+        body: JSON.stringify(
+          createErrorResponse(
+            authResult.errorCode || ERROR_CODES.AUTH_FAILED,
+            authResult.error || 'Authentication failed'
+          )
+        ),
       };
       return response;
     }

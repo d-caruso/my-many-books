@@ -53,7 +53,7 @@ export class CategoryController extends BaseController {
       );
       return this.createSuccessResponse(
         toCategoryResponseDTO(created),
-        'Category created successfully',
+        this.t('common:category_created'),
         undefined,
         201
       );
@@ -118,7 +118,7 @@ export class CategoryController extends BaseController {
       );
       return this.createSuccessResponse(
         toCategoryResponseDTO(updated),
-        'Category updated successfully'
+        this.t('common:category_updated')
       );
     } catch (error) {
       return this.handleCategoryServiceError(error);
@@ -150,7 +150,7 @@ export class CategoryController extends BaseController {
       await this.categoryService.deleteCategory(numericCategoryId, this.getUserContext(request)!, {
         force: forceDelete,
       });
-      return this.createSuccessResponse(null, 'Category deleted successfully', undefined, 204);
+      return this.createSuccessResponse(null, this.t('common:category_deleted'), undefined, 204);
     } catch (error) {
       return this.handleCategoryServiceError(error);
     }

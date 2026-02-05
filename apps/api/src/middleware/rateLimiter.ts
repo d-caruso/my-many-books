@@ -3,6 +3,7 @@
 // ================================================================
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 
 export interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
@@ -194,13 +195,13 @@ export const withRateLimit = (
             'X-RateLimit-Reset': new Date(limitResult.resetTime).toISOString(),
           }),
         },
-        body: JSON.stringify({
-          success: false,
-          error: 'Rate limit exceeded',
-          message: `Too many requests. Limit: ${limitResult.limit} per ${config.windowMs / 1000}s`,
-          retryAfter: limitResult.retryAfter,
-          code: 'RATE_LIMIT_EXCEEDED',
-        }),
+        body: JSON.stringify(
+          createErrorResponse(ERROR_CODES.RATE_LIMIT_EXCEEDED, 'Too many requests', {
+            limit: limitResult.limit,
+            windowMs: config.windowMs,
+            retryAfter: limitResult.retryAfter,
+          })
+        ),
       };
       return response;
     }
