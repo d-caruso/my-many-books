@@ -32,6 +32,7 @@ jest.mock('../../../src/validation', () => ({
 import request from 'supertest';
 import app from '../../../src/app';
 import { AppSetting } from '../../../src/models';
+import { BASE_PATH } from '../../utils/apiBasePath';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -106,7 +107,7 @@ describe('Admin Mobile App Settings Validation', () => {
     jest.clearAllMocks();
   });
 
-  describe('PUT /api/v1/admin/mobile-app/settings - Settings Validation', () => {
+  describe(`PUT ${BASE_PATH}/admin/mobile-app/settings - Settings Validation`, () => {
     it('should validate batch upload interval limits', async () => {
       const invalidData = {
         batchUploadInterval: 30, // Below minimum of 60
@@ -115,7 +116,7 @@ describe('Admin Mobile App Settings Validation', () => {
       (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
 
       const response = await request(app)
-        .put('/api/v1/admin/mobile-app/settings')
+        .put(`${BASE_PATH}/admin/mobile-app/settings`)
         .set('Authorization', 'Bearer admin-token')
         .send(invalidData)
         .expect(400);
@@ -132,7 +133,7 @@ describe('Admin Mobile App Settings Validation', () => {
       (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
 
       const response = await request(app)
-        .put('/api/v1/admin/mobile-app/settings')
+        .put(`${BASE_PATH}/admin/mobile-app/settings`)
         .set('Authorization', 'Bearer admin-token')
         .send(invalidData)
         .expect(400);
@@ -149,7 +150,7 @@ describe('Admin Mobile App Settings Validation', () => {
       (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
 
       const response = await request(app)
-        .put('/api/v1/admin/mobile-app/settings')
+        .put(`${BASE_PATH}/admin/mobile-app/settings`)
         .set('Authorization', 'Bearer admin-token')
         .send(invalidData)
         .expect(400);

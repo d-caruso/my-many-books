@@ -25,6 +25,7 @@ import request from 'supertest';
 import app from '../../../src/app';
 import { Hook, HookExecution } from '../../../src/models';
 import { EVENTS } from '../../../src/services/hooks/events';
+import { BASE_PATH } from '../../utils/apiBasePath';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -78,7 +79,7 @@ jest.mock('../../../src/services/AuditLogService', () => ({
 }));
 
 describe('Hook API Integration Tests', () => {
-  const BASE_URL = '/api/v1/admin/hooks';
+  const BASE_URL = `${BASE_PATH}/admin/hooks`;
 
   beforeEach(() => {
     jest.clearAllMocks();

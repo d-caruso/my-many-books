@@ -43,6 +43,7 @@ import app from '../../../src/app';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { UserService } from '../../../src/middleware/auth';
 import { User } from '../../../src/models/User';
+import { BASE_PATH } from '../../utils/apiBasePath';
 
 const mockCognitoClient = CognitoIdentityProviderClient as jest.MockedClass<
   typeof CognitoIdentityProviderClient
@@ -69,7 +70,7 @@ describe('Auth Routes', () => {
     mockCognitoClient.prototype.send = mockSend;
   });
 
-  describe('POST /api/v1/auth/login', () => {
+  describe(`POST ${BASE_PATH}/auth/login`, () => {
     const mockUser: Partial<User> = {
       id: 1,
       email: 'test@example.com',
@@ -112,7 +113,7 @@ describe('Auth Routes', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       expect(response.status).toBe(200);
@@ -137,7 +138,7 @@ describe('Auth Routes', () => {
       // Verify HttpOnly and other security flags
       const refreshCookie = cookies.find((c: string) => c.startsWith('refresh_token='));
       expect(refreshCookie).toContain('HttpOnly');
-      expect(refreshCookie).toContain('Path=/api/v1/auth');
+      expect(refreshCookie).toContain(`Path=${BASE_PATH}/auth`);
     });
 
     it('should return 401 with invalid credentials', async () => {
@@ -147,7 +148,7 @@ describe('Auth Routes', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'wrongpassword' });
 
       expect(response.status).toBe(401);
@@ -161,7 +162,7 @@ describe('Auth Routes', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'nonexistent@example.com', password: 'Password123!' });
 
       expect(response.status).toBe(401);
@@ -170,7 +171,7 @@ describe('Auth Routes', () => {
 
     it('should return 400 without email', async () => {
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ password: 'Password123!' });
 
       expect(response.status).toBe(400);
@@ -179,7 +180,7 @@ describe('Auth Routes', () => {
 
     it('should return 400 without password', async () => {
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com' });
 
       expect(response.status).toBe(400);
@@ -201,7 +202,7 @@ describe('Auth Routes', () => {
       jwt.decode = jest.fn().mockReturnValue(null);
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       expect(response.status).toBe(401);
@@ -209,7 +210,7 @@ describe('Auth Routes', () => {
     });
   });
 
-  describe('POST /api/v1/auth/refresh', () => {
+  describe(`POST ${BASE_PATH}/auth/refresh`, () => {
     it('should refresh token with valid refresh token', async () => {
       const mockAccessToken = 'new.access.token';
       const mockIdToken = 'new.id.token';
@@ -223,7 +224,7 @@ describe('Auth Routes', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/refresh')
+        .post(`${BASE_PATH}/auth/refresh`)
         .set('Cookie', ['refresh_token=valid-refresh-token']);
 
       expect(response.status).toBe(200);
@@ -233,7 +234,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 401 without refresh token cookie', async () => {
-      const response = await request(app).post('/api/v1/auth/refresh');
+      const response = await request(app).post(`${BASE_PATH}/auth/refresh`);
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error', 'No refresh token');
@@ -245,7 +246,7 @@ describe('Auth Routes', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/refresh')
+        .post(`${BASE_PATH}/auth/refresh`)
         .set('Cookie', ['refresh_token=invalid-token']);
 
       expect(response.status).toBe(401);
@@ -262,7 +263,7 @@ describe('Auth Routes', () => {
       mockSend.mockRejectedValue(new Error('Token expired'));
 
       const response = await request(app)
-        .post('/api/v1/auth/refresh')
+        .post(`${BASE_PATH}/auth/refresh`)
         .set('Cookie', ['refresh_token=expired-token']);
 
       expect(response.status).toBe(401);
@@ -274,9 +275,9 @@ describe('Auth Routes', () => {
     });
   });
 
-  describe('POST /api/v1/auth/logout', () => {
+  describe(`POST ${BASE_PATH}/auth/logout`, () => {
     it('should clear refresh token cookie', async () => {
-      const response = await request(app).post('/api/v1/auth/logout');
+      const response = await request(app).post(`${BASE_PATH}/auth/logout`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
@@ -286,18 +287,18 @@ describe('Auth Routes', () => {
       expect(cookies).toBeDefined();
       const clearCookie = cookies.find((c: string) => c.startsWith('refresh_token=;'));
       expect(clearCookie).toBeDefined();
-      expect(clearCookie).toContain('Path=/api/v1/auth');
+      expect(clearCookie).toContain(`Path=${BASE_PATH}/auth`);
     });
   });
 
-  describe('POST /api/v1/auth/register', () => {
+  describe(`POST ${BASE_PATH}/auth/register`, () => {
     it('should register successfully with valid data', async () => {
       mockSend.mockResolvedValue({
         UserConfirmed: false,
         UserSub: 'new-user-sub',
       });
 
-      const response = await request(app).post('/api/v1/auth/register').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/register`).send({
         email: 'newuser@example.com',
               password: 'Password123!',
         name: 'New',
@@ -314,7 +315,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when email is missing', async () => {
-      const response = await request(app).post('/api/v1/auth/register').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/register`).send({
         password: 'Password123!',
         name: 'New',
         surname: 'User',
@@ -325,7 +326,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when password is missing', async () => {
-      const response = await request(app).post('/api/v1/auth/register').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/register`).send({
         email: 'newuser@example.com',
       role: 'user',
         name: 'New',
@@ -337,7 +338,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when name is missing', async () => {
-      const response = await request(app).post('/api/v1/auth/register').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/register`).send({
         email: 'newuser@example.com',
               password: 'Password123!',
         surname: 'User',
@@ -348,7 +349,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when surname is missing', async () => {
-      const response = await request(app).post('/api/v1/auth/register').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/register`).send({
         email: 'newuser@example.com',
       role: 'user',
         password: 'Password123!',
@@ -365,7 +366,7 @@ describe('Auth Routes', () => {
         message: 'User already exists',
       });
 
-      const response = await request(app).post('/api/v1/auth/register').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/register`).send({
         email: 'existing@example.com',
               password: 'Password123!',
         name: 'Existing',
@@ -382,7 +383,7 @@ describe('Auth Routes', () => {
         message: 'Password does not meet requirements',
       });
 
-      const response = await request(app).post('/api/v1/auth/register').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/register`).send({
         email: 'newuser@example.com',
       role: 'user',
         password: 'weak',
@@ -397,7 +398,7 @@ describe('Auth Routes', () => {
     it('should return 500 on unknown error', async () => {
       mockSend.mockRejectedValue(new Error('Unknown error occurred'));
 
-      const response = await request(app).post('/api/v1/auth/register').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/register`).send({
         email: 'newuser@example.com',
               password: 'Password123!',
         name: 'New',

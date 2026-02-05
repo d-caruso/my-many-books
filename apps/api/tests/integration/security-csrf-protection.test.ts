@@ -51,6 +51,7 @@ jest.mock('jsonwebtoken');
 import request from 'supertest';
 import app from '../../src/app';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { BASE_PATH } from '../utils/apiBasePath';
 
 const mockCognitoClient = CognitoIdentityProviderClient as jest.MockedClass<
   typeof CognitoIdentityProviderClient
@@ -99,7 +100,7 @@ describe('CSRF Protection Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       const cookies = response.headers['set-cookie'] as unknown as string[];
@@ -133,15 +134,15 @@ describe('CSRF Protection Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       const cookies = response.headers['set-cookie'] as unknown as string[];
       const refreshCookie = cookies.find((c: string) => c.startsWith('refresh_token='));
 
       // Path restriction limits the scope of the cookie
-      // Cookie will only be sent to /api/v1/auth endpoints
-      expect(refreshCookie).toContain('Path=/api/v1/auth');
+      // Cookie will only be sent to /api/<version>/auth endpoints
+      expect(refreshCookie).toContain(`Path=${BASE_PATH}/auth`);
     });
   });
 
@@ -156,7 +157,7 @@ describe('CSRF Protection Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/refresh')
+        .post(`${BASE_PATH}/auth/refresh`)
         .set('Cookie', ['refresh_token=valid-token'])
         .set('Origin', process.env['FRONTEND_URL'] || 'http://localhost:5173');
 
@@ -166,7 +167,7 @@ describe('CSRF Protection Tests', () => {
 
     it('should reject requests without credentials', async () => {
       // Attempt to use refresh token without cookie (simulating CSRF attack)
-      const response = await request(app).post('/api/v1/auth/refresh');
+      const response = await request(app).post(`${BASE_PATH}/auth/refresh`);
 
       // Should fail because refresh token is not present
       expect(response.status).toBe(401);
@@ -177,7 +178,7 @@ describe('CSRF Protection Tests', () => {
   describe('Token binding protection', () => {
     it('should require refresh token cookie for refresh endpoint', async () => {
       // Attempt to call refresh without cookie
-      const response = await request(app).post('/api/v1/auth/refresh').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/refresh`).send({
         refreshToken: 'stolen-token-from-somewhere',
       });
 
@@ -188,7 +189,7 @@ describe('CSRF Protection Tests', () => {
 
     it('should not accept refresh token from request body', async () => {
       // Attempt to send refresh token in request body (CSRF attack vector)
-      const response = await request(app).post('/api/v1/auth/refresh').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/refresh`).send({
         refreshToken: 'malicious-token',
       });
 
@@ -199,7 +200,7 @@ describe('CSRF Protection Tests', () => {
     it('should not accept refresh token from headers', async () => {
       // Attempt to send refresh token in custom header (CSRF attack vector)
       const response = await request(app)
-        .post('/api/v1/auth/refresh')
+        .post(`${BASE_PATH}/auth/refresh`)
         .set('X-Refresh-Token', 'malicious-token');
 
       // Should fail - only accepts tokens from HttpOnly cookie
@@ -232,7 +233,7 @@ describe('CSRF Protection Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       const cookies = response.headers['set-cookie'] as unknown as string[];
@@ -243,13 +244,13 @@ describe('CSRF Protection Tests', () => {
     });
 
     it('should properly clear cookie on logout', async () => {
-      const response = await request(app).post('/api/v1/auth/logout');
+      const response = await request(app).post(`${BASE_PATH}/auth/logout`);
 
       const cookies = response.headers['set-cookie'] as unknown as string[];
       const clearCookie = cookies.find((c: string) => c.startsWith('refresh_token=;'));
 
       expect(clearCookie).toBeDefined();
-      expect(clearCookie).toContain('Path=/api/v1/auth');
+      expect(clearCookie).toContain(`Path=${BASE_PATH}/auth`);
 
       // Cookie should be expired immediately
       expect(clearCookie).toMatch(/refresh_token=;/);
@@ -261,7 +262,7 @@ describe('CSRF Protection Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/refresh')
+        .post(`${BASE_PATH}/auth/refresh`)
         .set('Cookie', ['refresh_token=invalid-token']);
 
       expect(response.status).toBe(401);
@@ -280,7 +281,7 @@ describe('CSRF Protection Tests', () => {
       // This test validates that the endpoint requires cookies to be present
       // which is part of the double-submit cookie pattern defense
 
-      const response = await request(app).post('/api/v1/auth/refresh');
+      const response = await request(app).post(`${BASE_PATH}/auth/refresh`);
 
       // Without cookie, request should fail
       expect(response.status).toBe(401);
@@ -289,7 +290,7 @@ describe('CSRF Protection Tests', () => {
 
     it('should not process requests with only body parameters', async () => {
       // Ensures that sending token in body doesn't work (CSRF protection)
-      const response = await request(app).post('/api/v1/auth/refresh').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/refresh`).send({
         token: 'some-token',
         refreshToken: 'some-refresh-token',
       });
@@ -322,7 +323,7 @@ describe('CSRF Protection Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .set('Origin', process.env['FRONTEND_URL'] || 'http://localhost:5173')
         .send({ email: 'test@example.com', password: 'Password123!' });
 

@@ -26,6 +26,7 @@ import app from '../../../src/app';
 import { AppSetting } from '../../../src/models';
 import { ACTION_TYPES } from '../../../src/controllers/admin/AdminMobileHooksActionsConfigController';
 import { MOBILE_APP_SETTING_KEYS, MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
+import { BASE_PATH } from '../../utils/apiBasePath';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -102,7 +103,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
 
   describe('Admin Mobile Hooks Settings Endpoints', () => {
 
-    describe('GET /api/v1/admin/mobile-hooks/settings/listeners - Get Listener Settings', () => {
+    describe(`GET ${BASE_PATH}/admin/mobile-hooks/settings/listeners - Get Listener Settings`, () => {
       it('should return listener settings configuration', async () => {
         const mockSettings = [
           { key: MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED, value: 'true' },
@@ -118,7 +119,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         });
 
         const response = await request(app)
-          .get('/api/v1/admin/mobile-hooks/settings/listeners')
+          .get(`${BASE_PATH}/admin/mobile-hooks/settings/listeners`)
           .set('Authorization', 'Bearer admin-token')
           .expect(200);
 
@@ -130,7 +131,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
 
       it('should require admin authorization', async () => {
         const response = await request(app)
-          .get('/api/v1/admin/mobile-hooks/settings/listeners')
+          .get(`${BASE_PATH}/admin/mobile-hooks/settings/listeners`)
           .set('Authorization', 'Bearer user-token')
           .expect(403);
 
@@ -139,14 +140,14 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
 
       it('should require authentication', async () => {
         const response = await request(app)
-          .get('/api/v1/admin/mobile-hooks/settings/listeners')
+          .get(`${BASE_PATH}/admin/mobile-hooks/settings/listeners`)
           .expect(401);
 
         expect(response.body.error).toBe('No authorization header');
       });
     });
 
-    describe('PUT /api/v1/admin/mobile-hooks/settings/listeners - Update Listener Settings', () => {
+    describe(`PUT ${BASE_PATH}/admin/mobile-hooks/settings/listeners - Update Listener Settings`, () => {
       it('should successfully update listener settings', async () => {
         const updateData = {
           analyticsEnabled: false,
@@ -165,7 +166,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .put(`${BASE_PATH}/admin/mobile-hooks/settings/listeners`)
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(200);
@@ -195,7 +196,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         ]);
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .put(`${BASE_PATH}/admin/mobile-hooks/settings/listeners`)
           .set('Authorization', 'Bearer admin-token')
           .send(partialUpdate)
           .expect(200);
@@ -215,7 +216,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         );
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .put(`${BASE_PATH}/admin/mobile-hooks/settings/listeners`)
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(500);
@@ -227,7 +228,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
   });
 
   describe('Admin Mobile Hooks Listener Configuration Endpoints', () => {
-    describe('PUT /api/v1/admin/mobile-hooks/config/listeners - Update Hook Listeners', () => {
+    describe(`PUT ${BASE_PATH}/admin/mobile-hooks/config/listeners - Update Hook Listeners`, () => {
       it('should persist per-event listener + category toggles', async () => {
         const updateData = {
           listeners: {
@@ -250,7 +251,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         });
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/config/listeners')
+          .put(`${BASE_PATH}/admin/mobile-hooks/config/listeners`)
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(200);
@@ -293,7 +294,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         });
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/config/listeners')
+          .put(`${BASE_PATH}/admin/mobile-hooks/config/listeners`)
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(200);
@@ -320,7 +321,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         };
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/config/listeners')
+          .put(`${BASE_PATH}/admin/mobile-hooks/config/listeners`)
           .set('Authorization', 'Bearer admin-token')
           .send(invalidData)
           .expect(400);
@@ -333,7 +334,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
 
   describe('Admin Hook Action Configuration Endpoints', () => {
 
-    describe('GET /api/v1/admin/mobile-hooks/actions-config/mappings - Get Action Mappings', () => {
+    describe(`GET ${BASE_PATH}/admin/mobile-hooks/actions-config/mappings - Get Action Mappings`, () => {
       it('should return hook action mappings configuration', async () => {
         const mockSettings = [
           {
@@ -348,7 +349,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         });
 
         const response = await request(app)
-          .get('/api/v1/admin/mobile-hooks/actions-config/mappings')
+          .get(`${BASE_PATH}/admin/mobile-hooks/actions-config/mappings`)
           .set('Authorization', 'Bearer admin-token')
           .expect(200);
 
@@ -363,7 +364,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
 
         const response = await request(app)
-          .get('/api/v1/admin/mobile-hooks/actions-config/mappings')
+          .get(`${BASE_PATH}/admin/mobile-hooks/actions-config/mappings`)
           .set('Authorization', 'Bearer admin-token')
           .expect(200);
 
@@ -373,7 +374,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
       });
     });
 
-    describe('PUT /api/v1/admin/mobile-hooks/actions-config/mappings - Update Action Mappings', () => {
+    describe(`PUT ${BASE_PATH}/admin/mobile-hooks/actions-config/mappings - Update Action Mappings`, () => {
       it('should successfully update hook action mappings', async () => {
         const updateData = {
           actions: {
@@ -393,7 +394,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/actions-config/mappings')
+          .put(`${BASE_PATH}/admin/mobile-hooks/actions-config/mappings`)
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(200);
@@ -404,13 +405,13 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
       });
     });
 
-    describe('GET /api/v1/admin/mobile-hooks/actions-config/types - Get Action Types', () => {
+    describe(`GET ${BASE_PATH}/admin/mobile-hooks/actions-config/types - Get Action Types`, () => {
       it('should return list of available action types with settings', async () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
         (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
 
         const response = await request(app)
-          .get('/api/v1/admin/mobile-hooks/actions-config/types')
+          .get(`${BASE_PATH}/admin/mobile-hooks/actions-config/types`)
           .set('Authorization', 'Bearer admin-token')
           .expect(200);
 
@@ -426,7 +427,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
       });
     });
 
-    describe('PUT /api/v1/admin/mobile-hooks/actions-config/types/:action_type - Update Action Settings', () => {
+    describe(`PUT ${BASE_PATH}/admin/mobile-hooks/actions-config/types/:action_type - Update Action Settings`, () => {
       it('should successfully update settings for specific action type', async () => {
         const updateData = {
           enabled: true,
@@ -445,7 +446,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         (AppSetting.findOrCreate as jest.Mock).mockResolvedValue([mockSetting]);
 
         const response = await request(app)
-          .put(`/api/v1/admin/mobile-hooks/actions-config/types/${ACTION_TYPES.EMAIL}`)
+          .put(`${BASE_PATH}/admin/mobile-hooks/actions-config/types/${ACTION_TYPES.EMAIL}`)
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(200);
@@ -462,7 +463,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         };
 
         const response = await request(app)
-          .put('/api/v1/admin/mobile-hooks/actions-config/types/invalid_action')
+          .put(`${BASE_PATH}/admin/mobile-hooks/actions-config/types/invalid_action`)
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
           .expect(400);
@@ -480,7 +481,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
 
         const response = await request(app)
-          .put(`/api/v1/admin/mobile-hooks/actions-config/types/${ACTION_TYPES.EMAIL}`)
+          .put(`${BASE_PATH}/admin/mobile-hooks/actions-config/types/${ACTION_TYPES.EMAIL}`)
           .set('Authorization', 'Bearer admin-token')
           .send(invalidData)
           .expect(400);
@@ -490,7 +491,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
       });
     });
 
-    describe('POST /api/v1/admin/mobile-hooks/actions-config/test - Test Config Flow', () => {
+    describe(`POST ${BASE_PATH}/admin/mobile-hooks/actions-config/test - Test Config Flow`, () => {
       it('should test full config flow', async () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
         (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
@@ -501,7 +502,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         };
 
         const response = await request(app)
-          .post('/api/v1/admin/mobile-hooks/actions-config/test')
+          .post(`${BASE_PATH}/admin/mobile-hooks/actions-config/test`)
           .set('Authorization', 'Bearer admin-token')
           .send(testData)
           .expect(200);
@@ -513,7 +514,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
       });
     });
 
-    describe('POST /api/v1/admin/mobile-hooks/actions-config/types/:action_type/test - Test Action Type', () => {
+    describe(`POST ${BASE_PATH}/admin/mobile-hooks/actions-config/types/:action_type/test - Test Action Type`, () => {
       it('should test specific action type', async () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
         (AppSetting.findOne as jest.Mock).mockResolvedValue(null);
@@ -524,7 +525,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
         };
 
         const response = await request(app)
-          .post(`/api/v1/admin/mobile-hooks/actions-config/types/${ACTION_TYPES.EMAIL}/test`)
+          .post(`${BASE_PATH}/admin/mobile-hooks/actions-config/types/${ACTION_TYPES.EMAIL}/test`)
           .set('Authorization', 'Bearer admin-token')
           .send(testData)
           .expect(200);
@@ -555,7 +556,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
       // Simulate concurrent updates
       const promises = Array(5).fill(null).map(() =>
         request(app)
-          .put('/api/v1/admin/mobile-hooks/settings/listeners')
+          .put(`${BASE_PATH}/admin/mobile-hooks/settings/listeners`)
           .set('Authorization', 'Bearer admin-token')
           .send(updateData)
       );

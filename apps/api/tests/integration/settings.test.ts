@@ -121,6 +121,7 @@ jest.mock('../../src/middleware/authorization', () => ({
 import request from 'supertest';
 import app from '../../src/app';
 import { SettingsService } from '../../src/services/SettingsService';
+import { BASE_PATH } from '../utils/apiBasePath';
 
 describe('Settings API Integration Tests', () => {
   let adminToken: string;
@@ -135,7 +136,7 @@ describe('Settings API Integration Tests', () => {
     jest.clearAllMocks();
   });
 
-  describe('GET /api/v1/settings', () => {
+  describe(`GET ${BASE_PATH}/settings`, () => {
     it('should return active settings (public endpoint)', async () => {
       const mockSettings = [
         { key: 'books.list.status.onchange', value: '"remove"', type: 'enum', category: 'ui' },
@@ -145,7 +146,7 @@ describe('Settings API Integration Tests', () => {
       (SettingsService.getAllSettings as jest.Mock).mockReturnValue(mockSettings);
 
       const response = await request(app)
-        .get('/api/v1/settings');
+        .get(`${BASE_PATH}/settings`);
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ success: true, data: mockSettings });
@@ -153,7 +154,7 @@ describe('Settings API Integration Tests', () => {
     });
   });
 
-  describe('GET /api/v1/settings/:key', () => {
+  describe(`GET ${BASE_PATH}/settings/:key`, () => {
     it('should return specific setting (public endpoint)', async () => {
       const mockSetting = { key: 'books.list.status.onchange', value: '"remove"', type: 'enum' };
 
@@ -161,7 +162,7 @@ describe('Settings API Integration Tests', () => {
       (SettingsService.getAllSettings as jest.Mock).mockReturnValue([mockSetting]);
 
       const response = await request(app)
-        .get('/api/v1/settings/books.list.status.onchange');
+        .get(`${BASE_PATH}/settings/books.list.status.onchange`);
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
@@ -175,13 +176,13 @@ describe('Settings API Integration Tests', () => {
       (SettingsService.getAllSettings as jest.Mock).mockReturnValue([]);
 
       const response = await request(app)
-        .get('/api/v1/settings/nonexistent.key');
+        .get(`${BASE_PATH}/settings/nonexistent.key`);
 
       expect(response.status).toBe(404);
     });
   });
 
-  describe('GET /api/v1/settings/admin', () => {
+  describe(`GET ${BASE_PATH}/settings/admin`, () => {
     it('should return all settings including deleted for admin', async () => {
       const mockSettings = [
         { key: 'active.setting', value: '"value1"', deleted: false },
@@ -191,7 +192,7 @@ describe('Settings API Integration Tests', () => {
       (SettingsService.getAllSettingsAdmin as jest.Mock).mockResolvedValue(mockSettings);
 
       const response = await request(app)
-        .get('/api/v1/settings/admin')
+        .get(`${BASE_PATH}/settings/admin`)
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(response.status).toBe(200);
@@ -201,7 +202,7 @@ describe('Settings API Integration Tests', () => {
 
     it('should deny access for non-admin users', async () => {
       const response = await request(app)
-        .get('/api/v1/settings/admin')
+        .get(`${BASE_PATH}/settings/admin`)
         .set('Authorization', `Bearer ${userToken}`);
 
       expect(response.status).toBe(403);
@@ -209,13 +210,13 @@ describe('Settings API Integration Tests', () => {
 
     it('should return 401 for unauthenticated requests', async () => {
       const response = await request(app)
-        .get('/api/v1/settings/admin');
+        .get(`${BASE_PATH}/settings/admin`);
 
       expect(response.status).toBe(401);
     });
   });
 
-  describe('PATCH /api/v1/settings/admin/:key', () => {
+  describe(`PATCH ${BASE_PATH}/settings/admin/:key`, () => {
     it('should update setting value for admin', async () => {
       const mockUpdatedSetting = {
         key: 'books.list.status.onchange',
@@ -227,7 +228,7 @@ describe('Settings API Integration Tests', () => {
       (SettingsService.updateSetting as jest.Mock).mockResolvedValue(mockUpdatedSetting);
 
       const response = await request(app)
-        .patch('/api/v1/settings/admin/books.list.status.onchange')
+        .patch(`${BASE_PATH}/settings/admin/books.list.status.onchange`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ value: 'keep' });
 
@@ -241,7 +242,7 @@ describe('Settings API Integration Tests', () => {
 
     it('should deny access for non-admin users', async () => {
       const response = await request(app)
-        .patch('/api/v1/settings/admin/books.list.status.onchange')
+        .patch(`${BASE_PATH}/settings/admin/books.list.status.onchange`)
         .set('Authorization', `Bearer ${userToken}`)
         .send({ value: 'keep' });
 
@@ -250,7 +251,7 @@ describe('Settings API Integration Tests', () => {
 
     it('should return 401 for unauthenticated requests', async () => {
       const response = await request(app)
-        .patch('/api/v1/settings/admin/books.list.status.onchange')
+        .patch(`${BASE_PATH}/settings/admin/books.list.status.onchange`)
         .send({ value: 'keep' });
 
       expect(response.status).toBe(401);
@@ -262,7 +263,7 @@ describe('Settings API Integration Tests', () => {
       );
 
       const response = await request(app)
-        .patch('/api/v1/settings/admin/nonexistent')
+        .patch(`${BASE_PATH}/settings/admin/nonexistent`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ value: 'test' });
 
@@ -271,7 +272,7 @@ describe('Settings API Integration Tests', () => {
 
     it('should return 400 for invalid value', async () => {
       const response = await request(app)
-        .patch('/api/v1/settings/admin/books.list.status.onchange')
+        .patch(`${BASE_PATH}/settings/admin/books.list.status.onchange`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({});
 

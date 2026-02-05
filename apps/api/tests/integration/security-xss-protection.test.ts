@@ -51,6 +51,7 @@ jest.mock('jsonwebtoken');
 import request from 'supertest';
 import app from '../../src/app';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { BASE_PATH } from '../utils/apiBasePath';
 
 const mockCognitoClient = CognitoIdentityProviderClient as jest.MockedClass<
   typeof CognitoIdentityProviderClient
@@ -100,7 +101,7 @@ describe('XSS Protection Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       expect(response.status).toBe(200);
@@ -137,7 +138,7 @@ describe('XSS Protection Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       const cookies = response.headers['set-cookie'] as unknown as string[];
@@ -174,7 +175,7 @@ describe('XSS Protection Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       const cookies = response.headers['set-cookie'] as unknown as string[];
@@ -187,7 +188,7 @@ describe('XSS Protection Tests', () => {
       expect(refreshCookie).toContain('SameSite=Strict');
 
       // Path restriction: Limits cookie scope
-      expect(refreshCookie).toContain('Path=/api/v1/auth');
+      expect(refreshCookie).toContain(`Path=${BASE_PATH}/auth`);
 
       // Max-Age: 7 days expiration
       expect(refreshCookie).toMatch(/Max-Age=\d+/);
@@ -199,7 +200,7 @@ describe('XSS Protection Tests', () => {
       const xssPayload = '<script>alert("XSS")</script>';
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: xssPayload, password: 'Password123!' });
 
       // Should reject invalid email format
@@ -217,7 +218,7 @@ describe('XSS Protection Tests', () => {
         UserSub: 'new-user-sub',
       });
 
-      const response = await request(app).post('/api/v1/auth/register').send({
+      const response = await request(app).post(`${BASE_PATH}/auth/register`).send({
         email: 'test@example.com',
               password: 'Password123!',
         name: xssPayload,
@@ -235,7 +236,7 @@ describe('XSS Protection Tests', () => {
       mockSend.mockRejectedValue(new Error('Authentication failed'));
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       expect(response.status).toBe(500);
@@ -246,7 +247,7 @@ describe('XSS Protection Tests', () => {
     });
 
     it('should clear sensitive data on logout', async () => {
-      const response = await request(app).post('/api/v1/auth/logout');
+      const response = await request(app).post(`${BASE_PATH}/auth/logout`);
 
       expect(response.status).toBe(200);
 
@@ -285,7 +286,7 @@ describe('XSS Protection Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       // Ensure tokens are not leaked in custom headers
