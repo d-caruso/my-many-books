@@ -7,7 +7,84 @@ const createSimpleWrapper = (testId: string, element: keyof JSX.IntrinsicElement
     React.createElement(element, { 'data-testid': testId, ...props }, children);
 };
 
-const TextField = ({ label, value = '', onChange = noop, type = 'text', id, error, helperText, ...props }: any) => {
+const Autocomplete = ({
+  value,
+  inputValue,
+  options = [],
+  open,
+  loading,
+  disabled,
+  renderInput,
+  renderOption,
+  getOptionLabel,
+  onChange,
+  onInputChange,
+  onOpen,
+  onClose,
+  noOptionsText,
+  ListboxProps,
+  size,
+}: any) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onInputChange?.(e, e.target.value, 'input');
+  };
+
+  const handleFocus = () => onOpen?.();
+  const handleBlur = () => onClose?.();
+
+  const labelValue = value ? getOptionLabel?.(value) ?? '' : '';
+  const displayValue = inputValue ?? labelValue;
+
+  const inputElement = renderInput({
+    inputProps: {
+      value: displayValue,
+      onChange: handleInputChange,
+      onFocus: handleFocus,
+      onBlur: handleBlur,
+      disabled,
+      'data-size': size,
+    },
+    InputProps: { endAdornment: null },
+  });
+
+  return (
+    <div>
+      {inputElement}
+      {open && options.length > 0 && (
+        <ul data-testid="options-list" {...ListboxProps}>
+          {options.map((option: any, index: number) => {
+            const optionProps = {
+              key: option.id ?? index,
+              'data-testid': `option-${index}`,
+              onClick: () => onChange?.(null, option, 'selectOption', { option }),
+            };
+            return renderOption ? (
+              renderOption(optionProps, option, { index, selected: false, inputValue: inputValue ?? '' })
+            ) : (
+              <li {...optionProps}>{getOptionLabel?.(option)}</li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+const TextField = ({
+  label,
+  value = '',
+  onChange = noop,
+  type = 'text',
+  id,
+  error,
+  helperText,
+  inputProps = {},
+  InputProps = {},
+  placeholder,
+  disabled,
+  size,
+  ...rest
+}: any) => {
   const inputId = id || label || 'text-field';
   return (
     <div data-testid="text-field-container">
@@ -15,11 +92,19 @@ const TextField = ({ label, value = '', onChange = noop, type = 'text', id, erro
       <input
         id={inputId}
         type={type}
-        value={value}
-        onChange={(e) => onChange(e)}
+        value={inputProps.value ?? value}
+        onChange={inputProps.onChange ?? ((e: any) => onChange(e))}
+        onFocus={inputProps.onFocus}
+        onBlur={inputProps.onBlur}
+        placeholder={placeholder}
+        disabled={inputProps.disabled ?? disabled}
         aria-invalid={error ? 'true' : undefined}
-        {...props}
+        data-size={inputProps['data-size'] ?? size}
+        data-testid={inputProps['data-testid']}
+        role="textbox"
+        {...rest}
       />
+      {InputProps.endAdornment}
       {error && <div data-testid="text-field-error">{error}</div>}
       {helperText && !error && <div data-testid="text-field-helper">{helperText}</div>}
     </div>
@@ -117,6 +202,7 @@ export const createMuiMock = () => {
     DialogContent,
     DialogActions,
     CircularProgress: () => <div data-testid="circular-progress" />,
+    Autocomplete,
   } as Record<string, any>;
 
   return new Proxy(base, {

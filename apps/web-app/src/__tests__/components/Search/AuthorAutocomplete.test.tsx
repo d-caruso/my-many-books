@@ -5,9 +5,124 @@ import { AuthorAutocomplete } from '../../../components/Search/AuthorAutocomplet
 import { ApiProvider } from '../../../contexts/ApiContext';
 import { Author } from '../../../types';
 
-vi.mock('@mui/material', async () => {
-  const module = await import('../../test-utils/mockMui');
-  return module.createMuiMock();
+// Inline mock to avoid async import issues
+vi.mock('@mui/material', () => {
+  const React = require('react');
+
+  const createSimpleWrapper = (testId: string) => {
+    return ({ children, ...props }: any) =>
+      React.createElement('div', { 'data-testid': testId, ...props }, children);
+  };
+
+  const TextField = ({
+    label,
+    value = '',
+    onChange,
+    inputProps = {},
+    InputProps = {},
+    placeholder,
+    disabled,
+    size,
+    ...rest
+  }: any) => {
+    const inputId = label || 'text-field';
+    return (
+      <div data-testid="text-field-container">
+        {label && <label htmlFor={inputId}>{label}</label>}
+        <input
+          id={inputId}
+          value={inputProps.value ?? value}
+          onChange={inputProps.onChange}
+          onFocus={inputProps.onFocus}
+          onBlur={inputProps.onBlur}
+          placeholder={placeholder}
+          disabled={inputProps.disabled ?? disabled}
+          data-size={inputProps['data-size'] ?? size}
+          data-testid={inputProps['data-testid']}
+          role="textbox"
+          {...rest}
+        />
+        {InputProps.endAdornment}
+      </div>
+    );
+  };
+
+  const Autocomplete = ({
+    value,
+    inputValue,
+    options = [],
+    open,
+    loading,
+    disabled,
+    renderInput,
+    renderOption,
+    getOptionLabel,
+    onChange,
+    onInputChange,
+    onOpen,
+    onClose,
+    noOptionsText,
+    ListboxProps,
+    size,
+  }: any) => {
+    const handleInputChange = (e: any) => {
+      onInputChange?.(e, e.target.value, 'input');
+    };
+
+    const handleFocus = () => onOpen?.();
+    const handleBlur = () => onClose?.();
+
+    const labelValue = value ? getOptionLabel?.(value) ?? '' : '';
+    const displayValue = inputValue ?? labelValue;
+
+    const inputElement = renderInput({
+      inputProps: {
+        value: displayValue,
+        onChange: handleInputChange,
+        onFocus: handleFocus,
+        onBlur: handleBlur,
+        disabled,
+        'data-size': size,
+      },
+      InputProps: { endAdornment: null },
+    });
+
+    return (
+      <div>
+        {inputElement}
+        {open && options.length > 0 && (
+          <ul data-testid="options-list" {...ListboxProps}>
+            {options.map((option: any, index: number) => {
+              const optionProps = {
+                key: option.id ?? index,
+                'data-testid': `option-${index}`,
+                onClick: () => onChange?.(null, option, 'selectOption', { option }),
+              };
+              return renderOption ? (
+                renderOption(optionProps, option, { index, selected: false, inputValue: inputValue ?? '' })
+              ) : (
+                <li {...optionProps}>{getOptionLabel?.(option)}</li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
+  const Typography = ({ children, variant, ...props }: any) => {
+    const headingMap: Record<string, string> = { h1: 'h1', h2: 'h2', h3: 'h3', h4: 'h4', h5: 'h5', h6: 'h6' };
+    const Component = (variant && headingMap[variant]) || 'p';
+    return React.createElement(Component, props, children);
+  };
+
+  return {
+    Box: createSimpleWrapper('box'),
+    TextField,
+    Autocomplete,
+    Typography,
+    CircularProgress: () => <div data-testid="circular-progress" />,
+  };
 });
 
 
@@ -239,9 +354,6 @@ describe('AuthorAutocomplete', () => {
     await waitFor(() => {
       expect(screen.getByTestId('loading-state')).toHaveTextContent('not-loading');
     });
-
-    // Restore fake timers for cleanup
-    vi.useFakeTimers();
   });
 
   test('displays search results', async () => {
@@ -268,8 +380,6 @@ describe('AuthorAutocomplete', () => {
     expect(screen.getByText('Jane Austen')).toBeInTheDocument();
     expect(screen.getByText('Charles Dickens')).toBeInTheDocument();
     expect(screen.getByText('Ernest Hemingway')).toBeInTheDocument();
-
-    vi.useFakeTimers();
   });
 
   test('calls onChange when author is selected', async () => {
@@ -295,8 +405,6 @@ describe('AuthorAutocomplete', () => {
     fireEvent.click(firstOption);
 
     expect(mockOnChange).toHaveBeenCalledWith(mockAuthors[0]);
-
-    vi.useFakeTimers();
   });
 
   test('handles search errors gracefully', async () => {
@@ -323,7 +431,6 @@ describe('AuthorAutocomplete', () => {
     expect(screen.getByTestId('loading-state')).toHaveTextContent('not-loading');
 
     consoleErrorSpy.mockRestore();
-    vi.useFakeTimers();
   });
 
   test('clears search results when input is cleared', async () => {
@@ -344,8 +451,6 @@ describe('AuthorAutocomplete', () => {
     await waitFor(() => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
     });
-
-    vi.useFakeTimers();
 
     // Clear input
     fireEvent.change(input, { target: { value: '' } });
@@ -389,8 +494,6 @@ describe('AuthorAutocomplete', () => {
 
     expect(screen.getByText('Jane Austen')).toBeInTheDocument();
     expect(screen.getByText('British')).toBeInTheDocument();
-
-    vi.useFakeTimers();
   });
 
   test('renders author options without nationality', async () => {
@@ -418,8 +521,6 @@ describe('AuthorAutocomplete', () => {
 
     expect(screen.getByText('Jane Austen')).toBeInTheDocument();
     expect(screen.queryByText('British')).not.toBeInTheDocument();
-
-    vi.useFakeTimers();
   });
 
   test('cancels previous search when new search is initiated', async () => {
@@ -471,8 +572,6 @@ describe('AuthorAutocomplete', () => {
     });
 
     expect(screen.queryByText('Jane Austen')).not.toBeInTheDocument();
-
-    vi.useFakeTimers();
   });
 
   test('cleans up timeout on unmount', () => {
@@ -549,7 +648,5 @@ describe('AuthorAutocomplete', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('circular-progress')).not.toBeInTheDocument();
     });
-
-    vi.useFakeTimers();
   });
 });
