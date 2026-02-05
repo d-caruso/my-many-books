@@ -25,6 +25,7 @@ import {
   EnvironmentConfig,
   DEFAULT_GATEWAY_CONFIG,
 } from '../../../../services/handlers/types/GatewayTypes';
+import { API_BASE_URL } from '../../../../config/api';
 
 describe('GatewayTypes', () => {
   describe('Configuration Interfaces', () => {
@@ -441,7 +442,7 @@ describe('GatewayTypes', () => {
   describe('Default Configuration', () => {
     it('should provide valid DEFAULT_GATEWAY_CONFIG', () => {
       expect(DEFAULT_GATEWAY_CONFIG).toBeDefined();
-      expect(DEFAULT_GATEWAY_CONFIG.baseURL).toBe('http://localhost:3001/api/v1');
+      expect(DEFAULT_GATEWAY_CONFIG.baseURL).toBe(API_BASE_URL);
       expect(DEFAULT_GATEWAY_CONFIG.timeout).toBe(10000);
       expect(DEFAULT_GATEWAY_CONFIG.retryAttempts).toBe(3);
       expect(DEFAULT_GATEWAY_CONFIG.retryDelay).toBe(1000);

@@ -4,13 +4,17 @@
 // ================================================================
 
 import { mobileHookConfigService } from '../hooks/mobileHookConfigService';
+import { API_BASE_URL } from '../../config/api';
 
 describe('Environment Variables Security', () => {
   describe('EXPO_PUBLIC_ prefixed variables', () => {
     it('should only use EXPO_PUBLIC_ prefix for non-sensitive variables', () => {
       // These are the environment variables we expect to be public
       const allowedPublicEnvVars = [
-        'EXPO_PUBLIC_API_URL',
+        'EXPO_PUBLIC_API_ORIGIN',
+        'EXPO_PUBLIC_API_PREFIX',
+        'EXPO_PUBLIC_API_VERSION',
+        'EXPO_PUBLIC_API_URL', // Legacy override (optional)
         'EXPO_PUBLIC_HOOKS_ENABLED',
         'EXPO_PUBLIC_SHOW_LANGUAGE_SELECTOR'
       ];
@@ -18,7 +22,10 @@ describe('Environment Variables Security', () => {
       // Scan for any EXPO_PUBLIC_ variables in our codebase to ensure 
       // we're not accidentally exposing sensitive information
       const publicVarUsages = [
-        'EXPO_PUBLIC_API_URL',           // API endpoint - safe to be public
+        'EXPO_PUBLIC_API_ORIGIN',        // API origin - safe to be public
+        'EXPO_PUBLIC_API_PREFIX',        // API prefix - safe to be public
+        'EXPO_PUBLIC_API_VERSION',       // API version - safe to be public
+        'EXPO_PUBLIC_API_URL',           // Legacy override (optional) - safe to be public
         'EXPO_PUBLIC_HOOKS_ENABLED',    // Emergency kill switch - safe to be public
         'EXPO_PUBLIC_SHOW_LANGUAGE_SELECTOR'  // UI feature toggle - safe to be public
       ];
@@ -94,30 +101,56 @@ describe('Environment Variables Security', () => {
 
   describe('API endpoint security', () => {
     it('should use secure defaults for API URL', () => {
-      const originalEnv = process.env.EXPO_PUBLIC_API_URL;
+      const originalEnv = {
+        apiUrl: process.env.EXPO_PUBLIC_API_URL,
+        origin: process.env.EXPO_PUBLIC_API_ORIGIN,
+        prefix: process.env.EXPO_PUBLIC_API_PREFIX,
+        version: process.env.EXPO_PUBLIC_API_VERSION,
+      };
       
       try {
         delete process.env.EXPO_PUBLIC_API_URL;
+        delete process.env.EXPO_PUBLIC_API_ORIGIN;
+        delete process.env.EXPO_PUBLIC_API_PREFIX;
+        delete process.env.EXPO_PUBLIC_API_VERSION;
         
         // Re-import to get the default value
         delete require.cache[require.resolve('../api')];
         
         // Should default to localhost (development) which is safe
-        // In production, EXPO_PUBLIC_API_URL should be explicitly set
+        // In production, the API endpoint should be explicitly set (EXPO_PUBLIC_API_* or legacy EXPO_PUBLIC_API_URL)
         expect(true).toBe(true); // This test validates the pattern exists
         
       } finally {
-        if (originalEnv === undefined) {
+        if (originalEnv.apiUrl === undefined) {
           delete process.env.EXPO_PUBLIC_API_URL;
         } else {
-          process.env.EXPO_PUBLIC_API_URL = originalEnv;
+          process.env.EXPO_PUBLIC_API_URL = originalEnv.apiUrl;
+        }
+
+        if (originalEnv.origin === undefined) {
+          delete process.env.EXPO_PUBLIC_API_ORIGIN;
+        } else {
+          process.env.EXPO_PUBLIC_API_ORIGIN = originalEnv.origin;
+        }
+
+        if (originalEnv.prefix === undefined) {
+          delete process.env.EXPO_PUBLIC_API_PREFIX;
+        } else {
+          process.env.EXPO_PUBLIC_API_PREFIX = originalEnv.prefix;
+        }
+
+        if (originalEnv.version === undefined) {
+          delete process.env.EXPO_PUBLIC_API_VERSION;
+        } else {
+          process.env.EXPO_PUBLIC_API_VERSION = originalEnv.version;
         }
       }
     });
 
     it('should validate that API URLs use HTTPS in production', () => {
       // In a real production environment, we'd want to ensure HTTPS
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const apiUrl = API_BASE_URL;
       
       if (process.env.NODE_ENV === 'production') {
         expect(apiUrl).toMatch(/^https:/);
@@ -226,7 +259,7 @@ describe('Environment Variables Security', () => {
       
       if (process.env.NODE_ENV === 'production') {
         // Production environment should have stricter validation
-        expect(process.env.EXPO_PUBLIC_API_URL).toBeDefined();
+        expect(process.env.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_API_ORIGIN).toBeDefined();
       } else {
         // Development environment can have defaults
         expect(true).toBe(true); // Acceptable to have defaults in development

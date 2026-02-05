@@ -19,6 +19,7 @@ import {
   QueueHandlerType,
   CreatePayload
 } from '../../../../services/handlers/types/HandlerTypes';
+import { API_BASE_URL } from '../../../../config/api';
 
 // Test book type
 interface TestBook {
@@ -188,7 +189,7 @@ describe('Handler Patterns Simple Integration', () => {
       const result = await clientGateway.create(testBook);
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        'http://localhost:3001/api/v1/books',
+        `${API_BASE_URL}/books`,
         testBook,
         expect.objectContaining({
           timeout: 10000,
@@ -227,7 +228,7 @@ describe('Handler Patterns Simple Integration', () => {
       // Test valid configuration
       const validConfig = createDefaultClientGatewayConfig(mockHttpClient);
       expect(validConfig.httpClient).toBe(mockHttpClient);
-      expect(validConfig.baseURL).toBe('http://localhost:3001/api/v1');
+      expect(validConfig.baseURL).toBe(API_BASE_URL);
       expect(validConfig.timeout).toBe(10000);
     });
   });
@@ -354,7 +355,7 @@ describe('Handler Patterns Simple Integration', () => {
         get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn()
       };
       const clientConfig = createDefaultClientGatewayConfig(mockHttpClient);
-      expect(clientConfig.baseURL).toBe('http://localhost:3001/api/v1');
+      expect(clientConfig.baseURL).toBe(API_BASE_URL);
       expect(clientConfig.httpClient).toBe(mockHttpClient);
 
       // Both configurations should be valid

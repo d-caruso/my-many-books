@@ -1,18 +1,6 @@
 // Test api.ts by bypassing the global mock
 // The setupTests.ts mocks @/services/api, so we need to work around it
 
-// Mock expo-constants
-jest.mock('expo-constants', () => ({
-  __esModule: true,
-  default: {
-    expoConfig: {
-      extra: {
-        apiUrl: 'http://localhost:3001/api/v1',
-      },
-    },
-  },
-}));
-
 // Mock expo-secure-store
 jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(),
@@ -300,7 +288,12 @@ describe('API Service Coverage', () => {
   });
 
   it('should test environment configuration', () => {
-    const originalEnv = process.env.EXPO_PUBLIC_API_URL;
+    const originalEnv = {
+      apiUrl: process.env.EXPO_PUBLIC_API_URL,
+      origin: process.env.EXPO_PUBLIC_API_ORIGIN,
+      prefix: process.env.EXPO_PUBLIC_API_PREFIX,
+      version: process.env.EXPO_PUBLIC_API_VERSION,
+    };
 
     jest.unmock('@/services/api');
     jest.doMock('@my-many-books/shared-api', () => ({
@@ -352,9 +345,12 @@ describe('API Service Coverage', () => {
       userAPI: { setBaseURL: jest.fn() },
     }));
 
-    // Test with custom URL
-    process.env.EXPO_PUBLIC_API_URL = 'http://test.example.com/api';
+    // Test with custom URL parts
+    delete process.env.EXPO_PUBLIC_API_URL;
+    process.env.EXPO_PUBLIC_API_ORIGIN = 'http://test.example.com';
+    process.env.EXPO_PUBLIC_API_PREFIX = '/api';
     
+    delete require.cache[require.resolve('../../src/config/api')];
     delete require.cache[require.resolve('../../src/services/api')];
     const apiModule = require('../../src/services/api');
     
@@ -362,16 +358,42 @@ describe('API Service Coverage', () => {
     expect(apiModule.userAPI).toBeDefined();
     
     // Restore
-    if (originalEnv) {
-      process.env.EXPO_PUBLIC_API_URL = originalEnv;
-    } else {
+    if (originalEnv.apiUrl === undefined) {
       delete process.env.EXPO_PUBLIC_API_URL;
+    } else {
+      process.env.EXPO_PUBLIC_API_URL = originalEnv.apiUrl;
+    }
+
+    if (originalEnv.origin === undefined) {
+      delete process.env.EXPO_PUBLIC_API_ORIGIN;
+    } else {
+      process.env.EXPO_PUBLIC_API_ORIGIN = originalEnv.origin;
+    }
+
+    if (originalEnv.prefix === undefined) {
+      delete process.env.EXPO_PUBLIC_API_PREFIX;
+    } else {
+      process.env.EXPO_PUBLIC_API_PREFIX = originalEnv.prefix;
+    }
+
+    if (originalEnv.version === undefined) {
+      delete process.env.EXPO_PUBLIC_API_VERSION;
+    } else {
+      process.env.EXPO_PUBLIC_API_VERSION = originalEnv.version;
     }
   });
 
   it('should test default URL fallback', () => {
-    const originalEnv = process.env.EXPO_PUBLIC_API_URL;
+    const originalEnv = {
+      apiUrl: process.env.EXPO_PUBLIC_API_URL,
+      origin: process.env.EXPO_PUBLIC_API_ORIGIN,
+      prefix: process.env.EXPO_PUBLIC_API_PREFIX,
+      version: process.env.EXPO_PUBLIC_API_VERSION,
+    };
     delete process.env.EXPO_PUBLIC_API_URL;
+    delete process.env.EXPO_PUBLIC_API_ORIGIN;
+    delete process.env.EXPO_PUBLIC_API_PREFIX;
+    delete process.env.EXPO_PUBLIC_API_VERSION;
 
     jest.unmock('@/services/api');
     jest.doMock('@my-many-books/shared-api', () => ({
@@ -423,6 +445,7 @@ describe('API Service Coverage', () => {
       userAPI: { setBaseURL: jest.fn() },
     }));
 
+    delete require.cache[require.resolve('../../src/config/api')];
     delete require.cache[require.resolve('../../src/services/api')];
     const apiModule = require('../../src/services/api');
     
@@ -431,8 +454,28 @@ describe('API Service Coverage', () => {
     expect(apiModule.apiUtils).toBeDefined();
     
     // Restore
-    if (originalEnv) {
-      process.env.EXPO_PUBLIC_API_URL = originalEnv;
+    if (originalEnv.apiUrl === undefined) {
+      delete process.env.EXPO_PUBLIC_API_URL;
+    } else {
+      process.env.EXPO_PUBLIC_API_URL = originalEnv.apiUrl;
+    }
+
+    if (originalEnv.origin === undefined) {
+      delete process.env.EXPO_PUBLIC_API_ORIGIN;
+    } else {
+      process.env.EXPO_PUBLIC_API_ORIGIN = originalEnv.origin;
+    }
+
+    if (originalEnv.prefix === undefined) {
+      delete process.env.EXPO_PUBLIC_API_PREFIX;
+    } else {
+      process.env.EXPO_PUBLIC_API_PREFIX = originalEnv.prefix;
+    }
+
+    if (originalEnv.version === undefined) {
+      delete process.env.EXPO_PUBLIC_API_VERSION;
+    } else {
+      process.env.EXPO_PUBLIC_API_VERSION = originalEnv.version;
     }
   });
 });

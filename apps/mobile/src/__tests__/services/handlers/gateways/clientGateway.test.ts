@@ -9,6 +9,7 @@ import {
   ClientGatewayConfig,
 } from '../../../../services/handlers/gateways/clientGateway';
 import { ClientGatewayHandler } from '../../../../services/handlers/types/HandlerTypes';
+import { API_BASE_URL } from '../../../../config/api';
 
 // Mock HTTP client
 const createMockHttpClient = () => ({
@@ -44,7 +45,7 @@ describe('ClientGateway', () => {
   beforeEach(() => {
     mockHttpClient = createMockHttpClient();
     config = {
-      baseURL: 'http://localhost:3001/api/v1',
+      baseURL: API_BASE_URL,
       httpClient: mockHttpClient,
       options: {
         failFast: true,
@@ -80,7 +81,7 @@ describe('ClientGateway', () => {
       });
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        'http://localhost:3001/api/v1/books',
+        `${API_BASE_URL}/books`,
         { title: 'Test Book', author: 'Test Author', status: 'reading' },
         expect.objectContaining({
           timeout: 10000,
@@ -131,7 +132,7 @@ describe('ClientGateway', () => {
       });
 
       expect(mockHttpClient.put).toHaveBeenCalledWith(
-        'http://localhost:3001/api/v1/books/1',
+        `${API_BASE_URL}/books/1`,
         { title: 'Updated Book', status: 'completed' },
         expect.any(Object)
       );
@@ -144,7 +145,7 @@ describe('ClientGateway', () => {
       await gateway.delete('1');
 
       expect(mockHttpClient.delete).toHaveBeenCalledWith(
-        'http://localhost:3001/api/v1/books/1',
+        `${API_BASE_URL}/books/1`,
         expect.any(Object)
       );
     });
@@ -164,7 +165,7 @@ describe('ClientGateway', () => {
       const result = await gateway.read!('1');
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        'http://localhost:3001/api/v1/books/1',
+        `${API_BASE_URL}/books/1`,
         expect.any(Object)
       );
       expect(result).toEqual(mockBook);
@@ -195,7 +196,7 @@ describe('ClientGateway', () => {
       const result = await gateway.list!();
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        'http://localhost:3001/api/v1/books',
+        `${API_BASE_URL}/books`,
         expect.any(Object)
       );
       expect(result).toEqual(mockBooks);
@@ -215,7 +216,7 @@ describe('ClientGateway', () => {
       });
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        'http://localhost:3001/api/v1/books?search=test&sortBy=title&sortDirection=asc&limit=10&offset=0&status=reading',
+        `${API_BASE_URL}/books?search=test&sortBy=title&sortDirection=asc&limit=10&offset=0&status=reading`,
         expect.any(Object)
       );
     });
@@ -388,7 +389,7 @@ describe('ClientGateway', () => {
     it('should create default configuration', () => {
       const defaultConfig = createDefaultClientGatewayConfig(mockHttpClient);
 
-      expect(defaultConfig.baseURL).toBe('http://localhost:3001/api/v1');
+      expect(defaultConfig.baseURL).toBe(API_BASE_URL);
       expect(defaultConfig.httpClient).toBe(mockHttpClient);
       expect(defaultConfig.options.failFast).toBe(true);
       expect(defaultConfig.options.validateResponses).toBe(true);

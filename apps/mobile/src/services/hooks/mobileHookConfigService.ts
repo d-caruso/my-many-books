@@ -4,6 +4,7 @@
 // ================================================================
 
 import { MobileHooksListenerSettings } from '@my-many-books/shared-types';
+import { API_BASE_URL } from '../../config/api';
 
 export interface MobileHookDBConfig {
   hooks_enabled: boolean;
@@ -108,9 +109,7 @@ export class MobileHookConfigService {
 
     try {
       // Use fetch directly for simplicity (avoiding circular imports)
-      const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-      
-      const response = await fetch(`${baseUrl}/config/mobile`, {
+      const response = await fetch(`${API_BASE_URL}/config/mobile`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -182,8 +181,7 @@ export class MobileHookConfigService {
     custom_hook_listeners?: { [key: string]: { enabled: boolean } };
   } | null> {
     try {
-      const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-      const response = await fetch(`${baseUrl}/users/${userId}/mobile-config`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/mobile-config`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

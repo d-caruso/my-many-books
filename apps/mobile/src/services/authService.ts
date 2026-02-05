@@ -4,11 +4,9 @@
 // ================================================================
 
 import { AuthService, MobileStorageAdapter } from '@my-many-books/shared-auth';
-import Constants from 'expo-constants';
-
-const apiUrl = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3001/api/v1';
+import { API_BASE_URL } from '../config/api';
 
 export const authService = new AuthService({
   storage: new MobileStorageAdapter(),
-  apiUrl,
+  apiUrl: API_BASE_URL,
 });
