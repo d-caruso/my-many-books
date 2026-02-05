@@ -7,6 +7,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { Book, Author, Category, User, PaginatedResponse } from '../../types';
 import { USER_RESPONSE_FIELDS } from '@my-many-books/shared-types';
+import { API_BASE_PATH } from '../utils/apiBasePath';
 
 const now = new Date().toISOString();
 
@@ -255,7 +256,7 @@ const buildListenerSettingsResponse = () => ({
 
 export const handlers = [
   // Books endpoints
-  http.get('*/api/books', ({ request }) => {
+  http.get(`*${API_BASE_PATH}/books`, ({ request }) => {
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '10');
@@ -273,7 +274,7 @@ export const handlers = [
     return HttpResponse.json(response);
   }),
 
-  http.get('*/api/books/:id', ({ params }) => {
+  http.get(`*${API_BASE_PATH}/books/:id`, ({ params }) => {
     const id = parseInt(params.id as string);
     const book = mockBooks.find((b) => b.id === id);
     if (!book) {
@@ -282,7 +283,7 @@ export const handlers = [
     return HttpResponse.json(book);
   }),
 
-  http.post('*/api/books', async ({ request }) => {
+  http.post(`*${API_BASE_PATH}/books`, async ({ request }) => {
     const bookData = (await request.json()) as any;
     const newBook: Book = {
       id: Date.now(),
@@ -296,7 +297,7 @@ export const handlers = [
     return HttpResponse.json(newBook);
   }),
 
-  http.put('*/api/books/:id', async ({ params, request }) => {
+  http.put(`*${API_BASE_PATH}/books/:id`, async ({ params, request }) => {
     const id = parseInt(params.id as string);
     const updateData = (await request.json()) as any;
     const existingBook = mockBooks.find((b) => b.id === id);
@@ -314,7 +315,7 @@ export const handlers = [
     return HttpResponse.json(updatedBook);
   }),
 
-  http.delete('*/api/books/:id', ({ params }) => {
+  http.delete(`*${API_BASE_PATH}/books/:id`, ({ params }) => {
     const id = parseInt(params.id as string);
     const bookIndex = mockBooks.findIndex((b) => b.id === id);
     if (bookIndex === -1) {
@@ -324,8 +325,8 @@ export const handlers = [
   }),
 
   // Categories endpoints
-  http.get('*/api/categories', () => HttpResponse.json(mockCategories)),
-  http.get('*/api/categories/:id', ({ params }) => {
+  http.get(`*${API_BASE_PATH}/categories`, () => HttpResponse.json(mockCategories)),
+  http.get(`*${API_BASE_PATH}/categories/:id`, ({ params }) => {
     const id = parseInt(params.id as string);
     const category = mockCategories.find((c) => c.id === id);
     if (!category) {
@@ -333,7 +334,7 @@ export const handlers = [
     }
     return HttpResponse.json(category);
   }),
-  http.post('*/api/categories', async ({ request }) => {
+  http.post(`*${API_BASE_PATH}/categories`, async ({ request }) => {
     const categoryData = (await request.json()) as any;
     const newCategory: Category = {
       id: Date.now(),
@@ -345,8 +346,8 @@ export const handlers = [
   }),
 
   // Authors endpoints
-  http.get('*/api/authors', () => HttpResponse.json(mockAuthors)),
-  http.get('*/api/authors/:id', ({ params }) => {
+  http.get(`*${API_BASE_PATH}/authors`, () => HttpResponse.json(mockAuthors)),
+  http.get(`*${API_BASE_PATH}/authors/:id`, ({ params }) => {
     const id = parseInt(params.id as string);
     const author = mockAuthors.find((a) => a.id === id);
     if (!author) {
@@ -354,7 +355,7 @@ export const handlers = [
     }
     return HttpResponse.json(author);
   }),
-  http.post('*/api/authors', async ({ request }) => {
+  http.post(`*${API_BASE_PATH}/authors`, async ({ request }) => {
     const authorData = (await request.json()) as any;
     const newAuthor: Author = {
       id: Date.now(),
@@ -366,8 +367,8 @@ export const handlers = [
   }),
 
   // Users endpoints
-  http.get('*/api/users', () => HttpResponse.json(mockUserResponse)),
-  http.put('*/api/users', async ({ request }) => {
+  http.get(`*${API_BASE_PATH}/users`, () => HttpResponse.json(mockUserResponse)),
+  http.put(`*${API_BASE_PATH}/users`, async ({ request }) => {
     const updateData = (await request.json()) as Partial<typeof mockUserResponse>;
     const updatedUserResponse = {
       ...mockUserResponse,
@@ -379,14 +380,14 @@ export const handlers = [
   }),
 
   // Search endpoints
-  http.get('*/api/books/search/:isbn', ({ params }) => {
+  http.get(`*${API_BASE_PATH}/books/search/:isbn`, ({ params }) => {
     const book = mockBooks.find((b) => b.isbnCode === params.isbn);
     if (!book) {
       return new HttpResponse(null, { status: 404 });
     }
     return HttpResponse.json(book);
   }),
-  http.get('*/api/books/search', ({ request }) => {
+  http.get(`*${API_BASE_PATH}/books/search`, ({ request }) => {
     const url = new URL(request.url);
     const q = url.searchParams.get('q');
     const status = url.searchParams.get('status');
@@ -406,7 +407,7 @@ export const handlers = [
       page: 1,
     });
   }),
-  http.get('*/api/authors/search', ({ request }) => {
+  http.get(`*${API_BASE_PATH}/authors/search`, ({ request }) => {
     const url = new URL(request.url);
     const q = url.searchParams.get('q');
 
@@ -421,8 +422,8 @@ export const handlers = [
   }),
 
   // Mobile hooks APIs
-  http.get('*/api/v1/admin/mobile-hooks/config/listeners', () => HttpResponse.json(buildListenersResponse())),
-  http.put('*/api/v1/admin/mobile-hooks/config/listeners', async ({ request }) => {
+  http.get(`*${API_BASE_PATH}/admin/mobile-hooks/config/listeners`, () => HttpResponse.json(buildListenersResponse())),
+  http.put(`*${API_BASE_PATH}/admin/mobile-hooks/config/listeners`, async ({ request }) => {
     const payload = (await request.json()) as Record<string, any>;
     if (payload.listeners) {
       Object.assign(mobileHooksState.listeners, payload.listeners);
@@ -440,19 +441,19 @@ export const handlers = [
       },
     });
   }),
-  http.get('*/api/v1/admin/mobile-hooks/actions-config/mappings', () => HttpResponse.json(buildMappingsResponse())),
-  http.put('*/api/v1/admin/mobile-hooks/actions-config/mappings', async ({ request }) => {
+  http.get(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/mappings`, () => HttpResponse.json(buildMappingsResponse())),
+  http.put(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/mappings`, async ({ request }) => {
     const payload = (await request.json()) as Record<string, any>;
     if (payload.actions) {
       mobileHooksState.mappings = payload.actions;
     }
     return HttpResponse.json(buildMappingsUpdateResponse());
   }),
-  http.post('*/api/v1/admin/mobile-hooks/actions-config/test', () =>
+  http.post(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/test`, () =>
     HttpResponse.json({ data: { executed: true } })
   ),
-  http.get('*/api/v1/admin/mobile-hooks/actions-config/types', () => HttpResponse.json(buildActionTypesResponse())),
-  http.put('*/api/v1/admin/mobile-hooks/actions-config/types/:actionType', async ({ params, request }) => {
+  http.get(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/types`, () => HttpResponse.json(buildActionTypesResponse())),
+  http.put(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/types/:actionType`, async ({ params, request }) => {
     const actionType = params.actionType as string;
     const settings = await request.json();
     mobileHooksState.actionTypes[actionType] = {
@@ -468,11 +469,11 @@ export const handlers = [
       },
     });
   }),
-  http.post('*/api/v1/admin/mobile-hooks/actions-config/types/:actionType/test', ({ params }) =>
+  http.post(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/types/:actionType/test`, ({ params }) =>
     HttpResponse.json({ data: { actionType: params.actionType, status: 'success' } })
   ),
-  http.get('*/api/v1/admin/mobile-hooks/settings/listeners', () => HttpResponse.json(buildListenerSettingsResponse())),
-  http.put('*/api/v1/admin/mobile-hooks/settings/listeners', async ({ request }) => {
+  http.get(`*${API_BASE_PATH}/admin/mobile-hooks/settings/listeners`, () => HttpResponse.json(buildListenerSettingsResponse())),
+  http.put(`*${API_BASE_PATH}/admin/mobile-hooks/settings/listeners`, async ({ request }) => {
     const updates = (await request.json()) as Record<string, unknown>;
     mobileHooksState.listenerSettings = {
       ...mobileHooksState.listenerSettings,
@@ -480,8 +481,8 @@ export const handlers = [
     };
     return HttpResponse.json(buildListenerSettingsResponse());
   }),
-  http.get('*/api/v1/admin/mobile-hooks/emergency', () => HttpResponse.json({ data: mobileHooksState.emergency })),
-  http.put('*/api/v1/admin/mobile-hooks/emergency', async ({ request }) => {
+  http.get(`*${API_BASE_PATH}/admin/mobile-hooks/emergency`, () => HttpResponse.json({ data: mobileHooksState.emergency })),
+  http.put(`*${API_BASE_PATH}/admin/mobile-hooks/emergency`, async ({ request }) => {
     const updates = (await request.json()) as Record<string, unknown>;
     mobileHooksState.emergency = {
       ...mobileHooksState.emergency,
@@ -489,15 +490,15 @@ export const handlers = [
     };
     return HttpResponse.json({ data: mobileHooksState.emergency });
   }),
-  http.get('*/api/v1/admin/mobile-hooks/health', () =>
+  http.get(`*${API_BASE_PATH}/admin/mobile-hooks/health`, () =>
     HttpResponse.json({ data: { ...mobileHooksState.health, timestamp: new Date().toISOString() } })
   ),
-  http.get('*/api/v1/admin/mobile-hooks/analytics/events/recent', ({ request }) => {
+  http.get(`*${API_BASE_PATH}/admin/mobile-hooks/analytics/events/recent`, ({ request }) => {
     const url = new URL(request.url);
     const limit = Number(url.searchParams.get('limit') ?? '50');
     return HttpResponse.json(buildRecentEventsResponse({ limit }));
   }),
-  http.get('*/api/v1/mobile-analytics/stats', () => HttpResponse.json({ data: mobileHooksState.analyticsStats })),
+  http.get(`*${API_BASE_PATH}/admin/mobile-analytics/stats`, () => HttpResponse.json({ data: mobileHooksState.analyticsStats })),
 ];
 
 export const server = setupServer(...handlers);

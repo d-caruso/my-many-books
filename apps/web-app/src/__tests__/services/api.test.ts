@@ -151,6 +151,8 @@ describe('ApiService with Industry Standard Testing', () => {
     beforeEach(() => {
       // Mock import.meta.env using Vitest's env stubbing
       vi.stubEnv('MODE', 'development');
+      vi.stubEnv('VITE_API_ORIGIN', '');
+      vi.stubEnv('VITE_API_URL', '');
       vi.stubEnv('VITE_API_BASE_URL', '');
     });
 
@@ -349,7 +351,11 @@ describe('ApiService with Industry Standard Testing', () => {
     beforeEach(() => {
       // Mock import.meta.env for production with API URL
       vi.stubEnv('MODE', 'production');
-      vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.com');
+      vi.stubEnv('VITE_API_ORIGIN', 'https://api.example.com');
+      vi.stubEnv('VITE_API_PREFIX', '/api');
+      vi.stubEnv('VITE_API_VERSION', 'v1');
+      vi.stubEnv('VITE_API_URL', '');
+      vi.stubEnv('VITE_API_BASE_URL', '');
     });
 
     afterEach(() => {
@@ -811,6 +817,8 @@ describe('ApiService with Industry Standard Testing', () => {
     test('development mode uses mock data and does not call API client', async () => {
       // Mock import.meta.env for development mode
       vi.stubEnv('MODE', 'development');
+      vi.stubEnv('VITE_API_ORIGIN', '');
+      vi.stubEnv('VITE_API_URL', '');
       vi.stubEnv('VITE_API_BASE_URL', '');
 
       const result = await testApiService.getBooks();
@@ -829,7 +837,11 @@ describe('ApiService with Industry Standard Testing', () => {
     test('production mode calls API client with correct parameters', async () => {
       // Mock import.meta.env for production mode
       vi.stubEnv('MODE', 'production');
-      vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.com');
+      vi.stubEnv('VITE_API_ORIGIN', 'https://api.example.com');
+      vi.stubEnv('VITE_API_PREFIX', '/api');
+      vi.stubEnv('VITE_API_VERSION', 'v1');
+      vi.stubEnv('VITE_API_URL', '');
+      vi.stubEnv('VITE_API_BASE_URL', '');
 
       const mockResponse = {
         books: [],

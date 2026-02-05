@@ -188,9 +188,9 @@ If a setting update fails:
 ### API Endpoints Used
 
 ```
-GET  /api/v1/settings/admin     - Load all settings
-PATCH /api/v1/settings/admin/:key - Update setting value
-PATCH /api/v1/settings/admin/:key/toggle - Toggle active status
+GET  /api/<version>/settings/admin     - Load all settings
+PATCH /api/<version>/settings/admin/:key - Update setting value
+PATCH /api/<version>/settings/admin/:key/toggle - Toggle active status
 ```
 
 ### Data Flow

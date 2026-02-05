@@ -36,8 +36,13 @@ registerRoute(
 );
 
 // Cache API responses
+const apiOrigin =
+  import.meta.env.VITE_API_ORIGIN ||
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.VITE_API_BASE_URL ? new URL(import.meta.env.VITE_API_BASE_URL).origin : '');
+
 registerRoute(
-  ({ url }) => url.origin === import.meta.env.VITE_API_BASE_URL,
+  ({ url }) => Boolean(apiOrigin) && url.origin === apiOrigin,
   new NetworkFirst({
     cacheName: 'api-cache',
     plugins: [

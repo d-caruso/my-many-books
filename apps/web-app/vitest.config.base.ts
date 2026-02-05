@@ -22,7 +22,9 @@ const baseVitestConfig: UserConfig = {
       web: [/\.[jt]sx?$/, /\.css$/],
     },
     env: {
-      VITE_API_BASE_URL: 'http://localhost:3000',
+      VITE_API_ORIGIN: 'http://localhost:3000',
+      VITE_API_PREFIX: '/api',
+      VITE_API_VERSION: 'v1',
     },
     coverage: {
       provider: 'v8',

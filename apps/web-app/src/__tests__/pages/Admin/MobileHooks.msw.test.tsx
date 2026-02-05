@@ -2,6 +2,7 @@ import React from 'react';
 import i18n from 'i18next';
 import { fireEvent, renderWithI18n, screen, waitFor, within } from '../../test-utils';
 import { server, resetMobileHooksState } from '../../mocks/server';
+import { API_BASE_PATH } from '../../utils/apiBasePath';
 import { http, HttpResponse } from 'msw';
 import { vi } from 'vitest';
 import { MobileHookDashboardPage } from '../../../pages/Admin/MobileHooks/MobileHookDashboardPage';
@@ -54,7 +55,7 @@ describe('Mobile Hooks dashboard (MSW)', () => {
   it('shows a listeners error when the config endpoint fails', async () => {
     const expectedKey = 'admin.mobile_hooks.errors.listeners.load';
     server.use(
-      http.get('*/api/v1/admin/mobile-hooks/config/listeners', () =>
+      http.get(`*${API_BASE_PATH}/admin/mobile-hooks/config/listeners`, () =>
         HttpResponse.json({ error: 'boom' }, { status: 500 })
       )
     );
@@ -68,7 +69,7 @@ describe('Mobile Hooks dashboard (MSW)', () => {
     resetMobileHooksState();
     let eventCall = 0;
     server.use(
-      http.get('*/api/v1/admin/mobile-hooks/analytics/events/recent', () => {
+      http.get(`*${API_BASE_PATH}/admin/mobile-hooks/analytics/events/recent`, () => {
         eventCall += 1;
         return HttpResponse.json({
           data: {
@@ -154,7 +155,9 @@ describe('Hook analytics page (MSW)', () => {
   it('shows an analytics error when the stats endpoint fails', async () => {
     const expectedKey = 'admin.mobile_hooks.errors.analytics.load';
     server.use(
-      http.get('*/api/v1/admin/mobile-hooks/analytics/stats', () => HttpResponse.json({ error: 'boom' }, { status: 500 }))
+      http.get(`*${API_BASE_PATH}/admin/mobile-hooks/analytics/stats`, () =>
+        HttpResponse.json({ error: 'boom' }, { status: 500 })
+      )
     );
 
     renderWithProviders(<HookAnalyticsPage />);
@@ -173,7 +176,7 @@ describe('Hook analytics page (MSW)', () => {
       });
     });
 
-    server.use(http.get('*/api/v1/admin/mobile-hooks/analytics/stats', statsHandler));
+    server.use(http.get(`*${API_BASE_PATH}/admin/mobile-hooks/analytics/stats`, statsHandler));
 
     renderWithProviders(<HookAnalyticsPage />);
     await flushPromises();
@@ -206,7 +209,7 @@ describe('Hook configuration page (MSW)', () => {
   it('shows an error when listener settings fail to load', async () => {
     const expectedKey = 'admin.mobile_hooks.errors.listener_settings.load';
     server.use(
-      http.get('*/api/v1/admin/mobile-hooks/settings/listeners', () =>
+      http.get(`*${API_BASE_PATH}/admin/mobile-hooks/settings/listeners`, () =>
         HttpResponse.json({ error: 'boom' }, { status: 500 })
       )
     );
@@ -231,7 +234,7 @@ describe('Mobile hook testing page (MSW)', () => {
   it('shows an action types error when fetching fails', async () => {
     const expectedKey = 'admin.mobile_hooks.errors.action_types.load';
     server.use(
-      http.get('*/api/v1/admin/mobile-hooks/actions-config/types', () =>
+      http.get(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/types`, () =>
         HttpResponse.json({ error: 'boom' }, { status: 500 })
       )
     );

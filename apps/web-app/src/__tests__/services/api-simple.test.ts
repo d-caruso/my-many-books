@@ -3,7 +3,9 @@ import * as apiModule from '../../services/api';
 import { USER_RESPONSE_FIELDS } from '@my-many-books/shared-types';
 
 // Mock environment variables using Vitest
-vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000');
+vi.stubEnv('VITE_API_ORIGIN', 'http://localhost:3000');
+vi.stubEnv('VITE_API_PREFIX', '/api');
+vi.stubEnv('VITE_API_VERSION', 'v1');
 vi.stubEnv('MODE', 'test');
 
 // Mock localStorage before everything

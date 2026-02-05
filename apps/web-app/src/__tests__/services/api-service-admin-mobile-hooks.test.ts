@@ -3,6 +3,7 @@
  * Validates URL/method/body/headers and success/error handling via mocked fetch/auth.
  */
 import { beforeEach, describe, it, vi } from 'vitest';
+import { API_BASE_PATH } from '../utils/apiBasePath';
 
 const { mockAxiosInstance, mockFetch } = vi.hoisted(() => {
   const mockAxiosInstance = {
@@ -73,7 +74,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/settings/listeners');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/settings/listeners`);
       expect(options).toEqual(
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -131,7 +132,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/settings/listeners');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/settings/listeners`);
       expect(options).toEqual(
         expect.objectContaining({
           method: 'PUT',
@@ -190,7 +191,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/config/listeners');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/config/listeners`);
       expect(options).toEqual(
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -243,7 +244,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/actions-config/mappings');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/actions-config/mappings`);
       expect(options).toEqual(
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -297,7 +298,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/config/listeners');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/config/listeners`);
       expect(options).toEqual(
         expect.objectContaining({
           method: 'PUT',
@@ -361,7 +362,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/actions-config/mappings');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/actions-config/mappings`);
       expect(options).toEqual(
         expect.objectContaining({
           method: 'PUT',
@@ -433,7 +434,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/actions-config/test');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/actions-config/test`);
       expect(options).toEqual(
         expect.objectContaining({
           method: 'POST',
@@ -498,7 +499,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/actions-config/types');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/actions-config/types`);
       expect(options).toEqual(
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -553,7 +554,9 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain(`/api/v1/admin/mobile-hooks/actions-config/types/${encodeURIComponent(actionType)}`);
+      expect(url).toContain(
+        `${API_BASE_PATH}/admin/mobile-hooks/actions-config/types/${encodeURIComponent(actionType)}`
+      );
       expect(options).toEqual(
         expect.objectContaining({
           method: 'PUT',
@@ -616,7 +619,7 @@ describe('ApiService (admin mobile-hooks)', () => {
 
       const [url, options] = mockFetch.mock.calls[0];
       expect(url).toContain(
-        `/api/v1/admin/mobile-hooks/actions-config/types/${encodeURIComponent(actionType)}/test`
+        `${API_BASE_PATH}/admin/mobile-hooks/actions-config/types/${encodeURIComponent(actionType)}/test`
       );
       expect(options).toEqual(
         expect.objectContaining({
@@ -669,7 +672,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/emergency');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/emergency`);
       expect(options).toEqual(
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -721,7 +724,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/emergency');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/emergency`);
       expect(options).toEqual(
         expect.objectContaining({
           method: 'PUT',
@@ -781,7 +784,7 @@ describe('ApiService (admin mobile-hooks)', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/admin/mobile-hooks/health');
+      expect(url).toContain(`${API_BASE_PATH}/admin/mobile-hooks/health`);
       expect(options).toEqual(
         expect.objectContaining({
           headers: expect.objectContaining({

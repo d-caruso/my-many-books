@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server, resetMobileHooksState } from '../mocks/server';
 import { createApiService } from '../../services/api';
+import { API_BASE_PATH } from '../utils/apiBasePath';
 
 vi.mock('../../services/authService', () => ({
   authService: {
@@ -9,27 +10,6 @@ vi.mock('../../services/authService', () => ({
     logout: vi.fn(),
     silentRefresh: vi.fn(async () => false),
   },
-}));
-
-vi.mock('../../config/env', () => ({
-  env: {
-    NODE_ENV: 'test',
-    API_URL: 'http://localhost:3000',
-    API_BASE_URL: 'http://localhost:3000/api/v1',
-    COGNITO_USER_POOL_ID: '',
-    COGNITO_USER_POOL_CLIENT_ID: '',
-    COGNITO_IDENTITY_POOL_ID: '',
-    AWS_REGION: 'us-east-1',
-    BOOKS_PAGINATION_DEFAULT: 5,
-  },
-  NODE_ENV: 'test',
-  API_URL: 'http://localhost:3000',
-  API_BASE_URL: 'http://localhost:3000/api/v1',
-  COGNITO_USER_POOL_ID: '',
-  COGNITO_USER_POOL_CLIENT_ID: '',
-  COGNITO_IDENTITY_POOL_ID: '',
-  AWS_REGION: 'us-east-1',
-  BOOKS_PAGINATION_DEFAULT: 5,
 }));
 
 const apiService = createApiService();
@@ -53,7 +33,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
       let capturedBody: Record<string, unknown> | null = null;
 
       server.use(
-        http.put('*/api/v1/admin/mobile-hooks/settings/listeners', async ({ request }) => {
+        http.put(`*${API_BASE_PATH}/admin/mobile-hooks/settings/listeners`, async ({ request }) => {
           capturedBody = await request.json();
           return HttpResponse.json({
             data: {
@@ -98,7 +78,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
       let payloadBody: Record<string, unknown> | null = null;
 
       server.use(
-        http.put('*/api/v1/admin/mobile-hooks/config/listeners', async ({ request }) => {
+        http.put(`*${API_BASE_PATH}/admin/mobile-hooks/config/listeners`, async ({ request }) => {
           payloadBody = await request.json();
           return HttpResponse.json({
             data: {
@@ -126,7 +106,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
 
     test('getAdminMobileHooksConfigListeners throws on failure', async () => {
       server.use(
-        http.get('*/api/v1/admin/mobile-hooks/config/listeners', () =>
+        http.get(`*${API_BASE_PATH}/admin/mobile-hooks/config/listeners`, () =>
           HttpResponse.json({ error: 'boom' }, { status: 500 })
         )
       );
@@ -150,7 +130,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
       let requestBody: Record<string, unknown> | null = null;
 
       server.use(
-        http.put('*/api/v1/admin/mobile-hooks/actions-config/mappings', async ({ request }) => {
+        http.put(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/mappings`, async ({ request }) => {
           requestBody = await request.json();
           return HttpResponse.json({
             data: {
@@ -192,7 +172,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
       let captured: Record<string, unknown> | null = null;
 
       server.use(
-        http.put('*/api/v1/admin/mobile-hooks/actions-config/types/email', async ({ request }) => {
+        http.put(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/types/email`, async ({ request }) => {
           captured = await request.json();
           return HttpResponse.json({
             data: {
@@ -229,7 +209,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
       let captured: Record<string, unknown> | null = null;
 
       server.use(
-        http.put('*/api/v1/admin/mobile-hooks/emergency', async ({ request }) => {
+        http.put(`*${API_BASE_PATH}/admin/mobile-hooks/emergency`, async ({ request }) => {
           captured = await request.json();
           return HttpResponse.json({
             data: {
@@ -258,7 +238,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
       let capturedLimit: string | null = null;
 
       server.use(
-        http.get('*/api/v1/admin/mobile-hooks/analytics/events/recent', ({ request }) => {
+        http.get(`*${API_BASE_PATH}/admin/mobile-hooks/analytics/events/recent`, ({ request }) => {
           const url = new URL(request.url);
           capturedLimit = url.searchParams.get('limit');
           return HttpResponse.json({
