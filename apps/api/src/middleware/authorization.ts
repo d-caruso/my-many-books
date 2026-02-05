@@ -4,9 +4,9 @@
 // ================================================================
 
 import { getLogger } from '@my-many-books/shared-logging';
+import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 import { Request, Response, NextFunction } from 'express';
 import { createAbilityFor, Action, Resource } from '@my-many-books/shared-auth';
-import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 
 /**
  * Extended Request type with user
@@ -48,14 +48,16 @@ export const requirePermission = (action: Action, resource: Resource) => {
 
       // Check if user can perform action on resource
       if (!ability.can(action, resource)) {
-        res.status(403).json(
-          createErrorResponse(ERROR_CODES.FORBIDDEN, 'You do not have permission to perform this action', {
+        res.status(403).json(createErrorResponse(
+          ERROR_CODES.PERMISSION_DENIED,
+          'You do not have permission to perform this action',
+          {
             action,
             resource,
             authenticated: !!user,
             role: user?.role || 'anonymous',
-          })
-        );
+          }
+        ));
         return;
       }
 
@@ -74,9 +76,10 @@ export const requirePermission = (action: Action, resource: Resource) => {
         '[Authorization Middleware] Error'
       );
 
-      res.status(500).json(
-        createErrorResponse(ERROR_CODES.INTERNAL_ERROR, 'Internal server error')
-      );
+      res.status(500).json(createErrorResponse(
+        ERROR_CODES.INTERNAL_ERROR,
+        'Internal server error'
+      ));
       return;
     }
   };

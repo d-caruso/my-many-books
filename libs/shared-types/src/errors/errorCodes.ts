@@ -1,42 +1,52 @@
 /**
  * Standardized error codes for API responses
- * Machine-readable codes that clients can translate to localized messages
+ * Used by middleware to return machine-readable error codes
+ * Clients translate these codes to localized messages
  */
 
 export const ERROR_CODES = {
-  // Authentication (1xxx)
+  // Authentication
   AUTH_TOKEN_MISSING: 'AUTH_TOKEN_MISSING',
   AUTH_TOKEN_INVALID: 'AUTH_TOKEN_INVALID',
   AUTH_TOKEN_EXPIRED: 'AUTH_TOKEN_EXPIRED',
   AUTH_HEADER_INVALID: 'AUTH_HEADER_INVALID',
   AUTH_FAILED: 'AUTH_FAILED',
 
-  // Authorization (2xxx)
+  // Authorization
   FORBIDDEN: 'FORBIDDEN',
   ADMIN_REQUIRED: 'ADMIN_REQUIRED',
   ROLE_REQUIRED: 'ROLE_REQUIRED',
   ACCOUNT_DEACTIVATED: 'ACCOUNT_DEACTIVATED',
+  PERMISSION_DENIED: 'PERMISSION_DENIED',
 
-  // API Key (3xxx)
+  // User
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+
+  // API Key
   API_KEY_MISSING: 'API_KEY_MISSING',
   API_KEY_INVALID: 'API_KEY_INVALID',
   API_KEY_TIER_NOT_FOUND: 'API_KEY_TIER_NOT_FOUND',
 
-  // Rate Limiting (4xxx)
+  // Rate Limiting
   RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
   QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
   USAGE_LIMIT_EXCEEDED: 'USAGE_LIMIT_EXCEEDED',
 
-  // Validation (5xxx)
+  // Validation
   VALIDATION_FAILED: 'VALIDATION_FAILED',
   INVALID_REQUEST_BODY: 'INVALID_REQUEST_BODY',
+  INVALID_TOKEN_FORMAT: 'INVALID_TOKEN_FORMAT',
+  INSUFFICIENT_PERMISSIONS: 'INSUFFICIENT_PERMISSIONS',
+  INVALID_TOKEN_SIGNATURE: 'INVALID_TOKEN_SIGNATURE',
 
-  // Resources (6xxx)
+  // Resources
   NOT_FOUND: 'NOT_FOUND',
+  CONFLICT: 'CONFLICT',
 
-  // Server (9xxx)
+  // Server
   INTERNAL_ERROR: 'INTERNAL_ERROR',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
+  AUTHORIZATION_CHECK_FAILED: 'AUTHORIZATION_CHECK_FAILED',
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

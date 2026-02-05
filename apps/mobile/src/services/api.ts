@@ -71,13 +71,17 @@ class FetchHttpClient implements HttpClient {
         }
 
         // Handle authorization errors (403 Forbidden)
-        // Error message is already localized by the API based on Accept-Language header
+        // API returns error codes - client handles translation
         if (response.status === 403) {
+          const errorCode = errorData.error?.code;
           const authError = {
             status: 403,
             isAuthorizationError: true,
-            message: errorData.error || 'errors:permission_denied',
-            details: errorData.details,
+            code: errorCode,
+            message: errorCode
+              ? i18n.t(`errors:${errorCode}`, { defaultValue: errorData.error?.message || 'Permission denied' })
+              : errorData.error?.message || 'Permission denied',
+            details: errorData.error?.details,
           };
           throw authError;
         }

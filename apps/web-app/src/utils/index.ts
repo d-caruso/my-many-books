@@ -11,6 +11,13 @@ export {
   normalizeISBN,
 } from './isbn';
 
+// Export error translation utilities
+export {
+  translateApiError,
+  getErrorCode,
+  getErrorDetails,
+} from './errorTranslation';
+
 // Local implementations for validation utilities
 export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

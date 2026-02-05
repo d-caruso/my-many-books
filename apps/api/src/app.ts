@@ -69,9 +69,6 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Custom middleware to handle text/plain JSON payloads (for mobile analytics)
-app.use('/api/v1/mobile-analytics', express.text({ limit: '10mb' }), parseTextPlainJson);
-
 // API base path from environment
 const API_PREFIX = process.env['API_PREFIX'] || '/api';
 const API_ROUTE_VERSION = process.env['API_ROUTE_VERSION'] || 'v1';
@@ -96,6 +93,8 @@ app.use(`${BASE_PATH}/authors`, authorRoutes);
 app.use(`${BASE_PATH}/categories`, categoryRoutes);
 app.use(`${BASE_PATH}/isbn`, isbnRoutes);
 app.use(`${BASE_PATH}/settings`, settingsRoutes);
+// Custom middleware to handle text/plain JSON payloads (for mobile analytics)
+app.use(`${BASE_PATH}/mobile-analytics`, express.text({ limit: '10mb' }), parseTextPlainJson);
 app.use(`${BASE_PATH}/mobile-analytics`, mobileAnalyticsRoutes);
 app.use(`${BASE_PATH}/config`, configRoutes);
 app.use(`${BASE_PATH}/admin`, adminRoutes);

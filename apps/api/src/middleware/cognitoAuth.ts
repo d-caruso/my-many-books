@@ -3,9 +3,9 @@
 // ================================================================
 
 import { getLogger } from '@my-many-books/shared-logging';
+import { ERROR_CODES, createErrorResponse, type ErrorCode } from '@my-many-books/shared-types';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { verify, JwtPayload, Algorithm } from 'jsonwebtoken';
-import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 
 export interface CognitoConfig {
   enabled: boolean;
@@ -51,7 +51,7 @@ export interface CognitoAuthResult {
   isAuthenticated: boolean;
   user?: CognitoUser;
   error?: string;
-  errorCode?: string;
+  errorCode?: ErrorCode;
   statusCode?: number;
 }
 
@@ -92,7 +92,7 @@ export class CognitoAuthenticator {
         return {
           isAuthenticated: false,
           error: 'Invalid token format',
-          errorCode: ERROR_CODES.AUTH_TOKEN_INVALID,
+          errorCode: ERROR_CODES.INVALID_TOKEN_FORMAT,
           statusCode: 401,
         };
       }
@@ -109,7 +109,7 @@ export class CognitoAuthenticator {
           return {
             isAuthenticated: false,
             error: 'Insufficient permissions',
-            errorCode: ERROR_CODES.FORBIDDEN,
+            errorCode: ERROR_CODES.INSUFFICIENT_PERMISSIONS,
             statusCode: 403,
           };
         }
@@ -139,7 +139,7 @@ export class CognitoAuthenticator {
           return {
             isAuthenticated: false,
             error: 'Invalid token signature',
-            errorCode: ERROR_CODES.AUTH_TOKEN_INVALID,
+            errorCode: ERROR_CODES.INVALID_TOKEN_SIGNATURE,
             statusCode: 401,
           };
         }
@@ -325,12 +325,10 @@ export const withCognitoAuth = (
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify(
-          createErrorResponse(
-            authResult.errorCode || ERROR_CODES.AUTH_FAILED,
-            authResult.error || 'Authentication failed'
-          )
-        ),
+        body: JSON.stringify(createErrorResponse(
+          authResult.errorCode || ERROR_CODES.AUTH_FAILED,
+          authResult.error || 'Authentication failed'
+        )),
       };
     }
 
@@ -347,11 +345,11 @@ export const withCognitoAuth = (
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
           },
-          body: JSON.stringify(
-            createErrorResponse(ERROR_CODES.FORBIDDEN, 'Insufficient permissions', {
-              requiredPermissions,
-            })
-          ),
+          body: JSON.stringify(createErrorResponse(
+            ERROR_CODES.INSUFFICIENT_PERMISSIONS,
+            'Insufficient permissions',
+            { requiredPermissions }
+          )),
         };
       }
     }

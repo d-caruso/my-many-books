@@ -122,7 +122,7 @@ describe('Authorization Middleware Integration', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
-      expect(response.body.details).toMatchObject({
+      expect(response.body.error.details).toMatchObject({
         action: ACTIONS.MANAGE,
         resource: RESOURCES.ALL,
         role: 'user',
@@ -141,7 +141,7 @@ describe('Authorization Middleware Integration', () => {
       const response = await request(app).get('/admin/users');
 
       expect(response.status).toBe(403);
-      expect(response.body.details.role).toBe('anonymous');
+      expect(response.body.error.details.role).toBe('anonymous');
     });
   });
 
@@ -206,12 +206,15 @@ describe('Authorization Middleware Integration', () => {
       expect(response.status).toBe(403);
       expect(response.body).toMatchObject({
         success: false,
-        error: expect.any(String),
-        details: {
-          action: expect.any(String),
-          resource: expect.any(String),
-          authenticated: expect.any(Boolean),
-          role: expect.any(String),
+        error: {
+          code: expect.any(String),
+          message: expect.any(String),
+          details: {
+            action: expect.any(String),
+            resource: expect.any(String),
+            authenticated: expect.any(Boolean),
+            role: expect.any(String),
+          },
         },
       });
     });

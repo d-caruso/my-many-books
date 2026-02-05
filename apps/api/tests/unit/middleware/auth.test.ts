@@ -55,8 +55,12 @@ describe('Authentication Middleware', () => {
       await authMiddleware(req as AuthenticatedRequest, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ 
-        error: 'Missing or invalid authorization header' 
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: {
+          code: 'AUTH_HEADER_INVALID',
+          message: 'Missing or invalid authorization header',
+        },
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -67,8 +71,12 @@ describe('Authentication Middleware', () => {
       await authMiddleware(req as AuthenticatedRequest, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ 
-        error: 'Missing or invalid authorization header' 
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: {
+          code: 'AUTH_HEADER_INVALID',
+          message: 'Missing or invalid authorization header',
+        },
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -154,7 +162,13 @@ describe('Authentication Middleware', () => {
       await authMiddleware(req as AuthenticatedRequest, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Account is deactivated' });
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: {
+          code: 'ACCOUNT_DEACTIVATED',
+          message: 'Account is deactivated',
+        },
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -173,8 +187,12 @@ describe('Authentication Middleware', () => {
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Authentication failed',
-        details: 'Token verification failed',
+        success: false,
+        error: {
+          code: 'AUTH_FAILED',
+          message: 'Authentication failed',
+          details: { details: 'Token verification failed' },
+        },
       });
       expect(next).not.toHaveBeenCalled();
     });

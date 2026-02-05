@@ -226,7 +226,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
           updated: updatedSettings,
           lastUpdated: new Date().toISOString(),
         },
-        this.t('common:config_updated')
+        'Hook action configuration updated successfully'
       );
     } catch (error) {
       if (error instanceof Error) {
@@ -542,7 +542,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
           updated: Object.keys(body),
           lastUpdated: new Date().toISOString(),
         },
-        this.t('common:action_updated')
+        `${actionType} action settings updated successfully`
       );
     } catch (error) {
       if (error instanceof Error) {

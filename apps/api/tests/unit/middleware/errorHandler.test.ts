@@ -159,8 +159,11 @@ describe('ErrorHandler Middleware', () => {
       const body = JSON.parse(response.body);
       expect(body).toEqual({
         success: false,
-        error: 'Invalid email format',
-        details: { field: 'email' },
+        error: {
+          code: 'VALIDATION_FAILED',
+          message: 'Invalid email format',
+          details: { field: 'email' },
+        },
         requestId: 'test-request-id',
       });
     });
@@ -171,7 +174,8 @@ describe('ErrorHandler Middleware', () => {
 
       expect(response.statusCode).toBe(404);
       const body = JSON.parse(response.body);
-      expect(body.error).toBe('User not found');
+      expect(body.error.code).toBe('NOT_FOUND');
+      expect(body.error.message).toBe('User not found');
     });
 
     it('should create error response for generic Error', () => {
@@ -180,7 +184,8 @@ describe('ErrorHandler Middleware', () => {
 
       expect(response.statusCode).toBe(500);
       const body = JSON.parse(response.body);
-      expect(body.error).toBe('Something went wrong');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.message).toBe('Something went wrong');
       expect(body.stack).toBeDefined();
     });
 
@@ -190,7 +195,8 @@ describe('ErrorHandler Middleware', () => {
       const response = createErrorResponse(error, mockEvent);
 
       const body = JSON.parse(response.body);
-      expect(body.error).toBe('Internal server error');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.message).toBe('Internal server error');
       expect(body.stack).toBeUndefined();
     });
 
@@ -200,7 +206,8 @@ describe('ErrorHandler Middleware', () => {
       const response = createErrorResponse(error, mockEvent);
 
       const body = JSON.parse(response.body);
-      expect(body.error).toBe('Invalid input');
+      expect(body.error.code).toBe('VALIDATION_FAILED');
+      expect(body.error.message).toBe('Invalid input');
     });
 
     it('should include stack trace in development for all errors', () => {
@@ -218,7 +225,8 @@ describe('ErrorHandler Middleware', () => {
 
       expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.body);
-      expect(body.error).toBe('Test error');
+      expect(body.error.code).toBe('VALIDATION_FAILED');
+      expect(body.error.message).toBe('Test error');
       expect(body.requestId).toBeUndefined();
     });
 
@@ -285,7 +293,8 @@ describe('ErrorHandler Middleware', () => {
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error).toBe('Invalid input');
+      expect(body.error.code).toBe('VALIDATION_FAILED');
+      expect(body.error.message).toBe('Invalid input');
     });
 
     it('should handle non-Error objects', async () => {
@@ -305,7 +314,8 @@ describe('ErrorHandler Middleware', () => {
 
       expect(response.statusCode).toBe(404);
       const body = JSON.parse(response.body);
-      expect(body.error).toBe('Resource not found');
+      expect(body.error.code).toBe('NOT_FOUND');
+      expect(body.error.message).toBe('Resource not found');
     });
 
     it('should work without event parameter', () => {
@@ -313,6 +323,8 @@ describe('ErrorHandler Middleware', () => {
       const response = errorHandler(error);
 
       expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('VALIDATION_FAILED');
     });
   });
 
@@ -335,13 +347,16 @@ describe('ErrorHandler Middleware', () => {
 
       expect(response.statusCode).toBe(500);
       const body = JSON.parse(response.body);
-      expect(body.error).toBe('fallback');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.message).toBe('fallback');
     });
 
     it('should handle undefined error', () => {
       const response = createErrorResponse(new Error('undefined fallback') as any, mockEvent);
 
       expect(response.statusCode).toBe(500);
+      const body = JSON.parse(response.body);
+      expect(body.error.code).toBe('INTERNAL_ERROR');
     });
 
     it('should handle error with no message', () => {
@@ -350,7 +365,8 @@ describe('ErrorHandler Middleware', () => {
 
       expect(response.statusCode).toBe(500);
       const body = JSON.parse(response.body);
-      expect(body.error).toBe('');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.message).toBe('');
     });
 
     it('should handle AppError with false isOperational in production', () => {
@@ -362,7 +378,8 @@ describe('ErrorHandler Middleware', () => {
       const response = createErrorResponse(error, mockEvent);
 
       const body = JSON.parse(response.body);
-      expect(body.error).toBe('Internal server error');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.message).toBe('Internal server error');
     });
   });
 });

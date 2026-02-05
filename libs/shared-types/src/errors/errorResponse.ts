@@ -1,56 +1,58 @@
+import { ErrorCode } from './errorCodes';
+
 /**
- * Standardized API error response type
+ * Standardized API error response format
+ * Used by middleware and controllers for consistent error responses
  */
-
-import { z } from 'zod';
-import { ERROR_CODES, type ErrorCode } from './errorCodes';
-
-export const ApiErrorResponseSchema = z.object({
-  success: z.literal(false),
-  error: z.object({
-    code: z.enum([
-      ERROR_CODES.AUTH_TOKEN_MISSING,
-      ERROR_CODES.AUTH_TOKEN_INVALID,
-      ERROR_CODES.AUTH_TOKEN_EXPIRED,
-      ERROR_CODES.AUTH_HEADER_INVALID,
-      ERROR_CODES.AUTH_FAILED,
-      ERROR_CODES.FORBIDDEN,
-      ERROR_CODES.ADMIN_REQUIRED,
-      ERROR_CODES.ROLE_REQUIRED,
-      ERROR_CODES.ACCOUNT_DEACTIVATED,
-      ERROR_CODES.API_KEY_MISSING,
-      ERROR_CODES.API_KEY_INVALID,
-      ERROR_CODES.API_KEY_TIER_NOT_FOUND,
-      ERROR_CODES.RATE_LIMIT_EXCEEDED,
-      ERROR_CODES.QUOTA_EXCEEDED,
-      ERROR_CODES.USAGE_LIMIT_EXCEEDED,
-      ERROR_CODES.VALIDATION_FAILED,
-      ERROR_CODES.INVALID_REQUEST_BODY,
-      ERROR_CODES.NOT_FOUND,
-      ERROR_CODES.INTERNAL_ERROR,
-      ERROR_CODES.SERVICE_UNAVAILABLE,
-    ]),
-    message: z.string(),
-    details: z.record(z.unknown()).optional(),
-  }),
-});
-
-export type ApiErrorResponse = z.infer<typeof ApiErrorResponseSchema>;
+export interface ApiErrorResponse {
+  success: false;
+  error: {
+    code: ErrorCode;
+    message: string; // English default (for debugging/logging)
+    details?: Record<string, unknown>; // Additional context (e.g., rate limit info)
+  };
+  requestId?: string;
+}
 
 /**
- * Helper function to create a standardized error response
+ * Helper type for error details in responses
+ */
+export interface ErrorDetails {
+  action?: string;
+  resource?: string;
+  authenticated?: boolean;
+  role?: string;
+  limit?: number;
+  windowMs?: number;
+  retryAfter?: number;
+  field?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Creates a standardized error response object
  */
 export function createErrorResponse(
   code: ErrorCode,
   message: string,
-  details?: Record<string, unknown>
+  details?: ErrorDetails,
+  requestId?: string
 ): ApiErrorResponse {
-  return {
+  const response: ApiErrorResponse = {
     success: false,
     error: {
       code,
       message,
-      ...(details && { details }),
     },
   };
+
+  if (details && Object.keys(details).length > 0) {
+    response.error.details = details;
+  }
+
+  if (requestId) {
+    response.requestId = requestId;
+  }
+
+  return response;
 }

@@ -2,8 +2,8 @@
 // src/middleware/rateLimiter.ts
 // ================================================================
 
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 export interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
@@ -195,13 +195,15 @@ export const withRateLimit = (
             'X-RateLimit-Reset': new Date(limitResult.resetTime).toISOString(),
           }),
         },
-        body: JSON.stringify(
-          createErrorResponse(ERROR_CODES.RATE_LIMIT_EXCEEDED, 'Too many requests', {
+        body: JSON.stringify(createErrorResponse(
+          ERROR_CODES.RATE_LIMIT_EXCEEDED,
+          'Rate limit exceeded',
+          {
             limit: limitResult.limit,
-            windowMs: config.windowMs,
+            windowSeconds: config.windowMs / 1000,
             retryAfter: limitResult.retryAfter,
-          })
-        ),
+          }
+        )),
       };
       return response;
     }

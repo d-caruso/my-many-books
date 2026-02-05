@@ -78,7 +78,10 @@ describe('Authorization Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: false,
-          error: expect.any(String),
+          error: expect.objectContaining({
+            code: 'PERMISSION_DENIED',
+            message: expect.any(String),
+          }),
         })
       );
     });
@@ -159,7 +162,10 @@ describe('Authorization Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: false,
-          error: expect.any(String),
+          error: expect.objectContaining({
+            code: 'PERMISSION_DENIED',
+            message: expect.any(String),
+          }),
         })
       );
     });
@@ -188,8 +194,8 @@ describe('Authorization Middleware', () => {
       mockRequest.user = {
         id: 1,
         email: 'user@example.com',
-      role: 'user',
-              } as any;
+        role: 'user',
+      } as any;
 
       const middleware = requirePermission(ACTIONS.MANAGE, RESOURCES.ALL);
 
@@ -198,12 +204,15 @@ describe('Authorization Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: false,
-          error: expect.any(String),
-          details: expect.objectContaining({
-            action: ACTIONS.MANAGE,
-            resource: RESOURCES.ALL,
-            authenticated: true,
-            role: 'user',
+          error: expect.objectContaining({
+            code: 'PERMISSION_DENIED',
+            message: expect.any(String),
+            details: expect.objectContaining({
+              action: ACTIONS.MANAGE,
+              resource: RESOURCES.ALL,
+              authenticated: true,
+              role: 'user',
+            }),
           }),
         })
       );
@@ -218,36 +227,18 @@ describe('Authorization Middleware', () => {
 
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          details: expect.objectContaining({
-            authenticated: false,
-                      }),
+          error: expect.objectContaining({
+            details: expect.objectContaining({
+              authenticated: false,
+            }),
+          }),
         })
       );
     });
   });
 
-  describe('i18n Support', () => {
-    it('should use i18n translator when available', () => {
-      const mockTranslator = jest.fn((key: string) => `translated_${key}`);
-
-      mockRequest = {
-        user: undefined,
-        t: mockTranslator,
-      } as any;
-
-      const middleware = requirePermission(ACTIONS.CREATE, RESOURCES.BOOK);
-
-      middleware(mockRequest as Request, mockResponse as Response, nextFunction);
-
-      expect(mockTranslator).toHaveBeenCalledWith('errors:permission_denied');
-      expect(mockResponse.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: 'translated_errors:permission_denied',
-        })
-      );
-    });
-
-    it('should fallback to English when translator not available', () => {
+  describe('Error Codes', () => {
+    it('should return PERMISSION_DENIED error code when access is denied', () => {
       mockRequest.user = undefined;
 
       const middleware = requirePermission(ACTIONS.CREATE, RESOURCES.BOOK);
@@ -256,7 +247,10 @@ describe('Authorization Middleware', () => {
 
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: 'You do not have permission to perform this action',
+          error: expect.objectContaining({
+            code: 'PERMISSION_DENIED',
+            message: 'You do not have permission to perform this action',
+          }),
         })
       );
     });
@@ -304,7 +298,10 @@ describe('Authorization Middleware', () => {
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: false,
-          error: expect.any(String),
+          error: expect.objectContaining({
+            code: 'PERMISSION_DENIED',
+            message: expect.any(String),
+          }),
         })
       );
     });

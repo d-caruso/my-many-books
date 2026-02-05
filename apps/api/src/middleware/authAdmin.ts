@@ -2,8 +2,8 @@
 // src/middleware/authAdmin.ts
 // ================================================================
 
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 export const authAdminMiddleware = (
   handler: (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
@@ -18,9 +18,10 @@ export const authAdminMiddleware = (
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify(
-          createErrorResponse(ERROR_CODES.AUTH_TOKEN_MISSING, 'Authentication required')
-        ),
+        body: JSON.stringify(createErrorResponse(
+          ERROR_CODES.AUTH_TOKEN_MISSING,
+          'Authentication required'
+        )),
       };
     }
 
@@ -31,9 +32,10 @@ export const authAdminMiddleware = (
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify(
-          createErrorResponse(ERROR_CODES.ADMIN_REQUIRED, 'Admin access required')
-        ),
+        body: JSON.stringify(createErrorResponse(
+          ERROR_CODES.ADMIN_REQUIRED,
+          'Admin access required'
+        )),
       };
     }
 

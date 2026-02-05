@@ -3,7 +3,7 @@
 // ================================================================
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
+import { ERROR_CODES, createErrorResponse, type ErrorCode } from '@my-many-books/shared-types';
 
 export interface ApiKeyConfig {
   enabled: boolean;
@@ -186,7 +186,7 @@ export interface AuthenticationResult {
   apiKey?: string;
   permissions?: string[];
   error?: string;
-  errorCode?: string;
+  errorCode?: ErrorCode;
   statusCode?: number;
   retryAfter?: number;
 }
@@ -194,7 +194,7 @@ export interface AuthenticationResult {
 export interface UsageCheckResult {
   allowed: boolean;
   error?: string;
-  errorCode?: string;
+  errorCode?: ErrorCode;
   retryAfter?: number;
   details?: Record<string, unknown>;
 }

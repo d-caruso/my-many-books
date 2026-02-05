@@ -719,7 +719,7 @@ export class BookController extends BaseController {
         source: result.source,
         responseTime: result.responseTime,
       },
-      this.t('common:book_created'),
+      this.t('common:book_imported'),
       undefined,
       201
     );

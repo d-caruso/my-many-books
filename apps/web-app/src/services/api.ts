@@ -68,14 +68,15 @@ class AxiosHttpClient implements HttpClient {
         }
 
         // Handle authorization errors (403 Forbidden)
-        // The error message from the API is already localized based on Accept-Language header
+        // API returns error codes - client handles translation
         if (error.response?.status === 403) {
-          // Enhance error with authorization details if available
+          const errorCode = error.response?.data?.error?.code;
           const authError = {
             ...error,
             isAuthorizationError: true,
-            message: error.response?.data?.error || 'errors:permission_denied',
-            details: error.response?.data?.details,
+            code: errorCode,
+            message: error.response?.data?.error?.message || 'Permission denied',
+            details: error.response?.data?.error?.details,
           };
           return Promise.reject(authError);
         }
