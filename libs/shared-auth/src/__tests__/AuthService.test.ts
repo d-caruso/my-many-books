@@ -44,6 +44,11 @@ class MockStorageAdapter implements StorageAdapter {
 // Mock fetch
 global.fetch = jest.fn();
 
+const API_ORIGIN = 'http://localhost:3000';
+const API_PREFIX = '/api';
+const API_VERSION = 'v1';
+const API_BASE_URL = `${API_ORIGIN}${API_PREFIX}/${API_VERSION}`;
+
 function createTestJwt(payload: Record<string, unknown>): string {
   const base64UrlEncode = (value: Record<string, unknown>) =>
     Buffer.from(JSON.stringify(value), 'utf8')
@@ -73,7 +78,7 @@ describe('AuthService', () => {
     mockStorage = new MockStorageAdapter();
     authService = new AuthService({
       storage: mockStorage,
-      apiUrl: 'http://localhost:3000/api/v1',
+      apiUrl: API_BASE_URL,
     });
     jest.clearAllMocks();
   });
@@ -83,7 +88,7 @@ describe('AuthService', () => {
       const onAuthStateChange = jest.fn();
       authService = new AuthService({
         storage: mockStorage,
-        apiUrl: 'http://localhost:3000/api/v1',
+        apiUrl: API_BASE_URL,
         onAuthStateChange,
       });
 
@@ -115,7 +120,7 @@ describe('AuthService', () => {
         expect.objectContaining({ email: 'test@example.com' })
       );
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/v1/auth/login',
+        `${API_BASE_URL}/auth/login`,
         expect.objectContaining({
           method: 'POST',
           credentials: 'include',
@@ -244,7 +249,7 @@ describe('AuthService', () => {
       const onAuthStateChange = jest.fn();
       authService = new AuthService({
         storage: mockStorage,
-        apiUrl: 'http://localhost:3000/api/v1',
+        apiUrl: API_BASE_URL,
         onAuthStateChange,
       });
 
@@ -344,7 +349,7 @@ describe('AuthService', () => {
       const storage = new NoUserStorageAdapter();
       authService = new AuthService({
         storage,
-        apiUrl: 'http://localhost:3000/api/v1',
+        apiUrl: API_BASE_URL,
       });
 
       await storage.setTokens({
@@ -405,7 +410,7 @@ describe('AuthService', () => {
 
       authService = new AuthService({
         storage: storage as any,
-        apiUrl: 'http://localhost:3000/api/v1',
+        apiUrl: API_BASE_URL,
       });
 
       const result = await authService.getAuthState();
@@ -420,7 +425,7 @@ describe('AuthService', () => {
       const onTokenRefresh = jest.fn();
       authService = new AuthService({
         storage: mockStorage,
-        apiUrl: 'http://localhost:3000/api/v1',
+        apiUrl: API_BASE_URL,
         onTokenRefresh,
       });
 
@@ -605,7 +610,7 @@ describe('AuthService', () => {
       const onAuthStateChange = jest.fn();
       authService = new AuthService({
         storage: mockStorage,
-        apiUrl: 'http://localhost:3000/api/v1',
+        apiUrl: API_BASE_URL,
         onAuthStateChange,
       });
 

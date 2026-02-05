@@ -32,9 +32,9 @@ describe('MobileStorageAdapter', () => {
     };
 
     let adapter: any;
-    jest.isolateModules(() => {
+    await jest.isolateModulesAsync(async () => {
       jest.doMock('expo-secure-store', () => secureStore, { virtual: true });
-      const { MobileStorageAdapter } = require('../MobileStorageAdapter');
+      const { MobileStorageAdapter } = await import('../MobileStorageAdapter');
       adapter = new MobileStorageAdapter();
     });
 
@@ -70,9 +70,9 @@ describe('MobileStorageAdapter', () => {
     };
 
     let adapter: any;
-    jest.isolateModules(() => {
+    await jest.isolateModulesAsync(async () => {
       jest.doMock('expo-secure-store', () => secureStore, { virtual: true });
-      const { MobileStorageAdapter } = require('../MobileStorageAdapter');
+      const { MobileStorageAdapter } = await import('../MobileStorageAdapter');
       adapter = new MobileStorageAdapter();
     });
 
@@ -94,9 +94,9 @@ describe('MobileStorageAdapter', () => {
     };
 
     let adapter: any;
-    jest.isolateModules(() => {
+    await jest.isolateModulesAsync(async () => {
       jest.doMock('expo-secure-store', () => secureStore, { virtual: true });
-      const { MobileStorageAdapter } = require('../MobileStorageAdapter');
+      const { MobileStorageAdapter } = await import('../MobileStorageAdapter');
       adapter = new MobileStorageAdapter();
     });
 
@@ -119,9 +119,9 @@ describe('MobileStorageAdapter', () => {
     };
 
     let adapter: any;
-    jest.isolateModules(() => {
+    await jest.isolateModulesAsync(async () => {
       jest.doMock('expo-secure-store', () => secureStore, { virtual: true });
-      const { MobileStorageAdapter } = require('../MobileStorageAdapter');
+      const { MobileStorageAdapter } = await import('../MobileStorageAdapter');
       adapter = new MobileStorageAdapter();
     });
 
@@ -137,7 +137,7 @@ describe('MobileStorageAdapter', () => {
     const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
     let adapter: any;
-    jest.isolateModules(() => {
+    await jest.isolateModulesAsync(async () => {
       jest.doMock(
         'expo-secure-store',
         () => {
@@ -145,7 +145,7 @@ describe('MobileStorageAdapter', () => {
         },
         { virtual: true }
       );
-      const { MobileStorageAdapter } = require('../MobileStorageAdapter');
+      const { MobileStorageAdapter } = await import('../MobileStorageAdapter');
       adapter = new MobileStorageAdapter();
     });
 

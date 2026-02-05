@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { HookSystem } from '../../HookSystem';
 import { expressHookEmitter, ExpressHookPayload } from '../expressHookMiddleware';
 
+const API_PREFIX = '/api';
+const API_VERSION = 'v1';
+const requestPath = `${API_PREFIX}/${API_VERSION}/users`;
+
 class DummyHookSystem extends HookSystem {
   public lastPayload: ExpressHookPayload | null = null;
   override async trigger(eventName: string, payload?: unknown): Promise<void> {
@@ -17,7 +21,7 @@ describe('expressHookEmitter', () => {
 
     const request = {
       method: 'POST',
-      originalUrl: '/api/v1/users',
+      originalUrl: requestPath,
       body: { name: 'D' },
       params: { id: '123' },
       query: { verbose: 'true' },
@@ -31,7 +35,7 @@ describe('expressHookEmitter', () => {
 
     expect(hookSystem.lastPayload).toEqual({
       method: 'POST',
-      path: '/api/v1/users',
+      path: requestPath,
       body: { name: 'D' },
       params: { id: '123' },
       query: { verbose: 'true' },
