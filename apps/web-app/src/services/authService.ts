@@ -19,5 +19,5 @@ const storage = useLocalStorage ? new LocalStorageAdapter() : new WebStorageAdap
 // Create singleton instance
 export const authService = new AuthService({
   storage,
-  apiUrl: env.API_BASE_URL || 'http://localhost:3001/api/v1',
+  apiUrl: env.API_BASE_URL,
 });

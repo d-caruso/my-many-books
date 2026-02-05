@@ -43,6 +43,7 @@ import bookRoutes from '../../../src/routes/bookRoutes';
 import { Book } from '../../../src/models/Book';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
+import { BASE_PATH } from '../../utils/apiBasePath';
 
 describe('Book Routes Authorization Integration', () => {
   let app: express.Application;
@@ -50,16 +51,16 @@ describe('Book Routes Authorization Integration', () => {
   beforeEach(() => {
     app = express();
     app.use(express.json());
-    app.use('/api/v1/books', bookRoutes);
+    app.use(`${BASE_PATH}/books`, bookRoutes);
     jest.clearAllMocks();
   });
 
-  describe('POST /api/v1/books - Create Book', () => {
+  describe(`POST ${BASE_PATH}/books - Create Book`, () => {
     it('should allow authenticated user to create book', async () => {
       // This test verifies that requirePermission(CREATE, BOOK) allows authenticated users
       // The actual book creation logic is tested in unit tests
       const response = await request(app)
-        .post('/api/v1/books')
+        .post(`${BASE_PATH}/books`)
         .set('Authorization', 'Bearer valid-token')
         .send({
           title: 'Test Book',
@@ -73,7 +74,7 @@ describe('Book Routes Authorization Integration', () => {
 
     it('should deny unauthenticated user from creating book', async () => {
       const response = await request(app)
-        .post('/api/v1/books')
+        .post(`${BASE_PATH}/books`)
         .send({
           title: 'Test Book',
           isbnCode: '978-0-123456-78-9',
@@ -84,7 +85,7 @@ describe('Book Routes Authorization Integration', () => {
     });
   });
 
-  describe('PUT /api/v1/books/:id - Update Book', () => {
+  describe(`PUT ${BASE_PATH}/books/:id - Update Book`, () => {
     it('should allow user to update own book', async () => {
       const mockBook = {
         id: 1,
@@ -102,7 +103,7 @@ describe('Book Routes Authorization Integration', () => {
 
       // Mock authenticated user with userId: 1
       const response = await request(app)
-        .put('/api/v1/books/1')
+        .put(`${BASE_PATH}/books/1`)
         .set('Authorization', 'Bearer valid-token')
         .send({
           title: 'Updated Title',
@@ -124,7 +125,7 @@ describe('Book Routes Authorization Integration', () => {
 
       // Mock authenticated user with userId: 1
       const response = await request(app)
-        .put('/api/v1/books/1')
+        .put(`${BASE_PATH}/books/1`)
         .set('Authorization', 'Bearer valid-token')
         .send({
           title: 'Malicious Update',
@@ -154,7 +155,7 @@ describe('Book Routes Authorization Integration', () => {
 
       // Mock admin user
       const response = await request(app)
-        .put('/api/v1/books/1')
+        .put(`${BASE_PATH}/books/1`)
         .set('Authorization', 'Bearer admin-token')
         .send({
           title: 'Admin Update',
@@ -165,7 +166,7 @@ describe('Book Routes Authorization Integration', () => {
     });
   });
 
-  describe('DELETE /api/v1/books/:id - Delete Book', () => {
+  describe(`DELETE ${BASE_PATH}/books/:id - Delete Book`, () => {
     it('should allow user to delete own book', async () => {
       const mockBook = {
         id: 1,
@@ -177,7 +178,7 @@ describe('Book Routes Authorization Integration', () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
       const response = await request(app)
-        .delete('/api/v1/books/1')
+        .delete(`${BASE_PATH}/books/1`)
         .set('Authorization', 'Bearer valid-token');
 
       expect(response.status).not.toBe(403);
@@ -193,7 +194,7 @@ describe('Book Routes Authorization Integration', () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
       const response = await request(app)
-        .delete('/api/v1/books/1')
+        .delete(`${BASE_PATH}/books/1`)
         .set('Authorization', 'Bearer valid-token');
 
       expect(response.status).toBe(403);
@@ -210,7 +211,7 @@ describe('Book Routes Authorization Integration', () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
       const response = await request(app)
-        .delete('/api/v1/books/1')
+        .delete(`${BASE_PATH}/books/1`)
         .set('Authorization', 'Bearer admin-token');
 
       expect(response.status).not.toBe(403);
@@ -220,15 +221,15 @@ describe('Book Routes Authorization Integration', () => {
   describe('Unauthorized Operations', () => {
     it('should deny all write operations for unauthenticated users', async () => {
       const createResponse = await request(app)
-        .post('/api/v1/books')
+        .post(`${BASE_PATH}/books`)
         .send({ title: 'Test' });
 
       const updateResponse = await request(app)
-        .put('/api/v1/books/1')
+        .put(`${BASE_PATH}/books/1`)
         .send({ title: 'Test' });
 
       const deleteResponse = await request(app)
-        .delete('/api/v1/books/1');
+        .delete(`${BASE_PATH}/books/1`);
 
       // All should fail authentication or authorization
       expect([401, 403]).toContain(createResponse.status);
@@ -245,7 +246,7 @@ describe('Book Routes Authorization Integration', () => {
       (Book.findByPk as jest.Mock).mockResolvedValue(mockBook);
 
       const response = await request(app)
-        .delete('/api/v1/books/1')
+        .delete(`${BASE_PATH}/books/1`)
         .set('Authorization', 'Bearer valid-token');
 
       expect(response.status).toBe(403);

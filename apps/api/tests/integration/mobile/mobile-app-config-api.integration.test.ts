@@ -25,6 +25,7 @@ import request from 'supertest';
 import app from '../../../src/app';
 import { AppSetting } from '../../../src/models';
 import { MOBILE_HOOK_SETTING_KEYS, MOBILE_APP_SETTING_KEYS, MOBILE_HOOKS_METADATA } from '@my-many-books/shared-types';
+import { BASE_PATH } from '../../utils/apiBasePath';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -99,9 +100,9 @@ describe('Mobile App Configuration API Integration Tests', () => {
     jest.clearAllMocks();
   });
 
-  describe('Mobile App Configuration Endpoints', () => {
+    describe('Mobile App Configuration Endpoints', () => {
 
-    describe('GET /api/v1/config/mobile - Get Mobile Config (Read-Only)', () => {
+    describe(`GET ${BASE_PATH}/config/mobile - Get Mobile Config (Read-Only)`, () => {
       it('should return mobile hook configuration with default values', async () => {
         const mockSettings = [
           {
@@ -145,7 +146,7 @@ describe('Mobile App Configuration API Integration Tests', () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
 
         const response = await request(app)
-          .get('/api/v1/config/mobile')
+          .get(`${BASE_PATH}/config/mobile`)
           .expect(200);
 
         expect(response.body.success).toBe(true);
@@ -160,7 +161,7 @@ describe('Mobile App Configuration API Integration Tests', () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
 
         const response = await request(app)
-          .get('/api/v1/config/mobile')
+          .get(`${BASE_PATH}/config/mobile`)
           .expect(200);
 
         expect(response.body.success).toBe(true);
@@ -191,7 +192,7 @@ describe('Mobile App Configuration API Integration Tests', () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettings);
 
         const response = await request(app)
-          .get('/api/v1/config/mobile')
+          .get(`${BASE_PATH}/config/mobile`)
           .expect(200);
 
         expect(response.body.success).toBe(true);
@@ -203,7 +204,7 @@ describe('Mobile App Configuration API Integration Tests', () => {
 
   describe('User-Specific Mobile Configuration Endpoints', () => {
 
-    describe('GET /api/v1/users/:id/mobile-config - Get User Mobile Config', () => {
+    describe(`GET ${BASE_PATH}/users/:id/mobile-config - Get User Mobile Config`, () => {
       it('should return access denied when accessing another user config', async () => {
         const mockSettings: any[] = [];
 
@@ -211,7 +212,7 @@ describe('Mobile App Configuration API Integration Tests', () => {
 
         // user-token authenticates as 'specific_user_789', but trying to access 'other_user_999'
         const response = await request(app)
-          .get('/api/v1/users/other_user_999/mobile-config')
+          .get(`${BASE_PATH}/users/other_user_999/mobile-config`)
           .set('Authorization', 'Bearer user-token')
           .expect(403);
 
@@ -220,7 +221,7 @@ describe('Mobile App Configuration API Integration Tests', () => {
       });
     });
 
-    describe('PUT /api/v1/users/:id/mobile-config - Update User Mobile Config', () => {
+    describe(`PUT ${BASE_PATH}/users/:id/mobile-config - Update User Mobile Config`, () => {
       it('should return access denied when updating another user config', async () => {
         const updateData = {
           analyticsEnabled: false,
@@ -228,7 +229,7 @@ describe('Mobile App Configuration API Integration Tests', () => {
 
         // user-token authenticates as 'specific_user_789', but trying to update 'other_user_999'
         const response = await request(app)
-          .put('/api/v1/users/other_user_999/mobile-config')
+          .put(`${BASE_PATH}/users/other_user_999/mobile-config`)
           .set('Authorization', 'Bearer user-token')
           .send(updateData)
           .expect(403);
@@ -245,7 +246,7 @@ describe('Mobile App Configuration API Integration Tests', () => {
 
       // Simulate concurrent reads
       const promises = Array(5).fill(null).map(() =>
-        request(app).get('/api/v1/config/mobile')
+        request(app).get(`${BASE_PATH}/config/mobile`)
       );
 
       const responses = await Promise.all(promises);

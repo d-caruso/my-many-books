@@ -9,10 +9,11 @@ import { http, HttpResponse } from 'msw';
 import { Book, Category, Author, User, PaginatedResponse } from '../../types';
 import { createApiService } from '../../services/api';
 import type { HttpClient, RequestConfig } from '@my-many-books/shared-api';
+import { API_BASE_PATH } from '../utils/apiBasePath';
 
 // Create a clean HttpClient for testing with MSW using fetch
 class TestHttpClient implements HttpClient {
-  constructor(private baseURL: string = 'http://localhost:3000/api') {}
+  constructor(private baseURL: string = `http://localhost:3000${API_BASE_PATH}`) {}
 
   private getFullUrl(url: string, params?: Record<string, any>): string {
     // If URL is already absolute, use it; otherwise prepend baseURL
@@ -83,7 +84,7 @@ class TestHttpClient implements HttpClient {
 const apiService = createApiService({
   httpClient: new TestHttpClient(),
   config: {
-    baseURL: 'http://localhost:3000/api',
+    baseURL: `http://localhost:3000${API_BASE_PATH}`,
     timeout: 10000,
     getAuthToken: () => null,
     onUnauthorized: () => {},
@@ -139,7 +140,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
     test('getBooks with custom pagination parameters', async () => {
       // Override the default handler with specific expectations
       server.use(
-        http.get('*/api/books', ({ request }) => {
+        http.get(`*${API_BASE_PATH}/books`, ({ request }) => {
           const url = new URL(request.url);
           const page = url.searchParams.get('page');
           const limit = url.searchParams.get('limit');
@@ -186,7 +187,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
 
       // Override handler to verify request data
       server.use(
-        http.post('*/api/books', async ({ request }) => {
+        http.post(`*${API_BASE_PATH}/books`, async ({ request }) => {
           const body = await request.json() as any;
 
           // Verify the transformed data structure
@@ -224,7 +225,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
     test('handles API errors correctly', async () => {
       // Mock a 404 error
       server.use(
-        http.get('*/api/books/999', () => {
+        http.get(`*${API_BASE_PATH}/books/999`, () => {
           return new HttpResponse(null, { status: 404 });
         })
       );
@@ -247,7 +248,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
       const categoryData = { name: 'Test Category' };
 
       server.use(
-        http.post('*/api/categories', async ({ request }) => {
+        http.post(`*${API_BASE_PATH}/categories`, async ({ request }) => {
           const body = await request.json() as any;
           expect(body).toEqual(categoryData);
 
@@ -272,7 +273,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
   describe('Authors API', () => {
     test('searchAuthors makes HTTP request with search parameter', async () => {
       server.use(
-        http.get('*/api/authors/search', ({ request }) => {
+        http.get(`*${API_BASE_PATH}/authors/search`, ({ request }) => {
           const url = new URL(request.url);
           const q = url.searchParams.get('q');
           expect(q).toBe('fitzgerald');
@@ -316,7 +317,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
     const updateData = { name: 'New', surname: 'Username' };
 
       server.use(
-        http.put('*/api/users', async ({ request }) => {
+        http.put(`*${API_BASE_PATH}/users`, async ({ request }) => {
           const body = await request.json() as Partial<User>;
           expect(body).toEqual(updateData);
 
@@ -352,7 +353,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
       };
 
       server.use(
-        http.get('*/api/books/search', ({ request }) => {
+        http.get(`*${API_BASE_PATH}/books/search`, ({ request }) => {
           const url = new URL(request.url);
           expect(url.searchParams.get('q')).toBe('gatsby');
 
@@ -393,7 +394,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
       const isbn = '9780743273565';
 
       server.use(
-        http.get(`*/api/books/search/${isbn}`, () => {
+        http.get(`*${API_BASE_PATH}/books/search/${isbn}`, () => {
           const payload = {
             id: 99,
             title: 'The Great Gatsby',

@@ -3,18 +3,6 @@
  * Tests auth service initialization and configuration
  */
 
-// Mock expo-constants
-jest.mock('expo-constants', () => ({
-  __esModule: true,
-  default: {
-    expoConfig: {
-      extra: {
-        apiUrl: 'http://localhost:3001/api/v1',
-      },
-    },
-  },
-}));
-
 // Mock expo-secure-store
 jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(),
@@ -42,10 +30,19 @@ describe('AuthService Instance', () => {
     expect(AuthService).toBeDefined();
   });
 
-  it('should configure with API URL', () => {
-    const apiUrl = 'http://localhost:3001/api/v1';
+  it('should configure AuthService with API_BASE_URL', () => {
+    jest.resetModules();
 
-    expect(apiUrl).toBe('http://localhost:3001/api/v1');
+    const { AuthService } = require('@my-many-books/shared-auth');
+    const { API_BASE_URL } = require('../../src/config/api');
+
+    require('../../src/services/authService');
+
+    expect(AuthService).toHaveBeenCalledWith(
+      expect.objectContaining({
+        apiUrl: API_BASE_URL,
+      })
+    );
   });
 
   it('should have onAuthStateChange callback', () => {
@@ -72,9 +69,8 @@ describe('AuthService Instance', () => {
     });
   });
 
-  it('should use fallback API URL if env not set', () => {
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-
-    expect(apiUrl).toBeTruthy();
+  it('should expose a non-empty API_BASE_URL', () => {
+    const { API_BASE_URL } = require('../../src/config/api');
+    expect(API_BASE_URL).toBeTruthy();
   });
 });

@@ -4,6 +4,7 @@
 // ================================================================
 
 import { MobileHookConfigService } from '../hooks/mobileHookConfigService';
+import { API_BASE_URL } from '../../config/api';
 
 // Mock fetch for testing
 global.fetch = jest.fn();
@@ -54,11 +55,11 @@ describe('MobileHookConfigService Priority System', () => {
       
       expect(shouldProcess).toBe(false);
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      expect(mockFetch).toHaveBeenNthCalledWith(1, 'http://localhost:3001/api/v1/config/mobile', {
+      expect(mockFetch).toHaveBeenNthCalledWith(1, `${API_BASE_URL}/config/mobile`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
-      expect(mockFetch).toHaveBeenNthCalledWith(2, 'http://localhost:3001/api/v1/users/user123/mobile-config', {
+      expect(mockFetch).toHaveBeenNthCalledWith(2, `${API_BASE_URL}/users/user123/mobile-config`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });

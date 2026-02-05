@@ -45,6 +45,7 @@ import categoryRoutes from '../../../src/routes/categoryRoutes';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
 import { Book } from '../../../src/models/Book';
+import { BASE_PATH } from '../../utils/apiBasePath';
 
 describe('Author & Category Routes Authorization Integration', () => {
   let app: express.Application;
@@ -52,8 +53,8 @@ describe('Author & Category Routes Authorization Integration', () => {
   beforeEach(() => {
     app = express();
     app.use(express.json());
-    app.use('/api/v1/authors', authorRoutes);
-    app.use('/api/v1/categories', categoryRoutes);
+    app.use(`${BASE_PATH}/authors`, authorRoutes);
+    app.use(`${BASE_PATH}/categories`, categoryRoutes);
     jest.clearAllMocks();
     (Author.create as jest.Mock).mockResolvedValue({ id: 1 });
     (Category.create as jest.Mock).mockResolvedValue({ id: 1 });
@@ -64,10 +65,10 @@ describe('Author & Category Routes Authorization Integration', () => {
   // AUTHOR ROUTES AUTHORIZATION
   // ============================================
   describe('Author Routes Authorization', () => {
-    describe('POST /api/v1/authors - Create Author', () => {
+    describe(`POST ${BASE_PATH}/authors - Create Author`, () => {
       it('should allow authenticated user to create author', async () => {
         const response = await request(app)
-          .post('/api/v1/authors')
+          .post(`${BASE_PATH}/authors`)
           .set('Authorization', 'Bearer valid-token')
           .send({
             name: 'John',
@@ -80,7 +81,7 @@ describe('Author & Category Routes Authorization Integration', () => {
 
       it('should deny unauthenticated user from creating author', async () => {
         const response = await request(app)
-          .post('/api/v1/authors')
+          .post(`${BASE_PATH}/authors`)
           .send({
             name: 'John',
             surname: 'Doe',
@@ -90,7 +91,7 @@ describe('Author & Category Routes Authorization Integration', () => {
       });
     });
 
-    describe('PUT /api/v1/authors/:id - Update Author', () => {
+    describe(`PUT ${BASE_PATH}/authors/:id - Update Author`, () => {
       it('should allow user to update own author', async () => {
         const mockAuthor = {
           id: 1,
@@ -104,7 +105,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Author.findOne as jest.Mock).mockResolvedValue(null);
 
         const response = await request(app)
-          .put('/api/v1/authors/1')
+          .put(`${BASE_PATH}/authors/1`)
           .set('Authorization', 'Bearer valid-token')
           .send({
             name: 'Jane',
@@ -126,7 +127,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
 
         const response = await request(app)
-          .put('/api/v1/authors/2')
+          .put(`${BASE_PATH}/authors/2`)
           .set('Authorization', 'Bearer valid-token')
           .send({
             name: 'Hacked',
@@ -149,7 +150,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Author.findOne as jest.Mock).mockResolvedValue(null);
 
         const response = await request(app)
-          .put('/api/v1/authors/1')
+          .put(`${BASE_PATH}/authors/1`)
           .set('Authorization', 'Bearer admin-token')
           .send({
             name: 'Updated',
@@ -160,7 +161,7 @@ describe('Author & Category Routes Authorization Integration', () => {
       });
     });
 
-    describe('DELETE /api/v1/authors/:id - Delete Author', () => {
+    describe(`DELETE ${BASE_PATH}/authors/:id - Delete Author`, () => {
       it('should allow user to delete own author', async () => {
         const mockAuthor = {
           id: 1,
@@ -172,7 +173,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Book.count as jest.Mock).mockResolvedValue(0);
 
         const response = await request(app)
-          .delete('/api/v1/authors/1')
+          .delete(`${BASE_PATH}/authors/1`)
           .set('Authorization', 'Bearer valid-token');
 
         expect(response.status).not.toBe(403);
@@ -187,7 +188,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Author.findByPk as jest.Mock).mockResolvedValue(mockAuthor);
 
         const response = await request(app)
-          .delete('/api/v1/authors/2')
+          .delete(`${BASE_PATH}/authors/2`)
           .set('Authorization', 'Bearer valid-token');
 
         expect(response.status).toBe(403);
@@ -204,7 +205,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Book.count as jest.Mock).mockResolvedValue(0);
 
         const response = await request(app)
-          .delete('/api/v1/authors/1')
+          .delete(`${BASE_PATH}/authors/1`)
           .set('Authorization', 'Bearer admin-token');
 
         expect(response.status).not.toBe(403);
@@ -216,10 +217,10 @@ describe('Author & Category Routes Authorization Integration', () => {
   // CATEGORY ROUTES AUTHORIZATION
   // ============================================
   describe('Category Routes Authorization', () => {
-    describe('POST /api/v1/categories - Create Category', () => {
+    describe(`POST ${BASE_PATH}/categories - Create Category`, () => {
       it('should allow authenticated user to create category', async () => {
         const response = await request(app)
-          .post('/api/v1/categories')
+          .post(`${BASE_PATH}/categories`)
           .set('Authorization', 'Bearer valid-token')
           .send({
             name: 'Fiction',
@@ -230,7 +231,7 @@ describe('Author & Category Routes Authorization Integration', () => {
 
       it('should deny unauthenticated user from creating category', async () => {
         const response = await request(app)
-          .post('/api/v1/categories')
+          .post(`${BASE_PATH}/categories`)
           .send({
             name: 'Fiction',
           });
@@ -239,7 +240,7 @@ describe('Author & Category Routes Authorization Integration', () => {
       });
     });
 
-    describe('PUT /api/v1/categories/:id - Update Category', () => {
+    describe(`PUT ${BASE_PATH}/categories/:id - Update Category`, () => {
       it('should allow user to update own category', async () => {
         const mockCategory = {
           id: 1,
@@ -252,7 +253,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Category.findByName as jest.Mock).mockResolvedValue(null);
 
         const response = await request(app)
-          .put('/api/v1/categories/1')
+          .put(`${BASE_PATH}/categories/1`)
           .set('Authorization', 'Bearer valid-token')
           .send({
             name: 'Sci-Fi',
@@ -272,7 +273,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Category.findByPk as jest.Mock).mockResolvedValue(mockCategory);
 
         const response = await request(app)
-          .put('/api/v1/categories/2')
+          .put(`${BASE_PATH}/categories/2`)
           .set('Authorization', 'Bearer valid-token')
           .send({
             name: 'Hacked Category',
@@ -293,7 +294,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Category.findByName as jest.Mock).mockResolvedValue(null);
 
         const response = await request(app)
-          .put('/api/v1/categories/1')
+          .put(`${BASE_PATH}/categories/1`)
           .set('Authorization', 'Bearer admin-token')
           .send({
             name: 'Updated Category',
@@ -303,7 +304,7 @@ describe('Author & Category Routes Authorization Integration', () => {
       });
     });
 
-    describe('DELETE /api/v1/categories/:id - Delete Category', () => {
+    describe(`DELETE ${BASE_PATH}/categories/:id - Delete Category`, () => {
       it('should allow user to delete own category', async () => {
         const mockCategory = {
           id: 1,
@@ -315,7 +316,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Book.count as jest.Mock).mockResolvedValue(0);
 
         const response = await request(app)
-          .delete('/api/v1/categories/1')
+          .delete(`${BASE_PATH}/categories/1`)
           .set('Authorization', 'Bearer valid-token');
 
         expect(response.status).not.toBe(403);
@@ -330,7 +331,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Category.findByPk as jest.Mock).mockResolvedValue(mockCategory);
 
         const response = await request(app)
-          .delete('/api/v1/categories/2')
+          .delete(`${BASE_PATH}/categories/2`)
           .set('Authorization', 'Bearer valid-token');
 
         expect(response.status).toBe(403);
@@ -347,7 +348,7 @@ describe('Author & Category Routes Authorization Integration', () => {
         (Book.count as jest.Mock).mockResolvedValue(0);
 
         const response = await request(app)
-          .delete('/api/v1/categories/1')
+          .delete(`${BASE_PATH}/categories/1`)
           .set('Authorization', 'Bearer admin-token');
 
         expect(response.status).not.toBe(403);
@@ -361,23 +362,23 @@ describe('Author & Category Routes Authorization Integration', () => {
   describe('Unauthorized Access', () => {
     it('should deny all write operations without authentication', async () => {
       // Author operations
-      let response = await request(app).post('/api/v1/authors').send({ name: 'Test', surname: 'Author' });
+      let response = await request(app).post(`${BASE_PATH}/authors`).send({ name: 'Test', surname: 'Author' });
       expect([401, 403]).toContain(response.status);
 
-      response = await request(app).put('/api/v1/authors/1').send({ name: 'Test' });
+      response = await request(app).put(`${BASE_PATH}/authors/1`).send({ name: 'Test' });
       expect([401, 403]).toContain(response.status);
 
-      response = await request(app).delete('/api/v1/authors/1');
+      response = await request(app).delete(`${BASE_PATH}/authors/1`);
       expect([401, 403]).toContain(response.status);
 
       // Category operations
-      response = await request(app).post('/api/v1/categories').send({ name: 'Test' });
+      response = await request(app).post(`${BASE_PATH}/categories`).send({ name: 'Test' });
       expect([401, 403]).toContain(response.status);
 
-      response = await request(app).put('/api/v1/categories/1').send({ name: 'Test' });
+      response = await request(app).put(`${BASE_PATH}/categories/1`).send({ name: 'Test' });
       expect([401, 403]).toContain(response.status);
 
-      response = await request(app).delete('/api/v1/categories/1');
+      response = await request(app).delete(`${BASE_PATH}/categories/1`);
       expect([401, 403]).toContain(response.status);
     });
   });

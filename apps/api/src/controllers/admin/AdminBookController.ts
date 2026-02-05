@@ -34,7 +34,7 @@ interface UpdateBookData {
 export class AdminBookController extends BaseController {
   /**
    * Get paginated list of all books with authors, categories, and user info
-   * GET /api/v1/admin/books
+   * GET /api/<version>/admin/books
    * Query params: page, limit, search (title/ISBN/author), userId
    */
   async getAllBooks(request: UniversalRequest): Promise<ApiResponse> {
@@ -146,7 +146,7 @@ export class AdminBookController extends BaseController {
 
   /**
    * Get single book by ID with full details
-   * GET /api/v1/admin/books/:id
+   * GET /api/<version>/admin/books/:id
    */
   async getBookById(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
@@ -218,7 +218,7 @@ export class AdminBookController extends BaseController {
 
   /**
    * Update book details
-   * PUT /api/v1/admin/books/:id
+   * PUT /api/<version>/admin/books/:id
    * Body: { title?, isbnCode?, editionNumber?, editionDate?, status?, notes?, userId? }
    */
   async updateBook(request: UniversalRequest): Promise<ApiResponse> {
@@ -304,7 +304,7 @@ export class AdminBookController extends BaseController {
 
   /**
    * Delete book
-   * DELETE /api/v1/admin/books/:id
+   * DELETE /api/<version>/admin/books/:id
    */
   async deleteBook(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);

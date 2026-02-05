@@ -25,6 +25,7 @@ import request from 'supertest';
 import app from '../../../src/app';
 import { mobileAnalyticsService } from '../../../src/services/MobileAnalyticsService';
 import type { MobileAnalyticsStats } from '@my-many-books/shared-types';
+import { BASE_PATH } from '../../utils/apiBasePath';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -64,7 +65,7 @@ jest.mock('../../../src/middleware/auth', () => ({
 }));
 
 describe('Mobile Analytics Integration Tests', () => {
-  const BASE_URL = '/api/v1/mobile-analytics';
+  const BASE_URL = `${BASE_PATH}/mobile-analytics`;
 
   beforeEach(() => {
     jest.clearAllMocks();

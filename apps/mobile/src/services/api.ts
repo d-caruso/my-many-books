@@ -6,14 +6,12 @@ import i18n from '../i18n';
 import { operationQueue } from './OperationQueue';
 import { isRetriableError } from './QueueExecutor';
 import type { OperationType } from '../types/queue';
+import { API_BASE_URL } from '../config/api';
 import {
   ApiError,
   ErrorCode,
   getClientErrorCode
 } from '../types/errors';
-
-// Configure API base URL for mobile
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 // Fetch-based HTTP client for React Native
 class FetchHttpClient implements HttpClient {

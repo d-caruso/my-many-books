@@ -117,6 +117,18 @@ The mobile app integrates with the My Many Books API through shared libraries:
 - `@my-many-books/shared-utils` - Utility functions
 - `@my-many-books/shared-business` - Business logic
 
+### API Configuration
+
+Expo public environment variables are defined in `apps/mobile/.env`:
+
+- `EXPO_PUBLIC_API_ORIGIN` (example: `http://localhost:3001`)
+- `EXPO_PUBLIC_API_PREFIX` (example: `/api`)
+- `EXPO_PUBLIC_API_VERSION` (example: `v1`)
+
+Optional legacy override:
+
+- `EXPO_PUBLIC_API_URL` (full base URL, includes prefix + version)
+
 ## Contributing
 
 1. Follow the existing code style

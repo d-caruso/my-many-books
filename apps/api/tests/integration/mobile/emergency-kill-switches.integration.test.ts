@@ -26,6 +26,7 @@ import app from '../../../src/app';
 import { AppSetting } from '../../../src/models';
 import { AUDIT_ACTIONS, RESOURCE_TYPES, EMERGENCY, EMERGENCY_SETTING_KEYS, EMERGENCY_ACTIONS } from '@my-many-books/shared-types';
 import type { EmergencyConfigResponse } from '../../../src/controllers/mobile/EmergencyController';
+import { BASE_PATH } from '../../utils/apiBasePath';
 
 // Mock the models
 jest.mock('../../../src/models', () => ({
@@ -79,7 +80,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
   });
 
   describe('Emergency Configuration Retrieval', () => {
-    describe('GET /api/v1/config/emergency - Get Emergency Config', () => {
+    describe(`GET ${BASE_PATH}/config/emergency - Get Emergency Config`, () => {
       it('should return current emergency configuration', async () => {
         const mockEmergencySettings = [
           {
@@ -127,7 +128,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue(mockEmergencySettings);
 
         const response = await request(app)
-          .get('/api/v1/config/emergency')
+          .get(`${BASE_PATH}/config/emergency`)
           .expect(200);
 
         expect(response.body.success).toBe(true);
@@ -149,7 +150,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
 
         const response = await request(app)
-          .get('/api/v1/config/emergency')
+          .get(`${BASE_PATH}/config/emergency`)
           .expect(200);
 
         expect(response.body.success).toBe(true);
@@ -175,7 +176,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue(mockSettingsWithCorruptedContacts);
 
         const response = await request(app)
-          .get('/api/v1/config/emergency')
+          .get(`${BASE_PATH}/config/emergency`)
           .expect(200);
 
         expect(response.body.success).toBe(true);
@@ -188,7 +189,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         (AppSetting.findAll as jest.Mock).mockRejectedValue(new Error('Database connection lost'));
 
         const response = await request(app)
-          .get('/api/v1/config/emergency')
+          .get(`${BASE_PATH}/config/emergency`)
           .expect(500);
 
         expect(response.body.success).toBe(false);
@@ -198,7 +199,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
   });
 
   describe('Emergency Configuration Updates', () => {
-    describe('PUT /api/v1/config/emergency - Update Emergency Config', () => {
+    describe(`PUT ${BASE_PATH}/config/emergency - Update Emergency Config`, () => {
       it('should successfully activate global kill switch with reason', async () => {
         const emergencyUpdate = {
           globalKillSwitch: true,
@@ -223,7 +224,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         ]);
 
         const response = await request(app)
-          .put('/api/v1/config/emergency')
+          .put(`${BASE_PATH}/config/emergency`)
           .send(emergencyUpdate)
           .expect(200);
 
@@ -285,7 +286,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         ]);
 
         const response = await request(app)
-          .put('/api/v1/config/emergency')
+          .put(`${BASE_PATH}/config/emergency`)
           .send(emergencyDeactivation)
           .expect(200);
 
@@ -322,7 +323,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
 
         const response = await request(app)
-          .put('/api/v1/config/emergency')
+          .put(`${BASE_PATH}/config/emergency`)
           .send(contactsUpdate)
           .expect(200);
 
@@ -359,7 +360,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         ]);
 
         const response = await request(app)
-          .put('/api/v1/config/emergency')
+          .put(`${BASE_PATH}/config/emergency`)
           .send(mobileDisableUpdate)
           .expect(200);
 
@@ -388,7 +389,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         ]);
 
         const response = await request(app)
-          .put('/api/v1/config/emergency')
+          .put(`${BASE_PATH}/config/emergency`)
           .send(partialUpdate)
           .expect(200);
 
@@ -408,7 +409,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         );
 
         const response = await request(app)
-          .put('/api/v1/config/emergency')
+          .put(`${BASE_PATH}/config/emergency`)
           .send(emergencyUpdate)
           .expect(500);
 
@@ -439,7 +440,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       ]);
 
       const response = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(criticalEmergency)
         .expect(200);
 
@@ -482,7 +483,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       ]);
 
       const response = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(emergencyRecovery)
         .expect(200);
 
@@ -524,7 +525,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       const mockAuditLog = getAuditLogService();
 
       const response = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(nonEmergencyUpdate)
         .expect(200);
 
@@ -552,7 +553,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       const beforeTime = new Date();
 
       const response = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(emergencyActivation)
         .expect(200);
 
@@ -601,7 +602,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       (AppSetting.findAll as jest.Mock).mockResolvedValue([]);
 
       const response = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(emergencyDeactivation)
         .expect(200);
 
@@ -664,7 +665,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
         ]);
 
       const response = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(incidentResponse)
         .expect(200);
 
@@ -680,7 +681,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
 
       // Verify that emergency state can be retrieved
       const statusResponse = await request(app)
-        .get('/api/v1/config/emergency')
+        .get(`${BASE_PATH}/config/emergency`)
         .expect(200);
 
       const data = statusResponse.body.data as EmergencyConfigResponse;
@@ -709,7 +710,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       ]);
 
       const partialResponse = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(partialRecovery)
         .expect(200);
 
@@ -728,7 +729,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       ]);
 
       const mobileResponse = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(mobileRecovery)
         .expect(200);
 
@@ -740,7 +741,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       };
 
       const finalResponse = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(fullRecovery)
         .expect(200);
 
@@ -756,7 +757,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       };
 
       const response = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(invalidContacts)
         .expect(400);
 
@@ -765,12 +766,12 @@ describe('Emergency Kill Switches Integration Tests', () => {
       expect(response.body.error).not.toBe('');   // And it's not empty
     });
 
-    it('should handle malformed configuration payloads', async () => {
-      const response = await request(app)
-        .put('/api/v1/config/emergency')
-        .set('Content-Type', 'application/json')
-        .send('{"invalid": json"}')
-        .expect(400);
+      it('should handle malformed configuration payloads', async () => {
+        const response = await request(app)
+          .put(`${BASE_PATH}/config/emergency`)
+          .set('Content-Type', 'application/json')
+          .send('{"invalid": json"}')
+          .expect(400);
 
       expect(response.body.success).toBe(false);
       expect(response.body.error).toContain('Invalid JSON payload');
@@ -780,7 +781,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
       const emptyUpdate = {};
 
       const response = await request(app)
-        .put('/api/v1/config/emergency')
+        .put(`${BASE_PATH}/config/emergency`)
         .send(emptyUpdate)
         .expect(400);
 

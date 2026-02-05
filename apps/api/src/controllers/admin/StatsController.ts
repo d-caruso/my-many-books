@@ -17,7 +17,7 @@ import { Book } from '../../models/Book';
 export class StatsController extends BaseController {
   /**
    * Get summary statistics for the admin dashboard
-   * GET /api/v1/admin/stats/summary
+   * GET /api/<version>/admin/stats/summary
    */
   async getSummary(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
@@ -44,7 +44,7 @@ export class StatsController extends BaseController {
 
   /**
    * Get detailed user statistics
-   * GET /api/v1/admin/stats/users
+   * GET /api/<version>/admin/stats/users
    *
    * Future implementation: user growth over time, user activity, etc.
    */
@@ -55,7 +55,7 @@ export class StatsController extends BaseController {
 
   /**
    * Get detailed book statistics
-   * GET /api/v1/admin/stats/books
+   * GET /api/<version>/admin/stats/books
    *
    * Future implementation: popular books, book additions over time, etc.
    */

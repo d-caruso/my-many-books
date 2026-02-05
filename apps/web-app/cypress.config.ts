@@ -9,7 +9,44 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const baseUrl = process.env["CYPRESS_BASE_URL"] || "http://localhost:3000";
-const apiBaseUrl = process.env["CYPRESS_API_BASE_URL"] || "http://localhost:3001/api/v1";
+
+const normalizeOrigin = (origin: string): string => origin.replace(/\/+$/, "");
+
+const normalizePathPrefix = (prefix: string): string => {
+  const trimmed = prefix.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const withLeadingSlash = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return withLeadingSlash.replace(/\/+$/, "");
+};
+
+const normalizePathSegment = (segment: string): string => segment.trim().replace(/^\/+|\/+$/g, "");
+
+const normalizeBaseUrl = (url: string): string => url.replace(/\/+$/, "");
+
+const buildApiBaseUrl = (origin: string, prefix: string, version: string): string => {
+  const cleanOrigin = normalizeOrigin(origin);
+  const cleanPrefix = normalizePathPrefix(prefix);
+  const cleanVersion = normalizePathSegment(version);
+
+  if (!cleanPrefix) {
+    return `${cleanOrigin}/${cleanVersion}`;
+  }
+
+  return `${cleanOrigin}${cleanPrefix}/${cleanVersion}`;
+};
+
+const apiBaseUrl = normalizeBaseUrl(
+  process.env["CYPRESS_API_BASE_URL"] ||
+    process.env["VITE_API_BASE_URL"] ||
+    buildApiBaseUrl(
+      process.env["CYPRESS_API_ORIGIN"] || process.env["VITE_API_ORIGIN"] || "http://localhost:3001",
+      process.env["CYPRESS_API_PREFIX"] || process.env["VITE_API_PREFIX"] || "/api",
+      process.env["CYPRESS_API_VERSION"] || process.env["VITE_API_VERSION"] || "v1"
+    )
+);
 
 const adminEmail = process.env["E2E_ADMIN_EMAIL"] || "admin@example.com";
 const adminName = process.env["E2E_ADMIN_NAME"] || "Admin";

@@ -6,6 +6,7 @@
  */
 
 import { HandlerStrategy } from './HandlerTypes';
+import { API_BASE_URL } from '../../../config/api';
 
 /**
  * Gateway configuration for handler behavior
@@ -298,7 +299,7 @@ export interface EnvironmentConfig {
  * Default configuration values
  */
 export const DEFAULT_GATEWAY_CONFIG: GatewayConfig = {
-  baseURL: 'http://localhost:3001/api/v1',
+  baseURL: API_BASE_URL,
   timeout: 10000,
   retryAttempts: 3,
   retryDelay: 1000,

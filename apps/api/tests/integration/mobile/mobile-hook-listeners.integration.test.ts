@@ -25,6 +25,7 @@ import request from 'supertest';
 import app from '../../../src/app';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
 import { EVENTS } from '../../../src/services/hooks/events';
+import { BASE_PATH } from '../../utils/apiBasePath';
 
 jest.mock('../../../src/services/hooks/hookSystem', () => ({
   initializeHookSystem: jest.fn().mockResolvedValue({
@@ -160,7 +161,7 @@ describe('Mobile Hook Listeners Integration Tests', () => {
       });
 
       const response = await request(app)
-        .post('/api/v1/mobile-analytics/events')
+        .post(`${BASE_PATH}/mobile-analytics/events`)
         .send(analyticsPayload)
         .expect(200);
 
@@ -391,7 +392,7 @@ describe('Mobile Hook Listeners Integration Tests', () => {
 
       // Process the analytics event
       const response = await request(app)
-        .post('/api/v1/mobile-analytics/events')
+        .post(`${BASE_PATH}/mobile-analytics/events`)
         .send(analyticsPayload)
         .expect(200);
 

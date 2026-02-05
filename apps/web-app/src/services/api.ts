@@ -110,6 +110,10 @@ class AxiosHttpClient implements HttpClient {
 type CreateBookInput = WebBookFormData | SharedBookFormData;
 type UpdateBookInput = Partial<WebBookFormData> | Partial<SharedBookFormData>;
 
+const isDevelopmentWithoutApiConfig = (): boolean =>
+  import.meta.env.MODE === 'development' &&
+  !(import.meta.env.VITE_API_ORIGIN || import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL);
+
 const extractAuthorIds = (data: CreateBookInput | UpdateBookInput): number[] | undefined => {
   if ('selectedAuthors' in data && Array.isArray(data.selectedAuthors) && data.selectedAuthors.length > 0) {
     return data.selectedAuthors.map(author => author.id);
@@ -379,10 +383,7 @@ class ApiService {
     const baseURL = env.API_BASE_URL;
     const cleanBaseURL = baseURL.replace(/\/$/, '');
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    if (cleanBaseURL.endsWith('/api/v1')) {
-      return `${cleanBaseURL}${normalizedEndpoint}`;
-    }
-    return `${cleanBaseURL}/api/v1${normalizedEndpoint}`;
+    return `${cleanBaseURL}${normalizedEndpoint}`;
   }
 
   private async fetchAdminData<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -637,9 +638,7 @@ class ApiService {
       queryParams.append('search', search);
     }
 
-    const url = cleanBaseURL.endsWith('/api/v1')
-      ? `${cleanBaseURL}/admin/users?${queryParams}`
-      : `${cleanBaseURL}/api/v1/admin/users?${queryParams}`;
+    const url = `${cleanBaseURL}/admin/users?${queryParams}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -663,9 +662,7 @@ class ApiService {
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
-    const url = cleanBaseURL.endsWith('/api/v1')
-      ? `${cleanBaseURL}/admin/users/${id}`
-      : `${cleanBaseURL}/api/v1/admin/users/${id}`;
+    const url = `${cleanBaseURL}/admin/users/${id}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -689,9 +686,7 @@ class ApiService {
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
-    const url = cleanBaseURL.endsWith('/api/v1')
-      ? `${cleanBaseURL}/admin/users/${id}`
-      : `${cleanBaseURL}/api/v1/admin/users/${id}`;
+    const url = `${cleanBaseURL}/admin/users/${id}`;
 
     const response = await fetch(url, {
       method: 'PUT',
@@ -716,9 +711,7 @@ class ApiService {
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
-    const url = cleanBaseURL.endsWith('/api/v1')
-      ? `${cleanBaseURL}/admin/users/${id}`
-      : `${cleanBaseURL}/api/v1/admin/users/${id}`;
+    const url = `${cleanBaseURL}/admin/users/${id}`;
 
     const response = await fetch(url, {
       method: 'DELETE',
@@ -753,9 +746,7 @@ class ApiService {
       queryParams.append('userId', userId.toString());
     }
 
-    const url = cleanBaseURL.endsWith('/api/v1')
-      ? `${cleanBaseURL}/admin/books?${queryParams}`
-      : `${cleanBaseURL}/api/v1/admin/books?${queryParams}`;
+    const url = `${cleanBaseURL}/admin/books?${queryParams}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -779,9 +770,7 @@ class ApiService {
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
-    const url = cleanBaseURL.endsWith('/api/v1')
-      ? `${cleanBaseURL}/admin/books/${id}`
-      : `${cleanBaseURL}/api/v1/admin/books/${id}`;
+    const url = `${cleanBaseURL}/admin/books/${id}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -805,9 +794,7 @@ class ApiService {
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
-    const url = cleanBaseURL.endsWith('/api/v1')
-      ? `${cleanBaseURL}/admin/books/${id}`
-      : `${cleanBaseURL}/api/v1/admin/books/${id}`;
+    const url = `${cleanBaseURL}/admin/books/${id}`;
 
     const response = await fetch(url, {
       method: 'PUT',
@@ -832,9 +819,7 @@ class ApiService {
     const token = await authService.getIdToken();
     const cleanBaseURL = baseURL.replace(/\/$/, '');
 
-    const url = cleanBaseURL.endsWith('/api/v1')
-      ? `${cleanBaseURL}/admin/books/${id}`
-      : `${cleanBaseURL}/api/v1/admin/books/${id}`;
+    const url = `${cleanBaseURL}/admin/books/${id}`;
 
     const response = await fetch(url, {
       method: 'DELETE',
@@ -856,7 +841,7 @@ class ApiService {
   // Book methods with development mock data fallback
   async getBooks(filters?: SearchFilters): Promise<PaginatedResponse<Book>> {
     // In development mode without API URL, return mock data
-    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
+    if (isDevelopmentWithoutApiConfig()) {
       return this.getMockBooks();
     }
 
@@ -959,7 +944,7 @@ class ApiService {
     categoryId?: number;
   }): Promise<SearchResult> {
     // In development mode without API URL, return mock data
-    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
+    if (isDevelopmentWithoutApiConfig()) {
       return this.getMockSearchResults(searchParams);
     }
 
@@ -985,7 +970,7 @@ class ApiService {
   // Categories methods with development mock data fallback
   async getCategories(): Promise<Category[]> {
     // In development mode without API URL, return mock data
-    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
+    if (isDevelopmentWithoutApiConfig()) {
       return this.getMockCategories();
     }
 
@@ -1003,7 +988,7 @@ class ApiService {
   // Authors methods with development mock data fallback
   async getAuthors(): Promise<Author[]> {
     // In development mode without API URL, return mock data
-    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
+    if (isDevelopmentWithoutApiConfig()) {
       return this.getMockAuthors();
     }
 
@@ -1016,7 +1001,7 @@ class ApiService {
     }
 
     // In development mode without API URL, return filtered mock data
-    if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_API_BASE_URL) {
+    if (isDevelopmentWithoutApiConfig()) {
       const mockAuthors = await this.getMockAuthors();
       return mockAuthors.filter(author =>
         author.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

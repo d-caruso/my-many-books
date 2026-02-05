@@ -51,6 +51,7 @@ jest.mock('jsonwebtoken');
 import request from 'supertest';
 import app from '../../src/app';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { BASE_PATH } from '../utils/apiBasePath';
 
 const mockCognitoClient = CognitoIdentityProviderClient as jest.MockedClass<
   typeof CognitoIdentityProviderClient
@@ -103,7 +104,7 @@ describe('Authentication Flow Integration', () => {
       });
 
       const loginResponse = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       expect(loginResponse.status).toBe(200);
@@ -127,7 +128,7 @@ describe('Authentication Flow Integration', () => {
       });
 
       const refreshResponse = await request(app)
-        .post('/api/v1/auth/refresh')
+        .post(`${BASE_PATH}/auth/refresh`)
         .set('Cookie', cookies);
 
       expect(refreshResponse.status).toBe(200);
@@ -136,7 +137,7 @@ describe('Authentication Flow Integration', () => {
 
       // Step 4: Logout
       const logoutResponse = await request(app)
-        .post('/api/v1/auth/logout')
+        .post(`${BASE_PATH}/auth/logout`)
         .set('Cookie', cookies);
 
       expect(logoutResponse.status).toBe(200);
@@ -164,7 +165,7 @@ describe('Authentication Flow Integration', () => {
       });
 
       const refreshResponse = await request(app)
-        .post('/api/v1/auth/refresh')
+        .post(`${BASE_PATH}/auth/refresh`)
         .set('Cookie', [`refresh_token=${mockRefreshToken}`]);
 
       expect(refreshResponse.status).toBe(200);
@@ -178,7 +179,7 @@ describe('Authentication Flow Integration', () => {
       });
 
       const refreshResponse = await request(app)
-        .post('/api/v1/auth/refresh')
+        .post(`${BASE_PATH}/auth/refresh`)
         .set('Cookie', ['refresh_token=expired.token']);
 
       expect(refreshResponse.status).toBe(401);
@@ -193,7 +194,7 @@ describe('Authentication Flow Integration', () => {
         UserSub: 'new-user-sub-123',
       });
 
-      const registerResponse = await request(app).post('/api/v1/auth/register').send({
+      const registerResponse = await request(app).post(`${BASE_PATH}/auth/register`).send({
         email: 'newuser@example.com',
               password: 'SecurePass123!',
         name: 'New',
@@ -211,7 +212,7 @@ describe('Authentication Flow Integration', () => {
       mockSend.mockRejectedValueOnce(new Error('Network error'));
 
       const loginResponse = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       expect(loginResponse.status).toBe(500);
@@ -220,7 +221,7 @@ describe('Authentication Flow Integration', () => {
 
     it('should prevent login with missing credentials', async () => {
       const response = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'test@example.com' });
 
       expect(response.status).toBe(400);
@@ -233,7 +234,7 @@ describe('Authentication Flow Integration', () => {
       });
 
       const refreshResponse = await request(app)
-        .post('/api/v1/auth/refresh')
+        .post(`${BASE_PATH}/auth/refresh`)
         .set('Cookie', ['refresh_token=invalid.token']);
 
       expect(refreshResponse.status).toBe(401);
@@ -271,7 +272,7 @@ describe('Authentication Flow Integration', () => {
       });
 
       const loginResponse = await request(app)
-        .post('/api/v1/auth/login')
+        .post(`${BASE_PATH}/auth/login`)
         .send({ email: 'session@example.com', password: 'Password123!' });
 
       const cookies = loginResponse.headers['set-cookie'] as unknown as string[];
@@ -287,7 +288,7 @@ describe('Authentication Flow Integration', () => {
         });
 
         const refreshResponse = await request(app)
-          .post('/api/v1/auth/refresh')
+          .post(`${BASE_PATH}/auth/refresh`)
           .set('Cookie', cookies);
 
         expect(refreshResponse.status).toBe(200);
