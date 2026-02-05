@@ -148,16 +148,13 @@ describe('Hook analytics page (MSW)', () => {
   it('renders analytics widgets after a successful load', async () => {
     renderWithProviders(<HookAnalyticsPage />);
     expect(screen.getByText('Mobile Hooks Analytics')).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Event volume' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Execution stats' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Error rate' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Performance' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Execution stats' })).toBeInTheDocument();
   });
 
   it('shows an analytics error when the stats endpoint fails', async () => {
     const expectedKey = 'admin.mobile_hooks.errors.analytics.load';
     server.use(
-      http.get('*/api/v1/mobile-analytics/stats', () => HttpResponse.json({ error: 'boom' }, { status: 500 }))
+      http.get('*/api/v1/admin/mobile-hooks/analytics/stats', () => HttpResponse.json({ error: 'boom' }, { status: 500 }))
     );
 
     renderWithProviders(<HookAnalyticsPage />);
@@ -171,17 +168,12 @@ describe('Hook analytics page (MSW)', () => {
       statsCall += 1;
       return HttpResponse.json({
         data: {
-          ...baseStats,
-          generatedAt: `gen-${statsCall}`,
-          topEventTypes: [{ eventType: `event-${statsCall}`, count: statsCall }],
-          eventTypeBreakdown: baseStats.eventTypeBreakdown,
           actionTypeBreakdown: baseStats.actionTypeBreakdown,
-          timeSeries: baseStats.timeSeries,
         },
       });
     });
 
-    server.use(http.get('*/api/v1/mobile-analytics/stats', statsHandler));
+    server.use(http.get('*/api/v1/admin/mobile-hooks/analytics/stats', statsHandler));
 
     renderWithProviders(<HookAnalyticsPage />);
     await flushPromises();

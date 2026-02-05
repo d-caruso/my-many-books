@@ -38,14 +38,6 @@ export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => 
   const percent = Math.min(100, Math.max(0, errorRate * 100));
   const status = stats?.systemStatus ?? 'healthy';
 
-  const worstActionTypes = useMemo(() => {
-    const rows = stats?.actionTypeBreakdown ?? [];
-    return rows
-      .slice()
-      .sort((a, b) => (b.errorRate ?? 0) - (a.errorRate ?? 0))
-      .slice(0, 5);
-  }, [stats?.actionTypeBreakdown]);
-
   const worstEventTypes = useMemo(() => {
     const rows = stats?.eventTypeBreakdown ?? [];
     return rows
@@ -89,33 +81,6 @@ export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => 
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
           Worst action types (last 24h)
         </Typography>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Action type</TableCell>
-              <TableCell align="right">Attempted</TableCell>
-              <TableCell align="right">Error rate</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {worstActionTypes.map((row) => (
-              <TableRow key={row.actionType} hover>
-                <TableCell sx={{ fontFamily: 'monospace' }}>{row.actionType}</TableCell>
-                <TableCell align="right">{row.attempted}</TableCell>
-                <TableCell align="right">{Math.round(row.errorRate * 100)}%</TableCell>
-              </TableRow>
-            ))}
-            {worstActionTypes.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    No action breakdown available.
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : null}
-          </TableBody>
-        </Table>
 
         <Divider sx={{ my: 2 }} />
 

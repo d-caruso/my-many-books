@@ -3,7 +3,6 @@ import {
   Box,
   Card,
   CardContent,
-  Chip,
   Divider,
   Table,
   TableBody,
@@ -12,47 +11,22 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import type { MobileAnalyticsStatsResponse } from '../../../../../services/api';
+import type { MobileAnalyticsActionTypeBreakdown } from '@my-many-books/shared-types';
 
 export interface ActionExecutionStatsProps {
-  stats: MobileAnalyticsStatsResponse | null;
+  actionTypeBreakdown: MobileAnalyticsActionTypeBreakdown[];
 }
 
-const statusColor = (status: MobileAnalyticsStatsResponse['systemStatus']): 'success' | 'warning' | 'error' => {
-  switch (status) {
-    case 'healthy':
-      return 'success';
-    case 'degraded':
-      return 'warning';
-    case 'disabled':
-      return 'warning';
-    case 'error':
-    default:
-      return 'error';
-  }
-};
-
-export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ stats }) => {
-  const errorRate = stats?.errorRate ?? 0;
-  const successRate = Math.max(0, 1 - errorRate);
-  const breakdown = stats?.actionTypeBreakdown ?? [];
+export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ actionTypeBreakdown }) => {
+  const totalAttempted = actionTypeBreakdown.reduce((s, r) => s + r.attempted, 0);
+  const totalSuccessful = actionTypeBreakdown.reduce((s, r) => s + r.successful, 0);
+  const errorRate = totalAttempted ? (totalAttempted - totalSuccessful) / totalAttempted : 0;
+  const successRate = 1 - errorRate;
 
   return (
     <Card>
       <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
-          <Typography variant="h6">Execution stats</Typography>
-          {stats ? (
-            <Chip
-              size="small"
-              label={stats.systemStatus}
-              color={statusColor(stats.systemStatus)}
-              variant="outlined"
-            />
-          ) : (
-            <Chip size="small" label="unknown" variant="outlined" />
-          )}
-        </Box>
+        <Typography variant="h6">Execution stats</Typography>
 
         <Box display="flex" gap={3} flexWrap="wrap" sx={{ mt: 2 }}>
           <Box>
@@ -86,7 +60,7 @@ export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ stat
             </TableRow>
           </TableHead>
           <TableBody>
-            {breakdown.map((row) => (
+            {actionTypeBreakdown.map((row) => (
               <TableRow key={row.actionType} hover>
                 <TableCell sx={{ fontFamily: 'monospace' }}>{row.actionType}</TableCell>
                 <TableCell align="right">{row.attempted}</TableCell>
@@ -95,7 +69,7 @@ export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ stat
                 <TableCell align="right">{Math.round(row.errorRate * 100)}%</TableCell>
               </TableRow>
             ))}
-            {breakdown.length === 0 ? (
+            {actionTypeBreakdown.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5}>
                   <Typography variant="body2" color="text.secondary">

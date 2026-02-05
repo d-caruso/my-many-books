@@ -26,6 +26,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AdminErrorBoundary } from '../../components/ErrorBoundary';
+import BarChartIcon from '@mui/icons-material/BarChart';
 
 const drawerWidth = 240;
 
@@ -93,6 +94,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           path: '/admin/mobile-hooks/testing',
         },
       ],
+    },
+    {
+      label: t('pages:admin.menu.mobile_analytics', 'Mobile Analytics'),
+      icon: <BarChartIcon />,
+      path: '/admin/mobile-analytics',
     },
     {
       label: t('pages:admin.menu.settings', 'Settings'),

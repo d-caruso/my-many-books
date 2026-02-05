@@ -11,6 +11,7 @@ import type {
   MobileHooksListenerSettings,
   HealthStatus,
   MobileAnalyticsStats,
+  MobileAnalyticsActionTypeBreakdown,
 } from '@my-many-books/shared-types';
 import axios from 'axios';
 import { env } from '../config/env';
@@ -366,7 +367,11 @@ class ApiService {
   }
 
   async getMobileAnalyticsStats(signal?: AbortSignal): Promise<MobileAnalyticsStatsResponse> {
-    return this.fetchAdminData('/mobile-analytics/stats', { signal });
+    return this.fetchAdminData('/admin/mobile-analytics/stats', { signal });
+  }
+
+  async getHookActionStats(signal?: AbortSignal): Promise<{ actionTypeBreakdown: MobileAnalyticsActionTypeBreakdown[] }> {
+    return this.fetchAdminData('/admin/mobile-hooks/analytics/stats', { signal });
   }
 
   private buildAdminUrl(endpoint: string): string {

@@ -64,6 +64,9 @@ const HookAnalyticsPage = lazy(() =>
 const MobileHookTestingPage = lazy(() =>
   import('./pages/Admin/MobileHooks/MobileHookTestingPage').then(m => ({ default: m.MobileHookTestingPage }))
 );
+const MobileAnalyticsPage = lazy(() =>
+  import('./pages/Admin/MobileAnalytics/MobileAnalyticsPage').then(m => ({ default: m.MobileAnalyticsPage }))
+ );
 
 function App() {
   const [appReady, setAppReady] = useState(false);
@@ -227,6 +230,14 @@ function App() {
                             element={
                               <ProtectedRoute requireAdmin>
                                 <MobileHookTestingPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/mobile-analytics"
+                            element={
+                              <ProtectedRoute requireAdmin>
+                                <MobileAnalyticsPage />
                               </ProtectedRoute>
                             }
                           />

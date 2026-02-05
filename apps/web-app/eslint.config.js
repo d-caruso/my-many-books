@@ -3,6 +3,11 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default tseslint.config(
   // Base ESLint recommended rules
@@ -23,6 +28,7 @@ export default tseslint.config(
         ecmaFeatures: {
           jsx: true,
         },
+        tsconfigRootDir: __dirname,
       },
     },
     settings: {

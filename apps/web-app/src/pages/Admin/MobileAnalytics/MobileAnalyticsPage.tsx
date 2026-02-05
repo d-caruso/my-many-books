@@ -1,22 +1,25 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from '../AdminLayout';
 import { useApi } from '../../../contexts/ApiContext';
-import type { MobileAnalyticsActionTypeBreakdown } from '@my-many-books/shared-types';
-import { ActionExecutionStats } from './components/analytics/ActionExecutionStats';
+import type { MobileAnalyticsStatsResponse } from '../../../services/api';
+import { EventVolumeChart } from '../MobileHooks/components/analytics/EventVolumeChart';
+import { ErrorRateMonitor } from '../MobileHooks/components/analytics/ErrorRateMonitor';
+import { PerformanceMetrics } from '../MobileHooks/components/analytics/PerformanceMetrics';
 
 const STATS_POLL_INTERVAL_MS = 10_000;
 
-export const HookAnalyticsPage: React.FC = () => {
+export const MobileAnalyticsPage: React.FC = () => {
   const { apiService } = useApi();
   const { t } = useTranslation('pages');
 
   const [loading, setLoading] = useState(true);
   const [reloading, setReloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [actionStats, setActionStats] = useState<{ actionTypeBreakdown: MobileAnalyticsActionTypeBreakdown[] } | null>(null);
+  const [stats, setStats] = useState<MobileAnalyticsStatsResponse | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
 
@@ -26,13 +29,13 @@ export const HookAnalyticsPage: React.FC = () => {
     abortRef.current = controller;
 
     try {
-      const payload = await apiService.getHookActionStats(controller.signal);
+      const payload = await apiService.getMobileAnalyticsStats(controller.signal);
       if (controller.signal.aborted) return;
-      setActionStats(payload);
+      setStats(payload);
       setError(null);
     } catch (err: any) {
       if (controller.signal.aborted) return;
-      setError(t('admin.mobile_hooks.errors.analytics.load'));
+      setError(t('admin.mobile_analytics.errors.load', 'Failed to load analytics'));
     }
   }, [apiService, t]);
 
@@ -76,7 +79,7 @@ export const HookAnalyticsPage: React.FC = () => {
     <AdminLayout>
       <Box>
         <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-          <Typography variant="h4">Mobile Hooks Analytics</Typography>
+          <Typography variant="h4">Mobile Analytics</Typography>
           <Button
             variant="outlined"
             startIcon={reloading ? <CircularProgress size={16} /> : <RefreshIcon />}
@@ -98,11 +101,21 @@ export const HookAnalyticsPage: React.FC = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <ActionExecutionStats actionTypeBreakdown={actionStats?.actionTypeBreakdown ?? []} />
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <EventVolumeChart stats={stats} />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <PerformanceMetrics stats={stats} />
+            </Grid>
+            <Grid item xs={12}>
+              <ErrorRateMonitor stats={stats} />
+            </Grid>
+          </Grid>
         )}
       </Box>
     </AdminLayout>
   );
 };
 
-export default HookAnalyticsPage;
+export default MobileAnalyticsPage;
