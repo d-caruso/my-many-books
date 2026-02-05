@@ -6,7 +6,7 @@ module.exports = {
     // Create Authors table
     await queryInterface.createTable('authors', {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false
@@ -38,7 +38,7 @@ module.exports = {
     // Create Categories table
     await queryInterface.createTable('categories', {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false
@@ -63,7 +63,7 @@ module.exports = {
     // Create Books table
     await queryInterface.createTable('books', {
       id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false
@@ -109,7 +109,7 @@ module.exports = {
     // Create BookAuthor junction table
     await queryInterface.createTable('book_authors', {
       bookId: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
           model: 'books',
@@ -119,7 +119,7 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       authorId: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
           model: 'authors',
@@ -143,7 +143,7 @@ module.exports = {
     // Create BookCategory junction table
     await queryInterface.createTable('book_categories', {
       bookId: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
           model: 'books',
@@ -153,7 +153,7 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       categoryId: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
           model: 'categories',

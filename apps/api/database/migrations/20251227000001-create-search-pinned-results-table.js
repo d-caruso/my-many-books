@@ -13,7 +13,7 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         comment: 'Primary key',
       },
       resource_type: {
@@ -22,7 +22,7 @@ module.exports = {
         comment: 'Type of resource (book, author, category, etc.)',
       },
       resource_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         comment: 'ID of the resource to pin',
       },

@@ -5,7 +5,7 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     // Add userId column to books table
     await queryInterface.addColumn('books', 'user_id', {
-      type: Sequelize.INTEGER,
+      type: Sequelize.INTEGER.UNSIGNED,
       allowNull: true,
       references: {
         model: 'users',

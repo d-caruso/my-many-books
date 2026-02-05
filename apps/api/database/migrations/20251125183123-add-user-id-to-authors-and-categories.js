@@ -27,7 +27,7 @@ module.exports = {
         'authors',
         'user_id',
         {
-          type: Sequelize.INTEGER,
+          type: Sequelize.INTEGER.UNSIGNED,
           allowNull: true, // Temporarily allow null for migration
           references: {
             model: 'users',
@@ -69,7 +69,7 @@ module.exports = {
         'categories',
         'user_id',
         {
-          type: Sequelize.INTEGER,
+          type: Sequelize.INTEGER.UNSIGNED,
           allowNull: true, // Temporarily allow null for migration
           references: {
             model: 'users',

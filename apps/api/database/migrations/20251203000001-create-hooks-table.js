@@ -8,7 +8,7 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         comment: 'Primary key'
       },
       name: {
@@ -49,7 +49,7 @@ module.exports = {
         comment: 'Execution order (higher = first)'
       },
       created_by: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: true,
         comment: 'Admin user who created this hook',
         references: {
