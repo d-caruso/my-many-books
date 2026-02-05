@@ -1,4 +1,22 @@
 #!/usr/bin/env bash
+# Hookey handler performance benchmark
+#
+# Runs Newman against the Hookey-Mobile-Hooks Postman collection to measure
+# handler response times and verify endpoints meet the <=5ms guardrail.
+#
+# Usage:
+#   npm run benchmark:hookey-handlers
+#
+# Environment:
+#   POSTMAN_ENVIRONMENT - Override the default Local-Development environment file
+#
+# Reports:
+#   Output written to reports/hookey-handlers-*.json
+#
+# See also:
+#   - docs/guides/mobile-hookey-integration.md (Performance Considerations)
+#   - apps/api/postman/Hookey-Mobile-Hooks.postman_collection.json
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

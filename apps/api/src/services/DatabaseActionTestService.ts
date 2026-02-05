@@ -12,6 +12,33 @@ interface InsertResult {
   id: number;
 }
 
+/**
+ * Service for testing database action configurations in the Mobile Hooks system.
+ *
+ * ## Why Raw SQL Instead of Sequelize Models?
+ *
+ * This service uses raw SQL (`INSERT INTO ${table}`) rather than Sequelize models because:
+ *
+ * 1. **Admin-configurable table names**: The controller allows admins to configure any
+ *    table name via `actionSettings.table` (see `AdminMobileHooksActionsConfigController`).
+ *    There is no fixed Sequelize model to call since the target table is dynamic.
+ *
+ * 2. **Complexity vs. value tradeoff**: Dynamically defining or bootstrapping a Sequelize
+ *    model per table at runtime would be more complicated and brittle than issuing a
+ *    direct `INSERT INTO ${table}` with prepared values.
+ *
+ * 3. **Test-only nature**: This endpoint exists solely for admins to verify their database
+ *    action configuration works. The lightweight raw SQL approach matches this limited scope.
+ *
+ * ## Where does the table name come from?
+ *
+ * - Default: `'mobile_analytics'`
+ * - Configured via: Admin panel → Action Configuration → Database action type
+ * - Stored in: `mobile.hooks.actions.settings.database.table`
+ * - UI: `apps/web-app/src/pages/Admin/MobileHooks/components/configuration/ActionSettingsForm.tsx`
+ *
+ * @see AdminMobileHooksActionsConfigController for the controller that uses this service
+ */
 export class DatabaseActionTestService {
   private readonly logger = getLogger();
   private readonly sequelize: Sequelize;
