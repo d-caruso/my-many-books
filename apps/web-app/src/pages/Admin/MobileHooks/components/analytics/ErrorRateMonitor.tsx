@@ -14,31 +14,37 @@ import {
   Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { SEVERITY, type Severity } from '@my-many-books/shared-design';
 import type { MobileAnalyticsStatsResponse } from '../../../../../services/api';
+import { severityToMuiColor, severityToMuiLinearProgressColor } from '../../../../../utils/severityToMuiColor';
 
 export interface ErrorRateMonitorProps {
   stats: MobileAnalyticsStatsResponse | null;
 }
 
-const statusColor = (status: MobileAnalyticsStatsResponse['systemStatus']): 'success' | 'warning' | 'error' | 'default' => {
+const systemStatusToChipSeverity = (status: MobileAnalyticsStatsResponse['systemStatus']): Severity => {
   switch (status) {
     case 'healthy':
-      return 'success';
+      return SEVERITY.SUCCESS;
     case 'degraded':
-      return 'warning';
+      return SEVERITY.WARNING;
     case 'disabled':
-      return 'default';
+      return SEVERITY.NEUTRAL;
     case 'error':
     default:
-      return 'error';
+      return SEVERITY.ERROR;
   }
 };
+
+const statusColor = (status: MobileAnalyticsStatsResponse['systemStatus']) =>
+  severityToMuiColor(systemStatusToChipSeverity(status));
 
 export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => {
   const { t } = useTranslation('pages');
   const errorRate = stats?.errorRate ?? 0;
   const percent = Math.min(100, Math.max(0, errorRate * 100));
   const status = stats?.systemStatus ?? 'healthy';
+  const progressSeverity = status === 'healthy' ? SEVERITY.SUCCESS : status === 'degraded' ? SEVERITY.WARNING : SEVERITY.ERROR;
 
   const worstEventTypes = useMemo(() => {
     const rows = stats?.eventTypeBreakdown ?? [];
@@ -69,7 +75,7 @@ export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => 
               <LinearProgress
                 variant="determinate"
                 value={percent}
-                color={status === 'healthy' ? 'success' : status === 'degraded' ? 'warning' : 'error'}
+                color={severityToMuiLinearProgressColor(progressSeverity)}
               />
             </Box>
             <Typography variant="body2" sx={{ minWidth: 52, textAlign: 'right' }}>

@@ -15,7 +15,9 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useTranslation } from 'react-i18next';
+import { SEVERITY, type Severity } from '@my-many-books/shared-design';
 import type { AdminMobileHooksRecentEvent } from '../../../../../services/api';
+import { severityToMuiColor } from '../../../../../utils/severityToMuiColor';
 
 export interface RecentHookEventsPanelProps {
   events: AdminMobileHooksRecentEvent[];
@@ -25,35 +27,40 @@ export interface RecentHookEventsPanelProps {
   onRefresh?: () => void | Promise<void>;
 }
 
-const eventStatusColor = (
+const processingStatusToSeverity = (
   status: AdminMobileHooksRecentEvent['processingStatus']
-): 'success' | 'warning' | 'error' | 'default' => {
+): Severity => {
   switch (status) {
     case 'processed':
-      return 'success';
+      return SEVERITY.SUCCESS;
     case 'pending':
-      return 'warning';
+      return SEVERITY.WARNING;
     case 'failed':
-      return 'error';
+      return SEVERITY.ERROR;
     default:
-      return 'default';
+      return SEVERITY.NEUTRAL;
   }
 };
 
-const actionStatusColor = (
+const eventStatusColor = (status: AdminMobileHooksRecentEvent['processingStatus']) =>
+  severityToMuiColor(processingStatusToSeverity(status));
+
+const actionExecutionStatusToSeverity = (
   status: AdminMobileHooksRecentEvent['actionExecutions'][number]['status']
-): 'success' | 'warning' | 'error' | 'default' => {
+): Severity => {
   switch (status) {
     case 'success':
-      return 'success';
+      return SEVERITY.SUCCESS;
     case 'failed':
-      return 'error';
+      return SEVERITY.ERROR;
     case 'skipped':
-      return 'default';
     default:
-      return 'default';
+      return SEVERITY.NEUTRAL;
   }
 };
+
+const actionStatusColor = (status: AdminMobileHooksRecentEvent['actionExecutions'][number]['status']) =>
+  severityToMuiColor(actionExecutionStatusToSeverity(status));
 
 const formatDate = (value: string) => {
   try {

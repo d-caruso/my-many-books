@@ -1,11 +1,13 @@
 import React from 'react';
 import { Box, Card, CardContent, Chip, Divider, LinearProgress, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { SEVERITY, type Severity } from '@my-many-books/shared-design';
 import type {
   AdminMobileHooksConfigListenersResponse,
   AdminMobileHooksEmergencyStatusResponse,
   AdminMobileHooksHealthResponse,
 } from '../../../../../services/api';
+import { severityToMuiColor, severityToMuiLinearProgressColor } from '../../../../../utils/severityToMuiColor';
 
 export interface HookOverviewCardProps {
   health: AdminMobileHooksHealthResponse | null;
@@ -13,19 +15,22 @@ export interface HookOverviewCardProps {
   listenersConfig: AdminMobileHooksConfigListenersResponse | null;
 }
 
-const statusColor = (status: AdminMobileHooksHealthResponse['status']): 'success' | 'warning' | 'error' | 'default' => {
+const healthStatusToChipSeverity = (status: AdminMobileHooksHealthResponse['status']): Severity => {
   switch (status) {
     case 'healthy':
-      return 'success';
+      return SEVERITY.SUCCESS;
     case 'degraded':
-      return 'warning';
+      return SEVERITY.WARNING;
     case 'error':
-      return 'error';
+      return SEVERITY.ERROR;
     case 'disabled':
     default:
-      return 'default';
+      return SEVERITY.NEUTRAL;
   }
 };
+
+const statusColor = (status: AdminMobileHooksHealthResponse['status']) =>
+  severityToMuiColor(healthStatusToChipSeverity(status));
 
 export const HookOverviewCard: React.FC<HookOverviewCardProps> = ({
   health,
@@ -33,6 +38,7 @@ export const HookOverviewCard: React.FC<HookOverviewCardProps> = ({
   listenersConfig,
 }) => {
   const { t } = useTranslation('pages');
+  const progressSeverity = health?.status === 'healthy' ? SEVERITY.SUCCESS : health?.status === 'degraded' ? SEVERITY.WARNING : SEVERITY.ERROR;
   const listenersEnabledCount = listenersConfig
     ? Object.values(listenersConfig.listeners).filter(v => v.enabled).length
     : 0;
@@ -68,7 +74,7 @@ export const HookOverviewCard: React.FC<HookOverviewCardProps> = ({
               <LinearProgress
                 variant="determinate"
                 value={health?.healthScore ?? 0}
-                color={health?.status === 'healthy' ? 'success' : health?.status === 'degraded' ? 'warning' : 'error'}
+                color={severityToMuiLinearProgressColor(progressSeverity)}
               />
             </Box>
             <Typography variant="body2" sx={{ minWidth: 44, textAlign: 'right' }}>

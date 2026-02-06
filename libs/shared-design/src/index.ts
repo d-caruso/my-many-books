@@ -11,3 +11,6 @@ export { themes } from './themes';
 
 // Component styles
 export { componentStyles } from './components';
+
+// Severity helpers
+export { SEVERITY, type Severity, severityToHex } from './severity';
