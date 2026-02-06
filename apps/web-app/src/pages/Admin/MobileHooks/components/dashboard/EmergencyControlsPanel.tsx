@@ -68,9 +68,9 @@ export const EmergencyControlsPanel: React.FC<EmergencyControlsPanelProps> = ({
 
   return (
     <Paper sx={{ p: 2 }}>
-      <Typography variant="h6">Emergency controls</Typography>
+      <Typography variant="h6">{t('admin.mobile_hooks.dashboard.emergency.title')}</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-        Toggle mobile hooks globally. Disabling will stop hook processing (emergency kill switch).
+        {t('admin.mobile_hooks.dashboard.emergency.description')}
       </Typography>
 
       {error ? (
@@ -81,18 +81,18 @@ export const EmergencyControlsPanel: React.FC<EmergencyControlsPanelProps> = ({
 
       <Box sx={{ mt: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          Mobile hooks enabled
+          {t('admin.mobile_hooks.dashboard.labels.mobile_hooks_enabled')}
         </Typography>
-        <Typography variant="h6">{isEnabled ? 'Yes' : 'No'}</Typography>
+        <Typography variant="h6">{isEnabled ? t('admin.mobile_hooks.common.yes') : t('admin.mobile_hooks.common.no')}</Typography>
       </Box>
 
       {isEnabled ? (
         <Box sx={{ mt: 2 }} display="flex" flexDirection="column" gap={2}>
           <TextField
-            label="Reason (optional)"
+            label={t('admin.mobile_hooks.dashboard.emergency.reason_label')}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Why are you disabling mobile hooks?"
+            placeholder={t('admin.mobile_hooks.dashboard.emergency.reason_placeholder')}
             disabled={saving}
             multiline
             minRows={2}
@@ -104,17 +104,17 @@ export const EmergencyControlsPanel: React.FC<EmergencyControlsPanelProps> = ({
               onClick={() => void disableHooks()}
               disabled={saving}
             >
-              Disable mobile hooks
+              {t('admin.mobile_hooks.dashboard.emergency.disable_button')}
             </Button>
           </Box>
         </Box>
       ) : (
         <Box sx={{ mt: 2 }} display="flex" flexDirection="column" gap={1}>
           <Typography variant="body2" color="text.secondary">
-            Disabled at: {disabledAtLabel ?? '—'}
+            {t('admin.mobile_hooks.dashboard.emergency.disabled_at', { value: disabledAtLabel ?? '—' })}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Reason: {emergency?.disabledReason ?? '—'}
+            {t('admin.mobile_hooks.dashboard.emergency.disabled_reason', { value: emergency?.disabledReason ?? '—' })}
           </Typography>
           <Box sx={{ mt: 1 }}>
             <Button
@@ -123,7 +123,7 @@ export const EmergencyControlsPanel: React.FC<EmergencyControlsPanelProps> = ({
               onClick={() => void enableHooks()}
               disabled={saving}
             >
-              Enable mobile hooks
+              {t('admin.mobile_hooks.dashboard.emergency.enable_button')}
             </Button>
           </Box>
         </Box>

@@ -150,6 +150,166 @@
 	      }
 	    },
 	    "mobile_hooks": {
+	      "actions": {
+	        "refresh": "Refresh",
+	        "save": "Save",
+	        "run_test": "Run test"
+	      },
+	      "common": {
+	        "unknown": "unknown",
+	        "yes": "Yes",
+	        "no": "No",
+	        "na": "N/A"
+	      },
+	      "pages": {
+	        "dashboard": {
+	          "title": "Mobile Hooks"
+	        },
+	        "analytics": {
+	          "title": "Mobile Hooks Analytics"
+	        },
+	        "configuration": {
+	          "title": "Mobile Hooks Configuration"
+	        },
+	        "testing": {
+	          "title": "Mobile Hooks Testing"
+	        }
+	      },
+	      "columns": {
+	        "event": "Event",
+	        "event_type": "Event type",
+	        "action_type": "Action type",
+	        "attempted": "Attempted",
+	        "success": "Success",
+	        "failed": "Failed",
+	        "error_rate": "Error rate",
+	        "enabled": "Enabled",
+	        "category": "Category",
+	        "received": "Received",
+	        "status": "Status",
+	        "actions": "Actions",
+	        "rate_limit_minutes": "Rate limit (minutes)"
+	      },
+	      "analytics": {
+	        "action_execution_stats": {
+	          "title": "Execution stats",
+	          "success_rate": "Success rate",
+	          "error_rate": "Error rate",
+	          "by_action_type": "By action type (last 24h)",
+	          "no_data": "No data available."
+	        },
+	        "error_rate_monitor": {
+	          "title": "Error rate",
+	          "errors_last_24h": "Errors (last 24h)",
+	          "worst_action_types_last_24h": "Worst action types (last 24h)",
+	          "worst_event_types_last_24h": "Worst event types (last 24h)",
+	          "no_action_breakdown": "No action breakdown available.",
+	          "no_event_breakdown": "No event breakdown available."
+	        },
+	        "event_volume": {
+	          "title": "Event volume",
+	          "processed_today": "Processed today",
+	          "total_processed": "Total processed",
+	          "last_24_hours": "Last 24 hours",
+	          "series_label": "{{total}} (ok {{processed}}, fail {{failed}})",
+	          "no_recent_events": "No recent events.",
+	          "top_event_types": "Top event types",
+	          "no_events_processed": "No events processed yet."
+	        },
+	        "performance": {
+	          "title": "Performance",
+	          "avg_processing_time": "Avg processing time",
+	          "ms_suffix": "{{value}}ms",
+	          "avg_events_per_hour_24h": "Avg events / hour (24h)",
+	          "peak_hour_volume_24h": "Peak hour volume (24h)",
+	          "last_processed": "Last processed",
+	          "last_24h_totals": "Last 24h totals",
+	          "totals_label": "Total {{total}} (ok {{processed}}, fail {{failed}})",
+	          "stats_generated_at": "Stats generated at",
+	          "note": "These metrics are based on the mobile analytics pipeline statistics endpoint."
+	        }
+	      },
+	      "dashboard": {
+	        "labels": {
+	          "mobile_hooks_enabled": "Mobile hooks enabled"
+	        },
+	        "overview": {
+	          "title": "Mobile Hooks Overview",
+	          "health_score": "Health score",
+	          "listeners_enabled": "Listeners enabled",
+	          "categories_enabled": "Categories enabled"
+	        },
+	        "listeners": {
+	          "listeners_title": "Hook listeners (events)",
+	          "categories_title": "Listener categories",
+	          "loading_listeners": "Loading listeners…",
+	          "loading_categories": "Loading categories…",
+	          "no_listeners": "No listeners configured.",
+	          "no_categories": "No categories configured.",
+	          "toggle_aria": "Toggle {{name}}"
+	        },
+	        "mappings": {
+	          "title": "Hook → action mappings"
+	        },
+	        "emergency": {
+	          "title": "Emergency controls",
+	          "description": "Toggle mobile hooks globally. Disabling will stop hook processing (emergency kill switch).",
+	          "reason_label": "Reason (optional)",
+	          "reason_placeholder": "Why are you disabling mobile hooks?",
+	          "disable_button": "Disable mobile hooks",
+	          "enable_button": "Enable mobile hooks",
+	          "disabled_at": "Disabled at: {{value}}",
+	          "disabled_reason": "Reason: {{value}}"
+	        },
+	        "recent_events": {
+	          "title": "Recent hook events",
+	          "description": "Latest events with processing status and per-action execution results.",
+	          "loading": "Loading…",
+	          "no_recent_events": "No recent events."
+	        }
+	      },
+	      "configuration": {
+	        "action_settings": {
+	          "loading_action_types": "Loading action types…",
+	          "title": "Action settings",
+	          "description": "Configure email/slack/webhook/database action types and their settings.",
+	          "settings_json": "Settings (JSON)",
+	          "settings_helper": "Edit settings as JSON. Secrets should not be stored here."
+	        },
+	        "listener_settings": {
+	          "loading": "Loading listener settings…",
+	          "title": "Listener settings",
+	          "description": "Feature flags and operational limits for mobile hook listeners.",
+	          "version": "Version: {{version}}",
+	          "last_updated": "Last updated: {{timestamp}}",
+	          "analytics_enabled": "Analytics enabled",
+	          "error_reporting_enabled": "Error reporting enabled",
+	          "offline_storage_enabled": "Offline storage enabled",
+	          "performance_monitoring_enabled": "Performance monitoring enabled",
+	          "batch_upload_interval_seconds": "Batch upload interval (seconds)",
+	          "max_offline_events": "Max offline events"
+	        },
+	        "rate_limiting": {
+	          "loading": "Loading rate limits…",
+	          "title": "Rate limiting",
+	          "description": "Configure `rate_limit_minutes` per action type (where supported).",
+	          "no_action_types_expose": "No action types expose `rate_limit_minutes` in settings."
+	        }
+	      },
+	      "testing": {
+	        "configuration_test": {
+	          "title": "Configuration test",
+	          "description": "Simulates an event through the mapping (preview what actions would run)."
+	        },
+	        "action_type_test": {
+	          "title": "Action type test",
+	          "description": "Validates action settings. Use dry-run for preview (non-dry-run execution may be simulated depending on backend)."
+	        },
+	        "dry_run": "Dry run",
+	        "payload_json": "Payload (JSON)",
+	        "test_data_json": "Test data (JSON)",
+	        "result": "Result"
+	      },
 	      "errors": {
 	        "dashboard": {
 	          "load": "Failed to load mobile hooks dashboard.",

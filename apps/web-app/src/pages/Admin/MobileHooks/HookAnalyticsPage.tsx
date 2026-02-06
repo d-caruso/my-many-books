@@ -76,14 +76,14 @@ export const HookAnalyticsPage: React.FC = () => {
     <AdminLayout>
       <Box>
         <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-          <Typography variant="h4">Mobile Hooks Analytics</Typography>
+          <Typography variant="h4">{t('admin.mobile_hooks.pages.analytics.title')}</Typography>
           <Button
             variant="outlined"
             startIcon={reloading ? <CircularProgress size={16} /> : <RefreshIcon />}
             onClick={() => void handleReload()}
             disabled={reloading || loading}
           >
-            Refresh
+            {t('admin.mobile_hooks.actions.refresh')}
           </Button>
         </Box>
 

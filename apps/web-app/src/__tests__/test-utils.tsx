@@ -3,6 +3,7 @@ import { render, RenderOptions } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import enPages from '@my-many-books/shared-i18n/src/locales/en/pages.json';
 
 // Create a test i18n instance
 const createTestI18n = () => {
@@ -111,6 +112,7 @@ const createTestI18n = () => {
             protected_route: {
               loading: 'Loading...',
             },
+            admin: enPages.admin,
           },
           theme: {
             selector: {

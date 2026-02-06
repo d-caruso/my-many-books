@@ -115,7 +115,7 @@ export const HookListenerForm: React.FC = () => {
       <Paper sx={{ p: 2 }}>
         <Box display="flex" alignItems="center" gap={2}>
           <CircularProgress size={18} />
-          <Typography variant="body2">Loading listener settings…</Typography>
+          <Typography variant="body2">{t('admin.mobile_hooks.configuration.listener_settings.loading')}</Typography>
         </Box>
       </Paper>
     );
@@ -125,25 +125,27 @@ export const HookListenerForm: React.FC = () => {
     <Paper sx={{ p: 2 }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
         <Box>
-          <Typography variant="h6">Listener settings</Typography>
+          <Typography variant="h6">{t('admin.mobile_hooks.configuration.listener_settings.title')}</Typography>
           <Typography variant="body2" color="text.secondary">
-            Feature flags and operational limits for mobile hook listeners.
+            {t('admin.mobile_hooks.configuration.listener_settings.description')}
           </Typography>
         </Box>
         <Button variant="contained" onClick={() => void save()} disabled={saving || Boolean(validationError)}>
-          {saving ? <CircularProgress size={16} /> : 'Save'}
+          {saving ? <CircularProgress size={16} /> : t('admin.mobile_hooks.actions.save')}
         </Button>
       </Box>
 
       {form.version ? (
         <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          Version: {form.version}
+          {t('admin.mobile_hooks.configuration.listener_settings.version', { version: form.version })}
         </Typography>
       ) : null}
 
       {form.lastUpdated ? (
         <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-          Last updated: {new Date(form.lastUpdated).toLocaleString()}
+          {t('admin.mobile_hooks.configuration.listener_settings.last_updated', {
+            timestamp: new Date(form.lastUpdated).toLocaleString(),
+          })}
         </Typography>
       ) : null}
 
@@ -173,7 +175,7 @@ export const HookListenerForm: React.FC = () => {
               onChange={(e) => setForm(prev => ({ ...prev, analyticsEnabled: e.target.checked }))}
             />
           }
-          label="Analytics enabled"
+          label={t('admin.mobile_hooks.configuration.listener_settings.analytics_enabled')}
         />
         <FormControlLabel
           control={
@@ -184,7 +186,7 @@ export const HookListenerForm: React.FC = () => {
               }
             />
           }
-          label="Error reporting enabled"
+          label={t('admin.mobile_hooks.configuration.listener_settings.error_reporting_enabled')}
         />
         <FormControlLabel
           control={
@@ -195,7 +197,7 @@ export const HookListenerForm: React.FC = () => {
               }
             />
           }
-          label="Offline storage enabled"
+          label={t('admin.mobile_hooks.configuration.listener_settings.offline_storage_enabled')}
         />
         <FormControlLabel
           control={
@@ -206,13 +208,13 @@ export const HookListenerForm: React.FC = () => {
               }
             />
           }
-          label="Performance monitoring enabled"
+          label={t('admin.mobile_hooks.configuration.listener_settings.performance_monitoring_enabled')}
         />
       </Box>
 
       <Box sx={{ mt: 2 }} display="flex" gap={2} flexWrap="wrap">
         <TextField
-          label="Batch upload interval (seconds)"
+          label={t('admin.mobile_hooks.configuration.listener_settings.batch_upload_interval_seconds')}
           type="number"
           value={form.batchUploadInterval}
           onChange={(e) =>
@@ -221,7 +223,7 @@ export const HookListenerForm: React.FC = () => {
           inputProps={{ min: 60, max: 3600 }}
         />
         <TextField
-          label="Max offline events"
+          label={t('admin.mobile_hooks.configuration.listener_settings.max_offline_events')}
           type="number"
           value={form.maxOfflineEvents}
           onChange={(e) => setForm(prev => ({ ...prev, maxOfflineEvents: Number(e.target.value) }))}

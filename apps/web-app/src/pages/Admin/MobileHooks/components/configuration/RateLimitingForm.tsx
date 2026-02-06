@@ -112,7 +112,7 @@ export const RateLimitingForm: React.FC = () => {
       <Paper sx={{ p: 2 }}>
         <Box display="flex" alignItems="center" gap={2}>
           <CircularProgress size={18} />
-          <Typography variant="body2">Loading rate limits…</Typography>
+          <Typography variant="body2">{t('admin.mobile_hooks.configuration.rate_limiting.loading')}</Typography>
         </Box>
       </Paper>
     );
@@ -132,13 +132,13 @@ export const RateLimitingForm: React.FC = () => {
     <Paper sx={{ p: 2 }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
         <Box>
-          <Typography variant="h6">Rate limiting</Typography>
+          <Typography variant="h6">{t('admin.mobile_hooks.configuration.rate_limiting.title')}</Typography>
           <Typography variant="body2" color="text.secondary">
-            Configure `rate_limit_minutes` per action type (where supported).
+            {t('admin.mobile_hooks.configuration.rate_limiting.description')}
           </Typography>
         </Box>
         <Button variant="contained" onClick={() => void save()} disabled={saving || !hasAnyEditable}>
-          {saving ? <CircularProgress size={16} /> : 'Save'}
+          {saving ? <CircularProgress size={16} /> : t('admin.mobile_hooks.actions.save')}
         </Button>
       </Box>
 
@@ -156,7 +156,7 @@ export const RateLimitingForm: React.FC = () => {
 
       {!hasAnyEditable ? (
         <Alert severity="info" sx={{ mt: 2 }}>
-          No action types expose `rate_limit_minutes` in settings.
+          {t('admin.mobile_hooks.configuration.rate_limiting.no_action_types_expose')}
         </Alert>
       ) : null}
 
@@ -164,8 +164,8 @@ export const RateLimitingForm: React.FC = () => {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Action type</TableCell>
-              <TableCell>Rate limit (minutes)</TableCell>
+              <TableCell>{t('admin.mobile_hooks.columns.action_type')}</TableCell>
+              <TableCell>{t('admin.mobile_hooks.columns.rate_limit_minutes')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -192,7 +192,7 @@ export const RateLimitingForm: React.FC = () => {
                       />
                     ) : (
                       <Typography variant="body2" color="text.secondary">
-                        N/A
+                        {t('admin.mobile_hooks.common.na')}
                       </Typography>
                     )}
                   </TableCell>

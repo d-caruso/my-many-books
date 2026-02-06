@@ -252,17 +252,17 @@ export const MobileHookDashboardPage: React.FC = () => {
   return (
     <AdminLayout>
       <Box>
-        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-          <Typography variant="h4">Mobile Hooks</Typography>
-          <Button
-            variant="outlined"
-            startIcon={reloading ? <CircularProgress size={16} /> : <RefreshIcon />}
-            onClick={() => void handleReload()}
-            disabled={reloading || loading}
-          >
-            Refresh
-          </Button>
-        </Box>
+	        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+	          <Typography variant="h4">{t('admin.mobile_hooks.pages.dashboard.title')}</Typography>
+	          <Button
+	            variant="outlined"
+	            startIcon={reloading ? <CircularProgress size={16} /> : <RefreshIcon />}
+	            onClick={() => void handleReload()}
+	            disabled={reloading || loading}
+	          >
+	            {t('admin.mobile_hooks.actions.refresh')}
+	          </Button>
+	        </Box>
 
         {error ? (
           <Alert severity="error" sx={{ mb: 3 }}>

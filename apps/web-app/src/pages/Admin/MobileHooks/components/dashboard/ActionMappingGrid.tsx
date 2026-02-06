@@ -72,7 +72,7 @@ export const ActionMappingGrid: React.FC<ActionMappingGridProps> = ({
   return (
     <Paper sx={{ p: 2 }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
-        <Typography variant="h6">Hook → action mappings</Typography>
+        <Typography variant="h6">{t('admin.mobile_hooks.dashboard.mappings.title')}</Typography>
         {saving ? <CircularProgress size={18} /> : null}
       </Box>
 
@@ -86,7 +86,7 @@ export const ActionMappingGrid: React.FC<ActionMappingGridProps> = ({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Event</TableCell>
+              <TableCell>{t('admin.mobile_hooks.columns.event')}</TableCell>
               {columns.map((actionType) => (
                 <TableCell key={actionType} align="center">
                   <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>

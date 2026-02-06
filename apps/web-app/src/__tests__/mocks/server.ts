@@ -24,17 +24,12 @@ const mockBooks: Book[] = [
         id: 1,
         name: 'F. Scott',
         surname: 'Fitzgerald',
-        nationality: 'American',
-        creationDate: '2024-01-01T00:00:00Z',
-        updateDate: '2024-01-01T00:00:00Z',
       },
     ],
     categories: [
       {
         id: 1,
         name: 'Fiction',
-        creationDate: '2024-01-01T00:00:00Z',
-        updateDate: '2024-01-01T00:00:00Z',
       },
     ],
     creationDate: '2024-01-15T10:00:00Z',

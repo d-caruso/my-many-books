@@ -150,6 +150,166 @@
 	      }
 	    },
 	    "mobile_hooks": {
+	      "actions": {
+	        "refresh": "Aggiorna",
+	        "save": "Salva",
+	        "run_test": "Esegui test"
+	      },
+	      "common": {
+	        "unknown": "sconosciuto",
+	        "yes": "Sì",
+	        "no": "No",
+	        "na": "N/A"
+	      },
+	      "pages": {
+	        "dashboard": {
+	          "title": "Hook Mobile"
+	        },
+	        "analytics": {
+	          "title": "Analitiche Hook Mobile"
+	        },
+	        "configuration": {
+	          "title": "Configurazione Hook Mobile"
+	        },
+	        "testing": {
+	          "title": "Test Hook Mobile"
+	        }
+	      },
+	      "columns": {
+	        "event": "Evento",
+	        "event_type": "Tipo evento",
+	        "action_type": "Tipo azione",
+	        "attempted": "Tentativi",
+	        "success": "Successo",
+	        "failed": "Falliti",
+	        "error_rate": "Tasso di errore",
+	        "enabled": "Abilitato",
+	        "category": "Categoria",
+	        "received": "Ricevuto",
+	        "status": "Stato",
+	        "actions": "Azioni",
+	        "rate_limit_minutes": "Limite (minuti)"
+	      },
+	      "analytics": {
+	        "action_execution_stats": {
+	          "title": "Statistiche esecuzione",
+	          "success_rate": "Tasso di successo",
+	          "error_rate": "Tasso di errore",
+	          "by_action_type": "Per tipo di azione (ultime 24h)",
+	          "no_data": "Nessun dato disponibile."
+	        },
+	        "error_rate_monitor": {
+	          "title": "Tasso di errore",
+	          "errors_last_24h": "Errori (ultime 24h)",
+	          "worst_action_types_last_24h": "Peggiori tipi di azione (ultime 24h)",
+	          "worst_event_types_last_24h": "Peggiori tipi di evento (ultime 24h)",
+	          "no_action_breakdown": "Nessun dettaglio per tipo di azione disponibile.",
+	          "no_event_breakdown": "Nessun dettaglio per tipo di evento disponibile."
+	        },
+	        "event_volume": {
+	          "title": "Volume eventi",
+	          "processed_today": "Processati oggi",
+	          "total_processed": "Totale processati",
+	          "last_24_hours": "Ultime 24 ore",
+	          "series_label": "{{total}} (ok {{processed}}, falliti {{failed}})",
+	          "no_recent_events": "Nessun evento recente.",
+	          "top_event_types": "Tipi di evento principali",
+	          "no_events_processed": "Nessun evento ancora processato."
+	        },
+	        "performance": {
+	          "title": "Prestazioni",
+	          "avg_processing_time": "Tempo medio di elaborazione",
+	          "ms_suffix": "{{value}}ms",
+	          "avg_events_per_hour_24h": "Media eventi / ora (24h)",
+	          "peak_hour_volume_24h": "Picco orario (24h)",
+	          "last_processed": "Ultimo elaborato",
+	          "last_24h_totals": "Totali ultime 24h",
+	          "totals_label": "Totale {{total}} (ok {{processed}}, falliti {{failed}})",
+	          "stats_generated_at": "Statistiche generate alle",
+	          "note": "Queste metriche si basano sull'endpoint di statistiche della pipeline di mobile analytics."
+	        }
+	      },
+	      "dashboard": {
+	        "labels": {
+	          "mobile_hooks_enabled": "Hook mobile abilitati"
+	        },
+	        "overview": {
+	          "title": "Panoramica Hook Mobile",
+	          "health_score": "Punteggio salute",
+	          "listeners_enabled": "Listener abilitati",
+	          "categories_enabled": "Categorie abilitate"
+	        },
+	        "listeners": {
+	          "listeners_title": "Listener hook (eventi)",
+	          "categories_title": "Categorie listener",
+	          "loading_listeners": "Caricamento listener…",
+	          "loading_categories": "Caricamento categorie…",
+	          "no_listeners": "Nessun listener configurato.",
+	          "no_categories": "Nessuna categoria configurata.",
+	          "toggle_aria": "Attiva/disattiva {{name}}"
+	        },
+	        "mappings": {
+	          "title": "Mappature hook → azioni"
+	        },
+	        "emergency": {
+	          "title": "Controlli di emergenza",
+	          "description": "Attiva/disattiva gli hook mobile globalmente. Disabilitando fermerai l'elaborazione degli hook (kill switch di emergenza).",
+	          "reason_label": "Motivo (opzionale)",
+	          "reason_placeholder": "Perché stai disabilitando gli hook mobile?",
+	          "disable_button": "Disabilita hook mobile",
+	          "enable_button": "Abilita hook mobile",
+	          "disabled_at": "Disabilitato il: {{value}}",
+	          "disabled_reason": "Motivo: {{value}}"
+	        },
+	        "recent_events": {
+	          "title": "Eventi hook recenti",
+	          "description": "Ultimi eventi con stato di elaborazione e risultati di esecuzione per azione.",
+	          "loading": "Caricamento…",
+	          "no_recent_events": "Nessun evento recente."
+	        }
+	      },
+	      "configuration": {
+	        "action_settings": {
+	          "loading_action_types": "Caricamento tipi di azione…",
+	          "title": "Impostazioni azioni",
+	          "description": "Configura i tipi di azione email/slack/webhook/database e le loro impostazioni.",
+	          "settings_json": "Impostazioni (JSON)",
+	          "settings_helper": "Modifica le impostazioni come JSON. I segreti non dovrebbero essere salvati qui."
+	        },
+	        "listener_settings": {
+	          "loading": "Caricamento impostazioni listener…",
+	          "title": "Impostazioni listener",
+	          "description": "Feature flag e limiti operativi per i listener degli hook mobile.",
+	          "version": "Versione: {{version}}",
+	          "last_updated": "Ultimo aggiornamento: {{timestamp}}",
+	          "analytics_enabled": "Analytics abilitata",
+	          "error_reporting_enabled": "Segnalazione errori abilitata",
+	          "offline_storage_enabled": "Archiviazione offline abilitata",
+	          "performance_monitoring_enabled": "Monitoraggio prestazioni abilitato",
+	          "batch_upload_interval_seconds": "Intervallo upload batch (secondi)",
+	          "max_offline_events": "Eventi offline massimi"
+	        },
+	        "rate_limiting": {
+	          "loading": "Caricamento limiti di frequenza…",
+	          "title": "Limitazione frequenza",
+	          "description": "Configura `rate_limit_minutes` per tipo di azione (dove supportato).",
+	          "no_action_types_expose": "Nessun tipo di azione espone `rate_limit_minutes` nelle impostazioni."
+	        }
+	      },
+	      "testing": {
+	        "configuration_test": {
+	          "title": "Test configurazione",
+	          "description": "Simula un evento attraverso la mappatura (anteprima delle azioni che verrebbero eseguite)."
+	        },
+	        "action_type_test": {
+	          "title": "Test tipo azione",
+	          "description": "Valida le impostazioni dell'azione. Usa dry-run per l'anteprima (l'esecuzione non dry-run potrebbe essere simulata a seconda del backend)."
+	        },
+	        "dry_run": "Dry run",
+	        "payload_json": "Payload (JSON)",
+	        "test_data_json": "Dati di test (JSON)",
+	        "result": "Risultato"
+	      },
 	      "errors": {
 	        "dashboard": {
 	          "load": "Impossibile caricare la dashboard degli hook mobile.",
