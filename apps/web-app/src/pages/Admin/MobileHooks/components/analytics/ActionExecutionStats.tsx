@@ -11,6 +11,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { MobileAnalyticsActionTypeBreakdown } from '@my-many-books/shared-types';
 
 export interface ActionExecutionStatsProps {
@@ -18,6 +19,7 @@ export interface ActionExecutionStatsProps {
 }
 
 export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ actionTypeBreakdown }) => {
+  const { t } = useTranslation('pages');
   const totalAttempted = actionTypeBreakdown.reduce((s, r) => s + r.attempted, 0);
   const totalSuccessful = actionTypeBreakdown.reduce((s, r) => s + r.successful, 0);
   const errorRate = totalAttempted ? (totalAttempted - totalSuccessful) / totalAttempted : 0;
@@ -26,18 +28,18 @@ export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ acti
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6">Execution stats</Typography>
+        <Typography variant="h6">{t('admin.mobile_hooks.analytics.action_execution_stats.title')}</Typography>
 
         <Box display="flex" gap={3} flexWrap="wrap" sx={{ mt: 2 }}>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Success rate
+              {t('admin.mobile_hooks.analytics.action_execution_stats.success_rate')}
             </Typography>
             <Typography variant="h6">{Math.round(successRate * 100)}%</Typography>
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Error rate
+              {t('admin.mobile_hooks.analytics.action_execution_stats.error_rate')}
             </Typography>
             <Typography variant="h6">{Math.round(errorRate * 100)}%</Typography>
           </Box>
@@ -46,17 +48,17 @@ export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ acti
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
-          By action type (last 24h)
+          {t('admin.mobile_hooks.analytics.action_execution_stats.by_action_type')}
         </Typography>
 
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Action type</TableCell>
-              <TableCell align="right">Attempted</TableCell>
-              <TableCell align="right">Success</TableCell>
-              <TableCell align="right">Failed</TableCell>
-              <TableCell align="right">Error rate</TableCell>
+              <TableCell>{t('admin.mobile_hooks.columns.action_type')}</TableCell>
+              <TableCell align="right">{t('admin.mobile_hooks.columns.attempted')}</TableCell>
+              <TableCell align="right">{t('admin.mobile_hooks.columns.success')}</TableCell>
+              <TableCell align="right">{t('admin.mobile_hooks.columns.failed')}</TableCell>
+              <TableCell align="right">{t('admin.mobile_hooks.columns.error_rate')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -73,7 +75,7 @@ export const ActionExecutionStats: React.FC<ActionExecutionStatsProps> = ({ acti
               <TableRow>
                 <TableCell colSpan={5}>
                   <Typography variant="body2" color="text.secondary">
-                    No data available.
+                    {t('admin.mobile_hooks.analytics.action_execution_stats.no_data')}
                   </Typography>
                 </TableCell>
               </TableRow>

@@ -1,10 +1,10 @@
 import React from 'react';
-import i18n from 'i18next';
 import { fireEvent, renderWithI18n, screen, waitFor, within } from '../../test-utils';
 import { server, resetMobileHooksState } from '../../mocks/server';
 import { API_BASE_PATH } from '../../utils/apiBasePath';
 import { http, HttpResponse } from 'msw';
 import { vi } from 'vitest';
+import enPages from '@my-many-books/shared-i18n/src/locales/en/pages.json';
 import { MobileHookDashboardPage } from '../../../pages/Admin/MobileHooks/MobileHookDashboardPage';
 import { HookAnalyticsPage } from '../../../pages/Admin/MobileHooks/HookAnalyticsPage';
 import { HookConfigurationPage } from '../../../pages/Admin/MobileHooks/HookConfigurationPage';
@@ -53,7 +53,7 @@ describe('Mobile Hooks dashboard (MSW)', () => {
   });
 
   it('shows a listeners error when the config endpoint fails', async () => {
-    const expectedKey = 'admin.mobile_hooks.errors.listeners.load';
+    const expectedMessage = enPages.admin.mobile_hooks.errors.listeners.load;
     server.use(
       http.get(`*${API_BASE_PATH}/admin/mobile-hooks/config/listeners`, () =>
         HttpResponse.json({ error: 'boom' }, { status: 500 })
@@ -62,7 +62,7 @@ describe('Mobile Hooks dashboard (MSW)', () => {
 
     renderWithProviders(<MobileHookDashboardPage />);
     const alerts = await screen.findAllByRole('alert');
-    expect(alerts.some((alert) => alert.textContent?.includes(expectedKey))).toBe(true);
+    expect(alerts.some((alert) => alert.textContent?.includes(expectedMessage))).toBe(true);
   });
 
   it('refreshes dashboard data and polls recent events', async () => {
@@ -153,7 +153,7 @@ describe('Hook analytics page (MSW)', () => {
   });
 
   it('shows an analytics error when the stats endpoint fails', async () => {
-    const expectedKey = 'admin.mobile_hooks.errors.analytics.load';
+    const expectedMessage = enPages.admin.mobile_hooks.errors.analytics.load;
     server.use(
       http.get(`*${API_BASE_PATH}/admin/mobile-hooks/analytics/stats`, () =>
         HttpResponse.json({ error: 'boom' }, { status: 500 })
@@ -162,7 +162,7 @@ describe('Hook analytics page (MSW)', () => {
 
     renderWithProviders(<HookAnalyticsPage />);
     const alerts = await screen.findAllByRole('alert');
-    expect(alerts.some((alert) => alert.textContent?.includes(expectedKey))).toBe(true);
+    expect(alerts.some((alert) => alert.textContent?.includes(expectedMessage))).toBe(true);
   });
 
   it('refreshes and polls the stats endpoint', async () => {
@@ -207,7 +207,7 @@ describe('Hook configuration page (MSW)', () => {
   });
 
   it('shows an error when listener settings fail to load', async () => {
-    const expectedKey = 'admin.mobile_hooks.errors.listener_settings.load';
+    const expectedMessage = enPages.admin.mobile_hooks.errors.listener_settings.load;
     server.use(
       http.get(`*${API_BASE_PATH}/admin/mobile-hooks/settings/listeners`, () =>
         HttpResponse.json({ error: 'boom' }, { status: 500 })
@@ -216,7 +216,7 @@ describe('Hook configuration page (MSW)', () => {
 
     renderWithProviders(<HookConfigurationPage />);
     const alerts = await screen.findAllByRole('alert');
-    expect(alerts.some((alert) => alert.textContent?.includes(expectedKey))).toBe(true);
+    expect(alerts.some((alert) => alert.textContent?.includes(expectedMessage))).toBe(true);
   });
 });
 
@@ -232,7 +232,7 @@ describe('Mobile hook testing page (MSW)', () => {
   });
 
   it('shows an action types error when fetching fails', async () => {
-    const expectedKey = 'admin.mobile_hooks.errors.action_types.load';
+    const expectedMessage = enPages.admin.mobile_hooks.errors.action_types.load;
     server.use(
       http.get(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/types`, () =>
         HttpResponse.json({ error: 'boom' }, { status: 500 })
@@ -241,6 +241,6 @@ describe('Mobile hook testing page (MSW)', () => {
 
     renderWithProviders(<MobileHookTestingPage />);
     const alerts = await screen.findAllByRole('alert');
-    expect(alerts.some((alert) => alert.textContent?.includes(expectedKey))).toBe(true);
+    expect(alerts.some((alert) => alert.textContent?.includes(expectedMessage))).toBe(true);
   });
 });

@@ -113,7 +113,7 @@ export const ActionSettingsForm: React.FC = () => {
       <Paper sx={{ p: 2 }}>
         <Box display="flex" alignItems="center" gap={2}>
           <CircularProgress size={18} />
-          <Typography variant="body2">Loading action types…</Typography>
+          <Typography variant="body2">{t('admin.mobile_hooks.configuration.action_settings.loading_action_types')}</Typography>
         </Box>
       </Paper>
     );
@@ -133,13 +133,13 @@ export const ActionSettingsForm: React.FC = () => {
     <Paper sx={{ p: 2 }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
         <Box>
-          <Typography variant="h6">Action settings</Typography>
+          <Typography variant="h6">{t('admin.mobile_hooks.configuration.action_settings.title')}</Typography>
           <Typography variant="body2" color="text.secondary">
-            Configure email/slack/webhook/database action types and their settings.
+            {t('admin.mobile_hooks.configuration.action_settings.description')}
           </Typography>
         </Box>
         <Button variant="contained" onClick={() => void save()} disabled={saving || !selectedActionType}>
-          {saving ? <CircularProgress size={16} /> : 'Save'}
+          {saving ? <CircularProgress size={16} /> : t('admin.mobile_hooks.actions.save')}
         </Button>
       </Box>
 
@@ -157,11 +157,11 @@ export const ActionSettingsForm: React.FC = () => {
 
       <Box sx={{ mt: 2 }} display="flex" gap={2} flexWrap="wrap" alignItems="center">
         <FormControl sx={{ minWidth: 240 }}>
-          <InputLabel id="action-type-label">Action type</InputLabel>
+          <InputLabel id="action-type-label">{t('admin.mobile_hooks.columns.action_type')}</InputLabel>
           <Select
             labelId="action-type-label"
             value={selectedActionType}
-            label="Action type"
+            label={t('admin.mobile_hooks.columns.action_type')}
             onChange={(e) => setSelectedActionType(e.target.value)}
           >
             {actionTypeOptions.map((actionType) => (
@@ -173,7 +173,7 @@ export const ActionSettingsForm: React.FC = () => {
         </FormControl>
 
         <Box display="flex" alignItems="center" gap={1}>
-          <Typography variant="body2">Enabled</Typography>
+          <Typography variant="body2">{t('admin.mobile_hooks.columns.enabled')}</Typography>
           <Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
         </Box>
       </Box>
@@ -194,14 +194,16 @@ export const ActionSettingsForm: React.FC = () => {
 
       <Box sx={{ mt: 2 }}>
         <TextField
-          label="Settings (JSON)"
+          label={t('admin.mobile_hooks.configuration.action_settings.settings_json')}
           value={settingsJson}
           onChange={(e) => setSettingsJson(e.target.value)}
           fullWidth
           multiline
           minRows={8}
           error={!parsedSettings.ok}
-          helperText={!parsedSettings.ok ? parsedSettings.error : 'Edit settings as JSON. Secrets should not be stored here.'}
+          helperText={
+            !parsedSettings.ok ? parsedSettings.error : t('admin.mobile_hooks.configuration.action_settings.settings_helper')
+          }
           inputProps={{ style: { fontFamily: 'monospace' } }}
         />
       </Box>

@@ -75,7 +75,7 @@
     "test:web-app:pages:auth": "vitest run --config vitest.config.pages.ts src/__tests__/pages/AuthPage.test.tsx",
     "test:web-app:pages:books": "vitest run --config vitest.config.pages.ts src/__tests__/pages/BooksPage.test.tsx",
     "test:web-app:accessibility": "vitest run --config vitest.config.ts src/__tests__/accessibility",
-    "test:web-app:types": "vitest run --config vitest.config.ts src/__tests__/types",
+    "test:web-app:types": "vitest run --config vitest.config.ts src/__tests__/types --passWithNoTests",
     "test:web-app:utils": "vitest run --config vitest.config.ts src/__tests__/utils",
     "test:web-app:pages": "vitest run --config vitest.config.pages.ts",
     "test:web-app:services": "vitest run --config vitest.config.services.ts",

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Card, CardContent, Divider, LinearProgress, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { MobileAnalyticsStatsResponse } from '../../../../../services/api';
 
 export interface EventVolumeChartProps {
@@ -7,6 +8,7 @@ export interface EventVolumeChartProps {
 }
 
 export const EventVolumeChart: React.FC<EventVolumeChartProps> = ({ stats }) => {
+  const { t } = useTranslation('pages');
   const topEventTypes = stats?.topEventTypes ?? [];
   const maxCount = topEventTypes.reduce((max, item) => Math.max(max, item.count || 0), 0);
   const timeSeries = stats?.timeSeries ?? [];
@@ -15,18 +17,18 @@ export const EventVolumeChart: React.FC<EventVolumeChartProps> = ({ stats }) => 
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6">Event volume</Typography>
+        <Typography variant="h6">{t('admin.mobile_hooks.analytics.event_volume.title')}</Typography>
 
         <Box display="flex" gap={3} flexWrap="wrap" sx={{ mt: 2 }}>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Processed today
+              {t('admin.mobile_hooks.analytics.event_volume.processed_today')}
             </Typography>
             <Typography variant="h6">{stats?.eventsProcessedToday ?? 0}</Typography>
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Total processed
+              {t('admin.mobile_hooks.analytics.event_volume.total_processed')}
             </Typography>
             <Typography variant="h6">{stats?.eventsProcessedTotal ?? 0}</Typography>
           </Box>
@@ -35,7 +37,7 @@ export const EventVolumeChart: React.FC<EventVolumeChartProps> = ({ stats }) => 
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
-          Last 24 hours
+          {t('admin.mobile_hooks.analytics.event_volume.last_24_hours')}
         </Typography>
 
         {timeSeries.length ? (
@@ -56,7 +58,11 @@ export const EventVolumeChart: React.FC<EventVolumeChartProps> = ({ stats }) => 
                       {label}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {point.total} (ok {point.processed}, fail {point.failed})
+                      {t('admin.mobile_hooks.analytics.event_volume.series_label', {
+                        total: point.total,
+                        processed: point.processed,
+                        failed: point.failed,
+                      })}
                     </Typography>
                   </Box>
                   <LinearProgress
@@ -70,14 +76,14 @@ export const EventVolumeChart: React.FC<EventVolumeChartProps> = ({ stats }) => 
           </Box>
         ) : (
           <Typography variant="body2" color="text.secondary">
-            No recent events.
+            {t('admin.mobile_hooks.analytics.event_volume.no_recent_events')}
           </Typography>
         )}
 
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
-          Top event types
+          {t('admin.mobile_hooks.analytics.event_volume.top_event_types')}
         </Typography>
 
         {topEventTypes.length ? (
@@ -102,7 +108,7 @@ export const EventVolumeChart: React.FC<EventVolumeChartProps> = ({ stats }) => 
           </Box>
         ) : (
           <Typography variant="body2" color="text.secondary">
-            No events processed yet.
+            {t('admin.mobile_hooks.analytics.event_volume.no_events_processed')}
           </Typography>
         )}
       </CardContent>

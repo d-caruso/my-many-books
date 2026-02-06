@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Card, CardContent, Chip, Divider, LinearProgress, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type {
   AdminMobileHooksConfigListenersResponse,
   AdminMobileHooksEmergencyStatusResponse,
@@ -31,6 +32,7 @@ export const HookOverviewCard: React.FC<HookOverviewCardProps> = ({
   emergency,
   listenersConfig,
 }) => {
+  const { t } = useTranslation('pages');
   const listenersEnabledCount = listenersConfig
     ? Object.values(listenersConfig.listeners).filter(v => v.enabled).length
     : 0;
@@ -44,7 +46,7 @@ export const HookOverviewCard: React.FC<HookOverviewCardProps> = ({
     <Card>
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
-          <Typography variant="h6">Mobile Hooks Overview</Typography>
+          <Typography variant="h6">{t('admin.mobile_hooks.dashboard.overview.title')}</Typography>
           {health ? (
             <Chip
               size="small"
@@ -53,13 +55,13 @@ export const HookOverviewCard: React.FC<HookOverviewCardProps> = ({
               variant="outlined"
             />
           ) : (
-            <Chip size="small" label="unknown" variant="outlined" />
+            <Chip size="small" label={t('admin.mobile_hooks.common.unknown')} variant="outlined" />
           )}
         </Box>
 
         <Box sx={{ mt: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Health score
+            {t('admin.mobile_hooks.dashboard.overview.health_score')}
           </Typography>
           <Box display="flex" alignItems="center" gap={2}>
             <Box sx={{ flex: 1 }}>
@@ -80,7 +82,7 @@ export const HookOverviewCard: React.FC<HookOverviewCardProps> = ({
         <Box display="flex" gap={3} flexWrap="wrap">
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Listeners enabled
+              {t('admin.mobile_hooks.dashboard.overview.listeners_enabled')}
             </Typography>
             <Typography variant="h6">
               {listenersEnabledCount}/{listenersTotalCount}
@@ -88,7 +90,7 @@ export const HookOverviewCard: React.FC<HookOverviewCardProps> = ({
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Categories enabled
+              {t('admin.mobile_hooks.dashboard.overview.categories_enabled')}
             </Typography>
             <Typography variant="h6">
               {categoriesEnabledCount}/{categoriesTotalCount}
@@ -96,9 +98,11 @@ export const HookOverviewCard: React.FC<HookOverviewCardProps> = ({
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Mobile hooks enabled
+              {t('admin.mobile_hooks.dashboard.labels.mobile_hooks_enabled')}
             </Typography>
-            <Typography variant="h6">{emergency?.enabled ? 'Yes' : 'No'}</Typography>
+            <Typography variant="h6">
+              {emergency?.enabled ? t('admin.mobile_hooks.common.yes') : t('admin.mobile_hooks.common.no')}
+            </Typography>
           </Box>
         </Box>
       </CardContent>

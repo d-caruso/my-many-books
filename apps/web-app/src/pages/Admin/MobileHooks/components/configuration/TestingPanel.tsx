@@ -136,9 +136,9 @@ export const TestingPanel: React.FC = () => {
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <Paper sx={{ p: 2 }}>
-        <Typography variant="h6">Configuration test</Typography>
+        <Typography variant="h6">{t('admin.mobile_hooks.testing.configuration_test.title')}</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Simulates an event through the mapping (preview what actions would run).
+          {t('admin.mobile_hooks.testing.configuration_test.description')}
         </Typography>
 
         {configTestError ? (
@@ -149,7 +149,7 @@ export const TestingPanel: React.FC = () => {
 
         <Box sx={{ mt: 2 }} display="flex" gap={2} flexWrap="wrap">
           <TextField
-            label="Event type"
+            label={t('admin.mobile_hooks.columns.event_type')}
             value={eventType}
             onChange={(e) => setEventType(e.target.value)}
             sx={{ minWidth: 320 }}
@@ -159,13 +159,13 @@ export const TestingPanel: React.FC = () => {
             onClick={() => void runConfigTest()}
             disabled={configTestLoading}
           >
-            {configTestLoading ? <CircularProgress size={16} /> : 'Run test'}
+            {configTestLoading ? <CircularProgress size={16} /> : t('admin.mobile_hooks.actions.run_test')}
           </Button>
         </Box>
 
         <Box sx={{ mt: 2 }}>
           <TextField
-            label="Payload (JSON)"
+            label={t('admin.mobile_hooks.testing.payload_json')}
             value={eventPayloadJson}
             onChange={(e) => setEventPayloadJson(e.target.value)}
             fullWidth
@@ -177,7 +177,7 @@ export const TestingPanel: React.FC = () => {
 
         {configTestResult ? (
           <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2">Result</Typography>
+            <Typography variant="subtitle2">{t('admin.mobile_hooks.testing.result')}</Typography>
             <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: 'background.default' }}>
               <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
                 {JSON.stringify(configTestResult, null, 2)}
@@ -188,9 +188,9 @@ export const TestingPanel: React.FC = () => {
       </Paper>
 
       <Paper sx={{ p: 2 }}>
-        <Typography variant="h6">Action type test</Typography>
+        <Typography variant="h6">{t('admin.mobile_hooks.testing.action_type_test.title')}</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Validates action settings. Use dry-run for preview (non-dry-run execution may be simulated depending on backend).
+          {t('admin.mobile_hooks.testing.action_type_test.description')}
         </Typography>
 
         {typesError ? (
@@ -207,10 +207,10 @@ export const TestingPanel: React.FC = () => {
 
         <Box sx={{ mt: 2 }} display="flex" gap={2} flexWrap="wrap" alignItems="center">
           <FormControl sx={{ minWidth: 240 }}>
-            <InputLabel id="test-action-type-label">Action type</InputLabel>
+            <InputLabel id="test-action-type-label">{t('admin.mobile_hooks.columns.action_type')}</InputLabel>
             <Select
               labelId="test-action-type-label"
-              label="Action type"
+              label={t('admin.mobile_hooks.columns.action_type')}
               value={selectedActionType}
               disabled={loadingTypes}
               onChange={(e) => setSelectedActionType(e.target.value)}
@@ -225,7 +225,7 @@ export const TestingPanel: React.FC = () => {
 
           <FormControlLabel
             control={<Switch checked={dryRun} onChange={(e) => setDryRun(e.target.checked)} />}
-            label="Dry run"
+            label={t('admin.mobile_hooks.testing.dry_run')}
           />
 
           <Button
@@ -233,13 +233,13 @@ export const TestingPanel: React.FC = () => {
             onClick={() => void runActionTest()}
             disabled={actionTestLoading || !selectedActionType}
           >
-            {actionTestLoading ? <CircularProgress size={16} /> : 'Run test'}
+            {actionTestLoading ? <CircularProgress size={16} /> : t('admin.mobile_hooks.actions.run_test')}
           </Button>
         </Box>
 
         <Box sx={{ mt: 2 }}>
           <TextField
-            label="Test data (JSON)"
+            label={t('admin.mobile_hooks.testing.test_data_json')}
             value={testDataJson}
             onChange={(e) => setTestDataJson(e.target.value)}
             fullWidth
@@ -251,7 +251,7 @@ export const TestingPanel: React.FC = () => {
 
         {actionTestResult ? (
           <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2">Result</Typography>
+            <Typography variant="subtitle2">{t('admin.mobile_hooks.testing.result')}</Typography>
             <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: 'background.default' }}>
               <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
                 {JSON.stringify(actionTestResult, null, 2)}

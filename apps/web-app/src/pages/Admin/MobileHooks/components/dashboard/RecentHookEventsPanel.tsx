@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { useTranslation } from 'react-i18next';
 import type { AdminMobileHooksRecentEvent } from '../../../../../services/api';
 
 export interface RecentHookEventsPanelProps {
@@ -69,15 +70,16 @@ export const RecentHookEventsPanel: React.FC<RecentHookEventsPanelProps> = ({
   error = null,
   onRefresh,
 }) => {
+  const { t } = useTranslation('pages');
   const showEmptyState = !loading && events.length === 0;
 
   return (
     <Paper sx={{ p: 2 }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
         <Box>
-          <Typography variant="h6">Recent hook events</Typography>
+          <Typography variant="h6">{t('admin.mobile_hooks.dashboard.recent_events.title')}</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Latest events with processing status and per-action execution results.
+            {t('admin.mobile_hooks.dashboard.recent_events.description')}
           </Typography>
         </Box>
         {onRefresh ? (
@@ -88,7 +90,7 @@ export const RecentHookEventsPanel: React.FC<RecentHookEventsPanelProps> = ({
             onClick={() => void onRefresh()}
             disabled={loading || refreshing}
           >
-            Refresh
+            {t('admin.mobile_hooks.actions.refresh')}
           </Button>
         ) : null}
       </Box>
@@ -103,7 +105,7 @@ export const RecentHookEventsPanel: React.FC<RecentHookEventsPanelProps> = ({
         <Box display="flex" alignItems="center" gap={2} sx={{ mt: 2 }}>
           <CircularProgress size={18} />
           <Typography variant="body2" color="text.secondary">
-            Loading…
+            {t('admin.mobile_hooks.dashboard.recent_events.loading')}
           </Typography>
         </Box>
       ) : null}
@@ -113,10 +115,10 @@ export const RecentHookEventsPanel: React.FC<RecentHookEventsPanelProps> = ({
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Received</TableCell>
-                <TableCell>Event</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell>{t('admin.mobile_hooks.columns.received')}</TableCell>
+                <TableCell>{t('admin.mobile_hooks.columns.event')}</TableCell>
+                <TableCell>{t('admin.mobile_hooks.columns.status')}</TableCell>
+                <TableCell>{t('admin.mobile_hooks.columns.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -167,7 +169,7 @@ export const RecentHookEventsPanel: React.FC<RecentHookEventsPanelProps> = ({
         </Box>
       ) : showEmptyState ? (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          No recent events.
+          {t('admin.mobile_hooks.dashboard.recent_events.no_recent_events')}
         </Typography>
       ) : null}
     </Paper>

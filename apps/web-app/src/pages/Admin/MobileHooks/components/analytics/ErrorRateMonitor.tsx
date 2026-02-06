@@ -13,6 +13,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { MobileAnalyticsStatsResponse } from '../../../../../services/api';
 
 export interface ErrorRateMonitorProps {
@@ -34,6 +35,7 @@ const statusColor = (status: MobileAnalyticsStatsResponse['systemStatus']): 'suc
 };
 
 export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => {
+  const { t } = useTranslation('pages');
   const errorRate = stats?.errorRate ?? 0;
   const percent = Math.min(100, Math.max(0, errorRate * 100));
   const status = stats?.systemStatus ?? 'healthy';
@@ -50,17 +52,17 @@ export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => 
     <Card>
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
-          <Typography variant="h6">Error rate</Typography>
+          <Typography variant="h6">{t('admin.mobile_hooks.analytics.error_rate_monitor.title')}</Typography>
           {stats ? (
             <Chip size="small" label={status} color={statusColor(status)} variant="outlined" />
           ) : (
-            <Chip size="small" label="unknown" variant="outlined" />
+            <Chip size="small" label={t('admin.mobile_hooks.common.unknown')} variant="outlined" />
           )}
         </Box>
 
         <Box sx={{ mt: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Errors (last 24h)
+            {t('admin.mobile_hooks.analytics.error_rate_monitor.errors_last_24h')}
           </Typography>
           <Box display="flex" alignItems="center" gap={2}>
             <Box sx={{ flex: 1 }}>
@@ -79,20 +81,20 @@ export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => 
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
-          Worst action types (last 24h)
+          {t('admin.mobile_hooks.analytics.error_rate_monitor.worst_action_types_last_24h')}
         </Typography>
 
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
-          Worst event types (last 24h)
+          {t('admin.mobile_hooks.analytics.error_rate_monitor.worst_event_types_last_24h')}
         </Typography>
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Event type</TableCell>
-              <TableCell align="right">Attempted</TableCell>
-              <TableCell align="right">Error rate</TableCell>
+              <TableCell>{t('admin.mobile_hooks.columns.event_type')}</TableCell>
+              <TableCell align="right">{t('admin.mobile_hooks.columns.attempted')}</TableCell>
+              <TableCell align="right">{t('admin.mobile_hooks.columns.error_rate')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -107,7 +109,7 @@ export const ErrorRateMonitor: React.FC<ErrorRateMonitorProps> = ({ stats }) => 
               <TableRow>
                 <TableCell colSpan={3}>
                   <Typography variant="body2" color="text.secondary">
-                    No event breakdown available.
+                    {t('admin.mobile_hooks.analytics.error_rate_monitor.no_event_breakdown')}
                   </Typography>
                 </TableCell>
               </TableRow>
