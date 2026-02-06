@@ -87,8 +87,9 @@ export const MobileHookDashboardPage: React.FC = () => {
       if (controller.signal.aborted) return;
       setListenersError(t('admin.mobile_hooks.errors.listeners.load'));
     } finally {
-      if (controller.signal.aborted) return;
-      setListenersLoading(false);
+      if (!controller.signal.aborted) {
+        setListenersLoading(false);
+      }
     }
   }, [apiService, t]);
 
@@ -114,8 +115,7 @@ export const MobileHookDashboardPage: React.FC = () => {
         if (controller.signal.aborted) return;
         setRecentEventsError(t('admin.mobile_hooks.errors.recent_events.load'));
       } finally {
-        if (controller.signal.aborted) return;
-        if (!isBackground) {
+        if (!controller.signal.aborted && !isBackground) {
           setRecentEventsLoading(false);
           setRecentEventsRefreshing(false);
         }
