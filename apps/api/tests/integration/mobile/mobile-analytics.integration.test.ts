@@ -24,7 +24,7 @@ jest.mock('@my-many-books/shared-i18n', () => ({
 import request from 'supertest';
 import app from '../../../src/app';
 import { mobileAnalyticsService } from '../../../src/services/MobileAnalyticsService';
-import type { MobileAnalyticsStats } from '@my-many-books/shared-types';
+import { MOBILE_ANALYTICS_PROCESSING_STATUS, type MobileAnalyticsStats } from '@my-many-books/shared-types';
 import { BASE_PATH } from '../../utils/apiBasePath';
 
 // Mock the models
@@ -81,7 +81,7 @@ describe('Mobile Analytics Integration Tests', () => {
           timestamp: '2024-01-10T10:30:00Z',
           data: { version: '1.0.0', platform: 'ios' },
           appVersion: '1.0.0',
-          processingStatus: 'processed',
+          processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
         };
 
         (mobileAnalyticsService.storeEvent as jest.Mock).mockResolvedValue(mockEvent);
@@ -102,7 +102,10 @@ describe('Mobile Analytics Integration Tests', () => {
         expect(response.body.success).toBe(true);
         expect(response.body.data).toHaveProperty('event_id');
         expect(response.body.data).toHaveProperty('status', 'stored');
-        expect(response.body.data).toHaveProperty('processing_status', 'processed');
+        expect(response.body.data).toHaveProperty(
+          'processing_status',
+          MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED
+        );
         
         expect(mobileAnalyticsService.storeEvent).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -144,7 +147,7 @@ describe('Mobile Analytics Integration Tests', () => {
 
         (mobileAnalyticsService.storeEvent as jest.Mock).mockResolvedValue({
           eventId: 'mobile_test_123',
-          processingStatus: 'processed',
+          processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
         });
 
         const response = await request(app)
@@ -210,9 +213,9 @@ describe('Mobile Analytics Integration Tests', () => {
 
         const mockBatchResult = {
           successful: [
-            { eventId: 'mobile_1_abc', processingStatus: 'processed' },
-            { eventId: 'mobile_2_def', processingStatus: 'processed' },
-            { eventId: 'mobile_3_ghi', processingStatus: 'processed' },
+            { eventId: 'mobile_1_abc', processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED },
+            { eventId: 'mobile_2_def', processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED },
+            { eventId: 'mobile_3_ghi', processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED },
           ],
           failed: [],
         };
@@ -249,7 +252,7 @@ describe('Mobile Analytics Integration Tests', () => {
 
         const mockBatchResult = {
           successful: [
-            { eventId: 'mobile_1_abc', processingStatus: 'processed' },
+            { eventId: 'mobile_1_abc', processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED },
           ],
           failed: [
             { index: 1, error: 'Validation failed for event' },
@@ -325,8 +328,8 @@ describe('Mobile Analytics Integration Tests', () => {
 
         const mockBatchResult = {
           successful: [
-            { eventId: 'mobile_1_abc', processingStatus: 'processed' },
-            { eventId: 'mobile_3_ghi', processingStatus: 'processed' },
+            { eventId: 'mobile_1_abc', processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED },
+            { eventId: 'mobile_3_ghi', processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED },
           ],
           failed: [],
         };
@@ -468,7 +471,7 @@ describe('Mobile Analytics Integration Tests', () => {
 
       (mobileAnalyticsService.storeEvent as jest.Mock).mockResolvedValue({
         eventId: 'mobile_concurrent_123',
-        processingStatus: 'processed',
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
       });
 
       const promises = Array(10).fill(null).map(() =>
@@ -504,7 +507,7 @@ describe('Mobile Analytics Integration Tests', () => {
 
       (mobileAnalyticsService.storeEvent as jest.Mock).mockResolvedValue({
         eventId: 'mobile_large_123',
-        processingStatus: 'processed',
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
       });
 
       const response = await request(app)
@@ -527,7 +530,7 @@ describe('Mobile Analytics Integration Tests', () => {
 
       (mobileAnalyticsService.storeEvent as jest.Mock).mockResolvedValue({
         eventId: 'mobile_truncated_123',
-        processingStatus: 'processed',
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
       });
 
       const response = await request(app)
@@ -564,7 +567,7 @@ describe('Mobile Analytics Integration Tests', () => {
 
       (mobileAnalyticsService.storeEvent as jest.Mock).mockResolvedValue({
         eventId: 'mobile_hook_trigger_123',
-        processingStatus: 'processed',
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
       });
 
       const response = await request(app)
@@ -606,7 +609,7 @@ describe('Mobile Analytics Integration Tests', () => {
 
       (mobileAnalyticsService.storeEvent as jest.Mock).mockResolvedValue({
         eventId: 'mobile_no_content_type_123',
-        processingStatus: 'processed',
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
       });
 
       const response = await request(app)
@@ -636,7 +639,7 @@ describe('Mobile Analytics Integration Tests', () => {
 
       (mobileAnalyticsService.storeEvent as jest.Mock).mockResolvedValue({
         eventId: 'mobile_sanitized_123',
-        processingStatus: 'processed',
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
       });
 
       const response = await request(app)

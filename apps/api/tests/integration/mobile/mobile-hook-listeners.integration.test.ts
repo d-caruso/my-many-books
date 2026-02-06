@@ -26,6 +26,7 @@ import app from '../../../src/app';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
 import { EVENTS } from '../../../src/services/hooks/events';
 import { BASE_PATH } from '../../utils/apiBasePath';
+import { MOBILE_ANALYTICS_PROCESSING_STATUS } from '@my-many-books/shared-types';
 
 jest.mock('../../../src/services/hooks/hookSystem', () => ({
   initializeHookSystem: jest.fn().mockResolvedValue({
@@ -157,7 +158,7 @@ describe('Mobile Hook Listeners Integration Tests', () => {
       const { mobileAnalyticsService } = require('../../../src/services/MobileAnalyticsService');
       mobileAnalyticsService.storeEvent.mockResolvedValue({
         eventId: 'mobile_test_123',
-        processingStatus: 'processed',
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
       });
 
       const response = await request(app)
@@ -387,7 +388,7 @@ describe('Mobile Hook Listeners Integration Tests', () => {
       const { mobileAnalyticsService } = require('../../../src/services/MobileAnalyticsService');
       mobileAnalyticsService.storeEvent.mockResolvedValue({
         eventId: 'critical_error_123',
-        processingStatus: 'processed',
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
       });
 
       // Process the analytics event

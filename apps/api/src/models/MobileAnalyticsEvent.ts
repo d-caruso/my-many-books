@@ -4,6 +4,11 @@
 // ================================================================
 
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
+import {
+  MOBILE_ANALYTICS_PROCESSING_STATUS,
+  MOBILE_ANALYTICS_PROCESSING_STATUSES,
+  type MobileAnalyticsProcessingStatus,
+} from '@my-many-books/shared-types';
 import { TABLE_NAMES, FIELD_NAMES } from '../utils/constants';
 
 export interface MobileAnalyticsEventAttributes {
@@ -15,7 +20,7 @@ export interface MobileAnalyticsEventAttributes {
   data: object;
   appVersion?: string;
   deviceInfo?: object;
-  processingStatus: 'pending' | 'processed' | 'failed';
+  processingStatus: MobileAnalyticsProcessingStatus;
   processingError?: string | null;
   creationDate: Date;
   updateDate: Date;
@@ -38,7 +43,7 @@ export class MobileAnalyticsEvent extends Model<
   public data!: object;
   public appVersion?: string;
   public deviceInfo?: object;
-  public processingStatus!: 'pending' | 'processed' | 'failed';
+  public processingStatus!: MobileAnalyticsProcessingStatus;
   public processingError?: string | null;
   public creationDate!: Date;
   public updateDate!: Date;
@@ -87,9 +92,9 @@ export class MobileAnalyticsEvent extends Model<
           field: 'device_info',
         },
         processingStatus: {
-          type: DataTypes.ENUM('pending', 'processed', 'failed'),
+          type: DataTypes.ENUM(...MOBILE_ANALYTICS_PROCESSING_STATUSES),
           allowNull: false,
-          defaultValue: 'pending',
+          defaultValue: MOBILE_ANALYTICS_PROCESSING_STATUS.PENDING,
           field: 'processing_status',
         },
         processingError: {

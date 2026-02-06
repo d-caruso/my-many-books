@@ -35,6 +35,7 @@ export * from './constants/search-sort-types';
 export * from './constants/field-names';
 export * from './constants/mobile-hooks-configs';
 export * from './constants/mobile-app-configs';
+export * from './constants/mobile-analytics.constants';
 export * from './constants/health-status';
 export * from './constants/book.constants';
 export * from './constants/emergency.constants';

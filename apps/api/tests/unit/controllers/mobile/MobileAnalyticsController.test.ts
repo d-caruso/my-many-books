@@ -7,7 +7,7 @@ import request from 'supertest';
 import express from 'express';
 import { mobileAnalyticsController } from '../../../../src/controllers/mobile/MobileAnalyticsController';
 import { mobileAnalyticsService } from '../../../../src/services/MobileAnalyticsService';
-import { HEALTH_STATUS } from '@my-many-books/shared-types';
+import { HEALTH_STATUS, MOBILE_ANALYTICS_PROCESSING_STATUS } from '@my-many-books/shared-types';
 import type { MobileAnalyticsStats } from '@my-many-books/shared-types';
 
 // Mock the service
@@ -30,7 +30,7 @@ describe('MobileAnalyticsController', () => {
         id: 1,
         eventId: 'test_event_123',
         eventType: 'user_action',
-        processingStatus: 'pending' as const,
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PENDING,
         creationDate: new Date(),
         updateDate: new Date(),
       };
@@ -85,8 +85,8 @@ describe('MobileAnalyticsController', () => {
     it('should upload batch events successfully', async () => {
       const mockResults = {
         successful: [
-          { eventId: 'event1', processingStatus: 'pending' as const },
-          { eventId: 'event2', processingStatus: 'pending' as const }
+          { eventId: 'event1', processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PENDING },
+          { eventId: 'event2', processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PENDING }
         ],
         failed: []
       };
