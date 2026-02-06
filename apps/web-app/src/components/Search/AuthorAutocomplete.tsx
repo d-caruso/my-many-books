@@ -7,7 +7,7 @@ import {
   Box,
   Typography
 } from '@mui/material';
-import { Author } from '../../types';
+import type { Author } from '@my-many-books/shared-types';
 import { useApi } from '../../contexts/ApiContext';
 
 interface AuthorAutocompleteProps {

@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { SearchFilters } from '../../types';
+import type { SearchFilters } from '@my-many-books/shared-types';
 
 interface SearchFilterProps {
   onSearchChange: (query: string) => void;

@@ -4,10 +4,17 @@
  */
 
 import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
-import { Book, User, Author, Category, PaginatedResponse, ApiError, SearchFilters, SearchResult } from '../types';
 import { BookFormData as WebBookFormData } from '../components/Book/BookForm';
 import type {
+  ApiError,
+  Author,
+  Book,
   BookFormData as SharedBookFormData,
+  Category,
+  PaginatedResponse,
+  SearchFilters,
+  SearchResult,
+  User,
   MobileHooksListenerSettings,
   HealthStatus,
   MobileAnalyticsStats,

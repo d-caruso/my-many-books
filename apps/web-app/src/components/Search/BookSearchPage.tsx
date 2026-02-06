@@ -18,7 +18,7 @@ import FilterIcon from '@mui/icons-material/FilterList';
 import { BookSearchForm } from './BookSearchForm';
 import { BookSearchResults } from './BookSearchResults';
 import { useBookSearch } from '../../hooks/useBookSearch';
-import { Book, SearchFilters } from '../../types';
+import type { Book, SearchFilters } from '@my-many-books/shared-types';
 
 const BookSearchPage: React.FC = () => {
   const { t } = useTranslation(['books', 'common']);

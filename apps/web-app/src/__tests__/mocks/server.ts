@@ -5,7 +5,7 @@
 
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import { Book, Author, Category, User, PaginatedResponse } from '../../types';
+import type { Book, Author, Category, User, PaginatedResponse } from '@my-many-books/shared-types';
 import { USER_RESPONSE_FIELDS } from '@my-many-books/shared-types';
 import { API_BASE_PATH } from '../utils/apiBasePath';
 

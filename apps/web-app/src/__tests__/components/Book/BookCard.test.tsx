@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BookCard } from '../../../components/Book/BookCard';
-import { Book } from '../../types';
+import type { Book } from '@my-many-books/shared-types';
 import { setupMuiMock } from '../../test-utils/setupMuiMock';
 
 

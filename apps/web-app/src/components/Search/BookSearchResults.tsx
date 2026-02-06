@@ -14,7 +14,7 @@ import {
 import ErrorIcon from '@mui/icons-material/Error';
 import BookIcon from '@mui/icons-material/MenuBook';
 import PushPinIcon from '@mui/icons-material/PushPin';
-import { Book, Author, Category } from '../../types';
+import type { Book, Author, Category } from '@my-many-books/shared-types';
 
 interface BookSearchResultsProps {
   books: Book[];

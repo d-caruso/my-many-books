@@ -17,7 +17,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BookIcon from '@mui/icons-material/MenuBook';
-import { Book, Author, Category } from '../../types';
+import type { Book, Author, Category } from '@my-many-books/shared-types';
 
 interface BookCardProps {
   book: Book;

@@ -1,4 +1,4 @@
-import { Book, Author, Category, User, PaginatedResponse } from '../../types';
+import type { Book, Author, Category, User, PaginatedResponse } from '@my-many-books/shared-types';
 import type { AuthorApi, BookApi, CategoryApi, UserApi } from '@my-many-books/shared-api';
 
 // Import after mocks are set up (avoid importing default instance to prevent axios creation)

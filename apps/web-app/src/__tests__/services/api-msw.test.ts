@@ -6,7 +6,7 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
-import { Book, Category, Author, User, PaginatedResponse } from '../../types';
+import type { Book, Category, Author, User, PaginatedResponse } from '@my-many-books/shared-types';
 import { createApiService } from '../../services/api';
 import type { HttpClient, RequestConfig } from '@my-many-books/shared-api';
 import { API_BASE_PATH } from '../utils/apiBasePath';

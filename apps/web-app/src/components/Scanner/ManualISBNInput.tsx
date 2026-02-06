@@ -8,7 +8,7 @@ import {
   Stack
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { ScanResult } from '../../types';
+import type { ScanResult } from '@my-many-books/shared-types';
 
 interface ManualISBNInputProps {
   onSubmit: (result: ScanResult) => void;

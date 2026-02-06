@@ -24,7 +24,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { SelectChangeEvent } from '@mui/material/Select';
-import { Book, Author, Category } from '../../types';
+import type { Book, Author, Category } from '@my-many-books/shared-types';
 
 interface BookDetailsProps {
   book: Book;

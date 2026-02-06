@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { ThemeName } from '../types';
+import type { ThemeName } from '@my-many-books/shared-types';
 import { useLocalStorage } from '@my-many-books/shared-ui-hooks';
 
 interface ThemeContextType {

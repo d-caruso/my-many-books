@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ScanResult } from '../types';
+import type { ScanResult } from '@my-many-books/shared-types';
 
 // Types for dynamically imported zxing library
 // Using 'any' to avoid bundling the library at compile time

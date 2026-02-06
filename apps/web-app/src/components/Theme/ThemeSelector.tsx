@@ -12,7 +12,7 @@ import {
 import Grid from '@mui/material/GridLegacy';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useTheme } from '../../contexts/ThemeContext';
-import { ThemeName } from '../../types';
+import type { ThemeName } from '@my-many-books/shared-types';
 import { ResponsiveButton } from '../UI/ResponsiveButton';
 
 interface ThemeSelectorProps {

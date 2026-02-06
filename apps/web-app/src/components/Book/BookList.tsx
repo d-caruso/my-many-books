@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import BookIcon from '@mui/icons-material/MenuBook';
-import { Book } from '../../types';
+import type { Book } from '@my-many-books/shared-types';
 import { BookCard } from './BookCard';
 
 interface BookListProps {

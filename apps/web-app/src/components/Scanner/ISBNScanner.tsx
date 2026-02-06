@@ -19,7 +19,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import TimerIcon from '@mui/icons-material/Timer';
 import { useTranslation } from 'react-i18next';
 import { useISBNScanner } from '../../hooks/useISBNScanner';
-import { ScanResult } from '../../types';
+import type { ScanResult } from '@my-many-books/shared-types';
 
 interface ISBNScannerProps {
   onScanSuccess: (result: ScanResult) => void;

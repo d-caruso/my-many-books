@@ -10,7 +10,7 @@ import BackIcon from '@mui/icons-material/ArrowBack';
 import { useTranslation } from 'react-i18next';
 import { ISBNScanner } from './ISBNScanner';
 import { ManualISBNInput } from './ManualISBNInput';
-import { ScanResult } from '../../types';
+import type { ScanResult } from '@my-many-books/shared-types';
 import { ScannerErrorBoundary } from '../ErrorBoundary';
 
 interface ScannerModalProps {

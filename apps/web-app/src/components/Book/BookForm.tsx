@@ -21,7 +21,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import { useTranslation } from 'react-i18next';
-import { Book, Author, Category } from '../../types';
+import type { Book, Author, Category } from '@my-many-books/shared-types';
 import { useCategories } from '../../hooks/useCategories';
 import { AuthorAutocomplete } from '../Search/AuthorAutocomplete';
 import { AddAuthorDialog } from '../Author/AddAuthorDialog';
