@@ -20,13 +20,13 @@ jest.mock('../../../src/container', () => {
     },
   };
 });
-/* jest.mock('../../../src/controllers/admin/StatsController', () => ({
+jest.mock('../../../src/controllers/admin/StatsController', () => ({
   statsController: {
     getSummary: jest.fn(),
     getUserStats: jest.fn(),
     getBookStats: jest.fn(),
   },
-})); */
+}));
 jest.mock('../../../src/controllers/admin/AdminBookController', () => ({
   adminBookController: {
     getAllBooks: jest.fn(),
@@ -91,11 +91,11 @@ app.use(express.json());
 app.use('/api/admin', adminRoutes);
 
 describe('Admin Routes', () => {
-  /* let mockStatsController: {
+  let mockStatsController: {
     getSummary: jest.Mock;
     getUserStats: jest.Mock;
     getBookStats: jest.Mock;
-  }; */
+  };
   let mockAdminBookController: {
     getAllBooks: jest.Mock;
     getBookById: jest.Mock;
@@ -109,8 +109,8 @@ describe('Admin Routes', () => {
     jest.clearAllMocks();
 
     // Get the mocked controllers
-    // const { statsController } = require('../../../src/controllers/admin/StatsController');
-    // mockStatsController = statsController;
+    const { statsController } = require('../../../src/controllers/admin/StatsController');
+    mockStatsController = statsController;
     const { adminBookController } = require('../../../src/controllers/admin/AdminBookController');
     mockAdminBookController = adminBookController;
 
@@ -132,7 +132,7 @@ describe('Admin Routes', () => {
     });
   });
 
-  /* describe('Stats Endpoints', () => {
+  describe('Stats Endpoints', () => {
     it('GET /stats/summary should call getSummary controller method', async () => {
       mockStatsController.getSummary.mockResolvedValue({
         statusCode: 200,
@@ -185,7 +185,7 @@ describe('Admin Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/admin/books')
+        .get('/api/admin/stats/books')
         .expect(501);
 
       expect(mockStatsController.getBookStats).toHaveBeenCalledWith(
@@ -198,7 +198,7 @@ describe('Admin Routes', () => {
         error: 'Not implemented yet',
       });
     });
-  }); */
+  });
 
   describe('User Management Endpoints', () => {
     it('GET /users should call getAllUsers controller method', async () => {
