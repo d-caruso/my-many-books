@@ -8,13 +8,14 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { MobileAnalyticsEvent, MobileHookActionExecution } from '../../models';
+import type { MobileAnalyticsProcessingStatus } from '@my-many-books/shared-types';
 
 type RecentMobileHookEvent = {
   eventId: string;
   eventType: string;
   userId: string | null;
   timestamp: string;
-  processingStatus: 'pending' | 'processed' | 'failed';
+  processingStatus: MobileAnalyticsProcessingStatus;
   processingError: string | null;
   createdAt: string;
   updatedAt: string;

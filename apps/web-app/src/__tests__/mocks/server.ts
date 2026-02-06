@@ -6,7 +6,7 @@
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { Book, Author, Category, User, PaginatedResponse } from '../../types';
-import { USER_RESPONSE_FIELDS } from '@my-many-books/shared-types';
+import { MOBILE_ANALYTICS_PROCESSING_STATUS, USER_RESPONSE_FIELDS } from '@my-many-books/shared-types';
 import { API_BASE_PATH } from '../utils/apiBasePath';
 
 const now = new Date().toISOString();
@@ -187,7 +187,7 @@ const createMobileHooksState = (): MobileHooksState => ({
     {
       eventId: 'evt-1',
       eventType: 'error.unhandled',
-      processingStatus: 'processed',
+      processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
       processingError: null,
       createdAt: now,
       actionExecutions: [

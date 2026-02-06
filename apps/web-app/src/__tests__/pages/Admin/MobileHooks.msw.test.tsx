@@ -11,6 +11,7 @@ import { HookConfigurationPage } from '../../../pages/Admin/MobileHooks/HookConf
 import { MobileHookTestingPage } from '../../../pages/Admin/MobileHooks/MobileHookTestingPage';
 import { MemoryRouter } from 'react-router-dom';
 import { ApiProvider } from '../../../contexts/ApiContext';
+import { MOBILE_ANALYTICS_PROCESSING_STATUS } from '@my-many-books/shared-types';
 
 vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
@@ -77,7 +78,7 @@ describe('Mobile Hooks dashboard (MSW)', () => {
               {
                 eventId: `evt-${eventCall}`,
                 eventType: `event-${eventCall}`,
-                processingStatus: 'processed',
+                processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
                 processingError: null,
                 createdAt: new Date().toISOString(),
                 actionExecutions: [],

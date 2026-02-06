@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { MOBILE_ANALYTICS_PROCESSING_STATUS } from '@my-many-books/shared-types';
 import type { AdminMobileHooksRecentEvent } from '../../../../../services/api';
 
 export interface RecentHookEventsPanelProps {
@@ -28,11 +29,11 @@ const eventStatusColor = (
   status: AdminMobileHooksRecentEvent['processingStatus']
 ): 'success' | 'warning' | 'error' | 'default' => {
   switch (status) {
-    case 'processed':
+    case MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED:
       return 'success';
-    case 'pending':
+    case MOBILE_ANALYTICS_PROCESSING_STATUS.PENDING:
       return 'warning';
-    case 'failed':
+    case MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED:
       return 'error';
     default:
       return 'default';

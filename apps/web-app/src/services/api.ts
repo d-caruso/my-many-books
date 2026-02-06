@@ -12,6 +12,7 @@ import type {
   HealthStatus,
   MobileAnalyticsStats,
   MobileAnalyticsActionTypeBreakdown,
+  MobileAnalyticsProcessingStatus,
 } from '@my-many-books/shared-types';
 import axios from 'axios';
 import { env } from '../config/env';
@@ -1230,7 +1231,7 @@ export interface AdminMobileHooksRecentEvent {
   eventType: string;
   userId: string | null;
   timestamp: string;
-  processingStatus: 'pending' | 'processed' | 'failed';
+  processingStatus: MobileAnalyticsProcessingStatus;
   processingError: string | null;
   createdAt: string;
   updatedAt: string;

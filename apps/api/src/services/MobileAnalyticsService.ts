@@ -9,6 +9,7 @@ import { getLogger } from '@my-many-books/shared-logging';
 import { AppSetting, MobileHookActionExecution } from '../models';
 import {
   MobileAnalyticsStats,
+  MOBILE_ANALYTICS_PROCESSING_STATUS,
   MOBILE_HOOK_SETTING_KEYS,
   HEALTH_STATUS,
   MobileAnalyticsEventTypeBreakdown,
@@ -38,7 +39,7 @@ export class MobileAnalyticsService {
         data: eventData.data,
         appVersion: eventData.appVersion,
         deviceInfo: eventData.deviceInfo,
-        processingStatus: 'pending'
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PENDING,
       });
 
       // Process event asynchronously
@@ -107,7 +108,9 @@ export class MobileAnalyticsService {
       
       type RecentEventRow = {
         eventType: string;
-        processingStatus: 'processed' | 'failed';
+        processingStatus:
+          | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED
+          | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED;
         creationDate: Date;
         updateDate: Date;
       };
@@ -123,19 +126,19 @@ export class MobileAnalyticsService {
         // Events processed today
         MobileAnalyticsEvent.count({
           where: {
-            processingStatus: 'processed',
+            processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
             creationDate: { [Op.gte]: startOfToday }
           }
         }),
         
         // Total events processed
         MobileAnalyticsEvent.count({
-          where: { processingStatus: 'processed' }
+          where: { processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED }
         }),
         
         // Failed events for error rate
         MobileAnalyticsEvent.count({
-          where: { processingStatus: 'failed' }
+          where: { processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED }
         }),
         
         // Top event types
@@ -143,7 +146,7 @@ export class MobileAnalyticsService {
         
         // Last processed event
         MobileAnalyticsEvent.findOne({
-          where: { processingStatus: 'processed' },
+          where: { processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED },
           order: [['updateDate', 'DESC']],
           attributes: ['updateDate']
         }),
@@ -152,7 +155,12 @@ export class MobileAnalyticsService {
         MobileAnalyticsEvent.findAll({
           where: {
             creationDate: { [Op.gte]: bucketStart },
-            processingStatus: { [Op.in]: ['processed', 'failed'] },
+            processingStatus: {
+              [Op.in]: [
+                MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
+                MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED,
+              ],
+            },
           },
           attributes: ['eventType', 'processingStatus', 'creationDate', 'updateDate'],
           raw: true,
@@ -200,7 +208,7 @@ export class MobileAnalyticsService {
           'eventType',
           [MobileAnalyticsEvent.sequelize!.fn('COUNT', '*'), 'count']
         ],
-        where: { processingStatus: 'processed' },
+        where: { processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED },
         group: ['eventType'],
         order: [[MobileAnalyticsEvent.sequelize!.literal('count'), 'DESC']],
         limit: 10,
@@ -226,7 +234,9 @@ export class MobileAnalyticsService {
     end: Date,
     events: Array<{
       eventType: string;
-      processingStatus: 'processed' | 'failed';
+      processingStatus:
+        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED
+        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED;
       creationDate: Date;
       updateDate: Date;
     }>
@@ -251,8 +261,8 @@ export class MobileAnalyticsService {
       const entry = bucketMap.get(key);
       if (!entry) continue;
 
-      if (event.processingStatus === 'processed') entry.processed += 1;
-      if (event.processingStatus === 'failed') entry.failed += 1;
+      if (event.processingStatus === MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED) entry.processed += 1;
+      if (event.processingStatus === MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED) entry.failed += 1;
       entry.total += 1;
     }
 
@@ -261,12 +271,14 @@ export class MobileAnalyticsService {
 
   private calculateAvgProcessingTimeFromEvents(
     events: Array<{
-      processingStatus: 'processed' | 'failed';
+      processingStatus:
+        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED
+        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED;
       creationDate: Date;
       updateDate: Date;
     }>
   ): number {
-    const processed = events.filter(e => e.processingStatus === 'processed');
+    const processed = events.filter(e => e.processingStatus === MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED);
     if (!processed.length) return 0;
 
     const totalMs = processed.reduce((sum, e) => {
@@ -281,7 +293,9 @@ export class MobileAnalyticsService {
   private buildEventTypeBreakdown(
     events: Array<{
       eventType: string;
-      processingStatus: 'processed' | 'failed';
+      processingStatus:
+        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED
+        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED;
     }>
   ): MobileAnalyticsEventTypeBreakdown[] {
     const stats = new Map<string, { attempted: number; successful: number; failed: number }>();
@@ -292,8 +306,8 @@ export class MobileAnalyticsService {
 
       const entry = stats.get(eventType) ?? { attempted: 0, successful: 0, failed: 0 };
       entry.attempted += 1;
-      if (event.processingStatus === 'processed') entry.successful += 1;
-      if (event.processingStatus === 'failed') entry.failed += 1;
+      if (event.processingStatus === MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED) entry.successful += 1;
+      if (event.processingStatus === MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED) entry.failed += 1;
       stats.set(eventType, entry);
     }
 
@@ -405,12 +419,15 @@ export class MobileAnalyticsService {
         await MobileHookActionExecution.bulkCreate(executions, { validate: true });
       }
 
-      await event.update({ processingStatus: 'processed', processingError: null });
+      await event.update({
+        processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
+        processingError: null,
+      });
     } catch (error) {
       // Mark as failed with error
       await MobileAnalyticsEvent.update(
         { 
-          processingStatus: 'failed',
+          processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED,
           processingError: error instanceof Error ? error.message : 'Unknown processing error'
         },
         { where: { id: eventId } }
