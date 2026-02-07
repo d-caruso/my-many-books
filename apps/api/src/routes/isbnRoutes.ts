@@ -6,15 +6,18 @@
 import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { IsbnController } from '../controllers/IsbnController';
-import { publicLimiter } from '../middleware/rateLimiters';
+import { authMiddleware } from '../middleware/auth';
+import { requireAdmin } from '../middleware/adminAuth';
 
 const router: express.Router = Router();
 const isbnController = new IsbnController();
 
-// Public ISBN service routes (no authentication required for lookups)
-// These routes allow external systems and apps to validate and lookup ISBNs
-// Apply public rate limiter (more restrictive for unauthenticated access)
-router.use(publicLimiter);
+// All ISBN routes require authentication
+router.use(authMiddleware);
+
+// ================================================================
+// User-accessible routes (authenticated users)
+// ================================================================
 
 // ISBN lookup endpoint - GET with query param or path param
 router.get('/lookup', expressRouteWrapper(isbnController.lookupBook.bind(isbnController)));
@@ -31,23 +34,28 @@ router.get('/validate', expressRouteWrapper(isbnController.validateIsbn.bind(isb
 // ISBN formatting endpoint
 router.get('/format', expressRouteWrapper(isbnController.formatIsbn.bind(isbnController)));
 
+// ================================================================
+// Admin-only routes
+// ================================================================
+
 // Service health check
-router.get('/health', expressRouteWrapper(isbnController.getServiceHealth.bind(isbnController)));
+router.get('/health', requireAdmin, expressRouteWrapper(isbnController.getServiceHealth.bind(isbnController)));
 
 // Resilience statistics (circuit breaker, cache, etc.)
-router.get('/stats', expressRouteWrapper(isbnController.getResilienceStats.bind(isbnController)));
+router.get('/stats', requireAdmin, expressRouteWrapper(isbnController.getResilienceStats.bind(isbnController)));
 
 // Cache management
-router.get('/cache', expressRouteWrapper(isbnController.getCacheStats.bind(isbnController)));
-router.delete('/cache', expressRouteWrapper(isbnController.clearCache.bind(isbnController)));
+router.get('/cache', requireAdmin, expressRouteWrapper(isbnController.getCacheStats.bind(isbnController)));
+router.delete('/cache', requireAdmin, expressRouteWrapper(isbnController.clearCache.bind(isbnController)));
 
 // Resilience management
 router.delete(
   '/resilience',
+  requireAdmin,
   expressRouteWrapper(isbnController.resetResilience.bind(isbnController))
 );
 
 // Fallback book management
-router.post('/fallback', expressRouteWrapper(isbnController.addFallbackBook.bind(isbnController)));
+router.post('/fallback', requireAdmin, expressRouteWrapper(isbnController.addFallbackBook.bind(isbnController)));
 
 export default router;
