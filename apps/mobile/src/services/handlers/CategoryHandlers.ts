@@ -1,11 +1,23 @@
 /**
+ * ============================================================================
+ * IMPORTANT: These handlers are NOT currently integrated into the app.
+ * ============================================================================
+ *
+ * The app uses direct API calls for category operations. These handler factories
+ * provide an alternative OOP approach with offline queueing support.
+ *
+ * Status: Fully implemented, NOT integrated (dead code)
+ *
+ * See docs/ARCHITECTURE_OVERVIEW.md for comparison table and details.
+ * ============================================================================
+ *
  * Category Handler Variants with Hookey Integration
- * 
+ *
  * Three handler patterns for different use cases:
  * - categoryClientGateway: Pure HTTP (web-app pattern, fail-fast when offline)
  * - categoryMobileHandler: Auto-queueing hybrid (try online first, queue when offline)
  * - categoryQueueHandler: Queue-only (no HTTP, prevents double-queueing)
- * 
+ *
  * All handlers emit hookey events for observability and tracking.
  */
 

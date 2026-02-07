@@ -1,11 +1,29 @@
 /**
+ * ============================================================================
+ * IMPORTANT: These handlers are NOT currently integrated into the app.
+ * ============================================================================
+ *
+ * The app uses `bookAPI` + `withQueueOnError` wrapper (in api.ts) for all
+ * runtime operations. These handler factories provide an alternative OOP
+ * approach with the same functionality.
+ *
+ * Status: Fully implemented, NOT integrated (dead code)
+ *
+ * To integrate, you would need:
+ * 1. Create NetworkStateProvider adapter for NetInfo (sync isOnline() method)
+ * 2. Export httpClient singleton from http/ directory
+ * 3. Replace bookAPI calls with handler.create/update/delete calls
+ *
+ * See docs/ARCHITECTURE_OVERVIEW.md for comparison table and details.
+ * ============================================================================
+ *
  * Book Handler Variants with Hookey Integration
- * 
+ *
  * Three handler patterns for different use cases:
  * - bookClientGateway: Pure HTTP (web-app pattern, fail-fast when offline)
  * - bookMobileHandler: Auto-queueing hybrid (try online first, queue when offline)
  * - bookQueueHandler: Queue-only (no HTTP, prevents double-queueing)
- * 
+ *
  * All handlers emit hookey events for observability and tracking.
  */
 

@@ -225,7 +225,16 @@ async function withQueueOnError<T>(
   }
 }
 
-// Export API instances with bound methods
+/**
+ * Book API with automatic offline queueing.
+ *
+ * This is the ACTIVE pattern used throughout the app for book operations.
+ * Write operations (create, update, delete) are wrapped with withQueueOnError
+ * to automatically queue failed requests for later retry.
+ *
+ * Note: Alternative handler-based approach exists in handlers/BookHandlers.ts
+ * but is not currently integrated. See docs/ARCHITECTURE_OVERVIEW.md for comparison.
+ */
 export const bookAPI = {
   searchBooks: apiClient.books.searchBooks.bind(apiClient.books),
   searchByISBN: apiClient.books.searchByISBN.bind(apiClient.books),

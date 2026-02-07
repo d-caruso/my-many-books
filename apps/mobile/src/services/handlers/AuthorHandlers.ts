@@ -1,11 +1,23 @@
 /**
+ * ============================================================================
+ * IMPORTANT: These handlers are NOT currently integrated into the app.
+ * ============================================================================
+ *
+ * The app uses direct API calls for author operations. These handler factories
+ * provide an alternative OOP approach with offline queueing support.
+ *
+ * Status: Fully implemented, NOT integrated (dead code)
+ *
+ * See docs/ARCHITECTURE_OVERVIEW.md for comparison table and details.
+ * ============================================================================
+ *
  * Author Handler Variants with Hookey Integration
- * 
+ *
  * Three handler patterns for different use cases:
  * - authorClientGateway: Pure HTTP (web-app pattern, fail-fast when offline)
  * - authorMobileHandler: Auto-queueing hybrid (try online first, queue when offline)
  * - authorQueueHandler: Queue-only (no HTTP, prevents double-queueing)
- * 
+ *
  * All handlers emit hookey events for observability and tracking.
  */
 
