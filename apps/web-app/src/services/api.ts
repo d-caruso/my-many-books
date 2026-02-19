@@ -125,20 +125,20 @@ const isDevelopmentWithoutApiConfig = (): boolean =>
   !(import.meta.env.VITE_API_ORIGIN || import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL);
 
 const extractAuthorIds = (data: CreateBookInput | UpdateBookInput): number[] | undefined => {
-  if ('selectedAuthors' in data && Array.isArray(data.selectedAuthors) && data.selectedAuthors.length > 0) {
+  if ('selectedAuthors' in data && Array.isArray(data.selectedAuthors)) {
     return data.selectedAuthors.map(author => author.id);
   }
-  if ('authorIds' in data && Array.isArray(data.authorIds) && data.authorIds.length > 0) {
+  if ('authorIds' in data && Array.isArray(data.authorIds)) {
     return data.authorIds;
   }
   return undefined;
 };
 
 const extractCategoryIds = (data: CreateBookInput | UpdateBookInput): number[] | undefined => {
-  if ('selectedCategories' in data && Array.isArray(data.selectedCategories) && data.selectedCategories.length > 0) {
+  if ('selectedCategories' in data && Array.isArray(data.selectedCategories)) {
     return data.selectedCategories;
   }
-  if ('categoryIds' in data && Array.isArray(data.categoryIds) && data.categoryIds.length > 0) {
+  if ('categoryIds' in data && Array.isArray(data.categoryIds)) {
     return data.categoryIds;
   }
   return undefined;
@@ -906,23 +906,17 @@ class ApiService {
       backendData.isbnCode = isbnCode;
     }
 
-    if (bookData.editionNumber !== undefined) {
-      backendData.editionNumber = bookData.editionNumber;
-    }
+    backendData.editionNumber = bookData.editionNumber ?? null;
 
     const editionDate = sanitizeString(bookData.editionDate);
-    if (editionDate) {
-      backendData.editionDate = editionDate;
-    }
+    backendData.editionDate = editionDate ?? null;
 
     if (bookData.status) {
       backendData.status = bookData.status;
     }
 
     const notes = sanitizeString(bookData.notes);
-    if (notes) {
-      backendData.notes = notes;
-    }
+    backendData.notes = notes ?? null;
 
     const authorIds = extractAuthorIds(bookData);
     if (authorIds) {

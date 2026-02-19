@@ -172,13 +172,17 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       return;
     }
 
-    if (associations.authorIds) {
-      const authors = await Author.findAll({ where: { id: associations.authorIds } });
+    if (associations.authorIds !== undefined) {
+      const authors = associations.authorIds.length > 0
+        ? await Author.findAll({ where: { id: associations.authorIds } })
+        : [];
       await book.setAuthors(authors);
     }
 
-    if (associations.categoryIds) {
-      const categories = await Category.findAll({ where: { id: associations.categoryIds } });
+    if (associations.categoryIds !== undefined) {
+      const categories = associations.categoryIds.length > 0
+        ? await Category.findAll({ where: { id: associations.categoryIds } })
+        : [];
       await book.setCategories(categories);
     }
   }

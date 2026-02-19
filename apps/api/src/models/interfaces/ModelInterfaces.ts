@@ -60,10 +60,10 @@ export interface BookAttributes
 export interface BookCreationAttributes {
   isbnCode: string;
   title: string;
-  editionNumber?: number | undefined;
-  editionDate?: Date | undefined;
+  editionNumber?: number | null;
+  editionDate?: Date | null;
   status?: BookStatus | undefined;
-  notes?: string | undefined;
+  notes?: string | null;
   userId?: number | undefined;
   updateDate?: Date | undefined;
 }

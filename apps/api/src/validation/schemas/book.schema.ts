@@ -50,8 +50,8 @@ export const updateBookSchema = Joi.object({
     .allow(null)
     .optional(),
   notes: bookValidationSchema.notes,
-  authorIds: Joi.array().items(commonSchemas.id).min(1).optional(),
-  categoryIds: Joi.array().items(commonSchemas.id).min(1).optional(),
+  authorIds: Joi.array().items(commonSchemas.id).optional(),
+  categoryIds: Joi.array().items(commonSchemas.id).optional(),
 }).min(1);
 
 /**

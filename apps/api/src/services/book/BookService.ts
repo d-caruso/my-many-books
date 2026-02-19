@@ -285,7 +285,7 @@ class BookService {
     if (input.title !== undefined) payload.title = input.title;
     if (input.editionNumber !== undefined) payload.editionNumber = input.editionNumber;
     if (input.editionDate !== undefined) {
-      payload.editionDate = input.editionDate ? new Date(input.editionDate) : undefined;
+      payload.editionDate = input.editionDate ? new Date(input.editionDate) : null;
     }
     if (input.status !== undefined) payload.status = input.status;
     if (input.notes !== undefined) payload.notes = input.notes;

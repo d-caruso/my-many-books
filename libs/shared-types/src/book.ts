@@ -35,7 +35,7 @@ export const BookFormSchema = z.object({
   editionNumber: z.number().int().positive().nullable().optional(),
   editionDate: z.string().nullable().optional(),
   status: BookStatusSchema.optional(),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
   authorIds: z.array(z.number().int()).optional(),
   categoryIds: z.array(z.number().int()).optional(),
 });

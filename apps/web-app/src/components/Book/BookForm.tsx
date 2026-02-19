@@ -43,7 +43,7 @@ export interface BookFormData {
   isbnCode: string;
   editionNumber?: number;
   editionDate?: string;
-  status?: Book['status'];
+  status?: NonNullable<Book['status']>;
   notes?: string;
   selectedAuthors: Author[];
   selectedCategories: number[];
@@ -82,7 +82,7 @@ export const BookForm: React.FC<BookFormProps> = ({
         isbnCode: book.isbnCode,
         editionNumber: book.editionNumber ?? undefined,
         editionDate: book.editionDate ? book.editionDate.split('T')[0] : '',
-        status: book.status,
+        status: book.status ?? undefined,
         notes: book.notes || '',
         selectedAuthors: book.authors || [],
         selectedCategories: book.categories?.map((cat: Category) => cat.id) || []
@@ -283,7 +283,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   labelId="status-label"
                   id="status"
                   value={formData.status || ''}
-                  onChange={(e) => handleInputChange('status', !e.target.value ? undefined : e.target.value as Book['status'])}
+                  onChange={(e) => handleInputChange('status', !e.target.value ? undefined : e.target.value as NonNullable<Book['status']>)}
                 >
                   <MenuItem value="">&nbsp;</MenuItem>
                   <MenuItem value="reading">{t('books:reading')}</MenuItem>

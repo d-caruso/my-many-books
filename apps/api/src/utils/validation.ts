@@ -58,12 +58,12 @@ export const bookValidationSchema = {
     .min(BOOK_CONSTRAINTS.TITLE.MIN_LENGTH)
     .max(BOOK_CONSTRAINTS.TITLE.MAX_LENGTH)
     .required(),
-  editionNumber: Joi.number().integer().positive().optional(),
-  editionDate: Joi.date().optional(),
+  editionNumber: Joi.number().integer().positive().allow(null).optional(),
+  editionDate: Joi.date().allow(null).optional(),
   status: Joi.string()
     .valid(...BOOK_STATUSES)
     .optional(),
-  notes: Joi.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH).optional(),
+  notes: Joi.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH).allow(null).optional(),
 };
 
 // Validation functions
