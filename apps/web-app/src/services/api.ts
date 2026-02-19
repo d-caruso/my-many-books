@@ -4,6 +4,7 @@
  */
 
 import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api';
+import type { ApiClient } from '@my-many-books/shared-api';
 import { BookFormData as WebBookFormData } from '../components/Book/BookForm';
 import type {
   ApiError,
@@ -152,7 +153,7 @@ const sanitizeString = (value?: string | null): string | undefined => {
 
 // Interface for API service dependencies
 interface ApiServiceDependencies {
-  apiClient?: any;
+  apiClient?: ApiClient;
   httpClient?: HttpClient;
   config?: ApiClientConfig;
 }
@@ -173,7 +174,7 @@ export interface FullTextSearchStatus {
 
 // Enhanced API service with dependency injection and mock data support
 class ApiService {
-  private apiClient: any;
+  private apiClient: ApiClient;
   private httpClient: HttpClient;
   private apiConfig: ApiClientConfig;
 
@@ -200,6 +201,14 @@ class ApiService {
 
     // Create and configure the API client
     this.apiClient = injectedApiClient || createApiClient(httpClient, apiConfig);
+  }
+
+  public getHttpClient(): HttpClient {
+    return this.httpClient;
+  }
+
+  public getApiConfig(): ApiClientConfig {
+    return this.apiConfig;
   }
 
   // Mock data for development mode - preserved from old api.ts

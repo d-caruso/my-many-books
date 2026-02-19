@@ -74,6 +74,61 @@ describe('SettingsContext', () => {
       expect(result.current.error).toEqual(error);
       expect(result.current.settings.size).toBe(0);
     });
+
+    it('should build SettingsApi from ApiService http client and config when not injected', async () => {
+      const apiSettingsResponse = [
+        {
+          key: 'books.list.status.onchange',
+          value: '"remove"',
+          category: 'ui',
+          type: 'enum',
+          defaultValue: '"remove"',
+          description: 'Behavior when book status changes',
+          active: true,
+          deleted: false,
+          creationDate: new Date().toISOString(),
+        },
+      ];
+
+      const mockHttpClient = {
+        get: vi.fn().mockResolvedValue(apiSettingsResponse),
+        post: vi.fn(),
+        put: vi.fn(),
+        patch: vi.fn(),
+        delete: vi.fn(),
+      };
+
+      const mockApiServiceForSettingsClient = {
+        getHttpClient: vi.fn(() => mockHttpClient),
+        getApiConfig: vi.fn(() => ({ baseURL: 'http://localhost:3000', timeout: 10000 })),
+      } as any;
+
+      const wrapperWithoutInjectedSettingsApi = ({ children }: { children: React.ReactNode }) => (
+        <ApiProvider apiService={mockApiServiceForSettingsClient}>
+          <SettingsProvider>{children}</SettingsProvider>
+        </ApiProvider>
+      );
+
+      const { result } = renderHook(() => useSettings(), { wrapper: wrapperWithoutInjectedSettingsApi });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.error).toBeNull();
+      expect(result.current.settings.size).toBe(1);
+      expect(mockApiServiceForSettingsClient.getHttpClient).toHaveBeenCalledTimes(1);
+      expect(mockApiServiceForSettingsClient.getApiConfig).toHaveBeenCalledTimes(1);
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        'http://localhost:3000/settings',
+        expect.objectContaining({
+          timeout: 10000,
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
+    });
   });
 
   describe('getSetting', () => {

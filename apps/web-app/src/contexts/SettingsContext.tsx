@@ -30,7 +30,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 }) => {
   const { apiService } = useApi();
   const settingsApi = useMemo(
-    () => injectedSettingsApi || new SettingsApi(apiService),
+    () =>
+      injectedSettingsApi ||
+      new SettingsApi(apiService.getHttpClient(), apiService.getApiConfig()),
     [injectedSettingsApi, apiService]
   );
 
