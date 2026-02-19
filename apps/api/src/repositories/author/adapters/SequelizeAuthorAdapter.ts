@@ -231,21 +231,21 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
     }
 
     if (filters?.name && filters?.surname) {
-      conditions.push({ name: { [Op.iLike]: `%${filters.name}%` } });
-      conditions.push({ surname: { [Op.iLike]: `%${filters.surname}%` } });
+      conditions.push({ name: { [Op.like]: `%${filters.name}%` } });
+      conditions.push({ surname: { [Op.like]: `%${filters.surname}%` } });
     } else if (filters?.name) {
       conditions.push({
         [Op.or]: [
-          { name: { [Op.iLike]: `%${filters.name}%` } },
-          { surname: { [Op.iLike]: `%${filters.name}%` } },
+          { name: { [Op.like]: `%${filters.name}%` } },
+          { surname: { [Op.like]: `%${filters.name}%` } },
         ],
       });
     } else if (filters?.surname) {
-      conditions.push({ surname: { [Op.iLike]: `%${filters.surname}%` } });
+      conditions.push({ surname: { [Op.like]: `%${filters.surname}%` } });
     }
 
     if (filters?.nationality) {
-      conditions.push({ nationality: { [Op.iLike]: `%${filters.nationality}%` } });
+      conditions.push({ nationality: { [Op.like]: `%${filters.nationality}%` } });
     }
 
     // Incremental sync support for mobile clients
@@ -290,21 +290,29 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
     total: number;
     relevanceScores: Map<number, number>;
   }> {
-    const where: WhereOptions = {};
+    const whereConditions: WhereOptions[] = [
+      {
+        [Op.or]: [
+          { name: { [Op.like]: `%${query}%` } },
+          { surname: { [Op.like]: `%${query}%` } },
+        ],
+      },
+    ];
+
     if (userId) {
-      where['userId'] = userId;
+      whereConditions.push({ userId });
     }
 
     // FULLTEXT search on name and surname
     const result = await Author.findAndCountAll({
-      where,
+      where: { [Op.and]: whereConditions },
       limit,
       offset,
       order: [['name', 'ASC'], ['surname', 'ASC']],
       raw: true,
     });
 
-    // Calculate simple relevance scores
+    // Calculate relevance scores
     const relevanceScores = new Map<number, number>();
     result.rows.forEach((author) => {
       const nameMatch = author.name.toLowerCase().includes(query.toLowerCase());
@@ -341,8 +349,8 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
     const whereConditions: WhereOptions[] = [
       {
         [Op.or]: [
-          { name: { [Op.iLike]: `%${query}%` } },
-          { surname: { [Op.iLike]: `%${query}%` } },
+          { name: { [Op.like]: `%${query}%` } },
+          { surname: { [Op.like]: `%${query}%` } },
         ],
       },
     ];

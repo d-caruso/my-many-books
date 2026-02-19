@@ -35,9 +35,9 @@ export class HookController extends BaseController {
 
     if (search) {
       where[Op.or as unknown as string] = [
-        { name: { [Op.iLike]: `%${search}%` } },
-        { description: { [Op.iLike]: `%${search}%` } },
-        { eventPattern: { [Op.iLike]: `%${search}%` } },
+        { name: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } },
+        { eventPattern: { [Op.like]: `%${search}%` } },
       ];
     }
 

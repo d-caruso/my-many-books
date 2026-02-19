@@ -148,7 +148,7 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
 
     if (filters?.email) {
       Object.assign(where, {
-        email: { [Op.iLike]: `%${filters.email}%` },
+        email: { [Op.like]: `%${filters.email}%` },
       });
     }
 
@@ -163,9 +163,9 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
     if (search) {
       Object.assign(where, {
         [Op.or]: [
-          { email: { [Op.iLike]: `%${search}%` } },
-          { name: { [Op.iLike]: `%${search}%` } },
-          { surname: { [Op.iLike]: `%${search}%` } },
+          { email: { [Op.like]: `%${search}%` } },
+          { name: { [Op.like]: `%${search}%` } },
+          { surname: { [Op.like]: `%${search}%` } },
         ],
       });
     }

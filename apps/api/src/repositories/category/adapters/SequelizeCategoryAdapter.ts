@@ -228,7 +228,7 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
 
     if (filters?.name) {
       Object.assign(where, {
-        name: { [Op.iLike]: `%${filters.name}%` },
+        name: { [Op.like]: `%${filters.name}%` },
       });
     }
 
