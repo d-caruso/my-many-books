@@ -38,6 +38,9 @@ export const BookSearchResults: React.FC<BookSearchResultsProps> = ({
   const { t } = useTranslation(['books', 'common']);
 
   if (error) {
+    const errorKey = `books:errors.${error}`;
+    const displayError = t(errorKey, { defaultValue: '' }) || t('books:errors.SEARCH_UNEXPECTED_ERROR');
+
     return (
       <Alert severity="error" sx={{ textAlign: 'center', py: 3 }}>
         <Box display="flex" flexDirection="column" alignItems="center">
@@ -45,7 +48,7 @@ export const BookSearchResults: React.FC<BookSearchResultsProps> = ({
           <Typography variant="h6" fontWeight="medium" gutterBottom>
             {t('books:search_error')}
           </Typography>
-          <Typography variant="body2">{error}</Typography>
+          <Typography variant="body2">{displayError}</Typography>
         </Box>
       </Alert>
     );

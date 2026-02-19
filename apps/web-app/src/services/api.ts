@@ -22,6 +22,7 @@ import type {
   MobileAnalyticsActionTypeBreakdown,
   MobileAnalyticsProcessingStatus,
 } from '@my-many-books/shared-types';
+import { SearchFiltersSchema } from '@my-many-books/shared-types';
 import axios from 'axios';
 import { env } from '../config/env';
 import { authService } from './authService';
@@ -966,8 +967,11 @@ class ApiService {
     }
 
     // Transform parameters for shared API
+    const parsedQuery = SearchFiltersSchema.shape.query.safeParse(searchParams.q?.trim() ?? '');
+    const query = parsedQuery.success ? parsedQuery.data : undefined;
+
     const filters: SearchFilters = {
-      query: searchParams.q,
+      query,
       status: searchParams.status as any,
       sortBy: searchParams.sortBy as any,
       authorId: searchParams.authorId,

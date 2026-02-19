@@ -32,8 +32,10 @@ export const ApiErrorSchema = z.object({
 
 export type ApiError = z.infer<typeof ApiErrorSchema>;
 
+export const SEARCH_QUERY_MIN_LENGTH = 2;
+
 export const SearchFiltersSchema = z.object({
-  query: z.string().min(2).optional(),
+  query: z.string().min(SEARCH_QUERY_MIN_LENGTH).optional(),
   status: BookStatusSchema.optional(),
   authorId: z.number().int().positive().optional(),
   categoryId: z.number().int().positive().optional(),

@@ -5,7 +5,7 @@
     "searching": "Ricerca in corso...",
     "advanced_filters": "Filtri Avanzati",
     "clear_all": "Cancella tutto",
-    "validation_error": "Inserisci almeno 2 caratteri nella casella di ricerca o seleziona un filtro avanzato.",
+    "validation_error": "Inserisci almeno {{min}} caratteri nella casella di ricerca o seleziona un filtro avanzato.",
     "author_placeholder": "Cerca per nome autore...",
     "category_label": "Categoria",
     "category_loading": "Caricamento categorie...",

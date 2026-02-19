@@ -88,7 +88,6 @@
   "type_to_search_authors": "Digita per cercare autori...",
   "no_authors_found": "Nessun autore trovato per \"{{term}}\"",
   "search_by_author_placeholder": "Cerca per nome autore...",
-  "search_validation_error": "Inserisci almeno 2 caratteri nella casella di ricerca o seleziona un filtro avanzato.",
   "all_categories": "Tutte le Categorie",
   "date_added": "Aggiunti di Recente",
   "all_books": "Tutti i Libri",
@@ -123,5 +122,8 @@
   "notes_optional": "Note (Opzionale)",
   "please_enter_isbn_first": "Inserisci prima un ISBN",
   "book_not_found_for_isbn": "Libro non trovato per questo ISBN",
-  "failed_to_lookup_book": "Ricerca libro fallita"
+  "failed_to_lookup_book": "Ricerca libro fallita",
+  "errors": {
+    "SEARCH_UNEXPECTED_ERROR": "Si è verificato un errore durante la ricerca. Riprova più tardi."
+  }
 }

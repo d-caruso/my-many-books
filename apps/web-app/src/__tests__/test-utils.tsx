@@ -30,6 +30,9 @@ const createTestI18n = () => {
           books: {
             my_books: 'My Books',
             search_error: 'Search Error',
+            errors: {
+              SEARCH_UNEXPECTED_ERROR: 'Something went wrong while searching. Please try again later.',
+            },
             no_books_found: 'No books found',
             try_adjusting: 'Try adjusting your search terms or filters',
             showing_results_one: 'Showing {{current}} of {{total}} book',
@@ -132,7 +135,7 @@ const createTestI18n = () => {
               searching: 'Searching...',
               advanced_filters: 'Advanced Filters',
               clear_all: 'Clear all',
-              validation_error: 'Please enter at least 2 characters in the search box or select an advanced filter.',
+              validation_error: 'Please enter at least {{min}} characters in the search box or select an advanced filter.',
               author_placeholder: 'Search by author name...',
               category_label: 'Category',
               category_loading: 'Loading categories...',

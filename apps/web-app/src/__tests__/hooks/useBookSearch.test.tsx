@@ -165,7 +165,32 @@ describe('useBookSearch', () => {
       });
 
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
-        q: '',
+        page: 1,
+        limit: SHARED_DEFAULT_LIMIT,
+        categoryId: 1,
+      });
+      expect(result.current.books).toEqual(mockBooks);
+    });
+
+    test('searches with filters when query is shorter than shared minimum', async () => {
+      const mockResponse = {
+        books: mockBooks,
+        total: 2,
+        page: 1,
+        hasMore: false,
+      };
+
+      mockBookAPI.searchBooks.mockResolvedValue(mockResponse);
+
+      const { result } = renderHook(() => useBookSearch(), {
+        wrapper: ({ children }) => <ApiProvider apiService={mockApiService}>{children}</ApiProvider>,
+      });
+
+      await act(async () => {
+        await result.current.searchBooks('a', { categoryId: 1 });
+      });
+
+      expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
         page: 1,
         limit: SHARED_DEFAULT_LIMIT,
         categoryId: 1,

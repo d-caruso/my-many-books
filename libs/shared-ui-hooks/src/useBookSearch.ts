@@ -3,7 +3,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Book, SearchFilters, SearchResult } from '@my-many-books/shared-types';
+import { Book, SearchFilters, SearchFiltersSchema, SearchResult } from '@my-many-books/shared-types';
 
 export interface BookSearchState<TBook extends Book = Book> {
   books: TBook[];
@@ -65,7 +65,10 @@ export const useBookSearch = <TBook extends Book = Book, TFilters extends Search
   const searchBooks = useCallback(
     async (query: string, filters: Partial<TFilters> = {}, page: number = 1): Promise<void> => {
       const trimmedQuery = query.trim();
-      if (!trimmedQuery && !hasActiveFilters(filters)) {
+      const parsedQuery = SearchFiltersSchema.shape.query.safeParse(trimmedQuery);
+      const validQuery = parsedQuery.success ? parsedQuery.data : undefined;
+
+      if (!validQuery && !hasActiveFilters(filters)) {
         clearSearch();
         return;
       }
@@ -75,11 +78,13 @@ export const useBookSearch = <TBook extends Book = Book, TFilters extends Search
 
       try {
         const searchParams: BookSearchQuery<TFilters> = {
-          q: trimmedQuery,
           page,
           limit: pageSize,
           ...filters,
         };
+        if (validQuery) {
+          searchParams.q = validQuery;
+        }
 
         const response = await api.searchBooks(searchParams);
 
@@ -96,7 +101,12 @@ export const useBookSearch = <TBook extends Book = Book, TFilters extends Search
         setLastFilters(filters);
       } catch (err: any) {
         console.error('Book search failed:', err);
-        setError(err.response?.data?.message || err.message || 'Failed to search books');
+        const isTechnicalError = Array.isArray(err?.issues) || err?.name === 'ZodError';
+        setError(
+          isTechnicalError
+            ? 'SEARCH_UNEXPECTED_ERROR'
+            : err.response?.data?.message || err.message || 'SEARCH_UNEXPECTED_ERROR'
+        );
 
         if (page === 1) {
           setBooks([]);
@@ -123,7 +133,12 @@ export const useBookSearch = <TBook extends Book = Book, TFilters extends Search
       return result;
     } catch (err: any) {
       console.error('ISBN search failed:', err);
-      setError(err.response?.data?.message || err.message || 'Book not found');
+      const isTechnicalError = Array.isArray(err?.issues) || err?.name === 'ZodError';
+      setError(
+        isTechnicalError
+          ? 'SEARCH_UNEXPECTED_ERROR'
+          : err.response?.data?.message || err.message || 'SEARCH_UNEXPECTED_ERROR'
+      );
       return null;
     } finally {
       setLoading(false);

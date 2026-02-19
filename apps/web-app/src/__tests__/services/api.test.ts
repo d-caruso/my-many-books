@@ -486,6 +486,23 @@ describe('ApiService with Industry Standard Testing', () => {
         expect(result).toEqual(mockResult);
       });
 
+      test('searchBooks does not forward short query strings to shared-api validation', async () => {
+        const mockResult = { books: [], total: 0, hasMore: false, page: 1 };
+        mockApiClient.books.searchBooks.mockResolvedValue(mockResult);
+
+        await testApiService.searchBooks({ q: 'a', categoryId: 1 });
+
+        expect(mockApiClient.books.searchBooks).toHaveBeenCalledWith({
+          query: undefined,
+          status: undefined,
+          sortBy: undefined,
+          authorId: undefined,
+          categoryId: 1,
+          page: undefined,
+          limit: undefined,
+        });
+      });
+
       test('getBook delegates to API client with correct parameters', async () => {
         const mockBook: Book = {
           id: 1,

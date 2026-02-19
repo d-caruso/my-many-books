@@ -82,7 +82,7 @@ describe('BookSearchResults', () => {
     vi.clearAllMocks();
   });
 
-  test('renders error state', () => {
+  test('renders error state with i18n fallback for unknown errors', () => {
     render(
       <BookSearchResults
         {...defaultProps}
@@ -93,8 +93,21 @@ describe('BookSearchResults', () => {
     const alert = screen.getByRole('alert');
     expect(alert).toBeInTheDocument();
     expect(alert).toHaveTextContent('Search Error');
-    expect(alert).toHaveTextContent('Search failed');
+    expect(alert).toHaveTextContent('Something went wrong while searching. Please try again later.');
     expect(screen.getByTestId('error-icon')).toBeInTheDocument();
+  });
+
+  test('renders error state with i18n key for known error codes', () => {
+    render(
+      <BookSearchResults
+        {...defaultProps}
+        error="SEARCH_UNEXPECTED_ERROR"
+      />
+    );
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveTextContent('Something went wrong while searching. Please try again later.');
   });
 
   test('renders no books found state', () => {

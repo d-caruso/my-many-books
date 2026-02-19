@@ -61,9 +61,10 @@ const BooksPage: React.FC = () => {
   const searchCategoryId = searchParams.get('categoryId');
   const searchAuthorId = searchParams.get('authorId');
   const searchSortBy = searchParams.get('sortBy');
+  const searchStatus = searchParams.get('status');
   const searchModeParam = searchParams.get('mode');
   const searchQuery = searchParams.get('q') || '';
-  const searchActive = Boolean(searchQuery || searchCategoryId || searchAuthorId || searchSortBy);
+  const searchActive = Boolean(searchQuery || searchCategoryId || searchAuthorId || searchSortBy || searchStatus);
 
   const runCurrentSearch = useCallback(async () => {
     const query = searchParams.get('q') || '';
@@ -71,10 +72,12 @@ const BooksPage: React.FC = () => {
     const categoryId = searchParams.get('categoryId');
     const authorId = searchParams.get('authorId');
     const sortBy = searchParams.get('sortBy');
+    const status = searchParams.get('status');
 
     if (categoryId) filters.categoryId = parseInt(categoryId);
     if (authorId) filters.authorId = parseInt(authorId);
     if (sortBy) filters.sortBy = sortBy;
+    if (status) filters.status = status;
 
     await searchBooks(query, filters);
   }, [searchParams, searchBooks]);
@@ -108,7 +111,10 @@ const BooksPage: React.FC = () => {
   const handleSearch = (query: string, filters: any) => {
     // Update URL params
     const params = new URLSearchParams();
-    if (query.trim()) params.set('q', query);
+
+    if (query.trim()) {
+      params.set('q', query.trim());
+    }
     
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== '' && value !== null) {

@@ -18,6 +18,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ClearIcon from '@mui/icons-material/Clear';
 import WarningIcon from '@mui/icons-material/Warning';
+import { SearchFiltersSchema, SEARCH_QUERY_MIN_LENGTH } from '@my-many-books/shared-types';
 import type { SearchFilters, Author } from '@my-many-books/shared-types';
 import { useCategories } from '../../hooks/useCategories';
 import { AuthorAutocomplete } from './AuthorAutocomplete';
@@ -43,20 +44,22 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
 
   useEffect(() => {
     setQuery(initialQuery);
+    setValidationError(null);
   }, [initialQuery]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation: require either min 2 chars in query OR at least one filter
-    const hasValidQuery = query.trim().length >= 2;
+
+    // Validation: require either valid query (from shared schema) OR at least one filter
+    const parsedQuery = SearchFiltersSchema.shape.query.safeParse(query.trim());
+    const hasValidQuery = parsedQuery.success && !!parsedQuery.data;
     const hasFilters = Object.values(filters).some(value => value !== undefined && value !== '' && value !== null);
-    
+
     if (!hasValidQuery && !hasFilters) {
-      setValidationError(t('form.validation_error'));
+      setValidationError(t('form.validation_error', { min: SEARCH_QUERY_MIN_LENGTH }));
       return;
     }
-    
+
     setValidationError(null);
     onSearch(query, filters);
   };

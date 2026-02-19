@@ -41,13 +41,17 @@ const BookSearchPage: React.FC = () => {
   useEffect(() => {
     const query = searchParams.get('q');
     const categoryId = searchParams.get('categoryId');
+    const authorId = searchParams.get('authorId');
     const sortBy = searchParams.get('sortBy');
+    const status = searchParams.get('status');
 
-    if (query || categoryId || sortBy) {
+    if (query || categoryId || authorId || sortBy || status) {
       const filters: SearchFilters = {};
-      
+
       if (categoryId) filters.categoryId = parseInt(categoryId);
+      if (authorId) filters.authorId = parseInt(authorId);
       if (sortBy) filters.sortBy = sortBy as SearchFilters['sortBy'];
+      if (status) filters.status = status as SearchFilters['status'];
 
       searchBooks(query || '', filters);
     }
@@ -56,11 +60,11 @@ const BookSearchPage: React.FC = () => {
   const handleSearch = (query: string, filters: SearchFilters) => {
     // Update URL params
     const params = new URLSearchParams();
-    
+
     if (query.trim()) {
-      params.set('q', query);
+      params.set('q', query.trim());
     }
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== '') {
         params.set(key, value.toString());

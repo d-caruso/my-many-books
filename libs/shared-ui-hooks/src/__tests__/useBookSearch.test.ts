@@ -90,7 +90,22 @@ describe('useBookSearch', () => {
       await result.current.searchBooks('  ', { status: 'reading' });
     });
 
-    expect(api.searchBooks).toHaveBeenCalledWith({ q: '', page: 1, limit: 20, status: 'reading' });
+    expect(api.searchBooks).toHaveBeenCalledWith({ page: 1, limit: 20, status: 'reading' });
+  });
+
+  it('does not forward short query when filters are active', async () => {
+    const api = {
+      searchBooks: jest.fn().mockResolvedValue({ books: [], total: 0, hasMore: false, page: 1 }),
+      searchByISBN: jest.fn(),
+    };
+
+    const { result } = renderHook(() => useBookSearch(api));
+
+    await act(async () => {
+      await result.current.searchBooks('a', { status: 'reading' });
+    });
+
+    expect(api.searchBooks).toHaveBeenCalledWith({ page: 1, limit: 20, status: 'reading' });
   });
 
   it('returns null for blank ISBN and captures errors for failed ISBN searches', async () => {
