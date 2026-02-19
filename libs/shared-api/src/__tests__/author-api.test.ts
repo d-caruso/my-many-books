@@ -402,6 +402,23 @@ describe('AuthorApi', () => {
       expect(result).toHaveLength(2);
     });
 
+    it('should handle wrapped search responses with metadata', async () => {
+      mockHttpClient.setResponse('/authors/search', {
+        data: {
+          results: mockAuthors,
+          total: mockAuthors.length,
+          limit: 20,
+          offset: 0,
+        },
+        status: 200,
+      });
+
+      const result = await authorApi.searchAuthors('author');
+
+      expect(result).toEqual(mockAuthors);
+      expect(result).toHaveLength(2);
+    });
+
     it('should handle special characters in search query', async () => {
       mockHttpClient.setResponse('/authors/search', {
         data: [mockAuthor],

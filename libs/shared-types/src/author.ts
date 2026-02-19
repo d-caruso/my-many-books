@@ -15,3 +15,12 @@ export const AuthorSchema = z.object({
 });
 
 export type Author = z.infer<typeof AuthorSchema>;
+
+export const AuthorSearchResponseSchema = z.object({
+  results: AuthorSchema.array(),
+  total: z.number().int().nonnegative(),
+  limit: z.number().int().nonnegative().optional(),
+  offset: z.number().int().nonnegative().optional(),
+});
+
+export type AuthorSearchResponse = z.infer<typeof AuthorSearchResponseSchema>;
