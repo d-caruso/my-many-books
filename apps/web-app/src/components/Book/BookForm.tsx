@@ -80,7 +80,7 @@ export const BookForm: React.FC<BookFormProps> = ({
       setFormData({
         title: book.title,
         isbnCode: book.isbnCode,
-        editionNumber: book.editionNumber,
+        editionNumber: book.editionNumber ?? undefined,
         editionDate: book.editionDate ? book.editionDate.split('T')[0] : '',
         status: book.status,
         notes: book.notes || '',
@@ -112,7 +112,7 @@ export const BookForm: React.FC<BookFormProps> = ({
       // Convert Zod errors to field-level errors
       const newErrors: Partial<Record<keyof BookFormData, string>> = {};
 
-      result.error.errors.forEach((err) => {
+      result.error.issues.forEach((err) => {
         const field = err.path[0] as keyof BookFormData;
         if (field && !newErrors[field]) {
           newErrors[field] = err.message;

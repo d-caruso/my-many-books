@@ -149,7 +149,7 @@ export const BookManagementPage: React.FC = () => {
 
     if (!result.success) {
       // Show first validation error
-      const firstError = result.error.errors[0];
+      const firstError = result.error.issues[0];
       setFormError(firstError.message);
       return;
     }
