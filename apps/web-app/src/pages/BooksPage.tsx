@@ -26,6 +26,7 @@ const BooksPage: React.FC = () => {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [initialIsbn, setInitialIsbn] = useState<string | undefined>(undefined);
 
   // Get setting for book status change behavior
   const { value: statusChangeBehavior } = useSetting<BookStatusChangeBehavior>(
@@ -84,9 +85,12 @@ const BooksPage: React.FC = () => {
 
   useEffect(() => {
     if (searchModeParam === 'add') {
+      const isbnFromUrl = searchParams.get('isbn') || undefined;
+      setInitialIsbn(isbnFromUrl);
       handleAddBook();
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('mode');
+      newParams.delete('isbn');
       setSearchParams(newParams, { replace: true });
       return;
     }
@@ -233,6 +237,7 @@ const BooksPage: React.FC = () => {
 
       setPageMode('list');
       setSelectedBook(null);
+      setInitialIsbn(undefined);
     } catch (err: any) {
       console.error('Failed to save book:', err);
       const errorData = err.response?.data;
@@ -259,6 +264,7 @@ const BooksPage: React.FC = () => {
     setPageMode('list');
     setSelectedBook(null);
     setActionError(null);
+    setInitialIsbn(undefined);
   };
 
   const visuallyHidden = {
@@ -281,6 +287,7 @@ const BooksPage: React.FC = () => {
           onSubmit={handleFormSubmit}
           onCancel={handleCancel}
           loading={actionLoading}
+          initialIsbn={initialIsbn}
         />
         {actionError && (
           <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-line' }}>

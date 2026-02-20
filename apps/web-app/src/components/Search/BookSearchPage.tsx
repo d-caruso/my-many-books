@@ -31,14 +31,23 @@ const BookSearchPage: React.FC = () => {
     hasMore,
     totalCount,
     searchBooks,
+    searchByISBN,
     clearSearch,
     loadMore
   } = useBookSearch();
 
   const [initialQuery] = useState(searchParams.get('q') || '');
+  const [isbnBook, setIsbnBook] = useState<Book | null>(null);
+
+  const isbnParam = searchParams.get('isbn');
 
   // Load initial search results from URL params
   useEffect(() => {
+    if (isbnParam) {
+      searchByISBN(isbnParam).then(result => setIsbnBook(result));
+      return;
+    }
+
     const query = searchParams.get('q');
     const categoryId = searchParams.get('categoryId');
     const authorId = searchParams.get('authorId');
@@ -55,7 +64,7 @@ const BookSearchPage: React.FC = () => {
 
       searchBooks(query || '', filters);
     }
-  }, [searchParams, searchBooks]);
+  }, [searchParams, searchBooks, isbnParam, searchByISBN]);
 
   const handleSearch = (query: string, filters: SearchFilters) => {
     // Update URL params
@@ -135,17 +144,18 @@ const BookSearchPage: React.FC = () => {
 
       {/* Search results */}
       <BookSearchResults
-        books={books}
+        books={isbnParam ? (isbnBook ? [isbnBook] : []) : books}
         loading={loading}
         error={error}
-        totalCount={totalCount}
-        hasMore={hasMore}
+        totalCount={isbnParam ? (isbnBook ? 1 : 0) : totalCount}
+        hasMore={isbnParam ? false : hasMore}
         onLoadMore={loadMore}
         onBookSelect={handleBookSelect}
+        scannedIsbn={isbnParam || undefined}
       />
 
       {/* Empty state for no search */}
-      {!loading && books.length === 0 && !error && !searchParams.get('q') && (
+      {!loading && books.length === 0 && !error && !searchParams.get('q') && !isbnParam && (
         <Box textAlign="center" py={6}>
           <Box color="text.disabled" mb={2}>
             <SearchIcon sx={{ fontSize: 96 }} />

@@ -77,7 +77,7 @@ const ScannerRoute: React.FC = () => {
       onClose={() => { if (!didNavigate.current) navigate(-1); }}
       onScanSuccess={(result) => {
         didNavigate.current = true;
-        navigate(`/search?q=${encodeURIComponent(result.isbn)}`);
+        navigate(`/search?isbn=${encodeURIComponent(result.isbn)}`);
       }}
       onScanError={() => {}}
     />

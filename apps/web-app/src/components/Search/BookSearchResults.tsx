@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -13,6 +14,7 @@ import {
 } from '@mui/material';
 import ErrorIcon from '@mui/icons-material/Error';
 import BookIcon from '@mui/icons-material/MenuBook';
+import AddIcon from '@mui/icons-material/Add';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
 
@@ -24,6 +26,7 @@ interface BookSearchResultsProps {
   hasMore: boolean;
   onLoadMore: () => void;
   onBookSelect: (book: Book) => void;
+  scannedIsbn?: string;
 }
 
 export const BookSearchResults: React.FC<BookSearchResultsProps> = ({
@@ -33,9 +36,11 @@ export const BookSearchResults: React.FC<BookSearchResultsProps> = ({
   totalCount,
   hasMore,
   onLoadMore,
-  onBookSelect
+  onBookSelect,
+  scannedIsbn
 }) => {
   const { t } = useTranslation(['books', 'common']);
+  const navigate = useNavigate();
 
   if (error) {
     const errorKey = `books:errors.${error}`;
@@ -64,6 +69,16 @@ export const BookSearchResults: React.FC<BookSearchResultsProps> = ({
         <Typography variant="body2" color="text.secondary">
           {t('books:try_adjusting')}
         </Typography>
+        {scannedIsbn && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate(`/?mode=add&isbn=${encodeURIComponent(scannedIsbn)}`)}
+            sx={{ mt: 3 }}
+          >
+            {t('books:add_new_book')}
+          </Button>
+        )}
       </Box>
     );
   }

@@ -36,6 +36,7 @@ interface BookFormProps {
   loading?: boolean;
   title?: string;
   apiErrors?: Array<{ field: string; message: string }>;
+  initialIsbn?: string;
 }
 
 export interface BookFormData {
@@ -55,14 +56,15 @@ export const BookForm: React.FC<BookFormProps> = ({
   onCancel,
   loading = false,
   title,
-  apiErrors = []
+  apiErrors = [],
+  initialIsbn
 }) => {
   const { t } = useTranslation(['books', 'common']);
   const { categories, loading: categoriesLoading, loadCategories } = useCategories();
   const defaultTitle = book ? t('books:edit_book_form') : t('books:add_new_book');
   const [formData, setFormData] = useState<BookFormData>({
     title: '',
-    isbnCode: '',
+    isbnCode: !book && initialIsbn ? initialIsbn : '',
     editionNumber: undefined,
     editionDate: '',
     status: undefined,
