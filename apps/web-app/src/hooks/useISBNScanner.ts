@@ -1,9 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ScanResult } from '@my-many-books/shared-types';
+import { validateISBN } from '@my-many-books/shared-utils';
 
 // Types for dynamically imported zxing library
 // Using 'any' to avoid bundling the library at compile time
 type BrowserMultiFormatReader = any;
+
+interface ScannerControls {
+  stop: () => void;
+}
 
 interface ScannerState {
   isScanning: boolean;
@@ -33,8 +38,26 @@ export const useISBNScanner = (
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
 
   const codeReader = useRef<BrowserMultiFormatReader | null>(null);
+  const scannerControls = useRef<ScannerControls | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const isInitializing = useRef(false);
+
+  // Stable refs for callback props — prevents startScanning recreation on parent re-render
+  const onScanSuccessRef = useRef(onScanSuccess);
+  const onScanErrorRef = useRef(onScanError);
+
+  useEffect(() => { onScanSuccessRef.current = onScanSuccess; }, [onScanSuccess]);
+  useEffect(() => { onScanErrorRef.current = onScanError; }, [onScanError]);
+
+  // Stable refs for state values — lets startScanning read latest values without depending on them
+  const hasPermissionRef = useRef(hasPermission);
+  hasPermissionRef.current = hasPermission;
+
+  const selectedDeviceIdRef = useRef<string | null>(selectedDeviceId);
+  selectedDeviceIdRef.current = selectedDeviceId;
+
+  const devicesRef = useRef<MediaDeviceInfo[]>(devices);
+  devicesRef.current = devices;
 
   // Dynamically import and initialize the barcode reader
   const initializeReader = useCallback(async () => {
@@ -44,8 +67,14 @@ export const useISBNScanner = (
 
     try {
       isInitializing.current = true;
-      const { BrowserMultiFormatReader } = await import('@zxing/library');
-      codeReader.current = new BrowserMultiFormatReader();
+      const { BrowserMultiFormatReader } = await import('@zxing/browser');
+      const { DecodeHintType, BarcodeFormat } = await import('@zxing/library');
+
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8]);
+
+      codeReader.current = new BrowserMultiFormatReader(hints);
+      console.debug('[ISBNScanner] Reader initialized with EAN-13/EAN-8 hints');
       return codeReader.current;
     } catch (err) {
       console.error('Failed to initialize barcode reader:', err);
@@ -59,8 +88,9 @@ export const useISBNScanner = (
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (codeReader.current) {
-        codeReader.current.reset();
+      if (scannerControls.current) {
+        scannerControls.current.stop();
+        scannerControls.current = null;
       }
     };
   }, []);
@@ -71,37 +101,37 @@ export const useISBNScanner = (
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
       setDevices(videoDevices);
-      
+
       // Prefer back camera on mobile devices
-      const backCamera = videoDevices.find(device => 
-        device.label.toLowerCase().includes('back') || 
+      const backCamera = videoDevices.find(device =>
+        device.label.toLowerCase().includes('back') ||
         device.label.toLowerCase().includes('rear') ||
         device.label.toLowerCase().includes('environment')
       );
-      
+
       const preferredDevice = backCamera || videoDevices[0];
-      if (preferredDevice && !selectedDeviceId) {
+      if (preferredDevice && !selectedDeviceIdRef.current) {
         setSelectedDeviceId(preferredDevice.deviceId);
       }
-      
+
       return videoDevices;
     } catch (err) {
       console.error('Error getting video devices:', err);
       setError('Failed to access camera devices');
       return [];
     }
-  }, [selectedDeviceId]);
+  }, []);
 
   // Request camera permission
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
       });
-      
+
       // Stop the stream immediately - we just needed permission
       stream.getTracks().forEach(track => track.stop());
-      
+
       setHasPermission(true);
       setError(null);
       await getVideoDevices();
@@ -109,7 +139,7 @@ export const useISBNScanner = (
     } catch (err: any) {
       console.error('Camera permission denied:', err);
       setHasPermission(false);
-      
+
       if (err.name === 'NotAllowedError') {
         setError('Camera access denied. Please enable camera permissions in your browser settings.');
       } else if (err.name === 'NotFoundError') {
@@ -117,78 +147,33 @@ export const useISBNScanner = (
       } else {
         setError('Failed to access camera. Please check your camera permissions.');
       }
-      
-      onScanError?.(error || 'Camera permission denied');
+
+      onScanErrorRef.current?.('Camera permission denied');
       return false;
     }
-  }, [error, getVideoDevices, onScanError]);
+  }, [getVideoDevices]);
 
-  // Validate ISBN format - moved to useCallback for dependency management
-  const validateISBN10 = useCallback((isbn: string): boolean => {
-    if (isbn.length !== 10) return false;
-    
-    let sum = 0;
-    for (let i = 0; i < 9; i++) {
-      const digit = parseInt(isbn[i]);
-      if (isNaN(digit)) return false;
-      sum += digit * (10 - i);
-    }
-    
-    const lastChar = isbn[9];
-    const checkDigit = lastChar === 'X' ? 10 : parseInt(lastChar);
-    if (isNaN(checkDigit) && lastChar !== 'X') return false;
-    
-    sum += checkDigit;
-    return sum % 11 === 0;
-  }, []);
-
-  const validateISBN13 = useCallback((isbn: string): boolean => {
-    if (isbn.length !== 13) return false;
-    
-    let sum = 0;
-    for (let i = 0; i < 12; i++) {
-      const digit = parseInt(isbn[i]);
-      if (isNaN(digit)) return false;
-      sum += digit * (i % 2 === 0 ? 1 : 3);
-    }
-    
-    const checkDigit = parseInt(isbn[12]);
-    if (isNaN(checkDigit)) return false;
-    
-    const calculatedCheck = (10 - (sum % 10)) % 10;
-    return calculatedCheck === checkDigit;
-  }, []);
-
-  const validateISBN = useCallback((code: string): boolean => {
-    // Remove any non-digit characters except X
-    const cleanCode = code.replace(/[^0-9X]/gi, '');
-    
-    // Check if it's ISBN-10 or ISBN-13
-    if (cleanCode.length === 10) {
-      return validateISBN10(cleanCode);
-    } else if (cleanCode.length === 13) {
-      return validateISBN13(cleanCode);
-    }
-    
-    return false;
-  }, [validateISBN10, validateISBN13]);
+  // Ref for requestPermission — keeps startScanning stable
+  const requestPermissionRef = useRef(requestPermission);
+  requestPermissionRef.current = requestPermission;
 
   // Stop scanning
   const stopScanning = useCallback((): void => {
-    if (codeReader.current) {
-      codeReader.current.reset();
+    if (scannerControls.current) {
+      scannerControls.current.stop();
+      scannerControls.current = null;
     }
     setIsScanning(false);
   }, []);
 
-  // Start scanning
+  // Start scanning — stable deps: only depends on functions with [] deps
+  // Reads volatile state (hasPermission, selectedDeviceId, devices) via refs
   const startScanning = useCallback(async (): Promise<void> => {
-    if (!hasPermission) {
-      const granted = await requestPermission();
+    if (!hasPermissionRef.current) {
+      const granted = await requestPermissionRef.current();
       if (!granted) return;
     }
 
-    // Dynamically load the scanner library
     const reader = await initializeReader();
     if (!reader || !videoRef.current) {
       setError('Scanner not properly initialized');
@@ -196,61 +181,74 @@ export const useISBNScanner = (
     }
 
     try {
-      setIsScanning(true);
       setError(null);
 
-      const deviceId = selectedDeviceId || devices[0]?.deviceId;
-      if (!deviceId) {
-        setError('No camera device available');
-        return;
-      }
+      const deviceId = selectedDeviceIdRef.current || devicesRef.current[0]?.deviceId;
 
-      // Dynamically import NotFoundException for error checking
+      const constraints: MediaStreamConstraints = {
+        video: {
+          deviceId: deviceId ? { exact: deviceId } : undefined,
+          facingMode: deviceId ? undefined : 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      };
+
+      setIsScanning(true);
+      console.debug('[ISBNScanner] Starting scan', { deviceId: deviceId || 'environment' });
+
       const { NotFoundException } = await import('@zxing/library');
 
-      await reader.decodeFromVideoDevice(
-        deviceId,
+      const controls = await reader.decodeFromConstraints(
+        constraints,
         videoRef.current,
         (result: any, error: any) => {
           if (result) {
             const scannedText = result.getText();
+            const format = result.getBarcodeFormat?.() ?? 'unknown';
+            console.debug('[ISBNScanner] Barcode decoded', { format, text: scannedText });
 
-            if (validateISBN(scannedText)) {
+            if (validateISBN(scannedText).isValid) {
+              console.debug('[ISBNScanner] Valid ISBN detected:', scannedText);
               const scanResult: ScanResult = {
                 isbn: scannedText.replace(/[^0-9X]/gi, ''),
                 success: true
               };
 
-              onScanSuccess(scanResult);
+              onScanSuccessRef.current(scanResult);
               stopScanning();
+            } else {
+              console.debug('[ISBNScanner] Decoded but not valid ISBN:', scannedText);
             }
           }
 
+          // Only log non-NotFoundException errors; don't set error state
+          // as it would hide the video element and break scanning
           if (error && !(error instanceof NotFoundException)) {
             console.warn('Scan error:', error);
-            setError('Scanning error occurred');
-            onScanError?.('Scanning error occurred');
           }
         }
       );
+
+      scannerControls.current = controls;
     } catch (err: any) {
       console.error('Failed to start scanning:', err);
       setError('Failed to start camera');
       setIsScanning(false);
-      onScanError?.('Failed to start camera');
+      onScanErrorRef.current?.('Failed to start camera');
     }
-  }, [hasPermission, requestPermission, selectedDeviceId, devices, onScanSuccess, onScanError, validateISBN, initializeReader, stopScanning]);
+  }, [initializeReader, stopScanning]);
 
   // Switch camera
   const switchCamera = useCallback((): void => {
     if (devices.length <= 1) return;
-    
+
     const currentIndex = devices.findIndex(device => device.deviceId === selectedDeviceId);
     const nextIndex = (currentIndex + 1) % devices.length;
     const nextDevice = devices[nextIndex];
-    
+
     setSelectedDeviceId(nextDevice.deviceId);
-    
+
     if (isScanning) {
       stopScanning();
       // Restart scanning with new device after a short delay

@@ -43,7 +43,7 @@ router.get(
   searchLimiter,
   validateQuery(searchBooksQuerySchema),
   expressRouteWrapper(bookController.searchBooks.bind(bookController))
-); // Rimossa la riga vuota e corretta l'indentazione.
+);
 
 router.get(
   '/search/isbn/:isbn',
@@ -78,7 +78,6 @@ router.post(
   expressRouteWrapper(bookController.createBookForUser.bind(bookController))
 );
 
-// Allineamento standard (multi-line se ci sono molti middleware)
 router.put(
   '/:id',
   writeLimiter,

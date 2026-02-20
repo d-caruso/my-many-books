@@ -3,18 +3,24 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useISBNScanner } from '../../hooks/useISBNScanner';
 import { ScanResult } from '../../hooks/../types';
 
-// Mock ZXing library
+// Mock scanner controls
+const mockControls = { stop: vi.fn() };
+
+// Mock ZXing browser reader
 const mockCodeReader = {
-  decodeFromVideoDevice: vi.fn(),
-  reset: vi.fn(),
-  getVideoInputDevices: vi.fn(),
+  decodeFromConstraints: vi.fn().mockResolvedValue(mockControls),
 };
 
 const MockBrowserMultiFormatReader = vi.fn(() => mockCodeReader);
 
-vi.mock('@zxing/library', () => ({
+vi.mock('@zxing/browser', () => ({
   BrowserMultiFormatReader: MockBrowserMultiFormatReader,
+}));
+
+vi.mock('@zxing/library', () => ({
   NotFoundException: vi.fn(),
+  DecodeHintType: { POSSIBLE_FORMATS: 'POSSIBLE_FORMATS', TRY_HARDER: 'TRY_HARDER' },
+  BarcodeFormat: { EAN_13: 'EAN_13', EAN_8: 'EAN_8' },
 }));
 
 // Mock navigator.mediaDevices
@@ -30,6 +36,8 @@ Object.defineProperty(navigator, 'mediaDevices', {
 
 // Mock console.error to keep tests clean
 const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+const consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
 describe('useISBNScanner', () => {
   let mockOnScanSuccess: any;
@@ -51,14 +59,13 @@ describe('useISBNScanner', () => {
       getTracks: () => [{ stop: vi.fn() }],
     });
 
-    mockCodeReader.getVideoInputDevices.mockResolvedValue([
-      { deviceId: 'camera1', kind: 'videoinput', label: 'Camera 1' },
-      { deviceId: 'camera2', kind: 'videoinput', label: 'Camera 2' },
-    ]);
+    mockCodeReader.decodeFromConstraints.mockResolvedValue(mockControls);
   });
 
   afterEach(() => {
     consoleSpy.mockClear();
+    consoleWarnSpy.mockClear();
+    consoleDebugSpy.mockClear();
   });
 
   test('initializes with default state', () => {
@@ -97,7 +104,7 @@ describe('useISBNScanner', () => {
     expect(MockBrowserMultiFormatReader).toHaveBeenCalled();
   });
 
-  test('cleans up code reader on unmount', async () => {
+  test('cleans up scanner controls on unmount', async () => {
     const { result, unmount } = renderHook(() => useISBNScanner(mockOnScanSuccess));
 
     // Set up video element
@@ -116,7 +123,7 @@ describe('useISBNScanner', () => {
 
     unmount();
 
-    expect(mockCodeReader.reset).toHaveBeenCalled();
+    expect(mockControls.stop).toHaveBeenCalled();
   });
 
   describe('requestPermission', () => {
@@ -196,8 +203,6 @@ describe('useISBNScanner', () => {
 
   describe('startScanning', () => {
     test('attempts to start scanning with permission and video element', async () => {
-      mockCodeReader.decodeFromVideoDevice.mockResolvedValue(undefined);
-      
       const { result } = renderHook(() => useISBNScanner(mockOnScanSuccess));
 
       const mockVideoElement = document.createElement('video') as HTMLVideoElement;
@@ -216,8 +221,14 @@ describe('useISBNScanner', () => {
         await result.current.startScanning();
       });
 
-      expect(mockCodeReader.decodeFromVideoDevice).toHaveBeenCalledWith(
-        'camera1', // First available camera
+      expect(mockCodeReader.decodeFromConstraints).toHaveBeenCalledWith(
+        expect.objectContaining({
+          video: expect.objectContaining({
+            deviceId: { exact: 'camera1' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          }),
+        }),
         mockVideoElement,
         expect.any(Function)
       );
@@ -232,7 +243,7 @@ describe('useISBNScanner', () => {
 
       expect(result.current.isScanning).toBe(false);
       expect(result.current.error).toBe('Scanner not properly initialized');
-      expect(mockCodeReader.decodeFromVideoDevice).not.toHaveBeenCalled();
+      expect(mockCodeReader.decodeFromConstraints).not.toHaveBeenCalled();
     });
 
     test('does not start scanning without video element', async () => {
@@ -249,11 +260,11 @@ describe('useISBNScanner', () => {
 
       expect(result.current.isScanning).toBe(false);
       expect(result.current.error).toBe('Scanner not properly initialized');
-      expect(mockCodeReader.decodeFromVideoDevice).not.toHaveBeenCalled();
+      expect(mockCodeReader.decodeFromConstraints).not.toHaveBeenCalled();
     });
 
     test('handles scanning errors', async () => {
-      mockCodeReader.decodeFromVideoDevice.mockRejectedValue(new Error('Scanning failed'));
+      mockCodeReader.decodeFromConstraints.mockRejectedValue(new Error('Scanning failed'));
 
       const { result } = renderHook(() => useISBNScanner(mockOnScanSuccess, mockOnScanError));
 
@@ -301,7 +312,7 @@ describe('useISBNScanner', () => {
       });
 
       expect(result.current.isScanning).toBe(false);
-      expect(mockCodeReader.reset).toHaveBeenCalled();
+      expect(mockControls.stop).toHaveBeenCalled();
     });
 
     test('can stop scanning even if not currently scanning', () => {
@@ -380,7 +391,6 @@ describe('useISBNScanner', () => {
 
     test('does nothing if no devices available', async () => {
       mockMediaDevices.enumerateDevices.mockResolvedValue([]);
-      mockCodeReader.getVideoInputDevices.mockResolvedValue([]);
 
       const { result } = renderHook(() => useISBNScanner(mockOnScanSuccess));
 
@@ -405,11 +415,11 @@ describe('useISBNScanner', () => {
         success: true,
       };
 
-      let scanCallback: ((result: any) => void) | undefined;
+      let scanCallback: ((result: any, error?: any) => void) | undefined;
 
-      mockCodeReader.decodeFromVideoDevice.mockImplementation((deviceId, video, callback) => {
+      mockCodeReader.decodeFromConstraints.mockImplementation((constraints, video, callback) => {
         scanCallback = callback;
-        return Promise.resolve();
+        return Promise.resolve(mockControls);
       });
 
       const { result } = renderHook(() => useISBNScanner(mockOnScanSuccess));
@@ -431,20 +441,56 @@ describe('useISBNScanner', () => {
       // Simulate successful scan
       act(() => {
         if (scanCallback) {
-          scanCallback({ getText: () => validISBN }, null);
+          scanCallback({ getText: () => validISBN, getBarcodeFormat: () => 'EAN_13' }, null);
         }
       });
 
       expect(mockOnScanSuccess).toHaveBeenCalledWith(mockScanResult);
     });
 
-    test('handles scan errors through callback', async () => {
-      
+    test('rejects non-ISBN EAN-13 barcodes (no 978/979 prefix)', async () => {
+      const nonISBNBarcode = '5477148210281';
+
       let scanCallback: ((result: any, error?: any) => void) | undefined;
 
-      mockCodeReader.decodeFromVideoDevice.mockImplementation((deviceId, video, callback) => {
+      mockCodeReader.decodeFromConstraints.mockImplementation((constraints, video, callback) => {
         scanCallback = callback;
-        return Promise.resolve();
+        return Promise.resolve(mockControls);
+      });
+
+      const { result } = renderHook(() => useISBNScanner(mockOnScanSuccess));
+
+      const mockVideoElement = document.createElement('video') as HTMLVideoElement;
+
+      await act(async () => {
+        await result.current.requestPermission();
+      });
+
+      act(() => {
+        result.current.setVideoElement(mockVideoElement);
+      });
+
+      await act(async () => {
+        await result.current.startScanning();
+      });
+
+      // Simulate scan with a non-ISBN EAN-13 barcode
+      act(() => {
+        if (scanCallback) {
+          scanCallback({ getText: () => nonISBNBarcode, getBarcodeFormat: () => 'EAN_13' }, null);
+        }
+      });
+
+      expect(mockOnScanSuccess).not.toHaveBeenCalled();
+      expect(result.current.isScanning).toBe(true);
+    });
+
+    test('logs warning for non-NotFoundException scan errors', async () => {
+      let scanCallback: ((result: any, error?: any) => void) | undefined;
+
+      mockCodeReader.decodeFromConstraints.mockImplementation((constraints, video, callback) => {
+        scanCallback = callback;
+        return Promise.resolve(mockControls);
       });
 
       const { result } = renderHook(() => useISBNScanner(mockOnScanSuccess, mockOnScanError));
@@ -463,14 +509,14 @@ describe('useISBNScanner', () => {
         await result.current.startScanning();
       });
 
-      // Simulate scan error
+      // Simulate scan error (non-NotFoundException)
       act(() => {
         if (scanCallback) {
           scanCallback(null, new Error('No barcode found'));
         }
       });
 
-      expect(mockOnScanError).toHaveBeenCalledWith('Scanning error occurred');
+      expect(consoleWarnSpy).toHaveBeenCalledWith('Scan error:', expect.any(Error));
     });
   });
 

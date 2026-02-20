@@ -1,5 +1,5 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { authService } from './services/authService';
 import { ApiProvider } from './contexts/ApiContext';
@@ -67,6 +67,22 @@ const MobileHookTestingPage = lazy(() =>
 const MobileAnalyticsPage = lazy(() =>
   import('./pages/Admin/MobileAnalytics/MobileAnalyticsPage').then(m => ({ default: m.MobileAnalyticsPage }))
  );
+
+const ScannerRoute: React.FC = () => {
+  const navigate = useNavigate();
+  const didNavigate = useRef(false);
+  return (
+    <ScannerModal
+      isOpen={true}
+      onClose={() => { if (!didNavigate.current) navigate(-1); }}
+      onScanSuccess={(result) => {
+        didNavigate.current = true;
+        navigate(`/search?q=${encodeURIComponent(result.isbn)}`);
+      }}
+      onScanError={() => {}}
+    />
+  );
+};
 
 function App() {
   const [appReady, setAppReady] = useState(false);
@@ -252,7 +268,7 @@ function App() {
                                   <Routes>
                                     <Route path="/" element={<PageErrorBoundary pageName="Books"><BooksPage /></PageErrorBoundary>} />
                                     <Route path="/search" element={<PageErrorBoundary pageName="Book Search"><BookSearchPage /></PageErrorBoundary>} />
-                                    <Route path="/scanner" element={<ScannerModal isOpen={true} onClose={() => window.history.back()} onScanSuccess={() => {}} onScanError={() => {}} />} />
+                                    <Route path="/scanner" element={<ScannerRoute />} />
                                     <Route path="*" element={<Navigate to="/" replace />} />
                                   </Routes>
                                 </Box>

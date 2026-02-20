@@ -34,6 +34,8 @@ const validateISBN10 = (isbn: string): boolean => {
 };
 
 const validateISBN13 = (isbn: string): boolean => {
+  if (!isbn.startsWith('978') && !isbn.startsWith('979')) return false;
+
   let sum = 0;
   for (let i = 0; i < 12; i++) {
     const digit = parseInt(isbn.charAt(i));

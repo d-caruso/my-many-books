@@ -34,7 +34,7 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
   onClose,
   isOpen
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('scanner');
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const {
@@ -49,25 +49,27 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
     setVideoElement,
   } = useISBNScanner(onScanSuccess, onScanError);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      setVideoElement(videoRef.current);
-    }
-  }, [setVideoElement]);
+  // Store actions in a ref so the effect doesn't restart when function
+  // references change — only isOpen and hasPermission should trigger it
+  const actionsRef = useRef({ startScanning, stopScanning, requestPermission, setVideoElement });
+  actionsRef.current = { startScanning, stopScanning, requestPermission, setVideoElement };
 
   useEffect(() => {
     if (isOpen && !hasPermission) {
-      requestPermission();
+      actionsRef.current.requestPermission();
     } else if (isOpen && hasPermission) {
-      startScanning();
-    } else {
-      stopScanning();
+      if (videoRef.current) {
+        actionsRef.current.setVideoElement(videoRef.current);
+        actionsRef.current.startScanning();
+      }
+    } else if (!isOpen) {
+      actionsRef.current.stopScanning();
     }
 
     return () => {
-      stopScanning();
+      actionsRef.current.stopScanning();
     };
-  }, [isOpen, hasPermission, requestPermission, startScanning, stopScanning]);
+  }, [isOpen, hasPermission]);
 
   if (!isOpen) {
     return null;

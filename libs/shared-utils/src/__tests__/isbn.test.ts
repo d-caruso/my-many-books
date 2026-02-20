@@ -18,6 +18,12 @@ describe('ISBN utilities', () => {
     expect(validateISBN('978-0-306-40615-8')).toEqual({ isValid: false, type: 'ISBN-13' });
   });
 
+  test('validateISBN rejects non-ISBN EAN-13 (no 978/979 prefix)', () => {
+    // Valid EAN-13 checksum but not a Bookland ISBN
+    expect(validateISBN('5477148210281')).toEqual({ isValid: false, type: 'ISBN-13' });
+    expect(validateISBN('4006381333931')).toEqual({ isValid: false, type: 'ISBN-13' });
+  });
+
   test('formatISBN formats normalized ISBN strings', () => {
     expect(formatISBN('0306406152')).toBe('0-30640-615-2');
     expect(formatISBN('9780306406157')).toBe('978-0-30640-615-7');
