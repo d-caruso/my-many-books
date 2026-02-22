@@ -8,14 +8,8 @@ const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
-// Mark app as mounted to hide HTML loading screen
-// This happens immediately when React starts rendering
-document.body.classList.add('app-mounted');
-
 root.render(
-  <React.StrictMode>
     <App />
-  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

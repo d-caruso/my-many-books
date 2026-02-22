@@ -3,7 +3,7 @@
  * Provides dependency injection for API service throughout the application
  */
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { ApiService, createApiService } from '../services/api';
 
 interface ApiContextValue {
@@ -23,15 +23,18 @@ interface ApiProviderProps {
 
 export const ApiProvider: React.FC<ApiProviderProps> = ({ children, apiService: injectedApiService }) => {
   // Use injected API service (for testing) or create default instance
-  const apiService = injectedApiService || createApiService();
+  const apiService = useMemo(
+    () => injectedApiService || createApiService(),
+    [injectedApiService]
+  );
 
-  const value: ApiContextValue = {
+  const value = useMemo<ApiContextValue>(() => ({
     bookAPI: apiService,
     categoryAPI: apiService,
     authorAPI: apiService,
     userAPI: apiService,
     apiService,
-  };
+  }), [apiService]);
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;
 };

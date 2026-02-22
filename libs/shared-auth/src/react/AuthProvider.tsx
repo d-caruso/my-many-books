@@ -48,22 +48,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
-    checkAuthState();
-  }, []);
+    let ignore = false;
 
-  const checkAuthState = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const { user: authUser } = await authService.getAuthState();
-      setUser(authUser);
-    } catch (error) {
-      console.error('Auth state check failed:', error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-      setInitialCheckDone(true);
-    }
-  };
+    const checkAuth = async () => {
+      setLoading(true);
+      try {
+        const { user: authUser } = await authService.getAuthState();
+        if (!ignore) setUser(authUser);
+      } catch (error) {
+        console.error('Auth state check failed:', error);
+        if (!ignore) setUser(null);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+          setInitialCheckDone(true);
+        }
+      }
+    };
+
+    checkAuth();
+    return () => { ignore = true; };
+  }, []);
 
   const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
@@ -99,11 +104,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     setUser(refreshedUser);
   };
 
-  // Show loading screen during initial auth check
-  if (!initialCheckDone) {
-    return <>{loadingComponent || <div>Loading...</div>}</>;
-  }
-
   const contextValue: AuthContextType = {
     user,
     loading,
@@ -114,5 +114,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     isAuthenticated: user !== null,
   };
 
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {initialCheckDone ? children : (loadingComponent || <div>Loading...</div>)}
+    </AuthContext.Provider>
+  );
 };

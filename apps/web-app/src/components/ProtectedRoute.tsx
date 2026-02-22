@@ -2,8 +2,6 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@my-many-books/shared-auth';
-import { NativeLoading } from './NativeLoading';
-
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
@@ -14,11 +12,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAdmin = false
 }) => {
   const { t } = useTranslation();
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <NativeLoading />;
-  }
+  const { user } = useAuth();
 
   if (!user) {
     return <Navigate to="/auth" replace />;

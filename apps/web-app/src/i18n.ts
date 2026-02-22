@@ -35,7 +35,7 @@ i18n
     // search is included because BookSearchForm renders on BooksPage (default landing page)
     // pwa is included because InstallPrompt renders immediately
     // dialogs is now eagerly loaded to ensure modal copy is available when UI switches languages
-    ns: ['common', 'pages', 'books', 'search', 'pwa', 'dialogs'],
+    ns: ['common', 'pages', 'books', 'search', 'pwa', 'dialogs', 'scanner', 'accessibility'],
     defaultNS: 'common',
 
     // Prevent preloading all languages - only load detected language

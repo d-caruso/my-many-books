@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button, IconButton, Chip, Container, Typography, Alert } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -20,7 +20,7 @@ type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
 
 const BooksPage: React.FC = () => {
-  const { t } = useTranslation(['pages', 'scanner']);
+  const { t, i18n } = useTranslation(['pages', 'scanner']);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -318,6 +318,35 @@ const BooksPage: React.FC = () => {
     setScannerNoticeMessage('');
   }, []);
 
+  // Fade page content on language change
+  const pageContentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = pageContentRef.current;
+    if (!el) return;
+
+    const handleFadeOut = () => {
+      el.style.animation = 'none';
+      void el.offsetHeight;
+      el.style.animation = 'langFadeOut 0.5s ease-out forwards';
+    };
+
+    const handleFadeIn = () => {
+      el.style.animation = 'none';
+      void el.offsetHeight;
+      el.style.animation = 'langFadeIn 1.2s ease-in';
+      el.addEventListener('animationend', () => {
+        el.style.animation = '';
+      }, { once: true });
+    };
+
+    document.addEventListener('languageChanging', handleFadeOut);
+    i18n.on('languageChanged', handleFadeIn);
+    return () => {
+      document.removeEventListener('languageChanging', handleFadeOut);
+      i18n.off('languageChanged', handleFadeIn);
+    };
+  }, [i18n]);
+
   const visuallyHidden = {
     border: 0,
     clip: 'rect(0 0 0 0)',
@@ -374,7 +403,21 @@ const BooksPage: React.FC = () => {
 
   // List mode (default)
   return (
-      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+      <Container
+        ref={pageContentRef}
+        maxWidth="lg"
+        sx={{
+          py: { xs: 2, sm: 4 },
+          '@keyframes langFadeOut': {
+            '0%': { opacity: 1 },
+            '100%': { opacity: 0 },
+          },
+          '@keyframes langFadeIn': {
+            '0%': { opacity: 0 },
+            '100%': { opacity: 1 },
+          },
+        }}
+      >
       {/* Page header */}
       <Box
         mb={{ xs: 3, sm: 6 }}
@@ -388,7 +431,18 @@ const BooksPage: React.FC = () => {
           <Typography variant="h4" component="h1" gutterBottom>
             {t('pages:books.title')}
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            key={displayedTotalCount > 0 ? 'with-count' : 'no-count'}
+            sx={{
+              '@keyframes fadeIn': {
+                from: { opacity: 0 },
+                to: { opacity: 1 },
+              },
+              animation: 'fadeIn 1.2s ease-in',
+            }}
+          >
             {displayedTotalCount > 0 ? t('pages:books.description_with_count', { count: displayedTotalCount }) : t('pages:books.description')}
           </Typography>
         </Box>

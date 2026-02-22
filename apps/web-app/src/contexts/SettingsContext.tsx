@@ -60,8 +60,32 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   }, [settingsApi]);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    let ignore = false;
+
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const fetchedSettings = await settingsApi.getSettings();
+        if (ignore) return;
+        const settingsMap = new Map<string, AppSetting>();
+        fetchedSettings.forEach(setting => {
+          settingsMap.set(setting.key, setting);
+        });
+        setSettings(settingsMap);
+      } catch (err) {
+        if (ignore) return;
+        const error = err instanceof Error ? err : new Error('Failed to load settings');
+        setError(error);
+        console.error('Failed to load settings:', error);
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    };
+
+    load();
+    return () => { ignore = true; };
+  }, [settingsApi]);
 
   const getSetting = useCallback((key: string): AppSetting | undefined => {
     return settings.get(key);
@@ -82,14 +106,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
     await loadSettings();
   }, [loadSettings]);
 
-  const value: SettingsContextValue = {
+  const value = useMemo<SettingsContextValue>(() => ({
     settings,
     isLoading,
     error,
     getSetting,
     getSettingValue,
     refreshSettings,
-  };
+  }), [settings, isLoading, error, getSetting, getSettingValue, refreshSettings]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };

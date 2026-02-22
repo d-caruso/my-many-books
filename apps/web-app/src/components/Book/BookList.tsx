@@ -76,9 +76,17 @@ export const BookList: React.FC<BookListProps> = ({
     );
   }
 
+  const fadeIn = {
+    '@keyframes fadeIn': {
+      from: { opacity: 0 },
+      to: { opacity: 1 },
+    },
+    animation: 'fadeIn 1.2s ease-in',
+  };
+
   if (viewMode === 'list') {
     return (
-      <Stack spacing={2}>
+      <Stack spacing={2} sx={fadeIn}>
         {books.map((book) => (
           <BookCard
             key={book.id}
@@ -106,7 +114,8 @@ export const BookList: React.FC<BookListProps> = ({
           lg: 'repeat(4, 1fr)',
           xl: 'repeat(5, 1fr)'
         },
-        gap: { xs: 2, sm: 3 }
+        gap: { xs: 2, sm: 3 },
+        ...fadeIn,
       }}
     >
       {books.map((book) => (

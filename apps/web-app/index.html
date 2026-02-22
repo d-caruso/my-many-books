@@ -41,7 +41,7 @@
         // Preload critical translation files for detected language
         // search is included because BookSearchForm renders on BooksPage (default landing page)
         // pwa is included because InstallPrompt renders immediately
-        var criticalNamespaces = ['common', 'pages', 'books', 'search', 'pwa'];
+        var criticalNamespaces = ['common', 'pages', 'books', 'search', 'pwa', 'scanner', 'accessibility'];
         criticalNamespaces.forEach(function(ns) {
           var link = document.createElement('link');
           link.rel = 'preload';
@@ -88,6 +88,13 @@
         top: 0;
         left: 0;
         z-index: 9999;
+        transition: opacity 0.3s ease-out, visibility 0s 0.3s;
+      }
+
+      .app-mounted .app-loading {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
       }
 
       .app-loading__spinner {
@@ -110,11 +117,6 @@
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
-
-      /* Hide loading screen after React mounts */
-      .app-mounted .app-loading {
-        display: none;
-      }
     </style>
 
     <title>My Many Books - Personal Library</title>
@@ -123,14 +125,12 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
 
     <!-- Instant loading UI (renders before ANY JavaScript) -->
-    <main>
-      <div id="root">
-        <div class="app-loading">
-          <div class="app-loading__spinner"></div>
-          <div class="app-loading__text">Loading My Many Books...</div>
-        </div>
-      </div>
-    </main>
+    <div class="app-loading">
+      <div class="app-loading__spinner"></div>
+      <div class="app-loading__text">Loading My Many Books...</div>
+    </div>
+
+    <div id="root"></div>
 
     <script type="module" src="/src/index.tsx"></script>
   </body>

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { authService } from './services/authService';
@@ -22,20 +22,20 @@ const initI18n = async () => {
   }
 };
 
-// Lazy load MUI theme wrapper to defer 380KB MUI bundle
-const ThemedApp = lazy(() => import('./components/ThemedApp').then(m => ({ default: m.ThemedApp })));
+// Eager load MUI theme wrapper (always needed on landing page)
+import { ThemedApp } from './components/ThemedApp';
 
 // Lazy load error fallback (only shown on errors)
 const RootErrorFallback = lazy(() => import('./components/ErrorBoundary/RootErrorFallback').then(m => ({ default: m.RootErrorFallback })));
 
-// Lazy load all pages for route-based code splitting
+// Eager load landing page components (always needed on first render)
+import BooksPage from './pages/BooksPage';
+import { Navbar } from './components/Navigation';
+
+// Lazy load non-landing pages for route-based code splitting
 const AuthPage = lazy(() => import('./pages/AuthPage'));
-const BooksPage = lazy(() => import('./pages/BooksPage'));
 const BookSearchPage = lazy(() => import('./components/Search/BookSearchPage'));
 const ScannerModal = lazy(() => import('./components/Scanner'));
-
-// Lazy load Navbar (only for authenticated users)
-const Navbar = lazy(() => import('./components/Navigation').then(m => ({ default: m.Navbar })));
 
 // Lazy load PWA components (non-critical, rarely shown)
 const InstallPrompt = lazy(() => import('./components/PWA').then(m => ({ default: m.InstallPrompt })));
@@ -151,8 +151,17 @@ function App() {
     initApp();
   }, []);
 
+  // Hide HTML loading screen after content has painted
+  const onContentReady = useCallback((node: HTMLElement | null) => {
+    if (node) {
+      requestAnimationFrame(() => {
+        document.body.classList.add('app-mounted');
+      });
+    }
+  }, []);
+
   if (!appReady) {
-    return <NativeLoading />;
+    return null;
   }
 
   return (
@@ -161,15 +170,14 @@ function App() {
         <RootErrorFallback error={error} reset={reset} />
       </Suspense>
     )}>
-      <Suspense fallback={<NativeLoading />}>
         <ThemedApp>
           <PWAProvider>
             <ApiProvider>
-              <SettingsProvider>
                 <AuthErrorBoundary>
-                  <AuthProvider authService={authService} loadingComponent={<NativeLoading />}>
+                  <AuthProvider authService={authService} loadingComponent={<></>}>
+                  <SettingsProvider>
                   <Router>
-                    <Box sx={{ minHeight: '100vh', position: 'relative' }}>
+                    <Box ref={onContentReady} sx={{ minHeight: '100vh', position: 'relative' }}>
                       {/* Skip to main content link for keyboard navigation */}
                       <Box
                         component="a"
@@ -202,7 +210,7 @@ function App() {
                       {/* First-access app explanation popup (web) */}
                       <AboutPopupGate />
 
-                      <Suspense fallback={<NativeLoading />}>
+                      <Suspense fallback={null}>
                         <Routes>
                           {/* Public route */}
                           <Route path="/auth" element={<AuthPage />} />
@@ -331,13 +339,12 @@ function App() {
                       </Suspense>
                     </Box>
                   </Router>
+                  </SettingsProvider>
                   </AuthProvider>
                 </AuthErrorBoundary>
-              </SettingsProvider>
             </ApiProvider>
           </PWAProvider>
         </ThemedApp>
-      </Suspense>
     </ErrorBoundary>
   );
 }

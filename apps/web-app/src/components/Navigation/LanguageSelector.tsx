@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Select, MenuItem, SelectChangeEvent, Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES } from '@my-many-books/shared-i18n';
@@ -16,13 +16,21 @@ export const LanguageSelector: React.FC = () => {
     }
   );
 
+  const isUserChange = useRef(false);
+
   const handleLanguageChange = (event: SelectChangeEvent<string>) => {
     const newLanguage = event.target.value;
-    void i18n.changeLanguage(newLanguage);
+    isUserChange.current = true;
     setPreferredLanguage(newLanguage);
+    document.dispatchEvent(new CustomEvent('languageChanging'));
+    setTimeout(() => {
+      void i18n.changeLanguage(newLanguage);
+      isUserChange.current = false;
+    }, 500);
   };
 
   useEffect(() => {
+    if (isUserChange.current) return;
     if (preferredLanguage && preferredLanguage !== i18n.language) {
       void i18n.changeLanguage(preferredLanguage);
     }
