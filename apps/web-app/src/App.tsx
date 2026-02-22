@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary/ErrorBoundary';
 import { AuthErrorBoundary } from './components/ErrorBoundary/AuthErrorBoundary';
 import { PageErrorBoundary } from './components/ErrorBoundary/PageErrorBoundary';
 import { NativeLoading } from './components/NativeLoading';
+import { AboutPopupGate } from './components/About/AboutPopupGate';
 import { Box } from '@mui/material';
 
 // Defer i18n initialization until after first render
@@ -154,6 +155,9 @@ function App() {
                         <OfflineIndicator />
                         <UpdatePrompt />
                       </Suspense>
+
+                      {/* First-access app explanation popup (web) */}
+                      <AboutPopupGate />
 
                       <Suspense fallback={<NativeLoading />}>
                         <Routes>
