@@ -65,23 +65,34 @@ describe('DatabaseConnection', () => {
 
       DatabaseConnection.getInstance();
 
-      expect(MockSequelize).toHaveBeenCalledWith('testdb', 'testuser', 'testpass', {
-        host: 'localhost',
-        port: 3306,
-        dialect: DATABASE_CONFIG.DIALECT,
-        timezone: DATABASE_CONFIG.TIMEZONE,
-        pool: DATABASE_CONFIG.POOL,
-        dialectOptions: {
-          ssl: false,
-        },
-        logging: false,
-        define: {
-          timestamps: true,
-          underscored: true,
-          createdAt: 'creation_date',
-          updatedAt: 'update_date',
-        },
-      });
+      expect(MockSequelize).toHaveBeenCalledWith('testdb', 'testuser', 'testpass',
+        expect.objectContaining({
+          host: 'localhost',
+          port: 3306,
+          dialect: DATABASE_CONFIG.DIALECT,
+          timezone: DATABASE_CONFIG.TIMEZONE,
+          pool: expect.objectContaining({
+            max: DATABASE_CONFIG.POOL.max,
+            min: DATABASE_CONFIG.POOL.min,
+            acquire: DATABASE_CONFIG.POOL.acquire,
+            idle: DATABASE_CONFIG.POOL.idle,
+            evict: DATABASE_CONFIG.POOL.evict,
+            validate: expect.any(Function),
+          }),
+          retry: { max: 2 },
+          dialectOptions: expect.objectContaining({
+            ssl: false,
+            connectTimeout: 5000,
+          }),
+          logging: false,
+          define: {
+            timestamps: true,
+            underscored: true,
+            createdAt: 'creation_date',
+            updatedAt: 'update_date',
+          },
+        })
+      );
     });
 
     it('should override pool settings from environment variables', () => {
@@ -132,11 +143,11 @@ describe('DatabaseConnection', () => {
 
       DatabaseConnection.getInstance();
 
-      expect(MockSequelize).toHaveBeenCalledWith('testdb', 'testuser', 'testpass', 
+      expect(MockSequelize).toHaveBeenCalledWith('testdb', 'testuser', 'testpass',
         expect.objectContaining({
-          dialectOptions: {
+          dialectOptions: expect.objectContaining({
             ssl: { rejectUnauthorized: false },
-          },
+          }),
         })
       );
     });

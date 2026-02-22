@@ -33,8 +33,8 @@ export const LanguageSelector: React.FC = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
-      <LanguageIcon sx={{ mr: 1, color: 'action.active' }} />
+    <Box sx={{ display: 'flex', alignItems: 'center', ml: { xs: 0.5, sm: 2 }, minWidth: 0 }}>
+      <LanguageIcon sx={{ mr: { xs: 0.5, sm: 1 }, color: 'action.active', fontSize: { xs: 20, sm: 24 } }} />
       <Select
         value={preferredLanguage}
         onChange={handleLanguageChange}
@@ -43,7 +43,13 @@ export const LanguageSelector: React.FC = () => {
           'aria-label': t('common:select_language', 'Select language')
         }}
         sx={{
-          minWidth: 120,
+          minWidth: { xs: 88, sm: 120 },
+          '& .MuiSelect-select': {
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            pr: { xs: 2.5, sm: 4 },
+          },
           '& .MuiOutlinedInput-notchedOutline': {
             border: 'none',
           },

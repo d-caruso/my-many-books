@@ -87,8 +87,9 @@ describe('Constants', () => {
       expect(DATABASE_CONFIG.TIMEZONE).toBe('+00:00');
       expect(DATABASE_CONFIG.POOL.max).toBe(20);
       expect(DATABASE_CONFIG.POOL.min).toBe(5);
-      expect(DATABASE_CONFIG.POOL.acquire).toBe(30000);
-      expect(DATABASE_CONFIG.POOL.idle).toBe(10000);
+      expect(DATABASE_CONFIG.POOL.acquire).toBe(5000);
+      expect(DATABASE_CONFIG.POOL.idle).toBe(60000);
+      expect(DATABASE_CONFIG.POOL.evict).toBe(30000);
     });
 
     it('should be frozen/immutable', () => {

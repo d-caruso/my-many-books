@@ -35,8 +35,9 @@ export const DATABASE_CONFIG = Object.freeze({
   POOL: Object.freeze({
     max: 20,
     min: 5,
-    acquire: 30000,
-    idle: 10000,
+    acquire: 5000,
+    idle: 60000,
+    evict: 30000,
   }),
 } as const);
 

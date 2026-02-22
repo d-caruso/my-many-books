@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-  import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+  import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
   import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
   import { SafeAreaView } from 'react-native-safe-area-context';
   import { router } from 'expo-router';
@@ -9,6 +9,7 @@ import React, { useState } from 'react';
   import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
   type AuthMode = 'login' | 'register';
+  const logoMark = require('../assets/logo-mark-primary.png');
 
   export default function AuthScreen() {
     const { t } = useTranslation();
@@ -85,6 +86,12 @@ import React, { useState } from 'react';
         >
           <ScrollView contentContainerStyle={styles.scrollContainer}>
             <View style={styles.header}>
+              <Image
+                source={logoMark}
+                style={styles.logo}
+                accessibilityRole="image"
+                accessibilityLabel={`${t('common:app_title')} logo`}
+              />
               <Text variant="displaySmall" style={styles.title} accessibilityRole="header">
                 {t('common:app_title')}
               </Text>
@@ -201,6 +208,11 @@ import React, { useState } from 'react';
     header: {
       alignItems: 'center',
       marginBottom: 32,
+    },
+    logo: {
+      width: 64,
+      height: 64,
+      marginBottom: 12,
     },
     title: {
       fontWeight: 'bold',

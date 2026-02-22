@@ -96,10 +96,17 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
   };
 
   return (
-    <Paper sx={{ p: 3 }}>
+    <Paper sx={{ p: { xs: 2, sm: 3 } }}>
       <Box component="form" onSubmit={handleSubmit}>
         {/* Main search input */}
-        <Box display="flex" gap={2} mb={2}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 2,
+            mb: 2
+          }}
+        >
           <TextField
             fullWidth
             id="search"
@@ -122,7 +129,10 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
             variant="contained"
             size="large"
             disabled={loading}
-            sx={{ minWidth: 120 }}
+            sx={{
+              minWidth: { xs: '100%', sm: 120 },
+              width: { xs: '100%', sm: 'auto' }
+            }}
           >
             {loading ? t('form.searching') : t('form.search_button')}
           </Button>
@@ -138,7 +148,16 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
         )}
 
         {/* Advanced filters toggle */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            flexWrap: 'wrap',
+            gap: 1,
+            mb: 1
+          }}
+        >
           <Button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}

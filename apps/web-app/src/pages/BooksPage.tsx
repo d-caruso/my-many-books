@@ -320,9 +320,16 @@ const BooksPage: React.FC = () => {
 
   // List mode (default)
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       {/* Page header */}
-      <Box mb={6} display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
+      <Box
+        mb={{ xs: 3, sm: 6 }}
+        display="flex"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        justifyContent="space-between"
+        flexWrap="wrap"
+        gap={2}
+      >
         <Box>
           <Typography variant="h4" component="h1" gutterBottom>
             {t('pages:books.title')}
@@ -338,6 +345,7 @@ const BooksPage: React.FC = () => {
           onClick={handleAddBook}
           size="large"
           aria-label={t('pages:books.add_book')}
+          sx={{ width: { xs: '100%', sm: 'auto' } }}
         >
           <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
             {t('pages:books.add_book')}
@@ -349,7 +357,7 @@ const BooksPage: React.FC = () => {
       </Box>
 
       {/* Search and filters */}
-      <Box mb={6}>
+      <Box mb={{ xs: 3, sm: 6 }}>
         <BookSearchForm
           onSearch={handleSearch}
           loading={searchLoading}
@@ -358,7 +366,7 @@ const BooksPage: React.FC = () => {
       </Box>
 
       {/* View controls */}
-      <Box mb={4} display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
+      <Box mb={{ xs: 3, sm: 4 }} display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
         <Box display="flex" alignItems="center" gap={2}>
           {searchActive && (
             <Chip

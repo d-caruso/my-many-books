@@ -57,11 +57,23 @@ class DatabaseConnection {
       port: parseInt(DB_PORT || '3306', 10),
       dialect: DATABASE_CONFIG.DIALECT,
       timezone: DATABASE_CONFIG.TIMEZONE,
-      pool: poolConfig,
+      pool: {
+        ...poolConfig,
+        validate: (client: unknown) => {
+          try {
+            return (client as { connection?: { _fatalError?: unknown } })
+              ?.connection?._fatalError == null;
+          } catch {
+            return true;
+          }
+        },
+      },
+      retry: { max: 2 },
       dialectOptions: {
         ssl: DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+        connectTimeout: 5000,
       },
-      logging: false, // Disabled for cleaner E2E test logs
+      logging: false,
       define: {
         timestamps: true,
         underscored: true,

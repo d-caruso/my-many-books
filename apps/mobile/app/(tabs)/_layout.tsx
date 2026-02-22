@@ -3,12 +3,15 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@my-many-books/shared-auth';
 import { Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { SyncQueueBadge } from '@/components/SyncQueueBadge';
+
+const logoMark = require('../../assets/logo-mark-primary.png');
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
   const { t } = useTranslation();
+  const appName = t('common:app_name', 'My Many Books');
 
   if (loading) {
     return null;
@@ -23,9 +26,21 @@ export default function TabLayout() {
       <SyncQueueBadge />
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: '#2196F3',
+          tabBarActiveTintColor: '#0369a1',
           tabBarInactiveTintColor: '#757575',
-          headerShown: false,
+          headerShown: true,
+          headerTitleAlign: 'center',
+          headerTitle: () => (
+            <View style={styles.headerBrand}>
+              <Image
+                source={logoMark}
+                style={styles.headerLogo}
+                accessibilityRole="image"
+                accessibilityLabel={`${appName} logo`}
+              />
+              <Text style={styles.headerTitle}>{appName}</Text>
+            </View>
+          ),
         }}
       >
       <Tabs.Screen
@@ -82,3 +97,20 @@ export default function TabLayout() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  headerBrand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerLogo: {
+    width: 24,
+    height: 24,
+  },
+  headerTitle: {
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+  },
+});

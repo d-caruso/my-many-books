@@ -19,10 +19,6 @@ vi.mock('react-router-dom', async () => ({
   useLocation: () => ({ pathname: '/books' }),
 }));
 
-vi.mock('@mui/icons-material/MenuBook', () => ({
-  default: () => <span data-testid="menu-book-icon">📚</span>,
-}));
-
 vi.mock('@mui/icons-material/Menu', () => ({
   default: () => <span data-testid="menu-icon">☰</span>,
 }));
@@ -90,8 +86,8 @@ describe('Navbar', () => {
     render(<Navbar />);
 
     expect(screen.getByRole('banner')).toBeInTheDocument();
-    expect(screen.getByTestId('menu-book-icon')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'My Many Books' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'My Many Books logo' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /My Many Books/ })).toBeInTheDocument();
   });
 
   test('shows mobile menu icon when user is not authenticated', () => {
@@ -170,7 +166,7 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'My Many Books' }));
+    fireEvent.click(screen.getByRole('button', { name: /My Many Books/ }));
     expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 
@@ -237,6 +233,6 @@ describe('Navbar', () => {
     render(<Navbar />);
 
     expect(screen.getByRole('banner')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'My Many Books' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /My Many Books/ })).toBeInTheDocument();
   });
 });

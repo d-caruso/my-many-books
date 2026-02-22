@@ -12,7 +12,6 @@ import {
   Box,
   Avatar
 } from '@mui/material';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
 import MenuIcon from '@mui/icons-material/Menu';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useAuth } from '@my-many-books/shared-auth';
@@ -25,6 +24,8 @@ export const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation(['common', 'books']);
   const appName = t('common:app_name');
+  const appShortName = t('common:app_short_name', 'MMB');
+  const appLogoAlt = t('common:app_logo', 'My Many Books logo');
   const menuLabel = t('common:menu');
   const userMenuLabel = t('common:user_menu', 'User menu');
   const avatarLabel = t('common:user_avatar', 'User avatar');
@@ -53,25 +54,67 @@ export const Navbar: React.FC = () => {
 
   return (
     <AppBar position="sticky" color="default" elevation={1}>
-      <Toolbar>
+      <Toolbar
+        sx={{
+          px: { xs: 1.5, sm: 2 },
+          minHeight: { xs: 72, sm: 76 },
+          gap: { xs: 0.5, sm: 1 },
+        }}
+      >
         {/* Logo */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mr: 4 }}>
-          <MenuBookIcon sx={{ mr: 1, fontSize: 32 }} color="primary" />
-          <Typography
-            variant="h6"
+        <Box sx={{ display: 'flex', alignItems: 'center', mr: { xs: 0.5, sm: 2 }, flexGrow: 1, minWidth: 0 }}>
+          <Box
             component="button"
             onClick={() => navigate('/')}
+            aria-label={appName}
             sx={{
+              display: 'flex',
+              alignItems: 'center',
               textDecoration: 'none',
               color: 'inherit',
-              fontWeight: 'bold',
               background: 'none',
               border: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              p: 0
             }}
           >
-            {appName}
-          </Typography>
+            <Box
+              component="img"
+              src="/brand/logo-mark-primary-128.png"
+              alt={appLogoAlt}
+              sx={{
+                width: { xs: 52, sm: 56 },
+                height: { xs: 52, sm: 56 },
+                mr: 1,
+                display: 'block'
+              }}
+            />
+            <Typography
+              component="span"
+              sx={{
+                display: { xs: 'inline', sm: 'none' },
+                fontWeight: 700,
+                fontSize: '1.05rem',
+                whiteSpace: 'nowrap',
+                lineHeight: 1,
+              }}
+            >
+              {appShortName}
+            </Typography>
+            <Typography
+              variant="h6"
+              component="span"
+              sx={{
+                display: { xs: 'none', sm: 'inline' },
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {appName}
+            </Typography>
+          </Box>
         </Box>
 
         {/* Navigation Items - Desktop */}
@@ -101,7 +144,7 @@ export const Navbar: React.FC = () => {
 
         {/* User Menu */}
         {user && (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: { xs: 0.25, sm: 0.5 } }}>
             <Button
               onClick={handleMenuOpen}
               startIcon={
