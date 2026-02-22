@@ -23,8 +23,8 @@ vi.mock('@mui/icons-material/Menu', () => ({
   default: () => <span data-testid="menu-icon">☰</span>,
 }));
 
-vi.mock('@mui/icons-material/ExpandMore', () => ({
-  default: () => <span data-testid="expand-more-icon">▼</span>,
+vi.mock('@mui/icons-material/MoreVert', () => ({
+  default: () => <span data-testid="more-vert-icon">⋮</span>,
 }));
 
 const mockUseAuth = vi.mocked(useAuth);
@@ -42,9 +42,14 @@ testI18n.use(initReactI18next).init({
         search: 'Search',
         scanner: 'Scanner',
         sign_out: 'Sign out',
+        about: 'About',
         menu: 'Menu',
         user_menu: 'User menu',
         user_avatar: 'User avatar',
+        about_app_title: 'What this app is for',
+        about_app_body: '<bold>My Many Books</bold> helps you organize your personal library, track reading status, search books, and manage your collection.',
+        dont_show_again: "Don't show again",
+        ok: 'OK',
       },
       books: {
         my_books: 'My Books',
@@ -116,8 +121,8 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    expect(screen.getByRole('button', { name: /Test User/ })).toBeInTheDocument();
-    expect(screen.getAllByLabelText('User avatar').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /user menu/i })).toBeInTheDocument();
+    expect(screen.getByLabelText('User avatar')).toBeInTheDocument();
   });
 
   test('opens and closes menu via the user button', async () => {
@@ -131,7 +136,7 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Test User/ }));
+    fireEvent.click(screen.getByRole('button', { name: /user menu/i }));
     expect(screen.getByRole('menu')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('menuitem', { name: 'My Books' }));
     await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
@@ -149,10 +154,31 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Test User/ }));
+    fireEvent.click(screen.getByRole('button', { name: /user menu/i }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }));
 
     await waitFor(() => expect(mockLogout).toHaveBeenCalled());
+  });
+
+  test('opens about dialog from the user menu', async () => {
+    mockUseAuth.mockReturnValue({
+      user: baseUser,
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
+    });
+
+    render(<Navbar />);
+
+    fireEvent.click(screen.getByRole('button', { name: /user menu/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'About' }));
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+    expect(screen.getByText('What this app is for')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   test('clicking logo navigates to home page', () => {
@@ -202,8 +228,7 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    const avatars = screen.getAllByLabelText('User avatar');
-    expect(avatars[0]).toHaveTextContent('J');
+    expect(screen.getByLabelText('User avatar')).toHaveTextContent('J');
   });
 
   test('falls back to email initial when name is missing', () => {
@@ -217,8 +242,7 @@ describe('Navbar', () => {
 
     render(<Navbar />);
 
-    const avatars = screen.getAllByLabelText('User avatar');
-    expect(avatars[0]).toHaveTextContent('F');
+    expect(screen.getByLabelText('User avatar')).toHaveTextContent('F');
   });
 
   test('renders while authentication state is loading', () => {

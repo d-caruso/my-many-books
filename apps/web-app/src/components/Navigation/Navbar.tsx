@@ -13,12 +13,15 @@ import {
   Avatar
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useAuth } from '@my-many-books/shared-auth';
 import { LanguageSelector } from './LanguageSelector';
+import { AboutDialog } from '../About/AboutDialog';
 
 export const Navbar: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [openAboutAfterMenuClose, setOpenAboutAfterMenuClose] = useState(false);
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -49,6 +52,22 @@ export const Navbar: React.FC = () => {
 
   const handleNavigation = (path: string) => {
     navigate(path);
+    handleMenuClose();
+  };
+
+  const blurActiveElement = () => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLElement) {
+      activeElement.blur();
+    }
+  };
+
+  const handleOpenAbout = () => {
+    setOpenAboutAfterMenuClose(true);
     handleMenuClose();
   };
 
@@ -144,35 +163,35 @@ export const Navbar: React.FC = () => {
 
         {/* User Menu */}
         {user && (
-          <Box sx={{ display: 'flex', alignItems: 'center', ml: { xs: 0.25, sm: 0.5 } }}>
-            <Button
-              onClick={handleMenuOpen}
-              startIcon={
-                <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }} aria-label={avatarLabel}>
-                  {userInitial}
-                </Avatar>
-              }
-              endIcon={<ExpandMoreIcon />}
-              sx={{ display: { xs: 'none', sm: 'flex' } }}
-            >
-              {user.name} {user.surname}
-            </Button>
-            
-            {/* Mobile User Icon */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: { xs: 0.25, sm: 0.5 } }}>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }} aria-label={avatarLabel}>
+              {userInitial}
+            </Avatar>
+
             <IconButton
               onClick={handleMenuOpen}
-              sx={{ display: { xs: 'flex', sm: 'none' } }}
               aria-label={userMenuLabel}
+              aria-haspopup="menu"
+              aria-expanded={Boolean(anchorEl) ? 'true' : undefined}
+              aria-controls={Boolean(anchorEl) ? 'navbar-user-menu' : undefined}
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }} aria-label={avatarLabel}>
-                {userInitial}
-              </Avatar>
+              <MoreVertIcon />
             </IconButton>
 
             <Menu
+              id="navbar-user-menu"
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
+              TransitionProps={{
+                onExited: () => {
+                  if (openAboutAfterMenuClose) {
+                    blurActiveElement();
+                    setAboutOpen(true);
+                    setOpenAboutAfterMenuClose(false);
+                  }
+                },
+              }}
             >
               {/* Mobile Navigation Items */}
               <Box sx={{ display: { xs: 'block', md: 'none' } }}>
@@ -181,8 +200,11 @@ export const Navbar: React.FC = () => {
                 <MenuItem onClick={() => handleNavigation('/scanner')}>{t('common:scanner')}</MenuItem>
               </Box>
 
+              <MenuItem onClick={handleOpenAbout}>{t('common:about')}</MenuItem>
               <MenuItem onClick={handleLogout}>{t('common:sign_out')}</MenuItem>
             </Menu>
+
+            <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
           </Box>
         )}
 
@@ -200,3 +222,5 @@ export const Navbar: React.FC = () => {
     </AppBar>
   );
 };
+
+export default Navbar;
