@@ -67,4 +67,21 @@ describe('AboutPopupGate', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
+
+  test('does not store the preference and shows popup again on remount when checkbox is unchecked', async () => {
+    const firstRender = render(<AboutPopupGate />);
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(localStorage.getItem('about-popup-hidden')).toBeNull();
+
+    firstRender.unmount();
+
+    render(<AboutPopupGate />);
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+  });
 });
