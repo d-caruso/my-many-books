@@ -34,6 +34,8 @@
   "scanner_error": "Scanner Error",
   "point_camera_at_barcode": "Point your camera at a book barcode",
   "barcode_scanned": "Barcode scanned: {{isbn}}",
+  "isbn_copied": "ISBN copied",
+  "isbn_detected": "ISBN detected",
   "scan_another": "Scan Another",
   "book_found": "Book Found!",
   "isbn_colon": "ISBN: {{isbn}}",

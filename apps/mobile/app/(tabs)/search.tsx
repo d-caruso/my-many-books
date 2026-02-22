@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, FlatList, ScrollView } from 'react-native';
-import { Searchbar, Text, SegmentedButtons, Chip, Menu, Button, IconButton } from 'react-native-paper';
+import { Searchbar, Text, SegmentedButtons, Chip, Menu, Button, IconButton, Snackbar } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import { BookCard } from '@/components/BookCard';
 import { EmptyState } from '@/components/EmptyState';
@@ -17,14 +18,22 @@ type SortDirection = 'asc' | 'desc';
 
 export default function SearchScreen() {
   const { t } = useTranslation('offline');
+  const { scannedIsbn, scannerCopy } = useLocalSearchParams<{
+    scannedIsbn?: string;
+    scannerCopy?: 'success' | 'failed';
+  }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMode, setSearchMode] = useState<SearchMode>('title');
+  const [isbnResult, setIsbnResult] = useState<Book | null>(null);
   const [statusFilter, setStatusFilter] = useState<Book['status'] | 'all'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('title');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const handledScannerParamsRef = useRef<string | null>(null);
 
   const {
     books,
@@ -38,17 +47,16 @@ export default function SearchScreen() {
 
   const performSearch = useCallback(async () => {
     if (!searchQuery.trim()) {
+      setIsbnResult(null);
       clearSearch();
       return;
     }
 
     if (searchMode === 'isbn') {
       const book = await searchByISBN(searchQuery);
-      if (book) {
-        // For ISBN search, we just show the single result
-        // This would need to be handled differently in the actual implementation
-      }
+      setIsbnResult(book);
     } else {
+      setIsbnResult(null);
       const filters: {
         author?: string;
         status?: string;
@@ -88,6 +96,32 @@ export default function SearchScreen() {
     setSearchQuery(query);
   };
 
+  useEffect(() => {
+    if (!scannedIsbn) {
+      return;
+    }
+
+    const payloadKey = `${scannedIsbn}:${scannerCopy || ''}`;
+    if (handledScannerParamsRef.current === payloadKey) {
+      return;
+    }
+    handledScannerParamsRef.current = payloadKey;
+
+    setSearchMode('isbn');
+    setSearchQuery(scannedIsbn);
+
+    if (scannerCopy === 'success' || scannerCopy === 'failed') {
+      setFeedbackMessage(
+        scannerCopy === 'success'
+          ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
+          : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
+      );
+      setFeedbackVisible(true);
+    }
+
+    router.replace('/(tabs)/search');
+  }, [scannedIsbn, scannerCopy, t]);
+
   // Trigger search when filters change
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -111,6 +145,11 @@ export default function SearchScreen() {
       showActions={false}
     />
   );
+
+  const displayedBooks =
+    searchMode === 'isbn' && searchQuery.trim()
+      ? (isbnResult ? [isbnResult] : [])
+      : books;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -242,10 +281,10 @@ export default function SearchScreen() {
         </View>
       )}
 
-      {loading && books.length === 0 && <LoadingSpinner />}
+      {loading && displayedBooks.length === 0 && <LoadingSpinner />}
 
       <FlatList
-        data={books}
+        data={displayedBooks}
         renderItem={renderBook}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
@@ -265,6 +304,14 @@ export default function SearchScreen() {
           ) : null
         }
       />
+
+      <Snackbar
+        visible={feedbackVisible}
+        onDismiss={() => setFeedbackVisible(false)}
+        duration={3000}
+      >
+        {feedbackMessage}
+      </Snackbar>
     </SafeAreaView>
   );
 }

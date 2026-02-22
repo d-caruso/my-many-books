@@ -9,9 +9,13 @@ import {
   Grid,
   Button as MuiButton,
   Stack,
-  Divider
+  Divider,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { ResponsiveInput } from '../UI/ResponsiveInput';
 import { ResponsiveButton } from '../UI/ResponsiveButton';
 
@@ -33,6 +37,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [requiresVerification, setRequiresVerification] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +180,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           />
 
           <ResponsiveInput
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             id="password"
             label={t('common:password')}
             value={formData.password}
@@ -183,10 +189,29 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             required
             disabled={loading}
             inputProps={{ minLength: 6 }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    edge="end"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    aria-label={
+                      showPassword
+                        ? t('common:hide_password', 'Hide password')
+                        : t('common:show_password', 'Show password')
+                    }
+                    disabled={loading}
+                  >
+                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
 
           <ResponsiveInput
-            type="password"
+            type={showConfirmPassword ? 'text' : 'password'}
             id="confirmPassword"
             label={t('common:confirm_password')}
             value={formData.confirmPassword}
@@ -199,6 +224,25 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             placeholder={t('common:confirm_your_password')}
             required
             disabled={loading}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    edge="end"
+                    onClick={() => setShowConfirmPassword(prev => !prev)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    aria-label={
+                      showConfirmPassword
+                        ? t('common:hide_password', 'Hide password')
+                        : t('common:show_password', 'Show password')
+                    }
+                    disabled={loading}
+                  >
+                    {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
 
           <ResponsiveButton

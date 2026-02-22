@@ -72,6 +72,24 @@ describe('LoginForm', () => {
     expect(passwordInput).toHaveValue('password123');
   });
 
+  test('toggles password visibility with eye button', () => {
+    render(
+      <LoginForm onSwitchToRegister={mockOnSwitchToRegister} />,
+      { wrapper: TestWrapper }
+    );
+
+    const passwordInput = screen.getByLabelText('Password');
+    const toggleButton = screen.getByRole('button', { name: /show password/i });
+
+    expect(passwordInput).toHaveAttribute('type', 'password');
+
+    fireEvent.click(toggleButton);
+    expect(passwordInput).toHaveAttribute('type', 'text');
+
+    fireEvent.click(screen.getByRole('button', { name: /hide password/i }));
+    expect(passwordInput).toHaveAttribute('type', 'password');
+  });
+
   test('validates email format', async () => {
     render(
       <LoginForm onSwitchToRegister={mockOnSwitchToRegister} />,

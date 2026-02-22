@@ -95,6 +95,24 @@ describe('RegisterForm', () => {
     expect(confirmPasswordInput).toHaveValue('password123');
   });
 
+  test('toggles password visibility for password and confirm password fields', () => {
+    renderRegisterForm();
+
+    const passwordInput = getInput(/^Password\b/i);
+    const confirmPasswordInput = getInput(/Confirm Password/i);
+    const toggleButtons = screen.getAllByRole('button', { name: /show password/i });
+
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+
+    fireEvent.click(toggleButtons[0]);
+    expect(passwordInput).toHaveAttribute('type', 'text');
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password');
+
+    fireEvent.click(toggleButtons[1]);
+    expect(confirmPasswordInput).toHaveAttribute('type', 'text');
+  });
+
   test('validates required fields', async () => {
     renderRegisterForm();
 

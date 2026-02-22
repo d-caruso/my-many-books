@@ -18,6 +18,8 @@ import React, { useState } from 'react';
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const { login, register, loading } = useAuth();
@@ -70,6 +72,8 @@ import React, { useState } from 'react';
       setPassword('');
       setName('');
       setConfirmPassword('');
+      setShowPassword(false);
+      setShowConfirmPassword(false);
       setError(null);
     };
 
@@ -149,10 +153,22 @@ import React, { useState } from 'react';
                   value={password}
                   onChangeText={setPassword}
                   style={styles.input}
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   autoComplete={authMode === 'login' ? 'password' : 'new-password'}
                   accessibilityInvalid={!!error}
+                  right={
+                    <TextInput.Icon
+                      icon={showPassword ? 'eye-off' : 'eye'}
+                      onPress={() => setShowPassword((prev) => !prev)}
+                      forceTextInputFocus={false}
+                      accessibilityLabel={
+                        showPassword
+                          ? t('common:hide_password', 'Hide password')
+                          : t('common:show_password', 'Show password')
+                      }
+                    />
+                  }
                 />
 
                 {authMode === 'register' && (
@@ -161,10 +177,22 @@ import React, { useState } from 'react';
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     style={styles.input}
-                    secureTextEntry
+                    secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
                     autoComplete="new-password"
                     accessibilityInvalid={!!error}
+                    right={
+                      <TextInput.Icon
+                        icon={showConfirmPassword ? 'eye-off' : 'eye'}
+                        onPress={() => setShowConfirmPassword((prev) => !prev)}
+                        forceTextInputFocus={false}
+                        accessibilityLabel={
+                          showConfirmPassword
+                            ? t('common:hide_password', 'Hide password')
+                            : t('common:show_password', 'Show password')
+                        }
+                      />
+                    }
                   />
                 )}
 

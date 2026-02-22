@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +13,11 @@ import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/s
 
 export default function AddBookScreen() {
   const { t } = useTranslation();
-  const { isbn, bookData } = useLocalSearchParams<{ isbn?: string; bookData?: string }>();
+  const { isbn, bookData, scannerCopy } = useLocalSearchParams<{
+    isbn?: string;
+    bookData?: string;
+    scannerCopy?: 'success' | 'failed';
+  }>();
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [isbnCode, setIsbnCode] = useState(isbn || '');
@@ -21,10 +25,19 @@ export default function AddBookScreen() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const handledScannerFeedbackRef = useRef<string | null>(null);
 
   const { createBook } = useBooks();
   const { searchByISBN } = useBookSearch();
   const { isOnline } = useNetworkState();
+
+  useEffect(() => {
+    if (isbn) {
+      setIsbnCode(isbn);
+    }
+  }, [isbn]);
 
   useEffect(() => {
     if (bookData) {
@@ -42,6 +55,52 @@ export default function AddBookScreen() {
       }
     }
   }, [bookData]);
+
+  useEffect(() => {
+    if (!scannerCopy) {
+      return;
+    }
+
+    const feedbackKey = `${scannerCopy}:${isbn || ''}`;
+    if (handledScannerFeedbackRef.current === feedbackKey) {
+      return;
+    }
+    handledScannerFeedbackRef.current = feedbackKey;
+
+    setFeedbackMessage(
+      scannerCopy === 'success'
+        ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
+        : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
+    );
+    setFeedbackVisible(true);
+
+    router.replace({
+      pathname: '/book/add',
+      params: {
+        ...(isbn ? { isbn } : {}),
+        ...(bookData ? { bookData } : {}),
+      },
+    });
+  }, [scannerCopy, isbn, bookData, t]);
+
+  useEffect(() => {
+    if (!feedbackVisible) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setFeedbackVisible(false);
+    }, 4000);
+
+    return () => clearTimeout(timeoutId);
+  }, [feedbackVisible]);
+
+  const handleIsbnChange = (value: string) => {
+    if (feedbackVisible) {
+      setFeedbackVisible(false);
+    }
+    setIsbnCode(value);
+  };
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -128,11 +187,19 @@ export default function AddBookScreen() {
                 </View>
               )}
 
+              {feedbackVisible && !!feedbackMessage && (
+                <View style={styles.scannerNoticeContainer} accessibilityLiveRegion="polite">
+                  <Text variant="bodyMedium" style={styles.scannerNoticeText}>
+                    {feedbackMessage}
+                  </Text>
+                </View>
+              )}
+
               <View style={styles.isbnSection}>
                 <TextInput
                   label={t('books:isbn_optional')}
                   value={isbnCode}
-                  onChangeText={setIsbnCode}
+                  onChangeText={handleIsbnChange}
                   style={styles.input}
                   keyboardType="default"
                   autoCapitalize="none"
@@ -255,6 +322,20 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#c62828',
     textAlign: 'center',
+  },
+  scannerNoticeContainer: {
+    backgroundColor: '#e8f4fd',
+    borderColor: '#0369a1',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  scannerNoticeText: {
+    color: '#0c4a6e',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   isbnSection: {
     flexDirection: 'row',

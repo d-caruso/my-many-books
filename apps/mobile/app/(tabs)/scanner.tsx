@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text, Button, Dialog, Portal } from 'react-native-paper';
+import { Text, Button } from 'react-native-paper';
 import { CameraView, BarcodeScanningResult } from 'expo-camera';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import * as Clipboard from 'expo-clipboard';
 
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 import { useBookSearch } from '@/hooks/useBookSearch';
-import { Book } from '@my-many-books/shared-types';
 
 export default function ScannerScreen() {
   const { t } = useTranslation('scanner');
-  const [showBookDialog, setShowBookDialog] = useState(false);
-  const [foundBook, setFoundBook] = useState<Book | null>(null);
 
   const {
     hasPermission,
@@ -38,37 +36,41 @@ export default function ScannerScreen() {
   }, [scannedData]);
 
   const handleISBNScanned = async (isbn: string) => {
+    let copyStatus: 'success' | 'failed' = 'failed';
+
+    try {
+      await Clipboard.setStringAsync(isbn);
+      copyStatus = 'success';
+    } catch {
+      copyStatus = 'failed';
+    }
+
     try {
       const book = await searchByISBN(isbn);
       if (book) {
-        setFoundBook(book);
-        setShowBookDialog(true);
+        router.push({
+          pathname: '/(tabs)/search',
+          params: { scannedIsbn: isbn, scannerCopy: copyStatus },
+        });
       } else {
         // Book not found, navigate to add book with ISBN
-        router.push(`/book/add?isbn=${isbn}`);
+        router.push({
+          pathname: '/book/add',
+          params: { isbn, scannerCopy: copyStatus },
+        });
       }
     } catch (error) {
       console.error('Failed to search book by ISBN:', error);
       // Navigate to add book with ISBN even if search fails
-      router.push(`/book/add?isbn=${isbn}`);
+      router.push({
+        pathname: '/book/add',
+        params: { isbn, scannerCopy: copyStatus },
+      });
     }
   };
 
   const handleBarCodeScan = ({ data }: BarcodeScanningResult) => {
     handleBarCodeScanned(data);
-  };
-
-  const handleAddFoundBook = () => {
-    setShowBookDialog(false);
-    if (foundBook) {
-      router.push(`/book/add?bookData=${encodeURIComponent(JSON.stringify(foundBook))}`);
-    }
-  };
-
-  const handleScanAnother = () => {
-    setShowBookDialog(false);
-    setFoundBook(null);
-    resetScanner();
   };
 
   if (hasPermission === null) {
@@ -145,31 +147,6 @@ export default function ScannerScreen() {
           </Button>
         </View>
       )}
-
-      <Portal>
-        <Dialog visible={showBookDialog} onDismiss={() => setShowBookDialog(false)} accessibilityRole="alertdialog" accessibilityLabel="Book Found Dialog" accessibilityViewIsModal={true}>
-          <Dialog.Title accessibilityRole="header">{t('book_found')}</Dialog.Title>
-          <Dialog.Content>
-            {foundBook && (
-              <>
-                <Text variant="titleMedium" accessibilityRole="header">{foundBook.title}</Text>
-                <Text variant="bodyMedium">
-                  by {foundBook.authors?.map(a => a.name).join(', ')}
-                </Text>
-                <Text variant="bodySmall" style={styles.isbn}>
-                  {t('isbn_colon', { isbn: foundBook.isbnCode })}
-                </Text>
-              </>
-            )}
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={handleScanAnother} accessibilityLabel="Scan another book">{t('scan_another')}</Button>
-            <Button mode="contained" onPress={handleAddFoundBook} accessibilityLabel="Add book to library">
-              {t('add_to_library')}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
     </SafeAreaView>
   );
 }
@@ -238,9 +215,5 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 16,
-  },
-  isbn: {
-    opacity: 0.7,
-    marginTop: 8,
   },
 });

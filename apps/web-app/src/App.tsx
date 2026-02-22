@@ -72,14 +72,43 @@ const MobileAnalyticsPage = lazy(() =>
 const ScannerRoute: React.FC = () => {
   const navigate = useNavigate();
   const didNavigate = useRef(false);
+
+  const buildScannerSearchUrl = (isbn: string, copyStatus: 'success' | 'failed') => {
+    const params = new URLSearchParams({
+      isbn,
+      scannerSource: 'scanner',
+      scannerCopy: copyStatus,
+    });
+
+    return `/search?${params.toString()}`;
+  };
+
+  const handleScanSuccess = async (result: { isbn: string }) => {
+    if (didNavigate.current) {
+      return;
+    }
+
+    didNavigate.current = true;
+
+    let copyStatus: 'success' | 'failed' = 'failed';
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(result.isbn);
+        copyStatus = 'success';
+      }
+    } catch {
+      copyStatus = 'failed';
+    }
+
+    navigate(buildScannerSearchUrl(result.isbn, copyStatus));
+  };
+
   return (
     <ScannerModal
       isOpen={true}
       onClose={() => { if (!didNavigate.current) navigate(-1); }}
-      onScanSuccess={(result) => {
-        didNavigate.current = true;
-        navigate(`/search?isbn=${encodeURIComponent(result.isbn)}`);
-      }}
+      onScanSuccess={(result) => { void handleScanSuccess(result); }}
       onScanError={() => {}}
     />
   );

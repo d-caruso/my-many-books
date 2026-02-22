@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { Book } from '../../../types';
 
@@ -11,14 +11,16 @@ import { setupMuiMock } from '../../test-utils/setupMuiMock';
 
 
 const mockNavigate = vi.fn();
+const mockSetSearchParams = vi.fn();
+let currentSearchParams = new URLSearchParams();
 
 // Mock react-router-dom BEFORE importing anything that uses it
 vi.mock('react-router-dom', async () => ({
   ...await vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useSearchParams: () => [
-    new URLSearchParams(),
-    vi.fn(),
+    currentSearchParams,
+    mockSetSearchParams,
   ],
 }));
 
@@ -126,6 +128,7 @@ const mockBooks: Book[] = [
 
 describe('BookSearchPage', () => {
   const mockSearchBooks = vi.fn();
+  const mockSearchByISBN = vi.fn();
   const mockClearSearch = vi.fn();
   const mockLoadMore = vi.fn();
 
@@ -136,16 +139,19 @@ describe('BookSearchPage', () => {
     hasMore: false,
     totalCount: 0,
     searchBooks: mockSearchBooks,
+    searchByISBN: mockSearchByISBN,
     clearSearch: mockClearSearch,
     loadMore: mockLoadMore,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    currentSearchParams = new URLSearchParams();
     mockUseBookSearch.mockReturnValue(defaultHookState);
   });
 
   const renderWithRouter = (searchParams = '') => {
+    currentSearchParams = new URLSearchParams(searchParams.replace(/^\?/, ''));
     return render(
       <MemoryRouter initialEntries={[`/search${searchParams}`]}>
         <BookSearchPage />
@@ -347,6 +353,19 @@ describe('BookSearchPage', () => {
     const { unmount } = renderWithRouter();
 
     expect(() => unmount()).not.toThrow();
+  });
+
+  test('redirects scanner-origin ISBN search to add view when no book is found', async () => {
+    mockSearchByISBN.mockResolvedValueOnce(null);
+
+    renderWithRouter('?isbn=9780000000000&scannerSource=scanner&scannerCopy=success');
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(
+        '/?mode=add&isbn=9780000000000&scannerSource=scanner&scannerCopy=success',
+        { replace: true }
+      );
+    });
   });
 
   // NOTE: CSS/styling tests removed as they are brittle and depend on implementation details

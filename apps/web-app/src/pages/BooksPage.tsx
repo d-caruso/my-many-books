@@ -18,7 +18,7 @@ type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
 
 const BooksPage: React.FC = () => {
-  const { t } = useTranslation('pages');
+  const { t } = useTranslation(['pages', 'scanner']);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [pageMode, setPageMode] = useState<PageMode>('list');
@@ -27,6 +27,8 @@ const BooksPage: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [initialIsbn, setInitialIsbn] = useState<string | undefined>(undefined);
+  const [scannerNoticeOpen, setScannerNoticeOpen] = useState(false);
+  const [scannerNoticeMessage, setScannerNoticeMessage] = useState('');
 
   // Get setting for book status change behavior
   const { value: statusChangeBehavior } = useSetting<BookStatusChangeBehavior>(
@@ -86,11 +88,23 @@ const BooksPage: React.FC = () => {
   useEffect(() => {
     if (searchModeParam === 'add') {
       const isbnFromUrl = searchParams.get('isbn') || undefined;
+      const scannerSource = searchParams.get('scannerSource');
+      const scannerCopy = searchParams.get('scannerCopy');
       setInitialIsbn(isbnFromUrl);
+      if (scannerSource === 'scanner') {
+        setScannerNoticeMessage(
+          scannerCopy === 'success'
+            ? t('isbn_copied', { ns: 'scanner', defaultValue: 'ISBN copied' })
+            : t('isbn_detected', { ns: 'scanner', defaultValue: 'ISBN detected' })
+        );
+        setScannerNoticeOpen(true);
+      }
       handleAddBook();
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('mode');
       newParams.delete('isbn');
+      newParams.delete('scannerSource');
+      newParams.delete('scannerCopy');
       setSearchParams(newParams, { replace: true });
       return;
     }
@@ -267,6 +281,11 @@ const BooksPage: React.FC = () => {
     setInitialIsbn(undefined);
   };
 
+  const handleScannerPrefillNoticeDismiss = useCallback(() => {
+    setScannerNoticeOpen(false);
+    setScannerNoticeMessage('');
+  }, []);
+
   const visuallyHidden = {
     border: 0,
     clip: 'rect(0 0 0 0)',
@@ -288,6 +307,8 @@ const BooksPage: React.FC = () => {
           onCancel={handleCancel}
           loading={actionLoading}
           initialIsbn={initialIsbn}
+          scannerPrefillNotice={pageMode === 'add' && scannerNoticeOpen ? scannerNoticeMessage : null}
+          onScannerPrefillNoticeDismiss={handleScannerPrefillNoticeDismiss}
         />
         {actionError && (
           <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-line' }}>
@@ -320,7 +341,7 @@ const BooksPage: React.FC = () => {
 
   // List mode (default)
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       {/* Page header */}
       <Box
         mb={{ xs: 3, sm: 6 }}

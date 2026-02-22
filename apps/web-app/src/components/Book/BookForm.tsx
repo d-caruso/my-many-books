@@ -15,6 +15,7 @@ import {
   CircularProgress,
   Stack,
   Divider,
+  Alert,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -37,6 +38,8 @@ interface BookFormProps {
   title?: string;
   apiErrors?: Array<{ field: string; message: string }>;
   initialIsbn?: string;
+  scannerPrefillNotice?: string | null;
+  onScannerPrefillNoticeDismiss?: () => void;
 }
 
 export interface BookFormData {
@@ -57,7 +60,9 @@ export const BookForm: React.FC<BookFormProps> = ({
   loading = false,
   title,
   apiErrors = [],
-  initialIsbn
+  initialIsbn,
+  scannerPrefillNotice = null,
+  onScannerPrefillNoticeDismiss
 }) => {
   const { t } = useTranslation(['books', 'common']);
   const { categories, loading: categoriesLoading, loadCategories } = useCategories();
@@ -75,6 +80,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [errors, setErrors] = useState<Partial<Record<keyof BookFormData, string>>>({});
   const [addAuthorDialogOpen, setAddAuthorDialogOpen] = useState(false);
   const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
+  const [showScannerPrefillNotice, setShowScannerPrefillNotice] = useState(Boolean(scannerPrefillNotice));
 
   // Initialize form with book data
   useEffect(() => {
@@ -91,6 +97,23 @@ export const BookForm: React.FC<BookFormProps> = ({
       });
     }
   }, [book]);
+
+  useEffect(() => {
+    setShowScannerPrefillNotice(Boolean(scannerPrefillNotice));
+  }, [scannerPrefillNotice]);
+
+  useEffect(() => {
+    if (!showScannerPrefillNotice || !scannerPrefillNotice) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowScannerPrefillNotice(false);
+      onScannerPrefillNoticeDismiss?.();
+    }, 4000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [showScannerPrefillNotice, scannerPrefillNotice, onScannerPrefillNoticeDismiss]);
 
   // Update errors when API errors change
   useEffect(() => {
@@ -152,6 +175,11 @@ export const BookForm: React.FC<BookFormProps> = ({
   };
 
   const handleInputChange = (field: keyof BookFormData, value: string | number | Author[] | number[] | undefined) => {
+    if (field === 'isbnCode' && showScannerPrefillNotice) {
+      setShowScannerPrefillNotice(false);
+      onScannerPrefillNoticeDismiss?.();
+    }
+
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error for this field
@@ -228,6 +256,15 @@ export const BookForm: React.FC<BookFormProps> = ({
           />
 
           {/* ISBN */}
+          {showScannerPrefillNotice && scannerPrefillNotice && (
+            <Alert severity="success" onClose={() => {
+              setShowScannerPrefillNotice(false);
+              onScannerPrefillNoticeDismiss?.();
+            }}>
+              {scannerPrefillNotice}
+            </Alert>
+          )}
+
           <TextField
             fullWidth
             required

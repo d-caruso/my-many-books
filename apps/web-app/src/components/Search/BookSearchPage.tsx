@@ -7,7 +7,9 @@ import {
   Container,
   Typography,
   Grid,
-  Paper
+  Paper,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
@@ -21,7 +23,7 @@ import { useBookSearch } from '../../hooks/useBookSearch';
 import type { Book, SearchFilters } from '@my-many-books/shared-types';
 
 const BookSearchPage: React.FC = () => {
-  const { t } = useTranslation(['books', 'common']);
+  const { t } = useTranslation(['books', 'common', 'scanner']);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const {
@@ -38,13 +40,48 @@ const BookSearchPage: React.FC = () => {
 
   const [initialQuery] = useState(searchParams.get('q') || '');
   const [isbnBook, setIsbnBook] = useState<Book | null>(null);
+  const [scannerNoticeOpen, setScannerNoticeOpen] = useState(false);
+  const [scannerNoticeMessage, setScannerNoticeMessage] = useState('');
 
   const isbnParam = searchParams.get('isbn');
+  const scannerSource = searchParams.get('scannerSource');
+  const scannerCopy = searchParams.get('scannerCopy');
 
   // Load initial search results from URL params
   useEffect(() => {
     if (isbnParam) {
-      searchByISBN(isbnParam).then(result => setIsbnBook(result));
+      searchByISBN(isbnParam).then(result => {
+        setIsbnBook(result);
+
+        if (!result && scannerSource === 'scanner') {
+          const addParams = new URLSearchParams({
+            mode: 'add',
+            isbn: isbnParam,
+          });
+
+          if (scannerCopy === 'success' || scannerCopy === 'failed') {
+            addParams.set('scannerSource', 'scanner');
+            addParams.set('scannerCopy', scannerCopy);
+          }
+
+          navigate(`/?${addParams.toString()}`, { replace: true });
+          return;
+        }
+
+        if (result && scannerSource === 'scanner') {
+          setScannerNoticeMessage(
+            scannerCopy === 'success'
+              ? t('isbn_copied', { ns: 'scanner', defaultValue: 'ISBN copied' })
+              : t('isbn_detected', { ns: 'scanner', defaultValue: 'ISBN detected' })
+          );
+          setScannerNoticeOpen(true);
+
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete('scannerSource');
+          newParams.delete('scannerCopy');
+          setSearchParams(newParams, { replace: true });
+        }
+      });
       return;
     }
 
@@ -64,7 +101,7 @@ const BookSearchPage: React.FC = () => {
 
       searchBooks(query || '', filters);
     }
-  }, [searchParams, searchBooks, isbnParam, searchByISBN]);
+  }, [searchParams, searchBooks, isbnParam, searchByISBN, scannerSource, scannerCopy, navigate, setSearchParams, t]);
 
   const handleSearch = (query: string, filters: SearchFilters) => {
     // Update URL params
@@ -210,6 +247,16 @@ const BookSearchPage: React.FC = () => {
           </Grid>
         </Box>
       )}
+
+      <Snackbar
+        open={scannerNoticeOpen}
+        autoHideDuration={3000}
+        onClose={() => setScannerNoticeOpen(false)}
+      >
+        <Alert onClose={() => setScannerNoticeOpen(false)} severity="success">
+          {scannerNoticeMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

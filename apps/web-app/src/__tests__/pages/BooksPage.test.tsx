@@ -74,8 +74,13 @@ vi.mock('../../components/Book', () => ({
       {loading && <div data-testid="book-loading">Loading</div>}
     </div>
   ),
-  BookForm: ({ book, onSubmit, onCancel, loading }: any) => (
-    <div data-testid="book-form" data-book-id={book?.id ?? 'new'} data-loading={loading}>
+  BookForm: ({ book, onSubmit, onCancel, loading, scannerPrefillNotice }: any) => (
+    <div
+      data-testid="book-form"
+      data-book-id={book?.id ?? 'new'}
+      data-loading={loading}
+      data-scanner-notice={scannerPrefillNotice ?? ''}
+    >
       <button data-testid="form-submit" onClick={() => onSubmit({ title: 'Form Book', isbn: '123', selectedAuthors: [], selectedCategories: [] })}>
         Submit
       </button>
@@ -277,6 +282,28 @@ describe('BooksPage', () => {
     renderBooksPage();
     expect(screen.getByTestId('book-form')).toBeInTheDocument();
     expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams), { replace: true });
+  });
+
+  test('shows scanner feedback and clears scanner params in add mode', () => {
+    currentSearchParams = new URLSearchParams([
+      ['mode', 'add'],
+      ['isbn', '9780000000000'],
+      ['scannerSource', 'scanner'],
+      ['scannerCopy', 'success'],
+    ]);
+
+    renderBooksPage();
+
+    expect(screen.getByTestId('book-form')).toBeInTheDocument();
+    expect(screen.getByTestId('book-form')).toHaveAttribute('data-scanner-notice', 'ISBN copied');
+
+    const replaceCall = mockSetSearchParams.mock.calls.find(
+      (call) => call[1]?.replace === true
+    );
+    expect(replaceCall).toBeDefined();
+    const updatedParams = replaceCall?.[0] as URLSearchParams;
+    expect(updatedParams.get('scannerSource')).toBeNull();
+    expect(updatedParams.get('scannerCopy')).toBeNull();
   });
 
   test('handles load more button when there are more results', () => {

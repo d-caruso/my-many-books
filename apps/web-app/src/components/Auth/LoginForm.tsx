@@ -8,8 +8,12 @@ import {
   Alert,
   Divider,
   Button as MuiButton,
-  Stack
+  Stack,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { ResponsiveInput } from '../UI/ResponsiveInput';
 import { ResponsiveButton } from '../UI/ResponsiveButton';
 
@@ -27,6 +31,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<{email?: string; password?: string}>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const isLoading = authLoading || loading;
 
@@ -130,7 +135,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
 
           <div>
             <ResponsiveInput
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               id="password"
               label={t('common:password')}
               value={formData.password}
@@ -144,6 +149,25 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
               disabled={isLoading}
               aria-invalid={!!validationErrors.password}
               aria-describedby={validationErrors.password ? 'password-error' : undefined}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      edge="end"
+                      onClick={() => setShowPassword(prev => !prev)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      aria-label={
+                        showPassword
+                          ? t('common:hide_password', 'Hide password')
+                          : t('common:show_password', 'Show password')
+                      }
+                      disabled={isLoading}
+                    >
+                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             {validationErrors.password && (
               <Typography id="password-error" color="error" variant="caption" component="p" role="alert" sx={{ mt: 0.5 }}>
