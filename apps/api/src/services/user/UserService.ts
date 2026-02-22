@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { USER_ROLES } from '@my-many-books/shared-auth';
+import { clearUserCache } from '../../middleware/authCache';
 import { TYPES } from '../../container/types';
 import { Repository as UserRepositoryContract } from '../../repositories/user/Repository';
 import { UserEntity, UserUpdateInput } from '../../repositories/user/UserRepositoryTypes';
@@ -168,10 +169,15 @@ export class UserService {
   }
 
   async deactivateAccount(userId: number): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new UserServiceError('USER_NOT_FOUND');
+    }
     const updated = await this.userRepository.update(userId, { isActive: false });
     if (!updated) {
       throw new UserServiceError('USER_NOT_FOUND');
     }
+    clearUserCache(user.email);
   }
 
   async deleteAccount(userId: number): Promise<void> {

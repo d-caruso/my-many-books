@@ -108,6 +108,25 @@ export class AuthProviderFactory {
   }
 }
 
+// Re-export for convenience
+export { clearUserCache } from './authCache';
+import { getCachedUser, setCachedUser } from './authCache';
+
+// Singleton auth provider (avoid re-instantiation per request)
+let cachedProvider: AuthProvider | null = null;
+
+function getAuthProvider(): AuthProvider {
+  if (!cachedProvider) {
+    const providerType = process.env['AUTH_PROVIDER'] || 'cognito';
+    cachedProvider = AuthProviderFactory.createProvider(providerType);
+  }
+  return cachedProvider;
+}
+
+export function resetAuthProvider(): void {
+  cachedProvider = null;
+}
+
 const resolveUserService = (): DomainUserService =>
   container.get<DomainUserService>(TYPES.UserService);
 
@@ -149,18 +168,27 @@ export const authMiddleware = async (
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
-    // Get auth provider from environment
-    const providerType = process.env['AUTH_PROVIDER'] || 'cognito';
-    const provider = AuthProviderFactory.createProvider(providerType);
+    const provider = getAuthProvider();
 
     // Verify token with auth provider
     const providerUser = await provider.verifyToken(token);
 
-    // Find or create user in database
-    const { user, isNewUser } = await UserService.findOrCreateUser(
-      providerUser,
-      provider.getProviderName()
-    );
+    // Find or create user in database (with 60s cache)
+    const cachedUser = getCachedUser(providerUser.email);
+    let user: UserEntity;
+    let isNewUser = false;
+
+    if (cachedUser) {
+      user = cachedUser;
+    } else {
+      const result = await UserService.findOrCreateUser(
+        providerUser,
+        provider.getProviderName()
+      );
+      user = result.user;
+      isNewUser = result.isNewUser;
+      setCachedUser(providerUser.email, user);
+    }
 
     // Check if user is active
     if (!user.isActive) {

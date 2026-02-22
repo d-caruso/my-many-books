@@ -102,13 +102,14 @@ describe('UserService', () => {
 
   describe('deactivateAccount', () => {
     it('updates isActive to false', async () => {
+      userRepository.findById.mockResolvedValue({ id: 1, email: 'test@example.com' } as any);
       userRepository.update.mockResolvedValue({ id: 1 } as any);
       await service.deactivateAccount(1);
       expect(userRepository.update).toHaveBeenCalledWith(1, { isActive: false });
     });
 
     it('throws on missing user', async () => {
-      userRepository.update.mockResolvedValue(null);
+      userRepository.findById.mockResolvedValue(null);
       await expect(service.deactivateAccount(1)).rejects.toBeInstanceOf(UserServiceError);
     });
   });

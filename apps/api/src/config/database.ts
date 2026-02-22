@@ -61,10 +61,17 @@ class DatabaseConnection {
         ...poolConfig,
         validate: (client: unknown) => {
           try {
-            return (client as { connection?: { _fatalError?: unknown } })
-              ?.connection?._fatalError == null;
+            const conn = (client as {
+              connection?: {
+                _fatalError?: unknown;
+                _closing?: boolean;
+                stream?: { destroyed?: boolean };
+              };
+            })?.connection;
+            if (!conn) return true;
+            return !conn._fatalError && !conn._closing && !conn.stream?.destroyed;
           } catch {
-            return true;
+            return false;
           }
         },
       },

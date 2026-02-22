@@ -14,7 +14,9 @@ import {
   AuthenticatedRequest,
   AuthProvider,
   AuthProviderUser,
+  resetAuthProvider,
 } from '../../../src/middleware/auth';
+import { clearUserCache } from '../../../src/middleware/authCache';
 
 // Mock dependencies
 jest.mock('jsonwebtoken');
@@ -46,8 +48,10 @@ describe('Authentication Middleware', () => {
     };
     next = jest.fn();
 
-    // Reset mocks
+    // Reset mocks and caches
     jest.clearAllMocks();
+    clearUserCache();
+    resetAuthProvider();
   });
 
   describe('authMiddleware', () => {
