@@ -12,6 +12,7 @@ import { SyncProvider } from '@/components/SyncProvider';
 import { LifecycleProvider } from '@/components/LifecycleProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ErrorTrackingProvider } from '@/components/ErrorTrackingProvider';
+import { AboutPopupGate } from '@/components/About/AboutPopupGate';
 import { useTranslation } from 'react-i18next';
 
 export default function RootLayout() {
@@ -31,6 +32,7 @@ export default function RootLayout() {
                   <ErrorBoundary>
                     <StatusBar style="auto" />
                     <OfflineBanner />
+                    <AboutPopupGate />
             <Stack>
               <Stack.Screen 
                 name="(tabs)" 

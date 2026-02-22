@@ -9,6 +9,7 @@ import { useAuth } from '@my-many-books/shared-auth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { changeLanguage } from '@/i18n';
 import LanguageSelector from '@/components/LanguageSelector';
+import { AboutDialog } from '@/components/About/AboutDialog';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -16,6 +17,7 @@ export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [aboutDialogVisible, setAboutDialogVisible] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -120,6 +122,15 @@ export default function ProfileScreen() {
               accessibilityRole="button"
               accessibilityLabel={`${t('export_data')}, ${t('export_your_book_collection')}`}
             />
+
+            <List.Item
+              title={t('about')}
+              left={() => <List.Icon icon="information-outline" accessible={false} />}
+              right={() => <List.Icon icon="chevron-right" accessible={false} />}
+              onPress={() => setAboutDialogVisible(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t('about')}
+            />
           </Card.Content>
         </Card>
 
@@ -208,6 +219,11 @@ export default function ProfileScreen() {
       >
         {snackbarMessage}
       </Snackbar>
+
+      <AboutDialog
+        visible={aboutDialogVisible}
+        onClose={() => setAboutDialogVisible(false)}
+      />
     </SafeAreaView>
   );
 }
