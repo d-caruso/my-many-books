@@ -7,8 +7,8 @@
     "noConnection": "You're offline. Check your connection and try again.",
     "requiresInternet": "Requires internet connection",
     "sessionExpired": "Session expired. Please login again.",
-    "validationError": "Validation Error",
-    "networkError": "Network Error",
+    "validationError": "Validation error",
+    "networkError": "Network error",
     "generalError": "Error"
   },
   "tooltips": {
@@ -23,7 +23,7 @@
       "syncFailed": "Sync failed"
     },
     "queue": {
-      "title": "Pending Changes",
+      "title": "Pending changes",
       "syncing": "Syncing...",
       "empty": "No pending changes",
       "status": "Status",
@@ -45,24 +45,24 @@
       },
       "unknown_item": "Unknown",
       "alerts": {
-        "nearlyFullTitle": "Queue Nearly Full",
+        "nearlyFullTitle": "Queue nearly full",
         "nearlyFullMessage": "Queue has {{count}} operations. Consider syncing when online.",
-        "fullTitle": "Queue Full",
+        "fullTitle": "Queue full",
         "fullMessage": "Queue is full. Oldest operation was discarded.",
         "okButton": "OK"
       }
     },
     "conflicts": {
-      "title": "Sync Conflict",
+      "title": "Sync conflict",
       "subtitle": "This book \"{title}\" was changed on another device while you were editing offline.",
       "message": "This item was changed on another device. Which version do you want to keep?",
-      "localVersion": "Your Version",
-      "serverVersion": "Server Version",
+      "localVersion": "Your version",
+      "serverVersion": "Server version",
       "local": "Local",
-      "server": "Server", 
+      "server": "Server",
       "conflict": "Conflict",
-      "keepLocal": "Keep My Changes",
-      "useServer": "Use Server Version",
+      "keepLocal": "Keep my changes",
+      "useServer": "Use server version",
       "useLocal": "Use my version",
       "notFound": "Conflict not found",
       "resolutionFailed": "Failed to resolve conflict"

@@ -3,22 +3,22 @@
     "placeholder": "Search by title, author, ISBN...",
     "search_button": "Search",
     "searching": "Searching...",
-    "advanced_filters": "Advanced Filters",
+    "advanced_filters": "Advanced filters",
     "clear_all": "Clear all",
     "validation_error": "Please enter at least {{min}} characters in the search box or select an advanced filter.",
     "author_placeholder": "Search by author name...",
     "category_label": "Category",
     "category_loading": "Loading categories...",
-    "category_all": "All Categories",
-    "status_label": "Reading Status",
-    "status_any": "Any Status",
+    "category_all": "All categories",
+    "status_label": "Reading status",
+    "status_any": "Any status",
     "status_reading": "Reading",
     "status_paused": "Paused",
     "status_finished": "Finished",
-    "sort_label": "Sort By",
+    "sort_label": "Sort by",
     "sort_title": "Title (A-Z)",
     "sort_author": "Author (A-Z)",
-    "sort_date": "Recently Added"
+    "sort_date": "Recently added"
   },
   "filter": {
     "title": "Filters",
@@ -27,12 +27,12 @@
       "title_desc": "Title Z-A",
       "author_asc": "Author A-Z",
       "author_desc": "Author Z-A",
-      "date_newest": "Date Added (Newest)",
-      "rating_highest": "Rating (Highest)"
+      "date_newest": "Date added (newest)",
+      "rating_highest": "Rating (highest)"
     },
     "status": {
       "label": "Status",
-      "all": "All Books",
+      "all": "All books",
       "reading": "Reading",
       "paused": "Paused",
       "finished": "Finished",
@@ -40,19 +40,19 @@
     },
     "category": {
       "label": "Category",
-      "all": "All Categories"
+      "all": "All categories"
     },
     "author": {
       "label": "Author",
-      "all": "All Authors"
+      "all": "All authors"
     },
-    "clear_all": "Clear All Filters",
+    "clear_all": "Clear all filters",
     "results_count": "{{filtered}} of {{total}} books",
     "results_total": "{{total}} books",
     "no_books": "No books found"
   },
   "fulltext": {
-    "title": "Full-Text Search",
+    "title": "Full-text search",
     "enabled": "Enabled",
     "disabled": "Disabled",
     "status": {
@@ -69,7 +69,7 @@
     }
   },
   "sorting": {
-    "title": "Sorting Options",
+    "title": "Sorting options",
     "label": "Sort by",
     "direction_label": "Order",
     "sortBy": "Sort by",
@@ -94,7 +94,7 @@
     }
   },
   "pinned": {
-    "title": "Pinned Results",
+    "title": "Pinned results",
     "badge": "Pinned",
     "pin": "Pin to top",
     "unpin": "Unpin",

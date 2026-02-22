@@ -1,6 +1,6 @@
 {
   "author": {
-    "add_title": "Add New Author",
+    "add_title": "Add new author",
     "name_label": "Name",
     "surname_label": "Surname",
     "nationality_label": "Nationality",
@@ -8,16 +8,16 @@
     "name_required": "Name is required",
     "surname_required": "Surname is required",
     "creating": "Creating...",
-    "create_button": "Create Author",
+    "create_button": "Create author",
     "create_failed": "Failed to create author. Please try again."
   },
   "category": {
-    "add_title": "Add New Category",
-    "name_label": "Category Name",
+    "add_title": "Add new category",
+    "name_label": "Category name",
     "name_placeholder": "e.g., Science Fiction, Mystery, Biography",
     "name_required": "Category name is required",
     "creating": "Creating...",
-    "create_button": "Create Category",
+    "create_button": "Create category",
     "create_failed": "Failed to create category. Please try again."
   }
 }

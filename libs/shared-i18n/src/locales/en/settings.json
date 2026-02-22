@@ -2,7 +2,7 @@
   "setting_updated": "Setting updated successfully",
   "setting_toggled": "Setting status toggled successfully",
   "categories": {
-    "ui": "User Interface",
+    "ui": "User interface",
     "behavior": "Behavior",
     "system": "System",
     "features": "Features"

@@ -7,8 +7,8 @@
     "noConnection": "Sei offline. Controlla la connessione e riprova.",
     "requiresInternet": "Richiede connessione internet",
     "sessionExpired": "Sessione scaduta. Effettua nuovamente il login.",
-    "validationError": "Errore di Validazione",
-    "networkError": "Errore di Rete",
+    "validationError": "Errore di validazione",
+    "networkError": "Errore di rete",
     "generalError": "Errore"
   },
   "tooltips": {
@@ -23,13 +23,13 @@
       "syncFailed": "Sincronizzazione fallita"
     },
     "queue": {
-      "title": "Modifiche in Sospeso",
+      "title": "Modifiche in sospeso",
       "syncing": "Sincronizzazione...",
       "empty": "Nessuna modifica in sospeso",
       "status": "Stato",
       "retries": "Tentativi",
       "statuses": {
-        "pending": "In Attesa",
+        "pending": "In attesa",
         "retrying": "Ritentando",
         "failed": "Fallito"
       },
@@ -45,24 +45,24 @@
       },
       "unknown_item": "Sconosciuto",
       "alerts": {
-        "nearlyFullTitle": "Coda Quasi Piena",
+        "nearlyFullTitle": "Coda quasi piena",
         "nearlyFullMessage": "La coda ha {{count}} operazioni. Considera la sincronizzazione quando online.",
-        "fullTitle": "Coda Piena",
+        "fullTitle": "Coda piena",
         "fullMessage": "La coda è piena. L'operazione più vecchia è stata scartata.",
         "okButton": "OK"
       }
     },
     "conflicts": {
-      "title": "Conflitto di Sincronizzazione",
+      "title": "Conflitto di sincronizzazione",
       "subtitle": "Il libro \"{title}\" è stato modificato su un altro dispositivo mentre editavi offline.",
       "message": "Questo elemento è stato modificato su un altro dispositivo. Quale versione vuoi conservare?",
-      "localVersion": "La Tua Versione",
-      "serverVersion": "Versione Server",
+      "localVersion": "La tua versione",
+      "serverVersion": "Versione server",
       "local": "Locale",
       "server": "Server",
       "conflict": "Conflitto",
-      "keepLocal": "Mantieni Le Mie Modifiche", 
-      "useServer": "Usa Versione Server",
+      "keepLocal": "Mantieni le mie modifiche",
+      "useServer": "Usa versione server",
       "useLocal": "Usa la mia versione",
       "notFound": "Conflitto non trovato",
       "resolutionFailed": "Risoluzione del conflitto fallita"

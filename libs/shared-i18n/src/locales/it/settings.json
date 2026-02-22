@@ -2,7 +2,7 @@
   "setting_updated": "Impostazione aggiornata con successo",
   "setting_toggled": "Stato dell'impostazione modificato con successo",
   "categories": {
-    "ui": "Interfaccia Utente",
+    "ui": "Interfaccia utente",
     "behavior": "Comportamento",
     "system": "Sistema",
     "features": "Funzionalità"

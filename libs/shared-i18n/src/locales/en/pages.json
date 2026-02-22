@@ -1,9 +1,9 @@
 {
   "books": {
-    "title": "My Books",
+    "title": "My books",
     "description": "Your personal book collection",
     "description_with_count": "{{count}} books in your library",
-    "add_book": "Add Book",
+    "add_book": "Add book",
     "add": "Add",
     "scan_isbn": "Scan ISBN",
     "clear_search": "Clear search",
@@ -12,11 +12,11 @@
     "no_books_search": "No books found matching your search",
     "no_books_empty": "No books in your library yet",
     "loading": "Loading...",
-    "load_more": "Load More Books",
+    "load_more": "Load more books",
     "error_load_books": "Failed to load your books",
-    "details_title": "Book Details",
-    "edit_title": "Edit Book",
-    "scan_title": "Scan Barcode"
+    "details_title": "Book details",
+    "edit_title": "Edit book",
+    "scan_title": "Scan barcode"
   },
   "protected_route": {
     "loading": "Loading..."
@@ -33,7 +33,7 @@
     "title": "Admin Panel",
     "sidebar_title": "Administration",
     "users": {
-      "title": "User Management",
+      "title": "User management",
       "name": "Name",
       "email": "Email",
       "role": "Role",
@@ -48,14 +48,14 @@
       "search": "Search",
       "edit": "Edit user",
       "delete": "Delete user",
-      "edit_user": "Edit User",
+      "edit_user": "Edit user",
       "first_name": "First Name",
       "last_name": "Last Name",
-      "delete_confirmation_title": "Delete User",
+      "delete_confirmation_title": "Delete user",
       "delete_confirmation_message": "Are you sure you want to delete user {{name}}? This action cannot be undone."
     },
     "books": {
-      "page_title": "Book Management",
+      "page_title": "Book management",
       "title": "Title",
       "isbn": "ISBN",
       "authors": "Authors",
@@ -71,24 +71,24 @@
       "search": "Search",
       "edit": "Edit book",
       "delete": "Delete book",
-      "edit_book": "Edit Book",
-      "edition_number": "Edition Number",
-      "edition_date": "Edition Date",
+      "edit_book": "Edit book",
+      "edition_number": "Edition number",
+      "edition_date": "Edition date",
       "notes": "Notes",
-      "delete_confirmation_title": "Delete Book",
+      "delete_confirmation_title": "Delete book",
       "delete_confirmation_message": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone."
     },
     "dashboard": {
       "title": "Dashboard",
-      "total_users": "Total Users",
-      "total_books": "Total Books",
-      "active_users": "Active Users",
-      "admin_users": "Admin Users",
-      "welcome_title": "Welcome to the Admin Panel",
+      "total_users": "Total users",
+      "total_books": "Total books",
+      "active_users": "Active users",
+      "admin_users": "Admin users",
+      "welcome_title": "Welcome to the admin panel",
       "welcome_message": "This is the foundation for the admin dashboard. Use the sidebar to navigate to different admin sections.",
-      "phase_info": "Phase 1: Admin Foundation - Complete ✓",
-      "phase_2_info": "Phase 2: Admin Dashboard - Complete ✓",
-      "next_phase": "Next: Phase 3 will add user management features."
+      "phase_info": "Phase 1: admin foundation - complete ✓",
+      "phase_2_info": "Phase 2: admin dashboard - complete ✓",
+      "next_phase": "Next: phase 3 will add user management features."
     },
     "settings": {
       "coming_soon": "Coming soon...",
@@ -97,10 +97,10 @@
     "hooks": {
       "title": "Hooks Administration",
       "stats": {
-        "total_hooks": "Total Hooks",
-        "active_hooks": "Active Hooks",
+        "total_hooks": "Total hooks",
+        "active_hooks": "Active hooks",
         "executions_today": "Executions Today",
-        "last_reload": "Last Reload",
+        "last_reload": "Last reload",
         "never_reloaded": "Never reloaded",
         "reload_hint": "Reload when you deploy new hook configurations."
       },

@@ -5,12 +5,12 @@
     "retry": "Retry"
   },
   "update_prompt": {
-    "title": "App Update Available",
+    "title": "App update available",
     "message": "A new version is ready to install",
     "updating": "Updating...",
     "update_button": "Update",
     "later_button": "Later",
-    "update_failed": "Update Failed"
+    "update_failed": "Update failed"
   },
   "install_prompt": {
     "title": "Install App",

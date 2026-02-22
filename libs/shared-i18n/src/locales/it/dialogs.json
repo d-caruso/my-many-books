@@ -1,6 +1,6 @@
 {
   "author": {
-    "add_title": "Aggiungi Nuovo Autore",
+    "add_title": "Aggiungi nuovo autore",
     "name_label": "Nome",
     "surname_label": "Cognome",
     "nationality_label": "Nazionalità",
@@ -8,16 +8,16 @@
     "name_required": "Il nome è obbligatorio",
     "surname_required": "Il cognome è obbligatorio",
     "creating": "Creazione in corso...",
-    "create_button": "Crea Autore",
+    "create_button": "Crea autore",
     "create_failed": "Impossibile creare l'autore. Riprova."
   },
   "category": {
-    "add_title": "Aggiungi Nuova Categoria",
-    "name_label": "Nome Categoria",
+    "add_title": "Aggiungi nuova categoria",
+    "name_label": "Nome categoria",
     "name_placeholder": "es., Fantascienza, Giallo, Biografia",
     "name_required": "Il nome della categoria è obbligatorio",
     "creating": "Creazione in corso...",
-    "create_button": "Crea Categoria",
+    "create_button": "Crea categoria",
     "create_failed": "Impossibile creare la categoria. Riprova."
   }
 }

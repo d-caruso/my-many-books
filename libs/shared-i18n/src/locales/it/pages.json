@@ -1,9 +1,9 @@
 {
   "books": {
-    "title": "I Miei Libri",
+    "title": "I miei libri",
     "description": "La tua collezione personale di libri",
     "description_with_count": "{{count}} libri nella tua biblioteca",
-    "add_book": "Aggiungi Libro",
+    "add_book": "Aggiungi libro",
     "add": "Aggiungi",
     "scan_isbn": "Scansiona ISBN",
     "clear_search": "Cancella ricerca",
@@ -12,11 +12,11 @@
     "no_books_search": "Nessun libro trovato per la tua ricerca",
     "no_books_empty": "Nessun libro nella tua biblioteca ancora",
     "loading": "Caricamento in corso...",
-    "load_more": "Carica Altri Libri",
+    "load_more": "Carica altri libri",
     "error_load_books": "Impossibile caricare i tuoi libri",
-    "details_title": "Dettagli Libro",
-    "edit_title": "Modifica Libro",
-    "scan_title": "Scansiona Codice a Barre"
+    "details_title": "Dettagli libro",
+    "edit_title": "Modifica libro",
+    "scan_title": "Scansiona codice a barre"
   },
   "protected_route": {
     "loading": "Caricamento in corso..."
@@ -33,7 +33,7 @@
     "title": "Pannello Admin",
     "sidebar_title": "Amministrazione",
     "users": {
-      "title": "Gestione Utenti",
+      "title": "Gestione utenti",
       "name": "Nome",
       "email": "Email",
       "role": "Ruolo",
@@ -48,14 +48,14 @@
       "search": "Cerca",
       "edit": "Modifica utente",
       "delete": "Elimina utente",
-      "edit_user": "Modifica Utente",
+      "edit_user": "Modifica utente",
       "first_name": "Nome",
       "last_name": "Cognome",
-      "delete_confirmation_title": "Elimina Utente",
+      "delete_confirmation_title": "Elimina utente",
       "delete_confirmation_message": "Sei sicuro di voler eliminare l'utente {{name}}? Questa azione non può essere annullata."
     },
     "books": {
-      "page_title": "Gestione Libri",
+      "page_title": "Gestione libri",
       "title": "Titolo",
       "isbn": "ISBN",
       "authors": "Autori",
@@ -71,24 +71,24 @@
       "search": "Cerca",
       "edit": "Modifica libro",
       "delete": "Elimina libro",
-      "edit_book": "Modifica Libro",
-      "edition_number": "Numero Edizione",
-      "edition_date": "Data Edizione",
+      "edit_book": "Modifica libro",
+      "edition_number": "Numero edizione",
+      "edition_date": "Data edizione",
       "notes": "Note",
-      "delete_confirmation_title": "Elimina Libro",
+      "delete_confirmation_title": "Elimina libro",
       "delete_confirmation_message": "Sei sicuro di voler eliminare \"{{title}}\"? Questa azione non può essere annullata."
     },
     "dashboard": {
       "title": "Dashboard",
-      "total_users": "Utenti Totali",
-      "total_books": "Libri Totali",
-      "active_users": "Utenti Attivi",
-      "admin_users": "Utenti Admin",
-      "welcome_title": "Benvenuto nel Pannello Admin",
+      "total_users": "Utenti totali",
+      "total_books": "Libri totali",
+      "active_users": "Utenti attivi",
+      "admin_users": "Utenti admin",
+      "welcome_title": "Benvenuto nel pannello admin",
       "welcome_message": "Questa è la base per il dashboard admin. Usa la barra laterale per navigare tra le diverse sezioni admin.",
-      "phase_info": "Fase 1: Fondamenta Admin - Completata ✓",
-      "phase_2_info": "Fase 2: Dashboard Admin - Completata ✓",
-      "next_phase": "Prossimo: La Fase 3 aggiungerà funzionalità di gestione utenti."
+      "phase_info": "Fase 1: fondamenta admin - completata ✓",
+      "phase_2_info": "Fase 2: dashboard admin - completata ✓",
+      "next_phase": "Prossimo: la fase 3 aggiungerà funzionalità di gestione utenti."
     },
     "settings": {
       "coming_soon": "Coming soon...",
@@ -97,10 +97,10 @@
     "hooks": {
       "title": "Gestione Hook",
       "stats": {
-        "total_hooks": "Hook Totali",
-        "active_hooks": "Hook Attivi",
+        "total_hooks": "Hook totali",
+        "active_hooks": "Hook attivi",
         "executions_today": "Esecuzioni Oggi",
-        "last_reload": "Ultimo Ricaricamento",
+        "last_reload": "Ultimo ricaricamento",
         "never_reloaded": "Mai ricaricati",
         "reload_hint": "Ricarica quando rilasci nuove configurazioni degli hook."
       },

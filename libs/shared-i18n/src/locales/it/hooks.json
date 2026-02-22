@@ -1,10 +1,10 @@
 {
   "title": "Gestione Hook",
   "stats": {
-    "total_hooks": "Hook Totali",
-    "active_hooks": "Hook Attivi",
-    "executions_today": "Esecuzioni Oggi",
-    "last_reload": "Ultimo Ricaricamento",
+    "total_hooks": "Hook totali",
+    "active_hooks": "Hook attivi",
+    "executions_today": "Esecuzioni oggi",
+    "last_reload": "Ultimo ricaricamento",
     "never_reloaded": "Mai ricaricati",
     "reload_hint": "Ricarica quando rilasci nuove configurazioni degli hook.",
     "reload_hint_with_shortcut": "Ricarica quando rilasci nuove configurazioni degli hook (⌘R / Ctrl+R)"

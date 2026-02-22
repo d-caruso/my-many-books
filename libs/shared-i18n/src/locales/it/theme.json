@@ -1,15 +1,15 @@
 {
   "settings": {
-    "title": "Impostazioni Tema",
+    "title": "Impostazioni tema",
     "description": "Personalizza l'aspetto della tua esperienza di lettura",
-    "theme_mode": "Modalità Tema",
-    "auto_system": "Auto (Sistema)",
+    "theme_mode": "Modalità tema",
+    "auto_system": "Auto (sistema)",
     "auto_description": "Passa automaticamente tra i temi in base alle preferenze del sistema",
-    "currently_using_dark": "Attualmente in uso: Tema scuro",
-    "currently_using_light": "Attualmente in uso: Tema chiaro",
+    "currently_using_dark": "Attualmente in uso: tema scuro",
+    "currently_using_light": "Attualmente in uso: tema chiaro",
     "enabled": "Abilitato",
     "enable": "Abilita",
-    "choose_theme": "Scegli Tema",
+    "choose_theme": "Scegli tema",
     "auto_enabled": "Tema automatico abilitato",
     "auto_enabled_description": "I temi cambieranno automaticamente tra chiaro e scuro in base alle impostazioni del sistema. Disabilita il tema automatico per scegliere un tema specifico.",
     "toggle_theme": "Cambia tema"

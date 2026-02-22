@@ -3,22 +3,22 @@
     "placeholder": "Cerca per titolo, autore, ISBN...",
     "search_button": "Cerca",
     "searching": "Ricerca in corso...",
-    "advanced_filters": "Filtri Avanzati",
+    "advanced_filters": "Filtri avanzati",
     "clear_all": "Cancella tutto",
     "validation_error": "Inserisci almeno {{min}} caratteri nella casella di ricerca o seleziona un filtro avanzato.",
     "author_placeholder": "Cerca per nome autore...",
     "category_label": "Categoria",
     "category_loading": "Caricamento categorie...",
-    "category_all": "Tutte le Categorie",
-    "status_label": "Stato Lettura",
-    "status_any": "Qualsiasi Stato",
-    "status_reading": "In Lettura",
-    "status_paused": "In Pausa",
+    "category_all": "Tutte le categorie",
+    "status_label": "Stato lettura",
+    "status_any": "Qualsiasi stato",
+    "status_reading": "In lettura",
+    "status_paused": "In pausa",
     "status_finished": "Completato",
-    "sort_label": "Ordina Per",
+    "sort_label": "Ordina per",
     "sort_title": "Titolo (A-Z)",
     "sort_author": "Autore (A-Z)",
-    "sort_date": "Aggiunti di Recente"
+    "sort_date": "Aggiunti di recente"
   },
   "filter": {
     "title": "Filtri",
@@ -27,32 +27,32 @@
       "title_desc": "Titolo Z-A",
       "author_asc": "Autore A-Z",
       "author_desc": "Autore Z-A",
-      "date_newest": "Data Aggiunta (Più recente)",
-      "rating_highest": "Valutazione (Più alta)"
+      "date_newest": "Data aggiunta (più recente)",
+      "rating_highest": "Valutazione (più alta)"
     },
     "status": {
       "label": "Stato",
-      "all": "Tutti i Libri",
-      "reading": "In Lettura",
-      "paused": "In Pausa",
+      "all": "Tutti i libri",
+      "reading": "In lettura",
+      "paused": "In pausa",
       "finished": "Completato",
-      "unread": "Da Leggere"
+      "unread": "Da leggere"
     },
     "category": {
       "label": "Categoria",
-      "all": "Tutte le Categorie"
+      "all": "Tutte le categorie"
     },
     "author": {
       "label": "Autore",
-      "all": "Tutti gli Autori"
+      "all": "Tutti gli autori"
     },
-    "clear_all": "Cancella Tutti i Filtri",
+    "clear_all": "Cancella tutti i filtri",
     "results_count": "{{filtered}} di {{total}} libri",
     "results_total": "{{total}} libri",
     "no_books": "Nessun libro trovato"
   },
   "fulltext": {
-    "title": "Ricerca Full-Text",
+    "title": "Ricerca full-text",
     "enabled": "Abilitata",
     "disabled": "Disabilitata",
     "status": {
@@ -69,7 +69,7 @@
     }
   },
   "sorting": {
-    "title": "Opzioni di Ordinamento",
+    "title": "Opzioni di ordinamento",
     "label": "Ordina per",
     "direction_label": "Ordine",
     "sortBy": "Ordina per",
@@ -94,7 +94,7 @@
     }
   },
   "pinned": {
-    "title": "Risultati Bloccati",
+    "title": "Risultati bloccati",
     "badge": "Bloccato",
     "pin": "Blocca in cima",
     "unpin": "Sblocca",
