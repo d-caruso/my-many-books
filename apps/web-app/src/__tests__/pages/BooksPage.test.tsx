@@ -8,11 +8,12 @@ import { ApiProvider } from '../../contexts/ApiContext';
 import { SettingsProvider } from '../../contexts/SettingsContext';
 
 const mockSetSearchParams = vi.fn();
+const mockNavigate = vi.fn();
 let currentSearchParams: URLSearchParams = new URLSearchParams();
 
 vi.mock('react-router-dom', () => ({
   useSearchParams: () => [currentSearchParams, mockSetSearchParams],
-  useNavigate: () => vi.fn(),
+  useNavigate: () => mockNavigate,
 }));
 
 const createBookSearchState = () => ({
@@ -161,6 +162,7 @@ const i18nReady = testI18n.use(initReactI18next).init({
           clear_search: 'Clear search',
           add_book: 'Add book',
           add: 'Add',
+          scan_isbn: 'Scan ISBN',
           grid_view: 'Grid view',
           list_view: 'List view',
           loading: 'Loading books...',
@@ -195,6 +197,7 @@ describe('BooksPage', () => {
   beforeEach(() => {
     currentSearchParams = new URLSearchParams();
     mockSetSearchParams.mockClear();
+    mockNavigate.mockClear();
     bookSearchState = createBookSearchState();
     booksState = createBooksState();
   });
@@ -225,6 +228,12 @@ describe('BooksPage', () => {
     expect(screen.getByTestId('book-form')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('form-cancel'));
     expect(screen.getByTestId('book-list')).toBeInTheDocument();
+  });
+
+  test('navigates to scanner when scan isbn button is clicked', () => {
+    renderBooksPage();
+    fireEvent.click(screen.getByRole('button', { name: /scan isbn/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/scanner');
   });
 
   test('renders book list items when library data is available', () => {

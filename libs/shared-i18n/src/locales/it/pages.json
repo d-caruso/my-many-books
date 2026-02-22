@@ -5,6 +5,7 @@
     "description_with_count": "{{count}} libri nella tua biblioteca",
     "add_book": "Aggiungi Libro",
     "add": "Aggiungi",
+    "scan_isbn": "Scansiona ISBN",
     "clear_search": "Cancella ricerca",
     "grid_view": "Vista griglia",
     "list_view": "Vista lista",

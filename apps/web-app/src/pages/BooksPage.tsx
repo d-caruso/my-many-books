@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button, IconButton, Chip, Container, Typography, Alert } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import ClearIcon from '@mui/icons-material/Clear';
 import GridIcon from '@mui/icons-material/ViewModule';
 import ListIcon from '@mui/icons-material/ViewList';
@@ -19,6 +20,7 @@ type PageMode = 'list' | 'add' | 'edit' | 'details';
 
 const BooksPage: React.FC = () => {
   const { t } = useTranslation(['pages', 'scanner']);
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [pageMode, setPageMode] = useState<PageMode>('list');
@@ -147,6 +149,10 @@ const BooksPage: React.FC = () => {
     setSelectedBook(null);
     setPageMode('add');
     setActionError(null);
+  };
+
+  const handleScanIsbn = () => {
+    navigate('/scanner');
   };
 
   const handleEditBook = (book: Book) => {
@@ -360,21 +366,39 @@ const BooksPage: React.FC = () => {
           </Typography>
         </Box>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon aria-hidden="true" />}
-          onClick={handleAddBook}
-          size="large"
-          aria-label={t('pages:books.add_book')}
-          sx={{ width: { xs: '100%', sm: 'auto' } }}
+        <Box
+          display="flex"
+          flexDirection={{ xs: 'column', sm: 'row' }}
+          gap={2}
+          width={{ xs: '100%', sm: 'auto' }}
         >
-          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-            {t('pages:books.add_book')}
-          </Box>
-          <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-            {t('pages:books.add')}
-          </Box>
-        </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon aria-hidden="true" />}
+            onClick={handleAddBook}
+            size="large"
+            aria-label={t('pages:books.add_book')}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
+          >
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              {t('pages:books.add_book')}
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+              {t('pages:books.add')}
+            </Box>
+          </Button>
+
+          <Button
+            variant="outlined"
+            startIcon={<QrCodeScannerIcon aria-hidden="true" />}
+            onClick={handleScanIsbn}
+            size="large"
+            aria-label={t('pages:books.scan_isbn')}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
+          >
+            {t('pages:books.scan_isbn')}
+          </Button>
+        </Box>
       </Box>
 
       {/* Search and filters */}

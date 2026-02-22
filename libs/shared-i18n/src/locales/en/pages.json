@@ -5,6 +5,7 @@
     "description_with_count": "{{count}} books in your library",
     "add_book": "Add Book",
     "add": "Add",
+    "scan_isbn": "Scan ISBN",
     "clear_search": "Clear search",
     "grid_view": "Grid view",
     "list_view": "List view",

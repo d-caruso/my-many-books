@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Paper,
   TextField,
@@ -16,11 +17,13 @@ import {
   Stack,
   Divider,
   Alert,
+  Tooltip,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { useTranslation } from 'react-i18next';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
 import { useCategories } from '../../hooks/useCategories';
@@ -65,6 +68,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   onScannerPrefillNoticeDismiss
 }) => {
   const { t } = useTranslation(['books', 'common']);
+  const navigate = useNavigate();
   const { categories, loading: categoriesLoading, loadCategories } = useCategories();
   const defaultTitle = book ? t('books:edit_book_form') : t('books:add_new_book');
   const [formData, setFormData] = useState<BookFormData>({
@@ -222,6 +226,10 @@ export const BookForm: React.FC<BookFormProps> = ({
     handleInputChange('selectedCategories', [...formData.selectedCategories, category.id]);
   };
 
+  const handleScanIsbn = () => {
+    navigate('/scanner?returnTo=add-book');
+  };
+
   return (
     <Paper elevation={3} sx={{ overflow: 'hidden' }}>
       <Box sx={{ px: 3, py: 2, bgcolor: 'primary.50', borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -265,19 +273,46 @@ export const BookForm: React.FC<BookFormProps> = ({
             </Alert>
           )}
 
-          <TextField
-            fullWidth
-            required
-            id="isbnCode"
-            label={t('books:isbn')}
-            value={formData.isbnCode}
-            onChange={(e) => handleInputChange('isbnCode', e.target.value)}
-            placeholder={t('books:isbn_placeholder')}
-            disabled={loading}
-            error={!!errors.isbnCode}
-            helperText={errors.isbnCode}
-            sx={{ fontFamily: 'monospace' }}
-          />
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr auto' },
+              gap: 2,
+              alignItems: 'start'
+            }}
+          >
+            <TextField
+              fullWidth
+              required
+              id="isbnCode"
+              label={t('books:isbn')}
+              value={formData.isbnCode}
+              onChange={(e) => handleInputChange('isbnCode', e.target.value)}
+              placeholder={t('books:isbn_placeholder')}
+              disabled={loading}
+              error={!!errors.isbnCode}
+              helperText={errors.isbnCode}
+              sx={{ fontFamily: 'monospace' }}
+            />
+            <Tooltip title={t('books:scan_isbn')}>
+              <span>
+                <Button
+                  variant="outlined"
+                  startIcon={<QrCodeScannerIcon aria-hidden="true" />}
+                  onClick={handleScanIsbn}
+                  disabled={loading}
+                  aria-label={t('books:scan_isbn')}
+                  sx={{
+                    width: { xs: '100%', sm: 'auto' },
+                    minHeight: 56,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {t('books:scan_isbn')}
+                </Button>
+              </span>
+            </Tooltip>
+          </Box>
 
           {/* Authors and Reading Status */}
           <Box

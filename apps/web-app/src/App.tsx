@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { authService } from './services/authService';
 import { ApiProvider } from './contexts/ApiContext';
@@ -71,7 +71,10 @@ const MobileAnalyticsPage = lazy(() =>
 
 const ScannerRoute: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const didNavigate = useRef(false);
+  const scannerParams = new URLSearchParams(location.search);
+  const returnTo = scannerParams.get('returnTo');
 
   const buildScannerSearchUrl = (isbn: string, copyStatus: 'success' | 'failed') => {
     const params = new URLSearchParams({
@@ -107,7 +110,18 @@ const ScannerRoute: React.FC = () => {
   return (
     <ScannerModal
       isOpen={true}
-      onClose={() => { if (!didNavigate.current) navigate(-1); }}
+      onClose={() => {
+        if (didNavigate.current) {
+          return;
+        }
+
+        if (returnTo === 'add-book') {
+          navigate('/?mode=add', { replace: true });
+          return;
+        }
+
+        navigate(-1);
+      }}
       onScanSuccess={(result) => { void handleScanSuccess(result); }}
       onScanError={() => {}}
     />
