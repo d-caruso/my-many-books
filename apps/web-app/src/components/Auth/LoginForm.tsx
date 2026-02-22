@@ -97,9 +97,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         <Typography variant="h5" component="h2">
           {t('common:sign_in')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t('common:welcome_back')}
-        </Typography>
       </Box>
 
       <Box component="form" onSubmit={handleSubmit} noValidate aria-label="Login form" sx={{ p: 4 }}>
