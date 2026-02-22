@@ -6,6 +6,7 @@ import { initReactI18next } from 'react-i18next';
 import BooksPage from '../../pages/BooksPage';
 import { ApiProvider } from '../../contexts/ApiContext';
 import { SettingsProvider } from '../../contexts/SettingsContext';
+import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../../constants/scanner';
 
 const mockSetSearchParams = vi.fn();
 const mockNavigate = vi.fn();
@@ -75,12 +76,15 @@ vi.mock('../../components/Book', () => ({
       {loading && <div data-testid="book-loading">Loading</div>}
     </div>
   ),
-  BookForm: ({ book, onSubmit, onCancel, loading, scannerPrefillNotice }: any) => (
+  BookForm: ({ book, onSubmit, onCancel, loading, scannerPrefillNotice, initialDraft, initialIsbn }: any) => (
     <div
       data-testid="book-form"
       data-book-id={book?.id ?? 'new'}
       data-loading={loading}
       data-scanner-notice={scannerPrefillNotice ?? ''}
+      data-initial-draft-title={initialDraft?.title ?? ''}
+      data-initial-draft-isbn={initialDraft?.isbnCode ?? ''}
+      data-initial-isbn={initialIsbn ?? ''}
     >
       <button data-testid="form-submit" onClick={() => onSubmit({ title: 'Form Book', isbn: '123', selectedAuthors: [], selectedCategories: [] })}>
         Submit
@@ -198,6 +202,7 @@ describe('BooksPage', () => {
     currentSearchParams = new URLSearchParams();
     mockSetSearchParams.mockClear();
     mockNavigate.mockClear();
+    window.sessionStorage.clear();
     bookSearchState = createBookSearchState();
     booksState = createBooksState();
   });
@@ -313,6 +318,62 @@ describe('BooksPage', () => {
     const updatedParams = replaceCall?.[0] as URLSearchParams;
     expect(updatedParams.get('scannerSource')).toBeNull();
     expect(updatedParams.get('scannerCopy')).toBeNull();
+  });
+
+  test('preserves add-book draft on scanner success and overrides isbn with scanned value', () => {
+    window.sessionStorage.setItem(
+      ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY,
+      JSON.stringify({
+        title: 'Typed before scan',
+        isbnCode: 'old-isbn',
+        notes: 'Keep this note',
+      })
+    );
+
+    currentSearchParams = new URLSearchParams([
+      ['mode', 'add'],
+      ['isbn', '9780000000000'],
+      ['scannerSource', 'scanner'],
+      ['scannerCopy', 'success'],
+    ]);
+
+    renderBooksPage();
+
+    const form = screen.getByTestId('book-form');
+    expect(form).toHaveAttribute('data-initial-draft-title', 'Typed before scan');
+    expect(form).toHaveAttribute('data-initial-draft-isbn', 'old-isbn');
+    expect(form).toHaveAttribute('data-initial-isbn', '9780000000000');
+    expect(window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY)).toBeNull();
+  });
+
+  test('restores add-book draft after closing scanner and clears restore state', () => {
+    window.sessionStorage.setItem(
+      ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY,
+      JSON.stringify({
+        title: 'Draft from scanner flow',
+        isbnCode: '9781111111111',
+        notes: 'Draft notes',
+      })
+    );
+
+    currentSearchParams = new URLSearchParams([
+      ['mode', 'add'],
+      ['restoreDraft', '1'],
+    ]);
+
+    renderBooksPage();
+
+    const form = screen.getByTestId('book-form');
+    expect(form).toHaveAttribute('data-initial-draft-title', 'Draft from scanner flow');
+    expect(form).toHaveAttribute('data-initial-draft-isbn', '9781111111111');
+    expect(window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY)).toBeNull();
+
+    const replaceCall = mockSetSearchParams.mock.calls.find(
+      (call) => call[1]?.replace === true
+    );
+    expect(replaceCall).toBeDefined();
+    const updatedParams = replaceCall?.[0] as URLSearchParams;
+    expect(updatedParams.get('restoreDraft')).toBeNull();
   });
 
   test('handles load more button when there are more results', () => {

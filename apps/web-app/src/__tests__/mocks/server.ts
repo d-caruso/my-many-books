@@ -376,12 +376,12 @@ export const handlers = [
   }),
 
   // Search endpoints
-  http.get(`*${API_BASE_PATH}/books/search/:isbn`, ({ params }) => {
+  http.get(`*${API_BASE_PATH}/books/search/isbn/:isbn`, ({ params }) => {
     const book = mockBooks.find((b) => b.isbnCode === params.isbn);
     if (!book) {
       return new HttpResponse(null, { status: 404 });
     }
-    return HttpResponse.json(book);
+    return HttpResponse.json({ source: 'local', book });
   }),
   http.get(`*${API_BASE_PATH}/books/search`, ({ request }) => {
     const url = new URL(request.url);

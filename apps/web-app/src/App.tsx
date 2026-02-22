@@ -116,7 +116,7 @@ const ScannerRoute: React.FC = () => {
         }
 
         if (returnTo === 'add-book') {
-          navigate('/?mode=add', { replace: true });
+          navigate('/?mode=add&restoreDraft=1', { replace: true });
           return;
         }
 

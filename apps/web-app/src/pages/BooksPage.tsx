@@ -14,6 +14,7 @@ import { BookSearchForm } from '../components/Search';
 import { useBookSearch } from '../hooks/useBookSearch';
 import { useBooks } from '../hooks/useBooks';
 import { useSetting } from '../hooks/useSetting';
+import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../constants/scanner';
 
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
@@ -29,6 +30,7 @@ const BooksPage: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [initialIsbn, setInitialIsbn] = useState<string | undefined>(undefined);
+  const [initialDraft, setInitialDraft] = useState<Partial<BookFormData> | null>(null);
   const [scannerNoticeOpen, setScannerNoticeOpen] = useState(false);
   const [scannerNoticeMessage, setScannerNoticeMessage] = useState('');
 
@@ -92,6 +94,27 @@ const BooksPage: React.FC = () => {
       const isbnFromUrl = searchParams.get('isbn') || undefined;
       const scannerSource = searchParams.get('scannerSource');
       const scannerCopy = searchParams.get('scannerCopy');
+      const restoreDraft = searchParams.get('restoreDraft') === '1' || scannerSource === 'scanner';
+      let restoredDraft: Partial<BookFormData> | null = null;
+
+      if (restoreDraft) {
+        try {
+          const storedDraft = window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
+          if (storedDraft) {
+            restoredDraft = JSON.parse(storedDraft) as Partial<BookFormData>;
+          }
+        } catch {
+          restoredDraft = null;
+        } finally {
+          try {
+            window.sessionStorage.removeItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
+          } catch {
+            // ignore storage cleanup failures
+          }
+        }
+      }
+
+      setInitialDraft(restoredDraft);
       setInitialIsbn(isbnFromUrl);
       if (scannerSource === 'scanner') {
         setScannerNoticeMessage(
@@ -107,6 +130,7 @@ const BooksPage: React.FC = () => {
       newParams.delete('isbn');
       newParams.delete('scannerSource');
       newParams.delete('scannerCopy');
+      newParams.delete('restoreDraft');
       setSearchParams(newParams, { replace: true });
       return;
     }
@@ -258,6 +282,7 @@ const BooksPage: React.FC = () => {
       setPageMode('list');
       setSelectedBook(null);
       setInitialIsbn(undefined);
+      setInitialDraft(null);
     } catch (err: any) {
       console.error('Failed to save book:', err);
       const errorData = err.response?.data;
@@ -285,6 +310,7 @@ const BooksPage: React.FC = () => {
     setSelectedBook(null);
     setActionError(null);
     setInitialIsbn(undefined);
+    setInitialDraft(null);
   };
 
   const handleScannerPrefillNoticeDismiss = useCallback(() => {
@@ -313,6 +339,7 @@ const BooksPage: React.FC = () => {
           onCancel={handleCancel}
           loading={actionLoading}
           initialIsbn={initialIsbn}
+          initialDraft={initialDraft}
           scannerPrefillNotice={pageMode === 'add' && scannerNoticeOpen ? scannerNoticeMessage : null}
           onScannerPrefillNoticeDismiss={handleScannerPrefillNoticeDismiss}
         />

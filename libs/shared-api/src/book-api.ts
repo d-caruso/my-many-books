@@ -21,6 +21,22 @@ import {
 const PaginatedBooksSchema = createPaginatedResponseSchema(BookSchema);
 
 export class BookApi extends BaseApiClient {
+  private parseIsbnSearchResponse(response: unknown): Book | null {
+    if (response === null || response === undefined) {
+      return null;
+    }
+
+    if (typeof response === 'object' && response !== null && 'book' in response) {
+      const wrappedBook = (response as { book?: unknown }).book;
+      if (wrappedBook === null || wrappedBook === undefined) {
+        return null;
+      }
+      return BookSchema.parse(wrappedBook);
+    }
+
+    return BookSchema.parse(response);
+  }
+
   async getBooks(
     page: number = 1,
     limit: number = 10,
@@ -92,8 +108,8 @@ export class BookApi extends BaseApiClient {
 
   async searchByISBN(isbn: string): Promise<Book | null> {
     try {
-      const response = await this.get<unknown>(`/books/search/${isbn}`);
-      return BookSchema.parse(response);
+      const response = await this.get<unknown>(`/books/search/isbn/${encodeURIComponent(isbn)}`);
+      return this.parseIsbnSearchResponse(response);
     } catch (error: any) {
       if (error.status === 404) {
         return null;

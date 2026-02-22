@@ -581,7 +581,7 @@ export class BookController extends BaseController {
    */
   async searchBooksByIsbn(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
-    const isbn = this.getQueryParameter(request, 'isbn');
+    const isbn = this.getPathParameter(request, 'isbn') || this.getQueryParameter(request, 'isbn');
     if (!isbn) {
       return this.createErrorResponseI18n('errors:isbn_parameter_required', 400);
     }

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Paper,
   TextField,
@@ -27,9 +26,11 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { useTranslation } from 'react-i18next';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
 import { useCategories } from '../../hooks/useCategories';
+import { useBookSearch } from '../../hooks/useBookSearch';
 import { AuthorAutocomplete } from '../Search/AuthorAutocomplete';
 import { AddAuthorDialog } from '../Author/AddAuthorDialog';
 import { AddCategoryDialog } from '../Category/AddCategoryDialog';
+import { EmbeddedScannerFlow } from '../Scanner/EmbeddedScannerFlow';
 import { normalizeIsbn } from '@my-many-books/shared-validation';
 import { createBookSchema } from '../../validation/bookSchemas';
 
@@ -41,6 +42,7 @@ interface BookFormProps {
   title?: string;
   apiErrors?: Array<{ field: string; message: string }>;
   initialIsbn?: string;
+  initialDraft?: Partial<BookFormData> | null;
   scannerPrefillNotice?: string | null;
   onScannerPrefillNoticeDismiss?: () => void;
 }
@@ -56,6 +58,24 @@ export interface BookFormData {
   selectedCategories: number[];
 }
 
+const buildNewBookFormData = (
+  initialIsbn?: string,
+  initialDraft?: Partial<BookFormData> | null
+): BookFormData => {
+  const draft = initialDraft ?? {};
+
+  return {
+    title: typeof draft.title === 'string' ? draft.title : '',
+    isbnCode: initialIsbn ?? (typeof draft.isbnCode === 'string' ? draft.isbnCode : ''),
+    editionNumber: typeof draft.editionNumber === 'number' ? draft.editionNumber : undefined,
+    editionDate: typeof draft.editionDate === 'string' ? draft.editionDate : '',
+    status: draft.status,
+    notes: typeof draft.notes === 'string' ? draft.notes : '',
+    selectedAuthors: Array.isArray(draft.selectedAuthors) ? [...draft.selectedAuthors] : [],
+    selectedCategories: Array.isArray(draft.selectedCategories) ? [...draft.selectedCategories] : [],
+  };
+};
+
 export const BookForm: React.FC<BookFormProps> = ({
   book,
   onSubmit,
@@ -64,27 +84,25 @@ export const BookForm: React.FC<BookFormProps> = ({
   title,
   apiErrors = [],
   initialIsbn,
+  initialDraft = null,
   scannerPrefillNotice = null,
   onScannerPrefillNoticeDismiss
 }) => {
-  const { t } = useTranslation(['books', 'common']);
-  const navigate = useNavigate();
+  const { t } = useTranslation(['books', 'common', 'scanner']);
   const { categories, loading: categoriesLoading, loadCategories } = useCategories();
+  const { searchByISBN } = useBookSearch();
   const defaultTitle = book ? t('books:edit_book_form') : t('books:add_new_book');
-  const [formData, setFormData] = useState<BookFormData>({
-    title: '',
-    isbnCode: !book && initialIsbn ? initialIsbn : '',
-    editionNumber: undefined,
-    editionDate: '',
-    status: undefined,
-    notes: '',
-    selectedAuthors: [],
-    selectedCategories: []
-  });
+  const [formData, setFormData] = useState<BookFormData>(() =>
+    buildNewBookFormData(!book ? initialIsbn : undefined, !book ? initialDraft : null)
+  );
   const [errors, setErrors] = useState<Partial<Record<keyof BookFormData, string>>>({});
   const [addAuthorDialogOpen, setAddAuthorDialogOpen] = useState(false);
   const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
   const [showScannerPrefillNotice, setShowScannerPrefillNotice] = useState(Boolean(scannerPrefillNotice));
+  const [embeddedScannerOpen, setEmbeddedScannerOpen] = useState(false);
+  const [embeddedScannerNotice, setEmbeddedScannerNotice] = useState<string | null>(null);
+  const [showEmbeddedScannerNotice, setShowEmbeddedScannerNotice] = useState(false);
+  const [duplicateIsbnWarning, setDuplicateIsbnWarning] = useState<string | null>(null);
 
   // Initialize form with book data
   useEffect(() => {
@@ -103,6 +121,19 @@ export const BookForm: React.FC<BookFormProps> = ({
   }, [book]);
 
   useEffect(() => {
+    if (book) {
+      return;
+    }
+
+    if (!initialDraft && !initialIsbn) {
+      return;
+    }
+
+    // Scanner round-trip draft restoration can arrive after initial mount.
+    setFormData(buildNewBookFormData(initialIsbn, initialDraft));
+  }, [book, initialDraft, initialIsbn]);
+
+  useEffect(() => {
     setShowScannerPrefillNotice(Boolean(scannerPrefillNotice));
   }, [scannerPrefillNotice]);
 
@@ -118,6 +149,19 @@ export const BookForm: React.FC<BookFormProps> = ({
 
     return () => window.clearTimeout(timeoutId);
   }, [showScannerPrefillNotice, scannerPrefillNotice, onScannerPrefillNoticeDismiss]);
+
+  useEffect(() => {
+    if (!showEmbeddedScannerNotice || !embeddedScannerNotice) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowEmbeddedScannerNotice(false);
+      setEmbeddedScannerNotice(null);
+    }, 4000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [showEmbeddedScannerNotice, embeddedScannerNotice]);
 
   // Update errors when API errors change
   useEffect(() => {
@@ -183,6 +227,17 @@ export const BookForm: React.FC<BookFormProps> = ({
       setShowScannerPrefillNotice(false);
       onScannerPrefillNoticeDismiss?.();
     }
+    if (field === 'isbnCode') {
+      if (showEmbeddedScannerNotice) {
+        setShowEmbeddedScannerNotice(false);
+      }
+      if (embeddedScannerNotice) {
+        setEmbeddedScannerNotice(null);
+      }
+      if (duplicateIsbnWarning) {
+        setDuplicateIsbnWarning(null);
+      }
+    }
 
     setFormData(prev => ({ ...prev, [field]: value }));
     
@@ -227,7 +282,54 @@ export const BookForm: React.FC<BookFormProps> = ({
   };
 
   const handleScanIsbn = () => {
-    navigate('/scanner?returnTo=add-book');
+    setEmbeddedScannerOpen(true);
+  };
+
+  const handleEmbeddedScannerClose = () => {
+    setEmbeddedScannerOpen(false);
+  };
+
+  const handleEmbeddedScannerSuccess = async (result: { isbn: string }) => {
+    const scannedIsbn = result.isbn;
+    let copyStatus: 'success' | 'failed' = 'failed';
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(scannedIsbn);
+        copyStatus = 'success';
+      }
+    } catch {
+      copyStatus = 'failed';
+    }
+
+    let existingBook: Book | null = null;
+    try {
+      existingBook = await searchByISBN(scannedIsbn);
+    } catch {
+      existingBook = null;
+    }
+
+    setFormData(prev => ({ ...prev, isbnCode: scannedIsbn }));
+    setErrors(prev => ({ ...prev, isbnCode: undefined }));
+    setDuplicateIsbnWarning(
+      existingBook
+        ? t('scanner:isbn_already_exists_in_library', {
+            defaultValue: 'A book with this ISBN already exists in your library.',
+          })
+        : null
+    );
+    if (existingBook) {
+      setEmbeddedScannerNotice(null);
+      setShowEmbeddedScannerNotice(false);
+    } else {
+      setEmbeddedScannerNotice(
+        copyStatus === 'success'
+          ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
+          : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
+      );
+      setShowEmbeddedScannerNotice(true);
+    }
+    setEmbeddedScannerOpen(false);
   };
 
   return (
@@ -273,14 +375,66 @@ export const BookForm: React.FC<BookFormProps> = ({
             </Alert>
           )}
 
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr auto' },
-              gap: 2,
-              alignItems: 'start'
-            }}
-          >
+          {showEmbeddedScannerNotice && embeddedScannerNotice && (
+            <Alert
+              severity="success"
+              onClose={() => {
+                setShowEmbeddedScannerNotice(false);
+                setEmbeddedScannerNotice(null);
+              }}
+            >
+              {embeddedScannerNotice}
+            </Alert>
+          )}
+
+          {duplicateIsbnWarning && (
+            <Alert severity="warning" onClose={() => setDuplicateIsbnWarning(null)}>
+              {duplicateIsbnWarning}
+            </Alert>
+          )}
+
+          {!book ? (
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: '1fr auto' },
+                gap: 2,
+                alignItems: 'start'
+              }}
+            >
+              <TextField
+                fullWidth
+                required
+                id="isbnCode"
+                label={t('books:isbn')}
+                value={formData.isbnCode}
+                onChange={(e) => handleInputChange('isbnCode', e.target.value)}
+                placeholder={t('books:isbn_placeholder')}
+                disabled={loading}
+                error={!!errors.isbnCode}
+                helperText={errors.isbnCode}
+                sx={{ fontFamily: 'monospace' }}
+              />
+              <Tooltip title={t('books:scan_isbn')}>
+                <span>
+                  <Button
+                    variant="outlined"
+                    startIcon={<QrCodeScannerIcon aria-hidden="true" />}
+                    onClick={handleScanIsbn}
+                    disabled={loading}
+                    aria-label={t('books:scan_isbn')}
+                    sx={{
+                      width: { xs: '100%', sm: 'auto' },
+                      minHeight: 56,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {t('books:scan_isbn')}
+                  </Button>
+                </span>
+              </Tooltip>
+            </Box>
+          ) : (
             <TextField
               fullWidth
               required
@@ -294,25 +448,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               helperText={errors.isbnCode}
               sx={{ fontFamily: 'monospace' }}
             />
-            <Tooltip title={t('books:scan_isbn')}>
-              <span>
-                <Button
-                  variant="outlined"
-                  startIcon={<QrCodeScannerIcon aria-hidden="true" />}
-                  onClick={handleScanIsbn}
-                  disabled={loading}
-                  aria-label={t('books:scan_isbn')}
-                  sx={{
-                    width: { xs: '100%', sm: 'auto' },
-                    minHeight: 56,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {t('books:scan_isbn')}
-                </Button>
-              </span>
-            </Tooltip>
-          </Box>
+          )}
 
           {/* Authors and Reading Status */}
           <Box
@@ -556,6 +692,12 @@ export const BookForm: React.FC<BookFormProps> = ({
         open={addCategoryDialogOpen}
         onClose={() => setAddCategoryDialogOpen(false)}
         onCategoryCreated={handleCategoryCreated}
+      />
+
+      <EmbeddedScannerFlow
+        isOpen={embeddedScannerOpen}
+        onClose={handleEmbeddedScannerClose}
+        onScanSuccess={handleEmbeddedScannerSuccess}
       />
     </Paper>
   );

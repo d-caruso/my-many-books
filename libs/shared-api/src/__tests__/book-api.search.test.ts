@@ -179,7 +179,7 @@ describe('BookApi (Search & Status)', () => {
 
   describe('searchByISBN', () => {
     it('should search for a book by ISBN', async () => {
-      mockHttpClient.setResponse('/books/search/978-0-123-45678-9', {
+      mockHttpClient.setResponse('/books/search/isbn/978-0-123-45678-9', {
         data: mockBook,
         status: 200,
       });
@@ -189,11 +189,11 @@ describe('BookApi (Search & Status)', () => {
       expect(result).toEqual(mockBook);
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('GET');
-      expect(lastRequest?.url).toContain('/books/search/978-0-123-45678-9');
+      expect(lastRequest?.url).toContain('/books/search/isbn/978-0-123-45678-9');
     });
 
     it('should return null when book not found (404)', async () => {
-      mockHttpClient.setResponse('/books/search/999-9-999-99999-9', {
+      mockHttpClient.setResponse('/books/search/isbn/999-9-999-99999-9', {
         data: { error: 'Not found' },
         status: 404,
       });
@@ -203,9 +203,20 @@ describe('BookApi (Search & Status)', () => {
       expect(result).toBeNull();
     });
 
+    it('should parse wrapped ISBN search responses', async () => {
+      mockHttpClient.setResponse('/books/search/isbn/978-0-123-45678-9', {
+        data: { source: 'local', book: mockBook },
+        status: 200,
+      });
+
+      const result = await bookApi.searchByISBN('978-0-123-45678-9');
+
+      expect(result).toEqual(mockBook);
+    });
+
     it('should validate response against BookSchema', async () => {
       const invalidBook = { id: 1, title: 'Missing isbnCode' };
-      mockHttpClient.setResponse('/books/search/978-0-123-45678-9', {
+      mockHttpClient.setResponse('/books/search/isbn/978-0-123-45678-9', {
         data: invalidBook,
         status: 200,
       });
@@ -216,7 +227,7 @@ describe('BookApi (Search & Status)', () => {
     });
 
     it('should propagate non-404 errors', async () => {
-      mockHttpClient.setResponse('/books/search/978-0-123-45678-9', {
+      mockHttpClient.setResponse('/books/search/isbn/978-0-123-45678-9', {
         data: { error: 'Server error' },
         status: 500,
       });
@@ -275,4 +286,3 @@ describe('BookApi (Search & Status)', () => {
     });
   });
 });
-

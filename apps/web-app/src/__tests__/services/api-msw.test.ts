@@ -394,7 +394,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
       const isbn = '9780743273565';
 
       server.use(
-        http.get(`*${API_BASE_PATH}/books/search/${isbn}`, () => {
+        http.get(`*${API_BASE_PATH}/books/search/isbn/${isbn}`, () => {
           const payload = {
             id: 99,
             title: 'The Great Gatsby',
@@ -407,7 +407,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
             updateDate: new Date().toISOString(),
           };
 
-          return HttpResponse.json(payload);
+          return HttpResponse.json({ source: 'local', book: payload });
         })
       );
 

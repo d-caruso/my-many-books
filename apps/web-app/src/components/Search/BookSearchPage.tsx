@@ -21,6 +21,7 @@ import { BookSearchForm } from './BookSearchForm';
 import { BookSearchResults } from './BookSearchResults';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import type { Book, SearchFilters } from '@my-many-books/shared-types';
+import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../../constants/scanner';
 
 const BookSearchPage: React.FC = () => {
   const { t } = useTranslation(['books', 'common', 'scanner']);
@@ -69,6 +70,12 @@ const BookSearchPage: React.FC = () => {
         }
 
         if (result && scannerSource === 'scanner') {
+          try {
+            window.sessionStorage.removeItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
+          } catch {
+            // Non-blocking cleanup; search UX should proceed.
+          }
+
           setScannerNoticeMessage(
             scannerCopy === 'success'
               ? t('isbn_copied', { ns: 'scanner', defaultValue: 'ISBN copied' })

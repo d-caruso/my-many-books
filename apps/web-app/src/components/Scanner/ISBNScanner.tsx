@@ -26,13 +26,15 @@ interface ISBNScannerProps {
   onScanError?: (error: string) => void;
   onClose: () => void;
   isOpen: boolean;
+  onManualEntryRequest?: () => void;
 }
 
 export const ISBNScanner: React.FC<ISBNScannerProps> = ({
   onScanSuccess,
   onScanError,
   onClose,
-  isOpen
+  isOpen,
+  onManualEntryRequest
 }) => {
   const { t } = useTranslation('scanner');
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -396,10 +398,9 @@ export const ISBNScanner: React.FC<ISBNScannerProps> = ({
 
               {/* Manual Input Button */}
               <IconButton
-                onClick={() => {
-                  console.log('Manual input not implemented yet');
-                }}
+                onClick={() => onManualEntryRequest?.()}
                 data-testid="manual-entry-toggle"
+                disabled={!onManualEntryRequest}
                 sx={{
                   color: 'white',
                   bgcolor: 'rgba(255, 255, 255, 0.1)',

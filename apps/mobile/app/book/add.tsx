@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import * as Clipboard from 'expo-clipboard';
 
 import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { Book } from '@/types';
+import { BarcodeScannerPanel } from '@/components/scanner/BarcodeScannerPanel';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
 
 export default function AddBookScreen() {
@@ -27,6 +29,8 @@ export default function AddBookScreen() {
   const [error, setError] = useState<string | null>(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const handledScannerFeedbackRef = useRef<string | null>(null);
 
   const { createBook } = useBooks();
@@ -99,8 +103,57 @@ export default function AddBookScreen() {
     if (feedbackVisible) {
       setFeedbackVisible(false);
     }
+    if (duplicateWarning) {
+      setDuplicateWarning(null);
+    }
     setIsbnCode(value);
   };
+
+  const handleEmbeddedScannerDetected = useCallback(async (isbnValue: string) => {
+    let copyStatus: 'success' | 'failed' = 'failed';
+
+    try {
+      await Clipboard.setStringAsync(isbnValue);
+      copyStatus = 'success';
+    } catch {
+      copyStatus = 'failed';
+    }
+
+    let existingBook: Book | null = null;
+    try {
+      existingBook = await searchByISBN(isbnValue);
+    } catch (err) {
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+        operation: 'embedded_scanner_isbn_lookup',
+        resource: RESOURCE_TYPES.BOOK,
+        error: err instanceof Error ? err.message : String(err),
+        isbn: isbnValue,
+        source: 'book_add_embedded_scanner',
+      });
+      existingBook = null;
+    }
+
+    setIsbnCode(isbnValue);
+    if (existingBook) {
+      setFeedbackVisible(false);
+      setFeedbackMessage('');
+    } else {
+      setFeedbackMessage(
+        copyStatus === 'success'
+          ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
+          : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
+      );
+      setFeedbackVisible(true);
+    }
+    setDuplicateWarning(
+      existingBook
+        ? t('scanner:isbn_already_exists_in_library', {
+            defaultValue: 'A book with this ISBN already exists in your library.',
+          })
+        : null
+    );
+    setScannerOpen(false);
+  }, [searchByISBN, t]);
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -195,24 +248,42 @@ export default function AddBookScreen() {
                 </View>
               )}
 
+              {duplicateWarning && (
+                <View style={styles.duplicateWarningContainer} accessibilityLiveRegion="polite">
+                  <Text variant="bodyMedium" style={styles.duplicateWarningText}>
+                    {duplicateWarning}
+                  </Text>
+                </View>
+              )}
+
               <View style={styles.isbnSection}>
                 <TextInput
                   label={t('books:isbn_optional')}
                   value={isbnCode}
                   onChangeText={handleIsbnChange}
-                  style={styles.input}
+                  style={styles.isbnInput}
                   keyboardType="default"
                   autoCapitalize="none"
                 />
-                <Button
-                  mode="outlined"
-                  onPress={handleISBNLookup}
-                  disabled={loading || !isbnCode.trim()}
-                  style={styles.lookupButton}
-                  accessibilityLabel={t('books:lookup_isbn')}
-                >
-                  {t('books:lookup')}
-                </Button>
+                <View style={styles.isbnActionButtons}>
+                  <Button
+                    mode="outlined"
+                    onPress={handleISBNLookup}
+                    disabled={loading || !isbnCode.trim()}
+                    style={styles.lookupButton}
+                    accessibilityLabel={t('books:lookup_isbn')}
+                  >
+                    {t('books:lookup')}
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    onPress={() => setScannerOpen(true)}
+                    style={styles.scanButton}
+                    accessibilityLabel={t('books:scan_isbn')}
+                  >
+                    {t('books:scan_isbn')}
+                  </Button>
+                </View>
               </View>
 
               <TextInput
@@ -289,6 +360,20 @@ export default function AddBookScreen() {
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={scannerOpen}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setScannerOpen(false)}
+      >
+        <SafeAreaView style={styles.scannerModalContainer}>
+          <BarcodeScannerPanel
+            onDetected={handleEmbeddedScannerDetected}
+            onClose={() => setScannerOpen(false)}
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -338,16 +423,44 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   isbnSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
     marginBottom: 16,
+  },
+  isbnInput: {
+    marginBottom: 8,
+  },
+  isbnActionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  duplicateWarningContainer: {
+    backgroundColor: '#fff8e1',
+    borderColor: '#f59e0b',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  duplicateWarningText: {
+    color: '#92400e',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   input: {
     marginBottom: 16,
   },
   lookupButton: {
-    marginLeft: 8,
-    marginBottom: 16,
+    flex: 1,
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  scanButton: {
+    flex: 1,
+    marginTop: 0,
+    marginBottom: 0,
   },
   sectionTitle: {
     fontWeight: 'bold',
@@ -370,5 +483,9 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     marginHorizontal: 8,
+  },
+  scannerModalContainer: {
+    flex: 1,
+    backgroundColor: '#000',
   },
 });
