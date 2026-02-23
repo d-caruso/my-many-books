@@ -13,6 +13,7 @@ import enScanner from '@my-many-books/shared-i18n/src/locales/en/scanner.json';
 import enPages from '@my-many-books/shared-i18n/src/locales/en/pages.json';
 import enAccessibility from '@my-many-books/shared-i18n/src/locales/en/accessibility.json';
 import enOffline from '@my-many-books/shared-i18n/src/locales/en/offline.json';
+import enDialogs from '@my-many-books/shared-i18n/src/locales/en/dialogs.json';
 
 import itCommon from '@my-many-books/shared-i18n/src/locales/it/common.json';
 import itValidation from '@my-many-books/shared-i18n/src/locales/it/validation.json';
@@ -22,6 +23,7 @@ import itScanner from '@my-many-books/shared-i18n/src/locales/it/scanner.json';
 import itPages from '@my-many-books/shared-i18n/src/locales/it/pages.json';
 import itAccessibility from '@my-many-books/shared-i18n/src/locales/it/accessibility.json';
 import itOffline from '@my-many-books/shared-i18n/src/locales/it/offline.json';
+import itDialogs from '@my-many-books/shared-i18n/src/locales/it/dialogs.json';
 
 // AsyncStorage key for language preference
 const LANGUAGE_STORAGE_KEY = '@language-preference';
@@ -91,6 +93,7 @@ const initializeI18n = async () => {
         pages: enPages,
         accessibility: enAccessibility,
         offline: enOffline,
+        dialogs: enDialogs,
       },
       it: {
         common: itCommon,
@@ -101,12 +104,13 @@ const initializeI18n = async () => {
         pages: itPages,
         accessibility: itAccessibility,
         offline: itOffline,
+        dialogs: itDialogs,
       },
     },
     lng: initialLanguage,
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: SUPPORTED_LANGUAGES.map((l) => l.code),
-    ns: ['common', 'validation', 'errors', 'books', 'scanner', 'pages', 'accessibility', 'offline'],
+    ns: ['common', 'validation', 'errors', 'books', 'scanner', 'pages', 'accessibility', 'offline', 'dialogs'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false, // React Native already escapes values

@@ -59,3 +59,29 @@ export const Menu = Object.assign('Menu', {
   Item: 'MenuItem',
 });
 export const ActivityIndicator = 'ActivityIndicator';
+export const Checkbox = 'Checkbox';
+export const SegmentedButtons = 'SegmentedButtons';
+export const Portal = ({ children }) => children;
+const DialogRoot = ({ children, ...props }) => {
+  const React = require('react');
+  return React.createElement('Dialog', props, children);
+};
+export const Dialog = Object.assign(DialogRoot, {
+  Title: 'DialogTitle',
+  Content: 'DialogContent',
+  Actions: 'DialogActions',
+});
+const ListItem = ({ title, description, onPress, left, right }) => {
+  const React = require('react');
+  return React.createElement(
+    'ListItem',
+    { onPress },
+    left ? left({}) : null,
+    title ? React.createElement('Text', { onPress }, title) : null,
+    description ? React.createElement('Text', null, description) : null,
+    right ? right({}) : null
+  );
+};
+export const List = Object.assign('List', {
+  Item: ListItem,
+});

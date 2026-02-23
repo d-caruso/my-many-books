@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Modal } from 'react-native';
+import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -9,9 +9,23 @@ import * as Clipboard from 'expo-clipboard';
 import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useNetworkState } from '@/hooks/useNetworkState';
-import { Book } from '@/types';
-import { BarcodeScannerPanel } from '@/components/scanner/BarcodeScannerPanel';
+import { Book, Author, Category } from '@/types';
+import { authorAPI, categoryAPI } from '@/services/api';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
+import { AuthorsSection } from '@/components/book/AuthorsSection';
+import { CategoriesSection } from '@/components/book/CategoriesSection';
+import { AddBookOverlays } from '@/components/book/AddBookOverlays';
+import { addBookStyles as styles } from '@/components/book/addBookStyles';
+
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return String(error);
+};
 
 export default function AddBookScreen() {
   const { t } = useTranslation();
@@ -21,21 +35,68 @@ export default function AddBookScreen() {
     scannerCopy?: 'success' | 'failed';
   }>();
   const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
   const [isbnCode, setIsbnCode] = useState(isbn || '');
   const [status, setStatus] = useState<Book['status']>('want-to-read');
   const [notes, setNotes] = useState('');
+  const [availableAuthors, setAvailableAuthors] = useState<Author[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
+  const [selectedAuthors, setSelectedAuthors] = useState<Author[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [authorsLoading, setAuthorsLoading] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [authorSelectorOpen, setAuthorSelectorOpen] = useState(false);
+  const [categorySelectorOpen, setCategorySelectorOpen] = useState(false);
+  const [addAuthorDialogOpen, setAddAuthorDialogOpen] = useState(false);
+  const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const handledScannerFeedbackRef = useRef<string | null>(null);
 
   const { createBook } = useBooks();
   const { searchByISBN } = useBookSearch();
   const { isOnline } = useNetworkState();
+
+  const loadAuthors = useCallback(async () => {
+    setAuthorsLoading(true);
+    try {
+      const authors = await authorAPI.getAuthors();
+      const sorted = [...authors].sort((a, b) =>
+        `${a.surname} ${a.name}`.localeCompare(`${b.surname} ${b.name}`)
+      );
+      setAvailableAuthors(sorted);
+    } catch (err: unknown) {
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+        operation: 'load_authors_for_add_book',
+        resource: RESOURCE_TYPES.AUTHOR,
+        error: getErrorMessage(err),
+        source: 'book_add_load_authors',
+      });
+    } finally {
+      setAuthorsLoading(false);
+    }
+  }, []);
+
+  const loadCategories = useCallback(async () => {
+    setCategoriesLoading(true);
+    try {
+      const categories = await categoryAPI.getCategories();
+      const sorted = [...categories].sort((a, b) => a.name.localeCompare(b.name));
+      setAvailableCategories(sorted);
+    } catch (err: unknown) {
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+        operation: 'load_categories_for_add_book',
+        resource: RESOURCE_TYPES.CATEGORY,
+        error: getErrorMessage(err),
+        source: 'book_add_load_categories',
+      });
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (isbn) {
@@ -44,11 +105,15 @@ export default function AddBookScreen() {
   }, [isbn]);
 
   useEffect(() => {
+    void loadAuthors();
+    void loadCategories();
+  }, [loadAuthors, loadCategories]);
+
+  useEffect(() => {
     if (bookData) {
       try {
         const book = JSON.parse(decodeURIComponent(bookData));
         setTitle(book.title || '');
-        setAuthor(book.authors?.map((a: { name: string }) => a.name).join(', ') || '');
         setIsbnCode(book.isbnCode || '');
       } catch (error) {
         mobileHooks.emit(MOBILE_EVENTS.ERROR.VALIDATION, {
@@ -108,6 +173,42 @@ export default function AddBookScreen() {
     }
     setIsbnCode(value);
   };
+
+  const handleSelectAuthor = (author: Author) => {
+    setSelectedAuthors((prev) =>
+      prev.some((existing) => Number(existing.id) === Number(author.id)) ? prev : [...prev, author]
+    );
+  };
+
+  const handleRemoveAuthor = (authorId: number) => {
+    setSelectedAuthors((prev) => prev.filter((author) => Number(author.id) !== authorId));
+  };
+
+  const handleToggleCategory = (categoryId: number) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(categoryId) ? prev.filter((id) => id !== categoryId) : [...prev, categoryId]
+    );
+  };
+
+  const handleCreateAuthor = useCallback(async (input: { name: string; surname: string; nationality?: string }) => {
+    const created = await authorAPI.createAuthor(input);
+    await loadAuthors();
+    setSelectedAuthors((prev) =>
+      prev.some((author) => Number(author.id) === Number(created.id)) ? prev : [...prev, created]
+    );
+    setAddAuthorDialogOpen(false);
+    return created;
+  }, [loadAuthors]);
+
+  const handleCreateCategory = useCallback(async (input: { name: string }) => {
+    const created = await categoryAPI.createCategory(input);
+    await loadCategories();
+    setSelectedCategoryIds((prev) =>
+      prev.includes(Number(created.id)) ? prev : [...prev, Number(created.id)]
+    );
+    setAddCategoryDialogOpen(false);
+    return created;
+  }, [loadCategories]);
 
   const handleEmbeddedScannerDetected = useCallback(async (isbnValue: string) => {
     let copyStatus: 'success' | 'failed' = 'failed';
@@ -170,7 +271,8 @@ export default function AddBookScreen() {
         isbnCode: isbnCode.trim(),
         status,
         notes: notes.trim(),
-        // Note: In a real implementation, you'd need to handle authors/categories properly
+        authorIds: selectedAuthors.map((author) => Number(author.id)),
+        categoryIds: selectedCategoryIds,
       });
 
       router.back();
@@ -201,7 +303,6 @@ export default function AddBookScreen() {
       const book = await searchByISBN(isbnCode.trim());
       if (book) {
         setTitle(book.title || '');
-        setAuthor(book.authors?.map(a => a.name).join(', ') || '');
       } else {
         setError(t('books:book_not_found_for_isbn'));
       }
@@ -296,12 +397,21 @@ export default function AddBookScreen() {
                 accessibilityErrorMessage={error}
               />
 
-              <TextInput
-                label={t('books:author_field')}
-                value={author}
-                onChangeText={setAuthor}
-                style={styles.input}
-                autoCapitalize="words"
+              <AuthorsSection
+                selectedAuthors={selectedAuthors}
+                authorsLoading={authorsLoading}
+                onOpenSelector={() => setAuthorSelectorOpen(true)}
+                onOpenAdd={() => setAddAuthorDialogOpen(true)}
+                onRemoveAuthor={handleRemoveAuthor}
+              />
+
+              <CategoriesSection
+                categoriesLoading={categoriesLoading}
+                availableCategories={availableCategories}
+                selectedCategoryIds={selectedCategoryIds}
+                onOpenSelector={() => setCategorySelectorOpen(true)}
+                onOpenAdd={() => setAddCategoryDialogOpen(true)}
+                onToggleCategory={handleToggleCategory}
               />
 
               <Text variant="titleSmall" style={styles.sectionTitle} accessibilityRole="header">
@@ -361,131 +471,37 @@ export default function AddBookScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <Modal
-        visible={scannerOpen}
-        animationType="slide"
-        presentationStyle="fullScreen"
-        onRequestClose={() => setScannerOpen(false)}
-      >
-        <SafeAreaView style={styles.scannerModalContainer}>
-          <BarcodeScannerPanel
-            onDetected={handleEmbeddedScannerDetected}
-            onClose={() => setScannerOpen(false)}
-          />
-        </SafeAreaView>
-      </Modal>
+      <AddBookOverlays
+        scannerOpen={scannerOpen}
+        onScannerClose={() => setScannerOpen(false)}
+        onScannerDetected={handleEmbeddedScannerDetected}
+        authorSelectorOpen={authorSelectorOpen}
+        availableAuthors={availableAuthors}
+        selectedAuthorIds={selectedAuthors.map((author) => Number(author.id))}
+        authorsLoading={authorsLoading}
+        onCloseAuthorSelector={() => setAuthorSelectorOpen(false)}
+        onSelectAuthor={handleSelectAuthor}
+        onOpenAddAuthorFromSelector={() => {
+          setAuthorSelectorOpen(false);
+          setAddAuthorDialogOpen(true);
+        }}
+        categorySelectorOpen={categorySelectorOpen}
+        availableCategories={availableCategories}
+        selectedCategoryIds={selectedCategoryIds}
+        categoriesLoading={categoriesLoading}
+        onCloseCategorySelector={() => setCategorySelectorOpen(false)}
+        onToggleCategory={handleToggleCategory}
+        onOpenAddCategoryFromSelector={() => {
+          setCategorySelectorOpen(false);
+          setAddCategoryDialogOpen(true);
+        }}
+        addAuthorDialogOpen={addAuthorDialogOpen}
+        onCloseAddAuthorDialog={() => setAddAuthorDialogOpen(false)}
+        onCreateAuthor={handleCreateAuthor}
+        addCategoryDialogOpen={addCategoryDialogOpen}
+        onCloseAddCategoryDialog={() => setAddCategoryDialogOpen(false)}
+        onCreateCategory={handleCreateCategory}
+      />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-    padding: 16,
-  },
-  card: {
-    marginBottom: 16,
-  },
-  title: {
-    fontWeight: 'bold',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  errorContainer: {
-    backgroundColor: '#ffebee',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: '#c62828',
-    textAlign: 'center',
-  },
-  scannerNoticeContainer: {
-    backgroundColor: '#e8f4fd',
-    borderColor: '#0369a1',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 16,
-  },
-  scannerNoticeText: {
-    color: '#0c4a6e',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  isbnSection: {
-    marginBottom: 16,
-  },
-  isbnInput: {
-    marginBottom: 8,
-  },
-  isbnActionButtons: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginBottom: 8,
-  },
-  duplicateWarningContainer: {
-    backgroundColor: '#fff8e1',
-    borderColor: '#f59e0b',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 16,
-  },
-  duplicateWarningText: {
-    color: '#92400e',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  input: {
-    marginBottom: 16,
-  },
-  lookupButton: {
-    flex: 1,
-    marginTop: 0,
-    marginBottom: 0,
-  },
-  scanButton: {
-    flex: 1,
-    marginTop: 0,
-    marginBottom: 0,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    marginBottom: 8,
-    marginTop: 8,
-  },
-  segmentedButtons: {
-    marginBottom: 16,
-  },
-  offlineHint: {
-    color: '#757575',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 24,
-  },
-  button: {
-    flex: 1,
-    marginHorizontal: 8,
-  },
-  scannerModalContainer: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-});
