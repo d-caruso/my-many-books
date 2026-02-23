@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Box, Container, Typography } from '@mui/material';
-import { useTranslation } from 'react-i18next';
+import { Box, Button, Container, Typography } from '@mui/material';
+import { Trans, useTranslation } from 'react-i18next';
 import { LoginForm, RegisterForm } from '../components/Auth';
 import { LanguageSelector } from '../components/Navigation/LanguageSelector';
+import { AboutDialog } from '../components/About/AboutDialog';
 import { useAuth } from '@my-many-books/shared-auth';
 import { LANGUAGE_FADE_IN_TIMING, LANGUAGE_FADE_OUT_TIMING } from '../constants/animations';
 
@@ -11,6 +12,7 @@ type AuthMode = 'login' | 'register';
 
 const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>('login');
+  const [aboutOpen, setAboutOpen] = useState(false);
   const { user } = useAuth();
   const { t, i18n } = useTranslation('common');
   const appName = t('app_name', 'My Many Books');
@@ -124,6 +126,29 @@ const AuthPage: React.FC = () => {
         ) : (
           <RegisterForm onSwitchToLogin={() => setMode('login')} />
         )}
+        <Box sx={{ mt: 2.5, display: 'flex', justifyContent: 'center' }}>
+          <Button
+            type="button"
+            variant="text"
+            size="small"
+            onClick={() => setAboutOpen(true)}
+            sx={{
+              textTransform: 'none',
+              fontSize: { xs: '0.95rem', sm: '1rem' },
+              fontWeight: 500,
+            }}
+          >
+            <Trans
+              ns="common"
+              i18nKey="about_app_link"
+              values={{ appName }}
+              components={{
+                bold: <Box key="auth-about-link-bold" component="span" sx={{ fontWeight: 700 }} />,
+              }}
+            />
+          </Button>
+        </Box>
+        <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
         </Container>
       </Box>
     </Box>

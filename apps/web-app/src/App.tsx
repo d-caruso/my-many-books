@@ -207,9 +207,6 @@ function App() {
                         <UpdatePrompt />
                       </Suspense>
 
-                      {/* First-access app explanation popup (web) */}
-                      <AboutPopupGate />
-
                       <Suspense fallback={null}>
                         <Routes>
                           {/* Public route */}
@@ -318,6 +315,8 @@ function App() {
                             path="/*"
                             element={
                               <ProtectedRoute>
+                                {/* First-access app explanation popup is user-app scoped, not admin scoped */}
+                                <AboutPopupGate />
                                 <Navbar />
                                 <Box component="main" id="main-content" tabIndex={-1} sx={{ width: '100%', minWidth: 0 }}>
                                   <Routes>

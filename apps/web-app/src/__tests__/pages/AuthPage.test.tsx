@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AuthPage from '../../pages/AuthPage';
 import { useAuth } from '@my-many-books/shared-auth';
 
@@ -63,6 +63,7 @@ describe('AuthPage', () => {
     expect(screen.getByTestId('language-selector')).toBeInTheDocument();
     expect(screen.getByTestId('login-form')).toBeInTheDocument();
     expect(screen.queryByTestId('register-form')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /what is my many books\?/i })).toBeInTheDocument();
   });
 
   test('switches to register form when switch button is clicked', () => {
@@ -72,6 +73,7 @@ describe('AuthPage', () => {
 
     expect(screen.getByTestId('register-form')).toBeInTheDocument();
     expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /what is my many books\?/i })).toBeInTheDocument();
   });
 
   test('switches back to login form from register form', () => {
@@ -126,5 +128,20 @@ describe('AuthPage', () => {
     // Check that the form is rendered and visible
     expect(loginForm).toBeInTheDocument();
     expect(loginForm).toBeVisible();
+  });
+
+  test('opens and closes About dialog from auth page link', async () => {
+    render(<AuthPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: /what is my many books\?/i }));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('What this app is for')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 });

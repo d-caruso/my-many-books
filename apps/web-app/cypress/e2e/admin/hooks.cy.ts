@@ -63,6 +63,7 @@ describe('Admin hooks (E2E)', () => {
     cy.loginAsAdmin();
     cy.visit('/admin/hooks');
 
+    cy.get('body').find('#about-dialog-title').should('not.exist');
     cy.get('[data-testid="open-hook-form"]', { timeout: 10000 }).click();
     cy.get('[data-testid="hook-form-action-config"]')
       .clear()

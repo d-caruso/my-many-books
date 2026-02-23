@@ -87,6 +87,7 @@
   "export_your_book_collection": "Export your book collection",
   "language_changed_successfully": "Language changed successfully",
   "about": "About",
+  "about_app_link": "What is <bold>{{appName}}</bold>?",
   "about_app_title": "What this app is for",
   "about_app_body": "<bold>My Many Books</bold> helps you organize your personal library, track reading status, search books, and manage your collection.",
   "dont_show_again": "Don't show again",

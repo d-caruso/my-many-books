@@ -36,6 +36,7 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
+      disableScrollLock
       aria-labelledby="about-dialog-title"
       aria-describedby="about-dialog-description"
     >
