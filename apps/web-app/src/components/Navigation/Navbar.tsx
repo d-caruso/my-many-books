@@ -176,8 +176,8 @@ export const Navbar: React.FC = () => {
               onClick={handleMenuOpen}
               aria-label={userMenuLabel}
               aria-haspopup="menu"
-              aria-expanded={Boolean(anchorEl) ? 'true' : undefined}
-              aria-controls={Boolean(anchorEl) ? 'navbar-user-menu' : undefined}
+              aria-expanded={anchorEl ? 'true' : undefined}
+              aria-controls={anchorEl ? 'navbar-user-menu' : undefined}
             >
               <MoreVertIcon />
             </IconButton>

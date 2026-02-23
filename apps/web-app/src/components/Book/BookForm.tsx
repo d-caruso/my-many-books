@@ -97,6 +97,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   );
   const [errors, setErrors] = useState<Partial<Record<keyof BookFormData, string>>>({});
   const [addAuthorDialogOpen, setAddAuthorDialogOpen] = useState(false);
+  const [authorAutocompleteReloadTrigger, setAuthorAutocompleteReloadTrigger] = useState(0);
   const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
   const [showScannerPrefillNotice, setShowScannerPrefillNotice] = useState(Boolean(scannerPrefillNotice));
   const [embeddedScannerOpen, setEmbeddedScannerOpen] = useState(false);
@@ -272,6 +273,8 @@ export const BookForm: React.FC<BookFormProps> = ({
   const handleAuthorCreated = (author: Author) => {
     // Add the newly created author to the selected authors list
     handleInputChange('selectedAuthors', [...formData.selectedAuthors, author]);
+    // Refresh the preloaded author options so the new author is immediately available in the dropdown.
+    setAuthorAutocompleteReloadTrigger((prev) => prev + 1);
   };
 
   const handleCategoryCreated = (category: Category) => {
@@ -492,6 +495,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                 onChange={handleAuthorAdd}
                 placeholder={t('books:search_add_authors')}
                 disabled={loading}
+                reloadTrigger={authorAutocompleteReloadTrigger}
               />
             </Box>
 

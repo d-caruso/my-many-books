@@ -24,6 +24,7 @@ import type {
 } from '@my-many-books/shared-types';
 import { SearchFiltersSchema } from '@my-many-books/shared-types';
 import axios from 'axios';
+import i18n from 'i18next';
 import { env } from '../config/env';
 import { authService } from './authService';
 
@@ -60,6 +61,14 @@ class AxiosHttpClient implements HttpClient {
         return response.data;
       },
       async (error: any) => {
+        // Handle timeout errors (client-side, no response from API)
+        if (error.code === 'ECONNABORTED') {
+          error.message = i18n.t('common:errors.timeout', {
+            defaultValue: 'The server is taking too long to respond. Please try again.',
+          });
+          return Promise.reject(error);
+        }
+
         if (error.response?.status === 401) {
           // Try to refresh token
           const refreshed = await authService.silentRefresh();

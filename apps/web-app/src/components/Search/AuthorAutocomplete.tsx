@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Autocomplete,
@@ -16,6 +16,7 @@ interface AuthorAutocompleteProps {
   placeholder?: string;
   disabled?: boolean;
   size?: 'small' | 'medium';
+  reloadTrigger?: number;
 }
 
 export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
@@ -23,7 +24,8 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   onChange,
   placeholder,
   disabled = false,
-  size = 'medium'
+  size = 'medium',
+  reloadTrigger = 0,
 }) => {
   const { t } = useTranslation(['books', 'common']);
   const { authorAPI } = useApi();
@@ -31,8 +33,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   const [authors, setAuthors] = useState<Author[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const mountedRef = useRef(true);
 
   // Update search term when value changes externally
   useEffect(() => {
@@ -43,43 +44,85 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
     }
   }, [value]);
 
-  // Debounced search function
-  const searchAuthors = useCallback(async (term: string) => {
-    if (!term.trim() || term.length < 2) {
-      setAuthors([]);
-      setShowDropdown(false);
-      return;
-    }
+  useEffect(() => {
+    mountedRef.current = true;
 
-    setLoading(true);
-    try {
-      const results = await authorAPI.searchAuthors(term);
-      setAuthors(results);
-      setShowDropdown(results.length > 0);
-    } catch (error) {
-      console.error('Author search failed:', error);
-      setAuthors([]);
-      setShowDropdown(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [authorAPI]);
+    const preloadAuthors = async () => {
+      setLoading(true);
+      try {
+        const results = await authorAPI.getAuthors();
+        const sorted = [...results].sort((a, b) =>
+          `${a.surname} ${a.name}`.localeCompare(`${b.surname} ${b.name}`)
+        );
+        if (mountedRef.current) {
+          setAuthors(sorted);
+        }
+      } catch (error) {
+        console.error('Author preload failed:', error);
+        if (mountedRef.current) {
+          setAuthors([]);
+        }
+      } finally {
+        if (mountedRef.current) {
+          setLoading(false);
+        }
+      }
+    };
 
+    void preloadAuthors();
 
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [authorAPI, reloadTrigger]);
 
-
+  /*
+   * Previous debounced server-side search (kept for the planned hybrid Phase 2 implementation).
+   * Phase 1 preloads authors once and filters locally for better UX on small/medium datasets.
+   *
+   * const searchAuthors = useCallback(async (term: string) => {
+   *   if (!term.trim() || term.length < 2) {
+   *     setAuthors([]);
+   *     setShowDropdown(false);
+   *     return;
+   *   }
+   *
+   *   setLoading(true);
+   *   try {
+   *     const results = await authorAPI.searchAuthors(term);
+   *     setAuthors(results);
+   *     setShowDropdown(results.length > 0);
+   *   } catch (error) {
+   *     console.error('Author search failed:', error);
+   *     setAuthors([]);
+   *     setShowDropdown(false);
+   *   } finally {
+   *     setLoading(false);
+   *   }
+   * }, [authorAPI]);
+   */
 
   // Clear search on unmount
   useEffect(() => {
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      mountedRef.current = false;
     };
   }, []);
 
+  const filteredAuthors = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) {
+      return authors;
+    }
 
-  const noOptionsMessage = searchTerm.length < 2
+    return authors.filter((author) => {
+      const fullName = `${author.name} ${author.surname}`.toLowerCase();
+      const reverseName = `${author.surname} ${author.name}`.toLowerCase();
+      return fullName.includes(term) || reverseName.includes(term);
+    });
+  }, [authors, searchTerm]);
+
+  const noOptionsMessage = !searchTerm.trim()
     ? t('books:type_to_search_authors')
     : t('books:no_authors_found', { term: searchTerm });
 
@@ -89,27 +132,22 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
         value={value}
         onChange={(_, newValue) => onChange(newValue)}
         inputValue={searchTerm}
-      onInputChange={(_, newInputValue) => {
+        onInputChange={(_, newInputValue) => {
         setSearchTerm(newInputValue);
-        
-        // Clear previous timeout
-        if (debounceRef.current) {
-          clearTimeout(debounceRef.current);
-        }
 
         // If input is cleared, clear selection
         if (!newInputValue.trim()) {
-          setAuthors([]);
-          setShowDropdown(false);
+          setShowDropdown(true);
           return;
         }
+        setShowDropdown(true);
 
-        // Debounce search
-        debounceRef.current = setTimeout(() => {
-          searchAuthors(newInputValue);
-        }, 300);
+        /*
+         * Phase 2 (hybrid) will restore debounced server-side search here when the
+         * author dataset exceeds the preload threshold.
+         */
       }}
-        options={authors}
+        options={filteredAuthors}
         getOptionLabel={(option) => `${option.name} ${option.surname}`}
         ListboxProps={{ 'data-testid': 'options-list' }}
         renderOption={(props, option, { index }) => {
@@ -161,7 +199,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
         onOpen={() => setShowDropdown(true)}
         onClose={() => setShowDropdown(false)}
         isOptionEqualToValue={(option, value) => option.id === value.id}
-        filterOptions={(x) => x} // Disable client-side filtering since we do server-side search
+        filterOptions={(x) => x} // We already apply local filtering to the preloaded author list
       />
       <Box data-testid="open-state" sx={{ display: 'none' }}>
         {showDropdown ? 'open' : 'closed'}

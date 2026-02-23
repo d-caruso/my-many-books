@@ -6,6 +6,7 @@ import { initReactI18next } from 'react-i18next';
 import { BookForm } from '../../../components/Book/BookForm';
 
 const mockSearchByISBN = vi.fn();
+let latestAuthorAutocompleteProps: any = null;
 
 vi.mock('../../../hooks/useCategories', () => ({
   useCategories: () => ({
@@ -22,11 +23,37 @@ vi.mock('../../../hooks/useBookSearch', () => ({
 }));
 
 vi.mock('../../../components/Search/AuthorAutocomplete', () => ({
-  AuthorAutocomplete: () => <div data-testid="author-autocomplete" />,
+  AuthorAutocomplete: (props: any) => {
+    latestAuthorAutocompleteProps = props;
+    return (
+      <div data-testid="author-autocomplete">
+        <div data-testid="author-autocomplete-reload-trigger">{String(props.reloadTrigger ?? 0)}</div>
+      </div>
+    );
+  },
 }));
 
 vi.mock('../../../components/Author/AddAuthorDialog', () => ({
-  AddAuthorDialog: () => null,
+  AddAuthorDialog: ({ open, onAuthorCreated, onClose }: any) =>
+    open ? (
+      <div data-testid="add-author-dialog">
+        <button
+          data-testid="create-author-success"
+          onClick={() =>
+            onAuthorCreated({
+              id: 999,
+              name: 'Virginia',
+              surname: 'Woolf',
+            })
+          }
+        >
+          Create author success
+        </button>
+        <button data-testid="close-add-author-dialog" onClick={onClose}>
+          Close author dialog
+        </button>
+      </div>
+    ) : null,
 }));
 
 vi.mock('../../../components/Category/AddCategoryDialog', () => ({
@@ -110,6 +137,7 @@ describe('BookForm', () => {
 
   beforeEach(() => {
     mockSearchByISBN.mockReset();
+    latestAuthorAutocompleteProps = null;
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
       configurable: true,
@@ -171,5 +199,20 @@ describe('BookForm', () => {
     expect(screen.getByLabelText(/title/i)).toHaveValue('Typed title');
     expect(screen.getByLabelText(/notes/i)).toHaveValue('Typed notes');
     expect(screen.getByRole('textbox', { name: /isbn/i })).toHaveValue('9781234567890');
+  });
+
+  test('reloads author autocomplete options after creating a new author', () => {
+    renderBookForm();
+
+    expect(screen.getByTestId('author-autocomplete-reload-trigger')).toHaveTextContent('0');
+
+    fireEvent.click(screen.getAllByRole('button', { name: /^Add$/i })[0]);
+    expect(screen.getByTestId('add-author-dialog')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('create-author-success'));
+
+    expect(screen.getByText('Virginia Woolf')).toBeInTheDocument();
+    expect(screen.getByTestId('author-autocomplete-reload-trigger')).toHaveTextContent('1');
+    expect(latestAuthorAutocompleteProps?.reloadTrigger).toBe(1);
   });
 });

@@ -1,11 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { AuthorAutocomplete } from '../../../components/Search/AuthorAutocomplete';
 import { ApiProvider } from '../../../contexts/ApiContext';
 import { Author } from '../../../types';
 
-// Inline mock to avoid async import issues
 vi.mock('@mui/material', () => {
   const React = require('react');
 
@@ -17,7 +16,6 @@ vi.mock('@mui/material', () => {
   const TextField = ({
     label,
     value = '',
-    onChange,
     inputProps = {},
     InputProps = {},
     placeholder,
@@ -52,7 +50,6 @@ vi.mock('@mui/material', () => {
     inputValue,
     options = [],
     open,
-    loading,
     disabled,
     renderInput,
     renderOption,
@@ -61,7 +58,6 @@ vi.mock('@mui/material', () => {
     onInputChange,
     onOpen,
     onClose,
-    noOptionsText,
     ListboxProps,
     size,
   }: any) => {
@@ -125,15 +121,8 @@ vi.mock('@mui/material', () => {
   };
 });
 
-
-// Create mock API service
-const mockAuthorAPI = {
-  searchAuthors: vi.fn(),
-};
-
-// Create mock API service instance
 const mockApiService = {
-  searchAuthors: mockAuthorAPI.searchAuthors,
+  searchAuthors: vi.fn(),
   getBooks: vi.fn(),
   getBook: vi.fn(),
   createBook: vi.fn(),
@@ -158,495 +147,216 @@ const mockApiService = {
 } as any;
 
 const mockAuthors: Author[] = [
-  {
-    id: 1,
-    name: 'Jane',
-    surname: 'Austen',
-    nationality: 'British',
-  },
-  {
-    id: 2,
-    name: 'Charles',
-    surname: 'Dickens',
-    nationality: 'British',
-  },
-  {
-    id: 3,
-    name: 'Ernest',
-    surname: 'Hemingway',
-    nationality: 'American',
-  },
+  { id: 3, name: 'Ernest', surname: 'Hemingway', nationality: 'American' },
+  { id: 1, name: 'Jane', surname: 'Austen', nationality: 'British' },
+  { id: 2, name: 'Charles', surname: 'Dickens', nationality: 'British' },
 ];
 
 describe('AuthorAutocomplete', () => {
   const mockOnChange = vi.fn();
 
-  const defaultProps = {
-    onChange: mockOnChange,
-  };
-
-  // Helper to render with ApiProvider
   const renderWithProvider = (ui: React.ReactElement) => {
-    return render(
-      <ApiProvider apiService={mockApiService}>
-        {ui}
-      </ApiProvider>
-    );
+    return render(<ApiProvider apiService={mockApiService}>{ui}</ApiProvider>);
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
-    mockAuthorAPI.searchAuthors.mockResolvedValue([]);
+    mockApiService.getAuthors.mockResolvedValue(mockAuthors);
+    mockApiService.searchAuthors.mockResolvedValue([]);
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  test('preloads authors on mount and does not use server search while typing', async () => {
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} />);
 
-  test('renders with default props', () => {
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    expect(screen.getByTestId('autocomplete')).toBeInTheDocument();
-    expect(screen.getByTestId('text-field')).toBeInTheDocument();
-    expect(screen.getByText('Author')).toBeInTheDocument();
-  });
-
-  test('renders with custom placeholder', () => {
-    renderWithProvider(
-      <AuthorAutocomplete
-        {...defaultProps}
-        placeholder="Custom placeholder"
-      />
-    );
-
-    expect(screen.getByPlaceholderText('Custom placeholder')).toBeInTheDocument();
-  });
-
-  test('renders with custom size', () => {
-    renderWithProvider(
-      <AuthorAutocomplete
-        {...defaultProps}
-        size="small"
-      />
-    );
-
-    const textField = screen.getByTestId('text-field');
-    const input = within(textField).getByRole('textbox');
-    expect(input).toHaveAttribute('data-size', 'small');
-  });
-
-  test('can be disabled', () => {
-    renderWithProvider(
-      <AuthorAutocomplete
-        {...defaultProps}
-        disabled={true}
-      />
-    );
-
-    const textField = screen.getByTestId('text-field');
-    const input = within(textField).getByRole('textbox');
-    expect(input).toBeDisabled();
-  });
-
-  test('displays current value', () => {
-    renderWithProvider(
-      <AuthorAutocomplete
-        {...defaultProps}
-        value={mockAuthors[0]}
-      />
-    );
+    await waitFor(() => {
+      expect(mockApiService.getAuthors).toHaveBeenCalledTimes(1);
+    });
 
     const input = screen.getByTestId('autocomplete-input');
-    expect(input).toHaveValue('Jane Austen');
-  });
-
-  test('clears input when value is null', () => {
-    const { rerender } = renderWithProvider(
-      <AuthorAutocomplete
-        {...defaultProps}
-        value={mockAuthors[0]}
-      />
-    );
-
-    let input = screen.getByTestId('autocomplete-input');
-    expect(input).toHaveValue('Jane Austen');
-
-    rerender(
-      <ApiProvider apiService={mockApiService}>
-        <AuthorAutocomplete
-          {...defaultProps}
-          value={null}
-        />
-      </ApiProvider>
-    );
-
-    input = screen.getByTestId('autocomplete-input');
-    expect(input).toHaveValue('');
-  });
-
-  test('performs search with debounce', async () => {
-    mockAuthorAPI.searchAuthors.mockResolvedValue(mockAuthors);
-
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    const input = screen.getByTestId('autocomplete-input');
-
+    fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'Jane' } });
 
-    // Should not search immediately
-    expect(mockAuthorAPI.searchAuthors).not.toHaveBeenCalled();
-
-    // Advance timers to trigger debounce
-    await act(async () => {
-      await vi.runAllTimersAsync();
-    });
-
-    expect(mockAuthorAPI.searchAuthors).toHaveBeenCalledWith('Jane');
+    expect(mockApiService.searchAuthors).not.toHaveBeenCalled();
+    expect(screen.getByTestId('open-state')).toHaveTextContent('open');
   });
 
-  test('does not search for terms shorter than 2 characters', async () => {
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
+  test('shows loading state during preload', async () => {
+    let resolveAuthors!: (value: Author[]) => void;
+    mockApiService.getAuthors.mockReturnValue(
+      new Promise<Author[]>((resolve) => {
+        resolveAuthors = resolve;
+      })
+    );
 
-    const input = screen.getByTestId('autocomplete-input');
-    
-    fireEvent.change(input, { target: { value: 'J' } });
-
-    act(() => {
-      vi.advanceTimersByTime(300);
-    });
-
-    expect(mockAuthorAPI.searchAuthors).not.toHaveBeenCalled();
-    expect(screen.getByTestId('open-state')).toHaveTextContent('closed');
-  });
-
-  test('shows loading state during search', async () => {
-    // Create a promise that doesn't resolve immediately
-    let resolveSearch: (value: Author[]) => void;
-    const searchPromise = new Promise<Author[]>((resolve) => {
-      resolveSearch = resolve;
-    });
-    mockAuthorAPI.searchAuthors.mockReturnValue(searchPromise);
-
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    const input = screen.getByTestId('autocomplete-input');
-
-    fireEvent.change(input, { target: { value: 'Jane' } });
-
-    // Advance timers for debounce
-    await act(async () => {
-      vi.advanceTimersByTime(300);
-    });
-
-    // Use real timers for waitFor
-    vi.useRealTimers();
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} />);
 
     await waitFor(() => {
       expect(screen.getByTestId('loading-state')).toHaveTextContent('loading');
     });
+    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
 
-    // Resolve the search
-    act(() => {
-      resolveSearch!(mockAuthors);
-    });
+    resolveAuthors(mockAuthors);
 
     await waitFor(() => {
       expect(screen.getByTestId('loading-state')).toHaveTextContent('not-loading');
     });
+    expect(screen.queryByTestId('circular-progress')).not.toBeInTheDocument();
   });
 
-  test('displays search results', async () => {
-    mockAuthorAPI.searchAuthors.mockResolvedValue(mockAuthors);
-
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
+  test('renders preloaded authors sorted alphabetically by surname', async () => {
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} />);
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalled());
 
     const input = screen.getByTestId('autocomplete-input');
-
-    fireEvent.change(input, { target: { value: 'author' } });
-
-    // Advance timers for debounce
-    await act(async () => {
-      vi.advanceTimersByTime(300);
-    });
-
-    // Use real timers for waitFor
-    vi.useRealTimers();
+    fireEvent.focus(input);
 
     await waitFor(() => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Jane Austen')).toBeInTheDocument();
+    expect(screen.getByTestId('option-0')).toHaveTextContent('Jane Austen');
+    expect(screen.getByTestId('option-1')).toHaveTextContent('Charles Dickens');
+    expect(screen.getByTestId('option-2')).toHaveTextContent('Ernest Hemingway');
+  });
+
+  test('filters preloaded authors locally by name', async () => {
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} />);
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalled());
+
+    const input = screen.getByTestId('autocomplete-input');
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'char' } });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('options-list')).toBeInTheDocument();
+    });
+
     expect(screen.getByText('Charles Dickens')).toBeInTheDocument();
-    expect(screen.getByText('Ernest Hemingway')).toBeInTheDocument();
+    expect(screen.queryByText('Jane Austen')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ernest Hemingway')).not.toBeInTheDocument();
   });
 
-  test('calls onChange when author is selected', async () => {
-    mockAuthorAPI.searchAuthors.mockResolvedValue(mockAuthors);
-
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
+  test('filters preloaded authors locally by surname-first input', async () => {
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} />);
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalled());
 
     const input = screen.getByTestId('autocomplete-input');
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'austen jan' } });
 
-    fireEvent.change(input, { target: { value: 'Jane' } });
-
-    await act(async () => {
-      vi.advanceTimersByTime(300);
+    await waitFor(() => {
+      expect(screen.getByText('Jane Austen')).toBeInTheDocument();
     });
+    expect(screen.queryByText('Charles Dickens')).not.toBeInTheDocument();
+  });
 
-    vi.useRealTimers();
+  test('reloads preloaded authors when reloadTrigger changes', async () => {
+    const newAuthor: Author = { id: 4, name: 'Virginia', surname: 'Woolf', nationality: 'British' };
+    mockApiService.getAuthors
+      .mockResolvedValueOnce(mockAuthors)
+      .mockResolvedValueOnce([...mockAuthors, newAuthor]);
+
+    const { rerender } = renderWithProvider(
+      <AuthorAutocomplete onChange={mockOnChange} reloadTrigger={0} />
+    );
+
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalledTimes(1));
+
+    fireEvent.focus(screen.getByTestId('autocomplete-input'));
+    await waitFor(() => expect(screen.getByTestId('options-list')).toBeInTheDocument());
+    expect(screen.queryByText('Virginia Woolf')).not.toBeInTheDocument();
+
+    rerender(
+      <ApiProvider apiService={mockApiService}>
+        <AuthorAutocomplete onChange={mockOnChange} reloadTrigger={1} />
+      </ApiProvider>
+    );
+
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalledTimes(2));
+    fireEvent.focus(screen.getByTestId('autocomplete-input'));
+    await waitFor(() => expect(screen.getByText('Virginia Woolf')).toBeInTheDocument());
+  });
+
+  test('calls onChange when selecting an author', async () => {
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} />);
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalled());
+
+    const input = screen.getByTestId('autocomplete-input');
+    fireEvent.focus(input);
 
     await waitFor(() => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
     });
 
-    const firstOption = screen.getByTestId('option-0');
-    fireEvent.click(firstOption);
+    fireEvent.click(screen.getByTestId('option-0'));
 
-    expect(mockOnChange).toHaveBeenCalledWith(mockAuthors[0]);
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ id: 1, name: 'Jane' }));
   });
 
-  test('handles search errors gracefully', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
-    mockAuthorAPI.searchAuthors.mockRejectedValue(new Error('Search failed'));
+  test('handles preload errors gracefully', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockApiService.getAuthors.mockRejectedValue(new Error('preload failed'));
 
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    const input = screen.getByTestId('autocomplete-input');
-
-    fireEvent.change(input, { target: { value: 'Jane' } });
-
-    await act(async () => {
-      vi.advanceTimersByTime(300);
-    });
-
-    vi.useRealTimers();
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} />);
 
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Author search failed:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Author preload failed:', expect.any(Error));
     });
 
-    expect(screen.getByTestId('open-state')).toHaveTextContent('closed');
     expect(screen.getByTestId('loading-state')).toHaveTextContent('not-loading');
-
     consoleErrorSpy.mockRestore();
   });
 
-  test('clears search results when input is cleared', async () => {
-    mockAuthorAPI.searchAuthors.mockResolvedValue(mockAuthors);
-
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
+  test('clearing input keeps dropdown open and shows full preloaded list', async () => {
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} />);
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalled());
 
     const input = screen.getByTestId('autocomplete-input');
-
-    // First search
+    fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'Jane' } });
-    await act(async () => {
-      vi.advanceTimersByTime(300);
-    });
-
-    vi.useRealTimers();
 
     await waitFor(() => {
-      expect(screen.getByTestId('options-list')).toBeInTheDocument();
+      expect(screen.getByText('Jane Austen')).toBeInTheDocument();
     });
 
-    // Clear input
     fireEvent.change(input, { target: { value: '' } });
 
-    expect(screen.getByTestId('open-state')).toHaveTextContent('closed');
-  });
-
-  test('shows correct no options text based on search term length', () => {
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    // Short search term
-    const input = screen.getByTestId('autocomplete-input');
-    fireEvent.change(input, { target: { value: 'J' } });
-
-    expect(screen.getByTestId('no-options-text')).toHaveTextContent('Type to search authors...');
-
-    // Longer search term with no results
-    fireEvent.change(input, { target: { value: 'xyz' } });
-
-    expect(screen.getByTestId('no-options-text')).toHaveTextContent('No authors found for "xyz"');
-  });
-
-  test('renders author options with nationality', async () => {
-    mockAuthorAPI.searchAuthors.mockResolvedValue([mockAuthors[0]]);
-
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    const input = screen.getByTestId('autocomplete-input');
-
-    fireEvent.change(input, { target: { value: 'Jane' } });
-
-    await act(async () => {
-      vi.advanceTimersByTime(300);
-    });
-
-    vi.useRealTimers();
-
-    await waitFor(() => {
-      expect(screen.getByTestId('options-list')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Jane Austen')).toBeInTheDocument();
-    expect(screen.getByText('British')).toBeInTheDocument();
-  });
-
-  test('renders author options without nationality', async () => {
-    const authorWithoutNationality = {
-      ...mockAuthors[0],
-      nationality: undefined,
-    };
-    mockAuthorAPI.searchAuthors.mockResolvedValue([authorWithoutNationality]);
-
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    const input = screen.getByTestId('autocomplete-input');
-
-    fireEvent.change(input, { target: { value: 'Jane' } });
-
-    await act(async () => {
-      vi.advanceTimersByTime(300);
-    });
-
-    vi.useRealTimers();
-
-    await waitFor(() => {
-      expect(screen.getByTestId('options-list')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Jane Austen')).toBeInTheDocument();
-    expect(screen.queryByText('British')).not.toBeInTheDocument();
-  });
-
-  test('cancels previous search when new search is initiated', async () => {
-    let resolveFirstSearch: (value: Author[]) => void;
-    let resolveSecondSearch: (value: Author[]) => void;
-
-    const firstSearchPromise = new Promise<Author[]>((resolve) => {
-      resolveFirstSearch = resolve;
-    });
-
-    const secondSearchPromise = new Promise<Author[]>((resolve) => {
-      resolveSecondSearch = resolve;
-    });
-
-    mockAuthorAPI.searchAuthors
-      .mockReturnValueOnce(firstSearchPromise)
-      .mockReturnValueOnce(secondSearchPromise);
-
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    const input = screen.getByTestId('autocomplete-input');
-
-    // First search
-    fireEvent.change(input, { target: { value: 'Jane' } });
-    await act(async () => {
-      vi.advanceTimersByTime(300);
-    });
-
-    // Second search before first completes
-    fireEvent.change(input, { target: { value: 'Charles' } });
-    await act(async () => {
-      vi.advanceTimersByTime(300);
-    });
-
-    vi.useRealTimers();
-
-    // Resolve first search (should be ignored)
-    act(() => {
-      resolveFirstSearch!([mockAuthors[0]]);
-    });
-
-    // Resolve second search
-    act(() => {
-      resolveSecondSearch!([mockAuthors[1]]);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Charles Dickens')).toBeInTheDocument();
-    });
-
-    expect(screen.queryByText('Jane Austen')).not.toBeInTheDocument();
-  });
-
-  test('cleans up timeout on unmount', () => {
-    const { unmount } = renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    const input = screen.getByTestId('autocomplete-input');
-    fireEvent.change(input, { target: { value: 'Jane' } });
-
-    expect(() => unmount()).not.toThrow();
-  });
-
-  test('handles rapid typing correctly', async () => {
-    mockAuthorAPI.searchAuthors.mockResolvedValue(mockAuthors);
-
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    const input = screen.getByTestId('autocomplete-input');
-    
-    // Rapid typing
-    fireEvent.change(input, { target: { value: 'J' } });
-    fireEvent.change(input, { target: { value: 'Ja' } });
-    fireEvent.change(input, { target: { value: 'Jan' } });
-    fireEvent.change(input, { target: { value: 'Jane' } });
-
-    // Only the last search should be executed after debounce
-    await act(async () => {
-      await vi.runAllTimersAsync();
-    });
-
-    expect(mockAuthorAPI.searchAuthors).toHaveBeenCalledTimes(1);
-    expect(mockAuthorAPI.searchAuthors).toHaveBeenCalledWith('Jane');
-  });
-
-  test('maintains focus state correctly', () => {
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    const input = screen.getByTestId('autocomplete-input');
-    
-    fireEvent.focus(input);
     expect(screen.getByTestId('open-state')).toHaveTextContent('open');
-
-    fireEvent.blur(input);
-    expect(screen.getByTestId('open-state')).toHaveTextContent('closed');
+    expect(screen.getByTestId('option-0')).toHaveTextContent('Jane Austen');
+    expect(screen.getByTestId('option-1')).toHaveTextContent('Charles Dickens');
+    expect(screen.getByTestId('option-2')).toHaveTextContent('Ernest Hemingway');
   });
 
-  test('shows loading indicator in input adornment', async () => {
-    let resolveSearch: (value: Author[]) => void;
-    const searchPromise = new Promise<Author[]>((resolve) => {
-      resolveSearch = resolve;
-    });
-    mockAuthorAPI.searchAuthors.mockReturnValue(searchPromise);
+  test('renders author nationality when available', async () => {
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} />);
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalled());
 
-    renderWithProvider(<AuthorAutocomplete {...defaultProps} />);
-
-    const input = screen.getByTestId('autocomplete-input');
-
-    fireEvent.change(input, { target: { value: 'Jane' } });
-
-    await act(async () => {
-      vi.advanceTimersByTime(300);
-    });
-
-    vi.useRealTimers();
+    fireEvent.focus(screen.getByTestId('autocomplete-input'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('input-adornment')).toBeInTheDocument();
-    });
-    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
-
-    act(() => {
-      resolveSearch!(mockAuthors);
+      expect(screen.getByTestId('options-list')).toBeInTheDocument();
     });
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('circular-progress')).not.toBeInTheDocument();
-    });
+    expect(screen.getAllByText('British')).toHaveLength(2);
+    expect(screen.getByText('American')).toBeInTheDocument();
+  });
+
+  test('renders with custom placeholder and size and supports disabled state', async () => {
+    renderWithProvider(
+      <AuthorAutocomplete
+        onChange={mockOnChange}
+        placeholder="Custom placeholder"
+        size="small"
+        disabled
+      />
+    );
+
+    expect(screen.getByPlaceholderText('Custom placeholder')).toBeInTheDocument();
+    const textField = screen.getByTestId('text-field');
+    const input = within(textField).getByRole('textbox');
+    expect(input).toHaveAttribute('data-size', 'small');
+    expect(input).toBeDisabled();
+
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalled());
   });
 });
