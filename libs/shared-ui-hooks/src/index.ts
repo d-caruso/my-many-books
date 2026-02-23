@@ -29,6 +29,20 @@ export type {
   CategoriesActions,
   UseCategoriesOptions,
 } from './useCategories';
+export { useManageAuthors } from './useManageAuthors';
+export type {
+  ManageAuthorsApi,
+  ManageAuthorsState,
+  ManageAuthorsActions,
+  ManageAuthorsOptions,
+} from './useManageAuthors';
+export { useManageCategories } from './useManageCategories';
+export type {
+  ManageCategoriesApi,
+  ManageCategoriesState,
+  ManageCategoriesActions,
+  ManageCategoriesOptions,
+} from './useManageCategories';
 
 // Utility hooks
 export { useAsyncOperation } from './useAsyncOperation';

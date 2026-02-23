@@ -14,3 +14,6 @@ export * from './formatting';
 
 // Build Tree Schema utility
 export * from './buildTreeSchema';
+
+// Entity management error mapping utilities
+export * from './entityManagementErrors';

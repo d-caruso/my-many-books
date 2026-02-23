@@ -3,6 +3,9 @@ export default {
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  moduleNameMapper: {
+    '^@my-many-books/shared-types$': '<rootDir>/../shared-types/src/index.ts',
+  },
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
@@ -18,4 +21,3 @@ export default {
     },
   },
 };
-

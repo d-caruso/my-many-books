@@ -3,6 +3,11 @@ export default {
   preset: '../../jest.preset.js',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  moduleNameMapper: {
+    '^@my-many-books/shared-types$': '<rootDir>/../shared-types/src/index.ts',
+    '^@my-many-books/shared-utils$': '<rootDir>/../shared-utils/src/index.ts',
+    '^@my-many-books/shared-validation$': '<rootDir>/../shared-validation/src/index.ts',
+  },
   transform: {
     '^.+\\.[tj]sx?$': [
       'ts-jest',
