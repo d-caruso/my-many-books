@@ -86,7 +86,7 @@ export const BookList: React.FC<BookListProps> = ({
 
   if (viewMode === 'list') {
     return (
-      <Stack spacing={2} sx={fadeIn}>
+      <Stack spacing={2} sx={{ ...fadeIn, width: '100%', minWidth: 0 }}>
         {books.map((book) => (
           <BookCard
             key={book.id}
@@ -106,6 +106,8 @@ export const BookList: React.FC<BookListProps> = ({
   return (
     <Box
       sx={{
+        width: '100%',
+        minWidth: 0,
         display: 'grid',
         gridTemplateColumns: {
           xs: 'repeat(1, 1fr)',
@@ -119,16 +121,17 @@ export const BookList: React.FC<BookListProps> = ({
       }}
     >
       {books.map((book) => (
-        <BookCard
-          key={book.id}
-          book={book}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onStatusChange={onStatusChange}
-          onClick={onBookClick}
-          showActions={showActions}
-          compact={false}
-        />
+        <Box key={book.id} sx={{ minWidth: 0 }}>
+          <BookCard
+            book={book}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onStatusChange={onStatusChange}
+            onClick={onBookClick}
+            showActions={showActions}
+            compact={false}
+          />
+        </Box>
       ))}
     </Box>
   );

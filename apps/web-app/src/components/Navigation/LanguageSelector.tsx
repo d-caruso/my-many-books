@@ -47,6 +47,9 @@ export const LanguageSelector: React.FC = () => {
         value={preferredLanguage}
         onChange={handleLanguageChange}
         size="small"
+        MenuProps={{
+          disableScrollLock: true,
+        }}
         inputProps={{
           'aria-label': t('common:select_language', 'Select language')
         }}

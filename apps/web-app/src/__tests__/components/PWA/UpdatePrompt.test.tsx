@@ -73,7 +73,7 @@ describe('UpdatePrompt', () => {
     render(<UpdatePrompt />);
 
     expect(screen.getByTestId('alert-info')).toBeInTheDocument();
-    expect(screen.getByText('App Update Available')).toBeInTheDocument();
+    expect(screen.getByText('App update available')).toBeInTheDocument();
     expect(screen.getByText('A new version is ready to install')).toBeInTheDocument();
   });
 
@@ -176,7 +176,7 @@ describe('UpdatePrompt', () => {
     await waitFor(() => {
       expect(screen.getByTestId('alert-error')).toBeInTheDocument();
     });
-    expect(screen.getByText('Update Failed')).toBeInTheDocument();
+    expect(screen.getByText('Update failed')).toBeInTheDocument();
   });
 
   test('shows custom update message', () => {

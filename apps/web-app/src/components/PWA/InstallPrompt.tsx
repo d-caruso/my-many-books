@@ -96,6 +96,7 @@ export const InstallPrompt: React.FC = () => {
         color: 'text.primary',
         border: 1,
         borderColor: 'primary.main',
+        boxSizing: 'border-box',
         p: 2,
         pr: 6,
         '@keyframes pwaLangFadeOut': {
@@ -108,6 +109,7 @@ export const InstallPrompt: React.FC = () => {
         },
         '@media (min-width: 768px)': {
           left: 'auto',
+          width: 300,
           maxWidth: 300
         }
       }}

@@ -386,11 +386,15 @@ const BooksPage: React.FC = () => {
   const visuallyHidden = {
     border: 0,
     clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
     height: 1,
     margin: -1,
     overflow: 'hidden',
     padding: 0,
     position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    whiteSpace: 'nowrap' as const,
     width: 1,
   };
 
@@ -468,6 +472,8 @@ const BooksPage: React.FC = () => {
         ref={pageContentRef}
         maxWidth="lg"
         sx={{
+          width: '100%',
+          minWidth: 0,
           py: { xs: 2, sm: 4 },
           '@keyframes langFadeOut': {
             '0%': { opacity: 1 },

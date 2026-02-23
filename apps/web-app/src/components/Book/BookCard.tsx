@@ -173,7 +173,8 @@ export const BookCard: React.FC<BookCardProps> = ({
         },
         display: 'flex',
         flexDirection: 'column',
-        height: '100%'
+        height: '100%',
+        minWidth: 0
       }}
       onClick={() => onClick?.(book)}
     >
@@ -357,7 +358,11 @@ export const BookCard: React.FC<BookCardProps> = ({
 
         {/* ISBN */}
         {book.isbnCode && (
-          <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontFamily: 'monospace', overflowWrap: 'anywhere' }}
+          >
             ISBN: {book.isbnCode}
           </Typography>
         )}
@@ -365,9 +370,9 @@ export const BookCard: React.FC<BookCardProps> = ({
 
       {/* Status change and actions */}
       {(onStatusChange || showActions) && (
-        <CardActions sx={{ pt: 0, px: { xs: 2, sm: 2.5 }, pb: { xs: 2, sm: 2.5 } }}>
+        <CardActions sx={{ pt: 0, px: { xs: 2, sm: 2.5 }, pb: { xs: 2, sm: 2.5 }, minWidth: 0 }}>
           {onStatusChange && (
-            <FormControl size="small" sx={{ minWidth: 120, flexGrow: 1 }}>
+            <FormControl size="small" sx={{ minWidth: 120, maxWidth: '100%', flexGrow: 1 }}>
               <Select
                 value={book.status || ''}
                 onChange={handleStatusChange}

@@ -11,6 +11,7 @@
     "list_view": "List view",
     "no_books_search": "No books found matching your search",
     "no_books_empty": "No books in your library yet",
+    "books_found": "books found",
     "loading": "Loading...",
     "load_more": "Load more books",
     "error_load_books": "Failed to load your books",

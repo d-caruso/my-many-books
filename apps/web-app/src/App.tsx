@@ -319,7 +319,7 @@ function App() {
                             element={
                               <ProtectedRoute>
                                 <Navbar />
-                                <Box component="main" id="main-content" tabIndex={-1}>
+                                <Box component="main" id="main-content" tabIndex={-1} sx={{ width: '100%', minWidth: 0 }}>
                                   <Routes>
                                     <Route path="/" element={<PageErrorBoundary pageName="Books"><BooksPage /></PageErrorBoundary>} />
                                     <Route path="/search" element={<PageErrorBoundary pageName="Book Search"><BookSearchPage /></PageErrorBoundary>} />

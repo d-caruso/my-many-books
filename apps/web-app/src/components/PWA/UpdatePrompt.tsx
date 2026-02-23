@@ -115,8 +115,11 @@ export const UpdatePrompt: React.FC<UpdatePromptProps> = ({
         position: 'fixed',
         top: 16,
         right: 16,
+        left: { xs: 16, sm: 'auto' },
         zIndex: 1300,
-        minWidth: 320,
+        boxSizing: 'border-box',
+        width: { xs: 'auto', sm: 320 },
+        maxWidth: 'calc(100vw - 32px)',
       }}
       action={
         <>
