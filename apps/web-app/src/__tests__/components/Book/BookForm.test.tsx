@@ -64,6 +64,7 @@ const i18nReady = testI18n.use(initReactI18next).init({
         enter_book_title: 'Enter title',
         isbn: 'ISBN',
         isbn_placeholder: 'Enter ISBN',
+        isbn_no_dashes_spaces_hint: 'Write the code without dashes or spaces',
         scan_isbn: 'Scan ISBN',
         author: 'Author',
         search_add_authors: 'Search authors',
@@ -121,6 +122,16 @@ describe('BookForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /scan isbn/i }));
 
     expect(screen.getByTestId('embedded-scanner-flow')).toBeInTheDocument();
+  });
+
+  test('shows isbn hint and applies numeric html input attributes', () => {
+    renderBookForm();
+
+    const isbnInput = screen.getByRole('textbox', { name: /isbn/i });
+
+    expect(screen.getByText('Write the code without dashes or spaces')).toBeInTheDocument();
+    expect(isbnInput).toHaveAttribute('inputmode', 'numeric');
+    expect(isbnInput).toHaveAttribute('pattern', '[0-9]*');
   });
 
   test('hydrates add-book draft when initial draft arrives after mount', () => {

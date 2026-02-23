@@ -332,6 +332,10 @@ export const BookForm: React.FC<BookFormProps> = ({
     setEmbeddedScannerOpen(false);
   };
 
+  const isbnHintText = t('books:isbn_no_dashes_spaces_hint', {
+    defaultValue: 'Write the code without dashes or spaces',
+  });
+
   return (
     <Paper elevation={3} sx={{ overflow: 'hidden' }}>
       <Box sx={{ px: 3, py: 2, bgcolor: 'primary.50', borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -412,7 +416,11 @@ export const BookForm: React.FC<BookFormProps> = ({
                 placeholder={t('books:isbn_placeholder')}
                 disabled={loading}
                 error={!!errors.isbnCode}
-                helperText={errors.isbnCode}
+                helperText={errors.isbnCode || isbnHintText}
+                inputProps={{
+                  inputMode: 'numeric',
+                  pattern: '[0-9]*',
+                }}
                 sx={{ fontFamily: 'monospace' }}
               />
               <Tooltip title={t('books:scan_isbn')}>
@@ -445,7 +453,11 @@ export const BookForm: React.FC<BookFormProps> = ({
               placeholder={t('books:isbn_placeholder')}
               disabled={loading}
               error={!!errors.isbnCode}
-              helperText={errors.isbnCode}
+              helperText={errors.isbnCode || isbnHintText}
+              inputProps={{
+                inputMode: 'numeric',
+                pattern: '[0-9]*',
+              }}
               sx={{ fontFamily: 'monospace' }}
             />
           )}
