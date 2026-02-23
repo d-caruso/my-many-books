@@ -12,6 +12,7 @@ import {
   CATEGORY_CONSTRAINTS,
   BOOK_CONSTRAINTS,
   ISBN_CONSTRAINTS,
+  EDITION_DATE_PATTERN,
 } from '@my-many-books/shared-validation';
 import { BOOK_STATUSES } from '@my-many-books/shared-types';
 
@@ -59,7 +60,25 @@ export const bookValidationSchema = {
     .max(BOOK_CONSTRAINTS.TITLE.MAX_LENGTH)
     .required(),
   editionNumber: Joi.number().integer().positive().allow(null).optional(),
-  editionDate: Joi.date().allow(null).optional(),
+  editionDate: Joi.string()
+    .pattern(EDITION_DATE_PATTERN)
+    .custom((value: string, helpers: Joi.CustomHelpers) => {
+      const parts = value.split('-').map(Number);
+      const month = parts[1];
+      const day = parts[2];
+      if (month !== undefined && (month < 1 || month > 12)) {
+        return helpers.error('any.invalid');
+      }
+      if (day !== undefined && (day < 1 || day > 31)) {
+        return helpers.error('any.invalid');
+      }
+      return value;
+    })
+    .allow(null)
+    .optional()
+    .messages({
+      'string.pattern.base': 'Edition date must be YYYY, YYYY-MM, or YYYY-MM-DD',
+    }),
   status: Joi.string()
     .valid(...BOOK_STATUSES)
     .optional(),

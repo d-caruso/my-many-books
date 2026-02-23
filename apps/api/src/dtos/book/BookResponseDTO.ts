@@ -5,7 +5,7 @@ export interface BookResponseDTO {
   title: string;
   isbnCode: string;
   editionNumber?: number;
-  editionDate?: Date | null;
+  editionDate?: string | null;
   status?: string;
   notes?: string;
   userId?: number;

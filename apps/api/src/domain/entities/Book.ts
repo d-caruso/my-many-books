@@ -21,7 +21,7 @@ export interface BookEntity extends BaseEntity<number> {
   isbnCode: string;
   title: string;
   editionNumber?: number;
-  editionDate?: Date;
+  editionDate?: string;
   status?: BookStatus;
   notes?: string;
   userId?: number;

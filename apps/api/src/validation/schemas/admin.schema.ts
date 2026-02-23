@@ -7,7 +7,7 @@
 
 import Joi from 'joi';
 import { commonSchemas } from './common.schema';
-import { ISBN_CONSTRAINTS, ISBN_PATTERNS } from '@my-many-books/shared-validation';
+import { ISBN_CONSTRAINTS, ISBN_PATTERNS, EDITION_DATE_PATTERN } from '@my-many-books/shared-validation';
 import { BOOK_STATUSES, SORT_DIRECTION_VALUES, SORT_DIRECTIONS } from '@my-many-books/shared-types';
 
 /**
@@ -68,7 +68,13 @@ export const adminUpdateBookSchema = Joi.object({
     }),
   title: Joi.string().min(1).max(500).optional(),
   editionNumber: Joi.number().integer().positive().optional(),
-  editionDate: Joi.date().optional(),
+  editionDate: Joi.string()
+    .pattern(EDITION_DATE_PATTERN)
+    .allow(null)
+    .optional()
+    .messages({
+      'string.pattern.base': 'Edition date must be YYYY, YYYY-MM, or YYYY-MM-DD',
+    }),
   status: Joi.string()
     .valid(...BOOK_STATUSES)
     .optional(),

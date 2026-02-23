@@ -33,5 +33,11 @@ export const BOOK_ERROR_MESSAGES = Object.freeze({
   NOTES_TOO_LONG: `Notes must be at most ${BOOK_CONSTRAINTS.NOTES.MAX_LENGTH} characters`,
   INVALID_STATUS: `Status must be one of: ${BOOK_STATUSES.join(', ')}`,
   EDITION_NUMBER_INVALID: 'Edition number must be a positive integer',
-  EDITION_DATE_INVALID: 'Edition date must be a valid date',
+  EDITION_DATE_INVALID: 'Edition date must be a valid date (YYYY, YYYY-MM, or YYYY-MM-DD)',
 } as const);
+
+/**
+ * Edition date format pattern.
+ * Accepts: "YYYY", "YYYY-MM", or "YYYY-MM-DD"
+ */
+export const EDITION_DATE_PATTERN = /^\d{4}(-\d{2}(-\d{2})?)?$/;

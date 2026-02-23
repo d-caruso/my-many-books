@@ -9,7 +9,7 @@ export interface TransformedBookData {
   authors: TransformedAuthorData[];
   categories: TransformedCategoryData[];
   editionNumber?: number | undefined;
-  editionDate?: Date | undefined;
+  editionDate?: string | undefined;
   publishers?: string[] | undefined;
   pages?: number | undefined;
   language?: string | undefined;

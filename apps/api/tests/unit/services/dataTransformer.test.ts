@@ -95,9 +95,10 @@ describe('DataTransformer', () => {
 
     it('should parse edition dates correctly', () => {
       const testCases = [
-        { input: '2023', expected: 2023 },
-        { input: 'January 15, 2023', expected: new Date('January 15, 2023') },
-        { input: '2023-03-15', expected: new Date('2023-03-15') },
+        { input: '2023', expected: '2023' },
+        { input: 'January 15, 2023', expected: '2023-01-15' },
+        { input: '2023-03-15', expected: '2023-03-15' },
+        { input: 'January 2023', expected: '2023-01' },
         { input: 'invalid date', expected: undefined },
       ];
 
@@ -109,11 +110,8 @@ describe('DataTransformer', () => {
 
         const result = DataTransformer.transformBook(olBook, '9780451524935');
 
-        if (typeof expected === 'number') {
-          // For year-only inputs, just check the year
-          expect(result.editionDate?.getFullYear()).toBe(expected);
-        } else if (expected) {
-          expect(result.editionDate?.getTime()).toBe(expected.getTime());
+        if (expected) {
+          expect(result.editionDate).toBe(expected);
         } else {
           expect(result.editionDate).toBeUndefined();
         }

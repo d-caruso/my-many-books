@@ -49,7 +49,7 @@ export interface BookAttributes
   isbnCode: string;
   title: string;
   editionNumber?: number | undefined;
-  editionDate?: Date | undefined;
+  editionDate?: string | undefined;
   status?: BookStatus | undefined;
   notes?: string | undefined;
   userId?: number | undefined;
@@ -61,7 +61,7 @@ export interface BookCreationAttributes {
   isbnCode: string;
   title: string;
   editionNumber?: number | null;
-  editionDate?: Date | null;
+  editionDate?: string | null;
   status?: BookStatus | undefined;
   notes?: string | null;
   userId?: number | undefined;

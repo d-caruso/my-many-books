@@ -15,7 +15,7 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
   public isbnCode!: string;
   public title!: string;
   public editionNumber?: number;
-  public editionDate?: Date;
+  public editionDate?: string;
   public status?: BookStatus;
   public notes?: string;
   public userId?: number;
@@ -90,7 +90,7 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
           },
         },
         editionDate: {
-          type: DataTypes.DATE,
+          type: DataTypes.STRING(10),
           allowNull: true,
           field: 'edition_date',
         },

@@ -33,6 +33,7 @@ import { AddCategoryDialog } from '../Category/AddCategoryDialog';
 import { EmbeddedScannerFlow } from '../Scanner/EmbeddedScannerFlow';
 import { normalizeIsbn } from '@my-many-books/shared-validation';
 import { createBookSchema } from '../../validation/bookSchemas';
+import { EditionDateInput } from './EditionDateInput';
 
 interface BookFormProps {
   book?: Book | null;
@@ -112,7 +113,7 @@ export const BookForm: React.FC<BookFormProps> = ({
         title: book.title,
         isbnCode: book.isbnCode,
         editionNumber: book.editionNumber ?? undefined,
-        editionDate: book.editionDate ? book.editionDate.split('T')[0] : '',
+        editionDate: book.editionDate ?? '',
         status: book.status ?? undefined,
         notes: book.notes || '',
         selectedAuthors: book.authors || [],
@@ -625,17 +626,12 @@ export const BookForm: React.FC<BookFormProps> = ({
             />
 
             {/* Edition Date */}
-            <TextField
-              fullWidth
-              type="date"
-              id="editionDate"
-              label={t('books:edition_date')}
+            <EditionDateInput
               value={formData.editionDate}
-              onChange={(e) => handleInputChange('editionDate', e.target.value)}
+              onChange={(val) => handleInputChange('editionDate', val)}
               disabled={loading}
-              InputLabelProps={{
-                shrink: true,
-              }}
+              error={!!errors.editionDate}
+              helperText={errors.editionDate}
             />
           </Box>
 

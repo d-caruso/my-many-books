@@ -5,7 +5,7 @@
  * Framework-agnostic, can be used by Joi, Zod, or custom validators.
  */
 
-import { BOOK_CONSTRAINTS, BOOK_ERROR_MESSAGES } from '../constants/book.constants';
+import { BOOK_CONSTRAINTS, BOOK_ERROR_MESSAGES, EDITION_DATE_PATTERN } from '../constants/book.constants';
 import { BOOK_STATUSES } from '@my-many-books/shared-types';
 import { ValidationResult } from '../types/validation.types';
 import { isEmpty, trim } from '../utils/string.utils';
@@ -111,17 +111,39 @@ export function validateEditionNumber(editionNumber: number | null | undefined):
 }
 
 /**
- * Validate edition date
+ * Validate edition date.
+ * Accepts flexible granularity: "YYYY", "YYYY-MM", or "YYYY-MM-DD".
  */
-export function validateEditionDate(editionDate: string | Date | null | undefined): ValidationResult {
+export function validateEditionDate(editionDate: string | null | undefined): ValidationResult {
   if (editionDate === null || editionDate === undefined || editionDate === '') {
-    return { isValid: true }; // Edition date is optional
+    return { isValid: true };
   }
 
-  // Try to parse as Date
-  const date = typeof editionDate === 'string' ? new Date(editionDate) : editionDate;
+  if (!EDITION_DATE_PATTERN.test(editionDate)) {
+    const errorCode = 'EDITION_DATE_INVALID';
+    return {
+      isValid: false,
+      error: BOOK_ERROR_MESSAGES.EDITION_DATE_INVALID,
+      errorCode,
+      i18nKey: getI18nKey(errorCode),
+    };
+  }
 
-  if (isNaN(date.getTime())) {
+  const parts = editionDate.split('-').map(Number);
+  const month = parts[1];
+  const day = parts[2];
+
+  if (month !== undefined && (month < 1 || month > 12)) {
+    const errorCode = 'EDITION_DATE_INVALID';
+    return {
+      isValid: false,
+      error: BOOK_ERROR_MESSAGES.EDITION_DATE_INVALID,
+      errorCode,
+      i18nKey: getI18nKey(errorCode),
+    };
+  }
+
+  if (day !== undefined && (day < 1 || day > 31)) {
     const errorCode = 'EDITION_DATE_INVALID';
     return {
       isValid: false,
