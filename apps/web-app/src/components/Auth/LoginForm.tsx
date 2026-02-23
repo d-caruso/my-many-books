@@ -7,6 +7,7 @@ import {
   validatePasswordAgainstPolicy,
   formatLocalizedList,
 } from '@my-many-books/shared-auth';
+import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
 import {
   Paper,
   Box,
@@ -79,6 +80,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
 
     try {
       await login(formData.email, formData.password);
+      try {
+        window.sessionStorage.setItem(POST_LOGIN_WELCOME_STORAGE_KEY, '1');
+      } catch {
+        // ignore storage failures; login flow must continue
+      }
       // Authentication success will be handled by AuthContext
     } catch (err: unknown) {
       console.error('Login error:', err);

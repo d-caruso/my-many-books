@@ -7,6 +7,8 @@ import BooksPage from '../../pages/BooksPage';
 import { ApiProvider } from '../../contexts/ApiContext';
 import { SettingsProvider } from '../../contexts/SettingsContext';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../../constants/scanner';
+import { useAuth } from '@my-many-books/shared-auth';
+import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
 
 const mockSetSearchParams = vi.fn();
 const mockNavigate = vi.fn();
@@ -16,6 +18,14 @@ vi.mock('react-router-dom', () => ({
   useSearchParams: () => [currentSearchParams, mockSetSearchParams],
   useNavigate: () => mockNavigate,
 }));
+
+vi.mock('@my-many-books/shared-auth', async () => {
+  const actual = await vi.importActual<typeof import('@my-many-books/shared-auth')>('@my-many-books/shared-auth');
+  return {
+    ...actual,
+    useAuth: vi.fn(),
+  };
+});
 
 const createBookSearchState = () => ({
   books: [
@@ -194,6 +204,8 @@ const renderBooksPage = () =>
   );
 
 describe('BooksPage', () => {
+  const mockUseAuth = vi.mocked(useAuth);
+
   beforeAll(async () => {
     await i18nReady;
   });
@@ -203,6 +215,15 @@ describe('BooksPage', () => {
     mockSetSearchParams.mockClear();
     mockNavigate.mockClear();
     window.sessionStorage.clear();
+    mockUseAuth.mockReturnValue({
+      user: { id: 1, name: 'Mario', surname: 'Rossi', email: 'mario@example.com' } as any,
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+      refreshUser: vi.fn(),
+      isAuthenticated: true,
+    });
     bookSearchState = createBookSearchState();
     booksState = createBooksState();
   });
@@ -250,6 +271,15 @@ describe('BooksPage', () => {
   test('displays total count in heading', () => {
     renderBooksPage();
     expect(screen.getByText('2 books in your library')).toBeInTheDocument();
+  });
+
+  test('shows one-time welcome snackbar after login handoff marker', () => {
+    window.sessionStorage.setItem(POST_LOGIN_WELCOME_STORAGE_KEY, '1');
+
+    renderBooksPage();
+
+    expect(screen.getByText('Hello Mario')).toBeInTheDocument();
+    expect(window.sessionStorage.getItem(POST_LOGIN_WELCOME_STORAGE_KEY)).toBeNull();
   });
 
   test('performs search and updates params', () => {

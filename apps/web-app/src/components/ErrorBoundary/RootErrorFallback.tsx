@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Button, Container, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   error: Error;
@@ -8,6 +9,8 @@ interface Props {
 }
 
 export const RootErrorFallback: React.FC<Props> = ({ error, reset }) => {
+  const { t } = useTranslation();
+
   return (
     <Container maxWidth="sm">
       <Box
@@ -24,11 +27,11 @@ export const RootErrorFallback: React.FC<Props> = ({ error, reset }) => {
         <ErrorOutlineIcon sx={{ fontSize: 80, color: 'error.main' }} />
 
         <Typography variant="h4" component="h1" gutterBottom>
-          Something went wrong
+          {t('common:page_error_title')}
         </Typography>
 
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-          We encountered an unexpected error. Please try refreshing the page.
+          {t('common:page_error_message')}
         </Typography>
 
         {process.env.NODE_ENV === 'development' && (
@@ -54,7 +57,7 @@ export const RootErrorFallback: React.FC<Props> = ({ error, reset }) => {
             onClick={reset}
             size="large"
           >
-            Try Again
+            {t('common:retry', 'Try Again')}
           </Button>
 
           <Button
@@ -62,7 +65,7 @@ export const RootErrorFallback: React.FC<Props> = ({ error, reset }) => {
             onClick={() => window.location.href = '/'}
             size="large"
           >
-            Go to Home
+            {t('common:go_home', 'Go to Home')}
           </Button>
         </Box>
       </Box>

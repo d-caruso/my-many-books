@@ -3,6 +3,7 @@ import React, { useState } from 'react';
   import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
   import { SafeAreaView } from 'react-native-safe-area-context';
   import { router } from 'expo-router';
+  import AsyncStorage from '@react-native-async-storage/async-storage';
 
   import { useTranslation } from 'react-i18next';
   import {
@@ -12,6 +13,7 @@ import React, { useState } from 'react';
     validatePasswordAgainstPolicy,
     formatLocalizedList,
   } from '@my-many-books/shared-auth';
+  import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
   import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
   type AuthMode = 'login' | 'register';
@@ -65,6 +67,11 @@ import React, { useState } from 'react';
           });
         } else {
           await login(email, password);
+          try {
+            await AsyncStorage.setItem(POST_LOGIN_WELCOME_STORAGE_KEY, '1');
+          } catch {
+            // Non-blocking: welcome snackbar is optional UX feedback
+          }
         }
 
         // Navigation handled after successful auth

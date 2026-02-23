@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, IconButton, Chip, Container, Typography, Alert } from '@mui/material';
+import { Box, Button, IconButton, Chip, Container, Typography, Alert, Snackbar } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import ClearIcon from '@mui/icons-material/Clear';
 import GridIcon from '@mui/icons-material/ViewModule';
 import ListIcon from '@mui/icons-material/ViewList';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@my-many-books/shared-auth';
 import type { Book, BookFormData as SharedBookFormInput, BookStatusChangeBehavior } from '@my-many-books/shared-types';
 import { SETTING_KEYS, BOOK_STATUS_CHANGE_BEHAVIOR } from '@my-many-books/shared-types';
+import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
 import { BookList, BookForm, BookDetails, type BookFormData } from '../components/Book';
 import { BookSearchForm } from '../components/Search';
 import { useBookSearch } from '../hooks/useBookSearch';
@@ -20,7 +22,8 @@ type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
 
 const BooksPage: React.FC = () => {
-  const { t, i18n } = useTranslation(['pages', 'scanner']);
+  const { t, i18n } = useTranslation(['pages', 'scanner', 'common']);
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -33,6 +36,8 @@ const BooksPage: React.FC = () => {
   const [initialDraft, setInitialDraft] = useState<Partial<BookFormData> | null>(null);
   const [scannerNoticeOpen, setScannerNoticeOpen] = useState(false);
   const [scannerNoticeMessage, setScannerNoticeMessage] = useState('');
+  const [welcomeNoticeOpen, setWelcomeNoticeOpen] = useState(false);
+  const [welcomeNoticeMessage, setWelcomeNoticeMessage] = useState('');
 
   // Get setting for book status change behavior
   const { value: statusChangeBehavior } = useSetting<BookStatusChangeBehavior>(
@@ -88,6 +93,32 @@ const BooksPage: React.FC = () => {
 
     await searchBooks(query, filters);
   }, [searchParams, searchBooks]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let shouldShowWelcome = false;
+    try {
+      shouldShowWelcome = window.sessionStorage.getItem(POST_LOGIN_WELCOME_STORAGE_KEY) === '1';
+      if (shouldShowWelcome) {
+        window.sessionStorage.removeItem(POST_LOGIN_WELCOME_STORAGE_KEY);
+      }
+    } catch {
+      shouldShowWelcome = false;
+    }
+
+    if (!shouldShowWelcome) return;
+
+    const displayName = user.name?.trim() || user.email || t('common:user', { defaultValue: 'User' });
+
+    setWelcomeNoticeMessage(
+      t('common:welcome_user', {
+        name: displayName,
+        defaultValue: 'Hello {{name}}',
+      })
+    );
+    setWelcomeNoticeOpen(true);
+  }, [user, t]);
 
   useEffect(() => {
     if (searchModeParam === 'add') {
@@ -318,6 +349,10 @@ const BooksPage: React.FC = () => {
     setScannerNoticeMessage('');
   }, []);
 
+  const handleWelcomeNoticeClose = useCallback(() => {
+    setWelcomeNoticeOpen(false);
+  }, []);
+
   // Fade page content on language change
   const pageContentRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -358,6 +393,21 @@ const BooksPage: React.FC = () => {
     width: 1,
   };
 
+  const welcomeSnackbarProps = {
+    open: welcomeNoticeOpen,
+    autoHideDuration: 3000,
+    onClose: handleWelcomeNoticeClose,
+    anchorOrigin: { vertical: 'top' as const, horizontal: 'right' as const },
+    sx: {
+      top: {
+        xs: 'calc(env(safe-area-inset-top, 0px) + 64px)',
+        sm: 'calc(env(safe-area-inset-top, 0px) + 72px)',
+      },
+      right: { xs: 8, sm: 16 },
+      left: 'auto',
+    },
+  };
+
   // Render different modes
   if (pageMode === 'add' || pageMode === 'edit') {
     return (
@@ -377,6 +427,11 @@ const BooksPage: React.FC = () => {
             {actionError}
           </Alert>
         )}
+        <Snackbar {...welcomeSnackbarProps}>
+          <Alert onClose={handleWelcomeNoticeClose} severity="success" variant="filled" sx={{ width: '100%' }}>
+            {welcomeNoticeMessage}
+          </Alert>
+        </Snackbar>
       </Container>
     );
   }
@@ -397,6 +452,11 @@ const BooksPage: React.FC = () => {
             {actionError}
           </Alert>
         )}
+        <Snackbar {...welcomeSnackbarProps}>
+          <Alert onClose={handleWelcomeNoticeClose} severity="success" variant="filled" sx={{ width: '100%' }}>
+            {welcomeNoticeMessage}
+          </Alert>
+        </Snackbar>
       </Container>
     );
   }
@@ -573,6 +633,12 @@ const BooksPage: React.FC = () => {
           </Button>
         </Box>
       )}
+
+      <Snackbar {...welcomeSnackbarProps}>
+        <Alert onClose={handleWelcomeNoticeClose} severity="success" variant="filled" sx={{ width: '100%' }}>
+          {welcomeNoticeMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

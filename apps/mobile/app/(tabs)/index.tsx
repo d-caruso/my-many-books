@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, FlatList, RefreshControl } from 'react-native';
-import { FAB, Searchbar, Chip, Text } from 'react-native-paper';
+import { FAB, Searchbar, Chip, Text, Snackbar } from 'react-native-paper';
 import { router } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@my-many-books/shared-auth';
+import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
 
 import { BookCard } from '@/components/BookCard';
 import { EmptyState } from '@/components/EmptyState';
@@ -17,8 +20,11 @@ import { Book } from '@/types';
 
 export default function BooksScreen() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [welcomeVisible, setWelcomeVisible] = useState(false);
+  const [welcomeMessage, setWelcomeMessage] = useState('');
   const { isOnline } = useNetworkState();
   
   const {
@@ -45,6 +51,40 @@ export default function BooksScreen() {
   const books = isSearching ? searchResults : userBooks;
   const loading = isSearching ? searchLoading : userBooksLoading;
   const error = isSearching ? searchError : userBooksError;
+
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+
+    const maybeShowWelcome = async () => {
+      try {
+        const shouldShow = (await AsyncStorage.getItem(POST_LOGIN_WELCOME_STORAGE_KEY)) === '1';
+        if (!shouldShow || cancelled) return;
+
+        await AsyncStorage.removeItem(POST_LOGIN_WELCOME_STORAGE_KEY);
+        if (cancelled) return;
+
+        const displayName = user.name?.trim() || user.email || t('common:user', 'User');
+
+        setWelcomeMessage(
+          t('common:welcome_user', {
+            name: displayName,
+            defaultValue: 'Hello {{name}}',
+          })
+        );
+        setWelcomeVisible(true);
+      } catch {
+        // Non-blocking UI enhancement
+      }
+    };
+
+    void maybeShowWelcome();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, t]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -178,6 +218,18 @@ export default function BooksScreen() {
         accessibilityLabel={t('books:add_book')}
         accessibilityHint={!isOnline ? t('tooltips.willSyncLater', { ns: 'offline' }) : undefined}
       />
+
+      <Snackbar
+        visible={welcomeVisible}
+        onDismiss={() => setWelcomeVisible(false)}
+        duration={3000}
+        action={{
+          label: t('ok'),
+          onPress: () => setWelcomeVisible(false),
+        }}
+      >
+        {welcomeMessage}
+      </Snackbar>
     </SafeAreaView>
   );
 }

@@ -53,10 +53,10 @@ export const AuthErrorFallback: React.FC<AuthErrorFallbackProps> = ({
 
           <Box textAlign="center">
             <Typography variant="h5" fontWeight="600" gutterBottom>
-              {t('auth:error_title')}
+              {t('common:page_error_title')}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              {t('auth:error_message')}
+              {t('common:page_error_message')}
             </Typography>
           </Box>
 
@@ -73,7 +73,7 @@ export const AuthErrorFallback: React.FC<AuthErrorFallbackProps> = ({
               onClick={reset}
               data-testid="retry-auth"
             >
-              {t('common:retry')}
+              {t('common:retry', 'Try Again')}
             </Button>
             <Button
               variant="outlined"
@@ -81,7 +81,7 @@ export const AuthErrorFallback: React.FC<AuthErrorFallbackProps> = ({
               onClick={handleLoginRedirect}
               data-testid="go-login"
             >
-              {t('auth:go_to_login')}
+              {t('common:sign_in')}
             </Button>
           </Stack>
         </Stack>

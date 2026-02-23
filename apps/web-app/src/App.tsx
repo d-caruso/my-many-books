@@ -173,10 +173,10 @@ function App() {
         <ThemedApp>
           <PWAProvider>
             <ApiProvider>
-                <AuthErrorBoundary>
                   <AuthProvider authService={authService} loadingComponent={<></>}>
                   <SettingsProvider>
                   <Router>
+                    <AuthErrorBoundary>
                     <Box ref={onContentReady} sx={{ minHeight: '100vh', position: 'relative' }}>
                       {/* Skip to main content link for keyboard navigation */}
                       <Box
@@ -338,10 +338,10 @@ function App() {
                         <InstallPrompt />
                       </Suspense>
                     </Box>
+                    </AuthErrorBoundary>
                   </Router>
                   </SettingsProvider>
                   </AuthProvider>
-                </AuthErrorBoundary>
             </ApiProvider>
           </PWAProvider>
         </ThemedApp>

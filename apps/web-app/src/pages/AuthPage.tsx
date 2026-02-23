@@ -16,11 +16,6 @@ const AuthPage: React.FC = () => {
   const logoAlt = t('app_logo', 'My Many Books logo');
   const pageContentRef = useRef<HTMLDivElement>(null);
 
-  // If user is already authenticated, redirect to home
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
-
   useEffect(() => {
     const el = pageContentRef.current;
     if (!el) return;
@@ -48,6 +43,11 @@ const AuthPage: React.FC = () => {
       i18n.off('languageChanged', handleFadeIn);
     };
   }, [i18n]);
+
+  // If user is already authenticated, redirect to home
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <Box

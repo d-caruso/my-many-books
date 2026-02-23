@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { LoginForm } from '../../../components/Auth/LoginForm';
 import { useAuth } from '@my-many-books/shared-auth';
+import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
 import { setupMuiMock } from '../../test-utils/setupMuiMock';
 
 // Mock the useAuth hook
@@ -28,6 +29,7 @@ describe('LoginForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.sessionStorage.clear();
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
@@ -169,6 +171,7 @@ describe('LoginForm', () => {
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'Password123');
     });
+    expect(window.sessionStorage.getItem(POST_LOGIN_WELCOME_STORAGE_KEY)).toBe('1');
   });
 
   test('shows loading state during login', async () => {
