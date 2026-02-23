@@ -7,6 +7,11 @@ import {
   Box,
   Typography
 } from '@mui/material';
+import type {
+  AutocompleteChangeReason,
+  AutocompleteCloseReason,
+  AutocompleteInputChangeReason,
+} from '@mui/material/Autocomplete';
 import type { Author } from '@my-many-books/shared-types';
 import { useApi } from '../../contexts/ApiContext';
 
@@ -17,6 +22,7 @@ interface AuthorAutocompleteProps {
   disabled?: boolean;
   size?: 'small' | 'medium';
   reloadTrigger?: number;
+  userIdFilter?: number;
 }
 
 export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
@@ -26,6 +32,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   disabled = false,
   size = 'medium',
   reloadTrigger = 0,
+  userIdFilter,
 }) => {
   const { t } = useTranslation(['books', 'common']);
   const { authorAPI } = useApi();
@@ -109,44 +116,85 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
     };
   }, []);
 
-  const filteredAuthors = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) {
+  const scopedAuthors = useMemo(() => {
+    if (userIdFilter === undefined) {
       return authors;
     }
 
-    return authors.filter((author) => {
+    const hasUserIds = authors.some((author) => author.userId !== undefined);
+    if (!hasUserIds) {
+      return authors;
+    }
+
+    return authors.filter((author) => author.userId === userIdFilter);
+  }, [authors, userIdFilter]);
+
+  const filteredAuthors = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) {
+      return scopedAuthors;
+    }
+
+    return scopedAuthors.filter((author) => {
       const fullName = `${author.name} ${author.surname}`.toLowerCase();
       const reverseName = `${author.surname} ${author.name}`.toLowerCase();
       return fullName.includes(term) || reverseName.includes(term);
     });
-  }, [authors, searchTerm]);
+  }, [scopedAuthors, searchTerm]);
 
   const noOptionsMessage = !searchTerm.trim()
     ? t('books:type_to_search_authors')
     : t('books:no_authors_found', { term: searchTerm });
 
+  const handleSelectionChange = (
+    _event: React.SyntheticEvent,
+    newValue: Author | null,
+    reason: AutocompleteChangeReason
+  ) => {
+    onChange(newValue);
+
+    if (reason === 'selectOption') {
+      setShowDropdown(false);
+    }
+  };
+
+  const handleInputChange = (
+    _event: React.SyntheticEvent,
+    newInputValue: string,
+    reason: AutocompleteInputChangeReason
+  ) => {
+    if (reason === 'blur') {
+      setShowDropdown(false);
+      return;
+    }
+
+    if (reason === 'clear') {
+      setSearchTerm('');
+      setShowDropdown(true);
+      return;
+    }
+
+    if (reason === 'reset' || reason === 'selectOption') {
+      setSearchTerm(newInputValue);
+      setShowDropdown(false);
+      return;
+    }
+
+    setSearchTerm(newInputValue);
+    setShowDropdown(true);
+  };
+
+  const handleClose = (_event: React.SyntheticEvent, _reason: AutocompleteCloseReason) => {
+    setShowDropdown(false);
+  };
+
   return (
     <Box data-testid="autocomplete">
       <Autocomplete
         value={value}
-        onChange={(_, newValue) => onChange(newValue)}
+        onChange={handleSelectionChange}
         inputValue={searchTerm}
-        onInputChange={(_, newInputValue) => {
-        setSearchTerm(newInputValue);
-
-        // If input is cleared, clear selection
-        if (!newInputValue.trim()) {
-          setShowDropdown(true);
-          return;
-        }
-        setShowDropdown(true);
-
-        /*
-         * Phase 2 (hybrid) will restore debounced server-side search here when the
-         * author dataset exceeds the preload threshold.
-         */
-      }}
+        onInputChange={handleInputChange}
         options={filteredAuthors}
         getOptionLabel={(option) => `${option.name} ${option.surname}`}
         ListboxProps={{ 'data-testid': 'options-list' }}
@@ -197,7 +245,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
         noOptionsText={noOptionsMessage}
         open={showDropdown}
         onOpen={() => setShowDropdown(true)}
-        onClose={() => setShowDropdown(false)}
+        onClose={handleClose}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         filterOptions={(x) => x} // We already apply local filtering to the preloaded author list
       />

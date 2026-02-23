@@ -3,7 +3,7 @@
   "isbn_exists": "Book with ISBN {{isbn}} already exists",
   "validation_failed": "Validation failed",
   "auth_required": "User authentication required",
-  "invalid_author_ids": "One or more author IDs are invalid",
+  "invalid_author_ids": "One or more selected authors are not available. Please select the author again and try saving.",
   "invalid_category_ids": "One or more category IDs are invalid",
   "request_body_required": "Request body is required",
   "internal_server_error": "Internal server error",

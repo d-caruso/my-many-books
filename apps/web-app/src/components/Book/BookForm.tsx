@@ -509,6 +509,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                 placeholder={t('books:search_add_authors')}
                 disabled={loading}
                 reloadTrigger={authorAutocompleteReloadTrigger}
+                userIdFilter={book?.userId}
               />
             </Box>
 

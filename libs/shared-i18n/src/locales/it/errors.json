@@ -3,7 +3,7 @@
   "isbn_exists": "Libro con ISBN {{isbn}} già esistente",
   "validation_failed": "Validazione fallita",
   "auth_required": "Autenticazione utente richiesta",
-  "invalid_author_ids": "Uno o più ID autore non validi",
+  "invalid_author_ids": "Uno o più autori selezionati non sono disponibili. Seleziona di nuovo l'autore e riprova a salvare.",
   "invalid_category_ids": "Uno o più ID categoria non validi",
   "request_body_required": "Corpo della richiesta richiesto",
   "internal_server_error": "Errore interno del server",
