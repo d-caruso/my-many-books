@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { ActivityIndicator, Button, Chip, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/types';
+import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { addBookStyles as styles } from './addBookStyles';
 
 interface CategoriesSectionProps {
@@ -58,7 +59,7 @@ export function CategoriesSection({
             const category = availableCategories.find((item) => Number(item.id) === categoryId);
             return (
               <Chip key={String(categoryId)} onClose={() => onToggleCategory(categoryId)}>
-                {category?.name ?? `${t('books:category')} #${categoryId}`}
+                {category ? getCategoryDisplayName(category, t) : `${t('books:category')} #${categoryId}`}
               </Chip>
             );
           })}

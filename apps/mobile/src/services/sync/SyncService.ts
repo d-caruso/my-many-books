@@ -39,6 +39,7 @@ interface ServerAuthor {
 interface ServerCategory {
   id: number;
   name: string;
+  translationKey?: string | null;
   updateDate?: string;
 }
 
@@ -807,6 +808,7 @@ export class SyncService {
           });
           
           await categoryRepository.updateSyncFields(localCategory.id, {
+            translationKey: serverCategory.translationKey ?? null,
             _serverUpdatedAt: serverCategory.updateDate,
             _syncStatus: 'synced',
           });
@@ -835,6 +837,7 @@ export class SyncService {
         
         await categoryRepository.updateSyncFields(existingByName.id, {
           serverId,
+          translationKey: serverCategory.translationKey ?? null,
           _serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
           _syncStatus: 'synced',
         });
@@ -849,9 +852,13 @@ export class SyncService {
           timestamp: new Date().toISOString()
         });
         
-        const newCategory = await categoryRepository.create(serverCategory.name);
+        const newCategory = await categoryRepository.create(
+          serverCategory.name,
+          serverCategory.translationKey ?? null
+        );
         await categoryRepository.updateSyncFields(newCategory.id, {
           serverId,
+          translationKey: serverCategory.translationKey ?? null,
           _serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
           _syncStatus: 'synced',
         });

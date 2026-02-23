@@ -11,6 +11,7 @@ export interface DefaultAuthor {
 
 export interface DefaultCategory {
   name: string;
+  translationKey: string;
 }
 
 export const DEFAULT_AUTHORS: DefaultAuthor[] = [
@@ -37,14 +38,34 @@ export const DEFAULT_AUTHORS: DefaultAuthor[] = [
 ];
 
 export const DEFAULT_CATEGORIES: DefaultCategory[] = [
-  { name: 'Fiction' },
-  { name: 'Non-Fiction' },
-  { name: 'Science Fiction' },
-  { name: 'Fantasy' },
-  { name: 'Mystery & Thriller' },
-  { name: 'Romance' },
-  { name: 'Historical Fiction' },
-  { name: 'Biography & Memoir' },
-  { name: 'Science & Technology' },
-  { name: 'Horror' },
+  { name: 'Fiction', translationKey: 'categories.fiction' },
+  { name: 'Non-Fiction', translationKey: 'categories.non_fiction' },
+  { name: 'Science Fiction', translationKey: 'categories.science_fiction' },
+  { name: 'Fantasy', translationKey: 'categories.fantasy' },
+  { name: 'Mystery & Thriller', translationKey: 'categories.mystery_thriller' },
+  { name: 'Romance', translationKey: 'categories.romance' },
+  { name: 'Historical Fiction', translationKey: 'categories.historical_fiction' },
+  { name: 'Biography & Memoir', translationKey: 'categories.biography_memoir' },
+  { name: 'Science & Technology', translationKey: 'categories.science_technology' },
+  { name: 'Horror', translationKey: 'categories.horror' },
+  { name: 'Young Adult', translationKey: 'categories.young_adult' },
+  { name: "Children's Books", translationKey: 'categories.childrens_books' },
+  { name: 'Poetry', translationKey: 'categories.poetry' },
+  { name: 'Drama', translationKey: 'categories.drama' },
+  { name: 'Philosophy', translationKey: 'categories.philosophy' },
+  { name: 'Self-Help', translationKey: 'categories.self_help' },
+  { name: 'Business & Economics', translationKey: 'categories.business_economics' },
+  { name: 'History', translationKey: 'categories.history' },
+  { name: 'Politics & Current Affairs', translationKey: 'categories.politics_current_affairs' },
+  { name: 'Travel', translationKey: 'categories.travel' },
+  { name: 'Graphic Novels & Comics', translationKey: 'categories.graphic_novels_comics' },
+  { name: 'Crime', translationKey: 'categories.crime' },
+  { name: 'Classics', translationKey: 'categories.classics' },
+  { name: 'Literary Fiction', translationKey: 'categories.literary_fiction' },
+  { name: 'Religion & Spirituality', translationKey: 'categories.religion_spirituality' },
+  { name: 'Psychology', translationKey: 'categories.psychology' },
+  { name: 'Health & Wellness', translationKey: 'categories.health_wellness' },
+  { name: 'Cooking & Food', translationKey: 'categories.cooking_food' },
+  { name: 'Art & Photography', translationKey: 'categories.art_photography' },
+  { name: 'Education & Study', translationKey: 'categories.education_study' },
 ];

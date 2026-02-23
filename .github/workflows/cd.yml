@@ -2,7 +2,7 @@ name: Monorepo CD
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/mobile-hookey-integration ]
+    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys ]
     tags: [ 'v*' ]
   workflow_dispatch:
     inputs:

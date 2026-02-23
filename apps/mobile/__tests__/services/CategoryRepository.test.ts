@@ -27,6 +27,13 @@ describe('CategoryRepository', () => {
       expect(category).toBeDefined();
       expect(category.id).toBeDefined();
       expect(category.name).toBe('Fiction');
+      expect(category.translationKey).toBeNull();
+    });
+
+    it('should create a category with translationKey', async () => {
+      const category = await categoryRepository.create('Fiction', 'categories.fiction');
+
+      expect(category.translationKey).toBe('categories.fiction');
     });
 
     it('should return existing category if name already exists', async () => {
@@ -100,6 +107,18 @@ describe('CategoryRepository', () => {
 
       expect(updated.id).toBe(category.id);
       expect(updated.name).toBe('New Name');
+    });
+
+    it('should update category translationKey when provided', async () => {
+      const category = await categoryRepository.create('Fiction');
+
+      const updated = await categoryRepository.update(
+        category.id,
+        'Fiction',
+        'categories.fiction'
+      );
+
+      expect(updated.translationKey).toBe('categories.fiction');
     });
   });
 
@@ -227,6 +246,20 @@ describe('CategoryRepository', () => {
       const results = await categoryRepository.search('Non-existent');
 
       expect(results).toHaveLength(0);
+    });
+  });
+
+  describe('updateSyncFields', () => {
+    it('should persist translationKey from sync', async () => {
+      const category = await categoryRepository.create('Fantasy');
+
+      await categoryRepository.updateSyncFields(category.id, {
+        translationKey: 'categories.fantasy',
+        _syncStatus: 'synced',
+      });
+
+      const found = await categoryRepository.findById(category.id);
+      expect(found?.translationKey).toBe('categories.fantasy');
     });
   });
 });

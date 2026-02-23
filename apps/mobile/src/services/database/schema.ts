@@ -50,6 +50,7 @@ export const CREATE_CATEGORIES_TABLE = `
   CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
+    translation_key TEXT,
     server_id INTEGER,
     _sync_status TEXT DEFAULT 'synced',
     _server_updated_at TEXT

@@ -3,6 +3,7 @@ import { CategoryEntity } from '../../repositories/category/CategoryRepositoryTy
 export interface CategoryResponseDTO {
   id: number;
   name: string;
+  translationKey?: string | null;
   userId: number;
   creationDate?: Date;
   updateDate?: Date;
@@ -13,6 +14,7 @@ export const toCategoryResponseDTO = (category: CategoryEntity): CategoryRespons
   const dto: CategoryResponseDTO = {
     id: category.id,
     name: category.name,
+    translationKey: category.translationKey ?? null,
     userId: category.userId,
   };
 

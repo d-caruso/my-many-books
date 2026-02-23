@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BookIcon from '@mui/icons-material/MenuBook';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
+import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { formatEditionDate } from '../../utils/formatEditionDate';
 
 interface BookCardProps {
@@ -323,7 +324,7 @@ export const BookCard: React.FC<BookCardProps> = ({
               {book.categories.slice(0, 2).map((category: Category) => (
                 <Chip
                   key={category.id}
-                  label={category.name}
+                  label={getCategoryDisplayName(category, t)}
                   size="small"
                   color="primary"
                   variant="outlined"

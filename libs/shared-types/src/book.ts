@@ -28,7 +28,7 @@ export const BookSchema = z.object({
   notes: z.string().nullable().optional(),
   userId: z.number().int().optional(),
   authors: AuthorSchema.pick({ id: true, name: true, surname: true }).array().optional(),
-  categories: CategorySchema.pick({ id: true, name: true }).array().optional(),
+  categories: CategorySchema.pick({ id: true, name: true, translationKey: true }).array().optional(),
   creationDate: z.string().optional(),
   updateDate: z.string().optional(),
 });

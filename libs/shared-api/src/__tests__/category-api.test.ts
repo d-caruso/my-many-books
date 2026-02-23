@@ -10,6 +10,7 @@ describe('CategoryApi', () => {
   const mockCategory: Category = {
     id: 1,
     name: 'Fiction',
+    translationKey: 'categories.fiction',
     userId: 1,
     creationDate: '2024-01-01T00:00:00.000Z',
     updateDate: '2024-01-01T00:00:00.000Z',
@@ -62,6 +63,21 @@ describe('CategoryApi', () => {
       });
 
       await expect(categoryApi.getCategories()).rejects.toThrow(ZodError);
+    });
+
+    it('should parse categories without translationKey for backward compatibility', async () => {
+      const legacyCategory = {
+        id: 2,
+        name: 'Custom Category',
+        userId: 1,
+      };
+      mockHttpClient.setResponse('/categories', {
+        data: [legacyCategory],
+        status: 200,
+      });
+
+      const result = await categoryApi.getCategories();
+      expect(result[0]).toEqual(legacyCategory);
     });
 
     it('should handle non-array responses', async () => {
@@ -263,4 +279,3 @@ describe('CategoryApi', () => {
     });
   });
 });
-

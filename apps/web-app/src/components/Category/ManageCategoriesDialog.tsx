@@ -23,6 +23,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import type { Category } from '@my-many-books/shared-types';
 import { useManageCategories } from '@my-many-books/shared-ui-hooks';
+import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../../contexts/ApiContext';
 
@@ -202,7 +203,7 @@ export const ManageCategoriesDialog: React.FC<ManageCategoriesDialogProps> = ({
                         </Stack>
                       </Stack>
                     ) : (
-                      <ListItemText primary={category.name} />
+                      <ListItemText primary={getCategoryDisplayName(category, t)} />
                     )}
                   </ListItem>
                 );

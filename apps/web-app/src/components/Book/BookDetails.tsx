@@ -26,6 +26,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { SelectChangeEvent } from '@mui/material/Select';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
+import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 
 interface BookDetailsProps {
   book: Book;
@@ -256,7 +257,12 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                       </Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                         {book.categories.map((category: Category) => (
-                          <Chip key={category.id} label={category.name} variant="outlined" size="medium" />
+                          <Chip
+                            key={category.id}
+                            label={getCategoryDisplayName(category, t)}
+                            variant="outlined"
+                            size="medium"
+                          />
                         ))}
                       </Stack>
                     </Box>

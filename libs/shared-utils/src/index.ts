@@ -17,3 +17,6 @@ export * from './buildTreeSchema';
 
 // Entity management error mapping utilities
 export * from './entityManagementErrors';
+
+// Category display utilities
+export * from './categoryDisplay';

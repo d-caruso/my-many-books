@@ -12,6 +12,7 @@ export interface CategoryBookSummary {
 
 export interface CategoryEntity extends BaseEntity<number> {
   name: string;
+  translationKey?: string | null;
   userId: number;
   creationDate: Date;
   updateDate?: Date;

@@ -182,9 +182,9 @@ describe('BookSearchForm', () => {
     render(<BookSearchForm {...defaultProps} />);
 
     openAdvancedFilters();
-    await selectOption('Reading status', 'Finished');
+    await selectOption('Reading progress', 'Finished');
     await waitFor(() => {
-      expect(getSelectDisplayText('Reading status')).toBe('Finished');
+      expect(getSelectDisplayText('Reading progress')).toBe('Finished');
     });
   });
 
@@ -312,7 +312,7 @@ describe('BookSearchForm', () => {
     fireEvent.change(getSearchInput(), { target: { value: 'test query' } });
     openAdvancedFilters();
     await selectOption('Category', 'Fiction');
-    await selectOption('Reading status', 'Finished');
+    await selectOption('Reading progress', 'Finished');
     await selectOption('Sort by', 'Relevance');
     fireEvent.click(getSearchButton());
 
@@ -328,7 +328,7 @@ describe('BookSearchForm', () => {
     openAdvancedFilters();
 
     expect(screen.getByLabelText('Category')).toBeInTheDocument();
-    expect(screen.getByLabelText('Reading status')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reading progress')).toBeInTheDocument();
     expect(screen.getByLabelText('Sort by')).toBeInTheDocument();
     expect(screen.getByTestId('author-autocomplete')).toBeInTheDocument();
   });

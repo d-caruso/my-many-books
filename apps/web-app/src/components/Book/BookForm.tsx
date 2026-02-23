@@ -34,6 +34,7 @@ import { AddCategoryDialog } from '../Category/AddCategoryDialog';
 import { ManageCategoriesDialog } from '../Category/ManageCategoriesDialog';
 import { EmbeddedScannerFlow } from '../Scanner/EmbeddedScannerFlow';
 import { normalizeIsbn } from '@my-many-books/shared-validation';
+import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { createBookSchema } from '../../validation/bookSchemas';
 import { EditionDateInput } from './EditionDateInput';
 
@@ -645,7 +646,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                     }
                     label={
                       <Typography variant="body2">
-                        {category.name}
+                        {getCategoryDisplayName(category, t)}
                       </Typography>
                     }
                   />

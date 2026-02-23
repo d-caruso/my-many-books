@@ -31,6 +31,7 @@ export interface CategoryAttributes
   extends Omit<IdBaseModelAttributes, 'id' | 'creationDate' | 'updateDate'> {
   id: CreationOptional<number>;
   name: string;
+  translationKey?: string | null;
   userId: number;
   creationDate: CreationOptional<Date>;
   updateDate?: CreationOptional<Date | undefined>;
@@ -38,6 +39,7 @@ export interface CategoryAttributes
 
 export interface CategoryCreationAttributes {
   name: string;
+  translationKey?: string | null;
   userId: number;
   updateDate?: Date | undefined;
 }

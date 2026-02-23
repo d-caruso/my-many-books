@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Dialog, List, Portal, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useManageCategories } from '@my-many-books/shared-ui-hooks';
+import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 import type { Category } from '@/types';
 import { categoryAPI } from '@/services/api';
 
@@ -139,7 +140,7 @@ export function ManageCategoriesDialog({
                 categories.map((category) => (
                   <List.Item
                     key={String(category.id)}
-                    title={category.name}
+                    title={getCategoryDisplayName(category, t)}
                     right={() => (
                       <View style={styles.listActionsRow}>
                         <Button compact onPress={() => handleStartEdit(category)} disabled={mutating}>

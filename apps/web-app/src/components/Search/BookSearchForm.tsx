@@ -20,6 +20,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import WarningIcon from '@mui/icons-material/Warning';
 import { SearchFiltersSchema, SEARCH_QUERY_MIN_LENGTH } from '@my-many-books/shared-types';
 import type { SearchFilters, Author } from '@my-many-books/shared-types';
+import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { useCategories } from '../../hooks/useCategories';
 import { AuthorAutocomplete } from './AuthorAutocomplete';
 
@@ -229,7 +230,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                     </MenuItem>
                     {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map((category) => (
                       <MenuItem key={category.id} value={category.id}>
-                        {category.name}
+                        {getCategoryDisplayName(category, t)}
                       </MenuItem>
                     ))}
                   </Select>

@@ -3,6 +3,7 @@ import { databaseService } from './DatabaseService';
 export interface Category {
   id: number;
   name: string;
+  translationKey?: string | null;
   serverId?: number;          // Phase 5: Server ID for sync
   _syncStatus?: 'synced' | 'pending' | 'failed';
   _serverUpdatedAt?: string;
@@ -44,7 +45,7 @@ export class CategoryRepository {
   /**
    * Create new category (or get existing if name already exists)
    */
-  async create(name: string): Promise<Category> {
+  async create(name: string, translationKey: string | null = null): Promise<Category> {
     // Check if category already exists
     const existing = await this.findByName(name);
     if (existing) {
@@ -53,8 +54,8 @@ export class CategoryRepository {
 
     // Create new category
     const result = await databaseService.executeQuery(
-      'INSERT INTO categories (name) VALUES (?)',
-      [name]
+      'INSERT INTO categories (name, translation_key) VALUES (?, ?)',
+      [name, translationKey]
     );
 
     const created = await this.findById(result.lastInsertRowId);
@@ -67,11 +68,18 @@ export class CategoryRepository {
   /**
    * Update category name
    */
-  async update(id: number, name: string): Promise<Category> {
-    await databaseService.executeQuery(
-      'UPDATE categories SET name = ? WHERE id = ?',
-      [name, id]
-    );
+  async update(id: number, name: string, translationKey?: string | null): Promise<Category> {
+    if (translationKey !== undefined) {
+      await databaseService.executeQuery(
+        'UPDATE categories SET name = ?, translation_key = ? WHERE id = ?',
+        [name, translationKey, id]
+      );
+    } else {
+      await databaseService.executeQuery(
+        'UPDATE categories SET name = ? WHERE id = ?',
+        [name, id]
+      );
+    }
 
     const updated = await this.findById(id);
     if (!updated) {
@@ -143,6 +151,7 @@ export class CategoryRepository {
     return {
       id: row.id,
       name: row.name,
+      translationKey: row.translation_key ?? null,
       serverId: row.server_id,
       _syncStatus: row._sync_status || 'synced',
       _serverUpdatedAt: row._server_updated_at,
@@ -165,6 +174,7 @@ export class CategoryRepository {
    */
   async updateSyncFields(id: number, fields: {
     serverId?: number;
+    translationKey?: string | null;
     _syncStatus?: 'synced' | 'pending' | 'failed';
     _serverUpdatedAt?: string;
   }): Promise<void> {
@@ -174,6 +184,10 @@ export class CategoryRepository {
     if (fields.serverId !== undefined) {
       updates.push('server_id = ?');
       values.push(fields.serverId);
+    }
+    if (fields.translationKey !== undefined) {
+      updates.push('translation_key = ?');
+      values.push(fields.translationKey);
     }
     if (fields._syncStatus !== undefined) {
       updates.push('_sync_status = ?');

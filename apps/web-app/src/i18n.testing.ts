@@ -15,6 +15,7 @@ import enPages from '@my-many-books/shared-i18n/src/locales/en/pages.json';
 import enTheme from '@my-many-books/shared-i18n/src/locales/en/theme.json';
 import enSearch from '@my-many-books/shared-i18n/src/locales/en/search.json';
 import enAccessibility from '@my-many-books/shared-i18n/src/locales/en/accessibility.json';
+import enCategories from '@my-many-books/shared-i18n/src/locales/en/categories.json';
 
 import itCommon from '@my-many-books/shared-i18n/src/locales/it/common.json';
 import itValidation from '@my-many-books/shared-i18n/src/locales/it/validation.json';
@@ -27,6 +28,7 @@ import itPages from '@my-many-books/shared-i18n/src/locales/it/pages.json';
 import itTheme from '@my-many-books/shared-i18n/src/locales/it/theme.json';
 import itSearch from '@my-many-books/shared-i18n/src/locales/it/search.json';
 import itAccessibility from '@my-many-books/shared-i18n/src/locales/it/accessibility.json';
+import itCategories from '@my-many-books/shared-i18n/src/locales/it/categories.json';
 
 // Configure i18next for tests with synchronous translations
 i18n
@@ -45,6 +47,7 @@ i18n
         theme: enTheme,
         search: enSearch,
         accessibility: enAccessibility,
+        categories: enCategories,
       },
       it: {
         common: itCommon,
@@ -58,11 +61,12 @@ i18n
         theme: itTheme,
         search: itSearch,
         accessibility: itAccessibility,
+        categories: itCategories,
       },
     },
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: SUPPORTED_LANGUAGES.map((l) => l.code),
-    ns: ['common', 'validation', 'errors', 'books', 'scanner', 'pwa', 'dialogs', 'pages', 'theme', 'search', 'accessibility'],
+    ns: ['common', 'validation', 'errors', 'books', 'scanner', 'pwa', 'dialogs', 'pages', 'theme', 'search', 'accessibility', 'categories'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,

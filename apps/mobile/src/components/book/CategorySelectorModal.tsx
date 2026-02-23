@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Checkbox, Dialog, List, Portal, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/types';
+import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 
 interface CategorySelectorModalProps {
   visible: boolean;
@@ -48,7 +49,7 @@ export function CategorySelectorModal({
                   return (
                     <List.Item
                       key={String(category.id)}
-                      title={category.name}
+                      title={getCategoryDisplayName(category, t)}
                       onPress={() => onToggleCategory(Number(category.id))}
                       left={() => (
                         <Checkbox status={checked ? 'checked' : 'unchecked'} />

@@ -10,7 +10,7 @@ export interface BookResponseDTO {
   notes?: string;
   userId?: number;
   authors?: Array<{ id: number; name: string; surname?: string }>;
-  categories?: Array<{ id: number; name: string }>;
+  categories?: Array<{ id: number; name: string; translationKey?: string | null }>;
 }
 
 export const toBookResponseDTO = (book: BookEntity): BookResponseDTO => {

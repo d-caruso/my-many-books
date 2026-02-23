@@ -2,7 +2,7 @@ import { databaseService } from './DatabaseService';
 import { ALL_TABLES } from './schema';
 
 const SCHEMA_VERSION_KEY = 'schema_version';
-const CURRENT_SCHEMA_VERSION = 3;
+const CURRENT_SCHEMA_VERSION = 4;
 
 /**
  * Database migration system
@@ -72,6 +72,11 @@ export class MigrationSystem {
       // Migrate to version 3: Add server_id to authors and categories
       if (currentVersion < 3) {
         await this.migrateToVersion3();
+      }
+
+      // Migrate to version 4: Add category translation_key
+      if (currentVersion < 4) {
+        await this.migrateToVersion4();
       }
 
       await this.setVersion(CURRENT_SCHEMA_VERSION);
@@ -191,6 +196,29 @@ export class MigrationSystem {
       console.log('Migration to version 3 completed successfully');
     } catch (error) {
       console.error('Migration to version 3 failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Migrate to version 4: Add translation_key to categories
+   */
+  private async migrateToVersion4(): Promise<void> {
+    console.log('Migrating to schema version 4: Adding translation_key to categories...');
+    const db = databaseService.getDatabase();
+
+    try {
+      const categoryTableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(categories)');
+      const hasTranslationKey = categoryTableInfo.some((col) => col.name === 'translation_key');
+
+      if (!hasTranslationKey) {
+        await db.execAsync('ALTER TABLE categories ADD COLUMN translation_key TEXT;');
+        console.log('Added translation_key column to categories table');
+      } else {
+        console.log('translation_key column already exists in categories table, skipping ALTER TABLE');
+      }
+    } catch (error) {
+      console.error('Migration to version 4 failed:', error);
       throw error;
     }
   }

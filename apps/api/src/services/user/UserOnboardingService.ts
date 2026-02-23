@@ -45,6 +45,7 @@ export class UserOnboardingService {
     const categoryPromises = DEFAULT_CATEGORIES.map(category =>
       this.categoryRepository.create({
         name: category.name,
+        translationKey: category.translationKey,
         userId,
       })
     );

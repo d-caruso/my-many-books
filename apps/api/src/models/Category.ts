@@ -11,6 +11,7 @@ import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
 
 export class Category extends IdBaseModel<CategoryAttributes> implements CategoryAttributes {
   public name!: string;
+  public translationKey!: string | null;
   public userId!: number;
 
   // Sortable fields for search and list endpoints
@@ -41,6 +42,14 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
           allowNull: false,
           validate: {
             notEmpty: true,
+            len: [1, 255],
+          },
+        },
+        translationKey: {
+          type: DataTypes.STRING(255),
+          allowNull: true,
+          field: 'translation_key',
+          validate: {
             len: [1, 255],
           },
         },
@@ -86,6 +95,7 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
     return {
       id: this.id,
       name: this.name,
+      translationKey: this.translationKey,
       userId: this.userId,
       creationDate: this.creationDate,
       updateDate: this.updateDate,
@@ -134,6 +144,7 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
     try {
       return await createModel(Category, {
         name: normalizedName,
+        translationKey: categoryData.translationKey ?? null,
         userId: categoryData.userId,
       });
     } catch (error) {
@@ -157,6 +168,7 @@ export class Category extends IdBaseModel<CategoryAttributes> implements Categor
       },
       defaults: {
         name: normalizedName,
+        translationKey: categoryData.translationKey ?? null,
         userId: categoryData.userId,
       },
     });

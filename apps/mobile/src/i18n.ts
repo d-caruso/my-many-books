@@ -14,6 +14,7 @@ import enPages from '@my-many-books/shared-i18n/src/locales/en/pages.json';
 import enAccessibility from '@my-many-books/shared-i18n/src/locales/en/accessibility.json';
 import enOffline from '@my-many-books/shared-i18n/src/locales/en/offline.json';
 import enDialogs from '@my-many-books/shared-i18n/src/locales/en/dialogs.json';
+import enCategories from '@my-many-books/shared-i18n/src/locales/en/categories.json';
 
 import itCommon from '@my-many-books/shared-i18n/src/locales/it/common.json';
 import itValidation from '@my-many-books/shared-i18n/src/locales/it/validation.json';
@@ -24,6 +25,7 @@ import itPages from '@my-many-books/shared-i18n/src/locales/it/pages.json';
 import itAccessibility from '@my-many-books/shared-i18n/src/locales/it/accessibility.json';
 import itOffline from '@my-many-books/shared-i18n/src/locales/it/offline.json';
 import itDialogs from '@my-many-books/shared-i18n/src/locales/it/dialogs.json';
+import itCategories from '@my-many-books/shared-i18n/src/locales/it/categories.json';
 
 // AsyncStorage key for language preference
 const LANGUAGE_STORAGE_KEY = '@language-preference';
@@ -94,6 +96,7 @@ const initializeI18n = async () => {
         accessibility: enAccessibility,
         offline: enOffline,
         dialogs: enDialogs,
+        categories: enCategories,
       },
       it: {
         common: itCommon,
@@ -105,12 +108,13 @@ const initializeI18n = async () => {
         accessibility: itAccessibility,
         offline: itOffline,
         dialogs: itDialogs,
+        categories: itCategories,
       },
     },
     lng: initialLanguage,
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: SUPPORTED_LANGUAGES.map((l) => l.code),
-    ns: ['common', 'validation', 'errors', 'books', 'scanner', 'pages', 'accessibility', 'offline', 'dialogs'],
+    ns: ['common', 'validation', 'errors', 'books', 'scanner', 'pages', 'accessibility', 'offline', 'dialogs', 'categories'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false, // React Native already escapes values
