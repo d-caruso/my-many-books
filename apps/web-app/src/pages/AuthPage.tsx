@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { LoginForm, RegisterForm } from '../components/Auth';
 import { LanguageSelector } from '../components/Navigation/LanguageSelector';
 import { useAuth } from '@my-many-books/shared-auth';
+import { LANGUAGE_FADE_IN_TIMING, LANGUAGE_FADE_OUT_TIMING } from '../constants/animations';
 
 type AuthMode = 'login' | 'register';
 
@@ -23,13 +24,13 @@ const AuthPage: React.FC = () => {
     const handleFadeOut = () => {
       el.style.animation = 'none';
       void el.offsetHeight;
-      el.style.animation = 'langFadeOut 0.5s ease-out forwards';
+      el.style.animation = `langFadeOut ${LANGUAGE_FADE_OUT_TIMING}`;
     };
 
     const handleFadeIn = () => {
       el.style.animation = 'none';
       void el.offsetHeight;
-      el.style.animation = 'langFadeIn 1.2s ease-in';
+      el.style.animation = `langFadeIn ${LANGUAGE_FADE_IN_TIMING}`;
       el.addEventListener('animationend', () => {
         el.style.animation = '';
       }, { once: true });

@@ -14,7 +14,7 @@
   },
   "install_prompt": {
     "title": "Installa App",
-    "message": "Aggiungi My Many Books alla schermata home per un accesso rapido",
+    "message": "Aggiungi <bold>My Many Books</bold> alla schermata home per un accesso rapido",
     "install_button": "Installa"
   }
 }

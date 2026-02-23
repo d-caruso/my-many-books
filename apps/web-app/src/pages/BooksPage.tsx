@@ -16,6 +16,7 @@ import { BookSearchForm } from '../components/Search';
 import { useBookSearch } from '../hooks/useBookSearch';
 import { useBooks } from '../hooks/useBooks';
 import { useSetting } from '../hooks/useSetting';
+import { LANGUAGE_FADE_IN_TIMING, LANGUAGE_FADE_OUT_TIMING } from '../constants/animations';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../constants/scanner';
 
 type ViewMode = 'list' | 'grid';
@@ -362,13 +363,13 @@ const BooksPage: React.FC = () => {
     const handleFadeOut = () => {
       el.style.animation = 'none';
       void el.offsetHeight;
-      el.style.animation = 'langFadeOut 0.5s ease-out forwards';
+      el.style.animation = `langFadeOut ${LANGUAGE_FADE_OUT_TIMING}`;
     };
 
     const handleFadeIn = () => {
       el.style.animation = 'none';
       void el.offsetHeight;
-      el.style.animation = 'langFadeIn 1.2s ease-in';
+      el.style.animation = `langFadeIn ${LANGUAGE_FADE_IN_TIMING}`;
       el.addEventListener('animationend', () => {
         el.style.animation = '';
       }, { once: true });

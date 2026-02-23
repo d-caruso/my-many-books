@@ -14,7 +14,7 @@
   },
   "install_prompt": {
     "title": "Install App",
-    "message": "Add My Many Books to your home screen for quick access",
+    "message": "Add <bold>My Many Books</bold> to your home screen for quick access",
     "install_button": "Install"
   }
 }
