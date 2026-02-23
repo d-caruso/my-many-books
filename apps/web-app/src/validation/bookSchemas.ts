@@ -8,6 +8,7 @@
 import { z } from 'zod';
 import {
   isValidIsbnFormat,
+  validateEditionDate,
   ISBN_CONSTRAINTS,
   BOOK_CONSTRAINTS,
   EDITION_DATE_PATTERN,
@@ -41,6 +42,9 @@ const isbnSchema = z
 const editionDateSchema = z
   .string()
   .regex(EDITION_DATE_PATTERN, 'Edition date must be YYYY, YYYY-MM, or YYYY-MM-DD')
+  .refine((value) => validateEditionDate(value).isValid, {
+    message: 'Edition date must be YYYY, YYYY-MM, or YYYY-MM-DD',
+  })
   .optional();
 
 /**

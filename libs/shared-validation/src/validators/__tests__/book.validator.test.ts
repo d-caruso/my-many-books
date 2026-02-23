@@ -117,6 +117,10 @@ describe('book.validator', () => {
       expect(validateEditionDate('1900')).toEqual({ isValid: true });
     });
 
+    it('should reject year 0000', () => {
+      expect(validateEditionDate('0000').isValid).toBe(false);
+    });
+
     it('should allow empty/null/undefined edition date', () => {
       expect(validateEditionDate('')).toEqual({ isValid: true });
       expect(validateEditionDate(null)).toEqual({ isValid: true });
@@ -138,6 +142,16 @@ describe('book.validator', () => {
     it('should reject invalid day', () => {
       expect(validateEditionDate('2023-01-32').isValid).toBe(false);
       expect(validateEditionDate('2023-01-00').isValid).toBe(false);
+    });
+
+    it('should validate leap day only on leap years', () => {
+      expect(validateEditionDate('2024-02-29').isValid).toBe(true);
+      expect(validateEditionDate('2023-02-29').isValid).toBe(false);
+    });
+
+    it('should reject day values beyond the selected month length', () => {
+      expect(validateEditionDate('2024-04-31').isValid).toBe(false);
+      expect(validateEditionDate('2024-04-30').isValid).toBe(true);
     });
 
     it('should reject ISO datetime strings', () => {

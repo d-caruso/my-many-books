@@ -12,6 +12,36 @@ import { isEmpty, trim } from '../utils/string.utils';
 import { getI18nKey } from '../errors/i18n-keys';
 import { BookStatus } from '@my-many-books/shared-types'
 
+function invalidEditionDateResult(): ValidationResult {
+  const errorCode = 'EDITION_DATE_INVALID';
+  return {
+    isValid: false,
+    error: BOOK_ERROR_MESSAGES.EDITION_DATE_INVALID,
+    errorCode,
+    i18nKey: getI18nKey(errorCode),
+  };
+}
+
+function isValidEditionYear(year: number): boolean {
+  return Number.isInteger(year) && year >= 1 && year <= 9999;
+}
+
+function isLeapYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+function getMaxDaysForMonth(year: number, month: number): number {
+  if ([4, 6, 9, 11].includes(month)) {
+    return 30;
+  }
+
+  if (month === 2) {
+    return isLeapYear(year) ? 29 : 28;
+  }
+
+  return 31;
+}
+
 /**
  * Validate book title
  */
@@ -120,37 +150,32 @@ export function validateEditionDate(editionDate: string | null | undefined): Val
   }
 
   if (!EDITION_DATE_PATTERN.test(editionDate)) {
-    const errorCode = 'EDITION_DATE_INVALID';
-    return {
-      isValid: false,
-      error: BOOK_ERROR_MESSAGES.EDITION_DATE_INVALID,
-      errorCode,
-      i18nKey: getI18nKey(errorCode),
-    };
+    return invalidEditionDateResult();
   }
 
-  const parts = editionDate.split('-').map(Number);
+  const parts = editionDate.split('-').map((part) => Number(part));
+  const year = parts[0];
   const month = parts[1];
   const day = parts[2];
 
-  if (month !== undefined && (month < 1 || month > 12)) {
-    const errorCode = 'EDITION_DATE_INVALID';
-    return {
-      isValid: false,
-      error: BOOK_ERROR_MESSAGES.EDITION_DATE_INVALID,
-      errorCode,
-      i18nKey: getI18nKey(errorCode),
-    };
+  if (!isValidEditionYear(year)) {
+    return invalidEditionDateResult();
   }
 
-  if (day !== undefined && (day < 1 || day > 31)) {
-    const errorCode = 'EDITION_DATE_INVALID';
-    return {
-      isValid: false,
-      error: BOOK_ERROR_MESSAGES.EDITION_DATE_INVALID,
-      errorCode,
-      i18nKey: getI18nKey(errorCode),
-    };
+  if (month !== undefined && (month < 1 || month > 12)) {
+    return invalidEditionDateResult();
+  }
+
+  if (day !== undefined) {
+    if (day < 1) {
+      return invalidEditionDateResult();
+    }
+
+    const effectiveMonth = month ?? 1;
+    const maxDays = getMaxDaysForMonth(year, effectiveMonth);
+    if (day > maxDays) {
+      return invalidEditionDateResult();
+    }
   }
 
   return { isValid: true };
