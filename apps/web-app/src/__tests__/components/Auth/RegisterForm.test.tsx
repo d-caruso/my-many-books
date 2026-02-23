@@ -8,9 +8,13 @@ import { setupMuiMock } from '../../test-utils/setupMuiMock';
 
 
 // Mock the useAuth hook
-vi.mock('@my-many-books/shared-auth', () => ({
-  useAuth: vi.fn(),
-}));
+vi.mock('@my-many-books/shared-auth', async () => {
+  const actual = await vi.importActual<typeof import('@my-many-books/shared-auth')>('@my-many-books/shared-auth');
+  return {
+    ...actual,
+    useAuth: vi.fn(),
+  };
+});
 
 // Mock Material-UI components
 setupMuiMock();
@@ -46,8 +50,8 @@ describe('RegisterForm', () => {
   test('renders registration form elements', () => {
     renderRegisterForm();
 
-    // Use getAllByText since "Create Account" appears twice (header and button)
-    expect(screen.getAllByText('Create Account')[0]).toBeInTheDocument();
+    // Use getAllByText since "Create account" appears twice (header and button)
+    expect(screen.getAllByText('Create account')[0]).toBeInTheDocument();
     expect(screen.getByText('Join My Many Books today')).toBeInTheDocument();
 
     expect(getInput(/First Name/i)).toBeInTheDocument();
@@ -153,7 +157,7 @@ describe('RegisterForm', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Password must be at least 8 characters/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Password must be at least 8 characters/).length).toBeGreaterThan(0);
     });
 
     expect(mockRegister).not.toHaveBeenCalled();
@@ -235,7 +239,7 @@ describe('RegisterForm', () => {
 
     // Button should be disabled during submission
     expect(submitButton).toBeDisabled();
-    expect(submitButton).toHaveTextContent('Creating Account...');
+    expect(submitButton).toHaveTextContent('Creating account...');
   });
 
   test('handles registration errors', async () => {

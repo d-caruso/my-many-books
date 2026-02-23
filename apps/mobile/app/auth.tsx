@@ -5,14 +5,20 @@ import React, { useState } from 'react';
   import { router } from 'expo-router';
 
   import { useTranslation } from 'react-i18next';
-  import { useAuth } from '@my-many-books/shared-auth';
+  import {
+    useAuth,
+    PASSWORD_POLICY,
+    getRequiredPasswordRuleTypes,
+    validatePasswordAgainstPolicy,
+    formatLocalizedList,
+  } from '@my-many-books/shared-auth';
   import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
   type AuthMode = 'login' | 'register';
   const logoMark = require('../assets/logo-mark-primary.png');
 
   export default function AuthScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [authMode, setAuthMode] = useState<AuthMode>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -23,6 +29,13 @@ import React, { useState } from 'react';
     const [error, setError] = useState<string | null>(null);
 
     const { login, register, loading } = useAuth();
+    const passwordRuleLabels = getRequiredPasswordRuleTypes().map((rule) =>
+      t(`common:password_rule_${rule}`)
+    );
+    const passwordRequirementsText = t('common:password_requirements', {
+      minLength: PASSWORD_POLICY.minLength,
+      requiredTypes: formatLocalizedList(passwordRuleLabels, i18n.language || 'en'),
+    });
 
     const handleSubmit = async () => {
       setError(null);
@@ -40,8 +53,8 @@ import React, { useState } from 'react';
           if (password !== confirmPassword) {
             throw new Error(t('common:passwords_no_match'));
           }
-          if (password.length < 6) {
-            throw new Error(t('common:password_min_length', { length: 6 }));
+          if (!validatePasswordAgainstPolicy(password).isValid) {
+            throw new Error(passwordRequirementsText);
           }
           // ← CHANGED: register signature
           await register({
@@ -170,6 +183,9 @@ import React, { useState } from 'react';
                     />
                   }
                 />
+                <Text variant="bodySmall" style={styles.passwordHelpText}>
+                  {passwordRequirementsText}
+                </Text>
 
                 {authMode === 'register' && (
                   <TextInput
@@ -269,6 +285,11 @@ import React, { useState } from 'react';
     },
     input: {
       marginBottom: 16,
+    },
+    passwordHelpText: {
+      marginTop: -10,
+      marginBottom: 12,
+      opacity: 0.75,
     },
     submitButton: {
       marginTop: 8,

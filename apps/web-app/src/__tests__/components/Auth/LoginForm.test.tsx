@@ -6,9 +6,13 @@ import { useAuth } from '@my-many-books/shared-auth';
 import { setupMuiMock } from '../../test-utils/setupMuiMock';
 
 // Mock the useAuth hook
-vi.mock('@my-many-books/shared-auth', () => ({
-  useAuth: vi.fn(),
-}));
+vi.mock('@my-many-books/shared-auth', async () => {
+  const actual = await vi.importActual<typeof import('@my-many-books/shared-auth')>('@my-many-books/shared-auth');
+  return {
+    ...actual,
+    useAuth: vi.fn(),
+  };
+});
 
 setupMuiMock();
 
@@ -43,6 +47,7 @@ describe('LoginForm', () => {
 
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
+    expect(screen.getByText(/Password must be at least 8 characters long and contain/i)).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
   });
@@ -66,9 +71,9 @@ describe('LoginForm', () => {
     );
 
     const passwordInput = screen.getByLabelText('Password');
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
 
-    expect(passwordInput).toHaveValue('password123');
+    expect(passwordInput).toHaveValue('Password123');
   });
 
   test('toggles password visibility with eye button', () => {
@@ -139,7 +144,7 @@ describe('LoginForm', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Password must be at least 6 characters')).toBeInTheDocument();
+      expect(screen.getAllByText(/Password must be at least 8 characters long and contain/i).length).toBeGreaterThan(0);
     });
 
     expect(mockLogin).not.toHaveBeenCalled();
@@ -158,11 +163,11 @@ describe('LoginForm', () => {
     const submitButton = screen.getByRole('button', { name: /sign in/i });
 
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
+      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'Password123');
     });
   });
 
@@ -199,7 +204,7 @@ describe('LoginForm', () => {
     const submitButton = screen.getByRole('button', { name: /sign in/i });
 
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -242,11 +247,11 @@ describe('LoginForm', () => {
     const passwordInput = screen.getByLabelText('Password');
 
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
     fireEvent.keyDown(passwordInput, { key: 'Enter' });
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
+      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'Password123');
     });
   });
 
@@ -280,7 +285,7 @@ describe('LoginForm', () => {
 
     // Trigger error
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -320,7 +325,7 @@ describe('LoginForm', () => {
     const submitButton = screen.getByRole('button', { name: /sign in/i });
 
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {

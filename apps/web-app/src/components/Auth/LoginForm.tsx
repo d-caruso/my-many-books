@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@my-many-books/shared-auth';
+import {
+  useAuth,
+  PASSWORD_POLICY,
+  getRequiredPasswordRuleTypes,
+  validatePasswordAgainstPolicy,
+  formatLocalizedList,
+} from '@my-many-books/shared-auth';
 import {
   Paper,
   Box,
@@ -22,7 +28,7 @@ interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
-  const { t } = useTranslation(['common']);
+  const { t, i18n } = useTranslation(['common']);
   const { login, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -34,6 +40,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const isLoading = authLoading || loading;
+  const passwordRuleLabels = getRequiredPasswordRuleTypes().map((rule) =>
+    t(`common:password_rule_${rule}`)
+  );
+  const passwordRequirementsText = t('common:password_requirements', {
+    minLength: PASSWORD_POLICY.minLength,
+    requiredTypes: formatLocalizedList(passwordRuleLabels, i18n.language || 'en'),
+  });
 
   const validateForm = (): boolean => {
     const errors: {email?: string; password?: string} = {};
@@ -46,8 +59,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
 
     if (!formData.password) {
       errors.password = t('common:password_required');
-    } else if (formData.password.length < 6) {
-      errors.password = t('common:password_min_length');
+    } else if (!validatePasswordAgainstPolicy(formData.password).isValid) {
+      errors.password = passwordRequirementsText;
     }
 
     setValidationErrors(errors);
@@ -145,7 +158,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
               placeholder={t('common:enter_password')}
               disabled={isLoading}
               aria-invalid={!!validationErrors.password}
-              aria-describedby={validationErrors.password ? 'password-error' : undefined}
+              aria-describedby={
+                validationErrors.password
+                  ? 'password-error password-format-help'
+                  : 'password-format-help'
+              }
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -171,6 +188,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
                 {validationErrors.password}
               </Typography>
             )}
+            <Typography
+              id="password-format-help"
+              color="text.secondary"
+              variant="caption"
+              component="p"
+              sx={{ mt: 0.5 }}
+            >
+              {passwordRequirementsText}
+            </Typography>
           </div>
 
           <ResponsiveButton

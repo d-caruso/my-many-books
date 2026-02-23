@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@my-many-books/shared-auth';
+import {
+  useAuth,
+  PASSWORD_POLICY,
+  getRequiredPasswordRuleTypes,
+  validatePasswordAgainstPolicy,
+  formatLocalizedList,
+} from '@my-many-books/shared-auth';
 import {
   Paper,
   Box,
@@ -24,7 +30,7 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
-  const { t } = useTranslation(['common']);
+  const { t, i18n } = useTranslation(['common']);
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -39,6 +45,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const [requiresVerification, setRequiresVerification] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const passwordRuleLabels = getRequiredPasswordRuleTypes().map((rule) =>
+    t(`common:password_rule_${rule}`)
+  );
+  const passwordRequirementsText = t('common:password_requirements', {
+    minLength: PASSWORD_POLICY.minLength,
+    requiredTypes: formatLocalizedList(passwordRuleLabels, i18n.language || 'en'),
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +64,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       return;
     }
 
-    if (formData.password.length < 8) {
-      setError(t('common:password_requirements'));
+    if (!validatePasswordAgainstPolicy(formData.password).isValid) {
+      setError(passwordRequirementsText);
       setLoading(false);
       return;
     }
@@ -188,7 +201,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             placeholder={t('common:create_password')}
             required
             disabled={loading}
-            inputProps={{ minLength: 6 }}
+            inputProps={{ minLength: PASSWORD_POLICY.minLength }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -209,6 +222,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               ),
             }}
           />
+          <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: -1, mb: 0.5 }}>
+            {passwordRequirementsText}
+          </Typography>
 
           <ResponsiveInput
             type={showConfirmPassword ? 'text' : 'password'}

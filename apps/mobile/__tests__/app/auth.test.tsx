@@ -42,7 +42,7 @@ describe('AuthScreen Logic', () => {
   it('should validate registration name is required', () => {
     const name = '';
     const email = 'test@example.com';
-    const password = 'password123';
+    const password = 'Password123';
 
     const isValid = !!(name && email && password);
 
@@ -50,7 +50,7 @@ describe('AuthScreen Logic', () => {
   });
 
   it('should validate passwords match on registration', () => {
-    const password = 'password123';
+    const password = 'Password123';
     const confirmPassword = 'different';
 
     const passwordsMatch = password === confirmPassword;
@@ -60,7 +60,7 @@ describe('AuthScreen Logic', () => {
 
   it('should validate password minimum length', () => {
     const password = '123';
-    const minLength = 6;
+    const minLength = 8;
 
     const isValid = password.length >= minLength;
 
@@ -70,12 +70,12 @@ describe('AuthScreen Logic', () => {
   it('should accept valid registration data', () => {
     const name = 'Test User';
     const email = 'test@example.com';
-    const password = 'password123';
-    const confirmPassword = 'password123';
+    const password = 'Password123';
+    const confirmPassword = 'Password123';
 
     const isNameValid = name.length > 0;
     const isEmailValid = email.length > 0;
-    const isPasswordValid = password.length >= 6;
+    const isPasswordValid = password.length >= 8;
     const passwordsMatch = password === confirmPassword;
 
     const isFormValid = isNameValid && isEmailValid && isPasswordValid && passwordsMatch;
@@ -86,9 +86,9 @@ describe('AuthScreen Logic', () => {
   it('should test useAuth login integration', async () => {
     mockLogin.mockResolvedValue(undefined);
 
-    await mockLogin('test@example.com', 'password123');
+    await mockLogin('test@example.com', 'Password123');
 
-    expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
+    expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'Password123');
   });
 
   it('should test useAuth register integration', async () => {
@@ -96,14 +96,14 @@ describe('AuthScreen Logic', () => {
 
     await mockRegister({
       email: 'new@example.com',
-      password: 'password123',
+      password: 'Password123',
       name: 'Test User',
       surname: '',
     });
 
     expect(mockRegister).toHaveBeenCalledWith({
       email: 'new@example.com',
-      password: 'password123',
+      password: 'Password123',
       name: 'Test User',
       surname: '',
     });
@@ -113,7 +113,7 @@ describe('AuthScreen Logic', () => {
     mockLogin.mockResolvedValue(undefined);
 
     // Simulate login success
-    await mockLogin('test@example.com', 'password123');
+    await mockLogin('test@example.com', 'Password123');
     mockReplace('/(tabs)');
 
     expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
