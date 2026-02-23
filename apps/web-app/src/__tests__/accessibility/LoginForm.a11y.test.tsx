@@ -8,9 +8,15 @@ import { setupMuiMock } from '../test-utils/setupMuiMock';
 import { useAuth } from '@my-many-books/shared-auth';
 
 // Mock the useAuth hook
-vi.mock('@my-many-books/shared-auth', () => ({
-  useAuth: vi.fn(),
-}));
+vi.mock('@my-many-books/shared-auth', async () => {
+  const actual = await vi.importActual<typeof import('@my-many-books/shared-auth')>(
+    '@my-many-books/shared-auth'
+  );
+  return {
+    ...actual,
+    useAuth: vi.fn(),
+  };
+});
 
 setupMuiMock();
 

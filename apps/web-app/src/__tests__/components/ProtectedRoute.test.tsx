@@ -29,7 +29,7 @@ describe('ProtectedRoute', () => {
     vi.clearAllMocks();
   });
 
-  test('shows loading spinner when loading is true', () => {
+  test('redirects to /auth when user is missing even if loading is true', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: true,
@@ -48,14 +48,9 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    // Check for spinner/loading state - NativeLoading renders a centered div with a spinner
-    const container = screen.getByText((content, element) => {
-      return element !== null &&
-             element.tagName === 'DIV' &&
-             element.style.minHeight === '100vh';
-    }, { selector: 'div' });
-    expect(container).toBeInTheDocument();
+    expect(screen.getByTestId('navigate-to')).toHaveTextContent('/auth');
     expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 
   test('redirects to /auth when user is not authenticated', () => {
@@ -144,31 +139,35 @@ describe('ProtectedRoute', () => {
     expect(screen.getByTestId('child-2')).toBeInTheDocument();
   });
 
-  test('loading state has correct styling', () => {
+  test('non-admin access denied state has correct styling', () => {
     mockUseAuth.mockReturnValue({
-      user: null,
-      loading: true,
+      user: {
+        id: '1',
+        email: 'user@example.com',
+        name: 'Regular',
+        surname: 'User',
+        role: 'user',
+      },
+      loading: false,
       login: vi.fn(),
       logout: vi.fn(),
       register: vi.fn(),
       refreshUser: vi.fn(),
-      isAuthenticated: false,
+      isAuthenticated: true,
     });
 
-    render(
+    const { container } = render(
       <MemoryRouter>
-        <ProtectedRoute>
+        <ProtectedRoute requireAdmin>
           <TestComponent />
         </ProtectedRoute>
       </MemoryRouter>
     );
 
-    // Check that the loading spinner is present - NativeLoading renders a centered div
-    const container = screen.getByText((content, element) => {
-      return element !== null &&
-             element.tagName === 'DIV' &&
-             element.style.minHeight === '100vh';
-    }, { selector: 'div' });
-    expect(container).toBeInTheDocument();
+    const outerContainer = container.querySelector('div[style*="min-height: 100vh"]');
+    expect(outerContainer).toBeInTheDocument();
+    expect(outerContainer).toHaveStyle({ minHeight: '100vh', display: 'flex' });
+    expect(screen.queryByTestId('navigate-to')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
   });
 });

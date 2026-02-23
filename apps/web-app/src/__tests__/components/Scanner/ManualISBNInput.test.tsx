@@ -80,7 +80,7 @@ describe('ManualISBNInput', () => {
       />
     );
 
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -100,7 +100,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
 
     fireEvent.change(isbnInput, { target: { value: '123456' } });
     fireEvent.click(submitButton);
@@ -122,7 +122,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
 
     fireEvent.change(isbnInput, { target: { value: '0486409120' } });
     fireEvent.click(submitButton);
@@ -145,7 +145,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
 
     fireEvent.change(isbnInput, { target: { value: '9780486409122' } });
     fireEvent.click(submitButton);
@@ -168,7 +168,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
 
     fireEvent.change(isbnInput, { target: { value: '978-0-486-40912-2' } });
     fireEvent.click(submitButton);
@@ -191,7 +191,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
 
     fireEvent.change(isbnInput, { target: { value: '048665088X' } });
     fireEvent.click(submitButton);
@@ -214,7 +214,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByText('Add Book');
+    const submitButton = screen.getByRole('button', { name: /add book/i });
 
     fireEvent.change(isbnInput, { target: { value: '123456' } });
     fireEvent.click(submitButton);
@@ -269,7 +269,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
 
     fireEvent.click(submitButton);
     
@@ -321,7 +321,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
 
     fireEvent.change(isbnInput, { target: { value: '9780486409122' } });
     fireEvent.click(submitButton);
@@ -345,7 +345,7 @@ describe('ManualISBNInput', () => {
     const isbnInput = screen.getByDisplayValue('');
 
     fireEvent.change(isbnInput, { target: { value: '9780486409122' } });
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -365,7 +365,7 @@ describe('ManualISBNInput', () => {
       />
     );
 
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
     expect(submitButton).not.toBeDisabled();
   });
 
@@ -379,7 +379,7 @@ describe('ManualISBNInput', () => {
     );
 
     const isbnInput = screen.getByDisplayValue('');
-    const submitButton = screen.getByRole('button', { name: 'Add Book' });
+    const submitButton = screen.getByRole('button', { name: /add book/i });
 
     fireEvent.change(isbnInput, { target: { value: '123' } });
 

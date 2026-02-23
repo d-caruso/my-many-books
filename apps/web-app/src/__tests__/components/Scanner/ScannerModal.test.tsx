@@ -89,7 +89,7 @@ describe('ScannerModal', () => {
 
     expect(screen.getByTestId('isbn-scanner')).toBeInTheDocument();
     expect(screen.queryByTestId('manual-isbn-input')).not.toBeInTheDocument();
-    expect(screen.getByText('Enter Manually')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /enter manually/i })).toBeInTheDocument();
   });
 
   test('switches to manual input mode', () => {
@@ -101,7 +101,7 @@ describe('ScannerModal', () => {
       />
     );
 
-    const manualButton = screen.getByText('Enter Manually');
+    const manualButton = screen.getByRole('button', { name: /enter manually/i });
     fireEvent.click(manualButton);
 
     expect(screen.getByTestId('manual-isbn-input')).toBeInTheDocument();
@@ -119,10 +119,10 @@ describe('ScannerModal', () => {
     );
 
     // Switch to manual
-    fireEvent.click(screen.getByText('Enter Manually'));
+    fireEvent.click(screen.getByRole('button', { name: /enter manually/i }));
     
     // Switch back to scanner
-    const backButton = screen.getByText('Back to Scanner');
+    const backButton = screen.getByRole('button', { name: /back to scanner/i });
     fireEvent.click(backButton);
 
     expect(screen.getByTestId('isbn-scanner')).toBeInTheDocument();
@@ -155,7 +155,7 @@ describe('ScannerModal', () => {
     );
 
     // Switch to manual mode
-    fireEvent.click(screen.getByText('Enter Manually'));
+    fireEvent.click(screen.getByRole('button', { name: /enter manually/i }));
     
     // Submit manual input
     const manualSubmitButton = screen.getByTestId('manual-submit-trigger');
@@ -190,11 +190,11 @@ describe('ScannerModal', () => {
     );
 
     // Switch to manual mode
-    fireEvent.click(screen.getByText('Enter Manually'));
+    fireEvent.click(screen.getByRole('button', { name: /enter manually/i }));
     expect(screen.getByTestId('manual-isbn-input')).toBeInTheDocument();
 
     // Close the modal
-    const backButton = screen.getByText('Back to Scanner');
+    const backButton = screen.getByRole('button', { name: /back to scanner/i });
     fireEvent.click(backButton);
 
     // Should be back in scan mode
@@ -227,7 +227,7 @@ describe('ScannerModal', () => {
     );
 
     // Switch to manual mode
-    fireEvent.click(screen.getByText('Enter Manually'));
+    fireEvent.click(screen.getByRole('button', { name: /enter manually/i }));
     
     // Cancel manual input
     const cancelButton = screen.getByTestId('manual-cancel-trigger');
@@ -264,7 +264,7 @@ describe('ScannerModal', () => {
     expect(isbnScanner).toHaveAttribute('data-is-open', 'true');
 
     // Switch to manual and check props
-    fireEvent.click(screen.getByText('Enter Manually'));
+    fireEvent.click(screen.getByRole('button', { name: /enter manually/i }));
     
     const manualInput = screen.getByTestId('manual-isbn-input');
     expect(manualInput).toHaveAttribute('data-is-open', 'true');
@@ -312,7 +312,7 @@ describe('ScannerModal', () => {
     expect(screen.getByText('ISBN Scanner')).toBeInTheDocument();
 
     // Switch to manual mode
-    fireEvent.click(screen.getByText('Enter Manually'));
+    fireEvent.click(screen.getByRole('button', { name: /enter manually/i }));
 
     // Manual mode header
     expect(screen.getByText('Enter ISBN Manually')).toBeInTheDocument();

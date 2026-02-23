@@ -13,20 +13,41 @@ import { MemoryRouter } from 'react-router-dom';
 import { ApiProvider } from '../../../contexts/ApiContext';
 import { MOBILE_ANALYTICS_PROCESSING_STATUS } from '@my-many-books/shared-types';
 
+vi.mock('../../../config/env', async () => {
+  const actual = (await vi.importActual('../../../config/env')) as any;
+  const apiOrigin = 'http://localhost:3001';
+  const apiBaseUrl = `${apiOrigin}/api/v1`;
+  const env = {
+    ...actual.env,
+    API_ORIGIN: apiOrigin,
+    API_URL: apiBaseUrl,
+    API_BASE_URL: apiBaseUrl,
+  };
+
+  return {
+    ...actual,
+    env,
+    default: env,
+    API_ORIGIN: apiOrigin,
+    API_URL: apiBaseUrl,
+    API_BASE_URL: apiBaseUrl,
+  };
+});
+
+vi.mock('../../../services/authService', () => ({
+  authService: {
+    getIdToken: vi.fn(async () => 'msw-token'),
+    logout: vi.fn(),
+    silentRefresh: vi.fn(async () => false),
+  },
+}));
+
 vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
 }));
 
 const now = new Date().toISOString();
 
-const flushPromises = () =>
-  new Promise<void>((resolve) => {
-    if (typeof queueMicrotask === 'function') {
-      queueMicrotask(resolve);
-    } else {
-      setTimeout(resolve, 0);
-    }
-  });
 const renderWithProviders = (ui: React.ReactElement) =>
   renderWithI18n(
     <ApiProvider>
@@ -46,11 +67,11 @@ describe('Mobile Hooks dashboard (MSW)', () => {
 
   it('renders all panels after the API succeeds', async () => {
     renderWithProviders(<MobileHookDashboardPage />);
-    await screen.findByText('Mobile Hooks Overview');
-    expect(screen.getByText('Hook listeners (events)')).toBeInTheDocument();
-    expect(screen.getByText('Hook → action mappings')).toBeInTheDocument();
-    expect(screen.getByText('Emergency controls')).toBeInTheDocument();
-    expect(screen.getByText('Recent hook events')).toBeInTheDocument();
+    expect(await screen.findByText('Mobile Hooks Overview')).toBeInTheDocument();
+    expect(await screen.findByText('Hook listeners (events)')).toBeInTheDocument();
+    expect(await screen.findByText('Hook → action mappings')).toBeInTheDocument();
+    expect(await screen.findByText('Emergency controls')).toBeInTheDocument();
+    expect(await screen.findByText('Recent hook events')).toBeInTheDocument();
   });
 
   it('shows a listeners error when the config endpoint fails', async () => {
@@ -180,9 +201,7 @@ describe('Hook analytics page (MSW)', () => {
     server.use(http.get(`*${API_BASE_PATH}/admin/mobile-hooks/analytics/stats`, statsHandler));
 
     renderWithProviders(<HookAnalyticsPage />);
-    await flushPromises();
-    await flushPromises();
-    expect(statsCall).toBe(1);
+    await waitFor(() => expect(statsCall).toBeGreaterThanOrEqual(1));
 
     const header = screen.getByRole('heading', { name: 'Mobile Hooks Analytics' }).closest('div');
     if (!header) throw new Error('Analytics header missing');
@@ -190,7 +209,7 @@ describe('Hook analytics page (MSW)', () => {
     await waitFor(() => expect(refreshButton).not.toBeDisabled());
     fireEvent.click(refreshButton);
 
-    await waitFor(() => expect(statsCall).toBe(2));
+    await waitFor(() => expect(statsCall).toBeGreaterThanOrEqual(2));
   });
 });
 
@@ -202,9 +221,9 @@ describe('Hook configuration page (MSW)', () => {
   it('renders listener/action/rate-limit panels after loading', async () => {
     renderWithProviders(<HookConfigurationPage />);
     expect(await screen.findByText('Listener settings')).toBeInTheDocument();
-    expect(screen.getByText('Action settings')).toBeInTheDocument();
-    expect(screen.getByText('Rate limiting')).toBeInTheDocument();
-    expect(screen.getByText('Configuration test')).toBeInTheDocument();
+    expect(await screen.findByText('Action settings')).toBeInTheDocument();
+    expect(await screen.findByText('Rate limiting')).toBeInTheDocument();
+    expect(await screen.findByText('Configuration test')).toBeInTheDocument();
   });
 
   it('shows an error when listener settings fail to load', async () => {

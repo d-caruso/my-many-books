@@ -5,6 +5,13 @@ import { BookSearchResults } from '../../../components/Search/BookSearchResults'
 import { Book } from '../../../types';
 import { setupMuiMock } from '../../test-utils/setupMuiMock';
 
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+  };
+});
 
 // Mock Material-UI components
 setupMuiMock();

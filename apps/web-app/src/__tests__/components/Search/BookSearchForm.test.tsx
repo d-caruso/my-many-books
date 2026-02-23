@@ -182,9 +182,9 @@ describe('BookSearchForm', () => {
     render(<BookSearchForm {...defaultProps} />);
 
     openAdvancedFilters();
-    await selectOption('Reading Status', 'Finished');
+    await selectOption('Reading status', 'Finished');
     await waitFor(() => {
-      expect(getSelectDisplayText('Reading Status')).toBe('Finished');
+      expect(getSelectDisplayText('Reading status')).toBe('Finished');
     });
   });
 
@@ -218,7 +218,7 @@ describe('BookSearchForm', () => {
 
     const listbox = await openSelectListbox('Category');
     const selectedOption = within(listbox).getByRole('option', { selected: true });
-    expect(selectedOption).toHaveTextContent('All Categories');
+    expect(selectedOption).toHaveTextContent(/all categories/i);
     fireEvent.click(selectedOption);
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
   });
@@ -312,7 +312,7 @@ describe('BookSearchForm', () => {
     fireEvent.change(getSearchInput(), { target: { value: 'test query' } });
     openAdvancedFilters();
     await selectOption('Category', 'Fiction');
-    await selectOption('Reading Status', 'Finished');
+    await selectOption('Reading status', 'Finished');
     await selectOption('Sort by', 'Relevance');
     fireEvent.click(getSearchButton());
 
@@ -328,7 +328,7 @@ describe('BookSearchForm', () => {
     openAdvancedFilters();
 
     expect(screen.getByLabelText('Category')).toBeInTheDocument();
-    expect(screen.getByLabelText('Reading Status')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reading status')).toBeInTheDocument();
     expect(screen.getByLabelText('Sort by')).toBeInTheDocument();
     expect(screen.getByTestId('author-autocomplete')).toBeInTheDocument();
   });

@@ -66,7 +66,7 @@ describe('BookCard', () => {
     const bookWithoutAuthors = { ...mockBook, authors: [] };
     render(<BookCard book={bookWithoutAuthors} />);
 
-    expect(screen.getByText('Unknown Author')).toBeInTheDocument();
+    expect(screen.getByText(/unknown author/i)).toBeInTheDocument();
   });
 
   test('handles string authors', () => {
@@ -144,7 +144,7 @@ describe('BookCard', () => {
     render(<BookCard book={minimalBook} />);
 
     expect(screen.getByText('Minimal Book')).toBeInTheDocument();
-    expect(screen.getByText('Unknown Author')).toBeInTheDocument();
+    expect(screen.getByText(/unknown author/i)).toBeInTheDocument();
   });
 
   test('getStatusColor function works correctly', () => {

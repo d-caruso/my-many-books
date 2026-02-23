@@ -162,7 +162,7 @@ describe('BookSearchPage', () => {
   test('renders search page with header and form', () => {
     renderWithRouter();
 
-    expect(screen.getByText('Search Books')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /search books/i })).toBeInTheDocument();
     expect(screen.getByText('Find books in your library or discover new ones to add')).toBeInTheDocument();
     expect(screen.getByTestId('book-search-form')).toBeInTheDocument();
   });
@@ -170,11 +170,11 @@ describe('BookSearchPage', () => {
   test('renders empty state when no search performed', () => {
     renderWithRouter();
 
-    expect(screen.getByText('Search Your Library')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /search your library/i })).toBeInTheDocument();
     expect(screen.getByText('Use the search form above to find books in your collection, or discover new books to add to your library.')).toBeInTheDocument();
-    expect(screen.getByText('Search by Title')).toBeInTheDocument();
-    expect(screen.getByText('Search by Author')).toBeInTheDocument();
-    expect(screen.getByText('Advanced Filters')).toBeInTheDocument();
+    expect(screen.getByText(/search by title/i)).toBeInTheDocument();
+    expect(screen.getByText(/search by author/i)).toBeInTheDocument();
+    expect(screen.getByText(/advanced filters/i)).toBeInTheDocument();
   });
 
   test('shows search results when books are present', () => {
@@ -215,7 +215,7 @@ describe('BookSearchPage', () => {
 
     renderWithRouter();
 
-    const addButton = screen.getByText('Add New Book');
+    const addButton = screen.getByRole('button', { name: /add new book/i });
     expect(addButton).toBeInTheDocument();
     
     fireEvent.click(addButton);

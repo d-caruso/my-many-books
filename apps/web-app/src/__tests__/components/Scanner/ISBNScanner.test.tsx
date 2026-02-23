@@ -72,7 +72,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    expect(screen.getByText('Scan ISBN Barcode')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /scan isbn barcode/i })).toBeInTheDocument();
     expect(screen.getByTestId('close-icon')).toBeInTheDocument();
   });
 
@@ -85,7 +85,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    expect(screen.queryByText('Scan ISBN Barcode')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /scan isbn barcode/i })).not.toBeInTheDocument();
   });
 
   test('shows permission request when no permission', () => {
@@ -103,7 +103,7 @@ describe('ISBNScanner', () => {
       />
     );
 
-    expect(screen.getByText('Camera Access Required')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /camera access required/i })).toBeInTheDocument();
     expect(screen.getByText('Allow camera access to scan book barcodes')).toBeInTheDocument();
   });
 
@@ -183,7 +183,7 @@ describe('ISBNScanner', () => {
     );
 
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    expect(screen.getByText('Initializing Camera')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /initializing camera/i })).toBeInTheDocument();
   });
 
   test('shows switch camera button when multiple devices available', () => {
@@ -329,7 +329,7 @@ describe('ISBNScanner', () => {
     );
 
     // Component should render successfully with device info
-    expect(screen.getByText('Scan ISBN Barcode')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /scan isbn barcode/i })).toBeInTheDocument();
   });
 
   test('handles onScanError callback', () => {

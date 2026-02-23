@@ -494,6 +494,9 @@ export const handlers = [
     const limit = Number(url.searchParams.get('limit') ?? '50');
     return HttpResponse.json(buildRecentEventsResponse({ limit }));
   }),
+  http.get(`*${API_BASE_PATH}/admin/mobile-hooks/analytics/stats`, () =>
+    HttpResponse.json({ data: mobileHooksState.analyticsStats })
+  ),
   http.get(`*${API_BASE_PATH}/admin/mobile-analytics/stats`, () => HttpResponse.json({ data: mobileHooksState.analyticsStats })),
 ];
 
