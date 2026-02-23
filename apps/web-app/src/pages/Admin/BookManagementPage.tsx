@@ -60,8 +60,10 @@ interface BookFormData {
   userId?: number | null;
 }
 
+const EDITION_DATE_ERROR_I18N_KEY = 'validation:book_edition_date_invalid';
+
 export const BookManagementPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['pages', 'validation', 'common']);
   const { apiService } = useApi();
   const { getAdminBooks, updateAdminBook, deleteAdminBook } = apiService;
 
@@ -151,7 +153,12 @@ export const BookManagementPage: React.FC = () => {
     if (!result.success) {
       // Show first validation error
       const firstError = result.error.issues[0];
-      setFormError(firstError.message);
+      const firstField = firstError?.path?.[0];
+      if (firstField === 'editionDate') {
+        setFormError(EDITION_DATE_ERROR_I18N_KEY);
+      } else {
+        setFormError(firstError.message);
+      }
       return;
     }
 
@@ -331,7 +338,9 @@ export const BookManagementPage: React.FC = () => {
           <DialogContent>
             {formError && (
               <Alert severity="error" sx={{ mb: 2 }}>
-                {formError}
+                {formError === EDITION_DATE_ERROR_I18N_KEY
+                  ? t(EDITION_DATE_ERROR_I18N_KEY, { defaultValue: formError })
+                  : formError}
               </Alert>
             )}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>

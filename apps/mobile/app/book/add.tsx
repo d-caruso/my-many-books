@@ -11,6 +11,7 @@ import { useBookSearch } from '@/hooks/useBookSearch';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { Book } from '@/types';
 import { BarcodeScannerPanel } from '@/components/scanner/BarcodeScannerPanel';
+import { EditionDateInput } from '@/components/EditionDateInput';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
 
 export default function AddBookScreen() {
@@ -24,6 +25,7 @@ export default function AddBookScreen() {
   const [author, setAuthor] = useState('');
   const [isbnCode, setIsbnCode] = useState(isbn || '');
   const [status, setStatus] = useState<Book['status']>('want-to-read');
+  const [editionDate, setEditionDate] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +52,7 @@ export default function AddBookScreen() {
         setTitle(book.title || '');
         setAuthor(book.authors?.map((a: { name: string }) => a.name).join(', ') || '');
         setIsbnCode(book.isbnCode || '');
+        setEditionDate(book.editionDate || '');
       } catch (error) {
         mobileHooks.emit(MOBILE_EVENTS.ERROR.VALIDATION, {
           operation: 'parse_book_data',
@@ -169,6 +172,7 @@ export default function AddBookScreen() {
         title: title.trim(),
         isbnCode: isbnCode.trim(),
         status,
+        editionDate: editionDate || undefined,
         notes: notes.trim(),
         // Note: In a real implementation, you'd need to handle authors/categories properly
       });
@@ -317,6 +321,11 @@ export default function AddBookScreen() {
                 ]}
                 style={styles.segmentedButtons}
                 accessibilityLabel={t('books:select_status')}
+              />
+
+              <EditionDateInput
+                value={editionDate}
+                onChange={setEditionDate}
               />
 
               <TextInput

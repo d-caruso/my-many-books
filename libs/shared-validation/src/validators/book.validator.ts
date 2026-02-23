@@ -23,7 +23,7 @@ function invalidEditionDateResult(): ValidationResult {
 }
 
 function isValidEditionYear(year: number): boolean {
-  return Number.isInteger(year) && year >= 1 && year <= 9999;
+  return Number.isInteger(year) && year >= 1 && year <= new Date().getFullYear();
 }
 
 function isLeapYear(year: number): boolean {
@@ -153,10 +153,14 @@ export function validateEditionDate(editionDate: string | null | undefined): Val
     return invalidEditionDateResult();
   }
 
-  const parts = editionDate.split('-').map((part) => Number(part));
-  const year = parts[0];
-  const month = parts[1];
-  const day = parts[2];
+  const [yearPart, monthPart, dayPart] = editionDate.split('-');
+  if (yearPart === undefined) {
+    return invalidEditionDateResult();
+  }
+
+  const year = Number(yearPart);
+  const month = monthPart !== undefined ? Number(monthPart) : undefined;
+  const day = dayPart !== undefined ? Number(dayPart) : undefined;
 
   if (!isValidEditionYear(year)) {
     return invalidEditionDateResult();

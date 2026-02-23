@@ -19,6 +19,7 @@ module.exports = {
     '^@my-many-books/shared-api$': '<rootDir>/../../libs/shared-api/src',
     '^@my-many-books/shared-utils$': '<rootDir>/../../libs/shared-utils/src',
     '^@my-many-books/shared-business$': '<rootDir>/../../libs/shared-business/src',
+    '^@my-many-books/shared-forms$': '<rootDir>/../../libs/shared-forms/src',
     '^@my-many-books/shared-auth$': '<rootDir>/../../libs/shared-auth/src',
     '^@react-native-async-storage/async-storage$': '<rootDir>/__mocks__/@react-native-async-storage/async-storage.js',
     '^react-native$': '<rootDir>/__mocks__/react-native.js',

@@ -59,6 +59,8 @@ export interface BookFormData {
   selectedCategories: number[];
 }
 
+const EDITION_DATE_ERROR_I18N_KEY = 'validation:book_edition_date_invalid';
+
 const buildNewBookFormData = (
   initialIsbn?: string,
   initialDraft?: Partial<BookFormData> | null
@@ -89,7 +91,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   scannerPrefillNotice = null,
   onScannerPrefillNoticeDismiss
 }) => {
-  const { t } = useTranslation(['books', 'common', 'scanner']);
+  const { t } = useTranslation(['books', 'common', 'scanner', 'validation']);
   const { categories, loading: categoriesLoading, loadCategories } = useCategories();
   const { searchByISBN } = useBookSearch();
   const defaultTitle = book ? t('books:edit_book_form') : t('books:add_new_book');
@@ -190,6 +192,11 @@ export const BookForm: React.FC<BookFormProps> = ({
       result.error.issues.forEach((err) => {
         const field = err.path[0] as keyof BookFormData;
         if (field && !newErrors[field]) {
+          if (field === 'editionDate') {
+            newErrors[field] = EDITION_DATE_ERROR_I18N_KEY;
+            return;
+          }
+
           newErrors[field] = err.message;
         }
       });
@@ -339,6 +346,12 @@ export const BookForm: React.FC<BookFormProps> = ({
   const isbnHintText = t('books:isbn_no_dashes_spaces_hint', {
     defaultValue: 'Write the code without dashes or spaces',
   });
+  const editionDateHelperText =
+    errors.editionDate === EDITION_DATE_ERROR_I18N_KEY
+      ? t(EDITION_DATE_ERROR_I18N_KEY, {
+          defaultValue: errors.editionDate,
+        })
+      : errors.editionDate;
 
   return (
     <Paper elevation={3} sx={{ overflow: 'hidden' }}>
@@ -631,7 +644,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               onChange={(val) => handleInputChange('editionDate', val)}
               disabled={loading}
               error={!!errors.editionDate}
-              helperText={errors.editionDate}
+              helperText={editionDateHelperText}
             />
           </Box>
 
