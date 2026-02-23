@@ -167,28 +167,50 @@ export class DataTransformer {
     return undefined;
   }
 
-  private static extractEditionDate(olBook: OpenLibraryBook): Date | undefined {
+  private static extractEditionDate(olBook: OpenLibraryBook): string | undefined {
     if (!olBook.publish_date) {
       return undefined;
     }
 
     try {
-      // Handle various date formats
       const dateStr = olBook.publish_date.trim();
 
-      // Try parsing as full date first
-      let date = new Date(dateStr);
-      if (!isNaN(date.getTime())) {
-        return date;
+      // Try ISO full date (YYYY-MM-DD)
+      const isoFullMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoFullMatch) {
+        return isoFullMatch[0].slice(0, 10);
       }
 
-      // Try parsing as year only
+      // Try ISO month (YYYY-MM)
+      const isoMonthMatch = dateStr.match(/^(\d{4})-(\d{2})$/);
+      if (isoMonthMatch) {
+        return isoMonthMatch[0];
+      }
+
+      // Try "Month DD, YYYY" or "Month YYYY" formats
+      const parsed = new Date(dateStr);
+      if (!isNaN(parsed.getTime())) {
+        // Check if the original string had a day component
+        const hasDayNumber = /\b\d{1,2}[,\s]/.test(dateStr);
+        if (hasDayNumber) {
+          const y = parsed.getFullYear();
+          const m = String(parsed.getMonth() + 1).padStart(2, '0');
+          const d = String(parsed.getDate()).padStart(2, '0');
+          return `${y}-${m}-${d}`;
+        }
+        // Month + Year (e.g. "January 1979")
+        const hasMonthName = /[a-zA-Z]/.test(dateStr);
+        if (hasMonthName) {
+          const y = parsed.getFullYear();
+          const m = String(parsed.getMonth() + 1).padStart(2, '0');
+          return `${y}-${m}`;
+        }
+      }
+
+      // Fallback: extract year from any format (e.g. "c1979", "1979")
       const yearMatch = dateStr.match(/(\d{4})/);
       if (yearMatch && yearMatch[1]) {
-        date = new Date(parseInt(yearMatch[1], 10), 0, 1); // January 1st of that year
-        if (!isNaN(date.getTime())) {
-          return date;
-        }
+        return yearMatch[1];
       }
 
       return undefined;

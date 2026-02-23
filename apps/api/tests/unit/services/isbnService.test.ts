@@ -72,7 +72,7 @@ describe('IsbnService', () => {
     description: 'Homer\'s epic poem of Odysseus\' journey home.',
     physicalFormat: 'Paperback',
     weight: '340g',
-    editionDate: new Date('1997-05-01'),
+    editionDate: '1997-05-01',
   };
 
   beforeEach(() => {

@@ -50,7 +50,7 @@ describe('BookCard', () => {
     expect(screen.getByText('Reading')).toBeInTheDocument();
     expect(screen.getByText('ISBN: 978-0123456789')).toBeInTheDocument();
     expect(screen.getByText('Edition 1')).toBeInTheDocument();
-    expect(screen.getByText('2023')).toBeInTheDocument();
+    expect(screen.getByText('01/01/2023')).toBeInTheDocument();
     expect(screen.getByText('Great book about testing')).toBeInTheDocument();
   });
 

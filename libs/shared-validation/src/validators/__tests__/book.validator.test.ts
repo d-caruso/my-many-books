@@ -102,10 +102,19 @@ describe('book.validator', () => {
   });
 
   describe('validateEditionDate', () => {
-    it('should validate valid dates', () => {
+    it('should validate full date (YYYY-MM-DD)', () => {
       expect(validateEditionDate('2023-01-01')).toEqual({ isValid: true });
-      expect(validateEditionDate(new Date('2023-01-01'))).toEqual({ isValid: true });
-      expect(validateEditionDate('2023-12-31T23:59:59Z')).toEqual({ isValid: true });
+      expect(validateEditionDate('2023-12-31')).toEqual({ isValid: true });
+    });
+
+    it('should validate month+year (YYYY-MM)', () => {
+      expect(validateEditionDate('2023-01')).toEqual({ isValid: true });
+      expect(validateEditionDate('2023-12')).toEqual({ isValid: true });
+    });
+
+    it('should validate year only (YYYY)', () => {
+      expect(validateEditionDate('2023')).toEqual({ isValid: true });
+      expect(validateEditionDate('1900')).toEqual({ isValid: true });
     });
 
     it('should allow empty/null/undefined edition date', () => {
@@ -114,11 +123,25 @@ describe('book.validator', () => {
       expect(validateEditionDate(undefined)).toEqual({ isValid: true });
     });
 
-    it('should reject invalid dates', () => {
+    it('should reject invalid formats', () => {
       const result = validateEditionDate('invalid-date');
       expect(result.isValid).toBe(false);
       expect(result.error).toBe(BOOK_ERROR_MESSAGES.EDITION_DATE_INVALID);
       expect(result.errorCode).toBe('EDITION_DATE_INVALID');
+    });
+
+    it('should reject invalid month', () => {
+      expect(validateEditionDate('2023-13').isValid).toBe(false);
+      expect(validateEditionDate('2023-00').isValid).toBe(false);
+    });
+
+    it('should reject invalid day', () => {
+      expect(validateEditionDate('2023-01-32').isValid).toBe(false);
+      expect(validateEditionDate('2023-01-00').isValid).toBe(false);
+    });
+
+    it('should reject ISO datetime strings', () => {
+      expect(validateEditionDate('2023-12-31T23:59:59Z').isValid).toBe(false);
     });
   });
 

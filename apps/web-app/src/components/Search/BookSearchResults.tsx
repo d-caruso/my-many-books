@@ -17,6 +17,7 @@ import BookIcon from '@mui/icons-material/MenuBook';
 import AddIcon from '@mui/icons-material/Add';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
+import { formatEditionDate } from '../../utils/formatEditionDate';
 
 interface BookSearchResultsProps {
   books: Book[];
@@ -279,7 +280,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
           )}
           {book.editionDate && (
             <Typography variant="caption" color="text.disabled">
-              {new Date(book.editionDate).getFullYear()}
+              {formatEditionDate(book.editionDate)}
             </Typography>
           )}
         </Box>

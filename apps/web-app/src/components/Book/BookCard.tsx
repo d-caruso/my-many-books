@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BookIcon from '@mui/icons-material/MenuBook';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
+import { formatEditionDate } from '../../utils/formatEditionDate';
 
 interface BookCardProps {
   book: Book;
@@ -309,7 +310,7 @@ export const BookCard: React.FC<BookCardProps> = ({
           )}
           {book.editionDate && (
             <Typography variant="caption" color="text.secondary">
-              {new Date(book.editionDate).getFullYear()}
+              {formatEditionDate(book.editionDate)}
             </Typography>
           )}
         </Box>

@@ -69,7 +69,13 @@ export class BookController extends BaseController {
         this.validateIsbnField(value, helpers)
       ),
     editionNumber: Joi.number().integer().min(1).optional(),
-    editionDate: Joi.date().iso().optional().allow(null),
+    editionDate: Joi.string()
+      .pattern(/^\d{4}(-\d{2}(-\d{2})?)?$/)
+      .optional()
+      .allow(null)
+      .messages({
+        'string.pattern.base': 'Edition date must be YYYY, YYYY-MM, or YYYY-MM-DD',
+      }),
     status: Joi.string()
       .valid(...BOOK_STATUSES)
       .optional(),

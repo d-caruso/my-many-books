@@ -51,7 +51,7 @@ describe('Book Model', () => {
       isbnCode: '9780140449136',
       title: 'Test Book',
       editionNumber: 1,
-      editionDate: new Date('2023-01-01'),
+      editionDate: '2023-01-01',
       status: BOOK_STATUS.READING,
       notes: 'Test notes',
     } as any;
@@ -335,17 +335,17 @@ describe('Book Model', () => {
   });
 
   describe('Data Types', () => {
-    it('should handle date fields correctly', async () => {
-      const editionDate = new Date('2023-06-15');
-      
+    it('should handle edition date as string', async () => {
+      const editionDate = '2023-06-15';
+
       const book = await Book.create({
         isbnCode: '9780140449136',
         title: 'Test Book',
         editionDate,
       } as any);
 
-      expect(book.editionDate).toBeInstanceOf(Date);
-      expect(book.editionDate!.getTime()).toBe(editionDate.getTime());
+      expect(typeof book.editionDate).toBe('string');
+      expect(book.editionDate).toBe(editionDate);
     });
 
     it('should handle optional numeric fields', async () => {

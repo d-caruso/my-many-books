@@ -32,6 +32,7 @@ import { useApi } from '../../contexts/ApiContext';
 import { DataGridErrorBoundary } from '../../components/ErrorBoundary';
 import { normalizeIsbn } from '@my-many-books/shared-validation';
 import { adminBookSchema } from '../../validation/bookSchemas';
+import { EditionDateInput } from '../../components/Book/EditionDateInput';
 
 interface Book {
   id: number;
@@ -355,13 +356,9 @@ export const BookManagementPage: React.FC = () => {
                 fullWidth
                 type="number"
               />
-              <TextField
-                label={t('pages:admin.books.edition_date', 'Edition Date')}
+              <EditionDateInput
                 value={formData.editionDate || ''}
-                onChange={(e) => setFormData({ ...formData, editionDate: e.target.value })}
-                fullWidth
-                type="date"
-                InputLabelProps={{ shrink: true }}
+                onChange={(val) => setFormData({ ...formData, editionDate: val })}
               />
               <FormControl fullWidth>
                 <InputLabel>{t('pages:admin.books.status', 'Status')}</InputLabel>

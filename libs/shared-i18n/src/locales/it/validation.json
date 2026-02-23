@@ -32,7 +32,7 @@
   "book_notes_too_long": "Le note devono contenere al massimo 2000 caratteri",
   "book_status_invalid": "Lo stato deve essere uno di: reading, paused, finished, TO_READ",
   "book_edition_number_invalid": "Il numero di edizione deve essere un intero positivo",
-  "book_edition_date_invalid": "La data di edizione deve essere una data valida",
+  "book_edition_date_invalid": "La data di edizione deve essere una data valida (AAAA, AAAA-MM, o AAAA-MM-GG)",
   "author_name_required": "Il nome è obbligatorio",
   "author_name_too_short": "Il nome deve contenere almeno 1 carattere",
   "author_name_too_long": "Il nome deve contenere al massimo 255 caratteri",

@@ -7,6 +7,12 @@ import { AuthorSchema } from './author';
 import { CategorySchema } from './category';
 import { BOOK_STATUSES } from './constants/book.constants'
 
+const editionDateSchema = z
+  .string()
+  .regex(/^\d{4}(-\d{2}(-\d{2})?)?$/, 'Edition date must be YYYY, YYYY-MM, or YYYY-MM-DD')
+  .nullable()
+  .optional();
+
 export const BookStatusSchema = z.enum(
     BOOK_STATUSES as readonly [string, ...string[]] as [typeof BOOK_STATUSES[number], ...typeof BOOK_STATUSES[number][]]
   ).nullable();
@@ -17,7 +23,7 @@ export const BookSchema = z.object({
   isbnCode: z.string().min(1),
   title: z.string().min(1),
   editionNumber: z.number().int().positive().nullable().optional(),
-  editionDate: z.string().nullable().optional(),
+  editionDate: editionDateSchema,
   status: BookStatusSchema.optional().catch(null),
   notes: z.string().nullable().optional(),
   userId: z.number().int().optional(),
@@ -33,7 +39,7 @@ export const BookFormSchema = z.object({
   title: z.string().min(1),
   isbnCode: z.string().min(1),
   editionNumber: z.number().int().positive().nullable().optional(),
-  editionDate: z.string().nullable().optional(),
+  editionDate: editionDateSchema,
   status: BookStatusSchema.optional(),
   notes: z.string().nullable().optional(),
   authorIds: z.array(z.number().int()).optional(),

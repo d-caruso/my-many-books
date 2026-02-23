@@ -279,7 +279,7 @@ describe('BookSearchResults', () => {
     );
 
     expect(screen.getByText('Edition 1')).toBeInTheDocument();
-    expect(screen.getByText('2004')).toBeInTheDocument();
+    expect(screen.getByText('30/09/2004')).toBeInTheDocument();
   });
 
   test('renders ISBN codes', () => {
@@ -345,7 +345,7 @@ describe('BookSearchResults', () => {
     );
 
     expect(screen.queryByText(/Edition/)).not.toBeInTheDocument();
-    expect(screen.queryByText('2004')).not.toBeInTheDocument();
+    expect(screen.queryByText('30/09/2004')).not.toBeInTheDocument();
   });
 
   test('applies correct status colors', () => {

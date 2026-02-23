@@ -14,12 +14,13 @@ export const formatBookCardData = (book: Book): BookCardData => {
 
   const categories = book.categories?.map(cat => cat.name) || [];
   
-  const editionInfo = book.editionNumber && book.editionDate
-    ? `Edition ${book.editionNumber} (${new Date(book.editionDate).getFullYear()})`
-    : book.editionNumber 
+  const editionYear = book.editionDate ? book.editionDate.slice(0, 4) : undefined;
+  const editionInfo = book.editionNumber && editionYear
+    ? `Edition ${book.editionNumber} (${editionYear})`
+    : book.editionNumber
       ? `Edition ${book.editionNumber}`
-      : book.editionDate
-        ? `${new Date(book.editionDate).getFullYear()}`
+      : editionYear
+        ? editionYear
         : undefined;
 
   return {

@@ -272,7 +272,7 @@ class BookService {
       isbnCode: input.isbnCode,
       title: input.title,
       editionNumber: input.editionNumber,
-      editionDate: input.editionDate ? new Date(input.editionDate) : undefined,
+      editionDate: input.editionDate ?? undefined,
       status: input.status,
       notes: input.notes,
       userId: input.userId,
@@ -285,7 +285,7 @@ class BookService {
     if (input.title !== undefined) payload.title = input.title;
     if (input.editionNumber !== undefined) payload.editionNumber = input.editionNumber;
     if (input.editionDate !== undefined) {
-      payload.editionDate = input.editionDate ? new Date(input.editionDate) : null;
+      payload.editionDate = input.editionDate;
     }
     if (input.status !== undefined) payload.status = input.status;
     if (input.notes !== undefined) payload.notes = input.notes;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatEditionDate } from '../../utils/formatEditionDate';
 import {
   Paper,
   Box,
@@ -203,7 +204,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                       <Typography variant="caption" color="text.secondary">
                         {t('books:edition_date')}
                       </Typography>
-                      <Typography variant="body1">{formatDate(book.editionDate)}</Typography>
+                      <Typography variant="body1">{formatEditionDate(book.editionDate)}</Typography>
                     </Grid>
                   )}
                   <Grid item xs={12} sm={6}>

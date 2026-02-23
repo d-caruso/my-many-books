@@ -10,6 +10,7 @@ import {
   isValidIsbnFormat,
   ISBN_CONSTRAINTS,
   BOOK_CONSTRAINTS,
+  EDITION_DATE_PATTERN,
 } from '@my-many-books/shared-validation';
 import { BOOK_STATUSES } from '@my-many-books/shared-types';
 
@@ -34,6 +35,15 @@ const isbnSchema = z
   );
 
 /**
+ * Edition date validation schema.
+ * Accepts flexible granularity: YYYY, YYYY-MM, or YYYY-MM-DD.
+ */
+const editionDateSchema = z
+  .string()
+  .regex(EDITION_DATE_PATTERN, 'Edition date must be YYYY, YYYY-MM, or YYYY-MM-DD')
+  .optional();
+
+/**
  * Create Book Schema (User)
  *
  * Strict validation for creating new books.
@@ -47,7 +57,7 @@ export const createBookSchema = z.object({
     .max(BOOK_CONSTRAINTS.TITLE.MAX_LENGTH, 'Title too long'),
   isbnCode: isbnSchema,
   editionNumber: z.number().int().positive().optional(),
-  editionDate: z.string().optional(),
+  editionDate: editionDateSchema,
   status: bookStatusEnum.optional(),
   notes: z.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH, 'Notes too long').nullable().optional(),
   selectedAuthors: z.array(z.any()).optional(), // Author objects
@@ -76,7 +86,7 @@ export const adminBookSchema = z.object({
     .optional(),
   isbnCode: isbnSchema.optional(),
   editionNumber: z.number().int().positive().optional(),
-  editionDate: z.string().optional(),
+  editionDate: editionDateSchema,
   status: bookStatusEnum.optional(),
   notes: z.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH, 'Notes too long').nullable().optional(),
 });
