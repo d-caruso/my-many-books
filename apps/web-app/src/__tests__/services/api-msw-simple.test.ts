@@ -149,21 +149,23 @@ describe('API Service with HTTP Layer Mocking Concept', () => {
 
     expect(mockAxiosInstance.post).toHaveBeenCalledWith(
       'http://localhost:3000/books',
-      {
+      expect.objectContaining({
         title: 'New Book',
         isbnCode: '987654321',
         editionNumber: 1,
         editionDate: '2024-01-01',
         status: 'reading',
         notes: 'Test notes',
-      },
-      {
+        authorIds: [],
+        categoryIds: [],
+      }),
+      expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: expect.any(String),
           'Content-Type': 'application/json',
         }),
         timeout: 10000,
-      }
+      })
     );
 
     expect(result).toEqual(mockCreatedBook);

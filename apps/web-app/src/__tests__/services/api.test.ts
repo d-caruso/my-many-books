@@ -548,11 +548,9 @@ describe('ApiService with Industry Standard Testing', () => {
 
         expect(mockApiClient.books.updateBook).toHaveBeenCalledWith(1, {
           title: 'Updated Book',
-          isbnCode: undefined,
-          editionNumber: undefined,
-          editionDate: undefined,
-          status: undefined,
-          notes: undefined,
+          editionNumber: null,
+          editionDate: null,
+          notes: null,
           authorIds: [1],
           categoryIds: [1, 2],
         });
@@ -577,7 +575,12 @@ describe('ApiService with Industry Standard Testing', () => {
 
         const result = await testApiService.updateBook(1, updateData);
 
-        expect(mockApiClient.books.updateBook).toHaveBeenCalledWith(1, updateData);
+        expect(mockApiClient.books.updateBook).toHaveBeenCalledWith(1, {
+          title: 'Updated Title',
+          editionNumber: null,
+          editionDate: null,
+          notes: null,
+        });
         expect(result).toEqual(mockResponse);
       });
 

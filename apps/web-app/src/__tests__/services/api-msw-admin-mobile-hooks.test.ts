@@ -4,6 +4,28 @@ import { server, resetMobileHooksState } from '../mocks/server';
 import { createApiService } from '../../services/api';
 import { API_BASE_PATH } from '../utils/apiBasePath';
 
+vi.mock('../../config/env', () => {
+  const mockedEnv = {
+    NODE_ENV: 'test',
+    API_URL: 'http://localhost:3001/api/v1',
+    API_ORIGIN: 'http://localhost:3001',
+    API_PREFIX: '/api',
+    API_VERSION: 'v1',
+    API_BASE_URL: 'http://localhost:3001/api/v1',
+    COGNITO_USER_POOL_ID: '',
+    COGNITO_USER_POOL_CLIENT_ID: '',
+    COGNITO_IDENTITY_POOL_ID: '',
+    AWS_REGION: 'us-east-1',
+    BOOKS_PAGINATION_DEFAULT: 5,
+  };
+
+  return {
+    env: mockedEnv,
+    default: mockedEnv,
+    ...mockedEnv,
+  };
+});
+
 vi.mock('../../services/authService', () => ({
   authService: {
     getIdToken: vi.fn(async () => 'msw-token'),
