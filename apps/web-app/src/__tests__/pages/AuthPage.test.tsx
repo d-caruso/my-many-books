@@ -5,11 +5,13 @@ import { useAuth } from '@my-many-books/shared-auth';
 
 // Import mocked modules
 import { LoginForm, RegisterForm } from '../../components/Auth';
+import { LanguageSelector } from '../../components/Navigation/LanguageSelector';
 import { Navigate } from 'react-router-dom';
 
 // Mock dependencies - industry standard approach
 vi.mock('@my-many-books/shared-auth');
 vi.mock('../../components/Auth');
+vi.mock('../../components/Navigation/LanguageSelector');
 vi.mock('react-router-dom');
 
 describe('AuthPage', () => {
@@ -50,10 +52,15 @@ describe('AuthPage', () => {
         Navigate to {to}
       </div>
     ));
+
+    vi.mocked(LanguageSelector).mockImplementation(() => (
+      <div data-testid="language-selector">Language Selector</div>
+    ));
   });
 
   test('renders login form by default', () => {
     render(<AuthPage />);
+    expect(screen.getByTestId('language-selector')).toBeInTheDocument();
     expect(screen.getByTestId('login-form')).toBeInTheDocument();
     expect(screen.queryByTestId('register-form')).not.toBeInTheDocument();
   });
