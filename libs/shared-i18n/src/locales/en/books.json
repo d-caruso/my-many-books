@@ -17,7 +17,7 @@
   "book_details": "Book details",
   "found_count": "{{count}} book found",
   "found_count_plural": "{{count}} books found",
-  "reading_status": "Reading status",
+  "reading_status": "Reading progress",
   "to_read": "To read",
   "reading": "Reading",
   "completed": "Completed",

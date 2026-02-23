@@ -10,7 +10,7 @@
     "category_label": "Category",
     "category_loading": "Loading categories...",
     "category_all": "All categories",
-    "status_label": "Reading status",
+    "status_label": "Reading progress",
     "status_any": "Any status",
     "status_reading": "Reading",
     "status_paused": "Paused",

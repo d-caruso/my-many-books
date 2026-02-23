@@ -6,7 +6,6 @@ import {
   Typography,
   Box,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Chip,
@@ -516,9 +515,11 @@ export const BookForm: React.FC<BookFormProps> = ({
             {/* Status */}
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, height: '28px' }}>
+                <Typography id="status-label" variant="subtitle2" color="text.secondary">
+                  {t('books:reading_status')}
+                </Typography>
               </Box>
               <FormControl fullWidth>
-                <InputLabel id="status-label">{t('books:reading_status')}</InputLabel>
                 <Select
                   labelId="status-label"
                   id="status"
