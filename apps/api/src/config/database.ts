@@ -79,6 +79,8 @@ class DatabaseConnection {
       dialectOptions: {
         ssl: DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
         connectTimeout: 5000,
+        enableKeepAlive: true,
+        keepAliveInitialDelay: 10000,
       },
       logging: false,
       define: {

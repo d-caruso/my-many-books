@@ -36,7 +36,7 @@ export const DATABASE_CONFIG = Object.freeze({
     max: 20,
     min: 5,
     acquire: 5000,
-    idle: 60000,
+    idle: 10000,
     evict: 30000,
   }),
 } as const);
