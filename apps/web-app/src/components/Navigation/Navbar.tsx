@@ -25,7 +25,7 @@ export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useTranslation(['common', 'books']);
+  const { t } = useTranslation(['common', 'books', 'accessibility']);
   const appName = t('common:app_name');
   const appShortName = t('common:app_short_name', 'MMB');
   const appLogoAlt = t('common:app_logo', 'My Many Books logo');
@@ -137,7 +137,11 @@ export const Navbar: React.FC = () => {
         </Box>
 
         {/* Navigation Items - Desktop */}
-        <Box component="nav" sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 2 }} aria-label="Main navigation">
+        <Box
+          component="nav"
+          sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 2 }}
+          aria-label={t('accessibility:main_navigation')}
+        >
           <Button
             color={location.pathname === '/' ? 'primary' : 'inherit'}
             onClick={() => navigate('/')}

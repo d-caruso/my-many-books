@@ -22,6 +22,8 @@
   "book_status": "Status: {{status}}",
   "settings_placeholder": "Settings. Configuration coming soon.",
   "skip_to_main": "Skip to main content",
+  "login_form": "Login form",
+  "registration_form": "Registration form",
   "main_navigation": "Main navigation",
   "admin_navigation": "Admin navigation",
   "access_denied_message": "Access denied. You do not have permission to access this area.",

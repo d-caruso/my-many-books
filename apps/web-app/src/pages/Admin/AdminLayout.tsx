@@ -49,7 +49,7 @@ interface MenuItem {
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
+  const { t } = useTranslation(['pages', 'accessibility']);
 
   const menuItems: MenuItem[] = [
     {
@@ -154,7 +154,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </Typography>
         </Toolbar>
         <Divider />
-        <Box component="nav" aria-label="Admin navigation">
+        <Box component="nav" aria-label={t('accessibility:admin_navigation')}>
           <List>
             {menuItems.map((item) => {
               const hasChildren = Array.isArray(item.children) && item.children.length > 0;

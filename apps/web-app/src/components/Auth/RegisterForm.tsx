@@ -30,7 +30,7 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
-  const { t, i18n } = useTranslation(['common']);
+  const { t, i18n } = useTranslation(['common', 'accessibility']);
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -129,7 +129,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         </Typography>
       </Box>
 
-      <Box component="form" onSubmit={handleSubmit} aria-label="Registration form" sx={{ p: 4 }}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        aria-label={t('accessibility:registration_form', 'Registration form')}
+        sx={{ p: 4 }}
+      >
         <Stack spacing={2}>
           {error && (
             <Alert severity="error" role="alert">

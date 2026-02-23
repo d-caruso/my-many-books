@@ -22,6 +22,8 @@
   "book_status": "Stato: {{status}}",
   "settings_placeholder": "Impostazioni. Configurazione in arrivo.",
   "skip_to_main": "Salta al contenuto principale",
+  "login_form": "Modulo di accesso",
+  "registration_form": "Modulo di registrazione",
   "main_navigation": "Navigazione principale",
   "admin_navigation": "Navigazione amministratore",
   "access_denied_message": "Accesso negato. Non hai i permessi per accedere a quest'area.",

@@ -29,7 +29,7 @@ interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
-  const { t, i18n } = useTranslation(['common']);
+  const { t, i18n } = useTranslation(['common', 'accessibility']);
   const { login, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -118,7 +118,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         </Typography>
       </Box>
 
-      <Box component="form" onSubmit={handleSubmit} noValidate aria-label="Login form" sx={{ p: 4 }}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        noValidate
+        aria-label={t('accessibility:login_form', 'Login form')}
+        sx={{ p: 4 }}
+      >
         <Stack spacing={2}>
           {error && (
             <Alert
