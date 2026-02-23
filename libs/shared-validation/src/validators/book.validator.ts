@@ -158,7 +158,7 @@ export function validateEditionDate(editionDate: string | null | undefined): Val
   const month = parts[1];
   const day = parts[2];
 
-  if (!isValidEditionYear(year)) {
+  if (year === undefined || !isValidEditionYear(year)) {
     return invalidEditionDateResult();
   }
 
