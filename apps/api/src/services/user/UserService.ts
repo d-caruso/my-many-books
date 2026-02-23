@@ -18,6 +18,8 @@ import {
 import { ApplicationError } from '../../errors/ApplicationError';
 import { UserCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { BOOK_STATUS } from '@my-many-books/shared-types';
+import { getLogger } from '@my-many-books/shared-logging';
+import { UserOnboardingService } from './UserOnboardingService';
 
 export type UserServiceErrorCode = 'USER_NOT_FOUND';
 
@@ -60,8 +62,12 @@ export interface UserStatsResult {
 export class UserService {
   constructor(
     @inject(TYPES.UserRepository) private readonly userRepository: UserRepositoryContract,
-    @inject(TYPES.BookRepository) private readonly bookRepository: BookRepositoryContract
+    @inject(TYPES.BookRepository) private readonly bookRepository: BookRepositoryContract,
+    @inject(TYPES.UserOnboardingService)
+    private readonly userOnboardingService: UserOnboardingService
   ) {}
+
+  private readonly logger = getLogger();
 
   initializeControllerContext(): void {
     void this.userRepository;
@@ -86,6 +92,11 @@ export class UserService {
     };
 
     const created = await this.userRepository.create(payload);
+    try {
+      await this.userOnboardingService.seedDefaults(created.id);
+    } catch (error) {
+      this.logger.warn({ err: error }, 'Failed to seed defaults for new user');
+    }
     return { user: created, isNewUser: true };
   }
 

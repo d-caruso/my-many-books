@@ -26,6 +26,7 @@ const TYPES = {
   AuthorSearchService: Symbol.for('AuthorSearchService'),
   CategorySearchService: Symbol.for('CategorySearchService'),
   PinnedResultsService: Symbol.for('PinnedResultsService'),
+  UserOnboardingService: Symbol.for('UserOnboardingService'),
 };
 
 export { TYPES };

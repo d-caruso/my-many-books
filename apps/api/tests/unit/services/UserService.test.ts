@@ -1,11 +1,18 @@
 import { UserService, UserServiceError } from '../../../src/services/user/UserService';
 import { Repository as UserRepositoryContract } from '../../../src/repositories/user/Repository';
 import { Repository as BookRepositoryContract } from '../../../src/repositories/book/Repository';
+import { UserOnboardingService } from '../../../src/services/user/UserOnboardingService';
 import { BOOK_STATUS } from '@my-many-books/shared-types';
+
+const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+jest.mock('@my-many-books/shared-logging', () => ({
+  getLogger: () => mockLogger,
+}));
 
 describe('UserService', () => {
   let userRepository: jest.Mocked<UserRepositoryContract>;
   let bookRepository: jest.Mocked<BookRepositoryContract>;
+  let userOnboardingService: jest.Mocked<UserOnboardingService>;
   let service: UserService;
 
   beforeEach(() => {
@@ -23,7 +30,11 @@ describe('UserService', () => {
       findRecentUserBooks: jest.fn(),
     } as unknown as jest.Mocked<BookRepositoryContract>;
 
-    service = new UserService(userRepository, bookRepository);
+    userOnboardingService = {
+      seedDefaults: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<UserOnboardingService>;
+
+    service = new UserService(userRepository, bookRepository, userOnboardingService);
   });
 
   describe('findOrCreateUser', () => {
@@ -58,6 +69,39 @@ describe('UserService', () => {
         })
       );
     });
+
+    it('calls seedDefaults when creating a new user', async () => {
+      userRepository.findByEmail.mockResolvedValue(null);
+      userRepository.create.mockResolvedValue({ id: 5 } as any);
+
+      await service.findOrCreateUser({ email: 'new@example.com' }, 'cognito');
+
+      expect(userOnboardingService.seedDefaults).toHaveBeenCalledWith(5);
+    });
+
+    it('does not call seedDefaults for existing users', async () => {
+      userRepository.findByEmail.mockResolvedValue({ id: 1 } as any);
+
+      await service.findOrCreateUser({ email: 'existing@example.com' }, 'cognito');
+
+      expect(userOnboardingService.seedDefaults).not.toHaveBeenCalled();
+    });
+
+    it('still returns user when seeding fails', async () => {
+      userRepository.findByEmail.mockResolvedValue(null);
+      userRepository.create.mockResolvedValue({ id: 3 } as any);
+      userOnboardingService.seedDefaults.mockRejectedValue(new Error('Seeding failed'));
+
+      const result = await service.findOrCreateUser({ email: 'new@example.com' }, 'cognito');
+
+      expect(result.user).toMatchObject({ id: 3 });
+      expect(result.isNewUser).toBe(true);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        { err: expect.any(Error) },
+        'Failed to seed defaults for new user'
+      );
+    });
+
   });
 
   describe('updateCurrentUser', () => {
