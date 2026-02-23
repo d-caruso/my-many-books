@@ -7,6 +7,8 @@ import { AddAuthorDialog } from './AddAuthorDialog';
 import { AddCategoryDialog } from './AddCategoryDialog';
 import { AuthorSelectorModal } from './AuthorSelectorModal';
 import { CategorySelectorModal } from './CategorySelectorModal';
+import { ManageAuthorsDialog } from './ManageAuthorsDialog';
+import { ManageCategoriesDialog } from './ManageCategoriesDialog';
 import { addBookStyles as styles } from './addBookStyles';
 
 interface AddBookOverlaysProps {
@@ -30,9 +32,17 @@ interface AddBookOverlaysProps {
   addAuthorDialogOpen: boolean;
   onCloseAddAuthorDialog: () => void;
   onCreateAuthor: (input: { name: string; surname: string; nationality?: string }) => Promise<Author>;
+  manageAuthorsDialogOpen: boolean;
+  onCloseManageAuthorsDialog: () => void;
+  onAuthorUpdated: (author: Author) => void;
+  onAuthorDeleted: (authorId: number) => void;
   addCategoryDialogOpen: boolean;
   onCloseAddCategoryDialog: () => void;
   onCreateCategory: (input: { name: string }) => Promise<Category>;
+  manageCategoriesDialogOpen: boolean;
+  onCloseManageCategoriesDialog: () => void;
+  onCategoryUpdated: (category: Category) => void;
+  onCategoryDeleted: (categoryId: number) => void;
 }
 
 export function AddBookOverlays(props: AddBookOverlaysProps) {
@@ -76,11 +86,25 @@ export function AddBookOverlays(props: AddBookOverlaysProps) {
         onCreate={props.onCreateAuthor}
       />
 
+      <ManageAuthorsDialog
+        visible={props.manageAuthorsDialogOpen}
+        onClose={props.onCloseManageAuthorsDialog}
+        onAuthorUpdated={props.onAuthorUpdated}
+        onAuthorDeleted={props.onAuthorDeleted}
+      />
+
       <AddCategoryDialog
         visible={props.addCategoryDialogOpen}
         onClose={props.onCloseAddCategoryDialog}
         onCreated={() => undefined}
         onCreate={props.onCreateCategory}
+      />
+
+      <ManageCategoriesDialog
+        visible={props.manageCategoriesDialogOpen}
+        onClose={props.onCloseManageCategoriesDialog}
+        onCategoryUpdated={props.onCategoryUpdated}
+        onCategoryDeleted={props.onCategoryDeleted}
       />
     </>
   );

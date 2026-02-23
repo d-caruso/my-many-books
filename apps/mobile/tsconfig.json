@@ -37,11 +37,17 @@
       "@my-many-books/shared-utils": [
         "../../libs/shared-utils/src"
       ],
+      "@my-many-books/shared-ui-hooks": [
+        "../../libs/shared-ui-hooks/src"
+      ],
       "@my-many-books/shared-business": [
         "../../libs/shared-business/src"
       ],
       "@my-many-books/shared-auth": [
         "../../libs/shared-auth/src"
+      ],
+      "@my-many-books/shared-validation": [
+        "../../libs/shared-validation/src"
       ]
     }
   },

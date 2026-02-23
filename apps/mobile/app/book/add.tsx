@@ -9,23 +9,13 @@ import * as Clipboard from 'expo-clipboard';
 import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useNetworkState } from '@/hooks/useNetworkState';
+import { useAddBookEntities } from '@/hooks/useAddBookEntities';
 import { Book, Author, Category } from '@/types';
-import { authorAPI, categoryAPI } from '@/services/api';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
 import { AuthorsSection } from '@/components/book/AuthorsSection';
 import { CategoriesSection } from '@/components/book/CategoriesSection';
 import { AddBookOverlays } from '@/components/book/AddBookOverlays';
 import { addBookStyles as styles } from '@/components/book/addBookStyles';
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === 'string') {
-    return error;
-  }
-  return String(error);
-};
 
 export default function AddBookScreen() {
   const { t } = useTranslation();
@@ -38,12 +28,6 @@ export default function AddBookScreen() {
   const [isbnCode, setIsbnCode] = useState(isbn || '');
   const [status, setStatus] = useState<Book['status']>('want-to-read');
   const [notes, setNotes] = useState('');
-  const [availableAuthors, setAvailableAuthors] = useState<Author[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
-  const [selectedAuthors, setSelectedAuthors] = useState<Author[]>([]);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
-  const [authorsLoading, setAuthorsLoading] = useState(false);
-  const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
@@ -52,62 +36,38 @@ export default function AddBookScreen() {
   const [authorSelectorOpen, setAuthorSelectorOpen] = useState(false);
   const [categorySelectorOpen, setCategorySelectorOpen] = useState(false);
   const [addAuthorDialogOpen, setAddAuthorDialogOpen] = useState(false);
+  const [manageAuthorsDialogOpen, setManageAuthorsDialogOpen] = useState(false);
   const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
+  const [manageCategoriesDialogOpen, setManageCategoriesDialogOpen] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const handledScannerFeedbackRef = useRef<string | null>(null);
 
   const { createBook } = useBooks();
   const { searchByISBN } = useBookSearch();
   const { isOnline } = useNetworkState();
-
-  const loadAuthors = useCallback(async () => {
-    setAuthorsLoading(true);
-    try {
-      const authors = await authorAPI.getAuthors();
-      const sorted = [...authors].sort((a, b) =>
-        `${a.surname} ${a.name}`.localeCompare(`${b.surname} ${b.name}`)
-      );
-      setAvailableAuthors(sorted);
-    } catch (err: unknown) {
-      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
-        operation: 'load_authors_for_add_book',
-        resource: RESOURCE_TYPES.AUTHOR,
-        error: getErrorMessage(err),
-        source: 'book_add_load_authors',
-      });
-    } finally {
-      setAuthorsLoading(false);
-    }
-  }, []);
-
-  const loadCategories = useCallback(async () => {
-    setCategoriesLoading(true);
-    try {
-      const categories = await categoryAPI.getCategories();
-      const sorted = [...categories].sort((a, b) => a.name.localeCompare(b.name));
-      setAvailableCategories(sorted);
-    } catch (err: unknown) {
-      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
-        operation: 'load_categories_for_add_book',
-        resource: RESOURCE_TYPES.CATEGORY,
-        error: getErrorMessage(err),
-        source: 'book_add_load_categories',
-      });
-    } finally {
-      setCategoriesLoading(false);
-    }
-  }, []);
+  const {
+    availableAuthors,
+    availableCategories,
+    selectedAuthors,
+    selectedCategoryIds,
+    authorsLoading,
+    categoriesLoading,
+    selectAuthor,
+    removeAuthor,
+    toggleCategory,
+    createAuthorAndSelect,
+    createCategoryAndSelect,
+    handleAuthorUpdated,
+    handleAuthorDeleted,
+    handleCategoryUpdated,
+    handleCategoryDeleted,
+  } = useAddBookEntities();
 
   useEffect(() => {
     if (isbn) {
       setIsbnCode(isbn);
     }
   }, [isbn]);
-
-  useEffect(() => {
-    void loadAuthors();
-    void loadCategories();
-  }, [loadAuthors, loadCategories]);
 
   useEffect(() => {
     if (bookData) {
@@ -174,41 +134,17 @@ export default function AddBookScreen() {
     setIsbnCode(value);
   };
 
-  const handleSelectAuthor = (author: Author) => {
-    setSelectedAuthors((prev) =>
-      prev.some((existing) => Number(existing.id) === Number(author.id)) ? prev : [...prev, author]
-    );
-  };
-
-  const handleRemoveAuthor = (authorId: number) => {
-    setSelectedAuthors((prev) => prev.filter((author) => Number(author.id) !== authorId));
-  };
-
-  const handleToggleCategory = (categoryId: number) => {
-    setSelectedCategoryIds((prev) =>
-      prev.includes(categoryId) ? prev.filter((id) => id !== categoryId) : [...prev, categoryId]
-    );
-  };
-
   const handleCreateAuthor = useCallback(async (input: { name: string; surname: string; nationality?: string }) => {
-    const created = await authorAPI.createAuthor(input);
-    await loadAuthors();
-    setSelectedAuthors((prev) =>
-      prev.some((author) => Number(author.id) === Number(created.id)) ? prev : [...prev, created]
-    );
+    const created = await createAuthorAndSelect(input);
     setAddAuthorDialogOpen(false);
     return created;
-  }, [loadAuthors]);
+  }, [createAuthorAndSelect]);
 
   const handleCreateCategory = useCallback(async (input: { name: string }) => {
-    const created = await categoryAPI.createCategory(input);
-    await loadCategories();
-    setSelectedCategoryIds((prev) =>
-      prev.includes(Number(created.id)) ? prev : [...prev, Number(created.id)]
-    );
+    const created = await createCategoryAndSelect(input);
     setAddCategoryDialogOpen(false);
     return created;
-  }, [loadCategories]);
+  }, [createCategoryAndSelect]);
 
   const handleEmbeddedScannerDetected = useCallback(async (isbnValue: string) => {
     let copyStatus: 'success' | 'failed' = 'failed';
@@ -401,8 +337,9 @@ export default function AddBookScreen() {
                 selectedAuthors={selectedAuthors}
                 authorsLoading={authorsLoading}
                 onOpenSelector={() => setAuthorSelectorOpen(true)}
+                onOpenManage={() => setManageAuthorsDialogOpen(true)}
                 onOpenAdd={() => setAddAuthorDialogOpen(true)}
-                onRemoveAuthor={handleRemoveAuthor}
+                onRemoveAuthor={removeAuthor}
               />
 
               <CategoriesSection
@@ -410,8 +347,9 @@ export default function AddBookScreen() {
                 availableCategories={availableCategories}
                 selectedCategoryIds={selectedCategoryIds}
                 onOpenSelector={() => setCategorySelectorOpen(true)}
+                onOpenManage={() => setManageCategoriesDialogOpen(true)}
                 onOpenAdd={() => setAddCategoryDialogOpen(true)}
-                onToggleCategory={handleToggleCategory}
+                onToggleCategory={toggleCategory}
               />
 
               <Text variant="titleSmall" style={styles.sectionTitle} accessibilityRole="header">
@@ -480,7 +418,7 @@ export default function AddBookScreen() {
         selectedAuthorIds={selectedAuthors.map((author) => Number(author.id))}
         authorsLoading={authorsLoading}
         onCloseAuthorSelector={() => setAuthorSelectorOpen(false)}
-        onSelectAuthor={handleSelectAuthor}
+        onSelectAuthor={selectAuthor}
         onOpenAddAuthorFromSelector={() => {
           setAuthorSelectorOpen(false);
           setAddAuthorDialogOpen(true);
@@ -490,7 +428,7 @@ export default function AddBookScreen() {
         selectedCategoryIds={selectedCategoryIds}
         categoriesLoading={categoriesLoading}
         onCloseCategorySelector={() => setCategorySelectorOpen(false)}
-        onToggleCategory={handleToggleCategory}
+        onToggleCategory={toggleCategory}
         onOpenAddCategoryFromSelector={() => {
           setCategorySelectorOpen(false);
           setAddCategoryDialogOpen(true);
@@ -498,9 +436,17 @@ export default function AddBookScreen() {
         addAuthorDialogOpen={addAuthorDialogOpen}
         onCloseAddAuthorDialog={() => setAddAuthorDialogOpen(false)}
         onCreateAuthor={handleCreateAuthor}
+        manageAuthorsDialogOpen={manageAuthorsDialogOpen}
+        onCloseManageAuthorsDialog={() => setManageAuthorsDialogOpen(false)}
+        onAuthorUpdated={handleAuthorUpdated}
+        onAuthorDeleted={handleAuthorDeleted}
         addCategoryDialogOpen={addCategoryDialogOpen}
         onCloseAddCategoryDialog={() => setAddCategoryDialogOpen(false)}
         onCreateCategory={handleCreateCategory}
+        manageCategoriesDialogOpen={manageCategoriesDialogOpen}
+        onCloseManageCategoriesDialog={() => setManageCategoriesDialogOpen(false)}
+        onCategoryUpdated={handleCategoryUpdated}
+        onCategoryDeleted={handleCategoryDeleted}
       />
     </SafeAreaView>
   );

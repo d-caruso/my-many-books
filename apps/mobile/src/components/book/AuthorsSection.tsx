@@ -9,6 +9,7 @@ interface AuthorsSectionProps {
   selectedAuthors: Author[];
   authorsLoading: boolean;
   onOpenSelector: () => void;
+  onOpenManage: () => void;
   onOpenAdd: () => void;
   onRemoveAuthor: (authorId: number) => void;
 }
@@ -17,6 +18,7 @@ export function AuthorsSection({
   selectedAuthors,
   authorsLoading,
   onOpenSelector,
+  onOpenManage,
   onOpenAdd,
   onRemoveAuthor,
 }: AuthorsSectionProps) {
@@ -31,6 +33,9 @@ export function AuthorsSection({
         <View style={styles.sectionActionsRow}>
           <Button mode="outlined" compact style={styles.sectionActionButton} onPress={onOpenSelector}>
             {t('books:select_author')}
+          </Button>
+          <Button mode="outlined" compact style={styles.sectionActionButton} onPress={onOpenManage}>
+            {t('common:manage', { defaultValue: 'Manage' })}
           </Button>
           <Button mode="outlined" compact style={styles.sectionActionButton} onPress={onOpenAdd}>
             {t('books:add_author')}

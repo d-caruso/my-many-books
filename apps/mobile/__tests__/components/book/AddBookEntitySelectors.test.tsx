@@ -40,6 +40,7 @@ describe('mobile Add Book author/category UI', () => {
           selectedAuthors={sampleAuthors}
           authorsLoading={false}
           onOpenSelector={onOpenSelector}
+          onOpenManage={jest.fn()}
           onOpenAdd={onOpenAdd}
           onRemoveAuthor={onRemoveAuthor}
         />
@@ -49,6 +50,7 @@ describe('mobile Add Book author/category UI', () => {
     const textValues = collectText(tree.toJSON()).join(' | ');
     expect(textValues).toContain('books:authors');
     expect(textValues).toContain('books:select_author');
+    expect(textValues).toContain('common:manage');
     expect(textValues).toContain('books:add_author');
     expect(textValues).toContain('Jane');
     expect(textValues).toContain('Austen');
@@ -58,7 +60,7 @@ describe('mobile Add Book author/category UI', () => {
     const buttonNodes = tree.root.findAll((node) => node.type === 'Button');
     act(() => {
       buttonNodes[0].props.onPress();
-      buttonNodes[1].props.onPress();
+      buttonNodes[2].props.onPress();
     });
 
     expect(onOpenSelector).toHaveBeenCalledTimes(1);
@@ -74,6 +76,7 @@ describe('mobile Add Book author/category UI', () => {
           availableCategories={sampleCategories}
           selectedCategoryIds={[10, 11]}
           onOpenSelector={jest.fn()}
+          onOpenManage={jest.fn()}
           onOpenAdd={jest.fn()}
           onToggleCategory={jest.fn()}
         />
@@ -83,6 +86,7 @@ describe('mobile Add Book author/category UI', () => {
     const textValues = collectText(tree.toJSON()).join(' | ');
 
     expect(textValues).toContain('books:categories');
+    expect(textValues).toContain('common:manage');
     expect(textValues).toContain('Fiction');
     expect(textValues).toContain('Classics');
   });

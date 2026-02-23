@@ -10,6 +10,7 @@ interface CategoriesSectionProps {
   availableCategories: Category[];
   selectedCategoryIds: number[];
   onOpenSelector: () => void;
+  onOpenManage: () => void;
   onOpenAdd: () => void;
   onToggleCategory: (categoryId: number) => void;
 }
@@ -19,6 +20,7 @@ export function CategoriesSection({
   availableCategories,
   selectedCategoryIds,
   onOpenSelector,
+  onOpenManage,
   onOpenAdd,
   onToggleCategory,
 }: CategoriesSectionProps) {
@@ -33,6 +35,9 @@ export function CategoriesSection({
         <View style={styles.sectionActionsRow}>
           <Button mode="outlined" compact style={styles.sectionActionButton} onPress={onOpenSelector}>
             {t('books:select_category')}
+          </Button>
+          <Button mode="outlined" compact style={styles.sectionActionButton} onPress={onOpenManage}>
+            {t('common:manage', { defaultValue: 'Manage' })}
           </Button>
           <Button mode="outlined" compact style={styles.sectionActionButton} onPress={onOpenAdd}>
             {t('books:add_category')}
