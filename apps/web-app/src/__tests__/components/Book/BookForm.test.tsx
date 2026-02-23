@@ -6,13 +6,14 @@ import { initReactI18next } from 'react-i18next';
 import { BookForm } from '../../../components/Book/BookForm';
 
 const mockSearchByISBN = vi.fn();
+const mockLoadCategories = vi.fn();
 let latestAuthorAutocompleteProps: any = null;
 
 vi.mock('../../../hooks/useCategories', () => ({
   useCategories: () => ({
     categories: [],
     loading: false,
-    loadCategories: vi.fn(),
+    loadCategories: mockLoadCategories,
   }),
 }));
 
@@ -58,6 +59,41 @@ vi.mock('../../../components/Author/AddAuthorDialog', () => ({
 
 vi.mock('../../../components/Category/AddCategoryDialog', () => ({
   AddCategoryDialog: () => null,
+}));
+
+vi.mock('../../../components/Author/ManageAuthorsDialog', () => ({
+  ManageAuthorsDialog: ({ open, onAuthorUpdated, onAuthorDeleted }: any) =>
+    open ? (
+      <div data-testid="manage-authors-dialog">
+        <button
+          data-testid="manage-author-update"
+          onClick={() =>
+            onAuthorUpdated?.({
+              id: 999,
+              name: 'Virginia',
+              surname: 'WOOLF',
+              nationality: 'British',
+            })
+          }
+        >
+          Update author
+        </button>
+        <button data-testid="manage-author-delete" onClick={() => onAuthorDeleted?.(999)}>
+          Delete author
+        </button>
+      </div>
+    ) : null,
+}));
+
+vi.mock('../../../components/Category/ManageCategoriesDialog', () => ({
+  ManageCategoriesDialog: ({ open, onCategoryDeleted }: any) =>
+    open ? (
+      <div data-testid="manage-categories-dialog">
+        <button data-testid="manage-category-delete" onClick={() => onCategoryDeleted?.(123)}>
+          Delete category
+        </button>
+      </div>
+    ) : null,
 }));
 
 vi.mock('../../../components/Scanner/EmbeddedScannerFlow', () => ({
@@ -137,11 +173,46 @@ describe('BookForm', () => {
 
   beforeEach(() => {
     mockSearchByISBN.mockReset();
+    mockLoadCategories.mockReset();
     latestAuthorAutocompleteProps = null;
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
       configurable: true,
     });
+  });
+
+  test('updates and removes selected authors from manage dialog callbacks', () => {
+    renderBookForm({
+      initialDraft: {
+        selectedAuthors: [{ id: 999, name: 'Virginia', surname: 'Woolf', nationality: null }],
+      },
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /^manage$/i })[0]);
+    expect(screen.getByTestId('manage-authors-dialog')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('manage-author-update'));
+    expect(screen.getByText('Virginia WOOLF')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('manage-author-delete'));
+    expect(screen.queryByText('Virginia WOOLF')).not.toBeInTheDocument();
+    expect(screen.getByTestId('author-autocomplete-reload-trigger')).toHaveTextContent('2');
+  });
+
+  test('removes deleted category from selection and reloads categories after manage callback', () => {
+    renderBookForm({
+      initialDraft: {
+        selectedCategories: [123, 456],
+      },
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /^manage$/i })[1]);
+    expect(screen.getByTestId('manage-categories-dialog')).toBeInTheDocument();
+
+    const callsBeforeDelete = mockLoadCategories.mock.calls.length;
+    fireEvent.click(screen.getByTestId('manage-category-delete'));
+
+    expect(mockLoadCategories.mock.calls.length).toBeGreaterThan(callsBeforeDelete);
   });
 
   test('opens embedded scanner from isbn field button without route navigation', () => {

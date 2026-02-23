@@ -1009,6 +1009,14 @@ class ApiService {
     return this.apiClient.categories.createCategory(categoryData);
   }
 
+  async updateCategory(id: number, categoryData: Partial<{ name: string }>): Promise<Category> {
+    return this.apiClient.categories.updateCategory(id, categoryData);
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    return this.apiClient.categories.deleteCategory(id);
+  }
+
   // Authors methods with development mock data fallback
   async getAuthors(): Promise<Author[]> {
     // In development mode without API URL, return mock data
@@ -1042,6 +1050,17 @@ class ApiService {
 
   async createAuthor(authorData: { name: string; surname: string; nationality?: string }): Promise<Author> {
     return this.apiClient.authors.createAuthor(authorData);
+  }
+
+  async updateAuthor(
+    id: number,
+    authorData: Partial<{ name: string; surname: string; nationality?: string | null }>
+  ): Promise<Author> {
+    return this.apiClient.authors.updateAuthor(id, authorData);
+  }
+
+  async deleteAuthor(id: number): Promise<void> {
+    return this.apiClient.authors.deleteAuthor(id);
   }
 
   // Error handler
@@ -1331,6 +1350,8 @@ export const categoryAPI = {
   getCategories: apiService.getCategories.bind(apiService),
   getCategory: apiService.getCategory.bind(apiService),
   createCategory: apiService.createCategory.bind(apiService),
+  updateCategory: apiService.updateCategory.bind(apiService),
+  deleteCategory: apiService.deleteCategory.bind(apiService),
 };
 
 export const authorAPI = {
@@ -1338,6 +1359,8 @@ export const authorAPI = {
   searchAuthors: apiService.searchAuthors.bind(apiService),
   getAuthor: apiService.getAuthor.bind(apiService),
   createAuthor: apiService.createAuthor.bind(apiService),
+  updateAuthor: apiService.updateAuthor.bind(apiService),
+  deleteAuthor: apiService.deleteAuthor.bind(apiService),
 };
 
 export const userAPI = {

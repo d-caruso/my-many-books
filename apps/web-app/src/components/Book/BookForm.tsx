@@ -29,7 +29,9 @@ import { useCategories } from '../../hooks/useCategories';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import { AuthorAutocomplete } from '../Search/AuthorAutocomplete';
 import { AddAuthorDialog } from '../Author/AddAuthorDialog';
+import { ManageAuthorsDialog } from '../Author/ManageAuthorsDialog';
 import { AddCategoryDialog } from '../Category/AddCategoryDialog';
+import { ManageCategoriesDialog } from '../Category/ManageCategoriesDialog';
 import { EmbeddedScannerFlow } from '../Scanner/EmbeddedScannerFlow';
 import { normalizeIsbn } from '@my-many-books/shared-validation';
 import { createBookSchema } from '../../validation/bookSchemas';
@@ -98,8 +100,10 @@ export const BookForm: React.FC<BookFormProps> = ({
   );
   const [errors, setErrors] = useState<Partial<Record<keyof BookFormData, string>>>({});
   const [addAuthorDialogOpen, setAddAuthorDialogOpen] = useState(false);
+  const [manageAuthorsDialogOpen, setManageAuthorsDialogOpen] = useState(false);
   const [authorAutocompleteReloadTrigger, setAuthorAutocompleteReloadTrigger] = useState(0);
   const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
+  const [manageCategoriesDialogOpen, setManageCategoriesDialogOpen] = useState(false);
   const [showScannerPrefillNotice, setShowScannerPrefillNotice] = useState(Boolean(scannerPrefillNotice));
   const [embeddedScannerOpen, setEmbeddedScannerOpen] = useState(false);
   const [embeddedScannerNotice, setEmbeddedScannerNotice] = useState<string | null>(null);
@@ -283,6 +287,36 @@ export const BookForm: React.FC<BookFormProps> = ({
     loadCategories();
     // Automatically select the newly created category
     handleInputChange('selectedCategories', [...formData.selectedCategories, category.id]);
+  };
+
+  const handleAuthorUpdated = (updatedAuthor: Author) => {
+    handleInputChange(
+      'selectedAuthors',
+      formData.selectedAuthors.map((author) =>
+        author.id === updatedAuthor.id ? updatedAuthor : author
+      )
+    );
+    setAuthorAutocompleteReloadTrigger((prev) => prev + 1);
+  };
+
+  const handleAuthorDeleted = (deletedAuthorId: number) => {
+    handleInputChange(
+      'selectedAuthors',
+      formData.selectedAuthors.filter((author) => author.id !== deletedAuthorId)
+    );
+    setAuthorAutocompleteReloadTrigger((prev) => prev + 1);
+  };
+
+  const handleCategoryUpdated = () => {
+    loadCategories();
+  };
+
+  const handleCategoryDeleted = (deletedCategoryId: number) => {
+    void loadCategories();
+    handleInputChange(
+      'selectedCategories',
+      formData.selectedCategories.filter((id) => id !== deletedCategoryId)
+    );
   };
 
   const handleScanIsbn = () => {
@@ -481,15 +515,25 @@ export const BookForm: React.FC<BookFormProps> = ({
                 <Typography variant="subtitle2" color="text.secondary">
                   {t('books:author')}
                 </Typography>
-                <Button
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => setAddAuthorDialogOpen(true)}
-                  disabled={loading}
-                  sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
-                >
-                  {t('common:add')}
-                </Button>
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    size="small"
+                    onClick={() => setManageAuthorsDialogOpen(true)}
+                    disabled={loading}
+                    sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
+                  >
+                    {t('common:manage', { defaultValue: 'Manage' })}
+                  </Button>
+                  <Button
+                    size="small"
+                    startIcon={<AddIcon />}
+                    onClick={() => setAddAuthorDialogOpen(true)}
+                    disabled={loading}
+                    sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
+                  >
+                    {t('common:add')}
+                  </Button>
+                </Stack>
               </Box>
               <AuthorAutocomplete
                 value={null}
@@ -546,15 +590,25 @@ export const BookForm: React.FC<BookFormProps> = ({
               <Typography variant="subtitle2" color="text.secondary">
                 {t('books:categories')}
               </Typography>
-              <Button
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={() => setAddCategoryDialogOpen(true)}
-                disabled={loading}
-                sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
-              >
-                {t('common:add')}
-              </Button>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  size="small"
+                  onClick={() => setManageCategoriesDialogOpen(true)}
+                  disabled={loading}
+                  sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
+                >
+                  {t('common:manage', { defaultValue: 'Manage' })}
+                </Button>
+                <Button
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() => setAddCategoryDialogOpen(true)}
+                  disabled={loading}
+                  sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
+                >
+                  {t('common:add')}
+                </Button>
+              </Stack>
             </Box>
 
             {categoriesLoading ? (
@@ -700,10 +754,24 @@ export const BookForm: React.FC<BookFormProps> = ({
         onAuthorCreated={handleAuthorCreated}
       />
 
+      <ManageAuthorsDialog
+        open={manageAuthorsDialogOpen}
+        onClose={() => setManageAuthorsDialogOpen(false)}
+        onAuthorUpdated={handleAuthorUpdated}
+        onAuthorDeleted={handleAuthorDeleted}
+      />
+
       <AddCategoryDialog
         open={addCategoryDialogOpen}
         onClose={() => setAddCategoryDialogOpen(false)}
         onCategoryCreated={handleCategoryCreated}
+      />
+
+      <ManageCategoriesDialog
+        open={manageCategoriesDialogOpen}
+        onClose={() => setManageCategoriesDialogOpen(false)}
+        onCategoryUpdated={handleCategoryUpdated}
+        onCategoryDeleted={handleCategoryDeleted}
       />
 
       <EmbeddedScannerFlow

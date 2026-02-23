@@ -1,6 +1,11 @@
 {
   "author": {
     "add_title": "Aggiungi nuovo autore",
+    "manage_title": "Gestisci autori",
+    "search_label": "Filtra autori",
+    "search_placeholder": "Scrivi nome, cognome o nazionalità",
+    "loading": "Caricamento autori...",
+    "no_results": "Nessun autore trovato",
     "name_label": "Nome",
     "surname_label": "Cognome",
     "nationality_label": "Nazionalità",
@@ -9,15 +14,34 @@
     "surname_required": "Il cognome è obbligatorio",
     "creating": "Creazione in corso...",
     "create_button": "Crea autore",
-    "create_failed": "Impossibile creare l'autore. Riprova."
+    "create_failed": "Impossibile creare l'autore. Riprova.",
+    "load_failed": "Impossibile caricare gli autori. Riprova.",
+    "update_button": "Salva autore",
+    "update_failed": "Impossibile aggiornare l'autore. Riprova.",
+    "delete_confirm_title": "Eliminare autore?",
+    "delete_confirm_message": "L'autore verrà rimosso dalla tua lista autori. Questa azione non può essere annullata.",
+    "delete_button": "Elimina autore",
+    "delete_failed": "Impossibile eliminare l'autore. Riprova.",
+    "delete_blocked_has_books": "Questo autore non può essere eliminato perché è già utilizzato da uno o più libri."
   },
   "category": {
     "add_title": "Aggiungi nuova categoria",
+    "manage_title": "Gestisci categorie",
+    "loading": "Caricamento categorie...",
+    "no_results": "Nessuna categoria trovata",
     "name_label": "Nome categoria",
     "name_placeholder": "es., Fantascienza, Giallo, Biografia",
     "name_required": "Il nome della categoria è obbligatorio",
     "creating": "Creazione in corso...",
     "create_button": "Crea categoria",
-    "create_failed": "Impossibile creare la categoria. Riprova."
+    "create_failed": "Impossibile creare la categoria. Riprova.",
+    "load_failed": "Impossibile caricare le categorie. Riprova.",
+    "update_button": "Salva categoria",
+    "update_failed": "Impossibile aggiornare la categoria. Riprova.",
+    "delete_confirm_title": "Eliminare categoria?",
+    "delete_confirm_message": "La categoria verrà rimossa dalla tua lista categorie. Questa azione non può essere annullata.",
+    "delete_button": "Elimina categoria",
+    "delete_failed": "Impossibile eliminare la categoria. Riprova.",
+    "delete_blocked_has_books": "Questa categoria non può essere eliminata perché è già utilizzata da uno o più libri."
   }
 }

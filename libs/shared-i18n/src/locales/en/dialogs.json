@@ -1,6 +1,11 @@
 {
   "author": {
     "add_title": "Add new author",
+    "manage_title": "Manage authors",
+    "search_label": "Filter authors",
+    "search_placeholder": "Type name, surname or nationality",
+    "loading": "Loading authors...",
+    "no_results": "No authors found",
     "name_label": "Name",
     "surname_label": "Surname",
     "nationality_label": "Nationality",
@@ -9,15 +14,34 @@
     "surname_required": "Surname is required",
     "creating": "Creating...",
     "create_button": "Create author",
-    "create_failed": "Failed to create author. Please try again."
+    "create_failed": "Failed to create author. Please try again.",
+    "load_failed": "Failed to load authors. Please try again.",
+    "update_button": "Save author",
+    "update_failed": "Failed to update author. Please try again.",
+    "delete_confirm_title": "Delete author?",
+    "delete_confirm_message": "This will remove the author from your author list. This action cannot be undone.",
+    "delete_button": "Delete author",
+    "delete_failed": "Failed to delete author. Please try again.",
+    "delete_blocked_has_books": "This author cannot be deleted because it is already used by one or more books."
   },
   "category": {
     "add_title": "Add new category",
+    "manage_title": "Manage categories",
+    "loading": "Loading categories...",
+    "no_results": "No categories found",
     "name_label": "Category name",
     "name_placeholder": "e.g., Science Fiction, Mystery, Biography",
     "name_required": "Category name is required",
     "creating": "Creating...",
     "create_button": "Create category",
-    "create_failed": "Failed to create category. Please try again."
+    "create_failed": "Failed to create category. Please try again.",
+    "load_failed": "Failed to load categories. Please try again.",
+    "update_button": "Save category",
+    "update_failed": "Failed to update category. Please try again.",
+    "delete_confirm_title": "Delete category?",
+    "delete_confirm_message": "This will remove the category from your category list. This action cannot be undone.",
+    "delete_button": "Delete category",
+    "delete_failed": "Failed to delete category. Please try again.",
+    "delete_blocked_has_books": "This category cannot be deleted because it is already used by one or more books."
   }
 }
