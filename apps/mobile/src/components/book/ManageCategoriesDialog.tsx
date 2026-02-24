@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Dialog, List, Portal, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useManageCategories } from '@my-many-books/shared-ui-hooks';
-import { getCategoryDisplayName } from '@my-many-books/shared-utils';
+import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import type { Category } from '@/types';
 import { categoryAPI } from '@/services/api';
 
@@ -20,10 +20,14 @@ export function ManageCategoriesDialog({
   onCategoryUpdated,
   onCategoryDeleted,
 }: ManageCategoriesDialogProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const categorySortComparator = useMemo(
+    () => createCategoryDisplayNameComparator<Category>(t, i18n.language),
+    [t, i18n.language]
+  );
 
   const api = useMemo(
     () => ({
@@ -38,13 +42,17 @@ export function ManageCategoriesDialog({
   const {
     categories,
     loading,
+    sorting,
     mutating,
     error,
     clearError,
     loadCategories,
     updateCategory,
     deleteCategory,
-  } = useManageCategories<Category>(api, { autoLoad: false });
+  } = useManageCategories<Category>(api, {
+    autoLoad: false,
+    sortComparator: categorySortComparator,
+  });
 
   useEffect(() => {
     if (visible) {
@@ -130,13 +138,13 @@ export function ManageCategoriesDialog({
             ) : null}
 
             <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
-              {loading ? (
+              {loading || sorting ? (
                 <Text variant="bodySmall" style={styles.helperText}>
                   {t('dialogs:category.loading', { defaultValue: 'Loading categories...' })}
                 </Text>
               ) : null}
 
-              {!loading &&
+              {!loading && !sorting &&
                 categories.map((category) => (
                   <List.Item
                     key={String(category.id)}
@@ -163,7 +171,7 @@ export function ManageCategoriesDialog({
                   />
                 ))}
 
-              {!loading && categories.length === 0 ? (
+              {!loading && !sorting && categories.length === 0 ? (
                 <Text variant="bodySmall" style={styles.helperText}>
                   {t('dialogs:category.no_results', { defaultValue: 'No categories found' })}
                 </Text>

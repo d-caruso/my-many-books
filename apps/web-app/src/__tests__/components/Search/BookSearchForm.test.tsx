@@ -97,6 +97,7 @@ describe('BookSearchForm', () => {
     mockUseCategories.mockReturnValue({
       categories: mockCategories,
       loading: false,
+      sorting: false,
     });
   });
 
@@ -259,7 +260,7 @@ describe('BookSearchForm', () => {
   });
 
   test('handles categories loading state', () => {
-    mockUseCategories.mockReturnValue({ categories: [], loading: true });
+    mockUseCategories.mockReturnValue({ categories: [], loading: true, sorting: false });
     render(<BookSearchForm {...defaultProps} />);
 
     openAdvancedFilters();
@@ -267,14 +268,15 @@ describe('BookSearchForm', () => {
     expect(categorySelect).toHaveAttribute('aria-disabled', 'true');
   });
 
-  test('sorts categories alphabetically', async () => {
+  test('renders categories in the order provided by the category hook (localized sorting happens in hook)', async () => {
     mockUseCategories.mockReturnValue({
       categories: [
-        { id: 1, name: 'Zebra' },
         { id: 2, name: 'Apple' },
         { id: 3, name: 'Banana' },
+        { id: 1, name: 'Zebra' },
       ],
       loading: false,
+      sorting: false,
     });
 
     render(<BookSearchForm {...defaultProps} />);

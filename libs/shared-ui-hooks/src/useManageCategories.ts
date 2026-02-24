@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
   Category,
   ENTITY_MANAGE_ERROR_CODES,
@@ -23,6 +23,7 @@ export interface ManageCategoriesOptions<TCategory extends Category = Category> 
 export interface ManageCategoriesState<TCategory extends Category = Category> {
   categories: TCategory[];
   loading: boolean;
+  sorting: boolean;
   mutating: boolean;
   error: EntityManageOperationError | null;
 }
@@ -59,6 +60,7 @@ export const useManageCategories = <TCategory extends Category = Category>(
   );
   const [categories, setCategories] = useState<TCategory[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sorting, startSortingTransition] = useTransition();
   const [mutating, setMutating] = useState(false);
   const [error, setError] = useState<EntityManageOperationError | null>(null);
   const loadingRef = useRef(false);
@@ -73,7 +75,9 @@ export const useManageCategories = <TCategory extends Category = Category>(
     setError(null);
     try {
       const data = await api.getCategories();
-      setCategories([...data].sort(sortComparator));
+      startSortingTransition(() => {
+        setCategories([...data].sort(sortComparator));
+      });
       loadedRef.current = true;
     } catch (err) {
       setError(mapCategoryManageApiError(err, 'load'));
@@ -82,6 +86,14 @@ export const useManageCategories = <TCategory extends Category = Category>(
       loadingRef.current = false;
     }
   }, [api, sortComparator]);
+
+  useEffect(() => {
+    if (!loadedRef.current) return;
+
+    startSortingTransition(() => {
+      setCategories((prev) => [...prev].sort(sortComparator));
+    });
+  }, [sortComparator]);
 
   const refreshCategories = useCallback(async (): Promise<void> => {
     await loadCategories();
@@ -104,7 +116,9 @@ export const useManageCategories = <TCategory extends Category = Category>(
       setError(null);
       try {
         const created = await api.createCategory({ name: normalizedName });
-        setCategories((prev) => [...prev, created].sort(sortComparator));
+        startSortingTransition(() => {
+          setCategories((prev) => [...prev, created].sort(sortComparator));
+        });
         return { success: true, data: created };
       } catch (err) {
         const mapped = mapCategoryManageApiError(err, 'create');
@@ -140,9 +154,13 @@ export const useManageCategories = <TCategory extends Category = Category>(
       setError(null);
       try {
         const updated = await api.updateCategory(id, normalized);
-        setCategories((prev) =>
-          prev.map((category) => (Number(category.id) === Number(id) ? updated : category)).sort(sortComparator)
-        );
+        startSortingTransition(() => {
+          setCategories((prev) =>
+            prev
+              .map((category) => (Number(category.id) === Number(id) ? updated : category))
+              .sort(sortComparator)
+          );
+        });
         return { success: true, data: updated };
       } catch (err) {
         const mapped = mapCategoryManageApiError(err, 'update');
@@ -183,6 +201,7 @@ export const useManageCategories = <TCategory extends Category = Category>(
   return {
     categories,
     loading,
+    sorting,
     mutating,
     error,
     loadCategories,

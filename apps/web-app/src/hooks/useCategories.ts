@@ -1,11 +1,16 @@
 import { useMemo } from 'react';
-import { useCategories as useSharedCategories, CategoriesAPI } from '@my-many-books/shared-ui-hooks';
+import {
+  useCategories as useSharedCategories,
+  CategoriesAPI,
+  UseCategoriesOptions,
+} from '@my-many-books/shared-ui-hooks';
+import { Category } from '@my-many-books/shared-types';
 import { useApi } from '../contexts/ApiContext';
 
 /**
  * Web wrapper that wires the shared Categories hook to the ApiContext client
  */
-export const useCategories = () => {
+export const useCategories = (options?: UseCategoriesOptions<Category>) => {
   const { categoryAPI } = useApi();
 
   const api = useMemo<CategoriesAPI>(() => ({
@@ -13,5 +18,5 @@ export const useCategories = () => {
     createCategory: data => categoryAPI.createCategory(data),
   }), [categoryAPI]);
 
-  return useSharedCategories(api);
+  return useSharedCategories(api, options);
 };

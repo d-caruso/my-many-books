@@ -23,7 +23,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import type { Category } from '@my-many-books/shared-types';
 import { useManageCategories } from '@my-many-books/shared-ui-hooks';
-import { getCategoryDisplayName } from '@my-many-books/shared-utils';
+import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../../contexts/ApiContext';
 
@@ -40,11 +40,15 @@ export const ManageCategoriesDialog: React.FC<ManageCategoriesDialogProps> = ({
   onCategoryUpdated,
   onCategoryDeleted,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation(['common', 'dialogs', 'categories']);
   const { categoryAPI } = useApi();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const categorySortComparator = React.useMemo(
+    () => createCategoryDisplayNameComparator<Category>(t, i18n.language),
+    [t, i18n.language]
+  );
 
   const categoriesApi = React.useMemo(
     () => ({
@@ -59,13 +63,17 @@ export const ManageCategoriesDialog: React.FC<ManageCategoriesDialogProps> = ({
   const {
     categories,
     loading,
+    sorting,
     mutating,
     error,
     clearError,
     loadCategories,
     updateCategory,
     deleteCategory,
-  } = useManageCategories<Category>(categoriesApi, { autoLoad: false });
+  } = useManageCategories<Category>(categoriesApi, {
+    autoLoad: false,
+    sortComparator: categorySortComparator,
+  });
 
   useEffect(() => {
     if (open) {
@@ -124,7 +132,7 @@ export const ManageCategoriesDialog: React.FC<ManageCategoriesDialogProps> = ({
             </Alert>
           )}
 
-          {loading ? (
+          {loading || sorting ? (
             <Box display="flex" alignItems="center" justifyContent="center" py={4} gap={1}>
               <CircularProgress size={20} />
               <Typography variant="body2" color="text.secondary">

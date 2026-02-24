@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Paper,
@@ -20,7 +20,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import WarningIcon from '@mui/icons-material/Warning';
 import { SearchFiltersSchema, SEARCH_QUERY_MIN_LENGTH } from '@my-many-books/shared-types';
 import type { SearchFilters, Author } from '@my-many-books/shared-types';
-import { getCategoryDisplayName } from '@my-many-books/shared-utils';
+import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { useCategories } from '../../hooks/useCategories';
 import { AuthorAutocomplete } from './AuthorAutocomplete';
 
@@ -36,12 +36,19 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
   initialQuery = ''
 }) => {
   const { t } = useTranslation('search');
+  const { t: tCategories, i18n } = useTranslation('categories');
   const [query, setQuery] = useState(initialQuery);
   const [filters, setFilters] = useState<SearchFilters>({});
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState<Author | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const { categories, loading: categoriesLoading } = useCategories();
+  const categorySortComparator = useMemo(
+    () => createCategoryDisplayNameComparator(tCategories, i18n.language),
+    [tCategories, i18n.language]
+  );
+  const { categories, loading: categoriesLoading, sorting: categoriesSorting } = useCategories({
+    sortComparator: categorySortComparator,
+  });
 
   useEffect(() => {
     setQuery(initialQuery);
@@ -222,15 +229,15 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                     id="categoryId"
                     value={filters.categoryId || ''}
                     onChange={(e) => handleFilterChange('categoryId', e.target.value ? parseInt(e.target.value as unknown as string) : undefined)}
-                    disabled={categoriesLoading}
+                    disabled={categoriesLoading || categoriesSorting}
                     label={t('form.category_label')}
                   >
                     <MenuItem value="">
-                      {categoriesLoading ? t('form.category_loading') : t('form.category_all')}
+                      {categoriesLoading || categoriesSorting ? t('form.category_loading') : t('form.category_all')}
                     </MenuItem>
-                    {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map((category) => (
+                    {categories.map((category) => (
                       <MenuItem key={category.id} value={category.id}>
-                        {getCategoryDisplayName(category, t)}
+                        {getCategoryDisplayName(category, tCategories)}
                       </MenuItem>
                     ))}
                   </Select>

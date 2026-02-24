@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Paper,
   TextField,
@@ -33,7 +33,7 @@ import { AddCategoryDialog } from '../Category/AddCategoryDialog';
 import { ManageCategoriesDialog } from '../Category/ManageCategoriesDialog';
 import { EmbeddedScannerFlow } from '../Scanner/EmbeddedScannerFlow';
 import { normalizeIsbn } from '@my-many-books/shared-validation';
-import { getCategoryDisplayName } from '@my-many-books/shared-utils';
+import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { createBookSchema } from '../../validation/bookSchemas';
 import { EditionDateInput } from './EditionDateInput';
 
@@ -93,8 +93,18 @@ export const BookForm: React.FC<BookFormProps> = ({
   scannerPrefillNotice = null,
   onScannerPrefillNoticeDismiss
 }) => {
-  const { t } = useTranslation(['books', 'common', 'scanner', 'validation']);
-  const { categories, loading: categoriesLoading, loadCategories } = useCategories();
+  const { t, i18n } = useTranslation(['books', 'common', 'scanner', 'validation', 'categories']);
+  const categorySortComparator = useMemo(
+    () => createCategoryDisplayNameComparator<Category>(t, i18n.language),
+    [t, i18n.language]
+  );
+  const {
+    categories,
+    loading: categoriesLoading,
+    sorting: categoriesSorting,
+    loadCategories
+  } = useCategories({ sortComparator: categorySortComparator });
+  const categoriesBusy = categoriesLoading || categoriesSorting;
   const { searchByISBN } = useBookSearch();
   const defaultTitle = book ? t('books:edit_book_form') : t('books:add_new_book');
   const [formData, setFormData] = useState<BookFormData>(() =>
@@ -627,7 +637,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               </Stack>
             </Box>
 
-            {categoriesLoading ? (
+            {categoriesBusy ? (
               <Box display="flex" alignItems="center" gap={1}>
                 <CircularProgress size={16} />
                 <Typography variant="body2" color="text.secondary">
@@ -648,7 +658,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   p: 2
                 }}
               >
-                {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map((category) => (
+                {categories.map((category) => (
                   <FormControlLabel
                     key={category.id}
                     control={

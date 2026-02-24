@@ -30,3 +30,15 @@ export function getCategoryDisplayName(category: CategoryLike, t: Translator): s
   return translated;
 }
 
+export function createCategoryDisplayNameComparator<TCategory extends CategoryLike>(
+  t: Translator,
+  locale?: string
+): (a: TCategory, b: TCategory) => number {
+  const collator = new Intl.Collator(locale || undefined, {
+    sensitivity: 'base',
+    numeric: true,
+  });
+
+  return (a: TCategory, b: TCategory) =>
+    collator.compare(getCategoryDisplayName(a, t), getCategoryDisplayName(b, t));
+}

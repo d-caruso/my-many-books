@@ -54,6 +54,7 @@ export default function AddBookScreen() {
     selectedCategoryIds,
     authorsLoading,
     categoriesLoading,
+    categoriesSorting,
     selectAuthor,
     removeAuthor,
     toggleCategory,
@@ -64,6 +65,7 @@ export default function AddBookScreen() {
     handleCategoryUpdated,
     handleCategoryDeleted,
   } = useAddBookEntities();
+  const categoriesBusy = categoriesLoading || categoriesSorting;
 
   useEffect(() => {
     if (isbn) {
@@ -347,7 +349,7 @@ export default function AddBookScreen() {
               />
 
               <CategoriesSection
-                categoriesLoading={categoriesLoading}
+                categoriesLoading={categoriesBusy}
                 availableCategories={availableCategories}
                 selectedCategoryIds={selectedCategoryIds}
                 onOpenSelector={() => setCategorySelectorOpen(true)}
@@ -435,7 +437,7 @@ export default function AddBookScreen() {
         categorySelectorOpen={categorySelectorOpen}
         availableCategories={availableCategories}
         selectedCategoryIds={selectedCategoryIds}
-        categoriesLoading={categoriesLoading}
+        categoriesLoading={categoriesBusy}
         onCloseCategorySelector={() => setCategorySelectorOpen(false)}
         onToggleCategory={toggleCategory}
         onOpenAddCategoryFromSelector={() => {

@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 
 import { Author, Category } from '@/types';
 import { authorAPI, categoryAPI } from '@/services/api';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
+import { useTranslation } from 'react-i18next';
+import { createCategoryDisplayNameComparator } from '@my-many-books/shared-utils';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
@@ -17,16 +19,19 @@ const getErrorMessage = (error: unknown): string => {
 const sortAuthors = (authors: Author[]): Author[] =>
   [...authors].sort((a, b) => `${a.surname} ${a.name}`.localeCompare(`${b.surname} ${b.name}`));
 
-const sortCategories = (categories: Category[]): Category[] =>
-  [...categories].sort((a, b) => a.name.localeCompare(b.name));
-
 export function useAddBookEntities() {
+  const { t, i18n } = useTranslation();
   const [availableAuthors, setAvailableAuthors] = useState<Author[]>([]);
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [selectedAuthors, setSelectedAuthors] = useState<Author[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [authorsLoading, setAuthorsLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoriesSorting, startCategorySortingTransition] = useTransition();
+  const categoryComparator = useMemo(
+    () => createCategoryDisplayNameComparator<Category>(t, i18n.language),
+    [t, i18n.language]
+  );
 
   const loadAuthors = useCallback(async () => {
     setAuthorsLoading(true);
@@ -49,7 +54,9 @@ export function useAddBookEntities() {
     setCategoriesLoading(true);
     try {
       const categories = await categoryAPI.getCategories();
-      setAvailableCategories(sortCategories(categories));
+      startCategorySortingTransition(() => {
+        setAvailableCategories([...categories].sort(categoryComparator));
+      });
     } catch (err: unknown) {
       mobileHooks.emit(String(MOBILE_EVENTS.ERROR.API_RESPONSE), {
         operation: 'load_categories_for_add_book',
@@ -60,7 +67,13 @@ export function useAddBookEntities() {
     } finally {
       setCategoriesLoading(false);
     }
-  }, []);
+  }, [categoryComparator]);
+
+  useEffect(() => {
+    startCategorySortingTransition(() => {
+      setAvailableCategories((prev) => [...prev].sort(categoryComparator));
+    });
+  }, [categoryComparator]);
 
   useEffect(() => {
     void loadAuthors();
@@ -148,6 +161,7 @@ export function useAddBookEntities() {
     selectedCategoryIds,
     authorsLoading,
     categoriesLoading,
+    categoriesSorting,
     setSelectedAuthors,
     setSelectedCategoryIds,
     loadAuthors,

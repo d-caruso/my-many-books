@@ -2,12 +2,13 @@
  * Shared categories hook - works on web and mobile
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, useTransition } from 'react';
 import { Category } from '@my-many-books/shared-types';
 
 export interface CategoriesState<TCategory extends Category = Category> {
   categories: TCategory[];
   loading: boolean;
+  sorting: boolean;
   error: string | null;
 }
 
@@ -40,6 +41,7 @@ export const useCategories = <TCategory extends Category = Category>(
   const [categories, setCategories] = useState<TCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sorting, startSortingTransition] = useTransition();
   const loadingRef = useRef(false);
   const loadedRef = useRef(false);
 
@@ -55,7 +57,9 @@ export const useCategories = <TCategory extends Category = Category>(
 
     try {
       const categoriesData = await api.getCategories();
-      setCategories([...categoriesData].sort(sortComparator));
+      startSortingTransition(() => {
+        setCategories([...categoriesData].sort(sortComparator));
+      });
       loadedRef.current = true;
     } catch (err: any) {
       console.error('Failed to load categories:', err);
@@ -73,7 +77,9 @@ export const useCategories = <TCategory extends Category = Category>(
 
     try {
       const newCategory = await api.createCategory({ name: name.trim() });
-      setCategories(prev => [...prev, newCategory].sort(sortComparator));
+      startSortingTransition(() => {
+        setCategories(prev => [...prev, newCategory].sort(sortComparator));
+      });
       return newCategory;
     } catch (err: any) {
       console.error('Failed to create category:', err);
@@ -81,6 +87,14 @@ export const useCategories = <TCategory extends Category = Category>(
       return null;
     }
   }, [api, sortComparator]);
+
+  useEffect(() => {
+    if (!loadedRef.current) return;
+
+    startSortingTransition(() => {
+      setCategories(prev => [...prev].sort(sortComparator));
+    });
+  }, [sortComparator]);
 
   const refreshCategories = useCallback(async (): Promise<void> => {
     await loadCategories();
@@ -97,6 +111,7 @@ export const useCategories = <TCategory extends Category = Category>(
   return {
     categories,
     loading,
+    sorting,
     error,
     loadCategories,
     createCategory,

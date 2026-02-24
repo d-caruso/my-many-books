@@ -1,4 +1,4 @@
-import { getCategoryDisplayName } from '../categoryDisplay';
+import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '../categoryDisplay';
 
 describe('getCategoryDisplayName', () => {
   it('returns raw name when translationKey is missing', () => {
@@ -26,3 +26,22 @@ describe('getCategoryDisplayName', () => {
   });
 });
 
+describe('createCategoryDisplayNameComparator', () => {
+  it('sorts by localized display label', () => {
+    const t = jest.fn((key: string, options?: Record<string, unknown>) => {
+      if (key === 'categories:fiction') return 'Narrativa';
+      if (key === 'categories:horror') return 'Horror';
+      return String(options?.defaultValue ?? key);
+    });
+
+    const categories = [
+      { id: 1, name: 'Fiction', translationKey: 'categories.fiction' },
+      { id: 2, name: 'Horror', translationKey: 'categories.horror' },
+      { id: 3, name: 'Zeta Custom', translationKey: null },
+    ];
+
+    const sorted = [...categories].sort(createCategoryDisplayNameComparator(t, 'it'));
+
+    expect(sorted.map((category) => category.id)).toEqual([2, 1, 3]);
+  });
+});
