@@ -46,6 +46,7 @@ describe('UserOnboardingService', () => {
       for (const category of DEFAULT_CATEGORIES) {
         expect(categoryRepository.create).toHaveBeenCalledWith({
           name: category.name,
+          translationKey: category.translationKey,
           userId: 42,
         });
       }
