@@ -84,7 +84,8 @@ export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttri
           },
           {
             fields: ['user_id', 'name', 'surname'],
-            name: 'idx_author_name_surname',
+            unique: true,
+            name: 'idx_author_user_name_surname',
           },
           {
             fields: ['surname'],
