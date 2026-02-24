@@ -22,6 +22,7 @@ config.resolver.alias = {
   '@my-many-books/shared-types': path.resolve(monorepoRoot, 'libs/shared-types/src'),
   '@my-many-books/shared-utils': path.resolve(monorepoRoot, 'libs/shared-utils/src'),
   '@my-many-books/shared-business': path.resolve(monorepoRoot, 'libs/shared-business/src'),
+  '@my-many-books/shared-forms': path.resolve(monorepoRoot, 'libs/shared-forms/src'),
 };
 
 module.exports = config;

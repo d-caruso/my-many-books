@@ -223,32 +223,61 @@ class BookService {
     categoryIds?: number[]
   ): Promise<void> {
     if (authorIds) {
-      if (authorIds.length === 0) {
+      const normalizedAuthorIds = this.deduplicateIds(authorIds);
+
+      if (normalizedAuthorIds.length === 0) {
         // allow clearing associations
       } else {
-        const authors = await Author.findAll({ where: { id: authorIds } });
-        if (authors.length !== authorIds.length) {
+        const authors = await Author.findAll({ where: { id: normalizedAuthorIds } });
+        if (authors.length !== normalizedAuthorIds.length) {
           throw new BookServiceError('INVALID_AUTHOR_IDS');
         }
-        if (ownerId !== undefined && authors.some(author => author.userId !== ownerId)) {
+        if (
+          ownerId !== undefined &&
+          authors.some((author) => !this.belongsToOwner(author.userId, ownerId))
+        ) {
           throw new BookServiceError('INVALID_AUTHOR_IDS');
         }
       }
     }
 
     if (categoryIds) {
-      if (categoryIds.length === 0) {
+      const normalizedCategoryIds = this.deduplicateIds(categoryIds);
+
+      if (normalizedCategoryIds.length === 0) {
         // allow clearing associations
       } else {
-        const categories = await Category.findAll({ where: { id: categoryIds } });
-        if (categories.length !== categoryIds.length) {
+        const categories = await Category.findAll({ where: { id: normalizedCategoryIds } });
+        if (categories.length !== normalizedCategoryIds.length) {
           throw new BookServiceError('INVALID_CATEGORY_IDS');
         }
-        if (ownerId !== undefined && categories.some(category => category.userId !== ownerId)) {
+        if (
+          ownerId !== undefined &&
+          categories.some((category) => !this.belongsToOwner(category.userId, ownerId))
+        ) {
           throw new BookServiceError('INVALID_CATEGORY_IDS');
         }
       }
     }
+  }
+
+  private deduplicateIds(ids: number[]): number[] {
+    return Array.from(new Set(ids));
+  }
+
+  private belongsToOwner(resourceUserId: number | null | undefined, ownerId: number): boolean {
+    if (resourceUserId === null || resourceUserId === undefined) {
+      return false;
+    }
+
+    const normalizedResourceUserId = Number(resourceUserId);
+    const normalizedOwnerId = Number(ownerId);
+
+    if (!Number.isFinite(normalizedResourceUserId) || !Number.isFinite(normalizedOwnerId)) {
+      return false;
+    }
+
+    return normalizedResourceUserId === normalizedOwnerId;
   }
 
   private extractAssociations(

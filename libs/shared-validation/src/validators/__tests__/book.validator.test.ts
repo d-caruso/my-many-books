@@ -121,6 +121,12 @@ describe('book.validator', () => {
       expect(validateEditionDate('0000').isValid).toBe(false);
     });
 
+    it('should reject years beyond the current year', () => {
+      const nextYear = String(new Date().getFullYear() + 1);
+      expect(validateEditionDate(nextYear).isValid).toBe(false);
+      expect(validateEditionDate(`${nextYear}-01`).isValid).toBe(false);
+    });
+
     it('should allow empty/null/undefined edition date', () => {
       expect(validateEditionDate('')).toEqual({ isValid: true });
       expect(validateEditionDate(null)).toEqual({ isValid: true });

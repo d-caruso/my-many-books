@@ -1,6 +1,104 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { EditionDateInput } from '../../../components/Book/EditionDateInput';
+
+const mockI18nState = vi.hoisted(() => ({
+  language: 'en',
+  resolvedLanguage: 'en',
+}));
+
+function createMockDayjs(isoDate: string) {
+  const [year, month, day] = isoDate.split('-');
+
+  return {
+    isValid: () => true,
+    format: (pattern: string) => {
+      if (pattern === 'YYYY') return year ?? '';
+      if (pattern === 'MM') return month ?? '';
+      if (pattern === 'DD') return day ?? '';
+      if (pattern === 'YYYY-MM-DD') return isoDate;
+      return isoDate;
+    },
+  };
+}
+
+vi.mock('@mui/x-date-pickers', () => ({
+  LocalizationProvider: ({
+    adapterLocale,
+    children,
+  }: {
+    adapterLocale?: string;
+    children: React.ReactNode;
+  }) => (
+    <div
+      data-testid="mock-localization-provider"
+      data-adapter-locale={adapterLocale ?? ''}
+    >
+      {children}
+    </div>
+  ),
+  DateCalendar: ({
+    value,
+    onChange,
+    onViewChange,
+  }: {
+    value?: { format?: (pattern: string) => string } | null;
+    onChange?: (
+      date: ReturnType<typeof createMockDayjs>,
+      selectionState?: 'partial' | 'shallow' | 'finish',
+      selectedView?: 'year' | 'month' | 'day'
+    ) => void;
+    onViewChange?: (view: 'year' | 'month' | 'day') => void;
+  }) => (
+    <div
+      data-testid="editionDate-calendar"
+      data-current-value={value?.format?.('YYYY-MM-DD') ?? ''}
+    >
+      <button
+        type="button"
+        onClick={() => {
+          onViewChange?.('year');
+          onChange?.(createMockDayjs('2024-01-01'), 'partial', 'year');
+        }}
+      >
+        Pick Year 2024
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          onViewChange?.('day');
+          onChange?.(createMockDayjs('2024-02-29'), 'finish', 'day');
+        }}
+      >
+        Pick 2024-02-29
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('@mui/x-date-pickers/AdapterDayjs', () => ({
+  AdapterDayjs: class MockAdapterDayjs {},
+}));
+
+vi.mock('@mui/x-date-pickers/locales', () => ({
+  enUS: {
+    components: {
+      MuiLocalizationProvider: { defaultProps: { localeText: {} } },
+    },
+  },
+  itIT: {
+    components: {
+      MuiLocalizationProvider: { defaultProps: { localeText: {} } },
+    },
+  },
+}));
+
+vi.mock('dayjs', () => ({
+  __esModule: true,
+  default: (value?: string) => createMockDayjs(value || '2000-01-01'),
+}));
+
+vi.mock('dayjs/locale/it', () => ({}));
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -13,6 +111,7 @@ vi.mock('react-i18next', () => ({
       };
       return map[key] ?? key;
     },
+    i18n: mockI18nState,
   }),
 }));
 
@@ -20,10 +119,10 @@ describe('EditionDateInput', () => {
   const getYearInput = () => screen.getByLabelText('Year');
   const getMonthSelect = () => screen.getByLabelText('Month');
   const getDaySelect = () => screen.getByLabelText('Day');
-  const getCalendarInput = () =>
-    screen.getByTestId('editionDate-calendar-input') as HTMLInputElement;
   const getCalendarButton = () =>
     screen.getByRole('button', { name: 'Edition date calendar' });
+  const getYearStepUpButton = () => screen.getByTestId('editionDate-year-step-up');
+  const getYearStepDownButton = () => screen.getByTestId('editionDate-year-step-down');
 
   const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -46,6 +145,11 @@ describe('EditionDateInput', () => {
     );
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
   };
+
+  beforeEach(() => {
+    mockI18nState.language = 'en';
+    mockI18nState.resolvedLanguage = 'en';
+  });
 
   it('should render three input fields', () => {
     render(<EditionDateInput value="" onChange={vi.fn()} />);
@@ -101,6 +205,56 @@ describe('EditionDateInput', () => {
 
     fireEvent.change(getYearInput(), { target: { value: '2024' } });
     expect(getMonthSelect()).not.toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('should cap typed year to the current year', () => {
+    const onChange = vi.fn();
+    const currentYear = new Date().getFullYear();
+    render(<EditionDateInput value="" onChange={onChange} />);
+
+    fireEvent.change(getYearInput(), {
+      target: { value: String(currentYear + 1) },
+    });
+
+    expect(getYearInput()).toHaveValue(String(currentYear));
+    expect(onChange).toHaveBeenLastCalledWith(String(currentYear));
+  });
+
+  it('should use ArrowUp and ArrowDown to step the year and reset invalid values to current year', () => {
+    const onChange = vi.fn();
+    const currentYear = new Date().getFullYear();
+    render(<EditionDateInput value="" onChange={onChange} />);
+
+    fireEvent.keyDown(getYearInput(), { key: 'ArrowUp' });
+    expect(getYearInput()).toHaveValue(String(currentYear));
+
+    fireEvent.change(getYearInput(), { target: { value: '200' } });
+    fireEvent.keyDown(getYearInput(), { key: 'ArrowDown' });
+    expect(getYearInput()).toHaveValue(String(currentYear));
+
+    fireEvent.change(getYearInput(), { target: { value: '2024' } });
+    fireEvent.keyDown(getYearInput(), { key: 'ArrowDown' });
+    expect(getYearInput()).toHaveValue('2023');
+
+    fireEvent.change(getYearInput(), { target: { value: String(currentYear) } });
+    fireEvent.keyDown(getYearInput(), { key: 'ArrowUp' });
+    expect(getYearInput()).toHaveValue(String(currentYear));
+    expect(onChange).toHaveBeenLastCalledWith(String(currentYear));
+  });
+
+  it('should render visible year step arrows and update the year on click', () => {
+    const currentYear = new Date().getFullYear();
+    render(<EditionDateInput value="" onChange={vi.fn()} />);
+
+    expect(getYearStepUpButton()).toBeInTheDocument();
+    expect(getYearStepDownButton()).toBeInTheDocument();
+
+    fireEvent.click(getYearStepUpButton());
+    expect(getYearInput()).toHaveValue(String(currentYear));
+
+    fireEvent.change(getYearInput(), { target: { value: '2024' } });
+    fireEvent.click(getYearStepDownButton());
+    expect(getYearInput()).toHaveValue('2023');
   });
 
   it.each([
@@ -163,41 +317,86 @@ describe('EditionDateInput', () => {
     expect(onChange).toHaveBeenLastCalledWith('0000');
   });
 
-  it('should sync fields when selecting a date from the side calendar selector', () => {
+  it('should sync fields when selecting a date from the MUI calendar selector', async () => {
     const onChange = vi.fn();
     render(<EditionDateInput value="" onChange={onChange} />);
 
-    fireEvent.change(getCalendarInput(), { target: { value: '2024-02-29' } });
+    fireEvent.click(getCalendarButton());
+    expect(screen.getByTestId('editionDate-calendar-popover')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Pick 2024-02-29'));
 
     expect(getYearInput()).toHaveValue('2024');
     expect(normalizeSelectText(getMonthSelect())).toBe('02');
     expect(normalizeSelectText(getDaySelect())).toBe('29');
     expect(onChange).toHaveBeenLastCalledWith('2024-02-29');
-    expect(getCalendarInput()).toHaveValue('2024-02-29');
+
+    await waitFor(() =>
+      expect(screen.queryByTestId('editionDate-calendar-popover')).not.toBeInTheDocument()
+    );
   });
 
-  it('should clear the side calendar value when the date becomes partial', async () => {
+  it('should keep the calendar open when selecting only a year in the calendar widget', () => {
     render(<EditionDateInput value="" onChange={vi.fn()} />);
 
-    fireEvent.change(getYearInput(), { target: { value: '2024' } });
-    await selectOption('Month', '02');
-    await selectOption('Day', '29');
+    fireEvent.click(getCalendarButton());
+    expect(screen.getByTestId('editionDate-calendar-popover')).toBeInTheDocument();
 
-    expect(getCalendarInput()).toHaveValue('2024-02-29');
+    fireEvent.click(screen.getByText('Pick Year 2024'));
+
+    expect(screen.getByTestId('editionDate-calendar-popover')).toBeInTheDocument();
+    expect(getYearInput()).toHaveValue('2024');
+  });
+
+  it('should clear the calendar selected value when the date becomes partial', async () => {
+    render(<EditionDateInput value="" onChange={vi.fn()} />);
+    const calendarButton = getCalendarButton();
+
+    fireEvent.click(calendarButton);
+    fireEvent.click(screen.getByText('Pick 2024-02-29'));
+
+    fireEvent.click(calendarButton);
+    expect(screen.getByTestId('editionDate-calendar')).toHaveAttribute(
+      'data-current-value',
+      '2024-02-29'
+    );
 
     fireEvent.change(getYearInput(), { target: { value: '202' } });
 
-    expect(getCalendarInput()).toHaveValue('');
+    expect(getMonthSelect()).toHaveAttribute('aria-disabled', 'true');
+
+    fireEvent.click(calendarButton);
+    expect(screen.getByTestId('editionDate-calendar')).toHaveAttribute(
+      'data-current-value',
+      ''
+    );
   });
 
-  it('should open the calendar picker when the calendar button is clicked', () => {
+  it('should open the MUI calendar popover when the calendar button is clicked', () => {
     render(<EditionDateInput value="" onChange={vi.fn()} />);
-
-    const showPicker = vi.fn();
-    (getCalendarInput() as HTMLInputElement & { showPicker?: () => void }).showPicker = showPicker;
 
     fireEvent.click(getCalendarButton());
 
-    expect(showPicker).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('editionDate-calendar-popover')).toBeInTheDocument();
+    expect(screen.getByTestId('editionDate-calendar')).toBeInTheDocument();
+  });
+
+  it('should update the calendar locale when language changes', () => {
+    const { rerender } = render(<EditionDateInput value="" onChange={vi.fn()} />);
+
+    fireEvent.click(getCalendarButton());
+    expect(screen.getByTestId('mock-localization-provider')).toHaveAttribute(
+      'data-adapter-locale',
+      'en'
+    );
+
+    mockI18nState.language = 'it';
+    mockI18nState.resolvedLanguage = 'it';
+    rerender(<EditionDateInput value="" onChange={vi.fn()} />);
+
+    expect(screen.getByTestId('mock-localization-provider')).toHaveAttribute(
+      'data-adapter-locale',
+      'it'
+    );
   });
 });

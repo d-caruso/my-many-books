@@ -286,4 +286,19 @@ describe('BookForm', () => {
     expect(screen.getByTestId('author-autocomplete-reload-trigger')).toHaveTextContent('1');
     expect(latestAuthorAutocompleteProps?.reloadTrigger).toBe(1);
   });
+
+  test('passes existing book owner userId to author autocomplete in edit mode', () => {
+    renderBookForm({
+      book: {
+        id: 10,
+        title: 'Existing Book',
+        isbnCode: '9781566199094',
+        userId: 42,
+        authors: [],
+        categories: [],
+      } as any,
+    });
+
+    expect(latestAuthorAutocompleteProps?.userIdFilter).toBe(42);
+  });
 });

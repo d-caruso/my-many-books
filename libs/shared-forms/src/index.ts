@@ -4,7 +4,7 @@
  */
 
 // Form types and interfaces
-export {
+export type {
   FormField,
   FormState,
   FormConfig,
@@ -20,6 +20,20 @@ export { FormValidator } from './FormValidator';
 
 // Pre-configured form schemas for the app
 export { bookFormSchema, userFormSchema, authFormSchemas } from './schemas';
+
+// Edition date helpers shared by web/mobile inputs
+export {
+  EDITION_DATE_MONTHS,
+  parseEditionDateParts,
+  assembleEditionDate,
+  getCurrentEditionYear,
+  sanitizeEditionYearInput,
+  stepEditionYear,
+  isValidEditionDateYear,
+  isLeapYear,
+  getEditionDateDaysInMonth
+} from './editionDate';
+export type { EditionDateParts, EditionYearStepDirection } from './editionDate';
 
 // React hooks for form management
 export { 

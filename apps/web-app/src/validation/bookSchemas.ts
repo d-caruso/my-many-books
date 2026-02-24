@@ -11,7 +11,7 @@ import {
   validateEditionDate,
   ISBN_CONSTRAINTS,
   BOOK_CONSTRAINTS,
-  EDITION_DATE_PATTERN,
+  BOOK_ERROR_MESSAGES,
 } from '@my-many-books/shared-validation';
 import { BOOK_STATUSES } from '@my-many-books/shared-types';
 
@@ -41,11 +41,11 @@ const isbnSchema = z
  */
 const editionDateSchema = z
   .string()
-  .regex(EDITION_DATE_PATTERN, 'Edition date must be YYYY, YYYY-MM, or YYYY-MM-DD')
-  .refine((value) => validateEditionDate(value).isValid, {
-    message: 'Edition date must be YYYY, YYYY-MM, or YYYY-MM-DD',
+  .optional()
+  .refine((value) => value === undefined || value === '' || validateEditionDate(value).isValid, {
+    message: BOOK_ERROR_MESSAGES.EDITION_DATE_INVALID,
   })
-  .optional();
+  ;
 
 /**
  * Create Book Schema (User)

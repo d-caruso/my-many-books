@@ -155,6 +155,46 @@ describe('BookService', () => {
     );
   });
 
+  it('accepts author associations when model userId is a numeric string matching the owner', async () => {
+    (repository.findById as jest.Mock).mockResolvedValue({
+      id: 9,
+      isbnCode: '222',
+      title: 'Owned Book',
+      status: BOOK_STATUS.READING,
+      userId: 10,
+    });
+    (Author.findAll as jest.Mock).mockResolvedValue([
+      { id: 1598, userId: '10' as unknown as number },
+    ]);
+    (repository.update as jest.Mock).mockResolvedValue({
+      id: 9,
+      isbnCode: '222',
+      title: 'Owned Book',
+      status: BOOK_STATUS.READING,
+      userId: 10,
+    });
+
+    await expect(
+      service.updateBook(
+        9,
+        { authorIds: [1598] },
+        { userId: 10, role: USER_ROLES.USER }
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({
+        id: 9,
+        userId: 10,
+      })
+    );
+
+    expect(Author.findAll).toHaveBeenCalledWith({ where: { id: [1598] } });
+    expect(repository.update).toHaveBeenCalledWith(
+      9,
+      {},
+      expect.objectContaining({ authorIds: [1598] })
+    );
+  });
+
   it('prevents users from deleting books they do not own', async () => {
     (repository.findById as jest.Mock).mockResolvedValue({
       id: 4,

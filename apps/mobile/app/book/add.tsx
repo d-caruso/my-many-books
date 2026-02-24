@@ -11,6 +11,7 @@ import { useBookSearch } from '@/hooks/useBookSearch';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { useAddBookEntities } from '@/hooks/useAddBookEntities';
 import { Book, Author, Category } from '@/types';
+import { EditionDateInput } from '@/components/EditionDateInput';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
 import { AuthorsSection } from '@/components/book/AuthorsSection';
 import { CategoriesSection } from '@/components/book/CategoriesSection';
@@ -27,6 +28,7 @@ export default function AddBookScreen() {
   const [title, setTitle] = useState('');
   const [isbnCode, setIsbnCode] = useState(isbn || '');
   const [status, setStatus] = useState<Book['status']>('want-to-read');
+  const [editionDate, setEditionDate] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +77,7 @@ export default function AddBookScreen() {
         const book = JSON.parse(decodeURIComponent(bookData));
         setTitle(book.title || '');
         setIsbnCode(book.isbnCode || '');
+        setEditionDate(book.editionDate || '');
       } catch (error) {
         mobileHooks.emit(MOBILE_EVENTS.ERROR.VALIDATION, {
           operation: 'parse_book_data',
@@ -206,6 +209,7 @@ export default function AddBookScreen() {
         title: title.trim(),
         isbnCode: isbnCode.trim(),
         status,
+        editionDate: editionDate || undefined,
         notes: notes.trim(),
         authorIds: selectedAuthors.map((author) => Number(author.id)),
         categoryIds: selectedCategoryIds,
@@ -365,6 +369,11 @@ export default function AddBookScreen() {
                 ]}
                 style={styles.segmentedButtons}
                 accessibilityLabel={t('books:select_status')}
+              />
+
+              <EditionDateInput
+                value={editionDate}
+                onChange={setEditionDate}
               />
 
               <TextInput

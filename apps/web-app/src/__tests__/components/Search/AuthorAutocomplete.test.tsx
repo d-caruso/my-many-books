@@ -66,7 +66,10 @@ vi.mock('@mui/material', () => {
     };
 
     const handleFocus = () => onOpen?.();
-    const handleBlur = () => onClose?.();
+    const handleBlur = (e: any) => {
+      onInputChange?.(e, '', 'blur');
+      onClose?.(e, 'blur');
+    };
 
     const labelValue = value ? getOptionLabel?.(value) ?? '' : '';
     const displayValue = inputValue ?? labelValue;
@@ -92,7 +95,11 @@ vi.mock('@mui/material', () => {
               const optionProps = {
                 key: option.id ?? index,
                 'data-testid': `option-${index}`,
-                onClick: () => onChange?.(null, option, 'selectOption', { option }),
+                onClick: () => {
+                  onInputChange?.(null, getOptionLabel?.(option) ?? '', 'reset');
+                  onChange?.(null, option, 'selectOption', { option });
+                  onClose?.(null, 'selectOption');
+                },
               };
               return renderOption ? (
                 renderOption(optionProps, option, { index, selected: false, inputValue: inputValue ?? '' })
@@ -147,9 +154,9 @@ const mockApiService = {
 } as any;
 
 const mockAuthors: Author[] = [
-  { id: 3, name: 'Ernest', surname: 'Hemingway', nationality: 'American' },
-  { id: 1, name: 'Jane', surname: 'Austen', nationality: 'British' },
-  { id: 2, name: 'Charles', surname: 'Dickens', nationality: 'British' },
+  { id: 3, name: 'Ernest', surname: 'Hemingway', nationality: 'American', userId: 2 },
+  { id: 1, name: 'Jane', surname: 'Austen', nationality: 'British', userId: 1 },
+  { id: 2, name: 'Charles', surname: 'Dickens', nationality: 'British', userId: 1 },
 ];
 
 describe('AuthorAutocomplete', () => {
@@ -250,6 +257,22 @@ describe('AuthorAutocomplete', () => {
     expect(screen.queryByText('Charles Dickens')).not.toBeInTheDocument();
   });
 
+  test('filters preloaded authors by userId when userIdFilter is provided', async () => {
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} userIdFilter={1} />);
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalled());
+
+    const input = screen.getByTestId('autocomplete-input');
+    fireEvent.focus(input);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('options-list')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Jane Austen')).toBeInTheDocument();
+    expect(screen.getByText('Charles Dickens')).toBeInTheDocument();
+    expect(screen.queryByText('Ernest Hemingway')).not.toBeInTheDocument();
+  });
+
   test('reloads preloaded authors when reloadTrigger changes', async () => {
     const newAuthor: Author = { id: 4, name: 'Virginia', surname: 'Woolf', nationality: 'British' };
     mockApiService.getAuthors
@@ -291,6 +314,28 @@ describe('AuthorAutocomplete', () => {
     fireEvent.click(screen.getByTestId('option-0'));
 
     expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ id: 1, name: 'Jane' }));
+  });
+
+  test('keeps dropdown closed after selecting an author and blurring the input', async () => {
+    renderWithProvider(<AuthorAutocomplete onChange={mockOnChange} />);
+    await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalled());
+
+    const input = screen.getByTestId('autocomplete-input');
+    fireEvent.focus(input);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('options-list')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('option-0'));
+
+    expect(screen.getByTestId('open-state')).toHaveTextContent('closed');
+    expect(screen.getByTestId('autocomplete-input')).toHaveValue('Jane Austen');
+
+    fireEvent.blur(screen.getByTestId('autocomplete-input'));
+
+    expect(screen.getByTestId('open-state')).toHaveTextContent('closed');
+    expect(screen.getByTestId('autocomplete-input')).toHaveValue('Jane Austen');
   });
 
   test('handles preload errors gracefully', async () => {

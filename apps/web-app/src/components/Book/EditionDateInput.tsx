@@ -1,17 +1,37 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
-  TextField,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   FormHelperText,
+  InputAdornment,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Popover,
+  Select,
+  TextField,
   Tooltip,
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { DateCalendar, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { enUS, itIT } from '@mui/x-date-pickers/locales';
+import type { DateView } from '@mui/x-date-pickers/models';
+import dayjs, { type Dayjs } from 'dayjs';
+import 'dayjs/locale/it';
 import { useTranslation } from 'react-i18next';
+import {
+  EDITION_DATE_MONTHS,
+  assembleEditionDate,
+  getCurrentEditionYear,
+  getEditionDateDaysInMonth,
+  isValidEditionDateYear,
+  parseEditionDateParts,
+  sanitizeEditionYearInput,
+  stepEditionYear,
+} from '@my-many-books/shared-forms';
 
 interface EditionDateInputProps {
   value?: string;
@@ -21,59 +41,33 @@ interface EditionDateInputProps {
   helperText?: string;
 }
 
-const MONTHS = Array.from({ length: 12 }, (_, i) =>
-  String(i + 1).padStart(2, '0')
-);
+type PickerLocale = 'en' | 'it';
+type CalendarSelectionState = 'partial' | 'shallow' | 'finish';
 
-function parseParts(value?: string): [string, string, string] {
-  if (!value) return ['', '', ''];
-  const parts = value.split('-');
-  return [parts[0] ?? '', parts[1] ?? '', parts[2] ?? ''];
+function getPickerLocale(language: string): PickerLocale {
+  return language.toLowerCase().startsWith('it') ? 'it' : 'en';
 }
 
-function assemble(year: string, month: string, day: string): string {
-  if (!year) return '';
-  if (!month) return year;
-  if (!day) return `${year}-${month}`;
-  return `${year}-${month}-${day}`;
+function getPickerLocaleText(locale: PickerLocale) {
+  return locale === 'it'
+    ? itIT.components.MuiLocalizationProvider.defaultProps.localeText
+    : enUS.components.MuiLocalizationProvider.defaultProps.localeText;
 }
 
-function isValidSelectableYear(year: string): boolean {
-  if (!/^\d{4}$/.test(year)) {
-    return false;
+function buildCalendarReferenceDate(
+  year: string,
+  month: string,
+  day: string
+): Dayjs {
+  if (!isValidEditionDateYear(year)) {
+    return dayjs();
   }
 
-  const yearNumber = Number(year);
-  return Number.isInteger(yearNumber) && yearNumber >= 1;
-}
+  const normalizedMonth = EDITION_DATE_MONTHS.includes(month) ? month : '01';
+  const availableDays = getEditionDateDaysInMonth(year, normalizedMonth);
+  const normalizedDay = availableDays.includes(day) ? day : '01';
 
-function isLeapYear(year: number): boolean {
-  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-}
-
-function getDaysInMonth(year: string, month: string): string[] {
-  if (!month) {
-    return [];
-  }
-
-  const monthNumber = Number(month);
-  if (!Number.isInteger(monthNumber) || monthNumber < 1 || monthNumber > 12) {
-    return [];
-  }
-
-  let totalDays = 31;
-
-  if ([4, 6, 9, 11].includes(monthNumber)) {
-    totalDays = 30;
-  } else if (monthNumber === 2) {
-    const yearNumber = Number(year);
-    totalDays =
-      isValidSelectableYear(year) && isLeapYear(yearNumber) ? 29 : 28;
-  }
-
-  return Array.from({ length: totalDays }, (_, i) =>
-    String(i + 1).padStart(2, '0')
-  );
+  return dayjs(`${year}-${normalizedMonth}-${normalizedDay}`);
 }
 
 export const EditionDateInput: React.FC<EditionDateInputProps> = ({
@@ -83,14 +77,18 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
   error = false,
   helperText,
 }) => {
-  const { t } = useTranslation(['books']);
-  const calendarInputRef = useRef<HTMLInputElement | null>(null);
+  const { t, i18n } = useTranslation(['books']);
+  const currentEditionYear = getCurrentEditionYear();
   const [year, setYear] = useState('');
   const [month, setMonth] = useState('');
   const [day, setDay] = useState('');
+  const [calendarAnchorEl, setCalendarAnchorEl] = useState<HTMLElement | null>(
+    null
+  );
+  const [calendarView, setCalendarView] = useState<DateView>('day');
 
   useEffect(() => {
-    const [y, m, d] = parseParts(value);
+    const [y, m, d] = parseEditionDateParts(value);
     setYear(y);
     setMonth(m);
     setDay(d);
@@ -98,7 +96,6 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
 
   const handleChange = useCallback(
     (newYear: string, newMonth: string, newDay: string) => {
-      // Clear month and day when year is removed
       if (!newYear) {
         setYear('');
         setMonth('');
@@ -107,19 +104,18 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
         return;
       }
 
-      const isYearValid = isValidSelectableYear(newYear);
+      const isYearValid = isValidEditionDateYear(newYear);
       if (!isYearValid) {
         newMonth = '';
         newDay = '';
       }
 
-      // Clear day when month is removed
       if (!newMonth && newDay) {
         newDay = '';
       }
 
       if (isYearValid && newMonth && newDay) {
-        const maxDay = getDaysInMonth(newYear, newMonth).length;
+        const maxDay = getEditionDateDaysInMonth(newYear, newMonth).length;
         if (maxDay === 0 || Number(newDay) > maxDay) {
           newDay = '';
         }
@@ -128,57 +124,97 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
       setYear(newYear);
       setMonth(newMonth);
       setDay(newDay);
-      onChange(assemble(newYear, newMonth, newDay));
+      onChange(assembleEditionDate(newYear, newMonth, newDay));
     },
     [onChange]
   );
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+    const raw = sanitizeEditionYearInput(e.target.value);
     handleChange(raw, month, day);
   };
 
-  const isYearReady = isValidSelectableYear(year);
-  const availableDays = getDaysInMonth(year, month);
+  const handleYearKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
+      return;
+    }
+
+    e.preventDefault();
+    const direction = e.key === 'ArrowUp' ? 'up' : 'down';
+    const nextYear = stepEditionYear(year, direction);
+    handleChange(nextYear, month, day);
+  };
+
+  const handleYearStepClick = (direction: 'up' | 'down') => {
+    const nextYear = stepEditionYear(year, direction);
+    handleChange(nextYear, month, day);
+  };
+
+  const isYearReady = isValidEditionDateYear(year);
+  const availableDays = getEditionDateDaysInMonth(year, month);
   const hasCompleteValidDate =
     isYearReady && !!month && !!day && availableDays.includes(day);
-  const calendarValue = hasCompleteValidDate ? assemble(year, month, day) : '';
 
-  const handleCalendarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nextValue = e.target.value;
+  const calendarLocale = getPickerLocale(
+    i18n.resolvedLanguage || i18n.language || 'en'
+  );
+  const calendarLocaleText = getPickerLocaleText(calendarLocale);
 
-    if (!nextValue) {
-      handleChange('', '', '');
+  const calendarValue = useMemo(() => {
+    if (!hasCompleteValidDate) {
+      return null;
+    }
+
+    return dayjs(`${year}-${month}-${day}`);
+  }, [day, hasCompleteValidDate, month, year]);
+
+  const calendarReferenceDate = useMemo(
+    () => buildCalendarReferenceDate(year, month, day),
+    [day, month, year]
+  );
+
+  const handleCalendarButtonClick = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    if (disabled) {
       return;
     }
 
-    const [newYear, newMonth, newDay] = parseParts(nextValue);
-    if (newYear && newMonth && newDay) {
-      handleChange(newYear, newMonth, newDay);
-    }
+    setCalendarView('day');
+    setCalendarAnchorEl((current) =>
+      current ? null : (event.currentTarget as HTMLElement)
+    );
   };
 
-  const handleCalendarButtonClick = () => {
-    const input = calendarInputRef.current as
-      | (HTMLInputElement & { showPicker?: () => void })
-      | null;
+  const handleCalendarClose = () => {
+    setCalendarAnchorEl(null);
+  };
 
-    if (!input || disabled) {
+  const handleCalendarChange = (
+    nextDate: Dayjs | null,
+    selectionState?: CalendarSelectionState,
+    selectedView?: DateView
+  ) => {
+    if (!nextDate || !nextDate.isValid()) {
       return;
     }
 
-    try {
-      if (typeof input.showPicker === 'function') {
-        input.showPicker();
-        return;
-      }
-    } catch {
-      // Fall back to focus/click for browsers with restricted showPicker support.
-    }
+    handleChange(
+      nextDate.format('YYYY'),
+      nextDate.format('MM'),
+      nextDate.format('DD')
+    );
 
-    input.focus();
-    input.click();
+    const effectiveSelectedView = selectedView ?? calendarView;
+    const shouldCloseCalendar =
+      selectionState === 'finish' && effectiveSelectedView === 'day';
+
+    if (shouldCloseCalendar) {
+      setCalendarAnchorEl(null);
+    }
   };
+
+  const isCalendarOpen = Boolean(calendarAnchorEl);
 
   return (
     <Box>
@@ -189,10 +225,39 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
           label={t('books:edition_date_year')}
           value={year}
           onChange={handleYearChange}
+          onKeyDown={handleYearKeyDown}
           placeholder="YYYY"
           disabled={disabled}
           error={error}
           inputProps={{ maxLength: 4, inputMode: 'numeric' }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end" sx={{ mr: -0.5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                  <IconButton
+                    size="small"
+                    disabled={disabled}
+                    onClick={() => handleYearStepClick('up')}
+                    aria-label={`${t('books:edition_date_year')} up`}
+                    data-testid="editionDate-year-step-up"
+                    sx={{ width: 22, height: 18, borderRadius: 0.75 }}
+                  >
+                    <KeyboardArrowUpIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    disabled={disabled}
+                    onClick={() => handleYearStepClick('down')}
+                    aria-label={`${t('books:edition_date_year')} down`}
+                    data-testid="editionDate-year-step-down"
+                    sx={{ width: 22, height: 18, borderRadius: 0.75 }}
+                  >
+                    <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Box>
+              </InputAdornment>
+            ),
+          }}
           InputLabelProps={{ shrink: true }}
         />
 
@@ -214,7 +279,7 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
             onChange={(e) => handleChange(year, e.target.value as string, day)}
           >
             <MenuItem value="">—</MenuItem>
-            {MONTHS.map((m) => (
+            {EDITION_DATE_MONTHS.map((m) => (
               <MenuItem key={m} value={m}>
                 {m}
               </MenuItem>
@@ -249,7 +314,7 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
         </FormControl>
 
         <Tooltip title={t('books:edition_date')}>
-          <Box sx={{ position: 'relative', display: 'flex', flexShrink: 0 }}>
+          <Box sx={{ display: 'flex', flexShrink: 0 }}>
             <IconButton
               aria-label={`${t('books:edition_date')} calendar`}
               disabled={disabled}
@@ -266,34 +331,51 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
             >
               <CalendarMonthIcon sx={{ fontSize: 30 }} />
             </IconButton>
-            <Box
-              component="input"
-              ref={calendarInputRef}
-              type="date"
-              value={calendarValue}
-              onChange={handleCalendarChange}
-              disabled={disabled}
-              aria-label={`${t('books:edition_date')} calendar`}
-              data-testid="editionDate-calendar-input"
-              sx={{
-                position: 'absolute',
-                width: 1,
-                height: 1,
-                top: 0,
-                left: 0,
-                opacity: 0,
-                pointerEvents: 'none',
-                border: 0,
-                m: 0,
-                p: 0,
-              }}
-            />
           </Box>
         </Tooltip>
+
+        <Popover
+          open={isCalendarOpen}
+          anchorEl={calendarAnchorEl}
+          onClose={handleCalendarClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          disablePortal
+          slotProps={{
+            paper: {
+              'data-testid': 'editionDate-calendar-popover',
+              sx: { mt: 1, p: 1 },
+            },
+          }}
+        >
+          <LocalizationProvider
+            key={calendarLocale}
+            dateAdapter={AdapterDayjs}
+            adapterLocale={calendarLocale}
+            localeText={calendarLocaleText}
+          >
+            <DateCalendar
+              value={calendarValue}
+              referenceDate={calendarReferenceDate}
+              maxDate={dayjs(`${currentEditionYear}-12-31`)}
+              onChange={handleCalendarChange}
+              onViewChange={setCalendarView}
+              disabled={disabled}
+              reduceAnimations
+              sx={{
+                '& .MuiDayCalendar-slideTransition': {
+                  minHeight: 0,
+                },
+                '& .MuiDayCalendar-loadingContainer': {
+                  minHeight: 0,
+                },
+              }}
+            />
+          </LocalizationProvider>
+        </Popover>
       </Box>
-      {helperText && (
-        <FormHelperText error={error}>{helperText}</FormHelperText>
-      )}
+
+      {helperText && <FormHelperText error={error}>{helperText}</FormHelperText>}
     </Box>
   );
 };
