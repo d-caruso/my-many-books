@@ -164,6 +164,40 @@ describe('API Service Simple Tests', () => {
     expect(result).toEqual(mockCategories);
   });
 
+  test('ApiService caches categories in memory across repeated getCategories calls', async () => {
+    const apiService = new apiModule.ApiService();
+    const mockCategories = [{ id: 1, name: 'Fiction' }];
+
+    mockAxiosInstance.get.mockResolvedValue(mockCategories);
+
+    const first = await apiService.getCategories();
+    const second = await apiService.getCategories();
+
+    expect(mockAxiosInstance.get).toHaveBeenCalledTimes(1);
+    expect(first).toEqual(mockCategories);
+    expect(second).toEqual(mockCategories);
+    expect(first).not.toBe(second);
+  });
+
+  test('ApiService invalidates category cache after createCategory', async () => {
+    const apiService = new apiModule.ApiService();
+    const initialCategories = [{ id: 1, name: 'Fiction' }];
+    const refreshedCategories = [{ id: 1, name: 'Fiction' }, { id: 2, name: 'Fantasy' }];
+
+    mockAxiosInstance.get
+      .mockResolvedValueOnce(initialCategories)
+      .mockResolvedValueOnce(refreshedCategories);
+    mockAxiosInstance.post.mockResolvedValue({ id: 2, name: 'Fantasy' });
+
+    await apiService.getCategories();
+    await apiService.createCategory({ name: 'Fantasy' });
+    const afterCreate = await apiService.getCategories();
+
+    expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2);
+    expect(mockAxiosInstance.post).toHaveBeenCalledTimes(1);
+    expect(afterCreate).toEqual(refreshedCategories);
+  });
+
   test('authorAPI.getAuthors calls correct endpoint', async () => {
     const { authorAPI } = apiModule;
     const mockAuthors = [{ id: 1, name: 'John', surname: 'Doe' }];

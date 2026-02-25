@@ -187,6 +187,14 @@ class ApiService {
   private apiClient: ApiClient;
   private httpClient: HttpClient;
   private apiConfig: ApiClientConfig;
+  private categoriesCache: { userKey: string | null; data: Category[] | null } = {
+    userKey: null,
+    data: null,
+  };
+  private categoriesInFlightRequest: { userKey: string | null; promise: Promise<Category[]> | null } = {
+    userKey: null,
+    promise: null,
+  };
 
   constructor(dependencies: ApiServiceDependencies = {}) {
     const injectedApiClient = dependencies.apiClient;
@@ -219,6 +227,30 @@ class ApiService {
 
   public getApiConfig(): ApiClientConfig {
     return this.apiConfig;
+  }
+
+  private async getCategoriesCacheUserKey(): Promise<string> {
+    try {
+      const user = await authService.getCurrentUser();
+      if (user?.id != null) {
+        return `user:${String(user.id)}`;
+      }
+    } catch {
+      // Best-effort cache scoping. If auth user cannot be read, fall back to anonymous scope.
+    }
+    return 'anonymous';
+  }
+
+  private invalidateCategoriesCache(): void {
+    this.categoriesCache = { userKey: null, data: null };
+    this.categoriesInFlightRequest = { userKey: null, promise: null };
+  }
+
+  private async fetchCategoriesUncached(): Promise<Category[]> {
+    if (isDevelopmentWithoutApiConfig()) {
+      return this.getMockCategories();
+    }
+    return this.apiClient.categories.getCategories();
   }
 
   // Mock data for development mode - preserved from old api.ts
@@ -993,12 +1025,30 @@ class ApiService {
 
   // Categories methods with development mock data fallback
   async getCategories(): Promise<Category[]> {
-    // In development mode without API URL, return mock data
-    if (isDevelopmentWithoutApiConfig()) {
-      return this.getMockCategories();
+    const userKey = await this.getCategoriesCacheUserKey();
+
+    if (this.categoriesCache.data && this.categoriesCache.userKey === userKey) {
+      return [...this.categoriesCache.data];
     }
 
-    return this.apiClient.categories.getCategories();
+    if (this.categoriesInFlightRequest.promise && this.categoriesInFlightRequest.userKey === userKey) {
+      const data = await this.categoriesInFlightRequest.promise;
+      return [...data];
+    }
+
+    const requestPromise = this.fetchCategoriesUncached();
+    this.categoriesInFlightRequest = { userKey, promise: requestPromise };
+
+    try {
+      const categories = await requestPromise;
+      const cached = [...categories];
+      this.categoriesCache = { userKey, data: cached };
+      return [...cached];
+    } finally {
+      if (this.categoriesInFlightRequest.userKey === userKey) {
+        this.categoriesInFlightRequest = { userKey: null, promise: null };
+      }
+    }
   }
 
   async getCategory(id: number): Promise<Category> {
@@ -1006,15 +1056,20 @@ class ApiService {
   }
 
   async createCategory(categoryData: { name: string }): Promise<Category> {
-    return this.apiClient.categories.createCategory(categoryData);
+    const created = await this.apiClient.categories.createCategory(categoryData);
+    this.invalidateCategoriesCache();
+    return created;
   }
 
   async updateCategory(id: number, categoryData: Partial<{ name: string }>): Promise<Category> {
-    return this.apiClient.categories.updateCategory(id, categoryData);
+    const updated = await this.apiClient.categories.updateCategory(id, categoryData);
+    this.invalidateCategoriesCache();
+    return updated;
   }
 
   async deleteCategory(id: number): Promise<void> {
-    return this.apiClient.categories.deleteCategory(id);
+    await this.apiClient.categories.deleteCategory(id);
+    this.invalidateCategoriesCache();
   }
 
   // Authors methods with development mock data fallback
