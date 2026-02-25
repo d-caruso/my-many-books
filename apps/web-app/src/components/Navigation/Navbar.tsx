@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -17,6 +17,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useAuth } from '@my-many-books/shared-auth';
 import { LanguageSelector } from './LanguageSelector';
 import { AboutDialog } from '../About/AboutDialog';
+import { useFadeInOnChange, useLanguageChangeFade } from '../../hooks/useLanguageChangeFade';
 
 export const Navbar: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -32,6 +33,11 @@ export const Navbar: React.FC = () => {
   const menuLabel = t('common:menu');
   const userMenuLabel = t('common:user_menu', 'User menu');
   const avatarLabel = t('common:user_avatar', 'User avatar');
+  const navVoicesRef = useRef<HTMLDivElement>(null);
+  const navVoicesFadeSx = useLanguageChangeFade(navVoicesRef, { keyframePrefix: 'navbarVoicesLangFade' });
+  const navVoicesRouteFadeSx = useFadeInOnChange(navVoicesRef, location.pathname, {
+    keyframePrefix: 'navbarVoicesViewFade',
+  });
   const userInitial = user?.name?.charAt(0)?.toUpperCase()
     ?? user?.surname?.charAt(0)?.toUpperCase()
     ?? user?.email?.charAt(0)?.toUpperCase()
@@ -139,7 +145,14 @@ export const Navbar: React.FC = () => {
         {/* Navigation Items - Desktop */}
         <Box
           component="nav"
-          sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 2 }}
+          ref={navVoicesRef}
+          sx={{
+            flexGrow: 1,
+            display: { xs: 'none', md: 'flex' },
+            gap: 2,
+            ...navVoicesFadeSx,
+            ...navVoicesRouteFadeSx,
+          }}
           aria-label={t('accessibility:main_navigation')}
         >
           <Button

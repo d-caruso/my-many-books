@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { authService } from './services/authService';
@@ -12,7 +12,7 @@ import { PageErrorBoundary } from './components/ErrorBoundary/PageErrorBoundary'
 import { NativeLoading } from './components/NativeLoading';
 import { AboutPopupGate } from './components/About/AboutPopupGate';
 import { Box } from '@mui/material';
-import { useLanguageChangeFade } from './hooks/useLanguageChangeFade';
+import { useFadeInOnChange, useLanguageChangeFade } from './hooks/useLanguageChangeFade';
 
 // Defer i18n initialization until after first render
 let i18nInitialized = false;
@@ -129,12 +129,29 @@ const ScannerRoute: React.FC = () => {
   );
 };
 
-const ProtectedUserShell: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const shellRef = useRef<HTMLDivElement>(null);
-  const fadeSx = useLanguageChangeFade(shellRef, { keyframePrefix: 'protectedShellLangFade' });
+const ProtectedMainContent: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  const routeTransitionKey = useMemo(() => {
+    if (location.pathname === '/') {
+      const params = new URLSearchParams(location.search);
+      const mode = params.get('mode') ?? '';
+      return `${location.pathname}?mode=${mode}`;
+    }
+
+    return location.pathname;
+  }, [location.pathname, location.search]);
+  const languageFadeSx = useLanguageChangeFade(mainRef, { keyframePrefix: 'protectedMainLangFade' });
+  const fadeSx = useFadeInOnChange(mainRef, routeTransitionKey, { keyframePrefix: 'protectedMainViewFade' });
 
   return (
-    <Box ref={shellRef} sx={{ width: '100%', minWidth: 0, ...fadeSx }}>
+    <Box
+      component="main"
+      ref={mainRef}
+      id="main-content"
+      tabIndex={-1}
+      sx={{ width: '100%', minWidth: 0, ...languageFadeSx, ...fadeSx }}
+    >
       {children}
     </Box>
   );
@@ -328,18 +345,16 @@ function App() {
                             element={
                               <ProtectedRoute>
                                 {/* First-access app explanation popup is user-app scoped, not admin scoped */}
-                                <ProtectedUserShell>
-                                  <AboutPopupGate />
-                                  <Navbar />
-                                  <Box component="main" id="main-content" tabIndex={-1} sx={{ width: '100%', minWidth: 0 }}>
-                                    <Routes>
-                                      <Route path="/" element={<PageErrorBoundary pageName="Books"><BooksPage /></PageErrorBoundary>} />
-                                      <Route path="/search" element={<PageErrorBoundary pageName="Book Search"><BookSearchPage /></PageErrorBoundary>} />
-                                      <Route path="/scanner" element={<ScannerRoute />} />
-                                      <Route path="*" element={<Navigate to="/" replace />} />
-                                    </Routes>
-                                  </Box>
-                                </ProtectedUserShell>
+                                <AboutPopupGate />
+                                <Navbar />
+                                <ProtectedMainContent>
+                                  <Routes>
+                                    <Route path="/" element={<PageErrorBoundary pageName="Books"><BooksPage /></PageErrorBoundary>} />
+                                    <Route path="/search" element={<PageErrorBoundary pageName="Book Search"><BookSearchPage /></PageErrorBoundary>} />
+                                    <Route path="/scanner" element={<ScannerRoute />} />
+                                    <Route path="*" element={<Navigate to="/" replace />} />
+                                  </Routes>
+                                </ProtectedMainContent>
                               </ProtectedRoute>
                             }
                           />

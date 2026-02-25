@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_FADE_IN_TIMING, LANGUAGE_FADE_OUT_TIMING } from '../constants/animations';
@@ -18,6 +18,11 @@ export const getLanguageFadeKeyframesSx = (keyframePrefix = 'langFade') =>
       '100%': { opacity: 1 },
     },
   }) as const;
+
+interface UseFadeOnChangeOptions {
+  keyframePrefix?: string;
+  skipInitial?: boolean;
+}
 
 export const useLanguageChangeFade = (
   elementRef: RefObject<HTMLElement | null>,
@@ -64,3 +69,40 @@ export const useLanguageChangeFade = (
   return getLanguageFadeKeyframesSx(keyframePrefix);
 };
 
+export const useFadeInOnChange = (
+  elementRef: RefObject<HTMLElement | null>,
+  changeKey: string,
+  options: UseFadeOnChangeOptions = {}
+) => {
+  const keyframePrefix = options.keyframePrefix ?? 'viewFade';
+  const skipInitial = options.skipInitial ?? true;
+  const isFirstRenderRef = useRef(true);
+
+  useEffect(() => {
+    if (skipInitial && isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+
+    const el = elementRef.current;
+    if (!el) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+
+    el.style.animation = 'none';
+    void el.offsetHeight;
+    el.style.animation = `${keyframePrefix}In ${LANGUAGE_FADE_IN_TIMING}`;
+    el.addEventListener(
+      'animationend',
+      () => {
+        el.style.animation = '';
+      },
+      { once: true }
+    );
+
+    isFirstRenderRef.current = false;
+  }, [changeKey, elementRef, keyframePrefix, skipInitial]);
+
+  return getLanguageFadeKeyframesSx(keyframePrefix);
+};

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button, IconButton, Chip, Container, Typography, Alert, Snackbar } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -17,6 +17,7 @@ import { useBookSearch } from '../hooks/useBookSearch';
 import { useBooks } from '../hooks/useBooks';
 import { useSetting } from '../hooks/useSetting';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../constants/scanner';
+import { useFadeInOnChange } from '../hooks/useLanguageChangeFade';
 
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
@@ -38,6 +39,7 @@ const BooksPage: React.FC = () => {
   const [scannerNoticeMessage, setScannerNoticeMessage] = useState('');
   const [welcomeNoticeOpen, setWelcomeNoticeOpen] = useState(false);
   const [welcomeNoticeMessage, setWelcomeNoticeMessage] = useState('');
+  const pageViewRef = useRef<HTMLDivElement>(null);
 
   // Get setting for book status change behavior
   const { value: statusChangeBehavior } = useSetting<BookStatusChangeBehavior>(
@@ -383,69 +385,84 @@ const BooksPage: React.FC = () => {
     },
   };
 
+  const pageViewTransitionKey = useMemo(() => {
+    if (pageMode === 'details') {
+      return `details:${selectedBook?.id ?? 'none'}`;
+    }
+    return pageMode;
+  }, [pageMode, selectedBook?.id]);
+  const pageViewFadeSx = useFadeInOnChange(pageViewRef, pageViewTransitionKey, {
+    keyframePrefix: 'booksPageModeFade',
+  });
+
   // Render different modes
   if (pageMode === 'add' || pageMode === 'edit') {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <BookForm
-          book={selectedBook}
-          onSubmit={handleFormSubmit}
-          onCancel={handleCancel}
-          loading={actionLoading}
-          initialIsbn={initialIsbn}
-          initialDraft={initialDraft}
-          scannerPrefillNotice={pageMode === 'add' && scannerNoticeOpen ? scannerNoticeMessage : null}
-          onScannerPrefillNoticeDismiss={handleScannerPrefillNoticeDismiss}
-        />
-        {actionError && (
-          <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-line' }}>
-            {actionError}
-          </Alert>
-        )}
-        <Snackbar {...welcomeSnackbarProps}>
-          <Alert onClose={handleWelcomeNoticeClose} severity="success" variant="filled" sx={{ width: '100%' }}>
-            {welcomeNoticeMessage}
-          </Alert>
-        </Snackbar>
-      </Container>
+      <Box ref={pageViewRef} sx={{ ...pageViewFadeSx }}>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          <BookForm
+            book={selectedBook}
+            onSubmit={handleFormSubmit}
+            onCancel={handleCancel}
+            loading={actionLoading}
+            initialIsbn={initialIsbn}
+            initialDraft={initialDraft}
+            scannerPrefillNotice={pageMode === 'add' && scannerNoticeOpen ? scannerNoticeMessage : null}
+            onScannerPrefillNoticeDismiss={handleScannerPrefillNoticeDismiss}
+          />
+          {actionError && (
+            <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-line' }}>
+              {actionError}
+            </Alert>
+          )}
+          <Snackbar {...welcomeSnackbarProps}>
+            <Alert onClose={handleWelcomeNoticeClose} severity="success" variant="filled" sx={{ width: '100%' }}>
+              {welcomeNoticeMessage}
+            </Alert>
+          </Snackbar>
+        </Container>
+      </Box>
     );
   }
 
   if (pageMode === 'details' && selectedBook) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <BookDetails
-          book={selectedBook}
-          onEdit={handleEditBook}
-          onDelete={handleDeleteBook}
-          onStatusChange={handleStatusChange}
-          onClose={() => setPageMode('list')}
-          loading={actionLoading}
-        />
-        {actionError && (
-          <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-line' }}>
-            {actionError}
-          </Alert>
-        )}
-        <Snackbar {...welcomeSnackbarProps}>
-          <Alert onClose={handleWelcomeNoticeClose} severity="success" variant="filled" sx={{ width: '100%' }}>
-            {welcomeNoticeMessage}
-          </Alert>
-        </Snackbar>
-      </Container>
+      <Box ref={pageViewRef} sx={{ ...pageViewFadeSx }}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <BookDetails
+            book={selectedBook}
+            onEdit={handleEditBook}
+            onDelete={handleDeleteBook}
+            onStatusChange={handleStatusChange}
+            onClose={() => setPageMode('list')}
+            loading={actionLoading}
+          />
+          {actionError && (
+            <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-line' }}>
+              {actionError}
+            </Alert>
+          )}
+          <Snackbar {...welcomeSnackbarProps}>
+            <Alert onClose={handleWelcomeNoticeClose} severity="success" variant="filled" sx={{ width: '100%' }}>
+              {welcomeNoticeMessage}
+            </Alert>
+          </Snackbar>
+        </Container>
+      </Box>
     );
   }
 
   // List mode (default)
   return (
-      <Container
-        maxWidth="lg"
-        sx={{
-          width: '100%',
-          minWidth: 0,
-          py: { xs: 2, sm: 4 },
-        }}
-      >
+      <Box ref={pageViewRef} sx={{ width: '100%', minWidth: 0, ...pageViewFadeSx }}>
+        <Container
+          maxWidth="lg"
+          sx={{
+            width: '100%',
+            minWidth: 0,
+            py: { xs: 2, sm: 4 },
+          }}
+        >
       {/* Page header */}
       <Box
         mb={{ xs: 3, sm: 6 }}
@@ -607,7 +624,8 @@ const BooksPage: React.FC = () => {
           {welcomeNoticeMessage}
         </Alert>
       </Snackbar>
-    </Container>
+        </Container>
+      </Box>
   );
 };
 export default BooksPage;
