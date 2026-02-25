@@ -478,4 +478,167 @@ describe('API Service Coverage', () => {
       process.env.EXPO_PUBLIC_API_VERSION = originalEnv.version;
     }
   });
+
+  it('caches category list in mobile API service memory and invalidates after create', async () => {
+    jest.resetModules();
+    jest.unmock('@/services/api');
+
+    const mockGetCategories = jest.fn()
+      .mockResolvedValueOnce([{ id: 1, name: 'Fiction' }])
+      .mockResolvedValueOnce([{ id: 1, name: 'Fiction' }, { id: 2, name: 'Fantasy' }]);
+    const mockCreateCategory = jest.fn().mockResolvedValue({ id: 2, name: 'Fantasy' });
+
+    jest.doMock('../../src/services/authService', () => ({
+      authService: {
+        getIdToken: jest.fn().mockResolvedValue(null),
+        silentRefresh: jest.fn().mockResolvedValue(false),
+        logout: jest.fn().mockResolvedValue(undefined),
+        getCurrentUser: jest.fn().mockResolvedValue({ id: 123 }),
+      },
+    }));
+
+    jest.doMock('@my-many-books/shared-api', () => ({
+      createApiClient: jest.fn(() => ({
+        books: {
+          getBooks: jest.fn(),
+          getBook: jest.fn(),
+          createBook: jest.fn(),
+          updateBook: jest.fn(),
+          patchBook: jest.fn(),
+          updateBookStatus: jest.fn(),
+          deleteBook: jest.fn(),
+          searchBooks: jest.fn(),
+          searchByISBN: jest.fn(),
+        },
+        users: {
+          login: jest.fn(),
+          register: jest.fn(),
+          logout: jest.fn(),
+          getCurrentUser: jest.fn(),
+          updateProfile: jest.fn(),
+          deleteAccount: jest.fn(),
+          refreshToken: jest.fn(),
+        },
+        authors: {
+          getAuthors: jest.fn(),
+          getAuthor: jest.fn(),
+          createAuthor: jest.fn(),
+          updateAuthor: jest.fn(),
+          deleteAuthor: jest.fn(),
+          searchAuthors: jest.fn(),
+        },
+        categories: {
+          getCategories: mockGetCategories,
+          getCategory: jest.fn(),
+          createCategory: mockCreateCategory,
+          updateCategory: jest.fn(),
+          deleteCategory: jest.fn(),
+        },
+        admin: {
+          getAdminStats: jest.fn(),
+          getAdminUsers: jest.fn(),
+          updateAdminUser: jest.fn(),
+          deleteAdminUser: jest.fn(),
+          getAdminBooks: jest.fn(),
+          updateAdminBook: jest.fn(),
+          deleteAdminBook: jest.fn(),
+        },
+      })),
+    }));
+
+    delete require.cache[require.resolve('../../src/services/api')];
+    const { categoryAPI } = require('../../src/services/api');
+
+    const first = await categoryAPI.getCategories();
+    const second = await categoryAPI.getCategories();
+
+    expect(mockGetCategories).toHaveBeenCalledTimes(1);
+    expect(first).toEqual([{ id: 1, name: 'Fiction' }]);
+    expect(second).toEqual([{ id: 1, name: 'Fiction' }]);
+    expect(first).not.toBe(second);
+
+    await categoryAPI.createCategory({ name: 'Fantasy' });
+    const third = await categoryAPI.getCategories();
+
+    expect(mockCreateCategory).toHaveBeenCalledTimes(1);
+    expect(mockGetCategories).toHaveBeenCalledTimes(2);
+    expect(third).toEqual([{ id: 1, name: 'Fiction' }, { id: 2, name: 'Fantasy' }]);
+  });
+
+  it('bypasses mobile category cache for sync getCategories(lastSyncTime)', async () => {
+    jest.resetModules();
+    jest.unmock('@/services/api');
+
+    const mockGetCategories = jest.fn()
+      .mockResolvedValueOnce([{ id: 1, name: 'Fiction' }])
+      .mockResolvedValueOnce([{ id: 1, name: 'Fiction' }]);
+
+    jest.doMock('../../src/services/authService', () => ({
+      authService: {
+        getIdToken: jest.fn().mockResolvedValue(null),
+        silentRefresh: jest.fn().mockResolvedValue(false),
+        logout: jest.fn().mockResolvedValue(undefined),
+        getCurrentUser: jest.fn().mockResolvedValue({ id: 123 }),
+      },
+    }));
+
+    jest.doMock('@my-many-books/shared-api', () => ({
+      createApiClient: jest.fn(() => ({
+        books: {
+          getBooks: jest.fn(),
+          getBook: jest.fn(),
+          createBook: jest.fn(),
+          updateBook: jest.fn(),
+          patchBook: jest.fn(),
+          updateBookStatus: jest.fn(),
+          deleteBook: jest.fn(),
+          searchBooks: jest.fn(),
+          searchByISBN: jest.fn(),
+        },
+        users: {
+          login: jest.fn(),
+          register: jest.fn(),
+          logout: jest.fn(),
+          getCurrentUser: jest.fn(),
+          updateProfile: jest.fn(),
+          deleteAccount: jest.fn(),
+          refreshToken: jest.fn(),
+        },
+        authors: {
+          getAuthors: jest.fn(),
+          getAuthor: jest.fn(),
+          createAuthor: jest.fn(),
+          updateAuthor: jest.fn(),
+          deleteAuthor: jest.fn(),
+          searchAuthors: jest.fn(),
+        },
+        categories: {
+          getCategories: mockGetCategories,
+          getCategory: jest.fn(),
+          createCategory: jest.fn(),
+          updateCategory: jest.fn(),
+          deleteCategory: jest.fn(),
+        },
+        admin: {
+          getAdminStats: jest.fn(),
+          getAdminUsers: jest.fn(),
+          updateAdminUser: jest.fn(),
+          deleteAdminUser: jest.fn(),
+          getAdminBooks: jest.fn(),
+          updateAdminBook: jest.fn(),
+          deleteAdminBook: jest.fn(),
+        },
+      })),
+    }));
+
+    delete require.cache[require.resolve('../../src/services/api')];
+    const { categoryAPI } = require('../../src/services/api');
+
+    await categoryAPI.getCategories();
+    await categoryAPI.getCategories('2026-01-01T00:00:00.000Z');
+
+    expect(mockGetCategories).toHaveBeenCalledTimes(2);
+    expect(mockGetCategories).toHaveBeenNthCalledWith(1);
+    expect(mockGetCategories).toHaveBeenNthCalledWith(2, '2026-01-01T00:00:00.000Z');
+  });
 });

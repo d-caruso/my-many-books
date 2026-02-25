@@ -7,6 +7,7 @@ import { operationQueue } from './OperationQueue';
 import { isRetriableError } from './QueueExecutor';
 import type { OperationType } from '../types/queue';
 import { API_BASE_URL } from '../config/api';
+import type { Category } from '@my-many-books/shared-types';
 import {
   ApiError,
   ErrorCode,
@@ -197,6 +198,80 @@ const apiConfig: ApiClientConfig = {
 const httpClient = new FetchHttpClient(apiConfig.baseURL, apiConfig.timeout);
 const apiClient = createApiClient(httpClient, apiConfig);
 
+type MobileCategoriesCacheState = {
+  userKey: string | null;
+  data: Category[] | null;
+};
+
+type MobileCategoriesInFlightState = {
+  userKey: string | null;
+  promise: Promise<Category[]> | null;
+};
+
+const mobileCategoriesCache: MobileCategoriesCacheState = {
+  userKey: null,
+  data: null,
+};
+
+const mobileCategoriesInFlight: MobileCategoriesInFlightState = {
+  userKey: null,
+  promise: null,
+};
+
+const invalidateMobileCategoriesCache = (): void => {
+  mobileCategoriesCache.userKey = null;
+  mobileCategoriesCache.data = null;
+  mobileCategoriesInFlight.userKey = null;
+  mobileCategoriesInFlight.promise = null;
+};
+
+const getMobileCategoriesCacheUserKey = async (): Promise<string> => {
+  try {
+    const user = await authService.getCurrentUser();
+    if (user?.id != null) {
+      return `user:${String(user.id)}`;
+    }
+  } catch {
+    // Best-effort cache scoping. Fall back to anonymous if auth user cannot be read.
+  }
+  return 'anonymous';
+};
+
+const getCategoriesWithMobileCache = async (lastSyncTime?: string): Promise<Category[]> => {
+  // Sync/incremental fetches must always hit the API.
+  if (lastSyncTime) {
+    return apiClient.categories.getCategories(lastSyncTime);
+  }
+
+  const userKey = await getMobileCategoriesCacheUserKey();
+
+  if (mobileCategoriesCache.data && mobileCategoriesCache.userKey === userKey) {
+    return [...mobileCategoriesCache.data];
+  }
+
+  if (mobileCategoriesInFlight.promise && mobileCategoriesInFlight.userKey === userKey) {
+    const data = await mobileCategoriesInFlight.promise;
+    return [...data];
+  }
+
+  const requestPromise = apiClient.categories.getCategories();
+  mobileCategoriesInFlight.userKey = userKey;
+  mobileCategoriesInFlight.promise = requestPromise;
+
+  try {
+    const categories = await requestPromise;
+    const cached = [...categories];
+    mobileCategoriesCache.userKey = userKey;
+    mobileCategoriesCache.data = cached;
+    return [...cached];
+  } finally {
+    if (mobileCategoriesInFlight.userKey === userKey) {
+      mobileCategoriesInFlight.userKey = null;
+      mobileCategoriesInFlight.promise = null;
+    }
+  }
+};
+
 // Export raw apiClient for internal use (e.g., QueueExecutor)
 export { apiClient };
 
@@ -298,11 +373,22 @@ export const authorAPI = {
 };
 
 export const categoryAPI = {
-  getCategories: apiClient.categories.getCategories.bind(apiClient.categories),
+  getCategories: getCategoriesWithMobileCache,
   getCategory: apiClient.categories.getCategory.bind(apiClient.categories),
-  createCategory: apiClient.categories.createCategory.bind(apiClient.categories),
-  updateCategory: apiClient.categories.updateCategory.bind(apiClient.categories),
-  deleteCategory: apiClient.categories.deleteCategory.bind(apiClient.categories),
+  createCategory: async (data: { name: string }) => {
+    const created = await apiClient.categories.createCategory(data);
+    invalidateMobileCategoriesCache();
+    return created;
+  },
+  updateCategory: async (id: number, data: Partial<{ name: string }>) => {
+    const updated = await apiClient.categories.updateCategory(id, data);
+    invalidateMobileCategoriesCache();
+    return updated;
+  },
+  deleteCategory: async (id: number) => {
+    await apiClient.categories.deleteCategory(id);
+    invalidateMobileCategoriesCache();
+  },
 };
 
 export const adminAPI = {
