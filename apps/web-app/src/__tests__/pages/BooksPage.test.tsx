@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -248,12 +248,12 @@ describe('BooksPage', () => {
     expect(screen.getByTestId('book-list')).toHaveAttribute('data-view-mode', 'list');
   });
 
-  test('opens and cancels add book form', () => {
+  test('opens and cancels add book form', async () => {
     renderBooksPage();
     fireEvent.click(screen.getByRole('button', { name: /add book/i }));
-    expect(screen.getByTestId('book-form')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     fireEvent.click(screen.getByTestId('form-cancel'));
-    expect(screen.getByTestId('book-list')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('book-list')).toBeInTheDocument());
   });
 
   test('navigates to scanner when scan isbn button is clicked', () => {
@@ -321,14 +321,14 @@ describe('BooksPage', () => {
     });
   });
 
-  test('opens add mode when mode=add param is provided', () => {
+  test('opens add mode when mode=add param is provided', async () => {
     currentSearchParams = new URLSearchParams([['mode', 'add']]);
     renderBooksPage();
-    expect(screen.getByTestId('book-form')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams), { replace: true });
   });
 
-  test('shows scanner feedback and clears scanner params in add mode', () => {
+  test('shows scanner feedback and clears scanner params in add mode', async () => {
     currentSearchParams = new URLSearchParams([
       ['mode', 'add'],
       ['isbn', '9780000000000'],
@@ -338,7 +338,7 @@ describe('BooksPage', () => {
 
     renderBooksPage();
 
-    expect(screen.getByTestId('book-form')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     expect(screen.getByTestId('book-form')).toHaveAttribute('data-scanner-notice', 'ISBN copied');
 
     const replaceCall = mockSetSearchParams.mock.calls.find(
@@ -350,7 +350,7 @@ describe('BooksPage', () => {
     expect(updatedParams.get('scannerCopy')).toBeNull();
   });
 
-  test('preserves add-book draft on scanner success and overrides isbn with scanned value', () => {
+  test('preserves add-book draft on scanner success and overrides isbn with scanned value', async () => {
     window.sessionStorage.setItem(
       ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY,
       JSON.stringify({
@@ -369,6 +369,7 @@ describe('BooksPage', () => {
 
     renderBooksPage();
 
+    await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     const form = screen.getByTestId('book-form');
     expect(form).toHaveAttribute('data-initial-draft-title', 'Typed before scan');
     expect(form).toHaveAttribute('data-initial-draft-isbn', 'old-isbn');
@@ -376,7 +377,7 @@ describe('BooksPage', () => {
     expect(window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY)).toBeNull();
   });
 
-  test('restores add-book draft after closing scanner and clears restore state', () => {
+  test('restores add-book draft after closing scanner and clears restore state', async () => {
     window.sessionStorage.setItem(
       ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY,
       JSON.stringify({
@@ -393,6 +394,7 @@ describe('BooksPage', () => {
 
     renderBooksPage();
 
+    await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     const form = screen.getByTestId('book-form');
     expect(form).toHaveAttribute('data-initial-draft-title', 'Draft from scanner flow');
     expect(form).toHaveAttribute('data-initial-draft-isbn', '9781111111111');
@@ -419,17 +421,18 @@ describe('BooksPage', () => {
     expect(screen.getByText(/books found/i)).toBeInTheDocument();
   });
 
-  test('handles selecting a book to open details', () => {
+  test('handles selecting a book to open details', async () => {
     renderBooksPage();
     fireEvent.click(screen.getByTestId('select-10'));
-    expect(screen.getByTestId('book-details')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('book-details')).toBeInTheDocument());
   });
 
-  test('handles editing a book from details', () => {
+  test('handles editing a book from details', async () => {
     renderBooksPage();
     fireEvent.click(screen.getByTestId('select-10'));
+    await waitFor(() => expect(screen.getByTestId('book-details')).toBeInTheDocument());
     fireEvent.click(screen.getByTestId('details-edit'));
-    expect(screen.getByTestId('book-form')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     expect(screen.getByTestId('book-form')).toHaveAttribute('data-book-id', '10');
   });
 

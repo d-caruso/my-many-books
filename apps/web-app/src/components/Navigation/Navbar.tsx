@@ -17,7 +17,8 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useAuth } from '@my-many-books/shared-auth';
 import { LanguageSelector } from './LanguageSelector';
 import { AboutDialog } from '../About/AboutDialog';
-import { useFadeInOnChange, useLanguageChangeFade } from '../../hooks/useLanguageChangeFade';
+import { runFadeOut, useFadeInOnChange, useLanguageChangeFade } from '../../hooks/useLanguageChangeFade';
+import { useProtectedViewTransition } from '../../contexts/ViewTransitionContext';
 
 export const Navbar: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -33,6 +34,7 @@ export const Navbar: React.FC = () => {
   const menuLabel = t('common:menu');
   const userMenuLabel = t('common:user_menu', 'User menu');
   const avatarLabel = t('common:user_avatar', 'User avatar');
+  const { fadeOutMainContent } = useProtectedViewTransition();
   const navVoicesRef = useRef<HTMLDivElement>(null);
   const navVoicesFadeSx = useLanguageChangeFade(navVoicesRef, { keyframePrefix: 'navbarVoicesLangFade' });
   const navVoicesRouteFadeSx = useFadeInOnChange(navVoicesRef, location.pathname, {
@@ -42,6 +44,11 @@ export const Navbar: React.FC = () => {
     ?? user?.surname?.charAt(0)?.toUpperCase()
     ?? user?.email?.charAt(0)?.toUpperCase()
     ?? 'U';
+
+  const runViewSwitchFadeOut = () => {
+    runFadeOut(navVoicesRef.current, 'navbarVoicesViewFade');
+    fadeOutMainContent();
+  };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -57,8 +64,14 @@ export const Navbar: React.FC = () => {
   };
 
   const handleNavigation = (path: string) => {
+    runViewSwitchFadeOut();
     navigate(path);
     handleMenuClose();
+  };
+
+  const handleLogoNavigation = () => {
+    fadeOutMainContent();
+    navigate('/');
   };
 
   const blurActiveElement = () => {
@@ -90,7 +103,7 @@ export const Navbar: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', mr: { xs: 0.5, sm: 2 }, flexGrow: 1, minWidth: 0 }}>
           <Box
             component="button"
-            onClick={() => navigate('/')}
+            onClick={handleLogoNavigation}
             aria-label={appName}
             sx={{
               display: 'flex',
@@ -155,22 +168,22 @@ export const Navbar: React.FC = () => {
           }}
           aria-label={t('accessibility:main_navigation')}
         >
-          <Button
-            color={location.pathname === '/' ? 'primary' : 'inherit'}
-            onClick={() => navigate('/')}
-          >
+            <Button
+              color={location.pathname === '/' ? 'primary' : 'inherit'}
+              onClick={() => handleNavigation('/')}
+            >
             {t('books:my_books')}
           </Button>
-          <Button
-            color={location.pathname === '/search' ? 'primary' : 'inherit'}
-            onClick={() => navigate('/search')}
-          >
+            <Button
+              color={location.pathname === '/search' ? 'primary' : 'inherit'}
+              onClick={() => handleNavigation('/search')}
+            >
             {t('common:search')}
           </Button>
-          <Button
-            color={location.pathname === '/scanner' ? 'primary' : 'inherit'}
-            onClick={() => navigate('/scanner')}
-          >
+            <Button
+              color={location.pathname === '/scanner' ? 'primary' : 'inherit'}
+              onClick={() => handleNavigation('/scanner')}
+            >
             {t('common:scanner')}
           </Button>
         </Box>

@@ -19,6 +19,14 @@ export const getLanguageFadeKeyframesSx = (keyframePrefix = 'langFade') =>
     },
   }) as const;
 
+export const runFadeOut = (element: HTMLElement | null, keyframePrefix = 'langFade') => {
+  if (!element) return;
+
+  element.style.animation = 'none';
+  void element.offsetHeight;
+  element.style.animation = `${keyframePrefix}Out ${LANGUAGE_FADE_OUT_TIMING}`;
+};
+
 interface UseFadeOnChangeOptions {
   keyframePrefix?: string;
   skipInitial?: boolean;
@@ -36,9 +44,7 @@ export const useLanguageChangeFade = (
       const el = elementRef.current;
       if (!el) return;
 
-      el.style.animation = 'none';
-      void el.offsetHeight;
-      el.style.animation = `${keyframePrefix}Out ${LANGUAGE_FADE_OUT_TIMING}`;
+      runFadeOut(el, keyframePrefix);
     };
 
     const handleFadeIn = () => {

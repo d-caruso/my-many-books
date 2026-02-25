@@ -22,11 +22,13 @@ import { BookSearchResults } from './BookSearchResults';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import type { Book, SearchFilters } from '@my-many-books/shared-types';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../../constants/scanner';
+import { useProtectedViewTransition } from '../../contexts/ViewTransitionContext';
 
 const BookSearchPage: React.FC = () => {
   const { t } = useTranslation(['books', 'common', 'scanner']);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { fadeOutMainContent } = useProtectedViewTransition();
   const {
     books,
     loading,
@@ -132,6 +134,7 @@ const BookSearchPage: React.FC = () => {
 
   const handleBookSelect = (book: Book) => {
     // Navigate to book details page
+    fadeOutMainContent();
     navigate(`/books/${book.id}`);
   };
 
@@ -177,7 +180,10 @@ const BookSearchPage: React.FC = () => {
             {t('books:clear_search')}
           </Button>
           <Button
-            onClick={() => navigate('/?mode=add')}
+            onClick={() => {
+              fadeOutMainContent();
+              navigate('/?mode=add');
+            }}
             variant="contained"
             startIcon={<AddIcon />}
           >

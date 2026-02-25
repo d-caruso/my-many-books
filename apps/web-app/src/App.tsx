@@ -12,7 +12,8 @@ import { PageErrorBoundary } from './components/ErrorBoundary/PageErrorBoundary'
 import { NativeLoading } from './components/NativeLoading';
 import { AboutPopupGate } from './components/About/AboutPopupGate';
 import { Box } from '@mui/material';
-import { useFadeInOnChange, useLanguageChangeFade } from './hooks/useLanguageChangeFade';
+import { runFadeOut, useFadeInOnChange, useLanguageChangeFade } from './hooks/useLanguageChangeFade';
+import { ViewTransitionProvider, useProtectedViewTransition } from './contexts/ViewTransitionContext';
 
 // Defer i18n initialization until after first render
 let i18nInitialized = false;
@@ -73,6 +74,7 @@ const MobileAnalyticsPage = lazy(() =>
 const ScannerRoute: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { fadeOutMainContent } = useProtectedViewTransition();
   const didNavigate = useRef(false);
   const scannerParams = new URLSearchParams(location.search);
   const returnTo = scannerParams.get('returnTo');
@@ -105,6 +107,7 @@ const ScannerRoute: React.FC = () => {
       copyStatus = 'failed';
     }
 
+    fadeOutMainContent();
     navigate(buildScannerSearchUrl(result.isbn, copyStatus));
   };
 
@@ -117,10 +120,12 @@ const ScannerRoute: React.FC = () => {
         }
 
         if (returnTo === 'add-book') {
+          fadeOutMainContent();
           navigate('/?mode=add&restoreDraft=1', { replace: true });
           return;
         }
 
+        fadeOutMainContent();
         navigate(-1);
       }}
       onScanSuccess={(result) => { void handleScanSuccess(result); }}
@@ -143,17 +148,25 @@ const ProtectedMainContent: React.FC<React.PropsWithChildren> = ({ children }) =
   }, [location.pathname, location.search]);
   const languageFadeSx = useLanguageChangeFade(mainRef, { keyframePrefix: 'protectedMainLangFade' });
   const fadeSx = useFadeInOnChange(mainRef, routeTransitionKey, { keyframePrefix: 'protectedMainViewFade' });
+  const contextValue = useMemo(
+    () => ({
+      fadeOutMainContent: () => runFadeOut(mainRef.current, 'protectedMainViewFade'),
+    }),
+    []
+  );
 
   return (
-    <Box
-      component="main"
-      ref={mainRef}
-      id="main-content"
-      tabIndex={-1}
-      sx={{ width: '100%', minWidth: 0, ...languageFadeSx, ...fadeSx }}
-    >
-      {children}
-    </Box>
+    <ViewTransitionProvider value={contextValue}>
+      <Box
+        component="main"
+        ref={mainRef}
+        id="main-content"
+        tabIndex={-1}
+        sx={{ width: '100%', minWidth: 0, ...languageFadeSx, ...fadeSx }}
+      >
+        {children}
+      </Box>
+    </ViewTransitionProvider>
   );
 };
 

@@ -17,10 +17,12 @@ import { useBookSearch } from '../hooks/useBookSearch';
 import { useBooks } from '../hooks/useBooks';
 import { useSetting } from '../hooks/useSetting';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../constants/scanner';
-import { useFadeInOnChange } from '../hooks/useLanguageChangeFade';
+import { runFadeOut, useFadeInOnChange } from '../hooks/useLanguageChangeFade';
+import { useProtectedViewTransition } from '../contexts/ViewTransitionContext';
 
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
+const BOOKS_PAGE_MODE_FADE_OUT_LEAD_MS = 140;
 
 const BooksPage: React.FC = () => {
   const { t } = useTranslation(['pages', 'scanner', 'common']);
@@ -40,6 +42,8 @@ const BooksPage: React.FC = () => {
   const [welcomeNoticeOpen, setWelcomeNoticeOpen] = useState(false);
   const [welcomeNoticeMessage, setWelcomeNoticeMessage] = useState('');
   const pageViewRef = useRef<HTMLDivElement>(null);
+  const pageModeTransitionTimeoutRef = useRef<number | null>(null);
+  const { fadeOutMainContent } = useProtectedViewTransition();
 
   // Get setting for book status change behavior
   const { value: statusChangeBehavior } = useSetting<BookStatusChangeBehavior>(
@@ -202,25 +206,54 @@ const BooksPage: React.FC = () => {
     setSearchParams(params);
   };
 
+  useEffect(() => {
+    return () => {
+      if (pageModeTransitionTimeoutRef.current !== null) {
+        window.clearTimeout(pageModeTransitionTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const runPageModeTransition = useCallback((applyTransition: () => void) => {
+    runFadeOut(pageViewRef.current, 'booksPageModeFade');
+
+    if (pageModeTransitionTimeoutRef.current !== null) {
+      window.clearTimeout(pageModeTransitionTimeoutRef.current);
+    }
+
+    pageModeTransitionTimeoutRef.current = window.setTimeout(() => {
+      pageModeTransitionTimeoutRef.current = null;
+      applyTransition();
+    }, BOOKS_PAGE_MODE_FADE_OUT_LEAD_MS);
+  }, []);
+
   const handleAddBook = () => {
-    setSelectedBook(null);
-    setPageMode('add');
-    setActionError(null);
+    runPageModeTransition(() => {
+      setSelectedBook(null);
+      setPageMode('add');
+      setActionError(null);
+    });
   };
 
   const handleScanIsbn = () => {
+    runFadeOut(pageViewRef.current, 'booksPageModeFade');
+    fadeOutMainContent();
     navigate('/scanner');
   };
 
   const handleEditBook = (book: Book) => {
-    setSelectedBook(book);
-    setPageMode('edit');
+    runPageModeTransition(() => {
+      setSelectedBook(book);
+      setPageMode('edit');
+    });
   };
 
   const handleViewDetails = (book: Book) => {
-    setSelectedBook(book);
-    setPageMode('details');
-    setActionError(null);
+    runPageModeTransition(() => {
+      setSelectedBook(book);
+      setPageMode('details');
+      setActionError(null);
+    });
   };
 
   const handleDeleteBook = async (bookId: number) => {
@@ -339,11 +372,19 @@ const BooksPage: React.FC = () => {
   };
 
   const handleCancel = () => {
-    setPageMode('list');
-    setSelectedBook(null);
-    setActionError(null);
-    setInitialIsbn(undefined);
-    setInitialDraft(null);
+    runPageModeTransition(() => {
+      setPageMode('list');
+      setSelectedBook(null);
+      setActionError(null);
+      setInitialIsbn(undefined);
+      setInitialDraft(null);
+    });
+  };
+
+  const handleCloseDetails = () => {
+    runPageModeTransition(() => {
+      setPageMode('list');
+    });
   };
 
   const handleScannerPrefillNoticeDismiss = useCallback(() => {
@@ -434,7 +475,7 @@ const BooksPage: React.FC = () => {
             onEdit={handleEditBook}
             onDelete={handleDeleteBook}
             onStatusChange={handleStatusChange}
-            onClose={() => setPageMode('list')}
+            onClose={handleCloseDetails}
             loading={actionLoading}
           />
           {actionError && (
