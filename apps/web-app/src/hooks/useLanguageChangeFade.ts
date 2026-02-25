@@ -86,7 +86,7 @@ export const useFadeInOnChange = (
   const fadeInTiming = options.fadeInTiming ?? LANGUAGE_FADE_IN_TIMING;
   const isFirstRenderRef = useRef(true);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (skipInitial && isFirstRenderRef.current) {
       isFirstRenderRef.current = false;
       return;
@@ -98,24 +98,30 @@ export const useFadeInOnChange = (
       return;
     }
 
+    const transitionTiming = fadeInTiming.replace(/\sforwards\b/, '').trim();
+    let handleTransitionEnd: ((event: TransitionEvent) => void) | null = null;
+
     el.style.animation = 'none';
+    el.style.transition = 'none';
     el.style.opacity = '0';
     void el.offsetHeight;
     const rafId = window.requestAnimationFrame(() => {
-      el.style.animation = `${keyframePrefix}In ${fadeInTiming}`;
-      el.addEventListener(
-        'animationend',
-        () => {
-          el.style.animation = '';
-          el.style.opacity = '';
-        },
-        { once: true }
-      );
+      el.style.transition = `opacity ${transitionTiming}`;
+      handleTransitionEnd = (event: TransitionEvent) => {
+        if (event.propertyName !== 'opacity') return;
+        el.style.transition = '';
+        el.style.opacity = '';
+      };
+      el.addEventListener('transitionend', handleTransitionEnd);
+      el.style.opacity = '1';
     });
 
     isFirstRenderRef.current = false;
     return () => {
       window.cancelAnimationFrame(rafId);
+      if (handleTransitionEnd) {
+        el.removeEventListener('transitionend', handleTransitionEnd);
+      }
     };
   }, [changeKey, elementRef, keyframePrefix, skipInitial, fadeInTiming]);
 

@@ -19,11 +19,13 @@ import { useSetting } from '../hooks/useSetting';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../constants/scanner';
 import { runFadeOut, useFadeInOnChange } from '../hooks/useLanguageChangeFade';
 import { useProtectedViewTransition } from '../contexts/ViewTransitionContext';
+import { VIEW_TRANSITION_FADE_IN_TIMING, VIEW_TRANSITION_FADE_OUT_LEAD_MS } from '../constants/animations';
 
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
-const BOOKS_PAGE_MODE_FADE_OUT_LEAD_MS = 180;
-const BOOKS_PAGE_MODE_FADE_IN_TIMING = '3s ease-in-out forwards';
+// Intra-view transitions should feel slightly faster than full route transitions.
+const BOOKS_PAGE_MODE_FADE_OUT_LEAD_MS = Math.max(0, VIEW_TRANSITION_FADE_OUT_LEAD_MS - 40);
+const BOOKS_PAGE_MODE_FADE_IN_TIMING = '1s ease-in-out forwards';
 
 const BooksPage: React.FC = () => {
   const { t } = useTranslation(['pages', 'scanner', 'common']);
@@ -44,7 +46,7 @@ const BooksPage: React.FC = () => {
   const [welcomeNoticeMessage, setWelcomeNoticeMessage] = useState('');
   const pageViewRef = useRef<HTMLDivElement>(null);
   const pageModeTransitionTimeoutRef = useRef<number | null>(null);
-  const { fadeOutMainContent } = useProtectedViewTransition();
+  const { runMainContentTransition } = useProtectedViewTransition();
 
   // Get setting for book status change behavior
   const { value: statusChangeBehavior } = useSetting<BookStatusChangeBehavior>(
@@ -238,8 +240,9 @@ const BooksPage: React.FC = () => {
 
   const handleScanIsbn = () => {
     runFadeOut(pageViewRef.current, 'booksPageModeFade');
-    fadeOutMainContent();
-    navigate('/scanner');
+    runMainContentTransition(() => {
+      navigate('/scanner');
+    });
   };
 
   const handleEditBook = (book: Book) => {

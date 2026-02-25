@@ -256,10 +256,10 @@ describe('BooksPage', () => {
     await waitFor(() => expect(screen.getByTestId('book-list')).toBeInTheDocument());
   });
 
-  test('navigates to scanner when scan isbn button is clicked', () => {
+  test('navigates to scanner when scan isbn button is clicked', async () => {
     renderBooksPage();
     fireEvent.click(screen.getByRole('button', { name: /scan isbn/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/scanner');
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/scanner'));
   });
 
   test('renders book list items when library data is available', () => {

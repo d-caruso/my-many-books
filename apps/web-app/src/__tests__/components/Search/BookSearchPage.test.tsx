@@ -206,7 +206,7 @@ describe('BookSearchPage', () => {
     expect(mockClearSearch).toHaveBeenCalledTimes(1);
   });
 
-  test('shows add new book button when books are present', () => {
+  test('shows add new book button when books are present', async () => {
     mockUseBookSearch.mockReturnValue({
       ...defaultHookState,
       books: mockBooks,
@@ -219,7 +219,7 @@ describe('BookSearchPage', () => {
     expect(addButton).toBeInTheDocument();
     
     fireEvent.click(addButton);
-    expect(mockNavigate).toHaveBeenCalledWith('/?mode=add');
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/?mode=add'));
   });
 
   test('handles search form submission', () => {
@@ -231,7 +231,7 @@ describe('BookSearchPage', () => {
     expect(mockSearchBooks).toHaveBeenCalledWith('test query', {});
   });
 
-  test('handles book selection', () => {
+  test('handles book selection', async () => {
     mockUseBookSearch.mockReturnValue({
       ...defaultHookState,
       books: mockBooks,
@@ -243,7 +243,7 @@ describe('BookSearchPage', () => {
     const bookButton = screen.getByText('Test Book 1');
     fireEvent.click(bookButton);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/books/1');
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/books/1'));
   });
 
   test('passes loading state to search results', () => {

@@ -14,6 +14,7 @@ import { AboutPopupGate } from './components/About/AboutPopupGate';
 import { Box } from '@mui/material';
 import { runFadeOut, useFadeInOnChange, useLanguageChangeFade } from './hooks/useLanguageChangeFade';
 import { ViewTransitionProvider, useProtectedViewTransition } from './contexts/ViewTransitionContext';
+import { VIEW_TRANSITION_FADE_IN_TIMING, VIEW_TRANSITION_FADE_OUT_LEAD_MS } from './constants/animations';
 
 // Defer i18n initialization until after first render
 let i18nInitialized = false;
@@ -74,7 +75,7 @@ const MobileAnalyticsPage = lazy(() =>
 const ScannerRoute: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { fadeOutMainContent } = useProtectedViewTransition();
+  const { runMainContentTransition } = useProtectedViewTransition();
   const didNavigate = useRef(false);
   const scannerParams = new URLSearchParams(location.search);
   const returnTo = scannerParams.get('returnTo');
@@ -107,8 +108,9 @@ const ScannerRoute: React.FC = () => {
       copyStatus = 'failed';
     }
 
-    fadeOutMainContent();
-    navigate(buildScannerSearchUrl(result.isbn, copyStatus));
+    runMainContentTransition(() => {
+      navigate(buildScannerSearchUrl(result.isbn, copyStatus));
+    });
   };
 
   return (
@@ -120,13 +122,15 @@ const ScannerRoute: React.FC = () => {
         }
 
         if (returnTo === 'add-book') {
-          fadeOutMainContent();
-          navigate('/?mode=add&restoreDraft=1', { replace: true });
+          runMainContentTransition(() => {
+            navigate('/?mode=add&restoreDraft=1', { replace: true });
+          });
           return;
         }
 
-        fadeOutMainContent();
-        navigate(-1);
+        runMainContentTransition(() => {
+          navigate(-1);
+        });
       }}
       onScanSuccess={(result) => { void handleScanSuccess(result); }}
       onScanError={() => {}}
@@ -147,10 +151,31 @@ const ProtectedMainContent: React.FC<React.PropsWithChildren> = ({ children }) =
     return location.pathname;
   }, [location.pathname, location.search]);
   const languageFadeSx = useLanguageChangeFade(mainRef, { keyframePrefix: 'protectedMainLangFade' });
-  const fadeSx = useFadeInOnChange(mainRef, routeTransitionKey, { keyframePrefix: 'protectedMainViewFade' });
+  const fadeSx = useFadeInOnChange(mainRef, routeTransitionKey, {
+    keyframePrefix: 'protectedMainViewFade',
+    fadeInTiming: VIEW_TRANSITION_FADE_IN_TIMING,
+  });
+  const transitionTimeoutRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (transitionTimeoutRef.current !== null) {
+      window.clearTimeout(transitionTimeoutRef.current);
+    }
+  }, []);
   const contextValue = useMemo(
     () => ({
       fadeOutMainContent: () => runFadeOut(mainRef.current, 'protectedMainViewFade'),
+      runMainContentTransition: (action: () => void) => {
+        runFadeOut(mainRef.current, 'protectedMainViewFade');
+
+        if (transitionTimeoutRef.current !== null) {
+          window.clearTimeout(transitionTimeoutRef.current);
+        }
+
+        transitionTimeoutRef.current = window.setTimeout(() => {
+          transitionTimeoutRef.current = null;
+          action();
+        }, VIEW_TRANSITION_FADE_OUT_LEAD_MS);
+      },
     }),
     []
   );

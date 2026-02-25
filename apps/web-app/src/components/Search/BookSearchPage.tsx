@@ -28,7 +28,7 @@ const BookSearchPage: React.FC = () => {
   const { t } = useTranslation(['books', 'common', 'scanner']);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { fadeOutMainContent } = useProtectedViewTransition();
+  const { runMainContentTransition } = useProtectedViewTransition();
   const {
     books,
     loading,
@@ -67,7 +67,9 @@ const BookSearchPage: React.FC = () => {
             addParams.set('scannerCopy', scannerCopy);
           }
 
-          navigate(`/?${addParams.toString()}`, { replace: true });
+          runMainContentTransition(() => {
+            navigate(`/?${addParams.toString()}`, { replace: true });
+          });
           return;
         }
 
@@ -134,8 +136,9 @@ const BookSearchPage: React.FC = () => {
 
   const handleBookSelect = (book: Book) => {
     // Navigate to book details page
-    fadeOutMainContent();
-    navigate(`/books/${book.id}`);
+    runMainContentTransition(() => {
+      navigate(`/books/${book.id}`);
+    });
   };
 
   const handleClearSearch = () => {
@@ -181,8 +184,9 @@ const BookSearchPage: React.FC = () => {
           </Button>
           <Button
             onClick={() => {
-              fadeOutMainContent();
-              navigate('/?mode=add');
+              runMainContentTransition(() => {
+                navigate('/?mode=add');
+              });
             }}
             variant="contained"
             startIcon={<AddIcon />}

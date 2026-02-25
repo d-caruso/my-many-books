@@ -183,7 +183,7 @@ describe('Navbar', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  test('clicking logo navigates to home page', () => {
+  test('clicking logo navigates to home page', async () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
@@ -195,10 +195,10 @@ describe('Navbar', () => {
     render(<Navbar />);
 
     fireEvent.click(screen.getByRole('button', { name: /My Many Books/ }));
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/'));
   });
 
-  test('navigation buttons navigate to correct paths', () => {
+  test('navigation buttons navigate to correct paths', async () => {
     mockUseAuth.mockReturnValue({
       user: baseUser,
       loading: false,
@@ -210,13 +210,13 @@ describe('Navbar', () => {
     render(<Navbar />);
 
     fireEvent.click(screen.getByRole('button', { name: 'My Books' }));
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/'));
 
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    expect(mockNavigate).toHaveBeenCalledWith('/search');
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/search'));
 
     fireEvent.click(screen.getByRole('button', { name: 'Scanner' }));
-    expect(mockNavigate).toHaveBeenCalledWith('/scanner');
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/scanner'));
   });
 
   test('clicking active navigation voice does not trigger no-op navigation', () => {

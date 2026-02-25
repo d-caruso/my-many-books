@@ -19,6 +19,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { AboutDialog } from '../About/AboutDialog';
 import { runFadeOut, useFadeInOnChange, useLanguageChangeFade } from '../../hooks/useLanguageChangeFade';
 import { useProtectedViewTransition } from '../../contexts/ViewTransitionContext';
+import { VIEW_TRANSITION_FADE_IN_TIMING } from '../../constants/animations';
 
 export const Navbar: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -34,11 +35,12 @@ export const Navbar: React.FC = () => {
   const menuLabel = t('common:menu');
   const userMenuLabel = t('common:user_menu', 'User menu');
   const avatarLabel = t('common:user_avatar', 'User avatar');
-  const { fadeOutMainContent } = useProtectedViewTransition();
+  const { runMainContentTransition } = useProtectedViewTransition();
   const navVoicesRef = useRef<HTMLDivElement>(null);
   const navVoicesFadeSx = useLanguageChangeFade(navVoicesRef, { keyframePrefix: 'navbarVoicesLangFade' });
   const navVoicesRouteFadeSx = useFadeInOnChange(navVoicesRef, location.pathname, {
     keyframePrefix: 'navbarVoicesViewFade',
+    fadeInTiming: VIEW_TRANSITION_FADE_IN_TIMING,
   });
   const userInitial = user?.name?.charAt(0)?.toUpperCase()
     ?? user?.surname?.charAt(0)?.toUpperCase()
@@ -47,7 +49,6 @@ export const Navbar: React.FC = () => {
 
   const runViewSwitchFadeOut = () => {
     runFadeOut(navVoicesRef.current, 'navbarVoicesViewFade');
-    fadeOutMainContent();
   };
 
   const isNoopNavigation = (path: string) => {
@@ -74,7 +75,9 @@ export const Navbar: React.FC = () => {
       return;
     }
     runViewSwitchFadeOut();
-    navigate(path);
+    runMainContentTransition(() => {
+      navigate(path);
+    });
     handleMenuClose();
   };
 
@@ -82,8 +85,9 @@ export const Navbar: React.FC = () => {
     if (isNoopNavigation('/')) {
       return;
     }
-    fadeOutMainContent();
-    navigate('/');
+    runMainContentTransition(() => {
+      navigate('/');
+    });
   };
 
   const blurActiveElement = () => {
