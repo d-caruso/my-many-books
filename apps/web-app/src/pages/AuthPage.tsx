@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Box, Button, Container, Typography } from '@mui/material';
 import { Trans, useTranslation } from 'react-i18next';
@@ -6,7 +6,7 @@ import { LoginForm, RegisterForm } from '../components/Auth';
 import { LanguageSelector } from '../components/Navigation/LanguageSelector';
 import { AboutDialog } from '../components/About/AboutDialog';
 import { useAuth } from '@my-many-books/shared-auth';
-import { LANGUAGE_FADE_IN_TIMING, LANGUAGE_FADE_OUT_TIMING } from '../constants/animations';
+import { useLanguageChangeFade } from '../hooks/useLanguageChangeFade';
 
 type AuthMode = 'login' | 'register';
 
@@ -14,38 +14,11 @@ const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [aboutOpen, setAboutOpen] = useState(false);
   const { user } = useAuth();
-  const { t, i18n } = useTranslation('common');
+  const { t } = useTranslation('common');
   const appName = t('app_name', 'My Many Books');
   const logoAlt = t('app_logo', 'My Many Books logo');
   const pageContentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = pageContentRef.current;
-    if (!el) return;
-
-    const handleFadeOut = () => {
-      el.style.animation = 'none';
-      void el.offsetHeight;
-      el.style.animation = `langFadeOut ${LANGUAGE_FADE_OUT_TIMING}`;
-    };
-
-    const handleFadeIn = () => {
-      el.style.animation = 'none';
-      void el.offsetHeight;
-      el.style.animation = `langFadeIn ${LANGUAGE_FADE_IN_TIMING}`;
-      el.addEventListener('animationend', () => {
-        el.style.animation = '';
-      }, { once: true });
-    };
-
-    document.addEventListener('languageChanging', handleFadeOut);
-    i18n.on('languageChanged', handleFadeIn);
-
-    return () => {
-      document.removeEventListener('languageChanging', handleFadeOut);
-      i18n.off('languageChanged', handleFadeIn);
-    };
-  }, [i18n]);
+  const fadeSx = useLanguageChangeFade(pageContentRef, { keyframePrefix: 'authLangFade' });
 
   // If user is already authenticated, redirect to home
   if (user) {
@@ -88,14 +61,7 @@ const AuthPage: React.FC = () => {
           justifyContent: 'center',
           py: { xs: 6, md: 10 },
           px: 2,
-          '@keyframes langFadeOut': {
-            '0%': { opacity: 1 },
-            '100%': { opacity: 0 },
-          },
-          '@keyframes langFadeIn': {
-            '0%': { opacity: 0 },
-            '100%': { opacity: 1 },
-          },
+          ...fadeSx,
         }}
       >
         <Container maxWidth="sm">

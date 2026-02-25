@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button, IconButton, Chip, Container, Typography, Alert, Snackbar } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -16,14 +16,13 @@ import { BookSearchForm } from '../components/Search';
 import { useBookSearch } from '../hooks/useBookSearch';
 import { useBooks } from '../hooks/useBooks';
 import { useSetting } from '../hooks/useSetting';
-import { LANGUAGE_FADE_IN_TIMING, LANGUAGE_FADE_OUT_TIMING } from '../constants/animations';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../constants/scanner';
 
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
 
 const BooksPage: React.FC = () => {
-  const { t, i18n } = useTranslation(['pages', 'scanner', 'common']);
+  const { t } = useTranslation(['pages', 'scanner', 'common']);
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -354,35 +353,6 @@ const BooksPage: React.FC = () => {
     setWelcomeNoticeOpen(false);
   }, []);
 
-  // Fade page content on language change
-  const pageContentRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = pageContentRef.current;
-    if (!el) return;
-
-    const handleFadeOut = () => {
-      el.style.animation = 'none';
-      void el.offsetHeight;
-      el.style.animation = `langFadeOut ${LANGUAGE_FADE_OUT_TIMING}`;
-    };
-
-    const handleFadeIn = () => {
-      el.style.animation = 'none';
-      void el.offsetHeight;
-      el.style.animation = `langFadeIn ${LANGUAGE_FADE_IN_TIMING}`;
-      el.addEventListener('animationend', () => {
-        el.style.animation = '';
-      }, { once: true });
-    };
-
-    document.addEventListener('languageChanging', handleFadeOut);
-    i18n.on('languageChanged', handleFadeIn);
-    return () => {
-      document.removeEventListener('languageChanging', handleFadeOut);
-      i18n.off('languageChanged', handleFadeIn);
-    };
-  }, [i18n]);
-
   const visuallyHidden = {
     border: 0,
     clip: 'rect(0 0 0 0)',
@@ -469,20 +439,11 @@ const BooksPage: React.FC = () => {
   // List mode (default)
   return (
       <Container
-        ref={pageContentRef}
         maxWidth="lg"
         sx={{
           width: '100%',
           minWidth: 0,
           py: { xs: 2, sm: 4 },
-          '@keyframes langFadeOut': {
-            '0%': { opacity: 1 },
-            '100%': { opacity: 0 },
-          },
-          '@keyframes langFadeIn': {
-            '0%': { opacity: 0 },
-            '100%': { opacity: 1 },
-          },
         }}
       >
       {/* Page header */}

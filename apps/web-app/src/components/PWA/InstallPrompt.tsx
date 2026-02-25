@@ -10,12 +10,12 @@ import InstallIcon from '@mui/icons-material/GetApp';
 import CloseIcon from '@mui/icons-material/Close';
 import { Trans, useTranslation } from 'react-i18next';
 import { usePWAContext } from '../../contexts/PWAContext';
-import { LANGUAGE_FADE_IN_TIMING, LANGUAGE_FADE_OUT_TIMING } from '../../constants/animations';
+import { useLanguageChangeFade } from '../../hooks/useLanguageChangeFade';
 
 const INSTALL_PROMPT_DISMISSED_KEY = 'pwa-install-prompt-dismissed';
 
 export const InstallPrompt: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { isInstallable, isInstalled, installApp } = usePWAContext();
   const [canInstall, setCanInstall] = React.useState(false);
   const promptRef = React.useRef<HTMLDivElement | null>(null);
@@ -26,6 +26,7 @@ export const InstallPrompt: React.FC = () => {
       return false;
     }
   });
+  const fadeSx = useLanguageChangeFade(promptRef, { keyframePrefix: 'pwaLangFade' });
 
   // Check if the deferred prompt is available by testing installApp
   React.useEffect(() => {
@@ -48,26 +49,6 @@ export const InstallPrompt: React.FC = () => {
     }
     setDismissed(false);
   }, [isInstallable]);
-
-  React.useEffect(() => {
-    const handleFadeOut = () => {
-      if (!promptRef.current) return;
-      promptRef.current.style.animation = `pwaLangFadeOut ${LANGUAGE_FADE_OUT_TIMING}`;
-    };
-
-    const handleFadeIn = () => {
-      if (!promptRef.current) return;
-      promptRef.current.style.animation = `pwaLangFadeIn ${LANGUAGE_FADE_IN_TIMING}`;
-    };
-
-    document.addEventListener('languageChanging', handleFadeOut);
-    i18n.on('languageChanged', handleFadeIn);
-
-    return () => {
-      document.removeEventListener('languageChanging', handleFadeOut);
-      i18n.off('languageChanged', handleFadeIn);
-    };
-  }, [i18n]);
 
   const handleDismiss = () => {
     setDismissed(true);
@@ -99,14 +80,7 @@ export const InstallPrompt: React.FC = () => {
         boxSizing: 'border-box',
         p: 2,
         pr: 6,
-        '@keyframes pwaLangFadeOut': {
-          '0%': { opacity: 1 },
-          '100%': { opacity: 0 },
-        },
-        '@keyframes pwaLangFadeIn': {
-          '0%': { opacity: 0 },
-          '100%': { opacity: 1 },
-        },
+        ...fadeSx,
         '@media (min-width: 768px)': {
           left: 'auto',
           width: 300,
