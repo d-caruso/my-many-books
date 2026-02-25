@@ -16,11 +16,13 @@ import {
   Divider,
   Alert,
   Tooltip,
+  IconButton,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
+import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { useTranslation } from 'react-i18next';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
@@ -534,29 +536,34 @@ export const BookForm: React.FC<BookFormProps> = ({
           >
             {/* Authors */}
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="subtitle2" color="text.secondary">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, mb: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mr: 1.25 }}>
                   {t('books:author')}
                 </Typography>
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    size="small"
-                    onClick={() => setManageAuthorsDialogOpen(true)}
-                    disabled={loading}
-                    sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
-                  >
-                    {t('common:manage', { defaultValue: 'Manage' })}
-                  </Button>
-                  <Button
-                    size="small"
-                    startIcon={<AddIcon />}
-                    onClick={() => setAddAuthorDialogOpen(true)}
-                    disabled={loading}
-                    sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
-                  >
-                    {t('common:add')}
-                  </Button>
-                </Stack>
+                <Tooltip title={t('common:add')}>
+                  <span>
+                    <IconButton
+                      size="small"
+                      onClick={() => setAddAuthorDialogOpen(true)}
+                      disabled={loading}
+                      aria-label={t('common:add')}
+                    >
+                      <AddIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title={t('common:manage', { defaultValue: 'Manage' })}>
+                  <span>
+                    <IconButton
+                      size="small"
+                      onClick={() => setManageAuthorsDialogOpen(true)}
+                      disabled={loading}
+                      aria-label={t('common:manage', { defaultValue: 'Manage' })}
+                    >
+                      <EditNoteOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
               </Box>
               <AuthorAutocomplete
                 value={null}
@@ -612,29 +619,34 @@ export const BookForm: React.FC<BookFormProps> = ({
 
           {/* Categories */}
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="subtitle2" color="text.secondary">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, mb: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mr: 1.25 }}>
                 {t('books:categories')}
               </Typography>
-              <Stack direction="row" spacing={1}>
-                <Button
-                  size="small"
-                  onClick={() => setManageCategoriesDialogOpen(true)}
-                  disabled={loading}
-                  sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
-                >
-                  {t('common:manage', { defaultValue: 'Manage' })}
-                </Button>
-                <Button
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => setAddCategoryDialogOpen(true)}
-                  disabled={loading}
-                  sx={{ minWidth: 'auto', fontSize: '0.75rem' }}
-                >
-                  {t('common:add')}
-                </Button>
-              </Stack>
+              <Tooltip title={t('common:add')}>
+                <span>
+                  <IconButton
+                    size="small"
+                    onClick={() => setAddCategoryDialogOpen(true)}
+                    disabled={loading}
+                    aria-label={t('common:add')}
+                  >
+                    <AddIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Tooltip title={t('common:manage', { defaultValue: 'Manage' })}>
+                <span>
+                  <IconButton
+                    size="small"
+                    onClick={() => setManageCategoriesDialogOpen(true)}
+                    disabled={loading}
+                    aria-label={t('common:manage', { defaultValue: 'Manage' })}
+                  >
+                    <EditNoteOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </Box>
 
             {categoriesBusy ? (
