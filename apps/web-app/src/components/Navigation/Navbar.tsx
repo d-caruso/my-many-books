@@ -50,6 +50,11 @@ export const Navbar: React.FC = () => {
     fadeOutMainContent();
   };
 
+  const isNoopNavigation = (path: string) => {
+    const currentPathWithQuery = `${location.pathname}${location.search ?? ''}${location.hash ?? ''}`;
+    return currentPathWithQuery === path;
+  };
+
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -64,12 +69,19 @@ export const Navbar: React.FC = () => {
   };
 
   const handleNavigation = (path: string) => {
+    if (isNoopNavigation(path)) {
+      handleMenuClose();
+      return;
+    }
     runViewSwitchFadeOut();
     navigate(path);
     handleMenuClose();
   };
 
   const handleLogoNavigation = () => {
+    if (isNoopNavigation('/')) {
+      return;
+    }
     fadeOutMainContent();
     navigate('/');
   };

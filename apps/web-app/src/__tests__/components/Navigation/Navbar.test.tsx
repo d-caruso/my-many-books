@@ -13,10 +13,11 @@ vi.mock('@my-many-books/shared-auth', () => ({
 }));
 
 const mockNavigate = vi.fn();
+let mockLocation = { pathname: '/books', search: '', hash: '' };
 vi.mock('react-router-dom', async () => ({
   ...await vi.importActual('react-router-dom'),
   useNavigate: () => mockNavigate,
-  useLocation: () => ({ pathname: '/books' }),
+  useLocation: () => mockLocation,
 }));
 
 vi.mock('@mui/icons-material/Menu', () => ({
@@ -77,6 +78,7 @@ const baseUser = {
 describe('Navbar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLocation = { pathname: '/books', search: '', hash: '' };
   });
 
   test('renders navbar with logo and app name', () => {
@@ -215,6 +217,22 @@ describe('Navbar', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Scanner' }));
     expect(mockNavigate).toHaveBeenCalledWith('/scanner');
+  });
+
+  test('clicking active navigation voice does not trigger no-op navigation', () => {
+    mockLocation = { pathname: '/', search: '', hash: '' };
+    mockUseAuth.mockReturnValue({
+      user: baseUser,
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
+    });
+
+    render(<Navbar />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'My Books' }));
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   test('shows user avatar initial when name is available', () => {
