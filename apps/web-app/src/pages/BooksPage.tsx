@@ -22,7 +22,8 @@ import { useProtectedViewTransition } from '../contexts/ViewTransitionContext';
 
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
-const BOOKS_PAGE_MODE_FADE_OUT_LEAD_MS = 140;
+const BOOKS_PAGE_MODE_FADE_OUT_LEAD_MS = 180;
+const BOOKS_PAGE_MODE_FADE_IN_TIMING = '3s ease-in-out forwards';
 
 const BooksPage: React.FC = () => {
   const { t } = useTranslation(['pages', 'scanner', 'common']);
@@ -434,6 +435,7 @@ const BooksPage: React.FC = () => {
   }, [pageMode, selectedBook?.id]);
   const pageViewFadeSx = useFadeInOnChange(pageViewRef, pageViewTransitionKey, {
     keyframePrefix: 'booksPageModeFade',
+    fadeInTiming: BOOKS_PAGE_MODE_FADE_IN_TIMING,
   });
 
   // Render different modes

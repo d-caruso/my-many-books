@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_FADE_IN_TIMING, LANGUAGE_FADE_OUT_TIMING } from '../constants/animations';
@@ -30,6 +30,7 @@ export const runFadeOut = (element: HTMLElement | null, keyframePrefix = 'langFa
 interface UseFadeOnChangeOptions {
   keyframePrefix?: string;
   skipInitial?: boolean;
+  fadeInTiming?: string;
 }
 
 export const useLanguageChangeFade = (
@@ -39,7 +40,7 @@ export const useLanguageChangeFade = (
   const { i18n } = useTranslation();
   const keyframePrefix = options.keyframePrefix ?? 'langFade';
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const handleFadeOut = () => {
       const el = elementRef.current;
       if (!el) return;
@@ -82,6 +83,7 @@ export const useFadeInOnChange = (
 ) => {
   const keyframePrefix = options.keyframePrefix ?? 'viewFade';
   const skipInitial = options.skipInitial ?? true;
+  const fadeInTiming = options.fadeInTiming ?? LANGUAGE_FADE_IN_TIMING;
   const isFirstRenderRef = useRef(true);
 
   useEffect(() => {
@@ -97,18 +99,25 @@ export const useFadeInOnChange = (
     }
 
     el.style.animation = 'none';
+    el.style.opacity = '0';
     void el.offsetHeight;
-    el.style.animation = `${keyframePrefix}In ${LANGUAGE_FADE_IN_TIMING}`;
-    el.addEventListener(
-      'animationend',
-      () => {
-        el.style.animation = '';
-      },
-      { once: true }
-    );
+    const rafId = window.requestAnimationFrame(() => {
+      el.style.animation = `${keyframePrefix}In ${fadeInTiming}`;
+      el.addEventListener(
+        'animationend',
+        () => {
+          el.style.animation = '';
+          el.style.opacity = '';
+        },
+        { once: true }
+      );
+    });
 
     isFirstRenderRef.current = false;
-  }, [changeKey, elementRef, keyframePrefix, skipInitial]);
+    return () => {
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [changeKey, elementRef, keyframePrefix, skipInitial, fadeInTiming]);
 
   return getLanguageFadeKeyframesSx(keyframePrefix);
 };
