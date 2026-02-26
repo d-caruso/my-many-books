@@ -2,7 +2,8 @@ import * as React from 'react';
 import { View, StyleSheet, Image } from 'react-native';
 import { Card, Text, IconButton, Menu, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import { Book } from '@/types';
+import { Book, type SyncStatus } from '@/types';
+import type { EntityMeta, UiBook } from '@/types/ui';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { SyncStatusBadge } from './SyncStatusBadge';
 import { ConflictDialog } from './ConflictDialog';
@@ -49,7 +50,7 @@ export function getStatusLabel(status: Book['status'], t?: (key: string) => stri
 export const statusOptions: Book['status'][] = [BOOK_STATUS.READING, BOOK_STATUS.PAUSED, BOOK_STATUS.FINISHED];
 
 interface BookCardProps {
-  book: Book;
+  book: UiBook | (Book & { meta?: EntityMeta });
   onPress?: () => void;
   onStatusChange?: (status: Book['status']) => void;
   onDelete?: () => void;
@@ -108,11 +109,11 @@ export const BookCard: React.FC<BookCardProps> = ({
                 {getStatusLabel(book.status, t)}
               </Chip>
               <SyncStatusBadge 
-                syncStatus={book._syncStatus}
+                syncStatus={book.meta?.syncStatus}
                 compact
                 testID="book-sync-status"
               />
-              {book._hasConflict && (
+              {book.meta?.hasConflict && (
                 <Chip
                   icon="alert"
                   style={styles.conflictChip}
@@ -169,11 +170,11 @@ export const BookCard: React.FC<BookCardProps> = ({
         )}
       </Card.Content>
 
-      {book._hasConflict && (
+      {book.meta?.hasConflict && (
         <ConflictDialog
           visible={conflictDialogVisible}
           localBook={book}
-          serverBook={book._serverVersion || book} // Use server version if available, fallback to current book
+          serverBook={(book as any)._serverVersion || book} // Use server version if available, fallback to current book
           onResolve={(choice) => {
             onResolveConflict?.(book.id, choice);
             setConflictDialogVisible(false);

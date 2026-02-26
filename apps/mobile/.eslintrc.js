@@ -1,5 +1,9 @@
 module.exports = {
   root: true,
+  parserOptions: {
+    tsconfigRootDir: __dirname,
+    project: ['./tsconfig.json'],
+  },
   extends: ['expo'], // expo config already includes React Native and react-hooks support
   rules: {
     // TypeScript specific rules

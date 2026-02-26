@@ -17,6 +17,8 @@ import { useBookSearch } from '@/hooks/useBookSearch';
 import { useSyncQueue } from '@/hooks/useSyncQueue';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { Book } from '@/types';
+import type { UiBook } from '@/types/ui';
+import type { ListRenderItem } from 'react-native';
 
 export default function BooksScreen() {
   const { t } = useTranslation();
@@ -25,7 +27,7 @@ export default function BooksScreen() {
   const [isSearching, setIsSearching] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState('');
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [selectedBook, setSelectedBook] = useState<UiBook | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'details'>('list');
   const { isOnline } = useNetworkState();
   
@@ -105,7 +107,7 @@ export default function BooksScreen() {
     clearSearch();
   };
 
-  const handleBookPress = (book: Book) => {
+  const handleBookPress = (book: UiBook) => {
     setSelectedBook(book);
     setViewMode('details');
   };
@@ -139,7 +141,7 @@ export default function BooksScreen() {
     }
   };
 
-  const renderBook = ({ item }: { item: Book }) => (
+  const renderBook: ListRenderItem<UiBook> = ({ item }) => (
     <BookCard
       book={item}
       onPress={() => handleBookPress(item)}
@@ -276,7 +278,7 @@ export default function BooksScreen() {
           <Chip icon="delete" onPress={() => handleDeleteBook(selectedBook.id)} accessibilityLabel={t('books:delete_book')}>
             {t('books:delete_book')}
           </Chip>
-          {'_hasConflict' in selectedBook && (selectedBook as any)._hasConflict && (
+          {selectedBook.meta?.hasConflict && (
             <Chip
               icon="alert"
               onPress={() => handleResolveConflict(selectedBook.id, 'local')}

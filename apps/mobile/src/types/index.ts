@@ -92,3 +92,5 @@ export interface PaginatedResponse<T> {
   hasMore: boolean;
 }
 
+// UI-layer shared types
+export type { EntityMeta, UiBook } from './ui';

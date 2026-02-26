@@ -14,41 +14,37 @@ import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mob
 import { OPERATION_TYPES } from '@/services/hooks/eventsSchema';
 import { LocalBook } from '@/entities/LocalBook';
 
-type CreateBookInput = Partial<BookFormData> & { _tempId?: string; id?: string | number };
-type UiBook = Book & {
-  _tempId?: string;
-  _syncStatus?: (typeof SYNC_STATUS)[keyof typeof SYNC_STATUS];
-  _serverUpdatedAt?: string;
-  _hasConflict?: boolean;
-  serverId?: number;
-  _rollbackData?: { previousValues?: Partial<Book> } | null;
-};
+import { EntityMeta, UiBook } from '@/types/ui';
 
-const bookToUi = (book: Book, meta: Partial<UiBook> = {}): UiBook => ({
+type CreateBookInput = Partial<BookFormData> & { meta?: Partial<EntityMeta>; id?: string | number };
+
+const bookToUi = (book: Book, meta: Partial<EntityMeta> = {}): UiBook => ({
   ...book,
-  _tempId: meta._tempId,
-  _syncStatus: meta._syncStatus ?? SYNC_STATUS.SYNCED,
-  _serverUpdatedAt: meta._serverUpdatedAt ?? (book.updateDate as string | undefined),
-  _hasConflict: meta._hasConflict,
-  serverId: meta.serverId,
-  _rollbackData: meta._rollbackData ?? null,
+  meta: {
+    tempId: meta.tempId,
+    syncStatus: meta.syncStatus ?? SYNC_STATUS.SYNCED,
+    serverUpdatedAt: meta.serverUpdatedAt ?? (book.updateDate as string | undefined),
+    hasConflict: meta.hasConflict,
+    serverId: meta.serverId,
+    rollbackData: meta.rollbackData ?? null,
+  },
 });
 
 const localToUi = (local: LocalBook): UiBook =>
   bookToUi(local.entity, {
-    _tempId: local.tempId,
-    _syncStatus: local.syncStatus,
-    _serverUpdatedAt: local.serverUpdatedAt,
+    tempId: local.tempId,
+    syncStatus: local.syncStatus,
+    serverUpdatedAt: local.serverUpdatedAt,
     serverId: local.serverId,
   });
 
 const uiToLocal = (ui: UiBook): LocalBook => {
-  const { _tempId, _syncStatus, _serverUpdatedAt, serverId, _hasConflict, _rollbackData, ...book } = ui;
+  const { meta, ...book } = ui;
   const local = new LocalBook(book as Book);
-  local.tempId = _tempId;
-  local.syncStatus = _syncStatus ?? SYNC_STATUS.SYNCED;
-  local.serverUpdatedAt = _serverUpdatedAt;
-  local.serverId = serverId;
+  local.tempId = meta?.tempId;
+  local.syncStatus = meta?.syncStatus ?? SYNC_STATUS.SYNCED;
+  local.serverUpdatedAt = meta?.serverUpdatedAt;
+  local.serverId = meta?.serverId;
   return local;
 };
 
@@ -132,8 +128,8 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // Upsert server data into SQLite (prevents PRIMARY KEY conflicts)
       for (const book of response.books) {
         const uiBook = bookToUi(book as Book, {
-          _syncStatus: SYNC_STATUS.SYNCED,
-          _serverUpdatedAt: book.updateDate,
+          syncStatus: SYNC_STATUS.SYNCED,
+          serverUpdatedAt: book.updateDate,
         });
         await bookRepository.upsert(uiToLocal(uiBook));
       }
@@ -180,8 +176,8 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // Upsert server data into SQLite (prevents PRIMARY KEY conflicts)
       for (const book of response.books) {
         const uiBook = bookToUi(book as Book, {
-          _syncStatus: SYNC_STATUS.SYNCED,
-          _serverUpdatedAt: book.updateDate,
+          syncStatus: SYNC_STATUS.SYNCED,
+          serverUpdatedAt: book.updateDate,
         });
         await bookRepository.upsert(uiToLocal(uiBook));
       }
@@ -202,7 +198,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   const createBook = useCallback(async (bookData: CreateBookInput): Promise<UiBook> => {
     // Generate temporary ID for optimistic update
     const tempId = `temp-${uuidv4()}`;
-    const { authorIds, categoryIds, ...bookPayload } = bookData;
+    const { authorIds, categoryIds, meta: incomingMeta, ...bookPayload } = bookData;
     const optimisticBook = bookToUi(
       {
         ...(bookPayload as Book),
@@ -211,8 +207,9 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         updateDate: new Date().toISOString(),
       },
       {
-        _tempId: tempId,
-        _syncStatus: SYNC_STATUS.PENDING,
+        tempId: tempId,
+        syncStatus: SYNC_STATUS.PENDING,
+        ...incomingMeta,
       }
     );
 
@@ -231,16 +228,16 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // Replace temp book with real book from server in SQLite
       await bookRepository.hardDelete(tempId);
       const newUiBook = bookToUi(newBook as Book, {
-        _tempId: tempId,
-        _syncStatus: SYNC_STATUS.SYNCED,
-        _serverUpdatedAt: (newBook as any)._serverUpdatedAt || newBook.updateDate || new Date().toISOString(),
+        tempId: tempId,
+        syncStatus: SYNC_STATUS.SYNCED,
+        serverUpdatedAt: (newBook as any)._serverUpdatedAt || newBook.updateDate || new Date().toISOString(),
         serverId: typeof newBook.id === 'number' ? newBook.id : undefined,
       });
       await bookRepository.create(uiToLocal(newUiBook));
 
       // Update local state
       setBooks(prev => prev.map(book =>
-        book._tempId === tempId ? newUiBook : book
+        book.meta.tempId === tempId ? newUiBook : book
       ));
 
       return newUiBook;
@@ -250,15 +247,15 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // If error is retriable, keep optimistic book with pending status
       // Note: API service already handles queueing via withQueueOnError, so we don't queue again here
       if (isRetriableError(err)) {
-        await bookRepository.update(tempId, { syncStatus: SYNC_STATUS.PENDING } as any);
-        setBooks(prev => prev.map(book =>
-          book._tempId === tempId ? { ...book, _syncStatus: SYNC_STATUS.PENDING } : book
-        ));
+          await bookRepository.update(tempId, { syncStatus: SYNC_STATUS.PENDING } as any);
+          setBooks(prev => prev.map(book =>
+            book.meta.tempId === tempId ? { ...book, meta: { ...book.meta, syncStatus: SYNC_STATUS.PENDING } } : book
+          ));
         return optimisticBook;
       } else {
         // Non-retriable error - remove optimistic book
         await bookRepository.hardDelete(tempId);
-        setBooks(prev => prev.filter(book => book._tempId !== tempId));
+        setBooks(prev => prev.filter(book => book.meta.tempId !== tempId));
         console.error('Book creation error:', extractErrorMessage(err));
         throw new Error(t('books.createFailed'));
       }
@@ -277,15 +274,18 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     const pendingBook: UiBook = {
       ...previousBook,
       ...bookData,
-      _syncStatus: SYNC_STATUS.PENDING,
-      updateDate: new Date().toISOString(),
-      _rollbackData: {
-        previousValues: {
-          title: previousBook.title,
-          status: previousBook.status,
-          updateDate: previousBook.updateDate,
+      meta: {
+        ...previousBook.meta,
+        syncStatus: SYNC_STATUS.PENDING,
+        rollbackData: {
+          previousValues: {
+            title: previousBook.title,
+            status: previousBook.status,
+            updateDate: previousBook.updateDate,
+          },
         },
       },
+      updateDate: new Date().toISOString(),
     };
     await bookRepository.update(stringId, uiToLocal(pendingBook));
 
@@ -304,30 +304,28 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       
       // Simple conflict detection: if server version is newer than our optimistic update
       const hasConflict = serverUpdatedAt > localUpdatedAt && 
-                         previousBook._serverUpdatedAt && 
-                         new Date(previousBook._serverUpdatedAt) < serverUpdatedAt;
+                         previousBook.meta.serverUpdatedAt && 
+                         new Date(previousBook.meta.serverUpdatedAt) < serverUpdatedAt;
 
       if (hasConflict) {
-        console.warn('Conflict detected for book update:', {
-          bookId: id,
-          serverVersion: updatedBook.updateDate,
-          localVersion: optimisticBook?.updateDate,
-          lastKnownServer: previousBook._serverUpdatedAt
-        });
-      }
+          console.warn('Conflict detected for book update:', {
+            bookId: id,
+            serverVersion: updatedBook.updateDate,
+            localVersion: optimisticBook?.updateDate,
+            lastKnownServer: previousBook.meta.serverUpdatedAt
+          });
+        }
 
       const updatedUi = bookToUi(updatedBook as Book, {
-        _syncStatus: SYNC_STATUS.SYNCED,
-        _serverUpdatedAt: updatedBook.updateDate,
-        _hasConflict: hasConflict,
+        syncStatus: SYNC_STATUS.SYNCED,
+        serverUpdatedAt: updatedBook.updateDate,
+        hasConflict,
       });
       await bookRepository.update(stringId, uiToLocal(updatedUi));
 
       // Update local state
       setBooks(prev => prev.map(book =>
-        book.id == id ? { 
-          ...updatedUi
-        } : book
+        book.id == id ? updatedUi : book
       ));
 
       return updatedUi;
@@ -339,16 +337,15 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       if (isRetriableError(err)) {
         const pendingBook = books.find(b => b.id == id);
         if (pendingBook) {
-          return { ...pendingBook, ...bookData, _syncStatus: SYNC_STATUS.PENDING };
+          return { ...pendingBook, ...bookData, meta: { ...pendingBook.meta, syncStatus: SYNC_STATUS.PENDING } };
         }
       } else {
         // Non-retriable error - rollback optimistic changes using stored rollback data
-        if (pendingBook._rollbackData?.previousValues) {
+        if (pendingBook.meta.rollbackData?.previousValues) {
           const rollback = {
             ...pendingBook,
-            ...pendingBook._rollbackData.previousValues,
-            _syncStatus: SYNC_STATUS.FAILED,
-            _rollbackData: null,
+            ...pendingBook.meta.rollbackData.previousValues,
+            meta: { ...pendingBook.meta, syncStatus: SYNC_STATUS.FAILED, rollbackData: null },
           } as UiBook;
           await bookRepository.update(stringId, uiToLocal(rollback));
           setBooks(prev => prev.map(book =>
@@ -358,7 +355,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
           // Fallback: just mark as failed if no rollback data
           await bookRepository.update(stringId, { syncStatus: SYNC_STATUS.FAILED } as any);
           setBooks(prev => prev.map(book =>
-            book.id == id ? { ...book, _syncStatus: SYNC_STATUS.FAILED } : book
+            book.id == id ? { ...book, meta: { ...book.meta, syncStatus: SYNC_STATUS.FAILED } } : book
           ));
         }
       }
@@ -413,7 +410,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     // Update SQLite and local state immediately (optimistic)
       await bookRepository.update(stringId, { syncStatus: SYNC_STATUS.PENDING } as any);
     setBooks(prev => prev.map(book =>
-      book.id == id ? { ...book, status, _syncStatus: SYNC_STATUS.PENDING } : book
+      book.id == id ? { ...book, status, meta: { ...book.meta, syncStatus: SYNC_STATUS.PENDING } } : book
     ));
 
     try {
@@ -423,7 +420,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // Mark as synced
       await bookRepository.update(stringId, { syncStatus: SYNC_STATUS.SYNCED } as any);
       setBooks(prev => prev.map(book =>
-        book.id == id ? { ...book, _syncStatus: SYNC_STATUS.SYNCED } : book
+        book.id == id ? { ...book, meta: { ...book.meta, syncStatus: SYNC_STATUS.SYNCED } } : book
       ));
     } catch (err: unknown) {
       console.error('Failed to update book status:', err);
@@ -437,7 +434,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         // Non-retriable error - mark as failed
         await bookRepository.update(stringId, { syncStatus: SYNC_STATUS.FAILED } as any);
         setBooks(prev => prev.map(book =>
-          book.id == id ? { ...book, _syncStatus: SYNC_STATUS.FAILED } : book
+          book.id == id ? { ...book, meta: { ...book.meta, syncStatus: SYNC_STATUS.FAILED } } : book
         ));
         const details = extractErrorDetails(err);
         mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
@@ -456,7 +453,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     const stringId = String(bookId);
     const conflictedBook = books.find(book => book.id == bookId);
     
-    if (!conflictedBook || !conflictedBook._hasConflict) {
+    if (!conflictedBook || !conflictedBook.meta.hasConflict) {
       throw new Error(t('conflicts.notFound'));
     }
 
@@ -465,16 +462,14 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         // Keep local version, mark for re-sync to server
         const updatedUi: UiBook = {
           ...conflictedBook,
-          _syncStatus: SYNC_STATUS.PENDING,
-          _hasConflict: false,
+          meta: { ...conflictedBook.meta, syncStatus: SYNC_STATUS.PENDING, hasConflict: false },
         };
         await bookRepository.update(stringId, uiToLocal(updatedUi));
 
         setBooks(prev => prev.map(book =>
           book.id == bookId ? { 
             ...book, 
-            _syncStatus: SYNC_STATUS.PENDING, 
-            _hasConflict: false 
+            meta: { ...book.meta, syncStatus: SYNC_STATUS.PENDING, hasConflict: false }
           } : book
         ));
 
@@ -493,11 +488,11 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         const serverBook = await bookAPI.getBook(numericId);
         const resolvedLocal = resolveBookConflict(uiToLocal(conflictedBook), serverBook, 'server');
         const resolvedUi = bookToUi(resolvedLocal.entity as Book, {
-          _syncStatus: resolvedLocal.syncStatus,
-          _serverUpdatedAt: resolvedLocal.serverUpdatedAt || serverBook.updateDate,
-          _hasConflict: false,
-          _tempId: conflictedBook._tempId,
-          serverId: resolvedLocal.serverId ?? conflictedBook.serverId ?? (typeof resolvedLocal.entity.id === 'number' ? resolvedLocal.entity.id : undefined),
+          syncStatus: resolvedLocal.syncStatus,
+          serverUpdatedAt: resolvedLocal.serverUpdatedAt || serverBook.updateDate,
+          hasConflict: false,
+          tempId: conflictedBook.meta.tempId,
+          serverId: resolvedLocal.serverId ?? conflictedBook.meta.serverId ?? (typeof resolvedLocal.entity.id === 'number' ? resolvedLocal.entity.id : undefined),
         });
         
         await bookRepository.update(stringId, uiToLocal(resolvedUi));
