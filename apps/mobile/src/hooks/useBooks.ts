@@ -8,9 +8,9 @@ import { useNetworkState } from '@/hooks/useNetworkState';
 import { v4 as uuidv4 } from 'uuid';
 import { resolveConflict as resolveBookConflict } from '@/utils/conflictDetection';
 import { useTranslation } from 'react-i18next';
-import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
+import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
+import { OPERATION_TYPES } from '@/services/hooks/eventsSchema';
 import { LocalBook } from '@/entities/LocalBook';
-import { SYNC_STATUS } from '@/types';
 
 interface UseBooksState {
   books: Book[];

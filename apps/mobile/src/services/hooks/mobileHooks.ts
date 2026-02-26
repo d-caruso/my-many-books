@@ -4,7 +4,9 @@
 // ================================================================
 
 import { HookSystem, InMemoryHookStorage } from '@my-many-books/hookey';
+import type { BuildResult, SchemaMap } from '@my-many-books/shared-utils';
 import { mobileHookConfigService } from './mobileHookConfigService';
+import { MobileEventName } from './eventsSchema';
 
 const isTestRuntime = (): boolean => {
   return __DEV__ || Boolean(process.env.JEST_WORKER_ID);
@@ -69,7 +71,7 @@ export class MobileHookSystemManager {
     }
   }
 
-  async emit(eventName: string, payload?: unknown): Promise<void> {
+  async emit(eventName: MobileEventName, payload?: unknown): Promise<void> {
     // Level 1: Check test environment and local config
     if (this.shouldSkipHooks()) {
       return;
@@ -87,7 +89,7 @@ export class MobileHookSystemManager {
     }
 
     try {
-      await system.trigger(eventName, {
+      await system.trigger(String(eventName), {
         ...payload,
         environment: this.options.environment,
         timestamp: new Date().toISOString(),
@@ -130,7 +132,7 @@ mobileHookSystemManager.initialize();
 
 // Export singleton methods
 export const mobileHooks = {
-  emit: (eventName: string, payload?: unknown) => mobileHookSystemManager.emit(eventName, payload),
+  emit: (eventName: MobileEventName, payload?: unknown) => mobileHookSystemManager.emit(eventName as string, payload),
   getInstance: () => mobileHookSystemManager.getInstance(),
   isOperational: () => mobileHookSystemManager.isOperational(),
 };

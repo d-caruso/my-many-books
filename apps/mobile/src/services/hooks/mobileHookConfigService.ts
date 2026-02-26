@@ -5,6 +5,7 @@
 
 import { MobileHooksListenerSettings } from '@my-many-books/shared-types';
 import { API_BASE_URL } from '../../config/api';
+import { MobileEventName } from './eventsSchema';
 
 export interface MobileHookDBConfig {
   hooks_enabled: boolean;
@@ -39,7 +40,7 @@ export class MobileHookConfigService {
    * Level 3: User-specific Configuration (Overrides global settings)
    * Level 4: Individual Hook/Listener Controls
    */
-  async shouldProcessHooks(eventType?: string): Promise<boolean> {
+  async shouldProcessHooks(eventType?: MobileEventName): Promise<boolean> {
     // Level 1: Environment Variable (Highest Priority - Infrastructure)
     const envEnabled = process.env.EXPO_PUBLIC_HOOKS_ENABLED;
     if (envEnabled === 'false') {
