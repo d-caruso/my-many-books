@@ -121,8 +121,8 @@ export class CategoryRepository {
       updateDate: row.update_date as string | undefined,
     };
     const local = new LocalCategory(category);
-    local.syncStatus = (row._sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
-    local.serverUpdatedAt = row._server_updated_at as string | undefined;
+    local.syncStatus = (row.sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
+    local.serverUpdatedAt = row.server_updated_at as string | undefined;
     return local;
   }
 
@@ -131,7 +131,7 @@ export class CategoryRepository {
    */
   async findByServerId(serverId: number): Promise<LocalCategory | null> {
     const category = await databaseService.getFirstAsync(
-      'SELECT * FROM categories WHERE _server_id = ?',
+      'SELECT * FROM categories WHERE server_id = ?',
       [serverId]
     );
     return category ? this.mapRowToCategory(category) : null;
@@ -153,11 +153,11 @@ export class CategoryRepository {
       values.push(fields.serverId);
     }
     if (fields._syncStatus !== undefined) {
-      updates.push('_sync_status = ?');
+      updates.push('sync_status = ?');
       values.push(fields._syncStatus);
     }
     if (fields._serverUpdatedAt !== undefined) {
-      updates.push('_server_updated_at = ?');
+      updates.push('server_updated_at = ?');
       values.push(fields._serverUpdatedAt);
     }
 

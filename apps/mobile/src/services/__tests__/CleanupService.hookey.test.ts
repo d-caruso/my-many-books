@@ -250,7 +250,7 @@ describe('CleanupService Hookey Integration', () => {
       const { operationQueue } = require('../OperationQueue');
       
       const pendingBooks = [
-        { id: 'book-1', title: 'Test Book', _sync_status: 'pending' }
+        { id: 'book-1', title: 'Test Book', sync_status: 'pending' }
       ];
       
       databaseService.getAllAsync
@@ -283,7 +283,7 @@ describe('CleanupService Hookey Integration', () => {
         { 
           id: 'book-2', 
           server_id: 123, 
-          _sync_status: 'failed',
+          sync_status: 'failed',
           creation_date: new Date().toISOString()
         }
       ];
@@ -317,7 +317,7 @@ describe('CleanupService Hookey Integration', () => {
         { 
           id: 'book-3', 
           server_id: null, 
-          _sync_status: 'failed',
+          sync_status: 'failed',
           creation_date: new Date(Date.now() - (6 * 60 * 60 * 1000)).toISOString() // 6 hours ago
         }
       ];

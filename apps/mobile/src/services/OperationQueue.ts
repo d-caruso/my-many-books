@@ -355,7 +355,7 @@ export class OperationQueue {
       }
       
       await databaseService.executeQuery(
-        'UPDATE books SET _sync_status = ? WHERE id = ? OR _temp_id = ?',
+        'UPDATE books SET sync_status = ? WHERE id = ? OR temp_id = ?',
         [status, bookId, bookId]
       );
     } catch (error) {

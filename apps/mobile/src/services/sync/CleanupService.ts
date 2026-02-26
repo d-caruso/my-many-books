@@ -70,7 +70,7 @@ export class CleanupService {
       `SELECT id, creation_date FROM books
        WHERE id LIKE 'temp-%'
        AND server_id IS NULL
-       AND _sync_status = ?`,
+       AND sync_status = ?`,
       [SYNC_STATUS.FAILED]
     );
 
@@ -322,13 +322,13 @@ export class CleanupService {
       const orphanedAuthors = await databaseService.getAllAsync(`
         SELECT ba.book_id, ba.author_id 
         FROM book_authors ba 
-        WHERE ba.book_id NOT IN (SELECT id FROM books WHERE _deleted = 0)
+        WHERE ba.book_id NOT IN (SELECT id FROM books WHERE deleted = 0)
       `);
       
       const orphanedCategories = await databaseService.getAllAsync(`
         SELECT bc.book_id, bc.category_id 
         FROM book_categories bc 
-        WHERE bc.book_id NOT IN (SELECT id FROM books WHERE _deleted = 0)
+        WHERE bc.book_id NOT IN (SELECT id FROM books WHERE deleted = 0)
       `);
 
       // Clean up orphaned foreign key references
@@ -342,7 +342,7 @@ export class CleanupService {
         
         await databaseService.executeQuery(`
           DELETE FROM book_authors 
-          WHERE book_id NOT IN (SELECT id FROM books WHERE _deleted = 0)
+          WHERE book_id NOT IN (SELECT id FROM books WHERE deleted = 0)
         `);
         
         mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.SUCCESS, {
@@ -362,7 +362,7 @@ export class CleanupService {
         
         await databaseService.executeQuery(`
           DELETE FROM book_categories 
-          WHERE book_id NOT IN (SELECT id FROM books WHERE _deleted = 0)
+          WHERE book_id NOT IN (SELECT id FROM books WHERE deleted = 0)
         `);
         
         mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.SUCCESS, {
@@ -417,11 +417,11 @@ export class CleanupService {
     const pendingBooks = await databaseService.getAllAsync<{
       id: string;
       title: string;
-      _sync_status: string;
+      sync_status: string;
     }>(`
-      SELECT id, title, _sync_status
+      SELECT id, title, sync_status
       FROM books
-      WHERE _sync_status = '${SYNC_STATUS.PENDING}'
+      WHERE sync_status = '${SYNC_STATUS.PENDING}'
     `);
 
     const allOperations = operationQueue.getAllOperations();
@@ -445,7 +445,7 @@ export class CleanupService {
         
         // Mark as failed since sync attempt is lost
         await databaseService.executeQuery(
-          'UPDATE books SET _sync_status = ? WHERE id = ?',
+          'UPDATE books SET sync_status = ? WHERE id = ?',
           [SYNC_STATUS.FAILED, book.id]
         );
       }
@@ -455,12 +455,12 @@ export class CleanupService {
     const failedBooks = await databaseService.getAllAsync<{
       id: string;
       server_id: number | null;
-      _sync_status: string;
+      sync_status: string;
       creation_date: string;
     }>(`
-      SELECT id, server_id, _sync_status, creation_date
+      SELECT id, server_id, sync_status, creation_date
       FROM books
-      WHERE _sync_status = ?
+      WHERE sync_status = ?
     `, [SYNC_STATUS.FAILED]);
 
     for (const book of failedBooks) {
@@ -482,7 +482,7 @@ export class CleanupService {
         });
         
         await databaseService.executeQuery(
-          'UPDATE books SET _sync_status = ? WHERE id = ?',
+          'UPDATE books SET sync_status = ? WHERE id = ?',
           [SYNC_STATUS.SYNCED, book.id]
         );
       } else if (ageInDays < 1) {
@@ -499,7 +499,7 @@ export class CleanupService {
         });
         
         await databaseService.executeQuery(
-          'UPDATE books SET _sync_status = ? WHERE id = ?',
+          'UPDATE books SET sync_status = ? WHERE id = ?',
           [SYNC_STATUS.PENDING, book.id]
         );
       }

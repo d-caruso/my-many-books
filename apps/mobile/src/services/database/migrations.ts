@@ -2,7 +2,7 @@ import { databaseService } from './DatabaseService';
 import { ALL_TABLES } from './schema';
 
 const SCHEMA_VERSION_KEY = 'schema_version';
-const CURRENT_SCHEMA_VERSION = 4;
+const CURRENT_SCHEMA_VERSION = 5;
 
 /**
  * Database migration system
@@ -77,6 +77,11 @@ export class MigrationSystem {
       // Migrate to version 4: Add category translation_key
       if (currentVersion < 4) {
         await this.migrateToVersion4();
+      }
+
+      // Migrate to version 5: Rename sync/meta columns to drop leading underscores
+      if (currentVersion < 5) {
+        await this.migrateToVersion5();
       }
 
       await this.setVersion(CURRENT_SCHEMA_VERSION);
@@ -219,6 +224,69 @@ export class MigrationSystem {
       }
     } catch (error) {
       console.error('Migration to version 4 failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Migrate to version 5: Drop leading underscores from sync/meta columns
+   */
+  private async migrateToVersion5(): Promise<void> {
+    console.log('Migrating to schema version 5: Renaming sync/meta columns to drop underscores...');
+    const db = databaseService.getDatabase();
+
+    try {
+      // Helper to rename column if it exists
+      const renameColumn = async (table: string, from: string, to: string): Promise<void> => {
+        const info = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
+        const hasFrom = info.some(col => col.name === from);
+        const hasTo = info.some(col => col.name === to);
+        if (hasFrom && !hasTo) {
+          await db.execAsync(`ALTER TABLE ${table} RENAME COLUMN ${from} TO ${to};`);
+          console.log(`Renamed ${table}.${from} -> ${to}`);
+        }
+      };
+
+      // Books table
+      await renameColumn('books', '_sync_status', 'sync_status');
+      await renameColumn('books', '_temp_id', 'temp_id');
+      await renameColumn('books', '_deleted', 'deleted');
+      await renameColumn('books', '_server_updated_at', 'server_updated_at');
+      // Align server_id naming if underscore variant exists
+      await renameColumn('books', '_server_id', 'server_id');
+
+      // Authors table
+      await renameColumn('authors', '_sync_status', 'sync_status');
+      await renameColumn('authors', '_server_updated_at', 'server_updated_at');
+      await renameColumn('authors', '_server_id', 'server_id');
+
+      // Categories table
+      await renameColumn('categories', '_sync_status', 'sync_status');
+      await renameColumn('categories', '_server_updated_at', 'server_updated_at');
+      await renameColumn('categories', '_server_id', 'server_id');
+
+      // ID mappings table
+      await renameColumn('id_mappings', '_server_id', 'server_id');
+
+      // Recreate indexes for renamed columns (drop old ones if present)
+      const dropIndexes = [
+        'idx_books_sync_status',
+        'idx_books_deleted',
+        'idx_books__server_id',
+        'idx_books_deleted_sync_status'
+      ];
+      for (const idx of dropIndexes) {
+        await db.execAsync(`DROP INDEX IF EXISTS ${idx};`);
+      }
+
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_books_sync_status ON books(sync_status);');
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_books_deleted ON books(deleted);');
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_books_server_id ON books(server_id);');
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_books_deleted_sync_status ON books(deleted, sync_status);');
+
+      console.log('Migration to version 5 completed successfully');
+    } catch (error) {
+      console.error('Migration to version 5 failed:', error);
       throw error;
     }
   }

@@ -12,7 +12,7 @@ export class BookRepository {
    */
   async findAll(): Promise<LocalBook[]> {
     const books = await databaseService.getAllAsync(
-      'SELECT * FROM books WHERE _deleted = 0 ORDER BY update_date DESC'
+      'SELECT * FROM books WHERE deleted = 0 ORDER BY update_date DESC'
     );
     return books.map(this.mapRowToBook);
   }
@@ -22,7 +22,7 @@ export class BookRepository {
    */
   async findById(id: string): Promise<LocalBook | null> {
     const book = await databaseService.getFirstAsync(
-      'SELECT * FROM books WHERE id = ? AND _deleted = 0',
+      'SELECT * FROM books WHERE id = ? AND deleted = 0',
       [id]
     );
     return book ? this.mapRowToBook(book) : null;
@@ -33,7 +33,7 @@ export class BookRepository {
    */
   async findByServerId(serverId: number): Promise<LocalBook | null> {
     const book = await databaseService.getFirstAsync(
-      'SELECT * FROM books WHERE server_id = ? AND _deleted = 0',
+      'SELECT * FROM books WHERE server_id = ? AND deleted = 0',
       [serverId]
     );
     return book ? this.mapRowToBook(book) : null;
@@ -56,7 +56,7 @@ export class BookRepository {
         `INSERT INTO books (
           id, title, authors, isbn, thumbnail, description, published_date,
           page_count, rating, status, notes, user_id, creation_date, update_date,
-          server_id, _sync_status, _temp_id, _deleted, _server_updated_at
+          server_id, sync_status, temp_id, deleted, server_updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
@@ -120,8 +120,8 @@ export class BookRepository {
         notes = COALESCE(?, notes),
         update_date = ?,
         server_id = COALESCE(?, server_id),
-        _sync_status = COALESCE(?, _sync_status),
-        _server_updated_at = COALESCE(?, _server_updated_at)
+        sync_status = COALESCE(?, sync_status),
+        server_updated_at = COALESCE(?, server_updated_at)
 
         // TODO: Phase 2 — not yet in API/DB, pending reconciliation
         // thumbnail = COALESCE(?, thumbnail),
@@ -160,7 +160,7 @@ export class BookRepository {
    */
   async delete(id: string): Promise<void> {
     await databaseService.executeQuery(
-      'UPDATE books SET _deleted = 1, _sync_status = ? WHERE id = ?',
+      'UPDATE books SET deleted = 1, sync_status = ? WHERE id = ?',
       [SYNC_STATUS.PENDING, id]
     );
   }
@@ -196,7 +196,7 @@ export class BookRepository {
         `INSERT INTO books (
           id, title, authors, isbn, thumbnail, description, published_date,
           page_count, rating, status, notes, user_id, creation_date, update_date,
-          server_id, _sync_status, _temp_id, _deleted, _server_updated_at
+          server_id, sync_status, temp_id, deleted, server_updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           serverIdStr,           // Use server ID as primary key
@@ -315,12 +315,12 @@ export class BookRepository {
     const values: unknown[] = [];
 
     if (fields._serverUpdatedAt !== undefined) {
-      updates.push('_server_updated_at = ?');
+      updates.push('server_updated_at = ?');
       values.push(fields._serverUpdatedAt);
     }
 
     if (fields._syncStatus !== undefined) {
-      updates.push('_sync_status = ?');
+      updates.push('sync_status = ?');
       values.push(fields._syncStatus);
     }
 
@@ -366,8 +366,8 @@ export class BookRepository {
           notes = ?,
           user_id = ?,
           update_date = ?,
-          _sync_status = ?,
-          _server_updated_at = ?
+          sync_status = ?,
+          server_updated_at = ?
         WHERE id = ?`,
         [
           entity.title || existingEntity.title,
@@ -395,7 +395,7 @@ export class BookRepository {
         `INSERT INTO books (
           id, title, authors, isbn, thumbnail, description, published_date,
           page_count, rating, status, notes, user_id, creation_date, update_date,
-          _sync_status, _temp_id, _deleted, _server_updated_at
+          sync_status, temp_id, deleted, server_updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           bookId,
@@ -433,7 +433,7 @@ export class BookRepository {
    */
   async findByStatus(status: string): Promise<LocalBook[]> {
     const books = await databaseService.getAllAsync(
-      'SELECT * FROM books WHERE _deleted = 0 AND status = ? ORDER BY update_date DESC',
+      'SELECT * FROM books WHERE deleted = 0 AND status = ? ORDER BY update_date DESC',
       [status]
     );
     return books.map(this.mapRowToBook);
@@ -455,7 +455,7 @@ export class BookRepository {
     let sql = 'SELECT DISTINCT b.* FROM books b';
     let joins = '';
     const params: unknown[] = [];
-    const whereConditions = ['b._deleted = 0'];
+    const whereConditions = ['b.deleted = 0'];
 
     // Add joins if filtering by author or category
     if (author || category) {
@@ -506,7 +506,7 @@ export class BookRepository {
    */
   async findPendingSync(): Promise<LocalBook[]> {
     const books = await databaseService.getAllAsync(
-      'SELECT * FROM books WHERE _sync_status IN (?, ?) ORDER BY update_date DESC',
+      'SELECT * FROM books WHERE sync_status IN (?, ?) ORDER BY update_date DESC',
       [SYNC_STATUS.PENDING, SYNC_STATUS.FAILED]
     );
     return books.map(this.mapRowToBook);
@@ -530,10 +530,10 @@ export class BookRepository {
     };
     const local = new LocalBook(book);
     local.serverId = row.server_id as number | undefined;
-    local.syncStatus = (row._sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
-    local.tempId = row._temp_id as string | undefined;
-    local.deleted = row._deleted === 1;
-    local.serverUpdatedAt = row._server_updated_at as string | undefined;
+    local.syncStatus = (row.sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
+    local.tempId = row.temp_id as string | undefined;
+    local.deleted = row.deleted === 1;
+    local.serverUpdatedAt = row.server_updated_at as string | undefined;
     return local;
   }
 

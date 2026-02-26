@@ -115,8 +115,8 @@ export class AuthorRepository {
       updateDate: row.update_date as string | undefined,
     };
     const local = new LocalAuthor(author);
-    local.syncStatus = (row._sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
-    local.serverUpdatedAt = row._server_updated_at as string | undefined;
+    local.syncStatus = (row.sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
+    local.serverUpdatedAt = row.server_updated_at as string | undefined;
     return local;
   }
 
@@ -147,11 +147,11 @@ export class AuthorRepository {
       values.push(fields.serverId);
     }
     if (fields._syncStatus !== undefined) {
-      updates.push('_sync_status = ?');
+      updates.push('sync_status = ?');
       values.push(fields._syncStatus);
     }
     if (fields._serverUpdatedAt !== undefined) {
-      updates.push('_server_updated_at = ?');
+      updates.push('server_updated_at = ?');
       values.push(fields._serverUpdatedAt);
     }
 

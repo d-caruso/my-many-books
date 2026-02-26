@@ -337,8 +337,8 @@ export default function AddBookScreen() {
                 onChangeText={setTitle}
                 style={styles.input}
                 autoCapitalize="words"
-                accessibilityInvalid={!!error}
-                accessibilityErrorMessage={error}
+                error={!!error}
+                accessibilityHint={error || undefined}
               />
 
               <AuthorsSection
@@ -373,7 +373,6 @@ export default function AddBookScreen() {
                   { value: 'finished', label: t('books:finished') },
                 ]}
                 style={styles.segmentedButtons}
-                accessibilityLabel={t('books:select_status')}
               />
 
               <EditionDateInput
