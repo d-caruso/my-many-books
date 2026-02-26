@@ -80,7 +80,7 @@ export function ManageCategoriesDialog({
   };
 
   const handleSaveEdit = async () => {
-    if (editingId == null) return;
+    if (editingId === null) return;
     const result = await updateCategory(editingId, { name: editName });
     if (result.success && result.data) {
       onCategoryUpdated?.(result.data);
@@ -89,7 +89,7 @@ export function ManageCategoriesDialog({
   };
 
   const handleConfirmDelete = async () => {
-    if (pendingDeleteId == null) return;
+    if (pendingDeleteId === null) return;
     const result = await deleteCategory(pendingDeleteId);
     if (result.success) {
       onCategoryDeleted?.(pendingDeleteId);

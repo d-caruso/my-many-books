@@ -96,7 +96,7 @@ export function ManageAuthorsDialog({
   };
 
   const handleSaveEdit = async () => {
-    if (editingId == null) return;
+    if (editingId === null) return;
     const result = await updateAuthor(editingId, {
       name: editName,
       surname: editSurname,
@@ -110,7 +110,7 @@ export function ManageAuthorsDialog({
   };
 
   const handleConfirmDelete = async () => {
-    if (pendingDeleteId == null) return;
+    if (pendingDeleteId === null) return;
     const result = await deleteAuthor(pendingDeleteId);
     if (result.success) {
       onAuthorDeleted?.(pendingDeleteId);

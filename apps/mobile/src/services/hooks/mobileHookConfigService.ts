@@ -9,11 +9,7 @@ import { MobileEventName } from './eventsSchema';
 
 export interface MobileHookDBConfig {
   hooks_enabled: boolean;
-  hook_listeners: {
-    [eventType: string]: {
-      enabled: boolean;
-    };
-  };
+  hook_listeners: Partial<Record<MobileEventName, { enabled: boolean }>>;
   config: MobileHooksListenerSettings;
 }
 
@@ -179,7 +175,7 @@ export class MobileHookConfigService {
    */
   private async getUserMobileConfig(userId: string): Promise<{
     hooks_enabled?: boolean;
-    custom_hook_listeners?: { [key: string]: { enabled: boolean } };
+    custom_hook_listeners?: Partial<Record<MobileEventName, { enabled: boolean }>>;
   } | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/users/${userId}/mobile-config`, {
