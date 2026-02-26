@@ -145,7 +145,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     initDatabase();
@@ -193,12 +193,12 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [t]);
 
   const createBook = useCallback(async (bookData: CreateBookInput): Promise<UiBook> => {
     // Generate temporary ID for optimistic update
     const tempId = `temp-${uuidv4()}`;
-    const { authorIds, categoryIds, meta: incomingMeta, ...bookPayload } = bookData;
+    const { meta: incomingMeta, ...bookPayload } = bookData;
     const optimisticBook = bookToUi(
       {
         ...(bookPayload as Book),
@@ -261,7 +261,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         throw new Error(t('books.createFailed'));
       }
     }
-  }, []);
+  }, [t]);
 
   const updateBook = useCallback(async (id: number | string, bookData: Partial<Book>): Promise<UiBook> => {
     // Store previous state for rollback
@@ -364,14 +364,14 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       console.error('Book update error:', extractErrorMessage(err));
       throw new Error(t('books.updateFailed'));
     }
-  }, [books]);
+  }, [books, t]);
 
   const deleteBook = useCallback(async (id: number | string): Promise<void> => {
     const stringId = String(id);
 
     // Soft delete in SQLite and remove from local state immediately (optimistic)
       await bookRepository.delete(stringId);
-    setBooks(prev => prev.filter(book => book.id != id));
+    setBooks(prev => prev.filter(book => String(book.id) !== stringId));
 
     try {
       // Try to delete on server
@@ -403,7 +403,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         throw new Error(t('books.deleteFailed'));
       }
     }
-  }, []);
+  }, [t]);
 
   const updateBookStatus = useCallback(async (id: number | string, status: Book['status']): Promise<void> => {
     const stringId = String(id);
@@ -448,7 +448,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         throw new Error(t('books.updateStatusFailed'));
       }
     }
-  }, []);
+  }, [t]);
 
   const resolveConflict = useCallback(async (bookId: number | string, choice: 'local' | 'server'): Promise<void> => {
     const stringId = String(bookId);
@@ -509,7 +509,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       console.error('Failed to resolve conflict:', error);
       throw new Error(t('conflicts.resolutionFailed'));
     }
-  }, [books]);
+  }, [books, t]);
 
   return {
     books,

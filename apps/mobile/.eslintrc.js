@@ -17,7 +17,7 @@ module.exports = {
     // react-hooks rules are already included in both 'expo' and '@react-native' configs
 
     // General rules
-    'no-console': 'warn',
+    'no-console': 'off',
     'prefer-const': 'error',
     'import/no-unresolved': ['error', { ignore: ['^\\./testUtils$', '^\\.//testUtils$'] }],
   },

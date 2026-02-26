@@ -7,9 +7,11 @@ import { MobileHooksListenerSettings } from '@my-many-books/shared-types';
 import { API_BASE_URL } from '../../config/api';
 import { MobileEventName } from './eventsSchema';
 
+type EventKey = MobileEventName & string;
+
 export interface MobileHookDBConfig {
   hooks_enabled: boolean;
-  hook_listeners: Partial<Record<MobileEventName, { enabled: boolean }>>;
+  hook_listeners: Partial<Record<EventKey, { enabled: boolean }>>;
   config: MobileHooksListenerSettings;
 }
 
@@ -36,7 +38,7 @@ export class MobileHookConfigService {
    * Level 3: User-specific Configuration (Overrides global settings)
    * Level 4: Individual Hook/Listener Controls
    */
-  async shouldProcessHooks(eventType?: MobileEventName): Promise<boolean> {
+  async shouldProcessHooks(eventType?: EventKey): Promise<boolean> {
     // Level 1: Environment Variable (Highest Priority - Infrastructure)
     const envEnabled = process.env.EXPO_PUBLIC_HOOKS_ENABLED;
     if (envEnabled === 'false') {
@@ -67,7 +69,7 @@ export class MobileHookConfigService {
         }
 
         // Check user-specific event type settings
-        if (eventType && userConfig?.custom_hook_listeners?.[eventType] && !userConfig.custom_hook_listeners[eventType].enabled) {
+        if (eventType && userConfig?.custom_hook_listeners?.[eventType]?.enabled === false) {
           if (__DEV__) {
             console.log(`[MobileHookConfig] Hook '${eventType}' disabled by user settings (Level 3)`);
           }
@@ -76,7 +78,7 @@ export class MobileHookConfigService {
       }
 
       // Level 4: Individual Hook/Listener Controls (if specific eventType provided)
-      if (eventType && dbConfig.hook_listeners[eventType] && !dbConfig.hook_listeners[eventType].enabled) {
+      if (eventType && dbConfig.hook_listeners?.[eventType]?.enabled === false) {
         if (__DEV__) {
           console.log(`[MobileHookConfig] Hook '${eventType}' disabled by admin settings (Level 4)`);
         }
@@ -175,7 +177,7 @@ export class MobileHookConfigService {
    */
   private async getUserMobileConfig(userId: string): Promise<{
     hooks_enabled?: boolean;
-    custom_hook_listeners?: Partial<Record<MobileEventName, { enabled: boolean }>>;
+    custom_hook_listeners?: Partial<Record<EventKey, { enabled: boolean }>>;
   } | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/users/${userId}/mobile-config`, {
@@ -193,7 +195,10 @@ export class MobileHookConfigService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
+      return (await response.json()) as {
+        hooks_enabled?: boolean;
+        custom_hook_listeners?: Partial<Record<EventKey, { enabled: boolean }>>;
+      };
     } catch (error) {
       if (__DEV__) {
         console.warn('[MobileHookConfig] Failed to fetch user config:', error);
