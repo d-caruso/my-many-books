@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Button } from 'react-native-paper';
 import { errorTrackingService } from '../services/errors/ErrorTrackingService';

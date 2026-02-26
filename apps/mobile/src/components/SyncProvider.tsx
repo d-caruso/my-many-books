@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSyncQueue } from '../hooks/useSyncQueue';
 import { operationQueue } from '../services/OperationQueue';
 

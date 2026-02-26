@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { View, FlatList, ScrollView } from 'react-native';
 import { Searchbar, Text, SegmentedButtons, Chip, Menu, Button, IconButton, Snackbar } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { Book } from '@my-many-books/shared-types';
+import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
 
 type SearchMode = 'title' | 'author' | 'isbn';
 type SortOption = 'title' | 'author' | 'date_added' | 'date_updated';
@@ -20,7 +21,7 @@ export default function SearchScreen() {
   const { t } = useTranslation('offline');
   const { scannedIsbn, scannerCopy } = useLocalSearchParams<{
     scannedIsbn?: string;
-    scannerCopy?: 'success' | 'failed';
+    scannerCopy?: ScannerCopyStatus;
   }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMode, setSearchMode] = useState<SearchMode>('title');
@@ -110,9 +111,9 @@ export default function SearchScreen() {
     setSearchMode('isbn');
     setSearchQuery(scannedIsbn);
 
-    if (scannerCopy === 'success' || scannerCopy === 'failed') {
+    if (scannerCopy === SCANNER_COPY_STATUS.SUCCESS || scannerCopy === SCANNER_COPY_STATUS.FAILED) {
       setFeedbackMessage(
-        scannerCopy === 'success'
+        scannerCopy === SCANNER_COPY_STATUS.SUCCESS
           ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
           : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
       );

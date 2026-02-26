@@ -58,6 +58,7 @@
   "include": [
     "src/**/*",
     "src/types/modules.d.ts",
+    "app/**/*",
     "*.ts",
     "*.tsx",
     ".expo/types/**/*.ts",

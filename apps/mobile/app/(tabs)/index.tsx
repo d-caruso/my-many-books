@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, FlatList, RefreshControl } from 'react-native';
 import { FAB, Searchbar, Chip, Text, Snackbar } from 'react-native-paper';
 import { router } from 'expo-router';

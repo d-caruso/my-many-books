@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Text, Card, ActivityIndicator, Searchbar, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';

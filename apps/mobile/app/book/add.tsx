@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,20 +10,22 @@ import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { useAddBookEntities } from '@/hooks/useAddBookEntities';
-import { Book, Author, Category } from '@/types';
+import { Book } from '@/types';
 import { EditionDateInput } from '@/components/EditionDateInput';
-import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
+import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
+import { OPERATION_TYPES } from '@/services/hooks/eventsSchema';
 import { AuthorsSection } from '@/components/book/AuthorsSection';
 import { CategoriesSection } from '@/components/book/CategoriesSection';
 import { AddBookOverlays } from '@/components/book/AddBookOverlays';
 import { addBookStyles as styles } from '@/components/book/addBookStyles';
+import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
 
 export default function AddBookScreen() {
   const { t } = useTranslation();
   const { isbn, bookData, scannerCopy } = useLocalSearchParams<{
     isbn?: string;
     bookData?: string;
-    scannerCopy?: 'success' | 'failed';
+    scannerCopy?: ScannerCopyStatus;
   }>();
   const [title, setTitle] = useState('');
   const [isbnCode, setIsbnCode] = useState(isbn || '');
@@ -102,7 +104,7 @@ export default function AddBookScreen() {
     handledScannerFeedbackRef.current = feedbackKey;
 
     setFeedbackMessage(
-      scannerCopy === 'success'
+      scannerCopy === SCANNER_COPY_STATUS.SUCCESS
         ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
         : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
     );
@@ -152,13 +154,13 @@ export default function AddBookScreen() {
   }, [createCategoryAndSelect]);
 
   const handleEmbeddedScannerDetected = useCallback(async (isbnValue: string) => {
-    let copyStatus: 'success' | 'failed' = 'failed';
+    let copyStatus: ScannerCopyStatus = SCANNER_COPY_STATUS.FAILED;
 
     try {
       await Clipboard.setStringAsync(isbnValue);
-      copyStatus = 'success';
+      copyStatus = SCANNER_COPY_STATUS.SUCCESS;
     } catch {
-      copyStatus = 'failed';
+      copyStatus = SCANNER_COPY_STATUS.FAILED;
     }
 
     let existingBook: Book | null = null;
@@ -181,7 +183,7 @@ export default function AddBookScreen() {
       setFeedbackMessage('');
     } else {
       setFeedbackMessage(
-        copyStatus === 'success'
+        copyStatus === SCANNER_COPY_STATUS.SUCCESS
           ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
           : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
       );

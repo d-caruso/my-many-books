@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { CameraView, BarcodeScanningResult } from 'expo-camera';
 import { Text, Button, IconButton } from 'react-native-paper';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Menu, Button, ActivityIndicator } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';

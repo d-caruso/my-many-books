@@ -6,18 +6,19 @@ import * as Clipboard from 'expo-clipboard';
 
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { BarcodeScannerPanel } from '@/components/scanner/BarcodeScannerPanel';
+import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
 
 export default function ScannerScreen() {
   const { searchByISBN } = useBookSearch();
 
   const handleDetected = useCallback(async (isbn: string) => {
-    let copyStatus: 'success' | 'failed' = 'failed';
+    let copyStatus: ScannerCopyStatus = SCANNER_COPY_STATUS.FAILED;
 
     try {
       await Clipboard.setStringAsync(isbn);
-      copyStatus = 'success';
+      copyStatus = SCANNER_COPY_STATUS.SUCCESS;
     } catch {
-      copyStatus = 'failed';
+      copyStatus = SCANNER_COPY_STATUS.FAILED;
     }
 
     try {

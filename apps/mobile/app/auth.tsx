@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
   import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
   import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
   import { SafeAreaView } from 'react-native-safe-area-context';

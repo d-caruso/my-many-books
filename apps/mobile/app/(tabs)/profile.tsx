@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { List, Text, Avatar, Button, Card, Switch, Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
