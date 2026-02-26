@@ -1,4 +1,4 @@
-import type { Book, Author, Category } from '@my-many-books/shared-types';
+import type { Book } from '@my-many-books/shared-types';
 import type { OperationType, QueueOperationStatus } from '../services/hooks/eventsSchema';
 
 export type ResourceType = 'book' | 'author' | 'category' | 'user' | 'settings';
@@ -13,7 +13,6 @@ export interface BaseOperationPayload {
 export interface BookOperationPayload extends BaseOperationPayload {
   title?: string;
   isbnCode?: string;
-  author?: string;
   status?: Book['status'];
   //TODO commented out fields that are not currently set in the API/DB but may be relevant for future features
   //thumbnail?: string;
@@ -36,6 +35,7 @@ export interface AuthorOperationPayload extends BaseOperationPayload {
 
 export interface CategoryOperationPayload extends BaseOperationPayload {
   name?: string;
+  translationKey?: string | null;
 }
 
 export interface UserOperationPayload extends BaseOperationPayload {
