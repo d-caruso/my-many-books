@@ -15,6 +15,9 @@ export * from './formatting';
 // Build Tree Schema utility
 export * from './buildTreeSchema';
 
+// Error extraction utilities
+export * from './errorExtraction';
+
 // Entity management error mapping utilities
 export * from './entityManagementErrors';
 

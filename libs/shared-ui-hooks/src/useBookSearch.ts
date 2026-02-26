@@ -4,6 +4,8 @@
 
 import { useState, useCallback } from 'react';
 import { Book, SearchFilters, SearchFiltersSchema, SearchResult } from '@my-many-books/shared-types';
+import { extractErrorMessage } from '@my-many-books/shared-utils';
+import { ZodError } from 'zod';
 
 export interface BookSearchState<TBook extends Book = Book> {
   books: TBook[];
@@ -99,13 +101,13 @@ export const useBookSearch = <TBook extends Book = Book, TFilters extends Search
         setCurrentPage(page);
         setLastQuery(query);
         setLastFilters(filters);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Book search failed:', err);
-        const isTechnicalError = Array.isArray(err?.issues) || err?.name === 'ZodError';
+        const isTechnicalError = err instanceof ZodError;
         setError(
           isTechnicalError
             ? 'SEARCH_UNEXPECTED_ERROR'
-            : err.response?.data?.message || err.message || 'SEARCH_UNEXPECTED_ERROR'
+            : extractErrorMessage(err) || 'SEARCH_UNEXPECTED_ERROR'
         );
 
         if (page === 1) {
@@ -131,13 +133,13 @@ export const useBookSearch = <TBook extends Book = Book, TFilters extends Search
     try {
       const result = await api.searchByISBN(isbn);
       return result;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('ISBN search failed:', err);
-      const isTechnicalError = Array.isArray(err?.issues) || err?.name === 'ZodError';
+      const isTechnicalError = err instanceof ZodError;
       setError(
         isTechnicalError
           ? 'SEARCH_UNEXPECTED_ERROR'
-          : err.response?.data?.message || err.message || 'SEARCH_UNEXPECTED_ERROR'
+          : extractErrorMessage(err) || 'SEARCH_UNEXPECTED_ERROR'
       );
       return null;
     } finally {

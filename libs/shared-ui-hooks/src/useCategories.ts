@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef, useTransition } from 'react';
 import { Category } from '@my-many-books/shared-types';
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 
 export interface CategoriesState<TCategory extends Category = Category> {
   categories: TCategory[];
@@ -61,9 +62,9 @@ export const useCategories = <TCategory extends Category = Category>(
         setCategories([...categoriesData].sort(sortComparator));
       });
       loadedRef.current = true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load categories:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to load categories');
+      setError(extractErrorMessage(err) || 'Failed to load categories');
     } finally {
       setLoading(false);
       loadingRef.current = false;
@@ -81,9 +82,9 @@ export const useCategories = <TCategory extends Category = Category>(
         setCategories(prev => [...prev, newCategory].sort(sortComparator));
       });
       return newCategory;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create category:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to create category');
+      setError(extractErrorMessage(err) || 'Failed to create category');
       return null;
     }
   }, [api, sortComparator]);

@@ -4,35 +4,12 @@ import {
   ENTITY_MANAGE_ERROR_CODES,
   EntityManageOperationError,
 } from '@my-many-books/shared-types';
-
-type ApiErrorLike = {
-  status?: number;
-  message?: string;
-  response?: {
-    status?: number;
-    data?: {
-      error?: unknown;
-      message?: unknown;
-    };
-  };
-};
-
-const getApiErrorDetails = (error: unknown): { status?: number; backendError?: string; message?: string } => {
-  const err = error as ApiErrorLike | undefined;
-  const status = err?.status ?? err?.response?.status;
-  const backendErrorRaw = err?.response?.data?.error;
-  const backendMessageRaw = err?.response?.data?.message;
-  const backendError = typeof backendErrorRaw === 'string' ? backendErrorRaw : undefined;
-  const backendMessage = typeof backendMessageRaw === 'string' ? backendMessageRaw : undefined;
-  const message = typeof err?.message === 'string' ? err.message : backendMessage;
-
-  return { status, backendError, message };
-};
+import { extractErrorDetails } from './errorExtraction';
 
 const buildError = (
   code: EntityManageOperationError['code'],
   i18nKey: string,
-  details: ReturnType<typeof getApiErrorDetails>
+  details: ReturnType<typeof extractErrorDetails>
 ): EntityManageOperationError => ({
   code,
   i18nKey,
@@ -45,7 +22,7 @@ export const mapAuthorManageApiError = (
   error: unknown,
   operation: 'load' | 'create' | 'update' | 'delete'
 ): EntityManageOperationError => {
-  const details = getApiErrorDetails(error);
+  const details = extractErrorDetails(error);
 
   if (operation === 'delete' && details.backendError === AUTHOR_DELETE_CONFLICT_REASONS.HAS_BOOKS) {
     return buildError(ENTITY_MANAGE_ERROR_CODES.HAS_BOOKS, 'dialogs:author.delete_blocked_has_books', details);
@@ -68,7 +45,7 @@ export const mapCategoryManageApiError = (
   error: unknown,
   operation: 'load' | 'create' | 'update' | 'delete'
 ): EntityManageOperationError => {
-  const details = getApiErrorDetails(error);
+  const details = extractErrorDetails(error);
 
   if (operation === 'delete' && details.backendError === CATEGORY_DELETE_CONFLICT_REASONS.HAS_BOOKS) {
     return buildError(

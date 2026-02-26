@@ -3,6 +3,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 
 interface AsyncOperationState<T> {
   data: T | null;
@@ -31,8 +32,8 @@ export const useAsyncOperation = <T, P extends any[]>(
       const result = await asyncFunction(...params);
       setData(result);
       return result;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'An error occurred';
+    } catch (err: unknown) {
+      const errorMessage = extractErrorMessage(err) || 'An error occurred';
       setError(errorMessage);
       console.error('Async operation failed:', err);
       return null;

@@ -25,6 +25,8 @@ export default function BooksScreen() {
   const [isSearching, setIsSearching] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'details'>('list');
   const { isOnline } = useNetworkState();
   
   const {
@@ -104,7 +106,13 @@ export default function BooksScreen() {
   };
 
   const handleBookPress = (book: Book) => {
-    router.push(`/book/${book.id}`);
+    setSelectedBook(book);
+    setViewMode('details');
+  };
+
+  const handleBackToList = () => {
+    setSelectedBook(null);
+    setViewMode('list');
   };
 
   const handleStatusChange = async (bookId: number, status: Book['status']) => {
@@ -141,12 +149,12 @@ export default function BooksScreen() {
     />
   );
 
-  if (loading && books.length === 0) {
+  if (loading && books.length === 0 && viewMode === 'list') {
     return <LoadingSpinner />;
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
+  const renderList = () => (
+    <>
       <View style={styles.header}>
         <Text variant="headlineMedium" style={styles.title} accessibilityRole="header">
           {t('books:my_books')}
@@ -218,7 +226,75 @@ export default function BooksScreen() {
         accessibilityLabel={t('books:add_book')}
         accessibilityHint={!isOnline ? t('tooltips.willSyncLater', { ns: 'offline' }) : undefined}
       />
+    </>
+  );
 
+  const renderDetails = () => {
+    if (!selectedBook) return null;
+    return (
+      <View style={styles.detailsContainer}>
+        <View style={styles.detailsHeader}>
+          <Text variant="headlineMedium" style={styles.title} accessibilityRole="header">
+            {selectedBook.title}
+          </Text>
+          <Chip
+            style={styles.statusChip}
+            accessibilityLabel={t('books:reading_status')}
+          >
+            {selectedBook.status}
+          </Chip>
+        </View>
+        <Text variant="bodyMedium" style={styles.detailsText}>
+          {selectedBook.authors?.map(a => a.name).join(', ') || t('books:unknown_author')}
+        </Text>
+        {selectedBook.notes ? (
+          <Text variant="bodySmall" style={styles.detailsText}>
+            {selectedBook.notes}
+          </Text>
+        ) : null}
+        <View style={styles.detailsActions}>
+          <Chip
+            icon="check"
+            onPress={() => handleStatusChange(selectedBook.id, 'reading')}
+          >
+            {t('books:reading')}
+          </Chip>
+          <Chip
+            icon="pause"
+            onPress={() => handleStatusChange(selectedBook.id, 'paused')}
+          >
+            {t('books:paused')}
+          </Chip>
+          <Chip
+            icon="check-all"
+            onPress={() => handleStatusChange(selectedBook.id, 'finished')}
+          >
+            {t('books:finished')}
+          </Chip>
+        </View>
+        <View style={styles.detailsFooter}>
+          <Chip icon="delete" onPress={() => handleDeleteBook(selectedBook.id)} accessibilityLabel={t('books:delete_book')}>
+            {t('books:delete_book')}
+          </Chip>
+          {'_hasConflict' in selectedBook && (selectedBook as any)._hasConflict && (
+            <Chip
+              icon="alert"
+              onPress={() => handleResolveConflict(selectedBook.id, 'local')}
+            >
+              {t('conflicts:resolve_local', { defaultValue: 'Resolve (local)' })}
+            </Chip>
+          )}
+          <Chip icon="arrow-left" onPress={handleBackToList} accessibilityLabel={t('common:back')}>
+            {t('common:back')}
+          </Chip>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {viewMode === 'details' ? renderDetails() : renderList()}
       <Snackbar
         visible={welcomeVisible}
         onDismiss={() => setWelcomeVisible(false)}
@@ -282,5 +358,33 @@ const styles = StyleSheet.create({
   },
   fabDisabled: {
     opacity: 0.5,
+  },
+  detailsContainer: {
+    flex: 1,
+    padding: 16,
+    gap: 12,
+  },
+  detailsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statusChip: {
+    alignSelf: 'flex-start',
+  },
+  detailsText: {
+    marginTop: 4,
+  },
+  detailsActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  detailsFooter: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 16,
   },
 });

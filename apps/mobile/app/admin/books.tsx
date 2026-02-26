@@ -27,7 +27,7 @@ export default function BookManagement() {
       setLoading(true);
       const response = await adminAPI.getAdminBooks(page, 50, searchQuery || undefined);
       setBooks(response.books);
-    } catch (err: Error) {
+    } catch (err: unknown) {
       console.error('Failed to fetch books:', err);
     } finally {
       setLoading(false);

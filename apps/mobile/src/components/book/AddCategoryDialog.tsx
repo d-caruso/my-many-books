@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Dialog, Portal, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@/types';
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 
 interface AddCategoryDialogProps {
   visible: boolean;
@@ -50,8 +51,7 @@ export function AddCategoryDialog({
       const created = await onCreate({ name: name.trim() });
       onCreated(created);
     } catch (err: unknown) {
-      const apiError = getApiErrorMessage(err);
-      setError(apiError || t('dialogs:category.create_failed'));
+      setError(extractErrorMessage(err) || t('dialogs:category.create_failed'));
     } finally {
       setSubmitting(false);
     }
@@ -105,12 +105,3 @@ const styles = StyleSheet.create({
 });
 
 export default AddCategoryDialog;
-  const getApiErrorMessage = (err: unknown): string | null => {
-    if (typeof err === 'object' && err !== null) {
-      const maybeResponse = (err as { response?: { data?: { error?: unknown } } }).response;
-      if (typeof maybeResponse?.data?.error === 'string') {
-        return maybeResponse.data.error;
-      }
-    }
-    return null;
-  };

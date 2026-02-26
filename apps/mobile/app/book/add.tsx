@@ -13,6 +13,7 @@ import { useAddBookEntities } from '@/hooks/useAddBookEntities';
 import { Book } from '@/types';
 import { EditionDateInput } from '@/components/EditionDateInput';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
+import { extractErrorDetails } from '@my-many-books/shared-utils';
 import { OPERATION_TYPES } from '@/services/hooks/eventsSchema';
 import { AuthorsSection } from '@/components/book/AuthorsSection';
 import { CategoriesSection } from '@/components/book/CategoriesSection';
@@ -220,12 +221,13 @@ export default function AddBookScreen() {
       });
 
       router.back();
-    } catch (err: Error) {
+    } catch (err: unknown) {
+      const details = extractErrorDetails(err);
       mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
         operation: OPERATION_TYPES.CREATE,
         resource: RESOURCE_TYPES.BOOK,
-        error: err.message,
-        statusCode: err.status,
+        error: details.message,
+        statusCode: details.status,
         source: 'book_add_submit'
       });
       setError(t('books:createFailed'));
@@ -250,11 +252,12 @@ export default function AddBookScreen() {
       } else {
         setError(t('books:book_not_found_for_isbn'));
       }
-    } catch (err: Error) {
+    } catch (err: unknown) {
+      const details = extractErrorDetails(err);
       mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
         operation: 'isbn_lookup',
         resource: RESOURCE_TYPES.BOOK,
-        error: err.message,
+        error: details.message,
         isbn: isbnCode.trim(),
         source: 'book_add_isbn_lookup'
       });

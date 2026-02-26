@@ -15,6 +15,7 @@ import { useState } from 'react';
   } from '@my-many-books/shared-auth';
   import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
   import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+  import { extractErrorDetails } from '@my-many-books/shared-utils';
 
   type AuthMode = 'login' | 'register';
   const logoMark = require('../assets/logo-mark-primary.png');
@@ -76,11 +77,12 @@ import { useState } from 'react';
 
         // Navigation handled after successful auth
         router.replace('/(tabs)');
-      } catch (err: Error) {
+      } catch (err: unknown) {
+        const details = extractErrorDetails(err);
         mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
           operation: authMode,
-          error: err.message,
-          statusCode: err.status,
+          error: details.message,
+          statusCode: details.status,
           source: 'auth_screen'
         });
         setError(t('common:auth_failed'));

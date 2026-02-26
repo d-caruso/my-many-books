@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { adminAPI } from '@/services/api';
 import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+import { extractErrorDetails } from '@my-many-books/shared-utils';
 
 interface DashboardStats {
   totalUsers: number;
@@ -25,11 +26,12 @@ export default function AdminDashboard() {
       setError(null);
       const data = await adminAPI.getAdminStats();
       setStats(data);
-    } catch (err: Error) {
+    } catch (err: unknown) {
+      const details = extractErrorDetails(err);
       mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
         operation: 'fetch_admin_stats',
-        error: err.message,
-        statusCode: err.status,
+        error: details.message,
+        statusCode: details.status,
         source: 'admin_dashboard'
       });
       setError(t('pages:admin.dashboard.failed_to_load_statistics', 'Failed to load statistics'));

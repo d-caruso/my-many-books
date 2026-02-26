@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Book, BookFormData, PaginatedResponse } from '@my-many-books/shared-types';
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 
 export interface BooksState<TBook extends Book = Book> {
   books: TBook[];
@@ -74,9 +75,9 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
       const totalPages = pagination?.totalPages ?? page;
       setHasMore(page < totalPages);
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load books:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to load books');
+      setError(extractErrorMessage(err) || 'Failed to load books');
       
       if (page === 1) {
         setBooks([]);
@@ -94,9 +95,9 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
       setBooks(prev => [newBook, ...prev]);
       setTotalCount(prev => prev + 1);
       return newBook;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create book:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to create book');
+      setError(extractErrorMessage(err) || 'Failed to create book');
       throw err;
     }
   }, [api]);
@@ -106,9 +107,9 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
       const updatedBook = await api.updateBook(id, bookData);
       setBooks(prev => prev.map(book => (book.id === id ? updatedBook : book)));
       return updatedBook;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update book:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to update book');
+      setError(extractErrorMessage(err) || 'Failed to update book');
       throw err;
     }
   }, [api]);
@@ -119,9 +120,9 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
       setBooks(prev => prev.filter(book => book.id !== id));
       setTotalCount(prev => prev - 1);
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete book:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to delete book');
+      setError(extractErrorMessage(err) || 'Failed to delete book');
       throw err;
     }
   }, [api]);
@@ -131,9 +132,9 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
       const updatedBook = await api.updateBookStatus(id, status);
       setBooks(prev => prev.map(book => (book.id === id ? updatedBook : book)));
       return updatedBook;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update book status:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to update book status');
+      setError(extractErrorMessage(err) || 'Failed to update book status');
       throw err;
     }
   }, [api]);

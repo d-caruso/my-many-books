@@ -9,6 +9,7 @@ import { useNetworkState } from '@/hooks/useNetworkState';
 import { v4 as uuidv4 } from 'uuid';
 import { resolveConflict as resolveBookConflict } from '@/utils/conflictDetection';
 import { useTranslation } from 'react-i18next';
+import { extractErrorMessage, extractErrorDetails } from '@my-many-books/shared-utils';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
 import { OPERATION_TYPES } from '@/services/hooks/eventsSchema';
 import { LocalBook } from '@/entities/LocalBook';
@@ -141,10 +142,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       setBooks(response.books.map(b => bookToUi(b as Book)));
     } catch (err: unknown) {
       console.error('Failed to load books:', err);
-      const errorMessage = (err && typeof err === 'object' && 'response' in err) 
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-      setError(errorMessage || t('books.loadFailed'));
+      setError(extractErrorMessage(err) || t('books.loadFailed'));
 
       // On error, load from local database
       await loadBooksFromDB();
@@ -192,10 +190,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       setBooks(response.books.map(b => bookToUi(b as Book)));
     } catch (err: unknown) {
       console.error('Failed to refresh books:', err);
-      const errorMessage = (err && typeof err === 'object' && 'response' in err) 
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-      setError(errorMessage || t('books.refreshFailed'));
+      setError(extractErrorMessage(err) || t('books.refreshFailed'));
 
       // On error, load from local database
       await loadBooksFromDB();
@@ -264,8 +259,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         // Non-retriable error - remove optimistic book
         await bookRepository.hardDelete(tempId);
         setBooks(prev => prev.filter(book => book._tempId !== tempId));
-        const errMsg = (err as any)?.response?.data?.message || (err as any)?.message;
-        console.error('Book creation error:', errMsg);
+        console.error('Book creation error:', extractErrorMessage(err));
         throw new Error(t('books.createFailed'));
       }
     }
@@ -369,8 +363,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         }
       }
 
-      const errMsg = (err as any)?.response?.data?.message || (err as any)?.message;
-      console.error('Book update error:', errMsg);
+      console.error('Book update error:', extractErrorMessage(err));
       throw new Error(t('books.updateFailed'));
     }
   }, [books]);
@@ -389,8 +382,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // On success, permanently delete from SQLite
       await bookRepository.hardDelete(stringId);
     } catch (err: unknown) {
-      const errMsg = (err as any)?.response?.data?.message || (err as any)?.message;
-      console.error('Failed to delete book:', errMsg);
+      console.error('Failed to delete book:', extractErrorMessage(err));
 
       // If error is retriable, keep soft-deleted with pending status
       // Note: API service already handles queueing via withQueueOnError, so we don't queue again here
@@ -410,7 +402,6 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
           );
           await loadBooksFromDB(); // Reload to restore the book
         }
-        console.error('Book deletion error:', errMsg);
         throw new Error(t('books.deleteFailed'));
       }
     }
@@ -448,12 +439,12 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         setBooks(prev => prev.map(book =>
           book.id == id ? { ...book, _syncStatus: SYNC_STATUS.FAILED } : book
         ));
-        const apiError = err as { response?: { data?: { message?: string }; status?: number }; message?: string };
+        const details = extractErrorDetails(err);
         mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
           operation: OPERATION_TYPES.UPDATE,
           resource: RESOURCE_TYPES.BOOK,
-          error: apiError.response?.data?.message || apiError.message,
-          statusCode: apiError.response?.status,
+          error: details.backendError || details.message,
+          statusCode: details.status,
           source: 'useBooks_updateBookStatus'
         });
         throw new Error(t('books.updateStatusFailed'));
