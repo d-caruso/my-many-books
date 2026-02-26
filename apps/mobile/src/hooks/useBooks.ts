@@ -83,29 +83,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   const [refreshing, setRefreshing] = useState(false);
   const { isOnline } = useNetworkState();
 
-  const initDatabase = async () => {
-    try {
-      // Initialize database and run migrations
-      await databaseService.openDatabase();
-      await migrationSystem.runMigrations();
-
-      // Load books from SQLite
-      await loadBooksFromDB();
-
-      // Fetch fresh data from server
-      await loadBooks();
-    } catch (error) {
-      mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
-        operation: 'initialize_database',
-        error: error instanceof Error ? error.message : String(error),
-        source: 'useBooks_initializeDatabase'
-      });
-      setError(t('database.initializationFailed'));
-    }
-  };
-
-
-  const loadBooksFromDB = async () => {
+  const loadBooksFromDB = useCallback(async () => {
     try {
       const dbBooks = await bookRepository.findAll();
       setBooks(dbBooks.map(localToUi));
@@ -116,7 +94,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         source: 'useBooks_loadBooksFromDB'
       });
     }
-  };
+  }, []);
 
   const loadBooks = useCallback(async () => {
     setLoading(true);
@@ -145,11 +123,32 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, loadBooksFromDB]);
+
+  const initDatabase = useCallback(async () => {
+    try {
+      // Initialize database and run migrations
+      await databaseService.openDatabase();
+      await migrationSystem.runMigrations();
+
+      // Load books from SQLite
+      await loadBooksFromDB();
+
+      // Fetch fresh data from server
+      await loadBooks();
+    } catch (error) {
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
+        operation: 'initialize_database',
+        error: error instanceof Error ? error.message : String(error),
+        source: 'useBooks_initializeDatabase'
+      });
+      setError(t('database.initializationFailed'));
+    }
+  }, [loadBooksFromDB, loadBooks, t]);
 
   useEffect(() => {
     initDatabase();
-  }, []);
+  }, [initDatabase]);
 
   // Reload from database when coming back online to reflect queue processing changes
   useEffect(() => {
@@ -164,7 +163,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       
       return () => clearTimeout(timer);
     }
-  }, [isOnline, loadBooks]);
+  }, [isOnline, loadBooks, loadBooksFromDB]);
 
   const refreshBooks = useCallback(async () => {
     setRefreshing(true);
@@ -193,7 +192,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     } finally {
       setRefreshing(false);
     }
-  }, [t]);
+  }, [t, loadBooksFromDB]);
 
   const createBook = useCallback(async (bookData: CreateBookInput): Promise<UiBook> => {
     // Generate temporary ID for optimistic update
@@ -403,7 +402,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         throw new Error(t('books.deleteFailed'));
       }
     }
-  }, [t]);
+  }, [t, loadBooksFromDB]);
 
   const updateBookStatus = useCallback(async (id: number | string, status: Book['status']): Promise<void> => {
     const stringId = String(id);

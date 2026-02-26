@@ -161,10 +161,7 @@ export class MobileHookConfigService {
         config: {
           analyticsEnabled: true,
           errorReportingEnabled: true,
-          offlineStorageEnabled: true,
           performanceMonitoringEnabled: true,
-          batchUploadInterval: 300,
-          maxOfflineEvents: 1000,
         }
       };
       
