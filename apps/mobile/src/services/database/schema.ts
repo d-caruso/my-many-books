@@ -1,3 +1,5 @@
+import { SYNC_STATUS } from '@/types';
+
 /**
  * Database schema for SQLite
  */
@@ -19,7 +21,7 @@ export const CREATE_BOOKS_TABLE = `
     creation_date TEXT NOT NULL,
     update_date TEXT NOT NULL,
     _server_id INTEGER,
-    _sync_status TEXT DEFAULT 'synced',
+    _sync_status TEXT DEFAULT '${SYNC_STATUS.SYNCED}',
     _temp_id TEXT,
     _deleted INTEGER DEFAULT 0,
     _server_updated_at TEXT
@@ -31,7 +33,7 @@ export const CREATE_AUTHORS_TABLE = `
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     _server_id INTEGER,
-    _sync_status TEXT DEFAULT 'synced',
+    _sync_status TEXT DEFAULT '${SYNC_STATUS.SYNCED}',
     _server_updated_at TEXT
   );
 `;
@@ -52,7 +54,7 @@ export const CREATE_CATEGORIES_TABLE = `
     name TEXT NOT NULL UNIQUE,
     translation_key TEXT,
     _server_id INTEGER,
-    _sync_status TEXT DEFAULT 'synced',
+    _sync_status TEXT DEFAULT '${SYNC_STATUS.SYNCED}',
     _server_updated_at TEXT
   );
 `;

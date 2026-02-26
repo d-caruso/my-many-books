@@ -11,6 +11,7 @@ import { hasBookConflict, hasAuthorConflict, hasCategoryConflict } from '../../u
 import { getErrorMessage } from '../../utils/helpers';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 import { RESOURCE_TYPES, CONFLICT_RESOLUTION_METHODS, VALIDATION_TYPES } from '../hooks/eventsSchema';
+import { SYNC_STATUS } from '@/types';
 
 const LAST_SYNC_KEY = '@last_sync_timestamp';
 const SYNC_PAGE_SIZE = 50;
@@ -471,7 +472,7 @@ export class SyncService {
     
     return {
       title: serverBook.title,
-      status: serverBook.status,
+      status: serverBook.status as Book['status'],
       thumbnail: serverBook.thumbnail,
       description: serverBook.description,
       publishedDate: serverBook.publishedDate || serverBook.published_date,
@@ -480,8 +481,8 @@ export class SyncService {
       notes: serverBook.notes,
       creationDate: serverBook.creationDate || serverBook.created_at || new Date().toISOString(),
       updateDate: serverTimestamp,
-      _syncStatus: 'synced',
-      _serverUpdatedAt: serverTimestamp, // CRITICAL: Always set for conflict detection
+      _syncStatus: SYNC_STATUS.SYNCED,
+      serverUpdatedAt: serverTimestamp, // CRITICAL: Always set for conflict detection
     };
   }
 
@@ -695,7 +696,7 @@ export class SyncService {
           
           await authorRepository.updateSyncFields(localAuthor.id, {
             _serverUpdatedAt: serverAuthor.updateDate,
-            _syncStatus: 'synced',
+            _syncStatus: SYNC_STATUS.SYNCED,
           });
           
           mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.SUCCESS, {
@@ -723,7 +724,7 @@ export class SyncService {
         await authorRepository.updateSyncFields(existingByName.id, {
           serverId,
           _serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),
-          _syncStatus: 'synced',
+          _syncStatus: SYNC_STATUS.SYNCED,
         });
         // Register ID mapping
         await idMappingService.registerTempId(existingByName.id.toString(), serverId, 'author');
@@ -740,7 +741,7 @@ export class SyncService {
         await authorRepository.updateSyncFields(newAuthor.id, {
           serverId,
           _serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),
-          _syncStatus: 'synced',
+          _syncStatus: SYNC_STATUS.SYNCED,
         });
         
         // Emit author creation success event
@@ -810,7 +811,7 @@ export class SyncService {
           await categoryRepository.updateSyncFields(localCategory.id, {
             translationKey: serverCategory.translationKey ?? null,
             _serverUpdatedAt: serverCategory.updateDate,
-            _syncStatus: 'synced',
+            _syncStatus: SYNC_STATUS.SYNCED,
           });
           
           mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.SUCCESS, {
@@ -839,7 +840,7 @@ export class SyncService {
           serverId,
           translationKey: serverCategory.translationKey ?? null,
           _serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
-          _syncStatus: 'synced',
+          _syncStatus: SYNC_STATUS.SYNCED,
         });
         // Register ID mapping
         await idMappingService.registerTempId(existingByName.id.toString(), serverId, 'category');
@@ -860,7 +861,7 @@ export class SyncService {
           serverId,
           translationKey: serverCategory.translationKey ?? null,
           _serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
-          _syncStatus: 'synced',
+          _syncStatus: SYNC_STATUS.SYNCED,
         });
         
         // Emit category creation success event

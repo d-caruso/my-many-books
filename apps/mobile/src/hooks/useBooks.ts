@@ -10,6 +10,7 @@ import { resolveConflict as resolveBookConflict } from '@/utils/conflictDetectio
 import { useTranslation } from 'react-i18next';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
 import { LocalBook } from '@/entities/LocalBook';
+import { SYNC_STATUS } from '@/types';
 
 interface UseBooksState {
   books: Book[];
@@ -111,7 +112,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       for (const book of response.books) {
         await bookRepository.upsert({
           ...book,
-          _syncStatus: 'synced',
+          _syncStatus: SYNC_STATUS.SYNCED,
           _serverUpdatedAt: book.updateDate,
         });
       }
@@ -143,7 +144,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       for (const book of response.books) {
         await bookRepository.upsert({
           ...book,
-          _syncStatus: 'synced',
+          _syncStatus: SYNC_STATUS.SYNCED,
           _serverUpdatedAt: book.updateDate,
         });
       }
@@ -193,7 +194,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       await bookRepository.create({
         ...newBook,
         serverId: Number(newBook.id), // FIXED: Ensure serverId is numeric for proper ID mapping
-        _syncStatus: 'synced',
+        _syncStatus: SYNC_STATUS.SYNCED,
         _serverUpdatedAt: newBook.updateDate || newBook.updatedAt || new Date().toISOString(),
       });
 
@@ -276,7 +277,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // Update SQLite with server response
       await bookRepository.update(stringId, {
         ...updatedBook,
-        _syncStatus: 'synced',
+        _syncStatus: SYNC_STATUS.SYNCED,
         _serverUpdatedAt: updatedBook.updateDate,
         _hasConflict: hasConflict
       });
@@ -285,7 +286,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       setBooks(prev => prev.map(book =>
         book.id == id ? { 
           ...updatedBook, 
-          _syncStatus: 'synced', 
+          _syncStatus: SYNC_STATUS.SYNCED, 
           _serverUpdatedAt: updatedBook.updateDate,
           _hasConflict: hasConflict
         } : book
@@ -362,7 +363,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         if (deletedBook) {
           await databaseService.executeQuery(
             'UPDATE books SET _deleted = 0, _sync_status = ? WHERE id = ?',
-            ['synced', stringId]
+            [SYNC_STATUS.SYNCED, stringId]
           );
           await loadBooksFromDB(); // Reload to restore the book
         }

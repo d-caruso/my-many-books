@@ -337,7 +337,7 @@ export class OperationQueue {
     } catch (error) {
       // Mark as failed or pending for retry
       if (operation.resource === 'book' && operation.payload?.id) {
-        const status = operation.retryCount >= operation.maxRetries - 1 ? OPERATION_STATUS.FAILED : OPERATION_STATUS.PENDING;
+        const status = operation.retryCount >= operation.maxRetries - 1 ? SYNC_STATUS.FAILED : SYNC_STATUS.PENDING;
         await this.updateBookSyncStatus(String(operation.payload.id), status);
       }
       throw error;

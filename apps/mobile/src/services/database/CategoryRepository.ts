@@ -2,6 +2,7 @@ import { databaseService } from './DatabaseService';
 import type { Category } from '@my-many-books/shared-types';
 import { LocalCategory } from '@/entities/LocalCategory';
 import type { SyncStatus } from '@/types';
+import { SYNC_STATUS } from '@/types';
 
 export class CategoryRepository {
   /**
@@ -120,7 +121,7 @@ export class CategoryRepository {
       updateDate: row.update_date as string | undefined,
     };
     const local = new LocalCategory(category);
-    local.syncStatus = (row._sync_status as SyncStatus) ?? 'synced';
+    local.syncStatus = (row._sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
     local.serverUpdatedAt = row._server_updated_at as string | undefined;
     return local;
   }

@@ -2,6 +2,7 @@ import { databaseService } from './DatabaseService';
 import type { Author } from '@my-many-books/shared-types';
 import { LocalAuthor } from '@/entities/LocalAuthor';
 import type { SyncStatus } from '@/types';
+import { SYNC_STATUS } from '@/types';
 
 export class AuthorRepository {
   /**
@@ -114,7 +115,7 @@ export class AuthorRepository {
       updateDate: row.update_date as string | undefined,
     };
     const local = new LocalAuthor(author);
-    local.syncStatus = (row._sync_status as SyncStatus) ?? 'synced';
+    local.syncStatus = (row._sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
     local.serverUpdatedAt = row._server_updated_at as string | undefined;
     return local;
   }

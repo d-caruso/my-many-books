@@ -75,7 +75,7 @@ export class BookRepository {
           entity.creationDate || now,
           entity.updateDate || now,
           book.serverId || null,
-          book.syncStatus || 'synced',
+          book.syncStatus || SYNC_STATUS.SYNCED,
           book.tempId || null,
           book.deleted ? 1 : 0,
           book.serverUpdatedAt || null,
@@ -214,7 +214,7 @@ export class BookRepository {
           tempRecord.creation_date,
           new Date().toISOString(), // Update the update_date
           serverId,              // Set server_id 
-          'synced',              // Mark as synced
+          SYNC_STATUS.SYNCED,    // Mark as synced
           tempId,                // Keep reference to original temp_id
           0,                     // Not deleted
           new Date().toISOString() // Server updated at
@@ -413,7 +413,7 @@ export class BookRepository {
           entity.userId || null,
           entity.creationDate || now,
           entity.updateDate || now,
-          book.syncStatus || 'synced',
+          book.syncStatus || SYNC_STATUS.SYNCED,
           book.tempId || null,
           book.deleted ? 1 : 0,
           book.serverUpdatedAt || null,
@@ -530,7 +530,7 @@ export class BookRepository {
     };
     const local = new LocalBook(book);
     local.serverId = row.server_id as number | undefined;
-    local.syncStatus = (row._sync_status as SyncStatus) ?? 'synced';
+    local.syncStatus = (row._sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
     local.tempId = row._temp_id as string | undefined;
     local.deleted = row._deleted === 1;
     local.serverUpdatedAt = row._server_updated_at as string | undefined;

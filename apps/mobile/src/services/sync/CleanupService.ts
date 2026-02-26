@@ -70,7 +70,8 @@ export class CleanupService {
       `SELECT id, creation_date FROM books
        WHERE id LIKE 'temp-%'
        AND server_id IS NULL
-       AND _sync_status = 'failed'`
+       AND _sync_status = ?`,
+      [SYNC_STATUS.FAILED]
     );
 
     for (const book of orphanedBooks) {
@@ -445,7 +446,7 @@ export class CleanupService {
         // Mark as failed since sync attempt is lost
         await databaseService.executeQuery(
           'UPDATE books SET _sync_status = ? WHERE id = ?',
-          ['failed', book.id]
+          [SYNC_STATUS.FAILED, book.id]
         );
       }
     }
@@ -459,8 +460,8 @@ export class CleanupService {
     }>(`
       SELECT id, server_id, _sync_status, creation_date
       FROM books
-      WHERE _sync_status = 'failed'
-    `);
+      WHERE _sync_status = ?
+    `, [SYNC_STATUS.FAILED]);
 
     for (const book of failedBooks) {
       const ageInDays = Math.floor(
@@ -482,7 +483,7 @@ export class CleanupService {
         
         await databaseService.executeQuery(
           'UPDATE books SET _sync_status = ? WHERE id = ?',
-          ['synced', book.id]
+          [SYNC_STATUS.SYNCED, book.id]
         );
       } else if (ageInDays < 1) {
         // Recent failures might be retryable - reset to pending for retry
