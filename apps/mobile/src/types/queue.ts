@@ -1,8 +1,6 @@
 import type { Book, Author, Category } from '@my-many-books/shared-types';
-import type { OperationType, OperationStatus } from '../services/hooks/eventsSchema';
-import { RESOURCE_TYPES } from '@my-many-books/shared-types';
+import type { OperationType, QueueOperationStatus } from '../services/hooks/eventsSchema';
 
-export type { OperationType, OperationStatus };
 export type ResourceType = 'book' | 'author' | 'category' | 'user' | 'settings';
 
 // Base interface for all operation payloads
@@ -69,7 +67,7 @@ export interface QueuedOperation {
   timestamp: number;       // When queued
   retryCount: number;      // Attempts so far
   maxRetries: number;      // Max attempts (default: 3)
-  status: OperationStatus;
+  status: QueueOperationStatus;
   lastFailedAt?: number;   // Timestamp when last marked as FAILED
   crossSessionRetries?: number; // Cross-session retry attempts (default: 0)
 }

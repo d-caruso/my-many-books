@@ -50,6 +50,6 @@ export const areListenersInitialized = (): boolean => {
 // Export everything for easy access
 export { mobileHooks } from './mobileHooks';
 export { mobileHookListenersManager } from './mobileHookListeners';
-export { MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_STATUS } from './eventsSchema';
+export { MOBILE_EVENTS, RESOURCE_TYPES, QUEUE_OPERATION_STATUS, QUEUE_SIZE_STATUS } from './eventsSchema';
 export type { EventsTree } from './eventsSchema';
 export type { MobileHooksListenerSettings, HookEventData } from './mobileHookListeners';

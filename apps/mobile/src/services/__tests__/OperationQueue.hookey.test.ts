@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OperationQueue } from '../OperationQueue';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 import { HEALTH_STATUS, RESOURCE_TYPES } from '@my-many-books/shared-types';
-import { OPERATION_TYPES } from '../hooks/eventsSchema';
+import { OPERATION_TYPES, QUEUE_SIZE_STATUS } from '../hooks/eventsSchema';
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({ 
@@ -21,7 +21,7 @@ jest.mock('../hooks/mobileHooks', () => {
     },
     // Use the actual event tree instead of hard-coded strings
     MOBILE_EVENTS: actualMobileHooks.MOBILE_EVENTS,
-    OPERATION_STATUSES: actualMobileHooks.OPERATION_STATUSES,
+    QUEUE_OPERATION_STATUSES: actualMobileHooks.QUEUE_OPERATION_STATUSES,
   };
 });
 
@@ -146,7 +146,7 @@ describe('OperationQueue Hookey Integration', () => {
         expect.objectContaining({
           queueSize: expect.any(Number),
           maxSize: 100,
-          status: 'approaching_limit',
+          status: QUEUE_SIZE_STATUS.APPROACHING_LIMIT,
           threshold: 0.8
         })
       );
@@ -178,7 +178,7 @@ describe('OperationQueue Hookey Integration', () => {
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
         MOBILE_EVENTS.QUEUE.SIZE_CHANGED,
         expect.objectContaining({
-          status: 'limit_exceeded',
+          status: QUEUE_SIZE_STATUS.LIMIT_EXCEEDED,
           action: 'discarded_oldest',
           discardedOperation: 'op-0'
         })
@@ -607,11 +607,11 @@ describe('OperationQueue Hookey Integration', () => {
 
       // Should emit warning about stale operations
       const staleCalls = mockMobileHooks.emit.mock.calls.filter(
-        ([_, payload]) => payload.status === 'stale_operations'
+        ([_, payload]) => payload.status === QUEUE_SIZE_STATUS.STALE_OPERATIONS
       );
       expect(staleCalls).toHaveLength(1);
       expect(staleCalls[0][1]).toEqual(expect.objectContaining({
-        status: 'stale_operations',
+        status: QUEUE_SIZE_STATUS.STALE_OPERATIONS,
         staleDuration: expect.any(Number),
         warning: 'operations_aging'
       }));

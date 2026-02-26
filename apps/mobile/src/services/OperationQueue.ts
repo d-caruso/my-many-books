@@ -5,7 +5,7 @@ import { Alert } from 'react-native';
 import i18n from '../i18n';
 import { databaseService } from './database/DatabaseService';
 import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
-import { OPERATION_STATUS, RETRY_REASONS } from './hooks/eventsSchema';
+import { QUEUE_OPERATION_STATUS, QUEUE_SIZE_STATUS, RETRY_REASONS } from './hooks/eventsSchema';
 import { HEALTH_STATUS } from '@my-many-books/shared-types';
 import { SyncStatus, SYNC_STATUS } from '@/types';
 
@@ -81,7 +81,7 @@ export class OperationQueue {
       mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
         queueSize: this.queue.length,
         maxSize: MAX_QUEUE_SIZE,
-        status: 'approaching_limit',
+        status: QUEUE_SIZE_STATUS.APPROACHING_LIMIT,
         threshold: 0.8
       });
       // Show user-facing warning when approaching limit (skip in test environment)
@@ -100,7 +100,7 @@ export class OperationQueue {
       mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
         queueSize: this.queue.length,
         maxSize: MAX_QUEUE_SIZE,
-        status: 'limit_exceeded',
+        status: QUEUE_SIZE_STATUS.LIMIT_EXCEEDED,
         action: 'discarded_oldest',
         discardedOperation: discarded?.id
       });
@@ -122,7 +122,7 @@ export class OperationQueue {
       timestamp: Date.now(),
       retryCount: 0,
       maxRetries,
-      status: OPERATION_STATUS.PENDING,
+      status: QUEUE_OPERATION_STATUS.PENDING,
     };
 
     this.queue.push(operation);
@@ -172,7 +172,7 @@ export class OperationQueue {
    * Get all pending operations
    */
   getPendingOperations(): QueuedOperation[] {
-    return this.queue.filter(op => op.status === OPERATION_STATUS.PENDING || op.status === OPERATION_STATUS.RETRYING);
+    return this.queue.filter(op => op.status === QUEUE_OPERATION_STATUS.PENDING || op.status === QUEUE_OPERATION_STATUS.RETRYING);
   }
 
   /**
@@ -180,9 +180,9 @@ export class OperationQueue {
    */
   getProcessableOperations(): QueuedOperation[] {
     return this.queue.filter(op => 
-      op.status === OPERATION_STATUS.PENDING || 
-      op.status === OPERATION_STATUS.RETRYING ||
-      (op.status === OPERATION_STATUS.FAILED && this.shouldRetryFailedOperation(op))
+      op.status === QUEUE_OPERATION_STATUS.PENDING || 
+      op.status === QUEUE_OPERATION_STATUS.RETRYING ||
+      (op.status === QUEUE_OPERATION_STATUS.FAILED && this.shouldRetryFailedOperation(op))
     );
   }
 
@@ -238,9 +238,9 @@ export class OperationQueue {
     try {
       for (const operation of processable) {
         // Handle cross-session retry - increment counter if this is a failed operation being retried
-        if (operation.status === OPERATION_STATUS.FAILED) {
+        if (operation.status === QUEUE_OPERATION_STATUS.FAILED) {
           operation.crossSessionRetries = (operation.crossSessionRetries || 0) + 1;
-          operation.status = OPERATION_STATUS.RETRYING;
+          operation.status = QUEUE_OPERATION_STATUS.RETRYING;
           
           mobileHooks.emit(MOBILE_EVENTS.QUEUE.RETRY, {
             operationId: operation.id,
@@ -262,7 +262,7 @@ export class OperationQueue {
           failedCount++;
 
           if (operation.retryCount >= operation.maxRetries) {
-            operation.status = OPERATION_STATUS.FAILED;
+            operation.status = QUEUE_OPERATION_STATUS.FAILED;
             operation.lastFailedAt = Date.now();
             operation.crossSessionRetries = (operation.crossSessionRetries || 0);
             operation.retryCount = 0; // Reset for cross-session retry
@@ -277,7 +277,7 @@ export class OperationQueue {
               crossSessionRetries: operation.crossSessionRetries
             });
           } else {
-            operation.status = OPERATION_STATUS.RETRYING;
+            operation.status = QUEUE_OPERATION_STATUS.RETRYING;
             mobileHooks.emit(MOBILE_EVENTS.QUEUE.RETRY, {
               operationId: operation.id,
               type: operation.type,
@@ -373,7 +373,7 @@ export class OperationQueue {
    * Get failed operations for cleanup service access (Phase 5 fix)
    */
   getFailedOperations(): QueuedOperation[] {
-    return this.queue.filter(op => op.status === OPERATION_STATUS.FAILED);
+    return this.queue.filter(op => op.status === QUEUE_OPERATION_STATUS.FAILED);
   }
 
   /**
@@ -381,8 +381,8 @@ export class OperationQueue {
    */
   async retryOperation(operationId: string): Promise<void> {
     const operation = this.queue.find(op => op.id === operationId);
-    if (operation && operation.status === OPERATION_STATUS.FAILED) {
-      operation.status = OPERATION_STATUS.PENDING;
+    if (operation && operation.status === QUEUE_OPERATION_STATUS.FAILED) {
+      operation.status = QUEUE_OPERATION_STATUS.PENDING;
       operation.retryCount = 0; // Reset retry count for manual retry
       await this.persist();
     }
@@ -394,7 +394,7 @@ export class OperationQueue {
   async retryAllFailedOperations(): Promise<void> {
     const failedOps = this.getFailedOperations();
     for (const operation of failedOps) {
-      operation.status = OPERATION_STATUS.PENDING;
+      operation.status = QUEUE_OPERATION_STATUS.PENDING;
       operation.retryCount = 0; // Reset retry count for manual retry
     }
     await this.persist();
@@ -412,8 +412,8 @@ export class OperationQueue {
     isHealthy: boolean;
     oldestOperation?: number;
   } {
-    const pending = this.queue.filter(op => op.status === OPERATION_STATUS.PENDING).length;
-    const retrying = this.queue.filter(op => op.status === OPERATION_STATUS.RETRYING).length;
+    const pending = this.queue.filter(op => op.status === QUEUE_OPERATION_STATUS.PENDING).length;
+    const retrying = this.queue.filter(op => op.status === QUEUE_OPERATION_STATUS.RETRYING).length;
     const failed = this.getFailedOperations().length;
     const total = this.queue.length;
 
@@ -464,7 +464,7 @@ export class OperationQueue {
     if (health.oldestOperation && (now - health.oldestOperation) > (60 * 60 * 1000)) {
       mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
         ...health,
-        status: 'stale_operations',
+        status: QUEUE_SIZE_STATUS.STALE_OPERATIONS,
         staleDuration: now - health.oldestOperation,
         timestamp: new Date().toISOString(),
         warning: 'operations_aging'
@@ -475,7 +475,7 @@ export class OperationQueue {
     if (health.failed > 0 && (health.failed / health.total) > 0.3) {
       mobileHooks.emit(MOBILE_EVENTS.QUEUE.SIZE_CHANGED, {
         ...health,
-        status: 'high_failure_rate',
+        status: QUEUE_SIZE_STATUS.HIGH_FAILURE_RATE,
         timestamp: new Date().toISOString(),
         warning: 'excessive_failures'
       });

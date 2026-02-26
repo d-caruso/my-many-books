@@ -1,6 +1,6 @@
 import { executeOperation, isRetriableError } from '../QueueExecutor';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
-import { OPERATION_STATUSES } from '../hooks/eventsSchema';
+import { QUEUE_OPERATION_STATUSES } from '../hooks/eventsSchema';
 import { ApiError, ErrorCode } from '../../types/errors';
 import type { QueuedOperation } from '../../types/queue';
 
@@ -30,7 +30,7 @@ jest.mock('../hooks/eventsSchema', () => {
   const actualEventsSchema = jest.requireActual('../hooks/eventsSchema');
   
   return {
-    OPERATION_STATUSES: actualEventsSchema.OPERATION_STATUSES,
+    QUEUE_OPERATION_STATUSES: actualEventsSchema.QUEUE_OPERATION_STATUSES,
     OPERATION_TYPES: actualEventsSchema.OPERATION_TYPES,
     RESOURCE_TYPES: actualEventsSchema.RESOURCE_TYPES,
   };
@@ -109,7 +109,7 @@ describe('QueueExecutor Hookey Integration', () => {
       timestamp: Date.now(),
       retryCount: 0,
       maxRetries: 3,
-      status: OPERATION_STATUSES.PENDING,
+      status: QUEUE_OPERATION_STATUSES.PENDING,
     };
 
     it('should emit EXECUTOR.OPERATION.START when operation begins', async () => {
@@ -408,7 +408,7 @@ describe('QueueExecutor Hookey Integration', () => {
       timestamp: Date.now(),
       retryCount: 0,
       maxRetries: 3,
-      status: OPERATION_STATUSES.PENDING,
+      status: QUEUE_OPERATION_STATUSES.PENDING,
     };
 
     it('should correctly categorize network errors', async () => {
@@ -473,7 +473,7 @@ describe('QueueExecutor Hookey Integration', () => {
         timestamp: Date.now(),
         retryCount: 0,
         maxRetries: 3,
-        status: OPERATION_STATUSES.PENDING,
+        status: QUEUE_OPERATION_STATUSES.PENDING,
       };
 
       await executeOperation(mockOperation);

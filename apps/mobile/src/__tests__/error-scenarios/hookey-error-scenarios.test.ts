@@ -4,7 +4,7 @@
 // Mock dependencies first
 import { operationQueue } from '../../services/OperationQueue';
 import { syncService } from '../../services/sync/SyncService';
-import { OPERATION_TYPES, RESOURCE_TYPES, OPERATION_STATUSES } from '../../services/hooks/eventsSchema';
+import { OPERATION_TYPES, RESOURCE_TYPES, QUEUE_OPERATION_STATUS } from '../../services/hooks/eventsSchema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiError, ErrorCode } from '../../types/errors';
 
@@ -93,7 +93,7 @@ describe('Mobile Operations Error Scenarios', () => {
       expect(operationQueue.size()).toBe(1);
       const pending = operationQueue.getPendingOperations();
       expect(pending[0].retryCount).toBeGreaterThan(0);
-      expect(pending[0].status).toBe(OPERATION_STATUSES.RETRYING);
+      expect(pending[0].status).toBe(QUEUE_OPERATION_STATUS.RETRYING);
     }, ERROR_TEST_TIMEOUT);
 
     it('should handle validation errors with retry until max attempts', async () => {
@@ -284,7 +284,7 @@ describe('Mobile Operations Error Scenarios', () => {
       // Operation should now be FAILED but remain in queue for cross-session retry
       const failedOps = operationQueue.getFailedOperations();
       expect(failedOps.length).toBe(1);
-      expect(failedOps[0].status).toBe(OPERATION_STATUSES.FAILED);
+      expect(failedOps[0].status).toBe(QUEUE_OPERATION_STATUS.FAILED);
       expect(failedOps[0].retryCount).toBe(0); // Reset for cross-session retry
       expect(failedOps[0].crossSessionRetries).toBe(0);
       expect(failedOps[0].lastFailedAt).toBeGreaterThan(0);
@@ -442,7 +442,7 @@ describe('Mobile Operations Error Scenarios', () => {
         timestamp: Date.now(),
         retryCount: 0,
         maxRetries: 1,
-        status: OPERATION_STATUSES.PENDING
+        status: QUEUE_OPERATION_STATUS.PENDING
       };
 
       // Directly add to queue internal array (simulating corrupted storage)

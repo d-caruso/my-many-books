@@ -6,7 +6,7 @@ import { useQueueStatus } from '../hooks/useQueueStatus';
 import { operationQueue } from '../services/OperationQueue';
 import type { QueuedOperation } from '../types/queue';
 import { useSyncQueue } from '../hooks/useSyncQueue';
-import { OPERATION_STATUS } from '@/services/hooks';
+import { QUEUE_OPERATION_STATUS } from '@/services/hooks';
 
 /**
  * Screen for managing queued operations
@@ -30,11 +30,11 @@ export const QueueManagementScreen: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case OPERATION_STATUS.PENDING:
+      case QUEUE_OPERATION_STATUS.PENDING:
         return theme.colors.primary;
-      case OPERATION_STATUS.RETRYING:
+      case QUEUE_OPERATION_STATUS.RETRYING:
         return '#FF9800';
-      case OPERATION_STATUS.FAILED:
+      case QUEUE_OPERATION_STATUS.FAILED:
         return theme.colors.error;
       default:
         return theme.colors.onSurface;
@@ -57,13 +57,13 @@ export const QueueManagementScreen: React.FC = () => {
         left={(props) => (
           <List.Icon
             {...props}
-            icon={item.status === 'failed' ? 'alert-circle' : 'sync'}
+            icon={item.status === QUEUE_OPERATION_STATUS.FAILED ? 'alert-circle' : 'sync'}
             color={getStatusColor(item.status)}
           />
         )}
         right={() => (
           <View style={styles.actions}>
-            {(item.status === 'failed' || item.status === 'retrying') && (
+            {(item.status === QUEUE_OPERATION_STATUS.FAILED || item.status === QUEUE_OPERATION_STATUS.RETRYING) && (
               <IconButton
                 icon="refresh"
                 size={20}
