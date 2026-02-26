@@ -29,7 +29,7 @@ export default function AddBookScreen() {
   }>();
   const [title, setTitle] = useState('');
   const [isbnCode, setIsbnCode] = useState(isbn || '');
-  const [status, setStatus] = useState<Book['status']>('want-to-read');
+  const [status, setStatus] = useState<Book['status'] | null>(null);
   const [editionDate, setEditionDate] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -212,7 +212,7 @@ export default function AddBookScreen() {
       await createBook({
         title: title.trim(),
         isbnCode: isbnCode.trim(),
-        status,
+        status: status ?? undefined,
         editionDate: editionDate || undefined,
         notes: notes.trim(),
         authorIds: selectedAuthors.map((author) => Number(author.id)),
@@ -364,12 +364,13 @@ export default function AddBookScreen() {
                 {t('books:reading_status')}
               </Text>
               <SegmentedButtons
-                value={status}
-                onValueChange={(value) => setStatus(value as Book['status'])}
+                value={status || ''}
+                onValueChange={(value) => setStatus(value ? (value as Book['status']) : null)}
                 buttons={[
-                  { value: 'want-to-read', label: t('books:want_to_read') },
+                  { value: '', label: t('common:none', { defaultValue: 'None' }) },
                   { value: 'reading', label: t('books:reading') },
-                  { value: 'completed', label: t('books:completed') },
+                  { value: 'paused', label: t('books:paused') },
+                  { value: 'finished', label: t('books:finished') },
                 ]}
                 style={styles.segmentedButtons}
                 accessibilityLabel={t('books:select_status')}
