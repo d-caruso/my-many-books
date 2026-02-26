@@ -1,4 +1,4 @@
-import type { Book, Author, Category } from './index';
+import type { Book, Author, Category } from '@my-many-books/shared-types';
 import type { OperationType, OperationStatus } from '../services/hooks/eventsSchema';
 import { RESOURCE_TYPES } from '@my-many-books/shared-types';
 
@@ -17,11 +17,12 @@ export interface BookOperationPayload extends BaseOperationPayload {
   isbnCode?: string;
   author?: string;
   status?: Book['status'];
-  thumbnail?: string;
-  description?: string;
-  publishedDate?: string;
-  pageCount?: number;
-  rating?: number;
+  //TODO commented out fields that are not currently set in the API/DB but may be relevant for future features
+  //thumbnail?: string;
+  //description?: string;
+  //publishedDate?: string;
+  //pageCount?: number;
+  //rating?: number;
   notes?: string;
   authorIds?: number[];
   categoryIds?: number[];

@@ -136,7 +136,7 @@ export const mobileHooks = {
 };
 
 // Export events for easy access  
-export { MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_STATUSES } from './eventsSchema';
+export { MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_STATUS } from './eventsSchema';
 
 // Export types
 export type { EventsTree } from './eventsSchema';

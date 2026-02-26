@@ -12,6 +12,7 @@ import { Category } from '@my-many-books/shared-types';
 import { CreatePayload, UpdatePayload } from './handlers/types/HandlerTypes';
 import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/eventsSchema';
 import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
+import { SYNC_STATUS } from '@/types';
 
 /**
  * Execute queued operation based on resource type and operation type
@@ -230,7 +231,7 @@ async function executeCreateBook(payload: CreatePayload<Book>): Promise<void> {
     if (serverResponse.updateDate || serverResponse.updatedAt) {
       await bookRepository.updateSyncFields(serverId.toString(), {
         _serverUpdatedAt: serverResponse.updateDate || serverResponse.updatedAt,
-        _syncStatus: 'synced'
+        _syncStatus: SYNC_STATUS.SYNCED
       });
     }
 
@@ -271,7 +272,7 @@ async function executeUpdateBook(payload: UpdatePayload<Book> & { id: string }):
   if (updateResponse.updateDate || updateResponse.updatedAt) {
     await bookRepository.updateSyncFields(String(serverIdToUse), {
       _serverUpdatedAt: updateResponse.updateDate || updateResponse.updatedAt,
-      _syncStatus: 'synced'
+      _syncStatus: SYNC_STATUS.SYNCED
     });
   }
 }
@@ -356,7 +357,7 @@ async function executeCreateAuthor(payload: CreatePayload<Author>): Promise<void
     await authorRepository.updateSyncFields(tempId, {
       serverId,
       _serverUpdatedAt: serverResponse.updateDate || new Date().toISOString(),
-      _syncStatus: 'synced',
+      _syncStatus: SYNC_STATUS.SYNCED,
     });
   }
 }
@@ -379,7 +380,7 @@ async function executeUpdateAuthor(payload: UpdatePayload<Author> & { id: string
   if (updateResponse.updateDate) {
     await authorRepository.updateSyncFields(authorId, {
       _serverUpdatedAt: updateResponse.updateDate,
-      _syncStatus: 'synced',
+      _syncStatus: SYNC_STATUS.SYNCED,
     });
   }
 }
@@ -408,7 +409,7 @@ async function executeCreateCategory(payload: CreatePayload<Category>): Promise<
     await categoryRepository.updateSyncFields(tempId, {
       serverId,
       _serverUpdatedAt: serverResponse.updateDate || new Date().toISOString(),
-      _syncStatus: 'synced',
+      _syncStatus: SYNC_STATUS.SYNCED,
     });
   }
 }
@@ -429,7 +430,7 @@ async function executeUpdateCategory(payload: UpdatePayload<Category> & { id: st
   if (updateResponse.updateDate) {
     await categoryRepository.updateSyncFields(categoryId, {
       _serverUpdatedAt: updateResponse.updateDate,
-      _syncStatus: 'synced',
+      _syncStatus: SYNC_STATUS.SYNCED,
     });
   }
 }

@@ -18,7 +18,7 @@ export const CREATE_BOOKS_TABLE = `
     user_id INTEGER,
     creation_date TEXT NOT NULL,
     update_date TEXT NOT NULL,
-    server_id INTEGER,
+    _server_id INTEGER,
     _sync_status TEXT DEFAULT 'synced',
     _temp_id TEXT,
     _deleted INTEGER DEFAULT 0,
@@ -30,7 +30,7 @@ export const CREATE_AUTHORS_TABLE = `
   CREATE TABLE IF NOT EXISTS authors (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
-    server_id INTEGER,
+    _server_id INTEGER,
     _sync_status TEXT DEFAULT 'synced',
     _server_updated_at TEXT
   );
@@ -51,7 +51,7 @@ export const CREATE_CATEGORIES_TABLE = `
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     translation_key TEXT,
-    server_id INTEGER,
+    _server_id INTEGER,
     _sync_status TEXT DEFAULT 'synced',
     _server_updated_at TEXT
   );
@@ -70,7 +70,7 @@ export const CREATE_BOOK_CATEGORIES_TABLE = `
 export const CREATE_ID_MAPPINGS_TABLE = `
   CREATE TABLE IF NOT EXISTS id_mappings (
     temp_id TEXT PRIMARY KEY,
-    server_id INTEGER NOT NULL,
+    _server_id INTEGER NOT NULL,
     resource_type TEXT NOT NULL,
     created_at TEXT NOT NULL
   );
@@ -84,7 +84,7 @@ export const CREATE_INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_books_user_id ON books(user_id);',
   'CREATE INDEX IF NOT EXISTS idx_books_sync_status ON books(_sync_status);',
   'CREATE INDEX IF NOT EXISTS idx_books_deleted ON books(_deleted);',
-  'CREATE INDEX IF NOT EXISTS idx_books_server_id ON books(server_id);',
+  'CREATE INDEX IF NOT EXISTS idx_books__server_id ON books(_server_id);',
   'CREATE INDEX IF NOT EXISTS idx_book_authors_book_id ON book_authors(book_id);',
   'CREATE INDEX IF NOT EXISTS idx_book_authors_author_id ON book_authors(author_id);',
   'CREATE INDEX IF NOT EXISTS idx_book_categories_book_id ON book_categories(book_id);',

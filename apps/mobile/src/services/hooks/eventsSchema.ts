@@ -205,11 +205,18 @@ export const OPERATION_TYPES = Object.freeze({
 } as const);
 
 // Operation status constants for queue operations
-export const OPERATION_STATUSES = Object.freeze({
+export const OPERATION_STATUS = Object.freeze({
   PENDING: 'pending',
   RETRYING: 'retrying',
   FAILED: 'failed',
 } as const);
+
+/**
+ * Array of all operation status values (derived from OPERATION_STATUS)
+ */
+export const OPERATION_STATUSES = Object.freeze(
+  Object.values(OPERATION_STATUS)
+) as readonly (typeof OPERATION_STATUS[keyof typeof OPERATION_STATUS])[];
 
 // Conflict resolution method constants
 export const CONFLICT_RESOLUTION_METHODS = Object.freeze({
@@ -257,7 +264,7 @@ export const HEALTH_SCORE_THRESHOLDS = Object.freeze({
 } as const);
 
 export type OperationType = typeof OPERATION_TYPES[keyof typeof OPERATION_TYPES];
-export type OperationStatus = typeof OPERATION_STATUSES[keyof typeof OPERATION_STATUSES];
+export type OperationStatus = typeof OPERATION_STATUS[keyof typeof OPERATION_STATUS];
 export type ConflictResolutionMethod = typeof CONFLICT_RESOLUTION_METHODS[keyof typeof CONFLICT_RESOLUTION_METHODS];
 export type ValidationType = typeof VALIDATION_TYPES[keyof typeof VALIDATION_TYPES];
 export type RetryReason = typeof RETRY_REASONS[keyof typeof RETRY_REASONS];

@@ -1,32 +1,30 @@
 // Import and re-export types from shared libraries with mobile-specific adaptations
 import type {
-  Book as SharedBook,
-  BookStatus as SharedBookStatus,
+  Book,
   User as SharedUser,
-  Author as SharedAuthor,
-  Category as SharedCategory
 } from '@my-many-books/shared-types';
 
-// Sync status for offline operations
-export type SyncStatus = 'synced' | 'pending' | 'failed' | 'syncing';
+export type { Book };
 
-// Enhanced Book type for mobile with additional fields
-export interface Book extends Omit<SharedBook, 'status' | 'creationDate' | 'updateDate'> {
-  status: 'want-to-read' | 'reading' | 'paused' | 'completed';
-  thumbnail?: string;
-  description?: string;
-  publishedDate?: string;
-  pageCount?: number;
-  rating?: number;
-  creationDate: string;
-  updateDate: string;
-  serverId?: number; // Server-assigned ID for sync (Phase 5)
-  // Offline sync fields
-  _syncStatus?: SyncStatus;
-  _tempId?: string;
-  _deleted?: boolean;
-  _serverUpdatedAt?: string;
-}
+/**
+ * Book status enum values
+ */
+export const SYNC_STATUS = Object.freeze({
+  SYNCED: 'synced',
+  PENDING: 'pending',
+  FAILED: 'failed',
+  SYNCING: 'syncing',
+} as const);
+
+/**
+ * Array of all sync status values (derived from SYNC_STATUS)
+ */
+export const SYNC_STATUSES = Object.freeze(
+  Object.values(SYNC_STATUS)
+) as readonly (typeof SYNC_STATUS[keyof typeof SYNC_STATUS])[];
+
+// Sync status for offline operations
+export type SyncStatus = typeof SYNC_STATUSES[number];
 
 // Enhanced User type for mobile
 export interface User extends SharedUser {
@@ -39,9 +37,6 @@ export interface UserPreferences {
   notifications: boolean;
   language: string;
 }
-
-// Re-export other shared types
-export type { SharedAuthor as Author, SharedCategory as Category };
 
 // Mobile-specific types
 
@@ -73,6 +68,15 @@ export interface AppTheme {
 
 export type StatusBarStyle = 'auto' | 'light' | 'dark';
 
+export interface SearchQuery {
+  q?: string;
+  author?: string;
+  category?: string;
+  status?: Book['status'];
+  limit?: number;
+  offset?: number;
+}
+
 // API Response types
 export interface ApiResponse<T = object> {
   data?: T;
@@ -88,18 +92,3 @@ export interface PaginatedResponse<T> {
   hasMore: boolean;
 }
 
-// Search types
-export interface SearchResult<T = Book> {
-  books: T[];
-  total: number;
-  hasMore: boolean;
-}
-
-export interface SearchQuery {
-  q?: string;
-  author?: string;
-  category?: string;
-  status?: Book['status'];
-  limit?: number;
-  offset?: number;
-}

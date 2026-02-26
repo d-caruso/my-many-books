@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Book } from '@/types';
+import { Book, SYNC_STATUS } from '@/types';
 import { bookAPI } from '@/services/api';
 import { bookRepository } from '@/services/database/BookRepository';
 import { databaseService } from '@/services/database/DatabaseService';
@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { resolveConflict as resolveBookConflict } from '@/utils/conflictDetection';
 import { useTranslation } from 'react-i18next';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES, OPERATION_TYPES } from '@/services/hooks/mobileHooks';
+import { LocalBook } from '@/entities/LocalBook';
 
 interface UseBooksState {
   books: Book[];
@@ -163,14 +164,14 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     }
   }, []);
 
-  const createBook = useCallback(async (bookData: Partial<Book>): Promise<Book> => {
+  const createBook = useCallback(async (bookData: Partial<LocalBook>): Promise<LocalBook> => {
     // Generate temporary ID for optimistic update
     const tempId = `temp-${uuidv4()}`;
     const optimisticBook: Book = {
       ...bookData,
       id: tempId as string,
       _tempId: tempId,
-      _syncStatus: 'pending',
+      _syncStatus: SYNC_STATUS.PENDING,
       creationDate: new Date().toISOString(),
       updateDate: new Date().toISOString(),
     } as Book;
@@ -198,7 +199,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
 
       // Update local state
       setBooks(prev => prev.map(book =>
-        book._tempId === tempId ? { ...newBook, _syncStatus: 'synced' } : book
+        book._tempId === tempId ? { ...newBook, _syncStatus: SYNC_STATUS.SYNCED } : book
       ));
 
       return newBook;
@@ -208,9 +209,9 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // If error is retriable, keep optimistic book with pending status
       // Note: API service already handles queueing via withQueueOnError, so we don't queue again here
       if (isRetriableError(err)) {
-        await bookRepository.update(tempId, { _syncStatus: 'pending' });
+        await bookRepository.update(tempId, { _syncStatus: SYNC_STATUS.PENDING });
         setBooks(prev => prev.map(book =>
-          book._tempId === tempId ? { ...book, _syncStatus: 'pending' } : book
+          book._tempId === tempId ? { ...book, _syncStatus: SYNC_STATUS.PENDING } : book
         ));
         return optimisticBook;
       } else {
@@ -234,7 +235,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     const stringId = String(id);
     await bookRepository.update(stringId, {
       ...bookData,
-      _syncStatus: 'pending',
+      _syncStatus: SYNC_STATUS.PENDING,
       updateDate: new Date().toISOString(),
       _rollbackData: { // Capture rollback metadata
         previousValues: {
@@ -246,7 +247,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     });
 
     setBooks(prev => prev.map(book =>
-      book.id == id ? { ...book, ...bookData, _syncStatus: 'pending' } : book
+      book.id == id ? { ...book, ...bookData, _syncStatus: SYNC_STATUS.PENDING } : book
     ));
 
     try {
@@ -299,29 +300,29 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       if (isRetriableError(err)) {
         const pendingBook = books.find(b => b.id == id);
         if (pendingBook) {
-          return { ...pendingBook, ...bookData, _syncStatus: 'pending' };
+          return { ...pendingBook, ...bookData, _syncStatus: SYNC_STATUS.PENDING };
         }
       } else {
         // Non-retriable error - rollback optimistic changes using stored rollback data
         if (previousBook._rollbackData?.previousValues) {
           await bookRepository.update(stringId, {
             ...previousBook._rollbackData.previousValues,
-            _syncStatus: 'failed',
+            _syncStatus: SYNC_STATUS.FAILED,
             _rollbackData: null, // Clear rollback data after restoring
           });
           setBooks(prev => prev.map(book =>
             book.id == id ? { 
               ...book, 
               ...previousBook._rollbackData.previousValues,
-              _syncStatus: 'failed',
+              _syncStatus: SYNC_STATUS.FAILED,
               _rollbackData: null
             } : book
           ));
         } else {
           // Fallback: just mark as failed if no rollback data
-          await bookRepository.update(stringId, { _syncStatus: 'failed' });
+          await bookRepository.update(stringId, { _syncStatus: SYNC_STATUS.FAILED });
           setBooks(prev => prev.map(book =>
-            book.id == id ? { ...book, _syncStatus: 'failed' } : book
+            book.id == id ? { ...book, _syncStatus: SYNC_STATUS.FAILED } : book
           ));
         }
       }
@@ -375,9 +376,9 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     const stringId = String(id);
 
     // Update SQLite and local state immediately (optimistic)
-    await bookRepository.update(stringId, { status, _syncStatus: 'pending' });
+    await bookRepository.update(stringId, { status, _syncStatus: SYNC_STATUS.PENDING });
     setBooks(prev => prev.map(book =>
-      book.id == id ? { ...book, status, _syncStatus: 'pending' } : book
+      book.id == id ? { ...book, status, _syncStatus: SYNC_STATUS.PENDING } : book
     ));
 
     try {
@@ -385,9 +386,9 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       await bookAPI.updateBook(id, { status });
 
       // Mark as synced
-      await bookRepository.update(stringId, { _syncStatus: 'synced' });
+      await bookRepository.update(stringId, { _syncStatus: SYNC_STATUS.SYNCED });
       setBooks(prev => prev.map(book =>
-        book.id == id ? { ...book, _syncStatus: 'synced' } : book
+        book.id == id ? { ...book, _syncStatus: SYNC_STATUS.SYNCED } : book
       ));
     } catch (err: unknown) {
       console.error('Failed to update book status:', err);
@@ -399,9 +400,9 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         return;
       } else {
         // Non-retriable error - mark as failed
-        await bookRepository.update(stringId, { _syncStatus: 'failed' });
+        await bookRepository.update(stringId, { _syncStatus: SYNC_STATUS.FAILED });
         setBooks(prev => prev.map(book =>
-          book.id == id ? { ...book, _syncStatus: 'failed' } : book
+          book.id == id ? { ...book, _syncStatus: SYNC_STATUS.FAILED } : book
         ));
         mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
           operation: OPERATION_TYPES.UPDATE,
@@ -427,14 +428,14 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       if (choice === 'local') {
         // Keep local version, mark for re-sync to server
         await bookRepository.update(stringId, {
-          _syncStatus: 'pending',
+          _syncStatus: SYNC_STATUS.PENDING,
           _hasConflict: false,
         });
 
         setBooks(prev => prev.map(book =>
           book.id == bookId ? { 
             ...book, 
-            _syncStatus: 'pending', 
+            _syncStatus: SYNC_STATUS.PENDING, 
             _hasConflict: false 
           } : book
         ));

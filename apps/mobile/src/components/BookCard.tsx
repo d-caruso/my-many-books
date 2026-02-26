@@ -6,17 +6,16 @@ import { Book } from '@/types';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { SyncStatusBadge } from './SyncStatusBadge';
 import { ConflictDialog } from './ConflictDialog';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 
 // Move utility functions back for direct coverage tracking
 export function getStatusColor(status: Book['status']) {
   switch (status) {
-    case 'reading':
+    case BOOK_STATUS.READING:
       return '#2196F3';
-    case 'completed':
+    case BOOK_STATUS.FINISHED:
       return '#4CAF50';
-    case 'want-to-read':
-      return '#FF9800';
-    case 'paused':
+    case BOOK_STATUS.PAUSED:
       return '#9C27B0';
     default:
       return '#757575';
@@ -28,29 +27,26 @@ export function getStatusLabel(status: Book['status'], t?: (key: string) => stri
   // This is kept for backward compatibility but should use t() from the component
   if (!t) {
     const statusMap: Record<Book['status'], string> = {
-      'reading': 'Reading',
-      'completed': 'Completed',
-      'want-to-read': 'Want to Read',
-      'paused': 'Paused',
+      [BOOK_STATUS.READING]: BOOK_STATUS.READING,
+      [BOOK_STATUS.FINISHED]: BOOK_STATUS.FINISHED,
+      [BOOK_STATUS.PAUSED]: BOOK_STATUS.PAUSED,
     };
     return statusMap[status] || status;
   }
 
   switch (status) {
-    case 'reading':
+    case BOOK_STATUS.READING:
       return t('books:reading');
-    case 'completed':
+    case BOOK_STATUS.FINISHED:
       return t('books:completed');
-    case 'want-to-read':
-      return t('books:want_to_read');
-    case 'paused':
+    case BOOK_STATUS.PAUSED:
       return t('books:paused');
     default:
       return status;
   }
 }
 
-export const statusOptions: Book['status'][] = ['want-to-read', 'reading', 'paused', 'completed'];
+export const statusOptions: Book['status'][] = [BOOK_STATUS.READING, BOOK_STATUS.PAUSED, BOOK_STATUS.FINISHED];
 
 interface BookCardProps {
   book: Book;
@@ -83,9 +79,9 @@ export const BookCard: React.FC<BookCardProps> = ({
     >
       <Card.Content style={styles.content}>
         <View style={styles.bookInfo}>
-          {book.thumbnail && (
+          {/*{book.thumbnail && (
             <Image source={{ uri: book.thumbnail }} style={styles.thumbnail} accessibilityLabel={`${book.title} thumbnail`} />
-          )}
+          )}*/}
           
           <View style={styles.textContent}>
             <Text variant="titleMedium" style={styles.title} numberOfLines={2} testID="book-title" accessibilityRole="header">
@@ -96,11 +92,11 @@ export const BookCard: React.FC<BookCardProps> = ({
               {book.authors?.map(a => a.name).join(', ') || t('books:unknown_author')}
             </Text>
             
-            {book.publishedDate && (
+            {/*{book.publishedDate && (
               <Text variant="bodySmall" style={styles.publishedDate}>
                 {t('books:published_label', { date: new Date(book.publishedDate).getFullYear() })}
               </Text>
-            )}
+            )}*/}
             
             <View style={styles.chipRow}>
               <Chip

@@ -1,5 +1,7 @@
+import { LocalBook } from '@/entities/LocalBook';
 import { databaseService } from './DatabaseService';
-import type { Book } from '@/types';
+import type { Book } from '@my-many-books/shared-types';
+import { SyncStatus, SYNC_STATUS } from '@/types';
 
 // Counter to ensure unique IDs even when Date.now() returns same value
 let idCounter = 0;
@@ -8,7 +10,7 @@ export class BookRepository {
   /**
    * Find all books (excluding deleted)
    */
-  async findAll(): Promise<Book[]> {
+  async findAll(): Promise<LocalBook[]> {
     const books = await databaseService.getAllAsync(
       'SELECT * FROM books WHERE _deleted = 0 ORDER BY update_date DESC'
     );
@@ -18,7 +20,7 @@ export class BookRepository {
   /**
    * Find book by ID
    */
-  async findById(id: string): Promise<Book | null> {
+  async findById(id: string): Promise<LocalBook | null> {
     const book = await databaseService.getFirstAsync(
       'SELECT * FROM books WHERE id = ? AND _deleted = 0',
       [id]
@@ -29,7 +31,7 @@ export class BookRepository {
   /**
    * Find book by server ID (Phase 5)
    */
-  async findByServerId(serverId: number): Promise<Book | null> {
+  async findByServerId(serverId: number): Promise<LocalBook | null> {
     const book = await databaseService.getFirstAsync(
       'SELECT * FROM books WHERE server_id = ? AND _deleted = 0',
       [serverId]
@@ -40,14 +42,15 @@ export class BookRepository {
   /**
    * Create new book
    */
-  async create(book: Partial<Book>): Promise<Book> {
-    const id = book.id || book._tempId || `temp-${Date.now()}-${idCounter++}`;
+  async create(book: Partial<LocalBook>): Promise<LocalBook> {
+    const id = book.entity.id?.toString() || book.tempId || `temp-${Date.now()}-${idCounter++}`;
     const now = new Date().toISOString();
 
     // Start transaction for atomic book + relations creation
     await databaseService.executeQuery('BEGIN TRANSACTION');
     
     try {
+      const entity = book.entity;
       // Insert main book record
       await databaseService.executeQuery(
         `INSERT INTO books (
@@ -57,35 +60,36 @@ export class BookRepository {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
-          book.title || '',
-          book.authors || null,
-          book.isbn || null,
-          book.thumbnail || null,
-          book.description || null,
-          book.publishedDate || null,
-          book.pageCount || null,
-          book.rating || null,
-          book.status || 'want-to-read',
-          book.notes || null,
-          book.userId || null,
-          book.creationDate || now,
-          book.updateDate || now,
+          entity.title || '',
+          entity.authors || null,
+          entity.isbnCode || null,
+          //TODO commented out fields that are not currently set in the API/DB but may be relevant for future features
+          //entity.thumbnail || null,
+          //entity.description || null,
+          //entity.publishedDate || null,
+          //entity.pageCount || null,
+          //entity.rating || null,
+          entity.status || 'want-to-read',
+          entity.notes || null,
+          entity.userId || null,
+          entity.creationDate || now,
+          entity.updateDate || now,
           book.serverId || null,
-          book._syncStatus || 'synced',
-          book._tempId || null,
-          book._deleted ? 1 : 0,
-          book._serverUpdatedAt || null,
+          book.syncStatus || 'synced',
+          book.tempId || null,
+          book.deleted ? 1 : 0,
+          book.serverUpdatedAt || null,
         ]
       );
 
       // Handle author relationships
-      if (book.authors) {
-        await this.createAuthorRelationships(id, book.authors);
+      if (entity.authors) {
+        await this.createAuthorRelationships(id, entity.authors);
       }
 
       // Handle category relationships  
-      if (book.categories) {
-        await this.createCategoryRelationships(id, book.categories);
+      if (entity.categories) {
+        await this.createCategoryRelationships(id, entity.categories);
       }
 
       await databaseService.executeQuery('COMMIT');
@@ -104,7 +108,7 @@ export class BookRepository {
   /**
    * Update book
    */
-  async update(id: string, updates: Partial<Book>): Promise<Book> {
+  async update(id: string, updates: Partial<LocalBook>): Promise<LocalBook> {
     const now = new Date().toISOString();
 
     await databaseService.executeQuery(
@@ -118,17 +122,28 @@ export class BookRepository {
         server_id = COALESCE(?, server_id),
         _sync_status = COALESCE(?, _sync_status),
         _server_updated_at = COALESCE(?, _server_updated_at)
+
+        // TODO: Phase 2 — not yet in API/DB, pending reconciliation
+        // thumbnail = COALESCE(?, thumbnail),
+        // description = COALESCE(?, description),
+        // published_date = COALESCE(?, published_date),
+        // page_count = COALESCE(?, page_count),
+        // rating = COALESCE(?, rating),
       WHERE id = ?`,
       [
-        updates.title,
-        updates.authors,
-        updates.status,
-        updates.rating,
-        updates.notes,
+        updates.entity.title,
+        updates.entity.authors,
+        updates.entity.status,
+        // updates.entity.thumbnail,
+        // updates.entity.description,
+        // updates.entity.publishedDate,
+        // updates.entity.pageCount,
+        // updates.entity.rating,
+        updates.entity.notes,
         now,
         updates.serverId,
-        updates._syncStatus,
-        updates._serverUpdatedAt,
+        updates.syncStatus,
+        updates.serverUpdatedAt,
         id,
       ]
     );
@@ -146,7 +161,7 @@ export class BookRepository {
   async delete(id: string): Promise<void> {
     await databaseService.executeQuery(
       'UPDATE books SET _deleted = 1, _sync_status = ? WHERE id = ?',
-      ['pending', id]
+      [SYNC_STATUS.PENDING, id]
     );
   }
 
@@ -250,7 +265,7 @@ export class BookRepository {
    * 2. If not found, check if this ID is a temp ID with a mapping
    * 3. If mapping exists, find by server ID
    */
-  async findByIdOrMapping(id: string): Promise<Book | null> {
+  async findByIdOrMapping(id: string): Promise<LocalBook | null> {
     // First try direct lookup
     let book = await this.findById(id);
     if (book) {
@@ -294,7 +309,7 @@ export class BookRepository {
    */
   async updateSyncFields(id: string, fields: {
     _serverUpdatedAt?: string;
-    _syncStatus?: string;
+    _syncStatus?: SyncStatus;
   }): Promise<void> {
     const updates: string[] = [];
     const values: unknown[] = [];
@@ -322,8 +337,9 @@ export class BookRepository {
    * Upsert book - insert if not exists, update if exists (Task 4.5)
    * This prevents PRIMARY KEY conflicts during server sync
    */
-  async upsert(book: Partial<Book>): Promise<Book> {
-    const bookId = book.id?.toString();
+  async upsert(book: Partial<LocalBook>): Promise<LocalBook> {
+    const entity = book.entity;
+    const bookId = entity.id?.toString();
     if (!bookId) {
       throw new Error('Book ID is required for upsert operation');
     }
@@ -332,6 +348,8 @@ export class BookRepository {
     const existingBook = await this.findById(bookId);
     
     if (existingBook) {
+      const existingEntity = existingBook.entity;
+
       // Book exists - update it
       const now = new Date().toISOString();
       await databaseService.executeQuery(
@@ -352,20 +370,21 @@ export class BookRepository {
           _server_updated_at = ?
         WHERE id = ?`,
         [
-          book.title || existingBook.title,
-          book.authors || existingBook.authors,
-          book.isbn || existingBook.isbn,
-          book.thumbnail || existingBook.thumbnail,
-          book.description || existingBook.description,
-          book.publishedDate || existingBook.publishedDate,
-          book.pageCount || existingBook.pageCount,
-          book.rating || existingBook.rating,
-          book.status || existingBook.status,
-          book.notes || existingBook.notes,
-          book.userId || existingBook.userId,
-          book.updateDate || now,
-          book._syncStatus || existingBook._syncStatus,
-          book._serverUpdatedAt || existingBook._serverUpdatedAt,
+          entity.title || existingEntity.title,
+          entity.authors || existingEntity.authors,
+          entity.isbnCode || existingEntity.isbnCode,
+          //TODO commented out fields that are not currently set in the API/DB but may be relevant for future features
+          //entity.thumbnail || existingEntity.thumbnail,
+          //entity.description || existingEntity.description,
+          //entity.publishedDate || existingEntity.publishedDate,
+          //entity.pageCount || existingEntity.pageCount,
+          //entity.rating || existingEntity.rating,
+          entity.status || existingEntity.status,
+          entity.notes || existingEntity.notes,
+          entity.userId || existingEntity.userId,
+          entity.updateDate || now,
+          book.syncStatus || existingBook.syncStatus,
+          book.serverUpdatedAt || existingBook.serverUpdatedAt,
           bookId,
         ]
       );
@@ -380,23 +399,24 @@ export class BookRepository {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           bookId,
-          book.title || '',
-          book.authors || null,
-          book.isbn || null,
-          book.thumbnail || null,
-          book.description || null,
-          book.publishedDate || null,
-          book.pageCount || null,
-          book.rating || null,
-          book.status || 'want-to-read',
-          book.notes || null,
-          book.userId || null,
-          book.creationDate || now,
-          book.updateDate || now,
-          book._syncStatus || 'synced',
-          book._tempId || null,
-          book._deleted ? 1 : 0,
-          book._serverUpdatedAt || null,
+          entity.title || '',
+          entity.authors || null,
+          entity.isbnCode || null,
+          //TODO commented out fields that are not currently set in the API/DB but may be relevant for future features
+          //book.thumbnail || null,
+          //book.description || null,
+          //book.publishedDate || null,
+          //book.pageCount || null,
+          //book.rating || null,
+          entity.status || 'want-to-read',
+          entity.notes || null,
+          entity.userId || null,
+          entity.creationDate || now,
+          entity.updateDate || now,
+          book.syncStatus || 'synced',
+          book.tempId || null,
+          book.deleted ? 1 : 0,
+          book.serverUpdatedAt || null,
         ]
       );
     }
@@ -409,23 +429,9 @@ export class BookRepository {
   }
 
   /**
-   * Search books
-   */
-  async search(query: string): Promise<Book[]> {
-    const books = await databaseService.getAllAsync(
-      `SELECT * FROM books
-       WHERE _deleted = 0
-       AND (title LIKE ? OR authors LIKE ?)
-       ORDER BY update_date DESC`,
-      [`%${query}%`, `%${query}%`]
-    );
-    return books.map(this.mapRowToBook);
-  }
-
-  /**
    * Find books by status
    */
-  async findByStatus(status: string): Promise<Book[]> {
+  async findByStatus(status: string): Promise<LocalBook[]> {
     const books = await databaseService.getAllAsync(
       'SELECT * FROM books WHERE _deleted = 0 AND status = ? ORDER BY update_date DESC',
       [status]
@@ -443,7 +449,7 @@ export class BookRepository {
     category?: string;
     sortBy?: 'title' | 'update_date' | 'creation_date' | 'rating';
     sortOrder?: 'ASC' | 'DESC';
-  }): Promise<Book[]> {
+  }): Promise<LocalBook[]> {
     const { query, status, author, category, sortBy = 'update_date', sortOrder = 'DESC' } = options;
 
     let sql = 'SELECT DISTINCT b.* FROM books b';
@@ -498,45 +504,44 @@ export class BookRepository {
   /**
    * Find pending sync operations
    */
-  async findPendingSync(): Promise<Book[]> {
+  async findPendingSync(): Promise<LocalBook[]> {
     const books = await databaseService.getAllAsync(
       'SELECT * FROM books WHERE _sync_status IN (?, ?) ORDER BY update_date DESC',
-      ['pending', 'failed']
+      [SYNC_STATUS.PENDING, SYNC_STATUS.FAILED]
     );
     return books.map(this.mapRowToBook);
   }
 
   /**
-   * Map database row to Book object
+   * Map database row to LocalBook object
    */
-  private mapRowToBook(row: Record<string, unknown>): Book {
-    return {
-      id: row.id,
-      title: row.title,
-      authors: row.authors,
-      isbn: row.isbn,
-      thumbnail: row.thumbnail,
-      description: row.description,
-      publishedDate: row.published_date,
-      pageCount: row.page_count,
-      rating: row.rating,
-      status: row.status,
-      notes: row.notes,
-      userId: row.user_id,
-      creationDate: row.creation_date,
-      updateDate: row.update_date,
-      serverId: row.server_id,
-      _syncStatus: row._sync_status,
-      _tempId: row._temp_id,
-      _deleted: row._deleted === 1,
-      _serverUpdatedAt: row._server_updated_at,
-    } as Book;
+  private mapRowToBook(row: Record<string, unknown>): LocalBook {
+    const book: Book = {
+      id: row.id as number,
+      isbnCode: row.isbn as string,
+      title: row.title as string,
+      status: row.status as Book['status'],
+      notes: row.notes as string | null,
+      userId: row.user_id as number,
+      authors: row.authors as Book['authors'],
+      categories: row.categories as Book['categories'],
+      creationDate: row.creation_date as string,
+      updateDate: row.update_date as string,
+    };
+    const local = new LocalBook(book);
+    local.serverId = row.server_id as number | undefined;
+    local.syncStatus = (row._sync_status as SyncStatus) ?? 'synced';
+    local.tempId = row._temp_id as string | undefined;
+    local.deleted = row._deleted === 1;
+    local.serverUpdatedAt = row._server_updated_at as string | undefined;
+    return local;
   }
+
 
   /**
    * Create author relationships for a book (Phase 4 fix)
    */
-  private async createAuthorRelationships(bookId: string, authors: string[]): Promise<void> {
+  private async createAuthorRelationships(bookId: string, authors: (string | { name: string })[]): Promise<void> {
     if (!authors) return;
     
     // Handle different author formats (string, array of strings, array of objects)
@@ -576,7 +581,7 @@ export class BookRepository {
   /**
    * Create category relationships for a book (Phase 4 fix)
    */
-  private async createCategoryRelationships(bookId: string, categories: string[]): Promise<void> {
+  private async createCategoryRelationships(bookId: string, categories: (string | { name: string })[]): Promise<void> {
     if (!categories) return;
     
     // Handle different category formats

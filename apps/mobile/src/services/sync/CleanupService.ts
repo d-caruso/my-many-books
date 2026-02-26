@@ -2,6 +2,7 @@ import { databaseService } from '../database/DatabaseService';
 import { operationQueue } from '../OperationQueue';
 import { idMappingService } from './IDMappingService';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
+import { SYNC_STATUS } from '@/types';
 
 const MAX_OPERATION_AGE_DAYS = 7; // Clean up operations older than 7 days
 const MAX_TEMP_ID_AGE_DAYS = 30; // Clean up temp IDs older than 30 days
@@ -419,7 +420,7 @@ export class CleanupService {
     }>(`
       SELECT id, title, _sync_status
       FROM books
-      WHERE _sync_status = 'pending'
+      WHERE _sync_status = '${SYNC_STATUS.PENDING}'
     `);
 
     const allOperations = operationQueue.getAllOperations();
@@ -498,7 +499,7 @@ export class CleanupService {
         
         await databaseService.executeQuery(
           'UPDATE books SET _sync_status = ? WHERE id = ?',
-          ['pending', book.id]
+          [SYNC_STATUS.PENDING, book.id]
         );
       }
     }

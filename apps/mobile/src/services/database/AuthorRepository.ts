@@ -1,18 +1,13 @@
 import { databaseService } from './DatabaseService';
-
-export interface Author {
-  id: number;
-  name: string;
-  serverId?: number;          // Phase 5: Server ID for sync
-  _syncStatus?: 'synced' | 'pending' | 'failed';
-  _serverUpdatedAt?: string;
-}
+import type { Author } from '@my-many-books/shared-types';
+import { LocalAuthor } from '@/entities/LocalAuthor';
+import type { SyncStatus } from '@/types';
 
 export class AuthorRepository {
   /**
    * Find all authors
    */
-  async findAll(): Promise<Author[]> {
+  async findAll(): Promise<LocalAuthor[]> {
     const authors = await databaseService.getAllAsync(
       'SELECT * FROM authors ORDER BY name ASC'
     );
@@ -22,7 +17,7 @@ export class AuthorRepository {
   /**
    * Find author by ID
    */
-  async findById(id: number): Promise<Author | null> {
+  async findById(id: number): Promise<LocalAuthor | null> {
     const author = await databaseService.getFirstAsync(
       'SELECT * FROM authors WHERE id = ?',
       [id]
@@ -33,7 +28,7 @@ export class AuthorRepository {
   /**
    * Find author by name
    */
-  async findByName(name: string): Promise<Author | null> {
+  async findByName(name: string): Promise<LocalAuthor | null> {
     const author = await databaseService.getFirstAsync(
       'SELECT * FROM authors WHERE name = ?',
       [name]
@@ -44,7 +39,7 @@ export class AuthorRepository {
   /**
    * Create new author (or get existing if name already exists)
    */
-  async create(name: string): Promise<Author> {
+  async create(name: string): Promise<LocalAuthor> {
     // Check if author already exists
     const existing = await this.findByName(name);
     if (existing) {
@@ -67,7 +62,7 @@ export class AuthorRepository {
   /**
    * Update author name
    */
-  async update(id: number, name: string): Promise<Author> {
+  async update(id: number, name: string): Promise<LocalAuthor> {
     await databaseService.executeQuery(
       'UPDATE authors SET name = ? WHERE id = ?',
       [name, id]
@@ -93,7 +88,7 @@ export class AuthorRepository {
   /**
    * Find authors for a specific book
    */
-  async findByBookId(bookId: string): Promise<Author[]> {
+  async findByBookId(bookId: string): Promise<LocalAuthor[]> {
     const authors = await databaseService.getAllAsync(
       `SELECT a.* FROM authors a
        INNER JOIN book_authors ba ON a.id = ba.author_id
@@ -105,54 +100,29 @@ export class AuthorRepository {
   }
 
   /**
-   * Add author to book (create junction table entry)
-   */
-  async addToBook(authorId: number, bookId: string): Promise<void> {
-    await databaseService.executeQuery(
-      'INSERT OR IGNORE INTO book_authors (book_id, author_id) VALUES (?, ?)',
-      [bookId, authorId]
-    );
-  }
-
-  /**
-   * Remove author from book (delete junction table entry)
-   */
-  async removeFromBook(authorId: number, bookId: string): Promise<void> {
-    await databaseService.executeQuery(
-      'DELETE FROM book_authors WHERE book_id = ? AND author_id = ?',
-      [bookId, authorId]
-    );
-  }
-
-  /**
-   * Search authors by name
-   */
-  async search(query: string): Promise<Author[]> {
-    const authors = await databaseService.getAllAsync(
-      'SELECT * FROM authors WHERE name LIKE ? ORDER BY name ASC',
-      [`%${query}%`]
-    );
-    return authors.map(this.mapRowToAuthor);
-  }
-
-  /**
-   * Map database row to Author object
+   * Map database row to LocalAuthor object
    * Phase 5: Include sync fields for server synchronization
    */
-  private mapRowToAuthor(row: Record<string, unknown>): Author {
-    return {
-      id: row.id,
-      name: row.name,
-      serverId: row.server_id,
-      _syncStatus: row._sync_status || 'synced',
-      _serverUpdatedAt: row._server_updated_at,
+  private mapRowToAuthor(row: Record<string, unknown>): LocalAuthor {
+    const author: Author = {
+      id: row.id as number,
+      name: row.name as string,
+      surname: row.surname as string,
+      nationality: row.nationality as string | null | undefined,
+      userId: row.user_id as number | undefined,
+      creationDate: row.creation_date as string | undefined,
+      updateDate: row.update_date as string | undefined,
     };
+    const local = new LocalAuthor(author);
+    local.syncStatus = (row._sync_status as SyncStatus) ?? 'synced';
+    local.serverUpdatedAt = row._server_updated_at as string | undefined;
+    return local;
   }
 
   /**
    * Find author by server ID (Phase 5)
    */
-  async findByServerId(serverId: number): Promise<Author | null> {
+  async findByServerId(serverId: number): Promise<LocalAuthor | null> {
     const author = await databaseService.getFirstAsync(
       'SELECT * FROM authors WHERE server_id = ?',
       [serverId]
@@ -165,7 +135,7 @@ export class AuthorRepository {
    */
   async updateSyncFields(id: number, fields: {
     serverId?: number;
-    _syncStatus?: 'synced' | 'pending' | 'failed';
+    _syncStatus?: SyncStatus;
     _serverUpdatedAt?: string;
   }): Promise<void> {
     const updates: string[] = [];

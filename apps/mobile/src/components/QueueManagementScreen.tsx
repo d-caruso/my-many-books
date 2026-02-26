@@ -6,6 +6,7 @@ import { useQueueStatus } from '../hooks/useQueueStatus';
 import { operationQueue } from '../services/OperationQueue';
 import type { QueuedOperation } from '../types/queue';
 import { useSyncQueue } from '../hooks/useSyncQueue';
+import { OPERATION_STATUS } from '@/services/hooks';
 
 /**
  * Screen for managing queued operations
@@ -29,11 +30,11 @@ export const QueueManagementScreen: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
+      case OPERATION_STATUS.PENDING:
         return theme.colors.primary;
-      case 'retrying':
+      case OPERATION_STATUS.RETRYING:
         return '#FF9800';
-      case 'failed':
+      case OPERATION_STATUS.FAILED:
         return theme.colors.error;
       default:
         return theme.colors.onSurface;

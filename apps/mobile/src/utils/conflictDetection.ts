@@ -1,23 +1,26 @@
-import type { Book, Author, Category } from '@/types';
+import type { Book, Author, Category } from '@my-many-books/shared-types';
+import { LocalBook } from '@/entities/LocalBook';
+import { LocalAuthor } from '@/entities/LocalAuthor';
+import { LocalCategory } from '@/entities/LocalCategory';
+import { SYNC_STATUS } from '@/types';
 
 /**
  * Generic conflict detection function for backwards compatibility
  * Alias for hasBookConflict
  */
-export function hasConflict(localBook: Book, serverBook: Book): boolean {
+export function hasConflict(localBook: LocalBook, serverBook: Book): boolean {
   return hasBookConflict(localBook, serverBook);
 }
 
 /**
  * Detect if a book has a conflict with the server version
  */
-export function hasBookConflict(localBook: Book, serverBook: Book): boolean {
-  if (!localBook._serverUpdatedAt || !serverBook.updateDate) {
+export function hasBookConflict(localBook: LocalBook, serverBook: Book): boolean {
+  if (!localBook.serverUpdatedAt || !serverBook.updateDate) {
     return false;
   }
 
-  // Check if server version was updated after our last known server state
-  const localServerTimestamp = new Date(localBook._serverUpdatedAt).getTime();
+  const localServerTimestamp = new Date(localBook.serverUpdatedAt).getTime();
   const serverTimestamp = new Date(serverBook.updateDate).getTime();
 
   return serverTimestamp > localServerTimestamp;
@@ -27,35 +30,30 @@ export function hasBookConflict(localBook: Book, serverBook: Book): boolean {
  * Resolve conflict by choosing local or server version
  */
 export function resolveConflict(
-  localBook: Book,
+  localBook: LocalBook,
   serverBook: Book,
   choice: 'local' | 'server'
-): Book {
+): LocalBook {
   if (choice === 'server') {
-    // Use server version
-    return {
-      ...serverBook,
-      _syncStatus: 'synced',
-      _serverUpdatedAt: serverBook.updateDate,
-    };
+    const resolved = new LocalBook(serverBook);
+    resolved.syncStatus = SYNC_STATUS.SYNCED;
+    resolved.serverUpdatedAt = serverBook.updateDate;
+    return resolved;
   } else {
-    // Use local version (will be synced to server)
-    return {
-      ...localBook,
-      _syncStatus: 'pending', // Will trigger re-sync
-    };
+    localBook.syncStatus = SYNC_STATUS.PENDING;
+    return localBook;
   }
 }
 
 /**
  * Detect if an author has a conflict with the server version
  */
-export function hasAuthorConflict(localAuthor: Author, serverAuthor: Author): boolean {
-  if (!localAuthor._serverUpdatedAt || !serverAuthor.updateDate) {
+export function hasAuthorConflict(localAuthor: LocalAuthor, serverAuthor: Author): boolean {
+  if (!localAuthor.serverUpdatedAt || !serverAuthor.updateDate) {
     return false;
   }
 
-  const localServerTimestamp = new Date(localAuthor._serverUpdatedAt).getTime();
+  const localServerTimestamp = new Date(localAuthor.serverUpdatedAt).getTime();
   const serverTimestamp = new Date(serverAuthor.updateDate).getTime();
 
   return serverTimestamp > localServerTimestamp;
@@ -64,12 +62,12 @@ export function hasAuthorConflict(localAuthor: Author, serverAuthor: Author): bo
 /**
  * Detect if a category has a conflict with the server version
  */
-export function hasCategoryConflict(localCategory: Category, serverCategory: Category): boolean {
-  if (!localCategory._serverUpdatedAt || !serverCategory.updateDate) {
+export function hasCategoryConflict(localCategory: LocalCategory, serverCategory: Category): boolean {
+  if (!localCategory.serverUpdatedAt || !serverCategory.updateDate) {
     return false;
   }
 
-  const localServerTimestamp = new Date(localCategory._serverUpdatedAt).getTime();
+  const localServerTimestamp = new Date(localCategory.serverUpdatedAt).getTime();
   const serverTimestamp = new Date(serverCategory.updateDate).getTime();
 
   return serverTimestamp > localServerTimestamp;

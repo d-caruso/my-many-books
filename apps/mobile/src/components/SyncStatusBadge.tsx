@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Badge, IconButton } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { SyncStatus } from '@/types';
+import { SYNC_STATUS } from '@/types';
 
 interface SyncStatusBadgeProps {
   syncStatus?: SyncStatus;
@@ -20,17 +21,17 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
 }) => {
   const { t } = useTranslation('offline');
 
-  if (!syncStatus || syncStatus === 'synced') {
+  if (!syncStatus || syncStatus === SYNC_STATUS.SYNCED) {
     return null;
   }
 
   const getBadgeColor = () => {
     switch (syncStatus) {
-      case 'pending':
+      case SYNC_STATUS.PENDING:
         return '#FF9800'; // Orange
-      case 'syncing':
+      case SYNC_STATUS.SYNCING:
         return '#2196F3'; // Blue
-      case 'failed':
+      case SYNC_STATUS.FAILED:
         return '#F44336'; // Red
       default:
         return '#757575'; // Gray
@@ -39,11 +40,11 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
 
   const getBadgeText = () => {
     switch (syncStatus) {
-      case 'pending':
+      case SYNC_STATUS.PENDING:
         return t('sync.badges.notSynced');
-      case 'syncing':
+      case SYNC_STATUS.SYNCING:
         return t('sync.badges.syncing');
-      case 'failed':
+      case SYNC_STATUS.FAILED:
         return t('sync.badges.syncFailed');
       default:
         return '';
@@ -52,11 +53,11 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
 
   const getIcon = () => {
     switch (syncStatus) {
-      case 'pending':
+      case SYNC_STATUS.PENDING:
         return 'cloud-upload-outline';
-      case 'syncing':
+      case SYNC_STATUS.SYNCING:
         return 'sync';
-      case 'failed':
+      case SYNC_STATUS.FAILED:
         return 'cloud-alert';
       default:
         return 'sync';
@@ -70,7 +71,7 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
           icon={getIcon()}
           size={16}
           iconColor={getBadgeColor()}
-          onPress={syncStatus === 'failed' ? onRetry : undefined}
+          onPress={syncStatus === SYNC_STATUS.FAILED ? onRetry : undefined}
           testID={`sync-icon-${syncStatus}`}
         />
       </View>
@@ -85,7 +86,7 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
       >
         {getBadgeText()}
       </Badge>
-      {syncStatus === 'failed' && onRetry && (
+      {syncStatus === SYNC_STATUS.FAILED && onRetry && (
         <IconButton
           icon="refresh"
           size={16}
