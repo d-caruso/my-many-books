@@ -83,32 +83,6 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
     };
   }, [authorAPI, reloadTrigger]);
 
-  /*
-   * Previous debounced server-side search (kept for the planned hybrid Phase 2 implementation).
-   * Phase 1 preloads authors once and filters locally for better UX on small/medium datasets.
-   *
-   * const searchAuthors = useCallback(async (term: string) => {
-   *   if (!term.trim() || term.length < 2) {
-   *     setAuthors([]);
-   *     setShowDropdown(false);
-   *     return;
-   *   }
-   *
-   *   setLoading(true);
-   *   try {
-   *     const results = await authorAPI.searchAuthors(term);
-   *     setAuthors(results);
-   *     setShowDropdown(results.length > 0);
-   *   } catch (error) {
-   *     console.error('Author search failed:', error);
-   *     setAuthors([]);
-   *     setShowDropdown(false);
-   *   } finally {
-   *     setLoading(false);
-   *   }
-   * }, [authorAPI]);
-   */
-
   // Clear search on unmount
   useEffect(() => {
     return () => {

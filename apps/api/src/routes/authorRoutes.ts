@@ -23,8 +23,6 @@ router.use(authMiddleware);
 router.use(standardLimiter);
 
 // Map the routes to the controller methods using the wrapper
-// IMPORTANT: /search must come BEFORE /:id to avoid matching "search" as an ID
-router.get('/search', expressRouteWrapper(authorController.searchAuthors.bind(authorController)));
 router.get('/', expressRouteWrapper(authorController.listAuthors.bind(authorController)));
 router.get('/:id', expressRouteWrapper(authorController.getAuthor.bind(authorController)));
 

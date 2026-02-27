@@ -25,11 +25,6 @@ import { BaseSearchOptions, SortField, SearchResult } from './ISearchable';
 import { BookSearchResultDTO, toBookSearchResultDTO } from '../../dtos/book/BookSearchResultDTO';
 import { SearchConfig } from './SearchConfig';
 
-/**
- * Book search options - extends BaseSearchOptions
- */
-export type BookSearchOptions = BaseSearchOptions;
-
 @injectable()
 export class BookSearchService extends FullTextSearchService<BookEntity> {
   constructor(
@@ -56,7 +51,7 @@ export class BookSearchService extends FullTextSearchService<BookEntity> {
    * Search books with FULLTEXT or LIKE fallback
    * Returns BookSearchResultDTO for API responses
    */
-  async search(options: BookSearchOptions): Promise<{
+  async search(options: BaseSearchOptions): Promise<{
     results: BookSearchResultDTO[];
     total: number;
   }> {

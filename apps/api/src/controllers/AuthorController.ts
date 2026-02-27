@@ -21,8 +21,6 @@ import { Repository as AuthorRepositoryContract } from '../repositories/author/R
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
-import { AuthorSearchService } from '../services/search/AuthorSearchService';
-
 interface AuthorSearchFilters {
   name?: string;
   surname?: string;
@@ -41,8 +39,7 @@ interface AuthorSearchFilters {
 export class AuthorController extends BaseController {
   constructor(
     @inject(TYPES.AuthorService) private readonly authorService: AuthorService,
-    @inject(TYPES.AuthorRepository) private readonly authorRepository: AuthorRepositoryContract,
-    @inject(TYPES.AuthorSearchService) private readonly authorSearchService: AuthorSearchService
+    @inject(TYPES.AuthorRepository) private readonly authorRepository: AuthorRepositoryContract
   ) {
     super();
     this.authorService.initializeControllerContext();
@@ -246,48 +243,6 @@ export class AuthorController extends BaseController {
     
     const meta = this.createPaginationMeta(pagination.page, pagination.limit, result.total);
     return this.createSuccessResponse(result.rows, undefined, meta);
-  }
-
-  /**
-   * Searches authors by name or surname (for autocomplete).
-   * @param request The universal request object.
-   * @returns An ApiResponse with a list of matching authors.
-   */
-  async searchAuthors(request: UniversalRequest): Promise<ApiResponse> {
-    await this.initializeI18n(request);
-    const authError = this.ensureAuthenticated(request);
-    if (authError) return authError;
-
-    const query = this.getQueryParameter(request, 'q') || '';
-    const sortBy = this.getQueryParameter(request, 'sortBy');
-    const sortOrder = this.getQueryParameter(request, 'sortOrder') as 'asc' | 'desc' | undefined;
-    const limit = parseInt(this.getQueryParameter(request, 'limit') || '20', 10);
-    const offset = parseInt(this.getQueryParameter(request, 'offset') || '0', 10);
-
-    // Validate sortBy against Author.SORTABLE_FIELD_VALUES
-    if (sortBy && !(Author.SORTABLE_FIELD_VALUES as readonly string[]).includes(sortBy)) {
-      return this.createErrorResponse(
-        `Invalid sortBy field: ${sortBy}. Must be one of: ${Author.SORTABLE_FIELD_VALUES.join(', ')}`,
-        400
-      );
-    }
-
-    // Use AuthorSearchService for FULLTEXT/LIKE search
-    const { results, total } = await this.authorSearchService.search({
-      query: query.trim(),
-      userId: request.user!.id,
-      sortBy: sortBy || undefined,
-      sortOrder,
-      limit,
-      offset,
-    });
-
-    return this.createSuccessResponse({
-      results,
-      total,
-      limit,
-      offset,
-    });
   }
 
   /**

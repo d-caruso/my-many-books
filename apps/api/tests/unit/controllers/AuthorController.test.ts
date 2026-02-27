@@ -58,7 +58,6 @@ describe('AuthorController', () => {
   let findUserAuthorByIdSpy: jest.SpyInstance;
   let findByIdSpy: jest.SpyInstance;
   let searchByQuerySpy: jest.SpyInstance;
-  let authorSearchServiceSpy: jest.SpyInstance;
 
   const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
@@ -77,10 +76,6 @@ describe('AuthorController', () => {
       .spyOn(AuthorRepository.prototype, 'searchByQuery')
       .mockResolvedValue([]);
 
-    // Import and spy on AuthorSearchService
-    const { AuthorSearchService } = require('../../../src/services/search/AuthorSearchService');
-    authorSearchServiceSpy = jest.spyOn(AuthorSearchService.prototype, 'search');
-
     mockRequest = {
       headers: { 'accept-language': 'en' },
       queryStringParameters: {},
@@ -97,7 +92,6 @@ describe('AuthorController', () => {
     findUserAuthorByIdSpy.mockRestore();
     findByIdSpy.mockRestore();
     searchByQuerySpy.mockRestore();
-    authorSearchServiceSpy.mockRestore();
     container.restore();
   });
 
@@ -244,33 +238,6 @@ describe('AuthorController', () => {
       expect(response.statusCode).toBe(200);
       expect(response.data).toHaveLength(1);
       expect(response.pagination).toBeDefined();
-    });
-  });
-
-  describe('searchAuthors', () => {
-    it('should delegate to AuthorSearchService', async () => {
-      mockRequest.queryStringParameters = { q: 'jo', limit: '10', offset: '5' };
-
-      authorSearchServiceSpy.mockResolvedValue({
-        results: [
-          { id: 1, name: 'John', surname: 'Doe', userId: 1, creationDate: new Date(), updateDate: new Date() },
-        ],
-        total: 1,
-      });
-
-      const response = await authorController.searchAuthors(mockRequest);
-
-      expect(authorSearchServiceSpy).toHaveBeenCalledWith({
-        query: 'jo',
-        userId: 1,
-        sortBy: undefined,
-        sortOrder: null,
-        limit: 10,
-        offset: 5,
-      });
-      expect(response.statusCode).toBe(200);
-      expect((response.data as any).results).toHaveLength(1);
-      expect((response.data as any).total).toBe(1);
     });
   });
 

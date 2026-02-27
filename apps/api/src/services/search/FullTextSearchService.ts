@@ -230,11 +230,11 @@ export abstract class FullTextSearchService<T extends { id: number }> {
 
         // Compare values
         let comparison = 0;
-        if (typeof aVal === 'string') {
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
           comparison = aVal.localeCompare(bVal);
-        } else if (typeof aVal === 'number') {
+        } else if (typeof aVal === 'number' && typeof bVal === 'number') {
           comparison = aVal - bVal;
-        } else if (aVal instanceof Date) {
+        } else if (aVal instanceof Date && bVal instanceof Date) {
           comparison = aVal.getTime() - bVal.getTime();
         }
 
@@ -257,15 +257,17 @@ export abstract class FullTextSearchService<T extends { id: number }> {
   /**
    * Get field value from SearchResult, checking both top-level and data property
    */
-  protected getFieldValue(result: SearchResult<T>, field: string): any {
+  protected getFieldValue(result: SearchResult<T>, field: string): string | number | Date | undefined {
     // Check top-level first (id, userId, creationDate, updateDate, isPinned, relevanceScore)
     if (field in result) {
-      return (result as any)[field];
+      const val = (result as unknown as Record<string, unknown>)[field];
+      if (typeof val === 'string' || typeof val === 'number' || val instanceof Date) return val;
     }
 
     // Check data property
-    if (result.data && field in result.data) {
-      return (result.data as any)[field];
+    if (result.data && field in (result.data as Record<string, unknown>)) {
+      const val = (result.data as Record<string, unknown>)[field];
+      if (typeof val === 'string' || typeof val === 'number' || val instanceof Date) return val;
     }
 
     return undefined;

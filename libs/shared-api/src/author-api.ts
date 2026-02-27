@@ -6,7 +6,6 @@ import { BaseApiClient } from './base-client';
 import {
   Author,
   AuthorSchema,
-  AuthorSearchResponseSchema,
 } from '@my-many-books/shared-types';
 
 const AuthorsArraySchema = AuthorSchema.array();
@@ -44,16 +43,4 @@ export class AuthorApi extends BaseApiClient {
     return this.delete<void>(`/authors/${id}`);
   }
 
-  async searchAuthors(query: string): Promise<Author[]> {
-    const response = await this.get<unknown>('/authors/search', {
-      params: { q: query },
-    });
-
-    const authorsArray = AuthorsArraySchema.safeParse(response);
-    if (authorsArray.success) {
-      return authorsArray.data;
-    }
-
-    return AuthorSearchResponseSchema.parse(response).results;
-  }
 }
