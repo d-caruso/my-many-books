@@ -44,6 +44,7 @@ describe('useISBNScanner', () => {
   let mockOnScanError: any;
 
   beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.clearAllMocks();
     mockOnScanSuccess = vi.fn();
     mockOnScanError = vi.fn();
@@ -63,6 +64,8 @@ describe('useISBNScanner', () => {
   });
 
   afterEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
     consoleSpy.mockClear();
     consoleWarnSpy.mockClear();
     consoleDebugSpy.mockClear();

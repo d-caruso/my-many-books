@@ -6,15 +6,15 @@ import i18n from '../../../i18n';
 
 describe('LanguageSelector', () => {
   beforeEach(() => {
-    // Mock the environment variable for testing using vi.stubEnv
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.stubEnv('VITE_SHOW_LANGUAGE_SELECTOR', 'true');
-    // Clear localStorage before each test
     localStorage.clear();
-    // Reset language to English
     i18n.changeLanguage('en');
   });
 
   afterEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
     localStorage.clear();
   });
 
