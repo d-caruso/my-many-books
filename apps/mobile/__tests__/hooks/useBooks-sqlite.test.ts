@@ -5,6 +5,23 @@ import { bookAPI } from '@/services/api';
 import { bookRepository } from '@/services/database/BookRepository';
 import { databaseService } from '@/services/database/DatabaseService';
 import { migrationSystem } from '@/services/database/migrations';
+import { LocalBook } from '@/entities/LocalBook';
+import { SYNC_STATUS } from '@/types';
+import type { Book, PaginatedResponse } from '@my-many-books/shared-types';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
+
+function makeLocalBook(entity: Partial<Book>, synced = true): LocalBook {
+  const lb = new LocalBook(entity as Book);
+  lb.syncStatus = synced ? SYNC_STATUS.SYNCED : SYNC_STATUS.PENDING;
+  return lb;
+}
+
+function mockBooksResponse(...partialBooks: Partial<Book>[]): PaginatedResponse<Book> {
+  return {
+    books: partialBooks.map(b => ({ id: 0, isbnCode: '', title: '', ...b }) as Book),
+    pagination: { currentPage: 1, totalPages: 1, totalItems: partialBooks.length, itemsPerPage: 10 },
+  };
+}
 
 jest.unmock('@/hooks/useBooks');
 
@@ -82,8 +99,8 @@ describe('useBooks with SQLite', () => {
       // Check if books were stored in database
       const dbBooks = await bookRepository.findAll();
       expect(dbBooks).toHaveLength(1);
-      expect(dbBooks[0].title).toBe('Test Book');
-      expect(dbBooks[0]._syncStatus).toBe('synced');
+      expect(dbBooks[0].entity.title).toBe('Test Book');
+      expect(dbBooks[0].syncStatus).toBe(SYNC_STATUS.SYNCED);
 
       // Wait for books state to update (check inside waitFor callback)
       await waitFor(() => {
@@ -105,8 +122,8 @@ describe('useBooks with SQLite', () => {
       const newBookData = { title: 'New Book', authors: 'Author Name' };
       const serverBook = { id: 123, ...newBookData, creationDate: new Date().toISOString(), updateDate: new Date().toISOString() };
 
-      mockBookAPI.getBooks.mockResolvedValueOnce({ books: [] });
-      mockBookAPI.createBook.mockResolvedValueOnce(serverBook);
+      mockBookAPI.getBooks.mockResolvedValueOnce(mockBooksResponse());
+      mockBookAPI.createBook.mockResolvedValueOnce(serverBook as unknown as Book);
 
       const { result } = renderHook(() => useBooks());
 
@@ -185,26 +202,21 @@ describe('useBooks with SQLite', () => {
     // result.current.books doesn't reflect state updates from setBooks() in test environment
     it.skip('should update book optimistically', async () => {
       // Create initial book
-      const initialBook = await bookRepository.create({
-        id: '456',
-        title: 'Original Title',
-        _syncStatus: 'synced',
-      });
+      const initialBook = await bookRepository.create(
+        makeLocalBook({ id: 456, title: 'Original Title' })
+      );
 
       const updatedBookData = { title: 'Updated Title', rating: 5 };
       const serverBook = { id: 456, ...updatedBookData, updateDate: new Date().toISOString() };
 
       // Return initial book from getBooks
-      mockBookAPI.getBooks.mockResolvedValueOnce({
-        books: [{
-          id: initialBook.id,
-          title: 'Original Title',
-          _syncStatus: 'synced',
-          creationDate: initialBook.creationDate,
-          updateDate: initialBook.updateDate,
-        }]
-      });
-      mockBookAPI.updateBook.mockResolvedValueOnce(serverBook);
+      mockBookAPI.getBooks.mockResolvedValueOnce(mockBooksResponse({
+        id: initialBook.entity.id,
+        title: 'Original Title',
+        creationDate: initialBook.entity.creationDate,
+        updateDate: initialBook.entity.updateDate,
+      }));
+      mockBookAPI.updateBook.mockResolvedValueOnce(serverBook as unknown as Book);
 
       const { result } = renderHook(() => useBooks());
 
@@ -221,32 +233,27 @@ describe('useBooks with SQLite', () => {
       await waitFor(() => {
         const book = result.current.books.find(b => b.id === 456);
         expect(book?.title).toBe('Updated Title');
-        expect(book?.rating).toBe(5);
-        expect(book?._syncStatus).toBe('synced');
+        expect((book as unknown as { rating?: number })?.rating).toBe(5);
+        expect(book?.meta?.syncStatus).toBe(SYNC_STATUS.SYNCED);
       });
     });
 
     // SKIPPED: React Native Testing Library renderHook limitation (GitHub issue #1030)
     it.skip('should keep pending status on retriable error', async () => {
-      const initialBook = await bookRepository.create({
-        id: '789',
-        title: 'Original',
-        _syncStatus: 'synced',
-      });
+      const initialBook = await bookRepository.create(
+        makeLocalBook({ id: 789, title: 'Original' })
+      );
 
       const networkError = new Error('Server error') as Error & { response?: { status: number } };
       networkError.response = { status: 500 };
 
       // Return initial book from getBooks
-      mockBookAPI.getBooks.mockResolvedValueOnce({
-        books: [{
-          id: initialBook.id,
-          title: 'Original',
-          _syncStatus: 'synced',
-          creationDate: initialBook.creationDate,
-          updateDate: initialBook.updateDate,
-        }]
-      });
+      mockBookAPI.getBooks.mockResolvedValueOnce(mockBooksResponse({
+        id: initialBook.entity.id,
+        title: 'Original',
+        creationDate: initialBook.entity.creationDate,
+        updateDate: initialBook.entity.updateDate,
+      }));
       mockBookAPI.updateBook.mockRejectedValueOnce(networkError);
 
       const { result } = renderHook(() => useBooks());
@@ -265,30 +272,25 @@ describe('useBooks with SQLite', () => {
 
       // Book should have pending status
       const dbBook = await bookRepository.findById('789');
-      expect(dbBook?.title).toBe('Updated');
-      expect(dbBook?._syncStatus).toBe('pending');
+      expect(dbBook?.entity.title).toBe('Updated');
+      expect(dbBook?.syncStatus).toBe(SYNC_STATUS.PENDING);
     });
   });
 
   describe('deleteBook - optimistic updates', () => {
     // SKIPPED: React Native Testing Library renderHook limitation (GitHub issue #1030)
     it.skip('should soft delete book optimistically', async () => {
-      const book = await bookRepository.create({
-        id: '999',
-        title: 'Book to Delete',
-        _syncStatus: 'synced',
-      });
+      const book = await bookRepository.create(
+        makeLocalBook({ id: 999, title: 'Book to Delete' })
+      );
 
       // Return book from getBooks
-      mockBookAPI.getBooks.mockResolvedValueOnce({
-        books: [{
-          id: book.id,
-          title: 'Book to Delete',
-          _syncStatus: 'synced',
-          creationDate: book.creationDate,
-          updateDate: book.updateDate,
-        }]
-      });
+      mockBookAPI.getBooks.mockResolvedValueOnce(mockBooksResponse({
+        id: book.entity.id,
+        title: 'Book to Delete',
+        creationDate: book.entity.creationDate,
+        updateDate: book.entity.updateDate,
+      }));
       mockBookAPI.deleteBook.mockResolvedValueOnce(undefined);
 
       const { result } = renderHook(() => useBooks());
@@ -318,25 +320,20 @@ describe('useBooks with SQLite', () => {
 
     // SKIPPED: React Native Testing Library renderHook limitation (GitHub issue #1030)
     it.skip('should restore book on non-retriable delete error', async () => {
-      const book = await bookRepository.create({
-        id: '888',
-        title: 'Protected Book',
-        _syncStatus: 'synced',
-      });
+      const book = await bookRepository.create(
+        makeLocalBook({ id: 888, title: 'Protected Book' })
+      );
 
       const forbiddenError = new Error('Forbidden') as Error & { response?: { status: number; data: { message: string } } };
       forbiddenError.response = { status: 403, data: { message: 'Cannot delete' } };
 
       // Return book from getBooks
-      mockBookAPI.getBooks.mockResolvedValueOnce({
-        books: [{
-          id: book.id,
-          title: 'Protected Book',
-          _syncStatus: 'synced',
-          creationDate: book.creationDate,
-          updateDate: book.updateDate,
-        }]
-      });
+      mockBookAPI.getBooks.mockResolvedValueOnce(mockBooksResponse({
+        id: book.entity.id,
+        title: 'Protected Book',
+        creationDate: book.entity.creationDate,
+        updateDate: book.entity.updateDate,
+      }));
       mockBookAPI.deleteBook.mockRejectedValueOnce(forbiddenError);
 
       const { result } = renderHook(() => useBooks());
@@ -360,37 +357,32 @@ describe('useBooks with SQLite', () => {
 
       const dbBook = await bookRepository.findById('888');
       expect(dbBook).toBeDefined();
-      expect(dbBook?._deleted).toBe(false);
+      expect(dbBook?.deleted).toBe(false);
     });
   });
 
   describe('updateBookStatus - optimistic updates', () => {
     // SKIPPED: React Native Testing Library renderHook limitation (GitHub issue #1030)
     it.skip('should update status optimistically', async () => {
-      const book = await bookRepository.create({
-        id: '555',
-        title: 'Status Test Book',
-        status: 'want-to-read',
-        _syncStatus: 'synced',
-      });
+      const book = await bookRepository.create(
+        makeLocalBook({ id: 555, title: 'Status Test Book', status: BOOK_STATUS.READING })
+      );
 
       // Return book from getBooks
-      mockBookAPI.getBooks.mockResolvedValueOnce({
-        books: [{
-          id: book.id,
-          title: 'Status Test Book',
-          status: 'want-to-read',
-          _syncStatus: 'synced',
-          creationDate: book.creationDate,
-          updateDate: book.updateDate,
-        }]
-      });
+      mockBookAPI.getBooks.mockResolvedValueOnce(mockBooksResponse({
+        id: book.entity.id,
+        title: 'Status Test Book',
+        status: BOOK_STATUS.READING,
+        creationDate: book.entity.creationDate,
+        updateDate: book.entity.updateDate,
+      }));
       mockBookAPI.updateBook.mockResolvedValueOnce({
         id: 555,
+        isbnCode: '',
         title: 'Status Test Book',
-        status: 'reading',
+        status: BOOK_STATUS.READING,
         updateDate: new Date().toISOString(),
-      });
+      } as Book);
 
       const { result } = renderHook(() => useBooks());
 
@@ -399,14 +391,14 @@ describe('useBooks with SQLite', () => {
       });
 
       await act(async () => {
-        await result.current.updateBookStatus(555, 'reading');
+        await result.current.updateBookStatus(555, BOOK_STATUS.READING);
       });
 
       // Should show updated status immediately
       await waitFor(() => {
         const book = result.current.books.find(b => b.id === 555);
-        expect(book?.status).toBe('reading');
-        expect(book?._syncStatus).toBe('synced');
+        expect(book?.status).toBe(BOOK_STATUS.READING);
+        expect(book?.meta?.syncStatus).toBe(SYNC_STATUS.SYNCED);
       });
     });
   });
@@ -419,7 +411,7 @@ describe('useBooks with SQLite', () => {
         { id: 2, title: 'Server Book 2', updateDate: new Date().toISOString() },
       ];
 
-      mockBookAPI.getBooks.mockResolvedValueOnce({ books: serverBooks });
+      mockBookAPI.getBooks.mockResolvedValueOnce(mockBooksResponse(...serverBooks));
 
       const { result } = renderHook(() => useBooks());
 
@@ -430,13 +422,13 @@ describe('useBooks with SQLite', () => {
       // Books should be in database
       const dbBooks = await bookRepository.findAll();
       expect(dbBooks).toHaveLength(2);
-      expect(dbBooks.every(b => b._syncStatus === 'synced')).toBe(true);
+      expect(dbBooks.every(b => b.syncStatus === SYNC_STATUS.SYNCED)).toBe(true);
     });
 
     // SKIPPED: React Native Testing Library renderHook limitation (GitHub issue #1030)
     it.skip('should load from database when server fails', async () => {
       // Pre-populate database
-      await bookRepository.create({ title: 'Cached Book', _syncStatus: 'synced' });
+      await bookRepository.create(makeLocalBook({ title: 'Cached Book' }));
 
       const networkError = new Error('No connection');
       mockBookAPI.getBooks.mockRejectedValueOnce(networkError);

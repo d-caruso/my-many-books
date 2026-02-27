@@ -67,6 +67,11 @@
   "exclude": [
     "node_modules",
     "babel.config.js",
-    "metro.config.js"
-  ],
+    "metro.config.js",
+    "**/__tests__/**/*",
+    "**/__mocks__/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "jest-setup.ts"
+  ]
 }

@@ -114,7 +114,6 @@ describe('OperationQueue Hookey Integration', () => {
       const operationId = await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
-        author: 'Test Author',
         status: 'reading'
       });
 
@@ -137,7 +136,6 @@ describe('OperationQueue Hookey Integration', () => {
       await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
-        author: 'Test Author',
         status: 'reading'
       });
 
@@ -171,7 +169,6 @@ describe('OperationQueue Hookey Integration', () => {
       await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-new',
         title: 'New Book',
-        author: 'New Author',
         status: 'reading'
       });
 
@@ -199,7 +196,6 @@ describe('OperationQueue Hookey Integration', () => {
       await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
-        author: 'Test Author',
         status: 'reading'
       });
 
@@ -219,7 +215,6 @@ describe('OperationQueue Hookey Integration', () => {
       await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
-        author: 'Test Author',
         status: 'reading'
       });
 
@@ -242,7 +237,6 @@ describe('OperationQueue Hookey Integration', () => {
       await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
-        author: 'Test Author', 
         status: 'reading'
       });
 
@@ -273,7 +267,6 @@ describe('OperationQueue Hookey Integration', () => {
       const operationId = await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
-        author: 'Test Author',
         status: 'reading'
       }, 1); // Set maxRetries to 1
 
@@ -305,7 +298,6 @@ describe('OperationQueue Hookey Integration', () => {
       await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         id: 'book-123',
         title: 'Test Book',
-        author: 'Test Author',
         status: 'reading'
       });
 
@@ -387,7 +379,6 @@ describe('OperationQueue Hookey Integration', () => {
       // Should be able to enqueue and emit events
       const operationId = await queue.enqueue(OPERATION_TYPES.CREATE, RESOURCE_TYPES.BOOK, {
         title: 'Test Book',
-        author: 'Test Author',
         status: 'reading'
       });
 
@@ -607,7 +598,7 @@ describe('OperationQueue Hookey Integration', () => {
 
       // Should emit warning about stale operations
       const staleCalls = mockMobileHooks.emit.mock.calls.filter(
-        ([_, payload]) => payload.status === QUEUE_SIZE_STATUS.STALE_OPERATIONS
+        ([_, payload]) => payload?.status === QUEUE_SIZE_STATUS.STALE_OPERATIONS
       );
       expect(staleCalls).toHaveLength(1);
       expect(staleCalls[0][1]).toEqual(expect.objectContaining({

@@ -198,22 +198,16 @@ export class NetworkService {
   private hasQualityChanged(current: NetInfoState, previous: NetInfoState | null): boolean {
     if (!previous) return false;
 
-    // Check for cellular signal strength changes
+    // Check for cellular generation changes (quality indicator for cellular)
     if (current.type === 'cellular' && previous.type === 'cellular') {
-      const currentDetails = current.details as Record<string, unknown>;
-      const previousDetails = previous.details as Record<string, unknown>;
-
-      if (currentDetails?.strength !== previousDetails?.strength) {
+      if (current.details?.cellularGeneration !== previous.details?.cellularGeneration) {
         return true;
       }
     }
 
     // Check for wifi signal strength changes
     if (current.type === 'wifi' && previous.type === 'wifi') {
-      const currentDetails = current.details as Record<string, unknown>;
-      const previousDetails = previous.details as Record<string, unknown>;
-
-      if (currentDetails?.strength !== previousDetails?.strength) {
+      if (current.details?.strength !== previous.details?.strength) {
         return true;
       }
     }

@@ -15,7 +15,7 @@ export function hasConflict(localBook: LocalBook, serverBook: Book): boolean {
 /**
  * Detect if a book has a conflict with the server version
  */
-export function hasBookConflict(localBook: LocalBook, serverBook: Book): boolean {
+export function hasBookConflict(localBook: LocalBook, serverBook: Pick<Book, 'updateDate'>): boolean {
   if (!localBook.serverUpdatedAt || !serverBook.updateDate) {
     return false;
   }
@@ -48,7 +48,7 @@ export function resolveConflict(
 /**
  * Detect if an author has a conflict with the server version
  */
-export function hasAuthorConflict(localAuthor: LocalAuthor, serverAuthor: Author): boolean {
+export function hasAuthorConflict(localAuthor: LocalAuthor, serverAuthor: Pick<Author, 'updateDate'>): boolean {
   if (!localAuthor.serverUpdatedAt || !serverAuthor.updateDate) {
     return false;
   }
@@ -62,7 +62,7 @@ export function hasAuthorConflict(localAuthor: LocalAuthor, serverAuthor: Author
 /**
  * Detect if a category has a conflict with the server version
  */
-export function hasCategoryConflict(localCategory: LocalCategory, serverCategory: Category): boolean {
+export function hasCategoryConflict(localCategory: LocalCategory, serverCategory: Pick<Category, 'updateDate'>): boolean {
   if (!localCategory.serverUpdatedAt || !serverCategory.updateDate) {
     return false;
   }

@@ -1,53 +1,36 @@
 // Test for OperationQueue service
-import type { QueuedOperation, OperationType, ResourceType, BookOperationPayload } from '../../src/types/queue';
-import type { OperationQueue } from '../../src/services/OperationQueue';
+import type { ResourceType, BookOperationPayload } from '../../src/types/queue';
+import type { OperationType } from '../../src/services/hooks/eventsSchema';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { OperationQueue } from '../../src/services/OperationQueue';
+import { mobileHooks, MOBILE_EVENTS } from '../../src/services/hooks/mobileHooks';
 
-// Mock interfaces
-interface MockAsyncStorage {
-  getItem: jest.MockedFunction<(key: string) => Promise<string | null>>;
-  setItem: jest.MockedFunction<(key: string, value: string) => Promise<void>>;
-  removeItem: jest.MockedFunction<(key: string) => Promise<void>>;
-}
+jest.mock('../../src/services/hooks/mobileHooks', () => {
+  const actual = jest.requireActual<typeof import('../../src/services/hooks/mobileHooks')>(
+    '../../src/services/hooks/mobileHooks'
+  );
+  return {
+    mobileHooks: { emit: jest.fn() },
+    MOBILE_EVENTS: actual.MOBILE_EVENTS,
+  };
+});
 
-interface MockApiExecutor {
-  (operation: QueuedOperation): Promise<void>;
-}
+jest.mock('../../src/services/database/DatabaseService', () => ({
+  databaseService: { executeQuery: jest.fn() },
+}));
 
-// Timer ID type for setTimeout mock
-type TimerId = ReturnType<typeof setTimeout>;
+const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
+const mockEmit = mobileHooks.emit as jest.MockedFunction<typeof mobileHooks.emit>;
 
 describe('OperationQueue', () => {
-  let mockAsyncStorage: MockAsyncStorage;
-  let OperationQueueClass: typeof OperationQueue;
-
   beforeEach(() => {
     jest.clearAllMocks();
-
-    mockAsyncStorage = {
-      getItem: jest.fn() as jest.MockedFunction<(key: string) => Promise<string | null>>,
-      setItem: jest.fn() as jest.MockedFunction<(key: string, value: string) => Promise<void>>,
-      removeItem: jest.fn() as jest.MockedFunction<(key: string) => Promise<void>>,
-    };
-
-    jest.doMock('@react-native-async-storage/async-storage', () => ({
-      __esModule: true,
-      default: mockAsyncStorage,
-    }));
-  });
-
-  afterEach(() => {
-    jest.resetModules();
+    mockAsyncStorage.getItem.mockResolvedValue(null);
+    mockAsyncStorage.setItem.mockResolvedValue(undefined);
   });
 
   it('should initialize with empty queue', async () => {
-    mockAsyncStorage.getItem.mockResolvedValue(null);
-
-    // Import OperationQueue after mocking AsyncStorage  
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
-    OperationQueueClass = OperationQueue;
-
-    const queue = new OperationQueueClass();
+    const queue = new OperationQueue();
     await queue.initialize();
 
     expect(queue.size()).toBe(0);
@@ -68,12 +51,7 @@ describe('OperationQueue', () => {
     ]);
     mockAsyncStorage.getItem.mockResolvedValue(storedQueue);
 
-    // Import OperationQueue after mocking AsyncStorage  
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
-    OperationQueueClass = OperationQueue;
-
-    const queue = new OperationQueueClass();
+    const queue = new OperationQueue();
     await queue.initialize();
 
     expect(queue.size()).toBe(1);
@@ -82,24 +60,13 @@ describe('OperationQueue', () => {
   it('should handle AsyncStorage errors gracefully', async () => {
     mockAsyncStorage.getItem.mockRejectedValue(new Error('Storage error'));
 
-    // Import OperationQueue after mocking AsyncStorage  
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
-    OperationQueueClass = OperationQueue;
-
-    const queue = new OperationQueueClass();
+    const queue = new OperationQueue();
     await queue.initialize();
 
     expect(queue.size()).toBe(0);
   });
 
   it('should enqueue operations', async () => {
-    mockAsyncStorage.getItem.mockResolvedValue(null);
-    mockAsyncStorage.setItem.mockResolvedValue(undefined);
-
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
-
     const queue = new OperationQueue();
     await queue.initialize();
 
@@ -110,12 +77,6 @@ describe('OperationQueue', () => {
   });
 
   it('should enforce queue size limit', async () => {
-    mockAsyncStorage.getItem.mockResolvedValue(null);
-    mockAsyncStorage.setItem.mockResolvedValue(undefined);
-
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
-
     const queue = new OperationQueue();
     await queue.initialize();
 
@@ -128,12 +89,6 @@ describe('OperationQueue', () => {
   });
 
   it('should detect when queue is near limit', async () => {
-    mockAsyncStorage.getItem.mockResolvedValue(null);
-    mockAsyncStorage.setItem.mockResolvedValue(undefined);
-
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
-
     const queue = new OperationQueue();
     await queue.initialize();
 
@@ -146,12 +101,6 @@ describe('OperationQueue', () => {
   });
 
   it('should dequeue operations', async () => {
-    mockAsyncStorage.getItem.mockResolvedValue(null);
-    mockAsyncStorage.setItem.mockResolvedValue(undefined);
-
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
-
     const queue = new OperationQueue();
     await queue.initialize();
 
@@ -186,9 +135,6 @@ describe('OperationQueue', () => {
     ]);
     mockAsyncStorage.getItem.mockResolvedValue(storedQueue);
 
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
-
     const queue = new OperationQueue();
     await queue.initialize();
 
@@ -198,12 +144,6 @@ describe('OperationQueue', () => {
   });
 
   it('should clear queue', async () => {
-    mockAsyncStorage.getItem.mockResolvedValue(null);
-    mockAsyncStorage.setItem.mockResolvedValue(undefined);
-
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
-
     const queue = new OperationQueue();
     await queue.initialize();
 
@@ -214,25 +154,6 @@ describe('OperationQueue', () => {
   });
 
   it('should emit SIZE_CHANGED event when approaching queue limit', async () => {
-    // Mock mobile hooks
-    const mockEmit = jest.fn();
-    jest.doMock('../../src/services/hooks/mobileHooks', () => {
-      // Import the actual event constants
-      const actualMobileHooks = jest.requireActual('../../src/services/hooks/mobileHooks');
-      
-      return {
-        mobileHooks: { emit: mockEmit },
-        // Use actual MOBILE_EVENTS instead of hard-coded strings
-        MOBILE_EVENTS: actualMobileHooks.MOBILE_EVENTS,
-      };
-    });
-    
-    mockAsyncStorage.getItem.mockResolvedValue(null);
-    mockAsyncStorage.setItem.mockResolvedValue(undefined);
-
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
-
     const queue = new OperationQueue();
     await queue.initialize();
 
@@ -241,30 +162,23 @@ describe('OperationQueue', () => {
       await queue.enqueue('CREATE', 'book', { title: `Book ${i}` });
     }
 
-    const { MOBILE_EVENTS } = require('../../src/services/hooks/mobileHooks');
     expect(mockEmit).toHaveBeenCalledWith(
       MOBILE_EVENTS.QUEUE.SIZE_CHANGED,
       expect.objectContaining({
         status: 'approaching_limit',
-        threshold: 0.8
+        threshold: 0.8,
       })
     );
   });
 
   it('should test exponential backoff behavior', async () => {
-    mockAsyncStorage.getItem.mockResolvedValue(null);
-    mockAsyncStorage.setItem.mockResolvedValue(undefined);
-
     let actualDelay = 0;
     const originalSetTimeout = global.setTimeout;
     global.setTimeout = jest.fn().mockImplementation((callback, delay) => {
       actualDelay = delay;
       callback();
-      return 'timeout-id' as unknown;
-    });
-
-    delete require.cache[require.resolve('../../src/services/OperationQueue')];
-    const { OperationQueue } = require('../../src/services/OperationQueue');
+      return 'timeout-id' as unknown as ReturnType<typeof setTimeout>;
+    }) as unknown as typeof setTimeout;
 
     const queue = new OperationQueue();
     await queue.initialize();
@@ -275,7 +189,7 @@ describe('OperationQueue', () => {
       .mockResolvedValueOnce(undefined);
 
     await queue.enqueue('CREATE', 'book', { title: 'Test' });
-    
+
     // First attempt (no delay)
     await queue.processQueue(mockApiExecutor);
     expect(actualDelay).toBe(0);
@@ -284,7 +198,7 @@ describe('OperationQueue', () => {
     await queue.processQueue(mockApiExecutor);
     expect(actualDelay).toBe(2000);
 
-    // Third attempt (4s delay) 
+    // Third attempt (4s delay)
     await queue.processQueue(mockApiExecutor);
     expect(actualDelay).toBe(4000);
 

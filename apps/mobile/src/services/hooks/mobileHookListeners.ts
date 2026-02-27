@@ -75,11 +75,6 @@ class AnalyticsListener {
 
       events.push(analyticsEvent);
 
-      // Keep only the most recent events
-      if (events.length > this.config.maxOfflineEvents) {
-        events.splice(0, events.length - this.config.maxOfflineEvents);
-      }
-
       await AsyncStorage.setItem(storageKey, JSON.stringify(events));
     } catch (error) {
       if (__DEV__) {
@@ -147,11 +142,6 @@ class ErrorReportingListener {
 
       errors.push(errorEvent);
 
-      // Keep only the most recent errors
-      if (errors.length > this.config.maxOfflineEvents) {
-        errors.splice(0, errors.length - this.config.maxOfflineEvents);
-      }
-
       await AsyncStorage.setItem(storageKey, JSON.stringify(errors));
     } catch (error) {
       if (__DEV__) {
@@ -190,10 +180,6 @@ class OfflineStorageListener {
       return; // Skip based on priority system
     }
 
-    if (!this.config.offlineStorageEnabled) {
-      return;
-    }
-
     try {
       // Store all events for offline processing
       await this.storeOfflineEvent(eventType, data);
@@ -219,11 +205,6 @@ class OfflineStorageListener {
       const events = existingEvents ? JSON.parse(existingEvents) : [];
 
       events.push(offlineEvent);
-
-      // Keep only the most recent events
-      if (events.length > this.config.maxOfflineEvents) {
-        events.splice(0, events.length - this.config.maxOfflineEvents);
-      }
 
       await AsyncStorage.setItem(storageKey, JSON.stringify(events));
     } catch (error) {
@@ -331,11 +312,6 @@ class PerformanceMonitoringListener {
 
       metrics.push(performanceEvent);
 
-      // Keep only the most recent metrics
-      if (metrics.length > this.config.maxOfflineEvents) {
-        metrics.splice(0, metrics.length - this.config.maxOfflineEvents);
-      }
-
       await AsyncStorage.setItem(storageKey, JSON.stringify(metrics));
     } catch (error) {
       if (__DEV__) {
@@ -358,10 +334,7 @@ export class MobileHookListenersManager {
     this.config = {
       analyticsEnabled: config.analyticsEnabled ?? true,
       errorReportingEnabled: config.errorReportingEnabled ?? true,
-      offlineStorageEnabled: config.offlineStorageEnabled ?? true,
       performanceMonitoringEnabled: config.performanceMonitoringEnabled ?? true,
-      batchUploadInterval: config.batchUploadInterval ?? 300, // 5 minutes
-      maxOfflineEvents: config.maxOfflineEvents ?? 1000,
     };
 
     this.analyticsListener = new AnalyticsListener(this.config);
@@ -427,33 +400,6 @@ export class MobileHookListenersManager {
         };
 
         await hookSystem.registerExistingHook(errorReportingHookWithId, errorReportingAction);
-      }
-
-      // Register offline storage listener for all events
-      if (this.config.offlineStorageEnabled) {
-        const offlineStorageHookConfig: Omit<HookConfig, 'id' | 'createdAt' | 'updatedAt'> = {
-          name: 'Mobile Offline Storage Listener',
-          description: 'Stores events for offline processing',
-          eventPattern: '*',
-          actionType: HOOK_LISTENER_CATEGORIES.OFFLINE_STORAGE,
-          isActive: true,
-          priority: 1,
-        };
-
-        const offlineStorageAction: HookAction = {
-          execute: async (context: HookActionContext) => {
-            await this.offlineStorageListener.handleEvent(context.eventName, context.payload);
-          },
-        };
-
-        const offlineStorageHookWithId: HookConfig = {
-          ...offlineStorageHookConfig,
-          id: 'mobile-offline-storage-listener',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        await hookSystem.registerExistingHook(offlineStorageHookWithId, offlineStorageAction);
       }
 
       // Register performance monitoring listener for performance events

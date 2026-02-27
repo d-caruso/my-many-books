@@ -14,6 +14,8 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "typecheck": "tsc --noEmit",
+    "typecheck:test": "tsc --noEmit -p tsconfig.test.json",
+    "check": "npm run typecheck && npm run typecheck:test && npm run lint",
     "postinstall": "node scripts/patch-expo-router.js"
   },
   "dependencies": {

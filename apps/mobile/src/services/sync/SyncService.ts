@@ -469,22 +469,20 @@ export class SyncService {
    * FIXED: Always ensure _serverUpdatedAt is populated for conflict tracking
    */
   private mapServerBookToLocal(serverBook: ServerBook): Partial<Book> {
-    // Ensure we capture server timestamp for conflict resolution
-    const serverTimestamp = serverBook.updateDate || serverBook.updated_at || serverBook.updatedAt || new Date().toISOString();
-    
+    const serverTimestamp = serverBook.updateDate || serverBook.updatedAt || new Date().toISOString();
+
     return {
       title: serverBook.title,
       status: serverBook.status as Book['status'],
-      thumbnail: serverBook.thumbnail,
-      description: serverBook.description,
-      publishedDate: serverBook.publishedDate || serverBook.published_date,
-      pageCount: serverBook.pageCount || serverBook.page_count,
-      rating: serverBook.rating,
       notes: serverBook.notes,
-      creationDate: serverBook.creationDate || serverBook.created_at || new Date().toISOString(),
+      // TODO
+      //thumbnail: serverBook.thumbnail,
+      //description: serverBook.description,
+      //publishedDate: serverBook.publishedDate,
+      //pageCount: serverBook.pageCount,
+      //rating: serverBook.rating,
+      creationDate: serverBook.creationDate || new Date().toISOString(),
       updateDate: serverTimestamp,
-      _syncStatus: SYNC_STATUS.SYNCED,
-      serverUpdatedAt: serverTimestamp, // CRITICAL: Always set for conflict detection
     };
   }
 

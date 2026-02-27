@@ -123,7 +123,7 @@ export class IDMappingService {
    * Resolve foreign keys in data payload before sending to server
    * Converts any temp IDs found in the data to their server IDs
    */
-  async resolveForeignKeys(data: unknown): Promise<unknown> {
+  async resolveForeignKeys<T>(data: T): Promise<T> {
     await this.initialize();
 
     // Emit ID mapping start event for resolution
@@ -139,7 +139,7 @@ export class IDMappingService {
 
     // Handle arrays
     if (Array.isArray(data)) {
-      return Promise.all(data.map((item) => this.resolveForeignKeys(item)));
+      return Promise.all(data.map((item) => this.resolveForeignKeys(item))) as Promise<T>;
     }
 
     // Handle objects
@@ -197,7 +197,7 @@ export class IDMappingService {
       timestamp: new Date().toISOString()
     });
     
-    return resolved;
+    return resolved as T;
   }
 
   /**

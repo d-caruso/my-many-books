@@ -1,4 +1,5 @@
 import { Book } from '@/types';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 
 export const formatDate = (dateString: string): string => {
   try {
@@ -18,12 +19,12 @@ export const formatDate = (dateString: string): string => {
 
 export const getStatusLabel = (status: Book['status']): string => {
   switch (status) {
-    case 'want-to-read':
-      return 'Want to Read';
-    case 'reading':
+    case BOOK_STATUS.READING:
       return 'Reading';
-    case 'completed':
-      return 'Completed';
+    case BOOK_STATUS.PAUSED:
+      return 'Paused';
+    case BOOK_STATUS.FINISHED:
+      return 'Finished';
     default:
       return 'Unknown';
   }
@@ -31,11 +32,11 @@ export const getStatusLabel = (status: Book['status']): string => {
 
 export const getStatusColor = (status: Book['status']): string => {
   switch (status) {
-    case 'want-to-read':
-      return '#2196F3'; // Blue
-    case 'reading':
+    case BOOK_STATUS.READING:
       return '#FF9800'; // Orange
-    case 'completed':
+    case BOOK_STATUS.PAUSED:
+      return '#2196F3'; // Blue
+    case BOOK_STATUS.FINISHED:
       return '#4CAF50'; // Green
     default:
       return '#757575'; // Gray

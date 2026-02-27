@@ -82,11 +82,13 @@ export async function getAppVersion(): Promise<string> {
  */
 export async function getMemoryUsage(): Promise<number | undefined> {
   try {
-    // Web environment: Use performance.memory if available
-    if (typeof performance !== 'undefined' && 
-        performance.memory && 
-        typeof performance.memory.usedJSHeapSize === 'number') {
-      return Math.round(performance.memory.usedJSHeapSize / 1024 / 1024); // MB
+    // Web environment: Use performance.memory if available (non-standard V8 extension)
+    interface PerformanceWithMemory extends Performance {
+      memory?: { usedJSHeapSize: number };
+    }
+    const perf = (typeof performance !== 'undefined' ? performance : undefined) as PerformanceWithMemory | undefined;
+    if (perf?.memory && typeof perf.memory.usedJSHeapSize === 'number') {
+      return Math.round(perf.memory.usedJSHeapSize / 1024 / 1024); // MB
     }
 
     // Node.js environment: Use process.memoryUsage if available  

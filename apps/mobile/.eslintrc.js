@@ -41,7 +41,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['__tests__/**/*', '__mocks__/**/*'],
+      files: ['__tests__/**/*', '__mocks__/**/*', 'src/**/__tests__/**/*', 'src/**/*.test.ts', 'src/**/*.test.tsx', 'jest-setup.ts'],
       parserOptions: {
         project: ['./tsconfig.test.json'],
       },

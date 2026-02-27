@@ -70,7 +70,7 @@ export class MobileHookSystemManager {
     }
   }
 
-  async emit(eventName: MobileEventName, payload?: Record<string, unknown>): Promise<void> {
+  async emit(eventName: MobileEventName, payload?: object): Promise<void> {
     // Level 1: Check test environment and local config
     if (this.shouldSkipHooks()) {
       return;
@@ -89,7 +89,7 @@ export class MobileHookSystemManager {
 
     try {
       await system.trigger(String(eventName), {
-        ...payload ?? {},
+        ...(payload as Record<string, unknown> | undefined) ?? {},
         environment: this.options.environment,
         timestamp: new Date().toISOString(),
         sessionId: this.getSessionId(),
@@ -131,7 +131,7 @@ mobileHookSystemManager.initialize();
 
 // Export singleton methods
 export const mobileHooks = {
-  emit: (eventName: MobileEventName, payload?: Record<string, unknown>) =>
+  emit: (eventName: MobileEventName, payload?: object) =>
     mobileHookSystemManager.emit(eventName, payload),
   getInstance: () => mobileHookSystemManager.getInstance(),
   isOperational: () => mobileHookSystemManager.isOperational(),

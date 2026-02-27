@@ -1,4 +1,5 @@
-import { QueuedOperation } from '../types/queue';
+import { QueuedOperation, BookOperationPayload, AuthorOperationPayload, CategoryOperationPayload } from '../types/queue';
+import type { BookFormData } from '@my-many-books/shared-types';
 import { apiClient } from './api';
 import { idMappingService } from './sync/IDMappingService';
 import { bookRepository } from './database/BookRepository';
@@ -6,10 +7,6 @@ import { authorRepository } from './database/AuthorRepository';
 import { categoryRepository } from './database/CategoryRepository';
 import { cleanupService } from './sync/CleanupService';
 import { ApiError } from '../types/errors';
-import { Book } from '@my-many-books/shared-types';
-import { Author } from '@my-many-books/shared-types';
-import { Category } from '@my-many-books/shared-types';
-import { CreatePayload, UpdatePayload } from './handlers/types/HandlerTypes';
 import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/eventsSchema';
 import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
 import { SYNC_STATUS } from '@/types';
@@ -34,13 +31,13 @@ export async function executeOperation(operation: QueuedOperation): Promise<void
   try {
     switch (resource) {
       case RESOURCE_TYPES.BOOK:
-        await executeBookOperation(type, payload);
+        await executeBookOperation(type, payload as BookOperationPayload);
         break;
       case RESOURCE_TYPES.AUTHOR:
-        await executeAuthorOperation(type, payload);
+        await executeAuthorOperation(type, payload as AuthorOperationPayload);
         break;
       case RESOURCE_TYPES.CATEGORY:
-        await executeCategoryOperation(type, payload);
+        await executeCategoryOperation(type, payload as CategoryOperationPayload);
         break;
       case RESOURCE_TYPES.USER:
         await executeUserOperation(type, payload);
@@ -176,13 +173,13 @@ function isValidationRelatedError(error: unknown): boolean {
          message.includes('HTTP 4');
 }
 
-async function executeBookOperation(type: string, payload: CreatePayload<Book> | UpdatePayload<Book> | { id: string }): Promise<void> {
+async function executeBookOperation(type: string, payload: BookOperationPayload): Promise<void> {
   switch (type) {
     case OPERATION_TYPES.CREATE:
-      await executeCreateBook(payload as CreatePayload<Book>);
+      await executeCreateBook(payload);
       break;
     case OPERATION_TYPES.UPDATE:
-      await executeUpdateBook(payload as UpdatePayload<Book> & { id: string });
+      await executeUpdateBook(payload as BookOperationPayload & { id: string });
       break;
     case OPERATION_TYPES.DELETE:
       await executeDeleteBook(payload as { id: string });
@@ -201,23 +198,17 @@ async function executeBookOperation(type: string, payload: CreatePayload<Book> |
  * 4. Register temp → server ID mapping
  * 5. Update local SQLite with server_id
  */
-async function executeCreateBook(payload: CreatePayload<Book>): Promise<void> {
+async function executeCreateBook(payload: BookOperationPayload): Promise<void> {
   const tempId = (payload as { id?: string }).id; // Store original temp ID
 
   // Resolve foreign keys before sending to server
   const resolvedPayload = await idMappingService.resolveForeignKeys(payload);
 
-  // Add _tempId field for server to know this is a mobile-created book
-  const serverPayload = {
-    ...resolvedPayload,
-    _tempId: tempId,
-  };
-
   // CRITICAL: Use raw apiClient to avoid double-queueing (bookAPI wraps withQueueOnError)
-  const serverResponse = await apiClient.books.createBook(serverPayload) as Record<string, unknown>;
+  const serverResponse = await apiClient.books.createBook(resolvedPayload as BookFormData) as Record<string, unknown>;
 
   // Extract server-assigned ID from response
-  const serverId = serverResponse.id;
+  const serverId = serverResponse.id as number;
 
   if (serverId && tempId) {
     // Register ID mapping
@@ -230,12 +221,12 @@ async function executeCreateBook(payload: CreatePayload<Book>): Promise<void> {
     // Update server timestamp for consistency (Phase 5 fix)
     if (serverResponse.updateDate || serverResponse.updatedAt) {
       await bookRepository.updateSyncFields(serverId.toString(), {
-        serverUpdatedAt: serverResponse.updateDate || serverResponse.updatedAt,
+        serverUpdatedAt: (serverResponse.updateDate || serverResponse.updatedAt) as string,
         syncStatus: SYNC_STATUS.SYNCED
       });
     }
 
-    // Verify foreign key integrity (Task 5.5.2) 
+    // Verify foreign key integrity (Task 5.5.2)
     await cleanupService.updateForeignKeysForBook(serverId.toString(), serverId);
 
     // Temp ID replaced with server ID successfully
@@ -249,7 +240,7 @@ async function executeCreateBook(payload: CreatePayload<Book>): Promise<void> {
  * 2. Resolve foreign keys in payload
  * 3. Send to server
  */
-async function executeUpdateBook(payload: UpdatePayload<Book> & { id: string }): Promise<void> {
+async function executeUpdateBook(payload: BookOperationPayload & { id: string }): Promise<void> {
   const bookId = payload.id;
 
   // Get book from local DB - use mapping-aware lookup (Critical Fix)
@@ -266,12 +257,12 @@ async function executeUpdateBook(payload: UpdatePayload<Book> & { id: string }):
   const resolvedPayload = await idMappingService.resolveForeignKeys(payload);
 
   // CRITICAL: Use raw apiClient to avoid double-queueing (bookAPI wraps withQueueOnError)
-  const updateResponse = await apiClient.books.updateBook(String(serverIdToUse), resolvedPayload) as Record<string, unknown>;
+  const updateResponse = await apiClient.books.updateBook(Number(serverIdToUse), resolvedPayload) as Record<string, unknown>;
 
   // Update server timestamp for consistency (Phase 5 fix)
   if (updateResponse.updateDate || updateResponse.updatedAt) {
     await bookRepository.updateSyncFields(String(serverIdToUse), {
-      serverUpdatedAt: updateResponse.updateDate || updateResponse.updatedAt,
+      serverUpdatedAt: (updateResponse.updateDate || updateResponse.updatedAt) as string,
       syncStatus: SYNC_STATUS.SYNCED
     });
   }
@@ -302,7 +293,7 @@ async function executeDeleteBook(payload: { id: string }): Promise<void> {
   }
 
   // CRITICAL: Use raw apiClient to avoid double-queueing (bookAPI wraps withQueueOnError)
-  await apiClient.books.deleteBook(String(localBook.serverId));
+  await apiClient.books.deleteBook(localBook.serverId);
 }
 
 async function executeUserOperation(_type: string, _payload: unknown): Promise<void> {
@@ -310,13 +301,13 @@ async function executeUserOperation(_type: string, _payload: unknown): Promise<v
   throw new Error('User operations not yet implemented');
 }
 
-async function executeAuthorOperation(type: string, payload: CreatePayload<Author> | UpdatePayload<Author> | { id: string }): Promise<void> {
+async function executeAuthorOperation(type: string, payload: AuthorOperationPayload): Promise<void> {
   switch (type) {
     case OPERATION_TYPES.CREATE:
-      await executeCreateAuthor(payload as CreatePayload<Author>);
+      await executeCreateAuthor(payload);
       break;
     case OPERATION_TYPES.UPDATE:
-      await executeUpdateAuthor(payload as UpdatePayload<Author> & { id: string });
+      await executeUpdateAuthor(payload as AuthorOperationPayload & { id: string });
       break;
     case OPERATION_TYPES.DELETE:
       await executeDeleteAuthor(payload as { id: string });
@@ -326,13 +317,13 @@ async function executeAuthorOperation(type: string, payload: CreatePayload<Autho
   }
 }
 
-async function executeCategoryOperation(type: string, payload: CreatePayload<Category> | UpdatePayload<Category> | { id: string }): Promise<void> {
+async function executeCategoryOperation(type: string, payload: CategoryOperationPayload): Promise<void> {
   switch (type) {
     case OPERATION_TYPES.CREATE:
-      await executeCreateCategory(payload as CreatePayload<Category>);
+      await executeCreateCategory(payload);
       break;
     case OPERATION_TYPES.UPDATE:
-      await executeUpdateCategory(payload as UpdatePayload<Category> & { id: string });
+      await executeUpdateCategory(payload as CategoryOperationPayload & { id: string });
       break;
     case OPERATION_TYPES.DELETE:
       await executeDeleteCategory(payload as { id: string });
@@ -342,7 +333,7 @@ async function executeCategoryOperation(type: string, payload: CreatePayload<Cat
   }
 }
 
-async function executeCreateAuthor(payload: CreatePayload<Author>): Promise<void> {
+async function executeCreateAuthor(payload: AuthorOperationPayload): Promise<void> {
   const tempId = (payload as { id?: string }).id;
   // CRITICAL: Use raw apiClient to avoid double-queueing (authorAPI would wrap withQueueOnError)
   const serverResponse = await apiClient.authors.createAuthor({
@@ -351,20 +342,20 @@ async function executeCreateAuthor(payload: CreatePayload<Author>): Promise<void
     nationality: payload.nationality,
   }) as Record<string, unknown>;
 
-  const serverId = serverResponse.id;
+  const serverId = serverResponse.id as number;
   if (serverId && tempId) {
     await idMappingService.registerTempId(tempId, serverId, 'author');
-    await authorRepository.updateSyncFields(tempId, {
+    await authorRepository.updateSyncFields(Number(tempId), {
       serverId,
-      serverUpdatedAt: serverResponse.updateDate || new Date().toISOString(),
+      serverUpdatedAt: (serverResponse.updateDate || new Date().toISOString()) as string,
       syncStatus: SYNC_STATUS.SYNCED,
     });
   }
 }
 
-async function executeUpdateAuthor(payload: UpdatePayload<Author> & { id: string }): Promise<void> {
+async function executeUpdateAuthor(payload: AuthorOperationPayload & { id: string }): Promise<void> {
   const authorId = payload.id;
-  const localAuthor = await authorRepository.findById(authorId);
+  const localAuthor = await authorRepository.findById(Number(authorId));
   if (!localAuthor) {
     throw new Error(`Author not found: ${authorId}`);
   }
@@ -378,8 +369,8 @@ async function executeUpdateAuthor(payload: UpdatePayload<Author> & { id: string
   }) as Record<string, unknown>;
 
   if (updateResponse.updateDate) {
-    await authorRepository.updateSyncFields(authorId, {
-      serverUpdatedAt: updateResponse.updateDate,
+    await authorRepository.updateSyncFields(Number(authorId), {
+      serverUpdatedAt: updateResponse.updateDate as string,
       syncStatus: SYNC_STATUS.SYNCED,
     });
   }
@@ -387,7 +378,7 @@ async function executeUpdateAuthor(payload: UpdatePayload<Author> & { id: string
 
 async function executeDeleteAuthor(payload: { id: string }): Promise<void> {
   const authorId = payload.id;
-  const localAuthor = await authorRepository.findById(authorId);
+  const localAuthor = await authorRepository.findById(Number(authorId));
   if (!localAuthor) return;
 
   if (localAuthor.serverId) {
@@ -396,27 +387,27 @@ async function executeDeleteAuthor(payload: { id: string }): Promise<void> {
   }
 }
 
-async function executeCreateCategory(payload: CreatePayload<Category>): Promise<void> {
+async function executeCreateCategory(payload: CategoryOperationPayload): Promise<void> {
   const tempId = (payload as { id?: string }).id;
   // CRITICAL: Use raw apiClient to avoid double-queueing (categoryAPI would wrap withQueueOnError)
   const serverResponse = await apiClient.categories.createCategory({
     name: payload.name,
   }) as Record<string, unknown>;
 
-  const serverId = serverResponse.id;
+  const serverId = serverResponse.id as number;
   if (serverId && tempId) {
     await idMappingService.registerTempId(tempId, serverId, 'category');
-    await categoryRepository.updateSyncFields(tempId, {
+    await categoryRepository.updateSyncFields(Number(tempId), {
       serverId,
-      serverUpdatedAt: serverResponse.updateDate || new Date().toISOString(),
+      serverUpdatedAt: (serverResponse.updateDate || new Date().toISOString()) as string,
       syncStatus: SYNC_STATUS.SYNCED,
     });
   }
 }
 
-async function executeUpdateCategory(payload: UpdatePayload<Category> & { id: string }): Promise<void> {
+async function executeUpdateCategory(payload: CategoryOperationPayload & { id: string }): Promise<void> {
   const categoryId = payload.id;
-  const localCategory = await categoryRepository.findById(categoryId);
+  const localCategory = await categoryRepository.findById(Number(categoryId));
   if (!localCategory) {
     throw new Error(`Category not found: ${categoryId}`);
   }
@@ -428,8 +419,8 @@ async function executeUpdateCategory(payload: UpdatePayload<Category> & { id: st
   }) as Record<string, unknown>;
 
   if (updateResponse.updateDate) {
-    await categoryRepository.updateSyncFields(categoryId, {
-      serverUpdatedAt: updateResponse.updateDate,
+    await categoryRepository.updateSyncFields(Number(categoryId), {
+      serverUpdatedAt: updateResponse.updateDate as string,
       syncStatus: SYNC_STATUS.SYNCED,
     });
   }
@@ -437,7 +428,7 @@ async function executeUpdateCategory(payload: UpdatePayload<Category> & { id: st
 
 async function executeDeleteCategory(payload: { id: string }): Promise<void> {
   const categoryId = payload.id;
-  const localCategory = await categoryRepository.findById(categoryId);
+  const localCategory = await categoryRepository.findById(Number(categoryId));
   if (!localCategory) return;
 
   if (localCategory.serverId) {
@@ -480,18 +471,19 @@ export function isRetriableError(error: unknown, operationId?: string, currentRe
       
       // HTTP status codes (if error object has status property)
       if (typeof error === 'object' && error !== null && 'status' in error && error.status) {
+        const status = error.status as number;
         // 408 Request Timeout is retriable
-        if (error.status === 408) {
+        if (status === 408) {
           isRetriable = true;
           retryReason = 'timeout_408';
         }
         // 429 Too Many Requests is retriable
-        else if (error.status === 429) {
+        else if (status === 429) {
           isRetriable = true;
           retryReason = 'rate_limit_429';
         }
         // 5xx server errors are retriable
-        else if (error.status >= 500 && error.status <= 599) {
+        else if (status >= 500 && status <= 599) {
           isRetriable = true;
           retryReason = 'server_error_5xx';
         }

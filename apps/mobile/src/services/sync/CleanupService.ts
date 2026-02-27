@@ -209,7 +209,7 @@ export class CleanupService {
       // Only remove operations that are:
       // 1. Beyond max retry attempts AND
       // 2. Older than the cutoff date
-      const isPermanentlyFailed = (op.retries || 0) >= 3; // Assume max retries is 3
+      const isPermanentlyFailed = (op.retryCount || 0) >= 3; // Assume max retries is 3
       const isStale = op.timestamp < cutoffDate;
       
       if (isPermanentlyFailed && isStale) {
@@ -218,9 +218,9 @@ export class CleanupService {
         mobileHooks.emit(MOBILE_EVENTS.QUEUE.DEQUEUE, {
           operationId: op.id,
           reason: 'permanently_failed',
-          retries: op.retries || 0,
+          retries: op.retryCount || 0,
           ageInDays: ageInDays,
-          message: `Removing permanently failed operation: ${op.id} (retries: ${op.retries || 0}, age: ${ageInDays} days)`,
+          message: `Removing permanently failed operation: ${op.id} (retries: ${op.retryCount || 0}, age: ${ageInDays} days)`,
           timestamp: new Date().toISOString()
         });
         
@@ -424,7 +424,7 @@ export class CleanupService {
       WHERE sync_status = '${SYNC_STATUS.PENDING}'
     `);
 
-    const allOperations = operationQueue.getAllOperations();
+    const allOperations = operationQueue.getPendingOperations();
 
     for (const book of pendingBooks) {
       // Check if there's a corresponding operation

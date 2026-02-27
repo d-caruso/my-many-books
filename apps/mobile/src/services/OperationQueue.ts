@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
-import { QueuedOperation, OperationType, ResourceType, BookOperationPayload, AuthorOperationPayload, CategoryOperationPayload, UserOperationPayload, SettingsOperationPayload } from '../types/queue';
+import { QueuedOperation, ResourceType, BookOperationPayload, AuthorOperationPayload, CategoryOperationPayload, UserOperationPayload, SettingsOperationPayload } from '../types/queue';
+import type { OperationType } from '../../src/services/hooks/eventsSchema';
 import { Alert } from 'react-native';
 import i18n from '../i18n';
 import { databaseService } from './database/DatabaseService';
