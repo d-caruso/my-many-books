@@ -8,12 +8,15 @@
  import { ApiResponse } from '../../common/ApiResponse';
  import { UniversalRequest } from '../../types';
  import { AppSetting } from '../../models';
+ import { AppSettingCreationAttributes } from '../../models/AppSetting';
  import { getAuditLogService } from '../../services/AuditLogService';
  import {
     MOBILE_APP_METADATA,
     MOBILE_APP_SETTING_KEYS,
     MOBILE_APP_SETTINGS_ACTIONS,
-    MobileAppSettings
+    MobileAppSettings,
+    SettingCategory,
+    SettingType,
 } from '@my-many-books/shared-types';
 
 const DEFAULT_MOBILE_APP_SETTINGS: MobileAppSettings = {
@@ -310,12 +313,12 @@ export class AdminMobileAppSettingsController extends BaseController {
         key,
         value,
         active: true,
-        category: MOBILE_APP_METADATA.CATEGORY,
-        type: MOBILE_APP_METADATA.DATA_TYPE,
+        category: MOBILE_APP_METADATA.CATEGORY as SettingCategory,
+        type: MOBILE_APP_METADATA.DATA_TYPE as SettingType,
         defaultValue: value,
         description: `Mobile app settings: ${key}`,
         deleted: false,
-      } as any,
+      } as AppSettingCreationAttributes,
     });
 
     if (setting.value !== value) {

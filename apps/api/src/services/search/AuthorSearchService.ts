@@ -27,7 +27,7 @@ import { SearchConfig } from './SearchConfig';
 /**
  * Author search options - extends BaseSearchOptions
  */
-export interface AuthorSearchOptions extends BaseSearchOptions {}
+export type AuthorSearchOptions = BaseSearchOptions;
 
 @injectable()
 export class AuthorSearchService extends FullTextSearchService<AuthorEntity> {

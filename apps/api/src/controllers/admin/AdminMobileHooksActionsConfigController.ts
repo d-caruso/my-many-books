@@ -132,7 +132,7 @@ interface HookActionConfigUpdateRequest {
 
 interface ActionSettingsUpdateRequest {
   enabled?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface HookListenerUpdateRequest {
@@ -397,7 +397,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       }> = [];
 
       for (const actionType of mappedActions) {
-        const actionSettings = config.actionSettings[actionType] as ActionSettings[ActionType];
+        const actionSettings = config.actionSettings[actionType];
         let settings: Record<string, unknown> = { ...actionSettings };
 
         switch (actionType) {
@@ -575,7 +575,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
     try {
       const config = await this.loadConfig();
-      const actionSettings = config.actionSettings[actionType] as ActionSettings[ActionType];
+      const actionSettings = config.actionSettings[actionType];
 
       if (!actionSettings) {
         return this.createErrorResponse(`No settings found for action type: ${actionType}`, 404);
@@ -776,7 +776,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     // For now, return simulated success
     // In production, this would actually send emails, Slack messages, etc.
     switch (actionType) {
-      case ACTION_TYPES.EMAIL:
+      case ACTION_TYPES.EMAIL: {
         const emailSettings = settings as ActionSettings[typeof ACTION_TYPES.EMAIL];
         const emailEndpoint = process.env['EMAIL_TEST_ENDPOINT'];
         if (!emailEndpoint) {
@@ -801,8 +801,9 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
             result: emailResult,
           },
         };
+      }
 
-      case ACTION_TYPES.SLACK:
+      case ACTION_TYPES.SLACK: {
         const slackSettings = settings as ActionSettings[typeof ACTION_TYPES.SLACK];
         if (!slackSettings.webhook_url) {
           return {
@@ -826,8 +827,9 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
             result: slackResult,
           },
         };
+      }
 
-      case ACTION_TYPES.WEBHOOK:
+      case ACTION_TYPES.WEBHOOK: {
         const webhookSettings = settings as ActionSettings[typeof ACTION_TYPES.WEBHOOK];
         const webhookResults = await webhookService.executeTestEndpoints(
           webhookSettings.endpoints,
@@ -845,8 +847,9 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
             results: webhookResults,
           },
         };
+      }
 
-      case ACTION_TYPES.DATABASE:
+      case ACTION_TYPES.DATABASE: {
         const dbSettings = settings as ActionSettings[typeof ACTION_TYPES.DATABASE];
         const tableName = dbSettings.table;
         const dbResult = await databaseActionTestService.insertTestRecord(tableName, testPayload);
@@ -861,8 +864,9 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
             result: dbResult,
           },
         };
+      }
 
-      case ACTION_TYPES.PUSH_NOTIFICATION:
+      case ACTION_TYPES.PUSH_NOTIFICATION: {
         const pushEndpoint = process.env['PUSH_NOTIFICATION_TEST_ENDPOINT'];
         if (!pushEndpoint) {
           return {
@@ -881,8 +885,9 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
             result: pushResult,
           },
         };
+      }
 
-      case ACTION_TYPES.SMS:
+      case ACTION_TYPES.SMS: {
         const smsSettings = settings as ActionSettings[typeof ACTION_TYPES.SMS];
         const smsEndpoint = process.env['SMS_TEST_ENDPOINT'];
         if (!smsEndpoint) {
@@ -908,6 +913,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
             result: smsResult,
           },
         };
+      }
 
       default:
         return {
@@ -924,8 +930,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     const settings = await AppSetting.findAll({
       where: {
         key: {
-          $like: `${ACTIONS_BASE}.%`,
-        } as any,
+          [Op.like]: `${ACTIONS_BASE}.%`,
+        },
       },
     });
 
@@ -936,7 +942,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     let actions: HookActionMapping = {};
     if (actionMappingsStr) {
       try {
-        actions = JSON.parse(actionMappingsStr);
+        actions = JSON.parse(actionMappingsStr) as HookActionMapping;
       } catch {
         actions = this.getDefaultActionMappings();
       }
@@ -950,8 +956,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       const settingsStr = settingsMap.get(`${ACTIONS_BASE}.settings.${actionType}`);
       if (settingsStr) {
         try {
-          const parsedSettings = JSON.parse(settingsStr);
-          actionSettings[actionType] = { ...actionSettings[actionType], ...parsedSettings };
+          const parsedSettings = JSON.parse(settingsStr) as ActionSettings[typeof actionType];
+          Object.assign(actionSettings[actionType], parsedSettings);
         } catch {
           // Keep default settings on parse error
         }
@@ -975,8 +981,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     const lastUpdatedSetting = await AppSetting.findOne({
       where: {
         key: {
-          $like: `${ACTIONS_BASE}.%`,
-        } as any,
+          [Op.like]: `${ACTIONS_BASE}.%`,
+        },
       },
       order: [['updateDate', 'DESC']],
     });
@@ -1150,15 +1156,16 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   /**
    * Validate action settings based on action type
    */
-  private validateActionSettings(actionType: ActionType, settings: any): ApiResponse | null {
+  private validateActionSettings(actionType: ActionType, settings: ActionSettings[ActionType]): ApiResponse | null {
     switch (actionType) {
-      case ACTION_TYPES.EMAIL:
-        if (settings.recipients && !Array.isArray(settings.recipients)) {
+      case ACTION_TYPES.EMAIL: {
+        const emailSettings = settings as ActionSettings[typeof ACTION_TYPES.EMAIL];
+        if (emailSettings.recipients && !Array.isArray(emailSettings.recipients)) {
           return this.createErrorResponse('Email recipients must be an array', 400);
         }
         if (
-          settings.rate_limit_minutes &&
-          (settings.rate_limit_minutes < 1 || settings.rate_limit_minutes > 1440)
+          emailSettings.rate_limit_minutes &&
+          (emailSettings.rate_limit_minutes < 1 || emailSettings.rate_limit_minutes > 1440)
         ) {
           return this.createErrorResponse(
             'Email rate limit must be between 1 and 1440 minutes',
@@ -1166,22 +1173,27 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
           );
         }
         break;
-      case ACTION_TYPES.WEBHOOK:
-        if (settings.endpoints && !Array.isArray(settings.endpoints)) {
+      }
+      case ACTION_TYPES.WEBHOOK: {
+        const webhookSettings = settings as ActionSettings[typeof ACTION_TYPES.WEBHOOK];
+        if (webhookSettings.endpoints && !Array.isArray(webhookSettings.endpoints)) {
           return this.createErrorResponse('Webhook endpoints must be an array', 400);
         }
         if (
-          settings.timeout_seconds &&
-          (settings.timeout_seconds < 1 || settings.timeout_seconds > 60)
+          webhookSettings.timeout_seconds &&
+          (webhookSettings.timeout_seconds < 1 || webhookSettings.timeout_seconds > 60)
         ) {
           return this.createErrorResponse('Webhook timeout must be between 1 and 60 seconds', 400);
         }
         break;
-      case ACTION_TYPES.DATABASE:
-        if (settings.batch_size && (settings.batch_size < 1 || settings.batch_size > 1000)) {
+      }
+      case ACTION_TYPES.DATABASE: {
+        const dbSettings = settings as ActionSettings[typeof ACTION_TYPES.DATABASE];
+        if (dbSettings.batch_size && (dbSettings.batch_size < 1 || dbSettings.batch_size > 1000)) {
           return this.createErrorResponse('Database batch size must be between 1 and 1000', 400);
         }
         break;
+      }
     }
     return null;
   }
@@ -1201,7 +1213,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         defaultValue: value,
         description: `Mobile hook action configuration: ${key}`,
         deleted: false,
-      } as any,
+      } as AppSetting['_creationAttributes'],
     });
 
     if (setting.value !== value) {

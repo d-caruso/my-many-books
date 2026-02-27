@@ -3,12 +3,12 @@
 // Settings Definitions - Source of Truth for Application Settings
 // ================================================================
 
-export type SettingType = 'string' | 'number' | 'boolean' | 'enum' | 'json';
-export type SettingCategory = 'ui' | 'api' | 'features' | 'business' | 'security' | 'mobile_hooks' | 'emergency' | 'mobile_hook_actions' | 'user_mobile_config';
-
-// Arrays for Zod enum validation
+// Arrays are the single source of truth; types are derived from them
 export const SettingTypeValues = ['string', 'number', 'boolean', 'enum', 'json'] as const;
-export const SettingCategoryValues = ['ui', 'api', 'features', 'business', 'security', 'mobile_hooks', 'emergency', 'mobile_hook_actions', 'user_mobile_config'] as const;
+export const SettingCategoryValues = ['ui', 'api', 'features', 'business', 'security', 'mobile_app', 'mobile_hooks', 'emergency', 'mobile_hook_actions', 'user_mobile_config'] as const;
+
+export type SettingType = typeof SettingTypeValues[number];
+export type SettingCategory = typeof SettingCategoryValues[number];
 
 // Book list status change behavior constants
 export const BOOK_STATUS_CHANGE_BEHAVIOR = {

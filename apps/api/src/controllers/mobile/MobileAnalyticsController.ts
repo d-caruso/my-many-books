@@ -215,7 +215,7 @@ export class MobileAnalyticsController extends BaseController {
    */
   private sanitizeString(input: string): string {
     if (typeof input !== 'string') return '';
-    return input.replace(/[<>\"']/g, '').trim().slice(0, 500); // Max 500 chars
+    return input.replace(/[<>"']/g, '').trim().slice(0, 500); // Max 500 chars
   }
 
   /**

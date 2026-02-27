@@ -4,7 +4,7 @@
 // ================================================================
 
 import type { Transaction } from 'sequelize';
-import { FindAndCountOptions, FindOptions, IncludeOptions, Op, WhereOptions } from 'sequelize';
+import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions } from 'sequelize';
 import { Book } from '@/models/Book';
 import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';
@@ -395,19 +395,22 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       replacements['userId'] = userId;
     }
 
+    interface FulltextRow { id: number; relevance_score: number; }
+    interface CountRow { total: number; }
+
     const [results, countResults] = await Promise.all([
-      Book.sequelize!.query(sql, {
+      Book.sequelize!.query<FulltextRow>(sql, {
         replacements,
-        type: 'SELECT' as any,
+        type: QueryTypes.SELECT,
       }),
-      Book.sequelize!.query(countSql, {
+      Book.sequelize!.query<CountRow>(countSql, {
         replacements,
-        type: 'SELECT' as any,
+        type: QueryTypes.SELECT,
       }),
     ]);
 
     const relevanceScores = new Map<number, number>();
-    const bookIds = (results as any[]).map((row: any) => {
+    const bookIds = results.map((row) => {
       relevanceScores.set(row.id, row.relevance_score);
       return row.id;
     });
@@ -420,7 +423,7 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       ],
     });
 
-    const total = (countResults as any[])[0]?.total || 0;
+    const total = countResults[0]?.total ?? 0;
 
     return {
       rows: books.map(book => this.toDomain(book)!),
@@ -492,11 +495,11 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       replacements['userId'] = userId;
     }
 
-    const results = await Book.sequelize!.query(sql, {
-      replacements,
-      type: 'SELECT' as any,
-    });
+    interface PinnedRow { resourceId: number; priority: number; }
 
-    return results as unknown as Array<{ resourceId: number; priority: number }>;
+    return Book.sequelize!.query<PinnedRow>(sql, {
+      replacements,
+      type: QueryTypes.SELECT,
+    });
   }
 }

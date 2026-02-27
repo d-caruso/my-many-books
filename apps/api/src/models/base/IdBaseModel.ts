@@ -7,7 +7,7 @@ export interface IdBaseModelAttributes extends BaseModelAttributes {
 }
 
 // Entity base model with ID (for main entities)
-export abstract class IdBaseModel<T extends IdBaseModelAttributes> extends BaseModel<T> {
+export abstract class IdBaseModel<T extends IdBaseModelAttributes, TCreation extends object = T> extends BaseModel<T, TCreation> {
   public id!: number;
 
   static override getTableName(): string {

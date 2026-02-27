@@ -8,13 +8,16 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting } from '../../models';
+import { AppSettingCreationAttributes } from '../../models/AppSetting';
 import { getAuditLogService } from '../../services/AuditLogService';
 import {
   MOBILE_HOOK_SETTING_KEYS,
   MOBILE_HOOKS_METADATA,
   MOBILE_HOOKS_SETTINGS_ACTIONS,
   MobileHooksListenerSettings,
-  HEALTH_STATUS
+  HEALTH_STATUS,
+  SettingCategory,
+  SettingType,
 } from '@my-many-books/shared-types';
 
 export interface EmergencyStatusRequest {
@@ -276,12 +279,12 @@ export class AdminMobileHooksSettingsController extends BaseController {
         key,
         value,
         active: true,
-        category: MOBILE_HOOKS_METADATA.CATEGORY,
-        type: MOBILE_HOOKS_METADATA.DATA_TYPE,
+        category: MOBILE_HOOKS_METADATA.CATEGORY as SettingCategory,
+        type: MOBILE_HOOKS_METADATA.DATA_TYPE as SettingType,
         defaultValue: value,
         description: `Mobile hook settings: ${key}`,
         deleted: false,
-      } as any,
+      } as AppSettingCreationAttributes,
     });
 
     if (setting.value !== value) {

@@ -14,7 +14,7 @@ import { BaseSearchOptions, SortField, SearchResult } from './ISearchable';
 import { CategorySearchResultDTO, toCategorySearchResultDTO } from '../../dtos/category/CategorySearchResultDTO';
 import { SearchConfig } from './SearchConfig';
 
-export interface CategorySearchOptions extends BaseSearchOptions {}
+export type CategorySearchOptions = BaseSearchOptions;
 
 @injectable()
 export class CategorySearchService extends FullTextSearchService<CategoryEntity> {

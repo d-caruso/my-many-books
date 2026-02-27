@@ -8,7 +8,22 @@ import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { TYPES } from '../../container/types';
 import { PinnedResultsService } from '../../services/PinnedResultsService';
-import { RESOURCE_TYPE_VALUES } from '@my-many-books/shared-types';
+import { RESOURCE_TYPE_VALUES, ResourceType } from '@my-many-books/shared-types';
+
+function isServiceError(err: unknown): err is { code: string; message: string } {
+  return typeof err === 'object' && err !== null && 'code' in err && 'message' in err;
+}
+
+interface CreatePinnedResultBody {
+  resource_type: string;
+  resource_id: number;
+  priority: number;
+  active?: boolean;
+}
+
+interface UpdatePriorityBody {
+  priority: number;
+}
 
 @injectable()
 export class AdminSearchController extends BaseController {
@@ -30,33 +45,29 @@ export class AdminSearchController extends BaseController {
     const resourceType = this.getQueryParameter(request, 'resource_type');
 
     // If resource_type is provided, validate it
-    if (resourceType && !RESOURCE_TYPE_VALUES.includes(resourceType as any)) {
+    if (resourceType && !(RESOURCE_TYPE_VALUES as readonly string[]).includes(resourceType)) {
       return this.createErrorResponse(
         `Invalid resource_type: ${resourceType}. Must be one of: ${RESOURCE_TYPE_VALUES.join(', ')}`,
         400
       );
     }
 
-    try {
-      const pinnedResults = resourceType
-        ? await this.pinnedResultsService.getPinnedResultsByType(resourceType as any)
-        : await this.pinnedResultsService.getAllPinnedResults();
+    const pinnedResults = resourceType
+      ? await this.pinnedResultsService.getPinnedResultsByType(resourceType as ResourceType)
+      : await this.pinnedResultsService.getAllPinnedResults();
 
-      return this.createSuccessResponse({
-        results: pinnedResults.map(pr => ({
-          id: pr.id,
-          resource_type: pr.resourceType,
-          resource_id: pr.resourceId,
-          priority: pr.priority,
-          active: pr.active,
-          created_at: pr.creationDate,
-          updated_at: pr.updateDate,
-        })),
-        total: pinnedResults.length,
-      });
-    } catch (error: any) {
-      throw error;
-    }
+    return this.createSuccessResponse({
+      results: pinnedResults.map(pr => ({
+        id: pr.id,
+        resource_type: pr.resourceType,
+        resource_id: pr.resourceId,
+        priority: pr.priority,
+        active: pr.active,
+        created_at: pr.creationDate,
+        updated_at: pr.updateDate,
+      })),
+      total: pinnedResults.length,
+    });
   }
 
   /**
@@ -68,7 +79,10 @@ export class AdminSearchController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody(request) as any;
+    const body = this.parseBody<CreatePinnedResultBody>(request);
+    if (!body) {
+      return this.createErrorResponse('Invalid request body', 400);
+    }
     const { resource_type, resource_id, priority, active } = body;
 
     // Validate required fields
@@ -77,7 +91,7 @@ export class AdminSearchController extends BaseController {
     }
 
     // Validate resource_type against RESOURCE_TYPE_VALUES
-    if (!RESOURCE_TYPE_VALUES.includes(resource_type)) {
+    if (!(RESOURCE_TYPE_VALUES as readonly string[]).includes(resource_type)) {
       return this.createErrorResponse(
         `Invalid resource_type: ${resource_type}. Must be one of: ${RESOURCE_TYPE_VALUES.join(', ')}`,
         400
@@ -91,7 +105,7 @@ export class AdminSearchController extends BaseController {
 
     try {
       const pinnedResult = await this.pinnedResultsService.createPinnedResult({
-        resourceType: resource_type,
+        resourceType: resource_type as ResourceType,
         resourceId: resource_id,
         priority,
         active,
@@ -111,12 +125,14 @@ export class AdminSearchController extends BaseController {
         undefined,
         201
       );
-    } catch (error: any) {
-      if (error.code === 'DUPLICATE_PIN') {
-        return this.createErrorResponse(error.message, 409);
-      }
-      if (error.code === 'INVALID_PRIORITY') {
-        return this.createErrorResponse(error.message, 400);
+    } catch (error: unknown) {
+      if (isServiceError(error)) {
+        if (error.code === 'DUPLICATE_PIN') {
+          return this.createErrorResponse(error.message, 409);
+        }
+        if (error.code === 'INVALID_PRIORITY') {
+          return this.createErrorResponse(error.message, 400);
+        }
       }
       throw error;
     }
@@ -136,7 +152,10 @@ export class AdminSearchController extends BaseController {
       return this.createErrorResponse('Invalid pinned result ID', 400);
     }
 
-    const body = this.parseBody(request) as any;
+    const body = this.parseBody<UpdatePriorityBody>(request);
+    if (!body) {
+      return this.createErrorResponse('Invalid request body', 400);
+    }
     const { priority } = body;
 
     if (priority === undefined || typeof priority !== 'number') {
@@ -155,12 +174,14 @@ export class AdminSearchController extends BaseController {
         created_at: pinnedResult.creationDate,
         updated_at: pinnedResult.updateDate,
       }, 'Priority updated successfully');
-    } catch (error: any) {
-      if (error.code === 'PINNED_RESULT_NOT_FOUND') {
-        return this.createErrorResponse(error.message, 404);
-      }
-      if (error.code === 'INVALID_PRIORITY') {
-        return this.createErrorResponse(error.message, 400);
+    } catch (error: unknown) {
+      if (isServiceError(error)) {
+        if (error.code === 'PINNED_RESULT_NOT_FOUND') {
+          return this.createErrorResponse(error.message, 404);
+        }
+        if (error.code === 'INVALID_PRIORITY') {
+          return this.createErrorResponse(error.message, 400);
+        }
       }
       throw error;
     }
@@ -184,8 +205,8 @@ export class AdminSearchController extends BaseController {
       await this.pinnedResultsService.deletePinnedResult(Number(id));
 
       return this.createSuccessResponse(null, 'Pinned result deleted successfully', undefined, 204);
-    } catch (error: any) {
-      if (error.code === 'PINNED_RESULT_NOT_FOUND') {
+    } catch (error: unknown) {
+      if (isServiceError(error) && error.code === 'PINNED_RESULT_NOT_FOUND') {
         return this.createErrorResponse(error.message, 404);
       }
       throw error;

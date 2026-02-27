@@ -34,7 +34,7 @@ export interface BaseSearchOptions {
 /**
  * Generic search result with relevance scoring and pinning
  */
-export interface SearchResult<T = any> {
+export interface SearchResult<T = unknown> {
   /** Resource ID */
   id: number;
   /** User ID (for user-specific resources) */

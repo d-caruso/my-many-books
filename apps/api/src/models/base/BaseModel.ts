@@ -11,7 +11,7 @@ export interface BaseModelAttributes {
 }
 
 // Base model with only timestamps (for junction tables)
-export abstract class BaseModel<T extends BaseModelAttributes> extends Model<T> {
+export abstract class BaseModel<T extends BaseModelAttributes, TCreation extends object = T> extends Model<T, TCreation> {
   public readonly creationDate!: Date;
   public updateDate?: Date;
 

@@ -28,7 +28,7 @@ import { SearchConfig } from './SearchConfig';
 /**
  * Book search options - extends BaseSearchOptions
  */
-export interface BookSearchOptions extends BaseSearchOptions {}
+export type BookSearchOptions = BaseSearchOptions;
 
 @injectable()
 export class BookSearchService extends FullTextSearchService<BookEntity> {

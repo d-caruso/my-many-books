@@ -31,7 +31,7 @@ export interface AppSettingCreationAttributes {
   deleted?: boolean;
 }
 
-export class AppSetting extends BaseModel<AppSettingAttributes> implements AppSettingAttributes {
+export class AppSetting extends BaseModel<AppSettingAttributes, AppSettingCreationAttributes> implements AppSettingAttributes {
   public key!: string;
   public value!: string;
   public category!: SettingCategory;

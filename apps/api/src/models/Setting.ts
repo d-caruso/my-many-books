@@ -21,7 +21,7 @@ export interface SettingCreationAttributes {
   description?: string;
 }
 
-export class Setting extends IdBaseModel<SettingAttributes> implements SettingAttributes {
+export class Setting extends IdBaseModel<SettingAttributes, SettingCreationAttributes> implements SettingAttributes {
   public key!: string;
   public value!: string;
   public description?: string;
