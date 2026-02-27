@@ -3,12 +3,12 @@
 // Mobile hook configuration priority system service
 // ================================================================
 
-import { MobileHooksListenerSettings } from '@my-many-books/shared-types';
+import { MobileHooksListenerSettings, HookListenerCategory } from '@my-many-books/shared-types';
 import { API_BASE_URL } from '../../config/api';
 
 export interface MobileHookDBConfig {
   hooks_enabled: boolean;
-  hook_listeners: Partial<Record<string, { enabled: boolean }>>;
+  hook_listeners: Partial<Record<HookListenerCategory, { enabled: boolean }>>;
   config: MobileHooksListenerSettings;
 }
 

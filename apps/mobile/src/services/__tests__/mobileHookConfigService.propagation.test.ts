@@ -4,6 +4,7 @@
 // ================================================================
 
 import { MobileHookConfigService } from '../hooks/mobileHookConfigService';
+import { HOOK_LISTENER_CATEGORIES } from '@my-many-books/shared-types';
 
 // Mock fetch for testing
 global.fetch = jest.fn();
@@ -133,7 +134,7 @@ describe('MobileHookConfigService Configuration Propagation', () => {
       const initialUserConfig = {
         hooks_enabled: true,
         custom_hook_listeners: {
-          analytics: { enabled: true }
+          [HOOK_LISTENER_CATEGORIES.ANALYTICS]: { enabled: true }
         }
       };
 
@@ -148,7 +149,7 @@ describe('MobileHookConfigService Configuration Propagation', () => {
         } as Response);
 
       // Initial check - should process hooks
-      const shouldProcess1 = await service.shouldProcessHooks('analytics');
+      const shouldProcess1 = await service.shouldProcessHooks(HOOK_LISTENER_CATEGORIES.ANALYTICS);
       expect(shouldProcess1).toBe(true);
 
       // Clear cache to simulate admin updating configuration
@@ -177,7 +178,7 @@ describe('MobileHookConfigService Configuration Propagation', () => {
         } as Response);
 
       // Second check - should now respect admin's analytics disable
-      const shouldProcess2 = await service.shouldProcessHooks('analytics');
+      const shouldProcess2 = await service.shouldProcessHooks(HOOK_LISTENER_CATEGORIES.ANALYTICS);
       expect(shouldProcess2).toBe(false); // Analytics disabled in global config
     });
   });

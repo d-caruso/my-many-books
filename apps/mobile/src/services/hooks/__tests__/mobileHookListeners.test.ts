@@ -5,6 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MobileHookListenersManager, MobileHooksListenerSettings } from '../mobileHookListeners';
+import { HOOK_LISTENER_CATEGORIES } from '@my-many-books/shared-types';
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -144,7 +145,7 @@ describe('MobileHookListenersManager', () => {
       });
 
       expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        'error_events',
+        'error_reporting_events',
         expect.stringContaining('error.unhandled')
       );
     });
@@ -157,7 +158,7 @@ describe('MobileHookListenersManager', () => {
       });
 
       expect(mockAsyncStorage.setItem).not.toHaveBeenCalledWith(
-        'error_events',
+        'error_reporting_events',
         expect.any(String)
       );
     });
@@ -170,7 +171,7 @@ describe('MobileHookListenersManager', () => {
       await errorReportingListener.handleEvent('error.validation', { test: 'data' });
 
       const calls = mockAsyncStorage.setItem.mock.calls.filter(
-        call => call[0] === 'error_events'
+        call => call[0] === 'error_reporting_events'
       );
 
       expect(calls).toHaveLength(3);
@@ -194,7 +195,7 @@ describe('MobileHookListenersManager', () => {
       });
 
       expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        'offline_events',
+        'offline_storage_events',
         expect.stringContaining('book.create.success')
       );
     });
@@ -205,7 +206,7 @@ describe('MobileHookListenersManager', () => {
       await offlineStorageListener.handleEvent('test.event', { test: 'data' });
 
       const savedCall = mockAsyncStorage.setItem.mock.calls.find(
-        call => call[0] === 'offline_events'
+        call => call[0] === 'offline_storage_events'
       );
 
       expect(savedCall).toBeDefined();
@@ -231,7 +232,7 @@ describe('MobileHookListenersManager', () => {
       
       // Should not store performance metrics yet - just tracking start time
       expect(mockAsyncStorage.setItem).not.toHaveBeenCalledWith(
-        'performance_metrics',
+        'performance_monitoring_events',
         expect.any(String)
       );
     });
@@ -246,7 +247,7 @@ describe('MobileHookListenersManager', () => {
       });
 
       expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        'performance_metrics',
+        'performance_monitoring_events',
         expect.stringContaining('executor.PERFORMANCE_METRIC')
       );
     });
@@ -260,7 +261,7 @@ describe('MobileHookListenersManager', () => {
       
       mockAsyncStorage.getItem.mockResolvedValueOnce(JSON.stringify(testEvents));
 
-      const events = await listenersManager.getStoredEvents('analytics');
+      const events = await listenersManager.getStoredEvents(HOOK_LISTENER_CATEGORIES.ANALYTICS);
 
       expect(mockAsyncStorage.getItem).toHaveBeenCalledWith('analytics_events');
       expect(events).toEqual(testEvents);
@@ -269,13 +270,13 @@ describe('MobileHookListenersManager', () => {
     it('should return empty array if no stored events', async () => {
       mockAsyncStorage.getItem.mockResolvedValueOnce(null);
 
-      const events = await listenersManager.getStoredEvents('analytics');
+      const events = await listenersManager.getStoredEvents(HOOK_LISTENER_CATEGORIES.ANALYTICS);
 
       expect(events).toEqual([]);
     });
 
     it('should clear stored events by category', async () => {
-      await listenersManager.clearStoredEvents('analytics');
+      await listenersManager.clearStoredEvents(HOOK_LISTENER_CATEGORIES.ANALYTICS);
 
       expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('analytics_events');
     });

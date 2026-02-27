@@ -61,3 +61,19 @@ export const HOOK_KEY_PATTERNS = Object.freeze({
   LISTENERS_BASE: `${BASE_HOOKS}.${GLOBAL_SCOPE}.listeners`,
   CATEGORIES_BASE: `${BASE_HOOKS}.${GLOBAL_SCOPE}.categories`,
 } as const);
+
+export const HOOK_LISTENER_CATEGORIES = Object.freeze({
+  ANALYTICS: 'analytics',
+  ERROR_REPORTING: 'error_reporting',
+  OFFLINE_STORAGE: 'offline_storage',
+  PERFORMANCE_MONITORING: 'performance_monitoring',
+} as const);
+
+export type HookListenerCategory = typeof HOOK_LISTENER_CATEGORIES[keyof typeof HOOK_LISTENER_CATEGORIES];
+
+export const HOOK_LISTENER_CATEGORIES_STORAGE_KEYS = Object.freeze({
+  [HOOK_LISTENER_CATEGORIES.ANALYTICS]: 'analytics_events',
+  [HOOK_LISTENER_CATEGORIES.ERROR_REPORTING]: 'error_reporting_events',
+  [HOOK_LISTENER_CATEGORIES.OFFLINE_STORAGE]: 'offline_storage_events',
+  [HOOK_LISTENER_CATEGORIES.PERFORMANCE_MONITORING]: 'performance_monitoring_events',
+} as const satisfies Record<HookListenerCategory, string>);

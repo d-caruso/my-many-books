@@ -6,7 +6,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HookSystem, HookConfig, HookAction, HookActionContext } from '@my-many-books/hookey';
 import { mobileHookConfigService } from './mobileHookConfigService';
-import { MobileHooksListenerSettings } from '@my-many-books/shared-types';
+import {
+  MobileHooksListenerSettings,
+  HOOK_LISTENER_CATEGORIES,
+  HOOK_LISTENER_CATEGORIES_STORAGE_KEYS,
+  HookListenerCategory,
+} from '@my-many-books/shared-types';
 
 export interface HookEventData {
   eventType: string;
@@ -26,7 +31,7 @@ class AnalyticsListener {
 
   async handleEvent(eventType: string, data: unknown): Promise<void> {
     // 2-Level Priority System Check
-    const shouldProcess = await mobileHookConfigService.shouldProcessHooks('analytics');
+    const shouldProcess = await mobileHookConfigService.shouldProcessHooks(HOOK_LISTENER_CATEGORIES.ANALYTICS);
     if (!shouldProcess) {
       return; // Skip based on priority system
     }
@@ -64,17 +69,18 @@ class AnalyticsListener {
         category: 'user_behavior',
       };
 
-      const existingEvents = await AsyncStorage.getItem('analytics_events');
+      const storageKey = HOOK_LISTENER_CATEGORIES_STORAGE_KEYS[HOOK_LISTENER_CATEGORIES.ANALYTICS];
+      const existingEvents = await AsyncStorage.getItem(storageKey);
       const events = existingEvents ? JSON.parse(existingEvents) : [];
-      
+
       events.push(analyticsEvent);
-      
+
       // Keep only the most recent events
       if (events.length > this.config.maxOfflineEvents) {
         events.splice(0, events.length - this.config.maxOfflineEvents);
       }
 
-      await AsyncStorage.setItem('analytics_events', JSON.stringify(events));
+      await AsyncStorage.setItem(storageKey, JSON.stringify(events));
     } catch (error) {
       if (__DEV__) {
         console.warn('[Analytics] Failed to store analytics event:', error);
@@ -93,7 +99,7 @@ class ErrorReportingListener {
 
   async handleEvent(eventType: string, data: unknown): Promise<void> {
     // 2-Level Priority System Check
-    const shouldProcess = await mobileHookConfigService.shouldProcessHooks('error_reporting');
+    const shouldProcess = await mobileHookConfigService.shouldProcessHooks(HOOK_LISTENER_CATEGORIES.ERROR_REPORTING);
     if (!shouldProcess) {
       return; // Skip based on priority system
     }
@@ -131,21 +137,22 @@ class ErrorReportingListener {
         eventType,
         data: data as Record<string, unknown>,
         timestamp: new Date().toISOString(),
-        category: 'error_reporting',
+        category: HOOK_LISTENER_CATEGORIES.ERROR_REPORTING,
         severity: this.getErrorSeverity(eventType),
       };
 
-      const existingErrors = await AsyncStorage.getItem('error_events');
+      const storageKey = HOOK_LISTENER_CATEGORIES_STORAGE_KEYS[HOOK_LISTENER_CATEGORIES.ERROR_REPORTING];
+      const existingErrors = await AsyncStorage.getItem(storageKey);
       const errors = existingErrors ? JSON.parse(existingErrors) : [];
-      
+
       errors.push(errorEvent);
-      
+
       // Keep only the most recent errors
       if (errors.length > this.config.maxOfflineEvents) {
         errors.splice(0, errors.length - this.config.maxOfflineEvents);
       }
 
-      await AsyncStorage.setItem('error_events', JSON.stringify(errors));
+      await AsyncStorage.setItem(storageKey, JSON.stringify(errors));
     } catch (error) {
       if (__DEV__) {
         console.warn('[ErrorReporting] Failed to store error event:', error);
@@ -178,7 +185,7 @@ class OfflineStorageListener {
 
   async handleEvent(eventType: string, data: unknown): Promise<void> {
     // 2-Level Priority System Check
-    const shouldProcess = await mobileHookConfigService.shouldProcessHooks('offline_storage');
+    const shouldProcess = await mobileHookConfigService.shouldProcessHooks(HOOK_LISTENER_CATEGORIES.OFFLINE_STORAGE);
     if (!shouldProcess) {
       return; // Skip based on priority system
     }
@@ -207,17 +214,18 @@ class OfflineStorageListener {
         environment: 'mobile',
       };
 
-      const existingEvents = await AsyncStorage.getItem('offline_events');
+      const storageKey = HOOK_LISTENER_CATEGORIES_STORAGE_KEYS[HOOK_LISTENER_CATEGORIES.OFFLINE_STORAGE];
+      const existingEvents = await AsyncStorage.getItem(storageKey);
       const events = existingEvents ? JSON.parse(existingEvents) : [];
-      
+
       events.push(offlineEvent);
-      
+
       // Keep only the most recent events
       if (events.length > this.config.maxOfflineEvents) {
         events.splice(0, events.length - this.config.maxOfflineEvents);
       }
 
-      await AsyncStorage.setItem('offline_events', JSON.stringify(events));
+      await AsyncStorage.setItem(storageKey, JSON.stringify(events));
     } catch (error) {
       if (__DEV__) {
         console.warn('[OfflineStorage] Failed to store offline event:', error);
@@ -241,7 +249,7 @@ class PerformanceMonitoringListener {
 
   async handleEvent(eventType: string, data: unknown): Promise<void> {
     // 2-Level Priority System Check
-    const shouldProcess = await mobileHookConfigService.shouldProcessHooks('performance_monitoring');
+    const shouldProcess = await mobileHookConfigService.shouldProcessHooks(HOOK_LISTENER_CATEGORIES.PERFORMANCE_MONITORING);
     if (!shouldProcess) {
       return; // Skip based on priority system
     }
@@ -289,7 +297,7 @@ class PerformanceMonitoringListener {
           operationType: operationKey,
           timestamp: new Date().toISOString(),
         },
-        category: 'performance_monitoring',
+        category: HOOK_LISTENER_CATEGORIES.PERFORMANCE_MONITORING,
       };
 
       if (__DEV__) {
@@ -305,7 +313,7 @@ class PerformanceMonitoringListener {
       eventType,
       data,
       timestamp: new Date().toISOString(),
-      category: 'performance_monitoring',
+      category: HOOK_LISTENER_CATEGORIES.PERFORMANCE_MONITORING,
     };
 
     if (__DEV__) {
@@ -317,17 +325,18 @@ class PerformanceMonitoringListener {
 
   private async storePerformanceEvent(performanceEvent: unknown): Promise<void> {
     try {
-      const existingMetrics = await AsyncStorage.getItem('performance_metrics');
+      const storageKey = HOOK_LISTENER_CATEGORIES_STORAGE_KEYS[HOOK_LISTENER_CATEGORIES.PERFORMANCE_MONITORING];
+      const existingMetrics = await AsyncStorage.getItem(storageKey);
       const metrics = existingMetrics ? JSON.parse(existingMetrics) : [];
-      
+
       metrics.push(performanceEvent);
-      
+
       // Keep only the most recent metrics
       if (metrics.length > this.config.maxOfflineEvents) {
         metrics.splice(0, metrics.length - this.config.maxOfflineEvents);
       }
 
-      await AsyncStorage.setItem('performance_metrics', JSON.stringify(metrics));
+      await AsyncStorage.setItem(storageKey, JSON.stringify(metrics));
     } catch (error) {
       if (__DEV__) {
         console.warn('[PerformanceMonitoring] Failed to store performance event:', error);
@@ -371,7 +380,7 @@ export class MobileHookListenersManager {
           name: 'Mobile Analytics Listener',
           description: 'Tracks user behavior and app usage analytics',
           eventPattern: '*',
-          actionType: 'analytics',
+          actionType: HOOK_LISTENER_CATEGORIES.ANALYTICS,
           isActive: true,
           priority: 1,
         };
@@ -399,7 +408,7 @@ export class MobileHookListenersManager {
           name: 'Mobile Error Reporting Listener',
           description: 'Tracks and reports errors and crashes',
           eventPattern: '*',
-          actionType: 'error_reporting',
+          actionType: HOOK_LISTENER_CATEGORIES.ERROR_REPORTING,
           isActive: true,
           priority: 1,
         };
@@ -426,7 +435,7 @@ export class MobileHookListenersManager {
           name: 'Mobile Offline Storage Listener',
           description: 'Stores events for offline processing',
           eventPattern: '*',
-          actionType: 'offline_storage',
+          actionType: HOOK_LISTENER_CATEGORIES.OFFLINE_STORAGE,
           isActive: true,
           priority: 1,
         };
@@ -453,7 +462,7 @@ export class MobileHookListenersManager {
           name: 'Mobile Performance Monitoring Listener',
           description: 'Tracks app performance metrics and timing',
           eventPattern: '*',
-          actionType: 'performance_monitoring',
+          actionType: HOOK_LISTENER_CATEGORIES.PERFORMANCE_MONITORING,
           isActive: true,
           priority: 1,
         };
@@ -493,10 +502,9 @@ export class MobileHookListenersManager {
     return { ...this.config };
   }
 
-  async getStoredEvents(category: 'analytics' | 'error' | 'offline' | 'performance'): Promise<HookEventData[]> {
+  async getStoredEvents(category: HookListenerCategory): Promise<HookEventData[]> {
     try {
-      const storageKey = `${category}_events`;
-      const storedData = await AsyncStorage.getItem(storageKey);
+      const storedData = await AsyncStorage.getItem(HOOK_LISTENER_CATEGORIES_STORAGE_KEYS[category]);
       return storedData ? JSON.parse(storedData) : [];
     } catch (error) {
       if (__DEV__) {
@@ -506,10 +514,9 @@ export class MobileHookListenersManager {
     }
   }
 
-  async clearStoredEvents(category: 'analytics' | 'error' | 'offline' | 'performance'): Promise<void> {
+  async clearStoredEvents(category: HookListenerCategory): Promise<void> {
     try {
-      const storageKey = `${category}_events`;
-      await AsyncStorage.removeItem(storageKey);
+      await AsyncStorage.removeItem(HOOK_LISTENER_CATEGORIES_STORAGE_KEYS[category]);
     } catch (error) {
       if (__DEV__) {
         console.warn(`[MobileHookListeners] Failed to clear stored ${category} events:`, error);

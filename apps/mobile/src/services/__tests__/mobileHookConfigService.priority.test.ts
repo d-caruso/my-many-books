@@ -5,6 +5,7 @@
 
 import { MobileHookConfigService } from '../hooks/mobileHookConfigService';
 import { API_BASE_URL } from '../../config/api';
+import { HOOK_LISTENER_CATEGORIES } from '@my-many-books/shared-types';
 
 // Mock fetch for testing
 global.fetch = jest.fn();
@@ -123,14 +124,14 @@ describe('MobileHookConfigService Priority System', () => {
           json: () => Promise.resolve({
             hooks_enabled: true,
             custom_hook_listeners: {
-              'analytics': { enabled: false }, // User disabled analytics specifically
-              'error_reporting': { enabled: true }
+              [HOOK_LISTENER_CATEGORIES.ANALYTICS]: { enabled: false }, // User disabled analytics specifically
+              [HOOK_LISTENER_CATEGORIES.ERROR_REPORTING]: { enabled: true }
             }
           })
         } as Response);
 
-      const shouldProcessAnalytics = await service.shouldProcessHooks('analytics');
-      const shouldProcessErrors = await service.shouldProcessHooks('error_reporting');
+      const shouldProcessAnalytics = await service.shouldProcessHooks(HOOK_LISTENER_CATEGORIES.ANALYTICS);
+      const shouldProcessErrors = await service.shouldProcessHooks(HOOK_LISTENER_CATEGORIES.ERROR_REPORTING);
       
       expect(shouldProcessAnalytics).toBe(false); // User disabled analytics
       expect(shouldProcessErrors).toBe(true);     // User allows error reporting
