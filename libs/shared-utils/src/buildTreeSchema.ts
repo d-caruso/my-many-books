@@ -7,11 +7,16 @@
 
 export type SchemaMap = { [key: string]: SchemaMap | null };
 
-export type AnyNode<T extends SchemaMap> = keyof T extends never ? Record<never, never> : { ANY: string };
+declare const __eventBrand: unique symbol;
+export type EventName = string & { readonly [__eventBrand]: void };
 
-export type BuildResult<T extends SchemaMap> = {
-  [K in keyof T]-?: T[K] extends null ? string : BuildResult<Extract<T[K], SchemaMap>>;
-} & AnyNode<T>;
+export type AnyNode<T extends SchemaMap> = keyof T extends never ? Record<never, never> : { ANY: EventName };
+
+export type BuildResult<T extends SchemaMap> = AnyNode<T> & {
+  [K in keyof T as T[K] extends null ? K : never]-?: EventName;
+} & {
+  [K in keyof T as T[K] extends null ? never : K]-?: BuildResult<Extract<T[K], SchemaMap>>;
+};
 
 /**
  * Helper function to join path segments with dots
@@ -74,7 +79,7 @@ export function buildTreeSchema<T extends SchemaMap>(schema: T, parents: string[
 
     if (value === null) {
       // Leaf node - create dot-notation event string
-      result[key as string] = join(path);
+      result[key as string] = join(path) as EventName;
     } else {
       // Branch node - recursively build subtree
       result[key as string] = buildTreeSchema(value as Extract<typeof value, SchemaMap>, path);
@@ -83,7 +88,7 @@ export function buildTreeSchema<T extends SchemaMap>(schema: T, parents: string[
 
   if (keys.length > 0) {
     // Add wildcard selector for this level (e.g., "book.*", "user.*", "*")
-    result['ANY'] = join([...parents, '*']);
+    result['ANY'] = join([...parents, '*']) as EventName;
   }
 
   return result as BuildResult<T>;

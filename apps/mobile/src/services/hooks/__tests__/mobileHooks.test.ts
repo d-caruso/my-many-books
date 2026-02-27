@@ -1,4 +1,5 @@
 import { mobileHooks, MobileHookSystemManager, MOBILE_EVENTS } from '../mobileHooks';
+import type { EventName } from '@my-many-books/shared-utils';
 import { HookSystem } from '@my-many-books/hookey';
 
 // Mock console methods to avoid noise in tests
@@ -80,7 +81,7 @@ describe('MobileHookSystemManager', () => {
       // Force an error by passing invalid data
       const circular: Record<string, unknown> = {};
       circular.self = circular; // Create circular reference
-      await expect(manager.emit('invalid.event', {
+      await expect(manager.emit('invalid.event' as EventName, {
         circular,
       })).resolves.not.toThrow();
 

@@ -1,4 +1,4 @@
-import { buildTreeSchema, ExtractEventNames } from '@my-many-books/shared-utils';
+import { buildTreeSchema, EventName } from '@my-many-books/shared-utils';
 
 // ================================================================
 // REUSABLE EVENT PATTERNS
@@ -194,7 +194,7 @@ export const MOBILE_EVENTS = Object.freeze(buildTreeSchema(schema));
 
 export type EventsTree = typeof MOBILE_EVENTS;
 
-export type MobileEventName = ExtractEventNames<EventsTree>
+export type MobileEventName = EventName;
 
 // Re-export from shared-types for convenience
 export { RESOURCE_TYPES } from '@my-many-books/shared-types';

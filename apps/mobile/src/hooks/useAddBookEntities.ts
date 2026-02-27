@@ -39,7 +39,7 @@ export function useAddBookEntities() {
       const authors = await authorAPI.getAuthors();
       setAvailableAuthors(sortAuthors(authors));
     } catch (err: unknown) {
-      mobileHooks.emit(String(MOBILE_EVENTS.ERROR.API_RESPONSE), {
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
         operation: 'load_authors_for_add_book',
         resource: String(RESOURCE_TYPES.AUTHOR),
         error: getErrorMessage(err),
@@ -58,7 +58,7 @@ export function useAddBookEntities() {
         setAvailableCategories([...categories].sort(categoryComparator));
       });
     } catch (err: unknown) {
-      mobileHooks.emit(String(MOBILE_EVENTS.ERROR.API_RESPONSE), {
+      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
         operation: 'load_categories_for_add_book',
         resource: String(RESOURCE_TYPES.CATEGORY),
         error: getErrorMessage(err),

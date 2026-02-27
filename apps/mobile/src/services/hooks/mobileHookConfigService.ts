@@ -5,13 +5,10 @@
 
 import { MobileHooksListenerSettings } from '@my-many-books/shared-types';
 import { API_BASE_URL } from '../../config/api';
-import { MobileEventName } from './eventsSchema';
-
-type EventKey = MobileEventName & string;
 
 export interface MobileHookDBConfig {
   hooks_enabled: boolean;
-  hook_listeners: Partial<Record<EventKey, { enabled: boolean }>>;
+  hook_listeners: Partial<Record<string, { enabled: boolean }>>;
   config: MobileHooksListenerSettings;
 }
 
@@ -38,7 +35,7 @@ export class MobileHookConfigService {
    * Level 3: User-specific Configuration (Overrides global settings)
    * Level 4: Individual Hook/Listener Controls
    */
-  async shouldProcessHooks(eventType?: EventKey): Promise<boolean> {
+  async shouldProcessHooks(eventType?: string): Promise<boolean> {
     // Level 1: Environment Variable (Highest Priority - Infrastructure)
     const envEnabled = process.env.EXPO_PUBLIC_HOOKS_ENABLED;
     if (envEnabled === 'false') {
@@ -174,7 +171,7 @@ export class MobileHookConfigService {
    */
   private async getUserMobileConfig(userId: string): Promise<{
     hooks_enabled?: boolean;
-    custom_hook_listeners?: Partial<Record<EventKey, { enabled: boolean }>>;
+    custom_hook_listeners?: Partial<Record<string, { enabled: boolean }>>;
   } | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/users/${userId}/mobile-config`, {
@@ -194,7 +191,7 @@ export class MobileHookConfigService {
 
       return (await response.json()) as {
         hooks_enabled?: boolean;
-        custom_hook_listeners?: Partial<Record<EventKey, { enabled: boolean }>>;
+        custom_hook_listeners?: Partial<Record<string, { enabled: boolean }>>;
       };
     } catch (error) {
       if (__DEV__) {
