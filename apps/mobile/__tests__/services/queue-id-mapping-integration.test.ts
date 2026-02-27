@@ -11,6 +11,9 @@ import { bookRepository } from '../../src/services/database/BookRepository';
 import { databaseService } from '../../src/services/database/DatabaseService';
 import { migrationSystem } from '../../src/services/database/migrations';
 import { bookAPI, apiClient } from '../../src/services/api';
+import { LocalBook } from '../../src/entities/LocalBook';
+import { SYNC_STATUS } from '../../src/types';
+import type { Book } from '../../src/types';
 
 // Mock the bookAPI and apiClient
 jest.mock('../../src/services/api', () => ({
@@ -68,13 +71,9 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverId = 5001;
 
       // Setup: Create book in local DB with temp ID
-      await bookRepository.create({
-        id: tempId,
-        title: 'Test Book',
-        status: 'want-to-read',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-      });
+      const createBook1 = new LocalBook({ title: 'Test Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      createBook1.tempId = tempId;
+      await bookRepository.create(createBook1);
 
       // Setup: Mock API to return server response with server ID
       (bookAPI.createBook as jest.Mock).mockResolvedValue({
@@ -123,9 +122,9 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
 
       // Verify: Local DB - temp ID replaced with server ID (Critical Fix)
       const localBook = await bookRepository.findById(serverId.toString());
-      expect(localBook?.id).toBe(serverId.toString());
+      expect(String(localBook?.entity.id)).toBe(serverId.toString());
       expect(localBook?.serverId).toBe(serverId);
-      expect(localBook?._syncStatus).toBe('synced');
+      expect(localBook?.syncStatus).toBe(SYNC_STATUS.SYNCED);
     });
 
     it('should resolve foreign keys before sending to server', async () => {
@@ -134,13 +133,9 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverAuthorId = 2002;
 
       // Setup: Create book in local DB
-      await bookRepository.create({
-        id: tempBookId,
-        title: 'Book with Author Reference',
-        status: 'want-to-read',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-      });
+      const createBook2 = new LocalBook({ title: 'Book with Author Reference', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      createBook2.tempId = tempBookId;
+      await bookRepository.create(createBook2);
 
       // Setup: Register author ID mapping
       await idMappingService.registerTempId(tempAuthorId, serverAuthorId, 'author');
@@ -191,14 +186,10 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverId = 5003;
 
       // Setup: Create book with server_id
-      await bookRepository.create({
-        id: tempId,
-        title: 'Book with Server ID',
-        status: 'reading',
-        serverId,
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-      });
+      const createBook3 = new LocalBook({ title: 'Book with Server ID', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      createBook3.tempId = tempId;
+      createBook3.serverId = serverId;
+      await bookRepository.create(createBook3);
 
       // Setup: Register ID mapping
       await idMappingService.registerTempId(tempId, serverId, 'book');
@@ -245,13 +236,9 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const tempId = 'temp-1703856002000';
 
       // Setup: Create book WITHOUT server_id (never synced)
-      await bookRepository.create({
-        id: tempId,
-        title: 'Book Without Server ID',
-        status: 'reading',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-      });
+      const createBook4 = new LocalBook({ title: 'Book Without Server ID', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      createBook4.tempId = tempId;
+      await bookRepository.create(createBook4);
 
       // Setup: Mock API
       (bookAPI.updateBook as jest.Mock).mockResolvedValue({
@@ -297,13 +284,9 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverCategoryId = 3003;
 
       // Setup: Create book
-      await bookRepository.create({
-        id: tempBookId,
-        title: 'Book to Update',
-        status: 'reading',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-      });
+      const createBook5 = new LocalBook({ title: 'Book to Update', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      createBook5.tempId = tempBookId;
+      await bookRepository.create(createBook5);
 
       // Setup: Register category ID mapping
       await idMappingService.registerTempId(tempCategoryId, serverCategoryId, 'category');
@@ -347,14 +330,10 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverId = 5004;
 
       // Setup: Create book with server_id
-      await bookRepository.create({
-        id: tempId,
-        title: 'Book to Delete',
-        status: 'completed',
-        serverId,
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-      });
+      const createBook6 = new LocalBook({ title: 'Book to Delete', status: 'completed', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      createBook6.tempId = tempId;
+      createBook6.serverId = serverId;
+      await bookRepository.create(createBook6);
 
       // Setup: Register ID mapping
       await idMappingService.registerTempId(tempId, serverId, 'book');
@@ -387,13 +366,9 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const tempId = 'temp-1703856004000';
 
       // Setup: Create book WITHOUT server_id (never synced)
-      await bookRepository.create({
-        id: tempId,
-        title: 'Local-only Book',
-        status: 'want-to-read',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-      });
+      const createBook7 = new LocalBook({ title: 'Local-only Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      createBook7.tempId = tempId;
+      await bookRepository.create(createBook7);
 
       // Setup: Mock API
       (bookAPI.deleteBook as jest.Mock).mockResolvedValue(undefined);
@@ -453,13 +428,9 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverId = 6001;
 
       // Step 1: CREATE book with temp ID
-      await bookRepository.create({
-        id: tempId,
-        title: 'E2E Test Book',
-        status: 'want-to-read',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-      });
+      const e2eBook = new LocalBook({ title: 'E2E Test Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      e2eBook.tempId = tempId;
+      await bookRepository.create(e2eBook);
 
       (bookAPI.createBook as jest.Mock).mockResolvedValue({
         id: serverId,

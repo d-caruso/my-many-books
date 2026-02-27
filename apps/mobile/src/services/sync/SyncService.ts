@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { bookAPI, authorAPI, categoryAPI } from '../api';
+import { LocalBook } from '../../entities/LocalBook';
 import { bookRepository } from '../database/BookRepository';
 import { authorRepository } from '../database/AuthorRepository';
 import { categoryRepository } from '../database/CategoryRepository';
@@ -367,27 +368,24 @@ export class SyncService {
       
       if (hasBookConflict(localBook, serverBookMapped)) {
         // Conflict detected - mark for user resolution
-        
+
         // Emit book-specific conflict detected event
         mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.CONFLICT.DETECTED, {
           resourceType: 'book',
-          resourceId: localBook.id,
+          resourceId: localBook.entity.id,
           serverId: serverId,
           conflictType: 'data_mismatch',
           localData: localBook,
           serverData: serverBookMapped,
           timestamp: new Date().toISOString()
         });
-        
-        await bookRepository.update(localBook.id, {
-          _hasConflict: true,
-          _conflictData: serverBookMapped,
-        });
+
+        await bookRepository.update(String(localBook.entity.id), new LocalBook(localBook.entity));
         
         // Emit conflict resolution event
         mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.CONFLICT.RESOLVED, {
           resourceType: RESOURCE_TYPES.BOOK,
-          resourceId: localBook.id,
+          resourceId: localBook.entity.id,
           serverId: serverId,
           resolutionMethod: CONFLICT_RESOLUTION_METHODS.FLAG_FOR_MANUAL_RESOLUTION,
           timestamp: new Date().toISOString()
@@ -395,35 +393,38 @@ export class SyncService {
       } else {
         // No conflict - check if server version is newer
         const serverUpdateDate = new Date(serverBook.updateDate || serverBook.updatedAt);
-        const localUpdateDate = new Date(localBook.updateDate);
+        const localUpdateDate = new Date(localBook.entity.updateDate as string);
 
         if (serverUpdateDate > localUpdateDate) {
           // Server version is newer - update local
+          const localId = String(localBook.entity.id);
           // Emit book update event
           mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.START, {
-            bookId: localBook.id,
+            bookId: localId,
             serverId,
             reason: 'server_sync',
             timestamp: new Date().toISOString()
           });
-          
-          await bookRepository.update(localBook.id, {
-            ...serverBookMapped,
-            serverId, // Preserve server_id
-          });
-          
+
+          const serverTimestamp = serverBook.updateDate || serverBook.updatedAt || new Date().toISOString();
+          const updatedBook = new LocalBook({ ...serverBookMapped, id: localBook.entity.id } as Book);
+          updatedBook.serverId = serverId;
+          updatedBook.syncStatus = SYNC_STATUS.SYNCED;
+          updatedBook.serverUpdatedAt = serverTimestamp;
+          await bookRepository.update(localId, updatedBook);
+
           // Emit book update success event
           mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.SUCCESS, {
-            bookId: localBook.id,
+            bookId: localId,
             serverId,
             reason: 'server_sync',
             timestamp: new Date().toISOString()
           });
         } else {
           mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.PULL.SUCCESS, {
-            bookId: localBook.id,
+            bookId: localBook.entity.id,
             reason: 'local_up_to_date',
-            message: `Local book ${localBook.id} is up-to-date or newer`,
+            message: `Local book ${localBook.entity.id} is up-to-date or newer`,
             timestamp: new Date().toISOString()
           });
         }
@@ -443,11 +444,12 @@ export class SyncService {
         timestamp: new Date().toISOString()
       });
 
-      await bookRepository.create({
-        ...newBook,
-        id: localId,
-        serverId,
-      });
+      const serverTimestamp = serverBook.updateDate || serverBook.updatedAt || new Date().toISOString();
+      const local = new LocalBook({ ...newBook, id: Number(localId) } as Book);
+      local.serverId = serverId;
+      local.syncStatus = SYNC_STATUS.SYNCED;
+      local.serverUpdatedAt = serverTimestamp;
+      await bookRepository.create(local);
       
       // Emit book creation success event
       mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.SUCCESS, {
@@ -659,48 +661,45 @@ export class SyncService {
         // Emit author-specific conflict detected event
         mobileHooks.emit(MOBILE_EVENTS.AUTHOR.SYNC.CONFLICT.DETECTED, {
           resourceType: 'author',
-          resourceId: localAuthor.id,
+          resourceId: localAuthor.entity.id,
           serverId: serverId,
           conflictType: 'data_mismatch',
           localData: localAuthor,
           serverData: serverAuthor,
           timestamp: new Date().toISOString()
         });
-        
-        await authorRepository.updateSyncFields(localAuthor.id, {
-          _hasConflict: true,
-          _conflictData: serverAuthor,
-        });
-        
+
+        await authorRepository.updateSyncFields(localAuthor.entity.id, {});
+
         // Emit conflict resolution event
         mobileHooks.emit(MOBILE_EVENTS.AUTHOR.SYNC.CONFLICT.RESOLVED, {
           resourceType: RESOURCE_TYPES.AUTHOR,
-          resourceId: localAuthor.id,
+          resourceId: localAuthor.entity.id,
           serverId: serverId,
           resolutionMethod: CONFLICT_RESOLUTION_METHODS.FLAG_FOR_MANUAL_RESOLUTION,
           timestamp: new Date().toISOString()
         });
-      } else if (serverAuthor.updateDate && localAuthor._serverUpdatedAt) {
+      } else if (serverAuthor.updateDate && localAuthor.serverUpdatedAt) {
         const serverUpdateDate = new Date(serverAuthor.updateDate);
-        const localUpdateDate = new Date(localAuthor._serverUpdatedAt);
+        const localUpdateDate = new Date(localAuthor.serverUpdatedAt);
 
         if (serverUpdateDate > localUpdateDate) {
           // Server version is newer - update local
           mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.START, {
-            authorId: localAuthor.id,
+            authorId: localAuthor.entity.id,
             serverId: serverAuthor.id,
             reason: 'server_sync',
-            message: `Updating local author ${localAuthor.id} with server changes`,
+            message: `Updating local author ${localAuthor.entity.id} with server changes`,
             timestamp: new Date().toISOString()
           });
-          
-          await authorRepository.updateSyncFields(localAuthor.id, {
-            _serverUpdatedAt: serverAuthor.updateDate,
-            _syncStatus: SYNC_STATUS.SYNCED,
+
+          await authorRepository.updateSyncFields(localAuthor.entity.id, {
+            serverUpdatedAt: serverAuthor.updateDate,
+            syncStatus: SYNC_STATUS.SYNCED,
           });
-          
+
           mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.SUCCESS, {
-            authorId: localAuthor.id,
+            authorId: localAuthor.entity.id,
             serverId: serverAuthor.id,
             reason: 'server_sync',
             timestamp: new Date().toISOString()
@@ -714,20 +713,20 @@ export class SyncService {
       if (existingByName) {
         // Found by name - update with server_id
         mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.START, {
-          authorId: existingByName.id,
+          authorId: existingByName.entity.id,
           serverId: serverId,
           reason: 'server_id_mapping',
-          message: `Updating existing author ${existingByName.id} with server_id: ${serverId}`,
+          message: `Updating existing author ${existingByName.entity.id} with server_id: ${serverId}`,
           timestamp: new Date().toISOString()
         });
-        
-        await authorRepository.updateSyncFields(existingByName.id, {
+
+        await authorRepository.updateSyncFields(existingByName.entity.id, {
           serverId,
-          _serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),
-          _syncStatus: SYNC_STATUS.SYNCED,
+          serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),
+          syncStatus: SYNC_STATUS.SYNCED,
         });
         // Register ID mapping
-        await idMappingService.registerTempId(existingByName.id.toString(), serverId, 'author');
+        await idMappingService.registerTempId(existingByName.entity.id.toString(), serverId, 'author');
       } else {
         // Create new author
         // Emit author creation event
@@ -738,22 +737,22 @@ export class SyncService {
         });
         
         const newAuthor = await authorRepository.create(serverAuthor.name);
-        await authorRepository.updateSyncFields(newAuthor.id, {
+        await authorRepository.updateSyncFields(newAuthor.entity.id, {
           serverId,
-          _serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),
-          _syncStatus: SYNC_STATUS.SYNCED,
+          serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),
+          syncStatus: SYNC_STATUS.SYNCED,
         });
-        
+
         // Emit author creation success event
         mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS, {
-          authorId: newAuthor.id,
+          authorId: newAuthor.entity.id,
           authorName: serverAuthor.name,
           serverId,
           timestamp: new Date().toISOString()
         });
-        
+
         // Register ID mapping
-        await idMappingService.registerTempId(newAuthor.id.toString(), serverId, 'author');
+        await idMappingService.registerTempId(newAuthor.entity.id.toString(), serverId, 'author');
       }
     }
   }
@@ -773,7 +772,7 @@ export class SyncService {
         // Emit category-specific conflict detected event
         mobileHooks.emit(MOBILE_EVENTS.CATEGORY.SYNC.CONFLICT.DETECTED, {
           resourceType: 'category',
-          resourceId: localCategory.id,
+          resourceId: localCategory.entity.id,
           serverId: serverId,
           conflictType: 'data_mismatch',
           localData: localCategory,
@@ -781,41 +780,38 @@ export class SyncService {
           timestamp: new Date().toISOString()
         });
         
-        await categoryRepository.updateSyncFields(localCategory.id, {
-          _hasConflict: true,
-          _conflictData: serverCategory,
-        });
-        
+        await categoryRepository.updateSyncFields(localCategory.entity.id, {});
+
         // Emit conflict resolution event
         mobileHooks.emit(MOBILE_EVENTS.CATEGORY.SYNC.CONFLICT.RESOLVED, {
           resourceType: RESOURCE_TYPES.CATEGORY,
-          resourceId: localCategory.id,
+          resourceId: localCategory.entity.id,
           serverId: serverId,
           resolutionMethod: CONFLICT_RESOLUTION_METHODS.FLAG_FOR_MANUAL_RESOLUTION,
           timestamp: new Date().toISOString()
         });
-      } else if (serverCategory.updateDate && localCategory._serverUpdatedAt) {
+      } else if (serverCategory.updateDate && localCategory.serverUpdatedAt) {
         const serverUpdateDate = new Date(serverCategory.updateDate);
-        const localUpdateDate = new Date(localCategory._serverUpdatedAt);
+        const localUpdateDate = new Date(localCategory.serverUpdatedAt);
 
         if (serverUpdateDate > localUpdateDate) {
           // Server version is newer - update local
           mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.START, {
-            categoryId: localCategory.id,
+            categoryId: localCategory.entity.id,
             serverId: serverCategory.id,
             reason: 'server_sync',
-            message: `Updating local category ${localCategory.id} with server changes`,
+            message: `Updating local category ${localCategory.entity.id} with server changes`,
             timestamp: new Date().toISOString()
           });
           
-          await categoryRepository.updateSyncFields(localCategory.id, {
+          await categoryRepository.updateSyncFields(localCategory.entity.id, {
             translationKey: serverCategory.translationKey ?? null,
-            _serverUpdatedAt: serverCategory.updateDate,
-            _syncStatus: SYNC_STATUS.SYNCED,
+            serverUpdatedAt: serverCategory.updateDate,
+            syncStatus: SYNC_STATUS.SYNCED,
           });
-          
+
           mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.SUCCESS, {
-            categoryId: localCategory.id,
+            categoryId: localCategory.entity.id,
             serverId: serverCategory.id,
             reason: 'server_sync',
             timestamp: new Date().toISOString()
@@ -829,21 +825,21 @@ export class SyncService {
       if (existingByName) {
         // Found by name - update with server_id
         mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.START, {
-          categoryId: existingByName.id,
+          categoryId: existingByName.entity.id,
           serverId: serverId,
           reason: 'server_id_mapping',
-          message: `Updating existing category ${existingByName.id} with server_id: ${serverId}`,
+          message: `Updating existing category ${existingByName.entity.id} with server_id: ${serverId}`,
           timestamp: new Date().toISOString()
         });
         
-        await categoryRepository.updateSyncFields(existingByName.id, {
+        await categoryRepository.updateSyncFields(existingByName.entity.id, {
           serverId,
           translationKey: serverCategory.translationKey ?? null,
-          _serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
-          _syncStatus: SYNC_STATUS.SYNCED,
+          serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
+          syncStatus: SYNC_STATUS.SYNCED,
         });
         // Register ID mapping
-        await idMappingService.registerTempId(existingByName.id.toString(), serverId, 'category');
+        await idMappingService.registerTempId(existingByName.entity.id.toString(), serverId, 'category');
       } else {
         // Create new category
         // Emit category creation event
@@ -857,23 +853,23 @@ export class SyncService {
           serverCategory.name,
           serverCategory.translationKey ?? null
         );
-        await categoryRepository.updateSyncFields(newCategory.id, {
+        await categoryRepository.updateSyncFields(newCategory.entity.id, {
           serverId,
           translationKey: serverCategory.translationKey ?? null,
-          _serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
-          _syncStatus: SYNC_STATUS.SYNCED,
+          serverUpdatedAt: serverCategory.updateDate || new Date().toISOString(),
+          syncStatus: SYNC_STATUS.SYNCED,
         });
-        
+
         // Emit category creation success event
         mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS, {
-          categoryId: newCategory.id,
+          categoryId: newCategory.entity.id,
           categoryName: serverCategory.name,
           serverId,
           timestamp: new Date().toISOString()
         });
-        
+
         // Register ID mapping
-        await idMappingService.registerTempId(newCategory.id.toString(), serverId, 'category');
+        await idMappingService.registerTempId(newCategory.entity.id.toString(), serverId, 'category');
       }
     }
   }

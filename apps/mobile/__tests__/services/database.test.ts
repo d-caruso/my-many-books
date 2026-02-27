@@ -40,8 +40,8 @@ describe('Database Service and Migrations (Task 4.2.3)', () => {
       expect(typeof CREATE_BOOKS_TABLE).toBe('string');
       expect(CREATE_BOOKS_TABLE).toContain('CREATE TABLE IF NOT EXISTS books');
       expect(CREATE_BOOKS_TABLE).toContain('id TEXT PRIMARY KEY');
-      expect(CREATE_BOOKS_TABLE).toContain('_sync_status TEXT');
-      expect(CREATE_BOOKS_TABLE).toContain('_deleted INTEGER');
+      expect(CREATE_BOOKS_TABLE).toContain('sync_status TEXT');
+      expect(CREATE_BOOKS_TABLE).toContain('deleted INTEGER');
     });
 
     it('should define CREATE_AUTHORS_TABLE statement', () => {
@@ -135,9 +135,9 @@ describe('Database Service and Migrations (Task 4.2.3)', () => {
       expect(columnNames).toContain('authors');
       expect(columnNames).toContain('status');
       expect(columnNames).toContain('rating');
-      expect(columnNames).toContain('_sync_status');
-      expect(columnNames).toContain('_deleted');
-      expect(columnNames).toContain('_temp_id');
+      expect(columnNames).toContain('sync_status');
+      expect(columnNames).toContain('deleted');
+      expect(columnNames).toContain('temp_id');
       expect(columnNames).toContain('creation_date');
       expect(columnNames).toContain('update_date');
     });

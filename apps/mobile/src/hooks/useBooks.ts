@@ -247,7 +247,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       // If error is retriable, keep optimistic book with pending status
       // Note: API service already handles queueing via withQueueOnError, so we don't queue again here
       if (isRetriableError(err)) {
-          await bookRepository.update(tempId, { syncStatus: SYNC_STATUS.PENDING });
+          await bookRepository.updateSyncFields(tempId, { syncStatus: SYNC_STATUS.PENDING });
           setBooks(prev => prev.map(book =>
             book.meta.tempId === tempId ? { ...book, meta: { ...book.meta, syncStatus: SYNC_STATUS.PENDING } } : book
           ));
@@ -353,7 +353,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
           ));
         } else {
           // Fallback: just mark as failed if no rollback data
-          await bookRepository.update(stringId, { syncStatus: SYNC_STATUS.FAILED });
+          await bookRepository.updateSyncFields(stringId, { syncStatus: SYNC_STATUS.FAILED });
           setBooks(prev => prev.map(book =>
             String(book.id) === stringId ? { ...book, meta: { ...book.meta, syncStatus: SYNC_STATUS.FAILED } } : book
           ));
@@ -408,7 +408,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     const stringId = String(id);
 
     // Update SQLite and local state immediately (optimistic)
-      await bookRepository.update(stringId, { syncStatus: SYNC_STATUS.PENDING });
+      await bookRepository.updateSyncFields(stringId, { syncStatus: SYNC_STATUS.PENDING });
     setBooks(prev => prev.map(book =>
       String(book.id) === stringId ? { ...book, status, meta: { ...book.meta, syncStatus: SYNC_STATUS.PENDING } } : book
     ));
@@ -418,7 +418,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
       await bookAPI.updateBook(stringId, { status });
 
       // Mark as synced
-      await bookRepository.update(stringId, { syncStatus: SYNC_STATUS.SYNCED });
+      await bookRepository.updateSyncFields(stringId, { syncStatus: SYNC_STATUS.SYNCED });
       setBooks(prev => prev.map(book =>
         String(book.id) === stringId ? { ...book, meta: { ...book.meta, syncStatus: SYNC_STATUS.SYNCED } } : book
       ));
@@ -432,7 +432,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         return;
       } else {
         // Non-retriable error - mark as failed
-        await bookRepository.update(stringId, { syncStatus: SYNC_STATUS.FAILED });
+        await bookRepository.updateSyncFields(stringId, { syncStatus: SYNC_STATUS.FAILED });
         setBooks(prev => prev.map(book =>
           String(book.id) === stringId ? { ...book, meta: { ...book.meta, syncStatus: SYNC_STATUS.FAILED } } : book
         ));

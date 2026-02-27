@@ -3,11 +3,11 @@
 // Test action mappings use constants consistently
 // ================================================================
 
-import { 
+import {
   MOBILE_EVENTS,
   RESOURCE_TYPES,
   OPERATION_TYPES,
-  QUEUE_OPERATION_STATUSES,
+  QUEUE_OPERATION_STATUS,
   MOBILE_CONFIG_LIMITS
 } from '../hooks/eventsSchema';
 
@@ -61,12 +61,12 @@ describe('Mobile Hook Configuration Constants', () => {
       expect(OPERATION_TYPES.UPDATE).toBe('UPDATE');
       expect(OPERATION_TYPES.DELETE).toBe('DELETE');
       
-      expect(QUEUE_OPERATION_STATUSES).toBeDefined();
-      expect(Object.isFrozen(QUEUE_OPERATION_STATUSES)).toBe(true);
-      
-      expect(QUEUE_OPERATION_STATUSES.PENDING).toBe('pending');
-      expect(QUEUE_OPERATION_STATUSES.RETRYING).toBe('retrying');
-      expect(QUEUE_OPERATION_STATUSES.FAILED).toBe('failed');
+      expect(QUEUE_OPERATION_STATUS).toBeDefined();
+      expect(Object.isFrozen(QUEUE_OPERATION_STATUS)).toBe(true);
+
+      expect(QUEUE_OPERATION_STATUS.PENDING).toBe('pending');
+      expect(QUEUE_OPERATION_STATUS.RETRYING).toBe('retrying');
+      expect(QUEUE_OPERATION_STATUS.FAILED).toBe('failed');
     });
   });
 
@@ -146,7 +146,7 @@ describe('Mobile Hook Configuration Constants', () => {
       expect(Object.isFrozen(MOBILE_EVENTS)).toBe(true);
       expect(Object.isFrozen(RESOURCE_TYPES)).toBe(true);
       expect(Object.isFrozen(OPERATION_TYPES)).toBe(true);
-      expect(Object.isFrozen(QUEUE_OPERATION_STATUSES)).toBe(true);
+      expect(Object.isFrozen(QUEUE_OPERATION_STATUS)).toBe(true);
       expect(Object.isFrozen(MOBILE_HOOK_SETTING_KEYS)).toBe(true);
       expect(Object.isFrozen(MOBILE_CONFIG_LIMITS)).toBe(true);
 

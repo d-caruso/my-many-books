@@ -1,6 +1,8 @@
 import { bookRepository } from '../../src/services/database/BookRepository';
 import { databaseService } from '../../src/services/database/DatabaseService';
 import { migrationSystem } from '../../src/services/database/migrations';
+import { LocalBook } from '../../src/entities/LocalBook';
+import type { Book } from '../../src/types';
 
 describe('Offline Search, Filter, and Sort', () => {
   beforeAll(async () => {
@@ -18,38 +20,10 @@ describe('Offline Search, Filter, and Sort', () => {
 
     // Populate test data with explicit timestamps to ensure proper ordering
     const now = Date.now();
-    await bookRepository.create({
-      title: 'The Great Gatsby',
-      authors: 'F. Scott Fitzgerald',
-      status: 'completed',
-      rating: 5,
-      _syncStatus: 'synced',
-      updateDate: new Date(now - 3000).toISOString(), // 3 seconds ago
-    });
-    await bookRepository.create({
-      title: 'To Kill a Mockingbird',
-      authors: 'Harper Lee',
-      status: 'reading',
-      rating: 4,
-      _syncStatus: 'synced',
-      updateDate: new Date(now - 2000).toISOString(), // 2 seconds ago
-    });
-    await bookRepository.create({
-      title: '1984',
-      authors: 'George Orwell',
-      status: 'want-to-read',
-      rating: null,
-      _syncStatus: 'synced',
-      updateDate: new Date(now - 1000).toISOString(), // 1 second ago
-    });
-    await bookRepository.create({
-      title: 'Pride and Prejudice',
-      authors: 'Jane Austen',
-      status: 'completed',
-      rating: 5,
-      _syncStatus: 'synced',
-      updateDate: new Date(now).toISOString(), // Most recent
-    });
+    await bookRepository.create(new LocalBook({ title: 'The Great Gatsby', authors: 'F. Scott Fitzgerald', status: 'completed', rating: 5, updateDate: new Date(now - 3000).toISOString() } as Book));
+    await bookRepository.create(new LocalBook({ title: 'To Kill a Mockingbird', authors: 'Harper Lee', status: 'reading', rating: 4, updateDate: new Date(now - 2000).toISOString() } as Book));
+    await bookRepository.create(new LocalBook({ title: '1984', authors: 'George Orwell', status: 'want-to-read', rating: null, updateDate: new Date(now - 1000).toISOString() } as Book));
+    await bookRepository.create(new LocalBook({ title: 'Pride and Prejudice', authors: 'Jane Austen', status: 'completed', rating: 5, updateDate: new Date(now).toISOString() } as Book));
   });
 
   describe('Offline Search', () => {
@@ -59,7 +33,7 @@ describe('Offline Search, Filter, and Sort', () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0].title).toBe('The Great Gatsby');
+      expect(results[0].entity.title).toBe('The Great Gatsby');
     });
 
     it('should search by author', async () => {
@@ -68,7 +42,7 @@ describe('Offline Search, Filter, and Sort', () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0].title).toBe('1984');
+      expect(results[0].entity.title).toBe('1984');
     });
 
     it('should be case-insensitive', async () => {
@@ -77,7 +51,7 @@ describe('Offline Search, Filter, and Sort', () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0].title).toBe('The Great Gatsby');
+      expect(results[0].entity.title).toBe('The Great Gatsby');
     });
 
     it('should search across multiple fields', async () => {
@@ -86,7 +60,7 @@ describe('Offline Search, Filter, and Sort', () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0].title).toBe('To Kill a Mockingbird');
+      expect(results[0].entity.title).toBe('To Kill a Mockingbird');
     });
 
     it('should return all books when no query provided', async () => {
@@ -103,7 +77,7 @@ describe('Offline Search, Filter, and Sort', () => {
       });
 
       expect(results).toHaveLength(2);
-      expect(results.every(book => book.status === 'completed')).toBe(true);
+      expect(results.every(book => book.entity.status === 'completed')).toBe(true);
     });
 
     it('should combine search and filter', async () => {
@@ -113,7 +87,7 @@ describe('Offline Search, Filter, and Sort', () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0].title).toBe('Pride and Prejudice');
+      expect(results[0].entity.title).toBe('Pride and Prejudice');
     });
 
     it('should return empty array for non-matching filter', async () => {
@@ -133,10 +107,10 @@ describe('Offline Search, Filter, and Sort', () => {
       });
 
       expect(results).toHaveLength(4);
-      expect(results[0].title).toBe('1984');
-      expect(results[1].title).toBe('Pride and Prejudice');
-      expect(results[2].title).toBe('The Great Gatsby');
-      expect(results[3].title).toBe('To Kill a Mockingbird');
+      expect(results[0].entity.title).toBe('1984');
+      expect(results[1].entity.title).toBe('Pride and Prejudice');
+      expect(results[2].entity.title).toBe('The Great Gatsby');
+      expect(results[3].entity.title).toBe('To Kill a Mockingbird');
     });
 
     it('should sort by title descending', async () => {
@@ -146,8 +120,8 @@ describe('Offline Search, Filter, and Sort', () => {
       });
 
       expect(results).toHaveLength(4);
-      expect(results[0].title).toBe('To Kill a Mockingbird');
-      expect(results[3].title).toBe('1984');
+      expect(results[0].entity.title).toBe('To Kill a Mockingbird');
+      expect(results[3].entity.title).toBe('1984');
     });
 
     it('should sort by rating descending', async () => {
@@ -158,8 +132,8 @@ describe('Offline Search, Filter, and Sort', () => {
 
       expect(results).toHaveLength(4);
       // Books with rating 5 should come first
-      expect(results[0].rating).toBe(5);
-      expect(results[1].rating).toBe(5);
+      expect((results[0].entity as Record<string, unknown>).rating).toBe(5);
+      expect((results[1].entity as Record<string, unknown>).rating).toBe(5);
     });
 
     it('should sort by update_date by default', async () => {
@@ -167,7 +141,7 @@ describe('Offline Search, Filter, and Sort', () => {
 
       expect(results).toHaveLength(4);
       // Most recently updated should be first (Pride and Prejudice was added last)
-      expect(results[0].title).toBe('Pride and Prejudice');
+      expect(results[0].entity.title).toBe('Pride and Prejudice');
     });
   });
 
@@ -181,8 +155,8 @@ describe('Offline Search, Filter, and Sort', () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0].title).toBe('Pride and Prejudice');
-      expect(results[0].status).toBe('completed');
+      expect(results[0].entity.title).toBe('Pride and Prejudice');
+      expect(results[0].entity.status).toBe('completed');
     });
 
     it('should handle complex queries', async () => {
@@ -194,8 +168,8 @@ describe('Offline Search, Filter, and Sort', () => {
       });
 
       expect(results).toHaveLength(2);
-      expect(results.every(book => book.status === 'completed')).toBe(true);
-      expect(results.every(book => book.rating === 5)).toBe(true);
+      expect(results.every(book => book.entity.status === 'completed')).toBe(true);
+      expect(results.every(book => (book.entity as Record<string, unknown>).rating === 5)).toBe(true);
     });
   });
 });

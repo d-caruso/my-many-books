@@ -17,7 +17,7 @@ describe('Conflict Detection', () => {
     const localBook = {
       id: 1,
       title: 'Test Book',
-      _serverUpdatedAt: timestamp,
+      serverUpdatedAt: timestamp,
       updateDate: timestamp,
     };
     const serverBook = {
@@ -38,7 +38,7 @@ describe('Conflict Detection', () => {
     const localBook = {
       id: 1,
       title: 'Test Book Local',
-      _serverUpdatedAt: oldTimestamp,
+      serverUpdatedAt: oldTimestamp,
       updateDate: oldTimestamp,
     };
     const serverBook = {
@@ -66,8 +66,8 @@ describe('Conflict Detection', () => {
 
     const resolved = resolveConflict(localBook, serverBook, 'server');
 
-    expect(resolved.title).toBe('Test Book Server');
-    expect(resolved._syncStatus).toBe('synced');
+    expect(resolved.entity.title).toBe('Test Book Server');
+    expect(resolved.syncStatus).toBe('synced');
   });
 
   it('should resolve conflict choosing local version', () => {
@@ -87,6 +87,6 @@ describe('Conflict Detection', () => {
     const resolved = resolveConflict(localBook, serverBook, 'local');
 
     expect(resolved.title).toBe('Test Book Local');
-    expect(resolved._syncStatus).toBe('pending');
+    expect(resolved.syncStatus).toBe('pending');
   });
 });

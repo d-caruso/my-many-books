@@ -43,11 +43,11 @@ describe('Queue-Sync Hookey Integration (End-to-End)', () => {
     bookRepository.update = jest.fn().mockResolvedValue(undefined);
     authorRepository.findByServerId = jest.fn().mockResolvedValue(null);
     authorRepository.findByName = jest.fn().mockResolvedValue(null);
-    authorRepository.create = jest.fn().mockResolvedValue({ id: 1 });
+    authorRepository.create = jest.fn().mockResolvedValue({ entity: { id: 1 } });
     authorRepository.updateSyncFields = jest.fn().mockResolvedValue(undefined);
     categoryRepository.findByServerId = jest.fn().mockResolvedValue(null);
     categoryRepository.findByName = jest.fn().mockResolvedValue(null);
-    categoryRepository.create = jest.fn().mockResolvedValue({ id: 1 });
+    categoryRepository.create = jest.fn().mockResolvedValue({ entity: { id: 1 } });
     categoryRepository.updateSyncFields = jest.fn().mockResolvedValue(undefined);
 
     // Mock mobileHooks.emit to capture all events

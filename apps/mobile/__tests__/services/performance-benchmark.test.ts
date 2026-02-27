@@ -1,6 +1,9 @@
 import { bookRepository } from '../../src/services/database/BookRepository';
 import { databaseService } from '../../src/services/database/DatabaseService';
 import { migrationSystem } from '../../src/services/database/migrations';
+import { LocalBook } from '../../src/entities/LocalBook';
+import { SYNC_STATUS } from '../../src/types';
+import type { Book } from '../../src/types';
 
 describe('Performance Benchmarks', () => {
   beforeAll(async () => {
@@ -21,13 +24,13 @@ describe('Performance Benchmarks', () => {
     // Create 100 test books
     const createStart = Date.now();
     for (let i = 0; i < 100; i++) {
-      await bookRepository.create({
+      const book = new LocalBook({
         title: `Test Book ${i}`,
         authors: `Author ${i % 10}`,
         status: i % 4 === 0 ? 'completed' : i % 4 === 1 ? 'reading' : i % 4 === 2 ? 'want-to-read' : 'paused',
         rating: i % 5 === 0 ? 5 : i % 5 === 1 ? 4 : null,
-        _syncStatus: 'synced',
-      });
+      } as Book);
+      await bookRepository.create(book);
     }
     const createTime = Date.now() - createStart;
     console.log(`Created 100 books in ${createTime}ms`);
@@ -45,12 +48,11 @@ describe('Performance Benchmarks', () => {
   it('should search efficiently with indexes', async () => {
     // Create 50 books
     for (let i = 0; i < 50; i++) {
-      await bookRepository.create({
+      await bookRepository.create(new LocalBook({
         title: `Book ${i}`,
         authors: i % 2 === 0 ? 'Stephen King' : 'J.K. Rowling',
         status: 'completed',
-        _syncStatus: 'synced',
-      });
+      } as Book));
     }
 
     // Search with filter
@@ -71,11 +73,10 @@ describe('Performance Benchmarks', () => {
   it('should handle status filtering efficiently', async () => {
     // Create 200 books with different statuses
     for (let i = 0; i < 200; i++) {
-      await bookRepository.create({
+      await bookRepository.create(new LocalBook({
         title: `Book ${i}`,
         status: i % 4 === 0 ? 'completed' : i % 4 === 1 ? 'reading' : i % 4 === 2 ? 'want-to-read' : 'paused',
-        _syncStatus: 'synced',
-      });
+      } as Book));
     }
 
     // Filter by status (should use index)
@@ -91,10 +92,9 @@ describe('Performance Benchmarks', () => {
   it('should find pending sync operations efficiently', async () => {
     // Create mix of synced and pending books
     for (let i = 0; i < 100; i++) {
-      await bookRepository.create({
-        title: `Book ${i}`,
-        _syncStatus: i % 3 === 0 ? 'pending' : i % 3 === 1 ? 'failed' : 'synced',
-      });
+      const book = new LocalBook({ title: `Book ${i}` } as Book);
+      book.syncStatus = i % 3 === 0 ? SYNC_STATUS.PENDING : i % 3 === 1 ? SYNC_STATUS.FAILED : SYNC_STATUS.SYNCED;
+      await bookRepository.create(book);
     }
 
     // Find pending sync (should use composite index)
@@ -113,16 +113,14 @@ describe('Performance Benchmarks', () => {
     // Create 1000 test books sequentially to avoid transaction conflicts
     const createStart = Date.now();
     for (let i = 0; i < 1000; i++) {
-      await bookRepository.create({
+      await bookRepository.create(new LocalBook({
         title: `Book ${i}`,
         authors: `Author ${i % 50}`, // 50 different authors
-        isbn: `ISBN-${1000000000 + i}`,
-        description: `Description for book ${i}`,
+        isbnCode: `ISBN-${1000000000 + i}`,
         status: i % 4 === 0 ? 'completed' : i % 4 === 1 ? 'reading' : i % 4 === 2 ? 'want-to-read' : 'paused',
         rating: i % 10 === 0 ? 5 : i % 10 === 1 ? 4 : i % 10 === 2 ? 3 : null,
-        _syncStatus: 'synced',
-      });
-      
+      } as Book));
+
       // Progress logging every 200 books
       if ((i + 1) % 200 === 0) {
         console.log(`Created ${i + 1} books...`);

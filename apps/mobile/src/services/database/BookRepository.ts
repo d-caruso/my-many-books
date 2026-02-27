@@ -42,15 +42,16 @@ export class BookRepository {
   /**
    * Create new book
    */
-  async create(book: Partial<LocalBook>): Promise<LocalBook> {
-    const id = book.entity.id?.toString() || book.tempId || `temp-${Date.now()}-${idCounter++}`;
+  async create(book: LocalBook): Promise<LocalBook> {
+    const entity = book.entity;
+    const id = entity?.id?.toString() || book.tempId || `temp-${Date.now()}-${idCounter++}`;
     const now = new Date().toISOString();
 
     // Start transaction for atomic book + relations creation
     await databaseService.executeQuery('BEGIN TRANSACTION');
-    
+
     try {
-      const entity = book.entity;
+      const entityAny = entity as Record<string, unknown>;
       // Insert main book record
       await databaseService.executeQuery(
         `INSERT INTO books (
@@ -61,14 +62,13 @@ export class BookRepository {
         [
           id,
           entity.title || '',
-          entity.authors || null,
+          this.serializeText(entity.authors),
           entity.isbnCode || null,
-          //TODO commented out fields that are not currently set in the API/DB but may be relevant for future features
-          //entity.thumbnail || null,
-          //entity.description || null,
-          //entity.publishedDate || null,
-          //entity.pageCount || null,
-          //entity.rating || null,
+          null,                                           // thumbnail (not yet in API)
+          null,                                           // description (not yet in API)
+          null,                                           // published_date (not yet in API)
+          null,                                           // page_count (not yet in API)
+          entityAny.rating ?? null,                       // rating
           entity.status || 'want-to-read',
           entity.notes || null,
           entity.userId || null,
@@ -84,12 +84,12 @@ export class BookRepository {
 
       // Handle author relationships
       if (entity.authors) {
-        await this.createAuthorRelationships(id, entity.authors);
+        await this.createAuthorRelationships(id, entity.authors as (string | { name: string })[]);
       }
 
-      // Handle category relationships  
+      // Handle category relationships
       if (entity.categories) {
-        await this.createCategoryRelationships(id, entity.categories);
+        await this.createCategoryRelationships(id, entity.categories as (string | { name: string })[]);
       }
 
       await databaseService.executeQuery('COMMIT');
@@ -108,8 +108,9 @@ export class BookRepository {
   /**
    * Update book
    */
-  async update(id: string, updates: Partial<LocalBook>): Promise<LocalBook> {
+  async update(id: string, book: LocalBook): Promise<LocalBook> {
     const now = new Date().toISOString();
+    const entity = book.entity;
 
     await databaseService.executeQuery(
       `UPDATE books SET
@@ -122,28 +123,17 @@ export class BookRepository {
         server_id = COALESCE(?, server_id),
         sync_status = COALESCE(?, sync_status),
         server_updated_at = COALESCE(?, server_updated_at)
-
-        // TODO: Phase 2 — not yet in API/DB, pending reconciliation
-        // thumbnail = COALESCE(?, thumbnail),
-        // description = COALESCE(?, description),
-        // published_date = COALESCE(?, published_date),
-        // page_count = COALESCE(?, page_count),
-        // rating = COALESCE(?, rating),
       WHERE id = ?`,
       [
-        updates.entity.title,
-        updates.entity.authors,
-        updates.entity.status,
-        // updates.entity.thumbnail,
-        // updates.entity.description,
-        // updates.entity.publishedDate,
-        // updates.entity.pageCount,
-        // updates.entity.rating,
-        updates.entity.notes,
+        entity.title,
+        this.serializeText(entity.authors),
+        entity.status,
+        (entity as Record<string, unknown>).rating ?? null,
+        entity.notes,
         now,
-        updates.serverId,
-        updates.syncStatus,
-        updates.serverUpdatedAt,
+        book.serverId,
+        book.syncStatus,
+        book.serverUpdatedAt,
         id,
       ]
     );
@@ -308,20 +298,20 @@ export class BookRepository {
    * Update sync-related fields for a book
    */
   async updateSyncFields(id: string, fields: {
-    _serverUpdatedAt?: string;
-    _syncStatus?: SyncStatus;
+    serverUpdatedAt?: string;
+    syncStatus?: SyncStatus;
   }): Promise<void> {
     const updates: string[] = [];
     const values: unknown[] = [];
 
-    if (fields._serverUpdatedAt !== undefined) {
+    if (fields.serverUpdatedAt !== undefined) {
       updates.push('server_updated_at = ?');
-      values.push(fields._serverUpdatedAt);
+      values.push(fields.serverUpdatedAt);
     }
 
-    if (fields._syncStatus !== undefined) {
+    if (fields.syncStatus !== undefined) {
       updates.push('sync_status = ?');
-      values.push(fields._syncStatus);
+      values.push(fields.syncStatus);
     }
 
     if (updates.length > 0) {
@@ -337,7 +327,7 @@ export class BookRepository {
    * Upsert book - insert if not exists, update if exists (Task 4.5)
    * This prevents PRIMARY KEY conflicts during server sync
    */
-  async upsert(book: Partial<LocalBook>): Promise<LocalBook> {
+  async upsert(book: LocalBook): Promise<LocalBook> {
     const entity = book.entity;
     const bookId = entity.id?.toString();
     if (!bookId) {
@@ -371,7 +361,7 @@ export class BookRepository {
         WHERE id = ?`,
         [
           entity.title || existingEntity.title,
-          entity.authors || existingEntity.authors,
+          Array.isArray(entity.authors) ? JSON.stringify(entity.authors) : entity.authors || existingEntity.authors,
           entity.isbnCode || existingEntity.isbnCode,
           //TODO commented out fields that are not currently set in the API/DB but may be relevant for future features
           //entity.thumbnail || existingEntity.thumbnail,
@@ -400,7 +390,7 @@ export class BookRepository {
         [
           bookId,
           entity.title || '',
-          entity.authors || null,
+          this.serializeText(entity.authors),
           entity.isbnCode || null,
           //TODO commented out fields that are not currently set in the API/DB but may be relevant for future features
           //book.thumbnail || null,
@@ -516,7 +506,7 @@ export class BookRepository {
    * Map database row to LocalBook object
    */
   private mapRowToBook(row: Record<string, unknown>): LocalBook {
-    const book: Book = {
+    const book = {
       id: row.id as number,
       isbnCode: row.isbn as string,
       title: row.title as string,
@@ -527,7 +517,8 @@ export class BookRepository {
       categories: row.categories as Book['categories'],
       creationDate: row.creation_date as string,
       updateDate: row.update_date as string,
-    };
+      rating: row.rating as number | null | undefined,
+    } as Book;
     const local = new LocalBook(book);
     local.serverId = row.server_id as number | undefined;
     local.syncStatus = (row.sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
@@ -535,6 +526,10 @@ export class BookRepository {
     local.deleted = row.deleted === 1;
     local.serverUpdatedAt = row.server_updated_at as string | undefined;
     return local;
+  }
+
+  async search(query: string): Promise<LocalBook[]> {
+    return this.searchWithFilters({ query });
   }
 
 
@@ -576,6 +571,12 @@ export class BookRepository {
         [bookId, authorId]
       );
     }
+  }
+
+  private serializeText(value: unknown): string | null {
+    if (value == null) return null;
+    if (typeof value === 'string') return value;
+    return JSON.stringify(value);
   }
 
   /**

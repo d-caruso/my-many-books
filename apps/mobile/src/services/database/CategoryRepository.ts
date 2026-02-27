@@ -107,10 +107,6 @@ export class CategoryRepository {
     return categories.map(this.mapRowToCategory);
   }
 
-  /**
-   * Map database row to Category object
-   * Phase 5: Include sync fields for server synchronization
-   */
   private mapRowToCategory(row: Record<string, unknown>): LocalCategory {
     const category: Category = {
       id: row.id as number,
@@ -123,6 +119,7 @@ export class CategoryRepository {
     const local = new LocalCategory(category);
     local.syncStatus = (row.sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
     local.serverUpdatedAt = row.server_updated_at as string | undefined;
+
     return local;
   }
 
@@ -142,8 +139,9 @@ export class CategoryRepository {
    */
   async updateSyncFields(id: number, fields: {
     serverId?: number;
-    _syncStatus?: SyncStatus;
-    _serverUpdatedAt?: string;
+    syncStatus?: SyncStatus;
+    serverUpdatedAt?: string;
+    translationKey?: string;
   }): Promise<void> {
     const updates: string[] = [];
     const values: unknown[] = [];
@@ -152,13 +150,17 @@ export class CategoryRepository {
       updates.push('server_id = ?');
       values.push(fields.serverId);
     }
-    if (fields._syncStatus !== undefined) {
+    if (fields.syncStatus !== undefined) {
       updates.push('sync_status = ?');
-      values.push(fields._syncStatus);
+      values.push(fields.syncStatus);
     }
-    if (fields._serverUpdatedAt !== undefined) {
+    if (fields.serverUpdatedAt !== undefined) {
       updates.push('server_updated_at = ?');
-      values.push(fields._serverUpdatedAt);
+      values.push(fields.serverUpdatedAt);
+    }
+    if (fields.translationKey !== undefined) {
+      updates.push('translation_key = ?');
+      values.push(fields.translationKey);
     }
 
     if (updates.length > 0) {

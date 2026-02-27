@@ -2,6 +2,9 @@ import { categoryRepository } from '../../src/services/database/CategoryReposito
 import { bookRepository } from '../../src/services/database/BookRepository';
 import { databaseService } from '../../src/services/database/DatabaseService';
 import { migrationSystem } from '../../src/services/database/migrations';
+import { LocalBook } from '../../src/entities/LocalBook';
+import { SYNC_STATUS } from '../../src/types';
+import type { Book } from '../../src/types';
 
 describe('CategoryRepository', () => {
   beforeAll(async () => {
@@ -25,23 +28,23 @@ describe('CategoryRepository', () => {
       const category = await categoryRepository.create('Fiction');
 
       expect(category).toBeDefined();
-      expect(category.id).toBeDefined();
-      expect(category.name).toBe('Fiction');
-      expect(category.translationKey).toBeNull();
+      expect(category.entity.id).toBeDefined();
+      expect(category.entity.name).toBe('Fiction');
+      expect(category.entity.translationKey).toBeNull();
     });
 
     it('should create a category with translationKey', async () => {
       const category = await categoryRepository.create('Fiction', 'categories.fiction');
 
-      expect(category.translationKey).toBe('categories.fiction');
+      expect(category.entity.translationKey).toBe('categories.fiction');
     });
 
     it('should return existing category if name already exists', async () => {
       const category1 = await categoryRepository.create('Fiction');
       const category2 = await categoryRepository.create('Fiction');
 
-      expect(category1.id).toBe(category2.id);
-      expect(category1.name).toBe(category2.name);
+      expect(category1.entity.id).toBe(category2.entity.id);
+      expect(category1.entity.name).toBe(category2.entity.name);
 
       // Verify only one category exists
       const all = await categoryRepository.findAll();
@@ -58,9 +61,9 @@ describe('CategoryRepository', () => {
       const categories = await categoryRepository.findAll();
 
       expect(categories).toHaveLength(3);
-      expect(categories[0].name).toBe('Fiction');
-      expect(categories[1].name).toBe('History');
-      expect(categories[2].name).toBe('Science');
+      expect(categories[0].entity.name).toBe('Fiction');
+      expect(categories[1].entity.name).toBe('History');
+      expect(categories[2].entity.name).toBe('Science');
     });
   });
 
@@ -68,11 +71,11 @@ describe('CategoryRepository', () => {
     it('should find category by ID', async () => {
       const created = await categoryRepository.create('Fiction');
 
-      const found = await categoryRepository.findById(created.id);
+      const found = await categoryRepository.findById(created.entity.id);
 
       expect(found).toBeDefined();
-      expect(found?.id).toBe(created.id);
-      expect(found?.name).toBe('Fiction');
+      expect(found?.entity.id).toBe(created.entity.id);
+      expect(found?.entity.name).toBe('Fiction');
     });
 
     it('should return null for non-existent ID', async () => {
@@ -89,7 +92,7 @@ describe('CategoryRepository', () => {
       const found = await categoryRepository.findByName('Non-Fiction');
 
       expect(found).toBeDefined();
-      expect(found?.name).toBe('Non-Fiction');
+      expect(found?.entity.name).toBe('Non-Fiction');
     });
 
     it('should return null for non-existent name', async () => {
@@ -103,22 +106,22 @@ describe('CategoryRepository', () => {
     it('should update category name', async () => {
       const category = await categoryRepository.create('Old Name');
 
-      const updated = await categoryRepository.update(category.id, 'New Name');
+      const updated = await categoryRepository.update(category.entity.id, 'New Name');
 
-      expect(updated.id).toBe(category.id);
-      expect(updated.name).toBe('New Name');
+      expect(updated.entity.id).toBe(category.entity.id);
+      expect(updated.entity.name).toBe('New Name');
     });
 
     it('should update category translationKey when provided', async () => {
       const category = await categoryRepository.create('Fiction');
 
       const updated = await categoryRepository.update(
-        category.id,
+        category.entity.id,
         'Fiction',
         'categories.fiction'
       );
 
-      expect(updated.translationKey).toBe('categories.fiction');
+      expect(updated.entity.translationKey).toBe('categories.fiction');
     });
   });
 
@@ -126,31 +129,30 @@ describe('CategoryRepository', () => {
     it('should delete category', async () => {
       const category = await categoryRepository.create('Test Category');
 
-      await categoryRepository.delete(category.id);
+      await categoryRepository.delete(category.entity.id);
 
-      const found = await categoryRepository.findById(category.id);
+      const found = await categoryRepository.findById(category.entity.id);
       expect(found).toBeNull();
     });
 
     it('should cascade delete from book_categories junction table', async () => {
-      const category = await categoryRepository.create('Test Category');
-      const book = await bookRepository.create({ title: 'Test Book' });
-      await categoryRepository.addToBook(category.id, book.id);
+      const book = await bookRepository.create(new LocalBook({ title: 'Test Book', categories: ['Test Category'] } as Book));
+      const category = await categoryRepository.findByName('Test Category');
 
       // Verify junction entry exists
       let junctionEntry = await databaseService.getFirstAsync(
         'SELECT * FROM book_categories WHERE category_id = ?',
-        [category.id]
+        [category!.entity.id]
       );
       expect(junctionEntry).toBeDefined();
 
       // Delete category
-      await categoryRepository.delete(category.id);
+      await categoryRepository.delete(category!.entity.id);
 
       // Verify junction entry was deleted via CASCADE
       junctionEntry = await databaseService.getFirstAsync(
         'SELECT * FROM book_categories WHERE category_id = ?',
-        [category.id]
+        [category!.entity.id]
       );
       expect(junctionEntry).toBeNull();
     });
@@ -158,94 +160,25 @@ describe('CategoryRepository', () => {
 
   describe('findByBookId', () => {
     it('should find categories for a book', async () => {
-      const category1 = await categoryRepository.create('Fiction');
-      const category2 = await categoryRepository.create('Adventure');
-      const category3 = await categoryRepository.create('Romance');
-      const book = await bookRepository.create({ title: 'Test Book' });
+      const book = await bookRepository.create(
+        new LocalBook({ title: 'Test Book', categories: ['Fiction', 'Adventure'] } as Book)
+      );
+      await categoryRepository.create('Romance'); // unlinked
 
-      await categoryRepository.addToBook(category1.id, book.id);
-      await categoryRepository.addToBook(category2.id, book.id);
-
-      const categories = await categoryRepository.findByBookId(book.id);
+      const categories = await categoryRepository.findByBookId(String(book.entity.id));
 
       expect(categories).toHaveLength(2);
-      expect(categories.some(c => c.id === category1.id)).toBe(true);
-      expect(categories.some(c => c.id === category2.id)).toBe(true);
-      expect(categories.some(c => c.id === category3.id)).toBe(false);
+      expect(categories.some(c => c.entity.name === 'Fiction')).toBe(true);
+      expect(categories.some(c => c.entity.name === 'Adventure')).toBe(true);
+      expect(categories.some(c => c.entity.name === 'Romance')).toBe(false);
     });
 
     it('should return empty array for book with no categories', async () => {
-      const book = await bookRepository.create({ title: 'Test Book' });
+      const book = await bookRepository.create(new LocalBook({ title: 'Test Book' } as Book));
 
-      const categories = await categoryRepository.findByBookId(book.id);
+      const categories = await categoryRepository.findByBookId(String(book.entity.id));
 
       expect(categories).toHaveLength(0);
-    });
-  });
-
-  describe('addToBook', () => {
-    it('should add category to book', async () => {
-      const category = await categoryRepository.create('Fiction');
-      const book = await bookRepository.create({ title: 'Test Book' });
-
-      await categoryRepository.addToBook(category.id, book.id);
-
-      const categories = await categoryRepository.findByBookId(book.id);
-      expect(categories).toHaveLength(1);
-      expect(categories[0].id).toBe(category.id);
-    });
-
-    it('should ignore duplicate entries (INSERT OR IGNORE)', async () => {
-      const category = await categoryRepository.create('Fiction');
-      const book = await bookRepository.create({ title: 'Test Book' });
-
-      await categoryRepository.addToBook(category.id, book.id);
-      await categoryRepository.addToBook(category.id, book.id); // Duplicate
-
-      const categories = await categoryRepository.findByBookId(book.id);
-      expect(categories).toHaveLength(1); // Should still be 1, not 2
-    });
-  });
-
-  describe('removeFromBook', () => {
-    it('should remove category from book', async () => {
-      const category = await categoryRepository.create('Fiction');
-      const book = await bookRepository.create({ title: 'Test Book' });
-      await categoryRepository.addToBook(category.id, book.id);
-
-      await categoryRepository.removeFromBook(category.id, book.id);
-
-      const categories = await categoryRepository.findByBookId(book.id);
-      expect(categories).toHaveLength(0);
-    });
-  });
-
-  describe('search', () => {
-    beforeEach(async () => {
-      await categoryRepository.create('Science Fiction');
-      await categoryRepository.create('Science');
-      await categoryRepository.create('Romance');
-    });
-
-    it('should search by partial name', async () => {
-      const results = await categoryRepository.search('Science');
-
-      expect(results).toHaveLength(2);
-      expect(results.some(c => c.name === 'Science Fiction')).toBe(true);
-      expect(results.some(c => c.name === 'Science')).toBe(true);
-    });
-
-    it('should be case-insensitive', async () => {
-      const results = await categoryRepository.search('romance');
-
-      expect(results).toHaveLength(1);
-      expect(results[0].name).toBe('Romance');
-    });
-
-    it('should return empty array for no matches', async () => {
-      const results = await categoryRepository.search('Non-existent');
-
-      expect(results).toHaveLength(0);
     });
   });
 
@@ -253,13 +186,13 @@ describe('CategoryRepository', () => {
     it('should persist translationKey from sync', async () => {
       const category = await categoryRepository.create('Fantasy');
 
-      await categoryRepository.updateSyncFields(category.id, {
+      await categoryRepository.updateSyncFields(category.entity.id, {
         translationKey: 'categories.fantasy',
-        _syncStatus: 'synced',
+        syncStatus: SYNC_STATUS.SYNCED,
       });
 
-      const found = await categoryRepository.findById(category.id);
-      expect(found?.translationKey).toBe('categories.fantasy');
+      const found = await categoryRepository.findById(category.entity.id);
+      expect(found?.entity.translationKey).toBe('categories.fantasy');
     });
   });
 });

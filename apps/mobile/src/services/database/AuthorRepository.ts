@@ -100,10 +100,6 @@ export class AuthorRepository {
     return authors.map(this.mapRowToAuthor);
   }
 
-  /**
-   * Map database row to LocalAuthor object
-   * Phase 5: Include sync fields for server synchronization
-   */
   private mapRowToAuthor(row: Record<string, unknown>): LocalAuthor {
     const author: Author = {
       id: row.id as number,
@@ -117,6 +113,7 @@ export class AuthorRepository {
     const local = new LocalAuthor(author);
     local.syncStatus = (row.sync_status as SyncStatus) ?? SYNC_STATUS.SYNCED;
     local.serverUpdatedAt = row.server_updated_at as string | undefined;
+
     return local;
   }
 
@@ -136,8 +133,8 @@ export class AuthorRepository {
    */
   async updateSyncFields(id: number, fields: {
     serverId?: number;
-    _syncStatus?: SyncStatus;
-    _serverUpdatedAt?: string;
+    syncStatus?: SyncStatus;
+    serverUpdatedAt?: string;
   }): Promise<void> {
     const updates: string[] = [];
     const values: unknown[] = [];
@@ -146,13 +143,13 @@ export class AuthorRepository {
       updates.push('server_id = ?');
       values.push(fields.serverId);
     }
-    if (fields._syncStatus !== undefined) {
+    if (fields.syncStatus !== undefined) {
       updates.push('sync_status = ?');
-      values.push(fields._syncStatus);
+      values.push(fields.syncStatus);
     }
-    if (fields._serverUpdatedAt !== undefined) {
+    if (fields.serverUpdatedAt !== undefined) {
       updates.push('server_updated_at = ?');
-      values.push(fields._serverUpdatedAt);
+      values.push(fields.serverUpdatedAt);
     }
 
     if (updates.length > 0) {

@@ -92,14 +92,14 @@ describe('BookCard', () => {
       expect(result).toBe('#2196F3');
     });
 
-    it('should return green for completed status', () => {
-      const result = BookCardModule.getStatusColor('completed');
+    it('should return green for finished status', () => {
+      const result = BookCardModule.getStatusColor('finished');
       expect(result).toBe('#4CAF50');
     });
 
-    it('should return orange for want-to-read status', () => {
-      const result = BookCardModule.getStatusColor('want-to-read');
-      expect(result).toBe('#FF9800');
+    it('should return default gray for unknown status', () => {
+      const result = BookCardModule.getStatusColor('want-to-read' as 'reading' | 'finished' | 'paused');
+      expect(result).toBe('#757575');
     });
 
     it('should return purple for paused status', () => {
@@ -107,25 +107,25 @@ describe('BookCard', () => {
       expect(result).toBe('#9C27B0');
     });
 
-    it('should return default gray for unknown status', () => {
-      const result = BookCardModule.getStatusColor('unknown' as 'reading' | 'completed' | 'want-to-read' | 'paused');
+    it('should return default gray for truly unknown status', () => {
+      const result = BookCardModule.getStatusColor('unknown' as 'reading' | 'finished' | 'paused');
       expect(result).toBe('#757575');
     });
 
     describe('getStatusLabel function', () => {
       it('should return Reading for reading status (no t function)', () => {
         const result = BookCardModule.getStatusLabel('reading');
-        expect(result).toBe('Reading');
+        expect(result).toBe('reading');
       });
 
       it('should return the raw status string for unknown status (no t function)', () => {
-        const result = BookCardModule.getStatusLabel('unknown' as 'reading' | 'completed' | 'want-to-read' | 'paused');
+        const result = BookCardModule.getStatusLabel('unknown' as 'reading' | 'finished' | 'paused');
         expect(result).toBe('unknown');
       });
 
       it('should use t function when provided', () => {
         const mockT = jest.fn((key) => key.replace('books:', ''));
-        const result = BookCardModule.getStatusLabel('completed', mockT);
+        const result = BookCardModule.getStatusLabel('finished', mockT);
         expect(result).toBe('completed');
         expect(mockT).toHaveBeenCalledWith('books:completed');
       });
@@ -133,10 +133,9 @@ describe('BookCard', () => {
 
     it('should export statusOptions array', () => {
       expect(BookCardModule.statusOptions).toEqual([
-        'want-to-read',
         'reading',
         'paused',
-        'completed',
+        'finished',
       ]);
     });
   });

@@ -300,9 +300,8 @@ describe('SyncService Hookey Integration', () => {
       
       hasBookConflict.mockReturnValue(true);
       bookRepository.findByServerId.mockResolvedValue({
-        id: 'local-book-1',
-        title: 'Local Title',
-        updateDate: '2024-01-01T00:00:00Z'
+        entity: { id: 'local-book-1', title: 'Local Title', updateDate: '2024-01-01T00:00:00Z' },
+        syncStatus: 'synced',
       });
 
       const { bookAPI } = require('../api');
@@ -346,8 +345,8 @@ describe('SyncService Hookey Integration', () => {
       
       hasAuthorConflict.mockReturnValue(true);
       authorRepository.findByServerId.mockResolvedValue({
-        id: 'local-author-1',
-        name: 'Local Author'
+        entity: { id: 'local-author-1', name: 'Local Author' },
+        serverUpdatedAt: undefined,
       });
 
       const { authorAPI } = require('../api');
@@ -386,8 +385,8 @@ describe('SyncService Hookey Integration', () => {
       
       hasCategoryConflict.mockReturnValue(true);
       categoryRepository.findByServerId.mockResolvedValue({
-        id: 'local-category-1',
-        name: 'Local Category'
+        entity: { id: 'local-category-1', name: 'Local Category' },
+        serverUpdatedAt: undefined,
       });
 
       const { categoryAPI } = require('../api');

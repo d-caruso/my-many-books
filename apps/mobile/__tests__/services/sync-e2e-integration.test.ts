@@ -18,6 +18,9 @@ import { databaseService } from '../../src/services/database/DatabaseService';
 import { migrationSystem } from '../../src/services/database/migrations';
 import { bookAPI, authorAPI, categoryAPI, apiClient } from '../../src/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LocalBook } from '../../src/entities/LocalBook';
+import { SYNC_STATUS } from '../../src/types';
+import type { Book } from '../../src/types';
 
 // Mock the bookAPI and apiClient
 jest.mock('../../src/services/api', () => ({
@@ -170,14 +173,10 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const serverId = 9001;
 
       // Step 1: Create book offline
-      await bookRepository.create({
-        id: tempId,
-        title: 'Offline Book',
-        status: 'want-to-read',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-        _syncStatus: 'pending',
-      });
+      const offlineBook1 = new LocalBook({ title: 'Offline Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      offlineBook1.tempId = tempId;
+      offlineBook1.syncStatus = SYNC_STATUS.PENDING;
+      await bookRepository.create(offlineBook1);
 
       // Step 2: Mock server responses
       (bookAPI.getBooks as jest.Mock).mockResolvedValue({ books: [] });
@@ -223,15 +222,14 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       // Verify: Local book has been replaced with server ID (Critical Fix)
       // After temp ID replacement, the book ID is now the server ID
       const localBook = await bookRepository.findById(serverId.toString());
-      expect(localBook?.id).toBe(serverId.toString());
+      expect(String(localBook?.entity.id)).toBe(serverId.toString());
       expect(localBook?.serverId).toBe(serverId);
-      expect(localBook?._syncStatus).toBe('synced');
+      expect(localBook?.syncStatus).toBe(SYNC_STATUS.SYNCED);
 
       // Step 4: Update book locally - now using server ID
-      await bookRepository.update(serverId.toString(), {
-        title: 'Updated Offline Book',
-        _syncStatus: 'pending',
-      });
+      const updateBook1 = new LocalBook({ title: 'Updated Offline Book' } as Book);
+      updateBook1.syncStatus = SYNC_STATUS.PENDING;
+      await bookRepository.update(serverId.toString(), updateBook1);
 
       // Enqueue UPDATE operation - still use tempId for queue operation lookup
       // The QueueExecutor will use findByIdOrMapping to resolve it to server ID
@@ -279,7 +277,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Verify: Book is marked as synced (now using server ID)
       const syncedBook = await bookRepository.findById(serverId.toString());
-      expect(syncedBook?._syncStatus).toBe('synced');
+      expect(syncedBook?.syncStatus).toBe(SYNC_STATUS.SYNCED);
     });
 
     it('should handle pull sync with conflict resolution', async () => {
@@ -288,14 +286,10 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Step 1: Create book locally (older)
       const oldDate = new Date('2024-01-01T00:00:00Z');
-      await bookRepository.create({
-        id: tempId,
-        title: 'Local Version',
-        status: 'reading',
-        serverId,
-        creationDate: oldDate.toISOString(),
-        updateDate: oldDate.toISOString(),
-      });
+      const conflictBook = new LocalBook({ title: 'Local Version', status: 'reading', creationDate: oldDate.toISOString(), updateDate: oldDate.toISOString() } as Book);
+      conflictBook.tempId = tempId;
+      conflictBook.serverId = serverId;
+      await bookRepository.create(conflictBook);
 
       // Register ID mapping
       await idMappingService.registerTempId(tempId, serverId, 'book');
@@ -322,8 +316,8 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Verify: Local book updated with server version (server is newer)
       const updatedBook = await bookRepository.findById(tempId);
-      expect(updatedBook?.title).toBe('Server Version');
-      expect(updatedBook?.status).toBe('completed');
+      expect(updatedBook?.entity.title).toBe('Server Version');
+      expect(updatedBook?.entity.status).toBe('completed');
     });
 
     it('should keep local version when local is newer', async () => {
@@ -332,14 +326,10 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Step 1: Create book locally (newer)
       const newDate = new Date('2024-12-01T00:00:00Z');
-      await bookRepository.create({
-        id: tempId,
-        title: 'Local Newer',
-        status: 'completed',
-        serverId,
-        creationDate: new Date('2024-01-01T00:00:00Z').toISOString(),
-        updateDate: newDate.toISOString(),
-      });
+      const newerBook = new LocalBook({ title: 'Local Newer', status: 'completed', creationDate: new Date('2024-01-01T00:00:00Z').toISOString(), updateDate: newDate.toISOString() } as Book);
+      newerBook.tempId = tempId;
+      newerBook.serverId = serverId;
+      await bookRepository.create(newerBook);
 
       // Register ID mapping
       await idMappingService.registerTempId(tempId, serverId, 'book');
@@ -363,8 +353,8 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Verify: Local book unchanged (local is newer)
       const unchangedBook = await bookRepository.findById(tempId);
-      expect(unchangedBook?.title).toBe('Local Newer');
-      expect(unchangedBook?.status).toBe('completed');
+      expect(unchangedBook?.entity.title).toBe('Local Newer');
+      expect(unchangedBook?.entity.status).toBe('completed');
     });
 
     it('should insert new books from server', async () => {
@@ -392,9 +382,9 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       // Verify: Book exists locally with server_id
       const newBook = await bookRepository.findByServerId(serverId);
       expect(newBook).toBeDefined();
-      expect(newBook?.id).toBe(String(serverId));
+      expect(String(newBook?.entity.id)).toBe(String(serverId));
       expect(newBook?.serverId).toBe(serverId);
-      expect(newBook?.title).toBe('New Server Book');
+      expect(newBook?.entity.title).toBe('New Server Book');
 
       // Verify: ID mapping created
       const tempId = await idMappingService.getTempId(serverId);
@@ -408,13 +398,9 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const serverBookId = 9005;
 
       // Step 1: Create book with authors
-      await bookRepository.create({
-        id: tempBookId,
-        title: 'Book with Authors',
-        status: 'reading',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-      });
+      const bookWithAuthors = new LocalBook({ title: 'Book with Authors', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      bookWithAuthors.tempId = tempBookId;
+      await bookRepository.create(bookWithAuthors);
 
       // Add book_authors entry
       const db = databaseService.getDatabase();
@@ -435,7 +421,9 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       await idMappingService.registerTempId(tempBookId, serverBookId, 'book');
 
       // Update book with server_id
-      await bookRepository.update(tempBookId, { serverId: serverBookId });
+      const servIdUpdate = new LocalBook({} as Book);
+      servIdUpdate.serverId = serverBookId;
+      await bookRepository.update(tempBookId, servIdUpdate);
 
       // Update foreign keys
       await cleanupService.updateForeignKeysForBook(tempBookId, serverBookId);
@@ -532,14 +520,10 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       oldDate.setDate(oldDate.getDate() - 31); // 31 days ago
 
       // Create old book with temp ID that never synced
-      await bookRepository.create({
-        id: 'temp-old-book-1703856005000',
-        title: 'Old Unsynced Book',
-        status: 'want-to-read',
-        creationDate: oldDate.toISOString(),
-        updateDate: oldDate.toISOString(),
-        _syncStatus: 'failed',
-      });
+      const oldUnsyncedBook = new LocalBook({ title: 'Old Unsynced Book', status: 'want-to-read', creationDate: oldDate.toISOString(), updateDate: oldDate.toISOString() } as Book);
+      oldUnsyncedBook.tempId = 'temp-old-book-1703856005000';
+      oldUnsyncedBook.syncStatus = SYNC_STATUS.FAILED;
+      await bookRepository.create(oldUnsyncedBook);
 
       // Perform cleanup
       const result = await cleanupService.cleanupOrphanedTempIds();
@@ -595,14 +579,10 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const serverId = 9007;
 
       // Step 1: Create local book (to push)
-      await bookRepository.create({
-        id: tempId,
-        title: 'Local Book',
-        status: 'reading',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-        _syncStatus: 'pending',
-      });
+      const localPushBook = new LocalBook({ title: 'Local Book', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      localPushBook.tempId = tempId;
+      localPushBook.syncStatus = SYNC_STATUS.PENDING;
+      await bookRepository.create(localPushBook);
 
       await operationQueue.enqueue('CREATE', 'book', {
         id: tempId,
@@ -644,8 +624,8 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       // Verify: Server book was inserted locally
       const pulledServerBook = await bookRepository.findById('9008');
       expect(pulledServerBook).toBeDefined();
-      expect(pulledServerBook?.title).toBe('Server Book');
-      expect(pulledServerBook?.status).toBe('completed');
+      expect(pulledServerBook?.entity.title).toBe('Server Book');
+      expect(pulledServerBook?.entity.status).toBe('completed');
       expect(pulledServerBook?.serverId).toBe(9008);
     });
 
@@ -703,14 +683,10 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
     it('should continue sync even if one operation fails', async () => {
       // Create two books
-      await bookRepository.create({
-        id: 'temp-success',
-        title: 'Success Book',
-        status: 'reading',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
-        _syncStatus: 'pending',
-      });
+      const successBook = new LocalBook({ title: 'Success Book', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      successBook.tempId = 'temp-success';
+      successBook.syncStatus = SYNC_STATUS.PENDING;
+      await bookRepository.create(successBook);
 
       await operationQueue.enqueue('CREATE', 'book', { id: 'temp-success', title: 'Success' });
 

@@ -230,8 +230,8 @@ async function executeCreateBook(payload: CreatePayload<Book>): Promise<void> {
     // Update server timestamp for consistency (Phase 5 fix)
     if (serverResponse.updateDate || serverResponse.updatedAt) {
       await bookRepository.updateSyncFields(serverId.toString(), {
-        _serverUpdatedAt: serverResponse.updateDate || serverResponse.updatedAt,
-        _syncStatus: SYNC_STATUS.SYNCED
+        serverUpdatedAt: serverResponse.updateDate || serverResponse.updatedAt,
+        syncStatus: SYNC_STATUS.SYNCED
       });
     }
 
@@ -260,7 +260,7 @@ async function executeUpdateBook(payload: UpdatePayload<Book> & { id: string }):
   }
 
   // Use server_id if available, otherwise use the current book ID (which could be server ID after replacement)
-  const serverIdToUse = localBook.serverId || localBook.id;
+  const serverIdToUse = localBook.serverId || localBook.entity.id;
 
   // Resolve foreign keys in payload
   const resolvedPayload = await idMappingService.resolveForeignKeys(payload);
@@ -271,8 +271,8 @@ async function executeUpdateBook(payload: UpdatePayload<Book> & { id: string }):
   // Update server timestamp for consistency (Phase 5 fix)
   if (updateResponse.updateDate || updateResponse.updatedAt) {
     await bookRepository.updateSyncFields(String(serverIdToUse), {
-      _serverUpdatedAt: updateResponse.updateDate || updateResponse.updatedAt,
-      _syncStatus: SYNC_STATUS.SYNCED
+      serverUpdatedAt: updateResponse.updateDate || updateResponse.updatedAt,
+      syncStatus: SYNC_STATUS.SYNCED
     });
   }
 }
@@ -356,8 +356,8 @@ async function executeCreateAuthor(payload: CreatePayload<Author>): Promise<void
     await idMappingService.registerTempId(tempId, serverId, 'author');
     await authorRepository.updateSyncFields(tempId, {
       serverId,
-      _serverUpdatedAt: serverResponse.updateDate || new Date().toISOString(),
-      _syncStatus: SYNC_STATUS.SYNCED,
+      serverUpdatedAt: serverResponse.updateDate || new Date().toISOString(),
+      syncStatus: SYNC_STATUS.SYNCED,
     });
   }
 }
@@ -369,7 +369,7 @@ async function executeUpdateAuthor(payload: UpdatePayload<Author> & { id: string
     throw new Error(`Author not found: ${authorId}`);
   }
 
-  const serverIdToUse = localAuthor.serverId || localAuthor.id;
+  const serverIdToUse = localAuthor.serverId || localAuthor.entity.id;
   // CRITICAL: Use raw apiClient to avoid double-queueing (authorAPI would wrap withQueueOnError)
   const updateResponse = await apiClient.authors.updateAuthor(Number(serverIdToUse), {
     name: payload.name,
@@ -379,8 +379,8 @@ async function executeUpdateAuthor(payload: UpdatePayload<Author> & { id: string
 
   if (updateResponse.updateDate) {
     await authorRepository.updateSyncFields(authorId, {
-      _serverUpdatedAt: updateResponse.updateDate,
-      _syncStatus: SYNC_STATUS.SYNCED,
+      serverUpdatedAt: updateResponse.updateDate,
+      syncStatus: SYNC_STATUS.SYNCED,
     });
   }
 }
@@ -408,8 +408,8 @@ async function executeCreateCategory(payload: CreatePayload<Category>): Promise<
     await idMappingService.registerTempId(tempId, serverId, 'category');
     await categoryRepository.updateSyncFields(tempId, {
       serverId,
-      _serverUpdatedAt: serverResponse.updateDate || new Date().toISOString(),
-      _syncStatus: SYNC_STATUS.SYNCED,
+      serverUpdatedAt: serverResponse.updateDate || new Date().toISOString(),
+      syncStatus: SYNC_STATUS.SYNCED,
     });
   }
 }
@@ -421,7 +421,7 @@ async function executeUpdateCategory(payload: UpdatePayload<Category> & { id: st
     throw new Error(`Category not found: ${categoryId}`);
   }
 
-  const serverIdToUse = localCategory.serverId || localCategory.id;
+  const serverIdToUse = localCategory.serverId || localCategory.entity.id;
   // CRITICAL: Use raw apiClient to avoid double-queueing (categoryAPI would wrap withQueueOnError)
   const updateResponse = await apiClient.categories.updateCategory(Number(serverIdToUse), {
     name: payload.name,
@@ -429,8 +429,8 @@ async function executeUpdateCategory(payload: UpdatePayload<Category> & { id: st
 
   if (updateResponse.updateDate) {
     await categoryRepository.updateSyncFields(categoryId, {
-      _serverUpdatedAt: updateResponse.updateDate,
-      _syncStatus: SYNC_STATUS.SYNCED,
+      serverUpdatedAt: updateResponse.updateDate,
+      syncStatus: SYNC_STATUS.SYNCED,
     });
   }
 }
