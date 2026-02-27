@@ -9,6 +9,8 @@
     "src/**/__tests__/**/*",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
+    "__tests__/**/*",
+    "__mocks__/**/*",
     "jest-setup.ts"
   ],
   "exclude": []

@@ -37,10 +37,14 @@ module.exports = {
   },
   env: {
     jest: true,
+    node: true,
   },
   overrides: [
     {
-      files: ['__tests__/**/*', '__mocks__/**/*', 'src/types/**/*'],
+      files: ['__tests__/**/*', '__mocks__/**/*'],
+      parserOptions: {
+        project: ['./tsconfig.test.json'],
+      },
       rules: {
         '@typescript-eslint/no-unused-vars': 'off',
         'import/no-unresolved': 'off',

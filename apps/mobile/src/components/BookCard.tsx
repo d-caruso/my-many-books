@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Card, Text, IconButton, Menu, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import { Book, type SyncStatus } from '@/types';
+import { Book } from '@/types';
 import type { EntityMeta, UiBook } from '@/types/ui';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { SyncStatusBadge } from './SyncStatusBadge';
@@ -174,7 +174,7 @@ export const BookCard: React.FC<BookCardProps> = ({
         <ConflictDialog
           visible={conflictDialogVisible}
           localBook={book}
-          serverBook={(book as any)._serverVersion || book} // Use server version if available, fallback to current book
+          serverBook={(book as UiBook & { _serverVersion?: Book })._serverVersion ?? book}
           onResolve={(choice) => {
             onResolveConflict?.(book.id, choice);
             setConflictDialogVisible(false);
