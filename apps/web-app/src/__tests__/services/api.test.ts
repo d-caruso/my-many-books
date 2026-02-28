@@ -24,7 +24,7 @@ type ApiClientContract = {
   >;
   authors: Pick<
     AuthorApi,
-    'getAuthors' | 'getAuthor' | 'createAuthor' | 'updateAuthor' | 'deleteAuthor' | 'searchAuthors'
+    'getAuthors' | 'getAuthor' | 'createAuthor' | 'updateAuthor' | 'deleteAuthor'
   >;
   users: Pick<
     UserApi,
@@ -64,7 +64,6 @@ function createMockApiClient() {
       createAuthor: vi.fn(),
       updateAuthor: vi.fn(),
       deleteAuthor: vi.fn(),
-      searchAuthors: vi.fn(),
     },
     users: {
       getCurrentUser: vi.fn(),
@@ -655,24 +654,32 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     describe('Authors Methods', () => {
-      test('searchAuthors delegates to API client with correct parameters', async () => {
-        const mockAuthors: Author[] = [
-          { 
-            id: 1, 
-            name: 'F. Scott', 
-            surname: 'Fitzgerald', 
+      test('searchAuthors filters authors from getAuthors', async () => {
+        const allAuthors: Author[] = [
+          {
+            id: 1,
+            name: 'F. Scott',
+            surname: 'Fitzgerald',
+            nationality: 'American',
+            creationDate: '2024-01-01T00:00:00Z',
+            updateDate: '2024-01-01T00:00:00Z',
+          },
+          {
+            id: 2,
+            name: 'Ernest',
+            surname: 'Hemingway',
             nationality: 'American',
             creationDate: '2024-01-01T00:00:00Z',
             updateDate: '2024-01-01T00:00:00Z',
           },
         ];
-        mockApiClient.authors.searchAuthors.mockResolvedValue(mockAuthors);
+        mockApiClient.authors.getAuthors.mockResolvedValue(allAuthors);
 
         const result = await testApiService.searchAuthors('fitzgerald');
 
-        expect(mockApiClient.authors.searchAuthors).toHaveBeenCalledWith('fitzgerald');
-        expect(mockApiClient.authors.searchAuthors).toHaveBeenCalledTimes(1);
-        expect(result).toEqual(mockAuthors);
+        expect(mockApiClient.authors.getAuthors).toHaveBeenCalledTimes(1);
+        expect(result).toHaveLength(1);
+        expect(result[0].surname).toBe('Fitzgerald');
       });
 
       test('getAuthors delegates to API client with correct parameters', async () => {

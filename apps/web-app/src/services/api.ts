@@ -1087,16 +1087,15 @@ class ApiService {
       return [];
     }
 
-    // In development mode without API URL, return filtered mock data
-    if (isDevelopmentWithoutApiConfig()) {
-      const mockAuthors = await this.getMockAuthors();
-      return mockAuthors.filter(author =>
-        author.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        author.surname.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+    const term = searchTerm.toLowerCase().trim();
+    const authors = isDevelopmentWithoutApiConfig()
+      ? await this.getMockAuthors()
+      : await this.apiClient.authors.getAuthors();
 
-    return this.apiClient.authors.searchAuthors(searchTerm.trim());
+    return authors.filter(author =>
+      author.name.toLowerCase().includes(term) ||
+      author.surname.toLowerCase().includes(term)
+    );
   }
 
   async getAuthor(id: number): Promise<Author> {

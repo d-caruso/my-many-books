@@ -107,12 +107,6 @@ const categoryAPI = {
   createCategory: apiService.createCategory.bind(apiService),
 };
 
-const authorAPI = {
-  getAuthors: apiService.getAuthors.bind(apiService),
-  searchAuthors: apiService.searchAuthors.bind(apiService),
-  getAuthor: apiService.getAuthor.bind(apiService),
-  createAuthor: apiService.createAuthor.bind(apiService),
-};
 
 const userAPI = {
   getCurrentUser: apiService.getCurrentUser.bind(apiService),
@@ -267,39 +261,6 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
 
       expect(result.id).toBe(123);
       expect(result.name).toBe('Test Category');
-    });
-  });
-
-  describe('Authors API', () => {
-    test('searchAuthors makes HTTP request with search parameter', async () => {
-      server.use(
-        http.get(`*${API_BASE_PATH}/authors/search`, ({ request }) => {
-          const url = new URL(request.url);
-          const q = url.searchParams.get('q');
-          expect(q).toBe('fitzgerald');
-
-          const filteredAuthors: Author[] = [
-            {
-              id: 1,
-              name: 'F. Scott',
-              surname: 'Fitzgerald',
-              nationality: 'American',
-              creationDate: '2024-01-01T00:00:00Z',
-              updateDate: '2024-01-01T00:00:00Z'
-            }
-          ];
-
-          return HttpResponse.json(filteredAuthors);
-        })
-      );
-
-      const result = await authorAPI.searchAuthors('fitzgerald');
-
-      // Check if result exists and is an array
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBe(1);
-      expect(result[0].surname).toBe('Fitzgerald');
     });
   });
 
