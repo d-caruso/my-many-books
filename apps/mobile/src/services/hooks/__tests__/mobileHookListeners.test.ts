@@ -32,10 +32,7 @@ describe('MobileHookListenersManager', () => {
     defaultConfig = {
       analyticsEnabled: true,
       errorReportingEnabled: true,
-      offlineStorageEnabled: true,
       performanceMonitoringEnabled: true,
-      batchUploadInterval: 300,
-      maxOfflineEvents: 1000,
     };
 
     listenersManager = new MobileHookListenersManager(defaultConfig);
@@ -45,10 +42,9 @@ describe('MobileHookListenersManager', () => {
     it('should create listeners manager with default config', () => {
       const manager = new MobileHookListenersManager();
       const config = manager.getConfig();
-      
+
       expect(config.analyticsEnabled).toBe(true);
       expect(config.errorReportingEnabled).toBe(true);
-      expect(config.offlineStorageEnabled).toBe(true);
       expect(config.performanceMonitoringEnabled).toBe(true);
     });
 
@@ -56,42 +52,34 @@ describe('MobileHookListenersManager', () => {
       const customConfig = {
         analyticsEnabled: false,
         errorReportingEnabled: true,
-        maxOfflineEvents: 500,
       };
 
       const manager = new MobileHookListenersManager(customConfig);
       const config = manager.getConfig();
-      
+
       expect(config.analyticsEnabled).toBe(false);
       expect(config.errorReportingEnabled).toBe(true);
-      expect(config.maxOfflineEvents).toBe(500);
     });
   });
 
   describe('listener registration', () => {
     it('should have correct listener configuration', () => {
       const config = listenersManager.getConfig();
-      
+
       expect(config.analyticsEnabled).toBe(true);
       expect(config.errorReportingEnabled).toBe(true);
-      expect(config.offlineStorageEnabled).toBe(true);
       expect(config.performanceMonitoringEnabled).toBe(true);
     });
 
     it('should support partial configuration', () => {
-      const partialConfig = {
-        analyticsEnabled: false,
-        errorReportingEnabled: true,
-        maxOfflineEvents: 500,
-      };
+      const partialConfig = { analyticsEnabled: false, errorReportingEnabled: true };
 
       const manager = new MobileHookListenersManager(partialConfig);
       const config = manager.getConfig();
-      
+
       expect(config.analyticsEnabled).toBe(false);
       expect(config.errorReportingEnabled).toBe(true);
-      expect(config.maxOfflineEvents).toBe(500);
-      expect(config.offlineStorageEnabled).toBe(true); // should use default
+      expect(config.performanceMonitoringEnabled).toBe(true); // should use default
     });
   });
 
@@ -110,29 +98,6 @@ describe('MobileHookListenersManager', () => {
       );
     });
 
-    it('should limit stored analytics events', async () => {
-      const analyticsListener = listenersManager['analyticsListener'];
-      
-      // Mock existing events at max limit
-      const existingEvents = Array(1000).fill({
-        eventType: 'existing.event',
-        data: {},
-        timestamp: new Date().toISOString(),
-        category: 'user_behavior',
-      });
-
-      mockAsyncStorage.getItem.mockResolvedValueOnce(JSON.stringify(existingEvents));
-
-      await analyticsListener.handleEvent('new.event', { test: 'data' });
-
-      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        'analytics_events',
-        expect.any(String)
-      );
-
-      const savedData = JSON.parse(mockAsyncStorage.setItem.mock.calls[0][1]);
-      expect(savedData).toHaveLength(1000); // Should still be at max limit
-    });
   });
 
   describe('error reporting listener', () => {
@@ -284,13 +249,12 @@ describe('MobileHookListenersManager', () => {
 
   describe('configuration management', () => {
     it('should update configuration', () => {
-      const newConfig = { analyticsEnabled: false, maxOfflineEvents: 500 };
-      
+      const newConfig = { analyticsEnabled: false };
+
       listenersManager.updateConfig(newConfig);
       const config = listenersManager.getConfig();
 
       expect(config.analyticsEnabled).toBe(false);
-      expect(config.maxOfflineEvents).toBe(500);
       expect(config.errorReportingEnabled).toBe(true); // Should retain other settings
     });
 
@@ -316,10 +280,7 @@ describe('MobileHookListenersManager', () => {
       const disabledConfig = {
         analyticsEnabled: false,
         errorReportingEnabled: false,
-        offlineStorageEnabled: false,
         performanceMonitoringEnabled: false,
-        batchUploadInterval: 300,
-        maxOfflineEvents: 1000,
       };
 
       const manager = new MobileHookListenersManager(disabledConfig);

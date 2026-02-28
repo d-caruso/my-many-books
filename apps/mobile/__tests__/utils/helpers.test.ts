@@ -36,25 +36,25 @@ describe('Helper Utilities', () => {
 
   describe('getStatusLabel', () => {
     it('should return correct labels for all statuses', () => {
-      expect(getStatusLabel('want-to-read')).toBe('Want to Read');
       expect(getStatusLabel('reading')).toBe('Reading');
-      expect(getStatusLabel('completed')).toBe('Completed');
+      expect(getStatusLabel('paused')).toBe('Paused');
+      expect(getStatusLabel('finished')).toBe('Finished');
     });
 
     it('should handle unknown status', () => {
-      expect(getStatusLabel('unknown' as 'want-to-read' | 'reading' | 'completed')).toBe('Unknown');
+      expect(getStatusLabel('unknown' as 'reading' | 'paused' | 'finished')).toBe('Unknown');
     });
   });
 
   describe('getStatusColor', () => {
     it('should return correct colors for all statuses', () => {
-      expect(getStatusColor('want-to-read')).toBe('#2196F3');
       expect(getStatusColor('reading')).toBe('#FF9800');
-      expect(getStatusColor('completed')).toBe('#4CAF50');
+      expect(getStatusColor('paused')).toBe('#2196F3');
+      expect(getStatusColor('finished')).toBe('#4CAF50');
     });
 
     it('should handle unknown status', () => {
-      expect(getStatusColor('unknown' as 'want-to-read' | 'reading' | 'completed')).toBe('#757575');
+      expect(getStatusColor('unknown' as 'reading' | 'paused' | 'finished')).toBe('#757575');
     });
   });
 

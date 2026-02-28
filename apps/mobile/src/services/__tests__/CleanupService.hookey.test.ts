@@ -31,6 +31,7 @@ jest.mock('../database/DatabaseService', () => ({
 jest.mock('../OperationQueue', () => ({
   operationQueue: {
     getFailedOperations: jest.fn(),
+    getPendingOperations: jest.fn(),
     dequeue: jest.fn(),
     getAllOperations: jest.fn(),
   },
@@ -63,6 +64,7 @@ describe('CleanupService Hookey Integration', () => {
 
     const { operationQueue } = require('../OperationQueue');
     operationQueue.getFailedOperations.mockReturnValue([]);
+    operationQueue.getPendingOperations.mockReturnValue([]);
     operationQueue.getAllOperations.mockReturnValue([]);
     operationQueue.dequeue.mockResolvedValue(undefined);
 
