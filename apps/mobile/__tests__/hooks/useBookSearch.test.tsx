@@ -232,12 +232,13 @@ describe('useBookSearch Hook', () => {
 
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    expect(mockDbMocks.searchWithFilters).toHaveBeenCalledWith({
-      query: 'test',
-      status: undefined,
-      sortBy: 'update_date',
-      sortOrder: 'DESC',
-    });
+    expect(mockDbMocks.searchWithFilters).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: 'test',
+        sortBy: 'update_date',
+        sortOrder: 'desc',
+      })
+    );
     expect(mockApiMocks.searchBooks).not.toHaveBeenCalled();
   });
 

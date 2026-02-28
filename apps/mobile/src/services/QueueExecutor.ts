@@ -204,8 +204,11 @@ async function executeCreateBook(payload: BookOperationPayload): Promise<void> {
   // Resolve foreign keys before sending to server
   const resolvedPayload = await idMappingService.resolveForeignKeys(payload);
 
+  // Add _tempId so the server can correlate the response back to the local record
+  const apiPayload = { ...resolvedPayload, _tempId: tempId };
+
   // CRITICAL: Use raw apiClient to avoid double-queueing (bookAPI wraps withQueueOnError)
-  const serverResponse = await apiClient.books.createBook(resolvedPayload as BookFormData) as Record<string, unknown>;
+  const serverResponse = await apiClient.books.createBook(apiPayload as BookFormData) as Record<string, unknown>;
 
   // Extract server-assigned ID from response
   const serverId = serverResponse.id as number;
@@ -250,14 +253,14 @@ async function executeUpdateBook(payload: BookOperationPayload & { id: string })
     throw new Error(`Book not found in local DB: ${bookId}`);
   }
 
-  // Use server_id if available, otherwise use the current book ID (which could be server ID after replacement)
-  const serverIdToUse = localBook.serverId || localBook.entity.id;
+  // Use server_id if available, otherwise fall back to payload id (temp ID string)
+  const serverIdToUse: number | string = localBook.serverId ?? payload.id;
 
   // Resolve foreign keys in payload
   const resolvedPayload = await idMappingService.resolveForeignKeys(payload);
 
   // CRITICAL: Use raw apiClient to avoid double-queueing (bookAPI wraps withQueueOnError)
-  const updateResponse = await apiClient.books.updateBook(Number(serverIdToUse), resolvedPayload) as Record<string, unknown>;
+  const updateResponse = await apiClient.books.updateBook(serverIdToUse as number, resolvedPayload) as Record<string, unknown>;
 
   // Update server timestamp for consistency (Phase 5 fix)
   if (updateResponse.updateDate || updateResponse.updatedAt) {

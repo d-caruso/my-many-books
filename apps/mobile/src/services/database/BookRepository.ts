@@ -71,7 +71,7 @@ export class BookRepository {
           null,                                           // description (not yet in API)
           null,                                           // published_date (not yet in API)
           null,                                           // page_count (not yet in API)
-          null,                                               // rating (not yet in API)
+          (entity as Record<string, unknown>).rating as number | null ?? null,
           entity.status || 'want-to-read',
           entity.notes || null,
           entity.userId || null,
@@ -131,7 +131,7 @@ export class BookRepository {
         entity.title,
         this.serializeText(entity.authors),
         entity.status,
-        null, // rating (not yet in API)
+        (entity as Record<string, unknown>).rating as number | null ?? null,
         entity.notes,
         now,
         book.serverId,

@@ -225,7 +225,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
 
       // Verify: API was called with server ID
       expect(apiClient.books.updateBook).toHaveBeenCalledWith(
-        String(serverId),
+        serverId,
         expect.objectContaining({
           title: 'Updated Title',
         })
@@ -359,7 +359,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(operation);
 
       // Verify: API was called with server ID
-      expect(apiClient.books.deleteBook).toHaveBeenCalledWith(String(serverId));
+      expect(apiClient.books.deleteBook).toHaveBeenCalledWith(serverId);
     });
 
     it('should skip server DELETE when book never synced (no server_id)', async () => {
@@ -484,13 +484,13 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
 
       // Verify: UPDATE used server_id
       expect(apiClient.books.updateBook).toHaveBeenCalledWith(
-        String(serverId),
+        serverId,
         expect.any(Object)
       );
 
       // Step 3: DELETE book (should use server_id)
       (bookAPI.deleteBook as jest.Mock).mockResolvedValue(undefined);
-      
+
       (apiClient.books.deleteBook as jest.Mock).mockResolvedValue(undefined);
 
       const deleteOp = {
@@ -507,7 +507,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       await executeOperation(deleteOp);
 
       // Verify: DELETE used server_id
-      expect(apiClient.books.deleteBook).toHaveBeenCalledWith(String(serverId));
+      expect(apiClient.books.deleteBook).toHaveBeenCalledWith(serverId);
     });
   });
 });

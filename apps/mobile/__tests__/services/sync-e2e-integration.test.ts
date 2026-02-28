@@ -271,7 +271,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Verify: UPDATE used server_id (via apiClient)
       expect(apiClient.books.updateBook).toHaveBeenCalledWith(
-        String(serverId),
+        serverId,
         expect.any(Object)
       );
 

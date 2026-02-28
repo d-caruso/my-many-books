@@ -20,7 +20,7 @@ const createMockOperationQueue = () => ({
   size: jest.fn().mockReturnValue(0),
   getPendingOperations: jest.fn().mockReturnValue([]),
   getFailedOperations: jest.fn().mockReturnValue([]),
-  remove: jest.fn().mockResolvedValue(undefined),
+  dequeue: jest.fn().mockResolvedValue(undefined),
 });
 
 const createMockIDMappingService = () => ({
@@ -194,10 +194,10 @@ describe('BookHandlerIntegration', () => {
       const removedCount = await integration.clearFailedBooks();
 
       expect(removedCount).toBe(2); // Only book operations
-      expect(mockOperationQueue.remove).toHaveBeenCalledTimes(2);
-      expect(mockOperationQueue.remove).toHaveBeenCalledWith('op1');
-      expect(mockOperationQueue.remove).toHaveBeenCalledWith('op3');
-      expect(mockOperationQueue.remove).not.toHaveBeenCalledWith('op2'); // user operation
+      expect(mockOperationQueue.dequeue).toHaveBeenCalledTimes(2);
+      expect(mockOperationQueue.dequeue).toHaveBeenCalledWith('op1');
+      expect(mockOperationQueue.dequeue).toHaveBeenCalledWith('op3');
+      expect(mockOperationQueue.dequeue).not.toHaveBeenCalledWith('op2'); // user operation
     });
 
     it('should return 0 when no failed book operations exist', async () => {
@@ -208,7 +208,7 @@ describe('BookHandlerIntegration', () => {
       const removedCount = await integration.clearFailedBooks();
 
       expect(removedCount).toBe(0);
-      expect(mockOperationQueue.remove).not.toHaveBeenCalled();
+      expect(mockOperationQueue.dequeue).not.toHaveBeenCalled();
     });
   });
 
