@@ -17,7 +17,7 @@ import { ClientGatewayOptions, DEFAULT_GATEWAY_CONFIG } from '../types/GatewayTy
  * HTTP Client interface for making requests
  * Uses existing apiClient from mobile app
  */
-interface HttpClient {
+export interface HttpClient {
   get<T>(url: string, config?: Record<string, unknown>): Promise<T>;
   post<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T>;
   put<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T>;
@@ -73,7 +73,7 @@ export function createClientGateway<T>(
     // Only create new object when needed
     return {
       ...baseRequestConfig,
-      headers: { ...baseRequestConfig.headers, ...overrides.headers },
+      headers: { ...(baseRequestConfig.headers as Record<string, string>), ...(overrides.headers as Record<string, string>) },
       ...overrides,
     };
   };

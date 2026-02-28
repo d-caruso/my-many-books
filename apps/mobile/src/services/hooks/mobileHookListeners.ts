@@ -13,6 +13,8 @@ import {
   HookListenerCategory,
 } from '@my-many-books/shared-types';
 
+export type { MobileHooksListenerSettings };
+
 export interface HookEventData {
   eventType: string;
   data: unknown;

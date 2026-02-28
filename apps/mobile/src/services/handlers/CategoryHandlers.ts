@@ -21,9 +21,9 @@
  * All handlers emit hookey events for observability and tracking.
  */
 
-import { createClientGateway, createDefaultClientGatewayConfig } from './gateways/clientGateway';
-import { createMobileHandler, createDefaultMobileHandlerConfig } from './gateways/mobileHandler';
-import { createQueueHandler, createDefaultQueueHandlerConfig } from './gateways/queueHandler';
+import { createClientGateway, createDefaultClientGatewayConfig, HttpClient } from './gateways/clientGateway';
+import { createMobileHandler, createDefaultMobileHandlerConfig, ExecutableQueue, NetworkStateProvider } from './gateways/mobileHandler';
+import { createQueueHandler, createDefaultQueueHandlerConfig, OperationQueue } from './gateways/queueHandler';
 import { ClientGatewayHandler, MobileHandlerType, QueueHandlerType } from './types/HandlerTypes';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 
@@ -264,7 +264,7 @@ export class CategoryHandlerFactory {
   /**
    * Create Pure HTTP Category Handler (web-app pattern)
    */
-  static createClientGateway(httpClient: Parameters<typeof createDefaultClientGatewayConfig>[0]): ValidatedCategoryHandler<ClientGatewayHandler<Category>> {
+  static createClientGateway(httpClient: HttpClient): ValidatedCategoryHandler<ClientGatewayHandler<Category>> {
     const config = createDefaultClientGatewayConfig(httpClient);
     const handler = createClientGateway<Category>('category', config);
     return new ValidatedCategoryHandler(handler);
@@ -273,7 +273,7 @@ export class CategoryHandlerFactory {
   /**
    * Create Auto-queueing Mobile Category Handler (hybrid)
    */
-  static createMobileHandler(httpClient: Parameters<typeof createDefaultMobileHandlerConfig>[0], queue: Parameters<typeof createDefaultMobileHandlerConfig>[1], networkProvider: Parameters<typeof createDefaultMobileHandlerConfig>[2]): ValidatedCategoryHandler<MobileHandlerType<Category>> {
+  static createMobileHandler(httpClient: HttpClient, queue: ExecutableQueue, networkProvider: NetworkStateProvider): ValidatedCategoryHandler<MobileHandlerType<Category>> {
     const config = createDefaultMobileHandlerConfig(httpClient, queue, networkProvider);
     const handler = createMobileHandler<Category>('category', config);
     return new ValidatedCategoryHandler(handler);
@@ -282,7 +282,7 @@ export class CategoryHandlerFactory {
   /**
    * Create Queue-only Category Handler
    */
-  static createQueueHandler(queue: Parameters<typeof createDefaultQueueHandlerConfig>[1]): ValidatedCategoryHandler<QueueHandlerType<Category>> {
+  static createQueueHandler(queue: OperationQueue): ValidatedCategoryHandler<QueueHandlerType<Category>> {
     const config = createDefaultQueueHandlerConfig('category', queue);
     const handler = createQueueHandler<Category>('category', config);
     return new ValidatedCategoryHandler(handler);
@@ -291,14 +291,14 @@ export class CategoryHandlerFactory {
 
 // Convenience exports for direct usage
 export const categoryClientGateway = {
-  create: (httpClient: Parameters<typeof createDefaultClientGatewayConfig>[0]) => CategoryHandlerFactory.createClientGateway(httpClient),
+  create: (httpClient: HttpClient) => CategoryHandlerFactory.createClientGateway(httpClient),
 };
 
 export const categoryMobileHandler = {
-  create: (httpClient: Parameters<typeof createDefaultMobileHandlerConfig>[0], queue: Parameters<typeof createDefaultMobileHandlerConfig>[1], networkProvider: Parameters<typeof createDefaultMobileHandlerConfig>[2]) =>
+  create: (httpClient: HttpClient, queue: ExecutableQueue, networkProvider: NetworkStateProvider) =>
     CategoryHandlerFactory.createMobileHandler(httpClient, queue, networkProvider),
 };
 
 export const categoryQueueHandler = {
-  create: (queue: Parameters<typeof createDefaultQueueHandlerConfig>[1]) => CategoryHandlerFactory.createQueueHandler(queue),
+  create: (queue: OperationQueue) => CategoryHandlerFactory.createQueueHandler(queue),
 };

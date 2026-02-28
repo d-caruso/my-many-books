@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import type { SQLiteBindParams } from 'expo-sqlite';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 
 const DATABASE_NAME = 'my_many_books.db';
@@ -48,7 +49,7 @@ class DatabaseService {
   /**
    * Execute SQL query
    */
-  async executeQuery(sql: string, params: unknown[] = []): Promise<{ changes: number; lastInsertRowId: number }> {
+  async executeQuery(sql: string, params: SQLiteBindParams = []): Promise<{ changes: number; lastInsertRowId: number }> {
     const db = this.getDatabase();
     try {
       const result = await db.runAsync(sql, params);
@@ -67,11 +68,11 @@ class DatabaseService {
   /**
    * Execute SQL query and return all rows
    */
-  async getAllAsync<T = Record<string, unknown>>(sql: string, params: unknown[] = []): Promise<T[]> {
+  async getAllAsync<T = Record<string, unknown>>(sql: string, params: SQLiteBindParams = []): Promise<T[]> {
     const db = this.getDatabase();
     try {
       const result = await db.getAllAsync(sql, params);
-      return result;
+      return result as T[];
     } catch (error) {
       mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
         operation: 'get_all_async',
@@ -86,11 +87,11 @@ class DatabaseService {
   /**
    * Execute SQL query and return first row
    */
-  async getFirstAsync<T = Record<string, unknown>>(sql: string, params: unknown[] = []): Promise<T | null> {
+  async getFirstAsync<T = Record<string, unknown>>(sql: string, params: SQLiteBindParams = []): Promise<T | null> {
     const db = this.getDatabase();
     try {
       const result = await db.getFirstAsync(sql, params);
-      return result;
+      return result as T | null;
     } catch (error) {
       mobileHooks.emit(MOBILE_EVENTS.ERROR.STORAGE, {
         operation: 'get_first_async',

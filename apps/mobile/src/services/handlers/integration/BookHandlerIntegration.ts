@@ -8,7 +8,46 @@
 import { OperationQueue } from '../../OperationQueue';
 import { IDMappingService } from '../../sync/IDMappingService';
 import { BookHandlerFactory, Book, CreateBookPayload, UpdateBookPayload } from '../BookHandlers';
-import { ResourceType } from '../../../types/queue';
+import { ResourceType, BookOperationPayload } from '../../../types/queue';
+import { HttpClient } from '../gateways/clientGateway';
+import { ExecutableQueue, NetworkStateProvider } from '../gateways/mobileHandler';
+
+/**
+ * Adapts services/OperationQueue to the ExecutableQueue interface expected by MobileHandler.
+ * services/OperationQueue uses enqueue()/processQueue() while ExecutableQueue uses add()/executeAll().
+ */
+class ExecutableQueueAdapter implements ExecutableQueue {
+  constructor(private q: OperationQueue) {}
+
+  async add(operation: {
+    id: string;
+    type: 'CREATE' | 'UPDATE' | 'DELETE';
+    resourceType: string;
+    resourceId?: string;
+    data?: unknown;
+    timestamp: Date;
+    retryCount: number;
+  }): Promise<string> {
+    return this.q.enqueue(
+      operation.type,
+      'book',
+      (operation.data ?? {}) as BookOperationPayload,
+      3
+    );
+  }
+
+  async executeAll(): Promise<void> {
+    // processQueue requires an external executor — callers should invoke it directly
+  }
+
+  size(): number {
+    return this.q.size();
+  }
+
+  clear(): void {
+    void this.q.clear();
+  }
+}
 
 // Ensure book is recognized as a valid resource type
 const BOOK_RESOURCE: ResourceType = 'book';
@@ -40,7 +79,7 @@ export class BookHandlerIntegration {
   /**
    * Create handlers that are properly integrated with queue system
    */
-  createIntegratedHandlers(httpClient: Record<string, unknown>, networkProvider: Record<string, unknown>) {
+  createIntegratedHandlers(httpClient: HttpClient, networkProvider: NetworkStateProvider) {
     this.ensureInitialized();
 
     return {
@@ -51,12 +90,12 @@ export class BookHandlerIntegration {
 
       // Mobile handler with queue and ID mapping
       mobileHandler: this.wrapWithIDMapping(
-        BookHandlerFactory.createMobileHandler(httpClient, this.operationQueue, networkProvider)
+        BookHandlerFactory.createMobileHandler(httpClient, new ExecutableQueueAdapter(this.operationQueue), networkProvider)
       ),
 
-      // Queue handler with ID mapping
+      // Queue handler with ID mapping (uses internal OperationQueueAdapter by default)
       queueHandler: this.wrapWithIDMapping(
-        BookHandlerFactory.createQueueHandler(this.operationQueue)
+        BookHandlerFactory.createQueueHandler()
       ),
     };
   }
@@ -64,7 +103,7 @@ export class BookHandlerIntegration {
   /**
    * Wrap handlers with ID mapping support
    */
-  private wrapWithIDMapping(handler: Record<string, unknown>) {
+  private wrapWithIDMapping(handler: object) {
     const typedHandler = handler as {
       create: (data: CreateBookPayload) => Promise<Book | string>;
       update: (id: string, data: UpdateBookPayload) => Promise<Book | string>;
@@ -204,7 +243,7 @@ export class BookHandlerIntegration {
     );
 
     for (const operation of failedBookOperations) {
-      await this.operationQueue.remove(operation.id);
+      await this.operationQueue.dequeue(operation.id);
     }
 
     return failedBookOperations.length;
@@ -228,8 +267,8 @@ export function getBookHandlerIntegration(
  * Convenience function to create fully integrated book handlers
  */
 export async function createIntegratedBookHandlers(
-  httpClient: Record<string, unknown>,
-  networkProvider: Record<string, unknown>,
+  httpClient: HttpClient,
+  networkProvider: NetworkStateProvider,
   operationQueue: OperationQueue,
   idMappingService: IDMappingService
 ) {

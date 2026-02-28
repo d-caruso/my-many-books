@@ -13,13 +13,13 @@ import {
   NetworkState,
 } from '../types/HandlerTypes';
 import { MobileHandlerOptions, DEFAULT_GATEWAY_CONFIG } from '../types/GatewayTypes';
-import { ClientGatewayConfig, createClientGateway } from './clientGateway';
+import { HttpClient, ClientGatewayConfig, createClientGateway } from './clientGateway';
 
 /**
- * Queue interface for offline operations
+ * Queue interface for offline operations with execution support
  * Uses existing OperationQueue from mobile app
  */
-interface OperationQueue {
+export interface ExecutableQueue {
   add(operation: QueueOperation): Promise<string>;
   executeAll(): Promise<void>;
   size(): number;
@@ -42,7 +42,7 @@ interface QueueOperation {
 /**
  * Network state provider interface
  */
-interface NetworkStateProvider {
+export interface NetworkStateProvider {
   isOnline(): boolean;
   getState(): NetworkState;
   onChange(callback: (state: NetworkState) => void): () => void;
@@ -53,7 +53,7 @@ interface NetworkStateProvider {
  */
 export interface MobileHandlerConfig extends ClientGatewayConfig {
   /** Queue instance for offline operations */
-  queue: OperationQueue;
+  queue: ExecutableQueue;
   /** Network state provider */
   networkProvider: NetworkStateProvider;
   /** Mobile-specific options */
@@ -297,16 +297,9 @@ export function createMobileHandler<T>(
 /**
  * Default Mobile Handler configuration
  */
-interface DefaultHttpClient {
-  get<T>(url: string, config?: Record<string, unknown>): Promise<T>;
-  post<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T>;
-  put<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T>;
-  delete<T>(url: string, config?: Record<string, unknown>): Promise<T>;
-}
-
 export const createDefaultMobileHandlerConfig = (
-  httpClient: DefaultHttpClient,
-  queue: OperationQueue,
+  httpClient: HttpClient,
+  queue: ExecutableQueue,
   networkProvider: NetworkStateProvider
 ): MobileHandlerConfig => ({
   baseURL: DEFAULT_GATEWAY_CONFIG.baseURL,

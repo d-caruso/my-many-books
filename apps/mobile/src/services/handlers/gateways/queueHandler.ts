@@ -19,7 +19,7 @@ import { OperationType, ResourceType, BaseOperationPayload } from '../../../type
 /**
  * Queue interface for operations
  */
-interface OperationQueue {
+export interface OperationQueue {
   add(operation: QueueOperation): Promise<string>;
   size(): number;
   clear(): void;

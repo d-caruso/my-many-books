@@ -27,9 +27,9 @@
  * All handlers emit hookey events for observability and tracking.
  */
 
-import { createClientGateway, createDefaultClientGatewayConfig } from './gateways/clientGateway';
-import { createMobileHandler, createDefaultMobileHandlerConfig } from './gateways/mobileHandler';
-import { createQueueHandler, createDefaultQueueHandlerConfig } from './gateways/queueHandler';
+import { createClientGateway, createDefaultClientGatewayConfig, HttpClient } from './gateways/clientGateway';
+import { createMobileHandler, createDefaultMobileHandlerConfig, ExecutableQueue, NetworkStateProvider } from './gateways/mobileHandler';
+import { createQueueHandler, createDefaultQueueHandlerConfig, OperationQueue } from './gateways/queueHandler';
 import { ClientGatewayHandler, MobileHandlerType, QueueHandlerType } from './types/HandlerTypes';
 import { 
   validateCreateBookAndThrow, 
@@ -92,7 +92,7 @@ const createEventMetadata = (operationId: string, bookData?: Partial<Book | Crea
 });
 
 // Validated book handler wrappers with hookey integration
-class ValidatedBookHandler<THandler extends Record<string, unknown>> {
+class ValidatedBookHandler<THandler extends object> {
   constructor(private handler: THandler) {}
 
   // Wrap create method with validation and hookey events
@@ -248,7 +248,7 @@ export class BookHandlerFactory {
    * - Used for real-time operations requiring server confirmation
    * - Includes validation for all operations
    */
-  static createClientGateway(httpClient: Record<string, unknown>): ValidatedBookHandler<ClientGatewayHandler<Book>> {
+  static createClientGateway(httpClient: HttpClient): ValidatedBookHandler<ClientGatewayHandler<Book>> {
     const config = createDefaultClientGatewayConfig(httpClient);
     const handler = createClientGateway<Book>('book', config);
     return new ValidatedBookHandler(handler);
@@ -261,7 +261,7 @@ export class BookHandlerFactory {
    * - Provides optimistic updates for better UX
    * - Includes validation for all operations
    */
-  static createMobileHandler(httpClient: Record<string, unknown>, queue: Record<string, unknown>, networkProvider: Record<string, unknown>): ValidatedBookHandler<MobileHandlerType<Book>> {
+  static createMobileHandler(httpClient: HttpClient, queue: ExecutableQueue, networkProvider: NetworkStateProvider): ValidatedBookHandler<MobileHandlerType<Book>> {
     const config = createDefaultMobileHandlerConfig(httpClient, queue, networkProvider);
     const handler = createMobileHandler<Book>('book', config);
     return new ValidatedBookHandler(handler);
@@ -274,7 +274,7 @@ export class BookHandlerFactory {
    * - No network dependency
    * - Includes validation for all operations
    */
-  static createQueueHandler(queue: Record<string, unknown>): ValidatedBookHandler<QueueHandlerType<Book>> {
+  static createQueueHandler(queue?: OperationQueue): ValidatedBookHandler<QueueHandlerType<Book>> {
     const config = createDefaultQueueHandlerConfig('book', queue);
     const handler = createQueueHandler<Book>('book', config);
     return new ValidatedBookHandler(handler);
@@ -283,16 +283,16 @@ export class BookHandlerFactory {
 
 // Convenience exports for direct usage
 export const bookClientGateway = {
-  create: (httpClient: Record<string, unknown>) => BookHandlerFactory.createClientGateway(httpClient),
+  create: (httpClient: HttpClient) => BookHandlerFactory.createClientGateway(httpClient),
 };
 
 export const bookMobileHandler = {
-  create: (httpClient: Record<string, unknown>, queue: Record<string, unknown>, networkProvider: Record<string, unknown>) => 
+  create: (httpClient: HttpClient, queue: ExecutableQueue, networkProvider: NetworkStateProvider) =>
     BookHandlerFactory.createMobileHandler(httpClient, queue, networkProvider),
 };
 
 export const bookQueueHandler = {
-  create: (queue: Record<string, unknown>) => BookHandlerFactory.createQueueHandler(queue),
+  create: (queue?: OperationQueue) => BookHandlerFactory.createQueueHandler(queue),
 };
 
 /**

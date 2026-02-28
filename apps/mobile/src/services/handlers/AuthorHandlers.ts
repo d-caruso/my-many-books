@@ -21,9 +21,9 @@
  * All handlers emit hookey events for observability and tracking.
  */
 
-import { createClientGateway, createDefaultClientGatewayConfig } from './gateways/clientGateway';
-import { createMobileHandler, createDefaultMobileHandlerConfig } from './gateways/mobileHandler';
-import { createQueueHandler, createDefaultQueueHandlerConfig } from './gateways/queueHandler';
+import { createClientGateway, createDefaultClientGatewayConfig, HttpClient } from './gateways/clientGateway';
+import { createMobileHandler, createDefaultMobileHandlerConfig, ExecutableQueue, NetworkStateProvider } from './gateways/mobileHandler';
+import { createQueueHandler, createDefaultQueueHandlerConfig, OperationQueue } from './gateways/queueHandler';
 import { ClientGatewayHandler, MobileHandlerType, QueueHandlerType } from './types/HandlerTypes';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 
@@ -115,7 +115,7 @@ const createEventMetadata = (operationId: string, authorData?: Partial<Author | 
 });
 
 // Validated author handler wrappers with hookey integration
-class ValidatedAuthorHandler<THandler extends Record<string, unknown>> {
+class ValidatedAuthorHandler<THandler extends object> {
   constructor(private handler: THandler) {}
 
   // Wrap create method with validation and hookey events
@@ -267,7 +267,7 @@ export class AuthorHandlerFactory {
   /**
    * Create Pure HTTP Author Handler (web-app pattern)
    */
-  static createClientGateway(httpClient: Record<string, unknown>): ValidatedAuthorHandler<ClientGatewayHandler<Author>> {
+  static createClientGateway(httpClient: HttpClient): ValidatedAuthorHandler<ClientGatewayHandler<Author>> {
     const config = createDefaultClientGatewayConfig(httpClient);
     const handler = createClientGateway<Author>('author', config);
     return new ValidatedAuthorHandler(handler);
@@ -276,7 +276,7 @@ export class AuthorHandlerFactory {
   /**
    * Create Auto-queueing Mobile Author Handler (hybrid)
    */
-  static createMobileHandler(httpClient: Record<string, unknown>, queue: Record<string, unknown>, networkProvider: Record<string, unknown>): ValidatedAuthorHandler<MobileHandlerType<Author>> {
+  static createMobileHandler(httpClient: HttpClient, queue: ExecutableQueue, networkProvider: NetworkStateProvider): ValidatedAuthorHandler<MobileHandlerType<Author>> {
     const config = createDefaultMobileHandlerConfig(httpClient, queue, networkProvider);
     const handler = createMobileHandler<Author>('author', config);
     return new ValidatedAuthorHandler(handler);
@@ -285,7 +285,7 @@ export class AuthorHandlerFactory {
   /**
    * Create Queue-only Author Handler
    */
-  static createQueueHandler(queue: Record<string, unknown>): ValidatedAuthorHandler<QueueHandlerType<Author>> {
+  static createQueueHandler(queue: OperationQueue): ValidatedAuthorHandler<QueueHandlerType<Author>> {
     const config = createDefaultQueueHandlerConfig('author', queue);
     const handler = createQueueHandler<Author>('author', config);
     return new ValidatedAuthorHandler(handler);
@@ -294,14 +294,14 @@ export class AuthorHandlerFactory {
 
 // Convenience exports for direct usage
 export const authorClientGateway = {
-  create: (httpClient: Record<string, unknown>) => AuthorHandlerFactory.createClientGateway(httpClient),
+  create: (httpClient: HttpClient) => AuthorHandlerFactory.createClientGateway(httpClient),
 };
 
 export const authorMobileHandler = {
-  create: (httpClient: Record<string, unknown>, queue: Record<string, unknown>, networkProvider: Record<string, unknown>) => 
+  create: (httpClient: HttpClient, queue: ExecutableQueue, networkProvider: NetworkStateProvider) =>
     AuthorHandlerFactory.createMobileHandler(httpClient, queue, networkProvider),
 };
 
 export const authorQueueHandler = {
-  create: (queue: Record<string, unknown>) => AuthorHandlerFactory.createQueueHandler(queue),
+  create: (queue: OperationQueue) => AuthorHandlerFactory.createQueueHandler(queue),
 };

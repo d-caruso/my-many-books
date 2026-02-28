@@ -192,25 +192,31 @@ class ErrorTrackingService {
    * Setup global JavaScript error handling using React Native's ErrorUtils
    */
   private setupGlobalErrorHandling(): void {
+    type ErrorUtilsType = {
+      setGlobalHandler: (fn: (error: unknown, isFatal: boolean) => void) => void;
+      getGlobalHandler: () => ((error: unknown, isFatal: boolean) => void) | null;
+    };
+    const g = global as typeof globalThis & { ErrorUtils?: ErrorUtilsType };
+
     // Check if ErrorUtils is available (React Native environment)
-    if (typeof global !== 'undefined' && global.ErrorUtils) {
-      const originalErrorHandler = global.ErrorUtils.getGlobalHandler();
+    if (typeof global !== 'undefined' && g.ErrorUtils) {
+      const originalErrorHandler = g.ErrorUtils.getGlobalHandler();
 
       this.globalErrorHandler = (error: unknown, isFatal: boolean) => {
         try {
           // Ensure we have a proper Error object
-          const normalizedError = error instanceof Error 
-            ? error 
+          const normalizedError = error instanceof Error
+            ? error
             : new Error(getErrorMessage(error));
 
           // Track the error with proper context
           this.trackError(normalizedError, 'UNHANDLED', {
             severity: isFatal ? 'critical' : 'high',
-            additionalData: { 
+            additionalData: {
               isFatal,
               handlerType: 'global_error_utils',
               originalErrorType: typeof error,
-              hasStack: Boolean(error?.stack)
+              hasStack: Boolean((error as { stack?: unknown })?.stack)
             }
           });
         } catch (trackingError) {
@@ -230,12 +236,12 @@ class ErrorTrackingService {
       };
 
       // Set our custom error handler
-      global.ErrorUtils.setGlobalHandler(this.globalErrorHandler);
-      
+      g.ErrorUtils.setGlobalHandler(this.globalErrorHandler);
+
       // Store cleanup function
       this.errorHandlers.push(() => {
-        if (global.ErrorUtils) {
-          global.ErrorUtils.setGlobalHandler(originalErrorHandler);
+        if (g.ErrorUtils) {
+          g.ErrorUtils.setGlobalHandler(originalErrorHandler);
         }
       });
     } else {
@@ -276,7 +282,13 @@ class ErrorTrackingService {
    * Setup unhandled promise rejection handling for multiple environments
    */
   private setupPromiseRejectionHandling(): void {
-    const handlePromiseRejection = (event: { reason?: unknown; preventDefault?: () => void }) => {
+    const handlePromiseRejection = (event: {
+      reason?: unknown;
+      preventDefault?: () => void;
+      detail?: { reason?: unknown };
+      promise?: unknown;
+      type?: string;
+    }) => {
       try {
         // Extract the rejection reason
         const reason = event.reason || event.detail?.reason || event;
@@ -284,7 +296,7 @@ class ErrorTrackingService {
         // Normalize to Error object
         const error = reason instanceof Error 
           ? reason 
-          : new Error(reason?.message || String(reason) || 'Unhandled promise rejection');
+          : new Error((reason as { message?: string })?.message || String(reason) || 'Unhandled promise rejection');
 
         this.trackError(error, 'PROMISE_REJECTION', {
           severity: 'high',

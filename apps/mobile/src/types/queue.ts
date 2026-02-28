@@ -1,6 +1,8 @@
 import type { Book } from '@my-many-books/shared-types';
 import type { OperationType, QueueOperationStatus } from '../services/hooks/eventsSchema';
 
+export type { OperationType } from '../services/hooks/eventsSchema';
+
 export type ResourceType = 'book' | 'author' | 'category' | 'user' | 'settings';
 
 // Base interface for all operation payloads

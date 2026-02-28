@@ -1,11 +1,14 @@
 // Create API services from shared libraries with mobile-specific configurations
-import { createApiClient, HttpClient, ApiClientConfig } from '@my-many-books/shared-api/';
+import { createApiClient, HttpClient, ApiClientConfig, RequestConfig } from '@my-many-books/shared-api/';
 import { authService } from './authService';
 import NetInfo from '@react-native-community/netinfo';
 import i18n from '../i18n';
 import { operationQueue } from './OperationQueue';
 import { isRetriableError } from './QueueExecutor';
-import type { OperationType } from '../types/queue';
+import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/eventsSchema';
+import type { OperationType } from './hooks/eventsSchema';
+import type { BookOperationPayload, UserOperationPayload, SettingsOperationPayload } from '../types/queue';
+import type { BookFormData } from '@my-many-books/shared-types';
 import { API_BASE_URL } from '../config/api';
 import type { Category } from '@my-many-books/shared-types';
 import {
@@ -31,12 +34,19 @@ class FetchHttpClient implements HttpClient {
       throw new ApiError(ErrorCode.NETWORK_OFFLINE, i18n.t('offline.errors.noConnection', { ns: 'offline' }));
     }
 
+    const token = await authService.getIdToken();
+    const headers: Record<string, string> = {
+      ...(options.headers as Record<string, string>),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
       const response = await fetch(url, {
         ...options,
+        headers,
         signal: controller.signal,
       });
 
@@ -51,16 +61,7 @@ class FetchHttpClient implements HttpClient {
           const refreshed = await authService.silentRefresh();
 
           if (refreshed) {
-            // Get new token and retry the original request
-            const newToken = await authService.getIdToken();
-            const retryOptions = {
-              ...options,
-              headers: {
-                ...options.headers,
-                Authorization: `Bearer ${newToken}`,
-              },
-            };
-            return this.fetchWithTimeout<T>(url, retryOptions, true);
+            return this.fetchWithTimeout<T>(url, options, true);
           }
 
           // Token refresh failed - logout user
@@ -118,7 +119,7 @@ class FetchHttpClient implements HttpClient {
     }
   }
 
-  async get<T>(url: string, config?: Record<string, unknown>): Promise<T> {
+  async get<T>(url: string, config?: RequestConfig): Promise<T> {
     let finalUrl = url;
     
     // Handle query parameters for GET requests
@@ -141,7 +142,7 @@ class FetchHttpClient implements HttpClient {
     });
   }
 
-  async post<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T> {
+  async post<T>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
     return this.fetchWithTimeout<T>(url, {
       method: 'POST',
       headers: {
@@ -152,7 +153,7 @@ class FetchHttpClient implements HttpClient {
     });
   }
 
-  async put<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T> {
+  async put<T>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
     return this.fetchWithTimeout<T>(url, {
       method: 'PUT',
       headers: {
@@ -163,7 +164,7 @@ class FetchHttpClient implements HttpClient {
     });
   }
 
-  async patch<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T> {
+  async patch<T>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
     return this.fetchWithTimeout<T>(url, {
       method: 'PATCH',
       headers: {
@@ -174,7 +175,7 @@ class FetchHttpClient implements HttpClient {
     });
   }
 
-  async delete<T>(url: string, config?: Record<string, unknown>): Promise<T> {
+  async delete<T>(url: string, config?: RequestConfig): Promise<T> {
     return this.fetchWithTimeout<T>(url, {
       method: 'DELETE',
       headers: config?.headers || {},
@@ -186,9 +187,6 @@ class FetchHttpClient implements HttpClient {
 const apiConfig: ApiClientConfig = {
   baseURL: API_BASE_URL,
   timeout: 10000,
-  getAuthToken: async () => {
-    return await authService.getIdToken();
-  },
   onUnauthorized: async () => {
     await authService.logout();
   },
@@ -290,8 +288,14 @@ async function withQueueOnError<T>(
   } catch (error) {
     // If error is retriable, enqueue the operation
     if (isRetriableError(error)) {
-      const retries = maxRetries ?? (operationType === 'CREATE' ? 5 : 3);
-      await operationQueue.enqueue(operationType, resource, payload, retries);
+      const retries = maxRetries ?? (operationType === OPERATION_TYPES.CREATE ? 5 : 3);
+      if (resource === RESOURCE_TYPES.BOOK) {
+        await operationQueue.enqueue(operationType, RESOURCE_TYPES.BOOK, payload as BookOperationPayload, retries);
+      } else if (resource === RESOURCE_TYPES.USER) {
+        await operationQueue.enqueue(operationType, RESOURCE_TYPES.USER, payload as UserOperationPayload, retries);
+      } else {
+        await operationQueue.enqueue(operationType, RESOURCE_TYPES.SETTINGS, payload as SettingsOperationPayload, retries);
+      }
       // Re-throw to let caller know it failed
       throw error;
     }
@@ -317,39 +321,32 @@ export const bookAPI = {
   getBook: apiClient.books.getBook.bind(apiClient.books),
 
   // Write operations with automatic queueing
-  createBook: async (book: unknown) => {
-    const bookData = book as Record<string, unknown>;
+  createBook: async (book: BookFormData) => {
     return withQueueOnError(
       () => apiClient.books.createBook(book),
-      'CREATE',
-      'book',
-      {
-        ...bookData,
-        // Ensure temp ID is preserved for queue processing
-        id: bookData.id || bookData._tempId,
-        _tempId: bookData._tempId || bookData.id,
-      }
+      OPERATION_TYPES.CREATE,
+      RESOURCE_TYPES.BOOK,
+      { ...book, id: (book as Record<string, unknown>)._tempId ?? (book as Record<string, unknown>).id }
     );
   },
 
   updateBook: async (id: string, book: unknown) => {
     const bookData = book as Record<string, unknown>;
     return withQueueOnError(
-      () => apiClient.books.updateBook(id, book),
-      'UPDATE',
-      'book',
+      () => apiClient.books.updateBook(Number(id), bookData as Partial<BookFormData>),
+      OPERATION_TYPES.UPDATE,
+      RESOURCE_TYPES.BOOK,
       { id, ...bookData }
     );
   },
 
-  deleteBook: async (id: string) => {
-    return withQueueOnError(
-      () => apiClient.books.deleteBook(id),
-      'DELETE',
-      'book',
+  deleteBook: async (id: string) =>
+    withQueueOnError(
+      () => apiClient.books.deleteBook(Number(id)),
+      OPERATION_TYPES.DELETE,
+      RESOURCE_TYPES.BOOK,
       { id }
-    );
-  },
+    ),
 
   updateBookStatus: apiClient.books.updateBookStatus.bind(apiClient.books),
 };
@@ -392,13 +389,20 @@ export const categoryAPI = {
 };
 
 export const adminAPI = {
-  getAdminStats: apiClient.admin.getAdminStats.bind(apiClient.admin),
-  getAdminUsers: apiClient.admin.getAdminUsers.bind(apiClient.admin),
-  updateAdminUser: apiClient.admin.updateAdminUser.bind(apiClient.admin),
-  deleteAdminUser: apiClient.admin.deleteAdminUser.bind(apiClient.admin),
-  getAdminBooks: apiClient.admin.getAdminBooks.bind(apiClient.admin),
-  updateAdminBook: apiClient.admin.updateAdminBook.bind(apiClient.admin),
-  deleteAdminBook: apiClient.admin.deleteAdminBook.bind(apiClient.admin),
+  getAdminStats: () =>
+    httpClient.get(`${API_BASE_URL}/admin/stats/summary`),
+  getAdminUsers: (page = 1, limit = 10, search?: string) =>
+    httpClient.get(`${API_BASE_URL}/admin/users`, { params: { page, limit, ...(search ? { search } : {}) } }),
+  updateAdminUser: (id: number, data: Record<string, unknown>) =>
+    httpClient.put(`${API_BASE_URL}/admin/users/${id}`, data),
+  deleteAdminUser: (id: number) =>
+    httpClient.delete(`${API_BASE_URL}/admin/users/${id}`),
+  getAdminBooks: (page = 1, limit = 10, search?: string) =>
+    httpClient.get(`${API_BASE_URL}/admin/books`, { params: { page, limit, ...(search ? { search } : {}) } }),
+  updateAdminBook: (id: number, data: Record<string, unknown>) =>
+    httpClient.put(`${API_BASE_URL}/admin/books/${id}`, data),
+  deleteAdminBook: (id: number) =>
+    httpClient.delete(`${API_BASE_URL}/admin/books/${id}`),
 };
 
 // Mobile-specific API utilities
@@ -424,7 +428,7 @@ export const apiUtils = {
     throw error;
   },
 
-  isOfflineError: (error: unknown): boolean => {
-    return error?.message === i18n.t('offline.errors.noConnection', { ns: 'offline' });
-  },
+  isOfflineError: (error: unknown): boolean =>
+    error instanceof Error &&
+    error.message === i18n.t('offline.errors.noConnection', { ns: 'offline' }),
 };
