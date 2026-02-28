@@ -2,7 +2,9 @@
 import type {
   Book,
   User as SharedUser,
+  SortDirection,
 } from '@my-many-books/shared-types';
+import type { DbSortField } from '@/constants/db';
 
 export type { Book };
 
@@ -75,6 +77,8 @@ export interface SearchQuery {
   status?: Book['status'];
   limit?: number;
   offset?: number;
+  sortBy?: DbSortField;
+  sortOrder?: SortDirection;
 }
 
 // API Response types

@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Checkbox, Dialog, List, Portal, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import type { Category } from '@/types';
+import type { Category } from '@my-many-books/shared-types';
 import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 
 interface CategorySelectorModalProps {

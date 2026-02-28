@@ -3,6 +3,7 @@ import type { Author } from '@my-many-books/shared-types';
 import { LocalAuthor } from '@/entities/LocalAuthor';
 import type { SyncStatus } from '@/types';
 import { SYNC_STATUS } from '@/types';
+import type { SQLiteBindValue } from 'expo-sqlite';
 
 export class AuthorRepository {
   /**
@@ -137,7 +138,7 @@ export class AuthorRepository {
     serverUpdatedAt?: string;
   }): Promise<void> {
     const updates: string[] = [];
-    const values: unknown[] = [];
+    const values: SQLiteBindValue[] = [];
 
     if (fields.serverId !== undefined) {
       updates.push('server_id = ?');

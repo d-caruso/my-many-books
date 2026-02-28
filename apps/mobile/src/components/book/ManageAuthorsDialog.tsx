@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Dialog, List, Portal, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useManageAuthors } from '@my-many-books/shared-ui-hooks';
-import type { Author } from '@/types';
+import type { Author } from '@my-many-books/shared-types';
 import { authorAPI } from '@/services/api';
 
 interface ManageAuthorsDialogProps {

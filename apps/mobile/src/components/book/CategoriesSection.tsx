@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { ActivityIndicator, Button, Chip, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import type { Category } from '@/types';
+import type { Category } from '@my-many-books/shared-types';
 import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { addBookStyles as styles } from './addBookStyles';
 

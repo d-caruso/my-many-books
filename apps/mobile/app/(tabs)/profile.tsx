@@ -72,8 +72,8 @@ export default function ProfileScreen() {
               <List.Item
                 title={t('pages:admin.title', 'Admin Panel')}
                 description={t('pages:admin.menu.access', 'Access admin features')}
-                left={() => <List.Icon icon="shield-account" accessible={false} />}
-                right={() => <List.Icon icon="chevron-right" accessible={false} />}
+                left={() => <List.Icon icon="shield-account" />}
+                right={() => <List.Icon icon="chevron-right" />}
                 onPress={() => router.push('/admin')}
                 accessibilityRole="button"
               />
@@ -82,7 +82,7 @@ export default function ProfileScreen() {
             <List.Item
               title={t('dark_mode')}
               description={t('toggle_dark_theme')}
-              left={() => <List.Icon icon="theme-light-dark" accessible={false} />}
+              left={() => <List.Icon icon="theme-light-dark" />}
               right={() => (
                 <Switch
                   value={isDark}
@@ -96,8 +96,8 @@ export default function ProfileScreen() {
             <List.Item
               title={t('notifications')}
               description={t('push_notification_settings')}
-              left={() => <List.Icon icon="bell" accessible={false} />}
-              right={() => <List.Icon icon="chevron-right" accessible={false} />}
+              left={() => <List.Icon icon="bell" />}
+              right={() => <List.Icon icon="chevron-right" />}
               onPress={() => {}}
               accessibilityRole="button"
               accessibilityLabel={`${t('notifications')}, ${t('push_notification_settings')}`}
@@ -106,8 +106,8 @@ export default function ProfileScreen() {
             <List.Item
               title={t('storage')}
               description={t('manage_offline_data')}
-              left={() => <List.Icon icon="database" accessible={false} />}
-              right={() => <List.Icon icon="chevron-right" accessible={false} />}
+              left={() => <List.Icon icon="database" />}
+              right={() => <List.Icon icon="chevron-right" />}
               onPress={() => {}}
               accessibilityRole="button"
               accessibilityLabel={`${t('storage')}, ${t('manage_offline_data')}`}
@@ -116,8 +116,8 @@ export default function ProfileScreen() {
             <List.Item
               title={t('export_data')}
               description={t('export_your_book_collection')}
-              left={() => <List.Icon icon="export" accessible={false} />}
-              right={() => <List.Icon icon="chevron-right" accessible={false} />}
+              left={() => <List.Icon icon="export" />}
+              right={() => <List.Icon icon="chevron-right" />}
               onPress={() => {}}
               accessibilityRole="button"
               accessibilityLabel={`${t('export_data')}, ${t('export_your_book_collection')}`}
@@ -125,8 +125,8 @@ export default function ProfileScreen() {
 
             <List.Item
               title={t('about')}
-              left={() => <List.Icon icon="information-outline" accessible={false} />}
-              right={() => <List.Icon icon="chevron-right" accessible={false} />}
+              left={() => <List.Icon icon="information-outline" />}
+              right={() => <List.Icon icon="chevron-right" />}
               onPress={() => setAboutDialogVisible(true)}
               accessibilityRole="button"
               accessibilityLabel={t('about')}
@@ -158,8 +158,8 @@ export default function ProfileScreen() {
             <List.Item
               title={t('help_and_support')}
               description={t('get_help_and_contact_support')}
-              left={() => <List.Icon icon="help-circle" accessible={false} />}
-              right={() => <List.Icon icon="chevron-right" accessible={false} />}
+              left={() => <List.Icon icon="help-circle" />}
+              right={() => <List.Icon icon="chevron-right" />}
               onPress={() => {}}
               accessibilityRole="button"
               accessibilityLabel={`${t('help_and_support')}, ${t('get_help_and_contact_support')}`}
@@ -168,8 +168,8 @@ export default function ProfileScreen() {
             <List.Item
               title={t('privacy_policy')}
               description={t('read_our_privacy_policy')}
-              left={() => <List.Icon icon="shield-account" accessible={false} />}
-              right={() => <List.Icon icon="chevron-right" accessible={false} />}
+              left={() => <List.Icon icon="shield-account" />}
+              right={() => <List.Icon icon="chevron-right" />}
               onPress={() => {}}
               accessibilityRole="button"
               accessibilityLabel={`${t('privacy_policy')}, ${t('read_our_privacy_policy')}`}
@@ -178,8 +178,8 @@ export default function ProfileScreen() {
             <List.Item
               title={t('terms_of_service')}
               description={t('read_our_terms_of_service')}
-              left={() => <List.Icon icon="file-document" accessible={false} />}
-              right={() => <List.Icon icon="chevron-right" accessible={false} />}
+              left={() => <List.Icon icon="file-document" />}
+              right={() => <List.Icon icon="chevron-right" />}
               onPress={() => {}}
               accessibilityRole="button"
               accessibilityLabel={`${t('terms_of_service')}, ${t('read_our_terms_of_service')}`}
@@ -188,7 +188,7 @@ export default function ProfileScreen() {
             <List.Item
               title={t('app_version')}
               description="1.0.0"
-              left={() => <List.Icon icon="information" accessible={false} />}
+              left={() => <List.Icon icon="information" />}
               accessible={true}
               accessibilityLabel={`${t('app_version')} 1.0.0`}
             />

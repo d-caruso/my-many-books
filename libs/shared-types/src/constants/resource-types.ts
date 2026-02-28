@@ -4,6 +4,7 @@ export const RESOURCE_TYPES = Object.freeze({
   AUTHOR: 'author',
   CATEGORY: 'category',
   USER: 'user',
+  SETTINGS: 'settings',
   HOOK: 'hook',
 
   // Configuration resources

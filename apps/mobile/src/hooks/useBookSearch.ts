@@ -5,6 +5,8 @@ import { bookRepository } from '@/services/database/BookRepository';
 import { useNetworkState } from './useNetworkState';
 import { useTranslation } from 'react-i18next';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import { DB_SORT_FIELDS } from '@/constants/db';
 
 interface BookSearchState {
   books: Book[];
@@ -68,11 +70,11 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
           status: filters.status,
           author: filters.author,
           category: filters.category,
-          sortBy: (filters.sortBy as string) || 'update_date',
-          sortOrder: (filters.sortOrder as string) || 'DESC',
+          sortBy: filters.sortBy ?? DB_SORT_FIELDS.UPDATE_DATE,
+          sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.DESC,
         });
 
-        setBooks(localBooks);
+        setBooks(localBooks.map(lb => lb.entity));
         setTotalCount(localBooks.length);
         setHasMore(false); // No pagination for offline search
         setCurrentPage(1);
@@ -114,11 +116,12 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
       setLastFilters(filters);
 
     } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string }; status?: number }; message?: string };
       mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
         operation: 'search',
         resource: RESOURCE_TYPES.BOOK,
-        error: err.response?.data?.message || err.message,
-        statusCode: err.response?.status,
+        error: e.response?.data?.message || e.message,
+        statusCode: e.response?.status,
         query,
         source: 'useBookSearch_searchBooks'
       });
@@ -131,10 +134,10 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
           status: filters.status,
           author: filters.author,
           category: filters.category,
-          sortBy: (filters.sortBy as string) || 'update_date',
-          sortOrder: (filters.sortOrder as string) || 'DESC',
+          sortBy: filters.sortBy ?? DB_SORT_FIELDS.UPDATE_DATE,
+          sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.DESC,
         });
-        setBooks(localBooks);
+        setBooks(localBooks.map(lb => lb.entity));
         setTotalCount(localBooks.length);
         setHasMore(false);
         setError(t('search.showingOfflineResults'));
@@ -163,11 +166,12 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
       const book = await bookAPI.searchByISBN(isbn);
       return book;
     } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string }; status?: number }; message?: string };
       mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
         operation: 'isbn_search',
         resource: RESOURCE_TYPES.BOOK,
-        error: err.response?.data?.message || err.message,
-        statusCode: err.response?.status,
+        error: e.response?.data?.message || e.message,
+        statusCode: e.response?.status,
         isbn,
         source: 'useBookSearch_searchByISBN'
       });

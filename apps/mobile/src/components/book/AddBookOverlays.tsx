@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { Author, Category } from '@/types';
+import type { Author, Category } from '@my-many-books/shared-types';
 import { BarcodeScannerPanel } from '@/components/scanner/BarcodeScannerPanel';
 import { AddAuthorDialog } from './AddAuthorDialog';
 import { AddCategoryDialog } from './AddCategoryDialog';

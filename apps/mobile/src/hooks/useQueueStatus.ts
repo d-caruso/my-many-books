@@ -19,7 +19,7 @@ export function useQueueStatus() {
     setOperations(allOps);
     
     // Check if any operations are currently being processed/syncing
-    const hasProcessingOps = allOps.some(op => op.status === 'retrying' || op._syncStatus === 'syncing');
+    const hasProcessingOps = allOps.some(op => op.status === 'retrying');
     setIsProcessing(hasProcessingOps);
   };
 

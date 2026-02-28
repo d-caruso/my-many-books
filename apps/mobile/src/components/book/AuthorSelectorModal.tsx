@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Chip, Dialog, List, Portal, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import type { Author } from '@/types';
+import type { Author } from '@my-many-books/shared-types';
 
 interface AuthorSelectorModalProps {
   visible: boolean;

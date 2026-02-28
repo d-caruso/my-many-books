@@ -2,6 +2,10 @@ import { LocalBook } from '@/entities/LocalBook';
 import { databaseService } from './DatabaseService';
 import type { Book } from '@my-many-books/shared-types';
 import { SyncStatus, SYNC_STATUS } from '@/types';
+import type { SQLiteBindValue } from 'expo-sqlite';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import { DB_SORT_FIELDS } from '@/constants/db';
+import type { DbSortField } from '@/constants/db';
 
 // Counter to ensure unique IDs even when Date.now() returns same value
 let idCounter = 0;
@@ -51,7 +55,6 @@ export class BookRepository {
     await databaseService.executeQuery('BEGIN TRANSACTION');
 
     try {
-      const entityAny = entity as Record<string, unknown>;
       // Insert main book record
       await databaseService.executeQuery(
         `INSERT INTO books (
@@ -68,7 +71,7 @@ export class BookRepository {
           null,                                           // description (not yet in API)
           null,                                           // published_date (not yet in API)
           null,                                           // page_count (not yet in API)
-          entityAny.rating ?? null,                       // rating
+          null,                                               // rating (not yet in API)
           entity.status || 'want-to-read',
           entity.notes || null,
           entity.userId || null,
@@ -128,7 +131,7 @@ export class BookRepository {
         entity.title,
         this.serializeText(entity.authors),
         entity.status,
-        (entity as Record<string, unknown>).rating ?? null,
+        null, // rating (not yet in API)
         entity.notes,
         now,
         book.serverId,
@@ -172,7 +175,7 @@ export class BookRepository {
     
     try {
       // 1. Get the temp record data
-      const tempRecord = await databaseService.getFirstAsync(
+      const tempRecord = await databaseService.getFirstAsync<Record<string, SQLiteBindValue>>(
         'SELECT * FROM books WHERE id = ?',
         [tempId]
       );
@@ -302,7 +305,7 @@ export class BookRepository {
     syncStatus?: SyncStatus;
   }): Promise<void> {
     const updates: string[] = [];
-    const values: unknown[] = [];
+    const values: SQLiteBindValue[] = [];
 
     if (fields.serverUpdatedAt !== undefined) {
       updates.push('server_updated_at = ?');
@@ -437,14 +440,14 @@ export class BookRepository {
     status?: string;
     author?: string;
     category?: string;
-    sortBy?: 'title' | 'update_date' | 'creation_date' | 'rating';
-    sortOrder?: 'ASC' | 'DESC';
+    sortBy?: DbSortField;
+    sortOrder?: typeof SORT_DIRECTIONS[keyof typeof SORT_DIRECTIONS];
   }): Promise<LocalBook[]> {
-    const { query, status, author, category, sortBy = 'update_date', sortOrder = 'DESC' } = options;
+    const { query, status, author, category, sortBy = DB_SORT_FIELDS.UPDATE_DATE, sortOrder = SORT_DIRECTIONS.DESC } = options;
 
     let sql = 'SELECT DISTINCT b.* FROM books b';
     let joins = '';
-    const params: unknown[] = [];
+    const params: SQLiteBindValue[] = [];
     const whereConditions = ['b.deleted = 0'];
 
     // Add joins if filtering by author or category

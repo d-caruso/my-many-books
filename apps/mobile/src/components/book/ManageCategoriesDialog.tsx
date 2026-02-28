@@ -4,7 +4,7 @@ import { Button, Dialog, List, Portal, Text, TextInput } from 'react-native-pape
 import { useTranslation } from 'react-i18next';
 import { useManageCategories } from '@my-many-books/shared-ui-hooks';
 import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
-import type { Category } from '@/types';
+import type { Category } from '@my-many-books/shared-types';
 import { categoryAPI } from '@/services/api';
 
 interface ManageCategoriesDialogProps {

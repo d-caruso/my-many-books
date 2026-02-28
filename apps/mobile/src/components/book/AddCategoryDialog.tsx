@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Dialog, Portal, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import type { Category } from '@/types';
+import type { Category } from '@my-many-books/shared-types';
 import { extractErrorMessage } from '@my-many-books/shared-utils';
 
 interface AddCategoryDialogProps {

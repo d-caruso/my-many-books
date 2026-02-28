@@ -11,11 +11,16 @@ import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { Book } from '@my-many-books/shared-types';
+import type { SearchQuery } from '@/types';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import type { SortDirection } from '@my-many-books/shared-types';
+import { DB_SORT_FIELDS } from '@/constants/db';
+import type { DbSortField } from '@/constants/db';
 import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
 
 type SearchMode = 'title' | 'author' | 'isbn';
-type SortOption = 'title' | 'author' | 'date_added' | 'date_updated';
-type SortDirection = 'asc' | 'desc';
+type SortOption = DbSortField;
+type SortOrder = SortDirection;
 
 export default function SearchScreen() {
   const { t } = useTranslation('offline');
@@ -27,8 +32,8 @@ export default function SearchScreen() {
   const [searchMode, setSearchMode] = useState<SearchMode>('title');
   const [isbnResult, setIsbnResult] = useState<Book | null>(null);
   const [statusFilter, setStatusFilter] = useState<Book['status'] | 'all'>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('title');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortBy, setSortBy] = useState<SortOption>(DB_SORT_FIELDS.TITLE);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(SORT_DIRECTIONS.DESC);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -58,12 +63,7 @@ export default function SearchScreen() {
       setIsbnResult(book);
     } else {
       setIsbnResult(null);
-      const filters: {
-        author?: string;
-        status?: string;
-        category?: string;
-        query?: string;
-      } = {};
+      const filters: Partial<SearchQuery> = {};
       
       // Apply search mode filter
       if (searchMode === 'author') {
@@ -87,11 +87,11 @@ export default function SearchScreen() {
       
       // Apply sort options
       filters.sortBy = sortBy;
-      filters.sortDirection = sortDirection;
-      
+      filters.sortOrder = sortOrder;
+
       await searchBooks(searchQuery, filters);
     }
-  }, [searchQuery, searchMode, statusFilter, selectedAuthor, selectedCategory, sortBy, sortDirection, searchBooks, searchByISBN, clearSearch]);
+  }, [searchQuery, searchMode, statusFilter, selectedAuthor, selectedCategory, sortBy, sortOrder, searchBooks, searchByISBN, clearSearch]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -128,7 +128,7 @@ export default function SearchScreen() {
     if (searchQuery.trim()) {
       performSearch();
     }
-  }, [statusFilter, selectedAuthor, selectedCategory, sortBy, sortDirection, performSearch]);
+  }, [statusFilter, selectedAuthor, selectedCategory, sortBy, sortOrder, performSearch]);
 
   // Trigger search when query changes
   useEffect(() => {
@@ -168,7 +168,6 @@ export default function SearchScreen() {
             { value: 'isbn', label: t('books:search_by_isbn_tab') },
           ]}
           style={styles.segmentedButtons}
-          accessibilityLabel="Select search type"
         />
 
         <Searchbar
@@ -242,11 +241,11 @@ export default function SearchScreen() {
                 contentStyle={styles.sortButtonContent}
                 style={styles.sortButton}
               >
-                {t(`books:sort_${sortBy}`)} ({sortDirection === 'asc' ? '↑' : '↓'})
+                {t(`books:sort_${sortBy}`)} ({sortOrder === SORT_DIRECTIONS.ASC ? '↑' : '↓'})
               </Button>
             }
           >
-            {(['title', 'author', 'date_added', 'date_updated'] as SortOption[]).map((option) => (
+            {(Object.values(DB_SORT_FIELDS) as SortOption[]).map((option) => (
               <Menu.Item
                 key={option}
                 onPress={() => {
@@ -259,9 +258,9 @@ export default function SearchScreen() {
             ))}
           </Menu>
           <IconButton
-            icon={sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}
-            onPress={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-            accessibilityLabel={`Sort ${sortDirection === 'asc' ? 'descending' : 'ascending'}`}
+            icon={sortOrder === SORT_DIRECTIONS.ASC ? 'arrow-up' : 'arrow-down'}
+            onPress={() => setSortOrder(sortOrder === SORT_DIRECTIONS.ASC ? SORT_DIRECTIONS.DESC : SORT_DIRECTIONS.ASC)}
+            accessibilityLabel={`Sort ${sortOrder === SORT_DIRECTIONS.ASC ? 'descending' : 'ascending'}`}
           />
         </View>
       </View>
@@ -292,13 +291,13 @@ export default function SearchScreen() {
         ListEmptyComponent={
           !loading && searchQuery.trim() ? (
             <EmptyState
-              icon="magnify"
+              icon="search"
               title={t('books:no_books_found')}
               description={t('books:try_different_search')}
             />
           ) : !loading ? (
             <EmptyState
-              icon="magnify"
+              icon="search"
               title={t('books:start_searching')}
               description={t('books:enter_title_author_isbn_to_begin')}
             />
