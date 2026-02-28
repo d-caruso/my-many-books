@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const data = await adminAPI.getAdminStats();
+      const data = await adminAPI.getAdminStats<DashboardStats>();
       setStats(data);
     } catch (err: unknown) {
       const details = extractErrorDetails(err);

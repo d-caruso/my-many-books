@@ -3,10 +3,13 @@ import type {
   Book,
   User as SharedUser,
   SortDirection,
+  BookFormData,
 } from '@my-many-books/shared-types';
 import type { DbSortField } from '@/constants/db';
 
 export type { Book };
+
+export type MobileBookCreateData = BookFormData & { _tempId?: string };
 
 /**
  * Book status enum values

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 
-import { Author, Category } from '@/types';
+import type { Author, Category } from '@my-many-books/shared-types';
 import { authorAPI, categoryAPI } from '@/services/api';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
 import { useTranslation } from 'react-i18next';

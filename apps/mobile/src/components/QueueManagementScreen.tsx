@@ -43,7 +43,7 @@ export const QueueManagementScreen: React.FC = () => {
 
   const getOperationLabel = (operation: QueuedOperation) => {
     const { type, resource, payload } = operation;
-    const title = payload?.title || payload?.id || t('sync.queue.unknown_item');
+    const title = ('title' in payload && payload.title) || payload?.id || t('sync.queue.unknown_item');
     const operationType = t(`sync.queue.operations.${type}`);
     const resourceType = t(`sync.queue.resources.${resource}`);
     return `${operationType} ${resourceType}: ${title}`;

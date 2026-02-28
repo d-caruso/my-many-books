@@ -136,7 +136,6 @@ import { useState } from 'react';
                     { value: 'register', label: t('common:register') },
                   ]}
                   style={styles.segmentedButtons}
-                  accessibilityLabel={t('common:select_auth_mode')}
                 />
 
                 {error && (
@@ -155,7 +154,6 @@ import { useState } from 'react';
                     style={styles.input}
                     autoCapitalize="words"
                     autoComplete="name"
-                    accessibilityInvalid={!!error}
                   />
                 )}
 
@@ -167,7 +165,6 @@ import { useState } from 'react';
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
-                  accessibilityInvalid={!!error}
                 />
 
                 <TextInput
@@ -178,7 +175,6 @@ import { useState } from 'react';
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   autoComplete={authMode === 'login' ? 'password' : 'new-password'}
-                  accessibilityInvalid={!!error}
                   right={
                     <TextInput.Icon
                       icon={showPassword ? 'eye-off' : 'eye'}
@@ -205,7 +201,6 @@ import { useState } from 'react';
                     secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
                     autoComplete="new-password"
-                    accessibilityInvalid={!!error}
                     right={
                       <TextInput.Icon
                         icon={showConfirmPassword ? 'eye-off' : 'eye'}

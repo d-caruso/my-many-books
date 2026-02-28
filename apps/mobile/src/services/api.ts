@@ -9,6 +9,7 @@ import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/eventsSchema';
 import type { OperationType } from './hooks/eventsSchema';
 import type { BookOperationPayload, UserOperationPayload, SettingsOperationPayload } from '../types/queue';
 import type { BookFormData } from '@my-many-books/shared-types';
+import type { MobileBookCreateData } from '../types';
 import { API_BASE_URL } from '../config/api';
 import type { Category } from '@my-many-books/shared-types';
 import {
@@ -321,12 +322,12 @@ export const bookAPI = {
   getBook: apiClient.books.getBook.bind(apiClient.books),
 
   // Write operations with automatic queueing
-  createBook: async (book: BookFormData) => {
+  createBook: async (book: MobileBookCreateData) => {
     return withQueueOnError(
       () => apiClient.books.createBook(book),
       OPERATION_TYPES.CREATE,
       RESOURCE_TYPES.BOOK,
-      { ...book, id: (book as Record<string, unknown>)._tempId ?? (book as Record<string, unknown>).id }
+      { ...book, id: book._tempId }
     );
   },
 
@@ -389,16 +390,16 @@ export const categoryAPI = {
 };
 
 export const adminAPI = {
-  getAdminStats: () =>
-    httpClient.get(`${API_BASE_URL}/admin/stats/summary`),
-  getAdminUsers: (page = 1, limit = 10, search?: string) =>
-    httpClient.get(`${API_BASE_URL}/admin/users`, { params: { page, limit, ...(search ? { search } : {}) } }),
+  getAdminStats: <T = unknown>() =>
+    httpClient.get<T>(`${API_BASE_URL}/admin/stats/summary`),
+  getAdminUsers: <T = unknown>(page = 1, limit = 10, search?: string) =>
+    httpClient.get<T>(`${API_BASE_URL}/admin/users`, { params: { page, limit, ...(search ? { search } : {}) } }),
   updateAdminUser: (id: number, data: Record<string, unknown>) =>
     httpClient.put(`${API_BASE_URL}/admin/users/${id}`, data),
   deleteAdminUser: (id: number) =>
     httpClient.delete(`${API_BASE_URL}/admin/users/${id}`),
-  getAdminBooks: (page = 1, limit = 10, search?: string) =>
-    httpClient.get(`${API_BASE_URL}/admin/books`, { params: { page, limit, ...(search ? { search } : {}) } }),
+  getAdminBooks: <T = unknown>(page = 1, limit = 10, search?: string) =>
+    httpClient.get<T>(`${API_BASE_URL}/admin/books`, { params: { page, limit, ...(search ? { search } : {}) } }),
   updateAdminBook: (id: number, data: Record<string, unknown>) =>
     httpClient.put(`${API_BASE_URL}/admin/books/${id}`, data),
   deleteAdminBook: (id: number) =>

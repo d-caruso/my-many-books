@@ -132,7 +132,6 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               trailingIcon={isSelected ? 'check' : undefined}
               disabled={isLoading}
               accessibilityLabel={`${language.nativeName} - ${language.name}`}
-              accessibilityRole="menuitem"
               accessibilityState={{ selected: isSelected }}
               testID={`language-option-${language.code}`}
               style={isSelected ? { backgroundColor: theme.colors.surfaceVariant } : undefined}

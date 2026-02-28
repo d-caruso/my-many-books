@@ -29,29 +29,29 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
   };
 
   const getFieldDifferences = () => {
-    const differences: {field: string, local: unknown, server: unknown}[] = [];
-    
+    const differences: {field: string, local: string, server: string}[] = [];
+
     if (localBook.title !== serverBook.title) {
       differences.push({
         field: 'title',
-        local: localBook.title,
-        server: serverBook.title
+        local: localBook.title ?? '',
+        server: serverBook.title ?? '',
       });
     }
-    
+
     if (localBook.status !== serverBook.status) {
       differences.push({
         field: 'status',
-        local: localBook.status,
-        server: serverBook.status
+        local: localBook.status ?? '',
+        server: serverBook.status ?? '',
       });
     }
-    
+
     if (localBook.notes !== serverBook.notes) {
       differences.push({
         field: 'notes',
         local: localBook.notes || t('books:no_notes'),
-        server: serverBook.notes || t('books:no_notes')
+        server: serverBook.notes || t('books:no_notes'),
       });
     }
 

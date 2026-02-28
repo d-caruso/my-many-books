@@ -25,7 +25,7 @@ export default function BookManagement() {
   const loadBooks = async () => {
     try {
       setLoading(true);
-      const response = await adminAPI.getAdminBooks(page, 50, searchQuery || undefined);
+      const response = await adminAPI.getAdminBooks<{ books: Book[]; total: number }>(page, 50, searchQuery || undefined);
       setBooks(response.books);
     } catch (err: unknown) {
       console.error('Failed to fetch books:', err);

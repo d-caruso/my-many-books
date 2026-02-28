@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text as RNText } from 'react-native';
 import { Button, Checkbox, Dialog, Portal, Text } from 'react-native-paper';
 import { Trans, useTranslation } from 'react-i18next';
 
@@ -25,8 +25,6 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
       <Dialog
         visible={visible}
         onDismiss={onClose}
-        accessibilityRole="alertdialog"
-        accessibilityLabel={t('about_app_title', 'What this app is for')}
       >
         <Dialog.Title>{t('about_app_title', 'What this app is for')}</Dialog.Title>
         <Dialog.Content>
@@ -35,7 +33,7 @@ export const AboutDialog: React.FC<AboutDialogProps> = ({
               ns="common"
               i18nKey="about_app_body"
               defaults="<bold>My Many Books</bold> helps you organize your personal library, track reading status, search books, and manage your collection."
-              components={{ bold: <Text key="about-app-name-bold" style={styles.bold} /> }}
+              components={{ bold: <RNText key="about-app-name-bold" style={styles.bold} /> }}
             />
           </Text>
           {showDontShowAgain && (

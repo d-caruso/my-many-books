@@ -54,7 +54,7 @@ interface BookCardProps {
   onPress?: () => void;
   onStatusChange?: (status: Book['status']) => void;
   onDelete?: () => void;
-  onResolveConflict?: (choice: 'local' | 'server') => void;
+  onResolveConflict?: (id: number | string, choice: 'local' | 'server') => void;
   showActions?: boolean;
 }
 
@@ -108,10 +108,9 @@ export const BookCard: React.FC<BookCardProps> = ({
               >
                 {getStatusLabel(book.status, t)}
               </Chip>
-              <SyncStatusBadge 
+              <SyncStatusBadge
                 syncStatus={book.meta?.syncStatus}
                 compact
-                testID="book-sync-status"
               />
               {book.meta?.hasConflict && (
                 <Chip
@@ -140,7 +139,6 @@ export const BookCard: React.FC<BookCardProps> = ({
                   onPress={() => setMenuVisible(true)}
                   testID="book-menu-button"
                   accessibilityLabel={`More options for ${book.title}`}
-                  accessibilityHint={!isOnline ? t('tooltips.willSyncLater', { ns: 'offline' }) : undefined}
                 />
               }
             >
@@ -153,7 +151,6 @@ export const BookCard: React.FC<BookCardProps> = ({
                   }}
                   title={t('books:mark_as_status', { status: getStatusLabel(status, t) })}
                   titleStyle={!isOnline ? { color: '#ff9800' } : undefined}
-                  accessibilityHint={!isOnline ? t('tooltips.willSyncLater', { ns: 'offline' }) : undefined}
                 />
               ))}
               <Menu.Item
@@ -163,7 +160,6 @@ export const BookCard: React.FC<BookCardProps> = ({
                 }}
                 title={t('delete')}
                 titleStyle={{ color: !isOnline ? '#ff9800' : '#f44336' }}
-                accessibilityHint={!isOnline ? t('tooltips.willSyncLater', { ns: 'offline' }) : undefined}
               />
             </Menu>
           </View>

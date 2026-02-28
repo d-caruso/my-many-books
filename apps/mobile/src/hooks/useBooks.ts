@@ -197,7 +197,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
   const createBook = useCallback(async (bookData: CreateBookInput): Promise<UiBook> => {
     // Generate temporary ID for optimistic update
     const tempId = `temp-${uuidv4()}`;
-    const { meta: incomingMeta, ...bookPayload } = bookData;
+    const { meta: incomingMeta, id: _localId, ...bookPayload } = bookData;
     const optimisticBook = bookToUi(
       {
         ...(bookPayload as Book),
@@ -219,8 +219,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     try {
       // Try to create on server - include temp ID for queue processing
       const newBook = await bookAPI.createBook({
-        ...bookData,
-        id: tempId, // Include temp ID so queue can map it later
+        ...(bookPayload as BookFormData),
         _tempId: tempId,
       });
 

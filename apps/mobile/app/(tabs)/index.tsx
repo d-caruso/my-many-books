@@ -147,7 +147,7 @@ export default function BooksScreen() {
       onPress={() => handleBookPress(item)}
       onStatusChange={(status) => handleStatusChange(item.id, status)}
       onDelete={() => handleDeleteBook(item.id)}
-      onResolveConflict={(choice) => handleResolveConflict(item.id, choice)}
+      onResolveConflict={(id, choice) => handleResolveConflict(Number(id), choice)}
     />
   );
 

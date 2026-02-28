@@ -25,7 +25,7 @@ export default function UserManagement() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const response = await adminAPI.getAdminUsers(page, 50, searchQuery || undefined);
+      const response = await adminAPI.getAdminUsers<{ users: User[]; total: number }>(page, 50, searchQuery || undefined);
       setUsers(response.users);
     } catch (err: unknown) {
       console.error('Failed to fetch users:', err);
