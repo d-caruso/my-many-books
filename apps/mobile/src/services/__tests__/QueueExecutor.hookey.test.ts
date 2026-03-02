@@ -30,6 +30,7 @@ jest.mock('../hooks/eventsSchema', () => {
   const actualEventsSchema = jest.requireActual('../hooks/eventsSchema');
   
   return {
+    QUEUE_OPERATION_STATUS: actualEventsSchema.QUEUE_OPERATION_STATUS,
     QUEUE_OPERATION_STATUSES: actualEventsSchema.QUEUE_OPERATION_STATUSES,
     OPERATION_TYPES: actualEventsSchema.OPERATION_TYPES,
     RESOURCE_TYPES: actualEventsSchema.RESOURCE_TYPES,

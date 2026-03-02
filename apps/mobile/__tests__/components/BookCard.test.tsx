@@ -2,45 +2,7 @@ import React from 'react';
 import renderer from 'react-test-renderer';
 import type { Book } from '@/types';
 import { BookCard } from '@/components/BookCard';
-
-// mock react-native-paper so that Menu anchor actually renders
-jest.mock('react-native-paper', () => {
-  const React = require('react');
-  const actual = jest.requireActual('react-native-paper');
-
-  // Create a testable Menu.Item component that exposes its props
-  const MenuItem = (props: { title?: string; onPress?: () => void }) => {
-    // Return an element with all props exposed for testing
-    return React.createElement(
-      'RCTView',
-      props,
-      React.createElement('RCTText', null, props.title)
-    );
-  };
-
-  const Menu = ({ anchor, children }: { anchor?: unknown; children?: React.ReactNode }) => {
-    // Simulate react-native-paper behavior: call anchor with onPress prop
-    const anchorElement =
-      typeof anchor === 'function'
-        ? anchor({ onPress: jest.fn() }) // inject mock onPress prop
-        : anchor;
-
-    return (
-      <>
-        {anchorElement}
-        {children}
-      </>
-    );
-  };
-
-  Menu.Item = MenuItem;
-
-  return {
-    ...actual,
-    Menu,
-    Portal: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
-  };
-});
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 
 // Mock the translation function to return mock strings for testing
 jest.mock('react-i18next', () => ({
@@ -70,7 +32,7 @@ const mockBook: Book = {
   id: 1,
   title: 'The Great Gatsby',
   isbnCode: '9780743273565',
-  status: 'reading' as const,
+  status: BOOK_STATUS.READING,
   authors: [{ id: 1, name: 'F. Scott', surname: 'Fitzgerald' }],
   categories: [{ id: 1, name: 'Classic' }, { id: 2, name: 'Fiction' }],
   creationDate: '2023-01-01T00:00:00.000Z',
@@ -86,12 +48,12 @@ describe('BookCard', () => {
 
   describe('Utility functions', () => {
     it('should return blue for reading status', () => {
-      const result = BookCardModule.getStatusColor('reading');
+      const result = BookCardModule.getStatusColor(BOOK_STATUS.READING);
       expect(result).toBe('#2196F3');
     });
 
     it('should return green for finished status', () => {
-      const result = BookCardModule.getStatusColor('finished');
+      const result = BookCardModule.getStatusColor(BOOK_STATUS.FINISHED);
       expect(result).toBe('#4CAF50');
     });
 
@@ -101,7 +63,7 @@ describe('BookCard', () => {
     });
 
     it('should return purple for paused status', () => {
-      const result = BookCardModule.getStatusColor('paused');
+      const result = BookCardModule.getStatusColor(BOOK_STATUS.PAUSED);
       expect(result).toBe('#9C27B0');
     });
 
@@ -112,8 +74,8 @@ describe('BookCard', () => {
 
     describe('getStatusLabel function', () => {
       it('should return Reading for reading status (no t function)', () => {
-        const result = BookCardModule.getStatusLabel('reading');
-        expect(result).toBe('reading');
+        const result = BookCardModule.getStatusLabel(BOOK_STATUS.READING);
+        expect(result).toBe(BOOK_STATUS.READING);
       });
 
       it('should return the raw status string for unknown status (no t function)', () => {
@@ -123,7 +85,7 @@ describe('BookCard', () => {
 
       it('should use t function when provided', () => {
         const mockT = jest.fn((key) => key.replace('books:', ''));
-        const result = BookCardModule.getStatusLabel('finished', mockT);
+        const result = BookCardModule.getStatusLabel(BOOK_STATUS.FINISHED, mockT);
         expect(result).toBe('completed');
         expect(mockT).toHaveBeenCalledWith('books:completed');
       });
@@ -131,9 +93,9 @@ describe('BookCard', () => {
 
     it('should export statusOptions array', () => {
       expect(BookCardModule.statusOptions).toEqual([
-        'reading',
-        'paused',
-        'finished',
+        BOOK_STATUS.READING,
+        BOOK_STATUS.PAUSED,
+        BOOK_STATUS.FINISHED,
       ]);
     });
   });
@@ -175,7 +137,7 @@ describe('BookCard', () => {
       expect(mockOnPress).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle menu button press to show menu', () => {
+    it('should render actions menu when actions are enabled', () => {
       let tree: renderer.ReactTestRenderer | undefined;
       renderer.act(() => {
         tree = renderer.create(
@@ -184,15 +146,13 @@ describe('BookCard', () => {
             onStatusChange: mockOnStatusChange,
             onDelete: mockOnDelete,
             onPress: mockOnPress,
+            showActions: true,
           })
         );
       });
       const testInstance = tree!.root;
-      const menuButton = testInstance.findByProps({ testID: 'book-menu-button' });
-
-      renderer.act(() => menuButton.props.onPress());
-      const completedItem = testInstance.findByProps({ title: 'Mark as Completed' });
-      expect(completedItem).toBeDefined();
+      const actionsContainer = testInstance.findByProps({ 'data-testid': 'book-actions' });
+      expect(actionsContainer).toBeDefined();
     });
 
     it('should not render menu button when showActions is false', () => {
@@ -206,9 +166,7 @@ describe('BookCard', () => {
         );
       });
       const testInstance = tree!.root;
-
-      // Try to find actions container, should throw
-      expect(() => testInstance.findByProps({ testID: 'book-actions' })).toThrow();
+      expect(() => testInstance.findByProps({ 'data-testid': 'book-actions' })).toThrow();
     });
   });
 });

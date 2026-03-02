@@ -136,7 +136,14 @@ describe('CategoryRepository', () => {
     });
 
     it('should cascade delete from book_categories junction table', async () => {
-      const book = await bookRepository.create(new LocalBook({ title: 'Test Book', categories: ['Test Category'] } as Book));
+      const book = await bookRepository.create(
+        new LocalBook({
+          id: 1,
+          isbnCode: 'isbn-test-1',
+          title: 'Test Book',
+          categories: [{ id: 1, name: 'Test Category', translationKey: null }],
+        })
+      );
       const category = await categoryRepository.findByName('Test Category');
 
       // Verify junction entry exists
@@ -161,7 +168,15 @@ describe('CategoryRepository', () => {
   describe('findByBookId', () => {
     it('should find categories for a book', async () => {
       const book = await bookRepository.create(
-        new LocalBook({ title: 'Test Book', categories: ['Fiction', 'Adventure'] } as Book)
+        new LocalBook({
+          id: 2,
+          isbnCode: 'isbn-test-2',
+          title: 'Test Book',
+          categories: [
+            { id: 1, name: 'Fiction', translationKey: null },
+            { id: 2, name: 'Adventure', translationKey: null },
+          ],
+        })
       );
       await categoryRepository.create('Romance'); // unlinked
 

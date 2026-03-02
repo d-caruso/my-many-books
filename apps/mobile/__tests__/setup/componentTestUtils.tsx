@@ -6,5 +6,5 @@
 // Import the main testUtils which has all the mocks
 import './testUtils';
 
-// Re-export everything from testUtils for convenience
-export * from './testUtils';
+// Side-effect only setup module
+export {};

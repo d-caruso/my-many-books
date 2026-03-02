@@ -351,7 +351,7 @@ describe('useBookSearch Hook', () => {
     const mockBook = {
       id: 1,
       title: 'ISBN Book',
-      isbn: '1234567890',
+      isbnCode: '1234567890',
       creationDate: '2024-01-01',
       updateDate: '2024-01-01',
     } as Book;

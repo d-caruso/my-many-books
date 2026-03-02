@@ -41,6 +41,7 @@ interface HttpClient {
 
 // Mock navigator.onLine for ClientGateway tests
 Object.defineProperty(global.navigator, 'onLine', {
+  configurable: true,
   writable: true,
   value: true,
 });
@@ -158,7 +159,7 @@ describe('Handler Patterns Simple Integration', () => {
 
     beforeEach(() => {
       // Ensure navigator.onLine is true for ClientGateway tests
-      Object.defineProperty(global.navigator, 'onLine', { value: true, configurable: true, writable: true });
+      (global.navigator as Navigator & { onLine: boolean }).onLine = true;
       
       mockHttpClient = {
         get: jest.fn().mockResolvedValue({}),

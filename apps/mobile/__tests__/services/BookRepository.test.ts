@@ -4,6 +4,20 @@ import { migrationSystem } from '../../src/services/database/migrations';
 import { LocalBook } from '../../src/entities/LocalBook';
 import { SYNC_STATUS } from '../../src/types';
 import type { Book } from '../../src/types';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
+
+let nextBookId = 1;
+
+const createBookFixture = (overrides: Partial<Book> = {}): Book => {
+  const id = nextBookId++;
+  return {
+    id,
+    isbnCode: `isbn-${id}`,
+    title: `Book ${id}`,
+    status: BOOK_STATUS.READING,
+    ...overrides,
+  };
+};
 
 describe('BookRepository', () => {
   beforeAll(async () => {
@@ -18,26 +32,33 @@ describe('BookRepository', () => {
   });
 
   beforeEach(async () => {
+    nextBookId = 1;
     // Clear books table before each test
     await databaseService.executeQuery('DELETE FROM books');
   });
 
   describe('create', () => {
     it('should create a new book', async () => {
-      const book = new LocalBook({ title: 'Test Book', authors: 'Test Author', status: 'want-to-read' } as Book);
+      const book = new LocalBook(
+        createBookFixture({
+          title: 'Test Book',
+          authors: [{ id: 1, name: 'Test', surname: 'Author' }],
+          status: BOOK_STATUS.PAUSED,
+        })
+      );
 
       const created = await bookRepository.create(book);
 
       expect(created).toBeDefined();
       expect(created.entity.id).toBeDefined();
       expect(created.entity.title).toBe('Test Book');
-      expect(created.entity.authors).toBe('Test Author');
-      expect(created.entity.status).toBe('want-to-read');
+      expect(created.entity.authors).toBeDefined();
+      expect(created.entity.status).toBe(BOOK_STATUS.PAUSED);
       expect(created.syncStatus).toBe('synced');
     });
 
     it('should create a book with temp ID', async () => {
-      const book = new LocalBook({ title: 'Temp Book' } as Book);
+      const book = new LocalBook(createBookFixture({ title: 'Temp Book' }));
       book.tempId = 'temp-123';
       book.syncStatus = SYNC_STATUS.PENDING;
 
@@ -51,8 +72,12 @@ describe('BookRepository', () => {
   describe('findAll', () => {
     it('should return all non-deleted books', async () => {
       const now = Date.now();
-      const book1 = new LocalBook({ title: 'Book 1', updateDate: new Date(now - 1000).toISOString() } as Book);
-      const book2 = new LocalBook({ title: 'Book 2', updateDate: new Date(now).toISOString() } as Book);
+      const book1 = new LocalBook(
+        createBookFixture({ title: 'Book 1', updateDate: new Date(now - 1000).toISOString() })
+      );
+      const book2 = new LocalBook(
+        createBookFixture({ title: 'Book 2', updateDate: new Date(now).toISOString() })
+      );
       await bookRepository.create(book1);
       await bookRepository.create(book2);
 
@@ -64,8 +89,8 @@ describe('BookRepository', () => {
     });
 
     it('should not return deleted books', async () => {
-      const b1 = new LocalBook({ title: 'Book 1' } as Book);
-      const b2 = new LocalBook({ title: 'Book 2' } as Book);
+      const b1 = new LocalBook(createBookFixture({ title: 'Book 1' }));
+      const b2 = new LocalBook(createBookFixture({ title: 'Book 2' }));
       const book1 = await bookRepository.create(b1);
       await bookRepository.create(b2);
       await bookRepository.delete(String(book1.entity.id));
@@ -79,7 +104,7 @@ describe('BookRepository', () => {
 
   describe('findById', () => {
     it('should find book by ID', async () => {
-      const created = await bookRepository.create(new LocalBook({ title: 'Test Book' } as Book));
+      const created = await bookRepository.create(new LocalBook(createBookFixture({ title: 'Test Book' })));
 
       const found = await bookRepository.findById(String(created.entity.id));
 
@@ -95,7 +120,7 @@ describe('BookRepository', () => {
     });
 
     it('should return null for deleted book', async () => {
-      const created = await bookRepository.create(new LocalBook({ title: 'Test Book' } as Book));
+      const created = await bookRepository.create(new LocalBook(createBookFixture({ title: 'Test Book' })));
       await bookRepository.delete(String(created.entity.id));
 
       const found = await bookRepository.findById(String(created.entity.id));
@@ -107,19 +132,20 @@ describe('BookRepository', () => {
   describe('update', () => {
     it('should update book fields', async () => {
       const created = await bookRepository.create(
-        new LocalBook({ title: 'Original Title', status: 'want-to-read' } as Book)
+        new LocalBook(createBookFixture({ title: 'Original Title', status: BOOK_STATUS.PAUSED }))
       );
 
-      const updates = new LocalBook({ title: 'Updated Title', status: 'reading', rating: 4 } as Book);
+      const updates = new LocalBook(createBookFixture({ title: 'Updated Title', status: BOOK_STATUS.READING }));
+      (updates.entity as Record<string, unknown>).rating = 4;
       const updated = await bookRepository.update(String(created.entity.id), updates);
 
       expect(updated.entity.title).toBe('Updated Title');
-      expect(updated.entity.status).toBe('reading');
+      expect(updated.entity.status).toBe(BOOK_STATUS.READING);
       expect((updated.entity as Record<string, unknown>).rating).toBe(4);
     });
 
     it('should update sync status', async () => {
-      const created = await bookRepository.create(new LocalBook({ title: 'Test Book' } as Book));
+      const created = await bookRepository.create(new LocalBook(createBookFixture({ title: 'Test Book' })));
 
       await bookRepository.updateSyncFields(String(created.entity.id), { syncStatus: SYNC_STATUS.PENDING });
       const updated = await bookRepository.findById(String(created.entity.id));
@@ -130,7 +156,7 @@ describe('BookRepository', () => {
 
   describe('delete', () => {
     it('should soft delete book', async () => {
-      const created = await bookRepository.create(new LocalBook({ title: 'Test Book' } as Book));
+      const created = await bookRepository.create(new LocalBook(createBookFixture({ title: 'Test Book' })));
 
       await bookRepository.delete(String(created.entity.id));
 
@@ -151,7 +177,7 @@ describe('BookRepository', () => {
 
   describe('hardDelete', () => {
     it('should permanently delete book', async () => {
-      const created = await bookRepository.create(new LocalBook({ title: 'Test Book' } as Book));
+      const created = await bookRepository.create(new LocalBook(createBookFixture({ title: 'Test Book' })));
 
       await bookRepository.hardDelete(String(created.entity.id));
 
@@ -166,9 +192,30 @@ describe('BookRepository', () => {
 
   describe('search', () => {
     beforeEach(async () => {
-      await bookRepository.create(new LocalBook({ title: 'The Great Gatsby', authors: 'F. Scott Fitzgerald' } as Book));
-      await bookRepository.create(new LocalBook({ title: 'Great Expectations', authors: 'Charles Dickens' } as Book));
-      await bookRepository.create(new LocalBook({ title: 'To Kill a Mockingbird', authors: 'Harper Lee' } as Book));
+      await bookRepository.create(
+        new LocalBook(
+          createBookFixture({
+            title: 'The Great Gatsby',
+            authors: [{ id: 1, name: 'F. Scott', surname: 'Fitzgerald' }],
+          })
+        )
+      );
+      await bookRepository.create(
+        new LocalBook(
+          createBookFixture({
+            title: 'Great Expectations',
+            authors: [{ id: 2, name: 'Charles', surname: 'Dickens' }],
+          })
+        )
+      );
+      await bookRepository.create(
+        new LocalBook(
+          createBookFixture({
+            title: 'To Kill a Mockingbird',
+            authors: [{ id: 3, name: 'Harper', surname: 'Lee' }],
+          })
+        )
+      );
     });
 
     it('should search by title', async () => {
@@ -196,16 +243,16 @@ describe('BookRepository', () => {
 
   describe('findByStatus', () => {
     beforeEach(async () => {
-      await bookRepository.create(new LocalBook({ title: 'Book 1', status: 'want-to-read' } as Book));
-      await bookRepository.create(new LocalBook({ title: 'Book 2', status: 'reading' } as Book));
-      await bookRepository.create(new LocalBook({ title: 'Book 3', status: 'want-to-read' } as Book));
+      await bookRepository.create(new LocalBook(createBookFixture({ title: 'Book 1', status: BOOK_STATUS.PAUSED })));
+      await bookRepository.create(new LocalBook(createBookFixture({ title: 'Book 2', status: BOOK_STATUS.READING })));
+      await bookRepository.create(new LocalBook(createBookFixture({ title: 'Book 3', status: BOOK_STATUS.PAUSED })));
     });
 
     it('should find books by status', async () => {
-      const wantToRead = await bookRepository.findByStatus('want-to-read');
+      const pausedBooks = await bookRepository.findByStatus(BOOK_STATUS.PAUSED);
 
-      expect(wantToRead).toHaveLength(2);
-      expect(wantToRead.every(b => b.entity.status === 'want-to-read')).toBe(true);
+      expect(pausedBooks).toHaveLength(2);
+      expect(pausedBooks.every(b => b.entity.status === BOOK_STATUS.PAUSED)).toBe(true);
     });
 
     it('should return empty array for non-existent status', async () => {
@@ -217,15 +264,15 @@ describe('BookRepository', () => {
 
   describe('findPendingSync', () => {
     it('should find books with pending sync status', async () => {
-      const syncedBook = new LocalBook({ title: 'Synced Book' } as Book);
+      const syncedBook = new LocalBook(createBookFixture({ title: 'Synced Book' }));
       syncedBook.syncStatus = SYNC_STATUS.SYNCED;
       await bookRepository.create(syncedBook);
 
-      const pendingBook = new LocalBook({ title: 'Pending Book' } as Book);
+      const pendingBook = new LocalBook(createBookFixture({ title: 'Pending Book' }));
       pendingBook.syncStatus = SYNC_STATUS.PENDING;
       await bookRepository.create(pendingBook);
 
-      const failedBook = new LocalBook({ title: 'Failed Book' } as Book);
+      const failedBook = new LocalBook(createBookFixture({ title: 'Failed Book' }));
       failedBook.syncStatus = SYNC_STATUS.FAILED;
       await bookRepository.create(failedBook);
 

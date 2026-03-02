@@ -226,7 +226,8 @@ describe('Helper Utilities', () => {
     it('should filter books by author', () => {
       const filtered = filterBooks(mockBooks, { author: 'john' });
       expect(filtered).toHaveLength(1);
-      expect(filtered[0].authors[0].name).toBe('John Doe');
+      expect(filtered[0].authors[0].name).toBe('John');
+      expect(filtered[0].authors[0].surname).toBe('Doe');
     });
 
     it('should handle multiple filters', () => {

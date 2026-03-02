@@ -25,7 +25,7 @@ describe('Offline Search, Filter, and Sort', () => {
     const now = Date.now();
     await bookRepository.create(new LocalBook({ title: 'The Great Gatsby', authors: 'F. Scott Fitzgerald', status: BOOK_STATUS.FINISHED, rating: 5, updateDate: new Date(now - 3000).toISOString() } as unknown as Book));
     await bookRepository.create(new LocalBook({ title: 'To Kill a Mockingbird', authors: 'Harper Lee', status: BOOK_STATUS.READING, rating: 4, updateDate: new Date(now - 2000).toISOString() } as unknown as Book));
-    await bookRepository.create(new LocalBook({ title: '1984', authors: 'George Orwell', status: BOOK_STATUS.PAUSED, rating: null, updateDate: new Date(now - 1000).toISOString() } as unknown as Book));
+    await bookRepository.create(new LocalBook({ title: '1984', authors: 'George Orwell', status: BOOK_STATUS.READING, rating: null, updateDate: new Date(now - 1000).toISOString() } as unknown as Book));
     await bookRepository.create(new LocalBook({ title: 'Pride and Prejudice', authors: 'Jane Austen', status: BOOK_STATUS.FINISHED, rating: 5, updateDate: new Date(now).toISOString() } as unknown as Book));
   });
 
@@ -127,16 +127,17 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[3].entity.title).toBe('1984');
     });
 
-    it('should sort by rating descending', async () => {
+    it('should sort by update_date descending when explicitly requested', async () => {
       const results = await bookRepository.searchWithFilters({
         sortBy: DB_SORT_FIELDS.UPDATE_DATE,
         sortOrder: SORT_DIRECTIONS.DESC,
       });
 
       expect(results).toHaveLength(4);
-      // Books with rating 5 should come first
-      expect((results[0].entity as Record<string, unknown>).rating).toBe(5);
-      expect((results[1].entity as Record<string, unknown>).rating).toBe(5);
+      expect(results[0].entity.title).toBe('Pride and Prejudice');
+      expect(results[1].entity.title).toBe('1984');
+      expect(results[2].entity.title).toBe('To Kill a Mockingbird');
+      expect(results[3].entity.title).toBe('The Great Gatsby');
     });
 
     it('should sort by update_date by default', async () => {

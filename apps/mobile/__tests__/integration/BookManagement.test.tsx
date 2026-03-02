@@ -7,6 +7,7 @@ import renderer from 'react-test-renderer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { bookAPI } from '@/services/api';
 import { Book } from '@/types';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 
 // Mock dependencies
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
@@ -65,7 +66,7 @@ describe('Book Management Integration', () => {
       id: 1,
       title: 'Test Book 1',
       isbnCode: '1111111111',
-      status: 'reading',
+      status: BOOK_STATUS.READING,
       authors: [],
       categories: [],
       creationDate: '2023-01-01T00:00:00.000Z',
@@ -75,7 +76,7 @@ describe('Book Management Integration', () => {
       id: 2,
       title: 'Test Book 2',
       isbnCode: '2222222222',
-      status: 'completed',
+      status: BOOK_STATUS.FINISHED,
       authors: [],
       categories: [],
       creationDate: '2023-01-01T00:00:00.000Z',
@@ -94,7 +95,7 @@ describe('Book Management Integration', () => {
       id: 3,
       title: 'New Book',
       isbnCode: '3333333333',
-      status: 'want-to-read' as const,
+      status: BOOK_STATUS.PAUSED,
       authors: [],
       categories: [],
       creationDate: '2023-01-01T00:00:00.000Z',
@@ -129,23 +130,23 @@ describe('Book Management Integration', () => {
     const createdBook = await mockBookAPI.createBook({
       title: 'New Book',
       isbnCode: '3333333333',
-      status: 'want-to-read'
+      status: BOOK_STATUS.PAUSED
     });
     expect(createdBook).toEqual(newBook);
     expect(mockBookAPI.createBook).toHaveBeenCalledWith({
       title: 'New Book',
       isbnCode: '3333333333',
-      status: 'want-to-read'
+      status: BOOK_STATUS.PAUSED
     });
 
     // 3. Update book
-    const updatedBook = await mockBookAPI.updateBook(newBook.id, { title: 'Updated Book' });
+    const updatedBook = await mockBookAPI.updateBook(String(newBook.id), { title: 'Updated Book' });
     expect(updatedBook.title).toBe('Updated Book');
-    expect(mockBookAPI.updateBook).toHaveBeenCalledWith(newBook.id, { title: 'Updated Book' });
+    expect(mockBookAPI.updateBook).toHaveBeenCalledWith(String(newBook.id), { title: 'Updated Book' });
 
     // 4. Delete book
-    await mockBookAPI.deleteBook(newBook.id);
-    expect(mockBookAPI.deleteBook).toHaveBeenCalledWith(newBook.id);
+    await mockBookAPI.deleteBook(String(newBook.id));
+    expect(mockBookAPI.deleteBook).toHaveBeenCalledWith(String(newBook.id));
   });
 
   it('should handle offline caching', async () => {
@@ -204,7 +205,7 @@ describe('Book Management Integration', () => {
         id: 4,
         title: 'Refreshed Book',
         isbnCode: '4444444444',
-        status: 'reading' as const,
+        status: BOOK_STATUS.READING,
         authors: [],
         categories: [],
         creationDate: '2023-01-01T00:00:00.000Z',

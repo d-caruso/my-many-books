@@ -79,7 +79,6 @@ describe('Database Service and Migrations (Task 4.2.3)', () => {
     it('should have migration system defined', () => {
       expect(migrationSystem).toBeDefined();
       expect(typeof migrationSystem.runMigrations).toBe('function');
-      expect(typeof migrationSystem.getCurrentVersion).toBe('function');
     });
 
     it('should run migrations and create tables', async () => {
@@ -102,7 +101,16 @@ describe('Database Service and Migrations (Task 4.2.3)', () => {
     });
 
     it('should track migration version', async () => {
-      const version = await migrationSystem.getCurrentVersion();
+      await migrationSystem.runMigrations();
+      const versionRow = await databaseService.getFirstAsync<{ value: string }>(
+        'SELECT value FROM migrations WHERE key = ?',
+        ['schema_version']
+      );
+
+      expect(versionRow).toBeDefined();
+      expect(versionRow).not.toBeNull();
+
+      const version = Number(versionRow!.value);
       expect(typeof version).toBe('number');
       expect(version).toBeGreaterThanOrEqual(1);
     });

@@ -7,6 +7,7 @@ import renderer from 'react-test-renderer';
 import { router } from 'expo-router';
 import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 
 // Simplified AddBookScreen test double
 const AddBookScreen = () => {
@@ -15,7 +16,7 @@ const AddBookScreen = () => {
   const [title, setTitle] = React.useState('');
   const [author, setAuthor] = React.useState('');
   const [isbn, setIsbn] = React.useState('');
-  const [status, setStatus] = React.useState('want-to-read');
+  const [status, setStatus] = React.useState<(typeof BOOK_STATUS)[keyof typeof BOOK_STATUS]>(BOOK_STATUS.READING);
   const [showValidationError, setShowValidationError] = React.useState(false);
   const [showCreationError, setShowCreationError] = React.useState(false);
 
@@ -41,7 +42,7 @@ const AddBookScreen = () => {
       await createBook({
         title,
         isbnCode: isbn,
-        status: status as "want-to-read" | "reading" | "completed",
+        status,
         notes: '',
       });
       router.back();
@@ -85,15 +86,15 @@ const AddBookScreen = () => {
       <View testID="segmented-buttons">
         <TouchableOpacity
           testID="segment-reading"
-          onPress={() => setStatus('reading')}
-          data-selected={status === 'reading'}
+          onPress={() => setStatus(BOOK_STATUS.READING)}
+          data-selected={status === BOOK_STATUS.READING}
         >
           <Text>Reading</Text>
         </TouchableOpacity>
         <TouchableOpacity
           testID="segment-completed"
-          onPress={() => setStatus('completed')}
-          data-selected={status === 'completed'}
+          onPress={() => setStatus(BOOK_STATUS.FINISHED)}
+          data-selected={status === BOOK_STATUS.FINISHED}
         >
           <Text>Completed</Text>
         </TouchableOpacity>
@@ -152,6 +153,7 @@ describe('AddBookScreen', () => {
       updateBook: jest.fn(),
       deleteBook: jest.fn(),
       updateBookStatus: jest.fn(),
+      resolveConflict: jest.fn(),
     });
 
     mockUseBookSearch.mockReturnValue({
@@ -159,11 +161,11 @@ describe('AddBookScreen', () => {
       searchByISBN: mockSearchByISBN,
       loading: false,
       error: null,
-      results: [],
       books: [],
       hasMore: false,
       totalCount: 0,
       currentPage: 1,
+      isOffline: false,
       clearSearch: jest.fn(),
       loadMore: jest.fn(),
     });
@@ -220,7 +222,7 @@ describe('AddBookScreen', () => {
       id: 1,
       title: 'Test Book',
       isbnCode: '1234567890',
-      status: 'want-to-read',
+      status: BOOK_STATUS.READING,
       authors: [],
       categories: [],
     };
@@ -255,7 +257,7 @@ describe('AddBookScreen', () => {
     expect(mockCreateBook).toHaveBeenCalledWith({
       title: 'Test Book',
       isbnCode: '1234567890',
-      status: 'reading',
+      status: BOOK_STATUS.READING,
       notes: '',
     });
 

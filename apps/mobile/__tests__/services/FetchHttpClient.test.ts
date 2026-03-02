@@ -3,7 +3,7 @@
  */
 
 import { ApiError, ErrorCode, getClientErrorCode } from '../../src/types/errors';
-import NetInfo from '@react-native-community/netinfo';
+import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const i18n = require('../../src/i18n').default;
 
@@ -130,11 +130,17 @@ class TestFetchHttpClient {
   }
 
   async get<T>(url: string, config?: Record<string, unknown>): Promise<T> {
+    type TestRequestConfig = {
+      params?: Record<string, string | number | boolean | null | undefined>;
+      headers?: HeadersInit;
+    };
+
+    const typedConfig = config as TestRequestConfig | undefined;
     let finalUrl = url;
     
-    if (config?.params) {
+    if (typedConfig?.params) {
       const params = new URLSearchParams();
-      Object.entries(config.params).forEach(([key, value]) => {
+      Object.entries(typedConfig.params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           params.append(key, String(value));
         }
@@ -147,21 +153,45 @@ class TestFetchHttpClient {
 
     return this.fetchWithTimeout<T>(finalUrl, {
       method: 'GET',
-      headers: config?.headers || {},
+      headers: typedConfig?.headers,
     });
   }
 
   async post<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T> {
+    type TestRequestConfig = {
+      headers?: HeadersInit;
+    };
+
+    const typedConfig = config as TestRequestConfig | undefined;
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+
+    if (typedConfig?.headers) {
+      new Headers(typedConfig.headers).forEach((value, key) => {
+        headers.set(key, value);
+      });
+    }
+
     return this.fetchWithTimeout<T>(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...config?.headers,
-      },
+      headers,
       body: JSON.stringify(data),
     });
   }
 }
+
+const connectedNetInfoState = (): NetInfoState => ({
+  type: 'other',
+  isConnected: true,
+  isInternetReachable: true,
+  details: { isConnectionExpensive: false },
+} as NetInfoState);
+
+const disconnectedNetInfoState = (): NetInfoState => ({
+  type: 'none',
+  isConnected: false,
+  isInternetReachable: false,
+  details: null,
+} as NetInfoState);
 
 describe('FetchHttpClient with ApiError', () => {
   let httpClient: TestFetchHttpClient;
@@ -171,12 +201,12 @@ describe('FetchHttpClient with ApiError', () => {
   beforeEach(() => {
     httpClient = new TestFetchHttpClient('https://api.example.com');
     jest.clearAllMocks();
-    mockNetInfo.mockResolvedValue({ isConnected: true } as { isConnected: boolean });
+    mockNetInfo.mockResolvedValue(connectedNetInfoState());
   });
 
   describe('Network connectivity checking', () => {
     it('should throw NETWORK_OFFLINE ApiError when offline', async () => {
-      mockNetInfo.mockResolvedValue({ isConnected: false } as { isConnected: boolean });
+      mockNetInfo.mockResolvedValue(disconnectedNetInfoState());
 
       try {
         await httpClient.get('/test');
@@ -416,11 +446,12 @@ describe('FetchHttpClient with ApiError', () => {
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(requestData),
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json'
-          })
         })
       );
+
+      const [, postOptions] = mockFetch.mock.calls[0];
+      expect(postOptions).toBeDefined();
+      expect(new Headers(postOptions?.headers).get('Content-Type')).toBe('application/json');
     });
   });
 });
