@@ -10,7 +10,7 @@ describe('Pinned Results API Integration Tests', () => {
   let sequelize: Sequelize;
 
   beforeAll(async () => {
-    sequelize = new Sequelize('sqlite::memory:', { logging: false });
+    sequelize = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false });
     ModelManager.initialize(sequelize);
     await ModelManager.syncDatabase(true);
   });

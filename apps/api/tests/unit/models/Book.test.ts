@@ -11,7 +11,9 @@ import { BOOK_STATUS } from '@my-many-books/shared-types';
 let sequelize: Sequelize;
 
 beforeAll(async () => {
-  sequelize = new Sequelize('sqlite::memory:', {
+  sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage: ':memory:',
     logging: false,
   });
 

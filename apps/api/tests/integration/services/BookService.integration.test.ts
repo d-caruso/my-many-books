@@ -15,7 +15,7 @@ describe('BookService (integration)', () => {
   let user: User;
 
   beforeAll(async () => {
-    sequelize = new Sequelize('sqlite::memory:', { logging: false });
+    sequelize = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false });
     ModelManager.initialize(sequelize);
     await ModelManager.syncDatabase(true);
     repository = new BookRepository();

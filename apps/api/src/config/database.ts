@@ -32,8 +32,7 @@ class DatabaseConnection {
     const isTestEnv = process.env['NODE_ENV'] === 'test';
 
     if (isTestEnv) {
-      const testUri = process.env['DB_TEST_URI'] || 'sqlite::memory:';
-      return new Sequelize(testUri, {
+      return new Sequelize({
         dialect: 'sqlite',
         storage: process.env['DB_TEST_STORAGE'] || ':memory:',
         logging: false,

@@ -21,7 +21,9 @@ describe('i18n Integration Tests', () => {
   let authorController: AuthorController;
 
   beforeAll(async () => {
-    sequelize = new Sequelize('sqlite::memory:', {
+    sequelize = new Sequelize({
+      dialect: 'sqlite',
+      storage: ':memory:',
       logging: false,
     });
 

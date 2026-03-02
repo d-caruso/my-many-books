@@ -13,7 +13,9 @@ describe('User Model', () => {
 
   beforeAll(async () => {
     // Use in-memory SQLite for testing
-    sequelize = new Sequelize('sqlite::memory:', {
+    sequelize = new Sequelize({
+      dialect: 'sqlite',
+      storage: ':memory:',
       logging: false,
     });
 

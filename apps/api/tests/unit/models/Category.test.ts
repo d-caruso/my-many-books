@@ -12,7 +12,9 @@ describe('Category Model', () => {
   let testUserId: number;
 
   beforeAll(async () => {
-    sequelize = new Sequelize('sqlite::memory:', {
+    sequelize = new Sequelize({
+      dialect: 'sqlite',
+      storage: ':memory:',
       logging: false,
       define: {
         timestamps: true,

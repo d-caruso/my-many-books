@@ -14,7 +14,7 @@ describe('DatabaseActionTestService', () => {
   let sequelizeMock: jest.Mocked<Sequelize>;
 
   beforeEach(() => {
-    sequelizeMock = new Sequelize('sqlite::memory:') as jest.Mocked<Sequelize>;
+    sequelizeMock = new Sequelize({ dialect: 'sqlite', storage: ':memory:' }) as jest.Mocked<Sequelize>;
     sequelizeMock.query = jest.fn();
   });
 

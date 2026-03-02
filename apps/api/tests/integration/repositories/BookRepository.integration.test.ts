@@ -12,7 +12,7 @@ describe('BookRepository (integration)', () => {
   let repository: BookRepository;
 
   beforeAll(async () => {
-    sequelize = new Sequelize('sqlite::memory:', { logging: false });
+    sequelize = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false });
     ModelManager.initialize(sequelize);
     await ModelManager.syncDatabase(true);
     repository = new BookRepository();
