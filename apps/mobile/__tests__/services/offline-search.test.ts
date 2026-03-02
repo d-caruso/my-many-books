@@ -3,6 +3,9 @@ import { databaseService } from '../../src/services/database/DatabaseService';
 import { migrationSystem } from '../../src/services/database/migrations';
 import { LocalBook } from '../../src/entities/LocalBook';
 import type { Book } from '../../src/types';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import { DB_SORT_FIELDS } from '../../src/constants/db';
 
 describe('Offline Search, Filter, and Sort', () => {
   beforeAll(async () => {
@@ -20,10 +23,10 @@ describe('Offline Search, Filter, and Sort', () => {
 
     // Populate test data with explicit timestamps to ensure proper ordering
     const now = Date.now();
-    await bookRepository.create(new LocalBook({ title: 'The Great Gatsby', authors: 'F. Scott Fitzgerald', status: 'completed', rating: 5, updateDate: new Date(now - 3000).toISOString() } as Book));
-    await bookRepository.create(new LocalBook({ title: 'To Kill a Mockingbird', authors: 'Harper Lee', status: 'reading', rating: 4, updateDate: new Date(now - 2000).toISOString() } as Book));
-    await bookRepository.create(new LocalBook({ title: '1984', authors: 'George Orwell', status: 'want-to-read', rating: null, updateDate: new Date(now - 1000).toISOString() } as Book));
-    await bookRepository.create(new LocalBook({ title: 'Pride and Prejudice', authors: 'Jane Austen', status: 'completed', rating: 5, updateDate: new Date(now).toISOString() } as Book));
+    await bookRepository.create(new LocalBook({ title: 'The Great Gatsby', authors: 'F. Scott Fitzgerald', status: BOOK_STATUS.FINISHED, rating: 5, updateDate: new Date(now - 3000).toISOString() } as unknown as Book));
+    await bookRepository.create(new LocalBook({ title: 'To Kill a Mockingbird', authors: 'Harper Lee', status: BOOK_STATUS.READING, rating: 4, updateDate: new Date(now - 2000).toISOString() } as unknown as Book));
+    await bookRepository.create(new LocalBook({ title: '1984', authors: 'George Orwell', status: BOOK_STATUS.PAUSED, rating: null, updateDate: new Date(now - 1000).toISOString() } as unknown as Book));
+    await bookRepository.create(new LocalBook({ title: 'Pride and Prejudice', authors: 'Jane Austen', status: BOOK_STATUS.FINISHED, rating: 5, updateDate: new Date(now).toISOString() } as unknown as Book));
   });
 
   describe('Offline Search', () => {
@@ -73,17 +76,17 @@ describe('Offline Search, Filter, and Sort', () => {
   describe('Offline Filters', () => {
     it('should filter by status', async () => {
       const results = await bookRepository.searchWithFilters({
-        status: 'completed',
+        status: BOOK_STATUS.FINISHED,
       });
 
       expect(results).toHaveLength(2);
-      expect(results.every(book => book.entity.status === 'completed')).toBe(true);
+      expect(results.every(book => book.entity.status === BOOK_STATUS.FINISHED)).toBe(true);
     });
 
     it('should combine search and filter', async () => {
       const results = await bookRepository.searchWithFilters({
         query: 'Pride',
-        status: 'completed',
+        status: BOOK_STATUS.FINISHED,
       });
 
       expect(results).toHaveLength(1);
@@ -92,7 +95,7 @@ describe('Offline Search, Filter, and Sort', () => {
 
     it('should return empty array for non-matching filter', async () => {
       const results = await bookRepository.searchWithFilters({
-        status: 'paused',
+        status: BOOK_STATUS.PAUSED,
       });
 
       expect(results).toHaveLength(0);
@@ -102,8 +105,8 @@ describe('Offline Search, Filter, and Sort', () => {
   describe('Offline Sorting', () => {
     it('should sort by title ascending', async () => {
       const results = await bookRepository.searchWithFilters({
-        sortBy: 'title',
-        sortOrder: 'ASC',
+        sortBy: DB_SORT_FIELDS.TITLE,
+        sortOrder: SORT_DIRECTIONS.ASC,
       });
 
       expect(results).toHaveLength(4);
@@ -115,8 +118,8 @@ describe('Offline Search, Filter, and Sort', () => {
 
     it('should sort by title descending', async () => {
       const results = await bookRepository.searchWithFilters({
-        sortBy: 'title',
-        sortOrder: 'DESC',
+        sortBy: DB_SORT_FIELDS.TITLE,
+        sortOrder: SORT_DIRECTIONS.DESC,
       });
 
       expect(results).toHaveLength(4);
@@ -126,8 +129,8 @@ describe('Offline Search, Filter, and Sort', () => {
 
     it('should sort by rating descending', async () => {
       const results = await bookRepository.searchWithFilters({
-        sortBy: 'rating',
-        sortOrder: 'DESC',
+        sortBy: DB_SORT_FIELDS.UPDATE_DATE,
+        sortOrder: SORT_DIRECTIONS.DESC,
       });
 
       expect(results).toHaveLength(4);
@@ -149,26 +152,26 @@ describe('Offline Search, Filter, and Sort', () => {
     it('should search, filter, and sort together', async () => {
       const results = await bookRepository.searchWithFilters({
         query: 'Pr',  // Matches "Pride and Prejudice"
-        status: 'completed',
-        sortBy: 'title',
-        sortOrder: 'ASC',
+        status: BOOK_STATUS.FINISHED,
+        sortBy: DB_SORT_FIELDS.TITLE,
+        sortOrder: SORT_DIRECTIONS.ASC,
       });
 
       expect(results).toHaveLength(1);
       expect(results[0].entity.title).toBe('Pride and Prejudice');
-      expect(results[0].entity.status).toBe('completed');
+      expect(results[0].entity.status).toBe(BOOK_STATUS.FINISHED);
     });
 
     it('should handle complex queries', async () => {
       // Search for completed books, sorted by rating
       const results = await bookRepository.searchWithFilters({
-        status: 'completed',
-        sortBy: 'rating',
-        sortOrder: 'DESC',
+        status: BOOK_STATUS.FINISHED,
+        sortBy: DB_SORT_FIELDS.UPDATE_DATE,
+        sortOrder: SORT_DIRECTIONS.DESC,
       });
 
       expect(results).toHaveLength(2);
-      expect(results.every(book => book.entity.status === 'completed')).toBe(true);
+      expect(results.every(book => book.entity.status === BOOK_STATUS.FINISHED)).toBe(true);
       expect(results.every(book => (book.entity as Record<string, unknown>).rating === 5)).toBe(true);
     });
   });

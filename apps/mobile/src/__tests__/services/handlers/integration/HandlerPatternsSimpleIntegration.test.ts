@@ -158,7 +158,7 @@ describe('Handler Patterns Simple Integration', () => {
 
     beforeEach(() => {
       // Ensure navigator.onLine is true for ClientGateway tests
-      global.navigator.onLine = true;
+      Object.defineProperty(global.navigator, 'onLine', { value: true, configurable: true, writable: true });
       
       mockHttpClient = {
         get: jest.fn().mockResolvedValue({}),

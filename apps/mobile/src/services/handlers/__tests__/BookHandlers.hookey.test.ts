@@ -1,5 +1,13 @@
 import { BookHandlerFactory, Book, CreateBookPayload } from '../BookHandlers';
 import { mobileHooks, MOBILE_EVENTS } from '../../hooks/mobileHooks';
+import type { HttpClient } from '../gateways/clientGateway';
+
+const mockHttpClient: HttpClient = {
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn(),
+};
 
 // Mock the mobile hooks to capture emitted events
 jest.mock('../../hooks/mobileHooks', () => ({
@@ -56,7 +64,7 @@ describe('BookHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockBook);
 
-      const bookHandler = BookHandlerFactory.createClientGateway({});
+      const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
       await bookHandler.create(createPayload);
 
       // Verify START event was emitted
@@ -104,7 +112,7 @@ describe('BookHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockRejectedValue(new Error('Create failed'));
 
-      const bookHandler = BookHandlerFactory.createClientGateway({});
+      const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
       
       await expect(bookHandler.create(createPayload)).rejects.toThrow('Create failed');
 
@@ -129,7 +137,7 @@ describe('BookHandlers Hookey Integration', () => {
     it('should emit FAILED event with validation error type for validation failures', async () => {
       const invalidPayload = { title: '', author: 'Test Author', status: 'reading' } as CreateBookPayload;
 
-      const bookHandler = BookHandlerFactory.createClientGateway({});
+      const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
 
       await expect(bookHandler.create(invalidPayload)).rejects.toThrow();
 
@@ -152,7 +160,7 @@ describe('BookHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue('temp-123');
 
-      const bookHandler = BookHandlerFactory.createClientGateway({});
+      const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
       await bookHandler.create(createPayload);
 
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
@@ -174,7 +182,7 @@ describe('BookHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.delete.mockResolvedValue(undefined);
 
-      const bookHandler = BookHandlerFactory.createClientGateway({});
+      const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
       await bookHandler.delete(bookId);
 
       // Verify START event was emitted
@@ -200,7 +208,7 @@ describe('BookHandlers Hookey Integration', () => {
     });
 
     it('should emit FAILED event for invalid book ID', async () => {
-      const bookHandler = BookHandlerFactory.createClientGateway({});
+      const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
 
       await expect(bookHandler.delete('')).rejects.toThrow();
 
@@ -233,15 +241,15 @@ describe('BookHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockBook);
 
-      const bookHandler = BookHandlerFactory.createClientGateway({});
+      const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
       await bookHandler.create(createPayload);
 
       const calls = mockMobileHooks.emit.mock.calls;
       const startCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.BOOK.CREATE.START);
       const successCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.BOOK.CREATE.SUCCESS);
 
-      expect(startCall[1].operationId).toBeDefined();
-      expect(successCall[1].operationId).toBe(startCall[1].operationId);
+      expect((startCall[1] as Record<string, unknown>).operationId).toBeDefined();
+      expect((successCall[1] as Record<string, unknown>).operationId).toBe((startCall[1] as Record<string, unknown>).operationId);
     });
 
     it('should include timestamp in all events', async () => {
@@ -263,13 +271,13 @@ describe('BookHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockBook);
 
-      const bookHandler = BookHandlerFactory.createClientGateway({});
+      const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
       await bookHandler.create(createPayload);
 
       const allCalls = mockMobileHooks.emit.mock.calls;
       
       allCalls.forEach((call) => {
-        const metadata = call[1];
+        const metadata = call[1] as Record<string, unknown>;
         expect(metadata.timestamp).toBeDefined();
         expect(typeof metadata.timestamp).toBe('string');
       });
@@ -294,13 +302,13 @@ describe('BookHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockBook);
 
-      const bookHandler = BookHandlerFactory.createClientGateway({});
+      const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
       await bookHandler.create(createPayload);
 
       const allCalls = mockMobileHooks.emit.mock.calls;
       
       allCalls.forEach((call) => {
-        const metadata = call[1];
+        const metadata = call[1] as Record<string, unknown>;
         expect(metadata.resourceType).toBe('book');
       });
     });
@@ -326,7 +334,7 @@ describe('BookHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockBook);
 
-      const bookHandler = BookHandlerFactory.createClientGateway({});
+      const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
 
       // Handler should work normally with fire-and-forget hooks
       const result = await bookHandler.create(createPayload);

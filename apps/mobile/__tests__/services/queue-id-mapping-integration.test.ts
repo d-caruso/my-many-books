@@ -71,7 +71,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverId = 5001;
 
       // Setup: Create book in local DB with temp ID
-      const createBook1 = new LocalBook({ title: 'Test Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const createBook1 = new LocalBook({ title: 'Test Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       createBook1.tempId = tempId;
       await bookRepository.create(createBook1);
 
@@ -133,7 +133,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverAuthorId = 2002;
 
       // Setup: Create book in local DB
-      const createBook2 = new LocalBook({ title: 'Book with Author Reference', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const createBook2 = new LocalBook({ title: 'Book with Author Reference', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       createBook2.tempId = tempBookId;
       await bookRepository.create(createBook2);
 
@@ -186,7 +186,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverId = 5003;
 
       // Setup: Create book with server_id
-      const createBook3 = new LocalBook({ title: 'Book with Server ID', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const createBook3 = new LocalBook({ title: 'Book with Server ID', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       createBook3.tempId = tempId;
       createBook3.serverId = serverId;
       await bookRepository.create(createBook3);
@@ -236,7 +236,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const tempId = 'temp-1703856002000';
 
       // Setup: Create book WITHOUT server_id (never synced)
-      const createBook4 = new LocalBook({ title: 'Book Without Server ID', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const createBook4 = new LocalBook({ title: 'Book Without Server ID', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       createBook4.tempId = tempId;
       await bookRepository.create(createBook4);
 
@@ -284,7 +284,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverCategoryId = 3003;
 
       // Setup: Create book
-      const createBook5 = new LocalBook({ title: 'Book to Update', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const createBook5 = new LocalBook({ title: 'Book to Update', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       createBook5.tempId = tempBookId;
       await bookRepository.create(createBook5);
 
@@ -330,7 +330,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverId = 5004;
 
       // Setup: Create book with server_id
-      const createBook6 = new LocalBook({ title: 'Book to Delete', status: 'completed', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const createBook6 = new LocalBook({ title: 'Book to Delete', status: 'completed', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       createBook6.tempId = tempId;
       createBook6.serverId = serverId;
       await bookRepository.create(createBook6);
@@ -366,7 +366,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const tempId = 'temp-1703856004000';
 
       // Setup: Create book WITHOUT server_id (never synced)
-      const createBook7 = new LocalBook({ title: 'Local-only Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const createBook7 = new LocalBook({ title: 'Local-only Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       createBook7.tempId = tempId;
       await bookRepository.create(createBook7);
 
@@ -428,7 +428,7 @@ describe('Queue with ID Mapping Integration (Task 5.3.3)', () => {
       const serverId = 6001;
 
       // Step 1: CREATE book with temp ID
-      const e2eBook = new LocalBook({ title: 'E2E Test Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const e2eBook = new LocalBook({ title: 'E2E Test Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       e2eBook.tempId = tempId;
       await bookRepository.create(e2eBook);
 

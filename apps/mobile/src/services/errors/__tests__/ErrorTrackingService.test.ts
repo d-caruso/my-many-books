@@ -39,7 +39,7 @@ const mockErrorUtils = {
   getGlobalHandler: jest.fn(),
   setGlobalHandler: jest.fn(),
 };
-global.ErrorUtils = mockErrorUtils;
+(global as typeof globalThis & { ErrorUtils: typeof mockErrorUtils }).ErrorUtils = mockErrorUtils;
 
 describe('ErrorTrackingService', () => {
   beforeEach(() => {
@@ -351,7 +351,7 @@ describe('ErrorTrackingService', () => {
       errorTrackingService.trackError(testError, 'NETWORK_TIMEOUT');
 
       const emittedCall = jest.mocked(mobileHooks.emit).mock.calls[1]; // Skip tracking start call
-      const errorData = emittedCall[1];
+      const errorData = emittedCall[1] as Record<string, unknown>;
 
       expect(errorData.networkState).toEqual({
         isOnline: true,

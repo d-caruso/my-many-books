@@ -5,6 +5,7 @@
 import { BookHandlerIntegration, getBookHandlerIntegration, createIntegratedBookHandlers } from '../../../../services/handlers/integration/BookHandlerIntegration';
 import { OperationQueue } from '../../../../services/OperationQueue';
 import { IDMappingService } from '../../../../services/sync/IDMappingService';
+import type { NetworkStateProvider } from '../../../../services/handlers/gateways/mobileHandler';
 
 // Mock dependencies
 jest.mock('../../../../services/OperationQueue');
@@ -51,8 +52,8 @@ describe('BookHandlerIntegration', () => {
     mockOperationQueue = createMockOperationQueue();
     mockIDMappingService = createMockIDMappingService();
     integration = new BookHandlerIntegration(
-      mockOperationQueue as jest.Mocked<OperationQueue>,
-      mockIDMappingService as jest.Mocked<IDMappingService>
+      mockOperationQueue as unknown as jest.Mocked<OperationQueue>,
+      mockIDMappingService as unknown as jest.Mocked<IDMappingService>
     );
     jest.clearAllMocks();
   });
@@ -74,7 +75,7 @@ describe('BookHandlerIntegration', () => {
       const networkProvider = createMockNetworkProvider();
 
       expect(() => {
-        integration.createIntegratedHandlers(httpClient, networkProvider);
+        integration.createIntegratedHandlers(httpClient, networkProvider as unknown as NetworkStateProvider);
       }).toThrow('BookHandlerIntegration must be initialized before use');
     });
   });
@@ -88,7 +89,7 @@ describe('BookHandlerIntegration', () => {
       const httpClient = createMockHttpClient();
       const networkProvider = createMockNetworkProvider();
 
-      const handlers = integration.createIntegratedHandlers(httpClient, networkProvider);
+      const handlers = integration.createIntegratedHandlers(httpClient, networkProvider as unknown as NetworkStateProvider);
 
       expect(handlers.clientGateway).toBeDefined();
       expect(handlers.mobileHandler).toBeDefined();
@@ -99,7 +100,7 @@ describe('BookHandlerIntegration', () => {
       const httpClient = createMockHttpClient();
       const networkProvider = createMockNetworkProvider();
 
-      const handlers = integration.createIntegratedHandlers(httpClient, networkProvider);
+      const handlers = integration.createIntegratedHandlers(httpClient, networkProvider as unknown as NetworkStateProvider);
 
       // All handlers should have the same methods
       for (const handler of Object.values(handlers)) {
@@ -120,7 +121,7 @@ describe('BookHandlerIntegration', () => {
     it('should create handlers with ID mapping wrapper', () => {
       const httpClient = createMockHttpClient();
       const networkProvider = createMockNetworkProvider();
-      const handlers = integration.createIntegratedHandlers(httpClient, networkProvider);
+      const handlers = integration.createIntegratedHandlers(httpClient, networkProvider as unknown as NetworkStateProvider);
 
       // Handlers should be wrapped and have the expected interface
       expect(handlers.clientGateway).toBeDefined();
@@ -217,8 +218,8 @@ describe('BookHandlerIntegration', () => {
       const queue1 = createMockOperationQueue();
       const idMapping1 = createMockIDMappingService();
 
-      const instance1 = getBookHandlerIntegration(queue1 as jest.Mocked<OperationQueue>, idMapping1 as jest.Mocked<IDMappingService>);
-      const instance2 = getBookHandlerIntegration(queue1 as jest.Mocked<OperationQueue>, idMapping1 as jest.Mocked<IDMappingService>);
+      const instance1 = getBookHandlerIntegration(queue1 as unknown as jest.Mocked<OperationQueue>, idMapping1 as unknown as jest.Mocked<IDMappingService>);
+      const instance2 = getBookHandlerIntegration(queue1 as unknown as jest.Mocked<OperationQueue>, idMapping1 as unknown as jest.Mocked<IDMappingService>);
 
       expect(instance1).toBe(instance2);
     });
@@ -233,9 +234,9 @@ describe('BookHandlerIntegration', () => {
 
       const handlers = await createIntegratedBookHandlers(
         httpClient,
-        networkProvider,
-        operationQueue as jest.Mocked<OperationQueue>,
-        idMappingService as jest.Mocked<IDMappingService>
+        networkProvider as unknown as NetworkStateProvider,
+        operationQueue as unknown as jest.Mocked<OperationQueue>,
+        idMappingService as unknown as jest.Mocked<IDMappingService>
       );
 
       expect(handlers.clientGateway).toBeDefined();

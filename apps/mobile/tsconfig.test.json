@@ -1,9 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["jest", "@testing-library/jest-native"],
+    "types": ["node", "jest", "@testing-library/jest-native"],
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "moduleDetection": "force"
   },
   "include": [
     "src/**/__tests__/**/*",

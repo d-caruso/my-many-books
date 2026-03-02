@@ -150,22 +150,22 @@ describe('Helper Utilities', () => {
     it('should group books by status', () => {
       const books: Book[] = [
         { id: 1, title: 'Book 1', status: 'reading', authors: [], categories: [], creationDate: '2023-01-01', updateDate: '2023-01-01', isbnCode: '123' },
-        { id: 2, title: 'Book 2', status: 'completed', authors: [], categories: [], creationDate: '2023-01-01', updateDate: '2023-01-01', isbnCode: '456' },
+        { id: 2, title: 'Book 2', status: 'finished', authors: [], categories: [], creationDate: '2023-01-01', updateDate: '2023-01-01', isbnCode: '456' },
         { id: 3, title: 'Book 3', status: 'reading', authors: [], categories: [], creationDate: '2023-01-01', updateDate: '2023-01-01', isbnCode: '789' },
       ];
 
       const grouped = groupBooksByStatus(books);
 
       expect(grouped.reading).toHaveLength(2);
-      expect(grouped.completed).toHaveLength(1);
+      expect(grouped.finished).toHaveLength(1);
       expect(grouped.reading[0].title).toBe('Book 1');
     });
   });
 
   describe('sortBooks', () => {
     const mockBooks: Book[] = [
-      { id: 1, title: 'Zebra Book', authors: [{ id: 1, name: 'Author A', books: [] }], creationDate: '2023-01-01', status: 'reading', categories: [], updateDate: '2023-01-01', isbnCode: '123' },
-      { id: 2, title: 'Alpha Book', authors: [{ id: 2, name: 'Author Z', books: [] }], creationDate: '2023-01-02', status: 'completed', categories: [], updateDate: '2023-01-02', isbnCode: '456' },
+      { id: 1, title: 'Zebra Book', authors: [{ id: 1, name: 'Alpha', surname: 'Author' }], creationDate: '2023-01-01', status: 'reading', categories: [], updateDate: '2023-01-01', isbnCode: '123' },
+      { id: 2, title: 'Alpha Book', authors: [{ id: 2, name: 'Zeta', surname: 'Author' }], creationDate: '2023-01-02', status: 'finished', categories: [], updateDate: '2023-01-02', isbnCode: '456' },
     ];
 
     it('should sort books by title', () => {
@@ -176,8 +176,8 @@ describe('Helper Utilities', () => {
 
     it('should sort books by author', () => {
       const sorted = sortBooks(mockBooks, 'author');
-      expect(sorted[0].authors[0].name).toBe('Author A');
-      expect(sorted[1].authors[0].name).toBe('Author Z');
+      expect(sorted[0].authors[0].name).toBe('Alpha');
+      expect(sorted[1].authors[0].name).toBe('Zeta');
     });
 
     it('should sort books by date', () => {
@@ -189,25 +189,25 @@ describe('Helper Utilities', () => {
 
   describe('filterBooks', () => {
     const mockBooks: Book[] = [
-      { 
-        id: 1, 
-        title: 'Book 1', 
-        status: 'reading', 
-        authors: [{ id: 1, name: 'John Doe', books: [] }], 
-        categories: [{ id: 1, name: 'Fiction', books: [] }], 
-        creationDate: '2023-01-01', 
-        updateDate: '2023-01-01', 
-        isbnCode: '123' 
+      {
+        id: 1,
+        title: 'Book 1',
+        status: 'reading',
+        authors: [{ id: 1, name: 'John', surname: 'Doe' }],
+        categories: [{ id: 1, name: 'Fiction' }],
+        creationDate: '2023-01-01',
+        updateDate: '2023-01-01',
+        isbnCode: '123'
       },
-      { 
-        id: 2, 
-        title: 'Book 2', 
-        status: 'completed', 
-        authors: [{ id: 2, name: 'Jane Smith', books: [] }], 
-        categories: [{ id: 2, name: 'Non-Fiction', books: [] }], 
-        creationDate: '2023-01-02', 
-        updateDate: '2023-01-02', 
-        isbnCode: '456' 
+      {
+        id: 2,
+        title: 'Book 2',
+        status: 'finished',
+        authors: [{ id: 2, name: 'Jane', surname: 'Smith' }],
+        categories: [{ id: 2, name: 'Non-Fiction' }],
+        creationDate: '2023-01-02',
+        updateDate: '2023-01-02',
+        isbnCode: '456'
       },
     ];
 
@@ -235,7 +235,7 @@ describe('Helper Utilities', () => {
     });
 
     it('should return empty array when no matches', () => {
-      const filtered = filterBooks(mockBooks, { status: 'want-to-read' });
+      const filtered = filterBooks(mockBooks, { status: 'paused' });
       expect(filtered).toHaveLength(0);
     });
   });

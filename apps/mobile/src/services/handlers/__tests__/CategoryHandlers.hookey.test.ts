@@ -1,5 +1,13 @@
 import { CategoryHandlerFactory, Category, CreateCategoryPayload } from '../CategoryHandlers';
 import { mobileHooks, MOBILE_EVENTS } from '../../hooks/mobileHooks';
+import type { HttpClient } from '../gateways/clientGateway';
+
+const mockHttpClient: HttpClient = {
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn(),
+};
 
 // Mock the mobile hooks to capture emitted events
 jest.mock('../../hooks/mobileHooks', () => ({
@@ -56,7 +64,7 @@ describe('CategoryHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockCategory);
 
-      const categoryHandler = CategoryHandlerFactory.createClientGateway({});
+      const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
       await categoryHandler.create(createPayload);
 
       // Verify START event was emitted
@@ -96,7 +104,7 @@ describe('CategoryHandlers Hookey Integration', () => {
     it('should emit FAILED event with validation error type for validation failures', async () => {
       const invalidPayload = { name: '', description: 'Test description' } as CreateCategoryPayload;
 
-      const categoryHandler = CategoryHandlerFactory.createClientGateway({});
+      const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
 
       await expect(categoryHandler.create(invalidPayload)).rejects.toThrow();
 
@@ -117,7 +125,7 @@ describe('CategoryHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.delete.mockResolvedValue(undefined);
 
-      const categoryHandler = CategoryHandlerFactory.createClientGateway({});
+      const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
       await categoryHandler.delete(categoryId);
 
       // Verify START event was emitted
@@ -143,7 +151,7 @@ describe('CategoryHandlers Hookey Integration', () => {
     });
 
     it('should emit FAILED event for invalid category ID', async () => {
-      const categoryHandler = CategoryHandlerFactory.createClientGateway({});
+      const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
 
       await expect(categoryHandler.delete('')).rejects.toThrow();
 
@@ -172,15 +180,15 @@ describe('CategoryHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockCategory);
 
-      const categoryHandler = CategoryHandlerFactory.createClientGateway({});
+      const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
       await categoryHandler.create(createPayload);
 
       const calls = mockMobileHooks.emit.mock.calls;
       const startCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.CATEGORY.CREATE.START);
       const successCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS);
 
-      expect(startCall[1].operationId).toBeDefined();
-      expect(successCall[1].operationId).toBe(startCall[1].operationId);
+      expect((startCall[1] as Record<string, unknown>).operationId).toBeDefined();
+      expect((successCall[1] as Record<string, unknown>).operationId).toBe((startCall[1] as Record<string, unknown>).operationId);
     });
 
     it('should include all required metadata fields in events', async () => {
@@ -202,13 +210,13 @@ describe('CategoryHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockCategory);
 
-      const categoryHandler = CategoryHandlerFactory.createClientGateway({});
+      const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
       await categoryHandler.create(createPayload);
 
       const allCalls = mockMobileHooks.emit.mock.calls;
       
       allCalls.forEach((call) => {
-        const metadata = call[1];
+        const metadata = call[1] as Record<string, unknown>;
         expect(metadata.operationId).toBeDefined();
         expect(metadata.resourceType).toBe('category');
         expect(metadata.timestamp).toBeDefined();

@@ -1,5 +1,5 @@
 // Test for API offline error handling
-import NetInfo from '@react-native-community/netinfo';
+import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import * as apiModule from '@/services/api';
 
 // Mock NetInfo is already set up globally in setupTests.ts
@@ -44,7 +44,7 @@ describe('API Offline Error Handling', () => {
         isConnected: null,
         isInternetReachable: null,
         details: null,
-      } as unknown);
+      } as unknown as NetInfoState);
 
       const isOnline = await apiModule.apiUtils.isOnline();
 
@@ -57,7 +57,7 @@ describe('API Offline Error Handling', () => {
         isConnected: false,
         isInternetReachable: false,
         details: null,
-      } as unknown);
+      } as unknown as NetInfoState);
 
       const isOnline = await apiModule.apiUtils.isOnline();
 
@@ -90,7 +90,7 @@ describe('API Offline Error Handling', () => {
         isConnected: false,
         isInternetReachable: false,
         details: null,
-      } as unknown);
+      } as unknown as NetInfoState);
 
       const mockError = new Error('Original error');
 
@@ -105,7 +105,7 @@ describe('API Offline Error Handling', () => {
         isConnected: true,
         isInternetReachable: true,
         details: { isConnectionExpensive: false, ssid: 'test', strength: 100 },
-      } as unknown);
+      } as unknown as NetInfoState);
 
       const mockError = new Error('Original error');
 

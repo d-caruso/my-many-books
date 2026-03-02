@@ -59,7 +59,7 @@ describe('ErrorBoundary', () => {
   it('should initialize with no error state', () => {
     // Test the initial state
     const initialState = { hasError: false, error: null, errorInfo: null, errorId: null };
-    const component = new ErrorBoundary({});
+    const component = new ErrorBoundary({} as ConstructorParameters<typeof ErrorBoundary>[0]);
     expect(component.state).toEqual(initialState);
   });
 

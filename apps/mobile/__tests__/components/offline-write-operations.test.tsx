@@ -10,15 +10,15 @@ jest.mock('react-native-paper', () => {
   const React = require('react');
   const actual = jest.requireActual('react-native-paper');
 
-  const MenuItem = (props: unknown) => {
+  const MenuItem = (props: Record<string, unknown>) => {
     return React.createElement(
       'RCTView',
       props,
-      React.createElement('RCTText', null, props.title)
+      React.createElement('RCTText', null, props.title as string)
     );
   };
 
-  const Menu = ({ anchor, children }: unknown) => {
+  const Menu = ({ anchor, children }: { anchor: unknown; children?: React.ReactNode }) => {
     const anchorElement =
       typeof anchor === 'function'
         ? anchor({ onPress: jest.fn() })
@@ -37,16 +37,17 @@ jest.mock('react-native-paper', () => {
   return {
     ...actual,
     Menu,
-    Portal: ({ children }: unknown) => <>{children}</>,
+    Portal: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   };
 });
 
 describe('Offline Write Operations', () => {
   const mockBook: Book = {
     id: 1,
+    isbnCode: '9780000000000',
     title: 'Test Book',
     status: 'reading' as const,
-    authors: [{ name: 'Test Author' }],
+    authors: [{ id: 1, name: 'Test', surname: 'Author' }],
     creationDate: '2024-01-01T00:00:00.000Z',
     updateDate: '2024-01-01T00:00:00.000Z',
   };

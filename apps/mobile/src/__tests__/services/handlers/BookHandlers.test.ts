@@ -23,6 +23,8 @@ const createMockQueue = () => ({
   enqueue: jest.fn(),
   size: jest.fn(() => 0),
   clear: jest.fn(),
+  add: jest.fn(),
+  executeAll: jest.fn(),
 });
 
 // Mock network provider
@@ -55,7 +57,7 @@ describe('BookHandlerFactory', () => {
 
   describe('createMobileHandler', () => {
     it('should create a mobile handler', () => {
-      const handler = BookHandlerFactory.createMobileHandler(mockHttpClient, mockQueue, mockNetworkProvider);
+      const handler = BookHandlerFactory.createMobileHandler(mockHttpClient, mockQueue as unknown as Parameters<typeof BookHandlerFactory.createMobileHandler>[1], mockNetworkProvider as unknown as Parameters<typeof BookHandlerFactory.createMobileHandler>[2]);
       expect(handler).toBeDefined();
       expect(typeof handler.create).toBe('function');
       expect(typeof handler.update).toBe('function');
@@ -147,7 +149,7 @@ describe('Book Handler Validation', () => {
         status: 'invalid-status',
       };
 
-      await expect(handler.create(invalidData)).rejects.toThrow(BookValidationError);
+      await expect(handler.create(invalidData as unknown as CreateBookPayload)).rejects.toThrow(BookValidationError);
     });
 
     it('should throw validation error for empty title', async () => {
@@ -267,7 +269,7 @@ describe('Book Handler Validation', () => {
         status: 'invalid-status',
       };
 
-      await expect(handler.update('1', invalidData)).rejects.toThrow(BookValidationError);
+      await expect(handler.update('1', invalidData as unknown as UpdateBookPayload)).rejects.toThrow(BookValidationError);
     });
 
     it('should accept partial updates with valid fields', async () => {

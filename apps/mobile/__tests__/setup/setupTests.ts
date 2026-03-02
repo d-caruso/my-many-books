@@ -5,7 +5,7 @@ import '@testing-library/jest-dom';
 jest.useFakeTimers();
 
 // Define __DEV__ global for React Native
-global.__DEV__ = true;
+(global as typeof globalThis & { __DEV__: boolean }).__DEV__ = true;
 
 // Mock React Native core modules that cause issues
 // Note: These mocks are commented out as the modules don't exist in the current React Native version
@@ -54,13 +54,27 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 
 // Use better-sqlite3 for testing (real SQLite engine in Node.js)
 // expo-sqlite requires native modules that don't work in Jest
+
+interface BetterSQLiteStatement {
+  run(...params: unknown[]): { changes: number; lastInsertRowid: number };
+  get(...params: unknown[]): unknown;
+  all(...params: unknown[]): unknown[];
+}
+
+interface BetterSQLiteDB {
+  exec(sql: string): void;
+  prepare(sql: string): BetterSQLiteStatement;
+  close(): void;
+  open: boolean;
+}
+
 jest.mock('expo-sqlite', () => {
   const Database = require('better-sqlite3');
 
   // Shared database instance per dbName for test persistence
-  let currentDb: unknown = null;
+  let currentDb: BetterSQLiteDB | null = null;
 
-  const createDbWrapper = (db: unknown) => ({
+  const createDbWrapper = (db: BetterSQLiteDB) => ({
     execAsync: async (sql: string) => {
       db.exec(sql);
       return { changes: 0, lastInsertRowId: 0 };
@@ -258,17 +272,17 @@ jest.mock('react-native', () => {
   const React = require('react');
   
   // Create proper React Native component mocks with displayName for Testing Library compatibility
-  const View = React.forwardRef((props: unknown, ref: unknown) => {
+  const View = React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
     return React.createElement('RCTView', { ...props, ref });
   });
   View.displayName = 'View';
   
-  const Text = React.forwardRef((props: unknown, ref: unknown) => {
+  const Text = React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
     return React.createElement('RCTText', { ...props, ref });
   });
   Text.displayName = 'Text';
   
-  const TouchableOpacity = React.forwardRef((props: unknown, ref: unknown) => {
+  const TouchableOpacity = React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
     const { onPress, disabled, ...otherProps } = props;
     return React.createElement('RCTTouchableOpacity', { 
       ...otherProps, 
@@ -279,7 +293,7 @@ jest.mock('react-native', () => {
   });
   TouchableOpacity.displayName = 'TouchableOpacity';
   
-  const TextInput = React.forwardRef((props: unknown, ref: unknown) => {
+  const TextInput = React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
     const { onChangeText, value, ...otherProps } = props;
     return React.createElement('RCTTextInput', { 
       ...otherProps, 
@@ -290,22 +304,22 @@ jest.mock('react-native', () => {
   });
   TextInput.displayName = 'TextInput';
   
-  const Image = React.forwardRef((props: unknown, ref: unknown) => {
+  const Image = React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
     return React.createElement('RCTImageView', { ...props, ref });
   });
   Image.displayName = 'Image';
   
-  const ScrollView = React.forwardRef((props: unknown, ref: unknown) => {
+  const ScrollView = React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
     return React.createElement('RCTScrollView', { ...props, ref });
   });
   ScrollView.displayName = 'ScrollView';
   
-  const ActivityIndicator = React.forwardRef((props: unknown, ref: unknown) => {
+  const ActivityIndicator = React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
     return React.createElement('RCTActivityIndicatorView', { ...props, ref });
   });
   ActivityIndicator.displayName = 'ActivityIndicator';
 
-  const Button = React.forwardRef((props: unknown, ref: unknown) => {
+  const Button = React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
     const { onPress, title, disabled, ...otherProps } = props;
     return React.createElement('RCTButton', {
       ...otherProps,
@@ -384,7 +398,7 @@ const mockApiUtils = {
   },
 
   isOfflineError: (error: unknown): boolean => {
-    return error?.message === "You're offline. Check your connection and try again.";
+    return error instanceof Error && error.message === "You're offline. Check your connection and try again.";
   },
 };
 

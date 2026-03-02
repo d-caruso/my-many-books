@@ -158,7 +158,7 @@ describe('Handler Performance Benchmarks', () => {
 
     beforeEach(() => {
       // Ensure navigator.onLine is true for ClientGateway tests
-      global.navigator.onLine = true;
+      Object.defineProperty(global.navigator, 'onLine', { value: true, configurable: true, writable: true });
       
       mockHttpClient = createOptimizedMockHttpClient();
       const config = createDefaultClientGatewayConfig(mockHttpClient);
@@ -221,7 +221,7 @@ describe('Handler Performance Benchmarks', () => {
       await queueConfig.queue.clear();
 
       // Setup ClientGateway
-      global.navigator.onLine = true;
+      Object.defineProperty(global.navigator, 'onLine', { value: true, configurable: true, writable: true });
       const mockHttpClient = createOptimizedMockHttpClient();
       const clientConfig = createDefaultClientGatewayConfig(mockHttpClient);
       clientGateway = createClientGateway<TestBook>('book', clientConfig);

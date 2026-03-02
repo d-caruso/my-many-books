@@ -211,7 +211,7 @@ describe('GatewayTypes', () => {
       const responseConfig: ResponseConfig = {
         format: 'json',
         schema: { type: 'object' },
-        transform: (data) => ({ ...data, transformed: true }),
+        transform: (data) => ({ ...(data as Record<string, unknown>), transformed: true }),
         errorHandler: (error) => new Error(`Custom: ${error.message}`),
       };
 

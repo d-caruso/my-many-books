@@ -264,7 +264,7 @@ describe('SyncService Hookey Integration', () => {
 
       expect(failedCalls.length).toBeGreaterThanOrEqual(1); // At least upload failed
       
-      const uploadFailedCall = failedCalls.find(([, payload]) => payload.stage === 'upload');
+      const uploadFailedCall = failedCalls.find(([, payload]) => (payload as Record<string, unknown>).stage === 'upload');
       expect(uploadFailedCall).toBeDefined();
       expect(uploadFailedCall[1]).toEqual(expect.objectContaining({
         stage: 'upload',
@@ -467,9 +467,10 @@ describe('SyncService Hookey Integration', () => {
       );
 
       expect(failedCalls.length).toBeGreaterThan(0);
-      expect(failedCalls.some(([, payload]) => 
-        payload.stage === 'download' && payload.error === 'API Error'
-      )).toBe(true);
+      expect(failedCalls.some(([, payload]) => {
+        const p = payload as Record<string, unknown>;
+        return p.stage === 'download' && p.error === 'API Error';
+      })).toBe(true);
     });
 
     it('should handle empty API responses gracefully', async () => {

@@ -39,7 +39,7 @@ const createMockApiExecutor = (errorType: 'network' | 'validation' | 'server' | 
       default:
         throw new Error(`Unknown error type: ${errorType}`);
     }
-  });
+  }) as unknown as jest.MockedFunction<Parameters<typeof operationQueue.processQueue>[0]>;
 };
 
 describe('Mobile Operations Error Scenarios', () => {
@@ -339,7 +339,7 @@ describe('Mobile Operations Error Scenarios', () => {
       });
 
       // Process queue
-      await operationQueue.processQueue(mixedExecutor);
+      await operationQueue.processQueue(mixedExecutor as unknown as Parameters<typeof operationQueue.processQueue>[0]);
 
       expect(mixedExecutor).toHaveBeenCalledTimes(3); // All operations attempted
 
@@ -392,7 +392,7 @@ describe('Mobile Operations Error Scenarios', () => {
         return { id: `server-${callCount}` };
       });
 
-      await operationQueue.processQueue(randomFailureExecutor);
+      await operationQueue.processQueue(randomFailureExecutor as unknown as Parameters<typeof operationQueue.processQueue>[0]);
 
       // Queue should maintain consistency
       const remainingOps = operationQueue.size();
@@ -453,7 +453,7 @@ describe('Mobile Operations Error Scenarios', () => {
       const mockExecutor = jest.fn(async () => ({ id: 'server-123' }));
 
       // Processing should handle malformed data gracefully
-      await operationQueue.processQueue(mockExecutor);
+      await operationQueue.processQueue(mockExecutor as unknown as Parameters<typeof operationQueue.processQueue>[0]);
 
       // Valid operation should be processed, malformed one may cause executor failure but shouldn't crash
       expect(mockExecutor).toHaveBeenCalled();

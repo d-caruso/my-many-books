@@ -598,7 +598,7 @@ describe('OperationQueue Hookey Integration', () => {
 
       // Should emit warning about stale operations
       const staleCalls = mockMobileHooks.emit.mock.calls.filter(
-        ([_, payload]) => payload?.status === QUEUE_SIZE_STATUS.STALE_OPERATIONS
+        ([_, payload]) => (payload as Record<string, unknown>)?.status === QUEUE_SIZE_STATUS.STALE_OPERATIONS
       );
       expect(staleCalls).toHaveLength(1);
       expect(staleCalls[0][1]).toEqual(expect.objectContaining({

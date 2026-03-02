@@ -148,9 +148,10 @@ describe('IDMappingService Hookey Integration', () => {
       // Should have completion calls for successful resolution and overall completion
       expect(completeCalls.length).toBeGreaterThan(0);
       
-      const fieldResolutionCall = completeCalls.find(([, payload]) => 
-        payload.operation === 'resolve_foreign_key' && payload.success === true
-      );
+      const fieldResolutionCall = completeCalls.find(([, payload]) => {
+        const p = payload as Record<string, unknown>;
+        return p.operation === 'resolve_foreign_key' && p.success === true;
+      });
       
       expect(fieldResolutionCall).toBeDefined();
       expect(fieldResolutionCall[1]).toEqual(expect.objectContaining({
@@ -172,9 +173,10 @@ describe('IDMappingService Hookey Integration', () => {
         ([eventName]) => eventName === MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE
       );
 
-      const failedResolutionCall = completeCalls.find(([, payload]) => 
-        payload.operation === 'resolve_foreign_key' && payload.success === false
-      );
+      const failedResolutionCall = completeCalls.find(([, payload]) => {
+        const p = payload as Record<string, unknown>;
+        return p.operation === 'resolve_foreign_key' && p.success === false;
+      });
       
       expect(failedResolutionCall).toBeDefined();
       expect(failedResolutionCall[1]).toEqual(expect.objectContaining({
@@ -197,8 +199,8 @@ describe('IDMappingService Hookey Integration', () => {
         ([eventName]) => eventName === MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE
       );
 
-      const overallCompletionCall = completeCalls.find(([, payload]) => 
-        payload.operation === 'resolve_foreign_keys'
+      const overallCompletionCall = completeCalls.find(([, payload]) =>
+        (payload as Record<string, unknown>).operation === 'resolve_foreign_keys'
       );
 
       expect(overallCompletionCall).toBeDefined();
@@ -228,9 +230,10 @@ describe('IDMappingService Hookey Integration', () => {
         ([eventName]) => eventName === MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE
       );
 
-      const successfulResolutions = completeCalls.filter(([, payload]) => 
-        payload.operation === 'resolve_foreign_key' && payload.success === true
-      );
+      const successfulResolutions = completeCalls.filter(([, payload]) => {
+        const p = payload as Record<string, unknown>;
+        return p.operation === 'resolve_foreign_key' && p.success === true;
+      });
 
       // Should resolve temp-author-123 and temp-cat-456 but not regular-id
       expect(successfulResolutions).toHaveLength(2);
@@ -289,8 +292,8 @@ describe('IDMappingService Hookey Integration', () => {
         ([eventName]) => eventName === MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE
       );
 
-      const fieldResolutions = completeCalls.filter(([, payload]) => 
-        payload.operation === 'resolve_foreign_key'
+      const fieldResolutions = completeCalls.filter(([, payload]) =>
+        (payload as Record<string, unknown>).operation === 'resolve_foreign_key'
       );
 
       // Should attempt to resolve both nested IDs
@@ -304,13 +307,14 @@ describe('IDMappingService Hookey Integration', () => {
 
       // Check all emitted events have required structure
       mockMobileHooks.emit.mock.calls.forEach(([eventName, payload]) => {
+        const p = payload as Record<string, unknown>;
         expect(typeof eventName).toBe('string');
-        expect(payload).toBeDefined();
-        expect(payload.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/); // ISO format
-        
-        if (eventName === MOBILE_EVENTS.SYNC.ID_MAPPING.START || 
+        expect(p).toBeDefined();
+        expect(p.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/); // ISO format
+
+        if (eventName === MOBILE_EVENTS.SYNC.ID_MAPPING.START ||
             eventName === MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE) {
-          expect(payload.operation).toBeDefined();
+          expect(p.operation).toBeDefined();
         }
       });
     });

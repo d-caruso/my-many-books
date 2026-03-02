@@ -71,10 +71,8 @@ const mockBook: Book = {
   title: 'The Great Gatsby',
   isbnCode: '9780743273565',
   status: 'reading' as const,
-  authors: [{ name: 'F. Scott Fitzgerald' }],
-  categories: ['Classic', 'Fiction'],
-  publishedDate: '1925-04-10',
-  thumbnail: 'https://example.com/gatsby.jpg',
+  authors: [{ id: 1, name: 'F. Scott', surname: 'Fitzgerald' }],
+  categories: [{ id: 1, name: 'Classic' }, { id: 2, name: 'Fiction' }],
   creationDate: '2023-01-01T00:00:00.000Z',
   updateDate: '2023-01-01T00:00:00.000Z',
 };
@@ -186,8 +184,6 @@ describe('BookCard', () => {
             onStatusChange: mockOnStatusChange,
             onDelete: mockOnDelete,
             onPress: mockOnPress,
-            testID: 'book-menu-button',
-            title: 'Mark as Completed'
           })
         );
       });

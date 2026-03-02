@@ -119,7 +119,7 @@ describe('ApiError instanceof checking', () => {
   });
 
   it('should handle non-error objects', () => {
-    expect(null instanceof ApiError).toBe(false);
+    expect((null as unknown) instanceof ApiError).toBe(false);
     expect({} instanceof ApiError).toBe(false);
   });
 

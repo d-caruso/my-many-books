@@ -1,7 +1,7 @@
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 
-import type { Author, Category } from '@/types';
+import type { Author, Category } from '@my-many-books/shared-types';
 import { ManageAuthorsDialog } from '@/components/book/ManageAuthorsDialog';
 import { ManageCategoriesDialog } from '@/components/book/ManageCategoriesDialog';
 

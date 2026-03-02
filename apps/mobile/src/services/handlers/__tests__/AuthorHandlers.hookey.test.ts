@@ -1,5 +1,13 @@
 import { AuthorHandlerFactory, Author, CreateAuthorPayload } from '../AuthorHandlers';
 import { mobileHooks, MOBILE_EVENTS } from '../../hooks/mobileHooks';
+import type { HttpClient } from '../gateways/clientGateway';
+
+const mockHttpClient: HttpClient = {
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn(),
+};
 
 // Mock the mobile hooks to capture emitted events
 jest.mock('../../hooks/mobileHooks', () => ({
@@ -56,7 +64,7 @@ describe('AuthorHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockAuthor);
 
-      const authorHandler = AuthorHandlerFactory.createClientGateway({});
+      const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
       await authorHandler.create(createPayload);
 
       // Verify START event was emitted
@@ -104,7 +112,7 @@ describe('AuthorHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockRejectedValue(new Error('Create failed'));
 
-      const authorHandler = AuthorHandlerFactory.createClientGateway({});
+      const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
       
       await expect(authorHandler.create(createPayload)).rejects.toThrow('Create failed');
 
@@ -129,7 +137,7 @@ describe('AuthorHandlers Hookey Integration', () => {
     it('should emit FAILED event with validation error type for validation failures', async () => {
       const invalidPayload = { name: '', bio: 'Test bio' } as CreateAuthorPayload;
 
-      const authorHandler = AuthorHandlerFactory.createClientGateway({});
+      const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
 
       await expect(authorHandler.create(invalidPayload)).rejects.toThrow();
 
@@ -150,7 +158,7 @@ describe('AuthorHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.delete.mockResolvedValue(undefined);
 
-      const authorHandler = AuthorHandlerFactory.createClientGateway({});
+      const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
       await authorHandler.delete(authorId);
 
       // Verify START event was emitted
@@ -176,7 +184,7 @@ describe('AuthorHandlers Hookey Integration', () => {
     });
 
     it('should emit FAILED event for invalid author ID', async () => {
-      const authorHandler = AuthorHandlerFactory.createClientGateway({});
+      const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
 
       await expect(authorHandler.delete('')).rejects.toThrow();
 
@@ -209,15 +217,15 @@ describe('AuthorHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockAuthor);
 
-      const authorHandler = AuthorHandlerFactory.createClientGateway({});
+      const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
       await authorHandler.create(createPayload);
 
       const calls = mockMobileHooks.emit.mock.calls;
       const startCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.AUTHOR.CREATE.START);
       const successCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS);
 
-      expect(startCall[1].operationId).toBeDefined();
-      expect(successCall[1].operationId).toBe(startCall[1].operationId);
+      expect((startCall[1] as Record<string, unknown>).operationId).toBeDefined();
+      expect((successCall[1] as Record<string, unknown>).operationId).toBe((startCall[1] as Record<string, unknown>).operationId);
     });
 
     it('should include timestamp in all events', async () => {
@@ -239,13 +247,13 @@ describe('AuthorHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockAuthor);
 
-      const authorHandler = AuthorHandlerFactory.createClientGateway({});
+      const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
       await authorHandler.create(createPayload);
 
       const allCalls = mockMobileHooks.emit.mock.calls;
       
       allCalls.forEach((call) => {
-        const metadata = call[1];
+        const metadata = call[1] as Record<string, unknown>;
         expect(metadata.timestamp).toBeDefined();
         expect(typeof metadata.timestamp).toBe('string');
       });
@@ -270,13 +278,13 @@ describe('AuthorHandlers Hookey Integration', () => {
       const mockGateway = require('../gateways/clientGateway').createClientGateway();
       mockGateway.create.mockResolvedValue(mockAuthor);
 
-      const authorHandler = AuthorHandlerFactory.createClientGateway({});
+      const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
       await authorHandler.create(createPayload);
 
       const allCalls = mockMobileHooks.emit.mock.calls;
       
       allCalls.forEach((call) => {
-        const metadata = call[1];
+        const metadata = call[1] as Record<string, unknown>;
         expect(metadata.resourceType).toBe('author');
       });
     });

@@ -1,7 +1,7 @@
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 
-import type { Author, Category } from '@/types';
+import type { Author, Category } from '@my-many-books/shared-types';
 import { AuthorsSection } from '@/components/book/AuthorsSection';
 import { CategoriesSection } from '@/components/book/CategoriesSection';
 import { AuthorSelectorModal } from '@/components/book/AuthorSelectorModal';

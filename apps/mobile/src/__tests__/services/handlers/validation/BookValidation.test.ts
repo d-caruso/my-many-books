@@ -29,8 +29,8 @@ describe('Book Validation', () => {
       it('should require title', () => {
         const data = { ...validBookData } as Partial<typeof validBookData>;
         delete data.title;
-        
-        const errors = validateCreateBook(data);
+
+        const errors = validateCreateBook(data as unknown as CreateBookPayload);
         expect(errors).toEqual([
           expect.objectContaining({
             field: 'title',
@@ -78,8 +78,8 @@ describe('Book Validation', () => {
       it('should require author', () => {
         const data = { ...validBookData } as Partial<typeof validBookData>;
         delete data.author;
-        
-        const errors = validateCreateBook(data);
+
+        const errors = validateCreateBook(data as unknown as CreateBookPayload);
         expect(errors).toEqual([
           expect.objectContaining({
             field: 'author',
@@ -120,8 +120,8 @@ describe('Book Validation', () => {
       it('should require status', () => {
         const data = { ...validBookData } as Partial<typeof validBookData>;
         delete data.status;
-        
-        const errors = validateCreateBook(data);
+
+        const errors = validateCreateBook(data as unknown as CreateBookPayload);
         expect(errors).toEqual([
           expect.objectContaining({
             field: 'status',
@@ -132,8 +132,8 @@ describe('Book Validation', () => {
       });
 
       it('should reject invalid status', () => {
-        const data: typeof validBookData & { status: string } = { ...validBookData, status: 'invalid-status' };
-        
+        const data = { ...validBookData, status: 'invalid-status' } as unknown as CreateBookPayload;
+
         const errors = validateCreateBook(data);
         expect(errors).toEqual([
           expect.objectContaining({
@@ -276,7 +276,7 @@ describe('Book Validation', () => {
         });
 
         it('should reject non-numeric rating', () => {
-          const data: typeof validBookData & { rating: string } = { ...validBookData, rating: 'five' };
+          const data = { ...validBookData, rating: 'five' } as unknown as CreateBookPayload;
           const errors = validateCreateBook(data);
           expect(errors).toEqual([
             expect.objectContaining({
@@ -328,7 +328,7 @@ describe('Book Validation', () => {
         rating: 10,
       };
       
-      const errors = validateCreateBook(invalidData);
+      const errors = validateCreateBook(invalidData as unknown as CreateBookPayload);
       expect(errors).toHaveLength(5);
       expect(errors.map(e => e.field).sort()).toEqual(['author', 'isbn', 'rating', 'status', 'title']);
     });
@@ -361,7 +361,7 @@ describe('Book Validation', () => {
         rating: 10,
       };
       
-      const errors = validateUpdateBook(invalidData);
+      const errors = validateUpdateBook(invalidData as unknown as UpdateBookPayload);
       expect(errors).toHaveLength(3);
       expect(errors.map(e => e.field).sort()).toEqual(['rating', 'status', 'title']);
     });

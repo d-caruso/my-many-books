@@ -52,8 +52,8 @@ const BooksScreen = () => {
   const booksToShow = booksScreenState.isSearching ? searchHook.books : booksHook.books;
   
   // Build the component elements
-  const elements = [
-    React.createElement(TextInput, { 
+  const elements: React.ReactElement[] = [
+    React.createElement(TextInput, {
       key: 'search', 
       testID: 'searchbar',
       onChangeText: handleSearchChange,
@@ -93,7 +93,8 @@ const BooksScreen = () => {
     
     // Add books
     booksToShow.forEach((book: unknown) => {
-      elements.push(React.createElement(Text, { key: `book-${book.id}` }, book.title));
+      const b = book as Record<string, unknown>;
+      elements.push(React.createElement(Text, { key: `book-${b.id}` }, b.title as string));
     });
   }
 
@@ -124,8 +125,8 @@ const mockBooks = [
   {
     id: 1,
     title: 'Test Book 1',
-    status: 'reading',
-    authors: [{ id: 1, name: 'Author 1', books: [] }],
+    status: 'reading' as const,
+    authors: [{ id: 1, name: 'Author', surname: '1' }],
     categories: [],
     isbnCode: '123',
     creationDate: '2023-01-01',
@@ -134,14 +135,14 @@ const mockBooks = [
   {
     id: 2,
     title: 'Test Book 2',
-    status: 'completed',
-    authors: [{ id: 2, name: 'Author 2', books: [] }],
+    status: 'finished' as const,
+    authors: [{ id: 2, name: 'Author', surname: '2' }],
     categories: [],
     isbnCode: '456',
     creationDate: '2023-01-01',
     updateDate: '2023-01-01',
   },
-];
+] as unknown as ReturnType<typeof useBooks>['books'];
 
 describe('BooksScreen', () => {
   const mockRefreshBooks = jest.fn();
@@ -174,6 +175,7 @@ describe('BooksScreen', () => {
       updateBook: jest.fn(),
       deleteBook: mockDeleteBook,
       updateBookStatus: mockUpdateBookStatus,
+      resolveConflict: jest.fn(),
     });
 
     mockUseBookSearch.mockReturnValue({
@@ -183,6 +185,7 @@ describe('BooksScreen', () => {
       hasMore: false,
       totalCount: 0,
       currentPage: 1,
+      isOffline: false,
       searchBooks: mockSearchBooks,
       searchByISBN: jest.fn(),
       clearSearch: mockClearSearch,
@@ -261,8 +264,8 @@ describe('BooksScreen', () => {
       {
         id: 3,
         title: 'Search Result',
-        status: 'want-to-read',
-        authors: [{ id: 3, name: 'Search Author', books: [] }],
+        status: 'paused' as const,
+        authors: [{ id: 3, name: 'Search', surname: 'Author' }],
         categories: [],
         isbnCode: '789',
         creationDate: '2023-01-01',
@@ -281,6 +284,7 @@ describe('BooksScreen', () => {
       hasMore: false,
       totalCount: 1,
       currentPage: 1,
+      isOffline: false,
       searchBooks: mockSearchBooks,
       searchByISBN: jest.fn(),
       clearSearch: mockClearSearch,
@@ -310,6 +314,7 @@ describe('BooksScreen', () => {
       hasMore: false,
       totalCount: 0,
       currentPage: 1,
+      isOffline: false,
       searchBooks: mockSearchBooks,
       searchByISBN: jest.fn(),
       clearSearch: mockClearSearch,
@@ -339,6 +344,7 @@ describe('BooksScreen', () => {
       hasMore: false,
       totalCount: 0,
       currentPage: 1,
+      isOffline: false,
       searchBooks: mockSearchBooks,
       searchByISBN: jest.fn(),
       clearSearch: mockClearSearch,
@@ -375,6 +381,7 @@ describe('BooksScreen', () => {
       updateBook: jest.fn(),
       deleteBook: mockDeleteBook,
       updateBookStatus: mockUpdateBookStatus,
+      resolveConflict: jest.fn(),
     });
 
     let tree: renderer.ReactTestRenderer | undefined;
@@ -401,6 +408,7 @@ describe('BooksScreen', () => {
       updateBook: jest.fn(),
       deleteBook: mockDeleteBook,
       updateBookStatus: mockUpdateBookStatus,
+      resolveConflict: jest.fn(),
     });
 
     let tree: renderer.ReactTestRenderer | undefined;
@@ -426,6 +434,7 @@ describe('BooksScreen', () => {
       updateBook: jest.fn(),
       deleteBook: mockDeleteBook,
       updateBookStatus: mockUpdateBookStatus,
+      resolveConflict: jest.fn(),
     });
 
     let tree: renderer.ReactTestRenderer | undefined;
@@ -454,6 +463,7 @@ describe('BooksScreen', () => {
       hasMore: false,
       totalCount: 0,
       currentPage: 1,
+      isOffline: false,
       searchBooks: mockSearchBooks,
       searchByISBN: jest.fn(),
       clearSearch: mockClearSearch,

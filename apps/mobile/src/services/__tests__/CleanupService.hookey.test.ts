@@ -107,8 +107,8 @@ describe('CleanupService Hookey Integration', () => {
 
       expect(completeCalls.length).toBeGreaterThan(0);
       
-      const fullCleanupComplete = completeCalls.find(([, payload]) => 
-        payload.stage === 'full_cleanup'
+      const fullCleanupComplete = completeCalls.find(([, payload]) =>
+        (payload as Record<string, unknown>).stage === 'full_cleanup'
       );
 
       expect(fullCleanupComplete).toBeDefined();
@@ -145,8 +145,8 @@ describe('CleanupService Hookey Integration', () => {
       await cleanupService.cleanupOrphanedTempIds();
 
       const startCalls = mockMobileHooks.emit.mock.calls.filter(
-        ([eventName, payload]) => eventName === MOBILE_EVENTS.SYNC.START && 
-        payload.operation === 'cleanup_orphaned'
+        ([eventName, payload]) => eventName === MOBILE_EVENTS.SYNC.START &&
+        (payload as Record<string, unknown>).operation === 'cleanup_orphaned'
       );
 
       expect(startCalls).toHaveLength(1);
@@ -175,8 +175,8 @@ describe('CleanupService Hookey Integration', () => {
       await cleanupService.cleanupOrphanedTempIds();
 
       const completeCalls = mockMobileHooks.emit.mock.calls.filter(
-        ([eventName, payload]) => eventName === MOBILE_EVENTS.SYNC.COMPLETE && 
-        payload.operation === 'cleanup_orphaned'
+        ([eventName, payload]) => eventName === MOBILE_EVENTS.SYNC.COMPLETE &&
+        (payload as Record<string, unknown>).operation === 'cleanup_orphaned'
       );
 
       expect(completeCalls).toHaveLength(1);
@@ -219,8 +219,8 @@ describe('CleanupService Hookey Integration', () => {
       await cleanupService.fixInconsistentSyncStates();
 
       const startCalls = mockMobileHooks.emit.mock.calls.filter(
-        ([eventName, payload]) => eventName === MOBILE_EVENTS.SYNC.START && 
-        payload.operation === 'fix_sync_states'
+        ([eventName, payload]) => eventName === MOBILE_EVENTS.SYNC.START &&
+        (payload as Record<string, unknown>).operation === 'fix_sync_states'
       );
 
       expect(startCalls).toHaveLength(1);
@@ -235,8 +235,8 @@ describe('CleanupService Hookey Integration', () => {
       await cleanupService.fixInconsistentSyncStates();
 
       const completeCalls = mockMobileHooks.emit.mock.calls.filter(
-        ([eventName, payload]) => eventName === MOBILE_EVENTS.SYNC.COMPLETE && 
-        payload.operation === 'fix_sync_states'
+        ([eventName, payload]) => eventName === MOBILE_EVENTS.SYNC.COMPLETE &&
+        (payload as Record<string, unknown>).operation === 'fix_sync_states'
       );
 
       expect(completeCalls).toHaveLength(1);
@@ -383,12 +383,13 @@ describe('CleanupService Hookey Integration', () => {
       await cleanupService.performFullCleanup();
 
       mockMobileHooks.emit.mock.calls.forEach(([eventName, payload]) => {
+        const p = payload as Record<string, unknown>;
         expect(typeof eventName).toBe('string');
-        expect(payload).toBeDefined();
-        expect(payload.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-        
-        if (payload.sessionId) {
-          expect(payload.sessionId).toMatch(/^cleanup-\d+$/);
+        expect(p).toBeDefined();
+        expect(p.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+
+        if (p.sessionId) {
+          expect(p.sessionId).toMatch(/^cleanup-\d+$/);
         }
       });
     });
@@ -396,11 +397,14 @@ describe('CleanupService Hookey Integration', () => {
     it('should emit events in correct order', async () => {
       await cleanupService.performFullCleanup();
 
-      const eventOrder = mockMobileHooks.emit.mock.calls.map(([eventName, payload]) => ({
-        event: eventName,
-        stage: payload.stage,
-        operation: payload.operation
-      }));
+      const eventOrder = mockMobileHooks.emit.mock.calls.map(([eventName, payload]) => {
+        const p = payload as Record<string, unknown>;
+        return {
+          event: eventName,
+          stage: p.stage,
+          operation: p.operation
+        };
+      });
 
       // Should start with full cleanup, then proceed to substages
       const fullCleanupStartIndex = eventOrder.findIndex(e => 

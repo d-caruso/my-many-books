@@ -4,6 +4,9 @@ import { migrationSystem } from '../../src/services/database/migrations';
 import { LocalBook } from '../../src/entities/LocalBook';
 import { SYNC_STATUS } from '../../src/types';
 import type { Book } from '../../src/types';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import { DB_SORT_FIELDS } from '../../src/constants/db';
 
 describe('Performance Benchmarks', () => {
   beforeAll(async () => {
@@ -27,9 +30,9 @@ describe('Performance Benchmarks', () => {
       const book = new LocalBook({
         title: `Test Book ${i}`,
         authors: `Author ${i % 10}`,
-        status: i % 4 === 0 ? 'completed' : i % 4 === 1 ? 'reading' : i % 4 === 2 ? 'want-to-read' : 'paused',
+        status: i % 4 === 0 ? BOOK_STATUS.FINISHED : i % 4 === 1 ? BOOK_STATUS.READING : i % 4 === 2 ? BOOK_STATUS.PAUSED : BOOK_STATUS.PAUSED,
         rating: i % 5 === 0 ? 5 : i % 5 === 1 ? 4 : null,
-      } as Book);
+      } as unknown as Book);
       await bookRepository.create(book);
     }
     const createTime = Date.now() - createStart;
@@ -51,17 +54,17 @@ describe('Performance Benchmarks', () => {
       await bookRepository.create(new LocalBook({
         title: `Book ${i}`,
         authors: i % 2 === 0 ? 'Stephen King' : 'J.K. Rowling',
-        status: 'completed',
-      } as Book));
+        status: BOOK_STATUS.FINISHED,
+      } as unknown as Book));
     }
 
     // Search with filter
     const searchStart = Date.now();
     const results = await bookRepository.searchWithFilters({
       query: 'Stephen King',
-      status: 'completed',
-      sortBy: 'title',
-      sortOrder: 'ASC',
+      status: BOOK_STATUS.FINISHED,
+      sortBy: DB_SORT_FIELDS.TITLE,
+      sortOrder: SORT_DIRECTIONS.ASC,
     });
     const searchTime = Date.now() - searchStart;
     console.log(`Searched and filtered 50 books in ${searchTime}ms`);
@@ -75,13 +78,13 @@ describe('Performance Benchmarks', () => {
     for (let i = 0; i < 200; i++) {
       await bookRepository.create(new LocalBook({
         title: `Book ${i}`,
-        status: i % 4 === 0 ? 'completed' : i % 4 === 1 ? 'reading' : i % 4 === 2 ? 'want-to-read' : 'paused',
-      } as Book));
+        status: i % 4 === 0 ? BOOK_STATUS.FINISHED : i % 4 === 1 ? BOOK_STATUS.READING : BOOK_STATUS.PAUSED,
+      } as unknown as Book));
     }
 
     // Filter by status (should use index)
     const filterStart = Date.now();
-    const completed = await bookRepository.findByStatus('completed');
+    const completed = await bookRepository.findByStatus(BOOK_STATUS.FINISHED);
     const filterTime = Date.now() - filterStart;
     console.log(`Filtered 200 books by status in ${filterTime}ms`);
 
@@ -117,9 +120,9 @@ describe('Performance Benchmarks', () => {
         title: `Book ${i}`,
         authors: `Author ${i % 50}`, // 50 different authors
         isbnCode: `ISBN-${1000000000 + i}`,
-        status: i % 4 === 0 ? 'completed' : i % 4 === 1 ? 'reading' : i % 4 === 2 ? 'want-to-read' : 'paused',
+        status: i % 4 === 0 ? BOOK_STATUS.FINISHED : i % 4 === 1 ? BOOK_STATUS.READING : BOOK_STATUS.PAUSED,
         rating: i % 10 === 0 ? 5 : i % 10 === 1 ? 4 : i % 10 === 2 ? 3 : null,
-      } as Book));
+      } as unknown as Book));
 
       // Progress logging every 200 books
       if ((i + 1) % 200 === 0) {
@@ -141,8 +144,8 @@ describe('Performance Benchmarks', () => {
     const searchStart = Date.now();
     const searchResults = await bookRepository.searchWithFilters({
       query: 'Book 5',
-      sortBy: 'title',
-      sortOrder: 'ASC',
+      sortBy: DB_SORT_FIELDS.TITLE,
+      sortOrder: SORT_DIRECTIONS.ASC,
     });
     const searchTime = Date.now() - searchStart;
     console.log(`✅ Searched 1000 books in ${searchTime}ms (${searchResults.length} results)`);
@@ -150,7 +153,7 @@ describe('Performance Benchmarks', () => {
 
     // Filter by status
     const filterStart = Date.now();
-    const completedBooks = await bookRepository.findByStatus('completed');
+    const completedBooks = await bookRepository.findByStatus(BOOK_STATUS.FINISHED);
     const filterTime = Date.now() - filterStart;
     console.log(`✅ Filtered 1000 books by status in ${filterTime}ms (${completedBooks.length} results)`);
     expect(completedBooks.length).toBe(250); // 1/4 of books
@@ -159,8 +162,8 @@ describe('Performance Benchmarks', () => {
     // Sort by rating
     const sortStart = Date.now();
     const topRated = await bookRepository.searchWithFilters({
-      sortBy: 'rating',
-      sortOrder: 'DESC',
+      sortBy: DB_SORT_FIELDS.UPDATE_DATE,
+      sortOrder: SORT_DIRECTIONS.DESC,
     });
     const sortTime = Date.now() - sortStart;
     console.log(`✅ Sorted 1000 books by rating in ${sortTime}ms`);

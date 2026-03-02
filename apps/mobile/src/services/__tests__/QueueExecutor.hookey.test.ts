@@ -1,6 +1,6 @@
 import { executeOperation, isRetriableError } from '../QueueExecutor';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
-import { QUEUE_OPERATION_STATUSES } from '../hooks/eventsSchema';
+import { QUEUE_OPERATION_STATUS } from '../hooks/eventsSchema';
 import { ApiError, ErrorCode } from '../../types/errors';
 import type { QueuedOperation } from '../../types/queue';
 
@@ -109,7 +109,7 @@ describe('QueueExecutor Hookey Integration', () => {
       timestamp: Date.now(),
       retryCount: 0,
       maxRetries: 3,
-      status: QUEUE_OPERATION_STATUSES.PENDING,
+      status: QUEUE_OPERATION_STATUS.PENDING,
     };
 
     it('should emit EXECUTOR.OPERATION.START when operation begins', async () => {
@@ -346,7 +346,7 @@ describe('QueueExecutor Hookey Integration', () => {
       let retryCalls = mockMobileHooks.emit.mock.calls.filter(
         ([eventName]) => eventName === MOBILE_EVENTS.EXECUTOR.RETRY_SCHEDULED
       );
-      expect(retryCalls[0][1].nextRetryIn).toBe(1000); // 2^0 * 1000 = 1s
+      expect((retryCalls[0][1] as Record<string, unknown>).nextRetryIn).toBe(1000); // 2^0 * 1000 = 1s
 
       jest.clearAllMocks();
 
@@ -355,7 +355,7 @@ describe('QueueExecutor Hookey Integration', () => {
       retryCalls = mockMobileHooks.emit.mock.calls.filter(
         ([eventName]) => eventName === MOBILE_EVENTS.EXECUTOR.RETRY_SCHEDULED
       );
-      expect(retryCalls[0][1].nextRetryIn).toBe(2000); // 2^1 * 1000 = 2s
+      expect((retryCalls[0][1] as Record<string, unknown>).nextRetryIn).toBe(2000); // 2^1 * 1000 = 2s
 
       jest.clearAllMocks();
 
@@ -364,7 +364,7 @@ describe('QueueExecutor Hookey Integration', () => {
       retryCalls = mockMobileHooks.emit.mock.calls.filter(
         ([eventName]) => eventName === MOBILE_EVENTS.EXECUTOR.RETRY_SCHEDULED
       );
-      expect(retryCalls[0][1].nextRetryIn).toBe(4000); // 2^2 * 1000 = 4s
+      expect((retryCalls[0][1] as Record<string, unknown>).nextRetryIn).toBe(4000); // 2^2 * 1000 = 4s
     });
 
     it('should not emit events when operation details not provided', () => {
@@ -394,7 +394,7 @@ describe('QueueExecutor Hookey Integration', () => {
           ([eventName]) => eventName === MOBILE_EVENTS.EXECUTOR.RETRY_SCHEDULED
         );
         
-        expect(retryCalls[0][1].retryReason).toBe(expectedReason);
+        expect((retryCalls[0][1] as Record<string, unknown>).retryReason).toBe(expectedReason);
       });
     });
   });
@@ -408,7 +408,7 @@ describe('QueueExecutor Hookey Integration', () => {
       timestamp: Date.now(),
       retryCount: 0,
       maxRetries: 3,
-      status: QUEUE_OPERATION_STATUSES.PENDING,
+      status: QUEUE_OPERATION_STATUS.PENDING,
     };
 
     it('should correctly categorize network errors', async () => {
@@ -431,7 +431,7 @@ describe('QueueExecutor Hookey Integration', () => {
         );
 
         expect(networkErrorCalls).toHaveLength(1);
-        expect(networkErrorCalls[0][1].errorType).toBe('network');
+        expect((networkErrorCalls[0][1] as Record<string, unknown>).errorType).toBe('network');
       }
     });
 
@@ -455,7 +455,7 @@ describe('QueueExecutor Hookey Integration', () => {
         );
 
         expect(validationErrorCalls).toHaveLength(1);
-        expect(validationErrorCalls[0][1].errorType).toBe('validation');
+        expect((validationErrorCalls[0][1] as Record<string, unknown>).errorType).toBe('validation');
       }
     });
   });
@@ -473,7 +473,7 @@ describe('QueueExecutor Hookey Integration', () => {
         timestamp: Date.now(),
         retryCount: 0,
         maxRetries: 3,
-        status: QUEUE_OPERATION_STATUSES.PENDING,
+        status: QUEUE_OPERATION_STATUS.PENDING,
       };
 
       await executeOperation(mockOperation);
@@ -483,10 +483,11 @@ describe('QueueExecutor Hookey Integration', () => {
       );
 
       expect(metricCalls).toHaveLength(1);
-      expect(metricCalls[0][1].executionDuration).toBeGreaterThanOrEqual(0);
-      expect(metricCalls[0][1].performanceData.startTime).toBeGreaterThan(0);
-      expect(metricCalls[0][1].performanceData.endTime).toBeGreaterThan(0);
-      expect(metricCalls[0][1].performanceData.success).toBe(true);
+      const metricPayload = metricCalls[0][1] as Record<string, unknown>;
+      expect(metricPayload.executionDuration).toBeGreaterThanOrEqual(0);
+      expect((metricPayload.performanceData as Record<string, unknown>).startTime).toBeGreaterThan(0);
+      expect((metricPayload.performanceData as Record<string, unknown>).endTime).toBeGreaterThan(0);
+      expect((metricPayload.performanceData as Record<string, unknown>).success).toBe(true);
     });
   });
 });

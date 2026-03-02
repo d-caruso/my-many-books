@@ -41,7 +41,7 @@ describe('useBooks Hook Coverage', () => {
     }));
     jest.doMock('@react-native-async-storage/async-storage', () => ({
       getItem: jest.fn().mockResolvedValue(null),
-      setItem: jest.fn().mockResolvedValue(),
+      setItem: jest.fn().mockResolvedValue(undefined),
     }));
 
     const React = require('react');
@@ -90,7 +90,7 @@ describe('useBooks Hook Coverage', () => {
     
     const mockAsyncStorage = {
       getItem: jest.fn().mockResolvedValue(null),
-      setItem: jest.fn().mockResolvedValue(),
+      setItem: jest.fn().mockResolvedValue(undefined),
     };
     
     jest.doMock('@/services/api', () => ({
@@ -161,7 +161,7 @@ describe('useBooks Hook Coverage', () => {
     
     const mockAsyncStorage = {
       getItem: jest.fn().mockResolvedValue(null),
-      setItem: jest.fn().mockResolvedValue(),
+      setItem: jest.fn().mockResolvedValue(undefined),
     };
     
     jest.doMock('@/services/api', () => ({
@@ -210,7 +210,7 @@ describe('useBooks Hook Coverage', () => {
     
     const mockAsyncStorage = {
       getItem: jest.fn().mockResolvedValue(null),
-      setItem: jest.fn().mockResolvedValue(),
+      setItem: jest.fn().mockResolvedValue(undefined),
     };
     
     jest.doMock('@/services/api', () => ({
@@ -254,12 +254,12 @@ describe('useBooks Hook Coverage', () => {
       getBooks: jest.fn(),
       createBook: jest.fn(),
       updateBook: jest.fn(),
-      deleteBook: jest.fn().mockResolvedValue(),
+      deleteBook: jest.fn().mockResolvedValue(undefined),
     };
     
     const mockAsyncStorage = {
       getItem: jest.fn().mockResolvedValue(null),
-      setItem: jest.fn().mockResolvedValue(),
+      setItem: jest.fn().mockResolvedValue(undefined),
     };
     
     jest.doMock('@/services/api', () => ({
@@ -308,7 +308,7 @@ describe('useBooks Hook Coverage', () => {
     
     const mockAsyncStorage = {
       getItem: jest.fn().mockResolvedValue(null),
-      setItem: jest.fn().mockResolvedValue(),
+      setItem: jest.fn().mockResolvedValue(undefined),
     };
     
     jest.doMock('@/services/api', () => ({
@@ -362,7 +362,7 @@ describe('useBooks Hook Coverage', () => {
     
     const mockAsyncStorage = {
       getItem: jest.fn().mockResolvedValue(JSON.stringify([{ id: 1, title: 'Cached Book' }])),
-      setItem: jest.fn().mockResolvedValue(),
+      setItem: jest.fn().mockResolvedValue(undefined),
     };
     
     jest.doMock('@/services/api', () => ({
@@ -418,7 +418,7 @@ describe('useBooks Hook Coverage', () => {
     
     const mockAsyncStorage = {
       getItem: jest.fn().mockResolvedValue(null),
-      setItem: jest.fn().mockResolvedValue(),
+      setItem: jest.fn().mockResolvedValue(undefined),
     };
     
     jest.doMock('@/services/api', () => ({
@@ -468,13 +468,13 @@ describe('useBooks Hook Coverage', () => {
     const mockBookAPI = {
       getBooks: jest.fn(),
       createBook: jest.fn(),
-      updateBook: jest.fn().mockResolvedValue(),
+      updateBook: jest.fn().mockResolvedValue(undefined),
       deleteBook: jest.fn(),
     };
     
     const mockAsyncStorage = {
       getItem: jest.fn().mockResolvedValue(null),
-      setItem: jest.fn().mockResolvedValue(),
+      setItem: jest.fn().mockResolvedValue(undefined),
     };
     
     jest.doMock('@/services/api', () => ({

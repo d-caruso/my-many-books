@@ -173,7 +173,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const serverId = 9001;
 
       // Step 1: Create book offline
-      const offlineBook1 = new LocalBook({ title: 'Offline Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const offlineBook1 = new LocalBook({ title: 'Offline Book', status: 'want-to-read', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       offlineBook1.tempId = tempId;
       offlineBook1.syncStatus = SYNC_STATUS.PENDING;
       await bookRepository.create(offlineBook1);
@@ -227,7 +227,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       expect(localBook?.syncStatus).toBe(SYNC_STATUS.SYNCED);
 
       // Step 4: Update book locally - now using server ID
-      const updateBook1 = new LocalBook({ title: 'Updated Offline Book' } as Book);
+      const updateBook1 = new LocalBook({ title: 'Updated Offline Book' } as unknown as Book);
       updateBook1.syncStatus = SYNC_STATUS.PENDING;
       await bookRepository.update(serverId.toString(), updateBook1);
 
@@ -286,7 +286,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Step 1: Create book locally (older)
       const oldDate = new Date('2024-01-01T00:00:00Z');
-      const conflictBook = new LocalBook({ title: 'Local Version', status: 'reading', creationDate: oldDate.toISOString(), updateDate: oldDate.toISOString() } as Book);
+      const conflictBook = new LocalBook({ title: 'Local Version', status: 'reading', creationDate: oldDate.toISOString(), updateDate: oldDate.toISOString() } as unknown as Book);
       conflictBook.tempId = tempId;
       conflictBook.serverId = serverId;
       await bookRepository.create(conflictBook);
@@ -326,7 +326,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Step 1: Create book locally (newer)
       const newDate = new Date('2024-12-01T00:00:00Z');
-      const newerBook = new LocalBook({ title: 'Local Newer', status: 'completed', creationDate: new Date('2024-01-01T00:00:00Z').toISOString(), updateDate: newDate.toISOString() } as Book);
+      const newerBook = new LocalBook({ title: 'Local Newer', status: 'completed', creationDate: new Date('2024-01-01T00:00:00Z').toISOString(), updateDate: newDate.toISOString() } as unknown as Book);
       newerBook.tempId = tempId;
       newerBook.serverId = serverId;
       await bookRepository.create(newerBook);
@@ -398,7 +398,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const serverBookId = 9005;
 
       // Step 1: Create book with authors
-      const bookWithAuthors = new LocalBook({ title: 'Book with Authors', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const bookWithAuthors = new LocalBook({ title: 'Book with Authors', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       bookWithAuthors.tempId = tempBookId;
       await bookRepository.create(bookWithAuthors);
 
@@ -421,7 +421,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       await idMappingService.registerTempId(tempBookId, serverBookId, 'book');
 
       // Update book with server_id
-      const servIdUpdate = new LocalBook({} as Book);
+      const servIdUpdate = new LocalBook({} as unknown as Book);
       servIdUpdate.serverId = serverBookId;
       await bookRepository.update(tempBookId, servIdUpdate);
 
@@ -491,12 +491,12 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const opId = await operationQueue.enqueue('CREATE', 'book', { id: 'temp-old', title: 'Old Book' });
 
       // Manually set old timestamp and failed status
-      const queue = operationQueue as unknown;
-      const op = queue.queue.find((o: unknown) => o.id === opId);
+      const queue = operationQueue as unknown as Record<string, unknown>;
+      const op = (queue.queue as Array<Record<string, unknown>>).find((o) => o.id === opId);
       if (op) {
         op.timestamp = oldTimestamp;
         op.status = 'failed';
-        await queue.persist();
+        await (queue.persist as () => Promise<void>)();
       }
 
       // Reload queue
@@ -505,7 +505,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Verify operation is in queue
       const beforeCleanup = operationQueue.getPendingOperations();
-      const hasFailed = beforeCleanup.some((o: unknown) => o.status === 'failed');
+      const hasFailed = beforeCleanup.some((o) => (o as unknown as Record<string, unknown>).status === 'failed');
 
       // Perform cleanup (may be 0 or 1 depending on implementation)
       const result = await cleanupService.cleanupOrphanedTempIds();
@@ -520,7 +520,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       oldDate.setDate(oldDate.getDate() - 31); // 31 days ago
 
       // Create old book with temp ID that never synced
-      const oldUnsyncedBook = new LocalBook({ title: 'Old Unsynced Book', status: 'want-to-read', creationDate: oldDate.toISOString(), updateDate: oldDate.toISOString() } as Book);
+      const oldUnsyncedBook = new LocalBook({ title: 'Old Unsynced Book', status: 'want-to-read', creationDate: oldDate.toISOString(), updateDate: oldDate.toISOString() } as unknown as Book);
       oldUnsyncedBook.tempId = 'temp-old-book-1703856005000';
       oldUnsyncedBook.syncStatus = SYNC_STATUS.FAILED;
       await bookRepository.create(oldUnsyncedBook);
@@ -579,7 +579,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const serverId = 9007;
 
       // Step 1: Create local book (to push)
-      const localPushBook = new LocalBook({ title: 'Local Book', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const localPushBook = new LocalBook({ title: 'Local Book', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       localPushBook.tempId = tempId;
       localPushBook.syncStatus = SYNC_STATUS.PENDING;
       await bookRepository.create(localPushBook);
@@ -683,7 +683,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
     it('should continue sync even if one operation fails', async () => {
       // Create two books
-      const successBook = new LocalBook({ title: 'Success Book', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as Book);
+      const successBook = new LocalBook({ title: 'Success Book', status: 'reading', creationDate: new Date().toISOString(), updateDate: new Date().toISOString() } as unknown as Book);
       successBook.tempId = 'temp-success';
       successBook.syncStatus = SYNC_STATUS.PENDING;
       await bookRepository.create(successBook);

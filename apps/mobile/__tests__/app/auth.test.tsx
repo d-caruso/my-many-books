@@ -50,8 +50,8 @@ describe('AuthScreen Logic', () => {
   });
 
   it('should validate passwords match on registration', () => {
-    const password = 'Password123';
-    const confirmPassword = 'different';
+    const password: string = 'Password123';
+    const confirmPassword: string = 'different';
 
     const passwordsMatch = password === confirmPassword;
 

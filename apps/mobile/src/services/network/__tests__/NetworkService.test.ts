@@ -137,7 +137,7 @@ describe('NetworkService', () => {
   });
 
   describe('network state change events', () => {
-    let networkStateListener: (state: { type: string; isConnected: boolean }) => void;
+    let networkStateListener: (state: { type: string; isConnected: boolean; isInternetReachable: boolean; details?: unknown }) => void;
 
     beforeEach(async () => {
       await networkService.startMonitoring();
