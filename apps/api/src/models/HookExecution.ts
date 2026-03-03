@@ -4,11 +4,11 @@
 // ================================================================
 
 import { DataTypes, Model, Sequelize, Association } from 'sequelize';
-import { HookExecutionAttributes } from './interfaces/ModelInterfaces';
+import { HookExecutionAttributes, HookExecutionCreationAttributes } from './interfaces/ModelInterfaces';
 import { Hook } from './Hook';
 
 export class HookExecution
-  extends Model<HookExecutionAttributes>
+  extends Model<HookExecutionAttributes, HookExecutionCreationAttributes>
   implements HookExecutionAttributes
 {
   public id!: number;

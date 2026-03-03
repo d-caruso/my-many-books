@@ -7,6 +7,7 @@ import {
   AuthorAssociationInput,
   AuthorCreationInput,
   AuthorEntity,
+  AuthorListFilters,
   AuthorListOptions,
   AuthorQueryOptions,
   PaginatedResult,
@@ -19,7 +20,8 @@ export interface AuthorRepositoryAdapter
     AuthorCreationInput,
     AuthorAssociationInput,
     AuthorQueryOptions,
-    AuthorListOptions
+    AuthorListOptions,
+    AuthorListFilters
   > {
   findById(id: number, options?: AuthorQueryOptions): Promise<AuthorEntity | null>;
   findUserAuthorById(

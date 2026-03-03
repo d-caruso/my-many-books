@@ -11,6 +11,7 @@ A React-based Progressive Web Application for managing personal book collections
 - ISBN barcode scanning
 - Book search and filtering
 - Configurable themes and responsive design
+- Google OAuth sign-in via Cognito Hosted UI (authorization code flow)
 - Integration with My Many Books API
 
 ## Tech Stack

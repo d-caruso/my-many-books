@@ -17,16 +17,13 @@ import { createErrorResponse, ERROR_CODES } from '@my-many-books/shared-types';
  * req.query and req.params are read-only, so validated values
  * are stored in req.validated.query and req.validated.params
  */
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Express {
-    interface Request {
-      validated?: {
-        body?: unknown;
-        query?: Record<string, unknown>;
-        params?: Record<string, unknown>;
-      };
-    }
+declare module 'express' {
+  interface Request {
+    validated?: {
+      body?: unknown;
+      query?: Record<string, unknown>;
+      params?: Record<string, unknown>;
+    };
   }
 }
 

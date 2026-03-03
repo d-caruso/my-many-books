@@ -4,7 +4,7 @@
 
 import Joi from 'joi';
 import { inject, injectable } from 'inversify';
-import { Op, WhereOptions } from 'sequelize';
+import { Includeable, Op, WhereOptions } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book, Category } from '../models';
 import { ApiResponse } from '../common/ApiResponse';
@@ -12,7 +12,6 @@ import {
   BookCreationAttributes,
   BookAttributes,
   BookStatus,
-  AuthorCreationAttributes,
 } from '../models/interfaces/ModelInterfaces';
 import { validateIsbn } from '../utils/isbn';
 import { isbnService } from '../services/isbnService';
@@ -31,7 +30,7 @@ import { BookSearchService } from '../services/search/BookSearchService';
 import { BookSearchResultDTO } from '../dtos/book/BookSearchResultDTO';
 import { SEARCH_SORT_TYPES, SEARCH_RESULT_STATUS } from '@my-many-books/shared-types';
 
-interface BookSearchFilters {
+export interface BookSearchFilters {
   title?: string;
   isbnCode?: string;
   editionNumber?: number;
@@ -42,7 +41,6 @@ interface BookSearchFilters {
   category?: string;
   userId?: number;
   updatedSince?: string;
-  [key: string]: unknown;
 }
 
 /**
@@ -89,7 +87,29 @@ export class BookController extends BaseController {
     if (!validation.isValid) {
       return helpers.error('any.invalid', { message: `Invalid ISBN: ${validation.error}` });
     }
-    return validation.normalizedIsbn as string;
+
+    if (typeof validation.normalizedIsbn !== 'string') {
+      return helpers.error('any.invalid', { message: 'Invalid ISBN: normalization failed' });
+    }
+
+    return validation.normalizedIsbn;
+  }
+
+  private normalizeBookStatus(value: string | null): BookStatus | undefined {
+    switch (value) {
+      case 'reading':
+      case 'paused':
+      case 'finished':
+        return value;
+      default:
+        return undefined;
+    }
+  }
+
+  private isSortableField(
+    value: string
+  ): value is (typeof Book.SORTABLE_FIELD_VALUES)[number] {
+    return Book.SORTABLE_FIELD_VALUES.some(field => field === value);
   }
 
   /**
@@ -247,8 +267,12 @@ export class BookController extends BaseController {
     let searchFilters: BookSearchFilters = {};
     if (filters) {
       try {
-        searchFilters = JSON.parse(filters) as BookSearchFilters;
-        const filterValidation = this.validateRequest(searchFilters, this.searchFiltersSchema);
+        const parsedFilters: unknown = JSON.parse(filters);
+        if (!this.isRecord(parsedFilters)) {
+          return this.createErrorResponseI18n('errors:invalid_filters', 400);
+        }
+
+        const filterValidation = this.validateRequest(parsedFilters, this.searchFiltersSchema);
         if (!filterValidation.isValid) {
           return this.createErrorResponseI18n(
             'errors:validation_failed',
@@ -325,17 +349,21 @@ export class BookController extends BaseController {
 
     // Validate sortBy against Book.SORTABLE_FIELD_VALUES or allow 'relevance'
     let sortBy: string | undefined;
-    const sortOrder: 'asc' | 'desc' = sortOrderParam as 'asc' | 'desc';
+
+    if (sortOrderParam !== 'asc' && sortOrderParam !== 'desc') {
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
+        errors: {
+          sortOrder: `Invalid sortOrder: ${sortOrderParam}. Must be 'asc' or 'desc'`,
+        },
+      });
+    }
+    const sortOrder: 'asc' | 'desc' = sortOrderParam;
 
     if (sortByParam) {
       if (sortByParam === SEARCH_SORT_TYPES.RELEVANCE) {
         // Relevance sorting - no sortBy field needed
         sortBy = undefined;
-      } else if (
-        Book.SORTABLE_FIELD_VALUES.includes(
-          sortByParam as (typeof Book.SORTABLE_FIELD_VALUES)[number]
-        )
-      ) {
+      } else if (this.isSortableField(sortByParam)) {
         sortBy = sortByParam;
       } else {
         return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
@@ -346,11 +374,11 @@ export class BookController extends BaseController {
       }
     }
 
-    // Validate sortOrder
-    if (!['asc', 'desc'].includes(sortOrder)) {
+    const normalizedStatus = this.normalizeBookStatus(status);
+    if (status && !normalizedStatus) {
       return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
         errors: {
-          sortOrder: `Invalid sortOrder: ${sortOrder}. Must be 'asc' or 'desc'`,
+          status: `Invalid status: ${status}. Must be one of ${BOOK_STATUSES.join(', ')}`,
         },
       });
     }
@@ -376,7 +404,7 @@ export class BookController extends BaseController {
         if (bookIds.length === 0) {
           filteredResults = [];
         } else {
-          const includeClause: Array<Record<string, unknown>> = [];
+          const includeClause: Includeable[] = [];
 
           // Add author filter/include
           if (authorId) {
@@ -416,8 +444,8 @@ export class BookController extends BaseController {
             id: { [Op.in]: bookIds },
           };
 
-          if (status) {
-            Object.assign(whereConditions, { status: status as BookStatus });
+          if (normalizedStatus) {
+            Object.assign(whereConditions, { status: normalizedStatus });
           }
 
           if (request.user) {
@@ -435,12 +463,15 @@ export class BookController extends BaseController {
             .map(r => {
               const book = bookMap.get(r.id);
               if (!book) return undefined;
-              return {
+              const mappedResult: BookSearchResultDTO = {
                 ...book,
+                notes: book.notes ?? undefined,
+                userId: book.userId ?? undefined,
                 isPinned: r.isPinned,
                 status: r.isPinned ? SEARCH_RESULT_STATUS.PINNED : SEARCH_RESULT_STATUS.REGULAR,
                 relevanceScore: r.relevanceScore,
-              } as BookSearchResultDTO;
+              };
+              return mappedResult;
             })
             .filter((b): b is BookSearchResultDTO => b !== undefined);
         }
@@ -491,14 +522,22 @@ export class BookController extends BaseController {
     }
 
     // Add status filter
-    if (status) {
-      whereConditions.push({ status: status as BookStatus });
+    const normalizedStatus = this.normalizeBookStatus(status);
+    if (status && !normalizedStatus) {
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
+        errors: {
+          status: `Invalid status: ${status}. Must be one of ${BOOK_STATUSES.join(', ')}`,
+        },
+      });
+    }
+    if (normalizedStatus) {
+      whereConditions.push({ status: normalizedStatus });
     }
 
     const whereClause = whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
 
     // Build include clause for associations
-    const includeClause: Array<Record<string, unknown>> = [];
+    const includeClause: Includeable[] = [];
 
     // Add author filter/include
     if (authorId) {
@@ -626,13 +665,22 @@ export class BookController extends BaseController {
    */
   async importBookFromIsbn(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
-    const body = this.parseBody<{ isbn: string }>(request);
-    if (!body?.isbn) {
+    const authError = this.ensureAuthenticated(request);
+    if (authError) {
+      return authError;
+    }
+    const user = request.user;
+    if (!user) {
+      return this.createErrorResponseI18n('errors:user_authentication_required', 401);
+    }
+
+    const body = this.parseBody(request);
+    if (!this.isRecord(body) || typeof body['isbn'] !== 'string') {
       return this.createErrorResponseI18n('errors:isbn_not_provided', 400);
     }
-    const userId = request.user?.id;
+    const userId = user.id;
 
-    const validation = validateIsbn(body.isbn);
+    const validation = validateIsbn(body['isbn']);
     if (!validation.isValid) {
       return this.createErrorResponseI18n('errors:invalid_isbn', 400, { error: validation.error });
     }
@@ -641,9 +689,7 @@ export class BookController extends BaseController {
     const whereClause: WhereOptions<BookAttributes> = {
       isbnCode: validation.normalizedIsbn,
     };
-    if (userId) {
-      Object.assign(whereClause, { userId });
-    }
+    Object.assign(whereClause, { userId });
     const existingBook = await Book.findOne({ where: whereClause });
     if (existingBook) {
       return this.createErrorResponseI18n('errors:isbn_exists', 409, {
@@ -668,12 +714,14 @@ export class BookController extends BaseController {
             where: {
               name: authorData.name,
               surname: authorData.surname || '',
+              userId,
             },
             defaults: {
               name: authorData.name,
               surname: authorData.surname || '',
               nationality: authorData.nationality || null,
-            } as AuthorCreationAttributes,
+              userId,
+            },
           }).then(([author]) => author)
         )
       );
@@ -685,8 +733,8 @@ export class BookController extends BaseController {
       categories = await Promise.all(
         bookData.categories.map(categoryData =>
           findOrCreateModel(Category, {
-            where: { name: categoryData.name },
-            defaults: { name: categoryData.name },
+            where: { name: categoryData.name, userId },
+            defaults: { name: categoryData.name, userId },
           }).then(([category]) => category)
         )
       );
@@ -698,9 +746,7 @@ export class BookController extends BaseController {
       isbnCode: bookData.isbnCode,
       editionNumber: bookData.editionNumber,
       editionDate: bookData.editionDate,
-      status: (bookData as BookCreationAttributes).status,
-      notes: (bookData as BookCreationAttributes).notes,
-      userId, // Associate with user if authenticated
+      userId,
     };
     const book = await createModel(Book, bookCreateData);
 
@@ -734,7 +780,7 @@ export class BookController extends BaseController {
    * @param id The book ID.
    * @returns The book model instance or null.
    */
-  private async getBookWithAssociations(id: number): Promise<Book | null> {
+  private async getBookWithAssociations(id: number): Promise<object | null> {
     const book = await Book.findByPk(id, {
       include: [
         { model: Author, as: 'authors', through: { attributes: [] } },
@@ -742,11 +788,7 @@ export class BookController extends BaseController {
       ],
     });
 
-    // Ensure the book data includes associations in JSON serialization
-    if (book) {
-      return book.get({ plain: true }) as unknown as Book;
-    }
-    return null;
+    return book ? book.get({ plain: true }) : null;
   }
 
   // User-specific methods for route compatibility

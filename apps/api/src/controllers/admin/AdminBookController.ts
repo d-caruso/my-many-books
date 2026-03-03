@@ -21,7 +21,7 @@ interface UpdateBookData {
   title?: string;
   isbnCode?: string;
   editionNumber?: number | null;
-  editionDate?: Date | null;
+  editionDate?: string | null;
   status?: 'reading' | 'paused' | 'finished' | null;
   notes?: string | null;
   userId?: number | null;
@@ -32,6 +32,50 @@ interface UpdateBookData {
  * All endpoints require admin authentication (enforced by adminRoutes middleware).
  */
 export class AdminBookController extends BaseController {
+  private isUpdateBookData(value: unknown): value is UpdateBookData {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (value['title'] !== undefined && typeof value['title'] !== 'string') {
+      return false;
+    }
+    if (value['isbnCode'] !== undefined && typeof value['isbnCode'] !== 'string') {
+      return false;
+    }
+    if (
+      value['editionNumber'] !== undefined &&
+      value['editionNumber'] !== null &&
+      typeof value['editionNumber'] !== 'number'
+    ) {
+      return false;
+    }
+    if (
+      value['editionDate'] !== undefined &&
+      value['editionDate'] !== null &&
+      typeof value['editionDate'] !== 'string'
+    ) {
+      return false;
+    }
+    if (
+      value['status'] !== undefined &&
+      value['status'] !== null &&
+      value['status'] !== 'reading' &&
+      value['status'] !== 'paused' &&
+      value['status'] !== 'finished'
+    ) {
+      return false;
+    }
+    if (value['notes'] !== undefined && value['notes'] !== null && typeof value['notes'] !== 'string') {
+      return false;
+    }
+    if (value['userId'] !== undefined && value['userId'] !== null && typeof value['userId'] !== 'number') {
+      return false;
+    }
+
+    return true;
+  }
+
   /**
    * Get paginated list of all books with authors, categories, and user info
    * GET /api/<version>/admin/books
@@ -231,7 +275,7 @@ export class AdminBookController extends BaseController {
       }
 
       const body = this.parseBody(request);
-      if (!body) {
+      if (!this.isUpdateBookData(body)) {
         return this.createErrorResponseI18n('errors:invalid_request_body', 400);
       }
 
@@ -241,7 +285,7 @@ export class AdminBookController extends BaseController {
         return this.createErrorResponseI18n('errors:book_not_found', 404);
       }
 
-      const updateData = body as UpdateBookData;
+      const updateData = body;
 
       // If userId is being changed, verify the user exists
       if (updateData?.userId !== undefined && updateData.userId !== null) {
@@ -251,8 +295,7 @@ export class AdminBookController extends BaseController {
         }
       }
 
-      // Update book - cast needed due to Sequelize type limitations with null values
-      await book.update(updateData as Partial<BookAttributes>);
+      await book.update(updateData);
 
       // Reload with associations
       await book.reload({

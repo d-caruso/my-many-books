@@ -14,7 +14,10 @@ import { SORT_DIRECTION_VALUES, SORT_DIRECTIONS } from '@my-many-books/shared-ty
  * Custom Joi validator for event patterns
  * Uses hookey's validateEventPattern function
  */
-const eventPatternValidator = (value: string, helpers: Joi.CustomHelpers) => {
+const eventPatternValidator = (
+  value: string,
+  helpers: Joi.CustomHelpers
+): string | Joi.ErrorReport => {
   try {
     validateEventPattern(value);
     return value;
@@ -30,7 +33,10 @@ const eventPatternValidator = (value: string, helpers: Joi.CustomHelpers) => {
  * Custom Joi validator for action config
  * Uses hookey's safeValidateActionConfig function
  */
-const actionConfigValidator = (value: unknown, helpers: Joi.CustomHelpers) => {
+const actionConfigValidator = (
+  value: unknown,
+  helpers: Joi.CustomHelpers
+): unknown => {
   // Access the parent object to get actionType
   const parent = (helpers.state.ancestors as unknown[])?.[0] as { actionType?: string } | undefined;
   const actionType = parent?.actionType;

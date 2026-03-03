@@ -6,8 +6,13 @@
 import { UserBaseController } from '../base/UserBaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
-import { AppSetting, AppSettingAttributes } from '../../models';
-import { BASE_USER_PREFIX, USER_MOBILE_APP_SETTING_SUFFIXES, EmailNotificationFrequency } from '@my-many-books/shared-types';
+import { AppSetting, AppSettingCreationAttributes } from '../../models';
+import {
+  BASE_USER_PREFIX,
+  USER_MOBILE_APP_SETTING_SUFFIXES,
+  EmailNotificationFrequency,
+  EMAIL_NOTIFICATION_FREQUENCY,
+} from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 
 interface UserMobileConfigResponse {
@@ -42,7 +47,89 @@ export interface UserMobileConfigUpdateRequest {
   };
 }
 
+const isEmailNotificationFrequency = (value: unknown): value is EmailNotificationFrequency =>
+  value === EMAIL_NOTIFICATION_FREQUENCY.IMMEDIATE ||
+  value === EMAIL_NOTIFICATION_FREQUENCY.DAILY ||
+  value === EMAIL_NOTIFICATION_FREQUENCY.WEEKLY ||
+  value === EMAIL_NOTIFICATION_FREQUENCY.NEVER;
+
 export class UserMobileConfigController extends UserBaseController {
+  private isUserMobileConfigUpdateRequest(value: unknown): value is UserMobileConfigUpdateRequest {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    const notificationPreferences = value['notificationPreferences'];
+    if (notificationPreferences !== undefined) {
+      if (!this.isRecord(notificationPreferences)) {
+        return false;
+      }
+
+      if (
+        notificationPreferences['emailEnabled'] !== undefined &&
+        typeof notificationPreferences['emailEnabled'] !== 'boolean'
+      ) {
+        return false;
+      }
+      if (
+        notificationPreferences['pushEnabled'] !== undefined &&
+        typeof notificationPreferences['pushEnabled'] !== 'boolean'
+      ) {
+        return false;
+      }
+      if (
+        notificationPreferences['smsEnabled'] !== undefined &&
+        typeof notificationPreferences['smsEnabled'] !== 'boolean'
+      ) {
+        return false;
+      }
+      if (
+        notificationPreferences['emailFrequency'] !== undefined &&
+        !isEmailNotificationFrequency(notificationPreferences['emailFrequency'])
+      ) {
+        return false;
+      }
+    }
+
+    const privacySettings = value['privacySettings'];
+    if (privacySettings !== undefined) {
+      if (!this.isRecord(privacySettings)) {
+        return false;
+      }
+
+      if (
+        privacySettings['dataCollectionEnabled'] !== undefined &&
+        typeof privacySettings['dataCollectionEnabled'] !== 'boolean'
+      ) {
+        return false;
+      }
+      if (
+        privacySettings['analyticsSharingEnabled'] !== undefined &&
+        typeof privacySettings['analyticsSharingEnabled'] !== 'boolean'
+      ) {
+        return false;
+      }
+      if (
+        privacySettings['crashReportingEnabled'] !== undefined &&
+        typeof privacySettings['crashReportingEnabled'] !== 'boolean'
+      ) {
+        return false;
+      }
+    }
+
+    return (
+      value['offlineStorageEnabled'] === undefined ||
+      typeof value['offlineStorageEnabled'] === 'boolean'
+    );
+  }
+
+  private normalizeEmailFrequency(value: string): EmailNotificationFrequency {
+    if (isEmailNotificationFrequency(value)) {
+      return value;
+    }
+    return EMAIL_NOTIFICATION_FREQUENCY.IMMEDIATE;
+  }
+
   /**
    * GET /api/users/{id}/mobile-config - Get user's mobile config
    */
@@ -51,7 +138,7 @@ export class UserMobileConfigController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can access this config (self or admin)
@@ -66,7 +153,7 @@ export class UserMobileConfigController extends UserBaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to fetch user mobile configuration', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -78,7 +165,7 @@ export class UserMobileConfigController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -86,8 +173,8 @@ export class UserMobileConfigController extends UserBaseController {
       return this.createAccessDeniedResponse(request);
     }
 
-    const body = this.parseBody<UserMobileConfigUpdateRequest>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isUserMobileConfigUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -146,7 +233,7 @@ export class UserMobileConfigController extends UserBaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to update user mobile configuration', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -164,19 +251,17 @@ export class UserMobileConfigController extends UserBaseController {
 
     const settingsMap = new Map(settings.map(s => [s.key, s.value]));
 
-    // Helper function to get user setting with fallback to default
-    const getUserSetting = (settingName: string, defaultValue: string | boolean | number): string | boolean | number => {
+    const getUserSetting = (settingName: string, defaultValue: string): string => {
+      const key = `${BASE_USER_PREFIX}.${userId}.${settingName}`;
+      const value = settingsMap.get(key);
+      return value === undefined ? defaultValue : value;
+    };
+
+    const getUserBooleanSetting = (settingName: string, defaultValue: boolean): boolean => {
       const key = `${BASE_USER_PREFIX}.${userId}.${settingName}`;
       const value = settingsMap.get(key);
       if (value === undefined) return defaultValue;
-      if (typeof defaultValue === 'boolean') {
-        return value === 'true';
-      }
-      if (typeof defaultValue === 'number') {
-        const parsed = parseInt(value, 10);
-        return isNaN(parsed) ? defaultValue : parsed;
-      }
-      return value;
+      return value === 'true';
     };
 
     // Find last updated timestamp
@@ -191,17 +276,43 @@ export class UserMobileConfigController extends UserBaseController {
 
     return {
       userId: userId,
-      offlineStorageEnabled: getUserSetting(USER_MOBILE_APP_SETTING_SUFFIXES.OFFLINE_STORAGE_ENABLED, true) as boolean,
+      offlineStorageEnabled: getUserBooleanSetting(
+        USER_MOBILE_APP_SETTING_SUFFIXES.OFFLINE_STORAGE_ENABLED,
+        true
+      ),
       notificationPreferences: {
-        emailEnabled: getUserSetting(USER_MOBILE_APP_SETTING_SUFFIXES.NOTIFICATION_EMAIL_ENABLED, true) as boolean,
-        pushEnabled: getUserSetting(USER_MOBILE_APP_SETTING_SUFFIXES.NOTIFICATION_PUSH_ENABLED, true) as boolean,
-        smsEnabled: getUserSetting(USER_MOBILE_APP_SETTING_SUFFIXES.NOTIFICATION_SMS_ENABLED, false) as boolean,
-        emailFrequency: getUserSetting(USER_MOBILE_APP_SETTING_SUFFIXES.NOTIFICATION_EMAIL_FREQUENCY, 'immediate') as EmailNotificationFrequency,
+        emailEnabled: getUserBooleanSetting(
+          USER_MOBILE_APP_SETTING_SUFFIXES.NOTIFICATION_EMAIL_ENABLED,
+          true
+        ),
+        pushEnabled: getUserBooleanSetting(
+          USER_MOBILE_APP_SETTING_SUFFIXES.NOTIFICATION_PUSH_ENABLED,
+          true
+        ),
+        smsEnabled: getUserBooleanSetting(
+          USER_MOBILE_APP_SETTING_SUFFIXES.NOTIFICATION_SMS_ENABLED,
+          false
+        ),
+        emailFrequency: this.normalizeEmailFrequency(
+          getUserSetting(
+            USER_MOBILE_APP_SETTING_SUFFIXES.NOTIFICATION_EMAIL_FREQUENCY,
+            EMAIL_NOTIFICATION_FREQUENCY.IMMEDIATE
+          )
+        ),
       },
       privacySettings: {
-        dataCollectionEnabled: getUserSetting(USER_MOBILE_APP_SETTING_SUFFIXES.PRIVACY_DATA_COLLECTION_ENABLED, true) as boolean,
-        analyticsSharingEnabled: getUserSetting(USER_MOBILE_APP_SETTING_SUFFIXES.PRIVACY_ANALYTICS_SHARING_ENABLED, true) as boolean,
-        crashReportingEnabled: getUserSetting(USER_MOBILE_APP_SETTING_SUFFIXES.PRIVACY_CRASH_REPORTING_ENABLED, true) as boolean,
+        dataCollectionEnabled: getUserBooleanSetting(
+          USER_MOBILE_APP_SETTING_SUFFIXES.PRIVACY_DATA_COLLECTION_ENABLED,
+          true
+        ),
+        analyticsSharingEnabled: getUserBooleanSetting(
+          USER_MOBILE_APP_SETTING_SUFFIXES.PRIVACY_ANALYTICS_SHARING_ENABLED,
+          true
+        ),
+        crashReportingEnabled: getUserBooleanSetting(
+          USER_MOBILE_APP_SETTING_SUFFIXES.PRIVACY_CRASH_REPORTING_ENABLED,
+          true
+        ),
       },
       lastUpdated: lastUpdatedSetting?.updateDate?.toISOString() || null,
     };
@@ -213,18 +324,20 @@ export class UserMobileConfigController extends UserBaseController {
   private async updateUserConfigSetting(userId: number, settingName: string, value: string): Promise<void> {
     const key = `${BASE_USER_PREFIX}.${userId}.${settingName}`;
     
+    const defaults: AppSettingCreationAttributes = {
+      key,
+      value,
+      active: true,
+      category: 'user_mobile_config',
+      type: 'string',
+      defaultValue: value,
+      description: `User ${userId} mobile configuration: ${settingName}`,
+      deleted: false,
+    };
+
     const [setting] = await AppSetting.findOrCreate({
       where: { key },
-      defaults: {
-        key,
-        value,
-        active: true,
-        category: 'user_mobile_config',
-        type: 'string',
-        defaultValue: value,
-        description: `User ${userId} mobile configuration: ${settingName}`,
-        deleted: false,
-      } as AppSettingAttributes,
+      defaults,
     });
 
     if (setting.value !== value) {

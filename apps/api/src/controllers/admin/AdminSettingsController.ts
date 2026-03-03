@@ -11,7 +11,46 @@ import { Setting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { SearchSettingsService } from '../../services/SearchSettingsService';
 
+interface AuditLoggingUpdateRequest {
+  enabled: boolean;
+}
+
+interface SearchSettingsUpdateRequest {
+  enabled?: boolean;
+  sortableFields?: string[];
+  defaultSort?: string;
+}
+
 export class AdminSettingsController extends BaseController {
+  private isAuditLoggingUpdateRequest(value: unknown): value is AuditLoggingUpdateRequest {
+    return this.isRecord(value) && typeof value['enabled'] === 'boolean';
+  }
+
+  private isSearchSettingsUpdateRequest(value: unknown): value is SearchSettingsUpdateRequest {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (value['enabled'] !== undefined && typeof value['enabled'] !== 'boolean') {
+      return false;
+    }
+
+    if (value['sortableFields'] !== undefined) {
+      if (
+        !Array.isArray(value['sortableFields']) ||
+        !value['sortableFields'].every(field => typeof field === 'string')
+      ) {
+        return false;
+      }
+    }
+
+    if (value['defaultSort'] !== undefined && typeof value['defaultSort'] !== 'string') {
+      return false;
+    }
+
+    return true;
+  }
+
   /**
    * Get audit logging setting status
    *
@@ -57,7 +96,7 @@ export class AdminSettingsController extends BaseController {
       }
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to query audit logging setting:');
-      return this.createErrorResponse('Failed to query audit logging setting', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
 
     // Default
@@ -83,14 +122,11 @@ export class AdminSettingsController extends BaseController {
     const forceEnabled = process.env['AUDIT_LOGGING_FORCE_ENABLED'] === 'true';
 
     if (forceDisabled || forceEnabled) {
-      return this.createErrorResponse(
-        'Audit logging is enforced by deployment configuration and cannot be changed',
-        403
-      );
+      return this.createErrorResponseI18n('errors:setting_enforced_by_config', 403);
     }
 
-    const body = this.parseBody<{ enabled: boolean }>(request);
-    if (!body || typeof body.enabled !== 'boolean') {
+    const body = this.parseBody(request);
+    if (!this.isAuditLoggingUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -112,7 +148,7 @@ export class AdminSettingsController extends BaseController {
       });
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to update audit logging setting:');
-      return this.createErrorResponse('Failed to update audit logging setting', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -141,7 +177,7 @@ export class AdminSettingsController extends BaseController {
         { err: error instanceof Error ? error : new Error(String(error)) },
         'Failed to get search settings status:'
       );
-      return this.createErrorResponse('Failed to get search settings status', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -156,13 +192,8 @@ export class AdminSettingsController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<{
-      enabled?: boolean;
-      sortableFields?: string[];
-      defaultSort?: string;
-    }>(request);
-
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isSearchSettingsUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -175,26 +206,17 @@ export class AdminSettingsController extends BaseController {
         const forceEnabled = process.env['SEARCH_FULLTEXT_FORCE_ENABLED'] === 'true';
 
         if (forceDisabled || forceEnabled) {
-          return this.createErrorResponse(
-            'Full-text search enabled status is enforced by deployment configuration and cannot be changed',
-            403
-          );
+          return this.createErrorResponseI18n('errors:setting_enforced_by_config', 403);
         }
 
         await searchSettingsService.updateFulltextEnabled(body.enabled);
       }
 
       if (body.sortableFields !== undefined) {
-        if (!Array.isArray(body.sortableFields)) {
-          return this.createErrorResponse('sortableFields must be an array', 400);
-        }
         await searchSettingsService.updateSortableFields(body.sortableFields);
       }
 
       if (body.defaultSort !== undefined) {
-        if (typeof body.defaultSort !== 'string') {
-          return this.createErrorResponse('defaultSort must be a string', 400);
-        }
         await searchSettingsService.updateDefaultSort(body.defaultSort);
       }
 
@@ -206,7 +228,7 @@ export class AdminSettingsController extends BaseController {
         { err: error instanceof Error ? error : new Error(String(error)) },
         'Failed to update search settings:'
       );
-      return this.createErrorResponse('Failed to update search settings', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 }

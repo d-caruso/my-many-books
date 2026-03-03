@@ -37,8 +37,18 @@ export function ManageAuthorsDialog({
       ) => authorAPI.updateAuthor(id, data),
       deleteAuthor: (id: number) => authorAPI.deleteAuthor(id),
     }),
-    [authorAPI]
+    []
   );
+
+  const resetDialogState = () => {
+    setSearch('');
+    setEditingId(null);
+    setEditName('');
+    setEditSurname('');
+    setEditNationality('');
+    setPendingDeleteId(null);
+    clearError();
+  };
 
   const {
     authors,
@@ -54,17 +64,13 @@ export function ManageAuthorsDialog({
   useEffect(() => {
     if (visible) {
       void loadAuthors();
-      return;
     }
+  }, [visible, loadAuthors]);
 
-    setSearch('');
-    setEditingId(null);
-    setEditName('');
-    setEditSurname('');
-    setEditNationality('');
-    setPendingDeleteId(null);
-    clearError();
-  }, [visible, loadAuthors, clearError]);
+  const handleDialogClose = () => {
+    resetDialogState();
+    onClose();
+  };
 
   const filteredAuthors = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -120,7 +126,7 @@ export function ManageAuthorsDialog({
 
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={mutating ? undefined : onClose}>
+      <Dialog visible={visible} onDismiss={mutating ? undefined : handleDialogClose}>
         <Dialog.Title>{t('dialogs:author.manage_title', { defaultValue: 'Manage authors' })}</Dialog.Title>
         <Dialog.Content>
           <View style={styles.content}>
@@ -227,7 +233,7 @@ export function ManageAuthorsDialog({
           <Button onPress={() => void loadAuthors()} disabled={loading || mutating}>
             {t('common:retry')}
           </Button>
-          <Button onPress={onClose} disabled={mutating}>
+          <Button onPress={handleDialogClose} disabled={mutating}>
             {t('common:close')}
           </Button>
         </Dialog.Actions>

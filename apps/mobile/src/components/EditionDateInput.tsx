@@ -72,9 +72,15 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
 
   useEffect(() => {
     const [y, m, d] = parseEditionDateParts(value);
-    setYear(y);
-    setMonth(m);
-    setDay(d);
+    const syncStateTimer = setTimeout(() => {
+      setYear(y);
+      setMonth(m);
+      setDay(d);
+    }, 0);
+
+    return () => {
+      clearTimeout(syncStateTimer);
+    };
   }, [value]);
 
   const handleChange = (newYear: string, newMonth: string, newDay: string) => {

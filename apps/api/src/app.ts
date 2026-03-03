@@ -43,11 +43,11 @@ const securityHeadersEnabled = process.env['SECURITY_HEADERS_ENABLED'] !== 'fals
 
 // ===== LOGGING MIDDLEWARE (MUST BE FIRST) =====
 // 1. TraceId middleware for request correlation
-app.use(traceIdMiddleware() as unknown as express.RequestHandler);
+app.use(traceIdMiddleware());
 
 // 2. Request logger middleware (logs all HTTP requests)
 if (!isTestEnvironment) {
-  app.use(requestLoggerMiddleware() as unknown as express.RequestHandler);
+  app.use(requestLoggerMiddleware());
 }
 
 // ===== SECURITY HEADERS =====

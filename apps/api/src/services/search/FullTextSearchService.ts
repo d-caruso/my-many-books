@@ -32,6 +32,9 @@ import { ResourceType, SortDirection, SORT_DIRECTIONS } from '@my-many-books/sha
 import { SearchSettingsService } from '../SearchSettingsService';
 import { BaseSearchOptions, SortField, ISearchAdapter, SearchResult } from './ISearchable';
 
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 /**
  * Generic full-text search service
  * @template T - The resource model type (Book, Author, Category, etc)
@@ -258,16 +261,18 @@ export abstract class FullTextSearchService<T extends { id: number }> {
    * Get field value from SearchResult, checking both top-level and data property
    */
   protected getFieldValue(result: SearchResult<T>, field: string): string | number | Date | undefined {
-    // Check top-level first (id, userId, creationDate, updateDate, isPinned, relevanceScore)
-    if (field in result) {
-      const val = (result as unknown as Record<string, unknown>)[field];
-      if (typeof val === 'string' || typeof val === 'number' || val instanceof Date) return val;
-    }
+    if (field === 'id') return result.id;
+    if (field === 'userId') return result.userId;
+    if (field === 'creationDate') return result.creationDate;
+    if (field === 'updateDate') return result.updateDate;
+    if (field === 'relevanceScore') return result.relevanceScore;
 
-    // Check data property
-    if (result.data && field in (result.data as Record<string, unknown>)) {
-      const val = (result.data as Record<string, unknown>)[field];
-      if (typeof val === 'string' || typeof val === 'number' || val instanceof Date) return val;
+    if (isObjectRecord(result.data) && field in result.data) {
+      const dataRecord = result.data as Record<string, unknown>;
+      const val = dataRecord[field];
+      if (typeof val === 'string' || typeof val === 'number' || val instanceof Date) {
+        return val;
+      }
     }
 
     return undefined;

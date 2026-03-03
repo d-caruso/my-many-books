@@ -6,7 +6,7 @@ import { useAuth } from '@my-many-books/shared-auth';
 // Import mocked modules
 import { LoginForm, RegisterForm } from '../../components/Auth';
 import { LanguageSelector } from '../../components/Navigation/LanguageSelector';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 // Mock dependencies - industry standard approach
 vi.mock('@my-many-books/shared-auth');
@@ -15,17 +15,30 @@ vi.mock('../../components/Navigation/LanguageSelector');
 vi.mock('react-router-dom');
 
 describe('AuthPage', () => {
+  const mockRefreshUser = vi.fn();
+  const mockNavigate = vi.fn();
+
   beforeEach(() => {
     // Setup default mocks with proper Vitest mocked utility
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      token: null,
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
       register: vi.fn(),
-      updateUser: vi.fn(),
+      refreshUser: mockRefreshUser,
+      isAuthenticated: false,
     });
+
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: '/auth',
+      search: '',
+      hash: '',
+      state: null,
+      key: 'default',
+    } as any);
+
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
 
     // Mock Auth components to simple test doubles
     vi.mocked(LoginForm).mockImplementation(({ onSwitchToRegister }: any) => (
@@ -56,6 +69,10 @@ describe('AuthPage', () => {
     vi.mocked(LanguageSelector).mockImplementation(() => (
       <div data-testid="language-selector">Language Selector</div>
     ));
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   test('renders login form by default', () => {
@@ -93,12 +110,12 @@ describe('AuthPage', () => {
     // Override default mock for this specific test
     vi.mocked(useAuth).mockReturnValue({
       user: { id: 1, name: 'Test User' } as any,
-      token: 'mock-token',
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
       register: vi.fn(),
-      updateUser: vi.fn(),
+      refreshUser: mockRefreshUser,
+      isAuthenticated: true,
     });
 
     render(<AuthPage />);
@@ -142,6 +159,26 @@ describe('AuthPage', () => {
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
+  test('attempts auth refresh on Google callback success', async () => {
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: '/auth',
+      search: '?google=success',
+      hash: '',
+      state: null,
+      key: 'google-callback',
+    } as any);
+
+    render(<AuthPage />);
+
+    await waitFor(() => {
+      expect(mockRefreshUser).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/auth', { replace: true });
     });
   });
 });

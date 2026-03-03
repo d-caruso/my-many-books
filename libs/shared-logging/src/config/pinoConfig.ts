@@ -9,6 +9,9 @@ import { redactionConfig } from './redactionRules';
 
 type PinoLoggerOptions = LoggerOptions<string>;
 
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 /**
  * Environment for logging configuration
  */
@@ -72,16 +75,16 @@ export function getLogLevel(env: LogEnvironment = getEnvironment()): string {
  *
  * Ensures errors are logged with stack traces
  */
-export function errorSerializer(error: Error): Record<string, any> {
-  const serialized: Record<string, any> = {
+export function errorSerializer(error: Error): Record<string, unknown> {
+  const serialized: Record<string, unknown> = {
     type: error.name,
     message: error.message,
     stack: error.stack,
   };
 
   // Preserve enumerable custom properties (e.g. `code`, `statusCode`)
-  for (const key of Object.keys(error as any)) {
-    serialized[key] = (error as any)[key];
+  for (const [key, value] of Object.entries(error)) {
+    serialized[key] = value;
   }
 
   return serialized;
@@ -92,21 +95,33 @@ export function errorSerializer(error: Error): Record<string, any> {
  *
  * Serializes Express request objects
  */
-export function requestSerializer(req: any): Record<string, any> {
+export function requestSerializer(req: unknown): Record<string, unknown> {
+  if (!isObjectRecord(req)) {
+    return {};
+  }
+
+  const headers = isObjectRecord(req['headers']) ? req['headers'] : {};
+  const connection = isObjectRecord(req['connection']) ? req['connection'] : {};
+
   return {
-    id: req.id,
-    method: req.method,
-    url: req.url,
-    path: req.path,
-    params: req.params,
-    query: req.query,
+    id: req['id'],
+    method: req['method'],
+    url: req['url'],
+    path: req['path'],
+    params: isObjectRecord(req['params']) ? req['params'] : undefined,
+    query: isObjectRecord(req['query']) ? req['query'] : undefined,
     headers: {
-      host: req.headers?.host,
-      'user-agent': req.headers?.['user-agent'],
-      'content-type': req.headers?.['content-type'],
+      host: typeof headers['host'] === 'string' ? headers['host'] : undefined,
+      'user-agent': typeof headers['user-agent'] === 'string' ? headers['user-agent'] : undefined,
+      'content-type':
+        typeof headers['content-type'] === 'string' ? headers['content-type'] : undefined,
       // Don't log authorization headers
     },
-    remoteAddress: req.ip || req.connection?.remoteAddress,
+    remoteAddress:
+      (typeof req['ip'] === 'string' ? req['ip'] : undefined) ||
+      (typeof connection['remoteAddress'] === 'string'
+        ? connection['remoteAddress']
+        : undefined),
   };
 }
 
@@ -115,12 +130,20 @@ export function requestSerializer(req: any): Record<string, any> {
  *
  * Serializes Express response objects
  */
-export function responseSerializer(res: any): Record<string, any> {
+export function responseSerializer(res: unknown): Record<string, unknown> {
+  if (!isObjectRecord(res)) {
+    return {};
+  }
+
+  const headers = isObjectRecord(res['headers']) ? res['headers'] : {};
+
   return {
-    statusCode: res.statusCode,
+    statusCode: res['statusCode'],
     headers: {
-      'content-type': res.headers?.['content-type'],
-      'content-length': res.headers?.['content-length'],
+      'content-type':
+        typeof headers['content-type'] === 'string' ? headers['content-type'] : undefined,
+      'content-length':
+        typeof headers['content-length'] === 'string' ? headers['content-length'] : undefined,
     },
   };
 }

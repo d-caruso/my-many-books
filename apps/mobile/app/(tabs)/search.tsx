@@ -108,27 +108,26 @@ export default function SearchScreen() {
     }
     handledScannerParamsRef.current = payloadKey;
 
-    setSearchMode('isbn');
-    setSearchQuery(scannedIsbn);
+    const applyScannerStateTimer = setTimeout(() => {
+      setSearchMode('isbn');
+      setSearchQuery(scannedIsbn);
 
-    if (scannerCopy === SCANNER_COPY_STATUS.SUCCESS || scannerCopy === SCANNER_COPY_STATUS.FAILED) {
-      setFeedbackMessage(
-        scannerCopy === SCANNER_COPY_STATUS.SUCCESS
-          ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
-          : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
-      );
-      setFeedbackVisible(true);
-    }
+      if (scannerCopy === SCANNER_COPY_STATUS.SUCCESS || scannerCopy === SCANNER_COPY_STATUS.FAILED) {
+        setFeedbackMessage(
+          scannerCopy === SCANNER_COPY_STATUS.SUCCESS
+            ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
+            : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
+        );
+        setFeedbackVisible(true);
+      }
+    }, 0);
 
     router.replace('/(tabs)/search');
-  }, [scannedIsbn, scannerCopy, t]);
 
-  // Trigger search when filters change
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      performSearch();
-    }
-  }, [statusFilter, selectedAuthor, selectedCategory, sortBy, sortOrder, performSearch]);
+    return () => {
+      clearTimeout(applyScannerStateTimer);
+    };
+  }, [scannedIsbn, scannerCopy, t]);
 
   // Trigger search when query changes
   useEffect(() => {

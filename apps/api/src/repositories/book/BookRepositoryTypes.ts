@@ -5,25 +5,24 @@
 
 import { BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import {
-  AssociationInput,
-  CreationAttributes,
   ListOptions,
   QueryOptions,
   PaginatedResult as AdapterPaginatedResult,
-  SearchFilters,
 } from '../interfaces/adapters/RepositoryAdapter';
 import { BookEntity } from '../../domain/entities/Book';
 
 export type { BookEntity } from '../../domain/entities/Book';
 
-export interface BookAssociationInput extends AssociationInput {
+export interface BookAssociationInput {
   authorIds?: number[];
   categoryIds?: number[];
 }
 
-export type BookQueryOptions = QueryOptions;
+export interface BookQueryOptions extends QueryOptions {
+  transaction?: import('sequelize').Transaction | null;
+}
 
-export interface BookSearchFilters extends SearchFilters {
+export interface BookSearchFilters {
   title?: string;
   isbnCode?: string;
   editionNumber?: number;
@@ -45,5 +44,4 @@ export type PaginatedResult<T extends BookEntity = BookEntity> = AdapterPaginate
 
 export interface BookCreationInput
   extends BookCreationAttributes,
-    BookAssociationInput,
-    CreationAttributes {}
+    BookAssociationInput {}

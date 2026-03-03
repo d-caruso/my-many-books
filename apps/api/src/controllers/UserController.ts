@@ -13,7 +13,6 @@ import { toUserResponseDTO } from '../dtos/user/UserResponseDTO';
 import { UserService, UserServiceError } from '../services/user/UserService';
 import { BookEntity } from '../repositories/book/BookRepositoryTypes';
 import { BookStatus } from '@/models/interfaces/ModelInterfaces';
-import { BOOK_STATUSES } from '@my-many-books/shared-types';
 
 const toBookView = (book: BookEntity): object => ({
   id: book.id,
@@ -52,7 +51,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     if (!this.hasUserAccess(request, userId)) {
@@ -74,7 +73,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -102,7 +101,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -148,7 +147,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -171,7 +170,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -194,7 +193,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -228,6 +227,13 @@ export class UserController extends UserBaseController {
     if (!value) {
       return undefined;
     }
-    return BOOK_STATUSES.includes(value as BookStatus) ? (value as BookStatus) : undefined;
+    switch (value) {
+      case 'reading':
+      case 'paused':
+      case 'finished':
+        return value;
+      default:
+        return undefined;
+    }
   }
 }

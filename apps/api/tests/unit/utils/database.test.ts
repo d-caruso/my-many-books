@@ -55,6 +55,7 @@ describe('DatabaseUtils', () => {
       SearchPinnedResult: { count: jest.fn().mockResolvedValue(0) } as any,
       MobileAnalyticsEvent: { count: jest.fn().mockResolvedValue(0) } as any,
       MobileHookActionExecution: { count: jest.fn().mockResolvedValue(0) } as any,
+      UserAuthIdentity: { count: jest.fn().mockResolvedValue(0) } as any,
     });
 
     mockLogger = {

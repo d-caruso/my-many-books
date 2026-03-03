@@ -5,11 +5,11 @@
 
 import { DataTypes, Association, Sequelize } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
-import { HookAttributes, HookActionType } from './interfaces/ModelInterfaces';
+import { HookAttributes, HookActionType, HookCreationAttributes } from './interfaces/ModelInterfaces';
 import { User } from './User';
 import { HookExecution } from './HookExecution';
 
-export class Hook extends IdBaseModel<HookAttributes> implements HookAttributes {
+export class Hook extends IdBaseModel<HookAttributes, HookCreationAttributes> implements HookAttributes {
   public name!: string;
   public description?: string | null;
   public eventPattern!: string;

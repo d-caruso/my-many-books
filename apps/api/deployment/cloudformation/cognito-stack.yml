@@ -16,6 +16,30 @@ Parameters:
     Default: my-many-books-api
     Description: Service name
 
+  GoogleClientId:
+    Type: String
+    Description: Google OAuth 2.0 client ID used by Cognito social provider
+
+  GoogleClientSecret:
+    Type: String
+    NoEcho: true
+    Description: Google OAuth 2.0 client secret used by Cognito social provider
+
+  ApiAuthCallbackUrl:
+    Type: String
+    Default: http://localhost:3001/api/v1/auth/google/callback
+    Description: API callback URL used for Cognito authorization code redirect
+
+  MobileAuthCallbackUrl:
+    Type: String
+    Default: my-many-books://auth
+    Description: Mobile deep-link callback URL used for OAuth redirect
+
+  WebAppUrl:
+    Type: String
+    Default: http://localhost:3000
+    Description: Frontend web app URL used for Hosted UI logout redirect
+
 Resources:
   # Cognito User Pool
   CognitoUserPool:
@@ -54,9 +78,27 @@ Resources:
         Service: auth
         CreatedBy: cloudformation
 
+  CognitoGoogleIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      ProviderName: Google
+      ProviderType: Google
+      UserPoolId: !Ref CognitoUserPool
+      ProviderDetails:
+        client_id: !Ref GoogleClientId
+        client_secret: !Ref GoogleClientSecret
+        authorize_scopes: openid email profile
+      AttributeMapping:
+        email: email
+        given_name: given_name
+        family_name: family_name
+        username: sub
+
   # Cognito User Pool Client
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
+    DependsOn:
+      - CognitoGoogleIdentityProvider
     Properties:
       ClientName: !Sub '${ServiceName}-client-${Environment}'
       UserPoolId: !Ref CognitoUserPool
@@ -64,20 +106,18 @@ Resources:
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
         - code
-        - implicit
       AllowedOAuthScopes:
         - email
         - openid
         - profile
       SupportedIdentityProviders:
         - COGNITO
+        - Google
       CallbackURLs:
-        - http://localhost:3000
-        - https://localhost:3000
-        - !Sub 'https://${ServiceName}-web-${Environment}.s3-website-${AWS::Region}.amazonaws.com'
+        - !Ref ApiAuthCallbackUrl
+        - !Ref MobileAuthCallbackUrl
       LogoutURLs:
-        - http://localhost:3000
-        - https://localhost:3000
+        - !Ref WebAppUrl
         - !Sub 'https://${ServiceName}-web-${Environment}.s3-website-${AWS::Region}.amazonaws.com'
       AccessTokenValidity: 24
       IdTokenValidity: 24

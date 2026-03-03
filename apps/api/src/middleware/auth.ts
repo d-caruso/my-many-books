@@ -4,6 +4,7 @@
 // ================================================================
 
 import { getLogger } from '@my-many-books/shared-logging';
+import { i18n } from '@my-many-books/shared-i18n';
 import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 import { Request, Response, NextFunction } from 'express';
 import { AuthUser } from '../models/interfaces/ModelInterfaces';
@@ -11,6 +12,7 @@ import { container } from '../container';
 import { TYPES } from '../container/types';
 import { UserService as DomainUserService } from '../services/user/UserService';
 import { UserEntity } from '../domain/entities/User';
+import { CognitoJwtVerifier } from '../services/auth/cognitoJwtVerifier';
 
 // Extended Request interface to include authenticated user
 export interface AuthenticatedRequest extends Request {
@@ -25,42 +27,37 @@ export interface AuthProvider {
 
 export interface AuthProviderUser {
   id: string;
+  providerUserId?: string;
   email: string;
   name: string | undefined;
   surname: string | undefined;
+  emailVerified?: boolean | string;
 }
 
 // AWS Cognito provider implementation
 export class CognitoAuthProvider implements AuthProvider {
-  constructor(region: string, userPoolId: string) {
-    // Store parameters for potential future use
-    void region;
-    void userPoolId;
+  private readonly verifier: CognitoJwtVerifier;
+
+  constructor(
+    region: string,
+    userPoolId: string,
+    clientId: string
+  ) {
+    if (!region || !userPoolId || !clientId) {
+      throw new Error('Cognito region, user pool id, and client id are required');
+    }
+    this.verifier = new CognitoJwtVerifier(region, userPoolId, clientId);
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async verifyToken(token: string): Promise<AuthProviderUser> {
-    // TODO: Implement proper AWS Cognito JWT verification
-    // For now, we will just decode the token for debugging purposes.
-    // This is NOT a secure solution for production.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const jwt = require('jsonwebtoken') as { decode: (token: string) => unknown };
-    const decoded = jwt.decode(token) as {
-      sub?: string;
-      email?: string;
-      given_name?: string;
-      family_name?: string;
-    } | null;
-
-    if (!decoded || !decoded.sub || !decoded.email) {
-      throw new Error('Token verification failed');
-    }
+    const claims = await this.verifier.verifyIdToken(token);
 
     return {
-      id: decoded.sub,
-      email: decoded.email,
-      name: decoded.given_name || undefined,
-      surname: decoded.family_name || undefined,
+      id: claims.sub,
+      email: claims.email,
+      name: claims.given_name,
+      surname: claims.family_name,
+      emailVerified: claims.email_verified,
     };
   }
 
@@ -95,7 +92,8 @@ export class AuthProviderFactory {
       case 'cognito':
         return new CognitoAuthProvider(
           process.env['AWS_REGION'] || 'us-east-1',
-          process.env['COGNITO_USER_POOL_ID'] || ''
+          process.env['COGNITO_USER_POOL_ID'] || '',
+          process.env['COGNITO_USER_POOL_CLIENT_ID'] || ''
         );
       case 'auth0':
         return new Auth0Provider(
@@ -134,6 +132,8 @@ export const UserService = {
   findOrCreateUser(providerUser: AuthProviderUser, provider: string): Promise<{ user: UserEntity; isNewUser: boolean }> {
     return resolveUserService().findOrCreateUser(
       {
+        id: providerUser.id,
+        providerUserId: providerUser.providerUserId,
         email: providerUser.email,
         name: providerUser.name ?? null,
         surname: providerUser.surname ?? null,
@@ -161,7 +161,7 @@ export const authMiddleware = async (
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       res.status(401).json(createErrorResponse(
         ERROR_CODES.AUTH_HEADER_INVALID,
-        'Missing or invalid authorization header'
+        i18n.t('errors:auth_header_invalid')
       ));
       return;
     }
@@ -194,7 +194,7 @@ export const authMiddleware = async (
     if (!user.isActive) {
       res.status(403).json(createErrorResponse(
         ERROR_CODES.ACCOUNT_DEACTIVATED,
-        'Account is deactivated'
+        i18n.t('errors:account_deactivated')
       ));
       return;
     }
@@ -220,7 +220,7 @@ export const authMiddleware = async (
     );
     res.status(401).json(createErrorResponse(
       ERROR_CODES.AUTH_FAILED,
-      'Authentication failed',
+      i18n.t('errors:auth_failed'),
       { details: error instanceof Error ? error.message : 'Unknown error' }
     ));
   }

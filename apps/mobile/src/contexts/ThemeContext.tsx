@@ -42,10 +42,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [themeMode, setThemeModeState] = React.useState<ThemeMode>('system');
   const [isDark, setIsDark] = React.useState(false);
 
-  React.useEffect(() => {
-    loadStoredTheme();
-  }, []);
-
   const loadStoredTheme = async () => {
     try {
       const storedTheme = await AsyncStorage.getItem('themeMode');
@@ -65,6 +61,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       console.error('Failed to save theme:', error);
     }
   };
+
+  React.useEffect(() => {
+    void loadStoredTheme();
+  }, []);
 
   React.useEffect(() => {
     if (themeMode === 'system') {

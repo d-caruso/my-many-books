@@ -58,7 +58,7 @@ class DatabaseConnection {
       timezone: DATABASE_CONFIG.TIMEZONE,
       pool: {
         ...poolConfig,
-        validate: (client: unknown) => {
+        validate: (client: unknown): boolean => {
           try {
             const conn = (client as {
               connection?: {

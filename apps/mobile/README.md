@@ -129,6 +129,19 @@ Optional legacy override:
 
 - `EXPO_PUBLIC_API_URL` (full base URL, includes prefix + version)
 
+### Google Login Callback
+
+The mobile app uses deep-link callback routing for Cognito Hosted UI Google login.
+
+- App scheme is configured in `apps/mobile/app.json` (`\"scheme\": \"my-many-books\"`).
+- In non-development environments, API validates mobile redirect URIs via exact allowlist (`GOOGLE_OAUTH_REDIRECT_URIS_MOBILE`).
+- `GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX` (default: `my-many-books://`) is used as fallback only in development/test.
+- Keep the Cognito app client callback list aligned with the mobile scheme callback (`my-many-books://auth` in this app).
+- Mobile OAuth uses Authorization Code + PKCE:
+  - app generates and stores a PKCE verifier before opening Hosted UI
+  - API start endpoint computes the code challenge from the verifier
+  - callback exchange requires the original verifier
+
 ## Contributing
 
 1. Follow the existing code style

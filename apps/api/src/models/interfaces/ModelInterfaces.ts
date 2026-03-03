@@ -50,11 +50,11 @@ export interface BookAttributes
   id: CreationOptional<number>;
   isbnCode: string;
   title: string;
-  editionNumber?: number | undefined;
-  editionDate?: string | undefined;
-  status?: BookStatus | undefined;
-  notes?: string | undefined;
-  userId?: number | undefined;
+  editionNumber?: number | null | undefined;
+  editionDate?: string | null | undefined;
+  status?: BookStatus | null | undefined;
+  notes?: string | null | undefined;
+  userId?: number | null | undefined;
   creationDate: CreationOptional<Date>;
   updateDate?: CreationOptional<Date | undefined>;
 }
@@ -64,9 +64,9 @@ export interface BookCreationAttributes {
   title: string;
   editionNumber?: number | null;
   editionDate?: string | null;
-  status?: BookStatus | undefined;
+  status?: BookStatus | null;
   notes?: string | null;
-  userId?: number | undefined;
+  userId?: number | null;
   updateDate?: Date | undefined;
 }
 
@@ -215,4 +215,5 @@ export interface HookExecutionCreationAttributes {
   success: boolean;
   errorMessage?: string | null;
   executionTimeMs?: number | null;
+  executedAt?: Date;
 }

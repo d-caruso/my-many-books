@@ -52,6 +52,8 @@
   "enter_email": "Enter your email",
   "enter_password": "Enter your password",
   "signing_in": "Signing In...",
+  "continue_with_google": "Continue with Google",
+  "google_login_failed": "Google login failed. Please try again.",
   "email_required": "Email is required",
   "email_invalid": "Please enter a valid email address",
   "password_required": "Password is required",

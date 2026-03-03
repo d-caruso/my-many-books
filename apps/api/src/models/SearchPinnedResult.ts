@@ -24,7 +24,7 @@ export interface SearchPinnedResultCreationAttributes {
   active?: boolean;
 }
 
-export class SearchPinnedResult extends IdBaseModel<SearchPinnedResultAttributes> implements SearchPinnedResultAttributes {
+export class SearchPinnedResult extends IdBaseModel<SearchPinnedResultAttributes, SearchPinnedResultCreationAttributes> implements SearchPinnedResultAttributes {
   public resourceType!: ResourceType;
   public resourceId!: number;
   public priority!: number;

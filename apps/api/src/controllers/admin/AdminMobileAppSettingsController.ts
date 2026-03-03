@@ -4,19 +4,17 @@
 // Manages global mobile app infrastructure settings—offline storage, batch intervals, and event limits
 // ================================================================
 
- import { BaseController } from '../base/BaseController';
- import { ApiResponse } from '../../common/ApiResponse';
- import { UniversalRequest } from '../../types';
- import { AppSetting } from '../../models';
- import { AppSettingCreationAttributes } from '../../models/AppSetting';
- import { getAuditLogService } from '../../services/AuditLogService';
- import {
-    MOBILE_APP_METADATA,
-    MOBILE_APP_SETTING_KEYS,
-    MOBILE_APP_SETTINGS_ACTIONS,
-    MobileAppSettings,
-    SettingCategory,
-    SettingType,
+import { BaseController } from '../base/BaseController';
+import { ApiResponse } from '../../common/ApiResponse';
+import { UniversalRequest } from '../../types';
+import { AppSetting } from '../../models';
+import { AppSettingCreationAttributes } from '../../models/AppSetting';
+import { getAuditLogService } from '../../services/AuditLogService';
+import {
+  MOBILE_APP_METADATA,
+  MOBILE_APP_SETTING_KEYS,
+  MOBILE_APP_SETTINGS_ACTIONS,
+  MobileAppSettings,
 } from '@my-many-books/shared-types';
 
 const DEFAULT_MOBILE_APP_SETTINGS: MobileAppSettings = {
@@ -46,15 +44,26 @@ const MOBILE_APP_SETTINGS_MESSAGES = {
   },
 } as const;
 
-// create a const for the keys of MobileAppSettings, so it can be used in type-safe manner
-// e.g. MobileAppSettingsKeys.offlineStorageEnabled
-type MobileAppSettingsKeyName = keyof MobileAppSettings;
-const MobileAppSettingsKeyNames = Object.keys(DEFAULT_MOBILE_APP_SETTINGS) as MobileAppSettingsKeyName[];
-const MobileAppSettingsKeys = Object.fromEntries(
-  MobileAppSettingsKeyNames.map((k) => [k, k]),
-) as { [K in MobileAppSettingsKeyName]: K };
+const MobileAppSettingsKeys = {
+  offlineStorageEnabled: 'offlineStorageEnabled',
+  batchUploadInterval: 'batchUploadInterval',
+  maxOfflineEvents: 'maxOfflineEvents',
+} as const;
 
 export class AdminMobileAppSettingsController extends BaseController {
+  private isMobileAppSettingsUpdate(value: unknown): value is Partial<MobileAppSettings> {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    return (
+      (value['offlineStorageEnabled'] === undefined ||
+        typeof value['offlineStorageEnabled'] === 'boolean') &&
+      (value['batchUploadInterval'] === undefined ||
+        typeof value['batchUploadInterval'] === 'number') &&
+      (value['maxOfflineEvents'] === undefined || typeof value['maxOfflineEvents'] === 'number')
+    );
+  }
 
     /**
     * GET /api/<version>/admin/mobile-app/settings
@@ -78,7 +87,7 @@ export class AdminMobileAppSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to fetch mobile app settings', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -109,8 +118,8 @@ export class AdminMobileAppSettingsController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<MobileAppSettings>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isMobileAppSettingsUpdate(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -176,7 +185,7 @@ export class AdminMobileAppSettingsController extends BaseController {
         if (error instanceof Error) {
           return this.createErrorResponse(error.message, 500);
         }
-        return this.createErrorResponse(MOBILE_APP_SETTINGS_MESSAGES.ERRORS.UPDATE_FAILED, 500);
+        return this.createErrorResponseI18n('errors:internal_error', 500);
     }
    }
 
@@ -231,7 +240,7 @@ export class AdminMobileAppSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to reset mobile settings', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -307,18 +316,20 @@ export class AdminMobileAppSettingsController extends BaseController {
    * Update a single setting
    */
   private async saveSetting(key: string, value: string): Promise<void> {
+    const defaults: AppSettingCreationAttributes = {
+      key,
+      value,
+      active: true,
+      category: MOBILE_APP_METADATA.CATEGORY,
+      type: MOBILE_APP_METADATA.DATA_TYPE,
+      defaultValue: value,
+      description: `Mobile app settings: ${key}`,
+      deleted: false,
+    };
+
     const [setting] = await AppSetting.findOrCreate({
       where: { key },
-      defaults: {
-        key,
-        value,
-        active: true,
-        category: MOBILE_APP_METADATA.CATEGORY as SettingCategory,
-        type: MOBILE_APP_METADATA.DATA_TYPE as SettingType,
-        defaultValue: value,
-        description: `Mobile app settings: ${key}`,
-        deleted: false,
-      } as AppSettingCreationAttributes,
+      defaults,
     });
 
     if (setting.value !== value) {
@@ -329,19 +340,16 @@ export class AdminMobileAppSettingsController extends BaseController {
   /**
    * Validate mobile settings values
    */
-  private validateSettings(settings: MobileAppSettings): ApiResponse | null {
+  private validateSettings(settings: Partial<MobileAppSettings>): ApiResponse | null {
     if (typeof settings.batchUploadInterval === 'number') {
       if (settings.batchUploadInterval < 60 || settings.batchUploadInterval > 3600) {
-        return this.createErrorResponse(
-          'Batch upload interval must be between 60 and 3600 seconds',
-          400
-        );
+        return this.createErrorResponseI18n('errors:batch_upload_interval_invalid', 400, { min: 60, max: 3600 });
       }
     }
 
     if (typeof settings.maxOfflineEvents === 'number') {
       if (settings.maxOfflineEvents < 100 || settings.maxOfflineEvents > 10000) {
-        return this.createErrorResponse('Max offline events must be between 100 and 10000', 400);
+        return this.createErrorResponseI18n('errors:max_offline_events_invalid', 400, { min: 100, max: 10000 });
       }
     }
 

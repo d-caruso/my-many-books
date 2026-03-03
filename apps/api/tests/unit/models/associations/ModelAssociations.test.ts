@@ -17,6 +17,7 @@ describe('ModelAssociations', () => {
   let mockCategory: any;
   let mockBookAuthor: any;
   let mockBookCategory: any;
+  let mockUserAuthIdentity: any;
   let mockSequelize: jest.Mocked<Sequelize>;
   let mockLogger: { info: jest.Mock; error: jest.Mock; warn: jest.Mock };
 
@@ -56,6 +57,10 @@ describe('ModelAssociations', () => {
     };
 
     mockBookCategory = {
+      belongsTo: jest.fn(),
+    };
+
+    mockUserAuthIdentity = {
       belongsTo: jest.fn(),
     };
 
@@ -124,6 +129,7 @@ describe('ModelAssociations', () => {
       ModelAssociations.registerModel('Category', mockCategory);
       ModelAssociations.registerModel('BookAuthor', mockBookAuthor);
       ModelAssociations.registerModel('BookCategory', mockBookCategory);
+      ModelAssociations.registerModel('UserAuthIdentity', mockUserAuthIdentity);
     });
 
     it('should define all associations successfully', () => {

@@ -21,7 +21,8 @@ export interface BookRepositoryAdapter
     BookCreationInput,
     BookAssociationInput,
     BookQueryOptions,
-    BookListOptions
+    BookListOptions,
+    BookSearchFilters
   > {
   findById(id: number, options?: BookQueryOptions): Promise<BookEntity | null>;
   findUserBookById(

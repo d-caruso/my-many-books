@@ -2,7 +2,7 @@ import { getLogger } from '@my-many-books/shared-logging';
 import { Sequelize, QueryTypes } from 'sequelize';
 import DatabaseConnection from '../config/database';
 
-interface DatabaseExecutionResult {
+export interface DatabaseExecutionResult {
   success: boolean;
   error?: string;
   recordId?: number;
@@ -72,7 +72,7 @@ export class DatabaseActionTestService {
       this.logger.warn({ err: error, table }, 'Database action test failed');
       return {
         success: false,
-        error: (error as Error).message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }

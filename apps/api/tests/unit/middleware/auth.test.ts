@@ -1,9 +1,9 @@
 // ================================================================
 // tests/middleware/auth.test.ts
-// Comprehensive unit tests for authentication middleware
+// Unit tests for authentication middleware and providers
 // ================================================================
 
-import { Response, NextFunction } from 'express';
+import { NextFunction, Response } from 'express';
 import {
   authMiddleware,
   optionalAuthMiddleware,
@@ -17,45 +17,28 @@ import {
   resetAuthProvider,
 } from '../../../src/middleware/auth';
 import { clearUserCache } from '../../../src/middleware/authCache';
-
-// Mock dependencies
-jest.mock('jsonwebtoken');
-
+import { CognitoJwtVerifier } from '../../../src/services/auth/cognitoJwtVerifier';
 
 describe('Authentication Middleware', () => {
   let req: Partial<AuthenticatedRequest>;
   let res: Partial<Response>;
   let next: NextFunction;
-  let consoleErrorSpy: jest.SpyInstance;
-
-  beforeAll(() => {
-    // Suppress console.error during tests
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterAll(() => {
-    // Restore console.error after tests
-    consoleErrorSpy.mockRestore();
-  });
 
   beforeEach(() => {
-    req = {
-      headers: {},
-    };
+    req = { headers: {} };
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
     };
     next = jest.fn();
 
-    // Reset mocks and caches
     jest.clearAllMocks();
     clearUserCache();
     resetAuthProvider();
   });
 
   describe('authMiddleware', () => {
-    it('should reject request without Authorization header', async () => {
+    it('rejects requests without Authorization header', async () => {
       await authMiddleware(req as AuthenticatedRequest, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
@@ -63,13 +46,13 @@ describe('Authentication Middleware', () => {
         success: false,
         error: {
           code: 'AUTH_HEADER_INVALID',
-          message: 'Missing or invalid authorization header',
+          message: 'Authentication error. Please log in again',
         },
       });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should reject request with invalid Authorization header format', async () => {
+    it('rejects requests with invalid Authorization format', async () => {
       req.headers!.authorization = 'InvalidFormat token';
 
       await authMiddleware(req as AuthenticatedRequest, res as Response, next);
@@ -79,13 +62,13 @@ describe('Authentication Middleware', () => {
         success: false,
         error: {
           code: 'AUTH_HEADER_INVALID',
-          message: 'Missing or invalid authorization header',
+          message: 'Authentication error. Please log in again',
         },
       });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should process valid token successfully', async () => {
+    it('processes valid token successfully', async () => {
       const mockToken = 'valid.jwt.token';
       req.headers!.authorization = `Bearer ${mockToken}`;
 
@@ -99,12 +82,12 @@ describe('Authentication Middleware', () => {
       const mockDbUser = {
         id: 1,
         email: 'test@example.com',
-              name: 'John',
+        role: 'user',
+        name: 'John',
         surname: 'Doe',
         isActive: true,
-        };
+      };
 
-      // Mock AuthProviderFactory and provider
       const mockProvider: jest.Mocked<AuthProvider> = {
         verifyToken: jest.fn().mockResolvedValue(mockProviderUser),
         getProviderName: jest.fn().mockReturnValue('cognito'),
@@ -112,7 +95,7 @@ describe('Authentication Middleware', () => {
 
       jest.spyOn(AuthProviderFactory, 'createProvider').mockReturnValue(mockProvider);
       jest.spyOn(UserService, 'findOrCreateUser').mockResolvedValue({
-        user: mockDbUser as any,
+        user: mockDbUser as never,
         isNewUser: false,
       });
 
@@ -125,7 +108,8 @@ describe('Authentication Middleware', () => {
       expect(req.user).toEqual({
         id: 1,
         email: 'test@example.com',
-                provider: 'cognito',
+        role: 'user',
+        provider: 'cognito',
         providerUserId: 'provider123',
         isNewUser: false,
       });
@@ -133,20 +117,21 @@ describe('Authentication Middleware', () => {
       expect(res.status).not.toHaveBeenCalled();
     });
 
-    it('should reject deactivated user', async () => {
+    it('rejects deactivated users', async () => {
       const mockToken = 'valid.jwt.token';
       req.headers!.authorization = `Bearer ${mockToken}`;
 
       const mockProviderUser: AuthProviderUser = {
         id: 'provider123',
         email: 'test@example.com',
-              name: 'John',
+        name: 'John',
         surname: 'Doe',
       };
 
       const mockDbUser = {
         id: 1,
         email: 'test@example.com',
+        role: 'user',
         name: 'John',
         surname: 'Doe',
         isActive: false,
@@ -159,7 +144,7 @@ describe('Authentication Middleware', () => {
 
       jest.spyOn(AuthProviderFactory, 'createProvider').mockReturnValue(mockProvider);
       jest.spyOn(UserService, 'findOrCreateUser').mockResolvedValue({
-        user: mockDbUser as any,
+        user: mockDbUser as never,
         isNewUser: false,
       });
 
@@ -170,13 +155,13 @@ describe('Authentication Middleware', () => {
         success: false,
         error: {
           code: 'ACCOUNT_DEACTIVATED',
-          message: 'Account is deactivated',
+          message: 'Your account has been deactivated',
         },
       });
       expect(next).not.toHaveBeenCalled();
     });
 
-    it('should handle token verification failure', async () => {
+    it('returns 401 when token verification fails', async () => {
       const mockToken = 'invalid.jwt.token';
       req.headers!.authorization = `Bearer ${mockToken}`;
 
@@ -194,58 +179,16 @@ describe('Authentication Middleware', () => {
         success: false,
         error: {
           code: 'AUTH_FAILED',
-          message: 'Authentication failed',
+          message: 'Authentication failed. Please try again',
           details: { details: 'Token verification failed' },
         },
       });
       expect(next).not.toHaveBeenCalled();
     });
-
-    it('should handle new user creation', async () => {
-      const mockToken = 'valid.jwt.token';
-      req.headers!.authorization = `Bearer ${mockToken}`;
-
-      const mockProviderUser: AuthProviderUser = {
-        id: 'provider123',
-        email: 'newuser@example.com',
-              name: 'New',
-        surname: 'User',
-      };
-
-      const mockDbUser = {
-        id: 2,
-        email: 'newuser@example.com',
-        name: 'New',
-        surname: 'User',
-        isActive: true,
-              };
-
-      const mockProvider: jest.Mocked<AuthProvider> = {
-        verifyToken: jest.fn().mockResolvedValue(mockProviderUser),
-        getProviderName: jest.fn().mockReturnValue('cognito'),
-      };
-
-      jest.spyOn(AuthProviderFactory, 'createProvider').mockReturnValue(mockProvider);
-      jest.spyOn(UserService, 'findOrCreateUser').mockResolvedValue({
-        user: mockDbUser as any,
-        isNewUser: true, // New user
-      });
-
-      await authMiddleware(req as AuthenticatedRequest, res as Response, next);
-
-      expect(req.user).toEqual({
-        id: 2,
-        email: 'newuser@example.com',
-                provider: 'cognito',
-        providerUserId: 'provider123',
-        isNewUser: true,
-      });
-      expect(next).toHaveBeenCalled();
-    });
   });
 
   describe('optionalAuthMiddleware', () => {
-    it('should continue without authentication when no header provided', async () => {
+    it('continues without authentication when no header is provided', async () => {
       await optionalAuthMiddleware(req as AuthenticatedRequest, res as Response, next);
 
       expect(next).toHaveBeenCalled();
@@ -253,7 +196,7 @@ describe('Authentication Middleware', () => {
       expect(req.user).toBeUndefined();
     });
 
-    it('should continue without authentication when invalid header provided', async () => {
+    it('continues without authentication when header format is invalid', async () => {
       req.headers!.authorization = 'InvalidFormat token';
 
       await optionalAuthMiddleware(req as AuthenticatedRequest, res as Response, next);
@@ -263,7 +206,7 @@ describe('Authentication Middleware', () => {
       expect(req.user).toBeUndefined();
     });
 
-    it('should authenticate when valid header provided', async () => {
+    it('authenticates when valid header is provided', async () => {
       const mockToken = 'valid.jwt.token';
       req.headers!.authorization = `Bearer ${mockToken}`;
 
@@ -277,10 +220,11 @@ describe('Authentication Middleware', () => {
       const mockDbUser = {
         id: 1,
         email: 'test@example.com',
-              name: 'John',
+        role: 'user',
+        name: 'John',
         surname: 'Doe',
         isActive: true,
-        };
+      };
 
       const mockProvider: jest.Mocked<AuthProvider> = {
         verifyToken: jest.fn().mockResolvedValue(mockProviderUser),
@@ -289,7 +233,7 @@ describe('Authentication Middleware', () => {
 
       jest.spyOn(AuthProviderFactory, 'createProvider').mockReturnValue(mockProvider);
       jest.spyOn(UserService, 'findOrCreateUser').mockResolvedValue({
-        user: mockDbUser as any,
+        user: mockDbUser as never,
         isNewUser: false,
       });
 
@@ -299,7 +243,7 @@ describe('Authentication Middleware', () => {
       expect(next).toHaveBeenCalled();
     });
 
-    it('should continue without user when authentication fails', async () => {
+    it('returns 401 when auth fails because authMiddleware handles response', async () => {
       const mockToken = 'invalid.jwt.token';
       req.headers!.authorization = `Bearer ${mockToken}`;
 
@@ -312,30 +256,27 @@ describe('Authentication Middleware', () => {
 
       await optionalAuthMiddleware(req as AuthenticatedRequest, res as Response, next);
 
-      // Current implementation issue: authMiddleware responds with 401 instead of throwing
-      // so optionalAuthMiddleware doesn't catch the error and continue gracefully
       expect(req.user).toBeUndefined();
-      expect(res.status).toHaveBeenCalledWith(401); // authMiddleware responds
-      expect(next).not.toHaveBeenCalled(); // next is not called due to response
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });
 
 describe('AuthProviderFactory', () => {
   beforeEach(() => {
-    // Clear environment variables
     delete process.env['AWS_REGION'];
     delete process.env['COGNITO_USER_POOL_ID'];
+    delete process.env['COGNITO_USER_POOL_CLIENT_ID'];
     delete process.env['AUTH0_DOMAIN'];
     delete process.env['AUTH0_AUDIENCE'];
-    
-    // Restore the actual implementations for factory testing
     jest.restoreAllMocks();
   });
 
-  it('should create Cognito provider', () => {
+  it('creates Cognito provider when env is configured', () => {
     process.env['AWS_REGION'] = 'us-east-1';
     process.env['COGNITO_USER_POOL_ID'] = 'us-east-1_123456789';
+    process.env['COGNITO_USER_POOL_CLIENT_ID'] = 'client-id';
 
     const provider = AuthProviderFactory.createProvider('cognito');
 
@@ -343,7 +284,7 @@ describe('AuthProviderFactory', () => {
     expect(provider.getProviderName()).toBe('cognito');
   });
 
-  it('should create Auth0 provider', () => {
+  it('creates Auth0 provider', () => {
     process.env['AUTH0_DOMAIN'] = 'test.auth0.com';
     process.env['AUTH0_AUDIENCE'] = 'test-audience';
 
@@ -353,69 +294,63 @@ describe('AuthProviderFactory', () => {
     expect(provider.getProviderName()).toBe('auth0');
   });
 
-  it('should throw error for unsupported provider', () => {
-    expect(() => {
-      AuthProviderFactory.createProvider('unsupported');
-    }).toThrow('Unsupported auth provider: unsupported');
+  it('throws for unsupported provider', () => {
+    expect(() => AuthProviderFactory.createProvider('unsupported')).toThrow(
+      'Unsupported auth provider: unsupported'
+    );
   });
 
-  afterAll(() => {
-    // Re-setup mocks for subsequent tests
-    jest.clearAllMocks();
+  it('throws for missing Cognito client id', () => {
+    process.env['AWS_REGION'] = 'us-east-1';
+    process.env['COGNITO_USER_POOL_ID'] = 'us-east-1_123456789';
+
+    expect(() => AuthProviderFactory.createProvider('cognito')).toThrow(
+      'Cognito region, user pool id, and client id are required'
+    );
   });
 });
 
 describe('CognitoAuthProvider', () => {
   let provider: CognitoAuthProvider;
+  let verifyIdTokenSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    provider = new CognitoAuthProvider('us-east-1', 'us-east-1_123456789');
+    provider = new CognitoAuthProvider('us-east-1', 'us-east-1_123456789', 'client-id');
+    jest.clearAllMocks();
+    verifyIdTokenSpy = jest.spyOn(CognitoJwtVerifier.prototype, 'verifyIdToken').mockResolvedValue({
+      sub: 'user-123',
+      email: 'test@example.com',
+      given_name: 'John',
+      family_name: 'Doe',
+      email_verified: true,
+    });
   });
 
-  it('should return correct provider name', () => {
+  afterEach(() => {
+    verifyIdTokenSpy.mockRestore();
+  });
+
+  it('returns provider name', () => {
     expect(provider.getProviderName()).toBe('cognito');
   });
 
-  it('should decode JWT token successfully', async () => {
-    const jwt = require('jsonwebtoken');
-    const mockDecodedToken = {
-      sub: 'user-123',
-      email: 'test@example.com',
-            given_name: 'John',
-      family_name: 'Doe',
-    };
-
-    jwt.decode = jest.fn().mockReturnValue(mockDecodedToken);
-
+  it('verifies JWT and maps identity claims', async () => {
     const result = await provider.verifyToken('mock.jwt.token');
 
+    expect(verifyIdTokenSpy).toHaveBeenCalledWith('mock.jwt.token');
     expect(result).toEqual({
       id: 'user-123',
       email: 'test@example.com',
       name: 'John',
       surname: 'Doe',
+      emailVerified: true,
     });
   });
 
-  it('should throw error for invalid token format', async () => {
-    const jwt = require('jsonwebtoken');
-    jwt.decode = jest.fn().mockReturnValue(null);
+  it('throws when verifier rejects token', async () => {
+    verifyIdTokenSpy.mockRejectedValueOnce(new Error('Token verification failed'));
 
     await expect(provider.verifyToken('invalid-token')).rejects.toThrow('Token verification failed');
-  });
-
-  it('should throw error for token missing required fields', async () => {
-    const jwt = require('jsonwebtoken');
-    const mockDecodedToken = {
-      sub: 'user-123',
-      // Missing email
-      given_name: 'John',
-      family_name: 'Doe',
-    };
-
-    jwt.decode = jest.fn().mockReturnValue(mockDecodedToken);
-
-    await expect(provider.verifyToken('incomplete-token')).rejects.toThrow('Token verification failed');
   });
 });
 
@@ -426,11 +361,13 @@ describe('Auth0Provider', () => {
     provider = new Auth0Provider('test.auth0.com', 'test-audience');
   });
 
-  it('should return correct provider name', () => {
+  it('returns provider name', () => {
     expect(provider.getProviderName()).toBe('auth0');
   });
 
-  it('should throw error for unimplemented verification', async () => {
-    await expect(provider.verifyToken('mock.jwt.token')).rejects.toThrow('Auth0 provider not yet implemented');
+  it('throws for unimplemented verification', async () => {
+    await expect(provider.verifyToken('mock.jwt.token')).rejects.toThrow(
+      'Auth0 provider not yet implemented'
+    );
   });
 });

@@ -9,7 +9,6 @@ import {
   ListOptions,
   PaginatedResult as AdapterPaginatedResult,
   QueryOptions,
-  SearchFilters,
 } from '../interfaces/adapters/RepositoryAdapter';
 
 export type { UserEntity };
@@ -18,7 +17,7 @@ export interface UserQueryOptions extends QueryOptions {
   transaction?: import('sequelize').Transaction | null;
 }
 
-export interface UserListFilters extends SearchFilters {
+export interface UserListFilters {
   email?: string;
   role?: string;
   isActive?: boolean;

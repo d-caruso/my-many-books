@@ -3,7 +3,7 @@
 // Settings Service - Manages application settings with auto-sync
 // ================================================================
 
-import { AppSetting, AppSettingAttributes } from '../models/AppSetting';
+import { AppSetting, AppSettingCreationAttributes } from '../models/AppSetting';
 import { getAllSettingDefinitions } from '@my-many-books/shared-types';
 import { getLogger } from '@my-many-books/shared-logging';
 
@@ -71,7 +71,7 @@ export class SettingsService {
         getLogger().debug({ key: def.key }, 'Updated existing setting');
       } else {
         // New setting - create it
-        await AppSetting.create({
+        const createPayload: AppSettingCreationAttributes = {
           key: def.key,
           value: JSON.stringify(def.defaultValue),
           category: def.category,
@@ -80,7 +80,8 @@ export class SettingsService {
           description: def.description,
           active: true,
           deleted: false,
-        } as AppSettingAttributes);
+        };
+        await AppSetting.create(createPayload);
         getLogger().info({ key: def.key }, 'Created new setting');
       }
     }

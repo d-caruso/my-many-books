@@ -5,6 +5,7 @@
 
 // Mock dependencies BEFORE imports
 jest.mock('@aws-sdk/client-cognito-identity-provider');
+jest.mock('axios');
 jest.mock('../../src/config/database', () => ({
   default: {
     getInstance: jest.fn().mockReturnValue({
@@ -46,16 +47,42 @@ jest.mock('../../src/middleware/auth', () => {
     },
   };
 });
-jest.mock('jsonwebtoken');
 
 import request from 'supertest';
+import crypto from 'crypto';
+import axios from 'axios';
 import app from '../../src/app';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { UserService } from '../../src/middleware/auth';
 import { BASE_PATH } from '../utils/apiBasePath';
+import * as googleOAuth from '../../src/services/auth/googleOAuth';
 
 const mockCognitoClient = CognitoIdentityProviderClient as jest.MockedClass<
   typeof CognitoIdentityProviderClient
 >;
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+const verifyCognitoIdTokenSpy = jest.spyOn(googleOAuth, 'verifyCognitoIdToken');
+
+const buildOAuthState = (platform: 'web' | 'mobile'): string => {
+  const payload = Buffer.from(
+    JSON.stringify({
+      platform,
+      nonce: 'integration-nonce',
+      ts: Date.now(),
+    }),
+    'utf8'
+  ).toString('base64url');
+
+  const signature = crypto
+    .createHmac('sha256', 'local-google-oauth-state')
+    .update(payload)
+    .digest('base64url');
+
+  return `${payload}.${signature}`;
+};
+
+const TEST_PKCE_VERIFIER =
+  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~';
 
 describe('Authentication Flow Integration', () => {
   let consoleErrorSpy: jest.SpyInstance;
@@ -73,6 +100,19 @@ describe('Authentication Flow Integration', () => {
     jest.clearAllMocks();
     mockSend = jest.fn();
     mockCognitoClient.prototype.send = mockSend;
+    mockedAxios.post.mockReset();
+    verifyCognitoIdTokenSpy.mockResolvedValue({
+      sub: 'cognito-user-123',
+      email: 'test@example.com',
+      given_name: 'Test',
+      family_name: 'User',
+      email_verified: true,
+    });
+
+    process.env['COGNITO_DOMAIN'] = 'https://auth.example.com';
+    process.env['COGNITO_USER_POOL_CLIENT_ID'] = 'test-client-id';
+    process.env['FRONTEND_URL'] = 'http://localhost:3000';
+    process.env['GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX'] = 'my-many-books://';
   });
 
   describe('Complete auth flow: login → authenticated request → refresh → logout', () => {
@@ -82,16 +122,6 @@ describe('Authentication Flow Integration', () => {
       const mockRefreshToken = 'mock.refresh.token';
       const newAccessToken = 'new.access.token';
       const newIdToken = 'new.id.token';
-
-      // Mock jwt decode
-      const jwt = require('jsonwebtoken');
-      jwt.decode = jest.fn().mockReturnValue({
-        sub: 'cognito-user-123',
-        email: 'test@example.com',
-      role: 'user',
-        given_name: 'Test',
-        family_name: 'User',
-      });
 
       // Step 1: Login
       mockSend.mockResolvedValueOnce({
@@ -252,14 +282,12 @@ describe('Authentication Flow Integration', () => {
       const mockAccessToken = 'session.access.token';
       const mockRefreshToken = 'session.refresh.token';
 
-      // Mock jwt decode
-      const jwt = require('jsonwebtoken');
-      jwt.decode = jest.fn().mockReturnValue({
+      verifyCognitoIdTokenSpy.mockResolvedValueOnce({
         sub: 'user-session-123',
         email: 'session@example.com',
-      role: 'user',
         given_name: 'Session',
         family_name: 'User',
+        email_verified: true,
       });
 
       mockSend.mockResolvedValueOnce({
@@ -294,6 +322,103 @@ describe('Authentication Flow Integration', () => {
         expect(refreshResponse.status).toBe(200);
         expect(refreshResponse.body).toHaveProperty('data.accessToken');
       }
+    });
+  });
+
+  describe('Google OAuth flow', () => {
+    it('should complete mobile OAuth exchange', async () => {
+      verifyCognitoIdTokenSpy.mockResolvedValueOnce({
+        sub: 'google-sub-001',
+        email: 'google@example.com',
+        email_verified: true,
+        given_name: 'Google',
+        family_name: 'User',
+      });
+
+      mockedAxios.post.mockResolvedValue({
+        data: {
+          access_token: 'google-access-token',
+          id_token: 'google-id-token',
+          refresh_token: 'google-refresh-token',
+          expires_in: 3600,
+          token_type: 'Bearer',
+        },
+      } as never);
+
+      const response = await request(app).post(`${BASE_PATH}/auth/google/mobile/exchange`).send({
+        code: 'oauth-code',
+        state: buildOAuthState('mobile'),
+        redirectUri: 'my-many-books://auth',
+        codeVerifier: TEST_PKCE_VERIFIER,
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('accessToken', 'google-access-token');
+      expect(response.body).toHaveProperty('idToken', 'google-id-token');
+      expect(response.body).toHaveProperty('user');
+      expect(UserService.findOrCreateUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'google-sub-001',
+          email: 'google@example.com',
+        }),
+        'google'
+      );
+    });
+
+    it('should pass Google provider subject for account linking when identities are present', async () => {
+      verifyCognitoIdTokenSpy.mockResolvedValueOnce({
+        sub: 'cognito-sub-001',
+        email: 'google.link@example.com',
+        email_verified: true,
+        given_name: 'Google',
+        family_name: 'Linked',
+        identities: [
+          {
+            providerName: 'Google',
+            providerType: 'Google',
+            userId: 'google-provider-sub-001',
+          },
+        ],
+      });
+
+      mockedAxios.post.mockResolvedValue({
+        data: {
+          access_token: 'google-access-token',
+          id_token: 'google-id-token',
+          refresh_token: 'google-refresh-token',
+          expires_in: 3600,
+          token_type: 'Bearer',
+        },
+      } as never);
+
+      const response = await request(app).post(`${BASE_PATH}/auth/google/mobile/exchange`).send({
+        code: 'oauth-code',
+        state: buildOAuthState('mobile'),
+        redirectUri: 'my-many-books://auth',
+        codeVerifier: TEST_PKCE_VERIFIER,
+      });
+
+      expect(response.status).toBe(200);
+      expect(UserService.findOrCreateUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'cognito-sub-001',
+          providerUserId: 'google-provider-sub-001',
+          email: 'google.link@example.com',
+        }),
+        'google'
+      );
+    });
+
+    it('should reject mobile OAuth exchange with invalid state', async () => {
+      const response = await request(app).post(`${BASE_PATH}/auth/google/mobile/exchange`).send({
+        code: 'oauth-code',
+        state: 'invalid-state',
+        redirectUri: 'my-many-books://auth',
+        codeVerifier: TEST_PKCE_VERIFIER,
+      });
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty('error', 'Invalid OAuth state');
     });
   });
 });

@@ -18,6 +18,7 @@ import { AppSetting } from './AppSetting';
 import { SearchPinnedResult } from './SearchPinnedResult';
 import { MobileAnalyticsEvent } from './MobileAnalyticsEvent';
 import { MobileHookActionExecution } from './MobileHookActionExecution';
+import { UserAuthIdentity } from './UserAuthIdentity';
 import { getLogger } from '@my-many-books/shared-logging';
 
 export * from './interfaces/ModelInterfaces';
@@ -37,6 +38,7 @@ export * from './AppSetting';
 export * from './SearchPinnedResult';
 export * from './MobileAnalyticsEvent';
 export * from './MobileHookActionExecution';
+export * from './UserAuthIdentity';
 
 export class ModelManager {
   private static sequelize: Sequelize | null = null;
@@ -64,6 +66,7 @@ export class ModelManager {
     SearchPinnedResult.initModel(sequelize);
     MobileAnalyticsEvent.initModel(sequelize);
     MobileHookActionExecution.initModel(sequelize);
+    UserAuthIdentity.initModel(sequelize);
 
     // Register models for associations
     ModelAssociations.registerModel('User', User);
@@ -80,6 +83,7 @@ export class ModelManager {
     ModelAssociations.registerModel('SearchPinnedResult', SearchPinnedResult);
     ModelAssociations.registerModel('MobileAnalyticsEvent', MobileAnalyticsEvent);
     ModelAssociations.registerModel('MobileHookActionExecution', MobileHookActionExecution);
+    ModelAssociations.registerModel('UserAuthIdentity', UserAuthIdentity);
 
     // Define associations
     ModelAssociations.defineAssociations();
@@ -130,6 +134,7 @@ export class ModelManager {
 	    SearchPinnedResult: typeof SearchPinnedResult;
 	    MobileAnalyticsEvent: typeof MobileAnalyticsEvent;
 	    MobileHookActionExecution: typeof MobileHookActionExecution;
+	    UserAuthIdentity: typeof UserAuthIdentity;
 	  } {
 	    return {
 	      User,
@@ -146,6 +151,7 @@ export class ModelManager {
 	      SearchPinnedResult,
 	      MobileAnalyticsEvent,
 	      MobileHookActionExecution,
+	      UserAuthIdentity,
 	    };
 	  }
 	}

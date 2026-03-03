@@ -47,10 +47,18 @@ jest.mock('../../src/middleware/auth', () => {
   };
 });
 jest.mock('jsonwebtoken');
+jest.mock('../../src/services/auth/googleOAuth', () => {
+  const actual = jest.requireActual('../../src/services/auth/googleOAuth');
+  return {
+    ...actual,
+    verifyCognitoIdToken: jest.fn(),
+  };
+});
 
 import request from 'supertest';
 import app from '../../src/app';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { verifyCognitoIdToken } from '../../src/services/auth/googleOAuth';
 import { BASE_PATH } from '../utils/apiBasePath';
 
 const mockCognitoClient = CognitoIdentityProviderClient as jest.MockedClass<
@@ -73,6 +81,13 @@ describe('CSRF Protection Tests', () => {
     jest.clearAllMocks();
     mockSend = jest.fn();
     mockCognitoClient.prototype.send = mockSend;
+
+    (verifyCognitoIdToken as jest.Mock).mockResolvedValue({
+      sub: 'cognito-user-123',
+      email: 'test@example.com',
+      given_name: 'Test',
+      family_name: 'User',
+    });
   });
 
   describe('SameSite cookie protection', () => {
