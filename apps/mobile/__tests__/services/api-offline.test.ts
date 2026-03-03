@@ -25,7 +25,6 @@ describe('API Offline Error Handling', () => {
     it('should export userAPI', () => {
       expect(apiModule.userAPI).toBeDefined();
       expect(typeof apiModule.userAPI.getCurrentUser).toBe('function');
-      expect(typeof apiModule.userAPI.login).toBe('function');
     });
   });
 

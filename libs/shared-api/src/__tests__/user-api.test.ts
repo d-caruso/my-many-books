@@ -1,7 +1,7 @@
 import { UserApi } from '../user-api';
 import { MockHttpClient } from '../__mocks__/MockHttpClient';
 import { ZodError } from 'zod';
-import { AuthSession, RefreshTokenResponse, UserProfile } from '@my-many-books/shared-types';
+import { UserProfile } from '@my-many-books/shared-types';
 
 describe('UserApi', () => {
   let mockHttpClient: MockHttpClient;
@@ -17,21 +17,6 @@ describe('UserApi', () => {
     role: 'user',
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-02T00:00:00.000Z',
-  };
-
-  const mockAuthSession: AuthSession = {
-    user: {
-      userId: 1,
-      email: 'user@example.com',
-      provider: 'cognito',
-      providerUserId: 'abc123',
-      isNewUser: false,
-    },
-    token: 'jwt-token',
-  };
-
-  const mockRefreshToken: RefreshTokenResponse = {
-    token: 'refreshed-jwt-token',
   };
 
   beforeEach(() => {
@@ -133,97 +118,4 @@ describe('UserApi', () => {
     });
   });
 
-  describe('login', () => {
-    it('should login with email and password', async () => {
-      mockHttpClient.setResponse('/auth/login', {
-        data: mockAuthSession,
-        status: 200,
-      });
-
-      const result = await userApi.login('user@example.com', 'password123');
-
-      expect(result).toEqual(mockAuthSession);
-      const lastRequest = mockHttpClient.getLastRequest();
-      expect(lastRequest?.method).toBe('POST');
-      expect(lastRequest?.url).toContain('/auth/login');
-      expect(lastRequest?.data).toEqual({
-        email: 'user@example.com',
-        password: 'password123',
-      });
-    });
-
-    it('should validate response against AuthSessionSchema', async () => {
-      mockHttpClient.setResponse('/auth/login', {
-        data: { token: '' },
-        status: 200,
-      });
-
-      await expect(userApi.login('user@example.com', 'password123')).rejects.toThrow(
-        ZodError
-      );
-    });
-  });
-
-  describe('register', () => {
-    it('should register a new user', async () => {
-      const registerData = {
-        email: 'new@example.com',
-        password: 'password123',
-        name: 'New',
-        surname: 'User',
-      };
-      mockHttpClient.setResponse('/auth/register', {
-        data: mockAuthSession,
-        status: 201,
-      });
-
-      const result = await userApi.register(registerData);
-
-      expect(result).toEqual(mockAuthSession);
-      const lastRequest = mockHttpClient.getLastRequest();
-      expect(lastRequest?.method).toBe('POST');
-      expect(lastRequest?.url).toContain('/auth/register');
-      expect(lastRequest?.data).toEqual(registerData);
-    });
-  });
-
-  describe('logout', () => {
-    it('should logout via POST', async () => {
-      mockHttpClient.setResponse('/auth/logout', {
-        data: undefined,
-        status: 204,
-      });
-
-      await userApi.logout();
-
-      const lastRequest = mockHttpClient.getLastRequest();
-      expect(lastRequest?.method).toBe('POST');
-      expect(lastRequest?.url).toContain('/auth/logout');
-    });
-  });
-
-  describe('refreshToken', () => {
-    it('should refresh token via POST', async () => {
-      mockHttpClient.setResponse('/auth/refresh', {
-        data: mockRefreshToken,
-        status: 200,
-      });
-
-      const result = await userApi.refreshToken();
-
-      expect(result).toEqual(mockRefreshToken);
-      const lastRequest = mockHttpClient.getLastRequest();
-      expect(lastRequest?.method).toBe('POST');
-      expect(lastRequest?.url).toContain('/auth/refresh');
-    });
-
-    it('should validate response against RefreshTokenSchema', async () => {
-      mockHttpClient.setResponse('/auth/refresh', {
-        data: { token: '' },
-        status: 200,
-      });
-
-      await expect(userApi.refreshToken()).rejects.toThrow(ZodError);
-    });
-  });
 });

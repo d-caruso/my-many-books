@@ -47,15 +47,3 @@ export const AuthUserSchema = z.object({
 
 export type AuthUser = z.infer<typeof AuthUserSchema>;
 
-export const AuthSessionSchema = z.object({
-  user: AuthUserSchema,
-  token: z.string().min(1),
-});
-
-export type AuthSession = z.infer<typeof AuthSessionSchema>;
-
-export const RefreshTokenSchema = z.object({
-  token: z.string().min(1),
-});
-
-export type RefreshTokenResponse = z.infer<typeof RefreshTokenSchema>;

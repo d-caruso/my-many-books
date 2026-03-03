@@ -412,10 +412,6 @@ export const userAPI = {
   getCurrentUser: apiClient.users.getCurrentUser.bind(apiClient.users),
   updateProfile: apiClient.users.updateProfile.bind(apiClient.users),
   deleteAccount: apiClient.users.deleteAccount.bind(apiClient.users),
-  login: apiClient.users.login.bind(apiClient.users),
-  register: apiClient.users.register.bind(apiClient.users),
-  logout: apiClient.users.logout.bind(apiClient.users),
-  refreshToken: apiClient.users.refreshToken.bind(apiClient.users),
 };
 
 export const authorAPI = {
