@@ -19,6 +19,7 @@ import { AppSetting } from '../../../src/models/AppSetting';
 import { SearchPinnedResult } from '../../../src/models/SearchPinnedResult';
 import { MobileAnalyticsEvent } from '../../../src/models/MobileAnalyticsEvent';
 import { MobileHookActionExecution } from '../../../src/models/MobileHookActionExecution';
+import { UserAuthIdentity } from '../../../src/models/UserAuthIdentity';
 import { getLogger } from '@my-many-books/shared-logging';
 
 // Mock all dependencies
@@ -37,6 +38,7 @@ jest.mock('../../../src/models/AppSetting');
 jest.mock('../../../src/models/SearchPinnedResult');
 jest.mock('../../../src/models/MobileAnalyticsEvent');
 jest.mock('../../../src/models/MobileHookActionExecution');
+jest.mock('../../../src/models/UserAuthIdentity');
 jest.mock('@my-many-books/shared-logging', () => ({
   getLogger: jest.fn(),
 }));
@@ -77,6 +79,7 @@ describe('ModelManager', () => {
     (SearchPinnedResult.initModel as jest.Mock) = jest.fn();
     (MobileAnalyticsEvent.initModel as jest.Mock) = jest.fn();
     (MobileHookActionExecution.initModel as jest.Mock) = jest.fn();
+    (UserAuthIdentity.initModel as jest.Mock) = jest.fn();
 
     // Mock ModelAssociations methods
     (ModelAssociations.registerModel as jest.Mock) = jest.fn();
@@ -103,8 +106,9 @@ describe('ModelManager', () => {
       expect(MobileAnalyticsEvent.initModel).toHaveBeenCalledWith(mockSequelize);
 
       expect(MobileHookActionExecution.initModel).toHaveBeenCalledWith(mockSequelize);
+      expect(UserAuthIdentity.initModel).toHaveBeenCalledWith(mockSequelize);
 
-      expect(ModelAssociations.registerModel).toHaveBeenCalledTimes(14);
+      expect(ModelAssociations.registerModel).toHaveBeenCalledTimes(15);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('User', User);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('Author', Author);
       expect(ModelAssociations.registerModel).toHaveBeenCalledWith('Category', Category);
@@ -122,6 +126,7 @@ describe('ModelManager', () => {
         'MobileHookActionExecution',
         MobileHookActionExecution
       );
+      expect(ModelAssociations.registerModel).toHaveBeenCalledWith('UserAuthIdentity', UserAuthIdentity);
 
       expect(ModelAssociations.defineAssociations).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith('Model manager initialized with all models and associations');
@@ -229,7 +234,8 @@ describe('ModelManager', () => {
         AppSetting,
         SearchPinnedResult,
         MobileAnalyticsEvent,
-        MobileHookActionExecution
+        MobileHookActionExecution,
+        UserAuthIdentity,
       });
     });
 
