@@ -118,50 +118,31 @@ export class UserService {
     providerUserId: string,
     emailSnapshot: string
   ): Promise<'linked' | 'conflict'> {
-    const [identity, created] = await UserAuthIdentity.findOrCreate({
-      where: {
-        provider,
-        providerUserId,
-      },
-      defaults: {
-        userId,
-        provider,
-        providerUserId,
-        emailSnapshot,
-      },
-    });
-
-    if (!created && identity.userId !== userId) {
-      return 'conflict';
-    }
-
-    const existingProviderLink = await UserAuthIdentity.findOne({
-      where: {
-        userId,
-        provider,
-      },
-    });
-
-    if (!existingProviderLink) {
-      await UserAuthIdentity.create({
-        userId,
-        provider,
-        providerUserId,
-        emailSnapshot,
+    try {
+      const [identity, created] = await UserAuthIdentity.findOrCreate({
+        where: { provider, providerUserId },
+        defaults: { userId, provider, providerUserId, emailSnapshot },
       });
+
+      if (!created && identity.userId !== userId) {
+        return 'conflict';
+      }
+
+      if (!created && identity.emailSnapshot !== emailSnapshot) {
+        identity.emailSnapshot = emailSnapshot;
+        await identity.save();
+      }
+
       return 'linked';
+    } catch (error: unknown) {
+      // Unique constraint on (user_id, provider): the user already has a different
+      // providerUserId linked for this provider. Return the disposition of the existing link.
+      const existing = await UserAuthIdentity.findOne({ where: { userId, provider } });
+      if (existing) {
+        return existing.providerUserId !== providerUserId ? 'conflict' : 'linked';
+      }
+      throw error;
     }
-
-    if (
-      existingProviderLink.providerUserId !== providerUserId ||
-      existingProviderLink.emailSnapshot !== emailSnapshot
-    ) {
-      existingProviderLink.providerUserId = providerUserId;
-      existingProviderLink.emailSnapshot = emailSnapshot;
-      await existingProviderLink.save();
-    }
-
-    return 'linked';
   }
 
   async findOrCreateUser(

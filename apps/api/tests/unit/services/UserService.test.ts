@@ -94,14 +94,11 @@ describe('UserService', () => {
     });
 
     it('links provider identity when existing user is matched by email', async () => {
-      userAuthIdentityModel.findOne
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(null);
+      userAuthIdentityModel.findOne.mockResolvedValueOnce(null);
       userAuthIdentityModel.findOrCreate.mockResolvedValue([
         { userId: 1, providerUserId: 'google-sub-001', emailSnapshot: 'existing@example.com' },
         true,
       ]);
-      userAuthIdentityModel.create.mockResolvedValue({ id: 10 });
       userRepository.findByEmail.mockResolvedValue({
         id: 1,
         email: 'existing@example.com',
@@ -122,12 +119,30 @@ describe('UserService', () => {
           emailSnapshot: 'existing@example.com',
         },
       });
-      expect(userAuthIdentityModel.create).toHaveBeenCalledWith({
-        userId: 1,
-        provider: 'google',
-        providerUserId: 'google-sub-001',
-        emailSnapshot: 'existing@example.com',
-      });
+      expect(userAuthIdentityModel.create).not.toHaveBeenCalled();
+    });
+
+    it('handles unique constraint violation when user already has a different provider link', async () => {
+      userAuthIdentityModel.findOne
+        .mockResolvedValueOnce(null)                                           // findUserByLinkedIdentity (initial)
+        .mockResolvedValueOnce({ userId: 1, providerUserId: 'google-sub-A' }) // catch: findOne({userId, provider})
+        .mockResolvedValueOnce(null);                                          // findUserByLinkedIdentity (conflict fallback)
+      userAuthIdentityModel.findOrCreate.mockRejectedValue(
+        new Error('Unique constraint violation on user_id+provider')
+      );
+      userRepository.findByEmail.mockResolvedValue({
+        id: 1,
+        email: 'existing@example.com',
+      } as any);
+
+      const result = await service.findOrCreateUser(
+        { id: 'google-sub-B', email: 'existing@example.com' },
+        'google'
+      );
+
+      expect(result.isNewUser).toBe(false);
+      expect(result.user).toMatchObject({ id: 1, email: 'existing@example.com' });
+      expect(userAuthIdentityModel.create).not.toHaveBeenCalled();
     });
 
     it('returns provider-linked user when link creation conflicts with another user', async () => {
@@ -162,9 +177,7 @@ describe('UserService', () => {
         userId: 99,
         destroy: jest.fn().mockResolvedValue(undefined),
       };
-      userAuthIdentityModel.findOne
-        .mockResolvedValueOnce(staleIdentity)
-        .mockResolvedValueOnce(null);
+      userAuthIdentityModel.findOne.mockResolvedValueOnce(staleIdentity);
       userRepository.findById.mockResolvedValue(null);
       userRepository.findByEmail.mockResolvedValue({
         id: 1,
@@ -174,7 +187,6 @@ describe('UserService', () => {
         { userId: 1, providerUserId: 'google-sub-001', emailSnapshot: 'existing@example.com' },
         true,
       ]);
-      userAuthIdentityModel.create.mockResolvedValue({ id: 10 });
 
       const result = await service.findOrCreateUser(
         { id: 'google-sub-001', email: 'existing@example.com' },

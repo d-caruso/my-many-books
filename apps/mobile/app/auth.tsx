@@ -36,7 +36,7 @@ const getFirstParam = (value: string | string[] | undefined): string | undefined
 
 const buildMobileRedirectUri = (): string => Linking.createURL('auth');
 const GOOGLE_PKCE_VERIFIER_STORAGE_KEY = 'auth.google.pkce.verifier';
-const PKCE_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+const PKCE_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
 const generatePkceCodeVerifier = (): string => {
   const cryptoApi = (globalThis as unknown as {
