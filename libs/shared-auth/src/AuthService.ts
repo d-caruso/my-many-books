@@ -123,11 +123,12 @@ export class AuthService {
       });
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error || 'Google login failed');
+        const errorPayload = await response.json().catch(() => undefined);
+        throw new Error(this.extractErrorMessage(errorPayload, 'Google login failed'));
       }
 
-      const data = await response.json() as LoginResponse;
+      const payload = await response.json() as unknown;
+      const { data } = this.unwrapEnvelopeData<LoginResponse>(payload);
       return await this.applyLoginResponse(data);
     } catch (error) {
       console.error('Google login error:', error);

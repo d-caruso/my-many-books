@@ -353,9 +353,10 @@ describe('Authentication Flow Integration', () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('accessToken', 'google-access-token');
-      expect(response.body).toHaveProperty('idToken', 'google-id-token');
-      expect(response.body).toHaveProperty('user');
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('accessToken', 'google-access-token');
+      expect(response.body.data).toHaveProperty('idToken', 'google-id-token');
+      expect(response.body.data).toHaveProperty('user');
       expect(UserService.findOrCreateUser).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'google-sub-001',
@@ -418,7 +419,8 @@ describe('Authentication Flow Integration', () => {
       });
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'Invalid OAuth state');
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('AUTH_TOKEN_INVALID');
     });
   });
 });

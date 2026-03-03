@@ -271,10 +271,11 @@ describe('Auth Routes', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('authorizeUrl');
-      expect(response.body.authorizeUrl).toContain('identity_provider=Google');
-      expect(response.body.authorizeUrl).toContain('code_challenge=');
-      expect(response.body).toHaveProperty('state');
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('authorizeUrl');
+      expect(response.body.data.authorizeUrl).toContain('identity_provider=Google');
+      expect(response.body.data.authorizeUrl).toContain('code_challenge=');
+      expect(response.body.data).toHaveProperty('state');
     });
 
     it(`POST ${BASE_PATH}/auth/google/mobile/start should return authorize URL`, async () => {
@@ -284,10 +285,11 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('authorizeUrl');
-      expect(response.body.authorizeUrl).toContain('identity_provider=Google');
-      expect(response.body.authorizeUrl).toContain('code_challenge=');
-      expect(response.body).toHaveProperty('state');
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('authorizeUrl');
+      expect(response.body.data.authorizeUrl).toContain('identity_provider=Google');
+      expect(response.body.data.authorizeUrl).toContain('code_challenge=');
+      expect(response.body.data).toHaveProperty('state');
     });
 
     it(`POST ${BASE_PATH}/auth/google/mobile/start should reject redirect URI in production when allowlist is missing`, async () => {
@@ -300,7 +302,8 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body).toEqual({ error: 'Invalid mobile redirect URI' });
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('INVALID_REQUEST_BODY');
     });
 
     it(`POST ${BASE_PATH}/auth/google/mobile/start should allow redirect URI in production when explicitly allowlisted`, async () => {
@@ -314,7 +317,8 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('authorizeUrl');
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('authorizeUrl');
     });
 
     it(`GET ${BASE_PATH}/auth/google/start should redirect for web`, async () => {
@@ -354,7 +358,8 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual({
         accessToken: 'google-access-token',
         idToken: 'google-id-token',
         expiresIn: 3600,
@@ -380,10 +385,8 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty(
-        'error',
-        'code, state, redirectUri, and codeVerifier are required'
-      );
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('INVALID_REQUEST_BODY');
     });
 
     it(`GET ${BASE_PATH}/auth/google/callback should redirect to web auth on success`, async () => {

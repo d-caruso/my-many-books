@@ -181,24 +181,24 @@ router.get('/google/start', (req: Request, res: Response): void => {
     const { platform = 'web', redirectUri, codeChallenge } = req.query as GoogleStartQuery;
 
     if (platform !== 'web' && platform !== 'mobile') {
-      res.status(400).json({ error: 'Invalid platform. Expected web or mobile.' });
+      sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'Invalid platform. Expected web or mobile.');
       return;
     }
 
     const state = createGoogleOAuthState(platform);
     if (platform === 'mobile') {
       if (!redirectUri) {
-        res.status(400).json({ error: 'redirectUri is required for mobile Google login' });
+        sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'redirectUri is required for mobile Google login');
         return;
       }
 
       if (!isAllowedMobileRedirectUri(redirectUri)) {
-        res.status(400).json({ error: 'Invalid mobile redirect URI' });
+        sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'Invalid mobile redirect URI');
         return;
       }
 
       if (!codeChallenge || !isValidPkceCodeChallenge(codeChallenge)) {
-        res.status(400).json({ error: 'A valid PKCE codeChallenge is required for mobile login' });
+        sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'A valid PKCE codeChallenge is required for mobile login');
         return;
       }
 
@@ -206,7 +206,7 @@ router.get('/google/start', (req: Request, res: Response): void => {
         codeChallenge,
       });
 
-      res.json({ authorizeUrl, state });
+      sendSuccess(res, 200, { authorizeUrl, state });
       return;
     }
 
@@ -224,7 +224,7 @@ router.get('/google/start', (req: Request, res: Response): void => {
       { err: error instanceof Error ? error : new Error(String(error)) },
       'Google OAuth start error:'
     );
-    res.status(500).json({ error: 'Failed to start Google OAuth flow' });
+    sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Failed to start Google OAuth flow');
   }
 });
 
@@ -233,12 +233,12 @@ router.post('/google/mobile/start', (req: Request, res: Response): void => {
     const { redirectUri, codeVerifier } = req.body as GoogleMobileStartRequest;
 
     if (!redirectUri || !isAllowedMobileRedirectUri(redirectUri)) {
-      res.status(400).json({ error: 'Invalid mobile redirect URI' });
+      sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'Invalid mobile redirect URI');
       return;
     }
 
     if (!codeVerifier || !isValidPkceCodeVerifier(codeVerifier)) {
-      res.status(400).json({ error: 'Invalid PKCE codeVerifier' });
+      sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'Invalid PKCE codeVerifier');
       return;
     }
 
@@ -248,13 +248,13 @@ router.post('/google/mobile/start', (req: Request, res: Response): void => {
       codeChallenge,
     });
 
-    res.json({ authorizeUrl, state });
+    sendSuccess(res, 200, { authorizeUrl, state });
   } catch (error: unknown) {
     getLogger().error(
       { err: error instanceof Error ? error : new Error(String(error)) },
       'Google OAuth mobile start error:'
     );
-    res.status(500).json({ error: 'Failed to start Google OAuth flow' });
+    sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Failed to start Google OAuth flow');
   }
 });
 
@@ -318,22 +318,22 @@ router.post('/google/mobile/exchange', async (req: Request, res: Response): Prom
   const { code, state, redirectUri, codeVerifier } = req.body as GoogleMobileExchangeRequest;
 
   if (!code || !state || !redirectUri || !codeVerifier) {
-    res.status(400).json({ error: 'code, state, redirectUri, and codeVerifier are required' });
+    sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'code, state, redirectUri, and codeVerifier are required');
     return;
   }
 
   if (!isAllowedMobileRedirectUri(redirectUri)) {
-    res.status(400).json({ error: 'Invalid mobile redirect URI' });
+    sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'Invalid mobile redirect URI');
     return;
   }
 
   if (!isValidGoogleOAuthState(state, 'mobile')) {
-    res.status(401).json({ error: 'Invalid OAuth state' });
+    sendError(res, 401, ERROR_CODES.AUTH_TOKEN_INVALID, 'Invalid OAuth state');
     return;
   }
 
   if (!isValidPkceCodeVerifier(codeVerifier)) {
-    res.status(400).json({ error: 'Invalid PKCE codeVerifier' });
+    sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'Invalid PKCE codeVerifier');
     return;
   }
 
@@ -347,7 +347,7 @@ router.post('/google/mobile/exchange', async (req: Request, res: Response): Prom
       'Google OAuth login successful (mobile)'
     );
 
-    res.json(session);
+    sendSuccess(res, 200, session);
   } catch (error: unknown) {
     const axiosError = error as AxiosError<{ error?: string; error_description?: string }>;
     const reason =
@@ -363,7 +363,7 @@ router.post('/google/mobile/exchange', async (req: Request, res: Response): Prom
       'Google OAuth mobile exchange error:'
     );
 
-    res.status(401).json({ error: 'Google authentication failed', details: reason });
+    sendError(res, 401, ERROR_CODES.AUTH_FAILED, 'Google authentication failed', { reason });
   }
 });
 
