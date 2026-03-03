@@ -4,6 +4,7 @@
 
 import Joi from 'joi';
 import { getLogger } from '@my-many-books/shared-logging';
+import { i18n } from '@my-many-books/shared-i18n';
 import { ERROR_CODES, createErrorResponse, type ErrorCode } from '@my-many-books/shared-types';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { verify, JwtPayload, Algorithm } from 'jsonwebtoken';
@@ -378,6 +379,7 @@ export const withCognitoAuth = (
     const authResult = authenticator.authenticate(event);
 
     if (!authResult.isAuthenticated) {
+      const errorCode = authResult.errorCode ?? ERROR_CODES.AUTH_FAILED;
       return {
         statusCode: authResult.statusCode || 401,
         headers: {
@@ -385,8 +387,8 @@ export const withCognitoAuth = (
           'Access-Control-Allow-Origin': '*',
         },
         body: JSON.stringify(createErrorResponse(
-          authResult.errorCode || ERROR_CODES.AUTH_FAILED,
-          authResult.error || 'Authentication failed'
+          errorCode,
+          i18n.isInitialized ? i18n.t(`errors:${errorCode}`) : (authResult.error ?? 'Authentication failed')
         )),
       };
     }
@@ -406,7 +408,7 @@ export const withCognitoAuth = (
           },
           body: JSON.stringify(createErrorResponse(
             ERROR_CODES.INSUFFICIENT_PERMISSIONS,
-            'Insufficient permissions',
+            i18n.isInitialized ? i18n.t('errors:INSUFFICIENT_PERMISSIONS') : 'Insufficient permissions',
             { requiredPermissions }
           )),
         };
