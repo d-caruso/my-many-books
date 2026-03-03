@@ -89,7 +89,7 @@ export class CognitoAuthenticator {
   private config: CognitoConfig;
   private publicKeys: Map<string, string> = new Map();
 
-  private readonly cognitoPayloadSchema = Joi.object<CognitoJwtPayload>({
+  private readonly cognitoPayloadSchema: Joi.ObjectSchema<CognitoJwtPayload> = Joi.object<CognitoJwtPayload>({
     sub: Joi.string().required(),
     email: Joi.string().default(''),
     email_verified: Joi.boolean().default(false),
@@ -289,11 +289,12 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
   }
 
   private extractUserFromToken(payload: JwtPayload): CognitoUser {
-    const { error, value } = this.cognitoPayloadSchema.validate(payload);
-    if (error) {
-      throw new Error(`Invalid Cognito token payload: ${error.message}`);
+    const result = this.cognitoPayloadSchema.validate(payload);
+    if (result.error) {
+      throw new Error(`Invalid Cognito token payload: ${result.error.message}`);
     }
 
+    const { value } = result;
     const aud = Array.isArray(value.aud) ? (value.aud[0] ?? '') : value.aud;
 
     return {
