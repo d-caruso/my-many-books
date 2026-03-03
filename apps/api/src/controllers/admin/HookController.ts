@@ -8,16 +8,83 @@ import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { Hook, HookExecution } from '../../models';
 import {
+  HookAttributes,
   HookCreationAttributes,
+  HookExecutionAttributes,
   HookUpdateAttributes,
 } from '../../models/interfaces/ModelInterfaces';
-import { Op, CreationAttributes } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { reloadHookSystem } from '../../services/hooks/hookSystem';
+import { createModel } from '../../utils/sequelize-helpers';
 
 let lastReloadedAt: string | null = null;
+const HOOK_ACTION_TYPES = ['log', 'email', 'database'] as const;
+
+const isHookActionType = (value: unknown): value is HookCreationAttributes['actionType'] =>
+  typeof value === 'string' && HOOK_ACTION_TYPES.some(actionType => actionType === value);
 
 export class HookController extends BaseController {
+  private isHookCreationRequest(value: unknown): value is HookCreationAttributes {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (
+      typeof value['name'] !== 'string' ||
+      typeof value['eventPattern'] !== 'string' ||
+      !isHookActionType(value['actionType']) ||
+      !this.isRecord(value['actionConfig'])
+    ) {
+      return false;
+    }
+
+    return (
+      (value['description'] === undefined ||
+        value['description'] === null ||
+        typeof value['description'] === 'string') &&
+      (value['isActive'] === undefined || typeof value['isActive'] === 'boolean') &&
+      (value['priority'] === undefined || typeof value['priority'] === 'number')
+    );
+  }
+
+  private isHookUpdateRequest(value: unknown): value is HookUpdateAttributes {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (value['name'] !== undefined && typeof value['name'] !== 'string') {
+      return false;
+    }
+    if (
+      value['description'] !== undefined &&
+      value['description'] !== null &&
+      typeof value['description'] !== 'string'
+    ) {
+      return false;
+    }
+    if (value['eventPattern'] !== undefined && typeof value['eventPattern'] !== 'string') {
+      return false;
+    }
+    if (
+      value['actionType'] !== undefined &&
+      !isHookActionType(value['actionType'])
+    ) {
+      return false;
+    }
+    if (value['actionConfig'] !== undefined && !this.isRecord(value['actionConfig'])) {
+      return false;
+    }
+    if (value['isActive'] !== undefined && typeof value['isActive'] !== 'boolean') {
+      return false;
+    }
+    if (value['priority'] !== undefined && typeof value['priority'] !== 'number') {
+      return false;
+    }
+
+    return true;
+  }
+
   async listHooks(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
@@ -27,18 +94,20 @@ export class HookController extends BaseController {
     const isActive = this.getQueryParameter(request, 'isActive');
     const search = this.getQueryParameter(request, 'search');
 
-    const where: Record<string, unknown> = {};
+    const where: WhereOptions<HookAttributes> = {};
 
     if (isActive !== null && isActive !== undefined) {
-      where['isActive'] = isActive === 'true';
+      where.isActive = isActive === 'true';
     }
 
     if (search) {
-      where[Op.or as unknown as string] = [
-        { name: { [Op.like]: `%${search}%` } },
-        { description: { [Op.like]: `%${search}%` } },
-        { eventPattern: { [Op.like]: `%${search}%` } },
-      ];
+      Object.assign(where, {
+        [Op.or]: [
+          { name: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } },
+          { eventPattern: { [Op.like]: `%${search}%` } },
+        ],
+      });
     }
 
     const { count, rows: hooks } = await Hook.findAndCountAll({
@@ -79,13 +148,8 @@ export class HookController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<HookCreationAttributes>(request);
-    if (!body) {
-      return this.createErrorResponseI18n('errors:validation_failed', 400);
-    }
-
-    // Basic validation
-    if (!body.name || !body.eventPattern || !body.actionType || !body.actionConfig) {
+    const body = this.parseBody(request);
+    if (!this.isHookCreationRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -101,7 +165,7 @@ export class HookController extends BaseController {
         createdBy: request.user?.id ?? null,
       };
 
-      const hook = await Hook.create(hookData as CreationAttributes<Hook>);
+      const hook = await createModel(Hook, hookData);
 
       // Log audit event
       getAuditLogService().logActionFromRequest(
@@ -126,7 +190,7 @@ export class HookController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
-      return this.createErrorResponse('Failed to create hook', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -140,8 +204,8 @@ export class HookController extends BaseController {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'hook' });
     }
 
-    const body = this.parseBody<HookUpdateAttributes>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isHookUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -152,7 +216,7 @@ export class HookController extends BaseController {
 
     try {
       const oldValues = hook.get({ plain: true });
-      await hook.update(body as Partial<Hook>);
+      await hook.update(body);
 
       // Log audit event
       getAuditLogService().logActionFromRequest(
@@ -175,7 +239,7 @@ export class HookController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
-      return this.createErrorResponse('Failed to update hook', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -215,7 +279,7 @@ export class HookController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
-      return this.createErrorResponse('Failed to delete hook', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -232,7 +296,7 @@ export class HookController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to reload hooks', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -257,22 +321,22 @@ export class HookController extends BaseController {
     const fromParam = this.getQueryParameter(request, 'from');
     const toParam = this.getQueryParameter(request, 'to');
 
-    const where: Record<string, unknown> = { hookId: Number(hookId) };
+    const where: WhereOptions<HookExecutionAttributes> = { hookId: Number(hookId) };
     if (successParam === 'true') {
-      where['success'] = true;
+      where.success = true;
     } else if (successParam === 'false') {
-      where['success'] = false;
+      where.success = false;
     }
 
     if (fromParam || toParam) {
-      const range: Record<string, Date> = {};
+      const range: { [Op.gte]?: Date; [Op.lte]?: Date } = {};
       if (fromParam) {
-        range[Op.gte as unknown as string] = new Date(fromParam);
+        range[Op.gte] = new Date(fromParam);
       }
       if (toParam) {
-        range[Op.lte as unknown as string] = new Date(toParam);
+        range[Op.lte] = new Date(toParam);
       }
-      where['executedAt'] = range;
+      where.executedAt = range;
     }
 
     const { count, rows: executions } = await HookExecution.findAndCountAll({

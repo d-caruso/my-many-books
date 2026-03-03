@@ -21,13 +21,12 @@ import { Repository as AuthorRepositoryContract } from '../repositories/author/R
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
-interface AuthorSearchFilters {
+export interface AuthorSearchFilters {
   name?: string;
   surname?: string;
   nationality?: string;
   userId?: number;
   updatedSince?: string;
-  [key: string]: unknown;
 }
 
 /**
@@ -204,8 +203,12 @@ export class AuthorController extends BaseController {
     let searchFilters: AuthorSearchFilters = {};
     if (filters) {
       try {
-        searchFilters = JSON.parse(filters) as AuthorSearchFilters;
-        const filterValidation = this.validateRequest(searchFilters, this.searchFiltersSchema);
+        const parsedFilters: unknown = JSON.parse(filters);
+        if (!this.isRecord(parsedFilters)) {
+          return this.createErrorResponseI18n('errors:invalid_filters', 400);
+        }
+
+        const filterValidation = this.validateRequest(parsedFilters, this.searchFiltersSchema);
         if (!filterValidation.isValid) {
           return this.createErrorResponseI18n(
             'errors:validation_failed',

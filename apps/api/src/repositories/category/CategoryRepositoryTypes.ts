@@ -9,7 +9,6 @@ import {
   ListOptions,
   QueryOptions,
   PaginatedResult as AdapterPaginatedResult,
-  SearchFilters,
 } from '../interfaces/adapters/RepositoryAdapter';
 
 export type { CategoryEntity };
@@ -20,7 +19,7 @@ export interface CategoryQueryOptions extends QueryOptions {
   transaction?: import('sequelize').Transaction | null;
 }
 
-export interface CategoryListFilters extends SearchFilters {
+export interface CategoryListFilters {
   name?: string;
   userId?: number;
   updatedSince?: string;

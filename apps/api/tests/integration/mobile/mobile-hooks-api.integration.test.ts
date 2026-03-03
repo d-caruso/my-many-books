@@ -327,7 +327,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
           .expect(400);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Invalid listener toggle for: error.unhandled');
+        expect(response.body.error).toBe('errors:invalid_listener_toggle');
       });
     });
   });
@@ -469,7 +469,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
           .expect(400);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Invalid action type');
+        expect(response.body.error).toBe('errors:invalid_action_type');
       });
 
       it('should validate email rate limit', async () => {
@@ -487,7 +487,7 @@ describe('Mobile Hooks Configuration API Integration Tests', () => {
           .expect(400);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Email rate limit must be between 1 and 1440 minutes');
+        expect(response.body.error).toBe('errors:email_rate_limit_invalid');
       });
     });
 

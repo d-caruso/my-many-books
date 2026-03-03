@@ -1,5 +1,10 @@
 import { DataTypes, Sequelize } from 'sequelize';
-import { BaseModel, BaseModelAttributes } from './BaseModel';
+import {
+  BaseModel,
+  BaseModelAttributeDefinitions,
+  BaseModelAttributes,
+  BaseModelOptions,
+} from './BaseModel';
 
 // Base interface with ID extends BaseModelAttributes
 export interface IdBaseModelAttributes extends BaseModelAttributes {
@@ -18,7 +23,14 @@ export abstract class IdBaseModel<T extends IdBaseModelAttributes, TCreation ext
     throw new Error('getModelName must be implemented by subclass');
   }
 
-  protected static override getBaseAttributes() {
+  protected static override getBaseAttributes(): BaseModelAttributeDefinitions & {
+    id: {
+      type: typeof DataTypes.INTEGER;
+      primaryKey: boolean;
+      autoIncrement: boolean;
+      allowNull: boolean;
+    };
+  } {
     return {
       id: {
         type: DataTypes.INTEGER,
@@ -30,7 +42,7 @@ export abstract class IdBaseModel<T extends IdBaseModelAttributes, TCreation ext
     };
   }
 
-  protected static override getBaseOptions(sequelize: Sequelize, tableName: string) {
+  protected static override getBaseOptions(sequelize: Sequelize, tableName: string): BaseModelOptions {
     const baseOptions = super.getBaseOptions(sequelize, tableName);
     return {
       ...baseOptions,

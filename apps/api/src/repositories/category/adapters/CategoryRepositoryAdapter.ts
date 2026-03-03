@@ -6,6 +6,7 @@
 import {
   CategoryCreationAttributes,
   CategoryEntity,
+  CategoryListFilters,
   CategoryListOptions,
   CategoryQueryOptions,
   PaginatedResult,
@@ -16,9 +17,10 @@ export interface CategoryRepositoryAdapter
   extends RepositoryAdapter<
     CategoryEntity,
     CategoryCreationAttributes,
-    Record<string, unknown>,
+    Record<string, never>,
     CategoryQueryOptions,
-    CategoryListOptions
+    CategoryListOptions,
+    CategoryListFilters
   > {
   findById(id: number, options?: CategoryQueryOptions): Promise<CategoryEntity | null>;
   findUserCategoryById(

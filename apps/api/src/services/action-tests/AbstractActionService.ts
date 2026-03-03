@@ -1,10 +1,10 @@
 import axios from 'axios';
-import { getLogger } from '@my-many-books/shared-logging';
+import { getLogger, type AppLogger } from '@my-many-books/shared-logging';
 
 export abstract class AbstractActionService {
   protected readonly httpClient: import('axios').AxiosInstance;
   protected readonly allowedHosts: string[];
-  protected readonly logger = getLogger();
+  protected readonly logger: AppLogger = getLogger();
 
   constructor(timeoutMs: number, allowlist: string | undefined) {
     this.allowedHosts = (allowlist ?? '')

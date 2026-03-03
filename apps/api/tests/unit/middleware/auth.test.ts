@@ -46,7 +46,7 @@ describe('Authentication Middleware', () => {
         success: false,
         error: {
           code: 'AUTH_HEADER_INVALID',
-          message: 'Missing or invalid authorization header',
+          message: 'Authentication error. Please log in again',
         },
       });
       expect(next).not.toHaveBeenCalled();
@@ -62,7 +62,7 @@ describe('Authentication Middleware', () => {
         success: false,
         error: {
           code: 'AUTH_HEADER_INVALID',
-          message: 'Missing or invalid authorization header',
+          message: 'Authentication error. Please log in again',
         },
       });
       expect(next).not.toHaveBeenCalled();
@@ -155,7 +155,7 @@ describe('Authentication Middleware', () => {
         success: false,
         error: {
           code: 'ACCOUNT_DEACTIVATED',
-          message: 'Account is deactivated',
+          message: 'Your account has been deactivated',
         },
       });
       expect(next).not.toHaveBeenCalled();
@@ -179,7 +179,7 @@ describe('Authentication Middleware', () => {
         success: false,
         error: {
           code: 'AUTH_FAILED',
-          message: 'Authentication failed',
+          message: 'Authentication failed. Please try again',
           details: { details: 'Token verification failed' },
         },
       });

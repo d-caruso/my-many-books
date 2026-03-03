@@ -9,7 +9,7 @@ import { CategoryAttributes, CategoryCreationAttributes } from './interfaces/Mod
 import { TABLE_NAMES } from '@/utils/constants';
 import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
 
-export class Category extends IdBaseModel<CategoryAttributes> implements CategoryAttributes {
+export class Category extends IdBaseModel<CategoryAttributes, CategoryCreationAttributes> implements CategoryAttributes {
   public name!: string;
   public translationKey!: string | null;
   public userId!: number;

@@ -2,10 +2,28 @@
 // src/middleware/cognitoAuth.ts
 // ================================================================
 
+import Joi from 'joi';
 import { getLogger } from '@my-many-books/shared-logging';
+import { i18n } from '@my-many-books/shared-i18n';
 import { ERROR_CODES, createErrorResponse, type ErrorCode } from '@my-many-books/shared-types';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { verify, JwtPayload, Algorithm } from 'jsonwebtoken';
+
+interface CognitoJwtPayload {
+  sub: string;
+  email: string;
+  email_verified: boolean;
+  given_name?: string;
+  family_name?: string;
+  'cognito:groups': string[];
+  token_use: string;
+  aud: string | string[];
+  iss: string;
+  exp: number;
+  iat: number;
+  scope?: string;
+  scopes?: string[];
+}
 
 export interface CognitoConfig {
   enabled: boolean;
@@ -38,6 +56,19 @@ interface JwtHeader {
   typ?: string;
 }
 
+const isJwtHeader = (value: unknown): value is JwtHeader => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    (candidate['kid'] === undefined || typeof candidate['kid'] === 'string') &&
+    (candidate['alg'] === undefined || typeof candidate['alg'] === 'string') &&
+    (candidate['typ'] === undefined || typeof candidate['typ'] === 'string')
+  );
+};
+
 interface AuthContext {
   user: CognitoUser | undefined;
   isAuthenticated: boolean;
@@ -58,6 +89,22 @@ export interface CognitoAuthResult {
 export class CognitoAuthenticator {
   private config: CognitoConfig;
   private publicKeys: Map<string, string> = new Map();
+
+  private readonly cognitoPayloadSchema: Joi.ObjectSchema<CognitoJwtPayload> = Joi.object<CognitoJwtPayload>({
+    sub: Joi.string().required(),
+    email: Joi.string().default(''),
+    email_verified: Joi.boolean().default(false),
+    given_name: Joi.string().optional(),
+    family_name: Joi.string().optional(),
+    'cognito:groups': Joi.array().items(Joi.string()).default([]),
+    token_use: Joi.string().default(''),
+    aud: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).required(),
+    iss: Joi.string().required(),
+    exp: Joi.number().required(),
+    iat: Joi.number().required(),
+    scope: Joi.string().optional(),
+    scopes: Joi.array().items(Joi.string()).optional(),
+  }).unknown(true);
 
   constructor(config: CognitoConfig) {
     this.config = config;
@@ -198,7 +245,12 @@ export class CognitoAuthenticator {
     }
 
     const header = Buffer.from(parts[0]!, 'base64url').toString('utf8');
-    return JSON.parse(header) as JwtHeader;
+    const parsedHeader: unknown = JSON.parse(header);
+    if (!isJwtHeader(parsedHeader)) {
+      throw new Error('Invalid token header format');
+    }
+
+    return parsedHeader;
   }
 
   private getPublicKey(keyId: string): string {
@@ -238,19 +290,27 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
   }
 
   private extractUserFromToken(payload: JwtPayload): CognitoUser {
+    const result = this.cognitoPayloadSchema.validate(payload);
+    if (result.error) {
+      throw new Error(`Invalid Cognito token payload: ${result.error.message}`);
+    }
+
+    const { value } = result;
+    const aud = Array.isArray(value.aud) ? (value.aud[0] ?? '') : value.aud;
+
     return {
-      sub: payload.sub!,
-      email: (payload['email'] as string) || '',
-      email_verified: payload['email_verified'] === true,
-      given_name: (payload['given_name'] as string) || undefined,
-      family_name: (payload['family_name'] as string) || undefined,
-      groups: (payload['cognito:groups'] as string[]) || [],
+      sub: value.sub,
+      email: value.email,
+      email_verified: value.email_verified,
+      given_name: value.given_name,
+      family_name: value.family_name,
+      groups: value['cognito:groups'],
       scopes: this.extractScopes(payload),
-      token_use: payload['token_use'] as string,
-      aud: payload.aud as string,
-      iss: payload.iss!,
-      exp: payload.exp!,
-      iat: payload.iat!,
+      token_use: value.token_use,
+      aud,
+      iss: value.iss,
+      exp: value.exp,
+      iat: value.iat,
     };
   }
 
@@ -319,6 +379,7 @@ export const withCognitoAuth = (
     const authResult = authenticator.authenticate(event);
 
     if (!authResult.isAuthenticated) {
+      const errorCode = authResult.errorCode ?? ERROR_CODES.AUTH_FAILED;
       return {
         statusCode: authResult.statusCode || 401,
         headers: {
@@ -326,8 +387,8 @@ export const withCognitoAuth = (
           'Access-Control-Allow-Origin': '*',
         },
         body: JSON.stringify(createErrorResponse(
-          authResult.errorCode || ERROR_CODES.AUTH_FAILED,
-          authResult.error || 'Authentication failed'
+          errorCode,
+          i18n.isInitialized ? i18n.t('errors:auth_failed') : (authResult.error ?? 'Authentication failed')
         )),
       };
     }
@@ -347,7 +408,7 @@ export const withCognitoAuth = (
           },
           body: JSON.stringify(createErrorResponse(
             ERROR_CODES.INSUFFICIENT_PERMISSIONS,
-            'Insufficient permissions',
+            i18n.isInitialized ? i18n.t('errors:insufficient_permissions') : 'Insufficient permissions',
             { requiredPermissions }
           )),
         };

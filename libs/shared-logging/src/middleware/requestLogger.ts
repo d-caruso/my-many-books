@@ -32,7 +32,7 @@ export interface RequestLoggerOptions {
   /**
    * Custom fields to add to every log
    */
-  customFields?: Record<string, any>;
+  customFields?: Record<string, unknown>;
 }
 
 /**
@@ -41,12 +41,11 @@ export interface RequestLoggerOptions {
 function getLogLevel(
   _req: Request,
   res: Response
-): pino.LevelWithSilent | string {
+): pino.LevelWithSilent {
   const statusCode = res.statusCode;
 
   if (statusCode >= 500) return 'error';
   if (statusCode >= 400) return 'warn';
-  if (statusCode >= 300) return 'info';
   return 'info';
 }
 
@@ -78,10 +77,10 @@ export function requestLoggerMiddleware(options: RequestLoggerOptions = {}) {
 
     // Determine log level based on response status
     customLogLevel: options.level
-      ? () => options.level! as pino.LevelWithSilent
+      ? () => options.level!
       : // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (req, res, _err) =>
-          getLogLevel(req as Request, res as Response) as pino.LevelWithSilent,
+          getLogLevel(req as Request, res as Response),
 
     // Add custom fields to every log
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

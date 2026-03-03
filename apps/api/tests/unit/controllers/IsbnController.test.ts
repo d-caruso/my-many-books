@@ -104,7 +104,7 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(400);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Validation failed');
+      expect(result.error).toBe('Validation failed. Please check your input');
     });
 
     it('should return 404 when book is not found', async () => {
@@ -188,7 +188,7 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(400);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Validation failed');
+      expect(result.error).toBe('Validation failed. Please check your input');
     });
   });
 

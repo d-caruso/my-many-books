@@ -44,7 +44,7 @@ export interface AuditLogFilterAttributes {
   };
 }
 
-export class AuditLog extends IdBaseModel<AuditLogAttributes> implements AuditLogAttributes {
+export class AuditLog extends IdBaseModel<AuditLogAttributes, AuditLogCreationAttributes> implements AuditLogAttributes {
   public userId!: number;
   public role?: string;
   public action!: string;

@@ -39,7 +39,7 @@ export interface LogEntry {
   /**
    * Additional structured metadata
    */
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -84,7 +84,7 @@ export interface AuditLogEntry extends LogEntry {
   /**
    * Additional details about the action (optional)
    */
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 /**

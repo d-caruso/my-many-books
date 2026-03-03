@@ -17,7 +17,7 @@ export interface AuditLogModel {
   action: string;
   resourceType: string;
   resourceId: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   createdAt: Date;
@@ -84,7 +84,7 @@ export class DatabaseAdapter extends BaseAdapter {
    * @returns Matching audit log entries
    */
   async query(filter: LogFilter): Promise<AuditLogEntry[]> {
-    const where: WhereOptions = {};
+    const where: WhereOptions<AuditLogModel> = {};
 
     // Build WHERE clause
     if (filter.userId) {
@@ -100,13 +100,10 @@ export class DatabaseAdapter extends BaseAdapter {
     }
 
     if (filter.startDate || filter.endDate) {
-      where['createdAt'] = {};
-      if (filter.startDate) {
-        (where['createdAt'] as any)[Op.gte] = filter.startDate;
-      }
-      if (filter.endDate) {
-        (where['createdAt'] as any)[Op.lte] = filter.endDate;
-      }
+      where['createdAt'] = {
+        ...(filter.startDate ? { [Op.gte]: filter.startDate } : {}),
+        ...(filter.endDate ? { [Op.lte]: filter.endDate } : {}),
+      };
     }
 
     try {

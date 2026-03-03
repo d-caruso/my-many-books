@@ -2,7 +2,7 @@
 // src/models/Book.ts
 // ================================================================
 
-import { DataTypes, Sequelize, Association } from 'sequelize';
+import { DataTypes, Sequelize, Association, Op } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
 import { BookAttributes, BookCreationAttributes, BookStatus } from './interfaces/ModelInterfaces';
 import { TABLE_NAMES } from '@/utils/constants';
@@ -11,14 +11,14 @@ import { Author } from './Author';
 import { Category } from './Category';
 import { createModel } from '../utils/sequelize-helpers';
 
-export class Book extends IdBaseModel<BookAttributes> implements BookAttributes {
+export class Book extends IdBaseModel<BookAttributes, BookCreationAttributes> implements BookAttributes {
   public isbnCode!: string;
   public title!: string;
-  public editionNumber?: number;
-  public editionDate?: string;
-  public status?: BookStatus;
-  public notes?: string;
-  public userId?: number;
+  public editionNumber?: number | null;
+  public editionDate?: string | null;
+  public status?: BookStatus | null;
+  public notes?: string | null;
+  public userId?: number | null;
 
   // Associations
   public authors?: Author[];
@@ -224,9 +224,6 @@ export class Book extends IdBaseModel<BookAttributes> implements BookAttributes 
   }
 
   static async searchByTitle(searchTerm: string): Promise<Book[]> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Op } = require('sequelize') as { Op: { like: symbol } };
-
     return await Book.findAll({
       where: {
         title: {

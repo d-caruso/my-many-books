@@ -1,8 +1,0 @@
-node_modules
-dist
-coverage
-*.config.ts
-*.config.js
-**/__tests__/**
-**/*.test.ts
-**/*.spec.ts

@@ -9,6 +9,7 @@ import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { MobileAnalyticsEvent, MobileHookActionExecution } from '../../models';
 import type { MobileAnalyticsProcessingStatus } from '@my-many-books/shared-types';
+import { isJsonObject, type JsonObject } from '../../types/json';
 
 type RecentMobileHookEvent = {
   eventId: string;
@@ -25,11 +26,24 @@ type RecentMobileHookEvent = {
     errorMessage: string | null;
     executionTimeMs: number | null;
     executedAt: string;
-    details?: Record<string, unknown>;
+    details?: JsonObject;
   }>;
 };
 
 export class AdminMobileHooksAnalyticsController extends BaseController {
+  private parseAggregateCount(value: unknown): number {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    return 0;
+  }
+
   /**
    * GET /api/<version>/admin/mobile-hooks/analytics/events/recent
    * Returns the last N mobile analytics events with per-action execution results.
@@ -87,13 +101,13 @@ export class AdminMobileHooksAnalyticsController extends BaseController {
         errorMessage: string | null;
         executionTimeMs: number | null;
         executedAt: string;
-        details?: Record<string, unknown>;
+        details?: JsonObject;
       }>
     >();
 
     for (const execution of executions) {
       const list = executionsByEventId.get(execution.mobileAnalyticsEventId) || [];
-      const details = (execution.details as Record<string, unknown> | null) || null;
+      const details = isJsonObject(execution.details) ? execution.details : null;
       list.push(
         details
           ? {
@@ -137,25 +151,29 @@ export class AdminMobileHooksAnalyticsController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const rows = (await MobileHookActionExecution.findAll({
+    const sequelize = MobileHookActionExecution.sequelize;
+    if (!sequelize) {
+      return this.createErrorResponseI18n('errors:internal_error', 500);
+    }
+
+    const rows = await MobileHookActionExecution.findAll({
       attributes: [
         'actionType',
-        [MobileHookActionExecution.sequelize!.fn('COUNT', '*'), 'attempted'],
-        [MobileHookActionExecution.sequelize!.fn('SUM',
-          MobileHookActionExecution.sequelize!.literal("CASE WHEN \"status\" = 'success' THEN 1 ELSE 0 END")
+        [sequelize.fn('COUNT', '*'), 'attempted'],
+        [sequelize.fn('SUM',
+          sequelize.literal("CASE WHEN status = 'success' THEN 1 ELSE 0 END")
         ), 'successful'],
-        [MobileHookActionExecution.sequelize!.fn('SUM',
-          MobileHookActionExecution.sequelize!.literal("CASE WHEN \"status\" = 'failed' THEN 1 ELSE 0 END")
+        [sequelize.fn('SUM',
+          sequelize.literal("CASE WHEN status = 'failed' THEN 1 ELSE 0 END")
         ), 'failed'],
       ],
       group: ['actionType'],
-      raw: true,
-    })) as unknown as Array<{ actionType: string; attempted: string; successful: string; failed: string }>;
+    });
 
     const breakdown = rows.map(row => {
-      const attempted = Number(row.attempted);
-      const successful = Number(row.successful);
-      const failed = Number(row.failed);
+      const attempted = this.parseAggregateCount(row.get('attempted'));
+      const successful = this.parseAggregateCount(row.get('successful'));
+      const failed = this.parseAggregateCount(row.get('failed'));
       return {
         actionType: row.actionType,
         attempted,

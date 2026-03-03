@@ -3,17 +3,16 @@
 // Sequelize-backed adapter for the Author repository
 // ================================================================
 
-import { FindAndCountOptions, FindOptions, IncludeOptions, Op, WhereOptions } from 'sequelize';
+import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions } from 'sequelize';
 import { Author } from '@/models/Author';
 import { Book } from '@/models/Book';
-import { AuthorAttributes } from '@/models/interfaces/ModelInterfaces';
+import { createModel } from '@/utils/sequelize-helpers';
 import {
   AuthorCreationInput,
   AuthorEntity,
   AuthorListFilters,
   AuthorListOptions,
   AuthorQueryOptions,
-  AuthorUpdateInput,
   PaginatedResult,
 } from '../AuthorRepositoryTypes';
 import { AuthorRepositoryAdapter } from './AuthorRepositoryAdapter';
@@ -103,7 +102,7 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
     payload: AuthorCreationInput,
     options?: AuthorQueryOptions
   ): Promise<AuthorEntity> {
-    const record = await Author.create(payload as unknown as AuthorAttributes, {
+    const record = await createModel(Author, payload, {
       transaction: options?.transaction ?? null,
     });
     return (await this.findById(record.id, options))!;
@@ -119,7 +118,7 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
       return null;
     }
 
-    await author.update(payload as AuthorUpdateInput, {
+    await author.update(payload, {
       transaction: options?.transaction ?? null,
     });
     return this.findById(id, options);
@@ -400,12 +399,11 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
       replacements['userId'] = userId;
     }
 
-    const results = await Author.sequelize!.query(sql, {
-      replacements,
-      type: 'SELECT',
-      raw: true,
-    });
+    interface PinnedRow { resourceId: number; priority: number; }
 
-    return results as Array<{ resourceId: number; priority: number }>;
+    return Author.sequelize!.query<PinnedRow>(sql, {
+      replacements,
+      type: QueryTypes.SELECT,
+    });
   }
 }

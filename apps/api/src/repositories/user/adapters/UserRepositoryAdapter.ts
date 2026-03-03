@@ -6,6 +6,7 @@
 import {
   PaginatedResult,
   UserEntity,
+  UserListFilters,
   UserListOptions,
   UserQueryOptions,
 } from '../UserRepositoryTypes';
@@ -16,9 +17,10 @@ export interface UserRepositoryAdapter
   extends RepositoryAdapter<
     UserEntity,
     UserCreationAttributes,
-    Record<string, unknown>,
+    Record<string, never>,
     UserQueryOptions,
-    UserListOptions
+    UserListOptions,
+    UserListFilters
   > {
   findById(id: number, options?: UserQueryOptions): Promise<UserEntity | null>;
   findByEmail(email: string, options?: UserQueryOptions): Promise<UserEntity | null>;
