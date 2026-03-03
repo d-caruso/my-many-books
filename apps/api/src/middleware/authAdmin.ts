@@ -21,7 +21,7 @@ export const authAdminMiddleware = (
         },
         body: JSON.stringify(createErrorResponse(
           ERROR_CODES.AUTH_TOKEN_MISSING,
-          i18n.t('errors:AUTH_TOKEN_MISSING')
+          i18n.t('errors:auth_token_missing')
         )),
       };
     }
@@ -35,7 +35,7 @@ export const authAdminMiddleware = (
         },
         body: JSON.stringify(createErrorResponse(
           ERROR_CODES.ADMIN_REQUIRED,
-          i18n.t('errors:ADMIN_REQUIRED')
+          i18n.t('errors:admin_required')
         )),
       };
     }

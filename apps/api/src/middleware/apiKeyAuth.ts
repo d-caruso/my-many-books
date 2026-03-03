@@ -235,7 +235,7 @@ export const withApiKeyAuth = (
         body: JSON.stringify(
           createErrorResponse(
             authResult.errorCode || ERROR_CODES.AUTH_FAILED,
-            i18n.t(`errors:${authResult.errorCode ?? ERROR_CODES.AUTH_FAILED}`)
+            i18n.t('errors:auth_failed')
           )
         ),
       };

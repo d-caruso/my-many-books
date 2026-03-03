@@ -17,9 +17,8 @@ async getStats(request: UniversalRequest): Promise<ApiResponse> {
     try {
     const stats = await mobileAnalyticsService.getAnalyticsStats();
     return this.createSuccessResponse(stats, 'Analytics statistics retrieved');
-    } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+    } catch {
+    return this.createErrorResponseI18n('errors:internal_error', 500);
     }
 }
 

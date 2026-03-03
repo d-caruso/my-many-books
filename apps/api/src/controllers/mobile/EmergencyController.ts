@@ -85,7 +85,7 @@ export class EmergencyController extends BaseController {
       const config = await this.loadEmergencyConfig();
       return this.createSuccessResponse(config);
     } catch {
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -163,7 +163,7 @@ export class EmergencyController extends BaseController {
         lastUpdated: new Date().toISOString(),
       }, 'Emergency configuration updated successfully');
     } catch {
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 

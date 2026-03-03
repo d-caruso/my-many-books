@@ -130,7 +130,7 @@ describe('Mobile Analytics Integration Tests', () => {
           .expect(400);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Missing required fields');
+        expect(response.body.error).toBe('errors:event_required_fields_missing');
         expect(mobileAnalyticsService.storeEvent).not.toHaveBeenCalled();
       });
 
@@ -185,7 +185,7 @@ describe('Mobile Analytics Integration Tests', () => {
           .expect(500);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Failed to process event');
+        expect(response.body.error).toBe('errors:internal_error');
       });
     });
 
@@ -288,7 +288,7 @@ describe('Mobile Analytics Integration Tests', () => {
           .expect(400);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Batch size cannot exceed 100 events');
+        expect(response.body.error).toBe('errors:batch_size_exceeded');
         expect(mobileAnalyticsService.storeBatchEvents).not.toHaveBeenCalled();
       });
 
@@ -301,7 +301,7 @@ describe('Mobile Analytics Integration Tests', () => {
           .expect(400);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Batch cannot be empty');
+        expect(response.body.error).toBe('errors:batch_empty');
         expect(mobileAnalyticsService.storeBatchEvents).not.toHaveBeenCalled();
       });
 
@@ -428,7 +428,7 @@ describe('Mobile Analytics Integration Tests', () => {
           .expect(500);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Failed to retrieve stats');
+        expect(response.body.error).toBe('errors:internal_error');
       });
     });
 

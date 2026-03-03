@@ -50,7 +50,7 @@ export class StatsController extends BaseController {
    */
   getUserStats(_request: UniversalRequest): Promise<ApiResponse> {
     // TODO: Implement detailed user statistics
-    return Promise.resolve(this.createErrorResponseI18n('errors:operation_not_allowed', 501));
+    return Promise.resolve(this.createErrorResponseI18n('errors:not_implemented', 501));
   }
 
   /**
@@ -61,7 +61,7 @@ export class StatsController extends BaseController {
    */
   getBookStats(_request: UniversalRequest): Promise<ApiResponse> {
     // TODO: Implement detailed book statistics
-    return Promise.resolve(this.createErrorResponseI18n('errors:operation_not_allowed', 501));
+    return Promise.resolve(this.createErrorResponseI18n('errors:not_implemented', 501));
   }
 }
 

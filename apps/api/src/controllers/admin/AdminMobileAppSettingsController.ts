@@ -87,7 +87,7 @@ export class AdminMobileAppSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -185,7 +185,7 @@ export class AdminMobileAppSettingsController extends BaseController {
         if (error instanceof Error) {
           return this.createErrorResponse(error.message, 500);
         }
-        return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+        return this.createErrorResponseI18n('errors:internal_error', 500);
     }
    }
 
@@ -240,7 +240,7 @@ export class AdminMobileAppSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -343,13 +343,13 @@ export class AdminMobileAppSettingsController extends BaseController {
   private validateSettings(settings: Partial<MobileAppSettings>): ApiResponse | null {
     if (typeof settings.batchUploadInterval === 'number') {
       if (settings.batchUploadInterval < 60 || settings.batchUploadInterval > 3600) {
-        return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
+        return this.createErrorResponseI18n('errors:batch_upload_interval_invalid', 400, { min: 60, max: 3600 });
       }
     }
 
     if (typeof settings.maxOfflineEvents === 'number') {
       if (settings.maxOfflineEvents < 100 || settings.maxOfflineEvents > 10000) {
-        return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
+        return this.createErrorResponseI18n('errors:max_offline_events_invalid', 400, { min: 100, max: 10000 });
       }
     }
 

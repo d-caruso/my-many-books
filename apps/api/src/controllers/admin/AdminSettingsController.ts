@@ -96,7 +96,7 @@ export class AdminSettingsController extends BaseController {
       }
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to query audit logging setting:');
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
 
     // Default
@@ -122,7 +122,7 @@ export class AdminSettingsController extends BaseController {
     const forceEnabled = process.env['AUDIT_LOGGING_FORCE_ENABLED'] === 'true';
 
     if (forceDisabled || forceEnabled) {
-      return this.createErrorResponseI18n('errors:SETTING_ENFORCED_BY_CONFIG', 403);
+      return this.createErrorResponseI18n('errors:setting_enforced_by_config', 403);
     }
 
     const body = this.parseBody(request);
@@ -148,7 +148,7 @@ export class AdminSettingsController extends BaseController {
       });
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to update audit logging setting:');
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -177,7 +177,7 @@ export class AdminSettingsController extends BaseController {
         { err: error instanceof Error ? error : new Error(String(error)) },
         'Failed to get search settings status:'
       );
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -206,7 +206,7 @@ export class AdminSettingsController extends BaseController {
         const forceEnabled = process.env['SEARCH_FULLTEXT_FORCE_ENABLED'] === 'true';
 
         if (forceDisabled || forceEnabled) {
-          return this.createErrorResponseI18n('errors:SETTING_ENFORCED_BY_CONFIG', 403);
+          return this.createErrorResponseI18n('errors:setting_enforced_by_config', 403);
         }
 
         await searchSettingsService.updateFulltextEnabled(body.enabled);
@@ -228,7 +228,7 @@ export class AdminSettingsController extends BaseController {
         { err: error instanceof Error ? error : new Error(String(error)) },
         'Failed to update search settings:'
       );
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 }

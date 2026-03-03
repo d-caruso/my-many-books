@@ -51,7 +51,7 @@ export const requirePermission = (action: Action, resource: Resource) => {
       if (!ability.can(action, resource)) {
         res.status(403).json(createErrorResponse(
           ERROR_CODES.PERMISSION_DENIED,
-          i18n.t('errors:PERMISSION_DENIED'),
+          i18n.t('errors:permission_denied'),
           {
             action,
             resource,
@@ -79,7 +79,7 @@ export const requirePermission = (action: Action, resource: Resource) => {
 
       res.status(500).json(createErrorResponse(
         ERROR_CODES.INTERNAL_ERROR,
-        i18n.t('errors:INTERNAL_ERROR')
+        i18n.t('errors:internal_error')
       ));
       return;
     }

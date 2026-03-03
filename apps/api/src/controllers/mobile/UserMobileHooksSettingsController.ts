@@ -52,7 +52,7 @@ export class UserMobileHooksSettingsController extends UserBaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -98,7 +98,7 @@ export class UserMobileHooksSettingsController extends UserBaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 

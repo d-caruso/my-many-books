@@ -198,7 +198,7 @@ export const withRateLimit = (
         },
         body: JSON.stringify(createErrorResponse(
           ERROR_CODES.RATE_LIMIT_EXCEEDED,
-          i18n.t('errors:RATE_LIMIT_EXCEEDED'),
+          i18n.t('errors:rate_limit_exceeded'),
           {
             limit: limitResult.limit,
             windowSeconds: config.windowMs / 1000,

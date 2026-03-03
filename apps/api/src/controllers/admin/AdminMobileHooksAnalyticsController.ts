@@ -153,7 +153,7 @@ export class AdminMobileHooksAnalyticsController extends BaseController {
 
     const sequelize = MobileHookActionExecution.sequelize;
     if (!sequelize) {
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
 
     const rows = await MobileHookActionExecution.findAll({

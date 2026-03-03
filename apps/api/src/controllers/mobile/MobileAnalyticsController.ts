@@ -103,7 +103,7 @@ export class MobileAnalyticsController extends BaseController {
     }
 
     if (!body.event_type || !body.timestamp) {
-      return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
+      return this.createErrorResponseI18n('errors:event_required_fields_missing', 400);
     }
 
     try {
@@ -130,9 +130,8 @@ export class MobileAnalyticsController extends BaseController {
         processing_status: storedEvent.processingStatus,
         timestamp: new Date().toISOString()
       }, 'Event uploaded and stored successfully');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+    } catch {
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -149,11 +148,11 @@ export class MobileAnalyticsController extends BaseController {
 
     // Validate batch size
     if (body.events.length === 0) {
-      return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
+      return this.createErrorResponseI18n('errors:batch_empty', 400);
     }
 
     if (body.events.length > 100) {
-      return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
+      return this.createErrorResponseI18n('errors:batch_size_exceeded', 400, { max: 100 });
     }
 
     try {
@@ -213,9 +212,8 @@ export class MobileAnalyticsController extends BaseController {
         errors: allErrors,
         timestamp: new Date().toISOString()
       }, `Batch processed: ${successful.length} successful, ${allErrors.length} failed`);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+    } catch {
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 
@@ -228,9 +226,8 @@ export class MobileAnalyticsController extends BaseController {
     try {
       const stats = await mobileAnalyticsService.getAnalyticsStats();
       return this.createSuccessResponse(stats, 'Analytics statistics retrieved');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
+    } catch {
+      return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
 

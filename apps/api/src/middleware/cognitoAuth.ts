@@ -388,7 +388,7 @@ export const withCognitoAuth = (
         },
         body: JSON.stringify(createErrorResponse(
           errorCode,
-          i18n.isInitialized ? i18n.t(`errors:${errorCode}`) : (authResult.error ?? 'Authentication failed')
+          i18n.isInitialized ? i18n.t('errors:auth_failed') : (authResult.error ?? 'Authentication failed')
         )),
       };
     }
@@ -408,7 +408,7 @@ export const withCognitoAuth = (
           },
           body: JSON.stringify(createErrorResponse(
             ERROR_CODES.INSUFFICIENT_PERMISSIONS,
-            i18n.isInitialized ? i18n.t('errors:INSUFFICIENT_PERMISSIONS') : 'Insufficient permissions',
+            i18n.isInitialized ? i18n.t('errors:insufficient_permissions') : 'Insufficient permissions',
             { requiredPermissions }
           )),
         };

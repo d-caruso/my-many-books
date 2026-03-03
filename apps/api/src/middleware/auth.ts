@@ -162,7 +162,7 @@ export const authMiddleware = async (
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       res.status(401).json(createErrorResponse(
         ERROR_CODES.AUTH_HEADER_INVALID,
-        i18n.t('errors:AUTH_HEADER_INVALID')
+        i18n.t('errors:auth_header_invalid')
       ));
       return;
     }
@@ -195,7 +195,7 @@ export const authMiddleware = async (
     if (!user.isActive) {
       res.status(403).json(createErrorResponse(
         ERROR_CODES.ACCOUNT_DEACTIVATED,
-        i18n.t('errors:ACCOUNT_DEACTIVATED')
+        i18n.t('errors:account_deactivated')
       ));
       return;
     }
@@ -221,7 +221,7 @@ export const authMiddleware = async (
     );
     res.status(401).json(createErrorResponse(
       ERROR_CODES.AUTH_FAILED,
-      i18n.t('errors:AUTH_FAILED'),
+      i18n.t('errors:auth_failed'),
       { details: error instanceof Error ? error.message : 'Unknown error' }
     ));
   }
