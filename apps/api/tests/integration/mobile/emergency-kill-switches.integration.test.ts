@@ -193,7 +193,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
           .expect(500);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error.message).toContain('Failed to fetch emergency configuration');
+        expect(response.body.error.message).toBe('errors:internal_error');
       });
     });
   });
@@ -414,7 +414,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
           .expect(500);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error.message).toContain('Failed to update emergency configuration');
+        expect(response.body.error.message).toBe('errors:internal_error');
       });
     });
   });

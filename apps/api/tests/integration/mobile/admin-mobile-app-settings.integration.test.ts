@@ -122,9 +122,7 @@ describe('Admin Mobile App Settings Validation', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.message).toContain(
-        'Batch upload interval must be between 60 and 3600 seconds'
-      );
+      expect(response.body.error.message).toBe('errors:batch_upload_interval_invalid');
     });
 
     it('should validate max offline events limits', async () => {
@@ -141,7 +139,7 @@ describe('Admin Mobile App Settings Validation', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.message).toContain('Max offline events must be between 100 and 10000');
+      expect(response.body.error.message).toBe('errors:max_offline_events_invalid');
     });
 
     it('should reject oversized batch intervals', async () => {
@@ -158,9 +156,7 @@ describe('Admin Mobile App Settings Validation', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.message).toContain(
-        'Batch upload interval must be between 60 and 3600 seconds'
-      );
+      expect(response.body.error.message).toBe('errors:batch_upload_interval_invalid');
     });
   });
 });
