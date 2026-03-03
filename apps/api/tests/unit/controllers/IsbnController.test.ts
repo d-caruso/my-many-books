@@ -57,12 +57,7 @@ describe('IsbnController', () => {
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data).toEqual({
-        isbn: mockResult.isbn,
-        book: mockResult.book,
-        source: mockResult.source,
-        responseTime: mockResult.responseTime,
-      });
+      expect(result.data).toEqual(mockResult.book);
     });
 
     it('should lookup book successfully via query parameter', async () => {

@@ -87,12 +87,7 @@ export class IsbnController extends BaseController {
       const result = await isbnService.lookupBook(normalizedIsbn);
 
       if (result.success) {
-        return this.createSuccessResponse({
-          isbn: result.isbn,
-          book: result.book,
-          source: result.source,
-          responseTime: result.responseTime,
-        });
+        return this.createSuccessResponse(result.book ?? null);
       } else {
         return this.createErrorResponse(result.error || this.t('errors:book_not_found'), 404, {
           isbn: result.isbn,
