@@ -203,15 +203,13 @@ describe('BookApi (Search & Status)', () => {
       expect(result).toBeNull();
     });
 
-    it('should parse wrapped ISBN search responses', async () => {
+    it('should reject legacy wrapped ISBN search responses', async () => {
       mockHttpClient.setResponse('/books/search/isbn/978-0-123-45678-9', {
         data: { source: 'local', book: mockBook },
         status: 200,
       });
 
-      const result = await bookApi.searchByISBN('978-0-123-45678-9');
-
-      expect(result).toEqual(mockBook);
+      await expect(bookApi.searchByISBN('978-0-123-45678-9')).rejects.toThrow(ZodError);
     });
 
     it('should validate response against BookSchema', async () => {

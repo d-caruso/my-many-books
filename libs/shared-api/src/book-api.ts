@@ -26,14 +26,6 @@ export class BookApi extends BaseApiClient {
       return null;
     }
 
-    if (typeof response === 'object' && response !== null && 'book' in response) {
-      const wrappedBook = (response as { book?: unknown }).book;
-      if (wrappedBook === null || wrappedBook === undefined) {
-        return null;
-      }
-      return BookSchema.parse(wrappedBook);
-    }
-
     return BookSchema.parse(response);
   }
 

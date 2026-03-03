@@ -193,7 +193,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
           .expect(500);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Failed to fetch emergency configuration');
+        expect(response.body.error.message).toContain('Failed to fetch emergency configuration');
       });
     });
   });
@@ -414,7 +414,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
           .expect(500);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('Failed to update emergency configuration');
+        expect(response.body.error.message).toContain('Failed to update emergency configuration');
       });
     });
   });
@@ -762,19 +762,19 @@ describe('Emergency Kill Switches Integration Tests', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBeDefined();  // Just check error exists
-      expect(response.body.error).not.toBe('');   // And it's not empty
+      expect(response.body.error).toBeDefined();
+      expect(response.body.error.message).toBeTruthy();
     });
 
       it('should handle malformed configuration payloads', async () => {
-        const response = await request(app)
-          .put(`${BASE_PATH}/config/emergency`)
-          .set('Content-Type', 'application/json')
-          .send('{"invalid": json"}')
-          .expect(400);
+      const response = await request(app)
+        .put(`${BASE_PATH}/config/emergency`)
+        .set('Content-Type', 'application/json')
+        .send('{"invalid": json"}')
+        .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('Invalid JSON payload');
+      expect(response.body.error.message).toContain('Invalid JSON payload');
     });
 
     it('should reject empty emergency configuration updates', async () => {
@@ -787,6 +787,7 @@ describe('Emergency Kill Switches Integration Tests', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.error).toBeDefined();
+      expect(response.body.error.message).toBeTruthy();
     });
   });
 });

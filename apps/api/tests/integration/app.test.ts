@@ -8,6 +8,10 @@ import app from '../../src/app';
 import { HEALTH_STATUS } from '@my-many-books/shared-types';
 import { BASE_PATH } from '../utils/apiBasePath';
 
+jest.mock('../../src/services/hooks/hookSystem', () => ({
+  initializeHookSystem: jest.fn().mockResolvedValue(undefined),
+}));
+
 describe('Express App Integration', () => {
   describe('Health endpoint', () => {
     it('should respond to health check', async () => {
@@ -15,10 +19,11 @@ describe('Express App Integration', () => {
         .get(`${BASE_PATH}/health`)
         .expect(200);
 
-      expect(response.body).toHaveProperty('status', HEALTH_STATUS.HEALTHY);
-      expect(response.body).toHaveProperty('timestamp');
-      expect(response.body).toHaveProperty('version');
-      expect(response.body.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body).toHaveProperty('data.status', HEALTH_STATUS.HEALTHY);
+      expect(response.body).toHaveProperty('data.timestamp');
+      expect(response.body).toHaveProperty('data.version');
+      expect(response.body.data.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
   });
 
@@ -48,15 +53,24 @@ describe('Express App Integration', () => {
         .set('Content-Type', 'application/json')
         .expect(200);
 
-      expect(response.body).toHaveProperty('status');
+      expect(response.body).toHaveProperty('data.status');
     });
   });
 
   describe('Error handling', () => {
     it('should handle 404 for unknown routes', async () => {
-      await request(app)
+      const response = await request(app)
         .get('/unknown-route')
         .expect(404);
+
+      expect(response.body).toEqual({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Endpoint not found',
+          details: { availableRoutes: BASE_PATH },
+        },
+      });
     });
 
     it('should handle invalid JSON gracefully', async () => {
@@ -68,8 +82,10 @@ describe('Express App Integration', () => {
 
       expect(response.body).toMatchObject({
         success: false,
-        error: 'Invalid JSON payload',
-        code: 'INVALID_JSON',
+        error: {
+          message: 'Invalid JSON payload',
+          code: 'INVALID_JSON',
+        },
       });
     });
   });
@@ -81,7 +97,7 @@ describe('Express App Integration', () => {
         .get(`${BASE_PATH}/health`)
         .expect(200);
 
-      expect(response.body.status).toBe(HEALTH_STATUS.HEALTHY);
+      expect(response.body.data.status).toBe(HEALTH_STATUS.HEALTHY);
     });
 
     it('should limit request size appropriately', async () => {

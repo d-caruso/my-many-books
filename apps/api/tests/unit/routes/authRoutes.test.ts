@@ -29,6 +29,9 @@ jest.mock('../../../src/models', () => ({
     close: jest.fn(),
   },
 }));
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  initializeHookSystem: jest.fn().mockResolvedValue(undefined),
+}));
 jest.mock('@my-many-books/shared-i18n', () => ({
   initializeI18n: jest.fn().mockResolvedValue(undefined),
   i18n: {
@@ -117,11 +120,12 @@ describe('Auth Routes', () => {
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('accessToken', mockAccessToken);
-      expect(response.body).toHaveProperty('idToken', mockIdToken);
-      expect(response.body).toHaveProperty('expiresIn', 3600);
-      expect(response.body).toHaveProperty('user');
-      expect(response.body.user).toEqual({
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body.data).toHaveProperty('accessToken', mockAccessToken);
+      expect(response.body.data).toHaveProperty('idToken', mockIdToken);
+      expect(response.body.data).toHaveProperty('expiresIn', 3600);
+      expect(response.body).toHaveProperty('data.user');
+      expect(response.body.data.user).toEqual({
         id: 1,
         email: 'test@example.com',
               name: 'Test',
@@ -152,7 +156,7 @@ describe('Auth Routes', () => {
         .send({ email: 'test@example.com', password: 'wrongpassword' });
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'Invalid email or password');
+      expect(response.body.error).toHaveProperty('message', 'Invalid email or password');
     });
 
     it('should return 401 when user not found', async () => {
@@ -166,7 +170,7 @@ describe('Auth Routes', () => {
         .send({ email: 'nonexistent@example.com', password: 'Password123!' });
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'User not found');
+      expect(response.body.error).toHaveProperty('message', 'User not found');
     });
 
     it('should return 400 without email', async () => {
@@ -175,7 +179,7 @@ describe('Auth Routes', () => {
         .send({ password: 'Password123!' });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'Email and password required');
+      expect(response.body.error).toHaveProperty('message', 'Email and password required');
     });
 
     it('should return 400 without password', async () => {
@@ -184,7 +188,7 @@ describe('Auth Routes', () => {
         .send({ email: 'test@example.com' });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'Email and password required');
+      expect(response.body.error).toHaveProperty('message', 'Email and password required');
     });
 
     it('should return 401 when token is invalid', async () => {
@@ -206,7 +210,7 @@ describe('Auth Routes', () => {
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'Invalid token');
+      expect(response.body.error).toHaveProperty('message', 'Invalid token');
     });
   });
 
@@ -228,16 +232,17 @@ describe('Auth Routes', () => {
         .set('Cookie', ['refresh_token=valid-refresh-token']);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('accessToken', mockAccessToken);
-      expect(response.body).toHaveProperty('idToken', mockIdToken);
-      expect(response.body).toHaveProperty('expiresIn', 3600);
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body.data).toHaveProperty('accessToken', mockAccessToken);
+      expect(response.body.data).toHaveProperty('idToken', mockIdToken);
+      expect(response.body.data).toHaveProperty('expiresIn', 3600);
     });
 
     it('should return 401 without refresh token cookie', async () => {
       const response = await request(app).post(`${BASE_PATH}/auth/refresh`);
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'No refresh token');
+      expect(response.body.error).toHaveProperty('message', 'No refresh token');
     });
 
     it('should return 401 with invalid refresh token', async () => {
@@ -250,7 +255,7 @@ describe('Auth Routes', () => {
         .set('Cookie', ['refresh_token=invalid-token']);
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'Refresh token invalid');
+      expect(response.body.error).toHaveProperty('message', 'Refresh token invalid');
 
       // Verify cookie is cleared
       const cookies = response.headers['set-cookie'] as unknown as string[];
@@ -267,7 +272,7 @@ describe('Auth Routes', () => {
         .set('Cookie', ['refresh_token=expired-token']);
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'Refresh failed');
+      expect(response.body.error).toHaveProperty('message', 'Refresh failed');
 
       // Verify cookie is cleared
       const cookies = response.headers['set-cookie'] as unknown as string[];
@@ -281,6 +286,7 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
+      expect(response.body).toHaveProperty('data', null);
 
       // Verify cookie is cleared
       const cookies = response.headers['set-cookie'] as unknown as string[];
@@ -307,7 +313,7 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
-      expect(response.body).toHaveProperty('requiresVerification', true);
+      expect(response.body.data).toHaveProperty('requiresVerification', true);
       expect(response.body).toHaveProperty(
         'message',
         'Registration successful. Please check your email to verify your account.'
@@ -322,7 +328,7 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'All fields required');
+      expect(response.body.error).toHaveProperty('message', 'All fields required');
     });
 
     it('should return 400 when password is missing', async () => {
@@ -334,7 +340,7 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'All fields required');
+      expect(response.body.error).toHaveProperty('message', 'All fields required');
     });
 
     it('should return 400 when name is missing', async () => {
@@ -345,7 +351,7 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'All fields required');
+      expect(response.body.error).toHaveProperty('message', 'All fields required');
     });
 
     it('should return 400 when surname is missing', async () => {
@@ -357,7 +363,7 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'All fields required');
+      expect(response.body.error).toHaveProperty('message', 'All fields required');
     });
 
     it('should return 409 when email already exists', async () => {
@@ -374,7 +380,7 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(409);
-      expect(response.body).toHaveProperty('error', 'Email already registered');
+      expect(response.body.error).toHaveProperty('message', 'Email already registered');
     });
 
     it('should return 400 when password is invalid', async () => {
@@ -392,7 +398,7 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'Password does not meet requirements');
+      expect(response.body.error).toHaveProperty('message', 'Password does not meet requirements');
     });
 
     it('should return 500 on unknown error', async () => {
@@ -406,8 +412,8 @@ describe('Auth Routes', () => {
       });
 
       expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('error', 'Registration failed');
-      expect(response.body).toHaveProperty('details');
+      expect(response.body.error).toHaveProperty('message', 'Registration failed');
+      expect(response.body.error).toHaveProperty('details');
     });
   });
 });

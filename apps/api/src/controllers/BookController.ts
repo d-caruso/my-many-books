@@ -607,20 +607,16 @@ export class BookController extends BaseController {
     });
 
     if (localBook) {
-      return this.createSuccessResponse({
-        source: 'local',
-        book: localBook,
-      });
+      return this.createSuccessResponse(localBook.get({ plain: true }));
     }
 
     // If not found locally, try ISBN service
     const result = await isbnService.lookupBook(validation.normalizedIsbn!);
+    if (result.success && result.book) {
+      return this.createSuccessResponse(result.book);
+    }
 
-    return this.createSuccessResponse({
-      source: result.source,
-      book: result.success ? result.book : null,
-      error: result.success ? undefined : result.error,
-    });
+    return this.createSuccessResponse(null);
   }
 
   /**

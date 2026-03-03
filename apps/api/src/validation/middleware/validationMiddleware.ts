@@ -8,6 +8,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
 import { i18n } from '@my-many-books/shared-i18n';
+import { createErrorResponse, ERROR_CODES } from '@my-many-books/shared-types';
 
 /**
  * Extend Express Request to include validated data
@@ -147,11 +148,9 @@ export function validate(schema: ValidationSchema, options: ValidationOptions = 
 
     // If validation errors exist, return 400 Bad Request
     if (errors.length > 0) {
-      res.status(400).json({
-        success: false,
-        error: i18n.t('errors.validation_failed'),
-        details: errors,
-      });
+      res
+        .status(400)
+        .json(createErrorResponse(ERROR_CODES.VALIDATION_FAILED, i18n.t('errors.validation_failed'), { errors }));
       return;
     }
 

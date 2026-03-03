@@ -24,7 +24,7 @@ import settingsRoutes from './routes/settingsRoutes';
 import adminMobileAnalyticsRoutes from './routes/adminMobileAnalyticsRoutes';
 import adminMobileHooksRoutes from './routes/adminMobileHooksRoutes';
 import mobileAnalyticsRoutes from './routes/mobileAnalyticsRoutes';
-import configRoutes from './routes/configRoutes'; 
+import configRoutes from './routes/configRoutes';
 import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
 import { initializeHookSystem } from './services/hooks/hookSystem';
@@ -35,7 +35,7 @@ import { initializeI18n } from '@my-many-books/shared-i18n';
 import { getLogger } from '@my-many-books/shared-logging';
 import { SettingsService } from './services/SettingsService';
 import { parseTextPlainJson } from './middleware/parseTextPlainJson';
-import { HEALTH_STATUS } from '@my-many-books/shared-types';
+import { createErrorResponse, ERROR_CODES, HEALTH_STATUS } from '@my-many-books/shared-types';
 
 const app: express.Express = express();
 const isTestEnvironment = process.env['NODE_ENV'] === 'test';
@@ -78,10 +78,13 @@ const BASE_PATH = `${API_PREFIX}/${API_ROUTE_VERSION}`;
 // Apply public rate limiter to health check
 app.get(`${BASE_PATH}/health`, publicLimiter, (_req, res): void => {
   res.status(200).json({
-    status: HEALTH_STATUS.HEALTHY,
-    timestamp: new Date().toISOString(),
-    version: process.env['API_VERSION'] || '1.0.0',
-    environment: process.env['NODE_ENV'] || 'development',
+    success: true,
+    data: {
+      status: HEALTH_STATUS.HEALTHY,
+      timestamp: new Date().toISOString(),
+      version: process.env['API_VERSION'] || '1.0.0',
+      environment: process.env['NODE_ENV'] || 'development',
+    },
   });
 });
 
@@ -105,11 +108,9 @@ app.use(`${BASE_PATH}/admin/mobile-hooks`, adminMobileHooksRoutes);
 
 // ===== 404 HANDLER =====
 app.use((_req, res): void => {
-  res.status(404).json({
-    success: false,
-    error: 'Endpoint not found',
-    availableRoutes: BASE_PATH,
-  });
+  res
+    .status(404)
+    .json(createErrorResponse(ERROR_CODES.NOT_FOUND, 'Endpoint not found', { availableRoutes: BASE_PATH }));
 });
 
 // ===== GLOBAL ERROR HANDLER =====

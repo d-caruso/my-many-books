@@ -58,6 +58,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
         http.put(`*${API_BASE_PATH}/admin/mobile-hooks/settings/listeners`, async ({ request }) => {
           capturedBody = await request.json();
           return HttpResponse.json({
+            success: true,
             data: {
               settings: {
                 analyticsEnabled: capturedBody?.analyticsEnabled ?? true,
@@ -103,6 +104,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
         http.put(`*${API_BASE_PATH}/admin/mobile-hooks/config/listeners`, async ({ request }) => {
           payloadBody = await request.json();
           return HttpResponse.json({
+            success: true,
             data: {
               config: {
                 listeners: payloadBody?.listeners ?? {},
@@ -155,6 +157,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
         http.put(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/mappings`, async ({ request }) => {
           requestBody = await request.json();
           return HttpResponse.json({
+            success: true,
             data: {
               config: {
                 actions: requestBody?.actions ?? {},
@@ -197,6 +200,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
         http.put(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/types/email`, async ({ request }) => {
           captured = await request.json();
           return HttpResponse.json({
+            success: true,
             data: {
               actionType: 'email',
               settings: captured,
@@ -234,6 +238,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
         http.put(`*${API_BASE_PATH}/admin/mobile-hooks/emergency`, async ({ request }) => {
           captured = await request.json();
           return HttpResponse.json({
+            success: true,
             data: {
               ...captured,
               updatedAt: new Date().toISOString(),
@@ -264,6 +269,7 @@ describe('Admin mobile-hooks API (MSW)', () => {
           const url = new URL(request.url);
           capturedLimit = url.searchParams.get('limit');
           return HttpResponse.json({
+            success: true,
             data: {
               events: [],
             },

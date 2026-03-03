@@ -4,6 +4,7 @@
 // ================================================================
 
 import { getLogger } from '@my-many-books/shared-logging';
+import { createErrorResponse, ERROR_CODES, type ErrorCode } from '@my-many-books/shared-types';
 import express, { Router, Request, Response } from 'express';
 import {
   CognitoIdentityProviderClient,
@@ -12,6 +13,7 @@ import {
   AuthFlowType,
   InitiateAuthCommandOutput,
 } from '@aws-sdk/client-cognito-identity-provider';
+import * as jwt from 'jsonwebtoken';
 import { UserService } from '../middleware/auth';
 
 const router: express.Router = Router();
@@ -43,13 +45,31 @@ interface DecodedIdToken {
   family_name?: string;
 }
 
+const sendSuccess = <T>(res: Response, statusCode: number, data: T, message?: string): void => {
+  res.status(statusCode).json({
+    success: true,
+    data,
+    ...(message && { message }),
+  });
+};
+
+const sendError = (
+  res: Response,
+  statusCode: number,
+  code: ErrorCode,
+  message: string,
+  details?: Record<string, unknown>
+): void => {
+  res.status(statusCode).json(createErrorResponse(code, message, details));
+};
+
 // Login endpoint
 router.post('/login', async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body as LoginRequest;
 
     if (!email || !password) {
-      res.status(400).json({ error: 'Email and password required' });
+      sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'Email and password required');
       return;
     }
 
@@ -66,19 +86,17 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     const response: InitiateAuthCommandOutput = await cognitoClient.send(command);
 
     if (!response.AuthenticationResult) {
-      res.status(401).json({ error: 'Authentication failed' });
+      sendError(res, 401, ERROR_CODES.AUTH_FAILED, 'Authentication failed');
       return;
     }
 
     const authResult = response.AuthenticationResult;
 
     // Decode ID token to get user info
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const jwt = require('jsonwebtoken') as { decode: (token: string) => unknown };
     const decoded = jwt.decode(authResult.IdToken || '') as DecodedIdToken | null;
 
     if (!decoded || !decoded.sub || !decoded.email) {
-      res.status(401).json({ error: 'Invalid token' });
+      sendError(res, 401, ERROR_CODES.AUTH_TOKEN_INVALID, 'Invalid token');
       return;
     }
 
@@ -102,8 +120,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       path: AUTH_COOKIE_PATH,
     });
 
-    // Return access token and user info
-    res.json({
+    sendSuccess(res, 200, {
       accessToken: authResult.AccessToken,
       idToken: authResult.IdToken,
       expiresIn: authResult.ExpiresIn,
@@ -126,18 +143,18 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       const errorName = (error as { name: string }).name;
 
       if (errorName === 'NotAuthorizedException') {
-        res.status(401).json({ error: 'Invalid email or password' });
+        sendError(res, 401, ERROR_CODES.AUTH_FAILED, 'Invalid email or password');
         return;
       }
 
       if (errorName === 'UserNotFoundException') {
-        res.status(401).json({ error: 'User not found' });
+        sendError(res, 401, ERROR_CODES.USER_NOT_FOUND, 'User not found');
         return;
       }
     }
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    res.status(500).json({ error: 'Authentication failed', details: errorMessage });
+    sendError(res, 500, ERROR_CODES.AUTH_FAILED, 'Authentication failed', { cause: errorMessage });
   }
 });
 
@@ -147,7 +164,7 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
     const refreshToken = req.cookies?.['refresh_token'] as string | undefined;
 
     if (!refreshToken) {
-      res.status(401).json({ error: 'No refresh token' });
+      sendError(res, 401, ERROR_CODES.AUTH_TOKEN_MISSING, 'No refresh token');
       return;
     }
 
@@ -164,14 +181,13 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
 
     if (!response.AuthenticationResult) {
       res.clearCookie('refresh_token', { path: AUTH_COOKIE_PATH });
-      res.status(401).json({ error: 'Refresh token invalid' });
+      sendError(res, 401, ERROR_CODES.AUTH_TOKEN_INVALID, 'Refresh token invalid');
       return;
     }
 
     const authResult = response.AuthenticationResult;
 
-    // Return new access token
-    res.json({
+    sendSuccess(res, 200, {
       accessToken: authResult.AccessToken,
       idToken: authResult.IdToken,
       expiresIn: authResult.ExpiresIn,
@@ -184,14 +200,14 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
     res.clearCookie('refresh_token', { path: AUTH_COOKIE_PATH });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    res.status(401).json({ error: 'Refresh failed', details: errorMessage });
+    sendError(res, 401, ERROR_CODES.AUTH_FAILED, 'Refresh failed', { cause: errorMessage });
   }
 });
 
 // Logout endpoint
 router.post('/logout', (_req: Request, res: Response): void => {
   res.clearCookie('refresh_token', { path: AUTH_COOKIE_PATH });
-  res.json({ success: true });
+  sendSuccess(res, 200, null, 'Logout successful');
 });
 
 // Register endpoint
@@ -200,7 +216,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     const { email, password, name, surname } = req.body as RegisterRequest;
 
     if (!email || !password || !name || !surname) {
-      res.status(400).json({ error: 'All fields required' });
+      sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'All fields required');
       return;
     }
 
@@ -217,11 +233,12 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 
     await cognitoClient.send(command);
 
-    res.json({
-      success: true,
-      message: 'Registration successful. Please check your email to verify your account.',
-      requiresVerification: true,
-    });
+    sendSuccess(
+      res,
+      200,
+      { requiresVerification: true },
+      'Registration successful. Please check your email to verify your account.'
+    );
   } catch (error: unknown) {
     getLogger().error(
       { err: error instanceof Error ? error : new Error(String(error)) },
@@ -232,18 +249,18 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       const errorName = (error as { name: string }).name;
 
       if (errorName === 'UsernameExistsException') {
-        res.status(409).json({ error: 'Email already registered' });
+        sendError(res, 409, ERROR_CODES.CONFLICT, 'Email already registered');
         return;
       }
 
       if (errorName === 'InvalidPasswordException') {
-        res.status(400).json({ error: 'Password does not meet requirements' });
+        sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Password does not meet requirements');
         return;
       }
     }
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    res.status(500).json({ error: 'Registration failed', details: errorMessage });
+    sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Registration failed', { cause: errorMessage });
   }
 });
 

@@ -173,7 +173,10 @@ describe('Admin Routes', () => {
       );
       expect(response.body).toEqual({
         success: false,
-        error: 'Not implemented yet',
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Not implemented yet',
+        },
       });
     });
 
@@ -195,7 +198,10 @@ describe('Admin Routes', () => {
       );
       expect(response.body).toEqual({
         success: false,
-        error: 'Not implemented yet',
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Not implemented yet',
+        },
       });
     });
   });
@@ -290,6 +296,7 @@ describe('Admin Routes', () => {
       );
       expect(response.body).toEqual({
         success: true,
+        data: null,
         message: 'User deleted',
       });
     });
@@ -385,6 +392,7 @@ describe('Admin Routes', () => {
       );
       expect(response.body).toEqual({
         success: true,
+        data: null,
         message: 'Book deleted',
       });
     });

@@ -43,6 +43,6 @@ export class UserApi {}
 export class BaseApiClient {}
 
 // Export types (these will be ignored by Jest but needed for TypeScript compilation)
-export interface HttpClient {}
-export interface RequestConfig {}
-export interface ApiClientConfig {}
+export type HttpClient = unknown;
+export type RequestConfig = unknown;
+export type ApiClientConfig = unknown;

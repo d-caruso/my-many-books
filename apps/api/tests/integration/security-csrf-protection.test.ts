@@ -171,7 +171,7 @@ describe('CSRF Protection Tests', () => {
 
       // Should fail because refresh token is not present
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'No refresh token');
+      expect(response.body).toHaveProperty('error.message', 'No refresh token');
     });
   });
 
@@ -184,7 +184,7 @@ describe('CSRF Protection Tests', () => {
 
       // Should fail because refresh token must be in HttpOnly cookie, not request body
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'No refresh token');
+      expect(response.body).toHaveProperty('error.message', 'No refresh token');
     });
 
     it('should not accept refresh token from request body', async () => {
@@ -285,7 +285,7 @@ describe('CSRF Protection Tests', () => {
 
       // Without cookie, request should fail
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'No refresh token');
+      expect(response.body).toHaveProperty('error.message', 'No refresh token');
     });
 
     it('should not process requests with only body parameters', async () => {

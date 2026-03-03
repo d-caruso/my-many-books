@@ -21,6 +21,7 @@ module.exports = {
     '^@my-many-books/shared-types$': '<rootDir>/../../libs/shared-types/src/index.ts',
     '^@my-many-books/shared-utils$': '<rootDir>/../../libs/shared-utils/src/index.ts',
     '^@my-many-books/shared-validation$': '<rootDir>/../../libs/shared-validation/src/index.ts',
+    '^@my-many-books/hookey$': '<rootDir>/../../libs/hookey/src/index.ts',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(@my-many-books)/)',

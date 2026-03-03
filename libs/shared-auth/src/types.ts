@@ -56,6 +56,24 @@ export interface RegisterResponse {
   message: string;
 }
 
+export interface ApiSuccessEnvelope<T> {
+  success: true;
+  data: T;
+  message?: string;
+}
+
+export interface ApiErrorEnvelope {
+  success: false;
+  error:
+    | string
+    | {
+        code?: string;
+        message: string;
+        details?: unknown;
+      };
+  requestId?: string;
+}
+
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;

@@ -23,7 +23,9 @@
       "@my-many-books/shared-utils": ["../../libs/shared-utils/src/index.ts"],
       "@my-many-books/shared-utils/*": ["../../libs/shared-utils/src/*"],
       "@my-many-books/shared-validation": ["../../libs/shared-validation/src/index.ts"],
-      "@my-many-books/shared-validation/*": ["../../libs/shared-validation/src/*"]
+      "@my-many-books/shared-validation/*": ["../../libs/shared-validation/src/*"],
+      "@my-many-books/hookey": ["../../libs/hookey/src/index.ts"],
+      "@my-many-books/hookey/*": ["../../libs/hookey/src/*"]
     }
   },
   "include": [

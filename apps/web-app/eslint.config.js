@@ -3,6 +3,7 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import globals from 'globals';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -61,6 +62,72 @@ export default tseslint.config(
     },
   },
 
+  // Cypress support files use declaration merging on Cypress namespace.
+  {
+    files: ['**/cypress/support/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-namespace': 'off',
+    },
+  },
+
+  // Cypress webpack config runs in Node/CommonJS context.
+  {
+    files: ['**/cypress/webpack.config.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+
+  // Service worker has a dedicated worker global scope.
+  {
+    files: ['**/public/sw.js'],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+        ...globals.browser,
+      },
+    },
+  },
+
+  // Seed scripts run in Node/CommonJS context.
+  {
+    files: ['**/seed-*.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+
+  // Test and mock files run in test/runtime contexts and often use mock factories.
+  {
+    files: [
+      '**/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
+      '**/src/**/__mocks__/**/*.{js,jsx,ts,tsx}',
+      '**/src/jest.setup.ts',
+    ],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+        ...globals.node,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      'react/display-name': 'off',
+    },
+  },
+
   // Ignore patterns
   {
     ignores: [
@@ -70,6 +137,9 @@ export default tseslint.config(
       'node_modules/**',
       '*.config.js',
       '*.config.ts',
+      '**/*.config.js',
+      '**/*.config.ts',
+      '**/.eslintrc.cjs',
       'vite.config.ts',
       'vitest.config.ts',
       'vitest.*.ts',

@@ -21,6 +21,7 @@ import type {
   MobileAnalyticsStats,
   MobileAnalyticsActionTypeBreakdown,
   MobileAnalyticsProcessingStatus,
+  UserProfile,
 } from '@my-many-books/shared-types';
 import { SearchFiltersSchema } from '@my-many-books/shared-types';
 import axios from 'axios';
@@ -41,6 +42,25 @@ class AxiosHttpClient implements HttpClient {
       timeout,
       withCredentials: true, // Send cookies for refresh token
     });
+
+    const unwrapSuccessEnvelope = <T>(payload: unknown): T => {
+      if (
+        payload &&
+        typeof payload === 'object' &&
+        'success' in payload &&
+        (payload as { success?: unknown }).success === true &&
+        'data' in payload
+      ) {
+        return (payload as { data: T }).data;
+      }
+
+      throw new Error(
+        i18n.t('common:errors.invalid_response_envelope', {
+          defaultValue: 'Invalid API success envelope',
+        })
+      );
+    };
+
     // Add request interceptor for auth token
     this.axios.interceptors.request.use(async (config: any) => {
       const token = await authService.getIdToken();
@@ -53,12 +73,11 @@ class AxiosHttpClient implements HttpClient {
     // Add response interceptor for error handling
     this.axios.interceptors.response.use(
       (response: any) => {
-        // Extract data field from API response structure
-        // In production, unwrap nested success response if present
-        if (response.data && response.data.success && response.data.data !== undefined) {
-          return response.data.data;
+        if (response.status === 204) {
+          return response.data;
         }
-        return response.data;
+
+        return unwrapSuccessEnvelope(response.data);
       },
       async (error: any) => {
         // Handle timeout errors (client-side, no response from API)
@@ -77,7 +96,7 @@ class AxiosHttpClient implements HttpClient {
             // Retry the original request
             const token = await authService.getIdToken();
             error.config.headers.Authorization = `Bearer ${token}`;
-            return axios.request(error.config);
+            return this.axios.request(error.config);
           }
 
           // Redirect to login if refresh fails
@@ -160,6 +179,17 @@ const sanitizeString = (value?: string | null): string | undefined => {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 };
+
+const mapUserProfileToUser = (profile: UserProfile): User => ({
+  id: profile.id,
+  email: profile.email,
+  name: profile.name,
+  surname: profile.surname,
+  isActive: profile.isActive,
+  role: profile.role,
+  creationDate: profile.createdAt,
+  updateDate: profile.updatedAt,
+});
 
 // Interface for API service dependencies
 interface ApiServiceDependencies {
@@ -265,8 +295,8 @@ class ApiService {
         status: "finished",
         notes: "Classic American literature",
         userId: 1,
-        authors: [{ id: 1, name: "F. Scott", surname: "Fitzgerald", nationality: "American", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }],
-        categories: [{ id: 1, name: "Fiction", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }, { id: 2, name: "Classic Literature", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }],
+        authors: [{ id: 1, name: "F. Scott", surname: "Fitzgerald" }],
+        categories: [{ id: 1, name: "Fiction" }, { id: 2, name: "Classic Literature" }],
         creationDate: "2024-01-15T10:00:00Z",
         updateDate: "2024-01-15T10:00:00Z"
       },
@@ -279,8 +309,8 @@ class ApiService {
         status: "reading",
         notes: "Powerful story about justice and morality",
         userId: 1,
-        authors: [{ id: 2, name: "Harper", surname: "Lee", nationality: "American", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }],
-        categories: [{ id: 1, name: "Fiction", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }, { id: 3, name: "Social Issues", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }],
+        authors: [{ id: 2, name: "Harper", surname: "Lee" }],
+        categories: [{ id: 1, name: "Fiction" }, { id: 3, name: "Social Issues" }],
         creationDate: "2024-01-20T14:30:00Z",
         updateDate: "2024-01-25T16:45:00Z"
       },
@@ -293,8 +323,8 @@ class ApiService {
         status: "paused",
         notes: "Dystopian masterpiece",
         userId: 1,
-        authors: [{ id: 3, name: "George", surname: "Orwell", nationality: "British", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }],
-        categories: [{ id: 1, name: "Fiction", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }, { id: 4, name: "Dystopian", creationDate: "2024-01-01T00:00:00Z", updateDate: "2024-01-01T00:00:00Z" }],
+        authors: [{ id: 3, name: "George", surname: "Orwell" }],
+        categories: [{ id: 1, name: "Fiction" }, { id: 4, name: "Dystopian" }],
         creationDate: "2024-02-01T09:15:00Z",
         updateDate: "2024-02-01T09:15:00Z"
       }
@@ -418,11 +448,13 @@ class ApiService {
 
   // User methods
   async getCurrentUser(): Promise<User> {
-    return this.apiClient.users.getCurrentUser();
+    const profile = await this.apiClient.users.getCurrentUser();
+    return mapUserProfileToUser(profile);
   }
 
   async updateProfile(userData: Pick<User, 'name' | 'surname'>): Promise<User> {
-    return this.apiClient.users.updateProfile(userData);
+    const profile = await this.apiClient.users.updateProfile(userData);
+    return mapUserProfileToUser(profile);
   }
 
   // Admin methods
@@ -445,6 +477,57 @@ class ApiService {
     return `${cleanBaseURL}${normalizedEndpoint}`;
   }
 
+  private extractApiErrorMessage(errorData: unknown, fallback: string): string {
+    if (!errorData || typeof errorData !== 'object') {
+      return fallback;
+    }
+
+    const maybeError = (errorData as { error?: unknown }).error;
+    if (typeof maybeError === 'string' && maybeError.length > 0) {
+      return maybeError;
+    }
+
+    if (
+      maybeError &&
+      typeof maybeError === 'object' &&
+      'message' in maybeError &&
+      typeof maybeError.message === 'string'
+    ) {
+      return maybeError.message;
+    }
+
+    return fallback;
+  }
+
+  private unwrapSuccessEnvelope<T>(
+    payload: unknown
+  ): { data: T; pagination?: Record<string, unknown> } {
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      'success' in payload &&
+      (payload as { success?: unknown }).success === true &&
+      'data' in payload
+    ) {
+      const typedPayload = payload as { data: T; pagination?: unknown };
+      const result: { data: T; pagination?: Record<string, unknown> } = {
+        data: typedPayload.data,
+      };
+
+      if (typedPayload.pagination && typeof typedPayload.pagination === 'object') {
+        result.pagination = typedPayload.pagination as Record<string, unknown>;
+      }
+
+      return result;
+    }
+
+    throw new Error(
+      i18n.t('common:errors.invalid_response_envelope', {
+        defaultValue: 'Invalid API success envelope',
+      })
+    );
+  }
+
   private async fetchAdminData<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = this.buildAdminUrl(endpoint);
     const token = await authService.getIdToken();
@@ -460,11 +543,17 @@ class ApiService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(
+        this.extractApiErrorMessage(errorData, `HTTP ${response.status}: ${response.statusText}`)
+      );
     }
 
-    const payload = await response.json();
-    return payload.data || payload;
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    const payload = await response.json().catch(() => null);
+    return this.unwrapSuccessEnvelope<T>(payload).data;
   }
 
   private async fetchAdminPayload<T>(
@@ -485,10 +574,17 @@ class ApiService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(
+        this.extractApiErrorMessage(errorData, `HTTP ${response.status}: ${response.statusText}`)
+      );
     }
 
-    return await response.json();
+    if (response.status === 204) {
+      return { data: undefined as T };
+    }
+
+    const payload = await response.json().catch(() => null);
+    return this.unwrapSuccessEnvelope<T>(payload);
   }
 
   async getAdminHooks(): Promise<{ hooks: AdminHookSummary[]; total?: number }> {
@@ -685,10 +781,6 @@ class ApiService {
   }
 
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<any> {
-    const baseURL = env.API_BASE_URL;
-    const token = await authService.getIdToken();
-    const cleanBaseURL = baseURL.replace(/\/$/, '');
-
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -697,103 +789,27 @@ class ApiService {
       queryParams.append('search', search);
     }
 
-    const url = `${cleanBaseURL}/admin/users?${queryParams}`;
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.data || data;
+    return this.fetchAdminData(`/admin/users?${queryParams.toString()}`);
   }
 
   async getAdminUser(id: number): Promise<any> {
-    const baseURL = env.API_BASE_URL;
-    const token = await authService.getIdToken();
-    const cleanBaseURL = baseURL.replace(/\/$/, '');
-
-    const url = `${cleanBaseURL}/admin/users/${id}`;
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.data || data;
+    return this.fetchAdminData(`/admin/users/${id}`);
   }
 
   async updateAdminUser(id: number, userData: any): Promise<any> {
-    const baseURL = env.API_BASE_URL;
-    const token = await authService.getIdToken();
-    const cleanBaseURL = baseURL.replace(/\/$/, '');
-
-    const url = `${cleanBaseURL}/admin/users/${id}`;
-
-    const response = await fetch(url, {
+    return this.fetchAdminData(`/admin/users/${id}`, {
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(userData),
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.data || data;
   }
 
   async deleteAdminUser(id: number): Promise<any> {
-    const baseURL = env.API_BASE_URL;
-    const token = await authService.getIdToken();
-    const cleanBaseURL = baseURL.replace(/\/$/, '');
-
-    const url = `${cleanBaseURL}/admin/users/${id}`;
-
-    const response = await fetch(url, {
+    return this.fetchAdminData(`/admin/users/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.data || data;
   }
 
   async getAdminBooks(page: number = 1, limit: number = 10, search?: string, userId?: number): Promise<any> {
-    const baseURL = env.API_BASE_URL;
-    const token = await authService.getIdToken();
-    const cleanBaseURL = baseURL.replace(/\/$/, '');
-
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -805,96 +821,24 @@ class ApiService {
       queryParams.append('userId', userId.toString());
     }
 
-    const url = `${cleanBaseURL}/admin/books?${queryParams}`;
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.data || data;
+    return this.fetchAdminData(`/admin/books?${queryParams.toString()}`);
   }
 
   async getAdminBook(id: number): Promise<any> {
-    const baseURL = env.API_BASE_URL;
-    const token = await authService.getIdToken();
-    const cleanBaseURL = baseURL.replace(/\/$/, '');
-
-    const url = `${cleanBaseURL}/admin/books/${id}`;
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.data || data;
+    return this.fetchAdminData(`/admin/books/${id}`);
   }
 
   async updateAdminBook(id: number, bookData: any): Promise<any> {
-    const baseURL = env.API_BASE_URL;
-    const token = await authService.getIdToken();
-    const cleanBaseURL = baseURL.replace(/\/$/, '');
-
-    const url = `${cleanBaseURL}/admin/books/${id}`;
-
-    const response = await fetch(url, {
+    return this.fetchAdminData(`/admin/books/${id}`, {
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(bookData),
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.data || data;
   }
 
   async deleteAdminBook(id: number): Promise<any> {
-    const baseURL = env.API_BASE_URL;
-    const token = await authService.getIdToken();
-    const cleanBaseURL = baseURL.replace(/\/$/, '');
-
-    const url = `${cleanBaseURL}/admin/books/${id}`;
-
-    const response = await fetch(url, {
+    return this.fetchAdminData(`/admin/books/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.data || data;
   }
 
   // Book methods with development mock data fallback
@@ -972,13 +916,16 @@ class ApiService {
     const isPartialUpdate = Object.keys(backendData).length === 1 && backendData.status !== undefined;
 
     if (isPartialUpdate) {
-      return this.apiClient.books.patchBook(id, { status: backendData.status });
+      const status = backendData.status;
+      if (status === 'reading' || status === 'paused' || status === 'finished') {
+        return this.apiClient.books.patchBook(id, { status });
+      }
     }
 
     return this.apiClient.books.updateBook(id, backendData);
   }
 
-  async updateBookStatus(id: number, status: Book['status']): Promise<Book> {
+  async updateBookStatus(id: number, status: NonNullable<Book['status']>): Promise<Book> {
     return this.apiClient.books.updateBookStatus(id, status);
   }
 
@@ -1004,11 +951,13 @@ class ApiService {
     // Transform parameters for shared API
     const parsedQuery = SearchFiltersSchema.shape.query.safeParse(searchParams.q?.trim() ?? '');
     const query = parsedQuery.success ? parsedQuery.data : undefined;
+    const parsedStatus = SearchFiltersSchema.shape.status.safeParse(searchParams.status);
+    const parsedSortBy = SearchFiltersSchema.shape.sortBy.safeParse(searchParams.sortBy);
 
     const filters: SearchFilters = {
       query,
-      status: searchParams.status as any,
-      sortBy: searchParams.sortBy as any,
+      status: parsedStatus.success ? parsedStatus.data : undefined,
+      sortBy: parsedSortBy.success ? parsedSortBy.data : undefined,
       authorId: searchParams.authorId,
       categoryId: searchParams.categoryId,
       page: searchParams.page,

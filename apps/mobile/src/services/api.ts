@@ -28,6 +28,55 @@ class FetchHttpClient implements HttpClient {
     this.timeout = timeout;
   }
 
+  private extractErrorPayload(errorData: unknown): {
+    code?: string;
+    message?: string;
+    details?: unknown;
+  } {
+    if (!errorData || typeof errorData !== 'object') {
+      return {};
+    }
+
+    const maybeError = (errorData as { error?: unknown }).error;
+    if (typeof maybeError === 'string') {
+      return { message: maybeError };
+    }
+
+    if (maybeError && typeof maybeError === 'object') {
+      const typed = maybeError as { code?: unknown; message?: unknown; details?: unknown };
+      return {
+        ...(typeof typed.code === 'string' && { code: typed.code }),
+        ...(typeof typed.message === 'string' && { message: typed.message }),
+        ...(typed.details !== undefined && { details: typed.details }),
+      };
+    }
+
+    return {};
+  }
+
+  private unwrapSuccessEnvelope<T>(payload: unknown): T {
+    if (payload && typeof payload === 'object' && 'success' in payload) {
+      const envelope = payload as { success?: unknown; data?: T };
+
+      if (envelope.success === true && 'data' in envelope) {
+        return envelope.data as T;
+      }
+
+      if (envelope.success === false) {
+        const parsedError = this.extractErrorPayload(payload);
+        throw new ApiError(
+          ErrorCode.HTTP_CLIENT_ERROR,
+          parsedError.message || 'API request failed'
+        );
+      }
+    }
+
+    throw new ApiError(
+      ErrorCode.HTTP_SERVER_ERROR,
+      'Invalid API success envelope'
+    );
+  }
+
   private async fetchWithTimeout<T>(url: string, options: RequestInit = {}, isRetry = false): Promise<T> {
     // Check network connectivity before making request
     const networkState = await NetInfo.fetch();
@@ -53,8 +102,14 @@ class FetchHttpClient implements HttpClient {
 
       clearTimeout(timeoutId);
 
+      // 204 No Content is the only successful response that intentionally has no envelope body.
+      if (response.status === 204) {
+        return undefined as T;
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        const parsedError = this.extractErrorPayload(errorData);
 
         // Handle authentication errors (401 Unauthorized)
         // Try to refresh token and retry the request once
@@ -74,15 +129,15 @@ class FetchHttpClient implements HttpClient {
         // Handle authorization errors (403 Forbidden)
         // API returns error codes - client handles translation
         if (response.status === 403) {
-          const errorCode = errorData.error?.code;
+          const errorCode = parsedError.code;
           const authError = {
             status: 403,
             isAuthorizationError: true,
             code: errorCode,
             message: errorCode
-              ? i18n.t(`errors:${errorCode}`, { defaultValue: errorData.error?.message || 'Permission denied' })
-              : errorData.error?.message || 'Permission denied',
-            details: errorData.error?.details,
+              ? i18n.t(`errors:${errorCode}`, { defaultValue: parsedError.message || 'Permission denied' })
+              : parsedError.message || 'Permission denied',
+            details: parsedError.details,
           };
           throw authError;
         }
@@ -92,11 +147,12 @@ class FetchHttpClient implements HttpClient {
           throw new ApiError(ErrorCode.HTTP_SERVER_ERROR, `HTTP ${response.status}: ${response.statusText}`, response.status);
         } else {
           const code = getClientErrorCode(response.status);
-          throw new ApiError(code, `HTTP ${response.status}: ${response.statusText}`, response.status);
+          throw new ApiError(code, parsedError.message || `HTTP ${response.status}: ${response.statusText}`, response.status);
         }
       }
 
-      return await response.json();
+      const payload = await response.json().catch(() => null);
+      return this.unwrapSuccessEnvelope<T>(payload);
     } catch (error) {
       clearTimeout(timeoutId);
       

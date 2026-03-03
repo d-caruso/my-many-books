@@ -51,9 +51,11 @@ describe('expressErrorHandler', () => {
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         success: false,
-        error: 'Invalid data',
-        code: 'VALIDATION_ERROR',
-        details: { field: 'title' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid data',
+          details: { field: 'title' },
+        },
       })
     );
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -79,12 +81,14 @@ describe('expressErrorHandler', () => {
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         success: false,
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Internal server error',
+        },
       })
     );
     const payload = (res.json as jest.Mock).mock.calls[0][0];
-    expect(payload.stack).toBeUndefined();
+    expect(payload.error?.details?.stack).toBeUndefined();
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -95,7 +99,7 @@ describe('expressErrorHandler', () => {
     expressErrorHandler(error, noopReq, res, next);
 
     const payload = (res.json as jest.Mock).mock.calls[0][0];
-    expect(payload.stack).toEqual(expect.any(String));
+    expect(payload.error?.details?.stack).toEqual(expect.any(String));
   });
 
   it('maps JSON parse errors to bad request responses', () => {
@@ -109,8 +113,10 @@ describe('expressErrorHandler', () => {
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         success: false,
-        error: 'Invalid JSON payload',
-        code: 'INVALID_JSON',
+        error: expect.objectContaining({
+          code: 'INVALID_JSON',
+          message: 'Invalid JSON payload',
+        }),
       })
     );
   });

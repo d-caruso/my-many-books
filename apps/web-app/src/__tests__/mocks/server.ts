@@ -12,6 +12,11 @@ import { API_BASE_PATH } from '../utils/apiBasePath';
 
 const now = new Date().toISOString();
 
+const successEnvelope = <T>(data: T) => ({
+  success: true as const,
+  data,
+});
+
 const mockBooks: Book[] = [
   {
     id: 1,
@@ -202,14 +207,13 @@ export const resetMobileHooksState = () => {
   mobileHooksState = createMobileHooksState();
 };
 
-const buildListenersResponse = () => ({
-  data: {
+const buildListenersResponse = () =>
+  successEnvelope({
     listeners: mobileHooksState.listeners,
     categories: mobileHooksState.categories,
     availableEvents: mobileHooksState.availableEvents,
     lastUpdated: new Date().toISOString(),
-  },
-});
+  });
 
 const buildMappingsPayload = () => ({
   actions: mobileHooksState.mappings,
@@ -218,37 +222,28 @@ const buildMappingsPayload = () => ({
   lastUpdated: new Date().toISOString(),
 });
 
-const buildMappingsResponse = () => ({
-  data: buildMappingsPayload(),
-});
+const buildMappingsResponse = () => successEnvelope(buildMappingsPayload());
 
-const buildMappingsUpdateResponse = () => ({
-  data: {
+const buildMappingsUpdateResponse = () =>
+  successEnvelope({
     config: buildMappingsPayload(),
     updated: ['actions'],
     lastUpdated: new Date().toISOString(),
-  },
-});
+  });
 
-const buildRecentEventsResponse = ({ limit }: { limit?: number }) => ({
-  data: {
+const buildRecentEventsResponse = ({ limit }: { limit?: number }) =>
+  successEnvelope({
     events: mobileHooksState.recentEvents.slice(0, limit ?? mobileHooksState.recentEvents.length),
-  },
-});
+  });
 
-const buildActionTypesResponse = () => ({
-  data: {
-    actions: mobileHooksState.actionTypes,
-  },
-});
+const buildActionTypesResponse = () => successEnvelope({ actions: mobileHooksState.actionTypes });
 
-const buildListenerSettingsResponse = () => ({
-  data: {
+const buildListenerSettingsResponse = () =>
+  successEnvelope({
     settings: mobileHooksState.listenerSettings,
     lastUpdated: new Date().toISOString(),
     version: '1.0.0',
-  },
-});
+  });
 
 export const handlers = [
   // Books endpoints
@@ -427,15 +422,15 @@ export const handlers = [
     if (payload.categories) {
       Object.assign(mobileHooksState.categories, payload.categories);
     }
-    return HttpResponse.json({
-      data: {
+    return HttpResponse.json(
+      successEnvelope({
         updated: [
           ...Object.keys(payload.listeners ?? {}).map((key) => `listeners.${key}.enabled`),
           ...Object.keys(payload.categories ?? {}).map((key) => `categories.${key}.enabled`),
         ],
         lastUpdated: new Date().toISOString(),
-      },
-    });
+      })
+    );
   }),
   http.get(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/mappings`, () => HttpResponse.json(buildMappingsResponse())),
   http.put(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/mappings`, async ({ request }) => {
@@ -446,7 +441,7 @@ export const handlers = [
     return HttpResponse.json(buildMappingsUpdateResponse());
   }),
   http.post(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/test`, () =>
-    HttpResponse.json({ data: { executed: true } })
+    HttpResponse.json(successEnvelope({ executed: true }))
   ),
   http.get(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/types`, () => HttpResponse.json(buildActionTypesResponse())),
   http.put(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/types/:actionType`, async ({ params, request }) => {
@@ -456,17 +451,17 @@ export const handlers = [
       ...mobileHooksState.actionTypes[actionType],
       settings,
     };
-    return HttpResponse.json({
-      data: {
+    return HttpResponse.json(
+      successEnvelope({
         actionType,
         settings,
         updated: ['settings'],
         lastUpdated: new Date().toISOString(),
-      },
-    });
+      })
+    );
   }),
   http.post(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/types/:actionType/test`, ({ params }) =>
-    HttpResponse.json({ data: { actionType: params.actionType, status: 'success' } })
+    HttpResponse.json(successEnvelope({ actionType: params.actionType, status: 'success' }))
   ),
   http.get(`*${API_BASE_PATH}/admin/mobile-hooks/settings/listeners`, () => HttpResponse.json(buildListenerSettingsResponse())),
   http.put(`*${API_BASE_PATH}/admin/mobile-hooks/settings/listeners`, async ({ request }) => {
@@ -477,17 +472,21 @@ export const handlers = [
     };
     return HttpResponse.json(buildListenerSettingsResponse());
   }),
-  http.get(`*${API_BASE_PATH}/admin/mobile-hooks/emergency`, () => HttpResponse.json({ data: mobileHooksState.emergency })),
+  http.get(`*${API_BASE_PATH}/admin/mobile-hooks/emergency`, () =>
+    HttpResponse.json(successEnvelope(mobileHooksState.emergency))
+  ),
   http.put(`*${API_BASE_PATH}/admin/mobile-hooks/emergency`, async ({ request }) => {
     const updates = (await request.json()) as Record<string, unknown>;
     mobileHooksState.emergency = {
       ...mobileHooksState.emergency,
       ...updates,
     };
-    return HttpResponse.json({ data: mobileHooksState.emergency });
+    return HttpResponse.json(successEnvelope(mobileHooksState.emergency));
   }),
   http.get(`*${API_BASE_PATH}/admin/mobile-hooks/health`, () =>
-    HttpResponse.json({ data: { ...mobileHooksState.health, timestamp: new Date().toISOString() } })
+    HttpResponse.json(
+      successEnvelope({ ...mobileHooksState.health, timestamp: new Date().toISOString() })
+    )
   ),
   http.get(`*${API_BASE_PATH}/admin/mobile-hooks/analytics/events/recent`, ({ request }) => {
     const url = new URL(request.url);
@@ -495,9 +494,11 @@ export const handlers = [
     return HttpResponse.json(buildRecentEventsResponse({ limit }));
   }),
   http.get(`*${API_BASE_PATH}/admin/mobile-hooks/analytics/stats`, () =>
-    HttpResponse.json({ data: mobileHooksState.analyticsStats })
+    HttpResponse.json(successEnvelope(mobileHooksState.analyticsStats))
   ),
-  http.get(`*${API_BASE_PATH}/admin/mobile-analytics/stats`, () => HttpResponse.json({ data: mobileHooksState.analyticsStats })),
+  http.get(`*${API_BASE_PATH}/admin/mobile-analytics/stats`, () =>
+    HttpResponse.json(successEnvelope(mobileHooksState.analyticsStats))
+  ),
 ];
 
 export const server = setupServer(...handlers);

@@ -50,8 +50,14 @@
       "@my-many-books/shared-auth": [
         "../../libs/shared-auth/src"
       ],
+      "@my-many-books/shared-i18n": [
+        "../../libs/shared-i18n/src"
+      ],
       "@my-many-books/shared-validation": [
         "../../libs/shared-validation/src"
+      ],
+      "@my-many-books/hookey": [
+        "../../libs/hookey/src"
       ]
     }
   },

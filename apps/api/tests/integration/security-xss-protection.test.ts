@@ -112,7 +112,7 @@ describe('XSS Protection Tests', () => {
       expect(JSON.stringify(response.body)).not.toContain(mockRefreshToken);
 
       // But access token CAN be in response (will be stored in memory only)
-      expect(response.body).toHaveProperty('accessToken', mockAccessToken);
+      expect(response.body).toHaveProperty('data.accessToken', mockAccessToken);
     });
 
     it('should store refresh token in HttpOnly cookie', async () => {

@@ -71,13 +71,18 @@ describe('Validation Middleware', () => {
       expect(statusMock).toHaveBeenCalledWith(400);
       expect(jsonMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: expect.any(String),
-          details: expect.arrayContaining([
-            expect.objectContaining({
-              field: 'age',
-              message: expect.stringContaining('required'),
+          error: expect.objectContaining({
+            code: 'VALIDATION_FAILED',
+            message: expect.any(String),
+            details: expect.objectContaining({
+              errors: expect.arrayContaining([
+                expect.objectContaining({
+                  field: 'age',
+                  message: expect.stringContaining('required'),
+                }),
+              ]),
             }),
-          ]),
+          }),
         })
       );
     });
@@ -238,10 +243,14 @@ describe('Validation Middleware', () => {
       expect(statusMock).toHaveBeenCalledWith(400);
       expect(jsonMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          details: expect.arrayContaining([
-            expect.objectContaining({ field: 'name' }),
-            expect.objectContaining({ field: 'page' }),
-          ]),
+          error: expect.objectContaining({
+            details: expect.objectContaining({
+              errors: expect.arrayContaining([
+                expect.objectContaining({ field: 'name' }),
+                expect.objectContaining({ field: 'page' }),
+              ]),
+            }),
+          }),
         })
       );
     });
@@ -310,7 +319,7 @@ describe('Validation Middleware', () => {
 
       expect(statusMock).toHaveBeenCalledWith(400);
       const callArgs = jsonMock.mock.calls[0][0];
-      expect(callArgs.details.length).toBe(1); // Only first error
+      expect(callArgs.error.details.errors.length).toBe(1); // Only first error
     });
 
     it('should return all errors when abortEarly is false', () => {
@@ -329,7 +338,7 @@ describe('Validation Middleware', () => {
 
       expect(statusMock).toHaveBeenCalledWith(400);
       const callArgs = jsonMock.mock.calls[0][0];
-      expect(callArgs.details.length).toBe(3); // All errors
+      expect(callArgs.error.details.errors.length).toBe(3); // All errors
     });
   });
 });

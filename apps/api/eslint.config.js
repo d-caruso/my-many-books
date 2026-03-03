@@ -57,8 +57,10 @@ export default tseslint.config(
       '.serverless/**',
       'coverage/**',
       '*.js',
-      'scripts/**/*',
-      'tests/**/*',
+      '**/scripts/**/*',
+      '**/tests/**/*',
+      'apps/api/scripts/**/*',
+      'apps/api/tests/**/*',
     ],
   }
 );

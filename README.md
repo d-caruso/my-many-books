@@ -49,7 +49,7 @@ npm run lint
 
 ### API (`apps/api`)
 - **Tech Stack**: Node.js, TypeScript, AWS Lambda, Serverless Framework
-- **Features**: RESTful API, ISBN lookup, user management, serverless architecture
+- **Features**: RESTful API, ISBN lookup, user management, serverless architecture, standardized response envelopes (`success/data` and structured `error`)
 - **Development**: `nx serve api`
 - **Deploy**: `nx run api:deploy`
 

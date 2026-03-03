@@ -144,7 +144,10 @@ describe('Author Routes', () => {
 
       expect(response.body).toEqual({
         success: false,
-        error: 'Author not found',
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Author not found',
+        },
       });
     });
   });
@@ -197,7 +200,10 @@ describe('Author Routes', () => {
 
       expect(response.body).toEqual({
         success: false,
-        error: 'Name and surname are required',
+        error: {
+          code: 'VALIDATION_FAILED',
+          message: 'Name and surname are required',
+        },
       });
     });
   });
@@ -246,7 +252,10 @@ describe('Author Routes', () => {
 
       expect(response.body).toEqual({
         success: false,
-        error: 'Author not found',
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Author not found',
+        },
       });
     });
   });
@@ -284,7 +293,10 @@ describe('Author Routes', () => {
 
       expect(response.body).toEqual({
         success: false,
-        error: 'Author not found',
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Author not found',
+        },
       });
     });
   });
@@ -333,7 +345,10 @@ describe('Author Routes', () => {
 
       expect(response.body).toEqual({
         success: false,
-        error: 'Author not found',
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Author not found',
+        },
       });
     });
 
@@ -381,10 +396,12 @@ describe('Author Routes', () => {
 
       expect(response.body).toMatchObject({
         success: false,
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Internal server error',
+        },
       });
-      expect(response.body.stack).toEqual(expect.any(String));
+      expect(response.body.error.details.stack).toEqual(expect.any(String));
     });
 
     it('should handle invalid JSON in request body', async () => {
@@ -396,8 +413,10 @@ describe('Author Routes', () => {
 
       expect(response.body).toMatchObject({
         success: false,
-        error: 'Invalid JSON payload',
-        code: 'INVALID_JSON',
+        error: {
+          code: 'INVALID_JSON',
+          message: 'Invalid JSON payload',
+        },
       });
     });
   });

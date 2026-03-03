@@ -95,16 +95,19 @@ describe('AuthService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          idToken: 'mock-id-token',
-          accessToken: 'mock-access-token',
-          expiresIn: 3600,
-          user: {
-            id: 1,
-            email: 'test@example.com',
-            name: 'Test',
-            surname: 'User',
-            role: 'user' as const,
-            isActive: true,
+          success: true,
+          data: {
+            idToken: 'mock-id-token',
+            accessToken: 'mock-access-token',
+            expiresIn: 3600,
+            user: {
+              id: 1,
+              email: 'test@example.com',
+              name: 'Test',
+              surname: 'User',
+              role: 'user' as const,
+              isActive: true,
+            },
           },
         }),
       };
@@ -154,6 +157,29 @@ describe('AuthService', () => {
       await expect(authService.login('test@example.com', 'password')).rejects.toThrow('Network error');
       expect(consoleErrorSpy).toHaveBeenCalledWith('Login error:', expect.any(Error));
     });
+
+    it('fails fast when success payload is not envelope-shaped', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          idToken: 'mock-id-token',
+          accessToken: 'mock-access-token',
+          expiresIn: 3600,
+          user: {
+            id: 1,
+            email: 'test@example.com',
+            name: 'Test',
+            surname: 'User',
+            role: 'user' as const,
+            isActive: true,
+          },
+        }),
+      });
+
+      await expect(authService.login('test@example.com', 'password')).rejects.toThrow(
+        'Invalid API success envelope'
+      );
+    });
   });
 
   describe('register', () => {
@@ -162,7 +188,9 @@ describe('AuthService', () => {
         ok: true,
         json: async () => ({
           success: true,
-          requiresVerification: true,
+          data: {
+            requiresVerification: true,
+          },
           message: 'Registration successful',
         }),
       };
@@ -178,6 +206,24 @@ describe('AuthService', () => {
 
       expect(result.success).toBe(true);
       expect(result.requiresVerification).toBe(true);
+    });
+
+    it('fails fast when register success payload is not envelope-shaped', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          requiresVerification: true,
+        }),
+      });
+
+      await expect(
+        authService.register({
+          email: 'new@example.com',
+          password: 'password',
+          name: 'New',
+          surname: 'User',
+        })
+      ).rejects.toThrow('Invalid API success envelope');
     });
 
     it('should throw error on failed registration', async () => {
@@ -325,9 +371,12 @@ describe('AuthService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          idToken,
-          accessToken: 'new-token',
-          expiresIn: 3600,
+          success: true,
+          data: {
+            idToken,
+            accessToken: 'new-token',
+            expiresIn: 3600,
+          },
         }),
       };
 
@@ -368,9 +417,12 @@ describe('AuthService', () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({
-          idToken,
-          accessToken: 'new-token',
-          expiresIn: 3600,
+          success: true,
+          data: {
+            idToken,
+            accessToken: 'new-token',
+            expiresIn: 3600,
+          },
         }),
       });
 
@@ -439,9 +491,12 @@ describe('AuthService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          idToken,
-          accessToken: 'new-token',
-          expiresIn: 3600,
+          success: true,
+          data: {
+            idToken,
+            accessToken: 'new-token',
+            expiresIn: 3600,
+          },
         }),
       };
 
@@ -471,13 +526,31 @@ describe('AuthService', () => {
       expect(result).toBe(false);
     });
 
+    it('returns false when refresh success payload is not envelope-shaped', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          idToken: 'raw-token',
+          accessToken: 'raw-access',
+          expiresIn: 3600,
+        }),
+      });
+
+      const result = await authService.silentRefresh();
+      expect(result).toBe(false);
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Silent refresh failed:', expect.any(Error));
+    });
+
     it('returns false if the ID token cannot be decoded', async () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({
-          idToken: 'not-a-jwt',
-          accessToken: 'new-token',
-          expiresIn: 3600,
+          success: true,
+          data: {
+            idToken: 'not-a-jwt',
+            accessToken: 'new-token',
+            expiresIn: 3600,
+          },
         }),
       });
 
@@ -517,9 +590,12 @@ describe('AuthService', () => {
       const mockResponse = {
         ok: true,
         json: async () => ({
-          idToken,
-          accessToken: 'new-access',
-          expiresIn: 3600,
+          success: true,
+          data: {
+            idToken,
+            accessToken: 'new-access',
+            expiresIn: 3600,
+          },
         }),
       };
 
@@ -581,9 +657,12 @@ describe('AuthService', () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({
-          idToken,
-          accessToken: 'new-access',
-          expiresIn: 3600,
+          success: true,
+          data: {
+            idToken,
+            accessToken: 'new-access',
+            expiresIn: 3600,
+          },
         }),
       });
 

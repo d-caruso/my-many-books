@@ -108,8 +108,8 @@ describe('Authentication Flow Integration', () => {
         .send({ email: 'test@example.com', password: 'Password123!' });
 
       expect(loginResponse.status).toBe(200);
-      expect(loginResponse.body).toHaveProperty('accessToken', mockAccessToken);
-      expect(loginResponse.body).toHaveProperty('user');
+      expect(loginResponse.body).toHaveProperty('data.accessToken', mockAccessToken);
+      expect(loginResponse.body).toHaveProperty('data.user');
 
       const cookies = loginResponse.headers['set-cookie'] as unknown as string[];
       expect(cookies).toBeDefined();
@@ -132,8 +132,8 @@ describe('Authentication Flow Integration', () => {
         .set('Cookie', cookies);
 
       expect(refreshResponse.status).toBe(200);
-      expect(refreshResponse.body).toHaveProperty('accessToken', newAccessToken);
-      expect(refreshResponse.body).toHaveProperty('idToken', newIdToken);
+      expect(refreshResponse.body).toHaveProperty('data.accessToken', newAccessToken);
+      expect(refreshResponse.body).toHaveProperty('data.idToken', newIdToken);
 
       // Step 4: Logout
       const logoutResponse = await request(app)
@@ -169,7 +169,7 @@ describe('Authentication Flow Integration', () => {
         .set('Cookie', [`refresh_token=${mockRefreshToken}`]);
 
       expect(refreshResponse.status).toBe(200);
-      expect(refreshResponse.body).toHaveProperty('accessToken', newAccessToken);
+      expect(refreshResponse.body).toHaveProperty('data.accessToken', newAccessToken);
     });
 
     it('should reject expired refresh token', async () => {
@@ -203,7 +203,7 @@ describe('Authentication Flow Integration', () => {
 
       expect(registerResponse.status).toBe(200);
       expect(registerResponse.body).toHaveProperty('success', true);
-      expect(registerResponse.body).toHaveProperty('requiresVerification', true);
+      expect(registerResponse.body).toHaveProperty('data.requiresVerification', true);
     });
   });
 
@@ -225,7 +225,7 @@ describe('Authentication Flow Integration', () => {
         .send({ email: 'test@example.com' });
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'Email and password required');
+      expect(response.body).toHaveProperty('error.message', 'Email and password required');
     });
 
     it('should clear cookies on failed refresh', async () => {
@@ -292,7 +292,7 @@ describe('Authentication Flow Integration', () => {
           .set('Cookie', cookies);
 
         expect(refreshResponse.status).toBe(200);
-        expect(refreshResponse.body).toHaveProperty('accessToken');
+        expect(refreshResponse.body).toHaveProperty('data.accessToken');
       }
     });
   });

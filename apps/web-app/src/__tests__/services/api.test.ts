@@ -1,4 +1,4 @@
-import type { Book, Author, Category, User, PaginatedResponse } from '@my-many-books/shared-types';
+import type { Book, Author, Category, User, UserProfile, PaginatedResponse } from '@my-many-books/shared-types';
 import type { AuthorApi, BookApi, CategoryApi, UserApi } from '@my-many-books/shared-api';
 
 // Import after mocks are set up (avoid importing default instance to prevent axios creation)
@@ -363,44 +363,66 @@ describe('ApiService with Industry Standard Testing', () => {
 
     describe('User Methods', () => {
       test('getCurrentUser delegates to API client with correct parameters', async () => {
-        const mockUser: User = {
+        const now = new Date().toISOString();
+        const mockUserProfile: UserProfile = {
           id: 1,
           email: 'test@example.com',
           name: 'Test',
           surname: 'User',
           isActive: true,
           role: 'user',
-          creationDate: new Date().toISOString(),
-          updateDate: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
         };
-        mockApiClient.users.getCurrentUser.mockResolvedValue(mockUser);
+        const expectedUser: User = {
+          id: 1,
+          email: 'test@example.com',
+          name: 'Test',
+          surname: 'User',
+          isActive: true,
+          role: 'user',
+          creationDate: now,
+          updateDate: now,
+        };
+        mockApiClient.users.getCurrentUser.mockResolvedValue(mockUserProfile);
 
         const result = await testApiService.getCurrentUser();
 
         expect(mockApiClient.users.getCurrentUser).toHaveBeenCalledWith();
         expect(mockApiClient.users.getCurrentUser).toHaveBeenCalledTimes(1);
-        expect(result).toEqual(mockUser);
+        expect(result).toEqual(expectedUser);
       });
 
       test('updateProfile delegates to API client with correct parameters', async () => {
         const userUpdate = { name: 'New', surname: 'Username' };
-        const mockUpdatedUser: User = {
+        const now = new Date().toISOString();
+        const mockUpdatedProfile: UserProfile = {
           id: 1,
           email: 'test@example.com',
           name: 'New',
           surname: 'Username',
           isActive: true,
           role: 'user',
-          creationDate: new Date().toISOString(),
-          updateDate: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
         };
-        mockApiClient.users.updateProfile.mockResolvedValue(mockUpdatedUser);
+        const expectedUpdatedUser: User = {
+          id: 1,
+          email: 'test@example.com',
+          name: 'New',
+          surname: 'Username',
+          isActive: true,
+          role: 'user',
+          creationDate: now,
+          updateDate: now,
+        };
+        mockApiClient.users.updateProfile.mockResolvedValue(mockUpdatedProfile);
 
         const result = await testApiService.updateProfile(userUpdate);
 
         expect(mockApiClient.users.updateProfile).toHaveBeenCalledWith(userUpdate);
         expect(mockApiClient.users.updateProfile).toHaveBeenCalledTimes(1);
-        expect(result).toEqual(mockUpdatedUser);
+        expect(result).toEqual(expectedUpdatedUser);
       });
     });
 
@@ -796,22 +818,32 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('testApiService uses injected mock API client', async () => {
       // Verify that our test service is using the injected mock
-      const mockUser: User = {
+      const now = new Date().toISOString();
+      const mockUserProfile: UserProfile = {
         id: 1,
         email: 'test@example.com',
         name: 'Test',
         surname: 'User',
         isActive: true,
         role: 'user',
-        creationDate: new Date().toISOString(),
-        updateDate: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       };
-      mockApiClient.users.getCurrentUser.mockResolvedValue(mockUser);
+      mockApiClient.users.getCurrentUser.mockResolvedValue(mockUserProfile);
 
       const result = await testApiService.getCurrentUser();
 
       expect(mockApiClient.users.getCurrentUser).toHaveBeenCalled();
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual({
+        id: 1,
+        email: 'test@example.com',
+        name: 'Test',
+        surname: 'User',
+        isActive: true,
+        role: 'user',
+        creationDate: now,
+        updateDate: now,
+      });
     });
 
     test('createApiService with custom httpClient and config', () => {

@@ -12,7 +12,13 @@ import type {
   RefreshResponse,
   RegisterResponse,
   AuthState,
+  ApiSuccessEnvelope,
+  ApiErrorEnvelope,
 } from './types';
+
+interface RegisterResponseData {
+  requiresVerification: boolean;
+}
 
 export class AuthService {
   private storage: StorageAdapter;
@@ -21,6 +27,47 @@ export class AuthService {
   constructor(config: AuthServiceConfig) {
     this.config = config;
     this.storage = config.storage;
+  }
+
+  private unwrapEnvelopeData<T>(payload: unknown): { data: T; message?: string } {
+    if (payload && typeof payload === 'object' && 'success' in payload) {
+      const maybeEnvelope = payload as Partial<ApiSuccessEnvelope<T>>;
+      if (maybeEnvelope.success === true && 'data' in maybeEnvelope) {
+        return {
+          data: maybeEnvelope.data as T,
+          message: maybeEnvelope.message,
+        };
+      }
+    }
+
+    throw new Error('Invalid API success envelope');
+  }
+
+  private extractErrorMessage(payload: unknown, fallback: string): string {
+    if (!payload || typeof payload !== 'object') {
+      return fallback;
+    }
+
+    const maybeEnvelope = payload as Partial<ApiErrorEnvelope> & { message?: unknown };
+
+    if (typeof maybeEnvelope.error === 'string' && maybeEnvelope.error.length > 0) {
+      return maybeEnvelope.error;
+    }
+
+    if (
+      maybeEnvelope.error &&
+      typeof maybeEnvelope.error === 'object' &&
+      'message' in maybeEnvelope.error &&
+      typeof maybeEnvelope.error.message === 'string'
+    ) {
+      return maybeEnvelope.error.message;
+    }
+
+    if (typeof maybeEnvelope.message === 'string' && maybeEnvelope.message.length > 0) {
+      return maybeEnvelope.message;
+    }
+
+    return fallback;
   }
 
   async login(email: string, password: string): Promise<User> {
@@ -33,11 +80,12 @@ export class AuthService {
       });
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error || 'Login failed');
+        const errorPayload = await response.json().catch(() => undefined);
+        throw new Error(this.extractErrorMessage(errorPayload, 'Login failed'));
       }
 
-      const data = await response.json() as LoginResponse;
+      const payload = await response.json() as unknown;
+      const { data } = this.unwrapEnvelopeData<LoginResponse>(payload);
 
       // Store access token in memory (via adapter)
       const tokens: AuthTokens = {
@@ -72,11 +120,22 @@ export class AuthService {
       });
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error || 'Registration failed');
+        const errorPayload = await response.json().catch(() => undefined);
+        throw new Error(this.extractErrorMessage(errorPayload, 'Registration failed'));
       }
 
-      return await response.json() as RegisterResponse;
+      const payload = await response.json() as unknown;
+      const { data, message } = this.unwrapEnvelopeData<RegisterResponseData>(payload);
+
+      if (typeof data?.requiresVerification !== 'boolean') {
+        throw new Error('Invalid API success envelope');
+      }
+
+      return {
+        success: true,
+        requiresVerification: data.requiresVerification,
+        message: message || 'Registration successful',
+      };
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -148,7 +207,8 @@ export class AuthService {
         return false;
       }
 
-      const data = await response.json() as RefreshResponse;
+      const payload = await response.json() as unknown;
+      const { data } = this.unwrapEnvelopeData<RefreshResponse>(payload);
 
       const tokens: AuthTokens = {
         idToken: data.idToken,

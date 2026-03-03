@@ -125,7 +125,16 @@ describe('API Service Simple Tests', () => {
     expect(mockAxiosInstance.get).toHaveBeenCalled();
     const [url] = mockAxiosInstance.get.mock.calls[0];
     expect(url).toContain('/users');
-    expect(result).toEqual(mockUser);
+    expect(result).toEqual({
+      id: mockUser.id,
+      email: mockUser.email,
+      name: mockUser.name,
+      surname: mockUser.surname,
+      isActive: mockUser.isActive,
+      role: mockUser.role,
+      creationDate: mockUser[USER_RESPONSE_FIELDS.CREATED_AT],
+      updateDate: mockUser[USER_RESPONSE_FIELDS.UPDATED_AT],
+    });
   });
 
   test('bookAPI.getBooks calls correct endpoint', async () => {
@@ -212,6 +221,45 @@ describe('API Service Simple Tests', () => {
     const [url] = mockAxiosInstance.get.mock.calls[0];
     expect(url).toContain('/authors');
     expect(result).toEqual(mockAuthors);
+  });
+
+  test('response interceptor unwraps valid success envelope', () => {
+    const onFulfilled = responseInterceptors[0]?.onFulfilled;
+    expect(onFulfilled).toBeDefined();
+
+    const result = onFulfilled({
+      status: 200,
+      data: {
+        success: true,
+        data: { id: 123 },
+      },
+    });
+
+    expect(result).toEqual({ id: 123 });
+  });
+
+  test('response interceptor allows 204 without envelope', () => {
+    const onFulfilled = responseInterceptors[0]?.onFulfilled;
+    expect(onFulfilled).toBeDefined();
+
+    const result = onFulfilled({
+      status: 204,
+      data: undefined,
+    });
+
+    expect(result).toBeUndefined();
+  });
+
+  test('response interceptor rejects non-envelope success payloads', () => {
+    const onFulfilled = responseInterceptors[0]?.onFulfilled;
+    expect(onFulfilled).toBeDefined();
+
+    expect(() =>
+      onFulfilled({
+        status: 200,
+        data: { id: 123 },
+      })
+    ).toThrow();
   });
 
 

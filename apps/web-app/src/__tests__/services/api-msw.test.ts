@@ -368,7 +368,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
             updateDate: new Date().toISOString(),
           };
 
-          return HttpResponse.json({ source: 'local', book: payload });
+          return HttpResponse.json(payload);
         })
       );
 

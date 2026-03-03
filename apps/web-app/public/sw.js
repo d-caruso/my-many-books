@@ -1,5 +1,3 @@
-/* eslint-env serviceworker */
-/* eslint-disable no-restricted-globals */
 // Service Worker for My Many Books PWA
 // Minimal implementation to enable PWA installation
 

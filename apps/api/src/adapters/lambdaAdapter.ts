@@ -4,6 +4,8 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
 import { AuthUser } from '../models/interfaces/ModelInterfaces';
+import { ERROR_CODES } from '@my-many-books/shared-types';
+import { formatApiResponse, normalizeApiError } from '../utils/apiResponseFormatter';
 
 type ControllerMethod = (request: UniversalRequest) => Promise<ApiResponse>;
 
@@ -42,13 +44,7 @@ export const lambdaAdapter = (controllerMethod: ControllerMethod) => {
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
           'Access-Control-Allow-Credentials': 'true',
         },
-        body: JSON.stringify({
-          success: apiResponse.success,
-          data: apiResponse.data,
-          ...(apiResponse.error && { error: apiResponse.error }),
-          ...(apiResponse.message && { message: apiResponse.message }),
-          ...(apiResponse.pagination && { pagination: apiResponse.pagination }),
-        } as const),
+        body: JSON.stringify(formatApiResponse(apiResponse)),
       };
     } catch (error) {
       return {
@@ -63,8 +59,11 @@ export const lambdaAdapter = (controllerMethod: ControllerMethod) => {
         },
         body: JSON.stringify({
           success: false,
-          error: 'Internal server error',
-          details: error instanceof Error ? error.message : 'Unknown error',
+          error: normalizeApiError(
+            undefined,
+            error instanceof Error ? error.message : 'Unknown error',
+            ERROR_CODES.INTERNAL_ERROR
+          ),
         }),
       };
     }

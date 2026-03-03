@@ -149,7 +149,10 @@ describe('expressRouteWrapper', () => {
       expect(mockRes.status).toHaveBeenCalledWith(400);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Validation failed',
+        error: {
+          code: 'VALIDATION_FAILED',
+          message: 'Validation failed',
+        },
       });
     });
 
@@ -168,7 +171,10 @@ describe('expressRouteWrapper', () => {
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Resource not found',
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Resource not found',
+        },
       });
     });
 
@@ -187,7 +193,32 @@ describe('expressRouteWrapper', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Database connection failed',
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Database connection failed',
+        },
+      });
+    });
+
+    it('should map 503 errors to SERVICE_UNAVAILABLE', async () => {
+      const apiResponse: ApiResponse = {
+        statusCode: 503,
+        success: false,
+        error: 'Service temporarily unavailable',
+      };
+
+      mockControllerMethod.mockResolvedValue(apiResponse);
+
+      const wrappedHandler = expressRouteWrapper(mockControllerMethod);
+      await wrappedHandler(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockRes.status).toHaveBeenCalledWith(503);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Service temporarily unavailable',
+        },
       });
     });
   });
@@ -378,8 +409,10 @@ describe('expressRouteWrapper', () => {
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        data: null,
-        error: 'Bad request',
+        error: {
+          code: 'VALIDATION_FAILED',
+          message: 'Bad request',
+        },
       });
     });
 
@@ -418,8 +451,10 @@ describe('expressRouteWrapper', () => {
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Validation failed',
-        message: 'Please check your input',
+        error: {
+          code: 'VALIDATION_FAILED',
+          message: 'Validation failed',
+        },
       });
     });
   });

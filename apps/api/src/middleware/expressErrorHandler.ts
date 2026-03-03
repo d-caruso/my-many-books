@@ -7,6 +7,7 @@ import { NextFunction, Request, Response } from 'express';
 import { ApplicationError, BadRequestError, InternalServerError } from '../errors/ApplicationError';
 import { getLogger } from '@my-many-books/shared-logging';
 import { getCurrentTraceId } from '@my-many-books/shared-logging';
+import { normalizeApiError } from '../utils/apiResponseFormatter';
 
 const isJsonSyntaxError = (
   error: Error
@@ -47,19 +48,28 @@ export const expressErrorHandler = (
     );
   }
 
-  const payload: Record<string, unknown> = {
+  const details = !isProduction && error.stack
+    ? {
+        ...(typeof appError.details === 'object' && appError.details !== null
+          ? (appError.details as Record<string, unknown>)
+          : appError.details !== undefined
+            ? { details: appError.details }
+            : {}),
+        stack: error.stack,
+      }
+    : appError.details;
+
+  res.status(appError.statusCode).json({
     success: false,
-    error: appError.message,
-    code: appError.code,
-  };
-
-  if (appError.details) {
-    payload['details'] = appError.details;
-  }
-
-  if (!isProduction && error.stack) {
-    payload['stack'] = error.stack;
-  }
-
-  res.status(appError.statusCode).json(payload);
+    error: normalizeApiError(
+      {
+        code: appError.code,
+        message: appError.message,
+        ...(appError.details !== undefined && { details: appError.details }),
+      },
+      details,
+      appError.code
+    ),
+    ...(traceId && { requestId: traceId }),
+  });
 };

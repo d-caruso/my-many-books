@@ -7,6 +7,8 @@ import { Response, Request, NextFunction } from 'express';
 import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
 import { AuthUser } from '../models/interfaces/ModelInterfaces';
+import { formatApiResponse } from './apiResponseFormatter';
+import { getCurrentTraceId } from '@my-many-books/shared-logging';
 
 // Define a generic type for a controller method
 // It should accept a universal request and return a Promise that resolves to an ApiResponse
@@ -43,14 +45,7 @@ export const expressRouteWrapper = (controllerMethod: ControllerMethod) => {
       if (result.statusCode === 204) {
         res.status(204).send();
       } else {
-        res.status(result.statusCode).json({
-          success: result.success,
-          data: result.data,
-          ...(result.error && { error: result.error }),
-          ...(result.message && { message: result.message }),
-          ...(result.meta && { meta: result.meta }),
-          ...(result.pagination && { pagination: result.pagination }),
-        });
+        res.status(result.statusCode).json(formatApiResponse(result, getCurrentTraceId()));
       }
     } catch (error) {
       next(error);

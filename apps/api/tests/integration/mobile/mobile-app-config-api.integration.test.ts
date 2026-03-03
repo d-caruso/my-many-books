@@ -217,7 +217,7 @@ describe('Mobile App Configuration API Integration Tests', () => {
           .expect(403);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('errors:access_denied');
+        expect(response.body.error.message).toContain('errors:access_denied');
       });
     });
 
@@ -235,7 +235,7 @@ describe('Mobile App Configuration API Integration Tests', () => {
           .expect(403);
 
         expect(response.body.success).toBe(false);
-        expect(response.body.error).toContain('errors:access_denied');
+        expect(response.body.error.message).toContain('errors:access_denied');
       });
     });
   });
