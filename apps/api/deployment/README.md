@@ -270,6 +270,25 @@ API_KEYS_ENABLED=true
 COGNITO_ENABLED=true
 ```
 
+### Cognito Google OAuth Parameters
+
+When deploying `deployment/cloudformation/cognito-stack.yml`, provide:
+
+- `GoogleClientId`
+- `GoogleClientSecret`
+- `ApiAuthCallbackUrl` (for example `https://api.example.com/api/v1/auth/google/callback`)
+- `MobileAuthCallbackUrl` (for example `my-many-books://auth`)
+- `WebAppUrl` (for Hosted UI logout redirect)
+
+Google OAuth client (Google Cloud Console) must include Cognito redirect URI:
+
+- `https://<cognito-domain>/oauth2/idpresponse`
+
+Runtime API configuration must also set:
+
+- `GOOGLE_OAUTH_STATE_SECRET` in non-development environments.
+- `GOOGLE_OAUTH_REDIRECT_URIS_MOBILE` (exact allowlist) in non-development environments.
+
 ### AWS Systems Manager Parameters
 
 Configuration stored in SSM:

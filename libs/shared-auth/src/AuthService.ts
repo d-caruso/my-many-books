@@ -23,6 +23,21 @@ export class AuthService {
     this.storage = config.storage;
   }
 
+  private async applyLoginResponse(data: LoginResponse): Promise<User> {
+    const tokens: AuthTokens = {
+      idToken: data.idToken,
+      accessToken: data.accessToken,
+      expiresAt: Date.now() + data.expiresIn * 1000,
+    };
+
+    await this.storage.setTokens(tokens);
+    await this.storage.setUser(data.user);
+
+    this.config.onAuthStateChange?.(data.user);
+
+    return data.user;
+  }
+
   async login(email: string, password: string): Promise<User> {
     try {
       const response = await fetch(`${this.config.apiUrl}/auth/login`, {
@@ -38,22 +53,36 @@ export class AuthService {
       }
 
       const data = await response.json() as LoginResponse;
-
-      // Store access token in memory (via adapter)
-      const tokens: AuthTokens = {
-        idToken: data.idToken,
-        accessToken: data.accessToken,
-        expiresAt: Date.now() + data.expiresIn * 1000,
-      };
-
-      await this.storage.setTokens(tokens);
-      await this.storage.setUser(data.user);
-
-      this.config.onAuthStateChange?.(data.user);
-
-      return data.user;
+      return await this.applyLoginResponse(data);
     } catch (error) {
       console.error('Login error:', error);
+      throw error;
+    }
+  }
+
+  async loginWithGoogleCode(payload: {
+    code: string;
+    state: string;
+    redirectUri: string;
+    codeVerifier: string;
+  }): Promise<User> {
+    try {
+      const response = await fetch(`${this.config.apiUrl}/auth/google/mobile/exchange`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json() as { error?: string };
+        throw new Error(error.error || 'Google login failed');
+      }
+
+      const data = await response.json() as LoginResponse;
+      return await this.applyLoginResponse(data);
+    } catch (error) {
+      console.error('Google login error:', error);
       throw error;
     }
   }

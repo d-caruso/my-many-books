@@ -20,6 +20,7 @@ import { UserCreationAttributes, BookStatus } from '@/models/interfaces/ModelInt
 import { BOOK_STATUS } from '@my-many-books/shared-types';
 import { getLogger } from '@my-many-books/shared-logging';
 import { UserOnboardingService } from './UserOnboardingService';
+import { UserAuthIdentity } from '../../models/UserAuthIdentity';
 
 export type UserServiceErrorCode = 'USER_NOT_FOUND';
 
@@ -30,6 +31,8 @@ export class UserServiceError extends ApplicationError {
 }
 
 export interface ProviderUserInput {
+  id?: string;
+  providerUserId?: string;
   email: string;
   name?: string | null;
   surname?: string | null;
@@ -74,17 +77,133 @@ export class UserService {
     void this.bookRepository;
   }
 
+  private getProviderUserId(providerUser: ProviderUserInput): string | null {
+    const raw = providerUser.providerUserId || providerUser.id;
+    if (!raw) {
+      return null;
+    }
+
+    const trimmed = raw.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  private async findUserByLinkedIdentity(
+    provider: string,
+    providerUserId: string
+  ): Promise<UserEntity | null> {
+    const linkedIdentity = await UserAuthIdentity.findOne({
+      where: {
+        provider,
+        providerUserId,
+      },
+    });
+
+    if (!linkedIdentity) {
+      return null;
+    }
+
+    const linkedUser = await this.userRepository.findById(linkedIdentity.userId);
+    if (linkedUser) {
+      return linkedUser;
+    }
+
+    // Defensive cleanup for stale links pointing to deleted users.
+    await linkedIdentity.destroy();
+    return null;
+  }
+
+  private async ensureIdentityLink(
+    userId: number,
+    provider: string,
+    providerUserId: string,
+    emailSnapshot: string
+  ): Promise<'linked' | 'conflict'> {
+    const [identity, created] = await UserAuthIdentity.findOrCreate({
+      where: {
+        provider,
+        providerUserId,
+      },
+      defaults: {
+        userId,
+        provider,
+        providerUserId,
+        emailSnapshot,
+      },
+    });
+
+    if (!created && identity.userId !== userId) {
+      return 'conflict';
+    }
+
+    const existingProviderLink = await UserAuthIdentity.findOne({
+      where: {
+        userId,
+        provider,
+      },
+    });
+
+    if (!existingProviderLink) {
+      await UserAuthIdentity.create({
+        userId,
+        provider,
+        providerUserId,
+        emailSnapshot,
+      });
+      return 'linked';
+    }
+
+    if (
+      existingProviderLink.providerUserId !== providerUserId ||
+      existingProviderLink.emailSnapshot !== emailSnapshot
+    ) {
+      existingProviderLink.providerUserId = providerUserId;
+      existingProviderLink.emailSnapshot = emailSnapshot;
+      await existingProviderLink.save();
+    }
+
+    return 'linked';
+  }
+
   async findOrCreateUser(
     providerUser: ProviderUserInput,
-    _provider: string
+    provider: string
   ): Promise<{ user: UserEntity; isNewUser: boolean }> {
-    const existing = await this.userRepository.findByEmail(providerUser.email);
+    const normalizedEmail = providerUser.email.trim().toLowerCase();
+    const normalizedProvider = provider.trim().toLowerCase();
+    const providerUserId = this.getProviderUserId(providerUser);
+
+    if (providerUserId) {
+      const linkedUser = await this.findUserByLinkedIdentity(normalizedProvider, providerUserId);
+      if (linkedUser) {
+        return { user: linkedUser, isNewUser: false };
+      }
+    }
+
+    const existing = await this.userRepository.findByEmail(normalizedEmail);
     if (existing) {
+      if (providerUserId) {
+        const linkResult = await this.ensureIdentityLink(
+          existing.id,
+          normalizedProvider,
+          providerUserId,
+          normalizedEmail
+        );
+
+        if (linkResult === 'conflict') {
+          const linkedUser = await this.findUserByLinkedIdentity(
+            normalizedProvider,
+            providerUserId
+          );
+          if (linkedUser) {
+            return { user: linkedUser, isNewUser: false };
+          }
+        }
+      }
       return { user: existing, isNewUser: false };
     }
 
     const payload: UserCreationAttributes = {
-      email: providerUser.email,
+      email: normalizedEmail,
       name: providerUser.name?.trim() || 'Unknown',
       surname: providerUser.surname?.trim() || 'User',
       isActive: true,
@@ -97,6 +216,11 @@ export class UserService {
     } catch (error) {
       this.logger.warn({ err: error }, 'Failed to seed defaults for new user');
     }
+
+    if (providerUserId) {
+      await this.ensureIdentityLink(created.id, normalizedProvider, providerUserId, normalizedEmail);
+    }
+
     return { user: created, isNewUser: true };
   }
 

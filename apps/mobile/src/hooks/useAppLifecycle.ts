@@ -13,13 +13,16 @@ export interface AppLifecycleState {
  */
 export function useAppLifecycle(): AppLifecycleState {
   const [appState, setAppState] = useState<AppStateStatus>(AppState.currentState);
-  const [currentSession, setCurrentSession] = useState<SessionData | null>(null);
-  const [isMonitoring, setIsMonitoring] = useState<boolean>(false);
+  const [currentSession, setCurrentSession] = useState<SessionData | null>(
+    () => appLifecycleService.getCurrentSession()
+  );
+  const [isMonitoring, setIsMonitoring] = useState<boolean>(
+    () => appLifecycleService.isMonitoring()
+  );
 
   useEffect(() => {
     // Start lifecycle monitoring
     appLifecycleService.startMonitoring();
-    setIsMonitoring(appLifecycleService.isMonitoring());
 
     // Set up local state tracking
     const updateLocalState = () => {
@@ -27,9 +30,6 @@ export function useAppLifecycle(): AppLifecycleState {
       setCurrentSession(appLifecycleService.getCurrentSession());
       setIsMonitoring(appLifecycleService.isMonitoring());
     };
-
-    // Update state immediately
-    updateLocalState();
 
     // Listen for app state changes to update local state
     const subscription = AppState.addEventListener('change', updateLocalState);

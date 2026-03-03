@@ -214,6 +214,63 @@ describe('AuthService', () => {
     });
   });
 
+  describe('loginWithGoogleCode', () => {
+    it('should exchange mobile OAuth code and persist session', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          idToken: 'google-id-token',
+          accessToken: 'google-access-token',
+          expiresIn: 3600,
+          user: {
+            id: 12,
+            email: 'google.user@example.com',
+            name: 'Google',
+            surname: 'User',
+            role: 'user' as const,
+            isActive: true,
+          },
+        }),
+      });
+
+      const user = await authService.loginWithGoogleCode({
+        code: 'oauth-code',
+        state: 'oauth-state',
+        redirectUri: 'my-many-books://auth',
+        codeVerifier: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~',
+      });
+
+      expect(user.email).toBe('google.user@example.com');
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${API_BASE_URL}/auth/google/mobile/exchange`,
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+        })
+      );
+      expect(await mockStorage.getTokens()).toMatchObject({
+        idToken: 'google-id-token',
+        accessToken: 'google-access-token',
+      });
+    });
+
+    it('should throw a generic error when exchange fails without error payload', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        json: async () => ({}),
+      });
+
+      await expect(
+        authService.loginWithGoogleCode({
+          code: 'bad-code',
+          state: 'state',
+          redirectUri: 'my-many-books://auth',
+          codeVerifier: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~',
+        })
+      ).rejects.toThrow('Google login failed');
+    });
+  });
+
   describe('logout', () => {
     it('should clear storage on logout', async () => {
       await mockStorage.setTokens({

@@ -34,8 +34,10 @@ describe('LoginForm', () => {
       user: null,
       loading: false,
       login: mockLogin,
+      register: vi.fn(),
       logout: vi.fn(),
-      signup: vi.fn(),
+      refreshUser: vi.fn(),
+      isAuthenticated: false,
     });
   });
 
@@ -179,8 +181,10 @@ describe('LoginForm', () => {
       user: null,
       loading: true,
       login: mockLogin,
+      register: vi.fn(),
       logout: vi.fn(),
-      signup: vi.fn(),
+      refreshUser: vi.fn(),
+      isAuthenticated: false,
     });
 
     render(
@@ -226,6 +230,20 @@ describe('LoginForm', () => {
     fireEvent.click(registerLink);
 
     expect(mockOnSwitchToRegister).toHaveBeenCalledTimes(1);
+  });
+
+  test('starts Google OAuth flow when Continue with Google is clicked', () => {
+    const assignSpy = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
+
+    render(
+      <LoginForm onSwitchToRegister={mockOnSwitchToRegister} />,
+      { wrapper: TestWrapper }
+    );
+
+    fireEvent.click(screen.getByTestId('google-login-button'));
+
+    expect(assignSpy).toHaveBeenCalledWith(expect.stringContaining('/auth/google/start?platform=web'));
+    assignSpy.mockRestore();
   });
 
   test.skip('shows forgot password link', () => {

@@ -12,12 +12,20 @@ import { syncService } from '../services/sync/SyncService';
 export function useSyncQueue() {
   const { isOnline } = useNetworkState();
 
-  // Process queue and perform bidirectional sync when network comes back online
-  useEffect(() => {
-    if (isOnline) {
-      performFullSync();
+  const performFullSync = useCallback(async () => {
+    try {
+      console.log('Starting full sync (queue + bidirectional)...');
+
+      // First process any queued operations
+      await operationQueue.processQueue(executeOperation);
+
+      // Then perform bidirectional sync
+      const syncResult = await syncService.performSync();
+      console.log('Full sync completed:', syncResult);
+    } catch (error) {
+      console.error('Failed to perform full sync:', error);
     }
-  }, [isOnline]);
+  }, []);
 
   const processQueue = useCallback(async () => {
     try {
@@ -27,21 +35,12 @@ export function useSyncQueue() {
     }
   }, []);
 
-  const performFullSync = useCallback(async () => {
-    try {
-      console.log('Starting full sync (queue + bidirectional)...');
-      
-      // First process any queued operations
-      await operationQueue.processQueue(executeOperation);
-      
-      // Then perform bidirectional sync
-      const syncResult = await syncService.performSync();
-      console.log('Full sync completed:', syncResult);
-      
-    } catch (error) {
-      console.error('Failed to perform full sync:', error);
+  // Process queue and perform bidirectional sync when network comes back online
+  useEffect(() => {
+    if (isOnline) {
+      void performFullSync();
     }
-  }, []);
+  }, [isOnline, performFullSync]);
 
   return {
     processQueue,

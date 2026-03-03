@@ -5,6 +5,7 @@
 
 // Mock dependencies BEFORE imports
 jest.mock('@aws-sdk/client-cognito-identity-provider');
+jest.mock('axios');
 jest.mock('../../../src/middleware/auth', () => {
   const actual = jest.requireActual('../../../src/middleware/auth');
   return {
@@ -14,7 +15,6 @@ jest.mock('../../../src/middleware/auth', () => {
     },
   };
 });
-jest.mock('jsonwebtoken');
 jest.mock('../../../src/config/database', () => ({
   default: {
     getInstance: jest.fn().mockReturnValue({
@@ -39,15 +39,43 @@ jest.mock('@my-many-books/shared-i18n', () => ({
 }));
 
 import request from 'supertest';
+import crypto from 'crypto';
+import axios from 'axios';
 import app from '../../../src/app';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { UserService } from '../../../src/middleware/auth';
 import { User } from '../../../src/models/User';
 import { BASE_PATH } from '../../utils/apiBasePath';
+import * as googleOAuth from '../../../src/services/auth/googleOAuth';
 
 const mockCognitoClient = CognitoIdentityProviderClient as jest.MockedClass<
   typeof CognitoIdentityProviderClient
 >;
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+const verifyCognitoIdTokenSpy = jest.spyOn(googleOAuth, 'verifyCognitoIdToken');
+
+const buildOAuthState = (platform: 'web' | 'mobile'): string => {
+  const payload = Buffer.from(
+    JSON.stringify({
+      platform,
+      nonce: 'test-nonce',
+      ts: Date.now(),
+    }),
+    'utf8'
+  ).toString('base64url');
+
+  const signature = crypto
+    .createHmac('sha256', 'local-google-oauth-state')
+    .update(payload)
+    .digest('base64url');
+
+  return `${payload}.${signature}`;
+};
+
+const TEST_PKCE_VERIFIER =
+  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~';
+const TEST_PKCE_CHALLENGE =
+  '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_';
 
 describe('Auth Routes', () => {
   let consoleErrorSpy: jest.SpyInstance;
@@ -68,6 +96,19 @@ describe('Auth Routes', () => {
 
     mockSend = jest.fn();
     mockCognitoClient.prototype.send = mockSend;
+    mockedAxios.post.mockReset();
+    verifyCognitoIdTokenSpy.mockResolvedValue({
+      sub: 'cognito-user-123',
+      email: 'test@example.com',
+      given_name: 'Test',
+      family_name: 'User',
+      email_verified: true,
+    });
+
+    process.env['COGNITO_DOMAIN'] = 'https://auth.example.com';
+    process.env['COGNITO_USER_POOL_CLIENT_ID'] = 'test-client-id';
+    process.env['FRONTEND_URL'] = 'http://localhost:3000';
+    process.env['GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX'] = 'my-many-books://';
   });
 
   describe(`POST ${BASE_PATH}/auth/login`, () => {
@@ -100,16 +141,6 @@ describe('Auth Routes', () => {
           RefreshToken: mockRefreshToken,
           ExpiresIn: 3600,
         },
-      });
-
-      // Mock jwt decode
-      const jwt = require('jsonwebtoken');
-      jwt.decode = jest.fn().mockReturnValue({
-        sub: 'cognito-user-123',
-        email: 'test@example.com',
-      role: 'user',
-        given_name: 'Test',
-        family_name: 'User',
       });
 
       const response = await request(app)
@@ -197,9 +228,7 @@ describe('Auth Routes', () => {
         },
       });
 
-      // Mock jwt decode to return null (invalid token)
-      const jwt = require('jsonwebtoken');
-      jwt.decode = jest.fn().mockReturnValue(null);
+      verifyCognitoIdTokenSpy.mockRejectedValueOnce(new Error('Token verification failed'));
 
       const response = await request(app)
         .post(`${BASE_PATH}/auth/login`)
@@ -207,6 +236,187 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error', 'Invalid token');
+    });
+  });
+
+  describe(`Google OAuth routes`, () => {
+    beforeEach(() => {
+      (UserService.findOrCreateUser as jest.Mock).mockResolvedValue({
+        user: {
+          id: 99,
+          email: 'google@example.com',
+          name: 'Google',
+          surname: 'User',
+          role: 'user',
+          isActive: true,
+        },
+        isNewUser: false,
+      });
+      process.env['NODE_ENV'] = 'test';
+      delete process.env['GOOGLE_OAUTH_REDIRECT_URIS_MOBILE'];
+      delete process.env['GOOGLE_OAUTH_STATE_SECRET'];
+    });
+
+    it(`GET ${BASE_PATH}/auth/google/start should return authorize URL for mobile`, async () => {
+      const response = await request(app)
+        .get(`${BASE_PATH}/auth/google/start`)
+        .query({
+          platform: 'mobile',
+          redirectUri: 'my-many-books://auth',
+          codeChallenge: TEST_PKCE_CHALLENGE,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('authorizeUrl');
+      expect(response.body.authorizeUrl).toContain('identity_provider=Google');
+      expect(response.body.authorizeUrl).toContain('code_challenge=');
+      expect(response.body).toHaveProperty('state');
+    });
+
+    it(`POST ${BASE_PATH}/auth/google/mobile/start should return authorize URL`, async () => {
+      const response = await request(app).post(`${BASE_PATH}/auth/google/mobile/start`).send({
+        redirectUri: 'my-many-books://auth',
+        codeVerifier: TEST_PKCE_VERIFIER,
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('authorizeUrl');
+      expect(response.body.authorizeUrl).toContain('identity_provider=Google');
+      expect(response.body.authorizeUrl).toContain('code_challenge=');
+      expect(response.body).toHaveProperty('state');
+    });
+
+    it(`POST ${BASE_PATH}/auth/google/mobile/start should reject redirect URI in production when allowlist is missing`, async () => {
+      process.env['NODE_ENV'] = 'production';
+      delete process.env['GOOGLE_OAUTH_REDIRECT_URIS_MOBILE'];
+
+      const response = await request(app).post(`${BASE_PATH}/auth/google/mobile/start`).send({
+        redirectUri: 'my-many-books://auth',
+        codeVerifier: TEST_PKCE_VERIFIER,
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: 'Invalid mobile redirect URI' });
+    });
+
+    it(`POST ${BASE_PATH}/auth/google/mobile/start should allow redirect URI in production when explicitly allowlisted`, async () => {
+      process.env['NODE_ENV'] = 'production';
+      process.env['GOOGLE_OAUTH_REDIRECT_URIS_MOBILE'] = 'my-many-books://auth';
+      process.env['GOOGLE_OAUTH_STATE_SECRET'] = 'test-production-state-secret';
+
+      const response = await request(app).post(`${BASE_PATH}/auth/google/mobile/start`).send({
+        redirectUri: 'my-many-books://auth',
+        codeVerifier: TEST_PKCE_VERIFIER,
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('authorizeUrl');
+    });
+
+    it(`GET ${BASE_PATH}/auth/google/start should redirect for web`, async () => {
+      const response = await request(app)
+        .get(`${BASE_PATH}/auth/google/start`)
+        .query({ platform: 'web' });
+
+      expect(response.status).toBe(302);
+      expect(response.headers['location']).toContain('/oauth2/authorize');
+      expect(response.headers['location']).toContain('identity_provider=Google');
+    });
+
+    it(`POST ${BASE_PATH}/auth/google/mobile/exchange should exchange OAuth code`, async () => {
+      mockedAxios.post.mockResolvedValue({
+        data: {
+          access_token: 'google-access-token',
+          id_token: 'google-id-token',
+          refresh_token: 'google-refresh-token',
+          expires_in: 3600,
+          token_type: 'Bearer',
+        },
+      } as never);
+
+      verifyCognitoIdTokenSpy.mockResolvedValueOnce({
+        sub: 'google-sub-123',
+        email: 'google@example.com',
+        email_verified: true,
+        given_name: 'Google',
+        family_name: 'User',
+      });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/google/mobile/exchange`).send({
+        code: 'oauth-code',
+        state: buildOAuthState('mobile'),
+        redirectUri: 'my-many-books://auth',
+        codeVerifier: TEST_PKCE_VERIFIER,
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        accessToken: 'google-access-token',
+        idToken: 'google-id-token',
+        expiresIn: 3600,
+        user: {
+          id: 99,
+          email: 'google@example.com',
+          name: 'Google',
+          surname: 'User',
+          role: 'user',
+          isActive: true,
+        },
+      });
+
+      const cookies = response.headers['set-cookie'] as unknown as string[];
+      expect(cookies.some((c: string) => c.startsWith('refresh_token='))).toBe(true);
+    });
+
+    it(`POST ${BASE_PATH}/auth/google/mobile/exchange should reject missing PKCE verifier`, async () => {
+      const response = await request(app).post(`${BASE_PATH}/auth/google/mobile/exchange`).send({
+        code: 'oauth-code',
+        state: buildOAuthState('mobile'),
+        redirectUri: 'my-many-books://auth',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty(
+        'error',
+        'code, state, redirectUri, and codeVerifier are required'
+      );
+    });
+
+    it(`GET ${BASE_PATH}/auth/google/callback should redirect to web auth on success`, async () => {
+      mockedAxios.post.mockResolvedValue({
+        data: {
+          access_token: 'google-access-token',
+          id_token: 'google-id-token',
+          refresh_token: 'google-refresh-token',
+          expires_in: 3600,
+          token_type: 'Bearer',
+        },
+      } as never);
+
+      verifyCognitoIdTokenSpy.mockResolvedValueOnce({
+        sub: 'google-sub-123',
+        email: 'google@example.com',
+        email_verified: true,
+        given_name: 'Google',
+        family_name: 'User',
+      });
+
+      const response = await request(app)
+        .get(`${BASE_PATH}/auth/google/callback`)
+        .set('Cookie', [`google_oauth_pkce_verifier=${TEST_PKCE_VERIFIER}`])
+        .query({ code: 'oauth-code', state: buildOAuthState('web') });
+
+      expect(response.status).toBe(302);
+      expect(response.headers['location']).toBe('http://localhost:3000/auth?google=success');
+    });
+
+    it(`GET ${BASE_PATH}/auth/google/callback should redirect with error on invalid state`, async () => {
+      const response = await request(app)
+        .get(`${BASE_PATH}/auth/google/callback`)
+        .query({ code: 'oauth-code', state: 'invalid-state' });
+
+      expect(response.status).toBe(302);
+      expect(response.headers['location']).toContain('google=error');
     });
   });
 

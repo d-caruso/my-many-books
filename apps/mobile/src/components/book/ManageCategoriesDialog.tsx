@@ -36,8 +36,15 @@ export function ManageCategoriesDialog({
       updateCategory: (id: number, data: Partial<{ name: string }>) => categoryAPI.updateCategory(id, data),
       deleteCategory: (id: number) => categoryAPI.deleteCategory(id),
     }),
-    [categoryAPI]
+    []
   );
+
+  const resetDialogState = () => {
+    setEditingId(null);
+    setEditName('');
+    setPendingDeleteId(null);
+    clearError();
+  };
 
   const {
     categories,
@@ -57,14 +64,13 @@ export function ManageCategoriesDialog({
   useEffect(() => {
     if (visible) {
       void loadCategories();
-      return;
     }
+  }, [visible, loadCategories]);
 
-    setEditingId(null);
-    setEditName('');
-    setPendingDeleteId(null);
-    clearError();
-  }, [visible, loadCategories, clearError]);
+  const handleDialogClose = () => {
+    resetDialogState();
+    onClose();
+  };
 
   const handleStartEdit = (category: Category) => {
     clearError();
@@ -99,7 +105,7 @@ export function ManageCategoriesDialog({
 
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={mutating ? undefined : onClose}>
+      <Dialog visible={visible} onDismiss={mutating ? undefined : handleDialogClose}>
         <Dialog.Title>{t('dialogs:category.manage_title', { defaultValue: 'Manage categories' })}</Dialog.Title>
         <Dialog.Content>
           <View style={styles.content}>
@@ -183,7 +189,7 @@ export function ManageCategoriesDialog({
           <Button onPress={() => void loadCategories()} disabled={loading || mutating}>
             {t('common:retry')}
           </Button>
-          <Button onPress={onClose} disabled={mutating}>
+          <Button onPress={handleDialogClose} disabled={mutating}>
             {t('common:close')}
           </Button>
         </Dialog.Actions>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Chip, Dialog, List, Portal, Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -25,12 +25,10 @@ export function AuthorSelectorModal({
 }: AuthorSelectorModalProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    if (!visible) {
-      setSearch('');
-    }
-  }, [visible]);
+  const handleClose = () => {
+    setSearch('');
+    onClose();
+  };
 
   const filteredAuthors = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -47,7 +45,7 @@ export function AuthorSelectorModal({
 
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={onClose}>
+      <Dialog visible={visible} onDismiss={handleClose}>
         <Dialog.Title>{t('books:select_author')}</Dialog.Title>
         <Dialog.Content>
           <View style={styles.content}>
@@ -78,7 +76,7 @@ export function AuthorSelectorModal({
                     description={author.nationality || undefined}
                     onPress={() => {
                       onSelectAuthor(author);
-                      onClose();
+                      handleClose();
                     }}
                     right={() =>
                       isSelected ? <Chip compact>{t('common:selected', { defaultValue: 'Selected' })}</Chip> : null
@@ -98,7 +96,7 @@ export function AuthorSelectorModal({
           </View>
         </Dialog.Content>
         <Dialog.Actions>
-          <Button onPress={onClose}>{t('common:close', { defaultValue: 'Close' })}</Button>
+          <Button onPress={handleClose}>{t('common:close', { defaultValue: 'Close' })}</Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>

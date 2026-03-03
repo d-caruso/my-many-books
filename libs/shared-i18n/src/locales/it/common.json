@@ -52,6 +52,8 @@
   "enter_email": "Inserisci la tua email",
   "enter_password": "Inserisci la tua password",
   "signing_in": "Accesso in corso...",
+  "continue_with_google": "Continua con Google",
+  "google_login_failed": "Accesso con Google non riuscito. Riprova.",
   "email_required": "L'email è obbligatoria",
   "email_invalid": "Inserisci un indirizzo email valido",
   "password_required": "La password è obbligatoria",

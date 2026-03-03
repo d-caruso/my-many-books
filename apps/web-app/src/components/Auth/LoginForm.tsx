@@ -23,6 +23,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { ResponsiveInput } from '../UI/ResponsiveInput';
 import { ResponsiveButton } from '../UI/ResponsiveButton';
+import { env } from '../../config/env';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -102,6 +103,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    const googleStartUrl = `${env.API_BASE_URL}/auth/google/start?platform=web`;
+    window.location.assign(googleStartUrl);
+  };
+
   return (
     <Paper
       elevation={3}
@@ -164,7 +170,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
               onChange={(e) => handleInputChange('password', e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  handleSubmit(e as any);
+                  e.preventDefault();
+                  void handleSubmit(e as unknown as React.FormEvent);
                 }
               }}
               placeholder={t('common:enter_password')}
@@ -221,6 +228,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           >
             {isLoading ? t('common:signing_in') : t('common:sign_in')}
           </ResponsiveButton>
+
+          <MuiButton
+            type="button"
+            variant="outlined"
+            fullWidth
+            disabled={isLoading}
+            onClick={handleGoogleLogin}
+            data-testid="google-login-button"
+          >
+            {t('common:continue_with_google', 'Continue with Google')}
+          </MuiButton>
         </Stack>
 
         <Divider sx={{ my: 3 }} />

@@ -109,6 +109,34 @@ Required environment variables (set in AWS Lambda environment):
 - `OPEN_LIBRARY_BASE_URL`: Open Library API URL
 - `GOOGLE_BOOKS_API_KEY`: Google Books API key
 - `GOOGLE_BOOKS_BASE_URL`: Google Books API URL
+- `COGNITO_DOMAIN`: Cognito Hosted UI domain (for example: `my-many-books-auth-dev.auth.us-east-1.amazoncognito.com`)
+- `COGNITO_USER_POOL_CLIENT_ID`: Cognito app client id used for password + OAuth flows
+- `COGNITO_USER_POOL_CLIENT_SECRET`: Optional app client secret (required only if Cognito app client uses secret)
+- `COGNITO_GOOGLE_PROVIDER_NAME`: Google IdP display name in Cognito (default: `Google`)
+- `GOOGLE_OAUTH_REDIRECT_URI_WEB`: Optional explicit callback URI for API web callback route
+- `GOOGLE_OAUTH_REDIRECT_URIS_MOBILE`: Comma-separated allowlist of exact mobile callback URIs (required outside `development`/`test`)
+- `GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX`: Development/test-only fallback prefix (default: `my-many-books://`)
+- `GOOGLE_OAUTH_STATE_SECRET`: HMAC secret used to sign/validate OAuth state payload (required outside `development`/`test`)
+
+## Google OAuth Setup (Web + Mobile)
+
+1. Create Google OAuth credentials in Google Cloud Console:
+   - Web client for Cognito social IdP.
+2. In Google Cloud OAuth authorized redirect URIs, add:
+   - `https://<your-cognito-domain>/oauth2/idpresponse`
+3. Deploy Cognito stack with Google provider parameters:
+   - `GoogleClientId`
+   - `GoogleClientSecret`
+   - `ApiAuthCallbackUrl` (for example `https://api.example.com/api/v1/auth/google/callback`)
+   - `MobileAuthCallbackUrl` (for example `my-many-books://auth`)
+4. Configure app runtime variables:
+   - API: `COGNITO_DOMAIN`, `COGNITO_USER_POOL_CLIENT_ID`, `GOOGLE_OAUTH_STATE_SECRET`
+   - API allowlist: `GOOGLE_OAUTH_REDIRECT_URIS_MOBILE` (required in non-dev/test; exact URI match)
+   - Optional local fallback only: `GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX`
+5. Verify OAuth code flow:
+   - Web: `GET /auth/google/start?platform=web`
+   - Mobile start: `POST /auth/google/mobile/start` with `redirectUri` + PKCE `codeVerifier`
+   - Mobile exchange: `POST /auth/google/mobile/exchange` with `code`, `state`, `redirectUri`, `codeVerifier`
 
 ## API Endpoints
 

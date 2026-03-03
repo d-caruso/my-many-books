@@ -20,6 +20,7 @@ export interface ModelRegistry {
   SearchPinnedResult: ModelStatic<Model>;
   MobileAnalyticsEvent: ModelStatic<Model>;
   MobileHookActionExecution: ModelStatic<Model>;
+  UserAuthIdentity: ModelStatic<Model>;
 }
 
 export class ModelAssociations {
@@ -42,9 +43,10 @@ export class ModelAssociations {
   }
 
   static defineAssociations(): void {
-    const { User, Book, Author, Category, BookAuthor, BookCategory } = ModelAssociations.models;
+    const { User, Book, Author, Category, BookAuthor, BookCategory, UserAuthIdentity } =
+      ModelAssociations.models;
 
-    if (!User || !Book || !Author || !Category || !BookAuthor || !BookCategory) {
+    if (!User || !Book || !Author || !Category || !BookAuthor || !BookCategory || !UserAuthIdentity) {
       throw new Error('All models must be registered before defining associations');
     }
 
@@ -60,6 +62,20 @@ export class ModelAssociations {
       foreignKey: 'user_id',
       as: 'user',
       onDelete: 'SET NULL',
+      onUpdate: 'CASCADE',
+    });
+
+    User.hasMany(UserAuthIdentity, {
+      foreignKey: 'user_id',
+      as: 'authIdentities',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    });
+
+    UserAuthIdentity.belongsTo(User, {
+      foreignKey: 'user_id',
+      as: 'user',
+      onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     });
 

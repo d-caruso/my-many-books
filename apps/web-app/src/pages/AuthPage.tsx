@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { Box, Button, Container, Typography } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Alert, Box, Button, Container, Typography } from '@mui/material';
 import { Trans, useTranslation } from 'react-i18next';
 import { LoginForm, RegisterForm } from '../components/Auth';
 import { LanguageSelector } from '../components/Navigation/LanguageSelector';
@@ -13,12 +13,50 @@ type AuthMode = 'login' | 'register';
 const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [aboutOpen, setAboutOpen] = useState(false);
-  const { user } = useAuth();
+  const [socialAuthError, setSocialAuthError] = useState<string | null>(null);
+  const { user, refreshUser } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useTranslation('common');
   const appName = t('app_name', 'My Many Books');
   const logoAlt = t('app_logo', 'My Many Books logo');
   const pageContentRef = useRef<HTMLDivElement>(null);
   const fadeSx = useLanguageChangeFade(pageContentRef, { keyframePrefix: 'authLangFade' });
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const googleStatus = params.get('google');
+
+    if (!googleStatus) {
+      return;
+    }
+
+    let ignore = false;
+    const handleGoogleCallback = async () => {
+      if (googleStatus === 'success') {
+        try {
+          await refreshUser();
+        } catch {
+          if (!ignore) {
+            setSocialAuthError(
+              t('common:google_login_failed', 'Google login failed. Please try again.')
+            );
+          }
+        }
+      } else if (!ignore) {
+        setSocialAuthError(t('common:google_login_failed', 'Google login failed. Please try again.'));
+      }
+
+      if (!ignore) {
+        navigate('/auth', { replace: true });
+      }
+    };
+
+    void handleGoogleCallback();
+    return () => {
+      ignore = true;
+    };
+  }, [location.search, navigate, refreshUser, t]);
 
   // If user is already authenticated, redirect to home
   if (user) {
@@ -65,6 +103,11 @@ const AuthPage: React.FC = () => {
         }}
       >
         <Container maxWidth="sm">
+        {socialAuthError ? (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {socialAuthError}
+          </Alert>
+        ) : null}
         <Box
           sx={{
             display: 'flex',
