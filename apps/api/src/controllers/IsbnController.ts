@@ -112,8 +112,8 @@ export class IsbnController extends BaseController {
   async batchLookupBooks(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     try {
-      const body = this.parseBody<BatchIsbnLookupRequest>(request);
-      if (!body) {
+      const body = this.parseBody(request);
+      if (!this.isRecord(body)) {
         return this.createErrorResponseI18n('errors:request_body_required', 400);
       }
 
@@ -310,8 +310,8 @@ export class IsbnController extends BaseController {
   async addFallbackBook(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     try {
-      const body = this.parseBody<AddFallbackBookRequest>(request);
-      if (!body) {
+      const body = this.parseBody(request);
+      if (!this.isRecord(body)) {
         return this.createErrorResponseI18n('errors:request_body_required', 400);
       }
 

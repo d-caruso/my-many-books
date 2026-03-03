@@ -98,16 +98,14 @@ export abstract class BaseAdapter implements LogStorage {
   /**
    * Log an error (uses console.error as fallback)
    */
-  protected logError(...args: any[]): void {
-    // eslint-disable-next-line no-console
+  protected logError(...args: unknown[]): void {
     console.error(`[${this.name}]`, ...args);
   }
 
   /**
    * Log info (uses console.log as fallback)
    */
-  protected logInfo(...args: any[]): void {
-    // eslint-disable-next-line no-console
+  protected logInfo(...args: unknown[]): void {
     console.log(`[${this.name}]`, ...args);
   }
 }

@@ -25,6 +25,24 @@ export interface MobileEventData {
   deviceInfo?: Record<string, unknown>;
 }
 
+type RecentEventStatus =
+  | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED
+  | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED;
+
+type RecentEventRow = {
+  eventType: string;
+  processingStatus: RecentEventStatus;
+  creationDate: Date;
+  updateDate: Date;
+};
+
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isRecentEventStatus = (value: unknown): value is RecentEventStatus =>
+  value === MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED ||
+  value === MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED;
+
 export class MobileAnalyticsService {
   /**
    * Store a single mobile analytics event
@@ -105,15 +123,6 @@ export class MobileAnalyticsService {
 
       const bucketStart = new Date(bucketEnd);
       bucketStart.setHours(bucketStart.getHours() - 23);
-      
-      type RecentEventRow = {
-        eventType: string;
-        processingStatus:
-          | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED
-          | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED;
-        creationDate: Date;
-        updateDate: Date;
-      };
 
       const [
         eventsToday,
@@ -121,7 +130,7 @@ export class MobileAnalyticsService {
         failedEventsTotal,
         topEventTypes,
         lastProcessed,
-        recentEvents,
+        recentEventModels,
       ] = await Promise.all([
         // Events processed today
         MobileAnalyticsEvent.count({
@@ -163,9 +172,12 @@ export class MobileAnalyticsService {
             },
           },
           attributes: ['eventType', 'processingStatus', 'creationDate', 'updateDate'],
-          raw: true,
-        }) as unknown as Promise<RecentEventRow[]>,
+        }),
       ]);
+
+      const recentEvents = recentEventModels
+        .map(event => this.toRecentEventRow(event))
+        .filter((event): event is RecentEventRow => event !== null);
 
       const totalEvents = processedEventsTotal + failedEventsTotal;
       const errorRate = totalEvents > 0 ? (failedEventsTotal / totalEvents) : 0;
@@ -203,24 +215,28 @@ export class MobileAnalyticsService {
    */
   private async getTopEventTypes(): Promise<Array<{ eventType: string; count: number }>> {
     try {
+      const sequelize = MobileAnalyticsEvent.sequelize;
+      if (!sequelize) {
+        getLogger().warn('MobileAnalyticsEvent sequelize instance unavailable while loading top event types');
+        return [];
+      }
+
       const results = await MobileAnalyticsEvent.findAll({
         attributes: [
           'eventType',
-          [MobileAnalyticsEvent.sequelize!.fn('COUNT', '*'), 'count']
+          [sequelize.fn('COUNT', sequelize.col('event_type')), 'count'],
         ],
         where: { processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED },
         group: ['eventType'],
-        order: [[MobileAnalyticsEvent.sequelize!.literal('count'), 'DESC']],
-        limit: 10,
-        raw: true
       });
 
-      const typedResults = results as unknown as Array<{ eventType: string; count: string }>;
-
-      return typedResults.map(result => ({
-        eventType: result.eventType,
-        count: parseInt(result.count, 10)
-      }));
+      return results
+        .map(result => ({
+          eventType: result.eventType,
+          count: this.parseAggregateCount(result.get('count')),
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
     } catch (error) {
       getLogger().error({ 
         err: error instanceof Error ? error : new Error(String(error))
@@ -229,17 +245,40 @@ export class MobileAnalyticsService {
     }
   }
 
+  private toRecentEventRow(event: MobileAnalyticsEvent): RecentEventRow | null {
+    if (!isRecentEventStatus(event.processingStatus)) {
+      return null;
+    }
+
+    if (!(event.creationDate instanceof Date) || !(event.updateDate instanceof Date)) {
+      return null;
+    }
+
+    return {
+      eventType: event.eventType,
+      processingStatus: event.processingStatus,
+      creationDate: event.creationDate,
+      updateDate: event.updateDate,
+    };
+  }
+
+  private parseAggregateCount(value: unknown): number {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number.parseInt(value, 10);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+
+    return 0;
+  }
+
   private buildTimeSeries(
     start: Date,
     end: Date,
-    events: Array<{
-      eventType: string;
-      processingStatus:
-        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED
-        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED;
-      creationDate: Date;
-      updateDate: Date;
-    }>
+    events: RecentEventRow[]
   ): Array<{ bucketStart: string; processed: number; failed: number; total: number }> {
     const bucketMap = new Map<
       string,
@@ -270,13 +309,7 @@ export class MobileAnalyticsService {
   }
 
   private calculateAvgProcessingTimeFromEvents(
-    events: Array<{
-      processingStatus:
-        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED
-        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED;
-      creationDate: Date;
-      updateDate: Date;
-    }>
+    events: RecentEventRow[]
   ): number {
     const processed = events.filter(e => e.processingStatus === MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED);
     if (!processed.length) return 0;
@@ -291,12 +324,7 @@ export class MobileAnalyticsService {
   }
 
   private buildEventTypeBreakdown(
-    events: Array<{
-      eventType: string;
-      processingStatus:
-        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED
-        | typeof MOBILE_ANALYTICS_PROCESSING_STATUS.FAILED;
-    }>
+    events: RecentEventRow[]
   ): MobileAnalyticsEventTypeBreakdown[] {
     const stats = new Map<string, { attempted: number; successful: number; failed: number }>();
 
@@ -336,10 +364,10 @@ export class MobileAnalyticsService {
       if (!record?.value) return {};
 
       const parsed: unknown = JSON.parse(record.value);
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+      if (!isObjectRecord(parsed)) return {};
 
       const mappings: Record<string, string[]> = {};
-      for (const [eventType, actionTypes] of Object.entries(parsed as Record<string, unknown>)) {
+      for (const [eventType, actionTypes] of Object.entries(parsed)) {
         if (!Array.isArray(actionTypes)) continue;
         mappings[eventType] = actionTypes.filter((v): v is string => typeof v === 'string' && v.length > 0);
       }
@@ -494,10 +522,10 @@ export class MobileAnalyticsService {
       }
 
       try {
-        const parsed = JSON.parse(raw) as { enabled?: unknown } | null;
+        const parsed: unknown = JSON.parse(raw);
         enabledMap[actionType] =
-          parsed && typeof parsed === 'object' && typeof parsed.enabled === 'boolean'
-            ? parsed.enabled
+          isObjectRecord(parsed) && typeof parsed['enabled'] === 'boolean'
+            ? parsed['enabled']
             : this.defaultActionEnabled(actionType);
       } catch {
         enabledMap[actionType] = this.defaultActionEnabled(actionType);

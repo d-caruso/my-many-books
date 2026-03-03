@@ -14,6 +14,9 @@ function isServiceError(err: unknown): err is { code: string; message: string } 
   return typeof err === 'object' && err !== null && 'code' in err && 'message' in err;
 }
 
+const isResourceType = (value: string): value is ResourceType =>
+  RESOURCE_TYPE_VALUES.some(resourceType => resourceType === value);
+
 interface CreatePinnedResultBody {
   resource_type: string;
   resource_id: number;
@@ -33,6 +36,23 @@ export class AdminSearchController extends BaseController {
     super();
   }
 
+  private isCreatePinnedResultBody(value: unknown): value is CreatePinnedResultBody {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    return (
+      typeof value['resource_type'] === 'string' &&
+      typeof value['resource_id'] === 'number' &&
+      typeof value['priority'] === 'number' &&
+      (value['active'] === undefined || typeof value['active'] === 'boolean')
+    );
+  }
+
+  private isUpdatePriorityBody(value: unknown): value is UpdatePriorityBody {
+    return this.isRecord(value) && typeof value['priority'] === 'number';
+  }
+
   /**
    * GET /admin/search/pinned?resource_type=book
    * Get pinned results by resource type (optional filter)
@@ -42,18 +62,20 @@ export class AdminSearchController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const resourceType = this.getQueryParameter(request, 'resource_type');
+    const resourceTypeRaw = this.getQueryParameter(request, 'resource_type');
 
     // If resource_type is provided, validate it
-    if (resourceType && !(RESOURCE_TYPE_VALUES as readonly string[]).includes(resourceType)) {
+    if (resourceTypeRaw && !isResourceType(resourceTypeRaw)) {
       return this.createErrorResponse(
-        `Invalid resource_type: ${resourceType}. Must be one of: ${RESOURCE_TYPE_VALUES.join(', ')}`,
+        `Invalid resource_type: ${resourceTypeRaw}. Must be one of: ${RESOURCE_TYPE_VALUES.join(', ')}`,
         400
       );
     }
 
+    const resourceType = resourceTypeRaw && isResourceType(resourceTypeRaw) ? resourceTypeRaw : null;
+
     const pinnedResults = resourceType
-      ? await this.pinnedResultsService.getPinnedResultsByType(resourceType as ResourceType)
+      ? await this.pinnedResultsService.getPinnedResultsByType(resourceType)
       : await this.pinnedResultsService.getAllPinnedResults();
 
     return this.createSuccessResponse({
@@ -79,33 +101,23 @@ export class AdminSearchController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<CreatePinnedResultBody>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isCreatePinnedResultBody(body)) {
       return this.createErrorResponse('Invalid request body', 400);
     }
     const { resource_type, resource_id, priority, active } = body;
 
-    // Validate required fields
-    if (!resource_type || !resource_id || priority === undefined) {
-      return this.createErrorResponse('Missing required fields: resource_type, resource_id, priority', 400);
-    }
-
     // Validate resource_type against RESOURCE_TYPE_VALUES
-    if (!(RESOURCE_TYPE_VALUES as readonly string[]).includes(resource_type)) {
+    if (!isResourceType(resource_type)) {
       return this.createErrorResponse(
         `Invalid resource_type: ${resource_type}. Must be one of: ${RESOURCE_TYPE_VALUES.join(', ')}`,
         400
       );
     }
 
-    // Validate resource_id and priority are numbers
-    if (typeof resource_id !== 'number' || typeof priority !== 'number') {
-      return this.createErrorResponse('resource_id and priority must be numbers', 400);
-    }
-
     try {
       const pinnedResult = await this.pinnedResultsService.createPinnedResult({
-        resourceType: resource_type as ResourceType,
+        resourceType: resource_type,
         resourceId: resource_id,
         priority,
         active,
@@ -152,15 +164,11 @@ export class AdminSearchController extends BaseController {
       return this.createErrorResponse('Invalid pinned result ID', 400);
     }
 
-    const body = this.parseBody<UpdatePriorityBody>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isUpdatePriorityBody(body)) {
       return this.createErrorResponse('Invalid request body', 400);
     }
     const { priority } = body;
-
-    if (priority === undefined || typeof priority !== 'number') {
-      return this.createErrorResponse('priority field is required and must be a number', 400);
-    }
 
     try {
       const pinnedResult = await this.pinnedResultsService.updatePriority(Number(id), { priority });

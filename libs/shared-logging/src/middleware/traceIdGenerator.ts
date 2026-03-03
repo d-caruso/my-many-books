@@ -9,6 +9,12 @@ import { Request, Response, NextFunction } from 'express';
 import { randomBytes } from 'crypto';
 import { AsyncLocalStorage } from 'async_hooks';
 
+declare module 'express' {
+  interface Request {
+    traceId?: string;
+  }
+}
+
 /**
  * Async local storage for trace ID
  *
@@ -16,6 +22,14 @@ import { AsyncLocalStorage } from 'async_hooks';
  * without explicitly passing it through every function call.
  */
 export const traceIdStorage = new AsyncLocalStorage<string>();
+
+const getHeaderTraceId = (req: Request): string | undefined => {
+  const headerValue = req.headers['x-trace-id'] ?? req.headers['traceid'];
+  if (Array.isArray(headerValue)) {
+    return headerValue[0];
+  }
+  return typeof headerValue === 'string' && headerValue.trim() ? headerValue : undefined;
+};
 
 /**
  * Generate a unique trace ID
@@ -51,15 +65,12 @@ export function getCurrentTraceId(): string | undefined {
 export function traceIdMiddleware() {
   return (req: Request, res: Response, next: NextFunction): void => {
     // Extract from header or generate new
-    const traceId =
-      (req.headers['x-trace-id'] as string) ||
-      (req.headers['traceid'] as string) ||
-      generateTraceId();
+    const traceId = getHeaderTraceId(req) || generateTraceId();
 
     // Store in async local storage
     traceIdStorage.run(traceId, () => {
       // Add to request object for easy access
-      (req as any).traceId = traceId;
+      req.traceId = traceId;
 
       // Add to response headers
       res.setHeader('X-Trace-Id', traceId);
@@ -76,5 +87,5 @@ export function traceIdMiddleware() {
  * @returns Trace ID
  */
 export function getTraceIdFromRequest(req: Request): string {
-  return (req as any).traceId || getCurrentTraceId() || generateTraceId();
+  return req.traceId || getCurrentTraceId() || generateTraceId();
 }

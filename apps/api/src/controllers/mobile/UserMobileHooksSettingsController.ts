@@ -6,7 +6,7 @@
 import { UserBaseController } from '../base/UserBaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
-import { AppSetting, AppSettingAttributes } from '../../models';
+import { AppSetting, AppSettingCreationAttributes } from '../../models';
 import { BASE_USER_PREFIX } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 
@@ -21,6 +21,14 @@ export interface UserMobileConfigUpdateRequest {
 }
 
 export class UserMobileHooksSettingsController extends UserBaseController {
+  private isUserMobileHooksUpdateRequest(value: unknown): value is UserMobileConfigUpdateRequest {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    return value['analyticsEnabled'] === undefined || typeof value['analyticsEnabled'] === 'boolean';
+  }
+
   /**
    * GET /api/users/{id}/mobile-hooks/settings - Get user's mobile hooks settings
    */
@@ -64,8 +72,8 @@ export class UserMobileHooksSettingsController extends UserBaseController {
       return this.createAccessDeniedResponse(request);
     }
 
-    const body = this.parseBody<UserMobileConfigUpdateRequest>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isUserMobileHooksUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -108,19 +116,11 @@ export class UserMobileHooksSettingsController extends UserBaseController {
 
     const settingsMap = new Map(settings.map(s => [s.key, s.value]));
 
-    // Helper function to get user setting with fallback to default
-    const getUserSetting = (settingName: string, defaultValue: string | boolean | number): string | boolean | number => {
+    const getUserBooleanSetting = (settingName: string, defaultValue: boolean): boolean => {
       const key = `${BASE_USER_PREFIX}.${userId}.${settingName}`;
       const value = settingsMap.get(key);
       if (value === undefined) return defaultValue;
-      if (typeof defaultValue === 'boolean') {
-        return value === 'true';
-      }
-      if (typeof defaultValue === 'number') {
-        const parsed = parseInt(value, 10);
-        return isNaN(parsed) ? defaultValue : parsed;
-      }
-      return value;
+      return value === 'true';
     };
 
     // Find last updated timestamp
@@ -135,7 +135,7 @@ export class UserMobileHooksSettingsController extends UserBaseController {
 
     return {
       userId: userId,
-      analyticsEnabled: getUserSetting('analytics_enabled', true) as boolean,
+      analyticsEnabled: getUserBooleanSetting('analytics_enabled', true),
       lastUpdated: lastUpdatedSetting?.updateDate?.toISOString() || null,
     };
   }
@@ -146,18 +146,20 @@ export class UserMobileHooksSettingsController extends UserBaseController {
   private async updateUserConfigSetting(userId: number, settingName: string, value: string): Promise<void> {
     const key = `${BASE_USER_PREFIX}.${userId}.${settingName}`;
     
+    const defaults: AppSettingCreationAttributes = {
+      key,
+      value,
+      active: true,
+      category: 'user_mobile_config',
+      type: 'string',
+      defaultValue: value,
+      description: `User ${userId} mobile configuration: ${settingName}`,
+      deleted: false,
+    };
+
     const [setting] = await AppSetting.findOrCreate({
       where: { key },
-      defaults: {
-        key,
-        value,
-        active: true,
-        category: 'user_mobile_config',
-        type: 'string',
-        defaultValue: value,
-        description: `User ${userId} mobile configuration: ${settingName}`,
-        deleted: false,
-      } as AppSettingAttributes,
+      defaults,
     });
 
     if (setting.value !== value) {

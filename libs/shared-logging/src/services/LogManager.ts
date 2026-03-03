@@ -242,7 +242,7 @@ export class LogManager {
   /**
    * Record a failure for an adapter
    */
-  private recordFailure(adapterName: string, error: any): void {
+  private recordFailure(adapterName: string, error: unknown): void {
     const state = this.circuitBreakers.get(adapterName);
     if (!state) return;
 
@@ -283,16 +283,14 @@ export class LogManager {
   /**
    * Log an error (uses console.error as fallback)
    */
-  private logError(...args: any[]): void {
-    // eslint-disable-next-line no-console
+  private logError(...args: unknown[]): void {
     console.error('[LogManager]', ...args);
   }
 
   /**
    * Log an info message (uses console.log as fallback)
    */
-  private logInfo(...args: any[]): void {
-    // eslint-disable-next-line no-console
+  private logInfo(...args: unknown[]): void {
     console.log('[LogManager]', ...args);
   }
 }

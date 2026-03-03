@@ -3,6 +3,7 @@
 // HookStorage implementation backed by Sequelize models
 // ================================================================
 
+import { FindOptions } from 'sequelize';
 import {
   HookConfig,
   HookExecution as HookExecutionRecord,
@@ -10,7 +11,11 @@ import {
   HookStorageStats,
 } from '@my-many-books/hookey';
 import { Hook, HookExecution } from '../../models';
-import { HookAttributes, HookExecutionAttributes } from '../../models/interfaces/ModelInterfaces';
+import {
+  HookAttributes,
+  HookExecutionAttributes,
+  HookExecutionCreationAttributes,
+} from '../../models/interfaces/ModelInterfaces';
 
 export class DatabaseHookStorage implements HookStorage {
   constructor(
@@ -23,7 +28,7 @@ export class DatabaseHookStorage implements HookStorage {
       return [];
     }
 
-    const queryOptions: Record<string, unknown> = {
+    const queryOptions: FindOptions = {
       order: [
         ['priority', 'DESC'],
         ['id', 'ASC'],
@@ -31,7 +36,7 @@ export class DatabaseHookStorage implements HookStorage {
     };
 
     if (filters?.isActive !== undefined) {
-      queryOptions['where'] = { isActive: filters.isActive };
+      queryOptions.where = { isActive: filters.isActive };
     }
 
     const hooks = await this.hookModel.findAll(queryOptions);
@@ -66,7 +71,7 @@ export class DatabaseHookStorage implements HookStorage {
       return;
     }
 
-    const payload: Omit<HookExecutionAttributes, 'id'> = {
+    const payload: HookExecutionCreationAttributes = {
       hookId: Number(execution.hookId),
       eventName: execution.eventName,
       eventData: execution.eventData ?? null,
@@ -76,8 +81,7 @@ export class DatabaseHookStorage implements HookStorage {
       executedAt: execution.executedAt ?? new Date(),
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    await this.hookExecutionModel.create(payload as HookExecutionAttributes);
+    await this.hookExecutionModel.create(payload);
   }
 
   async getExecutions(hookId: string, limit?: number): Promise<HookExecutionRecord[]> {
@@ -85,13 +89,13 @@ export class DatabaseHookStorage implements HookStorage {
       return [];
     }
 
-    const queryOptions: Record<string, unknown> = {
+    const queryOptions: FindOptions = {
       where: { hookId: Number(hookId) },
       order: [['executedAt', 'DESC']],
     };
 
     if (limit !== undefined) {
-      queryOptions['limit'] = limit;
+      queryOptions.limit = limit;
     }
 
     const executions = await this.hookExecutionModel.findAll(queryOptions);
@@ -104,12 +108,12 @@ export class DatabaseHookStorage implements HookStorage {
       return [];
     }
 
-    const queryOptions: Record<string, unknown> = {
+    const queryOptions: FindOptions = {
       order: [['executedAt', 'DESC']],
     };
 
     if (limit !== undefined) {
-      queryOptions['limit'] = limit;
+      queryOptions.limit = limit;
     }
 
     const executions = await this.hookExecutionModel.findAll(queryOptions);
@@ -145,8 +149,7 @@ export class DatabaseHookStorage implements HookStorage {
   }
 
   private mapHookConfig(hook: Hook): HookConfig {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    const data = hook.get({ plain: true }) as HookAttributes;
+    const data: HookAttributes = hook.get({ plain: true });
     const config: HookConfig = {
       id: data.id.toString(),
       name: data.name,
@@ -173,8 +176,7 @@ export class DatabaseHookStorage implements HookStorage {
   }
 
   private mapExecution(record: HookExecution): HookExecutionRecord {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    const data = record.get({ plain: true }) as HookExecutionAttributes;
+    const data: HookExecutionAttributes = record.get({ plain: true });
     const execution: HookExecutionRecord = {
       hookId: data.hookId.toString(),
       eventName: data.eventName,

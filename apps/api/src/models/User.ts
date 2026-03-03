@@ -5,10 +5,10 @@
 
 import { DataTypes, Association, Sequelize } from 'sequelize';
 import { IdBaseModel } from './base/IdBaseModel';
-import { UserAttributes, UserRole } from './interfaces/ModelInterfaces';
+import { UserAttributes, UserCreationAttributes, UserRole } from './interfaces/ModelInterfaces';
 import { Book } from './Book';
 
-export class User extends IdBaseModel<UserAttributes> implements UserAttributes {
+export class User extends IdBaseModel<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public email!: string;
   public name!: string;
   public surname!: string;

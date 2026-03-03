@@ -7,40 +7,108 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { mobileAnalyticsService, MobileEventData } from '../../services/MobileAnalyticsService';
+import { isJsonObject, JsonObject, JsonValue } from '../../types/json';
 
 export interface MobileAnalyticsEvent {
   event_type: string;
   user_id?: string;
   timestamp: string;
-  data: Record<string, unknown>;
+  data: JsonObject;
   app_version?: string;
-  device_info?: Record<string, unknown>;
+  device_info?: JsonObject;
 }
 
 export interface MobileAnalyticsEventBatch {
   events: MobileAnalyticsEvent[];
 }
 
+interface MobileAnalyticsEventInput {
+  event_type?: string;
+  user_id?: string;
+  timestamp?: string;
+  data?: JsonObject;
+  app_version?: string;
+  device_info?: JsonObject;
+}
+
+interface MobileAnalyticsEventBatchInput {
+  events: unknown[];
+}
+
 export class MobileAnalyticsController extends BaseController {
+  private isMobileAnalyticsEvent(value: unknown): value is MobileAnalyticsEventInput {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (value['event_type'] !== undefined && typeof value['event_type'] !== 'string') {
+      return false;
+    }
+
+    if (value['timestamp'] !== undefined && typeof value['timestamp'] !== 'string') {
+      return false;
+    }
+
+    if (value['user_id'] !== undefined && typeof value['user_id'] !== 'string') {
+      return false;
+    }
+
+    if (value['app_version'] !== undefined && typeof value['app_version'] !== 'string') {
+      return false;
+    }
+
+    if (value['data'] !== undefined && !isJsonObject(value['data'])) {
+      return false;
+    }
+
+    if (value['device_info'] !== undefined && !isJsonObject(value['device_info'])) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private isMobileAnalyticsEventBatch(value: unknown): value is MobileAnalyticsEventBatchInput {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (value['events'] === undefined) {
+      return false;
+    }
+
+    return Array.isArray(value['events']);
+  }
+
+  private toSanitizableEvent(event: MobileAnalyticsEventInput): MobileAnalyticsEvent {
+    return {
+      event_type: event.event_type || '',
+      timestamp: event.timestamp || '',
+      data: event.data ?? {},
+      ...(event.user_id ? { user_id: event.user_id } : {}),
+      ...(event.app_version ? { app_version: event.app_version } : {}),
+      ...(event.device_info ? { device_info: event.device_info } : {}),
+    };
+  }
+
   /**
    * POST /api/mobile-analytics/events - Single event upload
    */
   async uploadEvent(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
 
-    const body = this.parseBody<MobileAnalyticsEvent>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isMobileAnalyticsEvent(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
-    // Validate event structure
     if (!body.event_type || !body.timestamp) {
       return this.createErrorResponse('Missing required fields: event_type, timestamp', 400);
     }
 
     try {
       // Sanitize event data
-      const sanitizedEvent = this.sanitizeEvent(body);
+      const sanitizedEvent = this.sanitizeEvent(this.toSanitizableEvent(body));
       
       // Create event data for storage
       const eventData: MobileEventData = {
@@ -74,8 +142,8 @@ export class MobileAnalyticsController extends BaseController {
   async uploadEventBatch(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
 
-    const body = this.parseBody<MobileAnalyticsEventBatch>(request);
-    if (!body || !Array.isArray(body.events)) {
+    const body = this.parseBody(request);
+    if (!this.isMobileAnalyticsEventBatch(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -95,19 +163,19 @@ export class MobileAnalyticsController extends BaseController {
 
       for (let i = 0; i < body.events.length; i++) {
         const event = body.events[i];
-        
-        // Validate each event
-        if (!event || !event.event_type || !event.timestamp) {
+
+        if (!this.isMobileAnalyticsEvent(event) || !event.event_type || !event.timestamp) {
           validationErrors.push({
             index: i,
-            error: 'Missing required fields: event_type, timestamp'
+            error: 'Missing required fields: event_type, timestamp',
           });
           continue;
         }
-
+        
+        // Validate each event
         try {
           // Sanitize and prepare event
-          const sanitizedEvent = this.sanitizeEvent(event);
+          const sanitizedEvent = this.sanitizeEvent(this.toSanitizableEvent(event));
           eventsToProcess.push({
             eventId: this.generateEventId(),
             eventType: sanitizedEvent.event_type,
@@ -221,20 +289,22 @@ export class MobileAnalyticsController extends BaseController {
   /**
    * Sanitize object recursively
    */
-  private sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
-    if (!obj || typeof obj !== 'object') return {};
-    
-    const sanitized: Record<string, unknown> = {};
+  private sanitizeObject(obj: JsonObject): JsonObject {
+    if (!this.isRecord(obj)) return {};
+
+    const sanitized: JsonObject = {};
     
     for (const [key, value] of Object.entries(obj)) {
       if (typeof value === 'string') {
         sanitized[key] = this.sanitizeString(value);
-      } else if (typeof value === 'number' || typeof value === 'boolean') {
+      } else if (typeof value === 'number' || typeof value === 'boolean' || value === null) {
         sanitized[key] = value;
       } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-        sanitized[key] = this.sanitizeObject(value as Record<string, unknown>);
+        sanitized[key] = this.sanitizeObject(value);
       } else if (Array.isArray(value)) {
-        sanitized[key] = value.slice(0, 100); // Limit array size
+        sanitized[key] = value.slice(0, 100).map((entry: JsonValue) =>
+          typeof entry === 'string' ? this.sanitizeString(entry) : entry
+        ); // Limit array size
       }
       // Skip functions, null, undefined, or other complex types
     }

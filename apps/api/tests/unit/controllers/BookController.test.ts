@@ -277,6 +277,7 @@ describe('BookController', () => {
       jest.clearAllMocks();
 
       mockRequest.body = JSON.stringify({ isbn: '9780140449136' });
+      mockRequest.user = { id: 123, email: 'test@example.com', role: 'user', provider: 'cognito' };
 
       (validateIsbn as jest.Mock).mockReturnValue({
         isValid: true,
@@ -306,12 +307,24 @@ describe('BookController', () => {
 
     it('should return 400 if ISBN is missing', async () => {
       mockRequest.body = JSON.stringify({});
+      mockRequest.user = { id: 123, email: 'test@example.com', role: 'user', provider: 'cognito' };
 
       const result = await bookController.importBookFromIsbn(mockRequest);
 
       expect(result.statusCode).toBe(400);
       expect(result.success).toBe(false);
       expect(result.error).toBe('ISBN must be provided');
+    });
+
+    it('should require authentication for importBookFromIsbn', async () => {
+      mockRequest.body = JSON.stringify({ isbn: '9780140449136' });
+      delete mockRequest.user;
+
+      const result = await bookController.importBookFromIsbn(mockRequest);
+
+      expect(result.statusCode).toBe(401);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('User authentication required');
     });
   });
 

@@ -3,13 +3,13 @@
 // Sequelize-backed adapter for the Category repository
 // ================================================================
 
-import { FindAndCountOptions, FindOptions, IncludeOptions, Op, WhereOptions } from 'sequelize';
+import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions } from 'sequelize';
 import { Category } from '@/models/Category';
 import { Book } from '@/models/Book';
 import {
-  CategoryAttributes,
   CategoryCreationAttributes,
 } from '@/models/interfaces/ModelInterfaces';
+import { createModel } from '@/utils/sequelize-helpers';
 import {
   CategoryEntity,
   CategoryListFilters,
@@ -18,7 +18,6 @@ import {
   PaginatedResult,
 } from '../CategoryRepositoryTypes';
 import { CategoryRepositoryAdapter } from './CategoryRepositoryAdapter';
-import type { SearchFilters } from '../../interfaces/adapters/RepositoryAdapter';
 
 export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
   findById(id: number, options?: CategoryQueryOptions): Promise<CategoryEntity | null> {
@@ -101,7 +100,7 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
     options?: CategoryQueryOptions
   ): Promise<CategoryEntity> {
     const transaction = options?.transaction ?? null;
-    const category = await Category.create(payload as CategoryAttributes, {
+    const category = await createModel(Category, payload, {
       transaction,
     });
     return (await this.findById(category.id, options))!;
@@ -153,12 +152,11 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
   }
 
   buildListQuery(
-    filters: SearchFilters,
+    filters: Partial<CategoryListFilters>,
     options?: CategoryListOptions
   ): { query: FindAndCountOptions; limit: number; offset: number } {
-    const typedFilters = (filters as Partial<CategoryListFilters>) || {};
     const { limit, offset } = this.getPagination(options);
-    const where = this.buildWhereClause(typedFilters);
+    const where = this.buildWhereClause(filters);
     const query: FindAndCountOptions = {
       where,
       limit,
@@ -293,21 +291,22 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
       replacements['userId'] = userId;
     }
 
+    interface CategoryFulltextRow extends CategoryEntity { relevance: number; }
+    interface CountRow { total: number; }
+
     const [results, countResults] = await Promise.all([
-      Category.sequelize!.query(sql, {
+      Category.sequelize!.query<CategoryFulltextRow>(sql, {
         replacements,
-        type: 'SELECT',
-        raw: true,
+        type: QueryTypes.SELECT,
       }),
-      Category.sequelize!.query(countSql, {
+      Category.sequelize!.query<CountRow>(countSql, {
         replacements: { query, ...(userId ? { userId } : {}) },
-        type: 'SELECT',
-        raw: true,
+        type: QueryTypes.SELECT,
       }),
     ]);
 
-    const rows = results as Array<CategoryEntity & { relevance: number }>;
-    const total = (countResults as Array<{ total: number }>)[0]?.total || 0;
+    const rows = results;
+    const total = countResults[0]?.total ?? 0;
 
     const relevanceScores = new Map<number, number>();
     rows.forEach(row => {
@@ -342,11 +341,10 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
         ['name', 'ASC'],
         ['id', 'ASC'],
       ],
-      raw: true,
     });
 
     return {
-      rows: rows as CategoryEntity[],
+      rows: rows.map(row => this.toDomain(row)).filter((e): e is CategoryEntity => e !== null),
       total: count,
     };
   }
@@ -372,12 +370,11 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
       replacements['userId'] = userId;
     }
 
-    const results = await Category.sequelize!.query(sql, {
-      replacements,
-      type: 'SELECT',
-      raw: true,
-    });
+    interface PinnedRow { resourceId: number; priority: number; }
 
-    return results as Array<{ resourceId: number; priority: number }>;
+    return Category.sequelize!.query<PinnedRow>(sql, {
+      replacements,
+      type: QueryTypes.SELECT,
+    });
   }
 }

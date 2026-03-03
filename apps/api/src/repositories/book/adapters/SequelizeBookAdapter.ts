@@ -3,12 +3,12 @@
 // Sequelize-backed adapter for the Book repository
 // ================================================================
 
-import type { Transaction } from 'sequelize';
 import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions } from 'sequelize';
 import { Book } from '@/models/Book';
 import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';
 import { BookAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
+import { createModel } from '@/utils/sequelize-helpers';
 import {
   BookAssociationInput,
   BookCreationInput,
@@ -19,7 +19,6 @@ import {
   PaginatedResult,
 } from '../BookRepositoryTypes';
 import { BookRepositoryAdapter } from './BookRepositoryAdapter';
-import type { SearchFilters } from '../../interfaces/adapters/RepositoryAdapter';
 
 export class SequelizeBookAdapter implements BookRepositoryAdapter {
   findById(id: number, options?: BookQueryOptions): Promise<BookEntity | null> {
@@ -95,11 +94,12 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
   }
 
   async createModel(payload: BookCreationInput, options?: BookQueryOptions): Promise<BookEntity> {
-    const transaction = (options?.transaction as Transaction | null) ?? null;
-    const book = await Book.create(payload as unknown as BookAttributes, {
+    const transaction = options?.transaction ?? null;
+    const { authorIds, categoryIds, ...bookPayload } = payload;
+    const book = await createModel(Book, bookPayload, {
       transaction,
     });
-    await this.syncAssociations(book, payload);
+    await this.syncAssociations(book, { authorIds, categoryIds });
     return (await this.findById(book.id, options))!;
   }
 
@@ -113,11 +113,12 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       return null;
     }
 
-    const transaction = (options?.transaction as Transaction | null) ?? null;
-    await book.update(payload as Partial<BookAttributes>, {
+    const transaction = options?.transaction ?? null;
+    const { authorIds, categoryIds, ...bookPayload } = payload;
+    await book.update(bookPayload, {
       transaction,
     });
-    await this.syncAssociations(book, payload);
+    await this.syncAssociations(book, { authorIds, categoryIds });
     return this.findById(id, options);
   }
 
@@ -129,7 +130,7 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
     const include = this.buildInclude(options?.includeAssociations ?? true);
     const query: FindOptions<Book> = {};
     if (options?.transaction) {
-      query.transaction = options.transaction as Transaction;
+      query.transaction = options.transaction;
     }
     if (include) {
       query.include = include;
@@ -138,17 +139,16 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
   }
 
   buildListQuery(
-    filters: SearchFilters,
+    filters: Partial<BookSearchFilters>,
     options?: BookListOptions
   ): {
     query: FindAndCountOptions<BookAttributes>;
     limit: number;
     offset: number;
   } {
-    const typedFilters = (filters as Partial<BookSearchFilters>) || {};
     const { limit, offset } = this.getPagination(options);
-    const include = this.buildInclude(options?.includeAssociations ?? true, typedFilters);
-    const where = this.buildWhereClause(typedFilters);
+    const include = this.buildInclude(options?.includeAssociations ?? true, filters);
+    const where = this.buildWhereClause(filters);
 
     const query: FindAndCountOptions<BookAttributes> = {
       where,

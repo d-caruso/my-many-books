@@ -66,8 +66,8 @@ export abstract class BaseController {
    * @param key - Translation key with namespace (e.g., "errors:book_not_found")
    * @param interpolation - Optional interpolation values
    */
-  protected t(key: string, interpolation?: object): string {
-    return i18n.t(key, interpolation as Record<string, unknown>);
+  protected t(key: string, interpolation?: Record<string, unknown>): string {
+    return i18n.t(key, interpolation);
   }
 
   protected createSuccessResponse<T>(
@@ -108,26 +108,30 @@ export abstract class BaseController {
   protected createErrorResponseI18n(
     errorKey: string,
     statusCode: number = 400,
-    interpolation?: object,
+    interpolation?: Record<string, unknown>,
     details?: Record<string, unknown>
   ): ApiResponse {
     const errorMessage = this.t(errorKey, interpolation);
     return this.createErrorResponse(errorMessage, statusCode, details);
   }
 
-  protected parseBody<T>(request: UniversalRequest): T | null {
+  protected isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
+
+  protected parseBody(request: UniversalRequest): unknown {
     if (!request.body) {
       return null;
     }
 
-    // If body is already parsed (object), return it directly
+    // If body is already parsed (object), return it directly.
     if (typeof request.body === 'object') {
-      return request.body as T;
+      return request.body;
     }
 
-    // If body is string, try to parse it
+    // If body is string, try to parse it.
     try {
-      return JSON.parse(request.body as string) as T;
+      return typeof request.body === 'string' ? JSON.parse(request.body) : null;
     } catch {
       return null;
     }
@@ -144,7 +148,8 @@ export abstract class BaseController {
       const errors = error.details.map(detail => {
         // Check if the message is a translation key (contains ":")
         if (detail.message.includes(':')) {
-          return this.t(detail.message, detail.context as object | undefined);
+          const context = this.isRecord(detail.context) ? detail.context : undefined;
+          return this.t(detail.message, context);
         }
         // Otherwise return the message as-is (for backward compatibility)
         return detail.message;

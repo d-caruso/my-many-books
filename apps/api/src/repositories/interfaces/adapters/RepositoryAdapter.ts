@@ -7,10 +7,6 @@ import { BaseEntity } from '../../../domain/entities/BaseEntity';
 
 export type CreationAttributes = Record<string, unknown>;
 
-export interface AssociationInput {
-  [key: string]: unknown;
-}
-
 export interface QueryOptions {
   transaction?: unknown;
   includeAssociations?: boolean;
@@ -19,13 +15,8 @@ export interface QueryOptions {
 export interface ListOptions extends QueryOptions {
   limit?: number;
   offset?: number;
-  filters?: SearchFilters;
   orderBy?: string;
   orderDirection?: 'ASC' | 'DESC';
-}
-
-export interface SearchFilters {
-  [key: string]: unknown;
 }
 
 export interface PaginatedResult<T extends BaseEntity> {
@@ -38,13 +29,14 @@ export interface PaginatedResult<T extends BaseEntity> {
 export interface RepositoryAdapter<
   Entity extends BaseEntity,
   Creation,
-  Associations extends AssociationInput,
+  Associations extends object,
   Query extends QueryOptions,
   List extends ListOptions,
+  Filters extends object,
 > {
   buildFindOptions(options?: Query): unknown;
   buildListQuery(
-    filters: SearchFilters,
+    filters: Partial<Filters>,
     options?: List
   ): {
     query: unknown;

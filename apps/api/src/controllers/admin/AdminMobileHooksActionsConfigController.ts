@@ -8,17 +8,20 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
 import { AppSetting } from '../../models';
+import { AppSettingCreationAttributes } from '../../models/AppSetting';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { MOBILE_HOOK_SETTING_KEYS, BASE_HOOKS, GLOBAL_SCOPE } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
 import { databaseActionTestService } from '../../services/DatabaseActionTestService';
+import type { DatabaseExecutionResult } from '../../services/DatabaseActionTestService';
 import { emailService } from '../../services/action-tests/EmailService';
 import { pushNotificationService } from '../../services/action-tests/PushNotificationService';
 import { slackService } from '../../services/action-tests/SlackService';
 import { smsService } from '../../services/action-tests/SmsService';
 import { webhookService } from '../../services/action-tests/WebhookService';
-import { TABLE_NAMES } from '../../utils/constants'
-
+import type { ActionTestResult } from '../../services/action-tests/ActionTestResult';
+import { TABLE_NAMES } from '../../utils/constants';
+import { isJsonObject, isJsonValue, type JsonObject } from '../../types/json';
 
 const ACTIONS_BASE = `${BASE_HOOKS}.${GLOBAL_SCOPE}.actions`;
 const LISTENERS_BASE = `${BASE_HOOKS}.${GLOBAL_SCOPE}.listeners`;
@@ -35,15 +38,16 @@ export const ACTION_TYPES = {
 } as const;
 
 const ACTION_DESCRIPTIONS: Record<ActionType, string> = {
-    email: 'Send email notifications to configured recipients',
-    slack: 'Send messages to Slack channels with optional user mentions',
-    webhook: 'Send HTTP POST requests to external webhook endpoints',
-    database: 'Store events in database tables for analytics',
-    push_notification: 'Send push notifications to mobile devices',
-    sms: 'Send SMS messages for critical alerts',
-  };
+  email: 'Send email notifications to configured recipients',
+  slack: 'Send messages to Slack channels with optional user mentions',
+  webhook: 'Send HTTP POST requests to external webhook endpoints',
+  database: 'Store events in database tables for analytics',
+  push_notification: 'Send push notifications to mobile devices',
+  sms: 'Send SMS messages for critical alerts',
+};
 
 type ActionType = (typeof ACTION_TYPES)[keyof typeof ACTION_TYPES];
+const ACTION_TYPE_VALUES: readonly string[] = Object.values(ACTION_TYPES);
 
 interface HookActionMapping {
   [eventName: string]: ActionType[];
@@ -130,21 +134,162 @@ interface HookActionConfigUpdateRequest {
   actionSettings?: Partial<ActionSettings>;
 }
 
-interface ActionSettingsUpdateRequest {
-  enabled?: boolean;
-  [key: string]: unknown;
-}
+type ActionSettingsUpdateRequest = Partial<ActionSettings[ActionType]>;
+
+type HookListenerToggle = boolean | { enabled: boolean };
+type HookListenerUpdateMap = Record<string, HookListenerToggle>;
 
 interface HookListenerUpdateRequest {
-  listeners?: Record<string, unknown>;
-  categories?: Record<string, unknown>;
+  listeners?: HookListenerUpdateMap;
+  categories?: HookListenerUpdateMap;
   analytics?: boolean;
   errorReporting?: boolean;
   offlineStorage?: boolean;
   performanceMonitoring?: boolean;
 }
 
+interface TestConfigRequestBody {
+  eventType?: string;
+  payload?: JsonObject;
+}
+
+interface TestActionTypeRequestBody {
+  actionType: ActionType;
+  dryRun?: boolean;
+  testData?: JsonObject;
+}
+
+interface ActionExecutionResult {
+  success: boolean;
+  message: string;
+  details?: ActionExecutionDetails;
+}
+
+interface ActionExecutionDetails {
+  enabled?: boolean;
+  recipientCount?: number;
+  endpoints?: number;
+  results?: ActionTestResult[];
+  channel?: string;
+  endpointCount?: number;
+  table?: string;
+  recipients?: number;
+  result?: ActionTestResult | DatabaseExecutionResult | ActionTestResult[];
+}
+
+interface ActionTypeDetails {
+  description: string;
+  enabled: boolean;
+  configured: boolean;
+  warnings: string[];
+  settings: ActionSettings[ActionType];
+}
+
 export class AdminMobileHooksActionsConfigController extends BaseController {
+  private isActionType(value: string | undefined): value is ActionType {
+    return typeof value === 'string' && ACTION_TYPE_VALUES.includes(value);
+  }
+
+  private isHookActionMapping(value: unknown): value is HookActionMapping {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    return Object.values(value).every(actions =>
+      Array.isArray(actions) && actions.every(action => typeof action === 'string' && this.isActionType(action))
+    );
+  }
+
+  private isHookActionConfigUpdateRequest(value: unknown): value is HookActionConfigUpdateRequest {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (value['actions'] !== undefined && !this.isHookActionMapping(value['actions'])) {
+      return false;
+    }
+
+    if (value['actionSettings'] !== undefined && !this.isRecord(value['actionSettings'])) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private isHookListenerUpdateRequest(value: unknown): value is HookListenerUpdateRequest {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (value['listeners'] !== undefined && !this.isRecord(value['listeners'])) {
+      return false;
+    }
+
+    if (value['categories'] !== undefined && !this.isRecord(value['categories'])) {
+      return false;
+    }
+
+    if (value['analytics'] !== undefined && typeof value['analytics'] !== 'boolean') {
+      return false;
+    }
+
+    if (value['errorReporting'] !== undefined && typeof value['errorReporting'] !== 'boolean') {
+      return false;
+    }
+
+    if (
+      value['offlineStorage'] !== undefined &&
+      typeof value['offlineStorage'] !== 'boolean'
+    ) {
+      return false;
+    }
+
+    if (
+      value['performanceMonitoring'] !== undefined &&
+      typeof value['performanceMonitoring'] !== 'boolean'
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private isTestConfigRequestBody(value: unknown): value is TestConfigRequestBody {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (value['eventType'] !== undefined && typeof value['eventType'] !== 'string') {
+      return false;
+    }
+
+    if (value['payload'] !== undefined && !isJsonObject(value['payload'])) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private isActionSettingsUpdateRequest(value: unknown): value is ActionSettingsUpdateRequest {
+    return this.isRecord(value);
+  }
+
+  private isTestActionTypeRequestBody(value: unknown): value is TestActionTypeRequestBody {
+    if (!this.isRecord(value) || typeof value['actionType'] !== 'string') {
+      return false;
+    }
+
+    if (value['dryRun'] !== undefined && typeof value['dryRun'] !== 'boolean') {
+      return false;
+    }
+
+    if (value['testData'] !== undefined && !isJsonObject(value['testData'])) {
+      return false;
+    }
+
+    return this.isActionType(value['actionType']);
+  }
+
    /**
    * GET /api/admin/mobile-hooks/actions-config/mappings
    * Get current mobile hooks actions mappings:
@@ -181,8 +326,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<HookActionConfigUpdateRequest>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isHookActionConfigUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -199,6 +344,14 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       // Update action settings
       if (body.actionSettings) {
         for (const [actionType, settings] of Object.entries(body.actionSettings)) {
+          if (!this.isActionType(actionType)) {
+            return this.createErrorResponse(`Invalid action settings key: ${actionType}`, 400);
+          }
+
+          if (!isJsonObject(settings)) {
+            return this.createErrorResponse(`Invalid settings payload for: ${actionType}`, 400);
+          }
+
           const key = `${ACTIONS_BASE}.settings.${actionType}`;
           await this.updateConfigSetting(key, JSON.stringify(settings));
           updatedSettings.push(`actionSettings.${actionType}`);
@@ -269,8 +422,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<HookListenerUpdateRequest>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isHookListenerUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -278,22 +431,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       const updatedSettings: string[] = [];
 
       if (body.listeners !== undefined) {
-        if (!body.listeners || typeof body.listeners !== 'object' || Array.isArray(body.listeners)) {
-          return this.createErrorResponse('Invalid listeners payload', 400);
-        }
-
         for (const [eventName, toggle] of Object.entries(body.listeners)) {
-          let enabled: boolean | null = null;
-
-          if (typeof toggle === 'boolean') {
-            enabled = toggle;
-          } else if (
-            toggle &&
-            typeof toggle === 'object' &&
-            typeof (toggle as { enabled?: unknown }).enabled === 'boolean'
-          ) {
-            enabled = (toggle as { enabled: boolean }).enabled;
-          }
+          const enabled = this.normalizeHookToggle(toggle);
 
           if (enabled === null) {
             return this.createErrorResponse(`Invalid listener toggle for: ${eventName}`, 400);
@@ -305,22 +444,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       }
 
       if (body.categories !== undefined) {
-        if (!body.categories || typeof body.categories !== 'object' || Array.isArray(body.categories)) {
-          return this.createErrorResponse('Invalid categories payload', 400);
-        }
-
         for (const [categoryName, toggle] of Object.entries(body.categories)) {
-          let enabled: boolean | null = null;
-
-          if (typeof toggle === 'boolean') {
-            enabled = toggle;
-          } else if (
-            toggle &&
-            typeof toggle === 'object' &&
-            typeof (toggle as { enabled?: unknown }).enabled === 'boolean'
-          ) {
-            enabled = (toggle as { enabled: boolean }).enabled;
-          }
+          const enabled = this.normalizeHookToggle(toggle);
 
           if (enabled === null) {
             return this.createErrorResponse(`Invalid category toggle for: ${categoryName}`, 400);
@@ -364,6 +489,45 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     }
   }
 
+  private normalizeHookToggle(toggle: unknown): boolean | null {
+    if (typeof toggle === 'boolean') {
+      return toggle;
+    }
+
+    if (this.isRecord(toggle) && typeof toggle['enabled'] === 'boolean') {
+      return toggle['enabled'];
+    }
+
+    return null;
+  }
+
+  private sanitizeActionSettings(
+    actionType: ActionType,
+    actionSettings: ActionSettings
+  ): JsonObject {
+    switch (actionType) {
+      case ACTION_TYPES.WEBHOOK: {
+        const { webhook_url: _webhookUrl, ...sanitized } = actionSettings[ACTION_TYPES.WEBHOOK];
+        return sanitized;
+      }
+      case ACTION_TYPES.SLACK: {
+        const slackSettings = actionSettings[ACTION_TYPES.SLACK];
+        const { webhook_url: webhookUrl, ...sanitized } = slackSettings;
+        return webhookUrl ? { ...sanitized, webhook_url: '***masked***' } : sanitized;
+      }
+      case ACTION_TYPES.EMAIL:
+      case ACTION_TYPES.SMS: {
+        const recipientSettings = actionSettings[actionType];
+        return {
+          ...recipientSettings,
+          recipients: recipientSettings.recipients.map(() => '***@***.***'),
+        };
+      }
+      default:
+        return { ...actionSettings[actionType] };
+    }
+  }
+
   /**
    * POST /api/admin/mobile-hooks/actions-config/test - Test hook configuration
    * Triggers a test event through the hook system to verify configuration works
@@ -373,12 +537,16 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<{ eventType?: string; payload?: Record<string, unknown> }>(request);
+    const parsedBody = this.parseBody(request);
+    if (parsedBody !== null && !this.isTestConfigRequestBody(parsedBody)) {
+      return this.createErrorResponseI18n('errors:validation_failed', 400);
+    }
+    const body: TestConfigRequestBody | null = parsedBody;
 
     const testEventType = body?.eventType || 'test.hook.config';
-    const testPayload = body?.payload || {
+    const testPayload: JsonObject = body?.payload || {
       test: true,
-      triggeredBy: request.user?.id,
+      triggeredBy: request.user?.id ?? null,
       timestamp: new Date().toISOString(),
     };
 
@@ -390,36 +558,15 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
       // Simulate action execution without actually sending
       const testResults: Array<{
-        actionType: string;
+        actionType: ActionType;
         enabled: boolean;
         wouldExecute: boolean;
-        settings: Record<string, unknown>;
+        settings: JsonObject;
       }> = [];
 
       for (const actionType of mappedActions) {
         const actionSettings = config.actionSettings[actionType];
-        let settings: Record<string, unknown> = { ...actionSettings };
-
-        switch (actionType) {
-          case ACTION_TYPES.WEBHOOK:
-            settings = { ...(actionSettings as ActionSettings[typeof ACTION_TYPES.WEBHOOK]), webhook_url: undefined };
-            break;
-          case ACTION_TYPES.SLACK:
-            settings = {
-              ...(actionSettings as ActionSettings[typeof ACTION_TYPES.SLACK]),
-              webhook_url: (actionSettings as ActionSettings[typeof ACTION_TYPES.SLACK]).webhook_url ? '***masked***' : undefined,
-            };
-            break;
-          case ACTION_TYPES.EMAIL:
-          case ACTION_TYPES.SMS:
-            settings = {
-              ...(actionSettings as ActionSettings[typeof ACTION_TYPES.EMAIL]),
-              recipients: (actionSettings as ActionSettings[typeof ACTION_TYPES.EMAIL]).recipients.map(() => '***@***.***'),
-            };
-            break;
-          default:
-            break;
-        }
+        const settings = this.sanitizeActionSettings(actionType, config.actionSettings);
 
         testResults.push({
           actionType,
@@ -468,20 +615,27 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     if (authError) return authError;
 
     const config = await this.loadConfig();
-    const actions: Record<string, unknown> = {};
-
-    for (const actionType of Object.values(ACTION_TYPES)) {
+    const buildActionDetails = (actionType: ActionType): ActionTypeDetails => {
       const settings = config.actionSettings[actionType];
       const warnings = this.getActionWarnings(settings);
 
-      actions[actionType] = {
+      return {
         description: ACTION_DESCRIPTIONS[actionType],
         enabled: settings.enabled,
         configured: warnings.length === 0,
         warnings,
         settings,
       };
-    }
+    };
+
+    const actions: Record<ActionType, ActionTypeDetails> = {
+      [ACTION_TYPES.EMAIL]: buildActionDetails(ACTION_TYPES.EMAIL),
+      [ACTION_TYPES.SLACK]: buildActionDetails(ACTION_TYPES.SLACK),
+      [ACTION_TYPES.WEBHOOK]: buildActionDetails(ACTION_TYPES.WEBHOOK),
+      [ACTION_TYPES.DATABASE]: buildActionDetails(ACTION_TYPES.DATABASE),
+      [ACTION_TYPES.PUSH_NOTIFICATION]: buildActionDetails(ACTION_TYPES.PUSH_NOTIFICATION),
+      [ACTION_TYPES.SMS]: buildActionDetails(ACTION_TYPES.SMS),
+    };
 
     return this.createSuccessResponse({ actions });
   }
@@ -494,13 +648,14 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const actionType = request.params?.['action_type'] as ActionType;
-    if (!actionType || !Object.values(ACTION_TYPES).includes(actionType)) {
+    const actionTypeParam = request.params?.['action_type'];
+    if (!this.isActionType(actionTypeParam)) {
       return this.createErrorResponse('Invalid action type', 400);
     }
+    const actionType = actionTypeParam;
 
-    const body = this.parseBody<ActionSettingsUpdateRequest>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isActionSettingsUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -508,12 +663,75 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       // Get current settings for this action type
       const currentConfig = await this.loadConfig();
       const currentSettings = currentConfig.actionSettings[actionType];
+      let updatedSettings: ActionSettings[ActionType];
+      let nextActionSettings: ActionSettings;
 
-      // Merge with new settings
-      const updatedSettings = { ...currentSettings, ...body };
+      switch (actionType) {
+        case ACTION_TYPES.EMAIL: {
+          const mergedSettings: ActionSettings[typeof ACTION_TYPES.EMAIL] = {
+            ...currentConfig.actionSettings[ACTION_TYPES.EMAIL],
+            ...body,
+          };
+          updatedSettings = mergedSettings;
+          nextActionSettings = { ...currentConfig.actionSettings, [ACTION_TYPES.EMAIL]: mergedSettings };
+          break;
+        }
+        case ACTION_TYPES.SLACK: {
+          const mergedSettings: ActionSettings[typeof ACTION_TYPES.SLACK] = {
+            ...currentConfig.actionSettings[ACTION_TYPES.SLACK],
+            ...body,
+          };
+          updatedSettings = mergedSettings;
+          nextActionSettings = { ...currentConfig.actionSettings, [ACTION_TYPES.SLACK]: mergedSettings };
+          break;
+        }
+        case ACTION_TYPES.WEBHOOK: {
+          const mergedSettings: ActionSettings[typeof ACTION_TYPES.WEBHOOK] = {
+            ...currentConfig.actionSettings[ACTION_TYPES.WEBHOOK],
+            ...body,
+          };
+          updatedSettings = mergedSettings;
+          nextActionSettings = { ...currentConfig.actionSettings, [ACTION_TYPES.WEBHOOK]: mergedSettings };
+          break;
+        }
+        case ACTION_TYPES.DATABASE: {
+          const mergedSettings: ActionSettings[typeof ACTION_TYPES.DATABASE] = {
+            ...currentConfig.actionSettings[ACTION_TYPES.DATABASE],
+            ...body,
+          };
+          updatedSettings = mergedSettings;
+          nextActionSettings = { ...currentConfig.actionSettings, [ACTION_TYPES.DATABASE]: mergedSettings };
+          break;
+        }
+        case ACTION_TYPES.PUSH_NOTIFICATION: {
+          const mergedSettings: ActionSettings[typeof ACTION_TYPES.PUSH_NOTIFICATION] = {
+            ...currentConfig.actionSettings[ACTION_TYPES.PUSH_NOTIFICATION],
+            ...body,
+          };
+          updatedSettings = mergedSettings;
+          nextActionSettings = {
+            ...currentConfig.actionSettings,
+            [ACTION_TYPES.PUSH_NOTIFICATION]: mergedSettings,
+          };
+          break;
+        }
+        case ACTION_TYPES.SMS: {
+          const mergedSettings: ActionSettings[typeof ACTION_TYPES.SMS] = {
+            ...currentConfig.actionSettings[ACTION_TYPES.SMS],
+            ...body,
+          };
+          updatedSettings = mergedSettings;
+          nextActionSettings = { ...currentConfig.actionSettings, [ACTION_TYPES.SMS]: mergedSettings };
+          break;
+        }
+        default: {
+          actionType satisfies never;
+          return this.createErrorResponse('Invalid action type', 400);
+        }
+      }
 
       // Validate settings based on action type
-      const validationError = this.validateActionSettings(actionType, updatedSettings);
+      const validationError = this.validateActionSettings(actionType, nextActionSettings);
       if (validationError) {
         return validationError;
       }
@@ -538,7 +756,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       return this.createSuccessResponse(
         {
           action_type: actionType,
-          settings: updatedSettings,
+          settings: nextActionSettings[actionType],
           updated: Object.keys(body),
           lastUpdated: new Date().toISOString(),
         },
@@ -561,13 +779,8 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<{
-      actionType: ActionType;
-      dryRun?: boolean;
-      testData?: Record<string, unknown>;
-    }>(request);
-
-    if (!body?.actionType || !Object.values(ACTION_TYPES).includes(body.actionType)) {
+    const body = this.parseBody(request);
+    if (!this.isTestActionTypeRequestBody(body)) {
       return this.createErrorResponse('Invalid or missing actionType', 400);
     }
 
@@ -581,26 +794,26 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         return this.createErrorResponse(`No settings found for action type: ${actionType}`, 404);
       }
 
-      const testPayload = {
+      const testPayload: JsonObject = {
         eventType: 'test.action.execution',
         message: `Test ${actionType} action triggered by admin`,
-        triggeredBy: request.user?.id,
+        triggeredBy: request.user?.id ?? null,
         timestamp: new Date().toISOString(),
         ...testData,
       };
 
-      let executionResult: {
-        success: boolean;
-        message: string;
-        details?: Record<string, unknown>;
-      };
+      let executionResult: ActionExecutionResult;
 
       if (dryRun) {
         // Dry run - validate configuration without executing
-        executionResult = this.validateActionExecution(actionType, actionSettings);
+        executionResult = this.validateActionExecution(actionType, config.actionSettings);
       } else {
         // Actually execute the test action
-      executionResult = await this.executeTestAction(actionType, actionSettings, testPayload);
+        executionResult = await this.executeTestAction(
+          actionType,
+          config.actionSettings,
+          testPayload
+        );
       }
 
       // Log audit event
@@ -616,33 +829,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         }
       );
 
-      let sanitizedSettings: Record<string, unknown> = { ...actionSettings };
-
-      switch (actionType) {
-        case ACTION_TYPES.WEBHOOK:
-          sanitizedSettings = {
-            ...(actionSettings as ActionSettings[typeof ACTION_TYPES.WEBHOOK]),
-            webhook_url: undefined,
-          };
-          break;
-        case ACTION_TYPES.SLACK:
-          sanitizedSettings = {
-            ...(actionSettings as ActionSettings[typeof ACTION_TYPES.SLACK]),
-            webhook_url: (actionSettings as ActionSettings[typeof ACTION_TYPES.SLACK]).webhook_url
-              ? '***masked***'
-              : undefined,
-          };
-          break;
-        case ACTION_TYPES.EMAIL:
-        case ACTION_TYPES.SMS:
-          sanitizedSettings = {
-            ...(actionSettings as ActionSettings[typeof ACTION_TYPES.EMAIL]),
-            recipients: (actionSettings as ActionSettings[typeof ACTION_TYPES.EMAIL]).recipients.map(() => '***@***.***'),
-          };
-          break;
-        default:
-          break;
-      }
+      const sanitizedSettings = this.sanitizeActionSettings(actionType, config.actionSettings);
 
       return this.createSuccessResponse({
         actionType,
@@ -664,11 +851,12 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   /**
    * Validate action execution without actually executing
    */
-  private validateActionExecution<T extends ActionType>(
-    actionType: T,
-    settings: ActionSettings[T]
-  ): { success: boolean; message: string; details?: Record<string, unknown> } {
-    if (!settings.enabled) {
+  private validateActionExecution(
+    actionType: ActionType,
+    settings: ActionSettings
+  ): ActionExecutionResult {
+    const currentSettings = settings[actionType];
+    if (!currentSettings.enabled) {
       return {
         success: false,
         message: `${actionType} action is disabled`,
@@ -678,7 +866,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
     switch (actionType) {
       case ACTION_TYPES.EMAIL:
-        if (!(settings as ActionSettings[typeof ACTION_TYPES.EMAIL]).recipients || (settings as ActionSettings[typeof ACTION_TYPES.EMAIL]).recipients.length === 0) {
+        if (settings[ACTION_TYPES.EMAIL].recipients.length === 0) {
           return {
             success: false,
             message: 'No email recipients configured',
@@ -688,11 +876,11 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         return {
           success: true,
           message: 'Email configuration is valid',
-          details: { recipientCount: (settings as ActionSettings[typeof ACTION_TYPES.EMAIL]).recipients.length },
+          details: { recipientCount: settings[ACTION_TYPES.EMAIL].recipients.length },
         };
 
       case ACTION_TYPES.SLACK:
-        if (!(settings as ActionSettings[typeof ACTION_TYPES.SLACK]).channel) {
+        if (!settings[ACTION_TYPES.SLACK].channel) {
           return {
             success: false,
             message: 'No Slack channel configured',
@@ -701,11 +889,11 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         return {
           success: true,
           message: 'Slack configuration is valid',
-          details: { channel: (settings as ActionSettings[typeof ACTION_TYPES.SLACK]).channel },
+          details: { channel: settings[ACTION_TYPES.SLACK].channel },
         };
 
       case ACTION_TYPES.WEBHOOK:
-        if (!(settings as ActionSettings[typeof ACTION_TYPES.WEBHOOK]).endpoints || (settings as ActionSettings[typeof ACTION_TYPES.WEBHOOK]).endpoints.length === 0) {
+        if (settings[ACTION_TYPES.WEBHOOK].endpoints.length === 0) {
           return {
             success: false,
             message: 'No webhook endpoints configured',
@@ -715,11 +903,11 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         return {
           success: true,
           message: 'Webhook configuration is valid',
-          details: { endpointCount: (settings as ActionSettings[typeof ACTION_TYPES.WEBHOOK]).endpoints.length },
+          details: { endpointCount: settings[ACTION_TYPES.WEBHOOK].endpoints.length },
         };
 
       case ACTION_TYPES.DATABASE:
-        if (!(settings as ActionSettings[typeof ACTION_TYPES.DATABASE]).table) {
+        if (!settings[ACTION_TYPES.DATABASE].table) {
           return {
             success: false,
             message: 'No database table configured',
@@ -728,7 +916,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         return {
           success: true,
           message: 'Database configuration is valid',
-          details: { table: (settings as ActionSettings[typeof ACTION_TYPES.DATABASE]).table },
+          details: { table: settings[ACTION_TYPES.DATABASE].table },
         };
 
       case ACTION_TYPES.PUSH_NOTIFICATION:
@@ -738,7 +926,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         };
 
       case ACTION_TYPES.SMS:
-        if (!(settings as ActionSettings[typeof ACTION_TYPES.SMS]).recipients || (settings as ActionSettings[typeof ACTION_TYPES.SMS]).recipients.length === 0) {
+        if (settings[ACTION_TYPES.SMS].recipients.length === 0) {
           return {
             success: false,
             message: 'No SMS recipients configured',
@@ -748,13 +936,15 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         return {
           success: true,
           message: 'SMS configuration is valid',
-          details: { recipientCount: (settings as ActionSettings[typeof ACTION_TYPES.SMS]).recipients.length },
+          details: { recipientCount: settings[ACTION_TYPES.SMS].recipients.length },
         };
 
       default:
+        // Exhaustive guard for future action types
+        actionType satisfies never;
         return {
           success: false,
-          message: `Unknown action type: ${actionType}`,
+          message: 'Unknown action type',
         };
     }
   }
@@ -762,11 +952,11 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   /**
    * Execute a test action (non-dry-run)
    */
-  private async executeTestAction<T extends ActionType>(
-    actionType: T,
-    settings: ActionSettings[T],
-    testPayload: Record<string, unknown>
-  ): Promise<{ success: boolean; message: string; details?: Record<string, unknown> }> {
+  private async executeTestAction(
+    actionType: ActionType,
+    settings: ActionSettings,
+    testPayload: JsonObject
+  ): Promise<ActionExecutionResult> {
     // First validate
     const validation = this.validateActionExecution(actionType, settings);
     if (!validation.success) {
@@ -777,7 +967,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     // In production, this would actually send emails, Slack messages, etc.
     switch (actionType) {
       case ACTION_TYPES.EMAIL: {
-        const emailSettings = settings as ActionSettings[typeof ACTION_TYPES.EMAIL];
+        const emailSettings = settings[ACTION_TYPES.EMAIL];
         const emailEndpoint = process.env['EMAIL_TEST_ENDPOINT'];
         if (!emailEndpoint) {
           return {
@@ -804,7 +994,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       }
 
       case ACTION_TYPES.SLACK: {
-        const slackSettings = settings as ActionSettings[typeof ACTION_TYPES.SLACK];
+        const slackSettings = settings[ACTION_TYPES.SLACK];
         if (!slackSettings.webhook_url) {
           return {
             success: false,
@@ -830,7 +1020,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       }
 
       case ACTION_TYPES.WEBHOOK: {
-        const webhookSettings = settings as ActionSettings[typeof ACTION_TYPES.WEBHOOK];
+        const webhookSettings = settings[ACTION_TYPES.WEBHOOK];
         const webhookResults = await webhookService.executeTestEndpoints(
           webhookSettings.endpoints,
           testPayload
@@ -850,7 +1040,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       }
 
       case ACTION_TYPES.DATABASE: {
-        const dbSettings = settings as ActionSettings[typeof ACTION_TYPES.DATABASE];
+        const dbSettings = settings[ACTION_TYPES.DATABASE];
         const tableName = dbSettings.table;
         const dbResult = await databaseActionTestService.insertTestRecord(tableName, testPayload);
 
@@ -888,7 +1078,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       }
 
       case ACTION_TYPES.SMS: {
-        const smsSettings = settings as ActionSettings[typeof ACTION_TYPES.SMS];
+        const smsSettings = settings[ACTION_TYPES.SMS];
         const smsEndpoint = process.env['SMS_TEST_ENDPOINT'];
         if (!smsEndpoint) {
           return {
@@ -900,7 +1090,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         const smsResult = await smsService.sendTestSms(
           smsEndpoint,
           smsSettings.recipients,
-          typeof testPayload === 'string' ? testPayload : JSON.stringify(testPayload)
+          JSON.stringify(testPayload)
         );
 
         return {
@@ -916,9 +1106,11 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       }
 
       default:
+        // Exhaustive guard for future action types
+        actionType satisfies never;
         return {
           success: false,
-          message: `Execution not implemented for action type: ${actionType}`,
+          message: 'Execution not implemented for action type',
         };
     }
   }
@@ -942,7 +1134,10 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     let actions: HookActionMapping = {};
     if (actionMappingsStr) {
       try {
-        actions = JSON.parse(actionMappingsStr) as HookActionMapping;
+        const parsedMappings: unknown = JSON.parse(actionMappingsStr);
+        actions = this.isHookActionMapping(parsedMappings)
+          ? parsedMappings
+          : this.getDefaultActionMappings();
       } catch {
         actions = this.getDefaultActionMappings();
       }
@@ -956,8 +1151,10 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       const settingsStr = settingsMap.get(`${ACTIONS_BASE}.settings.${actionType}`);
       if (settingsStr) {
         try {
-          const parsedSettings = JSON.parse(settingsStr) as ActionSettings[typeof actionType];
-          Object.assign(actionSettings[actionType], parsedSettings);
+          const parsedSettings: unknown = JSON.parse(settingsStr);
+          if (isJsonObject(parsedSettings)) {
+            Object.assign(actionSettings[actionType], parsedSettings);
+          }
         } catch {
           // Keep default settings on parse error
         }
@@ -1132,9 +1329,11 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   ): string[] {
     const warnings: string[] = [];
     const expectedFields = settings.expected_fields || [];
+    const settingsEntries = Object.entries(settings);
 
     for (const field of expectedFields) {
-      const value = (settings as Record<string, unknown>)[field];
+      const rawValue = settingsEntries.find(([key]) => key === field)?.[1];
+      const value = isJsonValue(rawValue) ? rawValue : undefined;
 
       // Check empty array
       if (Array.isArray(value) && value.length === 0) {
@@ -1156,10 +1355,10 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
   /**
    * Validate action settings based on action type
    */
-  private validateActionSettings(actionType: ActionType, settings: ActionSettings[ActionType]): ApiResponse | null {
+  private validateActionSettings(actionType: ActionType, settings: ActionSettings): ApiResponse | null {
     switch (actionType) {
       case ACTION_TYPES.EMAIL: {
-        const emailSettings = settings as ActionSettings[typeof ACTION_TYPES.EMAIL];
+        const emailSettings = settings[ACTION_TYPES.EMAIL];
         if (emailSettings.recipients && !Array.isArray(emailSettings.recipients)) {
           return this.createErrorResponse('Email recipients must be an array', 400);
         }
@@ -1175,7 +1374,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         break;
       }
       case ACTION_TYPES.WEBHOOK: {
-        const webhookSettings = settings as ActionSettings[typeof ACTION_TYPES.WEBHOOK];
+        const webhookSettings = settings[ACTION_TYPES.WEBHOOK];
         if (webhookSettings.endpoints && !Array.isArray(webhookSettings.endpoints)) {
           return this.createErrorResponse('Webhook endpoints must be an array', 400);
         }
@@ -1188,7 +1387,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         break;
       }
       case ACTION_TYPES.DATABASE: {
-        const dbSettings = settings as ActionSettings[typeof ACTION_TYPES.DATABASE];
+        const dbSettings = settings[ACTION_TYPES.DATABASE];
         if (dbSettings.batch_size && (dbSettings.batch_size < 1 || dbSettings.batch_size > 1000)) {
           return this.createErrorResponse('Database batch size must be between 1 and 1000', 400);
         }
@@ -1202,18 +1401,20 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
    * Update a single configuration setting
    */
   private async updateConfigSetting(key: string, value: string): Promise<void> {
+    const defaults: AppSettingCreationAttributes = {
+      key,
+      value,
+      active: true,
+      category: 'mobile_hooks',
+      type: 'string',
+      defaultValue: value,
+      description: `Mobile hook action configuration: ${key}`,
+      deleted: false,
+    };
+
     const [setting] = await AppSetting.findOrCreate({
       where: { key },
-      defaults: {
-        key,
-        value,
-        active: true,
-        category: 'mobile_hooks',
-        type: 'string',
-        defaultValue: value,
-        description: `Mobile hook action configuration: ${key}`,
-        deleted: false,
-      } as AppSetting['_creationAttributes'],
+      defaults,
     });
 
     if (setting.value !== value) {

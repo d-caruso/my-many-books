@@ -11,7 +11,46 @@ import { Setting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { SearchSettingsService } from '../../services/SearchSettingsService';
 
+interface AuditLoggingUpdateRequest {
+  enabled: boolean;
+}
+
+interface SearchSettingsUpdateRequest {
+  enabled?: boolean;
+  sortableFields?: string[];
+  defaultSort?: string;
+}
+
 export class AdminSettingsController extends BaseController {
+  private isAuditLoggingUpdateRequest(value: unknown): value is AuditLoggingUpdateRequest {
+    return this.isRecord(value) && typeof value['enabled'] === 'boolean';
+  }
+
+  private isSearchSettingsUpdateRequest(value: unknown): value is SearchSettingsUpdateRequest {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (value['enabled'] !== undefined && typeof value['enabled'] !== 'boolean') {
+      return false;
+    }
+
+    if (value['sortableFields'] !== undefined) {
+      if (
+        !Array.isArray(value['sortableFields']) ||
+        !value['sortableFields'].every(field => typeof field === 'string')
+      ) {
+        return false;
+      }
+    }
+
+    if (value['defaultSort'] !== undefined && typeof value['defaultSort'] !== 'string') {
+      return false;
+    }
+
+    return true;
+  }
+
   /**
    * Get audit logging setting status
    *
@@ -89,8 +128,8 @@ export class AdminSettingsController extends BaseController {
       );
     }
 
-    const body = this.parseBody<{ enabled: boolean }>(request);
-    if (!body || typeof body.enabled !== 'boolean') {
+    const body = this.parseBody(request);
+    if (!this.isAuditLoggingUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -156,13 +195,8 @@ export class AdminSettingsController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<{
-      enabled?: boolean;
-      sortableFields?: string[];
-      defaultSort?: string;
-    }>(request);
-
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isSearchSettingsUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -185,16 +219,10 @@ export class AdminSettingsController extends BaseController {
       }
 
       if (body.sortableFields !== undefined) {
-        if (!Array.isArray(body.sortableFields)) {
-          return this.createErrorResponse('sortableFields must be an array', 400);
-        }
         await searchSettingsService.updateSortableFields(body.sortableFields);
       }
 
       if (body.defaultSort !== undefined) {
-        if (typeof body.defaultSort !== 'string') {
-          return this.createErrorResponse('defaultSort must be a string', 400);
-        }
         await searchSettingsService.updateDefaultSort(body.defaultSort);
       }
 

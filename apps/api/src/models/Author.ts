@@ -8,7 +8,7 @@ import { AuthorAttributes, AuthorCreationAttributes } from './interfaces/ModelIn
 import { TABLE_NAMES } from '@/utils/constants';
 import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
 
-export class Author extends IdBaseModel<AuthorAttributes> implements AuthorAttributes {
+export class Author extends IdBaseModel<AuthorAttributes, AuthorCreationAttributes> implements AuthorAttributes {
   public name!: string;
   public surname!: string;
   public nationality?: string;

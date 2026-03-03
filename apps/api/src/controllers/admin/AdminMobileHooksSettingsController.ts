@@ -16,8 +16,6 @@ import {
   MOBILE_HOOKS_SETTINGS_ACTIONS,
   MobileHooksListenerSettings,
   HEALTH_STATUS,
-  SettingCategory,
-  SettingType,
 } from '@my-many-books/shared-types';
 
 export interface EmergencyStatusRequest {
@@ -49,6 +47,28 @@ const DEFAULT_LISTENER_SETTINGS: MobileHooksListenerSettings = {
 };
 
 export class AdminMobileHooksSettingsController extends BaseController {
+  private isListenerSettingsUpdate(value: unknown): value is Partial<MobileHooksListenerSettings> {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    return (
+      (value['analyticsEnabled'] === undefined || typeof value['analyticsEnabled'] === 'boolean') &&
+      (value['errorReportingEnabled'] === undefined ||
+        typeof value['errorReportingEnabled'] === 'boolean') &&
+      (value['performanceMonitoringEnabled'] === undefined ||
+        typeof value['performanceMonitoringEnabled'] === 'boolean')
+    );
+  }
+
+  private isEmergencyStatusRequest(value: unknown): value is EmergencyStatusRequest {
+    if (!this.isRecord(value) || typeof value['enabled'] !== 'boolean') {
+      return false;
+    }
+
+    return value['reason'] === undefined || typeof value['reason'] === 'string';
+  }
+
   /**
    * Get current mobile hook listener settings
    */
@@ -81,8 +101,8 @@ export class AdminMobileHooksSettingsController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<MobileHooksListenerSettings>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isListenerSettingsUpdate(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -273,18 +293,20 @@ export class AdminMobileHooksSettingsController extends BaseController {
    * Update a single setting
    */
   private async saveSetting(key: string, value: string): Promise<void> {
+    const defaults: AppSettingCreationAttributes = {
+      key,
+      value,
+      active: true,
+      category: MOBILE_HOOKS_METADATA.CATEGORY,
+      type: MOBILE_HOOKS_METADATA.DATA_TYPE,
+      defaultValue: value,
+      description: `Mobile hook settings: ${key}`,
+      deleted: false,
+    };
+
     const [setting] = await AppSetting.findOrCreate({
       where: { key },
-      defaults: {
-        key,
-        value,
-        active: true,
-        category: MOBILE_HOOKS_METADATA.CATEGORY as SettingCategory,
-        type: MOBILE_HOOKS_METADATA.DATA_TYPE as SettingType,
-        defaultValue: value,
-        description: `Mobile hook settings: ${key}`,
-        deleted: false,
-      } as AppSettingCreationAttributes,
+      defaults,
     });
 
     if (setting.value !== value) {
@@ -326,8 +348,8 @@ export class AdminMobileHooksSettingsController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const body = this.parseBody<EmergencyStatusRequest>(request);
-    if (body === null || typeof body.enabled !== 'boolean') {
+    const body = this.parseBody(request);
+    if (!this.isEmergencyStatusRequest(body)) {
       return this.createErrorResponse('Invalid request: enabled (boolean) is required', 400);
     }
 

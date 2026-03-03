@@ -223,14 +223,14 @@ describe('CategoryController', () => {
 
       const response = await controller.listCategories({
         ...baseRequest,
-        queryStringParameters: { page: '1', limit: '20', search: 'fi' },
+        queryStringParameters: { page: '1', limit: '20', filters: JSON.stringify({ name: 'fi' }) },
       });
 
       expect(mockRepository.list).toHaveBeenCalledWith(
-        expect.objectContaining({ 
-          limit: 20, 
-          offset: 0, 
-          filters: expect.objectContaining({ name: 'fi', userId: 1 }) 
+        expect.objectContaining({
+          limit: 20,
+          offset: 0,
+          filters: expect.objectContaining({ name: 'fi', userId: 1 })
         })
       );
       expect(response.data).toEqual([

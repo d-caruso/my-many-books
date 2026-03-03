@@ -2,6 +2,7 @@
 // src/controllers/CategoryController.ts
 // ================================================================
 
+import Joi from 'joi';
 import { inject, injectable } from 'inversify';
 import { BaseController } from './base/BaseController';
 import { ApiResponse } from '../common/ApiResponse';
@@ -19,8 +20,20 @@ import { Book, Category } from '../models';
 import { Repository as CategoryRepositoryContract } from '../repositories/category/Repository';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
+
+export interface CategorySearchFilters {
+  name?: string;
+  userId?: number;
+  updatedSince?: string;
+}
+
 @injectable()
 export class CategoryController extends BaseController {
+  private readonly searchFiltersSchema = Joi.object<CategorySearchFilters>({
+    name: Joi.string().max(200).optional().trim(),
+    updatedSince: Joi.string().isoDate().optional(),
+  });
+
   constructor(
     @inject(TYPES.CategoryService) private readonly categoryService: CategoryService,
     @inject(TYPES.CategoryRepository) private readonly categoryRepository: CategoryRepositoryContract
@@ -159,22 +172,39 @@ export class CategoryController extends BaseController {
     if (authError) return authError;
 
     const pagination = this.getPaginationParams(request);
-    const search = this.getQueryParameter(request, 'search') ?? undefined;
+    const filtersParam = this.getQueryParameter(request, 'filters');
     const updatedSince = this.getQueryParameter(request, 'updatedSince');
 
+    let searchFilters: CategorySearchFilters = {};
+    if (filtersParam) {
+      try {
+        const parsedFilters: unknown = JSON.parse(filtersParam);
+        if (!this.isRecord(parsedFilters)) {
+          return this.createErrorResponseI18n('errors:invalid_filters', 400);
+        }
+        const filterValidation = this.validateRequest(parsedFilters, this.searchFiltersSchema);
+        if (!filterValidation.isValid) {
+          return this.createErrorResponseI18n(
+            'errors:validation_failed',
+            400,
+            undefined,
+            filterValidation.errors ? { errors: filterValidation.errors } : undefined
+          );
+        }
+        searchFilters = filterValidation.value!;
+      } catch {
+        return this.createErrorResponseI18n('errors:invalid_filters', 400);
+      }
+    }
+
+    if (updatedSince) {
+      searchFilters.updatedSince = updatedSince;
+    }
+
     try {
-      // Use repository layer for consistent filtering and incremental sync support
-      const filters: Record<string, unknown> = {};
-      if (search) {
-        filters['name'] = search;
-      }
-      if (updatedSince) {
-        filters['updatedSince'] = updatedSince;
-      }
-      
       // Add user filter
       const userContext = this.getUserContext(request)!;
-      filters['userId'] = userContext.userId;
+      const filters: CategorySearchFilters = { ...searchFilters, userId: userContext.userId };
 
       const listOptions = {
         limit: pagination.limit,

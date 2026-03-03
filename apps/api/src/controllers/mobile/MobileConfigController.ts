@@ -77,7 +77,7 @@ export class MobileConfigController extends BaseController {
       errorReportingEnabled: true,
       performanceMonitoringEnabled: true,
       emergencyEnabled: false,
-      emergencyReason: null as string | null,
+      emergencyReason: null,
     };
 
     return {

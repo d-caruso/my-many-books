@@ -6,7 +6,7 @@
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
-import { AppSetting, AppSettingAttributes } from '../../models';
+import { AppSetting, AppSettingCreationAttributes } from '../../models';
 import { Op } from 'sequelize';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { AUDIT_ACTIONS, RESOURCE_TYPES, EMERGENCY_SETTING_KEYS, EMERGENCY_ACTIONS, EMERGENCY } from '@my-many-books/shared-types';
@@ -31,6 +31,50 @@ interface EmergencyConfigUpdateRequest {
   }
 
 export class EmergencyController extends BaseController {
+  private isEmergencyConfigUpdateRequest(value: unknown): value is EmergencyConfigUpdateRequest {
+    if (!this.isRecord(value)) {
+      return false;
+    }
+
+    if (
+      value['mobileHooksEnabled'] !== undefined &&
+      typeof value['mobileHooksEnabled'] !== 'boolean'
+    ) {
+      return false;
+    }
+
+    if (value['apiHooksEnabled'] !== undefined && typeof value['apiHooksEnabled'] !== 'boolean') {
+      return false;
+    }
+
+    if (
+      value['globalKillSwitch'] !== undefined &&
+      typeof value['globalKillSwitch'] !== 'boolean'
+    ) {
+      return false;
+    }
+
+    if (value['emergencyReason'] !== undefined) {
+      if (
+        value['emergencyReason'] !== null &&
+        typeof value['emergencyReason'] !== 'string'
+      ) {
+        return false;
+      }
+    }
+
+    if (value['emergencyContacts'] !== undefined) {
+      if (
+        !Array.isArray(value['emergencyContacts']) ||
+        !value['emergencyContacts'].every(contact => typeof contact === 'string')
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   /**
    * GET /api/<version>/config/emergency - Get emergency kill switches
    */
@@ -51,8 +95,8 @@ export class EmergencyController extends BaseController {
   async updateEmergencyConfig(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
 
-    const body = this.parseBody<EmergencyConfigUpdateRequest>(request);
-    if (!body) {
+    const body = this.parseBody(request);
+    if (!this.isEmergencyConfigUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
@@ -91,9 +135,6 @@ export class EmergencyController extends BaseController {
       }
 
       if (body.emergencyContacts !== undefined) {
-        if (!Array.isArray(body.emergencyContacts)) {
-          return this.createErrorResponse(`${EMERGENCY_SETTING_KEYS.CONTACTS} must be an array`, 400);
-        }
         await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.CONTACTS, JSON.stringify(body.emergencyContacts));
         updatedSettings.push(EMERGENCY_SETTING_KEYS.CONTACTS);
       }
@@ -145,7 +186,7 @@ export class EmergencyController extends BaseController {
     let emergencyContacts: string[] = [];
     if (contactsStr) {
       try {
-        const parsed = JSON.parse(contactsStr) as unknown;
+        const parsed: unknown = JSON.parse(contactsStr);
         if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string')) {
           emergencyContacts = parsed;
         } else {
@@ -172,18 +213,20 @@ export class EmergencyController extends BaseController {
    * Update a single configuration setting
    */
   private async updateConfigSetting(key: string, value: string): Promise<void> {
+    const defaults: AppSettingCreationAttributes = {
+      key,
+      value,
+      active: true,
+      category: EMERGENCY,
+      type: 'string',
+      defaultValue: value,
+      description: `Emergency configuration: ${key}`,
+      deleted: false,
+    };
+
     const [setting] = await AppSetting.findOrCreate({
       where: { key },
-      defaults: {
-        key,
-        value,
-        active: true,
-        category: EMERGENCY,
-        type: 'string',
-        defaultValue: value,
-        description: `Emergency configuration: ${key}`,
-        deleted: false,
-      } as AppSettingAttributes,
+      defaults,
     });
 
     if (setting.value !== value) {

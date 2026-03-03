@@ -5,7 +5,8 @@
 
 import { FindAndCountOptions, Op, WhereOptions } from 'sequelize';
 import { User } from '@/models/User';
-import { UserAttributes, UserCreationAttributes } from '@/models/interfaces/ModelInterfaces';
+import { UserCreationAttributes } from '@/models/interfaces/ModelInterfaces';
+import { createModel } from '@/utils/sequelize-helpers';
 import {
   PaginatedResult,
   UserEntity,
@@ -14,7 +15,6 @@ import {
   UserQueryOptions,
 } from '../UserRepositoryTypes';
 import { UserRepositoryAdapter } from './UserRepositoryAdapter';
-import type { SearchFilters } from '../../interfaces/adapters/RepositoryAdapter';
 
 export class SequelizeUserAdapter implements UserRepositoryAdapter {
   findById(id: number, options?: UserQueryOptions): Promise<UserEntity | null> {
@@ -41,7 +41,7 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
     };
 
     const { rows, count } = await User.findAndCountAll(query);
-    const entities = rows.map(row => this.toDomain(row)).filter(Boolean) as UserEntity[];
+    const entities = rows.map(row => this.toDomain(row)).filter((e): e is UserEntity => e !== null);
 
     return {
       rows: entities,
@@ -56,7 +56,7 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
     options?: UserQueryOptions
   ): Promise<UserEntity> {
     const transaction = options?.transaction ?? null;
-    const user = await User.create(payload as UserAttributes, {
+    const user = await createModel(User, payload, {
       transaction,
     });
     return (await this.findById(user.id, options))!;
@@ -94,11 +94,11 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
   }
 
   buildListQuery(
-    filters: SearchFilters,
+    filters: Partial<UserListFilters>,
     options?: UserListOptions
   ): { query: FindAndCountOptions; limit: number; offset: number } {
     const { limit, offset } = this.getPagination(options);
-    const where = this.buildWhereClause(filters as Partial<UserListFilters>, options?.search);
+    const where = this.buildWhereClause(filters, options?.search);
     return {
       query: {
         where,
@@ -130,7 +130,7 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
     limit: number,
     offset: number
   ): PaginatedResult<UserEntity> {
-    const entities = rows.map(row => this.toDomain(row)).filter(Boolean) as UserEntity[];
+    const entities = rows.map(row => this.toDomain(row)).filter((e): e is UserEntity => e !== null);
 
     return {
       rows: entities,

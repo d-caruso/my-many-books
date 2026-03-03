@@ -62,6 +62,19 @@ export class CloudWatchAdapter extends BaseAdapter {
   private flushTimer?: NodeJS.Timeout;
   private sequenceToken?: string;
 
+  private static getErrorName(error: unknown): string | null {
+    if (typeof error !== 'object' || error === null) {
+      return null;
+    }
+
+    if (!('name' in error)) {
+      return null;
+    }
+
+    const { name } = error as { name: unknown };
+    return typeof name === 'string' ? name : null;
+  }
+
   constructor(config: CloudWatchAdapterConfig) {
     super(config);
     this.cloudWatchConfig = {
@@ -190,11 +203,12 @@ export class CloudWatchAdapter extends BaseAdapter {
 
       const response = await this.client.send(command);
       this.sequenceToken = response.nextSequenceToken;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorName = CloudWatchAdapter.getErrorName(error);
       // If sequence token is invalid, retry without it
       if (
-        error.name === 'InvalidSequenceTokenException' ||
-        error.name === 'DataAlreadyAcceptedException'
+        errorName === 'InvalidSequenceTokenException' ||
+        errorName === 'DataAlreadyAcceptedException'
       ) {
         this.sequenceToken = undefined;
         throw error; // Will be retried by retry() method
@@ -231,9 +245,10 @@ export class CloudWatchAdapter extends BaseAdapter {
           })
         );
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorName = CloudWatchAdapter.getErrorName(error);
       // Stream might have been created by another process
-      if (error.name !== 'ResourceAlreadyExistsException') {
+      if (errorName !== 'ResourceAlreadyExistsException') {
         throw error;
       }
     }
