@@ -94,7 +94,7 @@ export class IsbnController extends BaseController {
           responseTime: result.responseTime,
         });
       } else {
-        return this.createErrorResponse(result.error || 'Book not found', 404, {
+        return this.createErrorResponse(result.error || this.t('errors:book_not_found'), 404, {
           isbn: result.isbn,
           source: result.source,
           responseTime: result.responseTime,

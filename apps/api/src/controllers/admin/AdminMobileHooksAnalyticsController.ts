@@ -153,7 +153,7 @@ export class AdminMobileHooksAnalyticsController extends BaseController {
 
     const sequelize = MobileHookActionExecution.sequelize;
     if (!sequelize) {
-      return this.createErrorResponse('Database connection not initialized', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
 
     const rows = await MobileHookActionExecution.findAll({

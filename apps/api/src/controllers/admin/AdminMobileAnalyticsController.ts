@@ -19,7 +19,7 @@ async getStats(request: UniversalRequest): Promise<ApiResponse> {
     return this.createSuccessResponse(stats, 'Analytics statistics retrieved');
     } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return this.createErrorResponse(`Failed to retrieve stats: ${errorMessage}`, 500);
+    return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
 }
 

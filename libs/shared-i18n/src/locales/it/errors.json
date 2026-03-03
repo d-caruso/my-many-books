@@ -96,5 +96,6 @@
   "CONFLICT": "Si è verificato un conflitto con lo stato attuale della risorsa",
   "INTERNAL_ERROR": "Si è verificato un errore. Riprova più tardi",
   "SERVICE_UNAVAILABLE": "Servizio temporaneamente non disponibile. Riprova più tardi",
-  "AUTHORIZATION_CHECK_FAILED": "Verifica autorizzazione fallita"
+  "AUTHORIZATION_CHECK_FAILED": "Verifica autorizzazione fallita",
+  "SETTING_ENFORCED_BY_CONFIG": "Questa impostazione è imposta dalla configurazione di deployment e non può essere modificata"
 }

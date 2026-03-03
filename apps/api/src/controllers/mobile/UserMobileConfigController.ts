@@ -138,7 +138,7 @@ export class UserMobileConfigController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can access this config (self or admin)
@@ -153,7 +153,7 @@ export class UserMobileConfigController extends UserBaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to fetch user mobile configuration', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -165,7 +165,7 @@ export class UserMobileConfigController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -233,7 +233,7 @@ export class UserMobileConfigController extends UserBaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to update user mobile configuration', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 

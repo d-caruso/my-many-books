@@ -96,7 +96,7 @@ export class AdminSettingsController extends BaseController {
       }
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to query audit logging setting:');
-      return this.createErrorResponse('Failed to query audit logging setting', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
 
     // Default
@@ -122,10 +122,7 @@ export class AdminSettingsController extends BaseController {
     const forceEnabled = process.env['AUDIT_LOGGING_FORCE_ENABLED'] === 'true';
 
     if (forceDisabled || forceEnabled) {
-      return this.createErrorResponse(
-        'Audit logging is enforced by deployment configuration and cannot be changed',
-        403
-      );
+      return this.createErrorResponseI18n('errors:SETTING_ENFORCED_BY_CONFIG', 403);
     }
 
     const body = this.parseBody(request);
@@ -151,7 +148,7 @@ export class AdminSettingsController extends BaseController {
       });
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to update audit logging setting:');
-      return this.createErrorResponse('Failed to update audit logging setting', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -180,7 +177,7 @@ export class AdminSettingsController extends BaseController {
         { err: error instanceof Error ? error : new Error(String(error)) },
         'Failed to get search settings status:'
       );
-      return this.createErrorResponse('Failed to get search settings status', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -209,10 +206,7 @@ export class AdminSettingsController extends BaseController {
         const forceEnabled = process.env['SEARCH_FULLTEXT_FORCE_ENABLED'] === 'true';
 
         if (forceDisabled || forceEnabled) {
-          return this.createErrorResponse(
-            'Full-text search enabled status is enforced by deployment configuration and cannot be changed',
-            403
-          );
+          return this.createErrorResponseI18n('errors:SETTING_ENFORCED_BY_CONFIG', 403);
         }
 
         await searchSettingsService.updateFulltextEnabled(body.enabled);
@@ -234,7 +228,7 @@ export class AdminSettingsController extends BaseController {
         { err: error instanceof Error ? error : new Error(String(error)) },
         'Failed to update search settings:'
       );
-      return this.createErrorResponse('Failed to update search settings', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 }

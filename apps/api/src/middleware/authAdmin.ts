@@ -2,6 +2,7 @@
 // src/middleware/authAdmin.ts
 // ================================================================
 
+import { i18n } from '@my-many-books/shared-i18n';
 import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
@@ -20,7 +21,7 @@ export const authAdminMiddleware = (
         },
         body: JSON.stringify(createErrorResponse(
           ERROR_CODES.AUTH_TOKEN_MISSING,
-          'Authentication required'
+          i18n.t('errors:AUTH_TOKEN_MISSING')
         )),
       };
     }
@@ -34,7 +35,7 @@ export const authAdminMiddleware = (
         },
         body: JSON.stringify(createErrorResponse(
           ERROR_CODES.ADMIN_REQUIRED,
-          'Admin access required'
+          i18n.t('errors:ADMIN_REQUIRED')
         )),
       };
     }

@@ -66,10 +66,7 @@ export class AdminSearchController extends BaseController {
 
     // If resource_type is provided, validate it
     if (resourceTypeRaw && !isResourceType(resourceTypeRaw)) {
-      return this.createErrorResponse(
-        `Invalid resource_type: ${resourceTypeRaw}. Must be one of: ${RESOURCE_TYPE_VALUES.join(', ')}`,
-        400
-      );
+      return this.createErrorResponseI18n('errors:invalid_request_body', 400);
     }
 
     const resourceType = resourceTypeRaw && isResourceType(resourceTypeRaw) ? resourceTypeRaw : null;
@@ -103,16 +100,13 @@ export class AdminSearchController extends BaseController {
 
     const body = this.parseBody(request);
     if (!this.isCreatePinnedResultBody(body)) {
-      return this.createErrorResponse('Invalid request body', 400);
+      return this.createErrorResponseI18n('errors:invalid_request_body', 400);
     }
     const { resource_type, resource_id, priority, active } = body;
 
     // Validate resource_type against RESOURCE_TYPE_VALUES
     if (!isResourceType(resource_type)) {
-      return this.createErrorResponse(
-        `Invalid resource_type: ${resource_type}. Must be one of: ${RESOURCE_TYPE_VALUES.join(', ')}`,
-        400
-      );
+      return this.createErrorResponseI18n('errors:invalid_request_body', 400);
     }
 
     try {
@@ -161,12 +155,12 @@ export class AdminSearchController extends BaseController {
 
     const id = this.getPathParameter(request, 'id');
     if (!id || isNaN(Number(id))) {
-      return this.createErrorResponse('Invalid pinned result ID', 400);
+      return this.createErrorResponseI18n('errors:invalid_id', 400, { resource: 'pinned result' });
     }
 
     const body = this.parseBody(request);
     if (!this.isUpdatePriorityBody(body)) {
-      return this.createErrorResponse('Invalid request body', 400);
+      return this.createErrorResponseI18n('errors:invalid_request_body', 400);
     }
     const { priority } = body;
 
@@ -206,7 +200,7 @@ export class AdminSearchController extends BaseController {
 
     const id = this.getPathParameter(request, 'id');
     if (!id || isNaN(Number(id))) {
-      return this.createErrorResponse('Invalid pinned result ID', 400);
+      return this.createErrorResponseI18n('errors:invalid_id', 400, { resource: 'pinned result' });
     }
 
     try {

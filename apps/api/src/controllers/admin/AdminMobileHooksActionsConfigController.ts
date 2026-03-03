@@ -309,7 +309,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to fetch hook action configuration', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -345,11 +345,11 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       if (body.actionSettings) {
         for (const [actionType, settings] of Object.entries(body.actionSettings)) {
           if (!this.isActionType(actionType)) {
-            return this.createErrorResponse(`Invalid action settings key: ${actionType}`, 400);
+            return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
           }
 
           if (!isJsonObject(settings)) {
-            return this.createErrorResponse(`Invalid settings payload for: ${actionType}`, 400);
+            return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
           }
 
           const key = `${ACTIONS_BASE}.settings.${actionType}`;
@@ -385,7 +385,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to update hook action configuration', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -408,7 +408,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to fetch hook listeners', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -435,7 +435,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
           const enabled = this.normalizeHookToggle(toggle);
 
           if (enabled === null) {
-            return this.createErrorResponse(`Invalid listener toggle for: ${eventName}`, 400);
+            return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
           }
 
           await this.updateConfigSetting(`${LISTENERS_BASE}.${eventName}.enabled`, String(enabled));
@@ -448,7 +448,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
           const enabled = this.normalizeHookToggle(toggle);
 
           if (enabled === null) {
-            return this.createErrorResponse(`Invalid category toggle for: ${categoryName}`, 400);
+            return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
           }
 
           await this.updateConfigSetting(`${CATEGORIES_BASE}.${categoryName}.enabled`, String(enabled));
@@ -485,7 +485,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to update hook action configuration', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -602,7 +602,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to test hook configuration', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -650,7 +650,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
     const actionTypeParam = request.params?.['action_type'];
     if (!this.isActionType(actionTypeParam)) {
-      return this.createErrorResponse('Invalid action type', 400);
+      return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
     }
     const actionType = actionTypeParam;
 
@@ -726,7 +726,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         }
         default: {
           actionType satisfies never;
-          return this.createErrorResponse('Invalid action type', 400);
+          return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
         }
       }
 
@@ -766,7 +766,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse(`Failed to update ${actionType} action settings`, 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -781,7 +781,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
     const body = this.parseBody(request);
     if (!this.isTestActionTypeRequestBody(body)) {
-      return this.createErrorResponse('Invalid or missing actionType', 400);
+      return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
     }
 
     const { actionType, dryRun = true, testData = {} } = body;
@@ -791,7 +791,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       const actionSettings = config.actionSettings[actionType];
 
       if (!actionSettings) {
-        return this.createErrorResponse(`No settings found for action type: ${actionType}`, 404);
+        return this.createErrorResponseI18n('errors:NOT_FOUND', 404);
       }
 
       const testPayload: JsonObject = {
@@ -844,7 +844,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse(`Failed to test ${body.actionType} action`, 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -1360,36 +1360,33 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       case ACTION_TYPES.EMAIL: {
         const emailSettings = settings[ACTION_TYPES.EMAIL];
         if (emailSettings.recipients && !Array.isArray(emailSettings.recipients)) {
-          return this.createErrorResponse('Email recipients must be an array', 400);
+          return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
         }
         if (
           emailSettings.rate_limit_minutes &&
           (emailSettings.rate_limit_minutes < 1 || emailSettings.rate_limit_minutes > 1440)
         ) {
-          return this.createErrorResponse(
-            'Email rate limit must be between 1 and 1440 minutes',
-            400
-          );
+          return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
         }
         break;
       }
       case ACTION_TYPES.WEBHOOK: {
         const webhookSettings = settings[ACTION_TYPES.WEBHOOK];
         if (webhookSettings.endpoints && !Array.isArray(webhookSettings.endpoints)) {
-          return this.createErrorResponse('Webhook endpoints must be an array', 400);
+          return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
         }
         if (
           webhookSettings.timeout_seconds &&
           (webhookSettings.timeout_seconds < 1 || webhookSettings.timeout_seconds > 60)
         ) {
-          return this.createErrorResponse('Webhook timeout must be between 1 and 60 seconds', 400);
+          return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
         }
         break;
       }
       case ACTION_TYPES.DATABASE: {
         const dbSettings = settings[ACTION_TYPES.DATABASE];
         if (dbSettings.batch_size && (dbSettings.batch_size < 1 || dbSettings.batch_size > 1000)) {
-          return this.createErrorResponse('Database batch size must be between 1 and 1000', 400);
+          return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
         }
         break;
       }

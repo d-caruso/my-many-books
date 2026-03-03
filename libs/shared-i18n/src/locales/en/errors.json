@@ -96,5 +96,6 @@
   "CONFLICT": "A conflict occurred with the current state of the resource",
   "INTERNAL_ERROR": "Something went wrong. Please try again later",
   "SERVICE_UNAVAILABLE": "Service temporarily unavailable. Please try again later",
-  "AUTHORIZATION_CHECK_FAILED": "Authorization check failed"
+  "AUTHORIZATION_CHECK_FAILED": "Authorization check failed",
+  "SETTING_ENFORCED_BY_CONFIG": "This setting is enforced by deployment configuration and cannot be changed"
 }

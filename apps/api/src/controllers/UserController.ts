@@ -51,7 +51,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     if (!this.hasUserAccess(request, userId)) {
@@ -73,7 +73,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -101,7 +101,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -147,7 +147,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -170,7 +170,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)
@@ -193,7 +193,7 @@ export class UserController extends UserBaseController {
 
     const userId = this.getIdParam(request);
     if (userId === null) {
-      return this.createErrorResponse('User ID is required', 400);
+      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
     }
 
     // Check if user can update this config (self or admin)

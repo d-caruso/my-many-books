@@ -190,7 +190,7 @@ export class HookController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
-      return this.createErrorResponse('Failed to create hook', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -239,7 +239,7 @@ export class HookController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
-      return this.createErrorResponse('Failed to update hook', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -279,7 +279,7 @@ export class HookController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
-      return this.createErrorResponse('Failed to delete hook', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -296,7 +296,7 @@ export class HookController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to reload hooks', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 

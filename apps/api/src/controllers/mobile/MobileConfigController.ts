@@ -59,7 +59,7 @@ export class MobileConfigController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to fetch mobile configuration', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 

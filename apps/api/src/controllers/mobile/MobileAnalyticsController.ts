@@ -103,7 +103,7 @@ export class MobileAnalyticsController extends BaseController {
     }
 
     if (!body.event_type || !body.timestamp) {
-      return this.createErrorResponse('Missing required fields: event_type, timestamp', 400);
+      return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
     }
 
     try {
@@ -132,7 +132,7 @@ export class MobileAnalyticsController extends BaseController {
       }, 'Event uploaded and stored successfully');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return this.createErrorResponse(`Failed to process event: ${errorMessage}`, 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -149,11 +149,11 @@ export class MobileAnalyticsController extends BaseController {
 
     // Validate batch size
     if (body.events.length === 0) {
-      return this.createErrorResponse('Batch cannot be empty', 400);
+      return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
     }
 
     if (body.events.length > 100) {
-      return this.createErrorResponse('Batch size cannot exceed 100 events', 400);
+      return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
     }
 
     try {
@@ -215,7 +215,7 @@ export class MobileAnalyticsController extends BaseController {
       }, `Batch processed: ${successful.length} successful, ${allErrors.length} failed`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return this.createErrorResponse(`Failed to process batch: ${errorMessage}`, 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -230,7 +230,7 @@ export class MobileAnalyticsController extends BaseController {
       return this.createSuccessResponse(stats, 'Analytics statistics retrieved');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return this.createErrorResponse(`Failed to retrieve stats: ${errorMessage}`, 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 

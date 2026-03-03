@@ -2,6 +2,7 @@
 // src/middleware/rateLimiter.ts
 // ================================================================
 
+import { i18n } from '@my-many-books/shared-i18n';
 import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
@@ -197,7 +198,7 @@ export const withRateLimit = (
         },
         body: JSON.stringify(createErrorResponse(
           ERROR_CODES.RATE_LIMIT_EXCEEDED,
-          'Rate limit exceeded',
+          i18n.t('errors:RATE_LIMIT_EXCEEDED'),
           {
             limit: limitResult.limit,
             windowSeconds: config.windowMs / 1000,

@@ -89,7 +89,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse(MOBILE_HOOKS_SETTINGS_MESSAGES.ERRORS.FETCH_FAILED, 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -168,7 +168,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse(MOBILE_HOOKS_SETTINGS_MESSAGES.ERRORS.UPDATE_FAILED, 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -221,7 +221,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to reset mobile settings', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -336,7 +336,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to get emergency status', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -350,7 +350,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
     const body = this.parseBody(request);
     if (!this.isEmergencyStatusRequest(body)) {
-      return this.createErrorResponse('Invalid request: enabled (boolean) is required', 400);
+      return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
     }
 
     try {
@@ -378,7 +378,7 @@ export class AdminMobileHooksSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to update emergency status', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 

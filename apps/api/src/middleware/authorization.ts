@@ -4,6 +4,7 @@
 // ================================================================
 
 import { getLogger } from '@my-many-books/shared-logging';
+import { i18n } from '@my-many-books/shared-i18n';
 import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 import { Request, Response, NextFunction } from 'express';
 import { createAbilityFor, Action, Resource } from '@my-many-books/shared-auth';
@@ -50,7 +51,7 @@ export const requirePermission = (action: Action, resource: Resource) => {
       if (!ability.can(action, resource)) {
         res.status(403).json(createErrorResponse(
           ERROR_CODES.PERMISSION_DENIED,
-          'You do not have permission to perform this action',
+          i18n.t('errors:PERMISSION_DENIED'),
           {
             action,
             resource,
@@ -78,7 +79,7 @@ export const requirePermission = (action: Action, resource: Resource) => {
 
       res.status(500).json(createErrorResponse(
         ERROR_CODES.INTERNAL_ERROR,
-        'Internal server error'
+        i18n.t('errors:INTERNAL_ERROR')
       ));
       return;
     }

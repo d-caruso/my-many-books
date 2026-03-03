@@ -87,7 +87,7 @@ export class AdminMobileAppSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to fetch mobile app settings', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -185,7 +185,7 @@ export class AdminMobileAppSettingsController extends BaseController {
         if (error instanceof Error) {
           return this.createErrorResponse(error.message, 500);
         }
-        return this.createErrorResponse(MOBILE_APP_SETTINGS_MESSAGES.ERRORS.UPDATE_FAILED, 500);
+        return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
    }
 
@@ -240,7 +240,7 @@ export class AdminMobileAppSettingsController extends BaseController {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
-      return this.createErrorResponse('Failed to reset mobile settings', 500);
+      return this.createErrorResponseI18n('errors:INTERNAL_ERROR', 500);
     }
   }
 
@@ -343,16 +343,13 @@ export class AdminMobileAppSettingsController extends BaseController {
   private validateSettings(settings: Partial<MobileAppSettings>): ApiResponse | null {
     if (typeof settings.batchUploadInterval === 'number') {
       if (settings.batchUploadInterval < 60 || settings.batchUploadInterval > 3600) {
-        return this.createErrorResponse(
-          'Batch upload interval must be between 60 and 3600 seconds',
-          400
-        );
+        return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
       }
     }
 
     if (typeof settings.maxOfflineEvents === 'number') {
       if (settings.maxOfflineEvents < 100 || settings.maxOfflineEvents > 10000) {
-        return this.createErrorResponse('Max offline events must be between 100 and 10000', 400);
+        return this.createErrorResponseI18n('errors:VALIDATION_FAILED', 400);
       }
     }
 

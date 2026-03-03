@@ -3,6 +3,7 @@
 // ================================================================
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { i18n } from '@my-many-books/shared-i18n';
 import { ERROR_CODES, createErrorResponse, type ErrorCode } from '@my-many-books/shared-types';
 
 export interface ApiKeyConfig {
@@ -234,7 +235,7 @@ export const withApiKeyAuth = (
         body: JSON.stringify(
           createErrorResponse(
             authResult.errorCode || ERROR_CODES.AUTH_FAILED,
-            authResult.error || 'Authentication failed'
+            i18n.t(`errors:${authResult.errorCode ?? ERROR_CODES.AUTH_FAILED}`)
           )
         ),
       };
