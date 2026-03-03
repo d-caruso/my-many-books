@@ -20,7 +20,12 @@ describe('EditionDateInput (mobile)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
     Platform.OS = originalPlatform;
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('keeps month disabled until year is a valid non-zero YYYY', () => {
@@ -72,6 +77,9 @@ describe('EditionDateInput (mobile)', () => {
     renderer.act(() => {
       tree = renderer.create(<EditionDateInput value="2024-02" onChange={jest.fn()} />);
     });
+    renderer.act(() => {
+      jest.runAllTimers();
+    });
 
     renderer.act(() => {
       tree.root.findByProps({ testID: 'editionDate-day-button' }).props.onPress();
@@ -80,6 +88,9 @@ describe('EditionDateInput (mobile)', () => {
 
     renderer.act(() => {
       tree.update(<EditionDateInput value="2023-02" onChange={jest.fn()} />);
+    });
+    renderer.act(() => {
+      jest.runAllTimers();
     });
     expect(() => tree.root.findByProps({ testID: 'editionDate-option-day-29' })).toThrow();
     expect(tree.root.findByProps({ testID: 'editionDate-option-day-28' })).toBeDefined();
