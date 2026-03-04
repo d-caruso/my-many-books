@@ -60,5 +60,68 @@ describe('shared-api contract tests (MSW)', () => {
     expect(result.email).toBe('user@example.com');
     expect(result.fullName).toBe('Jane Doe');
   });
+
+  it('parses login response from auth success envelope', async () => {
+    const result = await httpClient.post<{ accessToken: string; idToken: string; user: { email: string } }>(
+      `${API_BASE_URL}/auth/login`,
+      { email: 'user@example.com', password: 'password' }
+    );
+    expect(result.accessToken).toBe('access-token-123');
+    expect(result.user.email).toBe('user@example.com');
+  });
+
+  it('parses register response from auth success envelope', async () => {
+    const result = await httpClient.post<{ requiresVerification: boolean }>(
+      `${API_BASE_URL}/auth/register`,
+      { email: 'user@example.com', password: 'pw', name: 'Jane', surname: 'Doe' }
+    );
+    expect(result.requiresVerification).toBe(true);
+  });
+
+  it('parses refresh response from auth success envelope', async () => {
+    const result = await httpClient.post<{ accessToken: string; idToken: string; expiresIn: number }>(
+      `${API_BASE_URL}/auth/refresh`
+    );
+    expect(typeof result.accessToken).toBe('string');
+    expect(typeof result.expiresIn).toBe('number');
+  });
+
+  it('parses logout response from auth success envelope', async () => {
+    const result = await httpClient.post<null>(`${API_BASE_URL}/auth/logout`);
+    expect(result).toBeNull();
+  });
+
+  it('parses health response from success envelope', async () => {
+    const result = await httpClient.get<{ status: string; version: string }>(`${API_BASE_URL}/health`);
+    expect(result.status).toBe('healthy');
+    expect(typeof result.version).toBe('string');
+  });
+
+  it('parses Google OAuth start (mobile) response from success envelope', async () => {
+    const result = await httpClient.get<{ authorizeUrl: string; state: string }>(
+      `${API_BASE_URL}/auth/google/start`,
+      { params: { platform: 'mobile', redirectUri: 'myapp://auth', codeChallenge: 'abc' } }
+    );
+    expect(typeof result.authorizeUrl).toBe('string');
+    expect(typeof result.state).toBe('string');
+  });
+
+  it('parses Google mobile/start response from success envelope', async () => {
+    const result = await httpClient.post<{ authorizeUrl: string; state: string }>(
+      `${API_BASE_URL}/auth/google/mobile/start`,
+      { redirectUri: 'myapp://auth', codeVerifier: 'verifier' }
+    );
+    expect(typeof result.authorizeUrl).toBe('string');
+    expect(typeof result.state).toBe('string');
+  });
+
+  it('parses Google mobile/exchange response from auth success envelope', async () => {
+    const result = await httpClient.post<{ accessToken: string; user: { email: string } }>(
+      `${API_BASE_URL}/auth/google/mobile/exchange`,
+      { code: 'code', state: 'state', redirectUri: 'myapp://auth', codeVerifier: 'verifier' }
+    );
+    expect(typeof result.accessToken).toBe('string');
+    expect(result.user.email).toBe('user@example.com');
+  });
 });
 

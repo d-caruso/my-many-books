@@ -7,6 +7,11 @@ import {
   CategorySchema,
   UserProfileSchema,
   createPaginatedResponseSchema,
+  LoginResponseSchema,
+  RegisterResponseSchema,
+  RefreshResponseSchema,
+  GoogleOAuthUrlSchema,
+  HealthResponseSchema,
 } from '@my-many-books/shared-types';
 import { expect } from '@jest/globals';
 
@@ -122,12 +127,85 @@ const userProfileResponse = successResponseSchema(UserProfileSchema).parse({
   data: userProfileData,
 });
 
+const loginResponse = successResponseSchema(LoginResponseSchema).parse({
+  success: true,
+  data: {
+    accessToken: 'access-token-123',
+    idToken: 'id-token-456',
+    expiresIn: 3600,
+    user: {
+      id: 1,
+      email: 'user@example.com',
+      name: 'Jane',
+      surname: 'Doe',
+      role: 'user',
+      isActive: true,
+    },
+  },
+});
+
+const registerResponse = successResponseSchema(RegisterResponseSchema).parse({
+  success: true,
+  data: { requiresVerification: true },
+  message: 'Registration successful. Please verify your email.',
+});
+
+const refreshResponse = successResponseSchema(RefreshResponseSchema).parse({
+  success: true,
+  data: {
+    accessToken: 'new-access-token',
+    idToken: 'new-id-token',
+    expiresIn: 3600,
+  },
+});
+
+const logoutResponse = { success: true as const, data: null, message: 'Logout successful' };
+
+const healthResponse = successResponseSchema(HealthResponseSchema).parse({
+  success: true,
+  data: {
+    status: 'healthy',
+    timestamp: iso('2024-01-01T00:00:00.000Z'),
+    version: '1.0.0',
+    environment: 'test',
+  },
+});
+
+const googleStartMobileResponse = successResponseSchema(GoogleOAuthUrlSchema).parse({
+  success: true,
+  data: { authorizeUrl: 'https://accounts.google.com/o/oauth2/auth?client_id=test', state: 'random-state' },
+});
+
+const googleMobileExchangeResponse = successResponseSchema(LoginResponseSchema).parse({
+  success: true,
+  data: {
+    accessToken: 'access-token-123',
+    idToken: 'id-token-456',
+    expiresIn: 3600,
+    user: {
+      id: 1,
+      email: 'user@example.com',
+      name: 'Jane',
+      surname: 'Doe',
+      role: 'user',
+      isActive: true,
+    },
+  },
+});
+
 export const contractFixtures = {
   booksResponse,
   authorsResponse,
   categoriesResponse,
   settingsResponse,
   userProfileResponse,
+  loginResponse,
+  registerResponse,
+  refreshResponse,
+  logoutResponse,
+  healthResponse,
+  googleStartMobileResponse,
+  googleMobileExchangeResponse,
 };
 
 export const handlers = [
@@ -217,5 +295,25 @@ export const handlers = [
 
   rest.delete(`${API_BASE_URL}/users`, (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ success: true, data: null, message: 'Account deleted successfully' }))
+  ),
+
+  rest.post(`${API_BASE_URL}/auth/login`, (req, res, ctx) => res(ctx.json(loginResponse))),
+
+  rest.post(`${API_BASE_URL}/auth/register`, (req, res, ctx) => res(ctx.json(registerResponse))),
+
+  rest.post(`${API_BASE_URL}/auth/refresh`, (req, res, ctx) => res(ctx.json(refreshResponse))),
+
+  rest.post(`${API_BASE_URL}/auth/logout`, (req, res, ctx) => res(ctx.json(logoutResponse))),
+
+  rest.get(`${API_BASE_URL}/health`, (req, res, ctx) => res(ctx.json(healthResponse))),
+
+  rest.get(`${API_BASE_URL}/auth/google/start`, (req, res, ctx) => res(ctx.json(googleStartMobileResponse))),
+
+  rest.post(`${API_BASE_URL}/auth/google/mobile/start`, (req, res, ctx) =>
+    res(ctx.json(googleStartMobileResponse))
+  ),
+
+  rest.post(`${API_BASE_URL}/auth/google/mobile/exchange`, (req, res, ctx) =>
+    res(ctx.json(googleMobileExchangeResponse))
   ),
 ];

@@ -43,5 +43,8 @@ export * from './constants/emergency.constants';
 export * from './constants/audit-actions.constants';
 export * from './constants/auth.constants';
 
+// Auth response exports
+export * from './auth-response';
+
 // Error handling exports
 export * from './errors';
