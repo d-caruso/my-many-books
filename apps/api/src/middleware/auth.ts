@@ -7,6 +7,7 @@ import { getLogger } from '@my-many-books/shared-logging';
 import { i18n } from '@my-many-books/shared-i18n';
 import { ERROR_CODES, createErrorResponse } from '@my-many-books/shared-types';
 import { Request, Response, NextFunction } from 'express';
+import * as jwt from 'jsonwebtoken';
 import { AuthUser } from '../models/interfaces/ModelInterfaces';
 import { container } from '../container';
 import { TYPES } from '../container/types';
@@ -85,6 +86,46 @@ export class Auth0Provider implements AuthProvider {
   }
 }
 
+// HS256 provider for local development and E2E testing.
+// Verifies tokens signed with LOCAL_JWT_SECRET. Never use in production.
+export class LocalJwtAuthProvider implements AuthProvider {
+  private readonly secret: string;
+
+  constructor() {
+    if (process.env['NODE_ENV'] === 'production') {
+      throw new Error('LocalJwtAuthProvider cannot be used in production');
+    }
+    const secret = process.env['LOCAL_JWT_SECRET'];
+    if (!secret) {
+      throw new Error('LOCAL_JWT_SECRET is required for local auth provider');
+    }
+    this.secret = secret;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async verifyToken(token: string): Promise<AuthProviderUser> {
+    const decoded = jwt.verify(token, this.secret, {
+      algorithms: ['HS256'],
+    }) as Record<string, unknown>;
+
+    const email = typeof decoded['email'] === 'string' ? decoded['email'] : '';
+    if (!email) {
+      throw new Error('Token missing email claim');
+    }
+
+    return {
+      id: typeof decoded['sub'] === 'string' ? decoded['sub'] : email,
+      email,
+      name: typeof decoded['given_name'] === 'string' ? decoded['given_name'] : undefined,
+      surname: typeof decoded['family_name'] === 'string' ? decoded['family_name'] : undefined,
+    };
+  }
+
+  getProviderName(): string {
+    return 'local';
+  }
+}
+
 // Provider factory
 export class AuthProviderFactory {
   static createProvider(providerType: string): AuthProvider {
@@ -100,6 +141,8 @@ export class AuthProviderFactory {
           process.env['AUTH0_DOMAIN'] || '',
           process.env['AUTH0_AUDIENCE'] || ''
         );
+      case 'local':
+        return new LocalJwtAuthProvider();
       default:
         throw new Error(`Unsupported auth provider: ${providerType}`);
     }

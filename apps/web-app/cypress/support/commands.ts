@@ -11,61 +11,60 @@ import {
 // Custom commands for the My Many Books application
 
 const loginWithUser = (profile: E2EUserProfile) => {
-  const tokens = buildAuthTokens(profile);
-  const response = buildLoginResponse(profile, tokens);
+  return buildAuthTokens(profile).then((tokens) => {
+    const response = buildLoginResponse(profile, tokens);
 
-  const authTokens = {
-    idToken: tokens.idToken,
-    accessToken: tokens.accessToken,
-    expiresAt: Date.now() + tokens.expiresIn * 1000,
-  };
+    const authTokens = {
+      idToken: tokens.idToken,
+      accessToken: tokens.accessToken,
+      expiresAt: Date.now() + tokens.expiresIn * 1000,
+    };
 
-  const authUser = {
-    id: profile.id,
-    email: profile.email,
-    name: profile.name,
-    surname: profile.surname,
-    role: profile.role,
-    isActive: true,
-  };
+    const authUser = {
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+      surname: profile.surname,
+      role: profile.role,
+      isActive: true,
+    };
 
-  // Set up intercept for refresh endpoint
-  cy.intercept('POST', '**/auth/refresh', {
-    statusCode: 200,
-    body: response,
-  }).as('refresh');
+    // Set up intercept for refresh endpoint
+    cy.intercept('POST', '**/auth/refresh', {
+      statusCode: 200,
+      body: response,
+    }).as('refresh');
 
-  // Use cy.session to persist authentication across page visits
-  cy.session(
-    [profile.email, profile.role],
-    () => {
-      cy.visit('/', {
-        onBeforeLoad(win) {
-          // Enable localStorage storage adapter for E2E tests
-          win.useLocalStorage = true;
-        }
-      });
-      cy.window().then((win) => {
-        win.localStorage.setItem('auth_tokens', JSON.stringify(authTokens));
-        win.localStorage.setItem('auth_user', JSON.stringify(authUser));
-      });
-      cy.reload();
-      cy.url().should('not.include', '/auth');
-    },
-    {
-      validate() {
-        cy.window().then((win) => {
-          const storedTokens = win.localStorage.getItem('auth_tokens');
-          const storedUser = win.localStorage.getItem('auth_user');
-          if (!storedTokens || !storedUser) {
-            throw new Error('Auth not persisted');
+    // Use cy.session to persist authentication across page visits
+    cy.session(
+      [profile.email, profile.role],
+      () => {
+        cy.visit('/', {
+          onBeforeLoad(win) {
+            // Enable localStorage storage adapter for E2E tests
+            win.useLocalStorage = true;
           }
         });
+        cy.window().then((win) => {
+          win.localStorage.setItem('auth_tokens', JSON.stringify(authTokens));
+          win.localStorage.setItem('auth_user', JSON.stringify(authUser));
+        });
+        cy.reload();
+        cy.url().should('not.include', '/auth');
       },
-    }
-  );
-
-  return cy.wrap({ user: profile, tokens }, { log: false });
+      {
+        validate() {
+          cy.window().then((win) => {
+            const storedTokens = win.localStorage.getItem('auth_tokens');
+            const storedUser = win.localStorage.getItem('auth_user');
+            if (!storedTokens || !storedUser) {
+              throw new Error('Auth not persisted');
+            }
+          });
+        },
+      }
+    );
+  });
 };
 
 Cypress.Commands.add('login', (email: string, password: string) => {

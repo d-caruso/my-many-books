@@ -46,6 +46,8 @@ env:
   E2E_USER_NAME: 'Reader'
   E2E_USER_SURNAME: 'User'
   CYPRESS_VIDEO: 'true'
+  AUTH_PROVIDER: 'local'
+  LOCAL_JWT_SECRET: 'e2e-test-secret-ci-only'
 
 jobs:
   e2e:

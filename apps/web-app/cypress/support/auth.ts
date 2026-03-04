@@ -24,17 +24,6 @@ const getEnvString = (key: string, fallback: string): string => {
   return fallback;
 };
 
-const base64UrlEncode = (value: Record<string, unknown>): string => {
-  const json = JSON.stringify(value);
-  const base64 = btoa(json);
-  return base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-};
-
-export const buildJwt = (payload: Record<string, unknown>): string => {
-  const header = { alg: "none", typ: "JWT" };
-  return `${base64UrlEncode(header)}.${base64UrlEncode(payload)}.signature`;
-};
-
 export const getE2EUser = (role: E2EUserRole): E2EUserProfile => {
   if (role === "admin") {
     return {
@@ -59,7 +48,7 @@ export const getE2EUser = (role: E2EUserRole): E2EUserProfile => {
   };
 };
 
-export const buildAuthTokens = (profile: E2EUserProfile): E2EAuthTokens => {
+export const buildAuthTokens = (profile: E2EUserProfile): Cypress.Chainable<E2EAuthTokens> => {
   const issuedAt = Math.floor(Date.now() / 1000);
   const expiresIn = 3600;
   const payload = {
@@ -72,14 +61,11 @@ export const buildAuthTokens = (profile: E2EUserProfile): E2EAuthTokens => {
     exp: issuedAt + expiresIn,
   };
 
-  const idToken = buildJwt(payload);
-  const accessToken = buildJwt(payload);
-
-  return {
-    idToken,
-    accessToken,
+  return cy.task<string>("auth:signToken", payload).then((token) => ({
+    idToken: token,
+    accessToken: token,
     expiresIn,
-  };
+  }));
 };
 
 export const buildLoginResponse = (profile: E2EUserProfile, tokens: E2EAuthTokens) => {

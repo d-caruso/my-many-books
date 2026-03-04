@@ -113,6 +113,12 @@ export default defineConfig({
       };
 
       on("task", {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        "auth:signToken": (payload: Record<string, unknown>) => {
+          const jwtLib = require("jsonwebtoken") as typeof import("jsonwebtoken");
+          const secret = process.env["LOCAL_JWT_SECRET"] || "e2e-local-dev-secret";
+          return jwtLib.sign(payload, secret, { algorithm: "HS256" });
+        },
         "db:reset": () => runSeedCommand("reset", seedEnv),
         "db:seed": () => runSeedCommand("seed", seedEnv),
       });
@@ -132,6 +138,7 @@ export default defineConfig({
     userName,
     userSurname,
     userPassword,
+    localJwtSecret: process.env["LOCAL_JWT_SECRET"] || "e2e-local-dev-secret",
   },
 
   component: {
