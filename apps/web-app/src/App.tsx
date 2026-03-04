@@ -37,6 +37,7 @@ import { Navbar } from './components/Navigation';
 
 // Lazy load non-landing pages for route-based code splitting
 const AuthPage = lazy(() => import('./pages/AuthPage'));
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 const BookSearchPage = lazy(() => import('./components/Search/BookSearchPage'));
 const ScannerModal = lazy(() => import('./components/Scanner'));
 
@@ -276,8 +277,9 @@ function App() {
 
                       <Suspense fallback={null}>
                         <Routes>
-                          {/* Public route */}
+                          {/* Public routes */}
                           <Route path="/auth" element={<AuthPage />} />
+                          <Route path="/auth/verify" element={<VerifyEmailPage />} />
 
                           {/* Admin routes - require admin role */}
                           <Route

@@ -5,6 +5,7 @@
 
 // Core service
 export { AuthService } from './AuthService';
+export { AuthApiError } from './AuthApiError';
 
 // Storage adapters
 export { WebStorageAdapter } from './adapters/WebStorageAdapter';

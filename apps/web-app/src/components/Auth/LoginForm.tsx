@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   useAuth,
+  AuthApiError,
   PASSWORD_POLICY,
   getRequiredPasswordRuleTypes,
   validatePasswordAgainstPolicy,
@@ -89,7 +90,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       // Authentication success will be handled by AuthContext
     } catch (err: unknown) {
       console.error('Login error:', err);
-      setError(err instanceof Error ? err.message : t('common:login_failed'));
+      if (err instanceof AuthApiError) {
+        setError(t(err.i18nKey, { defaultValue: err.message }));
+      } else {
+        setError(err instanceof Error ? err.message : t('common:login_failed'));
+      }
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   useAuth,
+  AuthApiError,
   PASSWORD_POLICY,
   getRequiredPasswordRuleTypes,
   validatePasswordAgainstPolicy,
@@ -32,6 +34,7 @@ interface RegisterFormProps {
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const { t, i18n } = useTranslation(['common', 'accessibility']);
   const { register } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -42,6 +45,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [requiresVerification, setRequiresVerification] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -80,7 +84,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       });
       
       if (result) {
-        setSuccess(result.message);
+        setRegisteredEmail(formData.email);
+        setSuccess(t('common:registration_success'));
         setRequiresVerification(result.requiresVerification);
         setError(null);
         
@@ -98,7 +103,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       // If no result, registration success will be handled by AuthContext (auto-login)
     } catch (err: unknown) {
       console.error('Registration error:', err);
-      setError(err instanceof Error ? err.message : t('common:registration_failed'));
+      if (err instanceof AuthApiError) {
+        setError(t(err.i18nKey, { defaultValue: err.message }));
+      } else {
+        setError(err instanceof Error ? err.message : t('common:registration_failed'));
+      }
       setSuccess(null);
     } finally {
       setLoading(false);
@@ -153,9 +162,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 {success}
               </Typography>
               {requiresVerification && (
-                <Typography variant="caption" display="block">
-                  {t('common:verification_link_instruction')}
-                </Typography>
+                <>
+                  <Typography variant="caption" display="block">
+                    {t('common:verification_link_instruction')}
+                  </Typography>
+                  <MuiButton
+                    variant="text"
+                    size="small"
+                    onClick={() => navigate(`/auth/verify?email=${encodeURIComponent(registeredEmail)}`)}
+                    sx={{ mt: 0.5, p: 0, minWidth: 0 }}
+                  >
+                    {t('common:enter_code')}
+                  </MuiButton>
+                </>
               )}
             </Alert>
           )}

@@ -15,6 +15,8 @@ import type {
   ApiSuccessEnvelope,
   ApiErrorEnvelope,
 } from './types';
+import { AuthApiError } from './AuthApiError';
+import { getAuthErrorI18nKey } from './authErrorI18n';
 
 interface RegisterResponseData {
   requiresVerification: boolean;
@@ -43,15 +45,18 @@ export class AuthService {
     throw new Error('Invalid API success envelope');
   }
 
-  private extractErrorMessage(payload: unknown, fallback: string): string {
+  private extractApiError(
+    payload: unknown,
+    fallback: string,
+  ): { code: string; message: string } {
     if (!payload || typeof payload !== 'object') {
-      return fallback;
+      return { code: 'INTERNAL_ERROR', message: fallback };
     }
 
     const maybeEnvelope = payload as Partial<ApiErrorEnvelope> & { message?: unknown };
 
     if (typeof maybeEnvelope.error === 'string' && maybeEnvelope.error.length > 0) {
-      return maybeEnvelope.error;
+      return { code: 'INTERNAL_ERROR', message: maybeEnvelope.error };
     }
 
     if (
@@ -60,14 +65,18 @@ export class AuthService {
       'message' in maybeEnvelope.error &&
       typeof maybeEnvelope.error.message === 'string'
     ) {
-      return maybeEnvelope.error.message;
+      const code =
+        'code' in maybeEnvelope.error && typeof maybeEnvelope.error.code === 'string'
+          ? maybeEnvelope.error.code
+          : 'INTERNAL_ERROR';
+      return { code, message: maybeEnvelope.error.message };
     }
 
     if (typeof maybeEnvelope.message === 'string' && maybeEnvelope.message.length > 0) {
-      return maybeEnvelope.message;
+      return { code: 'INTERNAL_ERROR', message: maybeEnvelope.message };
     }
 
-    return fallback;
+    return { code: 'INTERNAL_ERROR', message: fallback };
   }
 
   private async applyLoginResponse(data: LoginResponse): Promise<User> {
@@ -96,7 +105,8 @@ export class AuthService {
 
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => undefined);
-        throw new Error(this.extractErrorMessage(errorPayload, 'Login failed'));
+        const { code, message } = this.extractApiError(errorPayload, 'Login failed');
+        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
       }
 
       const payload = await response.json() as unknown;
@@ -124,7 +134,8 @@ export class AuthService {
 
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => undefined);
-        throw new Error(this.extractErrorMessage(errorPayload, 'Google login failed'));
+        const { code, message } = this.extractApiError(errorPayload, 'Google login failed');
+        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
       }
 
       const responseBody = await response.json() as unknown;
@@ -152,7 +163,8 @@ export class AuthService {
 
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => undefined);
-        throw new Error(this.extractErrorMessage(errorPayload, 'Registration failed'));
+        const { code, message } = this.extractApiError(errorPayload, 'Registration failed');
+        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
       }
 
       const payload = await response.json() as unknown;
@@ -310,6 +322,25 @@ export class AuthService {
       const updatedUser = { ...currentUser, ...userData };
       await this.storage.setUser(updatedUser);
       this.config.onAuthStateChange?.(updatedUser);
+    }
+  }
+
+  async verifyEmail(email: string, code: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.config.apiUrl}/auth/verify-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => undefined);
+        const { code, message } = this.extractApiError(errorPayload, 'Email verification failed');
+        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      }
+    } catch (error) {
+      console.error('Email verification error:', error);
+      throw error;
     }
   }
 

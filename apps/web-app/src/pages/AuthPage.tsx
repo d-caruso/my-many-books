@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Alert, Box, Button, Container, Typography } from '@mui/material';
+import { Alert, Box, Button, Container, Snackbar, Typography } from '@mui/material';
 import { Trans, useTranslation } from 'react-i18next';
 import { LoginForm, RegisterForm } from '../components/Auth';
 import { LanguageSelector } from '../components/Navigation/LanguageSelector';
 import { AboutDialog } from '../components/About/AboutDialog';
 import { useAuth } from '@my-many-books/shared-auth';
 import { useLanguageChangeFade } from '../hooks/useLanguageChangeFade';
+import type { VerifyEmailNavState } from '../types/authNavState';
 
 type AuthMode = 'login' | 'register';
 
@@ -14,6 +15,9 @@ const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [aboutOpen, setAboutOpen] = useState(false);
   const [socialAuthError, setSocialAuthError] = useState<string | null>(null);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false, message: '', severity: 'success',
+  });
   const { user, refreshUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -54,6 +58,22 @@ const AuthPage: React.FC = () => {
       ignore = true;
     };
   }, [location.search, navigate, refreshUser, t]);
+
+  useEffect(() => {
+    const state = location.state as VerifyEmailNavState | null;
+    if (state?.success === undefined) return;
+
+    if (state.success) {
+      setMode('login');
+      setSnackbar({ open: true, message: t('verify_email_success'), severity: 'success' });
+    } else {
+      setMode('register');
+      setSnackbar({ open: true, message: state.errorMessage || t('verify_email_failed'), severity: 'error' });
+    }
+
+    // Clear state to prevent re-showing on refresh
+    navigate('/auth', { replace: true, state: {} });
+  }, [location.state, navigate, t]);
 
   // If user is already authenticated, redirect to home
   if (user) {
@@ -157,6 +177,11 @@ const AuthPage: React.FC = () => {
         <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
         </Container>
       </Box>
+      <Snackbar open={snackbar.open} autoHideDuration={5000} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

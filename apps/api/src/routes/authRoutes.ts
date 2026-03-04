@@ -9,6 +9,7 @@ import express, { Router, Request, Response } from 'express';
 import type { AxiosError } from 'axios';
 import {
   CognitoIdentityProviderClient,
+  ConfirmSignUpCommand,
   InitiateAuthCommand,
   SignUpCommand,
   AuthFlowType,
@@ -56,6 +57,11 @@ interface RegisterRequest {
   name: string;
   surname: string;
   locale?: string;
+}
+
+interface VerifyEmailRequest {
+  email: string;
+  code: string;
 }
 
 interface GoogleStartQuery {
@@ -495,6 +501,59 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Registration failed', { cause: errorMessage });
+  }
+});
+
+router.post('/verify-email', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, code } = req.body as VerifyEmailRequest;
+
+    if (!email || !code) {
+      sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'Email and verification code are required');
+      return;
+    }
+
+    const command = new ConfirmSignUpCommand({
+      ClientId: process.env['COGNITO_USER_POOL_CLIENT_ID'] || '',
+      Username: email,
+      ConfirmationCode: code,
+    });
+
+    await cognitoClient.send(command);
+
+    sendSuccess(res, 200, { verified: true }, 'Email verified successfully');
+  } catch (error: unknown) {
+    getLogger().error(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'Email verification error:'
+    );
+
+    if (error && typeof error === 'object' && 'name' in error) {
+      const errorName = (error as { name: string }).name;
+
+      if (errorName === 'CodeMismatchException') {
+        sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Invalid verification code');
+        return;
+      }
+
+      if (errorName === 'ExpiredCodeException') {
+        sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Verification code has expired');
+        return;
+      }
+
+      if (errorName === 'NotAuthorizedException') {
+        sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Account already verified');
+        return;
+      }
+
+      if (errorName === 'UserNotFoundException') {
+        sendError(res, 404, ERROR_CODES.NOT_FOUND, 'User not found');
+        return;
+      }
+    }
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Email verification failed', { cause: errorMessage });
   }
 });
 

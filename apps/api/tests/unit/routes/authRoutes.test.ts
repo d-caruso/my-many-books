@@ -729,4 +729,85 @@ describe('Auth Routes', () => {
       expect(localeAttr).toBeUndefined();
     });
   });
+
+  describe(`POST ${BASE_PATH}/auth/verify-email`, () => {
+    it('should verify email successfully', async () => {
+      mockSend.mockResolvedValue({});
+
+      const response = await request(app).post(`${BASE_PATH}/auth/verify-email`).send({
+        email: 'user@example.com',
+        code: '123456',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body.data).toHaveProperty('verified', true);
+    });
+
+    it('should return 400 when email is missing', async () => {
+      const response = await request(app).post(`${BASE_PATH}/auth/verify-email`).send({
+        code: '123456',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toHaveProperty('message', 'Email and verification code are required');
+    });
+
+    it('should return 400 when code is missing', async () => {
+      const response = await request(app).post(`${BASE_PATH}/auth/verify-email`).send({
+        email: 'user@example.com',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toHaveProperty('message', 'Email and verification code are required');
+    });
+
+    it('should return 400 for invalid code', async () => {
+      mockSend.mockRejectedValue({ name: 'CodeMismatchException', message: 'Invalid code' });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/verify-email`).send({
+        email: 'user@example.com',
+        code: '000000',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toHaveProperty('message', 'Invalid verification code');
+    });
+
+    it('should return 400 for expired code', async () => {
+      mockSend.mockRejectedValue({ name: 'ExpiredCodeException', message: 'Code expired' });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/verify-email`).send({
+        email: 'user@example.com',
+        code: '123456',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toHaveProperty('message', 'Verification code has expired');
+    });
+
+    it('should return 400 for already verified account', async () => {
+      mockSend.mockRejectedValue({ name: 'NotAuthorizedException', message: 'Already confirmed' });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/verify-email`).send({
+        email: 'user@example.com',
+        code: '123456',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toHaveProperty('message', 'Account already verified');
+    });
+
+    it('should return 404 for non-existent user', async () => {
+      mockSend.mockRejectedValue({ name: 'UserNotFoundException', message: 'User not found' });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/verify-email`).send({
+        email: 'nonexistent@example.com',
+        code: '123456',
+      });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toHaveProperty('message', 'User not found');
+    });
+  });
 });
