@@ -9,7 +9,10 @@ import { userAPI } from '@/services/api';
 
 // Mock AsyncStorage and userAPI
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
-const mockUserAPI = userAPI as jest.Mocked<typeof userAPI>;
+const mockUserAPI = userAPI as jest.Mocked<typeof userAPI> & {
+  login: jest.Mock;
+  register: jest.Mock;
+};
 
 // Mock the API modules
 jest.mock('@react-native-async-storage/async-storage', () => ({

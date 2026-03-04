@@ -3,6 +3,7 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import * as jwtLib from "jsonwebtoken";
 import viteConfig from "./vite.config.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -113,9 +114,7 @@ export default defineConfig({
       };
 
       on("task", {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
         "auth:signToken": (payload: Record<string, unknown>) => {
-          const jwtLib = require("jsonwebtoken") as typeof import("jsonwebtoken");
           const secret = process.env["LOCAL_JWT_SECRET"] || "e2e-local-dev-secret";
           return jwtLib.sign(payload, secret, { algorithm: "HS256" });
         },

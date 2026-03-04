@@ -404,13 +404,26 @@ jobs:
           echo "Infrastructure deployment completed successfully"
 
       - name: Deploy Cognito Stack
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: |
           STACK_NAME="my-many-books-cognito-${{ needs.setup.outputs.environment }}"
           TEMPLATE_FILE="apps/api/deployment/cloudformation/cognito-stack.yml"
 
-          # Set parameters based on environment
-          PARAMETERS="ParameterKey=Environment,ParameterValue=${{ needs.setup.outputs.environment }}"
-          PARAMETERS="$PARAMETERS ParameterKey=ServiceName,ParameterValue=my-many-books-api"
+          # Base parameters (always supplied)
+          BASE_PARAMETERS="ParameterKey=Environment,ParameterValue=${{ needs.setup.outputs.environment }}"
+          BASE_PARAMETERS="$BASE_PARAMETERS ParameterKey=ServiceName,ParameterValue=my-many-books-api"
+
+          # Parameters that include Google credentials (for create / delete-recreate)
+          CREATE_PARAMETERS="$BASE_PARAMETERS"
+          CREATE_PARAMETERS="$CREATE_PARAMETERS ParameterKey=GoogleClientId,ParameterValue=$GOOGLE_CLIENT_ID"
+          CREATE_PARAMETERS="$CREATE_PARAMETERS ParameterKey=GoogleClientSecret,ParameterValue=$GOOGLE_CLIENT_SECRET"
+
+          # Parameters for update: keep existing Google credentials in the stack
+          UPDATE_PARAMETERS="$BASE_PARAMETERS"
+          UPDATE_PARAMETERS="$UPDATE_PARAMETERS ParameterKey=GoogleClientId,UsePreviousValue=true"
+          UPDATE_PARAMETERS="$UPDATE_PARAMETERS ParameterKey=GoogleClientSecret,UsePreviousValue=true"
 
           # Check if stack exists and get its status
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" >/dev/null 2>&1; then
@@ -445,7 +458,7 @@ jobs:
               aws cloudformation create-stack \
                 --stack-name "$STACK_NAME" \
                 --template-body "file://$TEMPLATE_FILE" \
-                --parameters $PARAMETERS \
+                --parameters $CREATE_PARAMETERS \
                 --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 
               echo "Waiting for Cognito stack creation..."
@@ -456,7 +469,7 @@ jobs:
               UPDATE_OUTPUT=$(aws cloudformation update-stack \
                 --stack-name "$STACK_NAME" \
                 --template-body "file://$TEMPLATE_FILE" \
-                --parameters $PARAMETERS \
+                --parameters $UPDATE_PARAMETERS \
                 --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM 2>&1) || {
                   exit_code=$?
                   if echo "$UPDATE_OUTPUT" | grep -q "No updates are to be performed"; then
@@ -478,7 +491,7 @@ jobs:
             aws cloudformation create-stack \
               --stack-name "$STACK_NAME" \
               --template-body "file://$TEMPLATE_FILE" \
-              --parameters $PARAMETERS \
+              --parameters $CREATE_PARAMETERS \
               --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 
             echo "Waiting for Cognito stack creation..."
