@@ -161,7 +161,7 @@ Resources:
       ProviderDetails:
         client_id: !Ref GoogleClientId
         client_secret: !Ref GoogleClientSecret
-        authorize_scopes: openid email profile
+        authorize_scopes: openid email profile offline_access
       AttributeMapping:
         email: email
         email_verified: email_verified
@@ -185,6 +185,7 @@ Resources:
         - email
         - openid
         - profile
+        - offline_access
       SupportedIdentityProviders:
         - COGNITO
         - Google
