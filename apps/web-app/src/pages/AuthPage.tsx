@@ -36,20 +36,17 @@ const AuthPage: React.FC = () => {
       if (googleStatus === 'success') {
         try {
           await refreshUser();
+          if (!ignore) navigate('/', { replace: true });
+          return;
         } catch {
-          if (!ignore) {
-            setSocialAuthError(
-              t('common:google_login_failed', 'Google login failed. Please try again.')
-            );
-          }
+          if (!ignore)
+            setSocialAuthError(t('common:google_login_failed', 'Google login failed. Please try again.'));
         }
       } else if (!ignore) {
         setSocialAuthError(t('common:google_login_failed', 'Google login failed. Please try again.'));
       }
 
-      if (!ignore) {
-        navigate('/auth', { replace: true });
-      }
+      if (!ignore) navigate('/auth', { replace: true });
     };
 
     void handleGoogleCallback();

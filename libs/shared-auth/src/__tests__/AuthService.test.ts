@@ -265,16 +265,19 @@ describe('AuthService', () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({
-          idToken: 'google-id-token',
-          accessToken: 'google-access-token',
-          expiresIn: 3600,
-          user: {
-            id: 12,
-            email: 'google.user@example.com',
-            name: 'Google',
-            surname: 'User',
-            role: 'user' as const,
-            isActive: true,
+          success: true,
+          data: {
+            idToken: 'google-id-token',
+            accessToken: 'google-access-token',
+            expiresIn: 3600,
+            user: {
+              id: 12,
+              email: 'google.user@example.com',
+              name: 'Google',
+              surname: 'User',
+              role: 'user' as const,
+              isActive: true,
+            },
           },
         }),
       });
@@ -433,6 +436,7 @@ describe('AuthService', () => {
             idToken,
             accessToken: 'new-token',
             expiresIn: 3600,
+            user: { id: 1, email: 'test@example.com', name: 'Test', surname: 'User', role: 'user' as const, isActive: true },
           },
         }),
       };
@@ -530,7 +534,7 @@ describe('AuthService', () => {
   });
 
   describe('silentRefresh', () => {
-    it('should refresh tokens successfully', async () => {
+    it('should refresh tokens and store user from response', async () => {
       const onTokenRefresh = jest.fn();
       authService = new AuthService({
         storage: mockStorage,
@@ -538,12 +542,15 @@ describe('AuthService', () => {
         onTokenRefresh,
       });
 
-      const idToken = createTestJwt({
-        sub: 1,
+      const idToken = 'new-id-token';
+      const mockUser = {
+        id: 42,
         email: 'test@example.com',
-        given_name: 'Test',
-        family_name: 'User',
-      });
+        name: 'Test',
+        surname: 'User',
+        role: 'admin' as const,
+        isActive: true,
+      };
 
       const mockResponse = {
         ok: true,
@@ -553,6 +560,7 @@ describe('AuthService', () => {
             idToken,
             accessToken: 'new-token',
             expiresIn: 3600,
+            user: mockUser,
           },
         }),
       };
@@ -565,6 +573,8 @@ describe('AuthService', () => {
       const tokens = await mockStorage.getTokens();
       expect(tokens?.idToken).toBe(idToken);
       expect(onTokenRefresh).toHaveBeenCalledWith(expect.objectContaining({ idToken }));
+      const storedUser = await mockStorage.getUser();
+      expect(storedUser).toEqual(mockUser);
     });
 
     it('should return false on refresh failure', async () => {
@@ -598,22 +608,23 @@ describe('AuthService', () => {
       expect(consoleErrorSpy).toHaveBeenCalledWith('Silent refresh failed:', expect.any(Error));
     });
 
-    it('returns false if the ID token cannot be decoded', async () => {
+    it('returns false when user is missing from refresh response', async () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({
           success: true,
           data: {
-            idToken: 'not-a-jwt',
+            idToken: 'new-id-token',
             accessToken: 'new-token',
             expiresIn: 3600,
+            // user intentionally omitted
           },
         }),
       });
 
       const result = await authService.silentRefresh();
       expect(result).toBe(false);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to decode ID token:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Silent refresh failed:', expect.any(Error));
     });
   });
 
@@ -652,6 +663,7 @@ describe('AuthService', () => {
             idToken,
             accessToken: 'new-access',
             expiresIn: 3600,
+            user: { id: 1, email: 'test@example.com', name: 'Test', surname: 'User', role: 'user' as const, isActive: true },
           },
         }),
       };
@@ -719,6 +731,7 @@ describe('AuthService', () => {
             idToken,
             accessToken: 'new-access',
             expiresIn: 3600,
+            user: { id: 1, email: 'test@example.com', name: 'Test', surname: 'User', role: 'user' as const, isActive: true },
           },
         }),
       });

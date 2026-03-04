@@ -101,6 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 
   const refreshUser = async (): Promise<void> => {
     const { user: refreshedUser } = await authService.getAuthState();
+    if (!refreshedUser) throw new Error('Failed to restore session');
     setUser(refreshedUser);
   };
 

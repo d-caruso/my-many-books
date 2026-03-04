@@ -454,7 +454,23 @@ describe('Auth Routes', () => {
   });
 
   describe(`POST ${BASE_PATH}/auth/refresh`, () => {
-    it('should refresh token with valid refresh token', async () => {
+    const mockRefreshUser: Partial<User> = {
+      id: 1,
+      email: 'test@example.com',
+      name: 'Test',
+      surname: 'User',
+      role: 'user',
+      isActive: true,
+    };
+
+    beforeEach(() => {
+      (UserService.findOrCreateUser as jest.Mock).mockResolvedValue({
+        user: mockRefreshUser,
+        isNewUser: false,
+      });
+    });
+
+    it('should refresh token and return user from DB', async () => {
       const mockAccessToken = 'new.access.token';
       const mockIdToken = 'new.id.token';
 
@@ -475,6 +491,30 @@ describe('Auth Routes', () => {
       expect(response.body.data).toHaveProperty('accessToken', mockAccessToken);
       expect(response.body.data).toHaveProperty('idToken', mockIdToken);
       expect(response.body.data).toHaveProperty('expiresIn', 3600);
+      expect(response.body.data.user).toMatchObject({
+        id: mockRefreshUser.id,
+        email: mockRefreshUser.email,
+        role: mockRefreshUser.role,
+      });
+    });
+
+    it('should return 401 when ID token verification fails after refresh', async () => {
+      mockSend.mockResolvedValue({
+        AuthenticationResult: {
+          IdToken: 'bad.id.token',
+          AccessToken: 'new.access.token',
+          ExpiresIn: 3600,
+        },
+      });
+
+      verifyCognitoIdTokenSpy.mockRejectedValueOnce(new Error('Invalid token'));
+
+      const response = await request(app)
+        .post(`${BASE_PATH}/auth/refresh`)
+        .set('Cookie', ['refresh_token=valid-refresh-token']);
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toHaveProperty('message', 'Invalid token');
     });
 
     it('should return 401 without refresh token cookie', async () => {

@@ -9,7 +9,7 @@ import crypto from 'crypto';
 import { CognitoJwtVerifier, VerifiedCognitoIdentity } from './cognitoJwtVerifier';
 
 const GOOGLE_PROVIDER_NAME = process.env['COGNITO_GOOGLE_PROVIDER_NAME'] || 'Google';
-const OAUTH_SCOPES = 'openid email profile offline_access';
+const OAUTH_SCOPES = 'openid email profile';
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const PKCE_CODE_VERIFIER_PATTERN = /^[A-Za-z0-9\-._~]{43,128}$/;
 const PKCE_CODE_CHALLENGE_PATTERN = /^[A-Za-z0-9\-_]{43,128}$/;

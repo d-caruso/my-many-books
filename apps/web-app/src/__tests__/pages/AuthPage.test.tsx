@@ -162,7 +162,31 @@ describe('AuthPage', () => {
     });
   });
 
-  test('attempts auth refresh on Google callback success', async () => {
+  test('navigates to / on Google callback success', async () => {
+    mockRefreshUser.mockResolvedValue(undefined);
+
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: '/auth',
+      search: '?google=success',
+      hash: '',
+      state: null,
+      key: 'google-callback',
+    } as any);
+
+    render(<AuthPage />);
+
+    await waitFor(() => {
+      expect(mockRefreshUser).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+    });
+  });
+
+  test('shows error and navigates to /auth on Google callback success when refresh fails', async () => {
+    mockRefreshUser.mockRejectedValue(new Error('Failed to restore session'));
+
     vi.mocked(useLocation).mockReturnValue({
       pathname: '/auth',
       search: '?google=success',
@@ -180,5 +204,7 @@ describe('AuthPage', () => {
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/auth', { replace: true });
     });
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 });

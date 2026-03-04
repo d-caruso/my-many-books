@@ -247,24 +247,12 @@ export class AuthService {
         expiresAt: Date.now() + data.expiresIn * 1000,
       };
 
-      await this.storage.setTokens(tokens);
-
-      // Decode ID token to extract user data
-      try {
-        const payload = this.decodeJWT(data.idToken);
-        const user: User = {
-          id: payload.sub,
-          email: payload.email,
-          name: payload.given_name,
-          surname: payload.family_name,
-          role: 'user', // Default role, will be updated from API if different
-          isActive: true, // Default active status
-        };
-        await this.storage.setUser(user);
-      } catch (decodeError) {
-        console.error('Failed to decode ID token:', decodeError);
-        return false;
+      if (!data.user) {
+        throw new Error('Refresh response missing user');
       }
+
+      await this.storage.setTokens(tokens);
+      await this.storage.setUser(data.user);
 
       this.config.onTokenRefresh?.(tokens);
 
@@ -275,25 +263,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Decode JWT token (without verification - verification is done server-side)
-   */
-  private decodeJWT(token: string): any {
-    try {
-      const base64Url = token.split('.')[1];
-      if (!base64Url) throw new Error('Invalid token');
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(jsonPayload);
-    } catch {
-      throw new Error('Invalid JWT token');
-    }
-  }
 
   async getIdToken(): Promise<string | null> {
     const tokens = await this.storage.getTokens();

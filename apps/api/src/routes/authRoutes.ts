@@ -395,10 +395,37 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
 
     const authResult = response.AuthenticationResult;
 
+    let decoded: Awaited<ReturnType<typeof verifyCognitoIdToken>>;
+    try {
+      decoded = await verifyCognitoIdToken(authResult.IdToken || '');
+    } catch {
+      res.clearCookie('refresh_token', { path: AUTH_COOKIE_PATH });
+      sendError(res, 401, ERROR_CODES.AUTH_TOKEN_INVALID, 'Invalid token');
+      return;
+    }
+
+    const { user } = await UserService.findOrCreateUser(
+      {
+        id: decoded.sub,
+        email: decoded.email,
+        name: decoded.given_name,
+        surname: decoded.family_name,
+      },
+      'cognito'
+    );
+
     sendSuccess(res, 200, {
       accessToken: authResult.AccessToken,
       idToken: authResult.IdToken,
       expiresIn: authResult.ExpiresIn,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        surname: user.surname,
+        role: user.role,
+        isActive: user.isActive,
+      },
     });
   } catch (error: unknown) {
     getLogger().error(

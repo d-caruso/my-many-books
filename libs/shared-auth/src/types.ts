@@ -48,6 +48,7 @@ export interface RefreshResponse {
   accessToken: string;
   idToken: string;
   expiresIn: number;
+  user: User;
 }
 
 export interface RegisterResponse {

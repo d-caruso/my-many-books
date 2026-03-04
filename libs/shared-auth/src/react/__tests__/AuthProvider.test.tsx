@@ -206,4 +206,41 @@ describe('AuthProvider', () => {
     );
     expect(authService.getAuthState).toHaveBeenCalledTimes(2);
   });
+
+  it('refreshUser throws when user is null after getAuthState', async () => {
+    const authService = createAuthServiceMock({
+      getAuthState: jest
+        .fn()
+        .mockResolvedValueOnce({ user, isAuthenticated: true })
+        .mockResolvedValueOnce({ user: null, isAuthenticated: false }),
+    });
+
+    let caughtError: Error | undefined;
+    function ConsumerWithErrorCapture() {
+      const { refreshUser: refresh } = useAuth();
+      return (
+        <button
+          type="button"
+          onClick={() =>
+            refresh().catch((e: Error) => {
+              caughtError = e;
+            })
+          }
+        >
+          refreshUser
+        </button>
+      );
+    }
+
+    render(
+      <AuthProvider authService={authService}>
+        <ConsumerWithErrorCapture />
+      </AuthProvider>
+    );
+
+    await screen.findByRole('button', { name: 'refreshUser' });
+    fireEvent.click(screen.getByRole('button', { name: 'refreshUser' }));
+    await waitFor(() => expect(caughtError).toBeDefined());
+    expect(caughtError?.message).toBe('Failed to restore session');
+  });
 });
