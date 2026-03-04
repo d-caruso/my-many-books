@@ -65,7 +65,7 @@ const loginWithUser = (profile: E2EUserProfile) => {
       }
     );
 
-    return { user: profile, tokens };
+    return cy.wrap({ user: profile, tokens });
   });
 };
 
