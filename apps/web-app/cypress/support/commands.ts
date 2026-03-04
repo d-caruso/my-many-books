@@ -64,6 +64,8 @@ const loginWithUser = (profile: E2EUserProfile) => {
         },
       }
     );
+
+    return { user: profile, tokens };
   });
 };
 
