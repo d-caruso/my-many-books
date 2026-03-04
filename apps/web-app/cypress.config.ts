@@ -3,7 +3,8 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { sign as jwtSign } from "jsonwebtoken";
+import jwtPkg from "jsonwebtoken";
+const { sign: jwtSign } = jwtPkg;
 import viteConfig from "./vite.config.js";
 
 const __filename = fileURLToPath(import.meta.url);
