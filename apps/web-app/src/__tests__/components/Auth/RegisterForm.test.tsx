@@ -211,7 +211,8 @@ describe('RegisterForm', () => {
         email: 'john@example.com',
         password: 'Password123',
         name: 'John',
-        surname: 'Doe'
+        surname: 'Doe',
+        locale: 'en',
       });
     });
   });
@@ -299,7 +300,8 @@ describe('RegisterForm', () => {
         email: 'john@example.com',
         password: 'Password123',
         name: 'John',
-        surname: 'Doe'
+        surname: 'Doe',
+        locale: 'en',
       });
     });
   });
