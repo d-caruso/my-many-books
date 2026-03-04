@@ -72,18 +72,29 @@ const getOAuthStateSecret = (): string => {
   return 'local-google-oauth-state';
 };
 
+const COGNITO_SERVICE_NAME = 'my-many-books-api';
+
+const resolveStage = (): string => {
+  const nodeEnv = process.env['NODE_ENV']?.trim() || 'development';
+  return nodeEnv === 'development' ? 'dev' : nodeEnv;
+};
+
 const getCognitoDomainBaseUrl = (): string => {
   const configuredDomain = process.env['COGNITO_DOMAIN']?.trim();
-  if (!configuredDomain) {
-    throw new Error('COGNITO_DOMAIN is not configured');
+  if (configuredDomain) {
+    const withProtocol =
+      configuredDomain.startsWith('http://') || configuredDomain.startsWith('https://')
+        ? configuredDomain
+        : `https://${configuredDomain}`;
+    return withProtocol.replace(/\/+$/, '');
   }
 
-  const withProtocol =
-    configuredDomain.startsWith('http://') || configuredDomain.startsWith('https://')
-      ? configuredDomain
-      : `https://${configuredDomain}`;
-
-  return withProtocol.replace(/\/+$/, '');
+  const region = process.env['AWS_REGION']?.trim();
+  if (!region) {
+    throw new Error('AWS_REGION is not configured');
+  }
+  const stage = resolveStage();
+  return `https://${COGNITO_SERVICE_NAME}-auth-${stage}.auth.${region}.amazoncognito.com`;
 };
 
 const toBase64Url = (value: string): string =>

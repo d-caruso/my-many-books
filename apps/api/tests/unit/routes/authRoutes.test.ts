@@ -331,6 +331,32 @@ describe('Auth Routes', () => {
       expect(response.headers['location']).toContain('identity_provider=Google');
     });
 
+    it(`GET ${BASE_PATH}/auth/google/start should derive Cognito domain from AWS_REGION when COGNITO_DOMAIN is not set`, async () => {
+      delete process.env['COGNITO_DOMAIN'];
+      process.env['AWS_REGION'] = 'us-west-2';
+      process.env['NODE_ENV'] = 'development';
+
+      const response = await request(app)
+        .get(`${BASE_PATH}/auth/google/start`)
+        .query({ platform: 'web' });
+
+      expect(response.status).toBe(302);
+      expect(response.headers['location']).toContain(
+        'my-many-books-api-auth-dev.auth.us-west-2.amazoncognito.com'
+      );
+    });
+
+    it(`GET ${BASE_PATH}/auth/google/start should use explicit COGNITO_DOMAIN when set`, async () => {
+      process.env['COGNITO_DOMAIN'] = 'https://custom.auth.example.com';
+
+      const response = await request(app)
+        .get(`${BASE_PATH}/auth/google/start`)
+        .query({ platform: 'web' });
+
+      expect(response.status).toBe(302);
+      expect(response.headers['location']).toContain('custom.auth.example.com');
+    });
+
     it(`POST ${BASE_PATH}/auth/google/mobile/exchange should exchange OAuth code`, async () => {
       mockedAxios.post.mockResolvedValue({
         data: {
