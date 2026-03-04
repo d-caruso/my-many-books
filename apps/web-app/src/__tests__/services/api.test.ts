@@ -3,6 +3,7 @@ import type { AuthorApi, BookApi, CategoryApi, UserApi } from '@my-many-books/sh
 
 // Import after mocks are set up (avoid importing default instance to prevent axios creation)
 import { createApiService, ApiService } from '../../services/api';
+import { getMockBooks, getMockCategories, getMockAuthors, getMockSearchResults } from '../../services/mock-data';
 import { beforeEach, describe, vi } from 'vitest';
 
 type ApiClientContract = {
@@ -160,8 +161,7 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockBooks returns expected structure', async () => {
-      // Access private method via type assertion
-      const mockBooks = await (testApiService as any).getMockBooks();
+      const mockBooks = await getMockBooks();
 
       expect(mockBooks).toHaveProperty('books');
       expect(mockBooks).toHaveProperty('pagination');
@@ -176,7 +176,7 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockCategories returns expected structure', async () => {
-      const mockCategories = await (testApiService as any).getMockCategories();
+      const mockCategories = await getMockCategories();
 
       expect(Array.isArray(mockCategories)).toBe(true);
       expect(mockCategories.length).toBeGreaterThan(0);
@@ -185,7 +185,7 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockAuthors returns expected structure', async () => {
-      const mockAuthors = await (testApiService as any).getMockAuthors();
+      const mockAuthors = await getMockAuthors();
 
       expect(Array.isArray(mockAuthors)).toBe(true);
       expect(mockAuthors.length).toBeGreaterThan(0);
@@ -196,7 +196,7 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('getMockSearchResults filters by query', async () => {
       const searchParams = { q: 'gatsby' };
-      const result = await (testApiService as any).getMockSearchResults(searchParams);
+      const result = await getMockSearchResults(searchParams);
 
       expect(result.books.some((book: Book) => 
         book.title.toLowerCase().includes('gatsby')
@@ -205,14 +205,14 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('getMockSearchResults filters by status', async () => {
       const searchParams = { status: 'finished' };
-      const result = await (testApiService as any).getMockSearchResults(searchParams);
+      const result = await getMockSearchResults(searchParams);
 
       expect(result.books.every((book: Book) => book.status === 'finished')).toBe(true);
     });
 
     test('getMockSearchResults filters by author', async () => {
       const searchParams = { authorId: 1 };
-      const result = await (testApiService as any).getMockSearchResults(searchParams);
+      const result = await getMockSearchResults(searchParams);
 
       expect(result.books.every((book: Book) => 
         book.authors?.some(author => author.id === 1)
@@ -221,7 +221,7 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('getMockSearchResults sorts by title', async () => {
       const searchParams = { sortBy: 'title' };
-      const result = await (testApiService as any).getMockSearchResults(searchParams);
+      const result = await getMockSearchResults(searchParams);
 
       const titles = result.books.map((book: Book) => book.title);
       const sortedTitles = [...titles].sort();
@@ -230,7 +230,7 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('getMockSearchResults sorts by author', async () => {
       const searchParams = { sortBy: 'author' };
-      const result = await (testApiService as any).getMockSearchResults(searchParams);
+      const result = await getMockSearchResults(searchParams);
 
       const authors = result.books.map((book: Book) => 
         book.authors?.[0] ? `${book.authors[0].name} ${book.authors[0].surname}` : ''
@@ -241,7 +241,7 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('getMockSearchResults sorts by date-added', async () => {
       const searchParams = { sortBy: 'date-added' };
-      const result = await (testApiService as any).getMockSearchResults(searchParams);
+      const result = await getMockSearchResults(searchParams);
 
       // Should be sorted by creation date descending (newest first)
       const dates = result.books.map((book: Book) => new Date(book.creationDate).getTime());
@@ -252,7 +252,7 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('getMockSearchResults filters by categoryId', async () => {
       const searchParams = { categoryId: 1 };
-      const result = await (testApiService as any).getMockSearchResults(searchParams);
+      const result = await getMockSearchResults(searchParams);
 
       expect(result.books.every((book: Book) => 
         book.categories?.some(category => category.id === 1)
@@ -261,7 +261,7 @@ describe('ApiService with Industry Standard Testing', () => {
 
     test('getMockSearchResults handles pagination', async () => {
       const searchParams = { page: 2, limit: 1 };
-      const result = await (testApiService as any).getMockSearchResults(searchParams);
+      const result = await getMockSearchResults(searchParams);
 
       expect(result.page).toBe(2);
       expect(result.books.length).toBeLessThanOrEqual(1);
