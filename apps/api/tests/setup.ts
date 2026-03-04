@@ -5,6 +5,20 @@ import { initializeI18n } from '@my-many-books/shared-i18n';
 // Load test environment variables
 config({ path: '.env.test' });
 
+// Mock rate limiters — prevents 429 errors from exhausting test quotas
+jest.mock('../src/middleware/rateLimiters', () => {
+  const passThrough = (_req: unknown, _res: unknown, next: () => void) => next();
+  return {
+    authLimiter: passThrough,
+    standardLimiter: passThrough,
+    adminLimiter: passThrough,
+    publicLimiter: passThrough,
+    searchLimiter: passThrough,
+    writeLimiter: passThrough,
+    readLimiter: passThrough,
+  };
+});
+
 // Mock AWS SDK
 jest.mock('aws-sdk', () => ({
   RDS: jest.fn().mockImplementation(() => ({

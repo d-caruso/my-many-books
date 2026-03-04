@@ -4,18 +4,6 @@
 // ================================================================
 
 // Mock dependencies BEFORE imports
-jest.mock('../../../src/middleware/rateLimiters', () => {
-  const passThrough = (_req: unknown, _res: unknown, next: () => void) => next();
-  return {
-    authLimiter: passThrough,
-    standardLimiter: passThrough,
-    adminLimiter: passThrough,
-    publicLimiter: passThrough,
-    searchLimiter: passThrough,
-    writeLimiter: passThrough,
-    readLimiter: passThrough,
-  };
-});
 jest.mock('@aws-sdk/client-cognito-identity-provider');
 jest.mock('axios');
 jest.mock('../../../src/middleware/auth', () => {
