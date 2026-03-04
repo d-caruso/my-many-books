@@ -141,6 +141,7 @@ export class AuthService {
     password: string;
     name: string;
     surname: string;
+    locale?: string;
   }): Promise<RegisterResponse> {
     try {
       const response = await fetch(`${this.config.apiUrl}/auth/register`, {

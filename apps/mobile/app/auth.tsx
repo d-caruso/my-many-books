@@ -193,6 +193,7 @@ export default function AuthScreen() {
           password,
           name,
           surname: '',
+          locale: i18n.language || 'en',
         });
       } else {
         await login(email, password);

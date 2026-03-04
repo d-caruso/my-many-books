@@ -55,6 +55,7 @@ interface RegisterRequest {
   password: string;
   name: string;
   surname: string;
+  locale?: string;
 }
 
 interface GoogleStartQuery {
@@ -418,7 +419,7 @@ router.post('/logout', (_req: Request, res: Response): void => {
 
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, name, surname } = req.body as RegisterRequest;
+    const { email, password, name, surname, locale } = req.body as RegisterRequest;
 
     if (!email || !password || !name || !surname) {
       sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'All fields required');
@@ -433,6 +434,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
         { Name: 'email', Value: email },
         { Name: 'given_name', Value: name },
         { Name: 'family_name', Value: surname },
+        ...(locale ? [{ Name: 'locale', Value: locale }] : []),
       ],
     });
 

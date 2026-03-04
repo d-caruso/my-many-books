@@ -75,7 +75,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         email: formData.email,
         password: formData.password,
         name: formData.name,
-        surname: formData.surname
+        surname: formData.surname,
+        locale: i18n.language || 'en',
       });
       
       if (result) {

@@ -4,6 +4,18 @@
 // ================================================================
 
 // Mock dependencies BEFORE imports
+jest.mock('../../../src/middleware/rateLimiters', () => {
+  const passThrough = (_req: unknown, _res: unknown, next: () => void) => next();
+  return {
+    authLimiter: passThrough,
+    standardLimiter: passThrough,
+    adminLimiter: passThrough,
+    publicLimiter: passThrough,
+    searchLimiter: passThrough,
+    writeLimiter: passThrough,
+    readLimiter: passThrough,
+  };
+});
 jest.mock('@aws-sdk/client-cognito-identity-provider');
 jest.mock('axios');
 jest.mock('../../../src/middleware/auth', () => {
@@ -45,7 +57,7 @@ import request from 'supertest';
 import crypto from 'crypto';
 import axios from 'axios';
 import app from '../../../src/app';
-import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { CognitoIdentityProviderClient, SignUpCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { UserService } from '../../../src/middleware/auth';
 import { User } from '../../../src/models/User';
 import { BASE_PATH } from '../../utils/apiBasePath';
@@ -627,6 +639,40 @@ describe('Auth Routes', () => {
       expect(response.status).toBe(500);
       expect(response.body.error).toHaveProperty('message', 'Registration failed');
       expect(response.body.error).toHaveProperty('details');
+    });
+
+    it('should include locale in UserAttributes when provided', async () => {
+      mockSend.mockResolvedValue({ UserConfirmed: false, UserSub: 'new-user-sub' });
+
+      await request(app).post(`${BASE_PATH}/auth/register`).send({
+        email: 'newuser@example.com',
+        password: 'Password123!',
+        name: 'New',
+        surname: 'User',
+        locale: 'it',
+      });
+
+      const MockSignUpCommand = SignUpCommand as jest.MockedClass<typeof SignUpCommand>;
+      const constructorInput = MockSignUpCommand.mock.calls[0]![0]!
+      expect(constructorInput.UserAttributes).toContainEqual({ Name: 'locale', Value: 'it' });
+    });
+
+    it('should not include locale in UserAttributes when omitted', async () => {
+      mockSend.mockResolvedValue({ UserConfirmed: false, UserSub: 'new-user-sub' });
+
+      await request(app).post(`${BASE_PATH}/auth/register`).send({
+        email: 'newuser@example.com',
+        password: 'Password123!',
+        name: 'New',
+        surname: 'User',
+      });
+
+      const MockSignUpCommand = SignUpCommand as jest.MockedClass<typeof SignUpCommand>;
+      const constructorInput = MockSignUpCommand.mock.calls[0]![0]!
+      const localeAttr = constructorInput.UserAttributes?.find(
+        (a) => a.Name === 'locale'
+      );
+      expect(localeAttr).toBeUndefined();
     });
   });
 });
