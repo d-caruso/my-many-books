@@ -9,7 +9,7 @@ export const AuthorSchema = z.object({
   name: z.string().min(1),
   surname: z.string().min(1),
   nationality: z.string().min(1).nullable().optional(),
-  userId: z.number().int().optional(),
+  userId: z.number().int().nullable().optional(),
   creationDate: z.string().optional(),
   updateDate: z.string().optional(),
 });

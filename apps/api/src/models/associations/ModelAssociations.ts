@@ -116,8 +116,8 @@ export class ModelAssociations {
     BookCategory.belongsTo(Book, { foreignKey: 'bookId', as: 'book' });
     BookCategory.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
 
-    Book.hasMany(BookAuthor, { foreignKey: 'bookId' });
-    Book.hasMany(BookCategory, { foreignKey: 'bookId' });
+    Book.hasMany(BookAuthor, { foreignKey: 'bookId', as: 'bookAuthors' });
+    Book.hasMany(BookCategory, { foreignKey: 'bookId', as: 'bookCategories' });
 
     Author.hasMany(BookAuthor, { foreignKey: 'authorId' });
     Category.hasMany(BookCategory, { foreignKey: 'categoryId' });

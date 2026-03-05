@@ -141,6 +141,36 @@ describe('SequelizeBookAdapter (unit)', () => {
     expect(total).toBe(4);
   });
 
+  it('toDomain resolves authors and categories from separate: true structure (bookAuthors/bookCategories)', async () => {
+    const plainWithJunction = {
+      id: 2,
+      title: 'Junction Book',
+      isbnCode: '0000000001',
+      status: BOOK_STATUS.READING,
+      userId: 5,
+      creationDate: new Date(),
+      updateDate: new Date(),
+      bookAuthors: [
+        { bookId: 2, authorId: 1, author: { id: 1, name: 'Haruki', surname: 'Murakami' } },
+      ],
+      bookCategories: [
+        { bookId: 2, categoryId: 1, category: { id: 1, name: 'Fiction' } },
+        { bookId: 2, categoryId: 2, category: { id: 2, name: 'Romance' } },
+      ],
+    };
+
+    const instance = createModelMock(plainWithJunction as any);
+    (Book.findByPk as jest.Mock).mockResolvedValue(instance);
+
+    const result = await adapter.findById(2);
+
+    expect(result).toMatchObject({
+      id: 2,
+      authors: [{ id: 1, name: 'Haruki', surname: 'Murakami' }],
+      categories: [{ id: 1, name: 'Fiction' }, { id: 2, name: 'Romance' }],
+    });
+  });
+
   it('findRecentUserBooks returns mapped domain entities', async () => {
     (Book.findAll as jest.Mock).mockResolvedValue([createModelMock()]);
 

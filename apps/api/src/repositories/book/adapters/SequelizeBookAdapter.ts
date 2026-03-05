@@ -7,6 +7,8 @@ import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, Where
 import { Book } from '@/models/Book';
 import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';
+import { BookAuthor } from '@/models/BookAuthor';
+import { BookCategory } from '@/models/BookCategory';
 import { BookAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import { createModel } from '@/utils/sequelize-helpers';
 import {
@@ -192,25 +194,32 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       return null;
     }
 
+    type BookRawPlain = BookEntity & {
+      authors?: Array<{ id: number; name: string; surname?: string | null }>;
+      categories?: Array<{ id: number; name: string }>;
+      bookAuthors?: Array<{ author?: { id: number; name: string; surname?: string | null } }>;
+      bookCategories?: Array<{ category?: { id: number; name: string } }>;
+    };
+
     const base =
       typeof (book as Book).get === 'function'
-        ? ((book as Book).get({ plain: true }) as BookEntity & {
-            authors?: Array<{ id: number; name: string; surname?: string }>;
-            categories?: Array<{ id: number; name: string }>;
-          })
-        : (book as BookEntity & {
-            authors?: Array<{ id: number; name: string; surname?: string }>;
-            categories?: Array<{ id: number; name: string }>;
-          });
+        ? ((book as Book).get({ plain: true }) as BookRawPlain)
+        : (book as BookRawPlain);
 
-    const { authors, categories, ...rest } = base;
-    const authorsMapped = this.mapAuthors(authors);
-    const categoriesMapped = this.mapCategories(categories);
+    const { authors, categories, bookAuthors, bookCategories, ...rest } = base;
+
+    const resolvedAuthors = bookAuthors
+      ? bookAuthors.map(ba => ba.author).filter((a): a is NonNullable<typeof a> => Boolean(a))
+      : authors;
+
+    const resolvedCategories = bookCategories
+      ? bookCategories.map(bc => bc.category).filter((c): c is NonNullable<typeof c> => Boolean(c))
+      : categories;
 
     return {
       ...(rest as BookEntity),
-      ...(authorsMapped ? { authors: authorsMapped } : {}),
-      ...(categoriesMapped ? { categories: categoriesMapped } : {}),
+      ...(resolvedAuthors ? { authors: this.mapAuthors(resolvedAuthors) } : {}),
+      ...(resolvedCategories ? { categories: this.mapCategories(resolvedCategories) } : {}),
     };
   }
 
@@ -238,36 +247,40 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       return undefined;
     }
 
-    const include: IncludeOptions[] = [
-      {
-        model: Author,
-        as: 'authors',
-        through: { attributes: [] },
-        ...(filters?.author
-          ? {
-              where: {
-                name: { [Op.like]: `%${filters.author}%` },
-              },
-              required: true,
-            }
-          : {}),
-      },
-      {
-        model: Category,
-        as: 'categories',
-        through: { attributes: [] },
-        ...(filters?.category
-          ? {
-              where: {
-                name: { [Op.like]: `%${filters.category}%` },
-              },
-              required: true,
-            }
-          : {}),
-      },
-    ];
+    // When filtering by author/category, use a JOIN (required: true) so the WHERE clause
+    // filters the parent books. Otherwise use separate: true to avoid Cartesian product
+    // when loading two independent many-to-many associations simultaneously.
+    const authorInclude: IncludeOptions = filters?.author
+      ? {
+          model: Author,
+          as: 'authors',
+          through: { attributes: [] },
+          where: { name: { [Op.like]: `%${filters.author}%` } },
+          required: true,
+        }
+      : {
+          model: BookAuthor,
+          as: 'bookAuthors',
+          separate: true,
+          include: [{ model: Author, as: 'author' }],
+        };
 
-    return include;
+    const categoryInclude: IncludeOptions = filters?.category
+      ? {
+          model: Category,
+          as: 'categories',
+          through: { attributes: [] },
+          where: { name: { [Op.like]: `%${filters.category}%` } },
+          required: true,
+        }
+      : {
+          model: BookCategory,
+          as: 'bookCategories',
+          separate: true,
+          include: [{ model: Category, as: 'category' }],
+        };
+
+    return [authorInclude, categoryInclude];
   }
 
   private buildWhereClause(filters?: Partial<BookSearchFilters>): WhereOptions<BookAttributes> {
@@ -418,8 +431,8 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
     const books = await Book.findAll({
       where: { id: bookIds },
       include: [
-        { model: Author, as: 'authors' },
-        { model: Category, as: 'categories' },
+        { model: BookAuthor, as: 'bookAuthors', separate: true, include: [{ model: Author, as: 'author' }] },
+        { model: BookCategory, as: 'bookCategories', separate: true, include: [{ model: Category, as: 'category' }] },
       ],
     });
 
@@ -461,9 +474,10 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       where,
       limit,
       offset,
+      distinct: true,
       include: [
-        { model: Author, as: 'authors' },
-        { model: Category, as: 'categories' },
+        { model: BookAuthor, as: 'bookAuthors', separate: true, include: [{ model: Author, as: 'author' }] },
+        { model: BookCategory, as: 'bookCategories', separate: true, include: [{ model: Category, as: 'category' }] },
       ],
       order: [['title', 'ASC']],
     });
