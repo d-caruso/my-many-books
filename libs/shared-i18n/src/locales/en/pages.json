@@ -2,7 +2,8 @@
   "books": {
     "title": "My books",
     "description": "Your personal book collection",
-    "description_with_count": "{{count}} books in your library",
+    "description_with_count_one": "{{count}} book in your library",
+    "description_with_count_other": "{{count}} books in your library",
     "add_book": "Add book",
     "add": "Add",
     "scan_isbn": "Scan ISBN",

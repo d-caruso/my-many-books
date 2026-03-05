@@ -185,18 +185,29 @@ export class AuthService {
     }
   }
 
-  async logout(): Promise<void> {
+  async logout(): Promise<string | null> {
+    let cognitoLogoutUrl: string | null = null;
     try {
-      await fetch(`${this.config.apiUrl}/auth/logout`, {
+      const response = await fetch(`${this.config.apiUrl}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });
+      if (response.ok) {
+        const payload = await response.json().catch(() => undefined);
+        try {
+          const { data } = this.unwrapEnvelopeData<{ cognitoLogoutUrl: string | null }>(payload);
+          cognitoLogoutUrl = data?.cognitoLogoutUrl ?? null;
+        } catch {
+          // old API without cognitoLogoutUrl
+        }
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       await this.storage.clear();
       this.config.onAuthStateChange?.(null);
     }
+    return cognitoLogoutUrl;
   }
 
   async getAuthState(): Promise<AuthState> {

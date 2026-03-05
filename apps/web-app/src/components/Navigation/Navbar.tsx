@@ -10,7 +10,8 @@ import {
   Menu,
   MenuItem,
   Box,
-  Avatar
+  Avatar,
+  Divider,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -247,6 +248,12 @@ export const Navbar: React.FC = () => {
               </Box>
 
               <MenuItem onClick={handleOpenAbout}>{t('common:about')}</MenuItem>
+              <Divider />
+              <Box sx={{ px: 2, py: 0.75 }}>
+                <Typography variant="caption" color="text.secondary" noWrap display="block">
+                  {user?.email}
+                </Typography>
+              </Box>
               <MenuItem onClick={handleLogout}>{t('common:sign_out')}</MenuItem>
             </Menu>
 

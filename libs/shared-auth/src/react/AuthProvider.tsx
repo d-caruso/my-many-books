@@ -107,7 +107,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   };
 
   const logout = async (): Promise<void> => {
-    await authService.logout();
+    const cognitoLogoutUrl = await authService.logout();
+    if (cognitoLogoutUrl && typeof window !== 'undefined') {
+      window.location.href = cognitoLogoutUrl;
+      return;
+    }
     setUser(null);
   };
 
