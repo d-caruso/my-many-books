@@ -250,35 +250,51 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
     // When filtering by author/category, use a JOIN (required: true) so the WHERE clause
     // filters the parent books. Otherwise use separate: true to avoid Cartesian product
     // when loading two independent many-to-many associations simultaneously.
-    const authorInclude: IncludeOptions = filters?.author
+    const authorInclude: IncludeOptions = filters?.authorId
       ? {
           model: Author,
           as: 'authors',
           through: { attributes: [] },
-          where: { name: { [Op.like]: `%${filters.author}%` } },
+          where: { id: filters.authorId },
           required: true,
         }
-      : {
-          model: BookAuthor,
-          as: 'bookAuthors',
-          separate: true,
-          include: [{ model: Author, as: 'author' }],
-        };
+      : filters?.author
+        ? {
+            model: Author,
+            as: 'authors',
+            through: { attributes: [] },
+            where: { name: { [Op.like]: `%${filters.author}%` } },
+            required: true,
+          }
+        : {
+            model: BookAuthor,
+            as: 'bookAuthors',
+            separate: true,
+            include: [{ model: Author, as: 'author' }],
+          };
 
-    const categoryInclude: IncludeOptions = filters?.category
+    const categoryInclude: IncludeOptions = filters?.categoryId
       ? {
           model: Category,
           as: 'categories',
           through: { attributes: [] },
-          where: { name: { [Op.like]: `%${filters.category}%` } },
+          where: { id: filters.categoryId },
           required: true,
         }
-      : {
-          model: BookCategory,
-          as: 'bookCategories',
-          separate: true,
-          include: [{ model: Category, as: 'category' }],
-        };
+      : filters?.category
+        ? {
+            model: Category,
+            as: 'categories',
+            through: { attributes: [] },
+            where: { name: { [Op.like]: `%${filters.category}%` } },
+            required: true,
+          }
+        : {
+            model: BookCategory,
+            as: 'bookCategories',
+            separate: true,
+            include: [{ model: Category, as: 'category' }],
+          };
 
     return [authorInclude, categoryInclude];
   }
@@ -286,8 +302,21 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
   private buildWhereClause(filters?: Partial<BookSearchFilters>): WhereOptions<BookAttributes> {
     const conditions: WhereOptions<BookAttributes>[] = [];
 
+    if (filters?.ids?.length) {
+      conditions.push({ id: { [Op.in]: filters.ids } });
+    }
+
     if (filters?.userId) {
       conditions.push({ userId: filters.userId });
+    }
+
+    if (filters?.searchQuery) {
+      conditions.push({
+        [Op.or]: [
+          { title: { [Op.like]: `%${filters.searchQuery}%` } },
+          { isbnCode: { [Op.like]: `%${filters.searchQuery}%` } },
+        ],
+      });
     }
 
     if (filters?.title) {

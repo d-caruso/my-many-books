@@ -7,7 +7,7 @@ import express, { Router } from 'express';
 import { expressRouteWrapper } from '../utils/routeWrapper';
 import { statsController } from '../controllers/admin/StatsController';
 import { AdminUserController } from '../controllers/admin/AdminUserController';
-import { adminBookController } from '../controllers/admin/AdminBookController';
+import { AdminBookController } from '../controllers/admin/AdminBookController';
 import { adminSettingsController } from '../controllers/admin/AdminSettingsController';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/authorization';
@@ -29,6 +29,7 @@ import { TYPES } from '../container/types';
 
 const router: express.Router = Router();
 const adminUserController = container.get<AdminUserController>(TYPES.AdminUserController);
+const adminBookController = container.get<AdminBookController>(TYPES.AdminBookController);
 
 // All admin routes require authentication AND admin role
 router.use(authMiddleware);

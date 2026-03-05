@@ -3,20 +3,16 @@
 // Admin book management controller
 // ================================================================
 
-import { Op, WhereOptions } from 'sequelize';
+import { inject, injectable } from 'inversify';
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { getLogger } from '@my-many-books/shared-logging';
 import { UniversalRequest } from '../../types';
-import { Book } from '../../models/Book';
-import { Author } from '../../models/Author';
-import { Category } from '../../models/Category';
 import { User } from '../../models/User';
-import { BookAttributes } from '../../models/interfaces/ModelInterfaces';
+import { TYPES } from '../../container/types';
+import { Repository as BookRepositoryContract } from '../../repositories/book/Repository';
+import { BookSearchFilters } from '../../repositories/book/BookRepositoryTypes';
 
-/**
- * Validation schemas
- */
 interface UpdateBookData {
   title?: string;
   isbnCode?: string;
@@ -27,11 +23,14 @@ interface UpdateBookData {
   userId?: number | null;
 }
 
-/**
- * Controller for admin book management.
- * All endpoints require admin authentication (enforced by adminRoutes middleware).
- */
+@injectable()
 export class AdminBookController extends BaseController {
+  constructor(
+    @inject(TYPES.BookRepository) private readonly bookRepository: BookRepositoryContract
+  ) {
+    super();
+  }
+
   private isUpdateBookData(value: unknown): value is UpdateBookData {
     if (!this.isRecord(value)) {
       return false;
@@ -77,9 +76,7 @@ export class AdminBookController extends BaseController {
   }
 
   /**
-   * Get paginated list of all books with authors, categories, and user info
    * GET /api/<version>/admin/books
-   * Query params: page, limit, search (title/ISBN/author), userId
    */
   async getAllBooks(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
@@ -89,57 +86,19 @@ export class AdminBookController extends BaseController {
       const search = this.getQueryParameter(request, 'search');
       const userIdFilter = this.getQueryParameter(request, 'userId');
 
-      // Build where clause for search
-      let whereClause: WhereOptions<BookAttributes> = {};
+      const filters: BookSearchFilters = {};
+      if (search) filters.searchQuery = search;
+      if (userIdFilter) filters.userId = parseInt(userIdFilter, 10);
 
-      if (search && userIdFilter) {
-        // Both conditions: use Op.and
-        whereClause = {
-          [Op.and]: [
-            {
-              [Op.or]: [
-                { title: { [Op.like]: `%${search}%` } },
-                { isbnCode: { [Op.like]: `%${search}%` } },
-              ],
-            },
-            { userId: parseInt(userIdFilter, 10) },
-          ],
-        };
-      } else if (search) {
-        // Only search condition
-        whereClause = {
-          [Op.or]: [
-            { title: { [Op.like]: `%${search}%` } },
-            { isbnCode: { [Op.like]: `%${search}%` } },
-          ],
-        };
-      } else if (userIdFilter) {
-        // Only userId filter
-        whereClause = { userId: parseInt(userIdFilter, 10) };
-      }
-
-      const { count, rows: books } = await Book.findAndCountAll({
-        where: whereClause,
-        include: [
-          {
-            model: Author,
-            as: 'authors',
-            through: { attributes: [] },
-          },
-          {
-            model: Category,
-            as: 'categories',
-            through: { attributes: [] },
-          },
-        ],
+      const result = await this.bookRepository.search(filters, {
         limit,
         offset,
-        order: [['creationDate', 'DESC']],
+        orderBy: 'creationDate',
+        orderDirection: 'DESC',
       });
 
-      // Fetch user info for each book
       const booksWithUsers = await Promise.all(
-        books.map(async book => {
+        result.rows.map(async book => {
           let userName = null;
           if (book.userId) {
             const user = await User.findByPk(book.userId, {
@@ -149,38 +108,14 @@ export class AdminBookController extends BaseController {
               userName = user.getFullName();
             }
           }
-
-          return {
-            id: book.id,
-            title: book.title,
-            isbnCode: book.isbnCode,
-            editionNumber: book.editionNumber,
-            editionDate: book.editionDate,
-            status: book.status,
-            notes: book.notes,
-            userId: book.userId,
-            userName,
-            authors:
-              book.authors?.map(author => ({
-                id: author.id,
-                name: author.name,
-                surname: author.surname,
-              })) || [],
-            categories:
-              book.categories?.map(category => ({
-                id: category.id,
-                name: category.name,
-              })) || [],
-            creationDate: book.creationDate,
-            updateDate: book.updateDate,
-          };
+          return { ...book, userName };
         })
       );
 
       return this.createSuccessResponse(
         { books: booksWithUsers },
         undefined,
-        this.createPaginationMeta(page, limit, count)
+        this.createPaginationMeta(page, limit, result.total)
       );
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Get all books error:');
@@ -189,7 +124,6 @@ export class AdminBookController extends BaseController {
   }
 
   /**
-   * Get single book by ID with full details
    * GET /api/<version>/admin/books/:id
    */
   async getBookById(request: UniversalRequest): Promise<ApiResponse> {
@@ -201,21 +135,7 @@ export class AdminBookController extends BaseController {
         return this.createErrorResponseI18n('errors:book_id_required', 400);
       }
 
-      const book = await Book.findByPk(parseInt(bookId, 10), {
-        include: [
-          {
-            model: Author,
-            as: 'authors',
-            through: { attributes: [] },
-          },
-          {
-            model: Category,
-            as: 'categories',
-            through: { attributes: [] },
-          },
-        ],
-      });
-
+      const book = await this.bookRepository.findById(parseInt(bookId, 10));
       if (!book) {
         return this.createErrorResponseI18n('errors:book_not_found', 404);
       }
@@ -230,30 +150,7 @@ export class AdminBookController extends BaseController {
         }
       }
 
-      return this.createSuccessResponse({
-        id: book.id,
-        title: book.title,
-        isbnCode: book.isbnCode,
-        editionNumber: book.editionNumber,
-        editionDate: book.editionDate,
-        status: book.status,
-        notes: book.notes,
-        userId: book.userId,
-        userName,
-        authors:
-          book.authors?.map(author => ({
-            id: author.id,
-            name: author.name,
-            surname: author.surname,
-          })) ?? [],
-        categories:
-          book.categories?.map(category => ({
-            id: category.id,
-            name: category.name,
-          })) ?? [],
-        creationDate: book.creationDate,
-        updateDate: book.updateDate,
-      });
+      return this.createSuccessResponse({ ...book, userName });
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Get book by ID error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
@@ -261,9 +158,7 @@ export class AdminBookController extends BaseController {
   }
 
   /**
-   * Update book details
    * PUT /api/<version>/admin/books/:id
-   * Body: { title?, isbnCode?, editionNumber?, editionDate?, status?, notes?, userId? }
    */
   async updateBook(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
@@ -279,35 +174,26 @@ export class AdminBookController extends BaseController {
         return this.createErrorResponseI18n('errors:invalid_request_body', 400);
       }
 
-      // Validation is handled by middleware (validateBody in adminRoutes.ts)
-      const book = await Book.findByPk(parseInt(bookId, 10));
-      if (!book) {
+      const existing = await this.bookRepository.findById(parseInt(bookId, 10));
+      if (!existing) {
         return this.createErrorResponseI18n('errors:book_not_found', 404);
       }
 
-      const updateData = body;
-
-      // If userId is being changed, verify the user exists
-      if (updateData?.userId !== undefined && updateData.userId !== null) {
-        const user = await User.findByPk(updateData.userId);
+      if (body.userId !== undefined && body.userId !== null) {
+        const user = await User.findByPk(body.userId);
         if (!user) {
           return this.createErrorResponseI18n('errors:user_not_found', 404);
         }
       }
 
-      await book.update(updateData);
-
-      // Reload with associations
-      await book.reload({
-        include: [
-          { model: Author, as: 'authors', through: { attributes: [] } },
-          { model: Category, as: 'categories', through: { attributes: [] } },
-        ],
-      });
+      const updated = await this.bookRepository.update(parseInt(bookId, 10), body);
+      if (!updated) {
+        return this.createErrorResponseI18n('errors:book_not_found', 404);
+      }
 
       let userName = null;
-      if (book.userId) {
-        const user = await User.findByPk(book.userId, {
+      if (updated.userId) {
+        const user = await User.findByPk(updated.userId, {
           attributes: ['id', 'name', 'surname', 'email'],
         });
         if (user) {
@@ -315,30 +201,7 @@ export class AdminBookController extends BaseController {
         }
       }
 
-      return this.createSuccessResponse({
-        id: book.id,
-        title: book.title,
-        isbnCode: book.isbnCode,
-        editionNumber: book.editionNumber,
-        editionDate: book.editionDate,
-        status: book.status,
-        notes: book.notes,
-        userId: book.userId,
-        userName,
-        authors:
-          book.authors?.map(author => ({
-            id: author.id,
-            name: author.name,
-            surname: author.surname,
-          })) ?? [],
-        categories:
-          book.categories?.map(category => ({
-            id: category.id,
-            name: category.name,
-          })) ?? [],
-        creationDate: book.creationDate,
-        updateDate: book.updateDate,
-      });
+      return this.createSuccessResponse({ ...updated, userName });
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Update book error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
@@ -346,7 +209,6 @@ export class AdminBookController extends BaseController {
   }
 
   /**
-   * Delete book
    * DELETE /api/<version>/admin/books/:id
    */
   async deleteBook(request: UniversalRequest): Promise<ApiResponse> {
@@ -358,13 +220,10 @@ export class AdminBookController extends BaseController {
         return this.createErrorResponseI18n('errors:book_id_required', 400);
       }
 
-      const book = await Book.findByPk(parseInt(bookId, 10));
-      if (!book) {
+      const deleted = await this.bookRepository.delete(parseInt(bookId, 10));
+      if (!deleted) {
         return this.createErrorResponseI18n('errors:book_not_found', 404);
       }
-
-      // Delete book (associations will be removed automatically via cascade)
-      await book.destroy();
 
       return this.createSuccessResponse(
         { message: this.t('success:book_deleted') },
@@ -378,5 +237,3 @@ export class AdminBookController extends BaseController {
     }
   }
 }
-
-export const adminBookController = new AdminBookController();

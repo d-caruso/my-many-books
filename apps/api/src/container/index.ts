@@ -19,6 +19,7 @@ import { Repository as CategoryRepositoryContract } from '../repositories/catego
 import { CategoryRepository } from '../repositories/category/CategoryRepository';
 import { CategoryService } from '../services/category/CategoryService';
 import { AdminUserController } from '../controllers/admin/AdminUserController';
+import { AdminBookController } from '../controllers/admin/AdminBookController';
 import { AdminSearchController } from '../controllers/admin/AdminSearchController';
 import { Repository as UserRepositoryContract } from '../repositories/user/Repository';
 import { UserRepository } from '../repositories/user/UserRepository';
@@ -67,6 +68,11 @@ container.bind<AdminUserService>(TYPES.AdminUserService).to(AdminUserService).in
 container
   .bind<AdminUserController>(TYPES.AdminUserController)
   .to(AdminUserController)
+  .inTransientScope();
+
+container
+  .bind<AdminBookController>(TYPES.AdminBookController)
+  .to(AdminBookController)
   .inTransientScope();
 
 container

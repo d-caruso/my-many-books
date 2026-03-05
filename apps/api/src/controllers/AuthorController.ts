@@ -5,7 +5,6 @@
 import Joi from 'joi';
 import { inject, injectable } from 'inversify';
 import { BaseController } from './base/BaseController';
-import { Author, Book } from '../models';
 import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
 import { TYPES } from '../container/types';
@@ -18,6 +17,7 @@ import { CreateAuthorDTO } from '../dtos/author/CreateAuthorDTO';
 import { UpdateAuthorDTO } from '../dtos/author/UpdateAuthorDTO';
 import { toAuthorResponseDTO } from '../dtos/author/AuthorResponseDTO';
 import { Repository as AuthorRepositoryContract } from '../repositories/author/Repository';
+import { Repository as BookRepositoryContract } from '../repositories/book/Repository';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
@@ -38,7 +38,8 @@ export interface AuthorSearchFilters {
 export class AuthorController extends BaseController {
   constructor(
     @inject(TYPES.AuthorService) private readonly authorService: AuthorService,
-    @inject(TYPES.AuthorRepository) private readonly authorRepository: AuthorRepositoryContract
+    @inject(TYPES.AuthorRepository) private readonly authorRepository: AuthorRepositoryContract,
+    @inject(TYPES.BookRepository) private readonly bookRepository: BookRepositoryContract
   ) {
     super();
     this.authorService.initializeControllerContext();
@@ -270,21 +271,12 @@ export class AuthorController extends BaseController {
       return this.createErrorResponseI18n('errors:author_not_found', 404);
     }
 
-    const { count, rows } = await Book.findAndCountAll({
-      include: [
-        {
-          model: Author,
-          where: { id: Number(authorId) },
-          through: { attributes: [] },
-        },
-      ],
-      limit: pagination.limit,
-      offset: pagination.offset,
-      order: [['publishedDate', 'DESC']],
-      distinct: true,
-    });
+    const result = await this.bookRepository.search(
+      { authorId: Number(authorId) },
+      { limit: pagination.limit, offset: pagination.offset, orderBy: 'creationDate', orderDirection: 'DESC' }
+    );
 
-    const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
+    const meta = this.createPaginationMeta(pagination.page, pagination.limit, result.total);
 
     return this.createSuccessResponse(
       {
@@ -293,7 +285,7 @@ export class AuthorController extends BaseController {
           name: author.name,
           surname: author.surname,
         },
-        books: rows,
+        books: result.rows,
       },
       undefined,
       meta

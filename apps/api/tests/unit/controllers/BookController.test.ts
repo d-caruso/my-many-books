@@ -170,31 +170,38 @@ describe('BookController', () => {
       id: 1,
       title: 'Test Book',
       isbnCode: '9780140449136',
-      Authors: [{ id: 1, name: 'Author One' }],
-      Categories: [{ id: 1, name: 'Fiction' }],
+      userId: 1,
+      bookAuthors: [{ bookId: 1, authorId: 1, author: { id: 1, name: 'Author', surname: 'One' } }],
+      bookCategories: [{ bookId: 1, categoryId: 1, category: { id: 1, name: 'Fiction' } }],
     };
-    // The book instance returned by findOne
     const mockBookInstance = createMockBookInstance(mockPlainBook);
 
     it('should get a book successfully', async () => {
       (Book.findOne as jest.Mock).mockResolvedValue(mockBookInstance);
       mockRequest.params = { id: '1' };
+      mockRequest.user = { id: 1, email: 'test@example.com', role: 'user', provider: 'cognito' };
 
       const result = await bookController.getBook(mockRequest);
 
       expect(Book.findOne).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 1 },
+          where: { id: 1, userId: 1 },
         })
       );
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockPlainBook);
+      expect(result.data).toMatchObject({
+        id: 1,
+        title: 'Test Book',
+        authors: [{ id: 1, name: 'Author', surname: 'One' }],
+        categories: [{ id: 1, name: 'Fiction' }],
+      });
     });
 
     it('should return 404 if book not found', async () => {
       (Book.findOne as jest.Mock).mockResolvedValue(null);
       mockRequest.params = { id: '999' };
+      mockRequest.user = { id: 1, email: 'test@example.com', role: 'user', provider: 'cognito' };
 
       const result = await bookController.getBook(mockRequest);
 

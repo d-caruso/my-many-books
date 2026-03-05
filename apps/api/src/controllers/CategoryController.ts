@@ -16,8 +16,8 @@ import {
 import { CreateCategoryDTO } from '../dtos/category/CreateCategoryDTO';
 import { UpdateCategoryDTO } from '../dtos/category/UpdateCategoryDTO';
 import { toCategoryResponseDTO } from '../dtos/category/CategoryResponseDTO';
-import { Book, Category } from '../models';
 import { Repository as CategoryRepositoryContract } from '../repositories/category/Repository';
+import { Repository as BookRepositoryContract } from '../repositories/book/Repository';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
 
@@ -36,7 +36,8 @@ export class CategoryController extends BaseController {
 
   constructor(
     @inject(TYPES.CategoryService) private readonly categoryService: CategoryService,
-    @inject(TYPES.CategoryRepository) private readonly categoryRepository: CategoryRepositoryContract
+    @inject(TYPES.CategoryRepository) private readonly categoryRepository: CategoryRepositoryContract,
+    @inject(TYPES.BookRepository) private readonly bookRepository: BookRepositoryContract
   ) {
     super();
     this.categoryService.initializeControllerContext();
@@ -257,25 +258,16 @@ export class CategoryController extends BaseController {
         this.getUserContext(request)!
       );
 
-      const result = await Book.findAndCountAll({
-        include: [
-          {
-            model: Category,
-            as: 'Categories',
-            where: { id: category.id },
-            through: { attributes: [] },
-          },
-        ],
-        limit: pagination.limit,
-        offset: pagination.offset,
-        order: [['title', 'ASC']],
-      });
+      const result = await this.bookRepository.search(
+        { categoryId: category.id },
+        { limit: pagination.limit, offset: pagination.offset, orderBy: 'title', orderDirection: 'ASC' }
+      );
 
-      const totalPages = Math.ceil(result.count / pagination.limit) || 1;
+      const totalPages = Math.ceil(result.total / pagination.limit) || 1;
       const meta = {
         page: pagination.page,
         limit: pagination.limit,
-        totalCount: result.count,
+        totalCount: result.total,
         totalPages,
         hasNext: pagination.page < totalPages,
         hasPrev: pagination.page > 1,

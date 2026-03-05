@@ -4,7 +4,7 @@
 
 import Joi from 'joi';
 import { inject, injectable } from 'inversify';
-import { Includeable, Op, WhereOptions } from 'sequelize';
+import { WhereOptions } from 'sequelize';
 import { BaseController } from './base/BaseController';
 import { Author, Book, Category } from '../models';
 import { ApiResponse } from '../common/ApiResponse';
@@ -157,27 +157,13 @@ export class BookController extends BaseController {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'book' });
     }
 
-    const whereClause: WhereOptions<BookAttributes> = {
-      id: Number(bookId),
-    };
-    if (request.user) {
-      Object.assign(whereClause, { userId: request.user.id });
-    }
-
-    const book = await Book.findOne({
-      where: whereClause,
-      include: [
-        { model: Author, as: 'authors', through: { attributes: [] } },
-        { model: Category, as: 'categories', through: { attributes: [] } },
-      ],
-    });
+    const book = await this.bookRepository.findUserBookById(Number(bookId), request.user!.id);
 
     if (!book) {
       return this.createErrorResponseI18n('errors:book_not_found', 404);
     }
 
-    // Convert Sequelize model to plain object to ensure associations are serialized
-    return this.createSuccessResponse(book.get({ plain: true }));
+    return this.createSuccessResponse(book);
   }
 
   /**
@@ -404,61 +390,19 @@ export class BookController extends BaseController {
         if (bookIds.length === 0) {
           filteredResults = [];
         } else {
-          const includeClause: Includeable[] = [];
-
-          // Add author filter/include
-          if (authorId) {
-            includeClause.push({
-              model: Author,
-              as: 'authors',
-              through: { attributes: [] },
-              where: { id: Number(authorId) },
-              required: true,
-            });
-          } else {
-            includeClause.push({
-              model: Author,
-              as: 'authors',
-              through: { attributes: [] },
-            });
-          }
-
-          // Add category filter/include
-          if (categoryId) {
-            includeClause.push({
-              model: Category,
-              as: 'categories',
-              through: { attributes: [] },
-              where: { id: Number(categoryId) },
-              required: true,
-            });
-          } else {
-            includeClause.push({
-              model: Category,
-              as: 'categories',
-              through: { attributes: [] },
-            });
-          }
-
-          const whereConditions: WhereOptions<BookAttributes> = {
-            id: { [Op.in]: bookIds },
-          };
-
-          if (normalizedStatus) {
-            Object.assign(whereConditions, { status: normalizedStatus });
-          }
-
-          if (request.user) {
-            Object.assign(whereConditions, { userId: request.user.id });
-          }
-
-          const books = await Book.findAll({
-            where: whereConditions,
-            include: includeClause,
-          });
+          const { rows } = await this.bookRepository.search(
+            {
+              ids: bookIds,
+              userId: request.user?.id,
+              status: normalizedStatus || undefined,
+              authorId: authorId ? Number(authorId) : undefined,
+              categoryId: categoryId ? Number(categoryId) : undefined,
+            },
+            { limit: bookIds.length, includeAssociations: true }
+          );
 
           // Preserve original order from BookSearchService (pinned first, then by sortBy/relevance)
-          const bookMap = new Map(books.map(b => [b.id, b.get({ plain: true })]));
+          const bookMap = new Map(rows.map(b => [b.id!, b]));
           filteredResults = results
             .map(r => {
               const book = bookMap.get(r.id);
@@ -534,85 +478,37 @@ export class BookController extends BaseController {
       whereConditions.push({ status: normalizedStatus });
     }
 
-    const whereClause = whereConditions.length > 0 ? { [Op.and]: whereConditions } : {};
-
-    // Build include clause for associations
-    const includeClause: Includeable[] = [];
-
-    // Add author filter/include
-    if (authorId) {
-      includeClause.push({
-        model: Author,
-        as: 'authors',
-        through: { attributes: [] },
-        where: { id: Number(authorId) },
-        required: true,
-      });
-    } else {
-      includeClause.push({
-        model: Author,
-        as: 'authors',
-        through: { attributes: [] },
-      });
-    }
-
-    // Add category filter/include
-    if (categoryId) {
-      includeClause.push({
-        model: Category,
-        as: 'categories',
-        through: { attributes: [] },
-        where: { id: Number(categoryId) },
-        required: true,
-      });
-    } else {
-      includeClause.push({
-        model: Category,
-        as: 'categories',
-        through: { attributes: [] },
-      });
-    }
-
     // Determine sort order
-    let orderClause: [string, string][] = [['title', 'ASC']];
-    switch (sortBy) {
-      case 'creationDate':
-      case 'createdAt':
-        orderClause = [['creationDate', 'DESC']];
-        break;
-      case 'updateDate':
-      case 'updatedAt':
-        orderClause = [['updateDate', 'DESC']];
-        break;
-      case 'status':
-        orderClause = [
-          ['status', 'ASC'],
-          ['title', 'ASC'],
-        ];
-        break;
-      case 'title':
-      default:
-        orderClause = [['title', 'ASC']];
-        break;
-    }
+    const orderDirectionMap: Record<string, { orderBy: string; orderDirection: 'ASC' | 'DESC' }> = {
+      creationDate: { orderBy: 'creationDate', orderDirection: 'DESC' },
+      createdAt:    { orderBy: 'creationDate', orderDirection: 'DESC' },
+      updateDate:   { orderBy: 'updateDate',   orderDirection: 'DESC' },
+      updatedAt:    { orderBy: 'updateDate',   orderDirection: 'DESC' },
+      status:       { orderBy: 'status',       orderDirection: 'ASC'  },
+    };
+    const orderOptions = orderDirectionMap[sortBy] ?? { orderBy: 'title', orderDirection: 'ASC' as const };
 
-    const { count, rows: books } = await Book.findAndCountAll({
-      where: whereClause,
-      include: includeClause,
-      limit: pagination.limit,
-      offset: pagination.offset,
-      order: orderClause,
-      distinct: true,
-    });
-
-    // Convert Sequelize models to plain objects to ensure associations are serialized
-    const plainBooks = books.map(book => book.get({ plain: true }));
+    const result = await this.bookRepository.search(
+      {
+        userId: request.user?.id,
+        status: normalizedStatus || undefined,
+        authorId: authorId ? Number(authorId) : undefined,
+        categoryId: categoryId ? Number(categoryId) : undefined,
+      },
+      {
+        limit: pagination.limit,
+        offset: pagination.offset,
+        orderBy: orderOptions.orderBy,
+        orderDirection: orderOptions.orderDirection,
+        includeAssociations: true,
+      }
+    );
 
     // Return SearchResult format expected by frontend
     const searchResult = {
-      books: plainBooks,
-      total: count,
-      hasMore: pagination.page * pagination.limit < count,
+      books: result.rows,
+      total: result.total,
+      hasMore: pagination.page * pagination.limit < result.total,
       page: pagination.page,
     };
 
@@ -637,16 +533,10 @@ export class BookController extends BaseController {
     }
 
     // Check local database first
-    const localBook = await Book.findOne({
-      where: { isbnCode: validation.normalizedIsbn },
-      include: [
-        { model: Author, as: 'authors', through: { attributes: [] } },
-        { model: Category, as: 'categories', through: { attributes: [] } },
-      ],
-    });
+    const localBook = await this.bookRepository.findByIsbnCode(validation.normalizedIsbn!);
 
     if (localBook) {
-      return this.createSuccessResponse(localBook.get({ plain: true }));
+      return this.createSuccessResponse(localBook);
     }
 
     // If not found locally, try ISBN service
@@ -781,14 +671,7 @@ export class BookController extends BaseController {
    * @returns The book model instance or null.
    */
   private async getBookWithAssociations(id: number): Promise<object | null> {
-    const book = await Book.findByPk(id, {
-      include: [
-        { model: Author, as: 'authors', through: { attributes: [] } },
-        { model: Category, as: 'categories', through: { attributes: [] } },
-      ],
-    });
-
-    return book ? book.get({ plain: true }) : null;
+    return this.bookRepository.findById(id);
   }
 
   // User-specific methods for route compatibility

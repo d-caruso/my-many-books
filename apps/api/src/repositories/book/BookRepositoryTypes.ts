@@ -23,14 +23,18 @@ export interface BookQueryOptions extends QueryOptions {
 }
 
 export interface BookSearchFilters {
+  ids?: number[];
   title?: string;
   isbnCode?: string;
+  searchQuery?: string;
   editionNumber?: number;
   editionDate?: string;
   status?: BookStatus;
   notes?: string;
   author?: string;
+  authorId?: number;
   category?: string;
+  categoryId?: number;
   userId?: number;
   updatedSince?: string;
 }
