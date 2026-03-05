@@ -810,4 +810,58 @@ describe('Auth Routes', () => {
       expect(response.body.error).toHaveProperty('message', 'User not found');
     });
   });
+
+  describe(`POST ${BASE_PATH}/auth/resend-code`, () => {
+    it('should resend verification code successfully', async () => {
+      mockSend.mockResolvedValue({});
+
+      const response = await request(app).post(`${BASE_PATH}/auth/resend-code`).send({
+        email: 'user@example.com',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body.data).toHaveProperty('sent', true);
+    });
+
+    it('should return 400 when email is missing', async () => {
+      const response = await request(app).post(`${BASE_PATH}/auth/resend-code`).send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toHaveProperty('message', 'Email is required');
+    });
+
+    it('should return 404 for non-existent user', async () => {
+      mockSend.mockRejectedValue({ name: 'UserNotFoundException', message: 'User not found' });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/resend-code`).send({
+        email: 'nonexistent@example.com',
+      });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toHaveProperty('message', 'User not found');
+    });
+
+    it('should return 429 for rate limit exceeded', async () => {
+      mockSend.mockRejectedValue({ name: 'LimitExceededException', message: 'Too many attempts' });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/resend-code`).send({
+        email: 'user@example.com',
+      });
+
+      expect(response.status).toBe(429);
+      expect(response.body.error).toHaveProperty('message', 'Too many requests. Please try again later.');
+    });
+
+    it('should return 500 for code delivery failure', async () => {
+      mockSend.mockRejectedValue({ name: 'CodeDeliveryFailureException', message: 'Delivery failed' });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/resend-code`).send({
+        email: 'user@example.com',
+      });
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toHaveProperty('message', 'Failed to deliver verification code');
+    });
+  });
 });

@@ -59,9 +59,12 @@ const AuthPage: React.FC = () => {
     };
   }, [location.search, navigate, refreshUser, t]);
 
+  const verifyStateProcessed = useRef(false);
+
   useEffect(() => {
     const state = location.state as VerifyEmailNavState | null;
-    if (state?.success === undefined) return;
+    if (state?.success === undefined || verifyStateProcessed.current) return;
+    verifyStateProcessed.current = true;
 
     if (state.success) {
       setMode('login');

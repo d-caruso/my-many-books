@@ -344,6 +344,25 @@ export class AuthService {
     }
   }
 
+  async resendCode(email: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.config.apiUrl}/auth/resend-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => undefined);
+        const { code, message } = this.extractApiError(errorPayload, 'Failed to resend verification code');
+        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      }
+    } catch (error) {
+      console.error('Resend verification code error:', error);
+      throw error;
+    }
+  }
+
   async getCurrentUser(): Promise<User | null> {
     return await this.storage.getUser();
   }

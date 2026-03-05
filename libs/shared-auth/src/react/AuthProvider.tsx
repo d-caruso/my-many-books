@@ -19,6 +19,7 @@ interface AuthContextType {
     locale?: string;
   }) => Promise<RegisterResponse>;
   verifyEmail: (email: string, code: string) => Promise<void>;
+  resendCode: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
@@ -101,6 +102,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     await authService.verifyEmail(email, code);
   };
 
+  const resendCode = async (email: string): Promise<void> => {
+    await authService.resendCode(email);
+  };
+
   const logout = async (): Promise<void> => {
     await authService.logout();
     setUser(null);
@@ -118,6 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     login,
     register,
     verifyEmail,
+    resendCode,
     logout,
     refreshUser,
     isAuthenticated: user !== null,

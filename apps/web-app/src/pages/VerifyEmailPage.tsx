@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Box, Container, Paper, Stack, Typography } from '@mui/material';
@@ -10,7 +10,7 @@ import type { VerifyEmailNavState } from '../types/authNavState';
 
 const VerifyEmailPage: React.FC = () => {
   const { t } = useTranslation('common');
-  const { verifyEmail } = useAuth();
+  const { verifyEmail, resendCode } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -20,6 +20,10 @@ const VerifyEmailPage: React.FC = () => {
   const [email, setEmail] = useState(emailParam);
   const [code, setCode] = useState(codeParam);
   const [loading, setLoading] = useState(false);
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [resendError, setResendError] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval>>();
   const autoSubmitted = useRef(false);
 
   const redirectWithResult = (success: boolean, errorMessage?: string) => {
@@ -46,6 +50,44 @@ const VerifyEmailPage: React.FC = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const startCooldown = useCallback(() => {
+    setCooldown(30);
+    clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  useEffect(() => {
+    return () => clearInterval(cooldownRef.current);
+  }, []);
+
+  const handleResend = async () => {
+    if (!email || resendStatus === 'sending' || cooldown > 0) return;
+
+    setResendStatus('sending');
+    setResendError('');
+
+    try {
+      await resendCode(email);
+      setResendStatus('sent');
+      startCooldown();
+    } catch (err: unknown) {
+      setResendStatus('error');
+      if (err instanceof AuthApiError) {
+        setResendError(t(err.i18nKey, { defaultValue: err.message }));
+      } else {
+        setResendError(t('resend_code_failed'));
+      }
     }
   };
 
@@ -134,6 +176,46 @@ const VerifyEmailPage: React.FC = () => {
                 >
                   {loading ? t('verifying') : t('verify_button')}
                 </ResponsiveButton>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t('resend_code_prompt')}
+                  </Typography>
+                  {cooldown > 0 ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      {t('resend_code_wait', { seconds: cooldown })}
+                    </Typography>
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      component="button"
+                      type="button"
+                      onClick={handleResend}
+                      disabled={!email || resendStatus === 'sending'}
+                      sx={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'primary.main',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        p: 0,
+                        mt: 0.5,
+                        '&:disabled': { color: 'text.disabled', cursor: 'default' },
+                      }}
+                    >
+                      {resendStatus === 'sending' ? t('resending_code') : t('resend_code_click')}
+                    </Typography>
+                  )}
+                  {resendStatus === 'sent' && (
+                    <Typography variant="body2" color="success.main" sx={{ mt: 0.5 }}>
+                      {t('resend_code_success')}
+                    </Typography>
+                  )}
+                  {resendStatus === 'error' && (
+                    <Typography variant="body2" color="error.main" sx={{ mt: 0.5 }}>
+                      {resendError}
+                    </Typography>
+                  )}
+                </Box>
               </Stack>
             </Box>
           </Paper>

@@ -8,9 +8,11 @@ import { createErrorResponse, ERROR_CODES, type ErrorCode } from '@my-many-books
 import express, { Router, Request, Response } from 'express';
 import type { AxiosError } from 'axios';
 import {
+  AdminGetUserCommand,
   CognitoIdentityProviderClient,
   ConfirmSignUpCommand,
   InitiateAuthCommand,
+  ResendConfirmationCodeCommand,
   SignUpCommand,
   AuthFlowType,
   InitiateAuthCommandOutput,
@@ -62,6 +64,10 @@ interface RegisterRequest {
 interface VerifyEmailRequest {
   email: string;
   code: string;
+}
+
+interface ResendCodeRequest {
+  email: string;
 }
 
 interface GoogleStartQuery {
@@ -489,7 +495,22 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       const errorName = (error as { name: string }).name;
 
       if (errorName === 'UsernameExistsException') {
-        sendError(res, 409, ERROR_CODES.CONFLICT, 'Email already registered');
+        try {
+          const getUserCommand = new AdminGetUserCommand({
+            UserPoolId: process.env['COGNITO_USER_POOL_ID'] || '',
+            Username: (req.body as RegisterRequest).email,
+          });
+          const userResult = await cognitoClient.send(getUserCommand);
+          const isConfirmed = userResult.UserStatus === 'CONFIRMED';
+
+          if (isConfirmed) {
+            sendError(res, 409, ERROR_CODES.CONFLICT, 'Email already registered');
+          } else {
+            sendError(res, 409, ERROR_CODES.EMAIL_NOT_VERIFIED, 'Email registered but not verified');
+          }
+        } catch {
+          sendError(res, 409, ERROR_CODES.CONFLICT, 'Email already registered');
+        }
         return;
       }
 
@@ -547,13 +568,60 @@ router.post('/verify-email', async (req: Request, res: Response): Promise<void> 
       }
 
       if (errorName === 'UserNotFoundException') {
-        sendError(res, 404, ERROR_CODES.NOT_FOUND, 'User not found');
+        sendError(res, 404, ERROR_CODES.USER_NOT_FOUND, 'User not found');
         return;
       }
     }
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Email verification failed', { cause: errorMessage });
+  }
+});
+
+router.post('/resend-code', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body as ResendCodeRequest;
+
+    if (!email) {
+      sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'Email is required');
+      return;
+    }
+
+    const command = new ResendConfirmationCodeCommand({
+      ClientId: process.env['COGNITO_USER_POOL_CLIENT_ID'] || '',
+      Username: email,
+    });
+
+    await cognitoClient.send(command);
+
+    sendSuccess(res, 200, { sent: true }, 'Verification code resent');
+  } catch (error: unknown) {
+    getLogger().error(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'Resend verification code error:'
+    );
+
+    if (error && typeof error === 'object' && 'name' in error) {
+      const errorName = (error as { name: string }).name;
+
+      if (errorName === 'UserNotFoundException') {
+        sendError(res, 404, ERROR_CODES.USER_NOT_FOUND, 'User not found');
+        return;
+      }
+
+      if (errorName === 'LimitExceededException') {
+        sendError(res, 429, ERROR_CODES.RATE_LIMIT_EXCEEDED, 'Too many requests. Please try again later.');
+        return;
+      }
+
+      if (errorName === 'CodeDeliveryFailureException') {
+        sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Failed to deliver verification code');
+        return;
+      }
+    }
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Failed to resend verification code', { cause: errorMessage });
   }
 });
 

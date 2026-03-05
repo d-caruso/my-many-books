@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -33,7 +33,7 @@ interface RegisterFormProps {
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const { t, i18n } = useTranslation(['common', 'accessibility']);
-  const { register } = useAuth();
+  const { register, resendCode } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -47,6 +47,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const [success, setSuccess] = useState<string | null>(null);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [requiresVerification, setRequiresVerification] = useState(false);
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [resendError, setResendError] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval>>();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const passwordRuleLabels = getRequiredPasswordRuleTypes().map((rule) =>
@@ -56,6 +60,44 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     minLength: PASSWORD_POLICY.minLength,
     requiredTypes: formatLocalizedList(passwordRuleLabels, i18n.language || 'en'),
   });
+
+  const startCooldown = useCallback(() => {
+    setCooldown(30);
+    clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  useEffect(() => {
+    return () => clearInterval(cooldownRef.current);
+  }, []);
+
+  const handleResend = async () => {
+    if (!registeredEmail || resendStatus === 'sending' || cooldown > 0) return;
+
+    setResendStatus('sending');
+    setResendError('');
+
+    try {
+      await resendCode(registeredEmail);
+      setResendStatus('sent');
+      startCooldown();
+    } catch (err: unknown) {
+      setResendStatus('error');
+      if (err instanceof AuthApiError) {
+        setResendError(t(err.i18nKey, { defaultValue: err.message }));
+      } else {
+        setResendError(t('common:resend_code_failed'));
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +147,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       console.error('Registration error:', err);
       if (err instanceof AuthApiError) {
         setError(t(err.i18nKey, { defaultValue: err.message }));
+        if (err.code === 'EMAIL_NOT_VERIFIED') {
+          setRegisteredEmail(formData.email);
+        }
       } else {
         setError(err instanceof Error ? err.message : t('common:registration_failed'));
       }
@@ -149,6 +194,38 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           {error && (
             <Alert severity="error" role="alert">
               {error}
+              {registeredEmail && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="caption" display="block">
+                    {t('common:resend_code_prompt')}
+                  </Typography>
+                  {cooldown > 0 ? (
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                      {t('common:resend_code_wait', { seconds: cooldown })}
+                    </Typography>
+                  ) : (
+                    <MuiButton
+                      variant="text"
+                      size="small"
+                      onClick={handleResend}
+                      disabled={resendStatus === 'sending'}
+                      sx={{ p: 0, minWidth: 0, mt: 0.5 }}
+                    >
+                      {resendStatus === 'sending' ? t('common:resending_code') : t('common:resend_code_click')}
+                    </MuiButton>
+                  )}
+                  {resendStatus === 'sent' && (
+                    <Typography variant="caption" color="success.main" display="block" sx={{ mt: 0.5 }}>
+                      {t('common:resend_code_success')}
+                    </Typography>
+                  )}
+                  {resendStatus === 'error' && (
+                    <Typography variant="caption" color="error.main" display="block" sx={{ mt: 0.5 }}>
+                      {resendError}
+                    </Typography>
+                  )}
+                </Box>
+              )}
             </Alert>
           )}
 
@@ -170,10 +247,38 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                     variant="text"
                     size="small"
                     onClick={() => navigate(`/auth/verify?email=${encodeURIComponent(registeredEmail)}`)}
-                    sx={{ mt: 0.5, p: 0, minWidth: 0 }}
+                    sx={{ p: 0, minWidth: 0, mt: 0.5 }}
                   >
                     {t('common:enter_code')}
                   </MuiButton>
+                  <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                    {t('common:resend_code_prompt')}
+                  </Typography>
+                  {cooldown > 0 ? (
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                      {t('common:resend_code_wait', { seconds: cooldown })}
+                    </Typography>
+                  ) : (
+                    <MuiButton
+                      variant="text"
+                      size="small"
+                      onClick={handleResend}
+                      disabled={resendStatus === 'sending'}
+                      sx={{ p: 0, minWidth: 0, mt: 0.5 }}
+                    >
+                      {resendStatus === 'sending' ? t('common:resending_code') : t('common:resend_code_click')}
+                    </MuiButton>
+                  )}
+                  {resendStatus === 'sent' && (
+                    <Typography variant="caption" color="success.main" display="block" sx={{ mt: 0.5 }}>
+                      {t('common:resend_code_success')}
+                    </Typography>
+                  )}
+                  {resendStatus === 'error' && (
+                    <Typography variant="caption" color="error.main" display="block" sx={{ mt: 0.5 }}>
+                      {resendError}
+                    </Typography>
+                  )}
                 </>
               )}
             </Alert>
