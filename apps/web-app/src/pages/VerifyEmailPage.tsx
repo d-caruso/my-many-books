@@ -154,6 +154,7 @@ const VerifyEmailPage: React.FC = () => {
                   placeholder={t('enter_email')}
                   required
                   disabled={loading || !!emailParam}
+                  autoComplete={emailParam ? 'off' : 'email'}
                 />
                 <ResponsiveInput
                   type="text"
