@@ -4,6 +4,7 @@
 // ================================================================
 
 import { FindAndCountOptions, Op, WhereOptions } from 'sequelize';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { User } from '@/models/User';
 import { UserCreationAttributes } from '@/models/interfaces/ModelInterfaces';
 import { createModel } from '@/utils/sequelize-helpers';
@@ -37,7 +38,7 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
       where,
       limit,
       offset,
-      order: [[options?.orderBy ?? 'creationDate', options?.orderDirection ?? 'DESC']],
+      order: [[options?.orderBy ?? 'creationDate', options?.orderDirection ?? SORT_DIRECTIONS.DESC]],
     };
 
     const { rows, count } = await User.findAndCountAll(query);
@@ -104,7 +105,7 @@ export class SequelizeUserAdapter implements UserRepositoryAdapter {
         where,
         limit,
         offset,
-        order: [[options?.orderBy ?? 'creationDate', options?.orderDirection ?? 'DESC']],
+        order: [[options?.orderBy ?? 'creationDate', options?.orderDirection ?? SORT_DIRECTIONS.DESC]],
       },
       limit,
       offset,

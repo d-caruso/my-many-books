@@ -12,6 +12,7 @@ import { User } from '../../models/User';
 import { TYPES } from '../../container/types';
 import { Repository as BookRepositoryContract } from '../../repositories/book/Repository';
 import { BookSearchFilters } from '../../repositories/book/BookRepositoryTypes';
+import { SORT_DIRECTIONS, DATABASE_FIELDS } from '@my-many-books/shared-types';
 
 interface UpdateBookData {
   title?: string;
@@ -93,8 +94,8 @@ export class AdminBookController extends BaseController {
       const result = await this.bookRepository.search(filters, {
         limit,
         offset,
-        orderBy: 'creationDate',
-        orderDirection: 'DESC',
+        orderBy: DATABASE_FIELDS.CREATION_DATE,
+        orderDirection: SORT_DIRECTIONS.DESC,
       });
 
       const booksWithUsers = await Promise.all(

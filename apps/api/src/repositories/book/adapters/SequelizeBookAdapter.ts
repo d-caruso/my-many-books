@@ -4,6 +4,7 @@
 // ================================================================
 
 import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions } from 'sequelize';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { Book } from '@/models/Book';
 import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';
@@ -351,7 +352,7 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       return [['title', 'ASC']];
     }
 
-    return [[options.orderBy, options.orderDirection ?? 'ASC']];
+    return [[options.orderBy, options.orderDirection ?? SORT_DIRECTIONS.ASC]];
   }
 
   private getPagination(options?: BookListOptions): { limit: number; offset: number } {

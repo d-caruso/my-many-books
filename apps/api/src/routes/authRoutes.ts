@@ -19,6 +19,7 @@ import {
 } from '@aws-sdk/client-cognito-identity-provider';
 import { UserService } from '../middleware/auth';
 import {
+  buildCognitoLogoutUrl,
   buildFrontendAuthRedirect,
   buildGoogleAuthorizeUrl,
   buildPkceCodeChallenge,
@@ -453,7 +454,14 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
 
 router.post('/logout', (_req: Request, res: Response): void => {
   res.clearCookie('refresh_token', { path: AUTH_COOKIE_PATH });
-  sendSuccess(res, 200, null, 'Logout successful');
+  let cognitoLogoutUrl: string | null = null;
+  try {
+    const frontendUrl = (process.env['FRONTEND_URL'] || 'http://localhost:3000').replace(/\/+$/, '');
+    cognitoLogoutUrl = buildCognitoLogoutUrl(`${frontendUrl}/auth`);
+  } catch {
+    // Cognito not configured, skip
+  }
+  sendSuccess(res, 200, { cognitoLogoutUrl }, 'Logout successful');
 });
 
 router.post('/register', async (req: Request, res: Response): Promise<void> => {

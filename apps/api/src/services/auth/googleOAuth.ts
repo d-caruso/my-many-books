@@ -251,6 +251,13 @@ export const getGooglePkceVerifierFromCookie = (req: Request): string | null => 
   return typeof value === 'string' ? value : null;
 };
 
+export const buildCognitoLogoutUrl = (logoutUri: string): string => {
+  const url = new URL('/logout', getCognitoDomainBaseUrl());
+  url.searchParams.set('client_id', getRequiredEnv('COGNITO_USER_POOL_CLIENT_ID'));
+  url.searchParams.set('logout_uri', logoutUri);
+  return url.toString();
+};
+
 export const buildGoogleAuthorizeUrl = (
   redirectUri: string,
   state: string,

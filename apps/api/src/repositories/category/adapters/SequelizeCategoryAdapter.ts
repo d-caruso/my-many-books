@@ -4,6 +4,7 @@
 // ================================================================
 
 import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions } from 'sequelize';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { Category } from '@/models/Category';
 import { Book } from '@/models/Book';
 import {
@@ -245,9 +246,9 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
     return where;
   }
 
-  private buildOrderClause(options?: CategoryListOptions): [string, 'ASC' | 'DESC'][] {
+  private buildOrderClause(options?: CategoryListOptions): [string, string][] {
     const orderBy = options?.orderBy ?? 'name';
-    const direction = options?.orderDirection ?? 'ASC';
+    const direction = options?.orderDirection ?? SORT_DIRECTIONS.ASC;
     return [[orderBy, direction]];
   }
 

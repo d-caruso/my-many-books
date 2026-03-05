@@ -31,7 +31,7 @@ export interface AuthorListFilters {
 export interface AuthorListOptions extends ListOptions {
   includeBooks?: boolean;
   orderBy?: string;
-  orderDirection?: 'ASC' | 'DESC';
+  orderDirection?: import('@my-many-books/shared-types').SortDirection;
   filters?: Partial<AuthorListFilters>;
 }
 

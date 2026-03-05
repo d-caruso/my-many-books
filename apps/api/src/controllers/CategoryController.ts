@@ -18,6 +18,8 @@ import { UpdateCategoryDTO } from '../dtos/category/UpdateCategoryDTO';
 import { toCategoryResponseDTO } from '../dtos/category/CategoryResponseDTO';
 import { Repository as CategoryRepositoryContract } from '../repositories/category/Repository';
 import { Repository as BookRepositoryContract } from '../repositories/book/Repository';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import { Book } from '../models';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
 
@@ -211,7 +213,7 @@ export class CategoryController extends BaseController {
         limit: pagination.limit,
         offset: pagination.offset,
         orderBy: 'name',
-        orderDirection: 'ASC' as const,
+        orderDirection: SORT_DIRECTIONS.ASC,
         filters,
       };
 
@@ -260,7 +262,7 @@ export class CategoryController extends BaseController {
 
       const result = await this.bookRepository.search(
         { categoryId: category.id },
-        { limit: pagination.limit, offset: pagination.offset, orderBy: 'title', orderDirection: 'ASC' }
+        { limit: pagination.limit, offset: pagination.offset, orderBy: Book.SORTABLE_FIELDS.TITLE, orderDirection: SORT_DIRECTIONS.ASC }
       );
 
       const totalPages = Math.ceil(result.total / pagination.limit) || 1;

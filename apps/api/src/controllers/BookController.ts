@@ -17,7 +17,7 @@ import { validateIsbn } from '../utils/isbn';
 import { isbnService } from '../services/isbnService';
 import { UniversalRequest } from '../types';
 import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
-import { BOOK_STATUSES } from '@my-many-books/shared-types';
+import { BOOK_STATUSES, DATABASE_FIELDS, SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { BookService, BookServiceError, BookUserContext } from '../services/book/BookService';
 import { CreateBookDTO } from '../dtos/book/CreateBookDTO';
 import { UpdateBookDTO } from '../dtos/book/UpdateBookDTO';
@@ -290,7 +290,7 @@ export class BookController extends BaseController {
       includeAssociations: includeAuthors || includeCategories,
       filters: searchFilters,
       orderBy: 'title',
-      orderDirection: 'ASC' as const,
+      orderDirection: SORT_DIRECTIONS.ASC,
     };
 
     const result = await this.bookRepository.listUserBooks(request.user?.id || 0, listOptions);
@@ -479,14 +479,12 @@ export class BookController extends BaseController {
     }
 
     // Determine sort order
-    const orderDirectionMap: Record<string, { orderBy: string; orderDirection: 'ASC' | 'DESC' }> = {
-      creationDate: { orderBy: 'creationDate', orderDirection: 'DESC' },
-      createdAt:    { orderBy: 'creationDate', orderDirection: 'DESC' },
-      updateDate:   { orderBy: 'updateDate',   orderDirection: 'DESC' },
-      updatedAt:    { orderBy: 'updateDate',   orderDirection: 'DESC' },
-      status:       { orderBy: 'status',       orderDirection: 'ASC'  },
+    const orderDirectionMap: Record<string, { orderBy: string; orderDirection: typeof SORT_DIRECTIONS[keyof typeof SORT_DIRECTIONS] }> = {
+      [DATABASE_FIELDS.CREATION_DATE]: { orderBy: DATABASE_FIELDS.CREATION_DATE, orderDirection: SORT_DIRECTIONS.DESC },
+      [DATABASE_FIELDS.UPDATE_DATE]:   { orderBy: DATABASE_FIELDS.UPDATE_DATE,   orderDirection: SORT_DIRECTIONS.DESC },
+      [Book.SORTABLE_FIELDS.STATUS]:   { orderBy: Book.SORTABLE_FIELDS.STATUS,   orderDirection: SORT_DIRECTIONS.ASC  },
     };
-    const orderOptions = orderDirectionMap[sortBy] ?? { orderBy: 'title', orderDirection: 'ASC' as const };
+    const orderOptions = orderDirectionMap[sortBy] ?? { orderBy: Book.SORTABLE_FIELDS.TITLE, orderDirection: SORT_DIRECTIONS.ASC };
 
     const result = await this.bookRepository.search(
       {

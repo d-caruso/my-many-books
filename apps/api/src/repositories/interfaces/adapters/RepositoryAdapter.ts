@@ -4,6 +4,7 @@
 // ================================================================
 
 import { BaseEntity } from '../../../domain/entities/BaseEntity';
+import { SortDirection } from '@my-many-books/shared-types';
 
 export type CreationAttributes = Record<string, unknown>;
 
@@ -16,7 +17,7 @@ export interface ListOptions extends QueryOptions {
   limit?: number;
   offset?: number;
   orderBy?: string;
-  orderDirection?: 'ASC' | 'DESC';
+  orderDirection?: SortDirection;
 }
 
 export interface PaginatedResult<T extends BaseEntity> {

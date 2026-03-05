@@ -18,6 +18,7 @@ import { UpdateAuthorDTO } from '../dtos/author/UpdateAuthorDTO';
 import { toAuthorResponseDTO } from '../dtos/author/AuthorResponseDTO';
 import { Repository as AuthorRepositoryContract } from '../repositories/author/Repository';
 import { Repository as BookRepositoryContract } from '../repositories/book/Repository';
+import { SORT_DIRECTIONS, DATABASE_FIELDS } from '@my-many-books/shared-types';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
@@ -240,7 +241,7 @@ export class AuthorController extends BaseController {
       includeBooks,
       filters: searchFilters,
       orderBy: 'surname',
-      orderDirection: 'ASC' as const,
+      orderDirection: SORT_DIRECTIONS.ASC,
     };
 
     const result = await this.authorRepository.list(listOptions);
@@ -273,7 +274,7 @@ export class AuthorController extends BaseController {
 
     const result = await this.bookRepository.search(
       { authorId: Number(authorId) },
-      { limit: pagination.limit, offset: pagination.offset, orderBy: 'creationDate', orderDirection: 'DESC' }
+      { limit: pagination.limit, offset: pagination.offset, orderBy: DATABASE_FIELDS.CREATION_DATE, orderDirection: SORT_DIRECTIONS.DESC }
     );
 
     const meta = this.createPaginationMeta(pagination.page, pagination.limit, result.total);
