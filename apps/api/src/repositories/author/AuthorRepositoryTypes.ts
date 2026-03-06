@@ -10,6 +10,7 @@ import {
   PaginatedResult as AdapterPaginatedResult,
 } from '../interfaces/adapters/RepositoryAdapter';
 import { AuthorEntity } from '../../domain/entities/Author';
+import { SortDirection } from '@my-many-books/shared-types';
 
 export type { AuthorEntity } from '../../domain/entities/Author';
 
@@ -31,7 +32,7 @@ export interface AuthorListFilters {
 export interface AuthorListOptions extends ListOptions {
   includeBooks?: boolean;
   orderBy?: string;
-  orderDirection?: import('@my-many-books/shared-types').SortDirection;
+  orderDirection?: SortDirection;
   filters?: Partial<AuthorListFilters>;
 }
 
