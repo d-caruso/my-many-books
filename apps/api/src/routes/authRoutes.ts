@@ -18,6 +18,7 @@ import {
   InitiateAuthCommandOutput,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { UserService } from '../middleware/auth';
+import { User } from '../models/User';
 import {
   buildCognitoLogoutUrl,
   buildFrontendAuthRedirect,
@@ -174,7 +175,20 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     if (error && typeof error === 'object' && 'name' in error) {
       const errorName = (error as { name: string }).name;
 
-      if (errorName === 'NotAuthorizedException') {
+      if (errorName === 'UserNotConfirmedException' || errorName === 'NotAuthorizedException') {
+        try {
+          const getUserCommand = new AdminGetUserCommand({
+            UserPoolId: process.env['COGNITO_USER_POOL_ID'] || '',
+            Username: (req.body as LoginRequest).email,
+          });
+          const userResult = await cognitoClient.send(getUserCommand);
+          if (userResult.UserStatus === 'UNCONFIRMED') {
+            sendError(res, 401, ERROR_CODES.EMAIL_NOT_VERIFIED, 'Email not verified');
+            return;
+          }
+        } catch {
+          // user lookup failed, fall through to generic error
+        }
         sendError(res, 401, ERROR_CODES.AUTH_FAILED, 'Invalid email or password');
         return;
       }
@@ -273,6 +287,13 @@ router.post('/google/mobile/start', (req: Request, res: Response): void => {
 });
 
 router.get('/google/callback', async (req: Request, res: Response): Promise<void> => {
+  const cognitoError = typeof req.query['error'] === 'string' ? req.query['error'] : '';
+  if (cognitoError) {
+    clearGooglePkceVerifierCookie(res, AUTH_COOKIE_PATH);
+    res.redirect(buildFrontendAuthRedirect('error', 'oauth_exchange_failed'));
+    return;
+  }
+
   const code = typeof req.query['code'] === 'string' ? req.query['code'] : '';
   const state = typeof req.query['state'] === 'string' ? req.query['state'] : '';
   const codeVerifier = getGooglePkceVerifierFromCookie(req);
@@ -512,7 +533,9 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
           const isConfirmed = userResult.UserStatus === 'CONFIRMED';
 
           if (isConfirmed) {
-            sendError(res, 409, ERROR_CODES.CONFLICT, 'Email already registered');
+            const existsInDb = await User.findOne({ where: { email: (req.body as RegisterRequest).email }, attributes: ['id'] });
+            const code = existsInDb ? ERROR_CODES.CONFLICT : ERROR_CODES.EMAIL_REGISTERED_VIA_SOCIAL;
+            sendError(res, 409, code, 'Email already registered');
           } else {
             sendError(res, 409, ERROR_CODES.EMAIL_NOT_VERIFIED, 'Email registered but not verified');
           }
