@@ -110,6 +110,7 @@ describe('Auth Routes', () => {
 
     process.env['COGNITO_DOMAIN'] = 'https://auth.example.com';
     process.env['COGNITO_USER_POOL_CLIENT_ID'] = 'test-client-id';
+    process.env['COGNITO_USER_POOL_ID'] = 'test-pool-id';
     process.env['FRONTEND_URL'] = 'http://localhost:3000';
     process.env['GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX'] = 'my-many-books://';
   });
@@ -565,7 +566,10 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
-      expect(response.body).toHaveProperty('data', null);
+      expect(response.body).toHaveProperty(
+        'data.cognitoLogoutUrl',
+        'https://auth.example.com/logout?client_id=test-client-id&logout_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth'
+      );
 
       // Verify cookie is cleared
       const cookies = response.headers['set-cookie'] as unknown as string[];
@@ -862,6 +866,70 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(500);
       expect(response.body.error).toHaveProperty('message', 'Failed to deliver verification code');
+    });
+  });
+
+  describe(`POST ${BASE_PATH}/auth/forgot-password`, () => {
+    it('returns accepted response for valid request', async () => {
+      mockSend.mockResolvedValue({});
+
+      const response = await request(app).post(`${BASE_PATH}/auth/forgot-password`).send({
+        email: 'user@example.com',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual({
+        accepted: true,
+        expiresInMinutes: 60,
+      });
+    });
+
+    it('does not reveal whether the user exists', async () => {
+      mockSend.mockRejectedValue({ name: 'UserNotFoundException', message: 'User does not exist' });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/forgot-password`).send({
+        email: 'missing@example.com',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual({
+        accepted: true,
+        expiresInMinutes: 60,
+      });
+    });
+  });
+
+  describe(`POST ${BASE_PATH}/auth/confirm-forgot-password`, () => {
+    it('confirms reset code and updates password', async () => {
+      mockSend.mockResolvedValueOnce({}).mockResolvedValueOnce({});
+
+      const response = await request(app).post(`${BASE_PATH}/auth/confirm-forgot-password`).send({
+        email: 'user@example.com',
+        code: '123456',
+        newPassword: 'NewPass123',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual({
+        reset: true,
+        signInRequired: true,
+      });
+    });
+
+    it('returns validation error for invalid code', async () => {
+      mockSend.mockRejectedValue({ name: 'CodeMismatchException', message: 'Invalid code' });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/confirm-forgot-password`).send({
+        email: 'user@example.com',
+        code: '000000',
+        newPassword: 'NewPass123',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toHaveProperty('message', 'Invalid reset code');
     });
   });
 });

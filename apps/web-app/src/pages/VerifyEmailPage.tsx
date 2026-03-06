@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Box, Container, Paper, Stack, Typography } from '@mui/material';
 import { useAuth, AuthApiError } from '@my-many-books/shared-auth';
+import { buildUrl } from '@my-many-books/shared-navigation';
 import { ResponsiveInput } from '../components/UI/ResponsiveInput';
 import { ResponsiveButton } from '../components/UI/ResponsiveButton';
 import { LanguageSelector } from '../components/Navigation/LanguageSelector';
@@ -30,7 +31,7 @@ const VerifyEmailPage: React.FC = () => {
     const state: VerifyEmailNavState = success
       ? { success: true }
       : { success: false, errorMessage };
-    navigate('/auth', { replace: true, state });
+    navigate(buildUrl('auth'), { replace: true, state });
   };
 
   const handleVerify = async (e?: React.FormEvent) => {

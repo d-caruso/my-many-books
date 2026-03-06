@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import type { AuthService } from '../../AuthService';
-import type { AuthState, RegisterResponse, User } from '../../types';
+import type {
+  AuthState,
+  RegisterResponse,
+  ForgotPasswordResponse,
+  ConfirmPasswordResetResponse,
+  User,
+} from '../../types';
 import { AuthProvider, useAuth } from '../AuthProvider';
 
 const user: User = {
@@ -21,6 +27,11 @@ function createAuthServiceMock(overrides?: Partial<AuthService>): AuthService {
     }),
     login: jest.fn(),
     register: jest.fn(),
+    verifyEmail: jest.fn(),
+    resendCode: jest.fn(),
+    changePassword: jest.fn(),
+    requestPasswordReset: jest.fn(),
+    confirmPasswordReset: jest.fn(),
     logout: jest.fn(),
   };
 
@@ -28,9 +39,21 @@ function createAuthServiceMock(overrides?: Partial<AuthService>): AuthService {
 }
 
 function Consumer() {
-  const { user: currentUser, loading, login, register, logout, refreshUser, isAuthenticated } =
-    useAuth();
+  const {
+    user: currentUser,
+    loading,
+    login,
+    register,
+    changePassword,
+    requestPasswordReset,
+    confirmPasswordReset,
+    logout,
+    refreshUser,
+    isAuthenticated,
+  } = useAuth();
   const [registerMessage, setRegisterMessage] = useState<string>('');
+  const [forgotMessage, setForgotMessage] = useState<string>('');
+  const [confirmMessage, setConfirmMessage] = useState<string>('');
 
   return (
     <div>
@@ -38,6 +61,8 @@ function Consumer() {
       <div data-testid="isAuthenticated">{String(isAuthenticated)}</div>
       <div data-testid="userEmail">{currentUser?.email ?? 'none'}</div>
       <div data-testid="registerMessage">{registerMessage}</div>
+      <div data-testid="forgotMessage">{forgotMessage}</div>
+      <div data-testid="confirmMessage">{confirmMessage}</div>
 
       <button type="button" onClick={() => void login('test@example.com', 'password')}>
         login
@@ -57,6 +82,39 @@ function Consumer() {
       </button>
       <button type="button" onClick={() => void logout()}>
         logout
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          void changePassword({
+            currentPassword: 'CurrentPass123',
+            newPassword: 'NewPass123',
+          })
+        }
+      >
+        changePassword
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          void requestPasswordReset('test@example.com').then((res) =>
+            setForgotMessage(String(res.expiresInMinutes))
+          )
+        }
+      >
+        requestReset
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          void confirmPasswordReset({
+            email: 'test@example.com',
+            code: '123456',
+            newPassword: 'NewPass123',
+          }).then((res) => setConfirmMessage(String(res.reset)))
+        }
+      >
+        confirmReset
       </button>
       <button type="button" onClick={() => void refreshUser()}>
         refreshUser
@@ -162,6 +220,73 @@ describe('AuthProvider', () => {
       password: 'password',
       name: 'New',
       surname: 'User',
+    });
+  });
+
+  it('supports changePassword and refreshes user state from auth service', async () => {
+    const updatedUser = { ...user, name: 'Updated' };
+    const authService = createAuthServiceMock({
+      getAuthState: jest.fn().mockResolvedValue({ user, isAuthenticated: true }),
+      changePassword: jest.fn().mockResolvedValue(updatedUser),
+    });
+
+    render(
+      <AuthProvider authService={authService}>
+        <Consumer />
+      </AuthProvider>
+    );
+
+    await waitFor(() => expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true'));
+    fireEvent.click(screen.getByRole('button', { name: 'changePassword' }));
+
+    await waitFor(() => expect(screen.getByTestId('userEmail')).toHaveTextContent(updatedUser.email));
+    expect(authService.changePassword).toHaveBeenCalledWith({
+      userId: 1,
+      currentPassword: 'CurrentPass123',
+      newPassword: 'NewPass123',
+      locale: undefined,
+    });
+  });
+
+  it('supports requestPasswordReset and returns API payload', async () => {
+    const response: ForgotPasswordResponse = { accepted: true, expiresInMinutes: 60 };
+    const authService = createAuthServiceMock({
+      requestPasswordReset: jest.fn().mockResolvedValue(response),
+    });
+
+    render(
+      <AuthProvider authService={authService}>
+        <Consumer />
+      </AuthProvider>
+    );
+
+    await screen.findByTestId('userEmail');
+    fireEvent.click(screen.getByRole('button', { name: 'requestReset' }));
+
+    await waitFor(() => expect(screen.getByTestId('forgotMessage')).toHaveTextContent('60'));
+    expect(authService.requestPasswordReset).toHaveBeenCalledWith('test@example.com');
+  });
+
+  it('supports confirmPasswordReset and returns API payload', async () => {
+    const response: ConfirmPasswordResetResponse = { reset: true, signInRequired: true };
+    const authService = createAuthServiceMock({
+      confirmPasswordReset: jest.fn().mockResolvedValue(response),
+    });
+
+    render(
+      <AuthProvider authService={authService}>
+        <Consumer />
+      </AuthProvider>
+    );
+
+    await screen.findByTestId('userEmail');
+    fireEvent.click(screen.getByRole('button', { name: 'confirmReset' }));
+
+    await waitFor(() => expect(screen.getByTestId('confirmMessage')).toHaveTextContent('true'));
+    expect(authService.confirmPasswordReset).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      code: '123456',
+      newPassword: 'NewPass123',
     });
   });
 

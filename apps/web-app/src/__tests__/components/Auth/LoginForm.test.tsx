@@ -246,14 +246,13 @@ describe('LoginForm', () => {
     assignSpy.mockRestore();
   });
 
-  test.skip('shows forgot password link', () => {
-    // TODO: Add forgot password link to LoginForm
+  test('shows forgot password action', () => {
     render(
       <LoginForm onSwitchToRegister={mockOnSwitchToRegister} />,
       { wrapper: TestWrapper }
     );
 
-    expect(screen.getByText('Forgot Password?')).toBeInTheDocument();
+    expect(screen.getByTestId('forgot-password-button')).toBeInTheDocument();
   });
 
   test('handles form submission on Enter key', async () => {

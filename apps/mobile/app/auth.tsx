@@ -370,6 +370,19 @@ export default function AuthScreen() {
                 {passwordRequirementsText}
               </Text>
 
+              {authMode === 'login' && (
+                <Button
+                  mode="text"
+                  onPress={() => router.push('/forgot-password')}
+                  disabled={isBusy}
+                  accessibilityLabel={t('common:forgot_password')}
+                  contentStyle={styles.forgotPasswordButtonContent}
+                  style={styles.forgotPasswordButton}
+                >
+                  {t('common:forgot_password')}
+                </Button>
+              )}
+
               {authMode === 'register' && (
                 <TextInput
                   label={t('common:confirm_password')}
@@ -486,6 +499,14 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginTop: 8,
+  },
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    marginTop: -8,
+    marginBottom: 8,
+  },
+  forgotPasswordButtonContent: {
+    justifyContent: 'flex-end',
   },
   googleButton: {
     marginTop: 12,

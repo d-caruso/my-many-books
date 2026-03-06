@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   useAuth,
@@ -8,6 +9,7 @@ import {
   validatePasswordAgainstPolicy,
   formatLocalizedList,
 } from '@my-many-books/shared-auth';
+import { buildUrl } from '@my-many-books/shared-navigation';
 import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
 import {
   Paper,
@@ -33,6 +35,7 @@ interface LoginFormProps {
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const { t, i18n } = useTranslation(['common', 'accessibility']);
   const { login, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -111,6 +114,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const handleGoogleLogin = () => {
     const googleStartUrl = `${env.API_BASE_URL}/auth/google/start?platform=web`;
     window.location.assign(googleStartUrl);
+  };
+
+  const handleForgotPassword = () => {
+    navigate(buildUrl('forgot-password'));
   };
 
   return (
@@ -243,6 +250,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             data-testid="google-login-button"
           >
             {t('common:continue_with_google', 'Continue with Google')}
+          </MuiButton>
+
+          <MuiButton
+            type="button"
+            variant="text"
+            size="small"
+            disabled={isLoading}
+            onClick={handleForgotPassword}
+            data-testid="forgot-password-button"
+          >
+            {t('common:forgot_password')}
           </MuiButton>
         </Stack>
 

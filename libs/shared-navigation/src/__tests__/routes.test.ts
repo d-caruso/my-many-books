@@ -56,8 +56,10 @@ describe('shared-navigation routes', () => {
 
     expect(authRoutes).toContain('books');
     expect(authRoutes).toContain('profile');
+    expect(authRoutes).toContain('account');
     expect(publicRoutes).toContain('home');
     expect(publicRoutes).toContain('search');
+    expect(publicRoutes).toContain('forgot-password');
     expect(authRoutes).not.toContain('home');
   });
 
@@ -72,5 +74,10 @@ describe('shared-navigation routes', () => {
   test('generateBreadcrumb handles auth routes and home', () => {
     expect(generateBreadcrumb(createRoute('home'))).toEqual(['Home']);
     expect(generateBreadcrumb(createRoute('login'))).toEqual(['Home', 'Auth', 'Login']);
+    expect(generateBreadcrumb(createRoute('reset-password'))).toEqual([
+      'Home',
+      'Auth',
+      'Reset Password',
+    ]);
   });
 });

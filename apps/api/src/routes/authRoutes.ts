@@ -4,7 +4,12 @@
 // ================================================================
 
 import { getLogger } from '@my-many-books/shared-logging';
-import { createErrorResponse, ERROR_CODES, type ErrorCode } from '@my-many-books/shared-types';
+import {
+  createErrorResponse,
+  ERROR_CODES,
+  PASSWORD_RESET_POLICY,
+  type ErrorCode,
+} from '@my-many-books/shared-types';
 import express, { Router, Request, Response } from 'express';
 import type { AxiosError } from 'axios';
 import {
@@ -38,6 +43,7 @@ import {
   verifyCognitoIdToken,
 } from '../services/auth/googleOAuth';
 import { completeGoogleLogin } from '../services/auth/googleOAuthSession';
+import { COGNITO_PASSWORD_ERRORS, cognitoPasswordService } from '../services/auth/cognitoPasswordService';
 
 const router: express.Router = Router();
 
@@ -69,6 +75,17 @@ interface VerifyEmailRequest {
 
 interface ResendCodeRequest {
   email: string;
+}
+
+interface ForgotPasswordRequest {
+  email: string;
+}
+
+interface ConfirmForgotPasswordRequest {
+  email: string;
+  code: string;
+  newPassword: string;
+  locale?: string;
 }
 
 interface GoogleStartQuery {
@@ -630,6 +647,121 @@ router.post('/resend-code', async (req: Request, res: Response): Promise<void> =
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Failed to resend verification code', { cause: errorMessage });
+  }
+});
+
+router.post('/forgot-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body as ForgotPasswordRequest;
+    if (!email || typeof email !== 'string') {
+      sendError(res, 400, ERROR_CODES.INVALID_REQUEST_BODY, 'Email is required');
+      return;
+    }
+
+    await cognitoPasswordService.requestForgotPassword({ email });
+
+    sendSuccess(
+      res,
+      200,
+      {
+        accepted: true,
+        expiresInMinutes: PASSWORD_RESET_POLICY.TOKEN_TTL_MINUTES,
+      },
+      'If the account exists, password reset instructions have been sent.'
+    );
+  } catch (error: unknown) {
+    getLogger().error(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'Forgot password error:'
+    );
+
+    const errorName = (error as { name?: string })?.name;
+    if (errorName === 'LimitExceededException' || errorName === 'TooManyRequestsException') {
+      sendError(
+        res,
+        429,
+        ERROR_CODES.RATE_LIMIT_EXCEEDED,
+        'Too many requests. Please try again later.'
+      );
+      return;
+    }
+
+    if (errorName === COGNITO_PASSWORD_ERRORS.COGNITO_CONFIG_ERROR_NAME) {
+      sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Password reset is currently unavailable');
+      return;
+    }
+
+    sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Failed to process password reset request');
+  }
+});
+
+router.post('/confirm-forgot-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, code, newPassword, locale } = req.body as ConfirmForgotPasswordRequest;
+    if (!email || !code || !newPassword) {
+      sendError(
+        res,
+        400,
+        ERROR_CODES.INVALID_REQUEST_BODY,
+        'Email, code, and newPassword are required'
+      );
+      return;
+    }
+
+    await cognitoPasswordService.confirmForgotPassword({
+      email,
+      code,
+      newPassword,
+      locale,
+    });
+
+    sendSuccess(
+      res,
+      200,
+      {
+        reset: true,
+        signInRequired: true,
+      },
+      'Password has been reset successfully'
+    );
+  } catch (error: unknown) {
+    getLogger().error(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'Confirm forgot password error:'
+    );
+
+    const errorName = (error as { name?: string })?.name;
+    if (errorName === COGNITO_PASSWORD_ERRORS.INVALID_PASSWORD_POLICY_ERROR_NAME) {
+      sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, error instanceof Error ? error.message : 'Invalid password');
+      return;
+    }
+
+    if (errorName === COGNITO_PASSWORD_ERRORS.COGNITO_CONFIG_ERROR_NAME) {
+      sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Password reset is currently unavailable');
+      return;
+    }
+
+    if (errorName === 'CodeMismatchException') {
+      sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Invalid reset code');
+      return;
+    }
+
+    if (errorName === 'ExpiredCodeException') {
+      sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Reset code has expired');
+      return;
+    }
+
+    if (errorName === 'LimitExceededException' || errorName === 'TooManyRequestsException') {
+      sendError(
+        res,
+        429,
+        ERROR_CODES.RATE_LIMIT_EXCEEDED,
+        'Too many requests. Please try again later.'
+      );
+      return;
+    }
+
+    sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Failed to reset password');
   }
 });
 

@@ -4,13 +4,24 @@
  */
 
 // Navigation interfaces and types
-export { NavigationAdapter, Route, NavigationState, NavigationOptions } from './types';
+export type { NavigationAdapter, Route, NavigationState, NavigationOptions } from './types';
 
 // Platform-agnostic navigation manager
 export { NavigationManager } from './NavigationManager';
 
 // Route definitions and utilities
-export { createRoute, createRoutes, matchRoute } from './routes';
+export {
+  APP_ROUTES,
+  buildPath,
+  buildUrl,
+  createRoute,
+  createRoutes,
+  generateBreadcrumb,
+  getAuthRoutes,
+  getPublicRoutes,
+  isValidRoute,
+  matchRoute,
+} from './routes';
 
 // Navigation hooks for React (web/mobile)
 export { useNavigation, useCurrentRoute, useNavigationParams } from './hooks';

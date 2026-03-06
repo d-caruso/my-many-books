@@ -11,16 +11,36 @@ import type {
   LoginResponse,
   RefreshResponse,
   RegisterResponse,
+  ChangePasswordResponse,
+  ForgotPasswordResponse,
+  ConfirmPasswordResetResponse,
   AuthState,
   ApiSuccessEnvelope,
   ApiErrorEnvelope,
 } from './types';
 import { AuthApiError } from './AuthApiError';
 import { getAuthErrorI18nKey } from './authErrorI18n';
+import { AUTH_ENDPOINTS, USER_ACCOUNT_PATCH_ACTIONS } from '@my-many-books/shared-types';
 
 interface RegisterResponseData {
   requiresVerification: boolean;
 }
+
+interface ChangePasswordInput {
+  userId: number;
+  currentPassword: string;
+  newPassword: string;
+  locale?: string;
+}
+
+interface ConfirmPasswordResetInput {
+  email: string;
+  code: string;
+  newPassword: string;
+  locale?: string;
+}
+
+const USERS_ENDPOINT = '/users';
 
 export class AuthService {
   private storage: StorageAdapter;
@@ -29,6 +49,10 @@ export class AuthService {
   constructor(config: AuthServiceConfig) {
     this.config = config;
     this.storage = config.storage;
+  }
+
+  private buildApiUrl(path: string): string {
+    return `${this.config.apiUrl}${path}`;
   }
 
   private unwrapEnvelopeData<T>(payload: unknown): { data: T; message?: string } {
@@ -96,7 +120,7 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<User> {
     try {
-      const response = await fetch(`${this.config.apiUrl}/auth/login`, {
+      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.LOGIN), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // Send/receive cookies
@@ -125,7 +149,7 @@ export class AuthService {
     codeVerifier: string;
   }): Promise<User> {
     try {
-      const response = await fetch(`${this.config.apiUrl}/auth/google/mobile/exchange`, {
+      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.GOOGLE_MOBILE_EXCHANGE), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -155,7 +179,7 @@ export class AuthService {
     locale?: string;
   }): Promise<RegisterResponse> {
     try {
-      const response = await fetch(`${this.config.apiUrl}/auth/register`, {
+      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.REGISTER), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -188,7 +212,7 @@ export class AuthService {
   async logout(): Promise<string | null> {
     let cognitoLogoutUrl: string | null = null;
     try {
-      const response = await fetch(`${this.config.apiUrl}/auth/logout`, {
+      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.LOGOUT), {
         method: 'POST',
         credentials: 'include',
       });
@@ -252,7 +276,7 @@ export class AuthService {
 
   async silentRefresh(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.config.apiUrl}/auth/refresh`, {
+      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.REFRESH), {
         method: 'POST',
         credentials: 'include', // Send refresh_token cookie
       });
@@ -338,7 +362,7 @@ export class AuthService {
 
   async verifyEmail(email: string, code: string): Promise<void> {
     try {
-      const response = await fetch(`${this.config.apiUrl}/auth/verify-email`, {
+      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.VERIFY_EMAIL), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code }),
@@ -357,7 +381,7 @@ export class AuthService {
 
   async resendCode(email: string): Promise<void> {
     try {
-      const response = await fetch(`${this.config.apiUrl}/auth/resend-code`, {
+      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.RESEND_CODE), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -376,5 +400,98 @@ export class AuthService {
 
   async getCurrentUser(): Promise<User | null> {
     return await this.storage.getUser();
+  }
+
+  async changePassword(input: ChangePasswordInput): Promise<User> {
+    try {
+      const response = await fetch(this.buildApiUrl(`${USERS_ENDPOINT}/${input.userId}`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          action: USER_ACCOUNT_PATCH_ACTIONS.CHANGE_PASSWORD,
+          currentPassword: input.currentPassword,
+          newPassword: input.newPassword,
+          locale: input.locale,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => undefined);
+        const { code, message } = this.extractApiError(errorPayload, 'Password change failed');
+        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      }
+
+      const payload = (await response.json()) as unknown;
+      const { data } = this.unwrapEnvelopeData<ChangePasswordResponse>(payload);
+
+      if (!data.changed) {
+        throw new Error('Password was not changed');
+      }
+
+      return await this.applyLoginResponse({
+        accessToken: data.accessToken,
+        idToken: data.idToken,
+        expiresIn: data.expiresIn,
+        user: data.user,
+      });
+    } catch (error) {
+      console.error('Password change error:', error);
+      throw error;
+    }
+  }
+
+  async requestPasswordReset(email: string): Promise<ForgotPasswordResponse> {
+    try {
+      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.FORGOT_PASSWORD), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => undefined);
+        const { code, message } = this.extractApiError(
+          errorPayload,
+          'Failed to process password reset request'
+        );
+        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      }
+
+      const payload = (await response.json()) as unknown;
+      const { data } = this.unwrapEnvelopeData<ForgotPasswordResponse>(payload);
+      return data;
+    } catch (error) {
+      console.error('Request password reset error:', error);
+      throw error;
+    }
+  }
+
+  async confirmPasswordReset(input: ConfirmPasswordResetInput): Promise<ConfirmPasswordResetResponse> {
+    try {
+      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.CONFIRM_FORGOT_PASSWORD), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: input.email,
+          code: input.code,
+          newPassword: input.newPassword,
+          locale: input.locale,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => undefined);
+        const { code, message } = this.extractApiError(errorPayload, 'Failed to reset password');
+        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      }
+
+      const payload = (await response.json()) as unknown;
+      const { data } = this.unwrapEnvelopeData<ConfirmPasswordResetResponse>(payload);
+      return data;
+    } catch (error) {
+      console.error('Confirm password reset error:', error);
+      throw error;
+    }
   }
 }

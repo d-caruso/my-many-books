@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { UserRoleSchema } from './user';
+import { USER_ACCOUNT_PATCH_ACTIONS } from './constants/auth.constants';
 
 export const AuthSessionUserSchema = z.object({
   id: z.number(),
@@ -23,6 +24,48 @@ export const RegisterResponseSchema = z.object({
   requiresVerification: z.boolean(),
 });
 export type RegisterResponse = z.infer<typeof RegisterResponseSchema>;
+
+export const ForgotPasswordRequestSchema = z.object({
+  email: z.string().email(),
+  locale: z.string().trim().min(2).max(5).optional(),
+});
+export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordRequestSchema>;
+
+export const ForgotPasswordResponseSchema = z.object({
+  accepted: z.boolean(),
+  expiresInMinutes: z.number().int().positive(),
+});
+export type ForgotPasswordResponse = z.infer<typeof ForgotPasswordResponseSchema>;
+
+export const ConfirmForgotPasswordRequestSchema = z.object({
+  email: z.string().email(),
+  code: z.string().trim().min(1).max(64),
+  newPassword: z.string().min(1).max(128),
+  locale: z.string().trim().min(2).max(5).optional(),
+});
+export type ConfirmForgotPasswordRequest = z.infer<typeof ConfirmForgotPasswordRequestSchema>;
+
+export const ConfirmForgotPasswordResponseSchema = z.object({
+  reset: z.boolean(),
+  signInRequired: z.boolean(),
+});
+export type ConfirmForgotPasswordResponse = z.infer<typeof ConfirmForgotPasswordResponseSchema>;
+
+export const ChangePasswordRequestSchema = z.object({
+  action: z.literal(USER_ACCOUNT_PATCH_ACTIONS.CHANGE_PASSWORD),
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(1).max(128),
+});
+export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequestSchema>;
+
+export const ChangePasswordResponseSchema = z.object({
+  changed: z.boolean(),
+  accessToken: z.string(),
+  idToken: z.string(),
+  expiresIn: z.number().int().positive(),
+  user: AuthSessionUserSchema,
+});
+export type ChangePasswordResponse = z.infer<typeof ChangePasswordResponseSchema>;
 
 export const RefreshResponseSchema = z.object({
   accessToken: z.string(),

@@ -1,4 +1,10 @@
 import {
+  ChangePasswordRequestSchema,
+  ChangePasswordResponseSchema,
+  ConfirmForgotPasswordRequestSchema,
+  ConfirmForgotPasswordResponseSchema,
+  ForgotPasswordRequestSchema,
+  ForgotPasswordResponseSchema,
   AuthorSchema,
   BookFormSchema,
   BookSchema,
@@ -9,6 +15,7 @@ import {
   SearchResultSchema,
   UserSchema,
 } from '../index';
+import { USER_ACCOUNT_PATCH_ACTIONS } from '../constants/auth.constants';
 
 describe('shared-types schemas', () => {
   it('validates a full book payload', () => {
@@ -118,6 +125,54 @@ describe('shared-types schemas', () => {
         title: 'Form Book',
         isbnCode: '999',
         authorIds: [1, 2],
+      })
+    ).toBeDefined();
+  });
+
+  it('validates password reset request/response schemas', () => {
+    expect(
+      ForgotPasswordRequestSchema.parse({ email: 'user@example.com', locale: 'en' })
+    ).toBeDefined();
+    expect(
+      ForgotPasswordResponseSchema.parse({ accepted: true, expiresInMinutes: 60 })
+    ).toBeDefined();
+
+    expect(
+      ConfirmForgotPasswordRequestSchema.parse({
+        email: 'user@example.com',
+        code: '123456',
+        newPassword: 'Password123',
+      })
+    ).toBeDefined();
+
+    expect(
+      ConfirmForgotPasswordResponseSchema.parse({ reset: true, signInRequired: true })
+    ).toBeDefined();
+  });
+
+  it('validates change password request/response schemas', () => {
+    expect(
+      ChangePasswordRequestSchema.parse({
+        action: USER_ACCOUNT_PATCH_ACTIONS.CHANGE_PASSWORD,
+        currentPassword: 'Password123',
+        newPassword: 'NewPassword123',
+      })
+    ).toBeDefined();
+
+    expect(
+      ChangePasswordResponseSchema.parse({
+        changed: true,
+        accessToken: 'access',
+        idToken: 'id',
+        expiresIn: 3600,
+        user: {
+          id: 1,
+          email: 'user@example.com',
+          name: 'John',
+          surname: 'Doe',
+          role: 'user',
+          isActive: true,
+        },
       })
     ).toBeDefined();
   });

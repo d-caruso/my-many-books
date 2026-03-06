@@ -111,6 +111,7 @@ describe('Authentication Flow Integration', () => {
 
     process.env['COGNITO_DOMAIN'] = 'https://auth.example.com';
     process.env['COGNITO_USER_POOL_CLIENT_ID'] = 'test-client-id';
+    process.env['COGNITO_USER_POOL_ID'] = 'test-pool-id';
     process.env['FRONTEND_URL'] = 'http://localhost:3000';
     process.env['GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX'] = 'my-many-books://';
   });
@@ -322,6 +323,43 @@ describe('Authentication Flow Integration', () => {
         expect(refreshResponse.status).toBe(200);
         expect(refreshResponse.body).toHaveProperty('data.accessToken');
       }
+    });
+  });
+
+  describe('Password reset flow', () => {
+    it('accepts forgot-password requests without leaking account existence', async () => {
+      mockSend.mockRejectedValueOnce({
+        name: 'UserNotFoundException',
+        message: 'User does not exist',
+      });
+
+      const response = await request(app).post(`${BASE_PATH}/auth/forgot-password`).send({
+        email: 'missing@example.com',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual({
+        accepted: true,
+        expiresInMinutes: 60,
+      });
+    });
+
+    it('confirms forgot-password with code and invalidates existing sessions', async () => {
+      mockSend.mockResolvedValueOnce({}).mockResolvedValueOnce({});
+
+      const response = await request(app).post(`${BASE_PATH}/auth/confirm-forgot-password`).send({
+        email: 'test@example.com',
+        code: '123456',
+        newPassword: 'NewPass123',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual({
+        reset: true,
+        signInRequired: true,
+      });
     });
   });
 

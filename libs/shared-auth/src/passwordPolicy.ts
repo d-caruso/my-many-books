@@ -1,3 +1,8 @@
+import {
+  PASSWORD_POLICY as SHARED_PASSWORD_POLICY,
+  PASSWORD_RULE_PATTERNS,
+} from '@my-many-books/shared-types';
+
 export interface PasswordPolicy {
   minLength: number;
   requireUppercase: boolean;
@@ -15,19 +20,12 @@ export interface PasswordValidationResult {
 }
 
 export const PASSWORD_POLICY: PasswordPolicy = {
-  minLength: 8,
-  requireUppercase: true,
-  requireLowercase: true,
-  requireNumbers: true,
-  requireSymbols: false,
+  minLength: SHARED_PASSWORD_POLICY.MIN_LENGTH,
+  requireUppercase: SHARED_PASSWORD_POLICY.REQUIRE_UPPERCASE,
+  requireLowercase: SHARED_PASSWORD_POLICY.REQUIRE_LOWERCASE,
+  requireNumbers: SHARED_PASSWORD_POLICY.REQUIRE_NUMBERS,
+  requireSymbols: SHARED_PASSWORD_POLICY.REQUIRE_SYMBOLS,
 };
-
-const PATTERNS = {
-  uppercase: /[A-Z]/,
-  lowercase: /[a-z]/,
-  numbers: /\d/,
-  symbols: /[^A-Za-z0-9]/,
-} as const;
 
 export const getRequiredPasswordRuleTypes = (
   policy: PasswordPolicy = PASSWORD_POLICY
@@ -53,7 +51,7 @@ export const validatePasswordAgainstPolicy = (
   }
 
   for (const rule of getRequiredPasswordRuleTypes(policy)) {
-    if (!PATTERNS[rule].test(password)) {
+    if (!PASSWORD_RULE_PATTERNS[rule].test(password)) {
       failedRules.push(rule);
     }
   }

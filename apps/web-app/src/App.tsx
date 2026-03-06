@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@my-many-books/shared-auth';
+import { APP_ROUTES } from '@my-many-books/shared-navigation';
 import { authService } from './services/authService';
 import { ApiProvider } from './contexts/ApiContext';
 import { SettingsProvider } from './contexts/SettingsContext';
@@ -38,6 +39,9 @@ import { Navbar } from './components/Navigation';
 // Lazy load non-landing pages for route-based code splitting
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const AccountPage = lazy(() => import('./pages/AccountPage'));
 const BookSearchPage = lazy(() => import('./components/Search/BookSearchPage'));
 const ScannerModal = lazy(() => import('./components/Scanner'));
 
@@ -88,7 +92,7 @@ const ScannerRoute: React.FC = () => {
       scannerCopy: copyStatus,
     });
 
-    return `/search?${params.toString()}`;
+    return `${APP_ROUTES.search.path}?${params.toString()}`;
   };
 
   const handleScanSuccess = async (result: { isbn: string }) => {
@@ -278,8 +282,10 @@ function App() {
                       <Suspense fallback={null}>
                         <Routes>
                           {/* Public routes */}
-                          <Route path="/auth" element={<AuthPage />} />
+                          <Route path={APP_ROUTES.auth.path} element={<AuthPage />} />
                           <Route path="/auth/verify" element={<VerifyEmailPage />} />
+                          <Route path={APP_ROUTES['forgot-password'].path} element={<ForgotPasswordPage />} />
+                          <Route path={APP_ROUTES['reset-password'].path} element={<ResetPasswordPage />} />
 
                           {/* Admin routes - require admin role */}
                           <Route
@@ -389,10 +395,11 @@ function App() {
                                 <Navbar />
                                 <ProtectedMainContent>
                                   <Routes>
-                                    <Route path="/" element={<PageErrorBoundary pageName="Books"><BooksPage /></PageErrorBoundary>} />
-                                    <Route path="/search" element={<PageErrorBoundary pageName="Book Search"><BookSearchPage /></PageErrorBoundary>} />
+                                    <Route path={APP_ROUTES.home.path} element={<PageErrorBoundary pageName="Books"><BooksPage /></PageErrorBoundary>} />
+                                    <Route path={APP_ROUTES.search.path} element={<PageErrorBoundary pageName="Book Search"><BookSearchPage /></PageErrorBoundary>} />
                                     <Route path="/scanner" element={<ScannerRoute />} />
-                                    <Route path="*" element={<Navigate to="/" replace />} />
+                                    <Route path={APP_ROUTES.account.path} element={<PageErrorBoundary pageName="Account"><AccountPage /></PageErrorBoundary>} />
+                                    <Route path="*" element={<Navigate to={APP_ROUTES.home.path} replace />} />
                                   </Routes>
                                 </ProtectedMainContent>
                               </ProtectedRoute>

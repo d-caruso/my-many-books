@@ -17,15 +17,12 @@ import { useTranslation } from 'react-i18next';
 
 export default function RootLayout() {
   const { t } = useTranslation();
-  
+
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <PaperProvider>
-          <AuthProvider
-            authService={authService}
-            loadingComponent={<LoadingSpinner />}
-          >
+          <AuthProvider authService={authService} loadingComponent={<LoadingSpinner />}>
             <SyncProvider>
               <LifecycleProvider>
                 <ErrorTrackingProvider>
@@ -33,53 +30,71 @@ export default function RootLayout() {
                     <StatusBar style="auto" />
                     <OfflineBanner />
                     <AboutPopupGate />
-            <Stack>
-              <Stack.Screen 
-                name="(tabs)" 
-                options={{ headerShown: false }} 
-              />
-              <Stack.Screen 
-                name="auth" 
-                options={{ 
-                  headerShown: false,
-                  presentation: 'modal'
-                }} 
-              />
-              <Stack.Screen 
-                name="book/[id]" 
-                options={{ 
-                  title: t('pages:books.details_title'),
-                  presentation: 'card'
-                }} 
-              />
-              <Stack.Screen 
-                name="book/edit/[id]" 
-                options={{ 
-                  title: t('pages:books.edit_title'),
-                  presentation: 'card'
-                }} 
-              />
-              <Stack.Screen 
-                name="book/add" 
-                options={{ 
-                  title: t('pages:books.add_book'),
-                  presentation: 'card'
-                }} 
-              />
-              <Stack.Screen
-                name="scanner"
-                options={{
-                  title: t('pages:books.scan_title'),
-                  presentation: 'card'
-                }}
-              />
-              <Stack.Screen
-                name="admin"
-                options={{
-                  headerShown: false
-                }}
-              />
-            </Stack>
+                    <Stack>
+                      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                      <Stack.Screen
+                        name="auth"
+                        options={{
+                          headerShown: false,
+                          presentation: 'modal',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="account"
+                        options={{
+                          title: t('common:account'),
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="forgot-password"
+                        options={{
+                          title: t('common:forgot_password_title'),
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="reset-password"
+                        options={{
+                          title: t('common:reset_password_title'),
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="book/[id]"
+                        options={{
+                          title: t('pages:books.details_title'),
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="book/edit/[id]"
+                        options={{
+                          title: t('pages:books.edit_title'),
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="book/add"
+                        options={{
+                          title: t('pages:books.add_book'),
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="scanner"
+                        options={{
+                          title: t('pages:books.scan_title'),
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="admin"
+                        options={{
+                          headerShown: false,
+                        }}
+                      />
+                    </Stack>
                   </ErrorBoundary>
                 </ErrorTrackingProvider>
               </LifecycleProvider>

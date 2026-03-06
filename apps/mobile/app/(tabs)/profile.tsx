@@ -80,6 +80,16 @@ export default function ProfileScreen() {
             )}
 
             <List.Item
+              title={t('common:account')}
+              description={t('common:account_subtitle')}
+              left={() => <List.Icon icon="lock-outline" />}
+              right={() => <List.Icon icon="chevron-right" />}
+              onPress={() => router.push('/account')}
+              accessibilityRole="button"
+              accessibilityLabel={`${t('common:account')}, ${t('common:account_subtitle')}`}
+            />
+
+            <List.Item
               title={t('dark_mode')}
               description={t('toggle_dark_theme')}
               left={() => <List.Icon icon="theme-light-dark" />}

@@ -5,6 +5,9 @@
 import request from 'supertest';
 import express from 'express';
 let mockController: any = {};
+const mockGetUserById = jest.fn();
+const mockChangePassword = jest.fn();
+const mockSetRefreshTokenCookie = jest.fn();
 
 jest.mock('../../../src/container', () => ({
   container: {
@@ -17,6 +20,23 @@ jest.mock('../../../src/middleware/auth', () => ({
     req.user = { id: 1, email: 'user@example.com', provider: 'cognito' };
     next();
   }),
+  UserService: {
+    getUserById: (...args: unknown[]) => mockGetUserById(...args),
+  },
+}));
+
+jest.mock('../../../src/services/auth/cognitoPasswordService', () => ({
+  cognitoPasswordService: {
+    changePassword: (...args: unknown[]) => mockChangePassword(...args),
+  },
+  COGNITO_PASSWORD_ERRORS: {
+    INVALID_PASSWORD_POLICY_ERROR_NAME: 'InvalidPasswordPolicyError',
+    COGNITO_CONFIG_ERROR_NAME: 'CognitoConfigurationError',
+  },
+}));
+
+jest.mock('../../../src/services/auth/googleOAuth', () => ({
+  setRefreshTokenCookie: (...args: unknown[]) => mockSetRefreshTokenCookie(...args),
 }));
 
 jest.mock('../../../src/validation', () => ({
@@ -81,6 +101,20 @@ describe('User Routes', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetUserById.mockResolvedValue({
+      id: 1,
+      email: 'user@example.com',
+      name: 'Jane',
+      surname: 'Doe',
+      role: 'user',
+      isActive: true,
+    });
+    mockChangePassword.mockResolvedValue({
+      accessToken: 'new-access-token',
+      idToken: 'new-id-token',
+      refreshToken: 'new-refresh-token',
+      expiresIn: 3600,
+    });
     app = express();
     app.use(express.json());
     app.use('/api/users', userRoutes);
@@ -118,5 +152,30 @@ describe('User Routes', () => {
   it('PATCH /api/users deactivates account', async () => {
     await request(app).patch('/api/users/1').expect(200);
     expect(mockController.deactivateAccount).toHaveBeenCalled();
+  });
+
+  it('PATCH /api/users changes password when action is change_password', async () => {
+    const response = await request(app)
+      .patch('/api/users/1')
+      .send({
+        action: 'change_password',
+        currentPassword: 'CurrentPass123',
+        newPassword: 'NewPass123',
+      })
+      .expect(200);
+
+    expect(mockChangePassword).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: 'user@example.com',
+        currentPassword: 'CurrentPass123',
+        newPassword: 'NewPass123',
+      })
+    );
+    expect(mockSetRefreshTokenCookie).toHaveBeenCalled();
+    expect(response.body.data).toMatchObject({
+      changed: true,
+      accessToken: 'new-access-token',
+      idToken: 'new-id-token',
+    });
   });
 });

@@ -110,6 +110,16 @@ export const APP_ROUTES: Record<AppRouteName, AppRoute> = {
       requiresAuth: true
     }
   },
+
+  account: {
+    name: 'account',
+    path: '/account',
+    metadata: {
+      title: 'Account',
+      breadcrumb: 'Account',
+      requiresAuth: true
+    }
+  },
   
   settings: {
     name: 'settings',
@@ -146,7 +156,25 @@ export const APP_ROUTES: Record<AppRouteName, AppRoute> = {
       title: 'Register',
       breadcrumb: 'Register'
     }
-  }
+  },
+
+  'forgot-password': {
+    name: 'forgot-password',
+    path: '/auth/forgot-password',
+    metadata: {
+      title: 'Forgot Password',
+      breadcrumb: 'Forgot Password'
+    }
+  },
+
+  'reset-password': {
+    name: 'reset-password',
+    path: '/auth/reset-password',
+    metadata: {
+      title: 'Reset Password',
+      breadcrumb: 'Reset Password'
+    }
+  },
 };
 
 // Route creation utilities
@@ -222,10 +250,10 @@ export function matchRoutePattern(path: string, appRoute: AppRoute): RouteMatch 
   const queryString = path.split('?')[1];
   if (queryString) {
     const queryParams = new URLSearchParams(queryString);
-    for (const [key, value] of queryParams.entries()) {
+    queryParams.forEach((value, key) => {
       const numValue = Number(value);
       query[key] = isNaN(numValue) ? value : numValue;
-    }
+    });
   }
   
   const route: Route = {
@@ -267,16 +295,18 @@ export function buildUrl(
   let url = route.path;
   
   if (query && Object.keys(query).length > 0) {
-    const queryString = new URLSearchParams(
-      Object.entries(query).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = String(value);
-        }
-        return acc;
-      }, {} as Record<string, string>)
-    ).toString();
-    
-    url += `?${queryString}`;
+    const queryParams = new URLSearchParams();
+
+    Object.entries(query).forEach(([key, value]) => {
+      if (value !== undefined) {
+        queryParams.set(key, String(value));
+      }
+    });
+
+    const queryString = queryParams.toString();
+    if (queryString) {
+      url += `?${queryString}`;
+    }
   }
   
   if (baseUrl) {
@@ -329,6 +359,8 @@ export function generateBreadcrumb(route: Route, params?: RouteParams): string[]
       
     case 'login':
     case 'register':
+    case 'forgot-password':
+    case 'reset-password':
       breadcrumbs.push('Auth');
       break;
   }
