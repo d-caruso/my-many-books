@@ -10,16 +10,11 @@ import { container } from '../../../src/container';
 import { TYPES } from '../../../src/container/types';
 
 // Mock dependencies
-jest.mock('../../../src/container', () => {
-  const actual = jest.requireActual('../../../src/container');
-  return {
-    ...actual,
-    container: {
-      ...actual.container,
-      get: jest.fn(),
-    },
-  };
-});
+jest.mock('../../../src/container', () => ({
+  container: {
+    get: jest.fn(),
+  },
+}));
 jest.mock('../../../src/controllers/admin/StatsController', () => ({
   statsController: {
     getSummary: jest.fn(),
@@ -78,10 +73,16 @@ const mockAdminUserController = {
   deleteUser: jest.fn(),
 };
 
+const mockAdminBookController = {
+  getAllBooks: jest.fn(),
+  getBookById: jest.fn(),
+  updateBook: jest.fn(),
+  deleteBook: jest.fn(),
+};
+
 (container.get as jest.Mock).mockImplementation(token => {
-  if (token === TYPES.AdminUserController) {
-    return mockAdminUserController;
-  }
+  if (token === TYPES.AdminUserController) return mockAdminUserController;
+  if (token === TYPES.AdminBookController) return mockAdminBookController;
   throw new Error(`Unexpected token ${token.toString()}`);
 });
 
@@ -96,12 +97,6 @@ describe('Admin Routes', () => {
     getUserStats: jest.Mock;
     getBookStats: jest.Mock;
   };
-  let mockAdminBookController: {
-    getAllBooks: jest.Mock;
-    getBookById: jest.Mock;
-    updateBook: jest.Mock;
-    deleteBook: jest.Mock;
-  };
   let mockAuthMiddleware: jest.MockedFunction<typeof authMiddleware>;
   let mockRequirePermission: jest.MockedFunction<typeof requirePermission>;
 
@@ -111,10 +106,9 @@ describe('Admin Routes', () => {
     // Get the mocked controllers
     const { statsController } = require('../../../src/controllers/admin/StatsController');
     mockStatsController = statsController;
-    const { adminBookController } = require('../../../src/controllers/admin/AdminBookController');
-    mockAdminBookController = adminBookController;
 
     Object.values(mockAdminUserController).forEach(method => method.mockReset());
+    Object.values(mockAdminBookController).forEach(method => method.mockReset());
 
     // Mock auth middleware to pass through and set an admin user
     mockAuthMiddleware = authMiddleware as jest.MockedFunction<typeof authMiddleware>;

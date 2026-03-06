@@ -1,9 +1,10 @@
 import { AuthorController } from '../../../src/controllers/AuthorController';
-import { Author, Book } from '../../../src/models';
+import { Author } from '../../../src/models';
 import { container } from '../../../src/container';
 import { TYPES } from '../../../src/container/types';
 import { AuthorService } from '../../../src/services/author/AuthorService';
 import { AuthorRepository } from '../../../src/repositories/author/AuthorRepository';
+import { BookRepository } from '../../../src/repositories/book/BookRepository';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
 import { EVENTS } from '../../../src/services/hooks/events';
 import { UniversalRequest } from '../../../src/types';
@@ -58,6 +59,7 @@ describe('AuthorController', () => {
   let findUserAuthorByIdSpy: jest.SpyInstance;
   let findByIdSpy: jest.SpyInstance;
   let searchByQuerySpy: jest.SpyInstance;
+  let bookSearchSpy: jest.SpyInstance;
 
   const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
@@ -75,6 +77,9 @@ describe('AuthorController', () => {
     searchByQuerySpy = jest
       .spyOn(AuthorRepository.prototype, 'searchByQuery')
       .mockResolvedValue([]);
+    bookSearchSpy = jest
+      .spyOn(BookRepository.prototype, 'search')
+      .mockResolvedValue({ rows: [], total: 0, limit: 20, offset: 0 });
 
     mockRequest = {
       headers: { 'accept-language': 'en' },
@@ -92,6 +97,7 @@ describe('AuthorController', () => {
     findUserAuthorByIdSpy.mockRestore();
     findByIdSpy.mockRestore();
     searchByQuerySpy.mockRestore();
+    bookSearchSpy.mockRestore();
     container.restore();
   });
 
@@ -249,16 +255,21 @@ describe('AuthorController', () => {
         surname: 'Smith',
         userId: 1,
       });
-      mockRequest.params = { id: '2' };
-      (Book.findAndCountAll as jest.Mock).mockResolvedValue({
-        count: 1,
+      bookSearchSpy.mockResolvedValue({
         rows: [{ id: 10, title: 'Book Title' }],
+        total: 1,
+        limit: 20,
+        offset: 0,
       });
+      mockRequest.params = { id: '2' };
 
       const response = await authorController.getAuthorBooks(mockRequest);
 
       expect(findByIdSpy).toHaveBeenCalledWith(2);
-      expect(Book.findAndCountAll).toHaveBeenCalled();
+      expect(bookSearchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ authorId: 2 }),
+        expect.any(Object)
+      );
       expect(response.statusCode).toBe(200);
       expect((response.data as any).books).toHaveLength(1);
     });

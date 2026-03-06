@@ -18,6 +18,7 @@ export const InstallPrompt: React.FC = () => {
   const { t } = useTranslation();
   const { isInstallable, isInstalled, installApp } = usePWAContext();
   const [canInstall, setCanInstall] = React.useState(false);
+  const [visible, setVisible] = React.useState(false);
   const promptRef = React.useRef<HTMLDivElement | null>(null);
   const [dismissed, setDismissed] = React.useState(() => {
     try {
@@ -28,13 +29,11 @@ export const InstallPrompt: React.FC = () => {
   });
   const fadeSx = useLanguageChangeFade(promptRef, { keyframePrefix: 'pwaLangFade' });
 
-  // Check if the deferred prompt is available by testing installApp
   React.useEffect(() => {
-    // The installApp function will log a warning if deferredPrompt is null
-    // We'll consider it available after a short delay to allow the event to fire
     const timer = setTimeout(() => {
       setCanInstall(true);
-    }, 1000);
+      setVisible(true);
+    }, 1400);
 
     return () => clearTimeout(timer);
   }, []);
@@ -80,6 +79,9 @@ export const InstallPrompt: React.FC = () => {
         boxSizing: 'border-box',
         p: 2,
         pr: 6,
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        transition: 'opacity 0.4s ease, transform 0.4s ease',
         ...fadeSx,
         '@media (min-width: 768px)': {
           left: 'auto',

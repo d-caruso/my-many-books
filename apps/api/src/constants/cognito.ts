@@ -4,6 +4,7 @@
  */
 export const COGNITO_ERRORS = Object.freeze({
   NOT_AUTHORIZED: 'NotAuthorizedException',
+  USER_NOT_CONFIRMED: 'UserNotConfirmedException',
   USER_NOT_FOUND: 'UserNotFoundException',
   USERNAME_EXISTS: 'UsernameExistsException',
   INVALID_PASSWORD: 'InvalidPasswordException',

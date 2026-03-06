@@ -80,7 +80,7 @@ describe('AuthPage', () => {
     expect(screen.getByTestId('language-selector')).toBeInTheDocument();
     expect(screen.getByTestId('login-form')).toBeInTheDocument();
     expect(screen.queryByTestId('register-form')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /what is my many books\?/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /what is\smy many books\?/i })).toBeInTheDocument();
   });
 
   test('switches to register form when switch button is clicked', () => {
@@ -90,7 +90,7 @@ describe('AuthPage', () => {
 
     expect(screen.getByTestId('register-form')).toBeInTheDocument();
     expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /what is my many books\?/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /what is\smy many books\?/i })).toBeInTheDocument();
   });
 
   test('switches back to login form from register form', () => {
@@ -150,7 +150,7 @@ describe('AuthPage', () => {
   test('opens and closes About dialog from auth page link', async () => {
     render(<AuthPage />);
 
-    fireEvent.click(screen.getByRole('button', { name: /what is my many books\?/i }));
+    fireEvent.click(screen.getByRole('button', { name: /what is\smy many books\?/i }));
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('What this app is for')).toBeInTheDocument();

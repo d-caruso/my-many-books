@@ -402,7 +402,7 @@ export class BookController extends BaseController {
           );
 
           // Preserve original order from BookSearchService (pinned first, then by sortBy/relevance)
-          const bookMap = new Map(rows.map(b => [b.id!, b]));
+          const bookMap = new Map(rows.map(b => [b.id, b]));
           filteredResults = results
             .map(r => {
               const book = bookMap.get(r.id);

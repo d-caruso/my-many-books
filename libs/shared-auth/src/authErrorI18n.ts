@@ -3,6 +3,7 @@ import { ERROR_CODES } from '@my-many-books/shared-types';
 const AUTH_ERROR_I18N: Record<string, string> = {
   [ERROR_CODES.AUTH_FAILED]: 'invalid_credentials',
   [ERROR_CODES.CONFLICT]: 'email_already_registered',
+  [ERROR_CODES.EMAIL_REGISTERED_VIA_SOCIAL]: 'email_registered_via_social',
   [ERROR_CODES.VALIDATION_FAILED]: 'invalid_data',
   [ERROR_CODES.USER_NOT_FOUND]: 'user_not_found',
   [ERROR_CODES.INTERNAL_ERROR]: 'unexpected_error',

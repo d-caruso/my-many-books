@@ -70,7 +70,7 @@ describe('InstallPrompt', () => {
     render(<InstallPrompt />);
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(1500);
     });
 
     fireEvent.click(screen.getByRole('button', { name: /install/i }));

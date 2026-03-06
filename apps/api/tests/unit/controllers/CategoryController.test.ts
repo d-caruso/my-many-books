@@ -3,7 +3,6 @@ import {
   CategoryService,
   CategoryServiceError,
 } from '../../../src/services/category/CategoryService';
-import { Book } from '../../../src/models/Book';
 import { UniversalRequest } from '../../../src/types';
 import { CategoryEntity } from '../../../src/repositories/category/CategoryRepositoryTypes';
 import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
@@ -17,7 +16,7 @@ jest.mock('../../../src/services/hooks/hookSystem', () => ({
 
 jest.mock('../../../src/models/Book', () => ({
   Book: {
-    findAndCountAll: jest.fn(),
+    SORTABLE_FIELDS: { TITLE: 'title', STATUS: 'status' },
   },
 }));
 
@@ -29,6 +28,7 @@ describe('CategoryController', () => {
   let controller: CategoryController;
   let mockService: jest.Mocked<CategoryService>;
   let mockRepository: any;
+  let mockBookRepository: any;
   let baseRequest: UniversalRequest;
   const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
@@ -56,9 +56,14 @@ describe('CategoryController', () => {
       list: jest.fn().mockResolvedValue({ rows: [], total: 0 }),
     };
 
+    mockBookRepository = {
+      search: jest.fn().mockResolvedValue({ rows: [], total: 0, limit: 20, offset: 0 }),
+    };
+
     controller = new CategoryController(
       mockService as unknown as CategoryService,
       mockRepository,
+      mockBookRepository,
     );
 
     baseRequest = {
@@ -246,9 +251,11 @@ describe('CategoryController', () => {
       mockService.getCategory.mockResolvedValue(
         buildCategory({ id: 5, name: 'History' })
       );
-      (Book.findAndCountAll as jest.Mock).mockResolvedValue({
-        count: 1,
+      mockBookRepository.search.mockResolvedValue({
         rows: [{ id: 10, title: 'Book' }],
+        total: 1,
+        limit: 20,
+        offset: 0,
       });
 
       const response = await controller.getCategoryBooks({
@@ -257,12 +264,15 @@ describe('CategoryController', () => {
       });
 
       expect(mockService.getCategory).toHaveBeenCalledWith(5, expect.any(Object));
-      expect(Book.findAndCountAll).toHaveBeenCalled();
+      expect(mockBookRepository.search).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId: 5 }),
+        expect.any(Object)
+      );
       expect(response.data).toMatchObject({
         category: expect.objectContaining({ id: 5, name: 'History' }),
         books: [{ id: 10, title: 'Book' }],
       });
-  });
+    });
 
   describe('listCategories with incremental sync', () => {
     beforeEach(() => {

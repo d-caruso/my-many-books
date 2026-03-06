@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, Container, Snackbar, Typography } from '@mui/material';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { Trans, useTranslation } from 'react-i18next';
 import { LoginForm, RegisterForm } from '../components/Auth';
 import { LanguageSelector } from '../components/Navigation/LanguageSelector';
@@ -11,6 +12,13 @@ import { useLanguageChangeFade } from '../hooks/useLanguageChangeFade';
 import type { VerifyEmailNavState } from '../types/authNavState';
 
 type AuthMode = 'login' | 'register';
+
+const oauthErrorKey: Record<string, string> = {
+  invalid_state: 'oauth_error_invalid_state',
+  missing_code_or_state: 'oauth_error_missing_code',
+  invalid_pkce_verifier: 'oauth_error_pkce_failed',
+  oauth_exchange_failed: 'oauth_error_exchange_failed',
+};
 
 const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>('login');
@@ -46,11 +54,12 @@ const AuthPage: React.FC = () => {
           if (!ignore) navigate(homePath, { replace: true });
           return;
         } catch {
-          if (!ignore)
-            setSocialAuthError(t('common:google_login_failed', 'Google login failed. Please try again.'));
+          if (!ignore) setSocialAuthError(t('oauth_error_generic'));
         }
       } else if (!ignore) {
-        setSocialAuthError(t('common:google_login_failed', 'Google login failed. Please try again.'));
+        const reason = params.get('reason') ?? '';
+        const key = oauthErrorKey[reason] ?? 'oauth_error_generic';
+        setSocialAuthError(t(key));
       }
 
       if (!ignore) navigate(authPath, { replace: true });
@@ -126,11 +135,6 @@ const AuthPage: React.FC = () => {
         }}
       >
         <Container maxWidth="sm">
-        {socialAuthError ? (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {socialAuthError}
-          </Alert>
-        ) : null}
         <Box
           sx={{
             display: 'flex',
@@ -153,7 +157,30 @@ const AuthPage: React.FC = () => {
             {appName}
           </Typography>
         </Box>
-        {mode === 'login' ? (
+        {socialAuthError ? (
+          <Box
+            role="alert"
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 2,
+              py: 4,
+              textAlign: 'center',
+            }}
+          >
+            <ErrorOutlineIcon sx={{ fontSize: 56, color: 'error.main' }} />
+            <Typography variant="h6" color="error.main" fontWeight={600}>
+              {socialAuthError}
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={() => setSocialAuthError(null)}
+            >
+              {t('try_again')}
+            </Button>
+          </Box>
+        ) : mode === 'login' ? (
           <LoginForm onSwitchToRegister={() => setMode('register')} />
         ) : (
           <RegisterForm onSwitchToLogin={() => setMode('login')} />
