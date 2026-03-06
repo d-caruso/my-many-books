@@ -36,6 +36,7 @@ import { getLogger } from '@my-many-books/shared-logging';
 import { SettingsService } from './services/SettingsService';
 import { parseTextPlainJson } from './middleware/parseTextPlainJson';
 import { createErrorResponse, ERROR_CODES, HEALTH_STATUS } from '@my-many-books/shared-types';
+import { BASE_PATH } from './constants/api';
 
 const app: express.Express = express();
 const isTestEnvironment = process.env['NODE_ENV'] === 'test';
@@ -69,10 +70,6 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// API base path from environment
-const API_PREFIX = process.env['API_PREFIX'] || '/api';
-const API_ROUTE_VERSION = process.env['API_ROUTE_VERSION'] || 'v1';
-const BASE_PATH = `${API_PREFIX}/${API_ROUTE_VERSION}`;
 
 // ===== HEALTH CHECK =====
 // Apply public rate limiter to health check

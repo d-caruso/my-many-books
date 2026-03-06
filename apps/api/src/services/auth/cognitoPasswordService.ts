@@ -10,6 +10,7 @@ import {
   type AuthenticationResultType,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { validatePasswordStrength } from '@my-many-books/shared-validation';
+import { COGNITO_ERRORS } from '../../constants/cognito';
 
 export interface CognitoClientLike {
   send<TOutput>(command: unknown): Promise<TOutput>;
@@ -152,7 +153,7 @@ export class CognitoPasswordService {
       }));
     } catch (error: unknown) {
       const errorName = (error as { name?: string })?.name;
-      if (errorName === 'UserNotFoundException') {
+      if (errorName === COGNITO_ERRORS.USER_NOT_FOUND) {
         // Prevent account enumeration.
         return;
       }

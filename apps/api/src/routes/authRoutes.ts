@@ -44,12 +44,10 @@ import {
 } from '../services/auth/googleOAuth';
 import { completeGoogleLogin } from '../services/auth/googleOAuthSession';
 import { COGNITO_PASSWORD_ERRORS, cognitoPasswordService } from '../services/auth/cognitoPasswordService';
+import { AUTH_COOKIE_PATH } from '../constants/api';
+import { COGNITO_ERRORS } from '../constants/cognito';
 
 const router: express.Router = Router();
-
-const API_PREFIX = process.env['API_PREFIX'] || '/api';
-const API_ROUTE_VERSION = process.env['API_ROUTE_VERSION'] || 'v1';
-const AUTH_COOKIE_PATH = `${API_PREFIX}/${API_ROUTE_VERSION}/auth`;
 
 const cognitoClient = new CognitoIdentityProviderClient({
   region: process.env['AWS_REGION'] || 'us-east-1',
@@ -191,12 +189,12 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     if (error && typeof error === 'object' && 'name' in error) {
       const errorName = (error as { name: string }).name;
 
-      if (errorName === 'NotAuthorizedException') {
+      if (errorName === COGNITO_ERRORS.NOT_AUTHORIZED) {
         sendError(res, 401, ERROR_CODES.AUTH_FAILED, 'Invalid email or password');
         return;
       }
 
-      if (errorName === 'UserNotFoundException') {
+      if (errorName === COGNITO_ERRORS.USER_NOT_FOUND) {
         sendError(res, 401, ERROR_CODES.USER_NOT_FOUND, 'User not found');
         return;
       }
@@ -519,7 +517,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     if (error && typeof error === 'object' && 'name' in error) {
       const errorName = (error as { name: string }).name;
 
-      if (errorName === 'UsernameExistsException') {
+      if (errorName === COGNITO_ERRORS.USERNAME_EXISTS) {
         try {
           const getUserCommand = new AdminGetUserCommand({
             UserPoolId: process.env['COGNITO_USER_POOL_ID'] || '',
@@ -539,7 +537,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
         return;
       }
 
-      if (errorName === 'InvalidPasswordException') {
+      if (errorName === COGNITO_ERRORS.INVALID_PASSWORD) {
         sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Password does not meet requirements');
         return;
       }
@@ -577,22 +575,22 @@ router.post('/verify-email', async (req: Request, res: Response): Promise<void> 
     if (error && typeof error === 'object' && 'name' in error) {
       const errorName = (error as { name: string }).name;
 
-      if (errorName === 'CodeMismatchException') {
+      if (errorName === COGNITO_ERRORS.CODE_MISMATCH) {
         sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Invalid verification code');
         return;
       }
 
-      if (errorName === 'ExpiredCodeException') {
+      if (errorName === COGNITO_ERRORS.EXPIRED_CODE) {
         sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Verification code has expired');
         return;
       }
 
-      if (errorName === 'NotAuthorizedException') {
+      if (errorName === COGNITO_ERRORS.NOT_AUTHORIZED) {
         sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Account already verified');
         return;
       }
 
-      if (errorName === 'UserNotFoundException') {
+      if (errorName === COGNITO_ERRORS.USER_NOT_FOUND) {
         sendError(res, 404, ERROR_CODES.USER_NOT_FOUND, 'User not found');
         return;
       }
@@ -629,17 +627,17 @@ router.post('/resend-code', async (req: Request, res: Response): Promise<void> =
     if (error && typeof error === 'object' && 'name' in error) {
       const errorName = (error as { name: string }).name;
 
-      if (errorName === 'UserNotFoundException') {
+      if (errorName === COGNITO_ERRORS.USER_NOT_FOUND) {
         sendError(res, 404, ERROR_CODES.USER_NOT_FOUND, 'User not found');
         return;
       }
 
-      if (errorName === 'LimitExceededException') {
+      if (errorName === COGNITO_ERRORS.LIMIT_EXCEEDED) {
         sendError(res, 429, ERROR_CODES.RATE_LIMIT_EXCEEDED, 'Too many requests. Please try again later.');
         return;
       }
 
-      if (errorName === 'CodeDeliveryFailureException') {
+      if (errorName === COGNITO_ERRORS.CODE_DELIVERY_FAILURE) {
         sendError(res, 500, ERROR_CODES.INTERNAL_ERROR, 'Failed to deliver verification code');
         return;
       }
@@ -676,7 +674,7 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<voi
     );
 
     const errorName = (error as { name?: string })?.name;
-    if (errorName === 'LimitExceededException' || errorName === 'TooManyRequestsException') {
+    if (errorName === COGNITO_ERRORS.LIMIT_EXCEEDED || errorName === COGNITO_ERRORS.TOO_MANY_REQUESTS) {
       sendError(
         res,
         429,
@@ -741,17 +739,17 @@ router.post('/confirm-forgot-password', async (req: Request, res: Response): Pro
       return;
     }
 
-    if (errorName === 'CodeMismatchException') {
+    if (errorName === COGNITO_ERRORS.CODE_MISMATCH) {
       sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Invalid reset code');
       return;
     }
 
-    if (errorName === 'ExpiredCodeException') {
+    if (errorName === COGNITO_ERRORS.EXPIRED_CODE) {
       sendError(res, 400, ERROR_CODES.VALIDATION_FAILED, 'Reset code has expired');
       return;
     }
 
-    if (errorName === 'LimitExceededException' || errorName === 'TooManyRequestsException') {
+    if (errorName === COGNITO_ERRORS.LIMIT_EXCEEDED || errorName === COGNITO_ERRORS.TOO_MANY_REQUESTS) {
       sendError(
         res,
         429,
