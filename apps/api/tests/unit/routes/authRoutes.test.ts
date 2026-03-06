@@ -565,7 +565,7 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
-      expect(response.body).toHaveProperty('data', null);
+      expect(response.body.data).toMatchObject({ cognitoLogoutUrl: expect.any(String) });
 
       // Verify cookie is cleared
       const cookies = response.headers['set-cookie'] as unknown as string[];
