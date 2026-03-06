@@ -156,6 +156,7 @@ const AuthPage: React.FC = () => {
         </Box>
         {socialAuthError ? (
           <Box
+            role="alert"
             sx={{
               display: 'flex',
               flexDirection: 'column',
