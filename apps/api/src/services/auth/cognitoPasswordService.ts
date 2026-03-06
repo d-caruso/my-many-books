@@ -10,7 +10,6 @@ import {
   type AuthenticationResultType,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { validatePasswordStrength } from '@my-many-books/shared-validation';
-import { passwordNotificationService, type PasswordNotificationService } from './passwordNotificationService';
 
 export interface CognitoClientLike {
   send<TOutput>(command: unknown): Promise<TOutput>;
@@ -72,8 +71,7 @@ export class CognitoPasswordService {
   constructor(
     private readonly cognitoClient: CognitoClientLike = new CognitoIdentityProviderClient({
       region: process.env['AWS_REGION'] || 'us-east-1',
-    }),
-    private readonly notificationService: PasswordNotificationService = passwordNotificationService
+    })
   ) {}
 
   private validateNewPassword(newPassword: string): void {
@@ -136,12 +134,6 @@ export class CognitoPasswordService {
       throw new Error('Authentication result is missing required tokens');
     }
 
-    await this.notificationService.sendPasswordSecurityNotification({
-      email: normalizedEmail,
-      locale: input.locale,
-      type: 'change',
-    });
-
     return {
       accessToken,
       idToken,
@@ -184,12 +176,8 @@ export class CognitoPasswordService {
       UserPoolId: getRequiredEnv('COGNITO_USER_POOL_ID'),
       Username: normalizedEmail,
     }));
-
-    await this.notificationService.sendPasswordSecurityNotification({
-      email: normalizedEmail,
-      locale: input.locale,
-      type: 'reset',
-    });
+    // Post-reset notification is handled by the Cognito PostConfirmation Lambda trigger
+    // (PostConfirmation_ConfirmForgotPassword) defined in cognito-stack.yml.
   }
 }
 

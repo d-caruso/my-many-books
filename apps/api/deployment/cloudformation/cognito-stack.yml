@@ -74,6 +74,7 @@ Resources:
         AllowAdminCreateUserOnly: false
       LambdaConfig:
         CustomMessage: !GetAtt CognitoCustomMessageLambda.Arn
+        PostConfirmation: !GetAtt CognitoPostConfirmationLambda.Arn
       UserPoolTags:
         Project: my-many-books
         Environment: !Ref Environment
@@ -190,6 +191,69 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt CognitoCustomMessageLambda.Arn
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt CognitoUserPool.Arn
+
+  # IAM role for the Post Confirmation Lambda
+  CognitoPostConfirmationLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ServiceName}-post-confirmation-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Project
+          Value: my-many-books
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Post Confirmation Lambda — placeholder for post-reset notification
+  # Fires on: PostConfirmation_ConfirmForgotPassword (password reset confirmed)
+  #            PostConfirmation_ConfirmSignUp (email verification confirmed)
+  # TODO: send "your password was reset" notification email when an email provider is configured.
+  CognitoPostConfirmationLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ServiceName}-post-confirmation-${Environment}'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Role: !GetAtt CognitoPostConfirmationLambdaRole.Arn
+      Timeout: 5
+      Environment:
+        Variables:
+          WEB_APP_URL: !Ref WebAppUrl
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            if (event.triggerSource === 'PostConfirmation_ConfirmForgotPassword') {
+              const email = event.request.userAttributes.email;
+              const locale = (event.request.userAttributes.locale || 'en').toLowerCase();
+              // TODO: send bilingual "your password was reset" notification email.
+              // Use locale to select EN/IT template (same pattern as CustomMessage Lambda).
+              // Requires an email provider (e.g. SES, Resend) to be configured.
+              console.log('PostConfirmation_ConfirmForgotPassword', { email, locale });
+            }
+            return event;
+          };
+      Tags:
+        - Key: Project
+          Value: my-many-books
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Allow Cognito to invoke the Post Confirmation Lambda
+  CognitoPostConfirmationLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt CognitoPostConfirmationLambda.Arn
       Principal: cognito-idp.amazonaws.com
       SourceArn: !GetAtt CognitoUserPool.Arn
 

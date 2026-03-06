@@ -37,11 +37,7 @@ describe('CognitoPasswordService', () => {
         },
       });
 
-    const sendPasswordSecurityNotification = jest.fn().mockResolvedValue(undefined);
-    const service = new CognitoPasswordService(
-      { send },
-      { sendPasswordSecurityNotification } as any
-    );
+    const service = new CognitoPasswordService({ send });
 
     const result = await service.changePassword({
       email: 'user@example.com',
@@ -63,20 +59,11 @@ describe('CognitoPasswordService', () => {
       'GlobalSignOutCommand',
       'InitiateAuthCommand',
     ]);
-    expect(sendPasswordSecurityNotification).toHaveBeenCalledWith(
-      expect.objectContaining({
-        email: 'user@example.com',
-        type: 'change',
-      })
-    );
   });
 
   it('rejects weak passwords before calling Cognito', async () => {
     const send = jest.fn();
-    const service = new CognitoPasswordService(
-      { send },
-      { sendPasswordSecurityNotification: jest.fn() } as any
-    );
+    const service = new CognitoPasswordService({ send });
 
     await expect(
       service.changePassword({
@@ -93,10 +80,7 @@ describe('CognitoPasswordService', () => {
 
   it('does not reveal unknown users during forgot-password request', async () => {
     const send = jest.fn().mockRejectedValue({ name: 'UserNotFoundException' });
-    const service = new CognitoPasswordService(
-      { send },
-      { sendPasswordSecurityNotification: jest.fn() } as any
-    );
+    const service = new CognitoPasswordService({ send });
 
     await expect(
       service.requestForgotPassword({ email: 'missing@example.com' })
@@ -106,11 +90,7 @@ describe('CognitoPasswordService', () => {
 
   it('confirms forgot-password and invalidates sessions', async () => {
     const send = jest.fn().mockResolvedValueOnce({}).mockResolvedValueOnce({});
-    const sendPasswordSecurityNotification = jest.fn().mockResolvedValue(undefined);
-    const service = new CognitoPasswordService(
-      { send },
-      { sendPasswordSecurityNotification } as any
-    );
+    const service = new CognitoPasswordService({ send });
 
     await service.confirmForgotPassword({
       email: 'user@example.com',
@@ -123,20 +103,11 @@ describe('CognitoPasswordService', () => {
       'ConfirmForgotPasswordCommand',
       'AdminUserGlobalSignOutCommand',
     ]);
-    expect(sendPasswordSecurityNotification).toHaveBeenCalledWith(
-      expect.objectContaining({
-        email: 'user@example.com',
-        type: 'reset',
-      })
-    );
   });
 
   it('throws configuration error if Cognito client id is missing', async () => {
     delete process.env['COGNITO_USER_POOL_CLIENT_ID'];
-    const service = new CognitoPasswordService(
-      { send: jest.fn() },
-      { sendPasswordSecurityNotification: jest.fn() } as any
-    );
+    const service = new CognitoPasswordService({ send: jest.fn() });
 
     await expect(
       service.requestForgotPassword({ email: 'user@example.com' })
