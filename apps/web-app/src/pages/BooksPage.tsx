@@ -33,14 +33,32 @@ const BooksPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [pageMode, setPageMode] = useState<PageMode>('list');
+  const [pageMode, setPageMode] = useState<PageMode>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('mode') === 'add' ? 'add' : 'list';
+  });
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [savingStatusBookId, setSavingStatusBookId] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [initialIsbn, setInitialIsbn] = useState<string | undefined>(undefined);
-  const [initialDraft, setInitialDraft] = useState<Partial<BookFormData> | null>(null);
+  const [initialIsbn, setInitialIsbn] = useState<string | undefined>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') !== 'add') return undefined;
+    return params.get('isbn') || undefined;
+  });
+  const [initialDraft, setInitialDraft] = useState<Partial<BookFormData> | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') !== 'add') return null;
+    const scannerSource = params.get('scannerSource');
+    if (scannerSource !== 'scanner' && params.get('restoreDraft') !== '1') return null;
+    try {
+      const stored = window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
+      return stored ? (JSON.parse(stored) as Partial<BookFormData>) : null;
+    } catch {
+      return null;
+    }
+  });
   const [scannerNoticeOpen, setScannerNoticeOpen] = useState(false);
   const [scannerNoticeMessage, setScannerNoticeMessage] = useState('');
   const [welcomeNoticeOpen, setWelcomeNoticeOpen] = useState(false);
@@ -165,7 +183,10 @@ const BooksPage: React.FC = () => {
         );
         setScannerNoticeOpen(true);
       }
-      handleAddBook();
+      setSelectedBook(null);
+      setPageMode('add');
+      setActionError(null);
+      window.scrollTo({ top: 0 });
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('mode');
       newParams.delete('isbn');

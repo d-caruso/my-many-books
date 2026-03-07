@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useStat
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { authService } from './services/authService';
-import { ApiProvider } from './contexts/ApiContext';
+import { ApiProvider, useApi } from './contexts/ApiContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { PWAProvider } from './contexts/PWAContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -76,20 +76,11 @@ const MobileAnalyticsPage = lazy(() =>
 const ScannerRoute: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { runMainContentTransition } = useProtectedViewTransition();
+  const { fadeOutMainContent, runMainContentTransition } = useProtectedViewTransition();
+  const { bookAPI } = useApi();
   const didNavigate = useRef(false);
   const scannerParams = new URLSearchParams(location.search);
   const returnTo = scannerParams.get('returnTo');
-
-  const buildScannerSearchUrl = (isbn: string, copyStatus: 'success' | 'failed') => {
-    const params = new URLSearchParams({
-      isbn,
-      scannerSource: 'scanner',
-      scannerCopy: copyStatus,
-    });
-
-    return `/search?${params.toString()}`;
-  };
 
   const handleScanSuccess = async (result: { isbn: string }) => {
     if (didNavigate.current) {
@@ -97,21 +88,23 @@ const ScannerRoute: React.FC = () => {
     }
 
     didNavigate.current = true;
+    fadeOutMainContent();
 
-    let copyStatus: 'success' | 'failed' = 'failed';
+    const [copyStatus, book] = await Promise.all([
+      navigator.clipboard?.writeText
+        ? navigator.clipboard.writeText(result.isbn).then(() => 'success' as const).catch(() => 'failed' as const)
+        : Promise.resolve('failed' as const),
+      bookAPI.searchByISBN(result.isbn).catch(() => null),
+      new Promise<void>(resolve => setTimeout(resolve, VIEW_TRANSITION_FADE_OUT_LEAD_MS)),
+    ]);
 
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(result.isbn);
-        copyStatus = 'success';
-      }
-    } catch {
-      copyStatus = 'failed';
+    const commonParams = { scannerSource: 'scanner', scannerCopy: copyStatus };
+
+    if (book) {
+      navigate(`/search?${new URLSearchParams({ isbn: result.isbn, ...commonParams }).toString()}`);
+    } else {
+      navigate(`/?${new URLSearchParams({ mode: 'add', isbn: result.isbn, ...commonParams }).toString()}`);
     }
-
-    runMainContentTransition(() => {
-      navigate(buildScannerSearchUrl(result.isbn, copyStatus));
-    });
   };
 
   return (
