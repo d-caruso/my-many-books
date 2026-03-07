@@ -5,31 +5,19 @@ import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import eslintConfigPrettier from 'eslint-config-prettier';
-import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-export default tseslint.config(
+// Shared base rules imported by per-project eslint configs.
+// Does NOT include projectService/type-checking (each project adds its own parserOptions)
+// Does NOT include ignores (each project adds its own)
+export const sharedRules = tseslint.config(
   eslint.configs.recommended,
 
-  // TypeScript rules — all TS/TSX files (with type-checking scoped to TS)
+  // TypeScript rules — parser + base rules (no type-checking)
   {
     files: ['**/*.{ts,tsx}'],
-    extends: [...tseslint.configs.recommendedTypeChecked],
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: __dirname,
-      },
-    },
+    extends: [...tseslint.configs.recommended],
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-return': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'warn',
       '@typescript-eslint/no-unused-expressions': ['error', { allowShortCircuit: true, allowTernary: true }],
@@ -88,8 +76,11 @@ export default tseslint.config(
       globals: { ...globals.serviceworker, ...globals.browser },
     },
   },
+);
 
-  // Global ignores
+// Root-level ESLint config = shared rules + workspace-wide ignores
+export default tseslint.config(
+  ...sharedRules,
   {
     ignores: [
       '**/dist/**',

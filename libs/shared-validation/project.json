@@ -1,8 +1,7 @@
 {
-  "name": "shared-i18n",
-  "version": "0.1.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/shared-i18n/src",
+  "name": "shared-validation",
+  "sourceRoot": "libs/shared-validation/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -11,17 +10,10 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "libs/shared-i18n/dist",
-        "main": "libs/shared-i18n/src/index.ts",
-        "tsConfig": "libs/shared-i18n/tsconfig.lib.json",
-        "assets": [
-          "libs/shared-i18n/*.md",
-          {
-            "glob": "**/*",
-            "input": "libs/shared-i18n/src/locales",
-            "output": "locales"
-          }
-        ]
+        "outputPath": "dist/libs/shared-validation",
+        "main": "libs/shared-validation/src/index.ts",
+        "tsConfig": "libs/shared-validation/tsconfig.lib.json",
+        "assets": []
       }
     },
     "lint": {
@@ -31,9 +23,9 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "libs/shared-i18n/**/*.ts"
+          "libs/shared-validation/src/**/*.ts"
         ],
-        "eslintConfig": "libs/shared-i18n/eslint.config.mjs"
+        "eslintConfig": "libs/shared-validation/eslint.config.mjs"
       }
     },
     "test": {
@@ -42,19 +34,20 @@
         "{workspaceRoot}/coverage/{projectRoot}"
       ],
       "options": {
-        "jestConfig": "libs/shared-i18n/jest.config.ts"
+        "jestConfig": "libs/shared-validation/jest.config.js",
+        "passWithNoTests": true
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
         "command": "tsc --noEmit",
-        "cwd": "libs/shared-i18n"
+        "cwd": "libs/shared-validation"
       }
     }
   },
   "tags": [
-    "scope:shared",
-    "type:lib"
+    "type:shared",
+    "scope:validation"
   ]
 }

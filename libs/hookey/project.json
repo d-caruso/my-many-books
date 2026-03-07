@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "libs/hookey/dist",
         "main": "libs/hookey/src/index.ts",
@@ -16,7 +18,9 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "libs/hookey/jest.config.ts"
       }
@@ -26,10 +30,9 @@
       "outputs": [],
       "options": {
         "lintFilePatterns": [
-          "libs/hookey/src/**/*.ts",
-          "!libs/hookey/examples/**",
-          "!libs/hookey/jest.config.ts"
-        ]
+          "libs/hookey/src/**/*.ts"
+        ],
+        "eslintConfig": "libs/hookey/eslint.config.mjs"
       }
     },
     "typecheck": {
@@ -40,5 +43,8 @@
       }
     }
   },
-  "tags": ["scope:shared", "type:lib"]
+  "tags": [
+    "scope:shared",
+    "type:lib"
+  ]
 }
