@@ -23,7 +23,8 @@
     "delete_confirm_message": "This will remove the author from your author list. This action cannot be undone.",
     "delete_button": "Delete author",
     "delete_failed": "Failed to delete author. Please try again.",
-    "delete_blocked_has_books": "This author cannot be deleted because it is already used by one or more books."
+    "delete_blocked_has_books": "This author is assigned to one or more books. Do you still want to delete it?",
+    "delete_force_button": "Delete anyway"
   },
   "category": {
     "add_title": "Add new category",
@@ -44,6 +45,7 @@
     "delete_confirm_message": "This will remove the category from your category list. This action cannot be undone.",
     "delete_button": "Delete category",
     "delete_failed": "Failed to delete category. Please try again.",
-    "delete_blocked_has_books": "This category cannot be deleted because it is already used by one or more books."
+    "delete_blocked_has_books": "This category is assigned to one or more books. Do you still want to delete it?",
+    "delete_force_button": "Delete anyway"
   }
 }

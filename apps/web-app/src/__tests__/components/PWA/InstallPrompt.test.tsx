@@ -9,6 +9,10 @@ vi.mock('../../../contexts/PWAContext', () => ({
   usePWAContext: vi.fn(),
 }));
 
+vi.mock('@my-many-books/shared-auth', () => ({
+  useAuth: vi.fn(() => ({ user: { id: '1', name: 'Test User' } })),
+}));
+
 setupMuiMock();
 
 vi.mock('@mui/icons-material/GetApp', () => ({

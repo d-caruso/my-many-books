@@ -175,13 +175,16 @@ export class AuthorController extends BaseController {
     }
 
     const numericAuthorId = Number(authorId);
+    const forceDelete = this.getQueryParameter(request, 'force') === 'true';
+
     await emitHookEvent(EVENTS.AUTHOR.DELETE.BEFORE, {
       user: this.mapRequestUser(request),
       authorId: numericAuthorId,
+      force: forceDelete,
     });
 
     try {
-      await this.authorService.deleteAuthor(numericAuthorId, this.getUserContext(request)!);
+      await this.authorService.deleteAuthor(numericAuthorId, this.getUserContext(request)!, forceDelete);
       return this.createSuccessResponse(null, this.t('common:author_deleted'), undefined, 204);
     } catch (error) {
       return this.handleAuthorServiceError(error);
@@ -325,7 +328,14 @@ export class AuthorController extends BaseController {
       case 'AUTHOR_NOT_FOUND':
         return this.createErrorResponseI18n('errors:author_not_found', 404);
       case 'AUTHOR_HAS_BOOKS':
-        return this.createErrorResponseI18n('errors:author_has_books', 409);
+        return {
+          statusCode: 409,
+          success: false,
+          error: {
+            code: 'AUTHOR_HAS_BOOKS',
+            message: this.t('errors:author_has_books'),
+          } as ApiErrorPayload,
+        };
       case 'FORBIDDEN':
       default:
         return this.createErrorResponseI18n('errors:permission_denied', 403);

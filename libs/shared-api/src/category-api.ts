@@ -36,7 +36,7 @@ export class CategoryApi extends BaseApiClient {
     return CategorySchema.parse(response);
   }
 
-  async deleteCategory(id: number): Promise<void> {
-    return this.delete<void>(`/categories/${id}`);
+  async deleteCategory(id: number, force?: boolean): Promise<void> {
+    return this.delete<void>(`/categories/${id}`, force ? { params: { force: 'true' } } : undefined);
   }
 }

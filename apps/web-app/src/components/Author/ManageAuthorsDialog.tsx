@@ -22,6 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import type { Author } from '@my-many-books/shared-types';
+import { ENTITY_MANAGE_ERROR_CODES } from '@my-many-books/shared-types';
 import { useManageAuthors } from '@my-many-books/shared-ui-hooks';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../../contexts/ApiContext';
@@ -45,6 +46,7 @@ export const ManageAuthorsDialog: React.FC<ManageAuthorsDialogProps> = ({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState({ name: '', surname: '', nationality: '' });
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [pendingForceDeleteId, setPendingForceDeleteId] = useState<number | null>(null);
 
   const authorsApi = useMemo(
     () => ({
@@ -52,7 +54,7 @@ export const ManageAuthorsDialog: React.FC<ManageAuthorsDialogProps> = ({
       createAuthor: (data: { name: string; surname: string; nationality?: string }) => authorAPI.createAuthor(data),
       updateAuthor: (id: number, data: Partial<{ name: string; surname: string; nationality?: string | null }>) =>
         authorAPI.updateAuthor(id, data),
-      deleteAuthor: (id: number) => authorAPI.deleteAuthor(id),
+      deleteAuthor: (id: number, force?: boolean) => authorAPI.deleteAuthor(id, force),
     }),
     [authorAPI]
   );
@@ -75,6 +77,7 @@ export const ManageAuthorsDialog: React.FC<ManageAuthorsDialogProps> = ({
       setSearchTerm('');
       setEditingId(null);
       setPendingDeleteId(null);
+      setPendingForceDeleteId(null);
       clearError();
     }
   }, [open, loadAuthors, clearError]);
@@ -130,6 +133,20 @@ export const ManageAuthorsDialog: React.FC<ManageAuthorsDialogProps> = ({
     if (result.success) {
       onAuthorDeleted?.(pendingDeleteId);
       setPendingDeleteId(null);
+    } else if (result.error.code === ENTITY_MANAGE_ERROR_CODES.HAS_BOOKS) {
+      clearError();
+      setPendingForceDeleteId(pendingDeleteId);
+      setPendingDeleteId(null);
+    }
+  };
+
+  const confirmForceDelete = async () => {
+    if (pendingForceDeleteId == null) return;
+    const id = pendingForceDeleteId;
+    setPendingForceDeleteId(null);
+    const result = await deleteAuthor(id, true);
+    if (result.success) {
+      onAuthorDeleted?.(id);
     }
   };
 
@@ -310,6 +327,33 @@ export const ManageAuthorsDialog: React.FC<ManageAuthorsDialogProps> = ({
             startIcon={mutating ? <CircularProgress size={14} /> : <DeleteIcon />}
           >
             {t('dialogs:author.delete_button', { defaultValue: 'Delete author' })}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={pendingForceDeleteId != null} onClose={mutating ? undefined : () => setPendingForceDeleteId(null)}>
+        <DialogTitle>
+          {t('dialogs:author.delete_confirm_title', { defaultValue: 'Delete author?' })}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            {t('dialogs:author.delete_blocked_has_books', {
+              defaultValue: 'This author is assigned to one or more books. Do you still want to delete it?',
+            })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingForceDeleteId(null)} disabled={mutating}>
+            {t('common:cancel')}
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => void confirmForceDelete()}
+            disabled={mutating}
+            startIcon={mutating ? <CircularProgress size={14} /> : <DeleteIcon />}
+          >
+            {t('dialogs:author.delete_force_button', { defaultValue: 'Delete anyway' })}
           </Button>
         </DialogActions>
       </Dialog>

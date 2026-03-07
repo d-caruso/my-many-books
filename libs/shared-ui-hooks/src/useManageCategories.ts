@@ -12,7 +12,7 @@ export interface ManageCategoriesApi<TCategory extends Category = Category> {
   getCategories: () => Promise<TCategory[]>;
   createCategory: (data: { name: string }) => Promise<TCategory>;
   updateCategory: (id: number, data: Partial<{ name: string }>) => Promise<TCategory>;
-  deleteCategory: (id: number) => Promise<void>;
+  deleteCategory: (id: number, force?: boolean) => Promise<void>;
 }
 
 export interface ManageCategoriesOptions<TCategory extends Category = Category> {
@@ -37,7 +37,7 @@ export interface ManageCategoriesActions<TCategory extends Category = Category> 
     id: number,
     data: Partial<{ name: string }>
   ) => Promise<EntityManageOperationResult<TCategory>>;
-  deleteCategory: (id: number) => Promise<EntityManageOperationResult<{ id: number }>>;
+  deleteCategory: (id: number, force?: boolean) => Promise<EntityManageOperationResult<{ id: number }>>;
 }
 
 const defaultCategorySort = <TCategory extends Category>(a: TCategory, b: TCategory): number =>
@@ -174,11 +174,11 @@ export const useManageCategories = <TCategory extends Category = Category>(
   );
 
   const deleteCategory = useCallback(
-    async (id: number): Promise<EntityManageOperationResult<{ id: number }>> => {
+    async (id: number, force?: boolean): Promise<EntityManageOperationResult<{ id: number }>> => {
       setMutating(true);
       setError(null);
       try {
-        await api.deleteCategory(id);
+        await api.deleteCategory(id, force);
         setCategories((prev) => prev.filter((category) => Number(category.id) !== Number(id)));
         return { success: true, data: { id } };
       } catch (err) {

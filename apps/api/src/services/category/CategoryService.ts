@@ -171,7 +171,7 @@ class CategoryService {
   async deleteCategory(
     id: number,
     userContext: CategoryUserContext,
-    options?: { force?: boolean }
+    force?: boolean
   ): Promise<void> {
     const existing = await this.categoryRepository.findById(id);
     if (!existing) {
@@ -181,7 +181,7 @@ class CategoryService {
     this.ensureOwnership(existing, userContext);
 
     const bookCount = await this.categoryRepository.countBooks(id);
-    if (bookCount > 0 && !options?.force) {
+    if (bookCount > 0 && !force) {
       throw new CategoryServiceError('CATEGORY_HAS_BOOKS');
     }
 
@@ -194,7 +194,7 @@ class CategoryService {
       categoryId: id,
       category: existing,
       user: this.mapEventUser(userContext),
-      options: options ?? {},
+      force: force ?? false,
     });
   }
 

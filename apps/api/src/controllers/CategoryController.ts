@@ -161,9 +161,7 @@ export class CategoryController extends BaseController {
     });
 
     try {
-      await this.categoryService.deleteCategory(numericCategoryId, this.getUserContext(request)!, {
-        force: forceDelete,
-      });
+      await this.categoryService.deleteCategory(numericCategoryId, this.getUserContext(request)!, forceDelete);
       return this.createSuccessResponse(null, this.t('common:category_deleted'), undefined, 204);
     } catch (error) {
       return this.handleCategoryServiceError(error);
@@ -320,7 +318,14 @@ export class CategoryController extends BaseController {
       case 'CATEGORY_NOT_FOUND':
         return this.createErrorResponseI18n('errors:category_not_found', 404);
       case 'CATEGORY_HAS_BOOKS':
-        return this.createErrorResponseI18n('errors:category_has_books', 400);
+        return {
+          statusCode: 409,
+          success: false,
+          error: {
+            code: 'CATEGORY_HAS_BOOKS',
+            message: this.t('errors:category_has_books'),
+          } as ApiErrorPayload,
+        };
       case 'FORBIDDEN':
       default:
         return this.createErrorResponseI18n('errors:permission_denied', 403);

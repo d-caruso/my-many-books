@@ -23,7 +23,8 @@
     "delete_confirm_message": "L'autore verrà rimosso dalla tua lista autori. Questa azione non può essere annullata.",
     "delete_button": "Elimina autore",
     "delete_failed": "Impossibile eliminare l'autore. Riprova.",
-    "delete_blocked_has_books": "Questo autore non può essere eliminato perché è già utilizzato da uno o più libri."
+    "delete_blocked_has_books": "Questo autore è assegnato a uno o più libri. Vuoi eliminarlo comunque?",
+    "delete_force_button": "Elimina comunque"
   },
   "category": {
     "add_title": "Aggiungi nuova categoria",
@@ -44,6 +45,7 @@
     "delete_confirm_message": "La categoria verrà rimossa dalla tua lista categorie. Questa azione non può essere annullata.",
     "delete_button": "Elimina categoria",
     "delete_failed": "Impossibile eliminare la categoria. Riprova.",
-    "delete_blocked_has_books": "Questa categoria non può essere eliminata perché è già utilizzata da uno o più libri."
+    "delete_blocked_has_books": "Questa categoria è assegnata a uno o più libri. Vuoi eliminarla comunque?",
+    "delete_force_button": "Elimina comunque"
   }
 }
