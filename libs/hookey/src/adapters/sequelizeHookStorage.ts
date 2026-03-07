@@ -73,12 +73,12 @@ export class SequelizeHookStorage implements HookStorage {
       options.where = { isActive: filters.isActive };
     }
     const records = await this.HookModel.findAll(options);
-    return records.map(record => record.get() as HookConfig);
+    return records.map((record) => record.get());
   }
 
   async getHook(id: string): Promise<HookConfig | null> {
     const record = await this.HookModel.findByPk(id);
-    return record ? (record.get() as HookConfig) : null;
+    return record ? record.get() : null;
   }
 
   async createHook(
@@ -91,14 +91,14 @@ export class SequelizeHookStorage implements HookStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    return record.get() as HookConfig;
+    return record.get();
   }
 
   async updateHook(id: string, updates: Partial<HookConfig>): Promise<HookConfig> {
     const record = await this.HookModel.findByPk(id);
     if (!record) throw new Error('Hook not found');
     await record.update({ ...updates, updatedAt: new Date() });
-    return record.get() as HookConfig;
+    return record.get();
   }
 
   async deleteHook(id: string): Promise<void> {
@@ -125,7 +125,7 @@ export class SequelizeHookStorage implements HookStorage {
     }
 
     const records = await this.ExecutionModel.findAll(options);
-    return records.map(record => record.get() as HookExecution);
+    return records.map((record) => record.get());
   }
 
   async getRecentExecutions(limit?: number): Promise<HookExecution[]> {
@@ -138,7 +138,7 @@ export class SequelizeHookStorage implements HookStorage {
     }
 
     const records = await this.ExecutionModel.findAll(options);
-    return records.map(record => record.get() as HookExecution);
+    return records.map((record) => record.get());
   }
 
   async getStats(): Promise<HookStorageStats> {

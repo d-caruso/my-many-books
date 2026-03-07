@@ -1,5 +1,5 @@
 import { HookAction, HookActionContext } from '../types';
-import { replaceTemplateVariables } from '../utils/templateEngine';
+import { replaceTemplateVariables, toTemplateData } from '../utils/templateEngine';
 
 export interface EmailActionConfig {
   to: string | string[];
@@ -57,7 +57,7 @@ export class EmailAction implements HookAction {
 
   async execute(context: HookActionContext): Promise<void> {
     // Extract data from context payload
-    const data = (context.payload as Record<string, unknown>) || {};
+    const data = toTemplateData(context.payload);
 
     // Replace template variables in subject and template
     const subject = replaceTemplateVariables(this.config.subject, data);

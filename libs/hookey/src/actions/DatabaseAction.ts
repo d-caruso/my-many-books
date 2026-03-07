@@ -1,5 +1,5 @@
 import { HookAction, HookActionContext } from '../types';
-import { replaceTemplateVariables } from '../utils/templateEngine';
+import { replaceTemplateVariables, toTemplateData } from '../utils/templateEngine';
 
 export type DatabaseOperation = 'create' | 'update' | 'delete';
 
@@ -57,7 +57,7 @@ export class DatabaseAction implements HookAction {
 
   async execute(context: HookActionContext): Promise<void> {
     // Extract data from context payload
-    const payloadData = (context.payload as Record<string, unknown>) || {};
+    const payloadData = toTemplateData(context.payload);
 
     switch (this.config.operation) {
       case 'create':
