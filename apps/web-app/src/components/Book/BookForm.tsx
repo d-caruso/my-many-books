@@ -462,7 +462,7 @@ export const BookForm: React.FC<BookFormProps> = ({
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: '1fr auto' },
+                gridTemplateColumns: { xs: '1fr', sm: '1fr auto', md: '1fr' },
                 gap: 2,
                 alignItems: 'start'
               }}

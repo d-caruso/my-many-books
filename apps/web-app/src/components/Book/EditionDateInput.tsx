@@ -228,7 +228,7 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
           },
           gap: 1,
           alignItems: 'center',
-          pt: 1,
+          pt: { xs: 1, sm: 0 },
         }}
       >
         <TextField
@@ -333,15 +333,15 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
               size="small"
               onClick={handleCalendarButtonClick}
               sx={{
-                width: 40,
-                height: 40,
+                width: { xs: 40, sm: 56 },
+                height: { xs: 40, sm: 56 },
                 borderRadius: 1,
                 border: '1px solid',
                 borderColor: error ? 'error.main' : 'divider',
                 color: error ? 'error.main' : 'action.active',
               }}
             >
-              <CalendarMonthIcon sx={{ fontSize: 22 }} />
+              <CalendarMonthIcon sx={{ fontSize: { xs: 22, sm: 30 } }} />
             </IconButton>
           </Box>
         </Tooltip>
