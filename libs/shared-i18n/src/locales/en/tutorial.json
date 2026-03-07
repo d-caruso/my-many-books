@@ -1,0 +1,74 @@
+{
+  "page_title": "How to",
+  "page_description": "Short guides for the most common actions in My Many Books.",
+  "no_guides_available": "No guides available right now.",
+  "sections": {
+    "library_workflows": "Library workflows"
+  },
+  "cards": {
+    "add_book": {
+      "title": "How to add a book",
+      "description": "Create a new book entry in your personal library.",
+      "step_1": "Open My books.",
+      "step_2": "Click Add book.",
+      "step_3": "Fill title, ISBN, and optional details.",
+      "step_4": "Save the form to add the book to your library."
+    },
+    "modify_book": {
+      "title": "How to modify a book",
+      "description": "Update details of a book that already exists in your library.",
+      "step_1": "Open the book from the list.",
+      "step_2": "Click Edit.",
+      "step_3": "Update the fields you need (title, notes, status, etc.).",
+      "step_4": "Save to apply the changes."
+    },
+    "delete_book": {
+      "title": "How to delete a book",
+      "description": "Remove a book from your library.",
+      "step_1": "Open the book details.",
+      "step_2": "Click Delete.",
+      "step_3": "Review the confirmation message.",
+      "step_4": "Confirm the deletion."
+    },
+    "scanner": {
+      "title": "How to use the ISBN scanner",
+      "description": "Find books quickly by scanning ISBN barcodes.",
+      "step_1": "Open the Scanner page.",
+      "step_2": "Allow camera permission when requested.",
+      "step_3": "Point the camera to the ISBN barcode.",
+      "step_4": "Use the detected ISBN in add or search flow."
+    },
+    "assign_authors_categories": {
+      "title": "How to assign authors/categories to a book",
+      "description": "Link authors and categories while adding or editing a book.",
+      "step_1": "Open Add book or Edit book form.",
+      "step_2": "Add one or more authors from the author selector.",
+      "step_3": "Select categories in the categories list.",
+      "step_4": "Save the form."
+    },
+    "add_authors_categories": {
+      "title": "How to add authors/categories",
+      "description": "Create new author and category entries directly from the book form.",
+      "step_1": "Open Add book or Edit book form.",
+      "step_2": "Use the Add icon near Authors or Categories.",
+      "step_3": "Fill the dialog fields and confirm creation.",
+      "step_4": "Verify the new entry is available in the selectors."
+    },
+    "modify_delete_authors_categories": {
+      "title": "How to modify/delete authors/categories",
+      "description": "Manage existing author and category entries from dedicated dialogs.",
+      "step_1": "Open Add book or Edit book form.",
+      "step_2": "Use the Manage icon near Authors or Categories.",
+      "step_3": "Edit fields and save, or choose delete.",
+      "step_4": "Confirm destructive actions when prompted."
+    },
+    "change_password": {
+      "title": "How to change the password",
+      "description": "Update your account password in security settings (when available).",
+      "step_1": "Open your account/security settings.",
+      "step_2": "Select Change password.",
+      "step_3": "Enter current and new password.",
+      "step_4": "Save to confirm the update."
+    }
+  }
+}

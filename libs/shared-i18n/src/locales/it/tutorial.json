@@ -1,0 +1,74 @@
+{
+  "page_title": "Come fare",
+  "page_description": "Guide rapide per le azioni piu comuni in My Many Books.",
+  "no_guides_available": "Nessuna guida disponibile al momento.",
+  "sections": {
+    "library_workflows": "Flussi della libreria"
+  },
+  "cards": {
+    "add_book": {
+      "title": "Come aggiungere un libro",
+      "description": "Crea una nuova scheda libro nella tua libreria personale.",
+      "step_1": "Apri I miei libri.",
+      "step_2": "Clicca Aggiungi libro.",
+      "step_3": "Compila titolo, ISBN e dettagli opzionali.",
+      "step_4": "Salva il modulo per aggiungere il libro alla libreria."
+    },
+    "modify_book": {
+      "title": "Come modificare un libro",
+      "description": "Aggiorna i dettagli di un libro gia presente nella libreria.",
+      "step_1": "Apri il libro dalla lista.",
+      "step_2": "Clicca Modifica.",
+      "step_3": "Aggiorna i campi necessari (titolo, note, stato, ecc.).",
+      "step_4": "Salva per applicare le modifiche."
+    },
+    "delete_book": {
+      "title": "Come eliminare un libro",
+      "description": "Rimuovi un libro dalla tua libreria.",
+      "step_1": "Apri i dettagli del libro.",
+      "step_2": "Clicca Elimina.",
+      "step_3": "Controlla il messaggio di conferma.",
+      "step_4": "Conferma l'eliminazione."
+    },
+    "scanner": {
+      "title": "Come usare lo scanner ISBN",
+      "description": "Trova rapidamente i libri scansionando il codice ISBN.",
+      "step_1": "Apri la pagina Scanner.",
+      "step_2": "Concedi il permesso fotocamera quando richiesto.",
+      "step_3": "Inquadra il codice ISBN del libro.",
+      "step_4": "Usa l'ISBN rilevato nel flusso di aggiunta o ricerca."
+    },
+    "assign_authors_categories": {
+      "title": "Come assegnare autori/categorie a un libro",
+      "description": "Collega autori e categorie durante aggiunta o modifica del libro.",
+      "step_1": "Apri il modulo Aggiungi libro o Modifica libro.",
+      "step_2": "Aggiungi uno o piu autori dal selettore autori.",
+      "step_3": "Seleziona le categorie nella lista categorie.",
+      "step_4": "Salva il modulo."
+    },
+    "add_authors_categories": {
+      "title": "Come aggiungere autori/categorie",
+      "description": "Crea nuovi autori e categorie direttamente dal modulo libro.",
+      "step_1": "Apri il modulo Aggiungi libro o Modifica libro.",
+      "step_2": "Usa l'icona Aggiungi vicino ad Autori o Categorie.",
+      "step_3": "Compila il dialog e conferma la creazione.",
+      "step_4": "Verifica che il nuovo elemento sia disponibile nei selettori."
+    },
+    "modify_delete_authors_categories": {
+      "title": "Come modificare/eliminare autori/categorie",
+      "description": "Gestisci autori e categorie esistenti dai dialog dedicati.",
+      "step_1": "Apri il modulo Aggiungi libro o Modifica libro.",
+      "step_2": "Usa l'icona Gestisci vicino ad Autori o Categorie.",
+      "step_3": "Modifica i campi e salva, oppure scegli elimina.",
+      "step_4": "Conferma le azioni distruttive quando richiesto."
+    },
+    "change_password": {
+      "title": "Come cambiare la password",
+      "description": "Aggiorna la password dell'account nelle impostazioni sicurezza (quando disponibile).",
+      "step_1": "Apri le impostazioni account/sicurezza.",
+      "step_2": "Seleziona Cambia password.",
+      "step_3": "Inserisci password attuale e nuova password.",
+      "step_4": "Salva per confermare l'aggiornamento."
+    }
+  }
+}

@@ -39,6 +39,7 @@ import { Navbar } from './components/Navigation';
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 const BookSearchPage = lazy(() => import('./components/Search/BookSearchPage'));
+const HowToPage = lazy(() => import('./pages/HowTo/HowToPage'));
 const ScannerModal = lazy(() => import('./components/Scanner'));
 
 // Lazy load PWA components (non-critical, rarely shown)
@@ -384,6 +385,7 @@ function App() {
                                   <Routes>
                                     <Route path="/" element={<PageErrorBoundary pageName="Books"><BooksPage /></PageErrorBoundary>} />
                                     <Route path="/search" element={<PageErrorBoundary pageName="Book Search"><BookSearchPage /></PageErrorBoundary>} />
+                                    <Route path="/how-to" element={<PageErrorBoundary pageName="How To"><HowToPage /></PageErrorBoundary>} />
                                     <Route path="/scanner" element={<ScannerRoute />} />
                                     <Route path="*" element={<Navigate to="/" replace />} />
                                   </Routes>

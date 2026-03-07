@@ -198,6 +198,12 @@ export const Navbar: React.FC = () => {
             {t('common:search')}
           </Button>
             <Button
+              color={location.pathname === '/how-to' ? 'primary' : 'inherit'}
+              onClick={() => handleNavigation('/how-to')}
+            >
+            {t('common:how_to', 'How to')}
+          </Button>
+            <Button
               color={location.pathname === '/scanner' ? 'primary' : 'inherit'}
               onClick={() => handleNavigation('/scanner')}
               sx={{ display: { xs: 'inline-flex', md: 'none' } }}
@@ -245,6 +251,7 @@ export const Navbar: React.FC = () => {
               <Box sx={{ display: { xs: 'block', md: 'none' } }}>
                 <MenuItem onClick={() => handleNavigation('/')}>{t('books:my_books')}</MenuItem>
                 <MenuItem onClick={() => handleNavigation('/search')}>{t('common:search')}</MenuItem>
+                <MenuItem onClick={() => handleNavigation('/how-to')}>{t('common:how_to', 'How to')}</MenuItem>
                 <MenuItem onClick={() => handleNavigation('/scanner')} sx={{ display: { xs: 'block', md: 'none' } }}>{t('common:scanner')}</MenuItem>
               </Box>
 
