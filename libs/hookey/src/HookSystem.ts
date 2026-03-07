@@ -8,6 +8,19 @@ import {
 import { InMemoryHookStorage } from './storage/InMemoryHookStorage';
 import { validateActionConfig, validateEventPattern } from './utils/validation';
 
+const HOOK_SYSTEM_LOG_PREFIX = '[HookSystem]';
+const UNKNOWN_HOOK_ERROR_MESSAGE = 'Unknown hook execution error';
+
+type AsyncHookListener = (payload?: unknown) => Promise<void>;
+
+interface AsyncHookEventEmitter {
+  on(event: string, listener: AsyncHookListener): unknown;
+}
+
+interface HookExecutionErrorInfo {
+  message: string;
+}
+
 export interface HookSystemOptions {
   timeoutMs?: number;
   failureThreshold?: number;
@@ -43,12 +56,15 @@ export class HookSystem {
   async registerHook(hook: HookConfig, action: HookAction): Promise<void> {
     this.validateHookConfig(hook);
     await this.storage.createHook(this.mapHookForPersistence(hook));
-    await this.registerHookInternal(hook, action);
+    this.registerHookInternal(hook, action);
   }
 
-  async registerExistingHook(hook: HookConfig, action: HookAction): Promise<void> {
+  // TODO: this is synchronous but returns Promise<void> for API consistency with registerHook.
+  // Callers should be updated to drop await and this return type changed to void.
+  registerExistingHook(hook: HookConfig, action: HookAction): Promise<void> {
     this.validateHookConfig(hook);
-    await this.registerHookInternal(hook, action);
+    this.registerHookInternal(hook, action);
+    return Promise.resolve();
   }
 
   async trigger(eventName: string, payload?: unknown): Promise<void> {
@@ -58,7 +74,7 @@ export class HookSystem {
     this.currentEvent = undefined;
   }
 
-  private async registerHookInternal(hook: HookConfig, action: HookAction): Promise<void> {
+  private registerHookInternal(hook: HookConfig, action: HookAction): void {
     const normalizedHook = this.normalizeHook(hook);
     // Store hook and action for reference
     this.hooks.set(normalizedHook.id, { hook: normalizedHook, action });
@@ -70,7 +86,7 @@ export class HookSystem {
       await this.executeAction(normalizedHook, action, actualEventName, payload);
     };
 
-    this.emitter.on(normalizedHook.eventPattern, listener);
+    this.onAsync(normalizedHook.eventPattern, listener);
   }
 
   private validateHookConfig(hook: HookConfig): void {
@@ -109,12 +125,12 @@ export class HookSystem {
     const breaker = this.getBreakerState(hook.id);
     if (breaker.openUntil && breaker.openUntil > Date.now()) {
       this.logger.warn?.(
-        `[HookSystem] Circuit breaker open for "${hook.name}" (${hook.id}). Skipping event "${actualEventName}".`
+        `${HOOK_SYSTEM_LOG_PREFIX} Circuit breaker open for "${hook.name}" (${hook.id}). Skipping event "${actualEventName}".`
       );
       await this.storage.logExecution({
         hookId: hook.id,
         eventName: actualEventName,
-        eventData: payload as Record<string, unknown>,
+        eventData: this.toEventData(payload),
         success: false,
         errorMessage: `Circuit breaker open until ${new Date(breaker.openUntil).toISOString()}`,
         executedAt: new Date(),
@@ -135,28 +151,60 @@ export class HookSystem {
       await this.storage.logExecution({
         hookId: hook.id,
         eventName: actualEventName,
-        eventData: payload as Record<string, unknown>,
+        eventData: this.toEventData(payload),
         success: true,
         executedAt: new Date(),
         executionTimeMs: Date.now() - start,
       });
       this.resetBreaker(hook.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const executionError = this.toExecutionError(error);
       this.recordFailure(hook.id);
       await this.storage.logExecution({
         hookId: hook.id,
         eventName: actualEventName,
-        eventData: payload as Record<string, unknown>,
+        eventData: this.toEventData(payload),
         success: false,
-        errorMessage: error.message,
+        errorMessage: executionError.message,
         executedAt: new Date(),
         executionTimeMs: Date.now() - start,
       });
       this.logger.error?.(
-        `[HookSystem] Failed executing "${hook.name}" (${hook.id}) for event "${actualEventName}": ${error.message}`
+        `${HOOK_SYSTEM_LOG_PREFIX} Failed executing "${hook.name}" (${hook.id}) for event "${actualEventName}": ${executionError.message}`
       );
       throw error;
     }
+  }
+
+  private onAsync(eventPattern: string, listener: AsyncHookListener): void {
+    (this.emitter as unknown as AsyncHookEventEmitter).on(eventPattern, listener);
+  }
+
+  private toEventData(payload: unknown): Record<string, unknown> | undefined {
+    if (typeof payload === 'object' && payload !== null) {
+      return payload as Record<string, unknown>;
+    }
+
+    return undefined;
+  }
+
+  private toExecutionError(error: unknown): HookExecutionErrorInfo {
+    if (error instanceof Error) {
+      return { message: error.message };
+    }
+
+    if (typeof error === 'string' && error.length > 0) {
+      return { message: error };
+    }
+
+    if (typeof error === 'object' && error !== null && 'message' in error) {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === 'string' && message.length > 0) {
+        return { message };
+      }
+    }
+
+    return { message: UNKNOWN_HOOK_ERROR_MESSAGE };
   }
 
   private getBreakerState(hookId: string): { failures: number; openUntil: number | null } {
@@ -176,7 +224,7 @@ export class HookSystem {
     if (state.failures >= this.failureThreshold) {
       state.openUntil = Date.now() + this.cooldownMs;
       this.logger.warn?.(
-        `[HookSystem] Circuit breaker opened for hook "${hookId}" after ${state.failures} failures`
+        `${HOOK_SYSTEM_LOG_PREFIX} Circuit breaker opened for hook "${hookId}" after ${state.failures} failures`
       );
     }
     this.breakerState.set(hookId, state);
