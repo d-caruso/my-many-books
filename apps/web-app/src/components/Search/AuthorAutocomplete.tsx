@@ -25,6 +25,9 @@ interface AuthorAutocompleteProps {
   userIdFilter?: number;
 }
 
+const formatAuthorLabel = (author: Author) =>
+  author.surname ? `${author.surname}, ${author.name}` : author.name;
+
 export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   value,
   onChange,
@@ -45,7 +48,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   // Update search term when value changes externally
   useEffect(() => {
     if (value) {
-      setSearchTerm(`${value.name} ${value.surname}`);
+      setSearchTerm(formatAuthorLabel(value));
     } else {
       setSearchTerm('');
     }
@@ -170,7 +173,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
         inputValue={searchTerm}
         onInputChange={handleInputChange}
         options={filteredAuthors}
-        getOptionLabel={(option) => `${option.name} ${option.surname}`}
+        getOptionLabel={formatAuthorLabel}
         ListboxProps={{ 'data-testid': 'options-list' }}
         renderOption={(props, option, { index }) => {
           const { key, ...otherProps } = props;
@@ -178,7 +181,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
             <Box component="li" key={key} data-testid={`option-${index}`} {...otherProps}>
               <Box>
                 <Typography variant="body2" fontWeight="medium">
-                  {option.name} {option.surname}
+                  {formatAuthorLabel(option)}
                 </Typography>
                 {option.nationality && (
                   <Typography variant="caption" color="text.secondary">

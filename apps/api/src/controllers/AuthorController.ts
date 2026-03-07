@@ -18,7 +18,8 @@ import { UpdateAuthorDTO } from '../dtos/author/UpdateAuthorDTO';
 import { toAuthorResponseDTO } from '../dtos/author/AuthorResponseDTO';
 import { Repository as AuthorRepositoryContract } from '../repositories/author/Repository';
 import { Repository as BookRepositoryContract } from '../repositories/book/Repository';
-import { SORT_DIRECTIONS, DATABASE_FIELDS } from '@my-many-books/shared-types';
+import { SORT_DIRECTIONS, DATABASE_FIELDS, ERROR_CODES } from '@my-many-books/shared-types';
+import { ApiErrorPayload } from '../common/ApiResponse';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
@@ -313,10 +314,14 @@ export class AuthorController extends BaseController {
 
     switch (error.code) {
       case 'DUPLICATE_AUTHOR':
-        return this.createErrorResponseI18n('errors:resource_exists', 409, {
-          resource: 'Author',
-          field: 'name',
-        });
+        return {
+          statusCode: 409,
+          success: false,
+          error: {
+            code: ERROR_CODES.DUPLICATE_AUTHOR,
+            message: this.t('errors:resource_exists', { resource: 'Author', field: 'name' }),
+          } as ApiErrorPayload,
+        };
       case 'AUTHOR_NOT_FOUND':
         return this.createErrorResponseI18n('errors:author_not_found', 404);
       case 'AUTHOR_HAS_BOOKS':

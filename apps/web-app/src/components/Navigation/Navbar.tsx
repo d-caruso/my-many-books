@@ -200,6 +200,7 @@ export const Navbar: React.FC = () => {
             <Button
               color={location.pathname === '/scanner' ? 'primary' : 'inherit'}
               onClick={() => handleNavigation('/scanner')}
+              sx={{ display: { xs: 'inline-flex', md: 'none' } }}
             >
             {t('common:scanner')}
           </Button>
@@ -244,7 +245,7 @@ export const Navbar: React.FC = () => {
               <Box sx={{ display: { xs: 'block', md: 'none' } }}>
                 <MenuItem onClick={() => handleNavigation('/')}>{t('books:my_books')}</MenuItem>
                 <MenuItem onClick={() => handleNavigation('/search')}>{t('common:search')}</MenuItem>
-                <MenuItem onClick={() => handleNavigation('/scanner')}>{t('common:scanner')}</MenuItem>
+                <MenuItem onClick={() => handleNavigation('/scanner')} sx={{ display: { xs: 'block', md: 'none' } }}>{t('common:scanner')}</MenuItem>
               </Box>
 
               <MenuItem onClick={handleOpenAbout}>{t('common:about')}</MenuItem>

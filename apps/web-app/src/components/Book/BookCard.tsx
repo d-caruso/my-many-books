@@ -12,7 +12,8 @@ import {
   MenuItem,
   FormControl,
   Box,
-  Stack
+  Stack,
+  CircularProgress,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -29,6 +30,7 @@ interface BookCardProps {
   onClick?: (book: Book) => void;
   showActions?: boolean;
   compact?: boolean;
+  saving?: boolean;
 }
 
 export const BookCard: React.FC<BookCardProps> = ({
@@ -38,7 +40,8 @@ export const BookCard: React.FC<BookCardProps> = ({
   onStatusChange,
   onClick,
   showActions = true,
-  compact = false
+  compact = false,
+  saving = false,
 }) => {
   const { t } = useTranslation(['books', 'common', 'accessibility']);
 
@@ -176,11 +179,30 @@ export const BookCard: React.FC<BookCardProps> = ({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        minWidth: 0
+        minWidth: 0,
+        position: 'relative',
       }}
       onClick={() => onClick?.(book)}
     >
-      {/* Book cover */}
+      {saving && (
+        <Box
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            bgcolor: 'rgba(255,255,255,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 'inherit',
+          }}
+        >
+          <CircularProgress size={32} />
+        </Box>
+      )}
+
+      {/* Book cover placeholder — hidden until real covers are supported
       <Box position="relative">
         <CardMedia
           sx={{
@@ -196,8 +218,7 @@ export const BookCard: React.FC<BookCardProps> = ({
         >
           <BookIcon sx={{ fontSize: 48 }} aria-hidden="true" />
         </CardMedia>
-        
-        {/* Status badge */}
+
         {book.status && (
           <Box position="absolute" top={8} right={8}>
             <Chip
@@ -208,11 +229,10 @@ export const BookCard: React.FC<BookCardProps> = ({
           </Box>
         )}
 
-        {/* Actions overlay */}
         {showActions && (
-          <Box 
-            position="absolute" 
-            top={8} 
+          <Box
+            position="absolute"
+            top={8}
             left={8}
             sx={{
               opacity: 0,
@@ -268,6 +288,7 @@ export const BookCard: React.FC<BookCardProps> = ({
           </Box>
         )}
       </Box>
+      */}
 
       <CardContent sx={{ flexGrow: 1, p: { xs: 2, sm: 2.5 } }}>
         <Typography
@@ -280,7 +301,7 @@ export const BookCard: React.FC<BookCardProps> = ({
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            fontSize: { xs: '0.875rem', sm: '1rem' }
+            fontSize: { xs: '1.125rem', sm: '1.25rem' }
           }}
           title={book.title}
         >
@@ -380,13 +401,14 @@ export const BookCard: React.FC<BookCardProps> = ({
                 onChange={handleStatusChange}
                 onClick={(e) => e.stopPropagation()}
                 displayEmpty
+                disabled={saving}
                 sx={{ fontSize: '0.875rem' }}
                 inputProps={{
                   'aria-label': t('accessibility:change_reading_status'),
                   'data-testid': 'select'
                 }}
               >
-                <MenuItem value="">&nbsp;</MenuItem>
+                <MenuItem value="">{'\u00A0'}</MenuItem>
                 <MenuItem value="reading">{t('books:reading')}</MenuItem>
                 <MenuItem value="paused">{t('books:paused')}</MenuItem>
                 <MenuItem value="finished">{t('books:finished')}</MenuItem>
@@ -395,6 +417,7 @@ export const BookCard: React.FC<BookCardProps> = ({
           )}
         </CardActions>
       )}
+
     </Card>
   );
 };

@@ -37,6 +37,7 @@ const BooksPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [savingStatusBookId, setSavingStatusBookId] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [initialIsbn, setInitialIsbn] = useState<string | undefined>(undefined);
   const [initialDraft, setInitialDraft] = useState<Partial<BookFormData> | null>(null);
@@ -235,6 +236,7 @@ const BooksPage: React.FC = () => {
       setSelectedBook(null);
       setPageMode('add');
       setActionError(null);
+      window.scrollTo({ top: 0 });
     });
   };
 
@@ -249,6 +251,7 @@ const BooksPage: React.FC = () => {
     runPageModeTransition(() => {
       setSelectedBook(book);
       setPageMode('edit');
+      window.scrollTo({ top: 0 });
     });
   };
 
@@ -257,6 +260,7 @@ const BooksPage: React.FC = () => {
       setSelectedBook(book);
       setPageMode('details');
       setActionError(null);
+      window.scrollTo({ top: 0 });
     });
   };
 
@@ -289,6 +293,7 @@ const BooksPage: React.FC = () => {
   };
 
   const handleStatusChange = async (bookId: number, status: Book['status']) => {
+    setSavingStatusBookId(bookId);
     try {
       await updateBookStatusEntry(bookId, status);
 
@@ -316,6 +321,8 @@ const BooksPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to update book status:', err);
       setActionError(err.response?.data?.message || err.message || 'Failed to update book status');
+    } finally {
+      setSavingStatusBookId(null);
     }
   };
 
@@ -566,7 +573,7 @@ const BooksPage: React.FC = () => {
             onClick={handleScanIsbn}
             size="large"
             aria-label={t('pages:books.scan_isbn')}
-            sx={{ width: { xs: '100%', sm: 'auto' } }}
+            sx={{ display: { xs: 'flex', md: 'none' }, width: { xs: '100%', sm: 'auto' } }}
           >
             {t('pages:books.scan_isbn')}
           </Button>
@@ -642,6 +649,7 @@ const BooksPage: React.FC = () => {
       <BookList
         books={displayedBooks}
         loading={displayedLoading}
+        savingStatusBookId={savingStatusBookId}
         error={combinedError}
         viewMode={viewMode}
         onEdit={handleEditBook}

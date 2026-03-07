@@ -405,15 +405,13 @@ export const BookForm: React.FC<BookFormProps> = ({
         <Typography variant="h5" fontWeight="600" color="text.primary">
           {title || defaultTitle}
         </Typography>
-        <Button
+        <IconButton
           onClick={onCancel}
-          startIcon={<CloseIcon />}
-          variant="outlined"
+          aria-label={t('common:close')}
           size="small"
-          sx={{ minWidth: 'auto' }}
         >
-          {t('common:close')}
-        </Button>
+          <CloseIcon />
+        </IconButton>
       </Box>
 
       <Box component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
@@ -486,24 +484,26 @@ export const BookForm: React.FC<BookFormProps> = ({
                 }}
                 sx={{ fontFamily: 'monospace' }}
               />
-              <Tooltip title={t('books:scan_isbn')}>
-                <span>
-                  <Button
-                    variant="outlined"
-                    startIcon={<QrCodeScannerIcon aria-hidden="true" />}
-                    onClick={handleScanIsbn}
-                    disabled={loading}
-                    aria-label={t('books:scan_isbn')}
-                    sx={{
-                      width: { xs: '100%', sm: 'auto' },
-                      minHeight: 56,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {t('books:scan_isbn')}
-                  </Button>
-                </span>
-              </Tooltip>
+              <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                <Tooltip title={t('books:scan_isbn')}>
+                  <span>
+                    <Button
+                      variant="outlined"
+                      startIcon={<QrCodeScannerIcon aria-hidden="true" />}
+                      onClick={handleScanIsbn}
+                      disabled={loading}
+                      aria-label={t('books:scan_isbn')}
+                      sx={{
+                        width: { xs: '100%', sm: 'auto' },
+                        minHeight: 56,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {t('books:scan_isbn')}
+                    </Button>
+                  </span>
+                </Tooltip>
+              </Box>
             </Box>
           ) : (
             <TextField

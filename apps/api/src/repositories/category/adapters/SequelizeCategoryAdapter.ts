@@ -3,7 +3,7 @@
 // Sequelize-backed adapter for the Category repository
 // ================================================================
 
-import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions } from 'sequelize';
+import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions, fn, col, where as sequelizeWhere } from 'sequelize';
 import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { Category } from '@/models/Category';
 import { Book } from '@/models/Book';
@@ -46,7 +46,12 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
   ): Promise<CategoryEntity | null> {
     const category = await Category.findOne({
       ...this.buildFindOptions(options),
-      where: { name, userId },
+      where: {
+        [Op.and]: [
+          sequelizeWhere(fn('LOWER', col('name')), name.toLowerCase()),
+          { userId },
+        ],
+      },
     });
     return this.toDomain(category);
   }

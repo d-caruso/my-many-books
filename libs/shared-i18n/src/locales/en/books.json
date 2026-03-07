@@ -127,6 +127,7 @@
   "please_enter_isbn_first": "Please enter an ISBN first",
   "book_not_found_for_isbn": "Book not found for this ISBN",
   "failed_to_lookup_book": "Failed to lookup book",
+  "status_saved": "Status saved",
   "errors": {
     "SEARCH_UNEXPECTED_ERROR": "Something went wrong while searching. Please try again later."
   }

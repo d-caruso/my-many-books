@@ -104,16 +104,23 @@ const AuthPage: React.FC = () => {
       <Box
         component="header"
         sx={{
-          minHeight: 64,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
           px: { xs: 1.5, sm: 2 },
+          pt: { xs: 0.5, sm: 1 },
+          pb: { xs: 0.25, sm: 0.5 },
           borderBottom: '1px solid',
           borderColor: 'divider',
           bgcolor: 'background.paper',
         }}
       >
+        <Box
+          component="img"
+          src="/brand/logo-mark-primary-128.png"
+          alt={logoAlt}
+          sx={{ width: 55, height: 55 }}
+        />
         <Box sx={{ minWidth: 0 }}>
           <LanguageSelector />
         </Box>
@@ -124,36 +131,21 @@ const AuthPage: React.FC = () => {
         sx={{
           flex: 1,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          py: { xs: 6, md: 10 },
+          py: { xs: 1, md: 4 },
           px: 2,
           ...fadeSx,
         }}
       >
-        <Container maxWidth="sm">
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            mb: 3
-          }}
-        >
-          <Box
-            component="img"
-            src="/brand/logo-mark-primary-128.png"
-            alt={logoAlt}
-            sx={{
-              width: 140,
-              height: 140,
-              mb: 1.5
-            }}
-          />
-          <Typography variant="h6" component="p" color="text.primary" fontWeight={700}>
+        {/* Title — centered in the space above the sign-in card */}
+        <Box sx={{ flex: 1, minHeight: 56, maxHeight: 96, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+          <Typography variant="h6" component="p" color="primary.main" fontWeight={700} sx={{ fontSize: { md: '1.5rem' } }}>
             {appName}
           </Typography>
         </Box>
+
+        <Container maxWidth="sm">
         {socialAuthError ? (
           <Box
             role="alert"
@@ -206,6 +198,9 @@ const AuthPage: React.FC = () => {
         </Box>
         <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
         </Container>
+
+        {/* Bottom spacer — mirrors title section to keep form centered */}
+        <Box sx={{ flex: 1, maxHeight: 96 }} />
       </Box>
       <Snackbar open={snackbar.open} autoHideDuration={5000} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>
         <Alert severity={snackbar.severity} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>

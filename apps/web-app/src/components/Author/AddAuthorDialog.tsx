@@ -7,13 +7,16 @@ import {
   TextField,
   Button,
   Stack,
+  Alert,
   CircularProgress
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import type { Author } from '@my-many-books/shared-types';
+import { ERROR_CODES } from '@my-many-books/shared-types';
 import { useApi } from '../../contexts/ApiContext';
+import { getErrorCode } from '../../utils/errorTranslation';
 
 interface AddAuthorDialogProps {
   open: boolean;
@@ -35,11 +38,13 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof typeof formData, string>>>({});
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handleClose = () => {
     if (!loading) {
       setFormData({ name: '', surname: '', nationality: '' });
       setErrors({});
+      setFormError(null);
       onClose();
     }
   };
@@ -67,6 +72,7 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
     }
 
     setLoading(true);
+    setFormError(null);
     try {
       const newAuthor = await authorAPI.createAuthor({
         name: formData.name.trim(),
@@ -78,8 +84,11 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
       handleClose();
     } catch (error: any) {
       console.error('Failed to create author:', error);
-      const errorMessage = error?.response?.data?.error || t('dialogs:author.create_failed');
-      setErrors({ name: errorMessage });
+      if (getErrorCode(error) === ERROR_CODES.DUPLICATE_AUTHOR) {
+        setFormError(t('dialogs:author.duplicate_author'));
+      } else {
+        setFormError(t('dialogs:author.create_failed'));
+      }
     } finally {
       setLoading(false);
     }
@@ -89,6 +98,9 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+    if (formError) {
+      setFormError(null);
     }
   };
 
@@ -133,6 +145,12 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
             />
           </Stack>
         </DialogContent>
+
+        {formError && (
+          <Alert severity="warning" sx={{ mx: 3 }}>
+            {formError}
+          </Alert>
+        )}
 
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button

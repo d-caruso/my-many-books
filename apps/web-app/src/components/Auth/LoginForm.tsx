@@ -123,8 +123,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         overflow: 'hidden',
       }}
     >
-      <Box sx={{ px: 4, py: 3, bgcolor: 'primary.50', borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="h5" component="h2">
+      <Box sx={{ px: 4, py: 2, bgcolor: 'primary.50', borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="h5" component="h2" sx={{ fontSize: '1.2rem' }}>
           {t('common:sign_in')}
         </Typography>
       </Box>
@@ -134,7 +134,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         onSubmit={handleSubmit}
         noValidate
         aria-label={t('accessibility:login_form', 'Login form')}
-        sx={{ p: 4 }}
+        sx={{ pt: 4, px: 4, pb: 3 }}
       >
         <Stack spacing={2}>
           {error && (

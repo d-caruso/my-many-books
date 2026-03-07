@@ -3,7 +3,7 @@
 // Sequelize-backed adapter for the Author repository
 // ================================================================
 
-import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions } from 'sequelize';
+import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions, fn, col, where as sequelizeWhere } from 'sequelize';
 import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { Author } from '@/models/Author';
 import { Book } from '@/models/Book';
@@ -45,7 +45,13 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
   ): Promise<AuthorEntity | null> {
     const author = await Author.findOne({
       ...this.buildFindOptions(options),
-      where: { name, surname, userId },
+      where: {
+        [Op.and]: [
+          sequelizeWhere(fn('LOWER', col('name')), name.toLowerCase()),
+          sequelizeWhere(fn('LOWER', col('surname')), surname.toLowerCase()),
+          { userId },
+        ],
+      },
     });
     return this.toDomain(author);
   }
