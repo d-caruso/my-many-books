@@ -15,7 +15,7 @@ export class AuthorApi extends BaseApiClient {
     const params: Record<string, string> = {};
     
     if (updatedSince) {
-      params.updatedSince = updatedSince;
+      params['updatedSince'] = updatedSince;
     }
 
     const response = await this.get<unknown>('/authors', {

@@ -28,6 +28,13 @@
       "options": {
         "jestConfig": "libs/shared-ui-hooks/jest.config.ts"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/shared-ui-hooks"
+      }
     }
   },
   "tags": ["scope:shared", "type:lib", "framework:react"]

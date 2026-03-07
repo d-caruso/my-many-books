@@ -1,12 +1,13 @@
 {
   "name": "@my-many-books/shared-ui-hooks",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "commonjs",
   "scripts": {
     "build": "tsc --project tsconfig.lib.json",
     "test": "jest --config jest.config.ts",
     "test:coverage": "jest --config jest.config.ts --coverage",
-    "lint": "eslint src/**/*.{ts,tsx}"
+    "lint": "eslint src/**/*.{ts,tsx}",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "react": "*"

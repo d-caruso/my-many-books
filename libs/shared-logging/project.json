@@ -39,6 +39,13 @@
           "codeCoverage": true
         }
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/shared-logging"
+      }
     }
   },
   "tags": ["type:shared", "scope:logging"]

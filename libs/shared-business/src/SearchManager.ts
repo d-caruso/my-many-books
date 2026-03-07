@@ -172,8 +172,11 @@ export class SearchManager {
           return authorA.localeCompare(authorB);
         }
 
-        case 'date-added':
-          return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime();
+        case 'date-added': {
+          const bTime = b.creationDate ? new Date(b.creationDate).getTime() : 0;
+          const aTime = a.creationDate ? new Date(a.creationDate).getTime() : 0;
+          return bTime - aTime;
+        }
 
         case 'status': {
           const statusOrder = { reading: 0, paused: 1, finished: 2 };

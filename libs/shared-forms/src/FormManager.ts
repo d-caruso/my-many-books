@@ -113,6 +113,9 @@ export class FormManager {
     
     for (const fieldName of Object.keys(this.state.fields)) {
       const field = this.state.fields[fieldName];
+      if (!field) {
+        continue;
+      }
       const fieldErrors = await this.validator.validateField(field, this.state.values);
       
       if (fieldErrors.length > 0) {
@@ -283,6 +286,9 @@ export class FormManager {
   getDirtyFields(): string[] {
     return Object.keys(this.state.fields).filter(fieldName => {
       const field = this.state.fields[fieldName];
+      if (!field) {
+        return false;
+      }
       return field.value !== field.defaultValue;
     });
   }

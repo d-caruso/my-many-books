@@ -44,7 +44,7 @@ export class BookApi extends BaseApiClient {
     };
 
     if (updatedSince) {
-      params.updatedSince = updatedSince;
+      params['updatedSince'] = updatedSince;
     }
 
     const response = await this.get<unknown>('/books', {

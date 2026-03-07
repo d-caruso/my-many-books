@@ -2,7 +2,7 @@
  * Local storage hook - with platform adapter pattern
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 export interface StorageAdapter {
   getItem: (key: string) => Promise<string | null> | string | null;

@@ -27,7 +27,7 @@ export const formatBookCardData = (book: Book): BookCardData => {
     id: book.id,
     title: book.title,
     authors,
-    status: book.status,
+    status: book.status ?? undefined,
     categories,
     isbn: book.isbnCode,
     editionInfo,

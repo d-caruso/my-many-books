@@ -217,7 +217,7 @@ export class FormValidator {
       FormValidator.createRequiredRule('Please confirm your password'),
       FormValidator.createCustomRule(
         (value, formData) => {
-          return value === formData?.password;
+          return value === formData?.['password'];
         },
         'Passwords do not match'
       )

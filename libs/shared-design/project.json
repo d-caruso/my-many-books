@@ -26,6 +26,13 @@
       "options": {
         "jestConfig": "libs/shared-design/jest.config.ts"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/shared-design"
+      }
     }
   },
   "tags": ["scope:shared", "type:lib"]

@@ -28,6 +28,13 @@
       "options": {
         "jestConfig": "libs/shared-utils/jest.config.ts"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/shared-utils"
+      }
     }
   },
   "tags": ["scope:shared", "type:lib"]

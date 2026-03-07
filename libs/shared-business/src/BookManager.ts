@@ -84,7 +84,7 @@ export class BookManager {
     }
 
     // Validate edition number if provided
-    if (updates.editionNumber !== undefined && updates.editionNumber < 1) {
+    if (updates.editionNumber != null && updates.editionNumber < 1) {
       throw new Error('Edition number must be at least 1');
     }
 

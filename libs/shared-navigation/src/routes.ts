@@ -223,7 +223,8 @@ export function matchRoute(path: string, routeName?: AppRouteName): RouteMatch |
 export function matchRoutePattern(path: string, appRoute: AppRoute): RouteMatch | null {
   const pattern = appRoute.path;
   const patternParts = pattern.split('/');
-  const pathParts = path.split('?')[0].split('/'); // Remove query string
+  const pathWithoutQuery = path.split('?')[0] ?? '';
+  const pathParts = pathWithoutQuery.split('/'); // Remove query string
   
   if (patternParts.length !== pathParts.length) {
     return null;
@@ -235,6 +236,9 @@ export function matchRoutePattern(path: string, appRoute: AppRoute): RouteMatch 
   for (let i = 0; i < patternParts.length; i++) {
     const patternPart = patternParts[i];
     const pathPart = pathParts[i];
+    if (patternPart === undefined || pathPart === undefined) {
+      return null;
+    }
     
     if (patternPart.startsWith(':')) {
       // Parameter

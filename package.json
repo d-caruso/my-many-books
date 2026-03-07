@@ -2,6 +2,7 @@
   "name": "my-many-books",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "My Many Books - Monorepo for managing personal book collections",
   "scripts": {
     "postinstall": "bash scripts/install-git-hooks.sh",
