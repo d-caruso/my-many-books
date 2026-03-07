@@ -9,15 +9,15 @@ const CategoriesArraySchema = CategorySchema.array();
 
 export class CategoryApi extends BaseApiClient {
   async getCategories(updatedSince?: string): Promise<Category[]> {
-    const params: Record<string, string> = {};
-    
+    const params: Record<string, string> = {
+      limit: '100',
+    };
+
     if (updatedSince) {
       params.updatedSince = updatedSince;
     }
 
-    const response = await this.get<unknown>('/categories', {
-      params: Object.keys(params).length > 0 ? params : undefined,
-    });
+    const response = await this.get<unknown>('/categories', { params });
     return CategoriesArraySchema.parse(response);
   }
 

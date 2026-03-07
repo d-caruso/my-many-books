@@ -140,6 +140,7 @@ export class SequelizeAuthorAdapter implements AuthorRepositoryAdapter {
       include: [
         {
           model: Author,
+          as: 'authors',
           where: { id: authorId },
           required: true,
         },

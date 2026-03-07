@@ -136,7 +136,7 @@ export class SequelizeCategoryAdapter implements CategoryRepositoryAdapter {
       include: [
         {
           model: Category,
-          as: 'Categories',
+          as: 'categories',
           where: { id: categoryId },
           required: true,
         },
