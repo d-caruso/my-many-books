@@ -13,10 +13,9 @@ export const MOBILE_ANALYTICS_PROCESSING_STATUS = Object.freeze({
  */
 export const MOBILE_ANALYTICS_PROCESSING_STATUSES = Object.freeze(
   Object.values(MOBILE_ANALYTICS_PROCESSING_STATUS)
-) as readonly (typeof MOBILE_ANALYTICS_PROCESSING_STATUS[keyof typeof MOBILE_ANALYTICS_PROCESSING_STATUS])[];
+);
 
 /**
  * Type exports
  */
 export type MobileAnalyticsProcessingStatus = typeof MOBILE_ANALYTICS_PROCESSING_STATUSES[number];
-

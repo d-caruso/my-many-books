@@ -13,7 +13,7 @@ export const BOOK_STATUS = Object.freeze({
  */
 export const BOOK_STATUSES = Object.freeze(
   Object.values(BOOK_STATUS)
-) as readonly (typeof BOOK_STATUS[keyof typeof BOOK_STATUS])[];
+);
 
 /**
  * Type exports
