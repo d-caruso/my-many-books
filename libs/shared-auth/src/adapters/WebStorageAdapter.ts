@@ -9,32 +9,37 @@ export class WebStorageAdapter implements StorageAdapter {
   private tokens: AuthTokens | null = null;
   private user: User | null = null;
 
-  async getTokens(): Promise<AuthTokens | null> {
-    return this.tokens;
+  getTokens(): Promise<AuthTokens | null> {
+    return Promise.resolve(this.tokens);
   }
 
-  async setTokens(tokens: AuthTokens): Promise<void> {
+  setTokens(tokens: AuthTokens): Promise<void> {
     this.tokens = tokens;
+    return Promise.resolve();
   }
 
-  async removeTokens(): Promise<void> {
+  removeTokens(): Promise<void> {
     this.tokens = null;
+    return Promise.resolve();
   }
 
-  async getUser(): Promise<User | null> {
-    return this.user;
+  getUser(): Promise<User | null> {
+    return Promise.resolve(this.user);
   }
 
-  async setUser(user: User): Promise<void> {
+  setUser(user: User): Promise<void> {
     this.user = user;
+    return Promise.resolve();
   }
 
-  async removeUser(): Promise<void> {
+  removeUser(): Promise<void> {
     this.user = null;
+    return Promise.resolve();
   }
 
-  async clear(): Promise<void> {
+  clear(): Promise<void> {
     this.tokens = null;
     this.user = null;
+    return Promise.resolve();
   }
 }

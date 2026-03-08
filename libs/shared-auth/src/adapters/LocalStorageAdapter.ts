@@ -10,54 +10,62 @@ export class LocalStorageAdapter implements StorageAdapter {
   private readonly TOKENS_KEY = 'auth_tokens';
   private readonly USER_KEY = 'auth_user';
 
-  async getTokens(): Promise<AuthTokens | null> {
+  getTokens(): Promise<AuthTokens | null> {
     try {
       const stored = localStorage.getItem(this.TOKENS_KEY);
-      return stored ? JSON.parse(stored) as AuthTokens : null;
+      return Promise.resolve(stored ? (JSON.parse(stored) as AuthTokens) : null);
     } catch {
-      return null;
+      return Promise.resolve(null);
     }
   }
 
-  async setTokens(tokens: AuthTokens): Promise<void> {
+  setTokens(tokens: AuthTokens): Promise<void> {
     try {
       localStorage.setItem(this.TOKENS_KEY, JSON.stringify(tokens));
-    } catch (error) {
-      console.error('Failed to store tokens:', error);
+    } catch {
+      // Ignore storage failures to preserve existing adapter behavior.
     }
+
+    return Promise.resolve();
   }
 
-  async removeTokens(): Promise<void> {
+  removeTokens(): Promise<void> {
     try {
       localStorage.removeItem(this.TOKENS_KEY);
-    } catch (error) {
-      console.error('Failed to remove tokens:', error);
+    } catch {
+      // Ignore storage failures to preserve existing adapter behavior.
     }
+
+    return Promise.resolve();
   }
 
-  async getUser(): Promise<User | null> {
+  getUser(): Promise<User | null> {
     try {
       const stored = localStorage.getItem(this.USER_KEY);
-      return stored ? JSON.parse(stored) as User : null;
+      return Promise.resolve(stored ? (JSON.parse(stored) as User) : null);
     } catch {
-      return null;
+      return Promise.resolve(null);
     }
   }
 
-  async setUser(user: User): Promise<void> {
+  setUser(user: User): Promise<void> {
     try {
       localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-    } catch (error) {
-      console.error('Failed to store user:', error);
+    } catch {
+      // Ignore storage failures to preserve existing adapter behavior.
     }
+
+    return Promise.resolve();
   }
 
-  async removeUser(): Promise<void> {
+  removeUser(): Promise<void> {
     try {
       localStorage.removeItem(this.USER_KEY);
-    } catch (error) {
-      console.error('Failed to remove user:', error);
+    } catch {
+      // Ignore storage failures to preserve existing adapter behavior.
     }
+
+    return Promise.resolve();
   }
 
   async clear(): Promise<void> {
