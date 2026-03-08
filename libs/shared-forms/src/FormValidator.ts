@@ -45,27 +45,34 @@ export class FormValidator {
         return this.validateUrl(value);
         
       case 'minLength':
-        return this.validateMinLength(value, rule.value);
+        return this.validateMinLength(value, this.getRuleNumberValue(rule));
         
       case 'maxLength':
-        return this.validateMaxLength(value, rule.value);
+        return this.validateMaxLength(value, this.getRuleNumberValue(rule));
         
       case 'pattern':
-        return this.validatePattern(value, rule.value);
+        return this.validatePattern(value, this.getRuleStringValue(rule));
         
       case 'min':
-        return this.validateMin(value, rule.value);
+        return this.validateMin(value, this.getRuleNumberValue(rule));
         
       case 'max':
-        return this.validateMax(value, rule.value);
+        return this.validateMax(value, this.getRuleNumberValue(rule));
         
       case 'custom':
         return this.validateCustom(rule, value, formValues);
         
       default:
-        console.warn(`Unknown validation rule type: ${rule.type}`);
         return true;
     }
+  }
+
+  private getRuleNumberValue(rule: ValidationRule): number {
+    return typeof rule.value === 'number' ? rule.value : 0;
+  }
+
+  private getRuleStringValue(rule: ValidationRule): string {
+    return typeof rule.value === 'string' ? rule.value : '';
   }
 
   private validateRequired(value: FieldValue): boolean {
@@ -131,15 +138,13 @@ export class FormValidator {
     formValues: Record<string, FieldValue>
   ): Promise<boolean> {
     if (!rule.validator) {
-      console.warn('Custom validation rule missing validator function');
       return true;
     }
 
     try {
       const result = await rule.validator(value, formValues);
       return result;
-    } catch (error) {
-      console.error('Custom validator error:', error);
+    } catch {
       return false;
     }
   }

@@ -197,8 +197,7 @@ describe('FormValidator', () => {
     await expect(validator.validateField(field, {})).resolves.toEqual([]);
   });
 
-  test('custom rule missing validator warns and passes', async () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  test('custom rule missing validator is ignored', async () => {
     const validator = new FormValidator();
     const field = createField({
       value: 'x',
@@ -206,12 +205,9 @@ describe('FormValidator', () => {
     });
 
     await expect(validator.validateField(field, {})).resolves.toEqual([]);
-    expect(warnSpy).toHaveBeenCalledWith('Custom validation rule missing validator function');
-    warnSpy.mockRestore();
   });
 
-  test('custom validator error returns false and logs', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  test('custom validator error returns false', async () => {
     const validator = new FormValidator();
     const rule = FormValidator.createCustomRule(() => {
       throw new Error('boom');
@@ -219,12 +215,9 @@ describe('FormValidator', () => {
     const field = createField({ value: 'x', validation: [rule] });
 
     await expect(validator.validateField(field, {})).resolves.toEqual(['Failed']);
-    expect(errorSpy).toHaveBeenCalledWith('Custom validator error:', expect.any(Error));
-    errorSpy.mockRestore();
   });
 
-  test('unknown rule type warns and is treated as valid', async () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  test('unknown rule type is treated as valid', async () => {
     const validator = new FormValidator();
     const field = createField({
       value: 'x',
@@ -232,7 +225,5 @@ describe('FormValidator', () => {
     });
 
     await expect(validator.validateField(field, {})).resolves.toEqual([]);
-    expect(warnSpy).toHaveBeenCalledWith('Unknown validation rule type: unknown');
-    warnSpy.mockRestore();
   });
 });
