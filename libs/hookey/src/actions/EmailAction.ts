@@ -1,5 +1,6 @@
 import { HookAction, HookActionContext } from '../types';
 import { replaceTemplateVariables, toTemplateData } from '../utils/templateEngine';
+import { getLogger, type AppLogger } from '@my-many-books/shared-logging';
 
 export interface EmailActionConfig {
   to: string | string[];
@@ -21,13 +22,27 @@ export interface EmailService {
   }): Promise<void>;
 }
 
+const EMAIL_LOG_PREFIX = '[EmailService]';
+const DEFAULT_FROM_ADDRESS = 'noreply@example.com';
+const RECIPIENT_SEPARATOR = ', ';
+
+function formatRecipients(value: string | string[]): string {
+  return Array.isArray(value) ? value.join(RECIPIENT_SEPARATOR) : value;
+}
+
 /**
  * Default email service implementation
- * This is a mock implementation that logs emails to console
+ * This is a mock implementation that logs emails through shared logging
  * In production, replace with actual email service (nodemailer, SendGrid, etc.)
  */
 export class ConsoleEmailService implements EmailService {
-  async sendEmail(options: {
+  private readonly logger: AppLogger;
+
+  constructor(logger: AppLogger = getLogger()) {
+    this.logger = logger;
+  }
+
+  sendEmail(options: {
     to: string | string[];
     cc?: string | string[];
     bcc?: string | string[];
@@ -35,17 +50,18 @@ export class ConsoleEmailService implements EmailService {
     body: string;
     from?: string;
   }): Promise<void> {
-    console.log('[EmailService] Sending email:');
-    console.log('  From:', options.from || 'noreply@example.com');
-    console.log('  To:', Array.isArray(options.to) ? options.to.join(', ') : options.to);
-    if (options.cc) {
-      console.log('  CC:', Array.isArray(options.cc) ? options.cc.join(', ') : options.cc);
-    }
-    if (options.bcc) {
-      console.log('  BCC:', Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc);
-    }
-    console.log('  Subject:', options.subject);
-    console.log('  Body:', options.body);
+    this.logger.info(
+      {
+        from: options.from ?? DEFAULT_FROM_ADDRESS,
+        to: formatRecipients(options.to),
+        cc: options.cc ? formatRecipients(options.cc) : undefined,
+        bcc: options.bcc ? formatRecipients(options.bcc) : undefined,
+        subject: options.subject,
+        body: options.body,
+      },
+      `${EMAIL_LOG_PREFIX} Sending email`
+    );
+    return Promise.resolve();
   }
 }
 

@@ -1,5 +1,6 @@
 import { HookAction, HookActionContext } from '../types';
 import { replaceTemplateVariables, toTemplateData } from '../utils/templateEngine';
+import { getLogger, type AppLogger } from '@my-many-books/shared-logging';
 
 export type DatabaseOperation = 'create' | 'update' | 'delete';
 
@@ -16,36 +17,55 @@ export interface DatabaseService {
   delete(table: string, where: Record<string, unknown>): Promise<unknown>;
 }
 
+const DATABASE_LOG_PREFIX = '[DatabaseService]';
+const DATABASE_ACTIONS = Object.freeze({
+  CREATE: 'CREATE',
+  UPDATE: 'UPDATE',
+  DELETE: 'DELETE',
+});
+
+function assertNever(value: never): never {
+  throw new Error(`Unknown database operation: ${String(value)}`);
+}
+
 /**
  * Default database service implementation
- * This is a mock implementation that logs operations to console
+ * This is a mock implementation that logs operations through shared logging
  * In production, replace with actual database service (Sequelize, TypeORM, Prisma, etc.)
  */
 export class ConsoleDatabaseService implements DatabaseService {
-  async create(table: string, data: Record<string, unknown>): Promise<unknown> {
-    console.log('[DatabaseService] CREATE');
-    console.log('  Table:', table);
-    console.log('  Data:', JSON.stringify(data, null, 2));
-    return { id: 'mock-id', ...data };
+  private readonly logger: AppLogger;
+
+  constructor(logger: AppLogger = getLogger()) {
+    this.logger = logger;
   }
 
-  async update(
+  create(table: string, data: Record<string, unknown>): Promise<unknown> {
+    this.logger.info(
+      { table, data },
+      `${DATABASE_LOG_PREFIX} ${DATABASE_ACTIONS.CREATE}`
+    );
+    return Promise.resolve({ id: 'mock-id', ...data });
+  }
+
+  update(
     table: string,
     data: Record<string, unknown>,
     where: Record<string, unknown>
   ): Promise<unknown> {
-    console.log('[DatabaseService] UPDATE');
-    console.log('  Table:', table);
-    console.log('  Data:', JSON.stringify(data, null, 2));
-    console.log('  Where:', JSON.stringify(where, null, 2));
-    return { affected: 1 };
+    this.logger.info(
+      { table, data, where },
+      `${DATABASE_LOG_PREFIX} ${DATABASE_ACTIONS.UPDATE}`
+    );
+    return Promise.resolve({ affected: 1 });
   }
 
-  async delete(table: string, where: Record<string, unknown>): Promise<unknown> {
-    console.log('[DatabaseService] DELETE');
-    console.log('  Table:', table);
-    console.log('  Where:', JSON.stringify(where, null, 2));
-    return { deleted: 1 };
+  delete(table: string, where: Record<string, unknown>): Promise<unknown> {
+    this.logger.info(
+      { table, where },
+      `${DATABASE_LOG_PREFIX} ${DATABASE_ACTIONS.DELETE}`
+    );
+    return Promise.resolve({ deleted: 1 });
   }
 }
 
@@ -70,7 +90,7 @@ export class DatabaseAction implements HookAction {
         await this.executeDelete(payloadData);
         break;
       default:
-        throw new Error(`Unknown database operation: ${this.config.operation}`);
+        assertNever(this.config.operation);
     }
   }
 

@@ -92,11 +92,11 @@ export class ActionRouter {
   }
 
   private extractLogLevel(value: unknown): LogLevelOption | undefined {
-    return isValidLogLevel(value) ? (value as LogLevelOption) : undefined;
+    return isValidLogLevel(value) ? value : undefined;
   }
 
   private extractDestination(value: unknown): LogDestinationOption | undefined {
-    return isValidDestination(value) ? (value as LogDestinationOption) : undefined;
+    return isValidDestination(value) ? value : undefined;
   }
 
   private extractFilePath(config: Record<string, unknown>): string | undefined {
