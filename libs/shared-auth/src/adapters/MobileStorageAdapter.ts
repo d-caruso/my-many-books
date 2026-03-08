@@ -7,8 +7,7 @@ import type { StorageAdapter, AuthTokens, User } from '../types';
 
 const TOKEN_KEY = 'auth_tokens';
 const USER_KEY = 'auth_user';
-const SECURE_STORE_PACKAGE_NAME = 'expo-secure-store';
-const SECURE_STORE_UNAVAILABLE_ERROR = `${SECURE_STORE_PACKAGE_NAME} not available`;
+const SECURE_STORE_UNAVAILABLE_ERROR = 'expo-secure-store not available';
 const USER_ROLE_USER: User['role'] = 'user';
 const USER_ROLE_ADMIN: User['role'] = 'admin';
 
@@ -67,7 +66,7 @@ export class MobileStorageAdapter implements StorageAdapter {
 
   private async getSecureStore(): Promise<SecureStoreModule> {
     if (!this.secureStorePromise) {
-      this.secureStorePromise = import(SECURE_STORE_PACKAGE_NAME)
+      this.secureStorePromise = import('expo-secure-store')
         .then((module) => module)
         .catch(() => null);
     }
