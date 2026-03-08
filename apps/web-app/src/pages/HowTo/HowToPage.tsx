@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Card, CardContent, Container, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, Container, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import {
   HOW_TO_SECTIONS,
   getTutorialCapabilities,
@@ -9,6 +10,7 @@ import {
 
 const HowToPage: React.FC = () => {
   const { t } = useTranslation('tutorial');
+  const navigate = useNavigate();
   const capabilities = getTutorialCapabilities();
   const visibleSections = getVisibleTutorialSections(HOW_TO_SECTIONS, capabilities);
 
@@ -55,6 +57,21 @@ const HowToPage: React.FC = () => {
                         </Box>
                       ))}
                     </Box>
+
+                    {item.ctaPath && (
+                      <Box
+                        sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}
+                        data-testid={`how-to-cta-container-${item.id}`}
+                      >
+                        <Button
+                          variant="contained"
+                          onClick={() => navigate(item.ctaPath)}
+                          data-testid={`how-to-cta-${item.id}`}
+                        >
+                          {t(item.ctaLabelKey ?? 'cta_try_it_now', 'Try it now')}
+                        </Button>
+                      </Box>
+                    )}
                   </CardContent>
                 </Card>
               ))}

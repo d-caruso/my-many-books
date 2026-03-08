@@ -41,6 +41,7 @@ testI18n.use(initReactI18next).init({
       common: {
         app_name: 'My Many Books',
         search: 'Search',
+        how_to: 'How to',
         scanner: 'Scanner',
         sign_out: 'Sign out',
         about: 'About',
@@ -215,8 +216,28 @@ describe('Navbar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/search'));
 
+    fireEvent.click(screen.getByRole('button', { name: 'How to' }));
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/how-to'));
+
     fireEvent.click(screen.getByRole('button', { name: 'Scanner' }));
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/scanner'));
+  });
+
+  test('user menu navigation includes How to route', async () => {
+    mockUseAuth.mockReturnValue({
+      user: baseUser,
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
+    });
+
+    render(<Navbar />);
+
+    fireEvent.click(screen.getByRole('button', { name: /user menu/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'How to' }));
+
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/how-to'));
   });
 
   test('clicking active navigation voice does not trigger no-op navigation', () => {

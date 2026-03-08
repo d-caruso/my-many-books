@@ -29,9 +29,32 @@ export interface TutorialCapabilities {
 }
 
 const DEFAULT_STEPS_PER_CARD = 4;
+const DEFAULT_CTA_LABEL_KEY = 'cta_try_it_now';
 
 const buildStepsKeys = (cardPrefix: string, stepsCount = DEFAULT_STEPS_PER_CARD): string[] =>
   Array.from({ length: stepsCount }, (_value, index) => `${cardPrefix}.step_${index + 1}`);
+
+interface TutorialItemConfig {
+  id: string;
+  cardKey: string;
+  ctaPath: string;
+  availability?: TutorialAvailability;
+}
+
+const buildTutorialItem = ({
+  id,
+  cardKey,
+  ctaPath,
+  availability,
+}: TutorialItemConfig): TutorialItem => ({
+  id,
+  titleKey: `cards.${cardKey}.title`,
+  descriptionKey: `cards.${cardKey}.description`,
+  stepsKeys: buildStepsKeys(`cards.${cardKey}`),
+  ctaLabelKey: DEFAULT_CTA_LABEL_KEY,
+  ctaPath,
+  ...(availability ? { availability } : {}),
+});
 
 const isFeatureEnabled = (value: string | boolean | undefined): boolean => {
   if (typeof value === 'boolean') {
@@ -74,55 +97,47 @@ export const HOW_TO_SECTIONS: TutorialSection[] = [
     id: 'library',
     titleKey: 'sections.library_workflows',
     items: [
-      {
+      buildTutorialItem({
         id: 'add-book',
-        titleKey: 'cards.add_book.title',
-        descriptionKey: 'cards.add_book.description',
-        stepsKeys: buildStepsKeys('cards.add_book'),
-      },
-      {
+        cardKey: 'add_book',
+        ctaPath: '/?mode=add',
+      }),
+      buildTutorialItem({
         id: 'modify-book',
-        titleKey: 'cards.modify_book.title',
-        descriptionKey: 'cards.modify_book.description',
-        stepsKeys: buildStepsKeys('cards.modify_book'),
-      },
-      {
+        cardKey: 'modify_book',
+        ctaPath: '/',
+      }),
+      buildTutorialItem({
         id: 'delete-book',
-        titleKey: 'cards.delete_book.title',
-        descriptionKey: 'cards.delete_book.description',
-        stepsKeys: buildStepsKeys('cards.delete_book'),
-      },
-      {
+        cardKey: 'delete_book',
+        ctaPath: '/',
+      }),
+      buildTutorialItem({
         id: 'scanner',
-        titleKey: 'cards.scanner.title',
-        descriptionKey: 'cards.scanner.description',
-        stepsKeys: buildStepsKeys('cards.scanner'),
-      },
-      {
+        cardKey: 'scanner',
+        ctaPath: '/scanner',
+      }),
+      buildTutorialItem({
         id: 'assign-authors-categories',
-        titleKey: 'cards.assign_authors_categories.title',
-        descriptionKey: 'cards.assign_authors_categories.description',
-        stepsKeys: buildStepsKeys('cards.assign_authors_categories'),
-      },
-      {
+        cardKey: 'assign_authors_categories',
+        ctaPath: '/?mode=add',
+      }),
+      buildTutorialItem({
         id: 'add-authors-categories',
-        titleKey: 'cards.add_authors_categories.title',
-        descriptionKey: 'cards.add_authors_categories.description',
-        stepsKeys: buildStepsKeys('cards.add_authors_categories'),
-      },
-      {
+        cardKey: 'add_authors_categories',
+        ctaPath: '/?mode=add',
+      }),
+      buildTutorialItem({
         id: 'modify-delete-authors-categories',
-        titleKey: 'cards.modify_delete_authors_categories.title',
-        descriptionKey: 'cards.modify_delete_authors_categories.description',
-        stepsKeys: buildStepsKeys('cards.modify_delete_authors_categories'),
-      },
-      {
+        cardKey: 'modify_delete_authors_categories',
+        ctaPath: '/?mode=add',
+      }),
+      buildTutorialItem({
         id: 'change-password',
-        titleKey: 'cards.change_password.title',
-        descriptionKey: 'cards.change_password.description',
-        stepsKeys: buildStepsKeys('cards.change_password'),
+        cardKey: 'change_password',
+        ctaPath: '/account',
         availability: 'userPasswordFeature',
-      },
+      }),
     ],
   },
 ];
