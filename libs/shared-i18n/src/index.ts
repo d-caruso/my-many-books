@@ -8,3 +8,7 @@ export {
   getCurrentLanguage,
   default as i18n,
 } from './config';
+
+// Export locale resources for use in tests
+export { default as enCommon } from './locales/en/common.json';
+export { default as enDialogs } from './locales/en/dialogs.json';

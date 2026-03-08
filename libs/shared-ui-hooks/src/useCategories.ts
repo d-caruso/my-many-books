@@ -45,10 +45,13 @@ export const useCategories = <TCategory extends Category = Category>(
   const [sorting, startSortingTransition] = useTransition();
   const loadingRef = useRef(false);
   const loadedRef = useRef(false);
+  const pendingReloadRef = useRef(false);
 
   const loadCategories = useCallback(async (): Promise<void> => {
-    // Prevent concurrent requests
+    // If a load is already in progress, mark a pending reload instead of dropping the request.
+    // This prevents a race condition where a category created during initial load is never shown.
     if (loadingRef.current) {
+      pendingReloadRef.current = true;
       return;
     }
 
@@ -68,6 +71,10 @@ export const useCategories = <TCategory extends Category = Category>(
     } finally {
       setLoading(false);
       loadingRef.current = false;
+      if (pendingReloadRef.current) {
+        pendingReloadRef.current = false;
+        void loadCategories();
+      }
     }
   }, [api, sortComparator]);
 

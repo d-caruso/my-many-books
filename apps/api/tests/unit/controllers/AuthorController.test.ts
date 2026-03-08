@@ -192,7 +192,8 @@ describe('AuthorController', () => {
 
       expect(deleteAuthorSpy).toHaveBeenCalledWith(
         2,
-        expect.objectContaining({ userId: 1 })
+        expect.objectContaining({ userId: 1 }),
+        false
       );
       expect(response.statusCode).toBe(204);
       expect(emitHookEventMock).toHaveBeenCalledWith(

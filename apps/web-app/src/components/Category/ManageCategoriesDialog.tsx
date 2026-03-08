@@ -22,6 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import type { Category } from '@my-many-books/shared-types';
+import { ENTITY_MANAGE_ERROR_CODES } from '@my-many-books/shared-types';
 import { useManageCategories } from '@my-many-books/shared-ui-hooks';
 import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { useTranslation } from 'react-i18next';
@@ -45,6 +46,7 @@ export const ManageCategoriesDialog: React.FC<ManageCategoriesDialogProps> = ({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [pendingForceDeleteId, setPendingForceDeleteId] = useState<number | null>(null);
   const categorySortComparator = React.useMemo(
     () => createCategoryDisplayNameComparator<Category>(t, i18n.language),
     [t, i18n.language]
@@ -55,7 +57,7 @@ export const ManageCategoriesDialog: React.FC<ManageCategoriesDialogProps> = ({
       getCategories: () => categoryAPI.getCategories(),
       createCategory: (data: { name: string }) => categoryAPI.createCategory(data),
       updateCategory: (id: number, data: Partial<{ name: string }>) => categoryAPI.updateCategory(id, data),
-      deleteCategory: (id: number) => categoryAPI.deleteCategory(id),
+      deleteCategory: (id: number, force?: boolean) => categoryAPI.deleteCategory(id, force),
     }),
     [categoryAPI]
   );
@@ -82,6 +84,7 @@ export const ManageCategoriesDialog: React.FC<ManageCategoriesDialogProps> = ({
       setEditingId(null);
       setEditName('');
       setPendingDeleteId(null);
+      setPendingForceDeleteId(null);
       clearError();
     }
   }, [open, loadCategories, clearError]);
@@ -114,6 +117,20 @@ export const ManageCategoriesDialog: React.FC<ManageCategoriesDialogProps> = ({
     if (result.success) {
       onCategoryDeleted?.(pendingDeleteId);
       setPendingDeleteId(null);
+    } else if (result.error.code === ENTITY_MANAGE_ERROR_CODES.HAS_BOOKS) {
+      clearError();
+      setPendingForceDeleteId(pendingDeleteId);
+      setPendingDeleteId(null);
+    }
+  };
+
+  const confirmForceDelete = async () => {
+    if (pendingForceDeleteId == null) return;
+    const id = pendingForceDeleteId;
+    setPendingForceDeleteId(null);
+    const result = await deleteCategory(id, true);
+    if (result.success) {
+      onCategoryDeleted?.(id);
     }
   };
 
@@ -259,6 +276,33 @@ export const ManageCategoriesDialog: React.FC<ManageCategoriesDialogProps> = ({
             startIcon={mutating ? <CircularProgress size={14} /> : <DeleteIcon />}
           >
             {t('dialogs:category.delete_button', { defaultValue: 'Delete category' })}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={pendingForceDeleteId != null} onClose={mutating ? undefined : () => setPendingForceDeleteId(null)}>
+        <DialogTitle>
+          {t('dialogs:category.delete_confirm_title', { defaultValue: 'Delete category?' })}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            {t('dialogs:category.delete_blocked_has_books', {
+              defaultValue: 'This category is assigned to one or more books. Do you still want to delete it?',
+            })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingForceDeleteId(null)} disabled={mutating}>
+            {t('common:cancel')}
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => void confirmForceDelete()}
+            disabled={mutating}
+            startIcon={mutating ? <CircularProgress size={14} /> : <DeleteIcon />}
+          >
+            {t('dialogs:category.delete_force_button', { defaultValue: 'Delete anyway' })}
           </Button>
         </DialogActions>
       </Dialog>

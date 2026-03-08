@@ -18,7 +18,8 @@ import { UpdateCategoryDTO } from '../dtos/category/UpdateCategoryDTO';
 import { toCategoryResponseDTO } from '../dtos/category/CategoryResponseDTO';
 import { Repository as CategoryRepositoryContract } from '../repositories/category/Repository';
 import { Repository as BookRepositoryContract } from '../repositories/book/Repository';
-import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import { SORT_DIRECTIONS, ERROR_CODES } from '@my-many-books/shared-types';
+import { ApiErrorPayload } from '../common/ApiResponse';
 import { Book } from '../models';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
@@ -160,9 +161,7 @@ export class CategoryController extends BaseController {
     });
 
     try {
-      await this.categoryService.deleteCategory(numericCategoryId, this.getUserContext(request)!, {
-        force: forceDelete,
-      });
+      await this.categoryService.deleteCategory(numericCategoryId, this.getUserContext(request)!, forceDelete);
       return this.createSuccessResponse(null, this.t('common:category_deleted'), undefined, 204);
     } catch (error) {
       return this.handleCategoryServiceError(error);
@@ -308,14 +307,25 @@ export class CategoryController extends BaseController {
 
     switch (error.code) {
       case 'DUPLICATE_CATEGORY':
-        return this.createErrorResponseI18n('errors:resource_exists', 409, {
-          resource: 'Category',
-          field: 'name',
-        });
+        return {
+          statusCode: 409,
+          success: false,
+          error: {
+            code: ERROR_CODES.DUPLICATE_CATEGORY,
+            message: this.t('errors:resource_exists', { resource: 'Category', field: 'name' }),
+          } as ApiErrorPayload,
+        };
       case 'CATEGORY_NOT_FOUND':
         return this.createErrorResponseI18n('errors:category_not_found', 404);
       case 'CATEGORY_HAS_BOOKS':
-        return this.createErrorResponseI18n('errors:category_has_books', 400);
+        return {
+          statusCode: 409,
+          success: false,
+          error: {
+            code: 'CATEGORY_HAS_BOOKS',
+            message: this.t('errors:category_has_books'),
+          } as ApiErrorPayload,
+        };
       case 'FORBIDDEN':
       default:
         return this.createErrorResponseI18n('errors:permission_denied', 403);

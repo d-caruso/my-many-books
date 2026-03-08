@@ -218,9 +218,21 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr 1fr 40px', sm: '1fr 1fr 1fr auto' },
+          gridTemplateAreas: {
+            xs: '"year year cal" "month day ."',
+            sm: '"year month day cal"',
+          },
+          gap: 1,
+          alignItems: 'center',
+          pt: { xs: 1, sm: 0 },
+        }}
+      >
         <TextField
-          sx={{ flex: 1 }}
+          sx={{ gridArea: 'year' }}
           id="editionDate-year"
           label={t('books:edition_date_year')}
           value={year}
@@ -262,7 +274,7 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
         />
 
         <FormControl
-          sx={{ flex: 1 }}
+          sx={{ gridArea: 'month' }}
           disabled={disabled || !isYearReady}
           error={error}
         >
@@ -288,7 +300,7 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
         </FormControl>
 
         <FormControl
-          sx={{ flex: 1 }}
+          sx={{ gridArea: 'day' }}
           disabled={disabled || !isYearReady || !month}
           error={error}
         >
@@ -314,27 +326,28 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
         </FormControl>
 
         <Tooltip title={t('books:edition_date')}>
-          <Box sx={{ display: 'flex', flexShrink: 0 }}>
+          <Box sx={{ gridArea: 'cal', display: 'flex', justifyContent: 'center' }}>
             <IconButton
               aria-label={`${t('books:edition_date')} calendar`}
               disabled={disabled}
-              size="large"
+              size="small"
               onClick={handleCalendarButtonClick}
               sx={{
-                width: 56,
-                height: 56,
+                width: { xs: 40, sm: 56 },
+                height: { xs: 40, sm: 56 },
                 borderRadius: 1,
                 border: '1px solid',
                 borderColor: error ? 'error.main' : 'divider',
                 color: error ? 'error.main' : 'action.active',
               }}
             >
-              <CalendarMonthIcon sx={{ fontSize: 30 }} />
+              <CalendarMonthIcon sx={{ fontSize: { xs: 22, sm: 30 } }} />
             </IconButton>
           </Box>
         </Tooltip>
+      </Box>
 
-        <Popover
+      <Popover
           open={isCalendarOpen}
           anchorEl={calendarAnchorEl}
           onClose={handleCalendarClose}
@@ -373,7 +386,6 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
             />
           </LocalizationProvider>
         </Popover>
-      </Box>
 
       {helperText && <FormHelperText error={error}>{helperText}</FormHelperText>}
     </Box>

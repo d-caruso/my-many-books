@@ -6,6 +6,12 @@ import {
 } from '@my-many-books/shared-types';
 import { extractErrorDetails } from './errorExtraction';
 
+const getApiErrorCode = (error: unknown): string | undefined => {
+  const err = error as { response?: { data?: { error?: { code?: unknown } } } } | null;
+  const code = err?.response?.data?.error?.code;
+  return typeof code === 'string' ? code : undefined;
+};
+
 const buildError = (
   code: EntityManageOperationError['code'],
   i18nKey: string,
@@ -23,8 +29,9 @@ export const mapAuthorManageApiError = (
   operation: 'load' | 'create' | 'update' | 'delete'
 ): EntityManageOperationError => {
   const details = extractErrorDetails(error);
+  const apiErrorCode = getApiErrorCode(error);
 
-  if (operation === 'delete' && details.backendError === AUTHOR_DELETE_CONFLICT_REASONS.HAS_BOOKS) {
+  if (operation === 'delete' && apiErrorCode === AUTHOR_DELETE_CONFLICT_REASONS.HAS_BOOKS) {
     return buildError(ENTITY_MANAGE_ERROR_CODES.HAS_BOOKS, 'dialogs:author.delete_blocked_has_books', details);
   }
 
@@ -46,8 +53,9 @@ export const mapCategoryManageApiError = (
   operation: 'load' | 'create' | 'update' | 'delete'
 ): EntityManageOperationError => {
   const details = extractErrorDetails(error);
+  const apiErrorCode = getApiErrorCode(error);
 
-  if (operation === 'delete' && details.backendError === CATEGORY_DELETE_CONFLICT_REASONS.HAS_BOOKS) {
+  if (operation === 'delete' && apiErrorCode === CATEGORY_DELETE_CONFLICT_REASONS.HAS_BOOKS) {
     return buildError(
       ENTITY_MANAGE_ERROR_CODES.HAS_BOOKS,
       'dialogs:category.delete_blocked_has_books',

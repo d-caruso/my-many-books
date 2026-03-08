@@ -18,7 +18,8 @@ import { UpdateAuthorDTO } from '../dtos/author/UpdateAuthorDTO';
 import { toAuthorResponseDTO } from '../dtos/author/AuthorResponseDTO';
 import { Repository as AuthorRepositoryContract } from '../repositories/author/Repository';
 import { Repository as BookRepositoryContract } from '../repositories/book/Repository';
-import { SORT_DIRECTIONS, DATABASE_FIELDS } from '@my-many-books/shared-types';
+import { SORT_DIRECTIONS, DATABASE_FIELDS, ERROR_CODES } from '@my-many-books/shared-types';
+import { ApiErrorPayload } from '../common/ApiResponse';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
@@ -174,13 +175,16 @@ export class AuthorController extends BaseController {
     }
 
     const numericAuthorId = Number(authorId);
+    const forceDelete = this.getQueryParameter(request, 'force') === 'true';
+
     await emitHookEvent(EVENTS.AUTHOR.DELETE.BEFORE, {
       user: this.mapRequestUser(request),
       authorId: numericAuthorId,
+      force: forceDelete,
     });
 
     try {
-      await this.authorService.deleteAuthor(numericAuthorId, this.getUserContext(request)!);
+      await this.authorService.deleteAuthor(numericAuthorId, this.getUserContext(request)!, forceDelete);
       return this.createSuccessResponse(null, this.t('common:author_deleted'), undefined, 204);
     } catch (error) {
       return this.handleAuthorServiceError(error);
@@ -313,14 +317,25 @@ export class AuthorController extends BaseController {
 
     switch (error.code) {
       case 'DUPLICATE_AUTHOR':
-        return this.createErrorResponseI18n('errors:resource_exists', 409, {
-          resource: 'Author',
-          field: 'name',
-        });
+        return {
+          statusCode: 409,
+          success: false,
+          error: {
+            code: ERROR_CODES.DUPLICATE_AUTHOR,
+            message: this.t('errors:resource_exists', { resource: 'Author', field: 'name' }),
+          } as ApiErrorPayload,
+        };
       case 'AUTHOR_NOT_FOUND':
         return this.createErrorResponseI18n('errors:author_not_found', 404);
       case 'AUTHOR_HAS_BOOKS':
-        return this.createErrorResponseI18n('errors:author_has_books', 409);
+        return {
+          statusCode: 409,
+          success: false,
+          error: {
+            code: 'AUTHOR_HAS_BOOKS',
+            message: this.t('errors:author_has_books'),
+          } as ApiErrorPayload,
+        };
       case 'FORBIDDEN':
       default:
         return this.createErrorResponseI18n('errors:permission_denied', 403);

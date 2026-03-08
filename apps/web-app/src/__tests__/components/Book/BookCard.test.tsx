@@ -47,7 +47,6 @@ describe('BookCard', () => {
 
     expect(screen.getByText('Test Book')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('Reading')).toBeInTheDocument();
     expect(screen.getByText('ISBN: 978-0123456789')).toBeInTheDocument();
     expect(screen.getByText('Edition 1')).toBeInTheDocument();
     expect(screen.getByText('01/01/2023')).toBeInTheDocument();
@@ -86,7 +85,7 @@ describe('BookCard', () => {
 
   test('calls onEdit when edit button is clicked', () => {
     const handleEdit = vi.fn();
-    render(<BookCard book={mockBook} onEdit={handleEdit} />);
+    render(<BookCard book={mockBook} onEdit={handleEdit} compact />);
 
     fireEvent.click(screen.getByTitle('Edit book'));
     expect(handleEdit).toHaveBeenCalledWith(mockBook);
@@ -94,7 +93,7 @@ describe('BookCard', () => {
 
   test('calls onDelete when delete button is clicked and confirmed', () => {
     const handleDelete = vi.fn();
-    render(<BookCard book={mockBook} onDelete={handleDelete} />);
+    render(<BookCard book={mockBook} onDelete={handleDelete} compact />);
 
     fireEvent.click(screen.getByTitle('Delete book'));
     expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete "Test Book"?');
@@ -104,7 +103,7 @@ describe('BookCard', () => {
   test('does not call onDelete when deletion is not confirmed', () => {
     (window.confirm as any).mockReturnValue(false);
     const handleDelete = vi.fn();
-    render(<BookCard book={mockBook} onDelete={handleDelete} />);
+    render(<BookCard book={mockBook} onDelete={handleDelete} compact />);
 
     fireEvent.click(screen.getByTitle('Delete book'));
     expect(window.confirm).toHaveBeenCalled();
@@ -152,13 +151,13 @@ describe('BookCard', () => {
     const pausedBook = { ...mockBook, status: 'paused' as Book['status'] };
     const defaultBook = { ...mockBook, status: 'unknown' as Book['status'] };
 
-    const { rerender } = render(<BookCard book={finishedBook} />);
+    const { rerender } = render(<BookCard book={finishedBook} compact />);
     expect(screen.getByText('Finished')).toBeInTheDocument();
 
-    rerender(<BookCard book={pausedBook} />);
+    rerender(<BookCard book={pausedBook} compact />);
     expect(screen.getByText('Paused')).toBeInTheDocument();
 
-    rerender(<BookCard book={defaultBook} />);
+    rerender(<BookCard book={defaultBook} compact />);
     expect(screen.getByText('unknown')).toBeInTheDocument();
   });
 
@@ -173,6 +172,7 @@ describe('BookCard', () => {
         onClick={handleClick}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        compact
       />
     );
 

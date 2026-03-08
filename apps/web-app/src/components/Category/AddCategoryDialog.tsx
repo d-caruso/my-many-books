@@ -7,13 +7,16 @@ import {
   TextField,
   Button,
   Stack,
+  Alert,
   CircularProgress
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@my-many-books/shared-types';
+import { ERROR_CODES } from '@my-many-books/shared-types';
 import { useApi } from '../../contexts/ApiContext';
+import { getErrorCode } from '../../utils/errorTranslation';
 
 interface AddCategoryDialogProps {
   open: boolean;
@@ -30,19 +33,21 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
   const { categoryAPI } = useApi();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [fieldError, setFieldError] = useState<string>('');
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handleClose = () => {
     if (!loading) {
       setName('');
-      setError('');
+      setFieldError('');
+      setFormError(null);
       onClose();
     }
   };
 
   const validateForm = (): boolean => {
     if (!name.trim()) {
-      setError(t('dialogs:category.name_required'));
+      setFieldError(t('dialogs:category.name_required'));
       return false;
     }
     return true;
@@ -56,6 +61,7 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
     }
 
     setLoading(true);
+    setFormError(null);
     try {
       const newCategory = await categoryAPI.createCategory({
         name: name.trim()
@@ -65,8 +71,11 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
       handleClose();
     } catch (error: any) {
       console.error('Failed to create category:', error);
-      const errorMessage = error?.response?.data?.error || t('dialogs:category.create_failed');
-      setError(errorMessage);
+      if (getErrorCode(error) === ERROR_CODES.DUPLICATE_CATEGORY) {
+        setFormError(t('dialogs:category.duplicate_category'));
+      } else {
+        setFormError(t('dialogs:category.create_failed'));
+      }
     } finally {
       setLoading(false);
     }
@@ -74,8 +83,11 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
 
   const handleChange = (value: string) => {
     setName(value);
-    if (error) {
-      setError('');
+    if (fieldError) {
+      setFieldError('');
+    }
+    if (formError) {
+      setFormError(null);
     }
   };
 
@@ -92,13 +104,19 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
               label={t('dialogs:category.name_label')}
               value={name}
               onChange={(e) => handleChange(e.target.value)}
-              error={!!error}
-              helperText={error}
+              error={!!fieldError}
+              helperText={fieldError}
               disabled={loading}
               placeholder={t('dialogs:category.name_placeholder')}
             />
           </Stack>
         </DialogContent>
+
+        {formError && (
+          <Alert severity="warning" sx={{ mx: 3 }}>
+            {formError}
+          </Alert>
+        )}
 
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button

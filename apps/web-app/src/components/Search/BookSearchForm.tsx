@@ -138,8 +138,9 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
             size="large"
             disabled={loading}
             sx={{
-              minWidth: { xs: '100%', sm: 120 },
-              width: { xs: '100%', sm: 'auto' }
+              display: { xs: 'none', sm: 'flex' },
+              minWidth: 120,
+              width: 'auto'
             }}
           >
             {loading ? t('form.searching') : t('form.search_button')}
@@ -308,6 +309,17 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
             </Stack>
           </Box>
         </Collapse>
+
+        {/* Search button — mobile only, after filters */}
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          disabled={loading}
+          sx={{ display: { xs: 'flex', sm: 'none' }, width: '100%', mt: 2 }}
+        >
+          {loading ? t('form.searching') : t('form.search_button')}
+        </Button>
       </Box>
     </Paper>
   );

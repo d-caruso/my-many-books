@@ -130,7 +130,7 @@ class AuthorService {
     return updated;
   }
 
-  async deleteAuthor(id: number, userContext: AuthorUserContext): Promise<void> {
+  async deleteAuthor(id: number, userContext: AuthorUserContext, force?: boolean): Promise<void> {
     const existing = await this.authorRepository.findById(id);
     if (!existing) {
       throw new AuthorServiceError('AUTHOR_NOT_FOUND');
@@ -139,7 +139,7 @@ class AuthorService {
     this.ensureOwnership(existing, userContext);
 
     const bookCount = await this.authorRepository.countBooks(id);
-    if (bookCount > 0) {
+    if (bookCount > 0 && !force) {
       throw new AuthorServiceError('AUTHOR_HAS_BOOKS');
     }
 
