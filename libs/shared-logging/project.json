@@ -10,7 +10,7 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "dist/libs/shared-logging",
+        "outputPath": "libs/shared-logging/dist",
         "main": "libs/shared-logging/src/index.ts",
         "tsConfig": "libs/shared-logging/tsconfig.lib.json",
         "assets": []
