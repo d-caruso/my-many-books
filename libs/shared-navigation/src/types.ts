@@ -2,12 +2,20 @@
  * Platform-agnostic navigation types and interfaces
  */
 
+export interface RouteParams {
+  [key: string]: string | number | undefined;
+}
+
+export interface QueryParams {
+  [key: string]: string | number | string[] | undefined;
+}
+
 export interface Route {
   id: string;
   path: string;
   name: string;
-  params?: Record<string, string | number>;
-  query?: Record<string, string | number | string[]>;
+  params?: RouteParams;
+  query?: QueryParams;
   metadata?: {
     title?: string;
     requiresAuth?: boolean;
@@ -45,14 +53,6 @@ export interface NavigationAdapter {
   onNavigationError?(error: Error): void;
 }
 
-export interface RouteParams {
-  [key: string]: string | number | undefined;
-}
-
-export interface QueryParams {
-  [key: string]: string | number | string[] | undefined;
-}
-
 // Route matching result
 export interface RouteMatch {
   route: Route;
@@ -82,10 +82,13 @@ export type AppRouteName =
   | 'authors'
   | 'author-books'
   | 'profile'
+  | 'account'
   | 'settings'
   | 'auth'
   | 'login'
-  | 'register';
+  | 'register'
+  | 'forgot-password'
+  | 'reset-password';
 
 // Route configuration for the app
 export interface AppRoute extends Omit<Route, 'id' | 'name'> {

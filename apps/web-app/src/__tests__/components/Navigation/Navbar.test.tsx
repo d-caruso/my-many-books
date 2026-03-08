@@ -44,6 +44,7 @@ testI18n.use(initReactI18next).init({
         how_to: 'How to',
         scanner: 'Scanner',
         sign_out: 'Sign out',
+        account: 'Account',
         about: 'About',
         menu: 'Menu',
         user_menu: 'User menu',
@@ -161,6 +162,23 @@ describe('Navbar', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }));
 
     await waitFor(() => expect(mockLogout).toHaveBeenCalled());
+  });
+
+  test('navigates to account page from user menu', async () => {
+    mockUseAuth.mockReturnValue({
+      user: baseUser,
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      signup: vi.fn(),
+    });
+
+    render(<Navbar />);
+
+    fireEvent.click(screen.getByRole('button', { name: /user menu/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Account' }));
+
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/account'));
   });
 
   test('opens about dialog from the user menu', async () => {

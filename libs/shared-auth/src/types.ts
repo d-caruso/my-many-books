@@ -57,6 +57,24 @@ export interface RegisterResponse {
   message: string;
 }
 
+export interface ChangePasswordResponse {
+  changed: boolean;
+  accessToken: string;
+  idToken: string;
+  expiresIn: number;
+  user: User;
+}
+
+export interface ForgotPasswordResponse {
+  accepted: boolean;
+  expiresInMinutes: number;
+}
+
+export interface ConfirmPasswordResetResponse {
+  reset: boolean;
+  signInRequired: boolean;
+}
+
 export interface ApiSuccessEnvelope<T> {
   success: true;
   data: T;

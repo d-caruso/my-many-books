@@ -25,6 +25,7 @@ import { Repository as UserRepositoryContract } from '../repositories/user/Repos
 import { UserRepository } from '../repositories/user/UserRepository';
 import { AdminUserService } from '../services/user/AdminUserService';
 import { UserController } from '../controllers/UserController';
+import { AccountController } from '../controllers/AccountController';
 import { UserService } from '../services/user/UserService';
 import { SettingsController } from '../controllers/SettingsController';
 import { SearchSettingsService } from '../services/SearchSettingsService';
@@ -60,6 +61,7 @@ container
 container.bind<UserRepositoryContract>(TYPES.UserRepository).to(UserRepository).inSingletonScope();
 container.bind<UserService>(TYPES.UserService).to(UserService).inSingletonScope();
 container.bind<UserController>(TYPES.UserController).to(UserController).inTransientScope();
+container.bind<AccountController>(TYPES.AccountController).to(AccountController).inTransientScope();
 container
   .bind<UserRepositoryContract>(TYPES.AdminUserRepository)
   .to(UserRepository)

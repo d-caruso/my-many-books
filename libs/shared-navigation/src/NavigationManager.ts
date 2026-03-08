@@ -169,10 +169,13 @@ export class NavigationManager {
       authors: '/authors',
       'author-books': '/authors/:authorId',
       profile: '/profile',
+      account: '/account',
       settings: '/settings',
       auth: '/auth',
       login: '/auth/login',
-      register: '/auth/register'
+      register: '/auth/register',
+      'forgot-password': '/auth/forgot-password',
+      'reset-password': '/auth/reset-password',
     };
 
     let path = routePatterns[routeName];

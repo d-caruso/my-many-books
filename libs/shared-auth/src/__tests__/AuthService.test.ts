@@ -780,6 +780,179 @@ describe('AuthService', () => {
     });
   });
 
+  describe('changePassword', () => {
+    it('updates stored tokens and user after a successful password change', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            changed: true,
+            accessToken: 'new-access-token',
+            idToken: 'new-id-token',
+            expiresIn: 3600,
+            user: {
+              id: 1,
+              email: 'test@example.com',
+              name: 'Updated',
+              surname: 'User',
+              role: 'user' as const,
+              isActive: true,
+            },
+          },
+        }),
+      });
+
+      const user = await authService.changePassword({
+        userId: 1,
+        currentPassword: 'CurrentPass123',
+        newPassword: 'NewPass123',
+        locale: 'en',
+      });
+
+      expect(user.name).toBe('Updated');
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${API_BASE_URL}/users/1`,
+        expect.objectContaining({
+          method: 'PATCH',
+          credentials: 'include',
+        })
+      );
+
+      expect(await mockStorage.getTokens()).toEqual(
+        expect.objectContaining({
+          accessToken: 'new-access-token',
+          idToken: 'new-id-token',
+        })
+      );
+      expect(await mockStorage.getUser()).toEqual(
+        expect.objectContaining({
+          email: 'test@example.com',
+        })
+      );
+    });
+
+    it('throws when password change API call fails', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        json: async () => ({
+          success: false,
+          error: {
+            code: 'AUTH_FAILED',
+            message: 'Current password is incorrect',
+          },
+        }),
+      });
+
+      await expect(
+        authService.changePassword({
+          userId: 1,
+          currentPassword: 'wrong',
+          newPassword: 'NewPass123',
+        })
+      ).rejects.toThrow('Current password is incorrect');
+    });
+  });
+
+  describe('requestPasswordReset', () => {
+    it('returns accepted response for forgot-password requests', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            accepted: true,
+            expiresInMinutes: 60,
+          },
+        }),
+      });
+
+      await expect(authService.requestPasswordReset('user@example.com')).resolves.toEqual({
+        accepted: true,
+        expiresInMinutes: 60,
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${API_BASE_URL}/auth/forgot-password`,
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
+    });
+
+    it('throws when forgot-password request fails', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        json: async () => ({
+          success: false,
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Too many requests',
+          },
+        }),
+      });
+
+      await expect(authService.requestPasswordReset('user@example.com')).rejects.toThrow(
+        'Too many requests'
+      );
+    });
+  });
+
+  describe('confirmPasswordReset', () => {
+    it('returns reset response for valid confirmation payload', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          data: {
+            reset: true,
+            signInRequired: true,
+          },
+        }),
+      });
+
+      await expect(
+        authService.confirmPasswordReset({
+          email: 'user@example.com',
+          code: '123456',
+          newPassword: 'NewPass123',
+          locale: 'en',
+        })
+      ).resolves.toEqual({
+        reset: true,
+        signInRequired: true,
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${API_BASE_URL}/auth/confirm-forgot-password`,
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
+    });
+
+    it('throws when reset confirmation fails', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        json: async () => ({
+          success: false,
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: 'Invalid reset code',
+          },
+        }),
+      });
+
+      await expect(
+        authService.confirmPasswordReset({
+          email: 'user@example.com',
+          code: '000000',
+          newPassword: 'NewPass123',
+        })
+      ).rejects.toThrow('Invalid reset code');
+    });
+  });
+
   describe('getCurrentUser', () => {
     it('should return current user', async () => {
       const mockUser = {

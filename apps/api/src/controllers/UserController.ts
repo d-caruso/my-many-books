@@ -163,29 +163,6 @@ export class UserController extends UserBaseController {
     }
   }
 
-  async deactivateAccount(request: UniversalRequest): Promise<ApiResponse> {
-    await this.initializeI18n(request);
-    const authError = this.ensureAuthenticated(request);
-    if (authError) return authError;
-
-    const userId = this.getIdParam(request);
-    if (userId === null) {
-      return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'user' });
-    }
-
-    // Check if user can update this config (self or admin)
-    if (!this.hasUserAccess(request, userId)) {
-      return this.createAccessDeniedResponse(request);
-    }
-
-    try {
-      await this.userService.deactivateAccount(userId);
-      return this.createSuccessResponse(null, this.t('common:account_deactivated'));
-    } catch (error) {
-      return this.handleServiceError(error);
-    }
-  }
-
   async deleteAccount(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);

@@ -32,6 +32,9 @@ export type {
   LoginResponse,
   RefreshResponse,
   RegisterResponse,
+  ChangePasswordResponse,
+  ForgotPasswordResponse,
+  ConfirmPasswordResetResponse,
   AuthState,
 } from './types';
 export type {

@@ -7,6 +7,7 @@ import { LoginForm, RegisterForm } from '../components/Auth';
 import { LanguageSelector } from '../components/Navigation/LanguageSelector';
 import { AboutDialog } from '../components/About/AboutDialog';
 import { useAuth } from '@my-many-books/shared-auth';
+import { buildUrl } from '@my-many-books/shared-navigation';
 import { useLanguageChangeFade } from '../hooks/useLanguageChangeFade';
 import type { VerifyEmailNavState } from '../types/authNavState';
 
@@ -30,6 +31,8 @@ const AuthPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation('common');
+  const authPath = buildUrl('auth');
+  const homePath = buildUrl('home');
   const appName = t('app_name', 'My Many Books');
   const logoAlt = t('app_logo', 'My Many Books logo');
   const pageContentRef = useRef<HTMLDivElement>(null);
@@ -48,7 +51,7 @@ const AuthPage: React.FC = () => {
       if (googleStatus === 'success') {
         try {
           await refreshUser();
-          if (!ignore) navigate('/', { replace: true });
+          if (!ignore) navigate(homePath, { replace: true });
           return;
         } catch {
           if (!ignore) setSocialAuthError(t('oauth_error_generic'));
@@ -59,7 +62,7 @@ const AuthPage: React.FC = () => {
         setSocialAuthError(t(key));
       }
 
-      if (!ignore) navigate('/auth', { replace: true });
+      if (!ignore) navigate(authPath, { replace: true });
     };
 
     void handleGoogleCallback();
@@ -84,12 +87,12 @@ const AuthPage: React.FC = () => {
     }
 
     // Clear state to prevent re-showing on refresh
-    navigate('/auth', { replace: true, state: {} });
+    navigate(authPath, { replace: true, state: {} });
   }, [location.state, navigate, t]);
 
   // If user is already authenticated, redirect to home
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={homePath} replace />;
   }
 
   return (

@@ -21,6 +21,7 @@ const TYPES = {
   UserRepository: Symbol.for('UserRepository'),
   UserService: Symbol.for('UserService'),
   UserController: Symbol.for('UserController'),
+  AccountController: Symbol.for('AccountController'),
   SettingsController: Symbol.for('SettingsController'),
   SearchSettingsService: Symbol.for('SearchSettingsService'),
   BookSearchService: Symbol.for('BookSearchService'),

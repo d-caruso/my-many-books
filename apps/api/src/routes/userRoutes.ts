@@ -3,7 +3,8 @@
 // User management routes
 // ================================================================
 
-import express, { Router } from 'express';
+import express, { Router, NextFunction, Request, Response } from 'express';
+import { USER_ACCOUNT_PATCH_ACTIONS } from '@my-many-books/shared-types';
 import { authMiddleware } from '../middleware/auth';
 import { readLimiter, writeLimiter } from '../middleware/rateLimiters';
 import {
@@ -16,11 +17,14 @@ import { expressRouteWrapper } from '../utils/routeWrapper';
 import { container } from '../container';
 import { TYPES } from '../container/types';
 import { UserController } from '../controllers/UserController';
+import { AccountController } from '../controllers/AccountController';
 import { userMobileHooksSettingsController } from '../controllers/mobile/UserMobileHooksSettingsController';
 import { userMobileConfigController } from '../controllers/mobile/UserMobileConfigController';
 
 const router: express.Router = Router();
 const userController = container.get<UserController>(TYPES.UserController);
+const accountController = container.get<AccountController>(TYPES.AccountController);
+const deactivateAccountHandler = expressRouteWrapper(accountController.deactivateAccount.bind(accountController));
 
 // All user routes require authentication
 router.use(authMiddleware);
@@ -59,12 +63,19 @@ router.get(
   expressRouteWrapper(userController.getUserStats.bind(userController))
 );
 
-// Account deactivation (WRITE)
+// Account deactivation / change password (WRITE)
 router.patch(
   '/:id',
   writeLimiter,
-  expressRouteWrapper(userController.deactivateAccount.bind(userController))
-); // PATCH to deactivate account
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const action = (req.body as { action?: string } | undefined)?.action;
+    if (action !== USER_ACCOUNT_PATCH_ACTIONS.CHANGE_PASSWORD) {
+      await deactivateAccountHandler(req, res, next);
+      return;
+    }
+    await accountController.changePassword(req, res, next);
+  }
+); // PATCH for account actions (deactivate/change password)
 
 // User mobile hooks settings (READ)
 router.get(

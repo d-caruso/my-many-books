@@ -16,6 +16,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useAuth } from '@my-many-books/shared-auth';
+import { buildUrl } from '@my-many-books/shared-navigation';
 import { LanguageSelector } from './LanguageSelector';
 import { AboutDialog } from '../About/AboutDialog';
 import { runFadeOut, useFadeInOnChange, useLanguageChangeFade } from '../../hooks/useLanguageChangeFade';
@@ -36,6 +37,11 @@ export const Navbar: React.FC = () => {
   const menuLabel = t('common:menu');
   const userMenuLabel = t('common:user_menu', 'User menu');
   const avatarLabel = t('common:user_avatar', 'User avatar');
+  const homePath = buildUrl('home');
+  const searchPath = buildUrl('search');
+  const scannerPath = '/scanner';
+  const howToPath = '/how-to';
+  const accountPath = buildUrl('account');
   const { runMainContentTransition } = useProtectedViewTransition();
   const navVoicesRef = useRef<HTMLDivElement>(null);
   const navVoicesFadeSx = useLanguageChangeFade(navVoicesRef, { keyframePrefix: 'navbarVoicesLangFade' });
@@ -83,11 +89,11 @@ export const Navbar: React.FC = () => {
   };
 
   const handleLogoNavigation = () => {
-    if (isNoopNavigation('/')) {
+    if (isNoopNavigation(homePath)) {
       return;
     }
     runMainContentTransition(() => {
-      navigate('/');
+      navigate(homePath);
     });
   };
 
@@ -186,28 +192,28 @@ export const Navbar: React.FC = () => {
           aria-label={t('accessibility:main_navigation')}
         >
             <Button
-              color={location.pathname === '/' ? 'primary' : 'inherit'}
-              onClick={() => handleNavigation('/')}
+              color={location.pathname === homePath ? 'primary' : 'inherit'}
+              onClick={() => handleNavigation(homePath)}
             >
             {t('books:my_books')}
           </Button>
             <Button
-              color={location.pathname === '/search' ? 'primary' : 'inherit'}
-              onClick={() => handleNavigation('/search')}
+              color={location.pathname === searchPath ? 'primary' : 'inherit'}
+              onClick={() => handleNavigation(searchPath)}
             >
             {t('common:search')}
           </Button>
-            <Button
-              color={location.pathname === '/how-to' ? 'primary' : 'inherit'}
-              onClick={() => handleNavigation('/how-to')}
-            >
+          <Button
+            color={location.pathname === howToPath ? 'primary' : 'inherit'}
+            onClick={() => handleNavigation(howToPath)}
+          >
             {t('common:how_to', 'How to')}
           </Button>
-            <Button
-              color={location.pathname === '/scanner' ? 'primary' : 'inherit'}
-              onClick={() => handleNavigation('/scanner')}
-              sx={{ display: { xs: 'inline-flex', md: 'none' } }}
-            >
+          <Button
+            color={location.pathname === scannerPath ? 'primary' : 'inherit'}
+            onClick={() => handleNavigation(scannerPath)}
+            sx={{ display: { xs: 'inline-flex', md: 'none' } }}
+          >
             {t('common:scanner')}
           </Button>
         </Box>
@@ -249,12 +255,13 @@ export const Navbar: React.FC = () => {
             >
               {/* Mobile Navigation Items */}
               <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-                <MenuItem onClick={() => handleNavigation('/')}>{t('books:my_books')}</MenuItem>
-                <MenuItem onClick={() => handleNavigation('/search')}>{t('common:search')}</MenuItem>
-                <MenuItem onClick={() => handleNavigation('/how-to')}>{t('common:how_to', 'How to')}</MenuItem>
-                <MenuItem onClick={() => handleNavigation('/scanner')} sx={{ display: { xs: 'block', md: 'none' } }}>{t('common:scanner')}</MenuItem>
+                <MenuItem onClick={() => handleNavigation(homePath)}>{t('books:my_books')}</MenuItem>
+                <MenuItem onClick={() => handleNavigation(searchPath)}>{t('common:search')}</MenuItem>
+                <MenuItem onClick={() => handleNavigation(howToPath)}>{t('common:how_to', 'How to')}</MenuItem>
+                <MenuItem onClick={() => handleNavigation(scannerPath)} sx={{ display: { xs: 'block', md: 'none' } }}>{t('common:scanner')}</MenuItem>
               </Box>
 
+              <MenuItem onClick={() => handleNavigation(accountPath)}>{t('common:account')}</MenuItem>
               <MenuItem onClick={handleOpenAbout}>{t('common:about')}</MenuItem>
               <Divider />
               <Box sx={{ px: 2, py: 0.75 }}>

@@ -5,7 +5,12 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthService } from '../AuthService';
-import type { User, RegisterResponse } from '../types';
+import type {
+  User,
+  RegisterResponse,
+  ForgotPasswordResponse,
+  ConfirmPasswordResetResponse,
+} from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +25,18 @@ interface AuthContextType {
   }) => Promise<RegisterResponse>;
   verifyEmail: (email: string, code: string) => Promise<void>;
   resendCode: (email: string) => Promise<void>;
+  changePassword: (input: {
+    currentPassword: string;
+    newPassword: string;
+    locale?: string;
+  }) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<ForgotPasswordResponse>;
+  confirmPasswordReset: (input: {
+    email: string;
+    code: string;
+    newPassword: string;
+    locale?: string;
+  }) => Promise<ConfirmPasswordResetResponse>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
@@ -106,6 +123,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     await authService.resendCode(email);
   };
 
+  const changePassword = async (input: {
+    currentPassword: string;
+    newPassword: string;
+    locale?: string;
+  }): Promise<void> => {
+    if (!user) {
+      throw new Error('User is not authenticated');
+    }
+
+    setLoading(true);
+    try {
+      const updatedUser = await authService.changePassword({
+        userId: user.id,
+        currentPassword: input.currentPassword,
+        newPassword: input.newPassword,
+        locale: input.locale,
+      });
+      setUser(updatedUser);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const requestPasswordReset = async (email: string): Promise<ForgotPasswordResponse> => {
+    setLoading(true);
+    try {
+      return await authService.requestPasswordReset(email);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmPasswordReset = async (input: {
+    email: string;
+    code: string;
+    newPassword: string;
+    locale?: string;
+  }): Promise<ConfirmPasswordResetResponse> => {
+    setLoading(true);
+    try {
+      return await authService.confirmPasswordReset(input);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async (): Promise<void> => {
     const cognitoLogoutUrl = await authService.logout();
     if (cognitoLogoutUrl && typeof window !== 'undefined') {
@@ -128,6 +191,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     register,
     verifyEmail,
     resendCode,
+    changePassword,
+    requestPasswordReset,
+    confirmPasswordReset,
     logout,
     refreshUser,
     isAuthenticated: user !== null,

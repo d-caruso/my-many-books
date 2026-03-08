@@ -7,9 +7,11 @@ import React from 'react';
 
 // Mock expo-router
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
   router: {
     replace: mockReplace,
+    push: mockPush,
   },
 }));
 
@@ -117,5 +119,11 @@ describe('AuthScreen Logic', () => {
     mockReplace('/(tabs)');
 
     expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
+  });
+
+  it('should navigate to forgot password screen', () => {
+    mockPush('/forgot-password');
+
+    expect(mockPush).toHaveBeenCalledWith('/forgot-password');
   });
 });

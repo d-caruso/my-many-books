@@ -32,7 +32,6 @@ describe('UserController', () => {
       updateCurrentUser: jest.fn(),
       listUserBooks: jest.fn(),
       getUserStats: jest.fn(),
-      deactivateAccount: jest.fn(),
       deleteAccount: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
 
@@ -125,14 +124,6 @@ describe('UserController', () => {
       const response = await controller.getUserStats(buildRequest());
       expect(response.statusCode).toBe(200);
       expect(response.data).toMatchObject({ totalBooks: 10 });
-    });
-  });
-
-  describe('deactivateAccount', () => {
-    it('calls service and returns message', async () => {
-      const response = await controller.deactivateAccount(buildRequest());
-      expect(service.deactivateAccount).toHaveBeenCalledWith(1);
-      expect(response.statusCode).toBe(200);
     });
   });
 

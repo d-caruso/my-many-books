@@ -1,3 +1,10 @@
+const React = require('react');
+
+const createPrimitive = (name) =>
+  React.forwardRef(({ children, ...props }, ref) =>
+    React.createElement(name, { ...props, ref }, children)
+  );
+
 export const MD3LightTheme = {
   colors: {
     primary: '#2196F3',
@@ -43,45 +50,55 @@ export const MD3DarkTheme = {
     thin: { fontFamily: 'System' },
   },
 };
+
 export const Provider = ({ children }) => children;
-export const Button = 'Button';
-export const Text = 'Text';
-export const TextInput = 'TextInput';
-export const Card = Object.assign('Card', {
-  Content: 'CardContent',
-  Actions: 'CardActions',
-  Cover: 'CardCover',
-  Title: 'CardTitle',
+export const Button = createPrimitive('Button');
+export const Text = createPrimitive('Text');
+export const TextInput = createPrimitive('TextInput');
+export const Chip = createPrimitive('Chip');
+export const IconButton = createPrimitive('IconButton');
+export const ActivityIndicator = createPrimitive('ActivityIndicator');
+export const Checkbox = createPrimitive('Checkbox');
+export const SegmentedButtons = createPrimitive('SegmentedButtons');
+export const Divider = createPrimitive('Divider');
+export const Surface = createPrimitive('Surface');
+export const Badge = createPrimitive('Badge');
+export const Banner = createPrimitive('Banner');
+export const Switch = createPrimitive('Switch');
+export const Snackbar = createPrimitive('Snackbar');
+
+export const Avatar = {
+  Text: createPrimitive('AvatarText'),
+};
+
+const CardRoot = createPrimitive('Card');
+export const Card = Object.assign(CardRoot, {
+  Content: createPrimitive('CardContent'),
+  Actions: createPrimitive('CardActions'),
+  Cover: createPrimitive('CardCover'),
+  Title: createPrimitive('CardTitle'),
 });
-export const Chip = 'Chip';
-export const IconButton = 'IconButton';
-export const Menu = Object.assign('Menu', {
-  Item: 'MenuItem',
+
+const MenuRoot = createPrimitive('Menu');
+export const Menu = Object.assign(MenuRoot, {
+  Item: createPrimitive('MenuItem'),
 });
-export const ActivityIndicator = 'ActivityIndicator';
-export const Checkbox = 'Checkbox';
-export const SegmentedButtons = 'SegmentedButtons';
+
 export const Portal = ({ children }) => children;
-const DialogRoot = ({ children, ...props }) => {
-  const React = require('react');
-  return React.createElement('Dialog', props, children);
-};
+
+const DialogRoot = createPrimitive('Dialog');
 export const Dialog = Object.assign(DialogRoot, {
-  Title: 'DialogTitle',
-  Content: 'DialogContent',
-  Actions: 'DialogActions',
+  Title: createPrimitive('DialogTitle'),
+  Content: createPrimitive('DialogContent'),
+  Actions: createPrimitive('DialogActions'),
 });
-const ListItem = ({ title, description, onPress, left, right }) => {
-  const React = require('react');
-  return React.createElement(
-    'ListItem',
-    { onPress },
-    left ? left({}) : null,
-    title ? React.createElement('Text', { onPress }, title) : null,
-    description ? React.createElement('Text', null, description) : null,
-    right ? right({}) : null
-  );
-};
-export const List = Object.assign('List', {
-  Item: ListItem,
+
+const ListRoot = createPrimitive('List');
+export const List = Object.assign(ListRoot, {
+  Item: createPrimitive('ListItem'),
+  Icon: createPrimitive('ListIcon'),
+});
+
+export const useTheme = () => ({
+  colors: MD3LightTheme.colors,
 });

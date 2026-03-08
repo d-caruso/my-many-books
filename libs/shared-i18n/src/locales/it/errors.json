@@ -74,6 +74,7 @@
   "auth_token_expired": "La sessione è scaduta. Effettua nuovamente l'accesso",
   "auth_header_invalid": "Errore di autenticazione. Effettua nuovamente l'accesso",
   "auth_failed": "Autenticazione fallita. Riprova",
+  "wrong_current_password": "La password attuale non è corretta. Riprova.",
   "admin_required": "Accesso riservato agli amministratori",
   "role_required": "È necessario il ruolo {{role}} per accedere a questa risorsa",
   "account_deactivated": "Il tuo account è stato disattivato",

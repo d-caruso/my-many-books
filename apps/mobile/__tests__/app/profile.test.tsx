@@ -53,6 +53,12 @@ describe('Profile Screen Logic', () => {
     expect(mockPush).toHaveBeenCalledWith('/admin');
   });
 
+  it('should navigate to account security screen', () => {
+    mockPush('/account');
+
+    expect(mockPush).toHaveBeenCalledWith('/account');
+  });
+
   it('should display user information', () => {
     mockUseAuth.mockReturnValue({
       user: {

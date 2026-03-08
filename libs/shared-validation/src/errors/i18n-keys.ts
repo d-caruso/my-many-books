@@ -44,6 +44,17 @@ export const ERROR_CODE_TO_I18N_KEY: Record<string, string> = Object.freeze({
   CATEGORY_NAME_REQUIRED: 'validation:category_name_required',
   CATEGORY_NAME_TOO_SHORT: 'validation:category_name_too_short',
   CATEGORY_NAME_TOO_LONG: 'validation:category_name_too_long',
+
+  // Auth/password errors
+  PASSWORD_REQUIRED: 'validation:password_required',
+  PASSWORD_TOO_SHORT: 'validation:password_too_short',
+  PASSWORD_TOO_LONG: 'validation:password_too_long',
+  PASSWORD_MISSING_UPPERCASE: 'validation:password_missing_uppercase',
+  PASSWORD_MISSING_LOWERCASE: 'validation:password_missing_lowercase',
+  PASSWORD_MISSING_NUMBER: 'validation:password_missing_number',
+  PASSWORD_MISSING_SYMBOL: 'validation:password_missing_symbol',
+  CONFIRM_PASSWORD_REQUIRED: 'validation:confirm_password_required',
+  PASSWORD_MISMATCH: 'validation:passwords_dont_match',
 } as const);
 
 /**
