@@ -35,9 +35,9 @@ describe('shared-navigation routes', () => {
   test('matchRoute parses params and query values', () => {
     const match = matchRoute('/books/10?foo=1&bar=baz');
     expect(match?.route.name).toBe('book-details');
-    expect(match?.params.bookId).toBe(10);
-    expect(match?.query.foo).toBe(1);
-    expect(match?.query.bar).toBe('baz');
+    expect(match?.params['bookId']).toBe(10);
+    expect(match?.query['foo']).toBe(1);
+    expect(match?.query['bar']).toBe('baz');
   });
 
   test('matchRoute returns null for unknown paths', () => {

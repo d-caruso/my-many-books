@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { DependencyList } from 'react';
 import {
   Route,
   NavigationState,
@@ -184,7 +185,7 @@ export function useIsAuthRequired(): boolean {
 // Navigation event hook
 export function useNavigationEvents(
   listener: (event: NavigationEvent) => void,
-  deps: any[] = []
+  deps: DependencyList = []
 ): void {
   const manager = getNavigationManager();
   
@@ -215,15 +216,21 @@ export function useNavigationGuard(
   const navigation = useNavigation();
   
   useEffect(() => {
-    const unsubscribe = manager.addEventListener(async (event: NavigationEvent) => {
+    const unsubscribe = manager.addEventListener((event: NavigationEvent) => {
       if (event.type === 'NAVIGATE') {
-        const canNavigate = await guard(event.route);
-        
-        if (!canNavigate && redirectTo) {
-          setTimeout(() => {
-            navigation.navigate(redirectTo);
-          }, 0);
-        }
+        void Promise.resolve(guard(event.route))
+          .then((canNavigate) => {
+            if (!canNavigate && redirectTo) {
+              setTimeout(() => {
+                void navigation.navigate(redirectTo).catch(() => {
+                  // Ignore redirect failures triggered from guard callbacks.
+                });
+              }, 0);
+            }
+          })
+          .catch(() => {
+            // Ignore guard evaluation failures to keep navigation events resilient.
+          });
       }
     });
     
@@ -264,8 +271,7 @@ export function useDeepLink(): {
       }
       
       return null;
-    } catch (error) {
-      console.error('Error parsing deep link:', error);
+    } catch {
       return null;
     }
   }, []);
