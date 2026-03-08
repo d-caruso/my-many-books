@@ -25,6 +25,20 @@ const i18nReady = testI18n.use(initReactI18next).init({
         page_description: 'Quick guides',
         no_guides_available: 'No guides available right now.',
         cta_try_it_now: 'Try it now',
+        video: {
+          label: 'Mini video',
+          fallback: 'Video is temporarily unavailable.',
+        },
+        videos: {
+          add_book: { caption: 'Add book video caption' },
+          modify_book: { caption: 'Modify book video caption' },
+          delete_book: { caption: 'Delete book video caption' },
+          scanner: { caption: 'Scanner video caption' },
+          assign_authors_categories: { caption: 'Assign authors and categories video caption' },
+          add_authors_categories: { caption: 'Add authors and categories video caption' },
+          modify_delete_authors_categories: { caption: 'Manage authors and categories video caption' },
+          change_password: { caption: 'Change password video caption' },
+        },
         sections: {
           library_workflows: 'Library workflows',
         },
@@ -56,7 +70,7 @@ describe('HowToPage', () => {
     await i18nReady;
   });
 
-  test('renders all phase 2 tutorial cards', () => {
+  test('renders all phase 3 tutorial cards', () => {
     renderHowToPage();
 
     expect(screen.getByRole('heading', { level: 1, name: 'How to' })).toBeInTheDocument();
@@ -95,10 +109,11 @@ describe('HowToPage', () => {
     });
   });
 
-  test('keeps phase 2 without videos', () => {
+  test('renders mini-video blocks for every visible card', () => {
     renderHowToPage();
 
-    expect(document.querySelector('video')).toBeNull();
+    expect(screen.getAllByTestId(/^how-to-video-/)).toHaveLength(visibleCardsCount * 3);
+    expect(screen.getAllByTestId(/^how-to-video-.*-element$/)).toHaveLength(visibleCardsCount);
   });
 
   test('renders change password card and CTA when password feature is enabled', () => {

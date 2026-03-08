@@ -3,8 +3,38 @@
   "page_description": "Guide rapide per le azioni piu comuni in My Many Books.",
   "no_guides_available": "Nessuna guida disponibile al momento.",
   "cta_try_it_now": "Prova ora",
+  "video": {
+    "label": "Mini video",
+    "fallback": "Video temporaneamente non disponibile."
+  },
   "sections": {
     "library_workflows": "Flussi della libreria"
+  },
+  "videos": {
+    "add_book": {
+      "caption": "Mini tutorial su come aggiungere un libro."
+    },
+    "modify_book": {
+      "caption": "Mini tutorial su come modificare un libro."
+    },
+    "delete_book": {
+      "caption": "Mini tutorial su come eliminare un libro."
+    },
+    "scanner": {
+      "caption": "Mini tutorial su come usare lo scanner ISBN."
+    },
+    "assign_authors_categories": {
+      "caption": "Mini tutorial su come assegnare autori e categorie."
+    },
+    "add_authors_categories": {
+      "caption": "Mini tutorial su come aggiungere autori e categorie."
+    },
+    "modify_delete_authors_categories": {
+      "caption": "Mini tutorial su come gestire autori e categorie."
+    },
+    "change_password": {
+      "caption": "Mini tutorial su come cambiare la password."
+    }
   },
   "cards": {
     "add_book": {

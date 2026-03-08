@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Button, Card, CardContent, Container, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { MiniVideoPlayer } from '../../components/Tutorial/MiniVideoPlayer';
 import {
   HOW_TO_SECTIONS,
   getTutorialCapabilities,
@@ -57,6 +58,16 @@ const HowToPage: React.FC = () => {
                         </Box>
                       ))}
                     </Box>
+
+                    {item.video && (
+                      <MiniVideoPlayer
+                        video={item.video}
+                        label={t('video.label', 'Mini video')}
+                        caption={t(item.video.captionKey)}
+                        fallbackMessage={t('video.fallback', 'Video unavailable right now.')}
+                        dataTestId={`how-to-video-${item.id}`}
+                      />
+                    )}
 
                     {item.ctaPath && (
                       <Box

@@ -9,6 +9,7 @@ A React-based Progressive Web Application for managing personal book collections
 - Personal book library management
 - Progressive Web App (PWA) capabilities
 - ISBN barcode scanning
+- Guided how-to tutorial page (quick steps, mini videos, deep-link CTA)
 - Book search and filtering
 - Configurable themes and responsive design
 - Google OAuth sign-in via Cognito Hosted UI (authorization code flow)

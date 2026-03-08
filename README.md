@@ -34,6 +34,7 @@ npm run lint
 
 - **Book Management**: Add, edit, and delete books from your collection.
 - **ISBN Scanning**: Easily add books by scanning their ISBN barcode.
+- **How-To Tutorials**: In-app tutorial cards with quick steps, mini videos, and "Try it now" deep links.
 - **Book Search**: Search your collection by title, author, or ISBN.
 - **Reading Status**: Track the status of your books (e.g., To Read, Reading, Completed).
 - **Offline Support**: Access your book collection even when you're offline (PWA feature).
@@ -43,7 +44,7 @@ npm run lint
 
 ### Web App (`apps/web-app`)
 - **Tech Stack**: React 18, TypeScript, Material-UI, PWA
-- **Features**: ISBN scanning, book search, responsive design, offline support
+- **Features**: ISBN scanning, book search, guided how-to tutorials, responsive design, offline support
 - **Development**: `nx serve web-app`
 - **Build**: `nx build web-app`
 
