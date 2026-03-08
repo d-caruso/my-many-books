@@ -4,6 +4,7 @@ import { EmailAction, EmailService } from '../EmailAction';
 import { DatabaseAction, DatabaseService } from '../DatabaseAction';
 import { HookActionContext } from '../../types';
 import { appendFile, mkdir } from 'node:fs/promises';
+import { getLogger } from '@my-many-books/shared-logging';
 
 jest.mock('node:fs/promises', () => ({
   appendFile: jest.fn().mockResolvedValue(undefined),
@@ -189,7 +190,7 @@ describe('ActionRouter', () => {
 
     describe('action execution', () => {
       it('creates functional LogAction', async () => {
-        const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
+        const infoSpy = jest.spyOn(getLogger(), 'info').mockImplementation();
         const router = new ActionRouter();
         const action = router.createAction('log', { prefix: 'test' });
 
@@ -200,13 +201,16 @@ describe('ActionRouter', () => {
 
         await action.execute(context);
 
-        expect(consoleSpy).toHaveBeenCalledWith('[test] event=test.event', { data: 'value' });
+        expect(infoSpy).toHaveBeenCalledWith(
+          { payload: { data: 'value' } },
+          '[test] event=test.event'
+        );
 
-        consoleSpy.mockRestore();
+        infoSpy.mockRestore();
       });
 
       it('omits metadata when include_metadata is false', async () => {
-        const consoleSpy = jest.spyOn(console, 'info').mockImplementation();
+        const infoSpy = jest.spyOn(getLogger(), 'info').mockImplementation();
         const router = new ActionRouter();
         const action = router.createAction('log', {
           prefix: 'audit',
@@ -220,9 +224,9 @@ describe('ActionRouter', () => {
 
         await action.execute(context);
 
-        expect(consoleSpy).toHaveBeenCalledWith('[audit] event=audit.event');
+        expect(infoSpy).toHaveBeenCalledWith('[audit] event=audit.event');
 
-        consoleSpy.mockRestore();
+        infoSpy.mockRestore();
       });
 
       it('writes to file when configured for file destination', async () => {

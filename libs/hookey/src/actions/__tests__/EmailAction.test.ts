@@ -28,7 +28,11 @@ class MockEmailService implements EmailService {
   }
 
   getLastEmail() {
-    return this.sentEmails[this.sentEmails.length - 1];
+    const email = this.sentEmails[this.sentEmails.length - 1];
+    if (!email) {
+      throw new Error('Expected at least one sent email');
+    }
+    return email;
   }
 }
 

@@ -37,7 +37,11 @@ describe('SequelizeHookStorage', () => {
     expect(hooks).toHaveLength(1);
 
     const executions = await storage.getExecutions(hook.id);
-    expect(executions[0].hookId).toBe(hook.id);
+    const firstExecution = executions[0];
+    if (!firstExecution) {
+      throw new Error('Expected at least one execution log');
+    }
+    expect(firstExecution.hookId).toBe(hook.id);
 
     const stats = await storage.getStats();
     expect(stats.totalHooks).toBe(1);

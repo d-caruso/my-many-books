@@ -8,7 +8,7 @@ const requestPath = `${API_PREFIX}/${API_VERSION}/users`;
 
 class DummyHookSystem extends HookSystem {
   public lastPayload: ExpressHookPayload | null = null;
-  override async trigger(eventName: string, payload?: unknown): Promise<void> {
+  override async trigger(_eventName: string, payload?: unknown): Promise<void> {
     this.lastPayload = payload as ExpressHookPayload;
     await Promise.resolve();
   }

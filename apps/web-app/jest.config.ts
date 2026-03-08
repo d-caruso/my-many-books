@@ -1,6 +1,6 @@
 export default {
   displayName: 'web-app',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.cjs',
   transform: {
     '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/react/babel'] }],
   },

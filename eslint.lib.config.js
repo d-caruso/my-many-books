@@ -2,6 +2,7 @@
 // Shared helper for per-lib eslint configs.
 // Each lib's eslint.config.mjs calls createLibConfig(import.meta.dirname).
 import path from 'path';
+import { existsSync } from 'fs';
 import tseslint from 'typescript-eslint';
 import { sharedRules } from './eslint.config.js';
 
@@ -11,14 +12,20 @@ import { sharedRules } from './eslint.config.js';
  */
 export function createLibConfig(libDir, tsconfig = './tsconfig.lib.json') {
   const relativeLibDir = path.relative(process.cwd(), libDir);
+  const globRoot = relativeLibDir === '' ? '.' : relativeLibDir;
+  const tsconfigSpecPath = path.join(libDir, 'tsconfig.spec.json');
+  const project = existsSync(tsconfigSpecPath)
+    ? [tsconfig, './tsconfig.spec.json']
+    : tsconfig;
+
   return tseslint.config(
     ...sharedRules,
     {
-      files: [`${relativeLibDir}/**/*.{ts,tsx}`],
+      files: [`${globRoot}/**/*.{ts,tsx}`],
       extends: [...tseslint.configs.recommendedTypeChecked],
       languageOptions: {
         parserOptions: {
-          project: tsconfig,
+          project,
           tsconfigRootDir: libDir,
         },
       },
@@ -31,11 +38,13 @@ export function createLibConfig(libDir, tsconfig = './tsconfig.lib.json') {
     },
     {
       ignores: [
-        `${relativeLibDir}/dist/**`,
-        `${relativeLibDir}/node_modules/**`,
-        `${relativeLibDir}/**/*.test.ts`,
-        `${relativeLibDir}/**/*.spec.ts`,
-        `${relativeLibDir}/**/__tests__/**`,
+        `${globRoot}/dist/**`,
+        `${globRoot}/node_modules/**`,
+        `${globRoot}/jest.config.ts`,
+        `${globRoot}/**/*.test.ts`,
+        `${globRoot}/**/*.spec.ts`,
+        `${globRoot}/**/__tests__/**`,
+        `${globRoot}/**/__mocks__/**`,
       ],
     },
   );

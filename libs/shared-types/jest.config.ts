@@ -1,6 +1,6 @@
 export default {
   displayName: 'shared-types',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.cjs',
   testEnvironment: 'node',
   setupFilesAfterEnv: [],
   transform: {

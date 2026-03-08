@@ -32,9 +32,12 @@ export function toTemplateData(value: unknown): TemplateData {
  * @param path - Dot-separated path (e.g., 'user.email')
  * @returns The value at the path, or undefined if not found
  */
-export function getNestedValue(obj: TemplateData, path: string): TemplateValue | undefined {
+export function getNestedValue(
+  obj: TemplateData | null | undefined,
+  path: string
+): TemplateValue | undefined {
   const parts = path.split('.');
-  let current: TemplateValue | undefined = obj;
+  let current: TemplateValue | undefined = obj ?? undefined;
 
   for (const part of parts) {
     if (!isTemplateData(current)) {

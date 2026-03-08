@@ -39,7 +39,11 @@ class MockDatabaseService implements DatabaseService {
   }
 
   getLastOperation() {
-    return this.operations[this.operations.length - 1];
+    const operation = this.operations[this.operations.length - 1];
+    if (!operation) {
+      throw new Error('Expected at least one recorded database operation');
+    }
+    return operation;
   }
 }
 

@@ -1,6 +1,6 @@
 export default {
   displayName: 'shared-business',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.cjs',
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   transform: {
