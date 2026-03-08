@@ -156,7 +156,7 @@ export class AccountController extends UserBaseController {
       if (errorName === COGNITO_ERRORS.NOT_AUTHORIZED) {
         res
           .status(401)
-          .json(createErrorResponse(ERROR_CODES.AUTH_FAILED, this.t('errors:auth_failed')));
+          .json(createErrorResponse(ERROR_CODES.WRONG_CURRENT_PASSWORD, this.t('errors:wrong_current_password')));
         return;
       }
 

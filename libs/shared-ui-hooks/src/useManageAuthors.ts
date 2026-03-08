@@ -20,7 +20,7 @@ export interface ManageAuthorsApi<TAuthor extends Author = Author> {
     id: number,
     data: Partial<{ name: string; surname: string; nationality?: string | null }>
   ) => Promise<TAuthor>;
-  deleteAuthor: (id: number) => Promise<void>;
+  deleteAuthor: (id: number, force?: boolean) => Promise<void>;
 }
 
 export interface ManageAuthorsOptions<TAuthor extends Author = Author> {
@@ -46,7 +46,7 @@ export interface ManageAuthorsActions<TAuthor extends Author = Author> {
     id: number,
     data: Partial<{ name: string; surname: string; nationality?: string | null }>
   ) => Promise<EntityManageOperationResult<TAuthor>>;
-  deleteAuthor: (id: number) => Promise<EntityManageOperationResult<{ id: number }>>;
+  deleteAuthor: (id: number, force?: boolean) => Promise<EntityManageOperationResult<{ id: number }>>;
 }
 
 const defaultAuthorSort = <TAuthor extends Author>(a: TAuthor, b: TAuthor): number =>
@@ -215,11 +215,11 @@ export const useManageAuthors = <TAuthor extends Author = Author>(
   );
 
   const deleteAuthor = useCallback(
-    async (id: number): Promise<EntityManageOperationResult<{ id: number }>> => {
+    async (id: number, force?: boolean): Promise<EntityManageOperationResult<{ id: number }>> => {
       setMutating(true);
       setError(null);
       try {
-        await api.deleteAuthor(id);
+        await api.deleteAuthor(id, force);
         setAuthors((prev) => prev.filter((author) => Number(author.id) !== Number(id)));
         return { success: true, data: { id } };
       } catch (err) {

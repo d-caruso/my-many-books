@@ -3,7 +3,7 @@
 // Sequelize-backed adapter for the Book repository
 // ================================================================
 
-import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions } from 'sequelize';
+import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions, literal } from 'sequelize';
 import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { Book } from '@/models/Book';
 import { Author } from '@/models/Author';
@@ -150,7 +150,7 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
     offset: number;
   } {
     const { limit, offset } = this.getPagination(options);
-    const include = this.buildInclude(options?.includeAssociations ?? true, filters);
+    const include = this.buildInclude(options?.includeAssociations ?? true);
     const where = this.buildWhereClause(filters);
 
     const query: FindAndCountOptions<BookAttributes> = {
@@ -240,64 +240,25 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
 
   // ===== Helpers ==========================================================
 
-  private buildInclude(
-    includeAssociations: boolean,
-    filters?: Partial<BookSearchFilters>
-  ): IncludeOptions[] | undefined {
+  private buildInclude(includeAssociations: boolean): IncludeOptions[] | undefined {
     if (!includeAssociations) {
       return undefined;
     }
 
-    // When filtering by author/category, use a JOIN (required: true) so the WHERE clause
-    // filters the parent books. Otherwise use separate: true to avoid Cartesian product
-    // when loading two independent many-to-many associations simultaneously.
-    const authorInclude: IncludeOptions = filters?.authorId
-      ? {
-          model: Author,
-          as: 'authors',
-          through: { attributes: [] },
-          where: { id: filters.authorId },
-          required: true,
-        }
-      : filters?.author
-        ? {
-            model: Author,
-            as: 'authors',
-            through: { attributes: [] },
-            where: { name: { [Op.like]: `%${filters.author}%` } },
-            required: true,
-          }
-        : {
-            model: BookAuthor,
-            as: 'bookAuthors',
-            separate: true,
-            include: [{ model: Author, as: 'author' }],
-          };
-
-    const categoryInclude: IncludeOptions = filters?.categoryId
-      ? {
-          model: Category,
-          as: 'categories',
-          through: { attributes: [] },
-          where: { id: filters.categoryId },
-          required: true,
-        }
-      : filters?.category
-        ? {
-            model: Category,
-            as: 'categories',
-            through: { attributes: [] },
-            where: { name: { [Op.like]: `%${filters.category}%` } },
-            required: true,
-          }
-        : {
-            model: BookCategory,
-            as: 'bookCategories',
-            separate: true,
-            include: [{ model: Category, as: 'category' }],
-          };
-
-    return [authorInclude, categoryInclude];
+    return [
+      {
+        model: BookAuthor,
+        as: 'bookAuthors',
+        separate: true,
+        include: [{ model: Author, as: 'author' }],
+      },
+      {
+        model: BookCategory,
+        as: 'bookCategories',
+        separate: true,
+        include: [{ model: Category, as: 'category' }],
+      },
+    ];
   }
 
   private buildWhereClause(filters?: Partial<BookSearchFilters>): WhereOptions<BookAttributes> {
@@ -330,6 +291,32 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
 
     if (filters?.status) {
       conditions.push({ status: filters.status });
+    }
+
+    if (filters?.categoryId) {
+      conditions.push({
+        id: { [Op.in]: literal(`(SELECT book_id FROM book_categories WHERE category_id = ${Number(filters.categoryId)})`) },
+      });
+    }
+
+    if (filters?.category) {
+      const escaped = Book.sequelize!.escape(`%${filters.category}%`);
+      conditions.push({
+        id: { [Op.in]: literal(`(SELECT bc.book_id FROM book_categories bc INNER JOIN categories c ON bc.category_id = c.id WHERE c.name LIKE ${escaped})`) },
+      });
+    }
+
+    if (filters?.authorId) {
+      conditions.push({
+        id: { [Op.in]: literal(`(SELECT book_id FROM book_authors WHERE author_id = ${Number(filters.authorId)})`) },
+      });
+    }
+
+    if (filters?.author) {
+      const escaped = Book.sequelize!.escape(`%${filters.author}%`);
+      conditions.push({
+        id: { [Op.in]: literal(`(SELECT ba.book_id FROM book_authors ba INNER JOIN authors a ON ba.author_id = a.id WHERE (a.name LIKE ${escaped} OR a.surname LIKE ${escaped}))`) },
+      });
     }
 
     if (filters?.notes) {

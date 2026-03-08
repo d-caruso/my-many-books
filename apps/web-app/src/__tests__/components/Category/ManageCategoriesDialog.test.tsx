@@ -4,6 +4,7 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { ManageCategoriesDialog } from '../../../components/Category/ManageCategoriesDialog';
+import { enCommon, enDialogs } from '@my-many-books/shared-i18n';
 
 const mockCategoryApi = {
   getCategories: vi.fn(),
@@ -26,25 +27,8 @@ const i18nReady = testI18n.use(initReactI18next).init({
   defaultNS: 'common',
   resources: {
     en: {
-      common: { edit: 'Edit', delete: 'Delete', cancel: 'Cancel', close: 'Close', retry: 'Try Again' },
-      dialogs: {
-        category: {
-          manage_title: 'Manage categories',
-          loading: 'Loading categories...',
-          no_results: 'No categories found',
-          name_label: 'Category name',
-          update_button: 'Save category',
-          update_failed: 'Failed to update category. Please try again.',
-          load_failed: 'Failed to load categories. Please try again.',
-          delete_confirm_title: 'Delete category?',
-          delete_confirm_message:
-            'This will remove the category from your category list. This action cannot be undone.',
-          delete_button: 'Delete category',
-          delete_failed: 'Failed to delete category. Please try again.',
-          delete_blocked_has_books:
-            'This category cannot be deleted because it is already used by one or more books.',
-        },
-      },
+      common: enCommon,
+      dialogs: enDialogs,
     },
   },
   interpolation: { escapeValue: false },
@@ -99,7 +83,7 @@ describe('ManageCategoriesDialog', () => {
   test('shows conflict error when deleting a category used by books', async () => {
     mockCategoryApi.getCategories.mockResolvedValue([{ id: 1, name: 'Classics' }]);
     mockCategoryApi.deleteCategory.mockRejectedValue({
-      response: { status: 409, data: { error: 'CATEGORY_HAS_BOOKS' } },
+      response: { status: 409, data: { error: { code: 'CATEGORY_HAS_BOOKS' } } },
     });
 
     renderDialog();
@@ -109,9 +93,7 @@ describe('ManageCategoriesDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete category' }));
 
     expect(
-      await screen.findByText(
-        'This category cannot be deleted because it is already used by one or more books.'
-      )
+      await screen.findByText(testI18n.t('dialogs:category.delete_blocked_has_books'))
     ).toBeInTheDocument();
   });
 });

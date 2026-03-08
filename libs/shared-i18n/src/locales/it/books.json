@@ -127,6 +127,7 @@
   "please_enter_isbn_first": "Inserisci prima un ISBN",
   "book_not_found_for_isbn": "Libro non trovato per questo ISBN",
   "failed_to_lookup_book": "Ricerca libro fallita",
+  "status_saved": "Stato salvato",
   "errors": {
     "SEARCH_UNEXPECTED_ERROR": "Si è verificato un errore durante la ricerca. Riprova più tardi."
   }

@@ -17,7 +17,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button
+  Button,
+  CircularProgress,
+  Backdrop
 } from '@mui/material';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import EditIcon from '@mui/icons-material/Edit';
@@ -47,6 +49,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
 }) => {
   const { t } = useTranslation(['books', 'common']);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
 
   const formatAuthors = (authors?: Author[]) => {
     if (!authors || authors.length === 0) return t('books:unknown_author');
@@ -82,11 +85,16 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
     }
   };
 
-  const handleStatusChange = (e: SelectChangeEvent) => {
+  const handleStatusChange = async (e: SelectChangeEvent) => {
     if (onStatusChange) {
       const value = e.target.value;
       const status = value === '' ? null : (value as Book['status']);
-      onStatusChange(book.id, status as any);
+      setStatusSaving(true);
+      try {
+        await (onStatusChange(book.id, status as any) as unknown as Promise<void>);
+      } finally {
+        setStatusSaving(false);
+      }
     }
   };
 
@@ -108,6 +116,9 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
 
   return (
     <>
+      <Backdrop open={statusSaving} sx={{ zIndex: (theme) => theme.zIndex.modal + 1, color: '#fff' }}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
       <Paper elevation={3} sx={{ borderRadius: 3, overflow: 'hidden', maxWidth: 600, mx: 'auto' }}>
         <Box
           sx={{
@@ -149,6 +160,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
 
         <Box sx={{ p: 4 }}>
           <Grid container spacing={4}>
+            {/* Book cover placeholder — hidden until real covers are supported
             <Grid item xs={12} md={4}>
               <Box
                 sx={{
@@ -164,6 +176,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                 <MenuBookIcon sx={{ fontSize: 72 }} />
               </Box>
             </Grid>
+            */}
 
             <Grid item xs={12} md={8}>
               <Stack spacing={3} sx={{ width: '100%' }}>
@@ -237,11 +250,9 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                           value={book.status || ''}
                           label={t('books:status')}
                           onChange={handleStatusChange}
-                          disabled={loading}
+                          disabled={statusSaving}
                         >
-                          <MenuItem value="">
-                            <em>{t('common:none')}</em>
-                          </MenuItem>
+                          <MenuItem value="">{'\u00A0'}</MenuItem>
                           <MenuItem value="reading">{t('books:reading')}</MenuItem>
                           <MenuItem value="paused">{t('books:paused')}</MenuItem>
                           <MenuItem value="finished">{t('books:finished')}</MenuItem>

@@ -9,6 +9,7 @@ import {
 import InstallIcon from '@mui/icons-material/GetApp';
 import CloseIcon from '@mui/icons-material/Close';
 import { Trans, useTranslation } from 'react-i18next';
+import { useAuth } from '@my-many-books/shared-auth';
 import { usePWAContext } from '../../contexts/PWAContext';
 import { useLanguageChangeFade } from '../../hooks/useLanguageChangeFade';
 
@@ -16,6 +17,7 @@ const INSTALL_PROMPT_DISMISSED_KEY = 'pwa-install-prompt-dismissed';
 
 export const InstallPrompt: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { isInstallable, isInstalled, installApp } = usePWAContext();
   const [canInstall, setCanInstall] = React.useState(false);
   const [visible, setVisible] = React.useState(false);
@@ -58,7 +60,7 @@ export const InstallPrompt: React.FC = () => {
     }
   };
 
-  if (isInstalled || !isInstallable || dismissed) {
+  if (!user || isInstalled || !isInstallable || dismissed) {
     return null;
   }
 

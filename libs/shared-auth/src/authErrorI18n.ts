@@ -9,6 +9,7 @@ const AUTH_ERROR_I18N: Record<string, string> = {
   [ERROR_CODES.INTERNAL_ERROR]: 'unexpected_error',
   [ERROR_CODES.AUTH_TOKEN_INVALID]: 'session_invalid',
   [ERROR_CODES.AUTH_TOKEN_EXPIRED]: 'session_expired',
+  [ERROR_CODES.WRONG_CURRENT_PASSWORD]: 'wrong_current_password',
   [ERROR_CODES.EMAIL_NOT_VERIFIED]: 'email_not_verified',
   [ERROR_CODES.RATE_LIMIT_EXCEEDED]: 'rate_limit_exceeded',
 };

@@ -178,5 +178,7 @@
   "user_not_found": "User not found",
   "unexpected_error": "An unexpected error occurred. Please try again.",
   "session_invalid": "Your session is invalid. Please sign in again.",
-  "session_expired": "Your session has expired. Please sign in again."
+  "session_expired": "Your session has expired. Please sign in again.",
+  "wrong_current_password": "Current password is incorrect. Please try again.",
+  "new_password_same_as_current": "New password must be different from your current password."
 }

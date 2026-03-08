@@ -201,7 +201,7 @@ describe('CategoryController', () => {
       expect(mockService.deleteCategory).toHaveBeenCalledWith(
         3,
         expect.any(Object),
-        { force: true }
+        true
       );
       expect(response.statusCode).toBe(204);
       expect(emitHookEventMock).toHaveBeenCalledWith(

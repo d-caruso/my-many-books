@@ -287,8 +287,8 @@ class ApiService extends AdminApiService {
     return updated;
   }
 
-  async deleteCategory(id: number): Promise<void> {
-    await this.apiClient.categories.deleteCategory(id);
+  async deleteCategory(id: number, force?: boolean): Promise<void> {
+    await this.apiClient.categories.deleteCategory(id, force);
     this.invalidateCategoriesCache();
   }
 
@@ -331,8 +331,8 @@ class ApiService extends AdminApiService {
     return this.apiClient.authors.updateAuthor(id, authorData);
   }
 
-  async deleteAuthor(id: number): Promise<void> {
-    return this.apiClient.authors.deleteAuthor(id);
+  async deleteAuthor(id: number, force?: boolean): Promise<void> {
+    return this.apiClient.authors.deleteAuthor(id, force);
   }
 
   // Error handler

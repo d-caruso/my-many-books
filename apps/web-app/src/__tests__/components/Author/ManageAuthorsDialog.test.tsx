@@ -4,6 +4,7 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { ManageAuthorsDialog } from '../../../components/Author/ManageAuthorsDialog';
+import { enCommon, enDialogs } from '@my-many-books/shared-i18n';
 
 const mockAuthorApi = {
   getAuthors: vi.fn(),
@@ -26,29 +27,8 @@ const i18nReady = testI18n.use(initReactI18next).init({
   defaultNS: 'common',
   resources: {
     en: {
-      common: { edit: 'Edit', delete: 'Delete', cancel: 'Cancel', close: 'Close', retry: 'Try Again' },
-      dialogs: {
-        author: {
-          manage_title: 'Manage authors',
-          search_label: 'Filter authors',
-          search_placeholder: 'Type name, surname or nationality',
-          loading: 'Loading authors...',
-          no_results: 'No authors found',
-          name_label: 'Name',
-          surname_label: 'Surname',
-          nationality_label: 'Nationality',
-          update_button: 'Save author',
-          update_failed: 'Failed to update author. Please try again.',
-          load_failed: 'Failed to load authors. Please try again.',
-          delete_confirm_title: 'Delete author?',
-          delete_confirm_message:
-            'This will remove the author from your author list. This action cannot be undone.',
-          delete_button: 'Delete author',
-          delete_failed: 'Failed to delete author. Please try again.',
-          delete_blocked_has_books:
-            'This author cannot be deleted because it is already used by one or more books.',
-        },
-      },
+      common: enCommon,
+      dialogs: enDialogs,
     },
   },
   interpolation: { escapeValue: false },
@@ -114,7 +94,7 @@ describe('ManageAuthorsDialog', () => {
       { id: 2, name: 'Virginia', surname: 'Woolf', nationality: 'British' },
     ]);
     mockAuthorApi.deleteAuthor.mockRejectedValue({
-      response: { status: 409, data: { error: 'AUTHOR_HAS_BOOKS' } },
+      response: { status: 409, data: { error: { code: 'AUTHOR_HAS_BOOKS' } } },
     });
 
     renderDialog();
@@ -124,9 +104,7 @@ describe('ManageAuthorsDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete author' }));
 
     expect(
-      await screen.findByText(
-        'This author cannot be deleted because it is already used by one or more books.'
-      )
+      await screen.findByText(testI18n.t('dialogs:author.delete_blocked_has_books'))
     ).toBeInTheDocument();
   });
 });

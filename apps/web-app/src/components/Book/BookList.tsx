@@ -24,6 +24,7 @@ interface BookListProps {
   onBookClick?: (book: Book) => void;
   viewMode?: 'grid' | 'list';
   showActions?: boolean;
+  savingStatusBookId?: number | null;
 }
 
 export const BookList: React.FC<BookListProps> = ({
@@ -36,7 +37,8 @@ export const BookList: React.FC<BookListProps> = ({
   onStatusChange,
   onBookClick,
   viewMode = 'grid',
-  showActions = true
+  showActions = true,
+  savingStatusBookId = null,
 }) => {
   const { t } = useTranslation(['books', 'common']);
 
@@ -97,6 +99,7 @@ export const BookList: React.FC<BookListProps> = ({
             onClick={onBookClick}
             showActions={showActions}
             compact={true}
+            saving={savingStatusBookId === book.id}
           />
         ))}
       </Stack>
@@ -129,6 +132,7 @@ export const BookList: React.FC<BookListProps> = ({
             onStatusChange={onStatusChange}
             onClick={onBookClick}
             showActions={showActions}
+            saving={savingStatusBookId === book.id}
             compact={false}
           />
         </Box>

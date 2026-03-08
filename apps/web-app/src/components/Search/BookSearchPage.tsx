@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
+  CircularProgress,
   Container,
   Typography,
   Grid,
@@ -145,6 +146,14 @@ const BookSearchPage: React.FC = () => {
     setSearchParams({});
     clearSearch();
   };
+
+  if (isbnParam && scannerSource === 'scanner' && loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>

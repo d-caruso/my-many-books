@@ -221,9 +221,9 @@ describe('AuthorAutocomplete', () => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
     });
 
-    expect(screen.getByTestId('option-0')).toHaveTextContent('Jane Austen');
-    expect(screen.getByTestId('option-1')).toHaveTextContent('Charles Dickens');
-    expect(screen.getByTestId('option-2')).toHaveTextContent('Ernest Hemingway');
+    expect(screen.getByTestId('option-0')).toHaveTextContent('Austen, Jane');
+    expect(screen.getByTestId('option-1')).toHaveTextContent('Dickens, Charles');
+    expect(screen.getByTestId('option-2')).toHaveTextContent('Hemingway, Ernest');
   });
 
   test('filters preloaded authors locally by name', async () => {
@@ -238,9 +238,9 @@ describe('AuthorAutocomplete', () => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Charles Dickens')).toBeInTheDocument();
-    expect(screen.queryByText('Jane Austen')).not.toBeInTheDocument();
-    expect(screen.queryByText('Ernest Hemingway')).not.toBeInTheDocument();
+    expect(screen.getByText('Dickens, Charles')).toBeInTheDocument();
+    expect(screen.queryByText('Austen, Jane')).not.toBeInTheDocument();
+    expect(screen.queryByText('Hemingway, Ernest')).not.toBeInTheDocument();
   });
 
   test('filters preloaded authors locally by surname-first input', async () => {
@@ -252,9 +252,9 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'austen jan' } });
 
     await waitFor(() => {
-      expect(screen.getByText('Jane Austen')).toBeInTheDocument();
+      expect(screen.getByText('Austen, Jane')).toBeInTheDocument();
     });
-    expect(screen.queryByText('Charles Dickens')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dickens, Charles')).not.toBeInTheDocument();
   });
 
   test('filters preloaded authors by userId when userIdFilter is provided', async () => {
@@ -268,9 +268,9 @@ describe('AuthorAutocomplete', () => {
       expect(screen.getByTestId('options-list')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Jane Austen')).toBeInTheDocument();
-    expect(screen.getByText('Charles Dickens')).toBeInTheDocument();
-    expect(screen.queryByText('Ernest Hemingway')).not.toBeInTheDocument();
+    expect(screen.getByText('Austen, Jane')).toBeInTheDocument();
+    expect(screen.getByText('Dickens, Charles')).toBeInTheDocument();
+    expect(screen.queryByText('Hemingway, Ernest')).not.toBeInTheDocument();
   });
 
   test('reloads preloaded authors when reloadTrigger changes', async () => {
@@ -287,7 +287,7 @@ describe('AuthorAutocomplete', () => {
 
     fireEvent.focus(screen.getByTestId('autocomplete-input'));
     await waitFor(() => expect(screen.getByTestId('options-list')).toBeInTheDocument());
-    expect(screen.queryByText('Virginia Woolf')).not.toBeInTheDocument();
+    expect(screen.queryByText('Woolf, Virginia')).not.toBeInTheDocument();
 
     rerender(
       <ApiProvider apiService={mockApiService}>
@@ -297,7 +297,7 @@ describe('AuthorAutocomplete', () => {
 
     await waitFor(() => expect(mockApiService.getAuthors).toHaveBeenCalledTimes(2));
     fireEvent.focus(screen.getByTestId('autocomplete-input'));
-    await waitFor(() => expect(screen.getByText('Virginia Woolf')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Woolf, Virginia')).toBeInTheDocument());
   });
 
   test('calls onChange when selecting an author', async () => {
@@ -330,12 +330,12 @@ describe('AuthorAutocomplete', () => {
     fireEvent.click(screen.getByTestId('option-0'));
 
     expect(screen.getByTestId('open-state')).toHaveTextContent('closed');
-    expect(screen.getByTestId('autocomplete-input')).toHaveValue('Jane Austen');
+    expect(screen.getByTestId('autocomplete-input')).toHaveValue('Austen, Jane');
 
     fireEvent.blur(screen.getByTestId('autocomplete-input'));
 
     expect(screen.getByTestId('open-state')).toHaveTextContent('closed');
-    expect(screen.getByTestId('autocomplete-input')).toHaveValue('Jane Austen');
+    expect(screen.getByTestId('autocomplete-input')).toHaveValue('Austen, Jane');
   });
 
   test('handles preload errors gracefully', async () => {
@@ -361,15 +361,15 @@ describe('AuthorAutocomplete', () => {
     fireEvent.change(input, { target: { value: 'Jane' } });
 
     await waitFor(() => {
-      expect(screen.getByText('Jane Austen')).toBeInTheDocument();
+      expect(screen.getByText('Austen, Jane')).toBeInTheDocument();
     });
 
     fireEvent.change(input, { target: { value: '' } });
 
     expect(screen.getByTestId('open-state')).toHaveTextContent('open');
-    expect(screen.getByTestId('option-0')).toHaveTextContent('Jane Austen');
-    expect(screen.getByTestId('option-1')).toHaveTextContent('Charles Dickens');
-    expect(screen.getByTestId('option-2')).toHaveTextContent('Ernest Hemingway');
+    expect(screen.getByTestId('option-0')).toHaveTextContent('Austen, Jane');
+    expect(screen.getByTestId('option-1')).toHaveTextContent('Dickens, Charles');
+    expect(screen.getByTestId('option-2')).toHaveTextContent('Hemingway, Ernest');
   });
 
   test('renders author nationality when available', async () => {

@@ -39,8 +39,8 @@ export class AuthorApi extends BaseApiClient {
     return AuthorSchema.parse(response);
   }
 
-  async deleteAuthor(id: number): Promise<void> {
-    return this.delete<void>(`/authors/${id}`);
+  async deleteAuthor(id: number, force?: boolean): Promise<void> {
+    return this.delete<void>(`/authors/${id}`, force ? { params: { force: 'true' } } : undefined);
   }
 
 }

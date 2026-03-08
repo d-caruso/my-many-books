@@ -178,5 +178,7 @@
   "user_not_found": "Utente non trovato",
   "unexpected_error": "Si è verificato un errore imprevisto. Riprova.",
   "session_invalid": "La tua sessione non è valida. Accedi di nuovo.",
-  "session_expired": "La tua sessione è scaduta. Accedi di nuovo."
+  "session_expired": "La tua sessione è scaduta. Accedi di nuovo.",
+  "wrong_current_password": "La password attuale non è corretta. Riprova.",
+  "new_password_same_as_current": "La nuova password deve essere diversa da quella attuale."
 }

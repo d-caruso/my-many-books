@@ -54,7 +54,7 @@ const getSearchInput = () =>
   screen.getByPlaceholderText('Search by title, author, ISBN...');
 
 const getSearchButton = () =>
-  screen.getByRole('button', { name: /Search/i });
+  screen.getAllByRole('button', { name: /Search/i })[0];
 
 const openAdvancedFilters = () => {
   fireEvent.click(screen.getByRole('button', { name: /Advanced Filters/i }));
@@ -229,7 +229,7 @@ describe('BookSearchForm', () => {
 
     expect(getSearchButton()).toBeDisabled();
     expect(getSearchInput()).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Searching...' })).toBeDisabled();
+    expect(screen.getAllByRole('button', { name: 'Searching...' })[0]).toBeDisabled();
   });
 
   test('clears validation error when typing in search box', async () => {
