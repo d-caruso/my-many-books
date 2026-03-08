@@ -40,9 +40,14 @@ describe('designTokens contract', () => {
   test('breakpoints are numeric and increasing', () => {
     const values = Object.values(designTokens.breakpoints);
     expect(values.every((value) => typeof value === 'number')).toBe(true);
-    for (let index = 1; index < values.length; index += 1) {
-      expect(values[index]).toBeGreaterThan(values[index - 1]);
+
+    let previousValue: number | null = null;
+    for (const value of values) {
+      if (previousValue !== null) {
+        expect(value).toBeGreaterThan(previousValue);
+      }
+
+      previousValue = value;
     }
   });
 });
-
