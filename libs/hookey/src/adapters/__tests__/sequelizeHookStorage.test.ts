@@ -2,20 +2,40 @@ import { Sequelize } from 'sequelize';
 import { SequelizeHookStorage } from '../sequelizeHookStorage';
 
 describe('SequelizeHookStorage', () => {
-  let sequelize: Sequelize;
+  let sequelize: Sequelize | undefined;
   let storage: SequelizeHookStorage;
+  let sqliteAvailable = true;
+
+  beforeAll(async () => {
+    try {
+      await import('sqlite3');
+    } catch {
+      sqliteAvailable = false;
+    }
+  });
 
   beforeEach(async () => {
+    if (!sqliteAvailable) {
+      return;
+    }
+
     sequelize = new Sequelize('sqlite::memory:', { logging: false });
     storage = new SequelizeHookStorage(sequelize);
     await storage.init();
   });
 
   afterEach(async () => {
-    await sequelize.close();
+    if (sequelize) {
+      await sequelize.close();
+      sequelize = undefined;
+    }
   });
 
   it('persists hooks and executions', async () => {
+    if (!sqliteAvailable) {
+      return;
+    }
+
     const hook = await storage.createHook({
       name: 'create-user',
       eventPattern: 'user.created',

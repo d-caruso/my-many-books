@@ -1,5 +1,6 @@
 import { EmailAction, EmailService, EmailActionConfig, ConsoleEmailService } from '../EmailAction';
 import { HookActionContext } from '../../types';
+import { getLogger } from '@my-many-books/shared-logging';
 
 // Mock email service for testing
 class MockEmailService implements EmailService {
@@ -23,11 +24,18 @@ class MockEmailService implements EmailService {
     this.sentEmails.push(options);
   }
 
-  reset() {
+  reset(): void {
     this.sentEmails = [];
   }
 
-  getLastEmail() {
+  getLastEmail(): {
+    to: string | string[];
+    cc?: string | string[];
+    bcc?: string | string[];
+    subject: string;
+    body: string;
+    from?: string;
+  } {
     const email = this.sentEmails[this.sentEmails.length - 1];
     if (!email) {
       throw new Error('Expected at least one sent email');
@@ -370,8 +378,8 @@ describe('EmailAction', () => {
   });
 
   describe('ConsoleEmailService', () => {
-    it('logs email to console', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    it('logs email through shared logger', async () => {
+      const infoSpy = jest.spyOn(getLogger(), 'info').mockImplementation();
 
       const service = new ConsoleEmailService();
       await service.sendEmail({
@@ -380,16 +388,21 @@ describe('EmailAction', () => {
         body: 'Body',
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith('[EmailService] Sending email:');
-      expect(consoleSpy).toHaveBeenCalledWith('  To:', 'user@example.com');
-      expect(consoleSpy).toHaveBeenCalledWith('  Subject:', 'Test');
-      expect(consoleSpy).toHaveBeenCalledWith('  Body:', 'Body');
+      expect(infoSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: 'noreply@example.com',
+          to: 'user@example.com',
+          subject: 'Test',
+          body: 'Body',
+        }),
+        '[EmailService] Sending email'
+      );
 
-      consoleSpy.mockRestore();
+      infoSpy.mockRestore();
     });
 
-    it('logs from address or default', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    it('logs custom from address', async () => {
+      const infoSpy = jest.spyOn(getLogger(), 'info').mockImplementation();
 
       const service = new ConsoleEmailService();
       await service.sendEmail({
@@ -399,9 +412,12 @@ describe('EmailAction', () => {
         from: 'custom@example.com',
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith('  From:', 'custom@example.com');
+      expect(infoSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ from: 'custom@example.com' }),
+        '[EmailService] Sending email'
+      );
 
-      consoleSpy.mockRestore();
+      infoSpy.mockRestore();
     });
   });
 });
