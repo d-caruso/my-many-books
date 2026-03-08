@@ -56,14 +56,15 @@ export class AuthService {
   }
 
   private unwrapEnvelopeData<T>(payload: unknown): { data: T; message?: string } {
-    if (payload && typeof payload === 'object' && 'success' in payload) {
-      const maybeEnvelope = payload as Partial<ApiSuccessEnvelope<T>>;
-      if (maybeEnvelope.success === true && 'data' in maybeEnvelope) {
-        return {
-          data: maybeEnvelope.data,
-          message: maybeEnvelope.message,
-        };
-      }
+    if (
+      payload !== null &&
+      typeof payload === 'object' &&
+      'success' in payload &&
+      'data' in payload &&
+      (payload as Record<string, unknown>).success === true
+    ) {
+      const envelope = payload as ApiSuccessEnvelope<T>;
+      return { data: envelope.data, message: envelope.message };
     }
 
     throw new Error('Invalid API success envelope');
