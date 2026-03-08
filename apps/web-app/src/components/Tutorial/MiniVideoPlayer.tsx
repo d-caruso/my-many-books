@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { type TutorialVideo } from '../../pages/HowTo/howToContent';
 
 interface MiniVideoPlayerProps {
@@ -17,8 +18,12 @@ export const MiniVideoPlayer: React.FC<MiniVideoPlayerProps> = ({
   fallbackMessage,
   dataTestId,
 }) => {
+  const { i18n } = useTranslation();
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
   const captionId = `${dataTestId}-caption`;
+  const normalizedLanguage = (i18n.resolvedLanguage ?? i18n.language ?? 'en').split('-')[0];
+  const defaultTrackLanguage = video.tracks.find((track) => track.srcLang === normalizedLanguage)?.srcLang
+    ?? video.tracks[0]?.srcLang;
 
   useEffect(() => {
     setHasPlaybackError(false);
@@ -51,7 +56,18 @@ export const MiniVideoPlayer: React.FC<MiniVideoPlayerProps> = ({
             border: (theme) => `1px solid ${theme.palette.divider}`,
             backgroundColor: 'background.default',
           }}
-        />
+        >
+          {video.tracks.map((track) => (
+            <track
+              key={track.src}
+              kind="captions"
+              src={track.src}
+              srcLang={track.srcLang}
+              label={track.label}
+              default={track.srcLang === defaultTrackLanguage}
+            />
+          ))}
+        </Box>
       )}
 
       <Typography

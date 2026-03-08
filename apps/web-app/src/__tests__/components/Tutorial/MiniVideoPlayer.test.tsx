@@ -8,10 +8,22 @@ describe('MiniVideoPlayer', () => {
     poster: '/tutorials/posters/add-book.jpg',
     captionKey: 'videos.add_book.caption',
     durationLabel: '00:20',
+    tracks: [
+      {
+        src: '/tutorials/captions/en/add-book.vtt',
+        srcLang: 'en' as const,
+        label: 'English',
+      },
+      {
+        src: '/tutorials/captions/it/add-book.vtt',
+        srcLang: 'it' as const,
+        label: 'Italian',
+      },
+    ],
   };
 
   test('renders video player with caption and duration', () => {
-    render(
+    const { container } = render(
       <MiniVideoPlayer
         video={baseVideo}
         label="Mini video"
@@ -23,6 +35,11 @@ describe('MiniVideoPlayer', () => {
 
     expect(screen.getByTestId('test-mini-video-element')).toBeInTheDocument();
     expect(screen.getByTestId('test-mini-video-caption')).toHaveTextContent('Add book tutorial • 00:20');
+    expect(container.querySelectorAll('track')).toHaveLength(2);
+    expect(container.querySelector('track[srclang="en"]')).toHaveAttribute(
+      'src',
+      '/tutorials/captions/en/add-book.vtt'
+    );
   });
 
   test('shows fallback message when video playback fails', () => {
