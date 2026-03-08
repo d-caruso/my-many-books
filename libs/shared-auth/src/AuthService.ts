@@ -404,9 +404,15 @@ export class AuthService {
 
   async changePassword(input: ChangePasswordInput): Promise<User> {
     try {
+      const idToken = await this.getIdToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+
       const response = await fetch(this.buildApiUrl(`${USERS_ENDPOINT}/${input.userId}`), {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({
           action: USER_ACCOUNT_PATCH_ACTIONS.CHANGE_PASSWORD,

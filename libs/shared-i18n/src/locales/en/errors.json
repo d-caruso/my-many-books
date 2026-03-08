@@ -74,6 +74,7 @@
   "auth_token_expired": "Your session has expired. Please log in again",
   "auth_header_invalid": "Authentication error. Please log in again",
   "auth_failed": "Authentication failed. Please try again",
+  "wrong_current_password": "Current password is incorrect. Please try again.",
   "admin_required": "Administrator access required",
   "role_required": "You need {{role}} role to access this resource",
   "account_deactivated": "Your account has been deactivated",
