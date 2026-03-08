@@ -1,7 +1,7 @@
 import { BookApi } from '../book-api';
 import { MockHttpClient } from '../__mocks__/MockHttpClient';
 import { ZodError } from 'zod';
-import { Book, BookStatus, SearchFilters, SearchResult } from '@my-many-books/shared-types';
+import { Book, BOOK_STATUSES, SearchFilters, SearchResult } from '@my-many-books/shared-types';
 
 describe('BookApi (Search & Status)', () => {
   let mockHttpClient: MockHttpClient;
@@ -276,9 +276,7 @@ describe('BookApi (Search & Status)', () => {
         status: 200,
       });
 
-      const statuses: BookStatus[] = ['reading', 'paused', 'finished', null];
-
-      for (const status of statuses) {
+      for (const status of BOOK_STATUSES) {
         await expect(bookApi.updateBookStatus(1, status)).resolves.toBeDefined();
       }
     });

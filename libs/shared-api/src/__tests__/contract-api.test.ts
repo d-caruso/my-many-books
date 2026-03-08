@@ -5,6 +5,14 @@ import { createApiClient, HttpClient, RequestConfig, SettingsApi } from '../inde
 
 type SuccessEnvelope<T> = { success: true; data: T };
 
+function getItemOrThrow<T>(items: readonly T[], index: number, label: string): T {
+  const item = items[index];
+  if (!item) {
+    throw new Error(`Expected ${label} at index ${index}`);
+  }
+  return item;
+}
+
 class UnwrappingFetchHttpClient implements HttpClient {
   private async request<T>(
     method: string,
@@ -204,15 +212,16 @@ describe('shared-api contract (success envelope)', () => {
     const api = createApiClient(new UnwrappingFetchHttpClient(), { baseURL });
     const result = await api.categories.getCategories();
     expect(result).toHaveLength(2);
-    expect(result[0].name).toBe('Fiction');
+    expect(getItemOrThrow(result, 0, 'category').name).toBe('Fiction');
   });
 
   it('unwraps settings and converts date fields', async () => {
     const settingsApi = new SettingsApi(new UnwrappingFetchHttpClient(), { baseURL });
     const result = await settingsApi.getSettings();
     expect(result).toHaveLength(1);
-    expect(result[0].creationDate).toBeInstanceOf(Date);
-    expect(result[0].updateDate).toBeInstanceOf(Date);
+    const firstSetting = getItemOrThrow(result, 0, 'setting');
+    expect(firstSetting.creationDate).toBeInstanceOf(Date);
+    expect(firstSetting.updateDate).toBeInstanceOf(Date);
   });
 
   it('handles 204 deletes without a JSON body', async () => {

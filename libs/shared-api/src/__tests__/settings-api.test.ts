@@ -3,6 +3,14 @@ import { MockHttpClient } from '../__mocks__/MockHttpClient';
 import { ZodError } from 'zod';
 import { AppSetting } from '@my-many-books/shared-types';
 
+function getItemOrThrow<T>(items: readonly T[], index: number, label: string): T {
+  const item = items[index];
+  if (!item) {
+    throw new Error(`Expected ${label} at index ${index}`);
+  }
+  return item;
+}
+
 describe('SettingsApi', () => {
   let mockHttpClient: MockHttpClient;
   let settingsApi: SettingsApi;
@@ -140,9 +148,10 @@ describe('SettingsApi', () => {
 
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual(expectedSetting);
-      expect(result[1].key).toBe('features.beta');
-      expect(result[1].deleted).toBe(true);
-      expect(result[1].deletedAt).toEqual(new Date('2024-01-04T00:00:00.000Z'));
+      const secondSetting = getItemOrThrow(result, 1, 'setting');
+      expect(secondSetting.key).toBe('features.beta');
+      expect(secondSetting.deleted).toBe(true);
+      expect(secondSetting.deletedAt).toEqual(new Date('2024-01-04T00:00:00.000Z'));
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('GET');
       expect(lastRequest?.url).toContain('/settings/admin');
@@ -194,4 +203,3 @@ describe('SettingsApi', () => {
     });
   });
 });
-
