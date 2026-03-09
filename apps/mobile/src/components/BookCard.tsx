@@ -8,20 +8,7 @@ import { useNetworkState } from '@/hooks/useNetworkState';
 import { SyncStatusBadge } from './SyncStatusBadge';
 import { ConflictDialog } from './ConflictDialog';
 import { BOOK_STATUS } from '@my-many-books/shared-types';
-
-// Move utility functions back for direct coverage tracking
-export function getStatusColor(status: Book['status']) {
-  switch (status) {
-    case BOOK_STATUS.READING:
-      return '#2196F3';
-    case BOOK_STATUS.FINISHED:
-      return '#4CAF50';
-    case BOOK_STATUS.PAUSED:
-      return '#9C27B0';
-    default:
-      return '#757575';
-  }
-}
+import { getStatusColor } from '@my-many-books/shared-design';
 
 export function getStatusLabel(status: Book['status'], t?: (key: string) => string) {
   // If t function is not provided, this shouldn't be called

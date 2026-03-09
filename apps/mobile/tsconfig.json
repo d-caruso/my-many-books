@@ -55,6 +55,9 @@
       ],
       "@my-many-books/hookey": [
         "../../libs/hookey/src"
+      ],
+      "@my-many-books/shared-design": [
+        "../../libs/shared-design/src"
       ]
     }
   },

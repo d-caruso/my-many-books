@@ -1,7 +1,5 @@
 import {
   formatDate,
-  getStatusLabel,
-  getStatusColor,
   generateBookId,
   sanitizeSearchQuery,
   groupBooksByStatus,
@@ -29,30 +27,6 @@ describe('Helper Utilities', () => {
     it('should handle null/undefined dates', () => {
       expect(formatDate(null as string)).toBe('Invalid Date');
       expect(formatDate(undefined as string)).toBe('Invalid Date');
-    });
-  });
-
-  describe('getStatusLabel', () => {
-    it('should return correct labels for all statuses', () => {
-      expect(getStatusLabel('reading')).toBe('Reading');
-      expect(getStatusLabel('paused')).toBe('Paused');
-      expect(getStatusLabel('finished')).toBe('Finished');
-    });
-
-    it('should handle unknown status', () => {
-      expect(getStatusLabel('unknown' as 'reading' | 'paused' | 'finished')).toBe('Unknown');
-    });
-  });
-
-  describe('getStatusColor', () => {
-    it('should return correct colors for all statuses', () => {
-      expect(getStatusColor('reading')).toBe('#FF9800');
-      expect(getStatusColor('paused')).toBe('#2196F3');
-      expect(getStatusColor('finished')).toBe('#4CAF50');
-    });
-
-    it('should handle unknown status', () => {
-      expect(getStatusColor('unknown' as 'reading' | 'paused' | 'finished')).toBe('#757575');
     });
   });
 
