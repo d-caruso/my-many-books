@@ -43,14 +43,6 @@ export const getStatusColor = (status: Book['status']): string => {
   }
 };
 
-export const truncateText = (text: string, limit: number): string => {
-  if (!text || typeof text !== 'string') return '';
-  
-  if (text.length <= limit) return text;
-  
-  return text.substring(0, limit) + '...';
-};
-
 export const generateBookId = (): string => {
   return `book_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };

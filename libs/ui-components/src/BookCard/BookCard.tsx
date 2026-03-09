@@ -6,7 +6,8 @@
 
 import * as React from 'react';
 import { BookCardProps } from './BookCard.types';
-import { formatBookCardData, getStatusColor, getStatusLabel, truncateText } from './BookCard.logic';
+import { formatBookCardData, getStatusColor, getStatusLabel } from './BookCard.logic';
+import { truncateText } from '@my-many-books/shared-utils';
 
 export const BookCard: React.FC<BookCardProps> = ({
   book,
@@ -130,5 +131,5 @@ export const BookCard: React.FC<BookCardProps> = ({
 };
 
 // Export the business logic for platform-specific implementations
-export { formatBookCardData, getStatusColor, getStatusLabel, truncateText } from './BookCard.logic';
+export { formatBookCardData, getStatusColor, getStatusLabel } from './BookCard.logic';
 export type { BookCardProps, BookCardData } from './BookCard.types';

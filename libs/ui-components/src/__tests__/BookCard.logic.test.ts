@@ -1,4 +1,4 @@
-import { formatBookCardData, getStatusColor, getStatusLabel, truncateText } from '../BookCard/BookCard.logic';
+import { formatBookCardData, getStatusColor, getStatusLabel } from '../BookCard/BookCard.logic';
 import type { Book } from '@my-many-books/shared-types';
 
 const baseBook: Book = {
@@ -45,8 +45,4 @@ describe('BookCard.logic', () => {
     expect(getStatusLabel(undefined)).toBe('');
   });
 
-  test('truncateText truncates long strings', () => {
-    expect(truncateText('abc', 3)).toBe('abc');
-    expect(truncateText('abcd', 3)).toBe('...');
-  });
 });

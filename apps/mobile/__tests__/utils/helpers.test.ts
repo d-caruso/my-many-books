@@ -2,7 +2,6 @@ import {
   formatDate,
   getStatusLabel,
   getStatusColor,
-  truncateText,
   generateBookId,
   sanitizeSearchQuery,
   groupBooksByStatus,
@@ -54,45 +53,6 @@ describe('Helper Utilities', () => {
 
     it('should handle unknown status', () => {
       expect(getStatusColor('unknown' as 'reading' | 'paused' | 'finished')).toBe('#757575');
-    });
-  });
-
-  describe('truncateText', () => {
-    it('should truncate text longer than limit', () => {
-      const longText = 'This is a very long text that should be truncated';
-      const truncated = truncateText(longText, 20);
-      
-      expect(truncated).toBe('This is a very long ...');
-      expect(truncated.length).toBeLessThanOrEqual(23); // 20 + '...' = 23
-    });
-
-    it('should not truncate text shorter than limit', () => {
-      const shortText = 'Short text';
-      const result = truncateText(shortText, 20);
-      
-      expect(result).toBe('Short text');
-    });
-
-    it('should handle exact length', () => {
-      const exactText = 'Exactly twenty chars';
-      const result = truncateText(exactText, 20);
-      
-      expect(result).toBe('Exactly twenty chars');
-    });
-
-    it('should handle empty text', () => {
-      expect(truncateText('', 10)).toBe('');
-    });
-
-    it('should handle null/undefined', () => {
-      expect(truncateText(null as string, 10)).toBe('');
-      expect(truncateText(undefined as string, 10)).toBe('');
-    });
-
-    it('should handle very small limits', () => {
-      const text = 'Hello world';
-      expect(truncateText(text, 1)).toBe('H...');
-      expect(truncateText(text, 0)).toBe('...');
     });
   });
 
