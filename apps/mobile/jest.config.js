@@ -11,7 +11,7 @@ module.exports = {
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+    '^.+\\.(ts|tsx|js|jsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.test.json' }],
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -19,7 +19,6 @@ module.exports = {
     '^@my-many-books/shared-api$': '<rootDir>/../../libs/shared-api/src',
     '^@my-many-books/shared-utils$': '<rootDir>/../../libs/shared-utils/src',
     '^@my-many-books/shared-ui-hooks$': '<rootDir>/../../libs/shared-ui-hooks/src',
-    '^@my-many-books/shared-business$': '<rootDir>/../../libs/shared-business/src',
     '^@my-many-books/shared-forms$': '<rootDir>/../../libs/shared-forms/src',
     '^@my-many-books/shared-auth$': '<rootDir>/../../libs/shared-auth/src',
     '^@my-many-books/shared-i18n$': '<rootDir>/../../libs/shared-i18n/src',

@@ -32,7 +32,7 @@ const createMockApiClient = () => ({
   },
 });
 
-export const createApiClient = (_httpClient?: any, _config?: any) => createMockApiClient();
+export const createApiClient = (_httpClient?: object, _config?: object) => createMockApiClient();
 
 // Export other required types and classes for compatibility
 export class ApiClient {}

@@ -29,9 +29,9 @@ describe('FormManager', () => {
     const state = manager.getState();
 
     expect(Object.keys(state.fields).sort()).toEqual(['subtitle', 'title']);
-    expect(state.values.title).toBe('A');
-    expect(state.values.subtitle).toBe('B');
-    expect(state.touched.title).toBe(false);
+    expect(state.values['title']).toBe('A');
+    expect(state.values['subtitle']).toBe('B');
+    expect(state.touched['title']).toBe(false);
     expect(state.isDirty).toBe(false);
     expect(state.isValid).toBe(true);
   });
@@ -46,20 +46,20 @@ describe('FormManager', () => {
     manager.setFieldValue('title', 'New');
 
     expect(manager.getFieldValue('title')).toBe('New');
-    expect(manager.getState().fields.title.value).toBe('New');
+    const titleField = manager.getState().fields['title'];
+    expect(titleField).toBeDefined();
+    expect(titleField?.value).toBe('New');
     expect(manager.getState().isDirty).toBe(true);
     expect(events).toEqual([{ type: 'FIELD_CHANGE', fieldName: 'title', value: 'New' }]);
   });
 
-  test('setFieldValue warns and no-ops for unknown field', () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  test('setFieldValue no-ops for unknown field', () => {
     const manager = new FormManager({ fields: [createTextField({ name: 'title', value: '' })] });
 
     manager.setFieldValue('missing', 'x');
 
-    expect(warnSpy).toHaveBeenCalledWith('Field "missing" does not exist in form');
+    expect(manager.getFieldValue('title')).toBe('');
     expect(manager.getState().isDirty).toBe(false);
-    warnSpy.mockRestore();
   });
 
   test('validationMode=onChange triggers validation', async () => {
@@ -250,7 +250,9 @@ describe('FormManager', () => {
     manager.updateField('title', { value: 'y', label: 'New Label' });
 
     expect(manager.getFieldValue('title')).toBe('y');
-    expect(manager.getState().fields.title.label).toBe('New Label');
+    const titleField = manager.getState().fields['title'];
+    expect(titleField).toBeDefined();
+    expect(titleField?.label).toBe('New Label');
   });
 
   test('addField and removeField mutate form state', async () => {
@@ -294,16 +296,16 @@ describe('FormManager', () => {
   });
 
   test('event listener exceptions are isolated', () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const manager = new FormManager({ fields: [createTextField({ name: 'title', value: 'x' })] });
+    const secondListener = jest.fn();
 
     manager.addEventListener(() => {
       throw new Error('listener fail');
     });
+    manager.addEventListener(secondListener);
 
     expect(() => manager.setFieldValue('title', 'y')).not.toThrow();
-    expect(errorSpy).toHaveBeenCalledWith('Form event listener error:', expect.any(Error));
-    errorSpy.mockRestore();
+    expect(secondListener).toHaveBeenCalledTimes(1);
   });
 
   test('addEventListener unsubscribe removes listener', () => {

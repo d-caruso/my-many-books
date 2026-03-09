@@ -64,7 +64,7 @@ const mockBooks: Book[] = [
   {
     id: 4,
     title: 'Book With String Authors',
-    authors: ['Author One', 'Author Two'] as any,
+    authors: ['Author One', 'Author Two'] as unknown as Book['authors'],
     isbnCode: '9780987654321',
     status: 'reading',
     categories: [{ id: 5, name: 'Non-Fiction' }],
@@ -433,7 +433,7 @@ describe('BookSearchResults', () => {
   test('handles unknown book status', () => {
     const bookWithUnknownStatus = {
       ...mockBooks[0],
-      status: 'custom-status' as any,
+      status: 'custom-status' as unknown as Book['status'],
     };
 
     render(

@@ -1,4 +1,10 @@
 import { useState, useEffect } from 'react';
+import { logger } from '../utils/logger';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 interface PWAState {
   isOffline: boolean;
@@ -16,7 +22,7 @@ interface PWAActions {
 
 // Global flag to ensure service worker only registers once (even with React Strict Mode)
 let swRegistrationPromise: Promise<ServiceWorkerRegistration | undefined> | null = null;
-let globalDeferredPrompt: Event | null = null;
+let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
 
 export const usePWA = (): PWAState & PWAActions => {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -27,7 +33,7 @@ export const usePWA = (): PWAState & PWAActions => {
   const [isInstalled, setIsInstalled] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
-  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     // Check if app is already installed
@@ -71,7 +77,7 @@ export const usePWA = (): PWAState & PWAActions => {
           return reg;
         })
         .catch((err) => {
-          console.error('[PWA] Service worker registration failed:', err);
+          logger.error('[PWA] Service worker registration failed:', err);
           return undefined;
         });
 
@@ -96,8 +102,9 @@ export const usePWA = (): PWAState & PWAActions => {
     // Install prompt handling - use global storage to persist across re-renders
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      globalDeferredPrompt = e;
-      setDeferredPrompt(e);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      globalDeferredPrompt = promptEvent;
+      setDeferredPrompt(promptEvent);
       setIsInstallable(true);
       // Store installability flag in sessionStorage
       sessionStorage.setItem('pwa-installable', 'true');
@@ -129,10 +136,9 @@ export const usePWA = (): PWAState & PWAActions => {
       return;
     }
 
-    const promptEvent = prompt as any;
-    promptEvent.prompt();
+    prompt.prompt();
 
-    const { outcome } = await promptEvent.userChoice;
+    const { outcome } = await prompt.userChoice;
 
     if (outcome === 'accepted') {
       globalDeferredPrompt = null;

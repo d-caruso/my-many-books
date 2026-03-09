@@ -103,7 +103,36 @@ export function toString(value: unknown): string {
     return '';
   }
 
-  return String(value);
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return String(value);
+  }
+
+  if (typeof value === 'symbol') {
+    return value.toString();
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (value instanceof Error) {
+    return value.message;
+  }
+
+  if (typeof value === 'object') {
+    try {
+      const serialized = JSON.stringify(value);
+      return serialized ?? '';
+    } catch {
+      return Object.prototype.toString.call(value);
+    }
+  }
+
+  return '';
 }
 
 /**

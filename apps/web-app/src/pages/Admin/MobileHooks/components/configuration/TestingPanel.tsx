@@ -28,7 +28,7 @@ export const TestingPanel: React.FC = () => {
 
   const safeJsonParse = (
     value: string
-  ): { ok: true; data: any } | { ok: false; error: string } => {
+  ): { ok: true; data: Record<string, unknown> } | { ok: false; error: string } => {
     try {
       const parsed = value ? JSON.parse(value) : {};
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -67,7 +67,7 @@ export const TestingPanel: React.FC = () => {
         setActionTypes(payload);
         const first = Object.keys(payload.actions)[0] ?? '';
         setSelectedActionType(first);
-      } catch (err: any) {
+      } catch {
         setTypesError(t('admin.mobile_hooks.errors.action_types.load'));
       } finally {
         setLoadingTypes(false);
@@ -100,7 +100,7 @@ export const TestingPanel: React.FC = () => {
         payload: payloadParse.data,
       });
       setConfigTestResult(result);
-    } catch (err: any) {
+    } catch {
       setConfigTestError(t('admin.mobile_hooks.errors.testing.config_test'));
     } finally {
       setConfigTestLoading(false);
@@ -126,7 +126,7 @@ export const TestingPanel: React.FC = () => {
         testData: dataParse.data,
       });
       setActionTestResult(result);
-    } catch (err: any) {
+    } catch {
       setActionTestError(t('admin.mobile_hooks.errors.testing.action_test'));
     } finally {
       setActionTestLoading(false);

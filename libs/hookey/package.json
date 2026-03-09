@@ -1,6 +1,6 @@
 {
   "name": "@my-many-books/hookey",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "publishConfig": {
     "access": "public"
   },
@@ -9,9 +9,12 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "test": "nx test hookey",
-    "lint": "nx lint hookey"
+    "lint": "nx lint hookey",
+    "typecheck": "nx typecheck hookey",
+    "build": "nx build hookey"
   },
   "dependencies": {
+    "@my-many-books/shared-logging": "file:../shared-logging",
     "@types/eventemitter2": "^2.2.1",
     "eventemitter2": "^6.4.9",
     "express": "^4.18.2",

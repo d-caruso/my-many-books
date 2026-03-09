@@ -1,3 +1,4 @@
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -16,7 +17,7 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import { PushPin as PinIcon, PushPinOutlined as UnpinIcon } from '@mui/icons-material';
+import { PushPinOutlined as UnpinIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { RESOURCE_TYPES } from '@my-many-books/shared-types';
@@ -47,8 +48,8 @@ export const SearchManagementPage: React.FC = () => {
       const queryParam = selectedResourceType !== 'all' ? `?resource_type=${selectedResourceType}` : '';
       const response = await apiService.get(`/admin/search/pinned${queryParam}`);
       setPinnedResults(response.data.results || []);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch pinned results');
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err) ?? 'Failed to fetch pinned results');
     } finally {
       setLoading(false);
     }
@@ -78,7 +79,7 @@ export const SearchManagementPage: React.FC = () => {
       await apiService.patch(`/admin/search/pinned/${reorderedItem.id}/priority`, {
         priority: result.destination.index,
       });
-    } catch (err: any) {
+    } catch {
       setError('Failed to update priority');
       // Revert on error
       fetchPinnedResults();
@@ -89,12 +90,12 @@ export const SearchManagementPage: React.FC = () => {
     try {
       await apiService.delete(`/admin/search/pinned/${id}`);
       setPinnedResults(pinnedResults.filter(item => item.id !== id));
-    } catch (err: any) {
+    } catch {
       setError('Failed to unpin result');
     }
   };
 
-  const handlePin = async (resourceType: string, resourceId: number) => {
+  const _handlePin = async (resourceType: string, resourceId: number) => {
     try {
       const maxPriority = pinnedResults.length > 0
         ? Math.max(...pinnedResults.map(r => r.priority))
@@ -108,7 +109,7 @@ export const SearchManagementPage: React.FC = () => {
       });
 
       fetchPinnedResults();
-    } catch (err: any) {
+    } catch {
       setError('Failed to pin result');
     }
   };

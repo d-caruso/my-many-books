@@ -2,6 +2,8 @@ import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { SettingsProvider, useSettings } from '../../contexts/SettingsContext';
 import { ApiProvider } from '../../contexts/ApiContext';
+import type { SettingsApi } from '@my-many-books/shared-api';
+import type { ApiService } from '../../services/api';
 
 const mockSettingsApi = {
   getSettings: vi.fn(),
@@ -15,11 +17,11 @@ const mockApiService = {
   post: vi.fn(),
   patch: vi.fn(),
   delete: vi.fn(),
-} as any;
+};
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <ApiProvider apiService={mockApiService}>
-    <SettingsProvider settingsApi={mockSettingsApi as any}>
+  <ApiProvider apiService={mockApiService as unknown as ApiService}>
+    <SettingsProvider settingsApi={mockSettingsApi as unknown as SettingsApi}>
       {children}
     </SettingsProvider>
   </ApiProvider>
@@ -101,10 +103,10 @@ describe('SettingsContext', () => {
       const mockApiServiceForSettingsClient = {
         getHttpClient: vi.fn(() => mockHttpClient),
         getApiConfig: vi.fn(() => ({ baseURL: 'http://localhost:3000', timeout: 10000 })),
-      } as any;
+      };
 
       const wrapperWithoutInjectedSettingsApi = ({ children }: { children: React.ReactNode }) => (
-        <ApiProvider apiService={mockApiServiceForSettingsClient}>
+        <ApiProvider apiService={mockApiServiceForSettingsClient as unknown as ApiService}>
           <SettingsProvider>{children}</SettingsProvider>
         </ApiProvider>
       );

@@ -36,12 +36,12 @@ describe('AuthPage', () => {
       hash: '',
       state: null,
       key: 'default',
-    } as any);
+    });
 
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
 
     // Mock Auth components to simple test doubles
-    vi.mocked(LoginForm).mockImplementation(({ onSwitchToRegister }: any) => (
+    vi.mocked(LoginForm).mockImplementation(({ onSwitchToRegister }: { onSwitchToRegister?: () => void }) => (
       <div data-testid="login-form">
         Login Form
         <button data-testid="switch-to-register" onClick={onSwitchToRegister}>
@@ -50,7 +50,7 @@ describe('AuthPage', () => {
       </div>
     ));
 
-    vi.mocked(RegisterForm).mockImplementation(({ onSwitchToLogin }: any) => (
+    vi.mocked(RegisterForm).mockImplementation(({ onSwitchToLogin }: { onSwitchToLogin?: () => void }) => (
       <div data-testid="register-form">
         Register Form
         <button data-testid="switch-to-login" onClick={onSwitchToLogin}>
@@ -60,7 +60,7 @@ describe('AuthPage', () => {
     ));
 
     // Mock Navigate component
-    vi.mocked(Navigate).mockImplementation(({ to, replace }: any) => (
+    vi.mocked(Navigate).mockImplementation(({ to, replace }: { to: string; replace?: boolean }) => (
       <div data-testid="navigate" data-to={to} data-replace={String(replace)}>
         Navigate to {to}
       </div>
@@ -109,7 +109,7 @@ describe('AuthPage', () => {
   test('redirects to home when user is authenticated', () => {
     // Override default mock for this specific test
     vi.mocked(useAuth).mockReturnValue({
-      user: { id: 1, name: 'Test User' } as any,
+      user: { id: 1, name: 'Test User', email: 'test@test.com', surname: 'User', role: 'user' as const, isActive: true },
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
@@ -171,7 +171,7 @@ describe('AuthPage', () => {
       hash: '',
       state: null,
       key: 'google-callback',
-    } as any);
+    });
 
     render(<AuthPage />);
 
@@ -193,7 +193,7 @@ describe('AuthPage', () => {
       hash: '',
       state: null,
       key: 'google-callback',
-    } as any);
+    });
 
     render(<AuthPage />);
 

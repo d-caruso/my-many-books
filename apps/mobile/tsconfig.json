@@ -41,9 +41,6 @@
       "@my-many-books/shared-ui-hooks": [
         "../../libs/shared-ui-hooks/src"
       ],
-      "@my-many-books/shared-business": [
-        "../../libs/shared-business/src"
-      ],
       "@my-many-books/shared-forms": [
         "../../libs/shared-forms/src"
       ],

@@ -242,7 +242,7 @@ export function renderWithI18n(
 /**
  * Mock translation function for tests that don't need full i18n
  */
-export const mockT = (key: string, options?: any) => {
+export const mockT = (key: string, options?: Record<string, unknown>) => {
   if (options && typeof options === 'object') {
     let result = key;
     Object.keys(options).forEach(optKey => {

@@ -1,6 +1,6 @@
 export default {
   displayName: 'shared-i18n',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.cjs',
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   transform: {

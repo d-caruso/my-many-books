@@ -214,7 +214,7 @@ export class LogManager {
         },
         (error) => {
           clearTimeout(timeoutId);
-          reject(error);
+          reject(error instanceof Error ? error : new Error('Unknown error'));
         }
       );
     });

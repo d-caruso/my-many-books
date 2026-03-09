@@ -35,10 +35,6 @@ const ResetPasswordPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ResetFormState, string>>>({});
 
-  if (user) {
-    return <Navigate to={buildUrl('account')} replace />;
-  }
-
   const isSubmitDisabled = useMemo(() => {
     return (
       loading ||
@@ -48,6 +44,10 @@ const ResetPasswordPage: React.FC = () => {
       !form.confirmNewPassword
     );
   }, [form.code, form.confirmNewPassword, form.email, form.newPassword, loading]);
+
+  if (user) {
+    return <Navigate to={buildUrl('account')} replace />;
+  }
 
   const updateField = (field: keyof ResetFormState, value: string) => {
     setForm((previous) => ({ ...previous, [field]: value }));

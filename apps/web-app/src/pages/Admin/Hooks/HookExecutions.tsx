@@ -1,3 +1,5 @@
+import { extractErrorMessage } from '@my-many-books/shared-utils';
+import { logger } from '../../../utils/logger';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
@@ -138,9 +140,9 @@ export const HookExecutions: React.FC = () => {
       });
       setExecutions(response.executions);
       setTotal(response.total);
-    } catch (err: any) {
-      console.error('Failed to load hook executions:', err);
-      setError(err?.message || t('executions.errors.fetch', 'Failed to load executions'));
+    } catch (err: unknown) {
+      logger.error('Failed to load hook executions:', err);
+      setError(extractErrorMessage(err) ?? t('executions.errors.fetch', 'Failed to load executions'));
     } finally {
       setLoading(false);
     }

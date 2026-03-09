@@ -6,7 +6,7 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
-import type { Book, Category, Author, User, PaginatedResponse } from '@my-many-books/shared-types';
+import type { Book, Category, User, PaginatedResponse } from '@my-many-books/shared-types';
 import { createApiService } from '../../services/api';
 import type { HttpClient, RequestConfig } from '@my-many-books/shared-api';
 import { API_BASE_PATH } from '../utils/apiBasePath';
@@ -15,7 +15,7 @@ import { API_BASE_PATH } from '../utils/apiBasePath';
 class TestHttpClient implements HttpClient {
   constructor(private baseURL: string = `http://localhost:3000${API_BASE_PATH}`) {}
 
-  private getFullUrl(url: string, params?: Record<string, any>): string {
+  private getFullUrl(url: string, params?: Record<string, unknown>): string {
     // If URL is already absolute, use it; otherwise prepend baseURL
     let fullUrl = url;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -42,30 +42,30 @@ class TestHttpClient implements HttpClient {
   async get<T>(url: string, config?: RequestConfig): Promise<T> {
     const response = await fetch(this.getFullUrl(url, config?.params), {
       method: 'GET',
-      headers: config?.headers as any,
+      headers: config?.headers as HeadersInit,
     });
     return response.json();
   }
 
-  async post<T>(url: string, data?: any, config?: RequestConfig): Promise<T> {
+  async post<T>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
     const response = await fetch(this.getFullUrl(url), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...config?.headers,
-      } as any,
+      } as HeadersInit,
       body: JSON.stringify(data),
     });
     return response.json();
   }
 
-  async put<T>(url: string, data?: any, config?: RequestConfig): Promise<T> {
+  async put<T>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
     const response = await fetch(this.getFullUrl(url), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         ...config?.headers,
-      } as any,
+      } as HeadersInit,
       body: JSON.stringify(data),
     });
     return response.json();
@@ -74,7 +74,7 @@ class TestHttpClient implements HttpClient {
   async delete<T>(url: string, config?: RequestConfig): Promise<T> {
     const response = await fetch(this.getFullUrl(url), {
       method: 'DELETE',
-      headers: config?.headers as any,
+      headers: config?.headers as HeadersInit,
     });
     return response.json();
   }
@@ -182,7 +182,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
       // Override handler to verify request data
       server.use(
         http.post(`*${API_BASE_PATH}/books`, async ({ request }) => {
-          const body = await request.json() as any;
+          const body = await request.json() as Record<string, unknown>;
 
           // Verify the transformed data structure
           expect(body).toEqual({
@@ -243,7 +243,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
 
       server.use(
         http.post(`*${API_BASE_PATH}/categories`, async ({ request }) => {
-          const body = await request.json() as any;
+          const body = await request.json() as Record<string, unknown>;
           expect(body).toEqual(categoryData);
 
           const newCategory: Category = {

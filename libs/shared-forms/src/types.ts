@@ -32,7 +32,7 @@ export interface FormField {
 export interface ValidationRule {
   type: 'required' | 'email' | 'url' | 'minLength' | 'maxLength' | 'pattern' | 'min' | 'max' | 'custom';
   message: string;
-  value?: any;
+  value?: unknown;
   validator?: (value: FieldValue, formData?: Record<string, FieldValue>) => boolean | Promise<boolean>;
 }
 
@@ -63,7 +63,7 @@ export interface FormConfig {
 
 export interface FormSubmissionResult {
   success: boolean;
-  data?: any;
+  data?: unknown;
   errors?: FormErrors | string;
   timestamp: Date;
 }
@@ -93,14 +93,16 @@ export interface FormSubmissionHandler {
 }
 
 // Form adapter for platform-specific implementations
+export type FormRenderNode = unknown;
+
 export interface FormAdapter {
   // Platform-specific form rendering
-  renderField(field: FormField): any;
-  renderForm(config: FormConfig, children: any[]): any;
-  
+  renderField(field: FormField): FormRenderNode;
+  renderForm(config: FormConfig, children: FormRenderNode[]): FormRenderNode;
+
   // Platform-specific validation styling
-  applyValidationStyling(field: FormField, hasError: boolean): any;
-  
+  applyValidationStyling(field: FormField, hasError: boolean): FormRenderNode;
+
   // Platform-specific event handling
   onFieldChange(fieldName: string, value: FieldValue): void;
   onFieldBlur(fieldName: string): void;

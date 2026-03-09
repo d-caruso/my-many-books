@@ -6,36 +6,46 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
       "options": {
-        "outputPath": "libs/shared-i18n/dist",
-        "main": "libs/shared-i18n/src/index.ts",
-        "tsConfig": "libs/shared-i18n/tsconfig.lib.json",
-        "assets": [
-          "libs/shared-i18n/*.md",
-          {
-            "glob": "**/*",
-            "input": "libs/shared-i18n/src/locales",
-            "output": "locales"
-          }
-        ]
+        "command": "tsc",
+        "cwd": "libs/shared-i18n"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
-        "lintFilePatterns": ["libs/shared-i18n/**/*.ts"]
+        "lintFilePatterns": [
+          "libs/shared-i18n/**/*.ts"
+        ],
+        "eslintConfig": "libs/shared-i18n/eslint.config.mjs"
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "libs/shared-i18n/jest.config.ts"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/shared-i18n"
+      }
     }
   },
-  "tags": ["scope:shared", "type:lib"]
+  "tags": [
+    "scope:shared",
+    "type:lib"
+  ]
 }

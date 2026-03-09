@@ -92,7 +92,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       }
       // Authentication success will be handled by AuthContext
     } catch (err: unknown) {
-      console.error('Login error:', err);
       if (err instanceof AuthApiError) {
         setError(t(err.i18nKey, { defaultValue: err.message }));
       } else {

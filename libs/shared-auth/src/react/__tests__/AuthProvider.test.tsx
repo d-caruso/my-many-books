@@ -159,10 +159,6 @@ describe('AuthProvider', () => {
     );
 
     await screen.findByTestId('content');
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Auth state check failed:',
-      expect.any(Error)
-    );
     consoleErrorSpy.mockRestore();
   });
 

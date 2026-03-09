@@ -1,13 +1,14 @@
 {
   "name": "@my-many-books/shared-i18n",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "commonjs",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "test": "jest --config jest.config.ts",
-    "lint": "eslint src/**/*.ts"
+    "build": "nx build shared-i18n",
+    "test": "nx test shared-i18n",
+    "lint": "nx lint shared-i18n",
+    "typecheck": "nx typecheck shared-i18n"
   },
   "dependencies": {
     "i18next": "^23.8.0"

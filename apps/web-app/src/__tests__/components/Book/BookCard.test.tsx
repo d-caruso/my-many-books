@@ -39,7 +39,7 @@ const mockBook: Book = {
 describe('BookCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (window.confirm as any).mockReturnValue(true);
+    (window.confirm as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
   });
 
   test('renders book information correctly', () => {
@@ -101,7 +101,7 @@ describe('BookCard', () => {
   });
 
   test('does not call onDelete when deletion is not confirmed', () => {
-    (window.confirm as any).mockReturnValue(false);
+    (window.confirm as unknown as ReturnType<typeof vi.fn>).mockReturnValue(false);
     const handleDelete = vi.fn();
     render(<BookCard book={mockBook} onDelete={handleDelete} compact />);
 

@@ -4,12 +4,13 @@ import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
 
+interface WorkboxManifestEntry {
+  url: string;
+  revision?: string | null;
+}
+
 declare const self: ServiceWorkerGlobalScope & {
-  addEventListener: (type: string, listener: (event: any) => void) => void;
-  skipWaiting: () => void;
-  clients: any;
-  registration: any;
-  __WB_MANIFEST: any;
+  __WB_MANIFEST: Array<WorkboxManifestEntry | string>;
 };
 
 clientsClaim();
@@ -101,7 +102,6 @@ self.addEventListener('sync', (event) => {
 async function doBackgroundSync() {
   // Handle queued offline actions
   // This will be implemented when we add offline functionality
-  console.log('Background sync triggered');
 }
 
 // Push notifications (for future implementation)

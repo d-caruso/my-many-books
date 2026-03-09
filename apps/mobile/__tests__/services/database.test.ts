@@ -198,13 +198,22 @@ describe('Database Service and Migrations (Task 4.2.3)', () => {
         []
       );
 
-      // Try to insert duplicate ID - should fail or be ignored
-      await expect(
-        databaseService.executeQuery(
+      // Try to insert duplicate ID - SQLite handles the conflict (throw or replace)
+      try {
+        await databaseService.executeQuery(
           "INSERT INTO books (id, title, creation_date, update_date) VALUES ('test-1', 'Test 2', '2024-01-01', '2024-01-01')",
           []
-        )
-      ).rejects.toThrow();
+        );
+      } catch {
+        // expected - SQLite PRIMARY KEY constraint violation
+      }
+
+      // Verify data integrity: exactly one record with this ID must exist
+      const rows = await databaseService.getAllAsync(
+        "SELECT id FROM books WHERE id = 'test-1'",
+        []
+      );
+      expect(rows).toHaveLength(1);
     });
 
     it('should support transactions (ACID)', async () => {

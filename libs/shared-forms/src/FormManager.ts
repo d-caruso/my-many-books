@@ -32,7 +32,7 @@ export class FormManager {
     
     // Validate on mount if configured
     if (config.validateOnMount) {
-      this.validateForm();
+      this.runInBackground(this.validateForm());
     }
   }
 
@@ -60,7 +60,6 @@ export class FormManager {
   // Field operations
   setFieldValue(fieldName: string, value: FieldValue): void {
     if (!this.state.fields[fieldName]) {
-      console.warn(`Field "${fieldName}" does not exist in form`);
       return;
     }
 
@@ -72,7 +71,7 @@ export class FormManager {
 
     // Validate on change if configured
     if (this.config.validationMode === 'onChange') {
-      this.validateField(fieldName);
+      this.runInBackground(this.validateField(fieldName));
     }
   }
 
@@ -83,7 +82,7 @@ export class FormManager {
 
     // Validate on blur if configured
     if (touched && this.config.validationMode === 'onBlur') {
-      this.validateField(fieldName);
+      this.runInBackground(this.validateField(fieldName));
     }
   }
 
@@ -113,6 +112,9 @@ export class FormManager {
     
     for (const fieldName of Object.keys(this.state.fields)) {
       const field = this.state.fields[fieldName];
+      if (!field) {
+        continue;
+      }
       const fieldErrors = await this.validator.validateField(field, this.state.values);
       
       if (fieldErrors.length > 0) {
@@ -217,7 +219,7 @@ export class FormManager {
 
     // Validate if configured
     if (this.config.validationMode === 'onChange') {
-      this.validateForm();
+      this.runInBackground(this.validateForm());
     }
   }
 
@@ -246,7 +248,7 @@ export class FormManager {
     this.state.touched[field.name] = false;
     
     if (field.validation && field.value) {
-      this.validateField(field.name);
+      this.runInBackground(this.validateField(field.name));
     }
   }
 
@@ -283,6 +285,9 @@ export class FormManager {
   getDirtyFields(): string[] {
     return Object.keys(this.state.fields).filter(fieldName => {
       const field = this.state.fields[fieldName];
+      if (!field) {
+        return false;
+      }
       return field.value !== field.defaultValue;
     });
   }
@@ -321,12 +326,19 @@ export class FormManager {
     this.state.isValid = Object.keys(this.state.errors).length === 0;
   }
 
+  private runInBackground(task: Promise<unknown>): void {
+    // Validation triggered from synchronous APIs should never reject unhandled.
+    void task.catch(() => {
+      // Keep existing behavior: ignore background validation failures.
+    });
+  }
+
   private emit(event: FormEvent): void {
     this.eventListeners.forEach(listener => {
       try {
         listener(event);
-      } catch (error) {
-        console.error('Form event listener error:', error);
+      } catch {
+        // Keep other listeners isolated when one listener throws.
       }
     });
   }

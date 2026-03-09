@@ -12,7 +12,7 @@ vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
 }));
 
-const buildApiService = (overrides: Record<string, any> = {}) => {
+const buildApiService = (overrides: Record<string, ReturnType<typeof vi.fn>> = {}) => {
   const apiService = {
     getAdminMobileHooksHealth: vi.fn().mockResolvedValue({
       status: 'healthy',
@@ -85,10 +85,10 @@ const buildApiService = (overrides: Record<string, any> = {}) => {
     ...overrides,
   };
 
-  return apiService as any;
+  return apiService as unknown as import('../../../services/api').ApiService;
 };
 
-const renderWithApi = (apiServiceOverrides: Record<string, any> = {}) => {
+const renderWithApi = (apiServiceOverrides: Record<string, ReturnType<typeof vi.fn>> = {}) => {
   const apiService = buildApiService(apiServiceOverrides);
   return rtlRender(
     <ApiProvider apiService={apiService}>
@@ -175,7 +175,7 @@ describe('MobileHookDashboardPage', () => {
   });
 
   it('persists hook→action mapping updates and keeps UI in sync', async () => {
-    const updateAdminMobileHooksActionsConfigMappings = vi.fn().mockImplementation(async (request: any) => ({
+    const updateAdminMobileHooksActionsConfigMappings = vi.fn().mockImplementation(async (request: { actions: Record<string, string[]> }) => ({
       config: {
         actions: request.actions,
         actionSettings: {},

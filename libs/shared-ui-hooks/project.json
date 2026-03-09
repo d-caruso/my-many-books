@@ -7,28 +7,46 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/dist"],
+      "outputs": [
+        "{workspaceRoot}/dist/libs/shared-ui-hooks"
+      ],
       "options": {
-        "command": "npm run build",
+        "command": "tsc --project tsconfig.lib.json",
         "cwd": "libs/shared-ui-hooks"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "libs/shared-ui-hooks/src/*.{ts,tsx}"
-        ]
+        ],
+        "eslintConfig": "libs/shared-ui-hooks/eslint.config.mjs"
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "libs/shared-ui-hooks/jest.config.ts"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/shared-ui-hooks"
+      }
     }
   },
-  "tags": ["scope:shared", "type:lib", "framework:react"]
+  "tags": [
+    "scope:shared",
+    "type:lib",
+    "framework:react"
+  ]
 }

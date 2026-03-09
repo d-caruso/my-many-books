@@ -3,7 +3,8 @@
 // Auth service instance for mobile app
 // ================================================================
 
-import { AuthService, MobileStorageAdapter } from '@my-many-books/shared-auth';
+import { AuthService } from '@my-many-books/shared-auth';
+import { MobileStorageAdapter } from './MobileStorageAdapter';
 import { API_BASE_URL } from '../config/api';
 
 export const authService = new AuthService({

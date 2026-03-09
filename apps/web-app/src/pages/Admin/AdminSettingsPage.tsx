@@ -14,7 +14,9 @@ import {
   FormControl,
   InputLabel,
   Grid,
+  type SelectChangeEvent,
 } from '@mui/material';
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
 import { apiService, type AuditLoggingStatus, type FullTextSearchStatus } from '../../services/api';
@@ -52,8 +54,8 @@ export const AdminSettingsPage: React.FC = () => {
       setError(null);
       const data = await apiService.getAuditLoggingStatus();
       setStatus(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch audit logging status');
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err) ?? 'Failed to fetch audit logging status');
     } finally {
       setLoading(false);
     }
@@ -65,8 +67,8 @@ export const AdminSettingsPage: React.FC = () => {
       setSearchError(null);
       const data = await apiService.getFullTextSearchStatus();
       setSearchStatus(data);
-    } catch (err: any) {
-      setSearchError(err.response?.data?.message || 'Failed to fetch full-text search status');
+    } catch (err: unknown) {
+      setSearchError(extractErrorMessage(err) ?? 'Failed to fetch full-text search status');
     } finally {
       setSearchLoading(false);
     }
@@ -80,8 +82,8 @@ export const AdminSettingsPage: React.FC = () => {
       setError(null);
       const data = await apiService.updateAuditLoggingStatus(!status.enabled);
       setStatus(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update audit logging status');
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err) ?? 'Failed to update audit logging status');
     } finally {
       setUpdating(false);
     }
@@ -95,14 +97,14 @@ export const AdminSettingsPage: React.FC = () => {
       setSearchError(null);
       const data = await apiService.updateFullTextSearchStatus({ enabled: !searchStatus.enabled });
       setSearchStatus(data);
-    } catch (err: any) {
-      setSearchError(err.response?.data?.message || 'Failed to update full-text search status');
+    } catch (err: unknown) {
+      setSearchError(extractErrorMessage(err) ?? 'Failed to update full-text search status');
     } finally {
       setSearchUpdating(false);
     }
   };
 
-  const handleSortableFieldsChange = async (event: any) => {
+  const handleSortableFieldsChange = async (event: SelectChangeEvent<string[]>) => {
     if (!searchStatus) return;
 
     try {
@@ -112,14 +114,14 @@ export const AdminSettingsPage: React.FC = () => {
         sortableFields: event.target.value,
       });
       setSearchStatus(data);
-    } catch (err: any) {
-      setSearchError(err.response?.data?.message || 'Failed to update sortable fields');
+    } catch (err: unknown) {
+      setSearchError(extractErrorMessage(err) ?? 'Failed to update sortable fields');
     } finally {
       setSearchUpdating(false);
     }
   };
 
-  const handleDefaultSortChange = async (event: any) => {
+  const handleDefaultSortChange = async (event: SelectChangeEvent<string>) => {
     if (!searchStatus) return;
 
     try {
@@ -129,8 +131,8 @@ export const AdminSettingsPage: React.FC = () => {
         defaultSort: event.target.value,
       });
       setSearchStatus(data);
-    } catch (err: any) {
-      setSearchError(err.response?.data?.message || 'Failed to update default sort');
+    } catch (err: unknown) {
+      setSearchError(extractErrorMessage(err) ?? 'Failed to update default sort');
     } finally {
       setSearchUpdating(false);
     }

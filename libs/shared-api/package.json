@@ -1,14 +1,15 @@
 {
   "name": "@my-many-books/shared-api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "commonjs",
   "description": "Shared API client for My Many Books monorepo",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "build": "tsc",
-    "test": "jest --config jest.config.ts",
-    "lint": "eslint src/**/*.ts"
+    "build": "nx build shared-api",
+    "test": "nx test shared-api",
+    "lint": "nx lint shared-api",
+    "typecheck": "nx typecheck shared-api"
   },
   "devDependencies": {
     "@types/jest": "^29.0.0",

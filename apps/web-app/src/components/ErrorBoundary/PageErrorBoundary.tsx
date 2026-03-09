@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
 import { PageErrorFallback } from './PageErrorFallback';
+import { logger } from '../../utils/logger';
 
 interface PageErrorBoundaryProps {
   children: ReactNode;
@@ -17,7 +18,7 @@ export const PageErrorBoundary: React.FC<PageErrorBoundaryProps> = ({
         <PageErrorFallback error={error} reset={reset} pageName={pageName} />
       )}
       onError={(error, errorInfo) => {
-        console.error(`Page Error ${pageName ? `(${pageName})` : ''}:`, error, errorInfo);
+        logger.error(`Page Error ${pageName ? `(${pageName})` : ''}:`, error, errorInfo);
       }}
     >
       {children}

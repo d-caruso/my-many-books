@@ -52,7 +52,7 @@ const mockAuthors: Author[] = [
   { id: 2, name: 'Harper', surname: 'Lee', nationality: 'American', creationDate: '2024-01-01T00:00:00Z', updateDate: '2024-01-01T00:00:00Z' },
 ];
 
-const mockUser: User = {
+const _mockUser: User = {
   id: 1,
   email: 'test@example.com',
   name: 'Test',
@@ -81,12 +81,12 @@ type MobileHooksState = {
   availableEvents: string[];
   mappings: Record<string, string[]>;
   actionSettings: Record<string, unknown>;
-  actionTypes: Record<string, any>;
+  actionTypes: Record<string, unknown>;
   listenerSettings: Record<string, unknown>;
-  emergency: Record<string, any>;
-  health: Record<string, any>;
-  analyticsStats: Record<string, any>;
-  recentEvents: Array<Record<string, any>>;
+  emergency: Record<string, unknown>;
+  health: Record<string, unknown>;
+  analyticsStats: Record<string, unknown>;
+  recentEvents: Array<Record<string, unknown>>;
 };
 
 const createMobileHooksState = (): MobileHooksState => ({
@@ -275,7 +275,7 @@ export const handlers = [
   }),
 
   http.post(`*${API_BASE_PATH}/books`, async ({ request }) => {
-    const bookData = (await request.json()) as any;
+    const bookData = (await request.json()) as Partial<Book>;
     const newBook: Book = {
       id: Date.now(),
       ...bookData,
@@ -290,7 +290,7 @@ export const handlers = [
 
   http.put(`*${API_BASE_PATH}/books/:id`, async ({ params, request }) => {
     const id = parseInt(params.id as string);
-    const updateData = (await request.json()) as any;
+    const updateData = (await request.json()) as Partial<Book>;
     const existingBook = mockBooks.find((b) => b.id === id);
 
     if (!existingBook) {
@@ -326,7 +326,7 @@ export const handlers = [
     return HttpResponse.json(category);
   }),
   http.post(`*${API_BASE_PATH}/categories`, async ({ request }) => {
-    const categoryData = (await request.json()) as any;
+    const categoryData = (await request.json()) as Partial<Category>;
     const newCategory: Category = {
       id: Date.now(),
       ...categoryData,
@@ -347,7 +347,7 @@ export const handlers = [
     return HttpResponse.json(author);
   }),
   http.post(`*${API_BASE_PATH}/authors`, async ({ request }) => {
-    const authorData = (await request.json()) as any;
+    const authorData = (await request.json()) as Partial<Author>;
     const newAuthor: Author = {
       id: Date.now(),
       ...authorData,
@@ -415,7 +415,7 @@ export const handlers = [
   // Mobile hooks APIs
   http.get(`*${API_BASE_PATH}/admin/mobile-hooks/config/listeners`, () => HttpResponse.json(buildListenersResponse())),
   http.put(`*${API_BASE_PATH}/admin/mobile-hooks/config/listeners`, async ({ request }) => {
-    const payload = (await request.json()) as Record<string, any>;
+    const payload = (await request.json()) as Record<string, Record<string, unknown>>;
     if (payload.listeners) {
       Object.assign(mobileHooksState.listeners, payload.listeners);
     }
@@ -434,7 +434,7 @@ export const handlers = [
   }),
   http.get(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/mappings`, () => HttpResponse.json(buildMappingsResponse())),
   http.put(`*${API_BASE_PATH}/admin/mobile-hooks/actions-config/mappings`, async ({ request }) => {
-    const payload = (await request.json()) as Record<string, any>;
+    const payload = (await request.json()) as Record<string, Record<string, string[]>>;
     if (payload.actions) {
       mobileHooksState.mappings = payload.actions;
     }

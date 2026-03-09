@@ -16,7 +16,7 @@ vi.mock('@mui/icons-material/ArrowBack', () => ({
 
 // Mock child components
 vi.mock('../../../components/Scanner/ISBNScanner', () => ({
-  ISBNScanner: ({ isOpen, onScanSuccess, onScanError, onClose }: any) => (
+  ISBNScanner: ({ isOpen, onScanSuccess, onScanError, onClose }: { isOpen: boolean; onScanSuccess: (r: unknown) => void; onScanError?: (e: string) => void; onClose: () => void }) => (
     <div data-testid="isbn-scanner" data-is-open={isOpen}>
       <button data-testid="scan-success-trigger" onClick={() => onScanSuccess({ isbn: '1234567890', success: true })}>
         Trigger Scan Success
@@ -32,7 +32,7 @@ vi.mock('../../../components/Scanner/ISBNScanner', () => ({
 }));
 
 vi.mock('../../../components/Scanner/ManualISBNInput', () => ({
-  ManualISBNInput: ({ isOpen, onSubmit, onCancel }: any) => (
+  ManualISBNInput: ({ isOpen, onSubmit, onCancel }: { isOpen: boolean; onSubmit: (r: unknown) => void; onCancel: () => void }) => (
     <div data-testid="manual-isbn-input" data-is-open={isOpen}>
       <button data-testid="manual-submit-trigger" onClick={() => onSubmit({ isbn: '9876543210', success: true })}>
         Submit Manual

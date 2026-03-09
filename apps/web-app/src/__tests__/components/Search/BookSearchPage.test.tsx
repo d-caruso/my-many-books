@@ -31,7 +31,7 @@ vi.mock('../../../hooks/useBookSearch', () => ({
 
 // Mock child components
 vi.mock('../../../components/Search/BookSearchForm', () => ({
-  BookSearchForm: ({ onSearch, loading, initialQuery }: any) => (
+  BookSearchForm: ({ onSearch, loading, initialQuery }: { onSearch: (q: string, f: Record<string, unknown>) => void; loading?: boolean; initialQuery?: string }) => (
     <div data-testid="book-search-form">
       <input
         data-testid="search-input"
@@ -54,7 +54,15 @@ vi.mock('../../../components/Search/BookSearchResults', () => ({
     hasMore,
     onLoadMore,
     onBookSelect,
-  }: any) => (
+  }: {
+    books: Book[];
+    loading: boolean;
+    error: string | null;
+    totalCount: number;
+    hasMore: boolean;
+    onLoadMore: () => void;
+    onBookSelect: (book: Book) => void;
+  }) => (
     <div data-testid="book-search-results">
       <div data-testid="results-count">{books.length}</div>
       <div data-testid="total-count">{totalCount}</div>

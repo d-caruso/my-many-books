@@ -155,7 +155,6 @@ describe('AuthService', () => {
       (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
       await expect(authService.login('test@example.com', 'password')).rejects.toThrow('Network error');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Login error:', expect.any(Error));
     });
 
     it('fails fast when success payload is not envelope-shaped', async () => {
@@ -255,8 +254,6 @@ describe('AuthService', () => {
           surname: 'User',
         })
       ).rejects.toThrow('Network error');
-
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Registration error:', expect.any(Error));
     });
   });
 
@@ -529,7 +526,6 @@ describe('AuthService', () => {
       const result = await authService.getAuthState();
       expect(result).toEqual({ user: null, isAuthenticated: false });
       expect(storage.clear).toHaveBeenCalledTimes(1);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Auth state check failed:', expect.any(Error));
     });
   });
 
@@ -605,7 +601,6 @@ describe('AuthService', () => {
 
       const result = await authService.silentRefresh();
       expect(result).toBe(false);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Silent refresh failed:', expect.any(Error));
     });
 
     it('returns false when user is missing from refresh response', async () => {
@@ -624,7 +619,6 @@ describe('AuthService', () => {
 
       const result = await authService.silentRefresh();
       expect(result).toBe(false);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Silent refresh failed:', expect.any(Error));
     });
   });
 

@@ -18,7 +18,7 @@ describe('getCategoryDisplayName', () => {
   });
 
   it('falls back to raw name when translation is missing', () => {
-    const t = jest.fn((_key: string, options?: Record<string, unknown>) => String(options?.defaultValue));
+    const t = jest.fn((_key: string, options?: Record<string, unknown>) => String(options?.['defaultValue']));
 
     expect(
       getCategoryDisplayName({ name: 'Fiction', translationKey: 'categories.fiction' }, t)
@@ -31,7 +31,7 @@ describe('createCategoryDisplayNameComparator', () => {
     const t = jest.fn((key: string, options?: Record<string, unknown>) => {
       if (key === 'categories:fiction') return 'Narrativa';
       if (key === 'categories:horror') return 'Horror';
-      return String(options?.defaultValue ?? key);
+      return String(options?.['defaultValue'] ?? key);
     });
 
     const categories = [

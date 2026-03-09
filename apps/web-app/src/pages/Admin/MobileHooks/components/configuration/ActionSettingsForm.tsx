@@ -42,7 +42,7 @@ export const ActionSettingsForm: React.FC = () => {
 
         const first = Object.keys(payload.actions)[0] ?? '';
         setSelectedActionType(first);
-      } catch (err: any) {
+      } catch {
         setError(t('admin.mobile_hooks.errors.action_types.load'));
       } finally {
         setLoading(false);
@@ -60,7 +60,7 @@ export const ActionSettingsForm: React.FC = () => {
   useEffect(() => {
     if (!selected) return;
     const settings = selected.settings ?? {};
-    setEnabled(Boolean((settings as any).enabled ?? selected.enabled));
+    setEnabled(Boolean((settings as Record<string, unknown>)['enabled'] ?? selected.enabled));
     setSettingsJson(JSON.stringify(settings, null, 2));
     setSuccess(null);
     setError(null);
@@ -73,7 +73,7 @@ export const ActionSettingsForm: React.FC = () => {
         return { ok: false as const, error: t('admin.mobile_hooks.errors.validation.json_object') };
       }
       return { ok: true as const, value: parsed as Record<string, unknown> };
-    } catch (e: any) {
+    } catch {
       return { ok: false as const, error: t('admin.mobile_hooks.errors.validation.invalid_json') };
     }
   }, [settingsJson, t]);
@@ -101,7 +101,7 @@ export const ActionSettingsForm: React.FC = () => {
       // refresh local cached actionTypes
       const refreshed = await apiService.getAdminMobileHooksActionTypes();
       setActionTypes(refreshed);
-    } catch (err: any) {
+    } catch {
       setError(t('admin.mobile_hooks.errors.action_settings.save'));
     } finally {
       setSaving(false);

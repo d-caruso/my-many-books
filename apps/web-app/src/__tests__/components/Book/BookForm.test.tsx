@@ -7,7 +7,7 @@ import { BookForm } from '../../../components/Book/BookForm';
 
 const mockSearchByISBN = vi.fn();
 const mockLoadCategories = vi.fn();
-let latestAuthorAutocompleteProps: any = null;
+let latestAuthorAutocompleteProps: Record<string, unknown> | null = null;
 
 vi.mock('../../../hooks/useCategories', () => ({
   useCategories: () => ({
@@ -24,7 +24,7 @@ vi.mock('../../../hooks/useBookSearch', () => ({
 }));
 
 vi.mock('../../../components/Search/AuthorAutocomplete', () => ({
-  AuthorAutocomplete: (props: any) => {
+  AuthorAutocomplete: (props: Record<string, unknown>) => {
     latestAuthorAutocompleteProps = props;
     return (
       <div data-testid="author-autocomplete">
@@ -35,7 +35,7 @@ vi.mock('../../../components/Search/AuthorAutocomplete', () => ({
 }));
 
 vi.mock('../../../components/Author/AddAuthorDialog', () => ({
-  AddAuthorDialog: ({ open, onAuthorCreated, onClose }: any) =>
+  AddAuthorDialog: ({ open, onAuthorCreated, onClose }: { open: boolean; onAuthorCreated: (a: unknown) => void; onClose: () => void }) =>
     open ? (
       <div data-testid="add-author-dialog">
         <button
@@ -62,7 +62,7 @@ vi.mock('../../../components/Category/AddCategoryDialog', () => ({
 }));
 
 vi.mock('../../../components/Author/ManageAuthorsDialog', () => ({
-  ManageAuthorsDialog: ({ open, onAuthorUpdated, onAuthorDeleted }: any) =>
+  ManageAuthorsDialog: ({ open, onAuthorUpdated, onAuthorDeleted }: { open: boolean; onAuthorUpdated?: (a: unknown) => void; onAuthorDeleted?: (id: number) => void }) =>
     open ? (
       <div data-testid="manage-authors-dialog">
         <button
@@ -86,7 +86,7 @@ vi.mock('../../../components/Author/ManageAuthorsDialog', () => ({
 }));
 
 vi.mock('../../../components/Category/ManageCategoriesDialog', () => ({
-  ManageCategoriesDialog: ({ open, onCategoryDeleted }: any) =>
+  ManageCategoriesDialog: ({ open, onCategoryDeleted }: { open: boolean; onCategoryDeleted?: (id: number) => void }) =>
     open ? (
       <div data-testid="manage-categories-dialog">
         <button data-testid="manage-category-delete" onClick={() => onCategoryDeleted?.(123)}>
@@ -97,7 +97,7 @@ vi.mock('../../../components/Category/ManageCategoriesDialog', () => ({
 }));
 
 vi.mock('../../../components/Scanner/EmbeddedScannerFlow', () => ({
-  EmbeddedScannerFlow: ({ isOpen, onClose, onScanSuccess }: any) =>
+  EmbeddedScannerFlow: ({ isOpen, onClose, onScanSuccess }: { isOpen: boolean; onClose: () => void; onScanSuccess: (r: unknown) => void }) =>
     isOpen ? (
       <div data-testid="embedded-scanner-flow">
         <button
@@ -296,7 +296,7 @@ describe('BookForm', () => {
         userId: 42,
         authors: [],
         categories: [],
-      } as any,
+      },
     });
 
     expect(latestAuthorAutocompleteProps?.userIdFilter).toBe(42);

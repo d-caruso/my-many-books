@@ -5,33 +5,36 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
       "options": {
-        "outputPath": "dist/libs/shared-logging",
-        "main": "libs/shared-logging/src/index.ts",
-        "tsConfig": "libs/shared-logging/tsconfig.lib.json",
-        "assets": []
+        "command": "tsc",
+        "cwd": "libs/shared-logging"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
-          "libs/shared-logging/src/**/*.ts",
-          "!libs/shared-logging/src/**/*.test.ts",
-          "!libs/shared-logging/src/**/*.spec.ts",
-          "!libs/shared-logging/src/__tests__/**"
-        ]
+          "libs/shared-logging/src/**/*.ts"
+        ],
+        "eslintConfig": "libs/shared-logging/eslint.config.mjs"
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "libs/shared-logging/jest.config.ts",
-        "passWithNoTests": true
+        "passWithNoTests": true,
+        "runInBand": true
       },
       "configurations": {
         "ci": {
@@ -39,7 +42,17 @@
           "codeCoverage": true
         }
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/shared-logging"
+      }
     }
   },
-  "tags": ["type:shared", "scope:logging"]
+  "tags": [
+    "type:shared",
+    "scope:logging"
+  ]
 }

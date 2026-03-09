@@ -57,7 +57,6 @@ const baseVitestConfig: UserConfig = {
       '@my-many-books/shared-validation': path.resolve(__dirname, '../../libs/shared-validation/src'),
       '@my-many-books/ui-components': path.resolve(__dirname, '../../libs/ui-components/src'),
       '@my-many-books/shared-ui-hooks': path.resolve(__dirname, '../../libs/shared-ui-hooks/src'),
-      '@my-many-books/shared-business': path.resolve(__dirname, '../../libs/shared-business/src'),
       '@my-many-books/shared-design': path.resolve(__dirname, '../../libs/shared-design/src'),
       '@my-many-books/shared-navigation': path.resolve(__dirname, '../../libs/shared-navigation/src'),
       '@my-many-books/shared-forms': path.resolve(__dirname, '../../libs/shared-forms/src'),

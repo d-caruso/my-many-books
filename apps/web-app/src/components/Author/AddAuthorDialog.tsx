@@ -82,8 +82,7 @@ export const AddAuthorDialog: React.FC<AddAuthorDialogProps> = ({
 
       onAuthorCreated(newAuthor);
       handleClose();
-    } catch (error: any) {
-      console.error('Failed to create author:', error);
+    } catch (error: unknown) {
       if (getErrorCode(error) === ERROR_CODES.DUPLICATE_AUTHOR) {
         setFormError(t('dialogs:author.duplicate_author'));
       } else {

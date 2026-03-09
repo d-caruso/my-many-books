@@ -1,3 +1,4 @@
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -49,7 +50,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
           >
             {React.cloneElement(icon, {
               sx: { fontSize: 40, color: 'white' }
-            } as any)}
+            } as object)}
           </Box>
         </Box>
       </CardContent>
@@ -77,19 +78,10 @@ export const AdminDashboardPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        console.log('Fetching admin stats...');
         const data = await apiService.getAdminStats();
         setStats(data);
-      } catch (err: any) {
-        console.error('Failed to fetch admin stats:', err);
-        console.error('Error details:', err.response?.data);
-        console.error('Error status:', err.response?.status);
-
-        const errorMessage = err.response?.data?.error
-          || err.response?.data?.message
-          || err.message
-          || 'Failed to load dashboard statistics';
-        setError(errorMessage);
+      } catch (err: unknown) {
+        setError(extractErrorMessage(err) ?? 'Failed to load dashboard statistics');
       } finally {
         setLoading(false);
       }

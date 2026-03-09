@@ -135,8 +135,8 @@ describe('string.utils', () => {
     });
 
     it('should handle objects', () => {
-      expect(toString({ foo: 'bar' })).toBe('[object Object]');
-      expect(toString([1, 2, 3])).toBe('1,2,3');
+      expect(toString({ foo: 'bar' })).toBe('{"foo":"bar"}');
+      expect(toString([1, 2, 3])).toBe('[1,2,3]');
     });
 
     it('should handle null/undefined', () => {

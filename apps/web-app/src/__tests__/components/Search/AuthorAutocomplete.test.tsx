@@ -6,23 +6,32 @@ import { ApiProvider } from '../../../contexts/ApiContext';
 import { Author } from '../../../types';
 
 vi.mock('@mui/material', () => {
-  const React = require('react');
-
   const createSimpleWrapper = (testId: string) => {
-    return ({ children, ...props }: any) =>
+    const Wrapper = ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
       React.createElement('div', { 'data-testid': testId, ...props }, children);
+    Wrapper.displayName = testId;
+    return Wrapper;
   };
 
   const TextField = ({
     label,
     value = '',
-    inputProps = {},
-    InputProps = {},
+    inputProps = {} as Record<string, unknown>,
+    InputProps = {} as { endAdornment?: React.ReactNode },
     placeholder,
     disabled,
     size,
     ...rest
-  }: any) => {
+  }: {
+    label?: string;
+    value?: string;
+    inputProps?: Record<string, unknown>;
+    InputProps?: { endAdornment?: React.ReactNode };
+    placeholder?: string;
+    disabled?: boolean;
+    size?: string;
+    [key: string]: unknown;
+  }) => {
     const inputId = label || 'text-field';
     return (
       <div data-testid="text-field-container">
@@ -60,13 +69,28 @@ vi.mock('@mui/material', () => {
     onClose,
     ListboxProps,
     size,
-  }: any) => {
-    const handleInputChange = (e: any) => {
+  }: {
+    value?: unknown;
+    inputValue?: string;
+    options?: unknown[];
+    open?: boolean;
+    disabled?: boolean;
+    renderInput: (params: unknown) => React.ReactNode;
+    renderOption?: (props: unknown, option: unknown, state: unknown) => React.ReactNode;
+    getOptionLabel?: (option: unknown) => string;
+    onChange?: (event: unknown, value: unknown, reason: string, details?: unknown) => void;
+    onInputChange?: (event: unknown, value: string, reason: string) => void;
+    onOpen?: () => void;
+    onClose?: (event: unknown, reason: string) => void;
+    ListboxProps?: Record<string, unknown>;
+    size?: string;
+  }) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       onInputChange?.(e, e.target.value, 'input');
     };
 
     const handleFocus = () => onOpen?.();
-    const handleBlur = (e: any) => {
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
       onInputChange?.(e, '', 'blur');
       onClose?.(e, 'blur');
     };
@@ -91,9 +115,10 @@ vi.mock('@mui/material', () => {
         {inputElement}
         {open && options.length > 0 && (
           <ul data-testid="options-list" {...ListboxProps}>
-            {options.map((option: any, index: number) => {
+            {options.map((option, index: number) => {
+              const optionId = (option as Record<string, unknown>).id;
               const optionProps = {
-                key: option.id ?? index,
+                key: optionId != null ? String(optionId) : index,
                 'data-testid': `option-${index}`,
                 onClick: () => {
                   onInputChange?.(null, getOptionLabel?.(option) ?? '', 'reset');
@@ -113,7 +138,7 @@ vi.mock('@mui/material', () => {
     );
   };
 
-  const Typography = ({ children, variant, ...props }: any) => {
+  const Typography = ({ children, variant, ...props }: { children?: React.ReactNode; variant?: string; [key: string]: unknown }) => {
     const headingMap: Record<string, string> = { h1: 'h1', h2: 'h2', h3: 'h3', h4: 'h4', h5: 'h5', h6: 'h6' };
     const Component = (variant && headingMap[variant]) || 'p';
     return React.createElement(Component, props, children);
@@ -151,7 +176,7 @@ const mockApiService = {
   register: vi.fn(),
   getCurrentUser: vi.fn(),
   logout: vi.fn(),
-} as any;
+};
 
 const mockAuthors: Author[] = [
   { id: 3, name: 'Ernest', surname: 'Hemingway', nationality: 'American', userId: 2 },

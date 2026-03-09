@@ -14,7 +14,7 @@ import { ApiProvider } from '../../../contexts/ApiContext';
 import { MOBILE_ANALYTICS_PROCESSING_STATUS } from '@my-many-books/shared-types';
 
 vi.mock('../../../config/env', async () => {
-  const actual = (await vi.importActual('../../../config/env')) as any;
+  const actual = (await vi.importActual('../../../config/env')) as Record<string, unknown>;
   const apiOrigin = 'http://localhost:3001';
   const apiBaseUrl = `${apiOrigin}/api/v1`;
   const env = {

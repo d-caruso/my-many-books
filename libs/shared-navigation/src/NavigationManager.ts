@@ -211,8 +211,8 @@ export class NavigationManager {
     this.eventListeners.forEach(listener => {
       try {
         listener(event);
-      } catch (error) {
-        console.error('Navigation event listener error:', error);
+      } catch {
+        // Keep other listeners isolated when one listener throws.
       }
     });
   }

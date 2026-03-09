@@ -365,7 +365,7 @@ export function useFieldValidation(
   }, [value, rules, formValues]);
 
   useEffect(() => {
-    validate();
+    void validate();
   }, [validate]);
 
   return {
@@ -394,8 +394,8 @@ export function useFormAutoSave(
     try {
       await saveHandler(formManager.getFormData());
       setLastSaved(new Date());
-    } catch (error) {
-      console.error('Auto-save failed:', error);
+    } catch {
+      // Keep auto-save failures non-blocking for form interactions.
     } finally {
       setIsSaving(false);
     }
@@ -409,7 +409,7 @@ export function useFormAutoSave(
         
         // Set new timeout
         saveTimeoutRef.current = setTimeout(() => {
-          saveNow();
+          void saveNow();
         }, delay);
       }
     });

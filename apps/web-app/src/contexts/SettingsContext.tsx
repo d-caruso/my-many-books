@@ -4,6 +4,7 @@
  */
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
+import { logger } from '../utils/logger';
 import { AppSetting } from '@my-many-books/shared-types';
 import { SettingsApi } from '@my-many-books/shared-api';
 import { useApi } from './ApiContext';
@@ -53,7 +54,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to load settings');
       setError(error);
-      console.error('Failed to load settings:', error);
+      logger.error('Failed to load settings:', error);
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +78,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
         if (ignore) return;
         const error = err instanceof Error ? err : new Error('Failed to load settings');
         setError(error);
-        console.error('Failed to load settings:', error);
+        logger.error('Failed to load settings:', error);
       } finally {
         if (!ignore) setIsLoading(false);
       }

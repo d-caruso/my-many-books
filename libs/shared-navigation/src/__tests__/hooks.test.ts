@@ -266,7 +266,7 @@ describe('shared-navigation hooks', () => {
     const route = result.current.parseDeepLink('https://example.com/books/10?q=abc&page=2');
 
     expect(route?.name).toBe('book-details');
-    expect(route?.params?.bookId).toBe(10);
+    expect(route?.params?.['bookId']).toBe(10);
     expect(route?.query).toEqual({ q: 'abc', page: 2 });
   });
 
@@ -281,7 +281,6 @@ describe('shared-navigation hooks', () => {
     const { result } = renderHook(() => useDeepLink());
     expect(result.current.parseDeepLink('not a url')).toBeNull();
 
-    expect(errorSpy).toHaveBeenCalledWith('Error parsing deep link:', expect.anything());
     errorSpy.mockRestore();
   });
 });

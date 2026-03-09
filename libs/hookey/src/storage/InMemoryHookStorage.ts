@@ -4,16 +4,22 @@ export class InMemoryHookStorage implements HookStorage {
   private hooks: HookConfig[] = [];
   private executions: HookExecution[] = [];
 
-  async getHooks(filters?: { isActive?: boolean }): Promise<HookConfig[]> {
-    if (!filters) return [...this.hooks];
-    return this.hooks.filter(hook => (filters.isActive !== undefined ? hook.isActive === filters.isActive : true));
+  getHooks(filters?: { isActive?: boolean }): Promise<HookConfig[]> {
+    if (!filters) {
+      return Promise.resolve([...this.hooks]);
+    }
+    return Promise.resolve(
+      this.hooks.filter((hook) =>
+        filters.isActive !== undefined ? hook.isActive === filters.isActive : true
+      )
+    );
   }
 
-  async getHook(id: string): Promise<HookConfig | null> {
-    return this.hooks.find(hook => hook.id === id) || null;
+  getHook(id: string): Promise<HookConfig | null> {
+    return Promise.resolve(this.hooks.find((hook) => hook.id === id) || null);
   }
 
-  async createHook(hook: Omit<HookConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<HookConfig> {
+  createHook(hook: Omit<HookConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<HookConfig> {
     const newHook: HookConfig = {
       ...hook,
       id: String(this.hooks.length + 1),
@@ -21,7 +27,7 @@ export class InMemoryHookStorage implements HookStorage {
       updatedAt: new Date(),
     };
     this.hooks.push(newHook);
-    return newHook;
+    return Promise.resolve(newHook);
   }
 
   async updateHook(id: string, updates: Partial<HookConfig>): Promise<HookConfig> {
@@ -34,30 +40,38 @@ export class InMemoryHookStorage implements HookStorage {
     return updated;
   }
 
-  async deleteHook(id: string): Promise<void> {
-    this.hooks = this.hooks.filter(hook => hook.id !== id);
+  deleteHook(id: string): Promise<void> {
+    this.hooks = this.hooks.filter((hook) => hook.id !== id);
+    return Promise.resolve();
   }
 
-  async logExecution(execution: HookExecution): Promise<void> {
+  logExecution(execution: HookExecution): Promise<void> {
     this.executions.push({ ...execution, executedAt: execution.executedAt || new Date() });
+    return Promise.resolve();
   }
 
-  async getExecutions(hookId: string, limit?: number): Promise<HookExecution[]> {
-    const records = this.executions.filter(exec => exec.hookId === hookId);
-    return limit ? records.slice(0, limit) : records;
+  getExecutions(hookId: string, limit?: number): Promise<HookExecution[]> {
+    const records = this.executions.filter((exec) => exec.hookId === hookId);
+    return Promise.resolve(limit ? records.slice(0, limit) : records);
   }
 
-  async getRecentExecutions(limit?: number): Promise<HookExecution[]> {
+  getRecentExecutions(limit?: number): Promise<HookExecution[]> {
     const sorted = [...this.executions].sort((a, b) => b.executedAt.getTime() - a.executedAt.getTime());
-    return limit ? sorted.slice(0, limit) : sorted;
+    return Promise.resolve(limit ? sorted.slice(0, limit) : sorted);
   }
 
-  async getStats(): Promise<HookStorageStats> {
+  getStats(): Promise<HookStorageStats> {
     const totalHooks = this.hooks.length;
-    const activeHooks = this.hooks.filter(hook => hook.isActive).length;
+    const activeHooks = this.hooks.filter((hook) => hook.isActive).length;
     const totalExecutions = this.executions.length;
-    const successfulExecutions = this.executions.filter(exec => exec.success).length;
+    const successfulExecutions = this.executions.filter((exec) => exec.success).length;
     const failedExecutions = totalExecutions - successfulExecutions;
-    return { totalHooks, activeHooks, totalExecutions, successfulExecutions, failedExecutions };
+    return Promise.resolve({
+      totalHooks,
+      activeHooks,
+      totalExecutions,
+      successfulExecutions,
+      failedExecutions,
+    });
   }
 }

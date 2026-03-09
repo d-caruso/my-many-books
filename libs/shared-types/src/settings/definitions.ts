@@ -145,15 +145,33 @@ export const SETTING_KEYS = {
 export function getAllSettingDefinitions(): SettingDefinition[] {
   const definitions: SettingDefinition[] = [];
 
-  function traverse(obj: any): void {
-    for (const key in obj) {
-      const value = obj[key];
-      if (value && typeof value === 'object') {
-        if ('key' in value && 'category' in value && 'type' in value) {
-          definitions.push(value as SettingDefinition);
-        } else {
-          traverse(value);
-        }
+  function isObjectRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+  }
+
+  function isSettingDefinition(value: unknown): value is SettingDefinition {
+    if (!isObjectRecord(value)) {
+      return false;
+    }
+
+    return (
+      typeof value['key'] === 'string' &&
+      typeof value['category'] === 'string' &&
+      typeof value['type'] === 'string' &&
+      typeof value['description'] === 'string'
+    );
+  }
+
+  function traverse(node: unknown): void {
+    if (!isObjectRecord(node)) {
+      return;
+    }
+
+    for (const value of Object.values(node)) {
+      if (isSettingDefinition(value)) {
+        definitions.push(value);
+      } else {
+        traverse(value);
       }
     }
   }

@@ -1,4 +1,6 @@
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useCallback, useEffect, useState } from 'react';
+import { logger } from '../../../utils/logger';
 import {
   Box,
   Button,
@@ -46,11 +48,9 @@ export const HooksPage: React.FC = () => {
       ]);
       setStats(hookStats);
       setHooks(hookPayload.hooks || []);
-    } catch (err: any) {
-      console.error('Failed to load hooks data:', err);
-      const message =
-        err?.message || t('errors.fetch', 'Failed to load hook data');
-      setError(message);
+    } catch (err: unknown) {
+      logger.error('Failed to load hooks data:', err);
+      setError(extractErrorMessage(err) ?? t('errors.fetch', 'Failed to load hook data'));
     } finally {
       setLoading(false);
     }
@@ -66,11 +66,9 @@ export const HooksPage: React.FC = () => {
       setError(null);
       await apiService.reloadAdminHooks();
       await loadHooksData();
-    } catch (err: any) {
-      console.error('Failed to reload hooks:', err);
-      const message =
-        err?.message || t('errors.reload', 'Failed to reload hooks');
-      setError(message);
+    } catch (err: unknown) {
+      logger.error('Failed to reload hooks:', err);
+      setError(extractErrorMessage(err) ?? t('errors.reload', 'Failed to reload hooks'));
     } finally {
       setReloading(false);
     }
@@ -147,7 +145,6 @@ export const HooksPage: React.FC = () => {
   };
 
   const handleSaveHook = async (data: HookFormData) => {
-    console.log('[HooksPage] handleSaveHook called', { data, editingHook });
     try {
       const payload = {
         name: data.name,
@@ -160,10 +157,7 @@ export const HooksPage: React.FC = () => {
       };
 
       if (editingHook) {
-        // Update existing hook
-        console.log('[HooksPage] Updating hook ID:', editingHook.id);
         const updatedHook = await apiService.updateAdminHook(editingHook.id, payload);
-        console.log('[HooksPage] Hook updated successfully:', updatedHook);
         setHooks((prev) =>
           prev.map((hook) => (hook.id === editingHook.id ? updatedHook : hook))
         );
@@ -180,10 +174,7 @@ export const HooksPage: React.FC = () => {
           );
         }
       } else {
-        // Create new hook
-        console.log('[HooksPage] Creating new hook');
         const newHook = await apiService.createAdminHook(payload);
-        console.log('[HooksPage] Hook created successfully:', newHook);
         setHooks((prev) => [newHook, ...prev]);
 
         // Update stats
@@ -197,10 +188,9 @@ export const HooksPage: React.FC = () => {
             : prev
         );
       }
-    } catch (err: any) {
-      console.error('[HooksPage] Failed to save hook:', err);
-      const message = err?.message || t('errors.save', 'Failed to save hook');
-      setError(message);
+    } catch (err: unknown) {
+      logger.error('Failed to save hook:', err);
+      setError(extractErrorMessage(err) ?? t('errors.save', 'Failed to save hook'));
     }
   };
 
@@ -303,7 +293,7 @@ export const HooksPage: React.FC = () => {
               setIsFormOpen(true);
             }}
             onViewExecutions={(id) => navigate(`/admin/hooks/${id}/executions`)}
-                onDelete={(id) =>
+                onDelete={(_id) =>
                   setError(t('errors.delete', 'Delete action is not implemented yet'))
                 }
           />
@@ -311,7 +301,7 @@ export const HooksPage: React.FC = () => {
       </Box>
       <HookForm
         open={isFormOpen}
-        initialData={editingHook as any}
+        initialData={editingHook ?? undefined}
         onClose={handleCloseForm}
         onSave={handleSaveHook}
       />

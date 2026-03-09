@@ -1,6 +1,6 @@
 export default {
   displayName: 'shared-api',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.cjs',
   testEnvironment: 'node',
   setupFilesAfterEnv: [],
   testMatch: ['<rootDir>/src/**/?(*.)+(spec|test).ts'],

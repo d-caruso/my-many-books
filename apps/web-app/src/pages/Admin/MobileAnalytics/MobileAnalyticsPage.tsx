@@ -33,7 +33,7 @@ export const MobileAnalyticsPage: React.FC = () => {
       if (controller.signal.aborted) return;
       setStats(payload);
       setError(null);
-    } catch (err: any) {
+    } catch {
       if (controller.signal.aborted) return;
       setError(t('admin.mobile_analytics.errors.load', 'Failed to load analytics'));
     }

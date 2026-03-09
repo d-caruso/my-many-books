@@ -10,6 +10,14 @@ class DummyAction implements HookAction {
   }
 }
 
+function getItemOrThrow<T>(items: readonly T[], index: number, label: string): T {
+  const item = items[index];
+  if (!item) {
+    throw new Error(`Expected ${label} at index ${index}`);
+  }
+  return item;
+}
+
 describe('HookSystem', () => {
   it('registers and triggers a hook with exact pattern match', async () => {
     const storage = new InMemoryHookStorage();
@@ -25,11 +33,11 @@ describe('HookSystem', () => {
       priority: 0,
     };
 
-    await hookSystem.registerHook(hook, action as any);
+    await hookSystem.registerHook(hook, action);
     await hookSystem.trigger('user.created', { userId: 1 });
 
     expect(action.calls).toHaveLength(1);
-    expect(action.calls[0]).toEqual({
+    expect(getItemOrThrow(action.calls, 0, 'action call')).toEqual({
       eventName: 'user.created',
       payload: { userId: 1 },
     });
@@ -57,9 +65,9 @@ describe('HookSystem', () => {
     await hookSystem.trigger('user.deleted', { userId: 3 });
 
     expect(action.calls).toHaveLength(3);
-    expect(action.calls[0].eventName).toBe('user.created');
-    expect(action.calls[1].eventName).toBe('user.updated');
-    expect(action.calls[2].eventName).toBe('user.deleted');
+    expect(getItemOrThrow(action.calls, 0, 'action call').eventName).toBe('user.created');
+    expect(getItemOrThrow(action.calls, 1, 'action call').eventName).toBe('user.updated');
+    expect(getItemOrThrow(action.calls, 2, 'action call').eventName).toBe('user.deleted');
   });
 
   it('triggers hook with double wildcard pattern: **', async () => {
@@ -84,9 +92,9 @@ describe('HookSystem', () => {
     await hookSystem.trigger('auth.login.success', { sessionId: 'abc' });
 
     expect(action.calls).toHaveLength(3);
-    expect(action.calls[0].eventName).toBe('user.created');
-    expect(action.calls[1].eventName).toBe('book.created');
-    expect(action.calls[2].eventName).toBe('auth.login.success');
+    expect(getItemOrThrow(action.calls, 0, 'action call').eventName).toBe('user.created');
+    expect(getItemOrThrow(action.calls, 1, 'action call').eventName).toBe('book.created');
+    expect(getItemOrThrow(action.calls, 2, 'action call').eventName).toBe('auth.login.success');
   });
 
   it('triggers hook with multi-level wildcard: book.*.*', async () => {
@@ -113,8 +121,8 @@ describe('HookSystem', () => {
     await hookSystem.trigger('book.created', { bookId: 3 });
 
     expect(action.calls).toHaveLength(2);
-    expect(action.calls[0].eventName).toBe('book.status.changed');
-    expect(action.calls[1].eventName).toBe('book.author.updated');
+    expect(getItemOrThrow(action.calls, 0, 'action call').eventName).toBe('book.status.changed');
+    expect(getItemOrThrow(action.calls, 1, 'action call').eventName).toBe('book.author.updated');
   });
 
   it('triggers hook with suffix wildcard: *.created', async () => {
@@ -141,9 +149,9 @@ describe('HookSystem', () => {
     await hookSystem.trigger('user.updated', { userId: 2 });
 
     expect(action.calls).toHaveLength(3);
-    expect(action.calls[0].eventName).toBe('user.created');
-    expect(action.calls[1].eventName).toBe('book.created');
-    expect(action.calls[2].eventName).toBe('author.created');
+    expect(getItemOrThrow(action.calls, 0, 'action call').eventName).toBe('user.created');
+    expect(getItemOrThrow(action.calls, 1, 'action call').eventName).toBe('book.created');
+    expect(getItemOrThrow(action.calls, 2, 'action call').eventName).toBe('author.created');
   });
 
   it('does not trigger hook for non-matching pattern', async () => {
@@ -187,8 +195,8 @@ describe('HookSystem', () => {
 
     const executions = await storage.getExecutions('7');
     expect(executions).toHaveLength(1);
-    expect(executions[0].eventName).toBe('user.created');
-    expect(executions[0].success).toBe(true);
+    expect(getItemOrThrow(executions, 0, 'execution').eventName).toBe('user.created');
+    expect(getItemOrThrow(executions, 0, 'execution').success).toBe(true);
   });
 
   it('registers existing hooks without persisting duplicates', async () => {
@@ -212,7 +220,7 @@ describe('HookSystem', () => {
 
     expect(createSpy).not.toHaveBeenCalled();
     expect(action.calls).toHaveLength(1);
-    expect(action.calls[0].eventName).toBe('book.created');
+    expect(getItemOrThrow(action.calls, 0, 'action call').eventName).toBe('book.created');
   });
 
   it('enforces execution timeout and records failure', async () => {
@@ -239,8 +247,8 @@ describe('HookSystem', () => {
 
     const executions = await storage.getExecutions('timeout-hook');
     expect(executions).toHaveLength(1);
-    expect(executions[0].success).toBe(false);
-    expect(executions[0].errorMessage).toContain('timed out');
+    expect(getItemOrThrow(executions, 0, 'execution').success).toBe(false);
+    expect(getItemOrThrow(executions, 0, 'execution').errorMessage).toContain('timed out');
   });
 
   it('opens circuit breaker after repeated failures and recovers after cooldown', async () => {

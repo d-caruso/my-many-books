@@ -71,8 +71,8 @@ describe('BookApi (CRUD)', () => {
       await bookApi.getBooks(2, 20);
 
       const lastRequest = mockHttpClient.getLastRequest();
-      expect(lastRequest?.config?.params?.page).toBe('2');
-      expect(lastRequest?.config?.params?.limit).toBe('20');
+      expect(lastRequest?.config?.params?.['page']).toBe('2');
+      expect(lastRequest?.config?.params?.['limit']).toBe('20');
     });
 
     it('should exclude authors when includeAuthors is false', async () => {
@@ -84,7 +84,7 @@ describe('BookApi (CRUD)', () => {
       await bookApi.getBooks(1, 10, false);
 
       const lastRequest = mockHttpClient.getLastRequest();
-      expect(lastRequest?.config?.params?.includeAuthors).toBe('false');
+      expect(lastRequest?.config?.params?.['includeAuthors']).toBe('false');
     });
 
     it('should exclude categories when includeCategories is false', async () => {
@@ -96,7 +96,7 @@ describe('BookApi (CRUD)', () => {
       await bookApi.getBooks(1, 10, true, false);
 
       const lastRequest = mockHttpClient.getLastRequest();
-      expect(lastRequest?.config?.params?.includeCategories).toBe('false');
+      expect(lastRequest?.config?.params?.['includeCategories']).toBe('false');
     });
 
     it('should validate response against PaginatedBooksSchema', async () => {
@@ -328,4 +328,3 @@ describe('BookApi (CRUD)', () => {
     });
   });
 });
-

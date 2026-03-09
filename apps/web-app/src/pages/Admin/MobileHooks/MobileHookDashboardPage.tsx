@@ -83,7 +83,7 @@ export const MobileHookDashboardPage: React.FC = () => {
       const payload = await apiService.getAdminMobileHooksConfigListeners(controller.signal);
       if (controller.signal.aborted) return;
       setListenersConfig(payload);
-    } catch (err: any) {
+    } catch {
       if (controller.signal.aborted) return;
       setListenersError(t('admin.mobile_hooks.errors.listeners.load'));
     } finally {
@@ -111,7 +111,7 @@ export const MobileHookDashboardPage: React.FC = () => {
         const payload = await apiService.getAdminMobileHooksRecentEvents(50, controller.signal);
         if (controller.signal.aborted) return;
         setRecentEvents(payload);
-      } catch (err: any) {
+      } catch {
         if (controller.signal.aborted) return;
         setRecentEventsError(t('admin.mobile_hooks.errors.recent_events.load'));
       } finally {
@@ -129,7 +129,7 @@ export const MobileHookDashboardPage: React.FC = () => {
       try {
         setLoading(true);
         await loadDashboard();
-      } catch (err: any) {
+      } catch {
         setError(t('admin.mobile_hooks.errors.dashboard.load'));
       } finally {
         setLoading(false);
@@ -161,7 +161,7 @@ export const MobileHookDashboardPage: React.FC = () => {
     try {
       setReloading(true);
       await Promise.all([loadDashboard(), loadListeners(), loadRecentEvents()]);
-    } catch (err: any) {
+    } catch {
       setError(t('admin.mobile_hooks.errors.dashboard.refresh'));
     } finally {
       setReloading(false);
@@ -188,7 +188,7 @@ export const MobileHookDashboardPage: React.FC = () => {
           : prev
       );
       showSuccess(t('admin.mobile_hooks.success.saved'));
-    } catch (err: any) {
+    } catch {
       setListenersError(t('admin.mobile_hooks.errors.listeners.save_listener', { name: eventName }));
     } finally {
       setSavingListeners(prev => {
@@ -219,7 +219,7 @@ export const MobileHookDashboardPage: React.FC = () => {
           : prev
       );
       showSuccess(t('admin.mobile_hooks.success.saved'));
-    } catch (err: any) {
+    } catch {
       setListenersError(t('admin.mobile_hooks.errors.listeners.save_category', { name: categoryName }));
     } finally {
       setSavingCategories(prev => {

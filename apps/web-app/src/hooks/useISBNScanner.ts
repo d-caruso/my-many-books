@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ScanResult } from '@my-many-books/shared-types';
 import { validateISBN } from '@my-many-books/shared-utils';
-
-// Types for dynamically imported zxing library
-// Using 'any' to avoid bundling the library at compile time
-type BrowserMultiFormatReader = any;
+import type { BrowserMultiFormatReader } from '@zxing/browser';
+import type { Result, Exception } from '@zxing/library';
+import { logger } from '../utils/logger';
 
 interface ScannerControls {
   stop: () => void;
@@ -74,10 +73,10 @@ export const useISBNScanner = (
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8]);
 
       codeReader.current = new BrowserMultiFormatReader(hints);
-      console.debug('[ISBNScanner] Reader initialized with EAN-13/EAN-8 hints');
+      logger.debug('[ISBNScanner] Reader initialized with EAN-13/EAN-8 hints');
       return codeReader.current;
     } catch (err) {
-      console.error('Failed to initialize barcode reader:', err);
+      logger.error('Failed to initialize barcode reader:', err);
       setError('Failed to initialize scanner');
       return null;
     } finally {
@@ -116,7 +115,7 @@ export const useISBNScanner = (
 
       return videoDevices;
     } catch (err) {
-      console.error('Error getting video devices:', err);
+      logger.error('Error getting video devices:', err);
       setError('Failed to access camera devices');
       return [];
     }
@@ -136,13 +135,14 @@ export const useISBNScanner = (
       setError(null);
       await getVideoDevices();
       return true;
-    } catch (err: any) {
-      console.error('Camera permission denied:', err);
+    } catch (err: unknown) {
+      logger.error('Camera permission denied:', err);
       setHasPermission(false);
 
-      if (err.name === 'NotAllowedError') {
+      const name = err instanceof Error ? (err as DOMException).name : '';
+      if (name === 'NotAllowedError') {
         setError('Camera access denied. Please enable camera permissions in your browser settings.');
-      } else if (err.name === 'NotFoundError') {
+      } else if (name === 'NotFoundError') {
         setError('No camera found on this device.');
       } else {
         setError('Failed to access camera. Please check your camera permissions.');
@@ -195,21 +195,21 @@ export const useISBNScanner = (
       };
 
       setIsScanning(true);
-      console.debug('[ISBNScanner] Starting scan', { deviceId: deviceId || 'environment' });
+      logger.debug('[ISBNScanner] Starting scan', { deviceId: deviceId || 'environment' });
 
       const { NotFoundException } = await import('@zxing/library');
 
       const controls = await reader.decodeFromConstraints(
         constraints,
         videoRef.current,
-        (result: any, error: any) => {
+        (result: Result | undefined, error: Exception | undefined) => {
           if (result) {
             const scannedText = result.getText();
             const format = result.getBarcodeFormat?.() ?? 'unknown';
-            console.debug('[ISBNScanner] Barcode decoded', { format, text: scannedText });
+            logger.debug('[ISBNScanner] Barcode decoded', { format, text: scannedText });
 
             if (validateISBN(scannedText).isValid) {
-              console.debug('[ISBNScanner] Valid ISBN detected:', scannedText);
+              logger.debug('[ISBNScanner] Valid ISBN detected:', scannedText);
               const scanResult: ScanResult = {
                 isbn: scannedText.replace(/[^0-9X]/gi, ''),
                 success: true
@@ -218,21 +218,21 @@ export const useISBNScanner = (
               onScanSuccessRef.current(scanResult);
               stopScanning();
             } else {
-              console.debug('[ISBNScanner] Decoded but not valid ISBN:', scannedText);
+              logger.debug('[ISBNScanner] Decoded but not valid ISBN:', scannedText);
             }
           }
 
           // Only log non-NotFoundException errors; don't set error state
           // as it would hide the video element and break scanning
           if (error && !(error instanceof NotFoundException)) {
-            console.warn('Scan error:', error);
+            logger.warn('Scan error:', error);
           }
         }
       );
 
       scannerControls.current = controls;
-    } catch (err: any) {
-      console.error('Failed to start scanning:', err);
+    } catch (err: unknown) {
+      logger.error('Failed to start scanning:', err);
       setError('Failed to start camera');
       setIsScanning(false);
       onScanErrorRef.current?.('Failed to start camera');

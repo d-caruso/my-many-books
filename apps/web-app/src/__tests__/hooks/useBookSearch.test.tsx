@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import { Book, SearchFilters } from '../../hooks/../types';
 import { ApiProvider } from '../../contexts/ApiContext';
+import type { ApiService } from '../../services/api';
 import React from 'react';
 
 // Create mock API service
@@ -28,7 +29,7 @@ const mockApiService = {
   createAuthor: vi.fn(),
   getCurrentUser: vi.fn(),
   updateProfile: vi.fn(),
-} as any;
+} as unknown as ApiService;
 
 const mockBooks: Book[] = [
   {
@@ -467,7 +468,7 @@ describe('useBookSearch', () => {
     });
 
     test('does not load more when already loading', async () => {
-      let resolveSearch: (value: any) => void;
+      let resolveSearch: (value: unknown) => void;
       const searchPromise = new Promise((resolve) => {
         resolveSearch = resolve;
       });

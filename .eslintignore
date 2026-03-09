@@ -1,8 +1,0 @@
-node_modules/
-dist/
-coverage/
-tmp/
-apps/web-app/build/
-apps/web-app/dist/
-**/build/**
-**/dist/**

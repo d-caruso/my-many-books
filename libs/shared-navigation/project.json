@@ -4,29 +4,46 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/shared-navigation/src",
   "projectType": "library",
-  "tags": ["shared"],
+  "tags": [
+    "shared"
+  ],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/dist/libs/shared-navigation"
+      ],
       "options": {
-        "outputPath": "dist/libs/shared-navigation",
-        "main": "libs/shared-navigation/src/index.ts",
-        "tsConfig": "libs/shared-navigation/tsconfig.lib.json"
+        "command": "tsc --project tsconfig.lib.json",
+        "cwd": "libs/shared-navigation"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
-        "lintFilePatterns": ["libs/shared-navigation/**/*.{ts,tsx}"]
+        "lintFilePatterns": [
+          "libs/shared-navigation/**/*.{ts,tsx}"
+        ],
+        "eslintConfig": "libs/shared-navigation/eslint.config.mjs"
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "libs/shared-navigation/jest.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/shared-navigation"
       }
     }
   }

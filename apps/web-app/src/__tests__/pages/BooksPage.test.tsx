@@ -9,6 +9,9 @@ import { SettingsProvider } from '../../contexts/SettingsContext';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../../constants/scanner';
 import { useAuth } from '@my-many-books/shared-auth';
 import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
+import type { ApiService } from '../../services/api';
+import type { SettingsApi } from '@my-many-books/shared-api';
+import type { Book } from '../../types';
 
 const mockSetSearchParams = vi.fn();
 const mockNavigate = vi.fn();
@@ -71,22 +74,40 @@ vi.mock('../../hooks/useBooks', () => ({
 }));
 
 vi.mock('../../components/Book', () => ({
-  BookList: ({ books, viewMode = 'grid', loading, error, onBookClick, onEdit, onDelete, onStatusChange, emptyMessage }: any) => (
+  BookList: ({ books, viewMode = 'grid', loading, error, onBookClick, onEdit, onDelete, onStatusChange, emptyMessage }: {
+    books: Book[];
+    viewMode?: string;
+    loading?: boolean;
+    error?: string | null;
+    onBookClick?: (book: Book) => void;
+    onEdit?: (book: Book) => void;
+    onDelete?: (id: number) => void;
+    onStatusChange?: (id: number, status: string) => void;
+    emptyMessage?: string;
+  }) => (
     <div data-testid="book-list" data-view-mode={viewMode}>
       {error && <div data-testid="book-error">{error}</div>}
       {books.length === 0 && <div data-testid="empty-message">{emptyMessage}</div>}
-      {books.map((book: any) => (
+      {books.map((book) => (
         <div key={book.id} data-testid={`book-item-${book.id}`}>
           <button data-testid={`select-${book.id}`} onClick={() => onBookClick?.(book)}>Select {book.title}</button>
           <button data-testid={`edit-${book.id}`} onClick={() => onEdit?.(book)}>Edit {book.title}</button>
-          <button data-testid={`delete-${book.id}`} onClick={() => onDelete?.(book.id)}>Delete {book.title}</button>
-          <button data-testid={`status-${book.id}`} onClick={() => onStatusChange?.(book.id, 'read')}>Status</button>
+          <button data-testid={`delete-${book.id}`} onClick={() => onDelete?.(book.id ?? 0)}>Delete {book.title}</button>
+          <button data-testid={`status-${book.id}`} onClick={() => onStatusChange?.(book.id ?? 0, 'read')}>Status</button>
         </div>
       ))}
       {loading && <div data-testid="book-loading">Loading</div>}
     </div>
   ),
-  BookForm: ({ book, onSubmit, onCancel, loading, scannerPrefillNotice, initialDraft, initialIsbn }: any) => (
+  BookForm: ({ book, onSubmit, onCancel, loading, scannerPrefillNotice, initialDraft, initialIsbn }: {
+    book?: Book | null;
+    onSubmit: (data: unknown) => void;
+    onCancel: () => void;
+    loading?: boolean;
+    scannerPrefillNotice?: string;
+    initialDraft?: { title?: string; isbnCode?: string };
+    initialIsbn?: string;
+  }) => (
     <div
       data-testid="book-form"
       data-book-id={book?.id ?? 'new'}
@@ -104,13 +125,18 @@ vi.mock('../../components/Book', () => ({
       </button>
     </div>
   ),
-  BookDetails: ({ book, onEdit, onDelete, onClose }: any) => (
+  BookDetails: ({ book, onEdit, onDelete, onClose }: {
+    book?: Book | null;
+    onEdit?: (book: Book) => void;
+    onDelete?: (id: number) => void;
+    onClose?: () => void;
+  }) => (
     <div data-testid="book-details">
       <div data-testid="details-title">{book?.title}</div>
-      <button data-testid="details-edit" onClick={() => onEdit?.(book)}>
+      <button data-testid="details-edit" onClick={() => onEdit?.(book as Book)}>
         Edit
       </button>
-      <button data-testid="details-delete" onClick={() => onDelete?.(book.id)}>
+      <button data-testid="details-delete" onClick={() => onDelete?.(book?.id ?? 0)}>
         Delete
       </button>
       <button data-testid="details-close" onClick={onClose}>
@@ -121,14 +147,14 @@ vi.mock('../../components/Book', () => ({
 }));
 
 vi.mock('../../components/Search', () => ({
-  BookSearchForm: ({ onSearch, loading, initialQuery }: any) => (
+  BookSearchForm: ({ onSearch, loading, initialQuery }: { onSearch: (q: string, f: Record<string, unknown>) => void; loading?: boolean; initialQuery?: string }) => (
     <div data-testid="search-form" data-loading={loading} data-initial-query={initialQuery}>
       <button data-testid="search-button" onClick={() => onSearch(initialQuery || 'query', { categoryId: 2 })}>
         Search
       </button>
     </div>
   ),
-  BookSearchResults: ({ books }: any) => <div data-testid="search-results">{books.length} results</div>,
+  BookSearchResults: ({ books }: { books: Book[] }) => <div data-testid="search-results">{books.length} results</div>,
 }));
 
 const mockApiService = {
@@ -138,7 +164,7 @@ const mockApiService = {
   post: vi.fn(),
   patch: vi.fn(),
   delete: vi.fn(),
-} as any;
+} as unknown as ApiService;
 
 const mockSettingsApi = {
   getSettings: vi.fn().mockResolvedValue([
@@ -156,7 +182,7 @@ const mockSettingsApi = {
   ]),
   getAllSettingsAdmin: vi.fn().mockResolvedValue([]),
   updateSetting: vi.fn(),
-} as any;
+} as unknown as SettingsApi;
 
 const testI18n = i18n.createInstance();
 const i18nReady = testI18n.use(initReactI18next).init({
@@ -216,7 +242,7 @@ describe('BooksPage', () => {
     mockNavigate.mockClear();
     window.sessionStorage.clear();
     mockUseAuth.mockReturnValue({
-      user: { id: 1, name: 'Mario', surname: 'Rossi', email: 'mario@example.com' } as any,
+      user: { id: 1, name: 'Mario', surname: 'Rossi', email: 'mario@example.com', role: 'user' as const, isActive: true },
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),

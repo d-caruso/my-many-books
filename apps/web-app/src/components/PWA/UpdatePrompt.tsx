@@ -38,7 +38,7 @@ export const UpdatePrompt: React.FC<UpdatePromptProps> = ({
     setError(null);
     try {
       await updateApp();
-    } catch (err) {
+    } catch {
       setError(t('pwa:update_prompt.update_failed'));
       setLoading(false);
     }

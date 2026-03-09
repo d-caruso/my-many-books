@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardActions,
-  CardMedia,
   Typography,
   Chip,
   IconButton,
@@ -15,9 +14,10 @@ import {
   Stack,
   CircularProgress,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
+// import BookIcon from '@mui/icons-material/MenuBook'; // used in commented-out cover section
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import BookIcon from '@mui/icons-material/MenuBook';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
 import { getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { formatEditionDate } from '../../utils/formatEditionDate';
@@ -52,7 +52,7 @@ export const BookCard: React.FC<BookCardProps> = ({
     ).join(', ');
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): 'success' | 'primary' | 'warning' | 'default' => {
     switch (status) {
       case 'finished':
         return 'success';
@@ -78,11 +78,11 @@ export const BookCard: React.FC<BookCardProps> = ({
     }
   };
 
-  const handleStatusChange = (event: any) => {
+  const handleStatusChange = (event: SelectChangeEvent<string>) => {
     if (onStatusChange) {
       const value = event.target.value;
       const status = value === '' ? null : (value as Book['status']);
-      onStatusChange(book.id, status as any);
+      onStatusChange(book.id, status);
     }
   };
 
@@ -122,7 +122,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                 <Chip
                   label={formatStatus(book.status)}
                   size="small"
-                  color={getStatusColor(book.status) as any}
+                  color={getStatusColor(book.status)}
                   sx={{ mt: 0.5, height: 20 }}
                 />
               )}
@@ -224,7 +224,7 @@ export const BookCard: React.FC<BookCardProps> = ({
             <Chip
               label={formatStatus(book.status)}
               size="small"
-              color={getStatusColor(book.status) as any}
+              color={getStatusColor(book.status)}
             />
           </Box>
         )}

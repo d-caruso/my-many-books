@@ -24,7 +24,7 @@ vi.mock('../../../contexts/ThemeContext', () => ({
 
 // Mock ResponsiveButton
 vi.mock('../../../components/UI/ResponsiveButton', () => ({
-  ResponsiveButton: ({ children, onClick, variant, size }: any) => (
+  ResponsiveButton: ({ children, onClick, variant, size }: { children?: React.ReactNode; onClick?: () => void; variant?: string; size?: string }) => (
     <button data-testid={`responsive-button-${variant}-${size}`} onClick={onClick}>{children}</button>
   )
 }));

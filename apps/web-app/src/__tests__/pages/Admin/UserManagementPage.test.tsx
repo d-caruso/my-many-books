@@ -28,12 +28,12 @@ vi.mock('../../../pages/Admin/AdminLayout', () => ({
 }));
 
 vi.mock('@mui/x-data-grid', () => ({
-  DataGrid: (props: any) => {
+  DataGrid: (props: { rows: Array<Record<string, unknown>>; columns: Array<{ field: string }> }) => {
     return (
       <div data-testid="data-grid">
-        {props.rows.map((row: any) => (
-          <div key={row.id} data-testid={`row-${row.id}`}>
-            {props.columns.map((col: any) => (
+        {props.rows.map((row) => (
+          <div key={String(row.id)} data-testid={`row-${row.id}`}>
+            {props.columns.map((col) => (
               <div key={col.field}>{col.field}</div>
             ))}
           </div>

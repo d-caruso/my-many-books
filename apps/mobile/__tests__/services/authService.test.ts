@@ -3,11 +3,9 @@
  * Tests auth service initialization and configuration
  */
 
-// Mock expo-secure-store
-jest.mock('expo-secure-store', () => ({
-  setItemAsync: jest.fn(),
-  getItemAsync: jest.fn(),
-  deleteItemAsync: jest.fn(),
+// Mock local storage adapter to avoid importing expo-secure-store in Node/Jest.
+jest.mock('../../src/services/MobileStorageAdapter', () => ({
+  MobileStorageAdapter: jest.fn().mockImplementation(() => ({})),
 }));
 
 // Mock shared-auth
@@ -19,24 +17,26 @@ jest.mock('@my-many-books/shared-auth', () => ({
     getAuthState: jest.fn(),
     getIdToken: jest.fn(),
   })),
-  MobileStorageAdapter: jest.fn(),
 }));
 
 describe('AuthService Instance', () => {
-  it('should initialize with MobileStorageAdapter', () => {
-    const { AuthService, MobileStorageAdapter } = require('@my-many-books/shared-auth');
-
-    expect(MobileStorageAdapter).toBeDefined();
-    expect(AuthService).toBeDefined();
-  });
-
-  it('should configure AuthService with API_BASE_URL', () => {
+  it('should initialize with MobileStorageAdapter', async () => {
     jest.resetModules();
 
-    const { AuthService } = require('@my-many-books/shared-auth');
-    const { API_BASE_URL } = require('../../src/config/api');
+    await import('../../src/services/authService');
+    const { AuthService } = await import('@my-many-books/shared-auth');
+    const { MobileStorageAdapter } = await import('../../src/services/MobileStorageAdapter');
 
-    require('../../src/services/authService');
+    expect(AuthService).toHaveBeenCalledTimes(1);
+    expect(MobileStorageAdapter).toHaveBeenCalledTimes(1);
+  });
+
+  it('should configure AuthService with API_BASE_URL', async () => {
+    jest.resetModules();
+
+    const { API_BASE_URL } = await import('../../src/config/api');
+    await import('../../src/services/authService');
+    const { AuthService } = await import('@my-many-books/shared-auth');
 
     expect(AuthService).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -46,17 +46,13 @@ describe('AuthService Instance', () => {
   });
 
   it('should have onAuthStateChange callback', () => {
-    const onAuthStateChange = (user: unknown) => {
-      console.log('Auth state changed:', user);
-    };
+    const onAuthStateChange = (_user: unknown): void => undefined;
 
     expect(typeof onAuthStateChange).toBe('function');
   });
 
   it('should have onTokenRefresh callback', () => {
-    const onTokenRefresh = (tokens: unknown) => {
-      console.log('Tokens refreshed:', tokens);
-    };
+    const onTokenRefresh = (_tokens: unknown): void => undefined;
 
     expect(typeof onTokenRefresh).toBe('function');
   });
@@ -64,13 +60,13 @@ describe('AuthService Instance', () => {
   it('should provide all required methods', () => {
     const requiredMethods = ['login', 'logout', 'register', 'getAuthState', 'getIdToken'];
 
-    requiredMethods.forEach(method => {
+    requiredMethods.forEach((method) => {
       expect(method).toBeTruthy();
     });
   });
 
-  it('should expose a non-empty API_BASE_URL', () => {
-    const { API_BASE_URL } = require('../../src/config/api');
+  it('should expose a non-empty API_BASE_URL', async () => {
+    const { API_BASE_URL } = await import('../../src/config/api');
     expect(API_BASE_URL).toBeTruthy();
   });
 });

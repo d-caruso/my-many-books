@@ -69,8 +69,7 @@ export const AddCategoryDialog: React.FC<AddCategoryDialogProps> = ({
 
       onCategoryCreated(newCategory);
       handleClose();
-    } catch (error: any) {
-      console.error('Failed to create category:', error);
+    } catch (error: unknown) {
       if (getErrorCode(error) === ERROR_CODES.DUPLICATE_CATEGORY) {
         setFormError(t('dialogs:category.duplicate_category'));
       } else {

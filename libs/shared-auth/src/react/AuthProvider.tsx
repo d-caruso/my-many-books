@@ -70,14 +70,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   useEffect(() => {
     let ignore = false;
 
-    const checkAuth = async () => {
+    const checkAuth = async (): Promise<void> => {
       setLoading(true);
       try {
         const { user: authUser } = await authService.getAuthState();
         if (!ignore) setUser(authUser);
-      } catch (error) {
-        console.error('Auth state check failed:', error);
-        if (!ignore) setUser(null);
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -86,7 +83,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       }
     };
 
-    checkAuth();
+    checkAuth().catch(() => {
+      if (!ignore) {
+        setUser(null);
+      }
+    });
     return () => { ignore = true; };
   }, []);
 

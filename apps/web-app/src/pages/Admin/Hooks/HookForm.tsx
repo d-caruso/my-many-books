@@ -1,3 +1,4 @@
+import { logger } from '../../../utils/logger';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Dialog,
@@ -73,7 +74,7 @@ export const HookForm: React.FC<HookFormProps> = ({
     setTouchedFields((prev) => ({ ...prev, [field]: true }));
   };
 
-  const handleFieldChange = (field: keyof HookFormData, value: any) => {
+  const handleFieldChange = (field: keyof HookFormData, value: HookFormData[keyof HookFormData]) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -82,13 +83,13 @@ export const HookForm: React.FC<HookFormProps> = ({
     try {
       JSON.parse(value);
       setConfigError(null);
-    } catch (err: any) {
+    } catch {
       setConfigError(t('form.errors.invalid_json', 'Provide valid JSON'));
     }
   };
 
   const handleSubmit = useCallback(async () => {
-    console.log('[HookForm] handleSubmit called', formState);
+    logger.debug('[HookForm] handleSubmit called', formState);
     setTouchedFields((prev) => ({
       ...prev,
       name: true,
@@ -100,24 +101,24 @@ export const HookForm: React.FC<HookFormProps> = ({
     const hasPatternError = !formState.eventPattern.trim();
     const hasPriorityError = formState.priority < 0;
 
-    console.log('[HookForm] Validation:', { hasNameError, hasPatternError, hasPriorityError, configError });
+    logger.debug('[HookForm] Validation:', { hasNameError, hasPatternError, hasPriorityError, configError });
 
     if (configError || hasNameError || hasPatternError || hasPriorityError) {
-      console.log('[HookForm] Validation failed, aborting save');
+      logger.debug('[HookForm] Validation failed, aborting save');
       return;
     }
 
     try {
       JSON.parse(formState.actionConfig);
-    } catch (err) {
-      console.log('[HookForm] Invalid JSON in actionConfig');
+    } catch {
+      logger.debug('[HookForm] Invalid JSON in actionConfig');
       setConfigError(t('form.errors.invalid_json', 'Provide valid JSON'));
       return;
     }
 
-    console.log('[HookForm] Calling onSave...');
+    logger.debug('[HookForm] Calling onSave...');
     await onSave(formState);
-    console.log('[HookForm] onSave completed, closing form');
+    logger.debug('[HookForm] onSave completed, closing form');
     onClose();
   }, [configError, formState, onClose, onSave, t]);
 

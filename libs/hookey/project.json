@@ -5,18 +5,20 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
       "options": {
-        "outputPath": "libs/hookey/dist",
-        "main": "libs/hookey/src/index.ts",
-        "tsConfig": "libs/hookey/tsconfig.lib.json",
-        "assets": []
+        "command": "tsc --project tsconfig.lib.json --outDir dist",
+        "cwd": "libs/hookey"
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "libs/hookey/jest.config.ts"
       }
@@ -26,12 +28,21 @@
       "outputs": [],
       "options": {
         "lintFilePatterns": [
-          "libs/hookey/src/**/*.ts",
-          "!libs/hookey/examples/**",
-          "!libs/hookey/jest.config.ts"
-        ]
+          "libs/hookey/src/**/*.ts"
+        ],
+        "eslintConfig": "libs/hookey/eslint.config.mjs"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/hookey"
       }
     }
   },
-  "tags": ["scope:shared", "type:lib"]
+  "tags": [
+    "scope:shared",
+    "type:lib"
+  ]
 }

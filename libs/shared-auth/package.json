@@ -6,13 +6,13 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "nx build shared-auth",
     "build:watch": "tsc --watch",
     "dev": "tsc --watch",
-    "test": "jest --config jest.config.ts",
+    "test": "nx test shared-auth",
     "test:watch": "jest --config jest.config.ts --watch",
     "test:coverage": "jest --config jest.config.ts --coverage",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "nx typecheck shared-auth",
     "lint": "nx lint shared-auth",
     "lint:fix": "nx lint shared-auth --fix"
   },

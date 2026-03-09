@@ -1,6 +1,7 @@
 import { mkdir, appendFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { HookAction, HookActionContext } from '../types';
+import { getLogger, type AppLogger } from '@my-many-books/shared-logging';
 
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 type LogDestination = 'console' | 'file';
@@ -13,12 +14,7 @@ export interface LogActionOptions {
   includeMetadata?: boolean;
 }
 
-const levelToConsoleMethod: Record<LogLevel, keyof Console> = {
-  info: 'info',
-  warn: 'warn',
-  error: 'error',
-  debug: 'debug',
-};
+const FALLBACK_UNSERIALIZABLE_PAYLOAD = '[unserializable payload]';
 
 export class LogAction implements HookAction {
   private readonly prefix: string;
@@ -26,6 +22,7 @@ export class LogAction implements HookAction {
   private readonly destination: LogDestination;
   private readonly filePath?: string;
   private readonly includeMetadata: boolean;
+  private readonly logger: AppLogger;
 
   constructor(config?: string | LogActionOptions) {
     if (typeof config === 'string') {
@@ -34,6 +31,7 @@ export class LogAction implements HookAction {
       this.destination = 'console';
       this.filePath = undefined;
       this.includeMetadata = true;
+      this.logger = getLogger();
       return;
     }
 
@@ -43,13 +41,19 @@ export class LogAction implements HookAction {
     this.destination = options.destination ?? 'console';
     this.filePath = options.filePath;
     this.includeMetadata = options.includeMetadata ?? true;
+    this.logger = getLogger();
   }
 
   async execute(context: HookActionContext): Promise<void> {
     const message = this.buildMessage(context.eventName);
     const payload = this.includeMetadata ? context.payload : undefined;
 
-    this.logToConsole(message, payload);
+    const loggerMethod = this.logger[this.level];
+    if (payload !== undefined) {
+      loggerMethod({ payload }, message);
+    } else {
+      loggerMethod(message);
+    }
 
     if (this.destination === 'file' && this.filePath) {
       await this.logToFile(message, payload);
@@ -58,21 +62,6 @@ export class LogAction implements HookAction {
 
   private buildMessage(eventName: string): string {
     return `[${this.prefix}] event=${eventName}`;
-  }
-
-  private logToConsole(message: string, payload?: unknown): void {
-    const method = levelToConsoleMethod[this.level];
-    const consoleMethod =
-      typeof console[method] === 'function'
-        ? (console[method] as (...args: unknown[]) => void)
-        : console.log.bind(console);
-
-    if (payload !== undefined) {
-      consoleMethod(message, payload);
-      return;
-    }
-
-    consoleMethod(message);
   }
 
   private async logToFile(message: string, payload?: unknown): Promise<void> {
@@ -88,9 +77,9 @@ export class LogAction implements HookAction {
       await mkdir(dirname(this.filePath), { recursive: true });
       await appendFile(this.filePath, line, 'utf8');
     } catch (error) {
-      console.warn(
-        `[${this.prefix}] Failed to write log file at ${this.filePath}:`,
-        error
+      this.logger.warn(
+        { err: error, filePath: this.filePath },
+        `[${this.prefix}] Failed to write log file`
       );
     }
   }
@@ -99,7 +88,7 @@ export class LogAction implements HookAction {
     try {
       return JSON.stringify(payload);
     } catch {
-      return '[unserializable payload]';
+      return FALLBACK_UNSERIALIZABLE_PAYLOAD;
     }
   }
 }

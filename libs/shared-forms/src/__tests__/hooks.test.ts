@@ -13,19 +13,19 @@ import {
   useSearchForm,
   useUserForm,
 } from '../hooks';
-import type { FormConfig, FormSubmissionResult } from '../types';
+import type { FormConfig, FormField, FormSubmissionResult } from '../types';
+
+const createTitleField = (value = ''): FormField => ({
+  id: 'title',
+  name: 'title',
+  label: 'Title',
+  type: 'text',
+  value,
+  validation: [FormValidator.createRequiredRule('Title required')],
+});
 
 const createConfig = (overrides: Partial<FormConfig> = {}): FormConfig => ({
-  fields: [
-    {
-      id: 'title',
-      name: 'title',
-      label: 'Title',
-      type: 'text',
-      value: '',
-      validation: [FormValidator.createRequiredRule('Title required')],
-    },
-  ],
+  fields: [createTitleField()],
   ...overrides,
 });
 
@@ -33,13 +33,13 @@ describe('shared-forms React hooks', () => {
   test('useForm updates state when setting a field value', async () => {
     const { result } = renderHook(() => useForm(createConfig()));
 
-    expect(result.current.state.values.title).toBe('');
+    expect(result.current.state.values['title']).toBe('');
 
     await act(async () => {
       result.current.setFieldValue('title', 'New Title');
     });
 
-    expect(result.current.state.values.title).toBe('New Title');
+    expect(result.current.state.values['title']).toBe('New Title');
     expect(result.current.formManager.getFieldValue('title')).toBe('New Title');
   });
 
@@ -101,7 +101,7 @@ describe('shared-forms React hooks', () => {
       timestamp: new Date(),
     }));
 
-    const manager = new FormManager(createConfig({ fields: [{ ...createConfig().fields[0], value: 'Ok' }] }), handler);
+    const manager = new FormManager(createConfig({ fields: [createTitleField('Ok')] }), handler);
     const { result } = renderHook(() => useFormSubmission(manager));
 
     expect(result.current.submissionState.hasSubmitted).toBe(false);
@@ -127,12 +127,12 @@ describe('shared-forms React hooks', () => {
 
   test('useBookForm and useUserForm apply initialData', async () => {
     const { result: book } = renderHook(() => useBookForm(undefined, { title: 'My Book', language: 'it' }));
-    expect(book.current.state.values.title).toBe('My Book');
-    expect(book.current.state.values.language).toBe('it');
+    expect(book.current.state.values['title']).toBe('My Book');
+    expect(book.current.state.values['language']).toBe('it');
 
     const { result: user } = renderHook(() => useUserForm(undefined, { firstName: 'A', lastName: 'B' }));
-    expect(user.current.state.values.firstName).toBe('A');
-    expect(user.current.state.values.lastName).toBe('B');
+    expect(user.current.state.values['firstName']).toBe('A');
+    expect(user.current.state.values['lastName']).toBe('B');
   });
 
   test('useSearchForm populates category/author options when provided', () => {
@@ -140,12 +140,16 @@ describe('shared-forms React hooks', () => {
       useSearchForm(undefined, [{ id: 1, name: 'Fiction' }], [{ id: 10, name: 'Author' }])
     );
 
-    expect(result.current.state.fields.category.options).toEqual([
+    const categoryField = result.current.state.fields['category'];
+    expect(categoryField).toBeDefined();
+    expect(categoryField?.options).toEqual([
       { label: 'All Categories', value: null },
       { label: 'Fiction', value: 1 },
     ]);
 
-    expect(result.current.state.fields.author.options).toEqual([
+    const authorField = result.current.state.fields['author'];
+    expect(authorField).toBeDefined();
+    expect(authorField?.options).toEqual([
       { label: 'All Authors', value: null },
       { label: 'Author', value: 10 },
     ]);
@@ -153,11 +157,16 @@ describe('shared-forms React hooks', () => {
 
   test('useBookForm and useSearchForm keep defaults when optional data is missing', () => {
     const { result: book } = renderHook(() => useBookForm());
-    expect(book.current.state.values.title).toBe('');
+    expect(book.current.state.values['title']).toBe('');
 
     const { result: search } = renderHook(() => useSearchForm());
-    expect(search.current.state.fields.category.options).toEqual([{ label: 'All Categories', value: null }]);
-    expect(search.current.state.fields.author.options).toEqual([{ label: 'All Authors', value: null }]);
+    const categoryField = search.current.state.fields['category'];
+    expect(categoryField).toBeDefined();
+    expect(categoryField?.options).toEqual([{ label: 'All Categories', value: null }]);
+
+    const authorField = search.current.state.fields['author'];
+    expect(authorField).toBeDefined();
+    expect(authorField?.options).toEqual([{ label: 'All Authors', value: null }]);
   });
 
   test('useFieldValidation validates rules and updates errors', async () => {
@@ -182,7 +191,7 @@ describe('shared-forms React hooks', () => {
   test('useFormAutoSave debounces changes and calls saveHandler after delay', async () => {
     jest.useFakeTimers();
     const saveHandler = jest.fn(async () => {});
-    const manager = new FormManager(createConfig({ fields: [{ ...createConfig().fields[0], value: 'Init' }] }));
+    const manager = new FormManager(createConfig({ fields: [createTitleField('Init')] }));
 
     const { result, unmount } = renderHook(() => useFormAutoSave(manager, saveHandler, 2000));
 

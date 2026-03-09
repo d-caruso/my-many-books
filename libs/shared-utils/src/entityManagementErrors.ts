@@ -7,9 +7,19 @@ import {
 import { extractErrorDetails } from './errorExtraction';
 
 const getApiErrorCode = (error: unknown): string | undefined => {
-  const err = error as { response?: { data?: { error?: { code?: unknown } } } } | null;
-  const code = err?.response?.data?.error?.code;
-  return typeof code === 'string' ? code : undefined;
+  const err = error as { response?: { data?: { error?: unknown } } } | null;
+  const rawError = err?.response?.data?.error;
+
+  if (typeof rawError === 'string') {
+    return rawError;
+  }
+
+  if (typeof rawError === 'object' && rawError !== null) {
+    const code = (rawError as { code?: unknown }).code;
+    return typeof code === 'string' ? code : undefined;
+  }
+
+  return undefined;
 };
 
 const buildError = (

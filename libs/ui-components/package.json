@@ -1,11 +1,12 @@
 {
   "name": "@my-many-books/ui-components",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "commonjs",
   "scripts": {
-    "build": "tsc --project tsconfig.lib.json",
-    "test": "jest --config jest.config.ts",
-    "lint": "eslint src --ext .ts,.tsx"
+    "build": "nx build ui-components",
+    "test": "nx test ui-components",
+    "lint": "nx lint ui-components",
+    "typecheck": "nx typecheck ui-components"
   },
   "dependencies": {
     "react": "*",

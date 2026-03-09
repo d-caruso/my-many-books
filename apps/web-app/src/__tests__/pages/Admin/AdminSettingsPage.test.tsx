@@ -7,9 +7,11 @@ import { AdminSettingsPage } from '../../../pages/Admin/AdminSettingsPage';
 import { apiService } from '../../../services/api';
 import { ApiProvider } from '../../../contexts/ApiContext';
 import { SettingsProvider } from '../../../contexts/SettingsContext';
+import type { ApiService } from '../../../services/api';
+import type { SettingsApi } from '@my-many-books/shared-api';
 
 // Import the mocked apiService to configure it
-const mockedApiService = apiService as any;
+const mockedApiService = apiService as unknown as Record<string, ReturnType<typeof vi.fn>>;
 
 vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
@@ -58,14 +60,14 @@ const mockApiService = {
   post: vi.fn(),
   patch: vi.fn(),
   delete: vi.fn(),
-} as any;
+} as unknown as ApiService;
 
 const mockSettingsApi = {
   getSettings: vi.fn().mockResolvedValue([]),
   getAllSettingsAdmin: vi.fn().mockResolvedValue([]),
   updateSetting: vi.fn(),
   toggleActive: vi.fn(),
-} as any;
+} as unknown as SettingsApi;
 
 // Create test i18n instance
 const testI18n = i18n.createInstance();
@@ -423,7 +425,7 @@ describe('AdminSettingsPage', () => {
     });
 
     // Find the select - use a more lenient query since disabled selects might not have accessible name
-    const selectInputs = screen.queryAllByRole('combobox');
+    const _selectInputs = screen.queryAllByRole('combobox');
     // The select should exist but be disabled (or there might be no combobox if FormControl is disabled)
     // Let's check for the "Inactive" label instead to verify the setting is inactive
     expect(screen.getByText('Inactive')).toBeInTheDocument();

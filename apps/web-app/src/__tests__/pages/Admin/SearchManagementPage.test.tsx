@@ -16,7 +16,7 @@ const mockApiService = {
   patch: vi.fn().mockResolvedValue({}),
   delete: vi.fn().mockResolvedValue({}),
   baseURL: 'http://localhost:3000',
-} as any;
+} as unknown as import('../../../services/api').ApiService;
 
 // Create test i18n instance
 const testI18n = i18n.createInstance();
@@ -190,7 +190,7 @@ describe('SearchManagementPage', () => {
     renderWithProvider(<SearchManagementPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to fetch pinned results')).toBeInTheDocument();
+      expect(screen.getByText('Network Error')).toBeInTheDocument();
     });
   });
 

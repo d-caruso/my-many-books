@@ -76,6 +76,9 @@ export const ActionConfigSchemas = {
 } as const;
 
 export type ActionType = keyof typeof ActionConfigSchemas;
+type SafeValidateActionConfigResult =
+  | ReturnType<(typeof ActionConfigSchemas)[ActionType]['safeParse']>
+  | { success: false; error: Error };
 
 /**
  * Validate action configuration based on action type
@@ -103,7 +106,10 @@ export function validateActionConfig(actionType: string, config: unknown): boole
  * @param config - The configuration object to validate
  * @returns Success result with data or failure with error
  */
-export function safeValidateActionConfig(actionType: string, config: unknown) {
+export function safeValidateActionConfig(
+  actionType: string,
+  config: unknown
+): SafeValidateActionConfigResult {
   const schema = ActionConfigSchemas[actionType as ActionType];
 
   if (!schema) {

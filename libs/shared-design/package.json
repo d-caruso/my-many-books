@@ -1,10 +1,11 @@
 {
   "name": "@my-many-books/shared-design",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "commonjs",
   "scripts": {
-    "build": "tsc --project tsconfig.lib.json",
-    "test": "jest --config jest.config.ts",
-    "lint": "eslint src/**/*.ts"
+    "build": "nx build shared-design",
+    "test": "nx test shared-design",
+    "lint": "nx lint shared-design",
+    "typecheck": "nx typecheck shared-design"
   }
 }

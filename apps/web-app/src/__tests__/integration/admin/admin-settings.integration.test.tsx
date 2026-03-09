@@ -8,6 +8,8 @@ import { AdminSettingsPage } from '../../../pages/Admin/AdminSettingsPage';
 import { ApiProvider } from '../../../contexts/ApiContext';
 import { SettingsProvider } from '../../../contexts/SettingsContext';
 import { AppSetting } from '@my-many-books/shared-types';
+import type { ApiService } from '../../../services/api';
+import type { SettingsApi } from '@my-many-books/shared-api';
 
 // Test i18n instance
 const testI18n = i18n.createInstance();
@@ -59,7 +61,7 @@ const mockSettingsApiInstance = {
 // Mock SettingsApi class and createApiClient
 vi.mock('@my-many-books/shared-api', () => ({
   SettingsApi: vi.fn().mockImplementation(() => mockSettingsApiInstance),
-  createApiClient: vi.fn((httpClient: any, baseURL: string) => ({
+  createApiClient: vi.fn((_httpClient: unknown, baseURL: string) => ({
     defaults: { baseURL },
     get: vi.fn(),
     post: vi.fn(),
@@ -77,14 +79,14 @@ const mockApiService = {
   post: vi.fn(),
   patch: vi.fn(),
   delete: vi.fn(),
-} as any;
+} as unknown as ApiService;
 
 const mockSettingsApi = {
   getSettings: vi.fn(),
   getAllSettingsAdmin: vi.fn(),
   updateSetting: vi.fn(),
   toggleActive: vi.fn(),
-} as any;
+} as unknown as SettingsApi;
 
 describe('Admin Settings Integration', () => {
   beforeEach(() => {

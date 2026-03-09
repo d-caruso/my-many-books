@@ -61,7 +61,7 @@ export const ActionMappingGrid: React.FC<ActionMappingGridProps> = ({
 
     try {
       await onUpdateMappings(nextActions);
-    } catch (err: any) {
+    } catch {
       setError(t('admin.mobile_hooks.errors.mappings.save'));
       setActions(actions);
     } finally {

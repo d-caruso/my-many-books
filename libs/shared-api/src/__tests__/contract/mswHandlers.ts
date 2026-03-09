@@ -215,13 +215,13 @@ export const handlers = [
     return res(ctx.json(booksResponse));
   }),
 
-  rest.get(`${API_BASE_URL}/authors`, (req, res, ctx) => res(ctx.json(authorsResponse))),
+  rest.get(`${API_BASE_URL}/authors`, (_req, res, ctx) => res(ctx.json(authorsResponse))),
 
-  rest.get(`${API_BASE_URL}/categories`, (req, res, ctx) => res(ctx.json(categoriesResponse))),
+  rest.get(`${API_BASE_URL}/categories`, (_req, res, ctx) => res(ctx.json(categoriesResponse))),
 
-  rest.get(`${API_BASE_URL}/settings`, (req, res, ctx) => res(ctx.json(settingsResponse))),
+  rest.get(`${API_BASE_URL}/settings`, (_req, res, ctx) => res(ctx.json(settingsResponse))),
 
-  rest.get(`${API_BASE_URL}/settings/admin`, (req, res, ctx) => res(ctx.json(settingsResponse))),
+  rest.get(`${API_BASE_URL}/settings/admin`, (_req, res, ctx) => res(ctx.json(settingsResponse))),
 
   rest.patch(`${API_BASE_URL}/settings/admin/:key`, async (req, res, ctx) => {
     const body = (await req.json()) as { value?: unknown };
@@ -230,10 +230,10 @@ export const handlers = [
     }
 
     const updated = settingsData.map((s) =>
-      s.key === req.params.key ? { ...s, value: JSON.stringify(body.value) } : s
+      s.key === req.params['key'] ? { ...s, value: JSON.stringify(body.value) } : s
     );
 
-    const updatedSetting = updated.find((s) => s.key === req.params.key);
+    const updatedSetting = updated.find((s) => s.key === req.params['key']);
     if (!updatedSetting) {
       return res(ctx.status(404), ctx.json({ error: 'Not found' }));
     }
@@ -252,7 +252,7 @@ export const handlers = [
         return res(ctx.status(400), ctx.json({ error: 'Invalid active' }));
       }
 
-      const updatedSetting = settingsData.find((s) => s.key === req.params.key);
+      const updatedSetting = settingsData.find((s) => s.key === req.params['key']);
       if (!updatedSetting) {
         return res(ctx.status(404), ctx.json({ error: 'Not found' }));
       }
@@ -265,7 +265,7 @@ export const handlers = [
       return res(ctx.json(response));
     }),
 
-  rest.get(`${API_BASE_URL}/users`, (req, res, ctx) => res(ctx.json(userProfileResponse))),
+  rest.get(`${API_BASE_URL}/users`, (_req, res, ctx) => res(ctx.json(userProfileResponse))),
 
   rest.put(`${API_BASE_URL}/users`, async (req, res, ctx) => {
     const body = (await req.json()) as Partial<{
@@ -293,27 +293,27 @@ export const handlers = [
     return res(ctx.json(response));
   }),
 
-  rest.delete(`${API_BASE_URL}/users`, (req, res, ctx) =>
+  rest.delete(`${API_BASE_URL}/users`, (_req, res, ctx) =>
     res(ctx.status(200), ctx.json({ success: true, data: null, message: 'Account deleted successfully' }))
   ),
 
-  rest.post(`${API_BASE_URL}/auth/login`, (req, res, ctx) => res(ctx.json(loginResponse))),
+  rest.post(`${API_BASE_URL}/auth/login`, (_req, res, ctx) => res(ctx.json(loginResponse))),
 
-  rest.post(`${API_BASE_URL}/auth/register`, (req, res, ctx) => res(ctx.json(registerResponse))),
+  rest.post(`${API_BASE_URL}/auth/register`, (_req, res, ctx) => res(ctx.json(registerResponse))),
 
-  rest.post(`${API_BASE_URL}/auth/refresh`, (req, res, ctx) => res(ctx.json(refreshResponse))),
+  rest.post(`${API_BASE_URL}/auth/refresh`, (_req, res, ctx) => res(ctx.json(refreshResponse))),
 
-  rest.post(`${API_BASE_URL}/auth/logout`, (req, res, ctx) => res(ctx.json(logoutResponse))),
+  rest.post(`${API_BASE_URL}/auth/logout`, (_req, res, ctx) => res(ctx.json(logoutResponse))),
 
-  rest.get(`${API_BASE_URL}/health`, (req, res, ctx) => res(ctx.json(healthResponse))),
+  rest.get(`${API_BASE_URL}/health`, (_req, res, ctx) => res(ctx.json(healthResponse))),
 
-  rest.get(`${API_BASE_URL}/auth/google/start`, (req, res, ctx) => res(ctx.json(googleStartMobileResponse))),
+  rest.get(`${API_BASE_URL}/auth/google/start`, (_req, res, ctx) => res(ctx.json(googleStartMobileResponse))),
 
-  rest.post(`${API_BASE_URL}/auth/google/mobile/start`, (req, res, ctx) =>
+  rest.post(`${API_BASE_URL}/auth/google/mobile/start`, (_req, res, ctx) =>
     res(ctx.json(googleStartMobileResponse))
   ),
 
-  rest.post(`${API_BASE_URL}/auth/google/mobile/exchange`, (req, res, ctx) =>
+  rest.post(`${API_BASE_URL}/auth/google/mobile/exchange`, (_req, res, ctx) =>
     res(ctx.json(googleMobileExchangeResponse))
   ),
 ];

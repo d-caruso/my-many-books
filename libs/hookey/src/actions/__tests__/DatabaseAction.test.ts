@@ -3,8 +3,10 @@ import {
   DatabaseService,
   DatabaseActionConfig,
   ConsoleDatabaseService,
+  DatabaseOperation,
 } from '../DatabaseAction';
 import { HookActionContext } from '../../types';
+import { getLogger } from '@my-many-books/shared-logging';
 
 // Mock database service for testing
 class MockDatabaseService implements DatabaseService {
@@ -34,12 +36,21 @@ class MockDatabaseService implements DatabaseService {
     return { deleted: 1 };
   }
 
-  reset() {
+  reset(): void {
     this.operations = [];
   }
 
-  getLastOperation() {
-    return this.operations[this.operations.length - 1];
+  getLastOperation(): {
+    type: 'create' | 'update' | 'delete';
+    table: string;
+    data?: Record<string, unknown>;
+    where?: Record<string, unknown>;
+  } {
+    const operation = this.operations[this.operations.length - 1];
+    if (!operation) {
+      throw new Error('Expected at least one recorded database operation');
+    }
+    return operation;
   }
 }
 
@@ -501,7 +512,7 @@ describe('DatabaseAction', () => {
 
     it('throws error for unknown operation', async () => {
       const config: DatabaseActionConfig = {
-        operation: 'invalid' as any,
+        operation: 'invalid' as unknown as DatabaseOperation,
         table: 'books',
       };
 
@@ -516,40 +527,56 @@ describe('DatabaseAction', () => {
   });
 
   describe('ConsoleDatabaseService', () => {
-    it('logs create operation to console', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    it('logs create operation through shared logger', async () => {
+      const infoSpy = jest.spyOn(getLogger(), 'info').mockImplementation();
 
       const service = new ConsoleDatabaseService();
       await service.create('books', { title: 'Test Book' });
 
-      expect(consoleSpy).toHaveBeenCalledWith('[DatabaseService] CREATE');
-      expect(consoleSpy).toHaveBeenCalledWith('  Table:', 'books');
+      expect(infoSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          table: 'books',
+          data: { title: 'Test Book' },
+        }),
+        '[DatabaseService] CREATE'
+      );
 
-      consoleSpy.mockRestore();
+      infoSpy.mockRestore();
     });
 
-    it('logs update operation to console', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    it('logs update operation through shared logger', async () => {
+      const infoSpy = jest.spyOn(getLogger(), 'info').mockImplementation();
 
       const service = new ConsoleDatabaseService();
       await service.update('books', { status: 'published' }, { id: 1 });
 
-      expect(consoleSpy).toHaveBeenCalledWith('[DatabaseService] UPDATE');
-      expect(consoleSpy).toHaveBeenCalledWith('  Table:', 'books');
+      expect(infoSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          table: 'books',
+          data: { status: 'published' },
+          where: { id: 1 },
+        }),
+        '[DatabaseService] UPDATE'
+      );
 
-      consoleSpy.mockRestore();
+      infoSpy.mockRestore();
     });
 
-    it('logs delete operation to console', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    it('logs delete operation through shared logger', async () => {
+      const infoSpy = jest.spyOn(getLogger(), 'info').mockImplementation();
 
       const service = new ConsoleDatabaseService();
       await service.delete('books', { id: 1 });
 
-      expect(consoleSpy).toHaveBeenCalledWith('[DatabaseService] DELETE');
-      expect(consoleSpy).toHaveBeenCalledWith('  Table:', 'books');
+      expect(infoSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          table: 'books',
+          where: { id: 1 },
+        }),
+        '[DatabaseService] DELETE'
+      );
 
-      consoleSpy.mockRestore();
+      infoSpy.mockRestore();
     });
   });
 });

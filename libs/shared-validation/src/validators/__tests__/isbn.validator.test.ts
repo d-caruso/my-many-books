@@ -6,8 +6,6 @@
 
 import {
   validateIsbn,
-  validateIsbn10,
-  validateIsbn13,
   validateIsbn10Checksum,
   validateIsbn13Checksum,
   convertIsbn10ToIsbn13,

@@ -56,14 +56,15 @@ export class AuthService {
   }
 
   private unwrapEnvelopeData<T>(payload: unknown): { data: T; message?: string } {
-    if (payload && typeof payload === 'object' && 'success' in payload) {
-      const maybeEnvelope = payload as Partial<ApiSuccessEnvelope<T>>;
-      if (maybeEnvelope.success === true && 'data' in maybeEnvelope) {
-        return {
-          data: maybeEnvelope.data as T,
-          message: maybeEnvelope.message,
-        };
-      }
+    if (
+      payload !== null &&
+      typeof payload === 'object' &&
+      'success' in payload &&
+      'data' in payload &&
+      (payload as Record<string, unknown>).success === true
+    ) {
+      const envelope = payload as ApiSuccessEnvelope<T>;
+      return { data: envelope.data, message: envelope.message };
     }
 
     throw new Error('Invalid API success envelope');
@@ -103,6 +104,18 @@ export class AuthService {
     return { code: 'INTERNAL_ERROR', message: fallback };
   }
 
+  private async readJsonPayload(response: Response): Promise<unknown> {
+    return (await response.json()) as unknown;
+  }
+
+  private async readJsonPayloadOrUndefined(response: Response): Promise<unknown> {
+    try {
+      return await this.readJsonPayload(response);
+    } catch {
+      return undefined;
+    }
+  }
+
   private async applyLoginResponse(data: LoginResponse): Promise<User> {
     const tokens: AuthTokens = {
       idToken: data.idToken,
@@ -119,27 +132,22 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<User> {
-    try {
-      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.LOGIN), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Send/receive cookies
-        body: JSON.stringify({ email, password }),
-      });
+    const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.LOGIN), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Send/receive cookies
+      body: JSON.stringify({ email, password }),
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => undefined);
-        const { code, message } = this.extractApiError(errorPayload, 'Login failed');
-        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
-      }
-
-      const payload = await response.json() as unknown;
-      const { data } = this.unwrapEnvelopeData<LoginResponse>(payload);
-      return await this.applyLoginResponse(data);
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await this.readJsonPayloadOrUndefined(response);
+      const { code, message } = this.extractApiError(errorPayload, 'Login failed');
+      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
     }
+
+    const payload = await this.readJsonPayload(response);
+    const { data } = this.unwrapEnvelopeData<LoginResponse>(payload);
+    return await this.applyLoginResponse(data);
   }
 
   async loginWithGoogleCode(payload: {
@@ -148,27 +156,22 @@ export class AuthService {
     redirectUri: string;
     codeVerifier: string;
   }): Promise<User> {
-    try {
-      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.GOOGLE_MOBILE_EXCHANGE), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
+    const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.GOOGLE_MOBILE_EXCHANGE), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => undefined);
-        const { code, message } = this.extractApiError(errorPayload, 'Google login failed');
-        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
-      }
-
-      const responseBody = await response.json() as unknown;
-      const { data } = this.unwrapEnvelopeData<LoginResponse>(responseBody);
-      return await this.applyLoginResponse(data);
-    } catch (error) {
-      console.error('Google login error:', error);
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await this.readJsonPayloadOrUndefined(response);
+      const { code, message } = this.extractApiError(errorPayload, 'Google login failed');
+      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
     }
+
+    const responseBody = await this.readJsonPayload(response);
+    const { data } = this.unwrapEnvelopeData<LoginResponse>(responseBody);
+    return await this.applyLoginResponse(data);
   }
 
   async register(userData: {
@@ -178,35 +181,30 @@ export class AuthService {
     surname: string;
     locale?: string;
   }): Promise<RegisterResponse> {
-    try {
-      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.REGISTER), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
+    const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.REGISTER), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => undefined);
-        const { code, message } = this.extractApiError(errorPayload, 'Registration failed');
-        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
-      }
-
-      const payload = await response.json() as unknown;
-      const { data, message } = this.unwrapEnvelopeData<RegisterResponseData>(payload);
-
-      if (typeof data?.requiresVerification !== 'boolean') {
-        throw new Error('Invalid API success envelope');
-      }
-
-      return {
-        success: true,
-        requiresVerification: data.requiresVerification,
-        message: message || 'Registration successful',
-      };
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await this.readJsonPayloadOrUndefined(response);
+      const { code, message } = this.extractApiError(errorPayload, 'Registration failed');
+      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
     }
+
+    const payload = await this.readJsonPayload(response);
+    const { data, message } = this.unwrapEnvelopeData<RegisterResponseData>(payload);
+
+    if (typeof data?.requiresVerification !== 'boolean') {
+      throw new Error('Invalid API success envelope');
+    }
+
+    return {
+      success: true,
+      requiresVerification: data.requiresVerification,
+      message: message || 'Registration successful',
+    };
   }
 
   async logout(): Promise<string | null> {
@@ -217,7 +215,7 @@ export class AuthService {
         credentials: 'include',
       });
       if (response.ok) {
-        const payload = await response.json().catch(() => undefined);
+        const payload = await this.readJsonPayloadOrUndefined(response);
         try {
           const { data } = this.unwrapEnvelopeData<{ cognitoLogoutUrl: string | null }>(payload);
           cognitoLogoutUrl = data?.cognitoLogoutUrl ?? null;
@@ -225,8 +223,8 @@ export class AuthService {
           // old API without cognitoLogoutUrl
         }
       }
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch {
+      // Ignore logout API errors and clear local auth state in finally.
     } finally {
       await this.storage.clear();
       this.config.onAuthStateChange?.(null);
@@ -267,8 +265,7 @@ export class AuthService {
       }
 
       return { user, isAuthenticated: true };
-    } catch (error) {
-      console.error('Auth state check failed:', error);
+    } catch {
       await this.storage.clear();
       return { user: null, isAuthenticated: false };
     }
@@ -285,7 +282,7 @@ export class AuthService {
         return false;
       }
 
-      const payload = await response.json() as unknown;
+      const payload = await this.readJsonPayload(response);
       const { data } = this.unwrapEnvelopeData<RefreshResponse>(payload);
 
       const tokens: AuthTokens = {
@@ -304,8 +301,7 @@ export class AuthService {
       this.config.onTokenRefresh?.(tokens);
 
       return true;
-    } catch (error) {
-      console.error('Silent refresh failed:', error);
+    } catch {
       return false;
     }
   }
@@ -361,40 +357,30 @@ export class AuthService {
   }
 
   async verifyEmail(email: string, code: string): Promise<void> {
-    try {
-      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.VERIFY_EMAIL), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code }),
-      });
+    const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.VERIFY_EMAIL), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => undefined);
-        const { code, message } = this.extractApiError(errorPayload, 'Email verification failed');
-        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
-      }
-    } catch (error) {
-      console.error('Email verification error:', error);
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await this.readJsonPayloadOrUndefined(response);
+      const { code, message } = this.extractApiError(errorPayload, 'Email verification failed');
+      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
     }
   }
 
   async resendCode(email: string): Promise<void> {
-    try {
-      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.RESEND_CODE), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
+    const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.RESEND_CODE), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => undefined);
-        const { code, message } = this.extractApiError(errorPayload, 'Failed to resend verification code');
-        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
-      }
-    } catch (error) {
-      console.error('Resend verification code error:', error);
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await this.readJsonPayloadOrUndefined(response);
+      const { code, message } = this.extractApiError(errorPayload, 'Failed to resend verification code');
+      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
     }
   }
 
@@ -403,101 +389,86 @@ export class AuthService {
   }
 
   async changePassword(input: ChangePasswordInput): Promise<User> {
-    try {
-      const idToken = await this.getIdToken();
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (idToken) {
-        headers['Authorization'] = `Bearer ${idToken}`;
-      }
-
-      const response = await fetch(this.buildApiUrl(`${USERS_ENDPOINT}/${input.userId}`), {
-        method: 'PATCH',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({
-          action: USER_ACCOUNT_PATCH_ACTIONS.CHANGE_PASSWORD,
-          currentPassword: input.currentPassword,
-          newPassword: input.newPassword,
-          locale: input.locale,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => undefined);
-        const { code, message } = this.extractApiError(errorPayload, 'Password change failed');
-        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
-      }
-
-      const payload = (await response.json()) as unknown;
-      const { data } = this.unwrapEnvelopeData<ChangePasswordResponse>(payload);
-
-      if (!data.changed) {
-        throw new Error('Password was not changed');
-      }
-
-      return await this.applyLoginResponse({
-        accessToken: data.accessToken,
-        idToken: data.idToken,
-        expiresIn: data.expiresIn,
-        user: data.user,
-      });
-    } catch (error) {
-      console.error('Password change error:', error);
-      throw error;
+    const idToken = await this.getIdToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (idToken) {
+      headers['Authorization'] = `Bearer ${idToken}`;
     }
+
+    const response = await fetch(this.buildApiUrl(`${USERS_ENDPOINT}/${input.userId}`), {
+      method: 'PATCH',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({
+        action: USER_ACCOUNT_PATCH_ACTIONS.CHANGE_PASSWORD,
+        currentPassword: input.currentPassword,
+        newPassword: input.newPassword,
+        locale: input.locale,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorPayload = await this.readJsonPayloadOrUndefined(response);
+      const { code, message } = this.extractApiError(errorPayload, 'Password change failed');
+      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+    }
+
+    const payload = await this.readJsonPayload(response);
+    const { data } = this.unwrapEnvelopeData<ChangePasswordResponse>(payload);
+
+    if (!data.changed) {
+      throw new Error('Password was not changed');
+    }
+
+    return await this.applyLoginResponse({
+      accessToken: data.accessToken,
+      idToken: data.idToken,
+      expiresIn: data.expiresIn,
+      user: data.user,
+    });
   }
 
   async requestPasswordReset(email: string): Promise<ForgotPasswordResponse> {
-    try {
-      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.FORGOT_PASSWORD), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
+    const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.FORGOT_PASSWORD), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => undefined);
-        const { code, message } = this.extractApiError(
-          errorPayload,
-          'Failed to process password reset request'
-        );
-        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
-      }
-
-      const payload = (await response.json()) as unknown;
-      const { data } = this.unwrapEnvelopeData<ForgotPasswordResponse>(payload);
-      return data;
-    } catch (error) {
-      console.error('Request password reset error:', error);
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await this.readJsonPayloadOrUndefined(response);
+      const { code, message } = this.extractApiError(
+        errorPayload,
+        'Failed to process password reset request'
+      );
+      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
     }
+
+    const payload = await this.readJsonPayload(response);
+    const { data } = this.unwrapEnvelopeData<ForgotPasswordResponse>(payload);
+    return data;
   }
 
   async confirmPasswordReset(input: ConfirmPasswordResetInput): Promise<ConfirmPasswordResetResponse> {
-    try {
-      const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.CONFIRM_FORGOT_PASSWORD), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: input.email,
-          code: input.code,
-          newPassword: input.newPassword,
-          locale: input.locale,
-        }),
-      });
+    const response = await fetch(this.buildApiUrl(AUTH_ENDPOINTS.CONFIRM_FORGOT_PASSWORD), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: input.email,
+        code: input.code,
+        newPassword: input.newPassword,
+        locale: input.locale,
+      }),
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => undefined);
-        const { code, message } = this.extractApiError(errorPayload, 'Failed to reset password');
-        throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
-      }
-
-      const payload = (await response.json()) as unknown;
-      const { data } = this.unwrapEnvelopeData<ConfirmPasswordResetResponse>(payload);
-      return data;
-    } catch (error) {
-      console.error('Confirm password reset error:', error);
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await this.readJsonPayloadOrUndefined(response);
+      const { code, message } = this.extractApiError(errorPayload, 'Failed to reset password');
+      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
     }
+
+    const payload = await this.readJsonPayload(response);
+    const { data } = this.unwrapEnvelopeData<ConfirmPasswordResetResponse>(payload);
+    return data;
   }
 }

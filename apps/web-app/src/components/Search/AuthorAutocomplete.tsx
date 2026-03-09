@@ -13,6 +13,7 @@ import type {
   AutocompleteInputChangeReason,
 } from '@mui/material/Autocomplete';
 import type { Author } from '@my-many-books/shared-types';
+import { logger } from '../../utils/logger';
 import { useApi } from '../../contexts/ApiContext';
 
 interface AuthorAutocompleteProps {
@@ -68,7 +69,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
           setAuthors(sorted);
         }
       } catch (error) {
-        console.error('Author preload failed:', error);
+        logger.error('Author preload failed:', error);
         if (mountedRef.current) {
           setAuthors([]);
         }

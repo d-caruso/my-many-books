@@ -30,7 +30,7 @@ export const HookAnalyticsPage: React.FC = () => {
       if (controller.signal.aborted) return;
       setActionStats(payload);
       setError(null);
-    } catch (err: any) {
+    } catch {
       if (controller.signal.aborted) return;
       setError(t('admin.mobile_hooks.errors.analytics.load'));
     }

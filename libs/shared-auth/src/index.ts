@@ -7,10 +7,6 @@
 export { AuthService } from './AuthService';
 export { AuthApiError } from './AuthApiError';
 
-// Storage adapters
-export { WebStorageAdapter } from './adapters/WebStorageAdapter';
-export { MobileStorageAdapter } from './adapters/MobileStorageAdapter';
-export { LocalStorageAdapter } from './adapters/LocalStorageAdapter';
 
 // React components and hooks
 export { AuthProvider, useAuth } from './react/AuthProvider';
