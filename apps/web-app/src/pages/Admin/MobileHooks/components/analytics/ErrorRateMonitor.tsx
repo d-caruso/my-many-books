@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { SEVERITY, type Severity } from '@my-many-books/shared-design';
+import { SEVERITY, type Severity } from '@my-many-books/shared-types';
 import type { MobileAnalyticsStatsResponse } from '../../../../../services/api';
 import { severityToMuiColor, severityToMuiLinearProgressColor } from '../../../../../utils/severityToMuiColor';
 

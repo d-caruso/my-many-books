@@ -1,14 +1,9 @@
 import { themes } from '../themes';
-import { designTokens } from '../tokens';
 import type { ThemeName } from '@my-many-books/shared-types';
 
 const hexColor = /^#[0-9A-Fa-f]{6}$/;
 
 describe('themes', () => {
-  test('snapshot', () => {
-    expect(themes).toMatchSnapshot();
-  });
-
   test('record keys are complete and stable', () => {
     const themeNames = Object.keys(themes).sort();
     expect(themeNames).toEqual(['bookish', 'dark', 'default', 'forest', 'lavender', 'ocean', 'sunset']);
@@ -38,19 +33,14 @@ describe('themes', () => {
   });
 
   test('switching themes changes primary color', () => {
-    const defaultTheme = themes.default;
-    const darkTheme = themes.dark;
-
-    expect(defaultTheme.colors.primary).not.toBe(darkTheme.colors.primary);
-    expect(defaultTheme.colors.background).not.toBe(darkTheme.colors.background);
+    expect(themes.default.colors.primary).not.toBe(themes.dark.colors.primary);
+    expect(themes.default.colors.background).not.toBe(themes.dark.colors.background);
   });
 
-  test('default and dark themes align with designTokens neutrals', () => {
-    expect(themes.default.colors.background).toBe(designTokens.colors.neutral[50]);
-    expect(themes.default.colors.text.primary).toBe(designTokens.colors.neutral[900]);
-
-    expect(themes.dark.colors.background).toBe(designTokens.colors.neutral[900]);
-    expect(themes.dark.colors.text.primary).toBe(designTokens.colors.neutral[100]);
+  test('default and dark themes use expected neutral hex values', () => {
+    expect(themes.default.colors.background).toBe('#F9FAFB');
+    expect(themes.default.colors.text.primary).toBe('#111827');
+    expect(themes.dark.colors.background).toBe('#111827');
+    expect(themes.dark.colors.text.primary).toBe('#F3F4F6');
   });
 });
-

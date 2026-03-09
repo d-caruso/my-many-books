@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Card, CardContent, Chip, Divider, LinearProgress, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { SEVERITY, type Severity } from '@my-many-books/shared-design';
+import { SEVERITY, type Severity } from '@my-many-books/shared-types';
 import type {
   AdminMobileHooksConfigListenersResponse,
   AdminMobileHooksEmergencyStatusResponse,

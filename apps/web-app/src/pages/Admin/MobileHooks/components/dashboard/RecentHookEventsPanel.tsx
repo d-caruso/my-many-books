@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useTranslation } from 'react-i18next';
-import { SEVERITY, type Severity } from '@my-many-books/shared-design';
+import { SEVERITY, type Severity } from '@my-many-books/shared-types';
 import type { AdminMobileHooksRecentEvent } from '../../../../../services/api';
 import { severityToMuiColor } from '../../../../../utils/severityToMuiColor';
 

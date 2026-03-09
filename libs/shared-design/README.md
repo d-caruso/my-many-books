@@ -4,57 +4,36 @@ Shared, platform-agnostic design primitives for the monorepo.
 
 ## What it provides
 
-- **Design tokens**: `designTokens` (colors, spacing, typography, etc.)
-- **Themes**: `themes` (built from tokens)
-- **Component styles**: `componentStyles` (platform-agnostic style objects)
-- **UI-agnostic severity**: `SEVERITY`, `Severity`, `severityToHex`
+- **Book status colors**: `BOOK_STATUS_COLORS`, `getStatusColor`
+- **Themes**: `themes` (aspirational — not yet consumed by any app)
 
-## Severity (UI-agnostic)
+## Book status colors
 
-`Severity` is a simple, cross-platform semantic signal:
-
-- `success`
-- `warning`
-- `error`
-- `neutral`
-
-Use it for health/status indicators, alerts, and any “good / degraded / bad / unknown” UI state.
-
-### Rule: map at the app boundary
-
-Apps should convert `Severity` to whatever the current UI framework needs:
-
-- **Web (MUI)**: map to MUI color tokens (ex: `'success' | 'warning' | 'error' | 'default'`) or style via `sx` using hex colors.
-- **Mobile (React Native / Paper)**: map to theme colors / component props in the mobile UI framework.
-
-Shared libraries should avoid depending on framework-specific tokens.
-
-### `severityToHex`
-
-If your component can take a hex color, use:
+`BOOK_STATUS_COLORS` is a hex color map aligned with MUI's default theme palette.
+Web-app maps these to MUI semantic names; other platforms use the hex values directly.
 
 ```ts
-import { SEVERITY, severityToHex } from '@my-many-books/shared-design';
+import { BOOK_STATUS_COLORS, getStatusColor } from '@my-many-books/shared-design';
 
-const warningColor = severityToHex(SEVERITY.WARNING);
+// Constant map
+BOOK_STATUS_COLORS.reading  // '#1976D2'
+BOOK_STATUS_COLORS.paused   // '#ED6C02'
+BOOK_STATUS_COLORS.finished // '#2E7D32'
+BOOK_STATUS_COLORS.none     // '#757575'
+
+// Helper (returns hex for any BookStatus, falls back to 'none')
+const color = getStatusColor(book.status);
 ```
 
-### Web (MUI) example mapper
+## Severity
+
+`SEVERITY` and `Severity` have been moved to `@my-many-books/shared-types`.
 
 ```ts
-import type { Severity } from '@my-many-books/shared-design';
-
-type MuiChipColor = 'success' | 'warning' | 'error' | 'default';
-
-export const severityToMuiChipColor = (severity: Severity): MuiChipColor =>
-  severity === 'neutral' ? 'default' : severity;
+import { SEVERITY, type Severity } from '@my-many-books/shared-types';
 ```
 
-### Mobile example mapper
+## Themes
 
-```ts
-import { severityToHex, type Severity } from '@my-many-books/shared-design';
-
-export const severityToColor = (severity: Severity) => severityToHex(severity);
-```
-
+`themes` is defined but not yet consumed by any app. Each platform needs to map
+the theme color tokens to its own UI framework (MUI / React Native Paper).

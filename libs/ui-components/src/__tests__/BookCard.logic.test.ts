@@ -1,4 +1,4 @@
-import { formatBookCardData, getStatusColor, getStatusLabel } from '../BookCard/BookCard.logic';
+import { formatBookCardData, getStatusColor } from '../BookCard/BookCard.logic';
 import type { Book } from '@my-many-books/shared-types';
 
 const baseBook: Book = {
@@ -32,17 +32,10 @@ describe('BookCard.logic', () => {
   });
 
   test('getStatusColor maps statuses to stable colors', () => {
-    expect(getStatusColor('finished')).toBe('#10B981');
-    expect(getStatusColor('reading')).toBe('#3B82F6');
-    expect(getStatusColor('paused')).toBe('#F59E0B');
-    expect(getStatusColor(undefined)).toBe('#6B7280');
-  });
-
-  test('getStatusLabel maps statuses to labels', () => {
-    expect(getStatusLabel('reading')).toBe('Reading');
-    expect(getStatusLabel('paused')).toBe('Paused');
-    expect(getStatusLabel('finished')).toBe('Finished');
-    expect(getStatusLabel(undefined)).toBe('');
+    expect(getStatusColor('finished')).toBe('#2E7D32');
+    expect(getStatusColor('reading')).toBe('#1976D2');
+    expect(getStatusColor('paused')).toBe('#ED6C02');
+    expect(getStatusColor(undefined)).toBe('#757575');
   });
 
 });

@@ -43,6 +43,9 @@ export * from './constants/emergency.constants';
 export * from './constants/audit-actions.constants';
 export * from './constants/auth.constants';
 
+// Severity exports
+export * from './constants/severity';
+
 // Auth response exports
 export * from './auth-response';
 

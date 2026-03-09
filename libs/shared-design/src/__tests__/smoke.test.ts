@@ -1,10 +1,12 @@
-import { componentStyles, designTokens, themes } from '../index';
+import { themes, BOOK_STATUS_COLORS, getStatusColor } from '../index';
 
 describe('shared-design exports', () => {
-  test('exports designTokens, themes, and componentStyles', () => {
-    expect(designTokens).toBeDefined();
+  test('exports themes', () => {
     expect(themes).toBeDefined();
-    expect(componentStyles).toBeDefined();
+  });
+
+  test('exports BOOK_STATUS_COLORS and getStatusColor', () => {
+    expect(BOOK_STATUS_COLORS).toBeDefined();
+    expect(getStatusColor).toBeInstanceOf(Function);
   });
 });
-

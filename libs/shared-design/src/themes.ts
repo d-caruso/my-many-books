@@ -1,8 +1,7 @@
-/**
- * Theme definitions using design tokens
- */
+// TODO: Unused — defined for future theme switching support across web and mobile.
+// Neither web-app nor mobile currently consume this. When adopted, each platform
+// will need to map these theme colors to its own UI framework (MUI / React Native Paper).
 
-import { designTokens } from './tokens';
 import { ThemeName, Theme } from '@my-many-books/shared-types';
 
 export const themes: Record<ThemeName, Theme> = {
@@ -10,46 +9,46 @@ export const themes: Record<ThemeName, Theme> = {
     name: 'default',
     displayName: 'Default',
     colors: {
-      primary: designTokens.colors.primary[500],
-      secondary: designTokens.colors.neutral[100], 
-      accent: designTokens.colors.primary[600],
+      primary: '#3B82F6',
+      secondary: '#F3F4F6',
+      accent: '#2563EB',
       surface: '#FFFFFF',
-      background: designTokens.colors.neutral[50],
+      background: '#F9FAFB',
       text: {
-        primary: designTokens.colors.neutral[900],
-        secondary: designTokens.colors.neutral[600],
-        muted: designTokens.colors.neutral[400],
+        primary: '#111827',
+        secondary: '#4B5563',
+        muted: '#9CA3AF',
       },
       semantic: {
-        success: designTokens.colors.semantic.success,
-        warning: designTokens.colors.semantic.warning,
-        error: designTokens.colors.semantic.error,
-        info: designTokens.colors.semantic.info,
-      }
-    }
+        success: '#10B981',
+        warning: '#F59E0B',
+        error: '#EF4444',
+        info: '#3B82F6',
+      },
+    },
   },
 
   dark: {
     name: 'dark',
     displayName: 'Dark Mode',
     colors: {
-      primary: designTokens.colors.primary[400],
-      secondary: designTokens.colors.neutral[800],
-      accent: designTokens.colors.primary[300],
-      surface: designTokens.colors.neutral[900],
-      background: designTokens.colors.neutral[900],
+      primary: '#60A5FA',
+      secondary: '#1F2937',
+      accent: '#93C5FD',
+      surface: '#111827',
+      background: '#111827',
       text: {
-        primary: designTokens.colors.neutral[100],
-        secondary: designTokens.colors.neutral[300],
-        muted: designTokens.colors.neutral[500],
+        primary: '#F3F4F6',
+        secondary: '#D1D5DB',
+        muted: '#6B7280',
       },
       semantic: {
         success: '#34D399',
-        warning: '#FBBF24', 
+        warning: '#FBBF24',
         error: '#F87171',
         info: '#60A5FA',
-      }
-    }
+      },
+    },
   },
 
   bookish: {
@@ -71,8 +70,8 @@ export const themes: Record<ThemeName, Theme> = {
         warning: '#F57C00',
         error: '#C62828',
         info: '#1565C0',
-      }
-    }
+      },
+    },
   },
 
   forest: {
@@ -94,8 +93,8 @@ export const themes: Record<ThemeName, Theme> = {
         warning: '#FF9800',
         error: '#F44336',
         info: '#2196F3',
-      }
-    }
+      },
+    },
   },
 
   ocean: {
@@ -117,8 +116,8 @@ export const themes: Record<ThemeName, Theme> = {
         warning: '#FF9800',
         error: '#F44336',
         info: '#2196F3',
-      }
-    }
+      },
+    },
   },
 
   sunset: {
@@ -140,8 +139,8 @@ export const themes: Record<ThemeName, Theme> = {
         warning: '#FF9800',
         error: '#F44336',
         info: '#2196F3',
-      }
-    }
+      },
+    },
   },
 
   lavender: {
@@ -163,7 +162,7 @@ export const themes: Record<ThemeName, Theme> = {
         warning: '#FF9800',
         error: '#F44336',
         info: '#2196F3',
-      }
-    }
-  }
+      },
+    },
+  },
 };

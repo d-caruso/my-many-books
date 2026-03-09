@@ -1,6 +1,5 @@
 import { createTheme } from '@mui/material/styles';
 import { themes } from '../themes';
-import { designTokens } from '../tokens';
 import type { ThemeName } from '@my-many-books/shared-types';
 
 describe('Material-UI integration', () => {
@@ -25,15 +24,15 @@ describe('Material-UI integration', () => {
           info: { main: theme.colors.semantic.info },
         },
         typography: {
-          fontFamily: designTokens.typography.fontFamily.primary,
-          fontSize: designTokens.typography.fontSize.base,
-          fontWeightLight: designTokens.typography.fontWeight.light,
-          fontWeightRegular: designTokens.typography.fontWeight.normal,
-          fontWeightMedium: designTokens.typography.fontWeight.medium,
-          fontWeightBold: designTokens.typography.fontWeight.bold,
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+          fontSize: 16,
+          fontWeightLight: 300,
+          fontWeightRegular: 400,
+          fontWeightMedium: 500,
+          fontWeightBold: 700,
         },
         shape: {
-          borderRadius: designTokens.borderRadius.md,
+          borderRadius: 6,
         },
       });
 
@@ -43,4 +42,3 @@ describe('Material-UI integration', () => {
     }
   });
 });
-
