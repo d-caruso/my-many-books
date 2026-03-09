@@ -1,10 +1,10 @@
 // Vitest setup file for additional globals and polyfills
+import { TextEncoder as NodeTextEncoder, TextDecoder as NodeTextDecoder } from 'util';
 
 // Add TextEncoder/TextDecoder for Node.js environment if not available
 if (typeof global.TextEncoder === 'undefined') {
-  const { TextEncoder, TextDecoder } = require('util');
-  global.TextEncoder = TextEncoder;
-  global.TextDecoder = TextDecoder as any;
+  global.TextEncoder = NodeTextEncoder;
+  global.TextDecoder = NodeTextDecoder as unknown as typeof TextDecoder;
 }
 
 // Mock window.location for tests

@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useISBNScanner } from '../../hooks/useISBNScanner';
 import { ScanResult } from '../../hooks/../types';
+import { logger } from '../../utils/logger';
 
 // Mock scanner controls
 const mockControls = { stop: vi.fn() };
@@ -36,12 +37,12 @@ Object.defineProperty(navigator, 'mediaDevices', {
 
 // Mock console.error to keep tests clean
 const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 const consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+const loggerWarnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
 describe('useISBNScanner', () => {
-  let mockOnScanSuccess: any;
-  let mockOnScanError: any;
+  let mockOnScanSuccess: ReturnType<typeof vi.fn>;
+  let mockOnScanError: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -67,8 +68,8 @@ describe('useISBNScanner', () => {
     vi.clearAllTimers();
     vi.useRealTimers();
     consoleSpy.mockClear();
-    consoleWarnSpy.mockClear();
     consoleDebugSpy.mockClear();
+    loggerWarnSpy.mockClear();
   });
 
   test('initializes with default state', () => {
@@ -418,7 +419,7 @@ describe('useISBNScanner', () => {
         success: true,
       };
 
-      let scanCallback: ((result: any, error?: any) => void) | undefined;
+      let scanCallback: ((result: unknown, error?: unknown) => void) | undefined;
 
       mockCodeReader.decodeFromConstraints.mockImplementation((constraints, video, callback) => {
         scanCallback = callback;
@@ -454,7 +455,7 @@ describe('useISBNScanner', () => {
     test('rejects non-ISBN EAN-13 barcodes (no 978/979 prefix)', async () => {
       const nonISBNBarcode = '5477148210281';
 
-      let scanCallback: ((result: any, error?: any) => void) | undefined;
+      let scanCallback: ((result: unknown, error?: unknown) => void) | undefined;
 
       mockCodeReader.decodeFromConstraints.mockImplementation((constraints, video, callback) => {
         scanCallback = callback;
@@ -489,7 +490,7 @@ describe('useISBNScanner', () => {
     });
 
     test('logs warning for non-NotFoundException scan errors', async () => {
-      let scanCallback: ((result: any, error?: any) => void) | undefined;
+      let scanCallback: ((result: unknown, error?: unknown) => void) | undefined;
 
       mockCodeReader.decodeFromConstraints.mockImplementation((constraints, video, callback) => {
         scanCallback = callback;
@@ -519,7 +520,7 @@ describe('useISBNScanner', () => {
         }
       });
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith('Scan error:', expect.any(Error));
+      expect(loggerWarnSpy).toHaveBeenCalledWith('Scan error:', expect.any(Error));
     });
   });
 

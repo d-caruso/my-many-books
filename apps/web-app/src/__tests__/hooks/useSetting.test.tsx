@@ -2,6 +2,8 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useSetting } from '../../hooks/useSetting';
 import { SettingsProvider } from '../../contexts/SettingsContext';
 import { ApiProvider } from '../../contexts/ApiContext';
+import type { ApiService } from '../../services/api';
+import type { SettingsApi } from '@my-many-books/shared-api';
 import React from 'react';
 
 const mockSettingsApi = {
@@ -16,11 +18,11 @@ const mockApiService = {
   post: vi.fn(),
   patch: vi.fn(),
   delete: vi.fn(),
-} as any;
+} as unknown as ApiService;
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ApiProvider apiService={mockApiService}>
-    <SettingsProvider settingsApi={mockSettingsApi as any}>
+    <SettingsProvider settingsApi={mockSettingsApi as unknown as SettingsApi}>
       {children}
     </SettingsProvider>
   </ApiProvider>

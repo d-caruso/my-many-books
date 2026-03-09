@@ -1,4 +1,3 @@
-import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -48,7 +47,7 @@ export const EmergencyControlsPanel: React.FC<EmergencyControlsPanelProps> = ({
     setError(null);
     try {
       await onUpdate({ enabled: false, reason: reason || undefined });
-    } catch (err: unknown) {
+    } catch {
       setError(t('admin.mobile_hooks.errors.emergency.disable'));
     } finally {
       setSaving(false);
@@ -60,7 +59,7 @@ export const EmergencyControlsPanel: React.FC<EmergencyControlsPanelProps> = ({
     setError(null);
     try {
       await onUpdate({ enabled: true });
-    } catch (err: unknown) {
+    } catch {
       setError(t('admin.mobile_hooks.errors.emergency.enable'));
     } finally {
       setSaving(false);

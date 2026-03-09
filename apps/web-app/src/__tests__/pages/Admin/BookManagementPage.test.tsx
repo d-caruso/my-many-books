@@ -17,13 +17,13 @@ vi.mock('../../../pages/Admin/AdminLayout', () => ({
 }));
 
 vi.mock('@mui/x-data-grid', () => ({
-  DataGrid: (props: any) => {
+  DataGrid: (props: { rows: Array<Record<string, unknown>> }) => {
     return (
       <div data-testid="data-grid">
-        {props.rows.map((row: any) => (
-          <div key={row.id} data-testid={`row-${row.id}`}>
-            <span data-testid={`title-${row.id}`}>{row.title}</span>
-            <span data-testid={`isbn-${row.id}`}>{row.isbnCode}</span>
+        {props.rows.map((row) => (
+          <div key={String(row.id)} data-testid={`row-${row.id}`}>
+            <span data-testid={`title-${row.id}`}>{String(row.title ?? '')}</span>
+            <span data-testid={`isbn-${row.id}`}>{String(row.isbnCode ?? '')}</span>
           </div>
         ))}
       </div>
@@ -73,7 +73,7 @@ testI18n.use(initReactI18next).init({
 const renderWithProvider = (ui: React.ReactElement) => {
   return rtlRender(
     <I18nextProvider i18n={testI18n}>
-      <ApiProvider apiService={mockApiService as any}>
+      <ApiProvider apiService={mockApiService as unknown as import('../../../services/api').ApiService}>
         {ui}
       </ApiProvider>
     </I18nextProvider>

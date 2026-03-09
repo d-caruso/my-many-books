@@ -35,7 +35,7 @@ export async function expectNoA11yViolations(container: HTMLElement) {
  */
 export async function runAxeTest(
   container: HTMLElement,
-  options?: any
+  options?: Parameters<typeof axe>[1]
 ) {
   const results = await axe(container, options);
   expect(results).toHaveNoViolations();

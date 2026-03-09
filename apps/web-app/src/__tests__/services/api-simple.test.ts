@@ -21,8 +21,8 @@ Object.defineProperty(window, 'localStorage', {
 
 // Create mock axios instance using vi.hoisted to avoid scope issues
 const { mockAxiosInstance, requestInterceptors, responseInterceptors } = vi.hoisted(() => {
-  const requestInterceptors: any[] = [];
-  const responseInterceptors: any[] = [];
+  const requestInterceptors: Array<{ onFulfilled: unknown; onRejected: unknown }> = [];
+  const responseInterceptors: Array<{ onFulfilled: unknown; onRejected: unknown }> = [];
   const mockAxiosInstance = {
     get: vi.fn(),
     post: vi.fn(),

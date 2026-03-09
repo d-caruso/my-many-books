@@ -43,7 +43,7 @@ vi.mock('../../services/authService', () => ({
 
 beforeEach(() => {
   mockFetch.mockReset();
-  (globalThis as any).fetch = mockFetch;
+  (globalThis as unknown as { fetch: typeof mockFetch }).fetch = mockFetch;
 });
 
 describe('ApiService (admin mobile-hooks)', () => {

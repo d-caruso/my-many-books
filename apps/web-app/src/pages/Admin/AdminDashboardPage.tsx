@@ -50,7 +50,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
           >
             {React.cloneElement(icon, {
               sx: { fontSize: 40, color: 'white' }
-            } as any)}
+            } as object)}
           </Box>
         </Box>
       </CardContent>

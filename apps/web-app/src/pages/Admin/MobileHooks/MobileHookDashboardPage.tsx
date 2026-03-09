@@ -1,4 +1,3 @@
-import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Snackbar, Typography } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
@@ -84,7 +83,7 @@ export const MobileHookDashboardPage: React.FC = () => {
       const payload = await apiService.getAdminMobileHooksConfigListeners(controller.signal);
       if (controller.signal.aborted) return;
       setListenersConfig(payload);
-    } catch (err: unknown) {
+    } catch {
       if (controller.signal.aborted) return;
       setListenersError(t('admin.mobile_hooks.errors.listeners.load'));
     } finally {
@@ -112,7 +111,7 @@ export const MobileHookDashboardPage: React.FC = () => {
         const payload = await apiService.getAdminMobileHooksRecentEvents(50, controller.signal);
         if (controller.signal.aborted) return;
         setRecentEvents(payload);
-      } catch (err: unknown) {
+      } catch {
         if (controller.signal.aborted) return;
         setRecentEventsError(t('admin.mobile_hooks.errors.recent_events.load'));
       } finally {
@@ -130,7 +129,7 @@ export const MobileHookDashboardPage: React.FC = () => {
       try {
         setLoading(true);
         await loadDashboard();
-      } catch (err: unknown) {
+      } catch {
         setError(t('admin.mobile_hooks.errors.dashboard.load'));
       } finally {
         setLoading(false);
@@ -162,7 +161,7 @@ export const MobileHookDashboardPage: React.FC = () => {
     try {
       setReloading(true);
       await Promise.all([loadDashboard(), loadListeners(), loadRecentEvents()]);
-    } catch (err: unknown) {
+    } catch {
       setError(t('admin.mobile_hooks.errors.dashboard.refresh'));
     } finally {
       setReloading(false);
@@ -189,7 +188,7 @@ export const MobileHookDashboardPage: React.FC = () => {
           : prev
       );
       showSuccess(t('admin.mobile_hooks.success.saved'));
-    } catch (err: unknown) {
+    } catch {
       setListenersError(t('admin.mobile_hooks.errors.listeners.save_listener', { name: eventName }));
     } finally {
       setSavingListeners(prev => {
@@ -220,7 +219,7 @@ export const MobileHookDashboardPage: React.FC = () => {
           : prev
       );
       showSuccess(t('admin.mobile_hooks.success.saved'));
-    } catch (err: unknown) {
+    } catch {
       setListenersError(t('admin.mobile_hooks.errors.listeners.save_category', { name: categoryName }));
     } finally {
       setSavingCategories(prev => {

@@ -11,7 +11,7 @@ import { env } from '../config/env';
 // Use LocalStorageAdapter when explicitly requested (E2E tests), WebStorageAdapter for production
 // LocalStorageAdapter persists auth across page reloads (needed for E2E tests)
 // WebStorageAdapter is in-memory for XSS security (production default)
-const useLocalStorage = typeof window !== 'undefined' && !!(window as any).useLocalStorage;
+const useLocalStorage = typeof window !== 'undefined' && !!(window as Window & { useLocalStorage?: boolean }).useLocalStorage;
 const storage = useLocalStorage ? new LocalStorageAdapter() : new WebStorageAdapter();
 
 // Create singleton instance

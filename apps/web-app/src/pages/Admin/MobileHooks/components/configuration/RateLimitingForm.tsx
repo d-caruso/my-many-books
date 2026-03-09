@@ -1,4 +1,3 @@
-import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -52,7 +51,7 @@ export const RateLimitingForm: React.FC = () => {
           nextDrafts[actionType] = extractRateLimitMinutes(info.settings ?? {});
         }
         setDrafts(nextDrafts);
-      } catch (err: unknown) {
+      } catch {
         setError(t('admin.mobile_hooks.errors.rate_limits.load'));
       } finally {
         setLoading(false);
@@ -101,7 +100,7 @@ export const RateLimitingForm: React.FC = () => {
           ? t('admin.mobile_hooks.success.rate_limits_updated')
           : t('admin.mobile_hooks.success.no_changes_to_save')
       );
-    } catch (err: unknown) {
+    } catch {
       setError(t('admin.mobile_hooks.errors.rate_limits.save'));
     } finally {
       setSaving(false);

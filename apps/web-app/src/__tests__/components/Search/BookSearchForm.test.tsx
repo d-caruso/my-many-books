@@ -10,7 +10,7 @@ vi.mock('../../../hooks/useCategories', () => ({
 }));
 
 vi.mock('../../../components/Search/AuthorAutocomplete', () => ({
-  AuthorAutocomplete: ({ value, onChange, placeholder, disabled, size }: any) => (
+  AuthorAutocomplete: ({ value, onChange, placeholder, disabled, size }: { value?: { name: string; surname: string } | null; onChange: (v: unknown) => void; placeholder?: string; disabled?: boolean; size?: string }) => (
     <div data-testid="author-autocomplete">
       <input
         data-testid="author-input"

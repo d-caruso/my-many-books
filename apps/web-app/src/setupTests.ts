@@ -15,8 +15,24 @@ import { TransformStream } from 'web-streams-polyfill/dist/ponyfill';
 
 import type { SetupServerApi } from 'msw/node';
 
+interface GridColumnDef {
+  field: string;
+  renderCell?: (params: Record<string, unknown>) => React.ReactNode;
+  valueGetter?: (params: Record<string, unknown>) => unknown;
+}
+
+interface DataGridMockProps {
+  rows?: Record<string, unknown>[];
+  columns?: GridColumnDef[];
+  loading?: boolean;
+  components?: Record<string, React.ComponentType<Record<string, unknown>> | undefined>;
+  componentsProps?: Record<string, Record<string, unknown> | undefined>;
+  slots?: Record<string, React.ComponentType<Record<string, unknown>> | undefined>;
+  slotProps?: Record<string, Record<string, unknown> | undefined>;
+}
+
 vi.mock('@mui/x-data-grid', () => {
-  const GridToolbarStub = ({ showQuickFilter, quickFilterProps, ...rest }: any) =>
+  const GridToolbarStub = ({ showQuickFilter: _showQuickFilter, quickFilterProps: _quickFilterProps, ...rest }: Record<string, unknown>) =>
     React.createElement('div', {
       'data-testid': 'mock-grid-toolbar',
       ...rest,
@@ -30,17 +46,17 @@ vi.mock('@mui/x-data-grid', () => {
     componentsProps = {},
     slots = {},
     slotProps = {},
-  }: any) => {
+  }: DataGridMockProps) => {
     const resolvedToolbar = slots?.toolbar ?? components.Toolbar;
     const toolbarProps = slotProps?.toolbar ?? componentsProps?.toolbar;
     const toolbarElement = resolvedToolbar
-      ? React.createElement(resolvedToolbar, toolbarProps)
+      ? React.createElement(resolvedToolbar, toolbarProps ?? {})
       : null;
     const resolvedLoadingOverlay = slots?.loadingOverlay ?? components.LoadingOverlay;
     const resolvedNoRowsOverlay = slots?.noRowsOverlay ?? components.NoRowsOverlay;
 
-    const rowElements = rows.map((row: any) => {
-      const cells = columns.map((column: any) => {
+    const rowElements = rows.map((row) => {
+      const cells = columns.map((column) => {
         const rawValue = row[column.field];
         const params = {
           row,
@@ -103,7 +119,7 @@ vi.mock('@mui/x-data-grid', () => {
 });
 
 if (typeof globalThis.TransformStream === 'undefined') {
-  globalThis.TransformStream = TransformStream as any;
+  globalThis.TransformStream = TransformStream as typeof globalThis.TransformStream;
 }
 
 // Extend expect with accessibility matchers
@@ -134,7 +150,16 @@ const vitestGlobals = globalThis as typeof globalThis & {
 };
 const safeVi = vitestGlobals.vi ?? {
   fn: () => {
-    const stub: any = () => undefined;
+    type Stub = (() => undefined) & {
+      mockImplementation: (impl: unknown) => Stub;
+      mockReturnValue: (val: unknown) => Stub;
+      mockResolvedValue: (val: unknown) => Stub;
+      mockRejectedValue: (val: unknown) => Stub;
+      mockReset: () => Stub;
+      mockReturnValueOnce: (val: unknown) => Stub;
+      mockResolvedValueOnce: (val: unknown) => Stub;
+    };
+    const stub = (() => undefined) as unknown as Stub;
     stub.mockImplementation = () => stub;
     stub.mockReturnValue = () => stub;
     stub.mockResolvedValue = () => stub;
@@ -190,7 +215,7 @@ if (typeof global.IntersectionObserver === 'undefined') {
     unobserve() {
       return null;
     }
-  } as any;
+  } as unknown as typeof IntersectionObserver;
 }
 
 // MediaDevices API (used by camera/scanner components)
@@ -200,7 +225,7 @@ if (typeof navigator.mediaDevices === 'undefined') {
     value: {
       getUserMedia: safeVi.fn(() => Promise.resolve({
         getTracks: () => [{ stop: safeVi.fn() }]
-      } as any)),
+      } as unknown as MediaStream)),
     },
   });
 }

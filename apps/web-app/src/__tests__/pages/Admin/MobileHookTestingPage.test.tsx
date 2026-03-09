@@ -23,7 +23,7 @@ describe('MobileHookTestingPage', () => {
       }),
       testAdminMobileHooksActionsConfig: vi.fn(),
       testAdminMobileHooksActionType: vi.fn(),
-    } as any;
+    } as unknown as import('../../../services/api').ApiService;
 
     rtlRender(
       <ApiProvider apiService={apiService}>

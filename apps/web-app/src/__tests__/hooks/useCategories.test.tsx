@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useCategories } from '../../hooks/useCategories';
 import { Category } from '../../hooks/../types';
 import { ApiProvider } from '../../contexts/ApiContext';
+import type { ApiService } from '../../services/api';
 import React from 'react';
 
 // Create mock API service
@@ -28,7 +29,7 @@ const mockApiService = {
   createAuthor: vi.fn(),
   getCurrentUser: vi.fn(),
   updateProfile: vi.fn(),
-} as any;
+} as unknown as ApiService;
 
 // Mock console.error to keep tests clean
 const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

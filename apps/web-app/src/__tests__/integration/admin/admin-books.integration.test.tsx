@@ -85,14 +85,14 @@ vi.mock('react-router-dom', async () => {
 
 // Mock DataGrid
 vi.mock('@mui/x-data-grid', () => ({
-  DataGrid: (props: any) => {
+  DataGrid: (props: { rows: Array<Record<string, unknown>> }) => {
     return (
       <div data-testid="data-grid">
-        {props.rows.map((row: any) => (
-          <div key={row.id} data-testid={`book-row-${row.id}`}>
-            <span data-testid={`book-title-${row.id}`}>{row.title}</span>
-            <span data-testid={`book-isbn-${row.id}`}>{row.isbnCode}</span>
-            <span>{row.userName || 'No owner'}</span>
+        {props.rows.map((row) => (
+          <div key={String(row.id)} data-testid={`book-row-${row.id}`}>
+            <span data-testid={`book-title-${row.id}`}>{String(row.title ?? '')}</span>
+            <span data-testid={`book-isbn-${row.id}`}>{String(row.isbnCode ?? '')}</span>
+            <span>{row.userName ? String(row.userName) : 'No owner'}</span>
           </div>
         ))}
       </div>

@@ -38,13 +38,13 @@ const mockAxiosInstance = {
 // global.fetch is mocked via vi.fn()
 
 describe('API Service with HTTP Layer Mocking Concept', () => {
-  let apiService: any;
+  let apiService: ReturnType<typeof createApiService>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup axios mock to return our mock instance
-    mockAxios.create.mockReturnValue(mockAxiosInstance as any);
+    mockAxios.create.mockReturnValue(mockAxiosInstance as unknown as ReturnType<typeof import('axios').default.create>);
     
     // Create API service configured for production (real HTTP calls)
     apiService = createApiService({

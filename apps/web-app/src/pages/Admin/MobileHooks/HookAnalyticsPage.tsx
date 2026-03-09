@@ -1,4 +1,3 @@
-import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -31,7 +30,7 @@ export const HookAnalyticsPage: React.FC = () => {
       if (controller.signal.aborted) return;
       setActionStats(payload);
       setError(null);
-    } catch (err: unknown) {
+    } catch {
       if (controller.signal.aborted) return;
       setError(t('admin.mobile_hooks.errors.analytics.load'));
     }

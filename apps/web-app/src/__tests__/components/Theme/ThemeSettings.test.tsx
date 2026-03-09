@@ -4,7 +4,7 @@ import { ThemeSettings } from '../../../components/Theme/ThemeSettings';
 
 // Mock ThemeSelector component
 vi.mock('../../../components/Theme/ThemeSelector', () => ({
-  ThemeSelector: ({ variant, showLabels }: any) => (
+  ThemeSelector: ({ variant, showLabels }: { variant?: string; showLabels?: boolean }) => (
     <div data-testid="theme-selector" data-variant={variant} data-show-labels={showLabels}>
       Theme Selector
     </div>
