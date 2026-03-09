@@ -195,6 +195,8 @@ export default function AuthScreen() {
           surname: '',
           locale: i18n.language || 'en',
         });
+        router.replace({ pathname: '/verify-email', params: { email } });
+        return;
       } else {
         await login(email, password);
         try {
