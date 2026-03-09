@@ -72,21 +72,18 @@ describe('shared-business manager integration', () => {
       getCurrentUser: async () => createUser(),
     };
 
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
     const manager = new AuthManager(api, tokenStorage);
 
-    await manager.login('USER@Example.com', 'Abcdef1');
+    await manager.login('USER@Example.com', 'Abcdef12');
     await expect(manager.isAuthenticated()).resolves.toBe(true);
 
     const user = await manager.getCurrentUser();
     expect(user?.email).toBe('user@example.com');
 
-    await manager.logout();
+    await expect(manager.logout()).resolves.toBeUndefined();
     await expect(manager.isAuthenticated()).resolves.toBe(false);
-
-    expect(warnSpy).toHaveBeenCalled();
-    warnSpy.mockRestore();
+    expect(token).toBeNull();
   });
 
   it('normalizes ISBN consistently between SearchManager and BookManager', async () => {

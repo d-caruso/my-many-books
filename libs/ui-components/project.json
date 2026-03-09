@@ -8,7 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": [
-        "{projectRoot}/dist"
+        "{workspaceRoot}/dist/libs/ui-components"
       ],
       "options": {
         "command": "tsc --project tsconfig.lib.json",

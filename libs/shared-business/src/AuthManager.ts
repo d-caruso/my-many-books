@@ -2,8 +2,78 @@
  * Authentication business logic manager - platform agnostic
  */
 
-import { User, AuthUser } from '@my-many-books/shared-types';
+import {
+  AuthUser,
+  PASSWORD_POLICY,
+  PASSWORD_RULE_PATTERNS,
+  PasswordRuleType,
+  User,
+} from '@my-many-books/shared-types';
+import * as enCommonRaw from '@my-many-books/shared-i18n/src/locales/en/common.json';
+import * as enValidationRaw from '@my-many-books/shared-i18n/src/locales/en/validation.json';
 import { isValidEmail } from '@my-many-books/shared-utils';
+
+const HTTP_STATUS_UNAUTHORIZED = 401;
+
+interface CommonMessages {
+  email_invalid: string;
+  first_name: string;
+  last_name: string;
+  login_failed: string;
+  registration_failed: string;
+  password_requirements: string;
+  password_rule_uppercase: string;
+  password_rule_lowercase: string;
+  password_rule_numbers: string;
+  password_rule_symbols: string;
+}
+
+interface ValidationMessages {
+  field_required: string;
+}
+
+const enCommon = enCommonRaw as unknown as CommonMessages;
+const enValidation = enValidationRaw as unknown as ValidationMessages;
+
+const formatMessage = (
+  template: string,
+  params: Record<string, string | number>
+): string => template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key: string) => String(params[key] ?? ''));
+
+const REQUIRED_PASSWORD_RULE_TYPES: PasswordRuleType[] = [
+  ...(PASSWORD_POLICY.REQUIRE_UPPERCASE ? (['uppercase'] as const) : []),
+  ...(PASSWORD_POLICY.REQUIRE_LOWERCASE ? (['lowercase'] as const) : []),
+  ...(PASSWORD_POLICY.REQUIRE_NUMBERS ? (['numbers'] as const) : []),
+  ...(PASSWORD_POLICY.REQUIRE_SYMBOLS ? (['symbols'] as const) : []),
+];
+
+const PASSWORD_RULE_LABELS: Record<PasswordRuleType, string> = {
+  uppercase: enCommon.password_rule_uppercase,
+  lowercase: enCommon.password_rule_lowercase,
+  numbers: enCommon.password_rule_numbers,
+  symbols: enCommon.password_rule_symbols,
+};
+
+const PASSWORD_REQUIRED_TYPES_LABEL = REQUIRED_PASSWORD_RULE_TYPES
+  .map((ruleType) => PASSWORD_RULE_LABELS[ruleType])
+  .join(', ');
+
+const PASSWORD_REQUIREMENTS_ERROR = formatMessage(enCommon.password_requirements, {
+  minLength: PASSWORD_POLICY.MIN_LENGTH,
+  requiredTypes: PASSWORD_REQUIRED_TYPES_LABEL,
+});
+
+const INVALID_EMAIL_FORMAT_ERROR = enCommon.email_invalid;
+const INVALID_PASSWORD_LENGTH_ERROR = PASSWORD_REQUIREMENTS_ERROR;
+const FIRST_NAME_REQUIRED_ERROR = formatMessage(enValidation.field_required, {
+  field: enCommon.first_name,
+});
+const LAST_NAME_REQUIRED_ERROR = formatMessage(enValidation.field_required, {
+  field: enCommon.last_name,
+});
+const WEAK_PASSWORD_ERROR = PASSWORD_REQUIREMENTS_ERROR;
+const LOGIN_FAILED_ERROR = enCommon.login_failed;
+const REGISTRATION_FAILED_ERROR = enCommon.registration_failed;
 
 export interface AuthAPI {
   login(email: string, password: string): Promise<{ user: AuthUser; token: string }>;
@@ -40,23 +110,23 @@ export class AuthManager {
 
     // Validate email format
     if (!isValidEmail(cleanedEmail)) {
-      throw new Error('Invalid email format');
+      throw new Error(INVALID_EMAIL_FORMAT_ERROR);
     }
 
     // Validate password
-    if (!password || password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
+    if (!password || password.length < PASSWORD_POLICY.MIN_LENGTH) {
+      throw new Error(INVALID_PASSWORD_LENGTH_ERROR);
     }
 
     try {
       const result = await this.api.login(cleanedEmail, password);
-      
+
       // Store token
       await this.tokenStorage.setToken(result.token);
-      
+
       return result;
-    } catch (error: any) {
-      throw new Error(error.message || 'Login failed');
+    } catch (error: unknown) {
+      throw new Error(this.getErrorMessage(error, LOGIN_FAILED_ERROR));
     }
   }
 
@@ -68,26 +138,26 @@ export class AuthManager {
 
     // Validate email
     if (!isValidEmail(cleanedEmail)) {
-      throw new Error('Invalid email format');
+      throw new Error(INVALID_EMAIL_FORMAT_ERROR);
     }
 
     // Validate password
-    if (!userData.password || userData.password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
+    if (!userData.password || userData.password.length < PASSWORD_POLICY.MIN_LENGTH) {
+      throw new Error(INVALID_PASSWORD_LENGTH_ERROR);
     }
 
     // Validate name
     if (!userData.name?.trim()) {
-      throw new Error('First name is required');
+      throw new Error(FIRST_NAME_REQUIRED_ERROR);
     }
 
     if (!userData.surname?.trim()) {
-      throw new Error('Last name is required');
+      throw new Error(LAST_NAME_REQUIRED_ERROR);
     }
 
     // Check for strong password
     if (!this.isStrongPassword(userData.password)) {
-      throw new Error('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      throw new Error(WEAK_PASSWORD_ERROR);
     }
 
     try {
@@ -99,13 +169,13 @@ export class AuthManager {
       };
 
       const result = await this.api.register(cleanedData);
-      
+
       // Store token
       await this.tokenStorage.setToken(result.token);
-      
+
       return result;
-    } catch (error: any) {
-      throw new Error(error.message || 'Registration failed');
+    } catch (error: unknown) {
+      throw new Error(this.getErrorMessage(error, REGISTRATION_FAILED_ERROR));
     }
   }
 
@@ -115,9 +185,8 @@ export class AuthManager {
   async logout(): Promise<void> {
     try {
       await this.api.logout();
-    } catch (error) {
-      // Continue with logout even if API call fails
-      console.warn('Logout API call failed:', error);
+    } catch {
+      // Continue logout flow even if API logout fails.
     } finally {
       // Always remove token from storage
       await this.tokenStorage.removeToken();
@@ -147,9 +216,9 @@ export class AuthManager {
       }
 
       return await this.api.getCurrentUser();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If token is invalid, try to refresh
-      if (error.status === 401) {
+      if (this.getErrorStatus(error) === HTTP_STATUS_UNAUTHORIZED) {
         try {
           const refreshResult = await this.api.refreshToken();
           await this.tokenStorage.setToken(refreshResult.token);
@@ -168,11 +237,47 @@ export class AuthManager {
    * Validate password strength
    */
   private isStrongPassword(password: string): boolean {
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    
-    return hasUpperCase && hasLowerCase && hasNumbers;
+    if (PASSWORD_POLICY.REQUIRE_UPPERCASE && !PASSWORD_RULE_PATTERNS.uppercase.test(password)) {
+      return false;
+    }
+
+    if (PASSWORD_POLICY.REQUIRE_LOWERCASE && !PASSWORD_RULE_PATTERNS.lowercase.test(password)) {
+      return false;
+    }
+
+    if (PASSWORD_POLICY.REQUIRE_NUMBERS && !PASSWORD_RULE_PATTERNS.numbers.test(password)) {
+      return false;
+    }
+
+    if (PASSWORD_POLICY.REQUIRE_SYMBOLS && !PASSWORD_RULE_PATTERNS.symbols.test(password)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private getErrorMessage(error: unknown, fallbackMessage: string): string {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    if (typeof error === 'object' && error !== null) {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === 'string' && message.trim().length > 0) {
+        return message;
+      }
+    }
+
+    return fallbackMessage;
+  }
+
+  private getErrorStatus(error: unknown): number | undefined {
+    if (typeof error !== 'object' || error === null) {
+      return undefined;
+    }
+
+    const status = (error as { status?: unknown }).status;
+    return typeof status === 'number' ? status : undefined;
   }
 
   /**
@@ -188,13 +293,13 @@ export class AuthManager {
     };
   } {
     const requirements = {
-      length: password.length >= 6,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /\d/.test(password),
+      length: password.length >= PASSWORD_POLICY.MIN_LENGTH,
+      uppercase: !PASSWORD_POLICY.REQUIRE_UPPERCASE || PASSWORD_RULE_PATTERNS.uppercase.test(password),
+      lowercase: !PASSWORD_POLICY.REQUIRE_LOWERCASE || PASSWORD_RULE_PATTERNS.lowercase.test(password),
+      number: !PASSWORD_POLICY.REQUIRE_NUMBERS || PASSWORD_RULE_PATTERNS.numbers.test(password),
     };
 
-    const isValid = Object.values(requirements).every(req => req);
+    const isValid = Object.values(requirements).every((req) => req);
 
     return { isValid, requirements };
   }

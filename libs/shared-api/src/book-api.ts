@@ -2,7 +2,7 @@
  * Book API client - platform agnostic
  */
 
-import { BaseApiClient } from './base-client';
+import { BaseApiClient, HTTP_STATUS_NOT_FOUND } from './base-client';
 import {
   Book,
   BookFormData,
@@ -51,7 +51,7 @@ export class BookApi extends BaseApiClient {
       params,
     });
 
-    return PaginatedBooksSchema.parse(response) as PaginatedResponse<Book>;
+    return PaginatedBooksSchema.parse(response);
   }
 
   async getBook(id: number): Promise<Book> {
@@ -95,15 +95,15 @@ export class BookApi extends BaseApiClient {
     if (parsedFilters.limit) params.append('limit', parsedFilters.limit.toString());
 
     const response = await this.get<unknown>(`/books/search?${params.toString()}`);
-    return SearchResultSchema.parse(response) as SearchResult;
+    return SearchResultSchema.parse(response);
   }
 
   async searchByISBN(isbn: string): Promise<Book | null> {
     try {
       const response = await this.get<unknown>(`/books/search/isbn/${encodeURIComponent(isbn)}`);
       return this.parseIsbnSearchResponse(response);
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (error: unknown) {
+      if (this.getErrorStatus(error) === HTTP_STATUS_NOT_FOUND) {
         return null;
       }
       throw error;

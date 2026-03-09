@@ -11,13 +11,13 @@ interface AsyncOperationState<T> {
   error: string | null;
 }
 
-interface AsyncOperationActions<T, P extends any[]> {
+interface AsyncOperationActions<T, P extends unknown[]> {
   execute: (...params: P) => Promise<T | null>;
   reset: () => void;
   setData: (data: T | null) => void;
 }
 
-export const useAsyncOperation = <T, P extends any[]>(
+export const useAsyncOperation = <T, P extends unknown[]>(
   asyncFunction: (...params: P) => Promise<T>
 ): AsyncOperationState<T> & AsyncOperationActions<T, P> => {
   const [data, setData] = useState<T | null>(null);
@@ -35,7 +35,6 @@ export const useAsyncOperation = <T, P extends any[]>(
     } catch (err: unknown) {
       const errorMessage = extractErrorMessage(err) || 'An error occurred';
       setError(errorMessage);
-      console.error('Async operation failed:', err);
       return null;
     } finally {
       setLoading(false);

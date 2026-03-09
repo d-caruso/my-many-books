@@ -11,7 +11,7 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": [
-        "{projectRoot}/dist"
+        "{workspaceRoot}/dist/libs/shared-forms"
       ],
       "options": {
         "command": "tsc --project tsconfig.lib.json",

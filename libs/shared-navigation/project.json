@@ -9,14 +9,13 @@
   ],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "outputs": [
-        "{options.outputPath}"
+        "{workspaceRoot}/dist/libs/shared-navigation"
       ],
       "options": {
-        "outputPath": "libs/shared-navigation/dist",
-        "main": "libs/shared-navigation/src/index.ts",
-        "tsConfig": "libs/shared-navigation/tsconfig.lib.json"
+        "command": "tsc --project tsconfig.lib.json",
+        "cwd": "libs/shared-navigation"
       }
     },
     "lint": {

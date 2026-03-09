@@ -5,6 +5,8 @@ import {
   AppSettingsArraySchema
 } from '@my-many-books/shared-types';
 
+type ParsedAppSetting = ReturnType<typeof AppSettingSchema.parse>;
+
 export class SettingsApi extends BaseApiClient {
   /**
    * Get all active settings (public)
@@ -51,14 +53,18 @@ export class SettingsApi extends BaseApiClient {
     return this.convertDateFields(setting);
   }
 
+  private parseOptionalDate(value: string | undefined): Date | undefined {
+    return value ? new Date(value) : undefined;
+  }
+
   // Convert date fields to Date objects
-  private convertDateFields(settings: any): AppSetting {
+  private convertDateFields(setting: ParsedAppSetting): AppSetting {
     return {
-      ...settings,
-      deletedAt: settings.deletedAt ? new Date(settings.deletedAt) : undefined,
-      lastSyncedAt: settings.lastSyncedAt ? new Date(settings.lastSyncedAt) : undefined,
-      creationDate: new Date(settings.creationDate),  // creationDate is mandatory
-      updateDate: settings.updateDate ? new Date(settings.updateDate) : undefined,
+      ...setting,
+      deletedAt: this.parseOptionalDate(setting.deletedAt),
+      lastSyncedAt: this.parseOptionalDate(setting.lastSyncedAt),
+      creationDate: new Date(setting.creationDate),
+      updateDate: this.parseOptionalDate(setting.updateDate),
     };
   }
 }

@@ -5,15 +5,13 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "outputs": [
-        "{options.outputPath}"
+        "{projectRoot}/dist"
       ],
       "options": {
-        "outputPath": "libs/shared-logging/dist",
-        "main": "libs/shared-logging/src/index.ts",
-        "tsConfig": "libs/shared-logging/tsconfig.lib.json",
-        "assets": []
+        "command": "tsc",
+        "cwd": "libs/shared-logging"
       }
     },
     "lint": {
@@ -35,7 +33,8 @@
       ],
       "options": {
         "jestConfig": "libs/shared-logging/jest.config.ts",
-        "passWithNoTests": true
+        "passWithNoTests": true,
+        "runInBand": true
       },
       "configurations": {
         "ci": {

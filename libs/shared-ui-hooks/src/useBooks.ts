@@ -76,7 +76,6 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
       setHasMore(page < totalPages);
       
     } catch (err: unknown) {
-      console.error('Failed to load books:', err);
       setError(extractErrorMessage(err) || 'Failed to load books');
       
       if (page === 1) {
@@ -96,7 +95,6 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
       setTotalCount(prev => prev + 1);
       return newBook;
     } catch (err: unknown) {
-      console.error('Failed to create book:', err);
       setError(extractErrorMessage(err) || 'Failed to create book');
       throw err;
     }
@@ -108,7 +106,6 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
       setBooks(prev => prev.map(book => (book.id === id ? updatedBook : book)));
       return updatedBook;
     } catch (err: unknown) {
-      console.error('Failed to update book:', err);
       setError(extractErrorMessage(err) || 'Failed to update book');
       throw err;
     }
@@ -121,7 +118,6 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
       setTotalCount(prev => prev - 1);
       return true;
     } catch (err: unknown) {
-      console.error('Failed to delete book:', err);
       setError(extractErrorMessage(err) || 'Failed to delete book');
       throw err;
     }
@@ -133,7 +129,6 @@ export const useBooks = <TBook extends Book = Book, TForm extends BookFormData =
       setBooks(prev => prev.map(book => (book.id === id ? updatedBook : book)));
       return updatedBook;
     } catch (err: unknown) {
-      console.error('Failed to update book status:', err);
       setError(extractErrorMessage(err) || 'Failed to update book status');
       throw err;
     }

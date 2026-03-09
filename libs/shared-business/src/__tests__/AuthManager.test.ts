@@ -28,8 +28,8 @@ describe('AuthManager', () => {
       const { api, tokenStorage } = createMocks();
       const manager = new AuthManager(api, tokenStorage);
 
-      await expect(manager.login('not-an-email', 'Abcdef1')).rejects.toThrow(
-        'Invalid email format'
+      await expect(manager.login('not-an-email', 'Abcdef12')).rejects.toThrow(
+        'Please enter a valid email address'
       );
       expect(api.login).not.toHaveBeenCalled();
     });
@@ -39,7 +39,7 @@ describe('AuthManager', () => {
       const manager = new AuthManager(api, tokenStorage);
 
       await expect(manager.login('user@example.com', '123')).rejects.toThrow(
-        'Password must be at least 6 characters long'
+        'Password must be at least 8 characters long and contain uppercase, lowercase, numbers'
       );
       expect(api.login).not.toHaveBeenCalled();
     });
@@ -53,9 +53,9 @@ describe('AuthManager', () => {
         token: 'jwt-token',
       });
 
-      const result = await manager.login('  USER@Example.com  ', 'Abcdef1');
+      const result = await manager.login('  USER@Example.com  ', 'Abcdef12');
 
-      expect(api.login).toHaveBeenCalledWith('user@example.com', 'Abcdef1');
+      expect(api.login).toHaveBeenCalledWith('user@example.com', 'Abcdef12');
       expect(tokenStorage.setToken).toHaveBeenCalledWith('jwt-token');
       expect(result.token).toBe('jwt-token');
     });
@@ -66,7 +66,7 @@ describe('AuthManager', () => {
 
       api.login.mockRejectedValue(new Error('Bad credentials'));
 
-      await expect(manager.login('user@example.com', 'Abcdef1')).rejects.toThrow(
+      await expect(manager.login('user@example.com', 'Abcdef12')).rejects.toThrow(
         'Bad credentials'
       );
     });
@@ -80,20 +80,20 @@ describe('AuthManager', () => {
       await expect(
         manager.register({
           email: 'user@example.com',
-          password: 'Abcdef1',
+          password: 'Abcdef12',
           name: '',
           surname: 'Doe',
         })
-      ).rejects.toThrow('First name is required');
+      ).rejects.toThrow('First Name is required');
 
       await expect(
         manager.register({
           email: 'user@example.com',
-          password: 'Abcdef1',
+          password: 'Abcdef12',
           name: 'Jane',
           surname: '',
         })
-      ).rejects.toThrow('Last name is required');
+      ).rejects.toThrow('Last Name is required');
 
       expect(api.register).not.toHaveBeenCalled();
     });
@@ -110,7 +110,7 @@ describe('AuthManager', () => {
           surname: 'Doe',
         })
       ).rejects.toThrow(
-        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+        'Password must be at least 8 characters long and contain uppercase, lowercase, numbers'
       );
     });
 
@@ -125,14 +125,14 @@ describe('AuthManager', () => {
 
       const result = await manager.register({
         email: '  USER@Example.com  ',
-        password: 'Abcdef1',
+        password: 'Abcdef12',
         name: '  Jane  ',
         surname: '  Doe ',
       });
 
       expect(api.register).toHaveBeenCalledWith({
         email: 'user@example.com',
-        password: 'Abcdef1',
+        password: 'Abcdef12',
         name: 'Jane',
         surname: 'Doe',
       });
@@ -149,7 +149,7 @@ describe('AuthManager', () => {
       await expect(
         manager.register({
           email: 'user@example.com',
-          password: 'Abcdef1',
+          password: 'Abcdef12',
           name: 'Jane',
           surname: 'Doe',
         })
@@ -290,7 +290,7 @@ describe('AuthManager', () => {
 
   describe('validatePasswordRequirements', () => {
     it('returns detailed requirement status', () => {
-      expect(AuthManager.validatePasswordRequirements('Abcdef1')).toEqual({
+      expect(AuthManager.validatePasswordRequirements('Abcdef12')).toEqual({
         isValid: true,
         requirements: {
           length: true,
@@ -303,7 +303,7 @@ describe('AuthManager', () => {
       expect(AuthManager.validatePasswordRequirements('abcdef')).toEqual({
         isValid: false,
         requirements: {
-          length: true,
+          length: false,
           uppercase: false,
           lowercase: true,
           number: false,

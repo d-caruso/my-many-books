@@ -66,7 +66,6 @@ export const useCategories = <TCategory extends Category = Category>(
       });
       loadedRef.current = true;
     } catch (err: unknown) {
-      console.error('Failed to load categories:', err);
       setError(extractErrorMessage(err) || 'Failed to load categories');
     } finally {
       setLoading(false);
@@ -86,11 +85,10 @@ export const useCategories = <TCategory extends Category = Category>(
     try {
       const newCategory = await api.createCategory({ name: name.trim() });
       startSortingTransition(() => {
-        setCategories(prev => [...prev, newCategory].sort(sortComparator));
+        setCategories((prev) => [...prev, newCategory].sort(sortComparator));
       });
       return newCategory;
     } catch (err: unknown) {
-      console.error('Failed to create category:', err);
       setError(extractErrorMessage(err) || 'Failed to create category');
       return null;
     }
@@ -100,7 +98,7 @@ export const useCategories = <TCategory extends Category = Category>(
     if (!loadedRef.current) return;
 
     startSortingTransition(() => {
-      setCategories(prev => [...prev].sort(sortComparator));
+      setCategories((prev) => [...prev].sort(sortComparator));
     });
   }, [sortComparator]);
 
@@ -113,8 +111,7 @@ export const useCategories = <TCategory extends Category = Category>(
     if (autoLoad && !loadedRef.current && !loadingRef.current) {
       void loadCategories();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoLoad]);
+  }, [autoLoad, loadCategories]);
 
   return {
     categories,

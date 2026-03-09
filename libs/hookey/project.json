@@ -5,15 +5,13 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "outputs": [
-        "{options.outputPath}"
+        "{projectRoot}/dist"
       ],
       "options": {
-        "outputPath": "libs/hookey/dist",
-        "main": "libs/hookey/src/index.ts",
-        "tsConfig": "libs/hookey/tsconfig.lib.json",
-        "assets": []
+        "command": "tsc --project tsconfig.lib.json --outDir dist",
+        "cwd": "libs/hookey"
       }
     },
     "test": {

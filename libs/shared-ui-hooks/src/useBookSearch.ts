@@ -102,7 +102,6 @@ export const useBookSearch = <TBook extends Book = Book, TFilters extends Search
         setLastQuery(query);
         setLastFilters(filters);
       } catch (err: unknown) {
-        console.error('Book search failed:', err);
         const isTechnicalError = err instanceof ZodError;
         setError(
           isTechnicalError
@@ -134,7 +133,6 @@ export const useBookSearch = <TBook extends Book = Book, TFilters extends Search
       const result = await api.searchByISBN(isbn);
       return result;
     } catch (err: unknown) {
-      console.error('ISBN search failed:', err);
       const isTechnicalError = err instanceof ZodError;
       setError(
         isTechnicalError

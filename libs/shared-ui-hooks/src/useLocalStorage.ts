@@ -46,6 +46,8 @@ const defaultDeserialize = <T>(value: string): T => JSON.parse(value) as T;
 
 type LocalStorageArg<T> = StorageAdapter | UseLocalStorageOptions<T> | undefined;
 
+type ValueUpdater<T> = T | ((val: T) => T);
+
 const resolveOptions = <T>(arg: LocalStorageArg<T>): {
   storage: StorageAdapter;
   serialize: (value: T) => string;
@@ -74,11 +76,18 @@ const resolveOptions = <T>(arg: LocalStorageArg<T>): {
   };
 };
 
+const handleAsyncStorageOp = (operation: Promise<void> | void): void => {
+  void Promise.resolve(operation).catch(() => undefined);
+};
+
+const isUpdaterFunction = <T>(value: ValueUpdater<T>): value is (val: T) => T =>
+  typeof value === 'function';
+
 export const useLocalStorage = <T>(
   key: string,
   initialValue: T,
   options?: StorageAdapter | UseLocalStorageOptions<T>
-): [T, (value: T | ((val: T) => T)) => void, () => void] => {
+): [T, (value: ValueUpdater<T>) => void, () => void] => {
   const { storage, serialize, deserialize } = resolveOptions(options);
 
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -88,28 +97,33 @@ export const useLocalStorage = <T>(
         return deserialize(item);
       }
       return initialValue;
-    } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
+    } catch {
       return initialValue;
     }
   });
 
-  const setValue = useCallback((value: T | ((val: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      storage.setItem(key, serialize(valueToStore));
-    } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error);
-    }
-  }, [key, serialize, storage, storedValue]);
+  const setValue = useCallback((value: ValueUpdater<T>): void => {
+    setStoredValue((currentValue) => {
+      const valueToStore = isUpdaterFunction(value) ? value(currentValue) : value;
 
-  const removeValue = useCallback(() => {
+      try {
+        const serialized = serialize(valueToStore);
+        handleAsyncStorageOp(storage.setItem(key, serialized));
+      } catch {
+        // Keep in-memory state even if persistence fails.
+      }
+
+      return valueToStore;
+    });
+  }, [key, serialize, storage]);
+
+  const removeValue = useCallback((): void => {
+    setStoredValue(initialValue);
+
     try {
-      setStoredValue(initialValue);
-      storage.removeItem(key);
-    } catch (error) {
-      console.error(`Error removing localStorage key "${key}":`, error);
+      handleAsyncStorageOp(storage.removeItem(key));
+    } catch {
+      // Keep in-memory reset even if persistence fails.
     }
   }, [key, initialValue, storage]);
 
