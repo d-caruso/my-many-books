@@ -1,8 +1,7 @@
-import { 
-  formatDate, 
-  getStatusLabel, 
-  getStatusColor, 
-  validateISBN, 
+import {
+  formatDate,
+  getStatusLabel,
+  getStatusColor,
   truncateText,
   generateBookId,
   sanitizeSearchQuery,
@@ -55,30 +54,6 @@ describe('Helper Utilities', () => {
 
     it('should handle unknown status', () => {
       expect(getStatusColor('unknown' as 'reading' | 'paused' | 'finished')).toBe('#757575');
-    });
-  });
-
-  describe('validateISBN', () => {
-    it('should validate correct ISBN-10', () => {
-      expect(validateISBN('0134685997')).toBe(true);
-      expect(validateISBN('0-13-468599-7')).toBe(true);
-    });
-
-    it('should validate correct ISBN-13', () => {
-      expect(validateISBN('9780134685991')).toBe(true);
-      expect(validateISBN('978-0-13-468599-1')).toBe(true);
-    });
-
-    it('should reject invalid ISBNs', () => {
-      expect(validateISBN('123')).toBe(false);
-      expect(validateISBN('1234567890123')).toBe(false);
-      expect(validateISBN('invalid-isbn')).toBe(false);
-      expect(validateISBN('')).toBe(false);
-    });
-
-    it('should handle null/undefined', () => {
-      expect(validateISBN(null as string)).toBe(false);
-      expect(validateISBN(undefined as string)).toBe(false);
     });
   });
 

@@ -43,51 +43,6 @@ export const getStatusColor = (status: Book['status']): string => {
   }
 };
 
-export const validateISBN = (isbn: string): boolean => {
-  if (!isbn || typeof isbn !== 'string') return false;
-  
-  // Remove hyphens and spaces
-  const cleanISBN = isbn.replace(/[-\s]/g, '');
-  
-  // Check if it's all digits
-  if (!/^\d+$/.test(cleanISBN)) return false;
-  
-  // Check length (ISBN-10 or ISBN-13)
-  if (cleanISBN.length === 10) {
-    return validateISBN10(cleanISBN);
-  } else if (cleanISBN.length === 13) {
-    return validateISBN13(cleanISBN);
-  }
-  
-  return false;
-};
-
-const validateISBN10 = (isbn: string): boolean => {
-  let sum = 0;
-  for (let i = 0; i < 9; i++) {
-    sum += parseInt(isbn[i]) * (10 - i);
-  }
-  
-  const checkDigit = isbn[9];
-  const calculatedCheck = (11 - (sum % 11)) % 11;
-  const expectedCheck = checkDigit === 'X' ? 10 : parseInt(checkDigit);
-  
-  return calculatedCheck === expectedCheck;
-};
-
-const validateISBN13 = (isbn: string): boolean => {
-  let sum = 0;
-  for (let i = 0; i < 12; i++) {
-    const digit = parseInt(isbn[i]);
-    sum += i % 2 === 0 ? digit : digit * 3;
-  }
-  
-  const checkDigit = parseInt(isbn[12]);
-  const calculatedCheck = (10 - (sum % 10)) % 10;
-  
-  return calculatedCheck === checkDigit;
-};
-
 export const truncateText = (text: string, limit: number): string => {
   if (!text || typeof text !== 'string') return '';
   
