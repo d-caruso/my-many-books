@@ -101,21 +101,21 @@ export const filterBooks = (books: Book[], filters: {
     if (filters.status && book.status !== filters.status) {
       return false;
     }
-    
+
     if (filters.category && !book.categories.some(cat => cat.name === filters.category)) {
       return false;
     }
-    
-    if (filters.author && !book.authors.some(author => 
+
+    if (filters.author && !book.authors.some(author =>
       author.name.toLowerCase().includes(filters.author!.toLowerCase())
     )) {
       return false;
     }
-    
+
     return true;
   });
 };
 
-export const getErrorMessage = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
+export const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+

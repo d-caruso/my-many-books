@@ -9,22 +9,7 @@ import {
   validatePasswordConfirmation,
   validatePasswordStrength,
 } from '@my-many-books/shared-validation';
-
-const getErrorMessage = (
-  t: (key: string, options?: Record<string, unknown>) => string,
-  i18nKey: string | undefined,
-  fallbackMessage: string | undefined,
-): string => {
-  if (i18nKey) {
-    return t(i18nKey, { defaultValue: fallbackMessage });
-  }
-
-  if (fallbackMessage) {
-    return fallbackMessage;
-  }
-
-  return t('common:unexpected_error');
-};
+import { resolveValidationError } from '@/utils/resolveValidationError';
 
 export default function AccountScreen() {
   const { t, i18n } = useTranslation();
@@ -65,14 +50,14 @@ export default function AccountScreen() {
 
     const passwordValidation = validatePasswordStrength(newPassword);
     if (!passwordValidation.isValid) {
-      setSubmitError(getErrorMessage(t, passwordValidation.i18nKey, passwordValidation.error));
+      setSubmitError(resolveValidationError(t, passwordValidation.i18nKey, passwordValidation.error));
       return;
     }
 
     const confirmationValidation = validatePasswordConfirmation(newPassword, confirmPassword);
     if (!confirmationValidation.isValid) {
       setSubmitError(
-        getErrorMessage(t, confirmationValidation.i18nKey, confirmationValidation.error),
+        resolveValidationError(t, confirmationValidation.i18nKey, confirmationValidation.error),
       );
       return;
     }
