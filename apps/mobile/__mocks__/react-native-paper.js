@@ -95,7 +95,8 @@ export const Dialog = Object.assign(DialogRoot, {
 
 const ListRoot = createPrimitive('List');
 export const List = Object.assign(ListRoot, {
-  Item: createPrimitive('ListItem'),
+  Item: ({ right, left, children, ...props }) =>
+    React.createElement('ListItem', props, children, left ? left() : null, right ? right() : null),
   Icon: createPrimitive('ListIcon'),
 });
 

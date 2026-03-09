@@ -43,7 +43,7 @@ export function usePermission(
     return createAbilityFor({
       id: user.id,
       email: user.email,
-      role: user.role as 'user' | 'admin',
+      role: user.role,
     });
   }, [user]);
 

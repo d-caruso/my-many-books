@@ -1,9 +1,9 @@
 // ================================================================
-// adapters/WebStorageAdapter.ts
+// services/WebStorageAdapter.ts
 // In-memory storage adapter for web (secure, lost on page refresh)
 // ================================================================
 
-import type { StorageAdapter, AuthTokens, User } from '../types';
+import type { StorageAdapter, AuthTokens, User } from '@my-many-books/shared-auth';
 
 export class WebStorageAdapter implements StorageAdapter {
   private tokens: AuthTokens | null = null;

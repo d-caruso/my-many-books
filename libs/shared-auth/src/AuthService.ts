@@ -108,7 +108,7 @@ export class AuthService {
     return (await response.json()) as unknown;
   }
 
-  private async readJsonPayloadOrUndefined(response: Response): Promise<unknown | undefined> {
+  private async readJsonPayloadOrUndefined(response: Response): Promise<unknown> {
     try {
       return await this.readJsonPayload(response);
     } catch {

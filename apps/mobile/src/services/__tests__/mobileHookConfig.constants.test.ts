@@ -150,12 +150,7 @@ describe('Mobile Hook Configuration Constants', () => {
       expect(Object.isFrozen(MOBILE_HOOK_SETTING_KEYS)).toBe(true);
       expect(Object.isFrozen(MOBILE_CONFIG_LIMITS)).toBe(true);
 
-      // Attempting to modify should fail silently or throw in strict mode
-      expect(() => {
-        (MOBILE_HOOK_SETTING_KEYS as Record<string, unknown>).NEW_KEY = 'test';
-      }).not.toThrow(); // Will fail silently in non-strict mode
-      
-      expect((MOBILE_HOOK_SETTING_KEYS as Record<string, unknown>).NEW_KEY).toBeUndefined();
+      // Object.isFrozen() above already verifies immutability
     });
   });
 

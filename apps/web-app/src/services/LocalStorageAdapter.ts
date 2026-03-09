@@ -1,10 +1,10 @@
 // ================================================================
-// adapters/LocalStorageAdapter.ts
+// services/LocalStorageAdapter.ts
 // localStorage-based storage adapter for E2E testing
 // WARNING: Only use for E2E tests. NOT for production (XSS vulnerability)
 // ================================================================
 
-import type { StorageAdapter, AuthTokens, User } from '../types';
+import type { StorageAdapter, AuthTokens, User } from '@my-many-books/shared-auth';
 
 export class LocalStorageAdapter implements StorageAdapter {
   private readonly TOKENS_KEY = 'auth_tokens';

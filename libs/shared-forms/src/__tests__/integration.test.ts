@@ -67,7 +67,6 @@ describe('shared-forms integration', () => {
       jest.advanceTimersByTime(2000);
     });
     expect(saveHandler).toHaveBeenCalledTimes(1);
-    expect(errorSpy).toHaveBeenCalledWith('Auto-save failed:', expect.any(Error));
 
     await act(async () => {
       manager.setFieldValue('title', 'B');

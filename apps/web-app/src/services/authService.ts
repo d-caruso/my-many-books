@@ -3,11 +3,9 @@
 // Auth service instance for web app
 // ================================================================
 
-import {
-  AuthService,
-  WebStorageAdapter,
-  LocalStorageAdapter,
-} from '@my-many-books/shared-auth';
+import { AuthService } from '@my-many-books/shared-auth';
+import { WebStorageAdapter } from './WebStorageAdapter';
+import { LocalStorageAdapter } from './LocalStorageAdapter';
 import { env } from '../config/env';
 
 // Use LocalStorageAdapter when explicitly requested (E2E tests), WebStorageAdapter for production

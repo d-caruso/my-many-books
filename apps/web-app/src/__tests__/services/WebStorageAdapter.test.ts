@@ -1,10 +1,10 @@
 // ================================================================
-// adapters/__tests__/WebStorageAdapter.test.ts
+// __tests__/services/WebStorageAdapter.test.ts
 // Unit tests for WebStorageAdapter
 // ================================================================
 
-import { WebStorageAdapter } from '../WebStorageAdapter';
-import type { AuthTokens, User } from '../../types';
+import { WebStorageAdapter } from '../../services/WebStorageAdapter';
+import type { AuthTokens, User } from '@my-many-books/shared-auth';
 
 describe('WebStorageAdapter', () => {
   let adapter: WebStorageAdapter;

@@ -14,7 +14,7 @@ export interface ButtonProps {
 }
 
 export interface ButtonStyles {
-  container: any;
-  text: any;
-  loader: any;
+  container: Record<string, unknown>;
+  text: Record<string, unknown>;
+  loader: Record<string, unknown>;
 }
