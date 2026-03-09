@@ -16,9 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { BOOK_STATUS } from '@my-many-books/shared-types';
-import { formatFullName, getCategoryDisplayName } from '@my-many-books/shared-utils';
+import { formatBookCardData, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { getStatusColor } from '@my-many-books/shared-design';
-import { formatEditionDate } from '@my-many-books/shared-forms';
 import { useBooks } from '@/hooks/useBooks';
 import type { Book } from '@/types';
 
@@ -32,11 +31,7 @@ export default function BookDetailScreen() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const book = books.find(b => String(b.id) === id);
-
-  const formatAuthors = (authors?: Book['authors']) => {
-    if (!authors?.length) return t('books:unknown_author');
-    return authors.map(a => formatFullName(a.name, a.surname)).join(', ');
-  };
+  const cardData = book ? formatBookCardData(book) : null;
 
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return null;
@@ -115,10 +110,10 @@ export default function BookDetailScreen() {
           {/* Title & Authors */}
           <View style={styles.section}>
             <Text variant="headlineSmall" style={styles.title}>
-              {book.title}
+              {cardData!.title}
             </Text>
             <Text variant="bodyMedium" style={styles.authors}>
-              {formatAuthors(book.authors)}
+              {cardData!.authors}
             </Text>
           </View>
 
@@ -161,12 +156,9 @@ export default function BookDetailScreen() {
 
           {/* Metadata fields */}
           <View style={styles.section}>
-            <Field label={t('books:isbn')} value={book.isbnCode} />
-            {book.editionNumber != null && (
-              <Field label={t('books:edition')} value={String(book.editionNumber)} />
-            )}
-            {book.editionDate && (
-              <Field label={t('books:edition_date')} value={formatEditionDate(book.editionDate)} />
+            {cardData!.isbn && <Field label={t('books:isbn')} value={cardData!.isbn} />}
+            {cardData!.editionInfo && (
+              <Field label={t('books:edition')} value={cardData!.editionInfo} />
             )}
             {formatDate(book.creationDate) && (
               <Field label={t('books:added')} value={formatDate(book.creationDate)!} />
@@ -219,7 +211,7 @@ export default function BookDetailScreen() {
           <Dialog.Title>{t('books:delete_book')}</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium">
-              {t('books:delete_confirm', { title: book.title })}
+              {t('books:delete_confirm', { title: cardData!.title })}
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
