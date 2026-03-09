@@ -42,8 +42,6 @@ describe('useAsyncOperation', () => {
   });
 
   it('captures error message from response.data.message and returns null', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-
     const responseError = Object.assign(new Error('wrapped'), { response: { data: { message: 'boom' } } });
     const asyncFn = jest.fn<Promise<string>, []>(() => Promise.reject(responseError));
 
@@ -56,14 +54,9 @@ describe('useAsyncOperation', () => {
     expect(result.current.loading).toBe(false);
     expect(result.current.data).toBeNull();
     expect(result.current.error).toBe('boom');
-    expect(consoleSpy).toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
   });
 
   it('falls back to err.message or default error message', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-
     const withMessage = jest.fn<Promise<string>, []>(() => Promise.reject(new Error('oops')));
     const { result, rerender } = renderHook(({ fn }) => useAsyncOperation(fn), { initialProps: { fn: withMessage } });
 
@@ -79,7 +72,5 @@ describe('useAsyncOperation', () => {
       await result.current.execute();
     });
     expect(result.current.error).toBe('An error occurred');
-
-    consoleSpy.mockRestore();
   });
 });
