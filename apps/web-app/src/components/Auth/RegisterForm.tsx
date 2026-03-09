@@ -144,7 +144,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       }
       // If no result, registration success will be handled by AuthContext (auto-login)
     } catch (err: unknown) {
-      console.error('Registration error:', err);
       if (err instanceof AuthApiError) {
         setError(t(err.i18nKey, { defaultValue: err.message }));
         if (err.code === 'EMAIL_NOT_VERIFIED') {
@@ -364,7 +363,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                handleSubmit(e as any);
+                e.preventDefault();
+                (e.currentTarget as HTMLElement).closest('form')?.requestSubmit();
               }
             }}
             placeholder={t('common:confirm_your_password')}

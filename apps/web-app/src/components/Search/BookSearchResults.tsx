@@ -162,7 +162,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
     ).join(', ');
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): 'success' | 'primary' | 'warning' | 'default' => {
     switch (status) {
       case 'finished':
         return 'success';
@@ -219,7 +219,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
         {/* Badges container */}
         <Box position="absolute" top={8} right={8} display="flex" flexDirection="column" gap={0.5}>
           {/* Pinned badge */}
-          {(book as any).isPinned && (
+          {(book as Book & { isPinned?: boolean }).isPinned && (
             <Chip
               label={t('search:pinned.badge')}
               size="small"
@@ -234,7 +234,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
             <Chip
               label={formatStatus(book.status)}
               size="small"
-              color={getStatusColor(book.status) as any}
+              color={getStatusColor(book.status)}
             />
           )}
         </Box>

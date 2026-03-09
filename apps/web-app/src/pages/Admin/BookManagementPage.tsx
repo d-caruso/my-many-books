@@ -1,3 +1,5 @@
+import { extractErrorMessage } from '@my-many-books/shared-utils';
+import { logger } from '../../utils/logger';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -106,9 +108,9 @@ export const BookManagementPage: React.FC = () => {
 
       setBooks(response.books);
       setTotalRows(response.pagination?.total || 0);
-    } catch (err: any) {
-      console.error('Failed to fetch books:', err);
-      setError(err.message || 'Failed to load books');
+    } catch (err: unknown) {
+      logger.error('Failed to fetch books:', err);
+      setError(extractErrorMessage(err) ?? 'Failed to load books');
     } finally {
       setLoading(false);
     }
@@ -178,9 +180,9 @@ export const BookManagementPage: React.FC = () => {
       setEditDialogOpen(false);
       setSelectedBook(null);
       fetchBooks();
-    } catch (err: any) {
-      console.error('Failed to update book:', err);
-      setFormError(err.message || 'Failed to update book');
+    } catch (err: unknown) {
+      logger.error('Failed to update book:', err);
+      setFormError(extractErrorMessage(err) ?? 'Failed to update book');
     } finally {
       setFormLoading(false);
     }
@@ -207,9 +209,9 @@ export const BookManagementPage: React.FC = () => {
       setDeleteDialogOpen(false);
       setBookToDelete(null);
       fetchBooks();
-    } catch (err: any) {
-      console.error('Failed to delete book:', err);
-      setError(err.message || 'Failed to delete book');
+    } catch (err: unknown) {
+      logger.error('Failed to delete book:', err);
+      setError(extractErrorMessage(err) ?? 'Failed to delete book');
     } finally {
       setDeleteLoading(false);
     }
@@ -223,8 +225,8 @@ export const BookManagementPage: React.FC = () => {
       field: 'authors',
       headerName: t('pages:admin.books.authors', 'Authors'),
       width: 200,
-      valueGetter: (value: any[]) =>
-        value?.map((a: any) => [a.name, a.surname].filter(Boolean).join(' ')).join(', ') || '',
+      valueGetter: (value: Array<{ name?: string; surname?: string }>) =>
+        value?.map((a) => [a.name, a.surname].filter(Boolean).join(' ')).join(', ') || '',
     },
     {
       field: 'userName',
@@ -244,7 +246,7 @@ export const BookManagementPage: React.FC = () => {
       width: 120,
       renderCell: (params: GridRenderCellParams) => {
         if (!params.value) return <Chip label="N/A" size="small" />;
-        const colorMap: any = { reading: 'primary', paused: 'warning', finished: 'success' };
+        const colorMap: Record<string, 'primary' | 'warning' | 'success'> = { reading: 'primary', paused: 'warning', finished: 'success' };
         return <Chip label={params.value} color={colorMap[params.value] || 'default'} size="small" />;
       },
     },
@@ -373,7 +375,7 @@ export const BookManagementPage: React.FC = () => {
                 <InputLabel>{t('pages:admin.books.status', 'Status')}</InputLabel>
                 <Select
                   value={formData.status || ''}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as any || null })}
+                  onChange={(e) => setFormData({ ...formData, status: (e.target.value as Book['status']) || null })}
                   label={t('pages:admin.books.status', 'Status')}
                 >
                   <MenuItem value="">&nbsp;</MenuItem>

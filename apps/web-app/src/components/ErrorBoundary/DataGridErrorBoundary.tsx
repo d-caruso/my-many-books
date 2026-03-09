@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
 import { DataGridErrorFallback } from './DataGridErrorFallback';
+import { logger } from '../../utils/logger';
 
 interface DataGridErrorBoundaryProps {
   children: ReactNode;
@@ -15,7 +16,7 @@ export const DataGridErrorBoundary: React.FC<DataGridErrorBoundaryProps> = ({
         <DataGridErrorFallback error={error} reset={reset} />
       )}
       onError={(error, errorInfo) => {
-        console.error('DataGrid Error:', error, errorInfo);
+        logger.error('DataGrid Error:', error, errorInfo);
       }}
     >
       {children}

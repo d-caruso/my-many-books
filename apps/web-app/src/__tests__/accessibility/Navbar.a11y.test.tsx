@@ -61,20 +61,28 @@ testI18n.use(initReactI18next).init({
   },
 });
 
+const baseAuthMock = (): ReturnType<typeof useAuth> => ({
+  login: vi.fn(),
+  logout: vi.fn(),
+  register: vi.fn(),
+  verifyEmail: vi.fn(),
+  resendCode: vi.fn(),
+  changePassword: vi.fn(),
+  requestPasswordReset: vi.fn(),
+  confirmPasswordReset: vi.fn(),
+  refreshUser: vi.fn(),
+  user: null,
+  loading: false,
+  isAuthenticated: false,
+});
+
 describe('Navbar Accessibility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should not have any accessibility violations when user is not authenticated', async () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: false,
-      error: null,
-      login: vi.fn(),
-      logout: vi.fn(),
-      register: vi.fn(),
-    } as any);
+    vi.mocked(useAuth).mockReturnValue(baseAuthMock());
 
     const { container } = render(
       <I18nextProvider i18n={testI18n}>
@@ -89,19 +97,17 @@ describe('Navbar Accessibility', () => {
 
   it('should not have accessibility violations when user is authenticated', async () => {
     vi.mocked(useAuth).mockReturnValue({
+      ...baseAuthMock(),
       user: {
-        id: '1',
+        id: 1,
         email: 'test@example.com',
         name: 'Test',
         surname: 'User',
         role: 'user',
+        isActive: true,
       },
-      loading: false,
-      error: null,
-      login: vi.fn(),
-      logout: vi.fn(),
-      register: vi.fn(),
-    } as any);
+      isAuthenticated: true,
+    });
 
     const { container } = render(
       <I18nextProvider i18n={testI18n}>
@@ -116,19 +122,17 @@ describe('Navbar Accessibility', () => {
 
   it('should not have accessibility violations when user is admin', async () => {
     vi.mocked(useAuth).mockReturnValue({
+      ...baseAuthMock(),
       user: {
-        id: '1',
+        id: 1,
         email: 'admin@example.com',
         name: 'Admin',
         surname: 'User',
         role: 'admin',
+        isActive: true,
       },
-      loading: false,
-      error: null,
-      login: vi.fn(),
-      logout: vi.fn(),
-      register: vi.fn(),
-    } as any);
+      isAuthenticated: true,
+    });
 
     const { container } = render(
       <I18nextProvider i18n={testI18n}>

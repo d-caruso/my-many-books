@@ -8,7 +8,7 @@ import GridIcon from '@mui/icons-material/ViewModule';
 import ListIcon from '@mui/icons-material/ViewList';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@my-many-books/shared-auth';
-import type { Book, BookFormData as SharedBookFormInput, BookStatusChangeBehavior } from '@my-many-books/shared-types';
+import type { Book, BookFormData as SharedBookFormInput, BookStatusChangeBehavior, SearchFilters } from '@my-many-books/shared-types';
 import { SETTING_KEYS, BOOK_STATUS_CHANGE_BEHAVIOR } from '@my-many-books/shared-types';
 import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
 import { BookList, BookForm, BookDetails, type BookFormData } from '../components/Book';
@@ -19,7 +19,8 @@ import { useSetting } from '../hooks/useSetting';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../constants/scanner';
 import { runFadeOut, useFadeInOnChange } from '../hooks/useLanguageChangeFade';
 import { useProtectedViewTransition } from '../contexts/ViewTransitionContext';
-import { VIEW_TRANSITION_FADE_IN_TIMING, VIEW_TRANSITION_FADE_OUT_LEAD_MS } from '../constants/animations';
+import { VIEW_TRANSITION_FADE_OUT_LEAD_MS } from '../constants/animations';
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 
 type ViewMode = 'list' | 'grid';
 type PageMode = 'list' | 'add' | 'edit' | 'details';
@@ -108,7 +109,7 @@ const BooksPage: React.FC = () => {
 
   const runCurrentSearch = useCallback(async () => {
     const query = searchParams.get('q') || '';
-    const filters: any = {};
+    const filters: Partial<SearchFilters> = {};
     const categoryId = searchParams.get('categoryId');
     const authorId = searchParams.get('authorId');
     const sortBy = searchParams.get('sortBy');
@@ -214,7 +215,7 @@ const BooksPage: React.FC = () => {
   const displayedLoadMore = searchActive ? loadMoreSearch : loadMoreBooks;
   const combinedError = actionError || displayedError;
 
-  const handleSearch = (query: string, filters: any) => {
+  const handleSearch = (query: string, filters: Partial<SearchFilters>) => {
     // Update URL params
     const params = new URLSearchParams();
 
@@ -224,7 +225,7 @@ const BooksPage: React.FC = () => {
     
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== '' && value !== null) {
-        params.set(key, value.toString());
+        params.set(key, String(value));
       }
     });
 
@@ -305,9 +306,8 @@ const BooksPage: React.FC = () => {
         setPageMode('list');
         setSelectedBook(null);
       }
-    } catch (err: any) {
-      console.error('Failed to delete book:', err);
-      setActionError(err.response?.data?.message || err.message || 'Failed to delete book');
+    } catch (err: unknown) {
+      setActionError(extractErrorMessage(err) ?? t('pages:delete_book_failed', 'Failed to delete book'));
     } finally {
       setActionLoading(false);
     }
@@ -339,9 +339,8 @@ const BooksPage: React.FC = () => {
       }
       // KEEP behavior: do nothing, book stays in list with updated status
       // The useBooks hook will update the book status in place
-    } catch (err: any) {
-      console.error('Failed to update book status:', err);
-      setActionError(err.response?.data?.message || err.message || 'Failed to update book status');
+    } catch (err: unknown) {
+      setActionError(extractErrorMessage(err) ?? t('pages:update_status_failed', 'Failed to update book status'));
     } finally {
       setSavingStatusBookId(null);
     }
@@ -381,22 +380,8 @@ const BooksPage: React.FC = () => {
       setSelectedBook(null);
       setInitialIsbn(undefined);
       setInitialDraft(null);
-    } catch (err: any) {
-      console.error('Failed to save book:', err);
-      const errorData = err.response?.data;
-      const errorMessage = errorData?.error || errorData?.message || 'Failed to save book';
-      const errorDetails = errorData?.details || [];
-
-      // Format validation errors with field names
-      if (errorDetails.length > 0) {
-        const formattedErrors = errorDetails.map((detail: any) =>
-          `${detail.field}: ${detail.message}`
-        ).join('\n');
-        setActionError(formattedErrors);
-      } else {
-        setActionError(errorMessage);
-      }
-
+    } catch (err: unknown) {
+      setActionError(extractErrorMessage(err) ?? t('pages:save_book_failed', 'Failed to save book'));
       throw err;
     } finally {
       setActionLoading(false);

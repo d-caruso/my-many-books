@@ -1,4 +1,6 @@
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useState, useEffect, useCallback } from 'react';
+import { logger } from '../../utils/logger';
 import {
   Box,
   Typography,
@@ -98,9 +100,9 @@ export const UserManagementPage: React.FC = () => {
 
       setUsers(response.users);
       setTotalRows(response.pagination?.total || 0);
-    } catch (err: any) {
-      console.error('Failed to fetch users:', err);
-      setError(err.message || 'Failed to load users');
+    } catch (err: unknown) {
+      logger.error('Failed to fetch users:', err);
+      setError(extractErrorMessage(err) ?? 'Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -146,9 +148,9 @@ export const UserManagementPage: React.FC = () => {
       setEditDialogOpen(false);
       setSelectedUser(null);
       fetchUsers();
-    } catch (err: any) {
-      console.error('Failed to update user:', err);
-      setFormError(err.message || 'Failed to update user');
+    } catch (err: unknown) {
+      logger.error('Failed to update user:', err);
+      setFormError(extractErrorMessage(err) ?? 'Failed to update user');
     } finally {
       setFormLoading(false);
     }
@@ -175,9 +177,9 @@ export const UserManagementPage: React.FC = () => {
       setDeleteDialogOpen(false);
       setUserToDelete(null);
       fetchUsers();
-    } catch (err: any) {
-      console.error('Failed to delete user:', err);
-      setError(err.message || 'Failed to delete user');
+    } catch (err: unknown) {
+      logger.error('Failed to delete user:', err);
+      setError(extractErrorMessage(err) ?? 'Failed to delete user');
     } finally {
       setDeleteLoading(false);
     }

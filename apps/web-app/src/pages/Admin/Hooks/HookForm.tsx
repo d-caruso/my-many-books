@@ -82,7 +82,7 @@ export const HookForm: React.FC<HookFormProps> = ({
     try {
       JSON.parse(value);
       setConfigError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setConfigError(t('form.errors.invalid_json', 'Provide valid JSON'));
     }
   };

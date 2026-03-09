@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
 import { ScannerErrorFallback } from './ScannerErrorFallback';
+import { logger } from '../../utils/logger';
 
 interface ScannerErrorBoundaryProps {
   children: ReactNode;
@@ -17,7 +18,7 @@ export const ScannerErrorBoundary: React.FC<ScannerErrorBoundaryProps> = ({
         <ScannerErrorFallback error={error} reset={reset} onClose={onClose} />
       )}
       onError={(error, errorInfo) => {
-        console.error('Scanner Error:', error, errorInfo);
+        logger.error('Scanner Error:', error, errorInfo);
       }}
     >
       {children}

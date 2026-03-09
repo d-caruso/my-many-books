@@ -64,7 +64,7 @@ const mockBook: Book = {
 describe('BookCard Accessibility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (window.confirm as any).mockReturnValue(true);
+    vi.mocked(window.confirm).mockReturnValue(true);
   });
 
   it('should not have any accessibility violations', async () => {

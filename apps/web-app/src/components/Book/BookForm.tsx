@@ -38,6 +38,7 @@ import { normalizeIsbn } from '@my-many-books/shared-validation';
 import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { createBookSchema } from '../../validation/bookSchemas';
 import { EditionDateInput } from './EditionDateInput';
+import { logger } from '../../utils/logger';
 
 interface BookFormProps {
   book?: Book | null;
@@ -241,9 +242,8 @@ export const BookForm: React.FC<BookFormProps> = ({
       };
 
       await onSubmit(submissionData);
-    } catch (error: any) {
-      console.error('Form submission error:', error);
-      console.error('Error response:', error?.response?.data);
+    } catch (error: unknown) {
+      logger.error('Form submission error:', error);
     }
   };
 

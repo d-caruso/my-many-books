@@ -1,3 +1,4 @@
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -61,7 +62,7 @@ export const ActionMappingGrid: React.FC<ActionMappingGridProps> = ({
 
     try {
       await onUpdateMappings(nextActions);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(t('admin.mobile_hooks.errors.mappings.save'));
       setActions(actions);
     } finally {

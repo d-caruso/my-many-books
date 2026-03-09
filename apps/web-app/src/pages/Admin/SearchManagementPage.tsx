@@ -1,3 +1,4 @@
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -47,7 +48,7 @@ export const SearchManagementPage: React.FC = () => {
       const queryParam = selectedResourceType !== 'all' ? `?resource_type=${selectedResourceType}` : '';
       const response = await apiService.get(`/admin/search/pinned${queryParam}`);
       setPinnedResults(response.data.results || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.response?.data?.message || 'Failed to fetch pinned results');
     } finally {
       setLoading(false);
@@ -78,7 +79,7 @@ export const SearchManagementPage: React.FC = () => {
       await apiService.patch(`/admin/search/pinned/${reorderedItem.id}/priority`, {
         priority: result.destination.index,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to update priority');
       // Revert on error
       fetchPinnedResults();
@@ -89,7 +90,7 @@ export const SearchManagementPage: React.FC = () => {
     try {
       await apiService.delete(`/admin/search/pinned/${id}`);
       setPinnedResults(pinnedResults.filter(item => item.id !== id));
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to unpin result');
     }
   };
@@ -108,7 +109,7 @@ export const SearchManagementPage: React.FC = () => {
       });
 
       fetchPinnedResults();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to pin result');
     }
   };

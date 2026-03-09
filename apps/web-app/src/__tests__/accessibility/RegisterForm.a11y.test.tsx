@@ -20,14 +20,24 @@ vi.mock('@my-many-books/shared-auth', async () => {
 
 setupMuiMock();
 
+const baseAuthMock = (): ReturnType<typeof useAuth> => ({
+  login: vi.fn(),
+  logout: vi.fn(),
+  register: vi.fn(),
+  verifyEmail: vi.fn(),
+  resendCode: vi.fn(),
+  changePassword: vi.fn(),
+  requestPasswordReset: vi.fn(),
+  confirmPasswordReset: vi.fn(),
+  refreshUser: vi.fn(),
+  user: null,
+  loading: false,
+  isAuthenticated: false,
+});
+
 describe('RegisterForm Accessibility', () => {
   beforeEach(() => {
-    vi.mocked(useAuth).mockReturnValue({
-      register: vi.fn(),
-      user: null,
-      loading: false,
-      error: null,
-    } as any);
+    vi.mocked(useAuth).mockReturnValue(baseAuthMock());
   });
 
   it('should not have any accessibility violations', async () => {
@@ -41,12 +51,7 @@ describe('RegisterForm Accessibility', () => {
   });
 
   it('should not have accessibility violations with error state', async () => {
-    vi.mocked(useAuth).mockReturnValue({
-      register: vi.fn(),
-      user: null,
-      loading: false,
-      error: 'Email already exists',
-    } as any);
+    vi.mocked(useAuth).mockReturnValue(baseAuthMock());
 
     const { container } = render(
       <BrowserRouter>
@@ -59,11 +64,9 @@ describe('RegisterForm Accessibility', () => {
 
   it('should not have accessibility violations in loading state', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      register: vi.fn(),
-      user: null,
+      ...baseAuthMock(),
       loading: true,
-      error: null,
-    } as any);
+    });
 
     const { container } = render(
       <BrowserRouter>

@@ -21,7 +21,6 @@ import {
   CircularProgress,
   Backdrop
 } from '@mui/material';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
@@ -59,7 +58,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
   };
   const authorPrefix = t('books:by_author_prefix', { defaultValue: 'by' });
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): 'success' | 'primary' | 'warning' | 'default' => {
     switch (status) {
       case 'finished':
         return 'success';
@@ -91,7 +90,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
       const status = value === '' ? null : (value as Book['status']);
       setStatusSaving(true);
       try {
-        await (onStatusChange(book.id, status as any) as unknown as Promise<void>);
+        await (onStatusChange(book.id, status) as unknown as Promise<void>);
       } finally {
         setStatusSaving(false);
       }
@@ -190,7 +189,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                   {book.status && (
                     <Chip
                       label={formatStatus(book.status)}
-                      color={getStatusColor(book.status) as any}
+                      color={getStatusColor(book.status)}
                       sx={{ width: 'fit-content' }}
                     />
                   )}

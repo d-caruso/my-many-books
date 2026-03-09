@@ -1,3 +1,4 @@
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
@@ -33,7 +34,7 @@ export const MobileAnalyticsPage: React.FC = () => {
       if (controller.signal.aborted) return;
       setStats(payload);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (controller.signal.aborted) return;
       setError(t('admin.mobile_analytics.errors.load', 'Failed to load analytics'));
     }

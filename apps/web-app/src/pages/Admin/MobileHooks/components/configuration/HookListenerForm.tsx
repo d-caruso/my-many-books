@@ -1,3 +1,4 @@
+import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -51,7 +52,7 @@ export const HookListenerForm: React.FC = () => {
           lastUpdated: payload.lastUpdated,
 	          version: payload.version,
 	        });
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(t('admin.mobile_hooks.errors.listener_settings.load'));
       } finally {
         setLoading(false);
@@ -103,7 +104,7 @@ export const HookListenerForm: React.FC = () => {
         lastUpdated: result.lastUpdated,
       }));
       setSuccess(t('admin.mobile_hooks.success.listener_settings_updated'));
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(t('admin.mobile_hooks.errors.listener_settings.save'));
     } finally {
       setSaving(false);
