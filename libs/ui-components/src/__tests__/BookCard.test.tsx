@@ -1,4 +1,3 @@
-import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
 import { BookCard } from '../BookCard/BookCard';
 import type { Book } from '@my-many-books/shared-types';

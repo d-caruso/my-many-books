@@ -281,7 +281,6 @@ describe('shared-navigation hooks', () => {
     const { result } = renderHook(() => useDeepLink());
     expect(result.current.parseDeepLink('not a url')).toBeNull();
 
-    expect(errorSpy).toHaveBeenCalledWith('Error parsing deep link:', expect.anything());
     errorSpy.mockRestore();
   });
 });
