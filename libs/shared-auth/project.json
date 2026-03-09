@@ -11,7 +11,7 @@
         "{projectRoot}/dist"
       ],
       "options": {
-        "command": "npm run build",
+        "command": "tsc",
         "cwd": "libs/shared-auth"
       }
     },
@@ -25,6 +25,22 @@
           "libs/shared-auth/**/*.{ts,tsx}"
         ],
         "eslintConfig": "libs/shared-auth/eslint.config.mjs"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "libs/shared-auth/jest.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/shared-auth"
       }
     }
   },

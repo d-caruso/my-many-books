@@ -3,11 +3,11 @@
   "version": "0.2.0",
   "type": "commonjs",
   "scripts": {
-    "build": "tsc --project tsconfig.lib.json",
-    "test": "jest --config jest.config.ts",
+    "build": "nx build shared-ui-hooks",
+    "test": "nx test shared-ui-hooks",
     "test:coverage": "jest --config jest.config.ts --coverage",
-    "lint": "eslint src/**/*.{ts,tsx}",
-    "typecheck": "tsc --noEmit"
+    "lint": "nx lint shared-ui-hooks",
+    "typecheck": "nx typecheck shared-ui-hooks"
   },
   "dependencies": {
     "react": "*"

@@ -11,7 +11,7 @@
         "{projectRoot}/dist"
       ],
       "options": {
-        "command": "npm run build",
+        "command": "tsc --project tsconfig.lib.json",
         "cwd": "libs/shared-types"
       }
     },

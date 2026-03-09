@@ -8,11 +8,11 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "test": "jest --runInBand",
+    "build": "nx build shared-logging",
+    "test": "nx test shared-logging",
     "test:coverage": "jest --runInBand --coverage",
-    "lint": "eslint src/**/*.ts",
-    "typecheck": "tsc --noEmit"
+    "lint": "nx lint shared-logging",
+    "typecheck": "nx typecheck shared-logging"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.670.0",

@@ -5,12 +5,12 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "test": "jest",
+    "build": "nx build shared-validation",
+    "test": "nx test shared-validation",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "lint": "eslint src/**/*.ts",
-    "typecheck": "tsc --noEmit"
+    "lint": "nx lint shared-validation",
+    "typecheck": "nx typecheck shared-validation"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

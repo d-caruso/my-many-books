@@ -3,9 +3,9 @@
   "version": "0.2.0",
   "type": "commonjs",
   "scripts": {
-    "build": "tsc --project tsconfig.lib.json",
-    "test": "jest --config jest.config.ts",
-    "lint": "eslint src/**/*.ts",
-    "typecheck": "tsc --noEmit"
+    "build": "nx build shared-design",
+    "test": "nx test shared-design",
+    "lint": "nx lint shared-design",
+    "typecheck": "nx typecheck shared-design"
   }
 }

@@ -10,7 +10,8 @@
   "scripts": {
     "test": "nx test hookey",
     "lint": "nx lint hookey",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "nx typecheck hookey",
+    "build": "nx build hookey"
   },
   "dependencies": {
     "@my-many-books/shared-logging": "file:../shared-logging",
