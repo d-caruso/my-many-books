@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatEditionDate } from '../../utils/formatEditionDate';
+import { formatEditionDate } from '@my-many-books/shared-forms';
 import {
   Paper,
   Box,

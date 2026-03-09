@@ -24,6 +24,7 @@ export { bookFormSchema, userFormSchema, authFormSchemas } from './schemas';
 // Edition date helpers shared by web/mobile inputs
 export {
   EDITION_DATE_MONTHS,
+  formatEditionDate,
   parseEditionDateParts,
   assembleEditionDate,
   getCurrentEditionYear,

@@ -3,6 +3,7 @@
  */
 
 import { Book, BookStatus } from '@my-many-books/shared-types';
+export type { BookCardData } from '@my-many-books/shared-utils';
 
 export interface BookCardProps {
   book: Book;
@@ -13,14 +14,4 @@ export interface BookCardProps {
   showActions?: boolean;
   compact?: boolean;
   testID?: string;
-}
-
-export interface BookCardData {
-  id: number;
-  title: string;
-  authors: string;
-  status?: BookStatus;
-  categories: string[];
-  isbn?: string;
-  editionInfo?: string;
 }
