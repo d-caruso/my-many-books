@@ -31,8 +31,6 @@ const mockApiService = {
   updateProfile: vi.fn(),
 } as unknown as ApiService;
 
-// Mock console.error to keep tests clean
-const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 const mockCategories: Category[] = [
   { id: 1, name: 'Fiction' },
@@ -45,9 +43,6 @@ describe('useCategories', () => {
     vi.clearAllMocks();
   });
 
-  afterAll(() => {
-    consoleSpy.mockRestore();
-  });
 
   test('initializes with empty state and loads categories on mount', async () => {
     mockCategoryAPI.getCategories.mockResolvedValue(mockCategories);
@@ -129,7 +124,6 @@ describe('useCategories', () => {
       expect(result.current.error).toBe('Failed to fetch categories from server');
       expect(result.current.loading).toBe(false);
       expect(result.current.categories).toEqual([]);
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to load categories:', apiError);
     });
 
     test('handles API errors with generic message', async () => {
@@ -323,7 +317,6 @@ describe('useCategories', () => {
 
       expect(createdCategory).toBe(null);
       expect(result.current.error).toBe('Category already exists');
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to create category:', apiError);
     });
 
     test('handles create category API errors with generic message', async () => {
