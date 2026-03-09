@@ -23,7 +23,6 @@
     "@my-many-books/hookey": "file:../../libs/hookey",
     "@my-many-books/shared-api": "file:../../libs/shared-api",
     "@my-many-books/shared-auth": "file:../../libs/shared-auth",
-    "@my-many-books/shared-business": "file:../../libs/shared-business",
     "@my-many-books/shared-forms": "file:../../libs/shared-forms",
     "@my-many-books/shared-i18n": "file:../../libs/shared-i18n",
     "@my-many-books/shared-types": "file:../../libs/shared-types",

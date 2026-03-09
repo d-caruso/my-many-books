@@ -48,7 +48,6 @@ jobs:
           - hookey
           - shared-api
           - shared-auth
-          - shared-business
           - shared-design
           - shared-forms
           - shared-i18n

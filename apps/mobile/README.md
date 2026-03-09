@@ -115,7 +115,6 @@ The mobile app integrates with the My Many Books API through shared libraries:
 - `@my-many-books/shared-api` - API client
 - `@my-many-books/shared-types` - TypeScript types
 - `@my-many-books/shared-utils` - Utility functions
-- `@my-many-books/shared-business` - Business logic
 
 ### API Configuration
 

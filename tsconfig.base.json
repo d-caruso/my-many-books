@@ -21,7 +21,6 @@
       "@my-many-books/ui-components": ["libs/ui-components/src/index.ts"],
       "@my-many-books/shared-utils": ["libs/shared-utils/src/index.ts"],
       "@my-many-books/shared-ui-hooks": ["libs/shared-ui-hooks/src/index.ts"],
-      "@my-many-books/shared-business": ["libs/shared-business/src/index.ts"],
       "@my-many-books/shared-design": ["libs/shared-design/src/index.ts"],
       "@my-many-books/shared-navigation": ["libs/shared-navigation/src/index.ts"],
       "@my-many-books/shared-forms": ["libs/shared-forms/src/index.ts"],
