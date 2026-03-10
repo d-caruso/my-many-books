@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text, Button } from 'react-native-paper';
+import { Text, Button, useTheme } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface EmptyStateProps {
@@ -18,9 +18,17 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionText,
   onAction,
 }) => {
+  const theme = useTheme();
+
   return (
     <View style={styles.container}>
-      <MaterialIcons name={icon} size={64} color="#bdbdbd" style={styles.icon} accessibilityLabel={`${title} icon`} />
+      <MaterialIcons
+        name={icon}
+        size={64}
+        color={theme.colors.onSurfaceVariant}
+        style={styles.icon}
+        accessibilityLabel={`${title} icon`}
+      />
       <Text variant="headlineSmall" style={styles.title} accessibilityRole="header">
         {title}
       </Text>

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Card, Text, TextInput } from 'react-native-paper';
+import { Button, Card, Text, TextInput, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,7 @@ import { AuthApiError, useAuth } from '@my-many-books/shared-auth';
 export default function VerifyEmailScreen() {
   const { t } = useTranslation('common');
   const { verifyEmail, resendCode } = useAuth();
+  const theme = useTheme();
   const params = useLocalSearchParams<{ email?: string }>();
 
   const [email, setEmail] = useState(params.email ?? '');
@@ -77,6 +78,25 @@ export default function VerifyEmailScreen() {
       }
     }
   };
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.colors.background },
+        content: { padding: 16 },
+        title: { marginBottom: 8, fontWeight: '700' },
+        subtitle: { marginBottom: 16, opacity: 0.8 },
+        input: { marginBottom: 12 },
+        submitButton: { marginTop: 8 },
+        resendContainer: { marginTop: 16, alignItems: 'center' },
+        resendPrompt: { opacity: 0.7 },
+        cooldownText: { opacity: 0.6, marginTop: 4 },
+        successText: { color: theme.colors.tertiary, marginTop: 4 },
+        errorText: { color: theme.colors.error, marginTop: 4 },
+        backButton: { marginTop: 8 },
+      }),
+    [theme]
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -190,48 +210,3 @@ export default function VerifyEmailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  content: {
-    padding: 16,
-  },
-  title: {
-    marginBottom: 8,
-    fontWeight: '700',
-  },
-  subtitle: {
-    marginBottom: 16,
-    opacity: 0.8,
-  },
-  input: {
-    marginBottom: 12,
-  },
-  submitButton: {
-    marginTop: 8,
-  },
-  resendContainer: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  resendPrompt: {
-    opacity: 0.7,
-  },
-  cooldownText: {
-    opacity: 0.6,
-    marginTop: 4,
-  },
-  successText: {
-    color: '#0f766e',
-    marginTop: 4,
-  },
-  errorText: {
-    color: '#b00020',
-    marginTop: 4,
-  },
-  backButton: {
-    marginTop: 8,
-  },
-});

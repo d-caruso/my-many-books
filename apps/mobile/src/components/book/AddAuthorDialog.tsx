@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Dialog, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, Dialog, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Author } from '@my-many-books/shared-types';
 
@@ -18,6 +18,7 @@ export function AddAuthorDialog({
   onCreate,
 }: AddAuthorDialogProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [nationality, setNationality] = useState('');
@@ -75,7 +76,7 @@ export function AddAuthorDialog({
         <Dialog.Content>
           <View style={styles.content}>
             {error ? (
-              <Text variant="bodySmall" style={styles.errorText}>
+              <Text variant="bodySmall" style={[styles.errorText, { color: theme.colors.error }]}>
                 {error}
               </Text>
             ) : null}
@@ -132,9 +133,7 @@ const styles = StyleSheet.create({
   content: {
     gap: 12,
   },
-  errorText: {
-    color: '#b91c1c',
-  },
+  errorText: {},
 });
 
 export default AddAuthorDialog;

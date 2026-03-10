@@ -18,11 +18,12 @@ import { OPERATION_TYPES } from '@/services/hooks/eventsSchema';
 import { AuthorsSection } from '@/components/book/AuthorsSection';
 import { CategoriesSection } from '@/components/book/CategoriesSection';
 import { AddBookOverlays } from '@/components/book/AddBookOverlays';
-import { addBookStyles as styles } from '@/components/book/addBookStyles';
+import { useAddBookStyles } from '@/components/book/addBookStyles';
 import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
 
 export default function AddBookScreen() {
   const { t } = useTranslation();
+  const styles = useAddBookStyles();
   const { isbn, bookData, scannerCopy } = useLocalSearchParams<{
     isbn?: string;
     bookData?: string;

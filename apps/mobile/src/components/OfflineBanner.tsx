@@ -1,12 +1,12 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { Banner } from 'react-native-paper';
+import { Banner, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useNetworkState } from '../hooks/useNetworkState';
 
 export const OfflineBanner: React.FC = () => {
   const { t } = useTranslation('offline');
   const { isOnline } = useNetworkState();
+  const theme = useTheme();
 
   if (isOnline) {
     return null;
@@ -16,7 +16,7 @@ export const OfflineBanner: React.FC = () => {
     <Banner
       visible={!isOnline}
       icon="wifi-off"
-      style={styles.banner}
+      style={{ backgroundColor: theme.colors.secondary }}
       testID="offline-banner"
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
@@ -25,9 +25,3 @@ export const OfflineBanner: React.FC = () => {
     </Banner>
   );
 };
-
-const styles = StyleSheet.create({
-  banner: {
-    backgroundColor: '#FFA726',
-  },
-});

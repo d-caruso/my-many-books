@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Card, Text, IconButton, Menu, Chip } from 'react-native-paper';
+import { Card, Text, IconButton, Menu, Chip, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { Book } from '@/types';
 import type { EntityMeta, UiBook } from '@/types/ui';
@@ -54,6 +54,7 @@ export const BookCard: React.FC<BookCardProps> = ({
   showActions = true,
 }) => {
   const { t } = useTranslation('offline');
+  const theme = useTheme();
   const [menuVisible, setMenuVisible] = React.useState(false);
   const [conflictDialogVisible, setConflictDialogVisible] = React.useState(false);
   const { isOnline } = useNetworkState();
@@ -137,7 +138,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                     setMenuVisible(false);
                   }}
                   title={t('books:mark_as_status', { status: getStatusLabel(status, t) })}
-                  titleStyle={!isOnline ? { color: '#ff9800' } : undefined}
+                  titleStyle={!isOnline ? { color: theme.colors.secondary } : undefined}
                 />
               ))}
               <Menu.Item
@@ -146,7 +147,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                   setMenuVisible(false);
                 }}
                 title={t('delete')}
-                titleStyle={{ color: !isOnline ? '#ff9800' : '#f44336' }}
+                titleStyle={{ color: !isOnline ? theme.colors.secondary : theme.colors.error }}
               />
             </Menu>
           </View>
@@ -187,7 +188,6 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 4,
     marginRight: 12,
-    backgroundColor: '#f0f0f0',
   },
   textContent: {
     flex: 1,
@@ -219,7 +219,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   conflictChip: {
-    backgroundColor: '#f44336',
     alignSelf: 'flex-start',
   },
   conflictChipText: {

@@ -11,6 +11,7 @@ import {
   Portal,
   ActivityIndicator,
   IconButton,
+  useTheme,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -24,6 +25,7 @@ import type { Book } from '@/types';
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation(['books', 'common']);
+  const theme = useTheme();
   const { books, loading, updateBookStatus, deleteBook } = useBooks();
 
   const [statusMenuVisible, setStatusMenuVisible] = useState(false);
@@ -67,7 +69,7 @@ export default function BookDetailScreen() {
 
   if (loading && !book) {
     return (
-      <SafeAreaView style={styles.centered}>
+      <SafeAreaView style={[styles.centered, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" />
       </SafeAreaView>
     );
@@ -75,7 +77,7 @@ export default function BookDetailScreen() {
 
   if (!book) {
     return (
-      <SafeAreaView style={styles.centered}>
+      <SafeAreaView style={[styles.centered, { backgroundColor: theme.colors.background }]}>
         <Text variant="bodyLarge">{t('books:book_not_found', 'Book not found')}</Text>
         <Button onPress={() => router.back()} style={styles.backButton}>
           {t('common:back')}
@@ -85,7 +87,7 @@ export default function BookDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Surface style={styles.surface} elevation={1}>
 
@@ -100,7 +102,7 @@ export default function BookDetailScreen() {
               />
               <IconButton
                 icon="delete"
-                iconColor="#b00020"
+                iconColor={theme.colors.error}
                 disabled={actionLoading}
                 onPress={() => setDeleteDialogVisible(true)}
                 accessibilityLabel={t('books:delete_book_title')}
@@ -220,7 +222,7 @@ export default function BookDetailScreen() {
               {t('common:cancel')}
             </Button>
             <Button
-              textColor="#b00020"
+              textColor={theme.colors.error}
               loading={actionLoading}
               disabled={actionLoading}
               onPress={handleDelete}
@@ -246,13 +248,11 @@ function Field({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
   },
   scroll: {
     padding: 16,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   statusChipText: {
-    color: '#ffffff',
+    color: 'white',
   },
   divider: {
     marginHorizontal: 16,

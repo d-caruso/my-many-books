@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Dialog, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, Dialog, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@my-many-books/shared-types';
 import { extractErrorMessage } from '@my-many-books/shared-utils';
@@ -19,6 +19,7 @@ export function AddCategoryDialog({
   onCreate,
 }: AddCategoryDialogProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +65,7 @@ export function AddCategoryDialog({
         <Dialog.Content>
           <View style={styles.content}>
             {error ? (
-              <Text variant="bodySmall" style={styles.errorText}>
+              <Text variant="bodySmall" style={[styles.errorText, { color: theme.colors.error }]}>
                 {error}
               </Text>
             ) : null}
@@ -99,9 +100,7 @@ const styles = StyleSheet.create({
   content: {
     gap: 12,
   },
-  errorText: {
-    color: '#b91c1c',
-  },
+  errorText: {},
 });
 
 export default AddCategoryDialog;

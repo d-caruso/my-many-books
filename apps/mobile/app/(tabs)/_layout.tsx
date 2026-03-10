@@ -4,6 +4,7 @@ import { useAuth } from '@my-many-books/shared-auth';
 import { Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View, Text, Image, StyleSheet } from 'react-native';
+import { useTheme } from 'react-native-paper';
 import { SyncQueueBadge } from '@/components/SyncQueueBadge';
 
 const logoMark = require('../../assets/logo-mark-primary.png');
@@ -11,6 +12,7 @@ const logoMark = require('../../assets/logo-mark-primary.png');
 export default function TabLayout() {
   const { user, loading } = useAuth();
   const { t } = useTranslation();
+  const theme = useTheme();
   const appName = t('common:app_name', 'My Many Books');
 
   if (loading) {
@@ -26,8 +28,8 @@ export default function TabLayout() {
       <SyncQueueBadge />
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: '#0369a1',
-          tabBarInactiveTintColor: '#757575',
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
           headerShown: true,
           headerTitleAlign: 'center',
           headerTitle: () => (
@@ -111,6 +113,5 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
   },
 });

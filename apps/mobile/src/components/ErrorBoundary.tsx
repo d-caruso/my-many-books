@@ -1,6 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Button, useTheme } from 'react-native-paper';
 import { errorTrackingService } from '../services/errors/ErrorTrackingService';
 import { useTranslation } from 'react-i18next';
 
@@ -116,16 +116,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 /**
  * Default error fallback component with translation support
  */
-function DefaultErrorFallback({ 
-  error, 
-  errorId, 
-  onRetry 
-}: { 
+function DefaultErrorFallback({
+  error,
+  errorId,
+  onRetry
+}: {
   error: Error;
   errorId: string | null;
   onRetry: () => void;
 }) {
   const { t } = useTranslation('errors');
+  const theme = useTheme();
 
   return (
     <View style={{
@@ -133,32 +134,32 @@ function DefaultErrorFallback({
       justifyContent: 'center',
       alignItems: 'center',
       padding: 20,
-      backgroundColor: '#f5f5f5'
+      backgroundColor: theme.colors.background,
     }}>
       <Text style={{
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#d32f2f',
+        color: theme.colors.error,
         marginBottom: 16,
-        textAlign: 'center'
+        textAlign: 'center',
       }}>
         {t('boundary.title', 'Something went wrong')}
       </Text>
-      
+
       <Text style={{
         fontSize: 16,
-        color: '#666',
+        color: theme.colors.onSurfaceVariant,
         marginBottom: 8,
-        textAlign: 'center'
+        textAlign: 'center',
       }}>
         {t('boundary.message', 'The app encountered an unexpected error and needs to reload this section.')}
       </Text>
 
       <Text style={{
         fontSize: 14,
-        color: '#999',
+        color: theme.colors.onSurfaceVariant,
         marginBottom: 24,
-        textAlign: 'center'
+        textAlign: 'center',
       }}>
         {t('boundary.errorDetails', 'Error: {{message}}', { message: error.message })}
       </Text>
@@ -166,16 +167,16 @@ function DefaultErrorFallback({
       {errorId && (
         <Text style={{
           fontSize: 12,
-          color: '#999',
+          color: theme.colors.onSurfaceVariant,
           marginBottom: 24,
           textAlign: 'center',
-          fontFamily: 'monospace'
+          fontFamily: 'monospace',
         }}>
           {t('boundary.errorId', 'Error ID: {{errorId}}', { errorId })}
         </Text>
       )}
 
-      <Button 
+      <Button
         mode="contained"
         onPress={onRetry}
         style={{ marginBottom: 16 }}
@@ -183,20 +184,19 @@ function DefaultErrorFallback({
         {t('boundary.retry', 'Try Again')}
       </Button>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => {
           errorTrackingService.recordUserAction('error_boundary_details_expanded');
-          // Could show more details in a modal or expand inline
         }}
         style={{
           padding: 8,
           borderRadius: 4,
-          backgroundColor: '#e0e0e0',
+          backgroundColor: theme.colors.surfaceVariant,
         }}
       >
         <Text style={{
           fontSize: 12,
-          color: '#666'
+          color: theme.colors.onSurfaceVariant,
         }}>
           {t('boundary.showDetails', 'Show Details')}
         </Text>

@@ -4,7 +4,7 @@ import { ActivityIndicator, Button, Chip, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@my-many-books/shared-types';
 import { getCategoryDisplayName } from '@my-many-books/shared-utils';
-import { addBookStyles as styles } from './addBookStyles';
+import { useAddBookStyles } from './addBookStyles';
 
 interface CategoriesSectionProps {
   categoriesLoading: boolean;
@@ -26,6 +26,7 @@ export function CategoriesSection({
   onToggleCategory,
 }: CategoriesSectionProps) {
   const { t } = useTranslation();
+  const styles = useAddBookStyles();
 
   return (
     <>

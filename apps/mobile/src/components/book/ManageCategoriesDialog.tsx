@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Dialog, List, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, Dialog, List, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useManageCategories } from '@my-many-books/shared-ui-hooks';
 import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
@@ -21,6 +21,7 @@ export function ManageCategoriesDialog({
   onCategoryDeleted,
 }: ManageCategoriesDialogProps) {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
@@ -110,8 +111,8 @@ export function ManageCategoriesDialog({
         <Dialog.Content>
           <View style={styles.content}>
             {error ? (
-              <View style={styles.errorBox}>
-                <Text variant="bodySmall" style={styles.errorText}>
+              <View style={[styles.errorBox, { backgroundColor: theme.colors.errorContainer }]}>
+                <Text variant="bodySmall" style={[styles.errorText, { color: theme.colors.error }]}>
                   {t(error.i18nKey, {
                     defaultValue:
                       error.message ||
@@ -122,8 +123,8 @@ export function ManageCategoriesDialog({
             ) : null}
 
             {editingId != null ? (
-              <View style={styles.editorBox}>
-                <Text variant="bodySmall" style={styles.editorLabel}>
+              <View style={[styles.editorBox, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
+                <Text variant="bodySmall" style={[styles.editorLabel, { color: theme.colors.onSurface }]}>
                   {t('common:edit')}
                 </Text>
                 <TextInput
@@ -145,7 +146,7 @@ export function ManageCategoriesDialog({
 
             <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
               {loading || sorting ? (
-                <Text variant="bodySmall" style={styles.helperText}>
+                <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
                   {t('dialogs:category.loading', { defaultValue: 'Loading categories...' })}
                 </Text>
               ) : null}
@@ -168,7 +169,7 @@ export function ManageCategoriesDialog({
                             setPendingDeleteId(Number(category.id));
                           }}
                           disabled={mutating}
-                          textColor="#b91c1c"
+                          textColor={theme.colors.error}
                         >
                           {t('common:delete')}
                         </Button>
@@ -178,7 +179,7 @@ export function ManageCategoriesDialog({
                 ))}
 
               {!loading && !sorting && categories.length === 0 ? (
-                <Text variant="bodySmall" style={styles.helperText}>
+                <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
                   {t('dialogs:category.no_results', { defaultValue: 'No categories found' })}
                 </Text>
               ) : null}
@@ -224,24 +225,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   errorBox: {
-    backgroundColor: '#ffebee',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  errorText: {
-    color: '#b91c1c',
-  },
+  errorText: {},
   editorBox: {
     gap: 8,
     padding: 10,
     borderRadius: 8,
-    backgroundColor: '#f8fafc',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
   },
   editorLabel: {
-    color: '#334155',
     fontWeight: '600',
   },
   inlineActionsRow: {
@@ -256,7 +251,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   helperText: {
-    color: '#64748b',
     textAlign: 'center',
     paddingVertical: 12,
   },

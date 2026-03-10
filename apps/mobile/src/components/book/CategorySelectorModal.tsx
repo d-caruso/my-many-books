@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Checkbox, Dialog, List, Portal, Text } from 'react-native-paper';
+import { Button, Checkbox, Dialog, List, Portal, Text, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@my-many-books/shared-types';
 import { getCategoryDisplayName } from '@my-many-books/shared-utils';
@@ -25,6 +25,7 @@ export function CategorySelectorModal({
   onAddCategoryPress,
 }: CategorySelectorModalProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   return (
     <Portal>
@@ -38,7 +39,7 @@ export function CategorySelectorModal({
 
             <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
               {loading ? (
-                <Text variant="bodySmall" style={styles.helperText}>
+                <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
                   {t('books:loading_categories')}
                 </Text>
               ) : null}
@@ -59,7 +60,7 @@ export function CategorySelectorModal({
                 })}
 
               {!loading && categories.length === 0 ? (
-                <Text variant="bodySmall" style={styles.helperText}>
+                <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
                   {t('books:no_categories_found', { defaultValue: 'No categories found' })}
                 </Text>
               ) : null}
@@ -85,7 +86,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   helperText: {
-    color: '#64748b',
     textAlign: 'center',
     paddingVertical: 16,
   },

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Chip, Dialog, List, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, Dialog, List, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Author } from '@my-many-books/shared-types';
 
@@ -24,6 +24,7 @@ export function AuthorSelectorModal({
   onAddAuthorPress,
 }: AuthorSelectorModalProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [search, setSearch] = useState('');
   const handleClose = () => {
     setSearch('');
@@ -61,7 +62,7 @@ export function AuthorSelectorModal({
               <Button mode="outlined" onPress={onAddAuthorPress}>
                 {t('books:add_author')}
               </Button>
-              <Text variant="bodySmall" style={styles.helperText}>
+              <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
                 {loading ? t('books:loading_categories') : t('books:search_add_authors')}
               </Text>
             </View>
@@ -86,7 +87,7 @@ export function AuthorSelectorModal({
               })}
 
               {!filteredAuthors.length && (
-                <Text variant="bodySmall" style={styles.emptyText}>
+                <Text variant="bodySmall" style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
                   {search.trim()
                     ? t('books:no_authors_found', { term: search })
                     : t('books:type_to_search_authors')}
@@ -110,9 +111,7 @@ const styles = StyleSheet.create({
   actionRow: {
     gap: 8,
   },
-  helperText: {
-    color: '#64748b',
-  },
+  helperText: {},
   list: {
     maxHeight: 320,
   },
@@ -121,7 +120,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-    color: '#64748b',
     paddingVertical: 16,
   },
 });

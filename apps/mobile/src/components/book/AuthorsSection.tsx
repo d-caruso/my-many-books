@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { ActivityIndicator, Button, Chip, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Author } from '@my-many-books/shared-types';
-import { addBookStyles as styles } from './addBookStyles';
+import { useAddBookStyles } from './addBookStyles';
 
 interface AuthorsSectionProps {
   selectedAuthors: Author[];
@@ -23,6 +23,7 @@ export function AuthorsSection({
   onRemoveAuthor,
 }: AuthorsSectionProps) {
   const { t } = useTranslation();
+  const styles = useAddBookStyles();
 
   return (
     <>

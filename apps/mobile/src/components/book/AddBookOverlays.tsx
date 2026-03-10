@@ -9,7 +9,7 @@ import { AuthorSelectorModal } from './AuthorSelectorModal';
 import { CategorySelectorModal } from './CategorySelectorModal';
 import { ManageAuthorsDialog } from './ManageAuthorsDialog';
 import { ManageCategoriesDialog } from './ManageCategoriesDialog';
-import { addBookStyles as styles } from './addBookStyles';
+import { useAddBookStyles } from './addBookStyles';
 
 interface AddBookOverlaysProps {
   scannerOpen: boolean;
@@ -46,6 +46,8 @@ interface AddBookOverlaysProps {
 }
 
 export function AddBookOverlays(props: AddBookOverlaysProps) {
+  const styles = useAddBookStyles();
+
   return (
     <>
       <Modal

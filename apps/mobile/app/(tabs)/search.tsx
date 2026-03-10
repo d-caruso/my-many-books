@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { View, FlatList, ScrollView } from 'react-native';
-import { Searchbar, Text, SegmentedButtons, Chip, Menu, Button, IconButton, Snackbar } from 'react-native-paper';
+import { Searchbar, Text, SegmentedButtons, Chip, Menu, Button, IconButton, Snackbar, useTheme } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +30,7 @@ type SortOrder = SortDirection;
 
 export default function SearchScreen() {
   const { t } = useTranslation('offline');
+  const theme = useTheme();
   const { scannedIsbn, scannerCopy } = useLocalSearchParams<{
     scannedIsbn?: string;
     scannerCopy?: ScannerCopyStatus;
@@ -170,6 +171,86 @@ export default function SearchScreen() {
     BOOK_STATUS.PAUSED,
     BOOK_STATUS.FINISHED,
   ];
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background,
+        },
+        header: {
+          padding: 16,
+          backgroundColor: theme.colors.surface,
+          elevation: 2,
+          shadowColor: theme.colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        },
+        title: {
+          marginBottom: 16,
+          fontWeight: 'bold',
+        },
+        segmentedButtons: {
+          marginBottom: 16,
+        },
+        searchbar: {
+          marginBottom: 8,
+        },
+        errorContainer: {
+          padding: 16,
+          backgroundColor: theme.colors.errorContainer,
+        },
+        errorText: {
+          color: theme.colors.error,
+          textAlign: 'center',
+        },
+        offlineContainer: {
+          padding: 12,
+          backgroundColor: theme.colors.secondaryContainer,
+          borderLeftWidth: 4,
+          borderLeftColor: theme.colors.secondary,
+        },
+        offlineText: {
+          color: theme.colors.onSecondaryContainer,
+          textAlign: 'center',
+          fontWeight: '500',
+        },
+        listContainer: {
+          padding: 16,
+          flexGrow: 1,
+        },
+        filterLabel: {
+          marginTop: 16,
+          marginBottom: 8,
+          fontWeight: '500',
+        },
+        filterContainer: {
+          marginBottom: 16,
+        },
+        filterChip: {
+          marginRight: 8,
+        },
+        sortContainer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 8,
+        },
+        sortLabel: {
+          marginRight: 12,
+          fontWeight: '500',
+        },
+        sortButton: {
+          flex: 1,
+          marginRight: 8,
+        },
+        sortButtonContent: {
+          paddingHorizontal: 8,
+        },
+      }),
+    [theme]
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -360,78 +441,3 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    padding: 16,
-    backgroundColor: 'white',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  title: {
-    marginBottom: 16,
-    fontWeight: 'bold',
-  },
-  segmentedButtons: {
-    marginBottom: 16,
-  },
-  searchbar: {
-    marginBottom: 8,
-  },
-  errorContainer: {
-    padding: 16,
-    backgroundColor: '#ffebee',
-  },
-  errorText: {
-    color: '#c62828',
-    textAlign: 'center',
-  },
-  offlineContainer: {
-    padding: 12,
-    backgroundColor: '#fff3cd',
-    borderLeftWidth: 4,
-    borderLeftColor: '#ffc107',
-  },
-  offlineText: {
-    color: '#856404',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  listContainer: {
-    padding: 16,
-    flexGrow: 1,
-  },
-  filterLabel: {
-    marginTop: 16,
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  filterContainer: {
-    marginBottom: 16,
-  },
-  filterChip: {
-    marginRight: 8,
-  },
-  sortContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  sortLabel: {
-    marginRight: 12,
-    fontWeight: '500',
-  },
-  sortButton: {
-    flex: 1,
-    marginRight: 8,
-  },
-  sortButtonContent: {
-    paddingHorizontal: 8,
-  },
-});

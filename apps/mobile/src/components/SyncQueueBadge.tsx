@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import { Badge } from 'react-native-paper';
+import { Badge, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useQueueStatus } from '../hooks/useQueueStatus';
 
@@ -10,6 +10,7 @@ import { useQueueStatus } from '../hooks/useQueueStatus';
 export const SyncQueueBadge: React.FC = () => {
   const { t } = useTranslation('offline');
   const { pendingCount } = useQueueStatus();
+  const theme = useTheme();
 
   if (pendingCount === 0) {
     return null;
@@ -17,7 +18,7 @@ export const SyncQueueBadge: React.FC = () => {
 
   return (
     <Badge
-      style={styles.badge}
+      style={[styles.badge, { backgroundColor: theme.colors.secondary }]}
       testID="sync-queue-badge"
       accessibilityRole="text"
       accessibilityLabel={`${pendingCount} ${t('sync.queue.syncing')}`}
@@ -32,6 +33,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: '#FF9800',
   },
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Badge, IconButton } from 'react-native-paper';
+import { Badge, IconButton, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { SyncStatus } from '@/types';
 import { SYNC_STATUS } from '@/types';
@@ -20,6 +20,7 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
   compact = false,
 }) => {
   const { t } = useTranslation('offline');
+  const theme = useTheme();
 
   if (!syncStatus || syncStatus === SYNC_STATUS.SYNCED) {
     return null;
@@ -28,13 +29,13 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
   const getBadgeColor = () => {
     switch (syncStatus) {
       case SYNC_STATUS.PENDING:
-        return '#FF9800'; // Orange
+        return theme.colors.secondary;
       case SYNC_STATUS.SYNCING:
-        return '#2196F3'; // Blue
+        return theme.colors.primary;
       case SYNC_STATUS.FAILED:
-        return '#F44336'; // Red
+        return theme.colors.error;
       default:
-        return '#757575'; // Gray
+        return theme.colors.onSurfaceVariant;
     }
   };
 

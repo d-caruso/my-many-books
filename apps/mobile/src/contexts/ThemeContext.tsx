@@ -2,6 +2,7 @@ import * as React from 'react';
 import { ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+import { themes } from '@my-many-books/shared-design';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -22,9 +23,12 @@ const lightTheme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: '#2196F3',
-    secondary: '#FF9800',
-    tertiary: '#4CAF50',
+    primary: themes.default.colors.primary,
+    secondary: themes.default.colors.semantic.warning,
+    tertiary: themes.default.colors.semantic.success,
+    error: themes.default.colors.semantic.error,
+    background: themes.default.colors.background,
+    surface: themes.default.colors.surface,
   },
 };
 
@@ -32,9 +36,12 @@ const darkTheme = {
   ...MD3DarkTheme,
   colors: {
     ...MD3DarkTheme.colors,
-    primary: '#2196F3',
-    secondary: '#FF9800',
-    tertiary: '#4CAF50',
+    primary: themes.dark.colors.primary,
+    secondary: themes.dark.colors.semantic.warning,
+    tertiary: themes.dark.colors.semantic.success,
+    error: themes.dark.colors.semantic.error,
+    background: themes.dark.colors.background,
+    surface: themes.dark.colors.surface,
   },
 };
 
@@ -68,8 +75,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   React.useEffect(() => {
     if (themeMode === 'system') {
-      // In a real app, you'd check the system theme
-      // For now, we'll default to light theme
       setIsDark(false);
     } else {
       setIsDark(themeMode === 'dark');

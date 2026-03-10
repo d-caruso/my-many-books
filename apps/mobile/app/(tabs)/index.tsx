@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { View, FlatList, RefreshControl } from 'react-native';
-import { FAB, Searchbar, Chip, Text, Snackbar } from 'react-native-paper';
+import { FAB, Searchbar, Chip, Text, Snackbar, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +23,7 @@ import type { ListRenderItem } from 'react-native';
 export default function BooksScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
@@ -143,6 +144,58 @@ export default function BooksScreen() {
     />
   );
 
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background,
+        },
+        header: {
+          padding: 16,
+          backgroundColor: theme.colors.surface,
+          elevation: 2,
+          shadowColor: theme.colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        },
+        title: {
+          marginBottom: 16,
+          fontWeight: 'bold',
+        },
+        searchbar: {
+          marginBottom: 8,
+        },
+        chipContainer: {
+          flexDirection: 'row',
+          marginTop: 8,
+        },
+        chip: {
+          marginRight: 8,
+        },
+        errorContainer: {
+          padding: 16,
+          backgroundColor: theme.colors.errorContainer,
+        },
+        errorText: {
+          color: theme.colors.error,
+          textAlign: 'center',
+        },
+        listContainer: {
+          padding: 16,
+          flexGrow: 1,
+        },
+        fab: {
+          position: 'absolute',
+          margin: 16,
+          right: 0,
+          bottom: 0,
+        },
+      }),
+    [theme]
+  );
+
   if (loading && books.length === 0) {
     return <LoadingSpinner />;
   }
@@ -240,54 +293,3 @@ export default function BooksScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    padding: 16,
-    backgroundColor: 'white',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  title: {
-    marginBottom: 16,
-    fontWeight: 'bold',
-  },
-  searchbar: {
-    marginBottom: 8,
-  },
-  chipContainer: {
-    flexDirection: 'row',
-    marginTop: 8,
-  },
-  chip: {
-    marginRight: 8,
-  },
-  errorContainer: {
-    padding: 16,
-    backgroundColor: '#ffebee',
-  },
-  errorText: {
-    color: '#c62828',
-    textAlign: 'center',
-  },
-  listContainer: {
-    padding: 16,
-    flexGrow: 1,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-  },
-  fabDisabled: {
-    opacity: 0.5,
-  },
-});
