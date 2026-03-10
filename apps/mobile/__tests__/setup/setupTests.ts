@@ -156,69 +156,22 @@ jest.mock('../../src/i18n', () => ({
 }));
 
 // Mock i18next for internationalization with actual translations
-jest.mock('react-i18next', () => ({
-  useTranslation: (namespace?: string) => ({
-    t: (key: string, params?: unknown) => {
-      // Map of translation keys to actual English translations for testing
-      const translations: Record<string, string> = {
-        // Common
-        'loading': 'Loading...',
-        'save': 'Save',
-        'cancel': 'Cancel',
-        'delete': 'Delete',
-        'search': 'Search',
-        'settings': 'Settings',
-        'ok': 'OK',
-        'logout': 'Logout',
-        'profile': 'Profile',
-        'user': 'User',
-        'scan': 'Scan',
-        'dark_mode': 'Dark Mode',
-        'toggle_dark_theme': 'Toggle dark theme',
-        'language': 'Language',
-        'language_changed_successfully': 'Language changed successfully',
-        // Books namespace
-        'books:my_books': 'My Books',
-        'books:add_book': 'Add Book',
-        'books:search_books': 'Search Books',
-        'books:no_books_found': 'No books found',
-        'books:unknown_author': 'Unknown Author',
-        'books:reading': 'Reading',
-        'books:completed': 'Completed',
-        'books:want_to_read': 'Want to Read',
-        // Scanner namespace
-        'scanner:scan_barcode': 'Scan ISBN Barcode',
-        'scanner:book_found': 'Book Found!',
-      };
+jest.mock('react-i18next', () => {
+  const mockI18n = { language: 'en', changeLanguage: jest.fn(() => Promise.resolve()) };
+  const tByNamespace: Record<string, (key: string) => string> = {};
 
-      // Handle namespace prefix (e.g., 'books:my_books')
-      let translationKey = key;
-      if (namespace && !key.includes(':')) {
-        translationKey = `${namespace}:${key}`;
+  return {
+    useTranslation: (namespace?: string) => {
+      const nsKey = namespace ?? '';
+      if (!tByNamespace[nsKey]) {
+        tByNamespace[nsKey] = (key: string) => key;
       }
-
-      let result = translations[translationKey] || key;
-
-      // Interpolate params if provided
-      if (params && typeof params === 'object') {
-        Object.keys(params).forEach(param => {
-          result = result.replace(`{{${param}}}`, String(params[param]));
-        });
-      }
-
-      return result;
+      return { t: tByNamespace[nsKey], i18n: mockI18n };
     },
-    i18n: {
-      language: 'en',
-      changeLanguage: jest.fn(() => Promise.resolve()),
-    },
-  }),
-  Trans: ({ children }: { children: unknown }) => children,
-  initReactI18next: {
-    type: '3rdParty',
-    init: jest.fn(),
-  },
-}));
+    Trans: ({ children }: { children: unknown }) => children,
+    initReactI18next: { type: '3rdParty', init: jest.fn() },
+  };
+});
 
 // Mock expo-localization
 jest.mock('expo-localization', () => ({

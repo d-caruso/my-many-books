@@ -76,11 +76,6 @@ function BookSearchTestComponent({ testId }: { testId: string }) {
 }
 
 describe('useBookSearch Hook', () => {
-  beforeAll(() => {
-    // Use real timers for this test suite (override global fake timers)
-    jest.useRealTimers();
-  });
-
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsOnline = true;
@@ -90,9 +85,8 @@ describe('useBookSearch Hook', () => {
     mockDbMocks.searchWithFilters.mockResolvedValue([]);
   });
 
-  afterAll(() => {
-    // Restore fake timers
-    jest.useFakeTimers();
+  beforeAll(() => {
+    jest.useRealTimers();
   });
 
   it('should import the hook', () => {
