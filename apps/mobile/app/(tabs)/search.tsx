@@ -11,12 +11,18 @@ import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { Book } from '@my-many-books/shared-types';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 import type { SearchQuery } from '@/types';
 import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import type { SortDirection } from '@my-many-books/shared-types';
 import { DB_SORT_FIELDS } from '@/constants/db';
 import type { DbSortField } from '@/constants/db';
 import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
+import { authorAPI, categoryAPI } from '@/services/api';
+import { authorRepository } from '@/services/database/AuthorRepository';
+import { categoryRepository } from '@/services/database/CategoryRepository';
+import { formatFullName, getCategoryDisplayName } from '@my-many-books/shared-utils';
+import type { Author, Category } from '@my-many-books/shared-types';
 
 type SearchMode = 'title' | 'author' | 'isbn';
 type SortOption = DbSortField;
@@ -35,8 +41,10 @@ export default function SearchScreen() {
   const [sortBy, setSortBy] = useState<SortOption>(DB_SORT_FIELDS.TITLE);
   const [sortOrder, setSortOrder] = useState<SortOrder>(SORT_DIRECTIONS.DESC);
   const [showSortMenu, setShowSortMenu] = useState(false);
-  const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedAuthorName, setSelectedAuthorName] = useState<string | null>(null);
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
+  const [availableAuthors, setAvailableAuthors] = useState<Author[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const handledScannerParamsRef = useRef<string | null>(null);
@@ -51,6 +59,33 @@ export default function SearchScreen() {
     clearSearch,
   } = useBookSearch();
 
+  // Load filter options — from API online, from SQLite offline
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        if (isOffline) {
+          const [localAuthors, localCats] = await Promise.all([
+            authorRepository.findAll(),
+            categoryRepository.findAll(),
+          ]);
+          setAvailableAuthors(localAuthors.map(la => la.entity));
+          setAvailableCategories(localCats.map(lc => lc.entity));
+        } else {
+          const [authors, categories] = await Promise.all([
+            authorAPI.getAuthors(),
+            categoryAPI.getCategories(),
+          ]);
+          setAvailableAuthors(authors);
+          setAvailableCategories(categories);
+        }
+      } catch {
+        // Non-critical — filter chips stay empty, search still works
+      }
+    };
+
+    void loadFilterOptions();
+  }, [isOffline]);
+
   const performSearch = useCallback(async () => {
     if (!searchQuery.trim()) {
       setIsbnResult(null);
@@ -64,51 +99,34 @@ export default function SearchScreen() {
     } else {
       setIsbnResult(null);
       const filters: Partial<SearchQuery> = {};
-      
-      // Apply search mode filter
+
       if (searchMode === 'author') {
         filters.author = searchQuery;
       }
-      
-      // Apply status filter
       if (statusFilter !== 'all') {
         filters.status = statusFilter;
       }
-      
-      // Apply author filter
-      if (selectedAuthor) {
-        filters.author = selectedAuthor;
+      if (selectedAuthorName) {
+        filters.author = selectedAuthorName;
       }
-      
-      // Apply category filter
-      if (selectedCategory) {
-        filters.category = selectedCategory;
+      if (selectedCategoryName) {
+        filters.category = selectedCategoryName;
       }
-      
-      // Apply sort options
       filters.sortBy = sortBy;
       filters.sortOrder = sortOrder;
 
       await searchBooks(searchQuery, filters);
     }
-  }, [searchQuery, searchMode, statusFilter, selectedAuthor, selectedCategory, sortBy, sortOrder, searchBooks, searchByISBN, clearSearch]);
-
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-  };
+  }, [searchQuery, searchMode, statusFilter, selectedAuthorName, selectedCategoryName, sortBy, sortOrder, searchBooks, searchByISBN, clearSearch]);
 
   useEffect(() => {
-    if (!scannedIsbn) {
-      return;
-    }
+    if (!scannedIsbn) return;
 
     const payloadKey = `${scannedIsbn}:${scannerCopy || ''}`;
-    if (handledScannerParamsRef.current === payloadKey) {
-      return;
-    }
+    if (handledScannerParamsRef.current === payloadKey) return;
     handledScannerParamsRef.current = payloadKey;
 
-    const applyScannerStateTimer = setTimeout(() => {
+    const timer = setTimeout(() => {
       setSearchMode('isbn');
       setSearchQuery(scannedIsbn);
 
@@ -123,18 +141,13 @@ export default function SearchScreen() {
     }, 0);
 
     router.replace('/(tabs)/search');
-
-    return () => {
-      clearTimeout(applyScannerStateTimer);
-    };
+    return () => clearTimeout(timer);
   }, [scannedIsbn, scannerCopy, t]);
 
-  // Trigger search when query changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       performSearch();
-    }, 300); // Debounce search
-
+    }, 300);
     return () => clearTimeout(timeoutId);
   }, [searchQuery, performSearch]);
 
@@ -150,6 +163,13 @@ export default function SearchScreen() {
     searchMode === 'isbn' && searchQuery.trim()
       ? (isbnResult ? [isbnResult] : [])
       : books;
+
+  const statusOptions: Array<Book['status'] | 'all'> = [
+    'all',
+    BOOK_STATUS.READING,
+    BOOK_STATUS.PAUSED,
+    BOOK_STATUS.FINISHED,
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -171,7 +191,7 @@ export default function SearchScreen() {
 
         <Searchbar
           placeholder={t('books:search_by_placeholder', { mode: searchMode.toLowerCase() })}
-          onChangeText={handleSearch}
+          onChangeText={setSearchQuery}
           value={searchQuery}
           style={styles.searchbar}
           accessibilityLabel="Search books by title, author, or ISBN"
@@ -182,13 +202,13 @@ export default function SearchScreen() {
           {t('books:filter_by_status')}
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
-          {['all', 'want-to-read', 'reading', 'paused', 'completed'].map((status) => (
+          {statusOptions.map((status) => (
             <Chip
-              key={status}
+              key={status ?? 'none'}
               selected={statusFilter === status}
-              onPress={() => setStatusFilter(status as Book['status'] | 'all')}
+              onPress={() => setStatusFilter(status)}
               style={styles.filterChip}
-              accessibilityLabel={`Filter by ${status === 'all' ? 'all books' : t(`books:${status}`)}`}
+              accessibilityLabel={status === 'all' ? t('books:all') : t(`books:${status}`)}
             >
               {status === 'all' ? t('books:all') : t(`books:${status}`)}
             </Chip>
@@ -201,13 +221,27 @@ export default function SearchScreen() {
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
           <Chip
-            selected={selectedAuthor === null}
-            onPress={() => setSelectedAuthor(null)}
+            selected={selectedAuthorName === null}
+            onPress={() => setSelectedAuthorName(null)}
             style={styles.filterChip}
           >
             {t('books:all_authors')}
           </Chip>
-          {/* Note: In a real implementation, you'd fetch available authors from the database */}
+          {availableAuthors.map((author) => {
+            const displayName = formatFullName(author.name, author.surname);
+            return (
+              <Chip
+                key={author.id}
+                selected={selectedAuthorName === displayName}
+                onPress={() => setSelectedAuthorName(
+                  selectedAuthorName === displayName ? null : displayName
+                )}
+                style={styles.filterChip}
+              >
+                {displayName}
+              </Chip>
+            );
+          })}
         </ScrollView>
 
         {/* Category Filter */}
@@ -216,13 +250,24 @@ export default function SearchScreen() {
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
           <Chip
-            selected={selectedCategory === null}
-            onPress={() => setSelectedCategory(null)}
+            selected={selectedCategoryName === null}
+            onPress={() => setSelectedCategoryName(null)}
             style={styles.filterChip}
           >
             {t('books:all_categories')}
           </Chip>
-          {/* Note: In a real implementation, you'd fetch available categories from the database */}
+          {availableCategories.map((cat) => (
+            <Chip
+              key={cat.id}
+              selected={selectedCategoryName === cat.name}
+              onPress={() => setSelectedCategoryName(
+                selectedCategoryName === cat.name ? null : cat.name
+              )}
+              style={styles.filterChip}
+            >
+              {getCategoryDisplayName(cat, t)}
+            </Chip>
+          ))}
         </ScrollView>
 
         {/* Sort Controls */}
