@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
-import { Text, TextInput, Button, Card, SegmentedButtons, useTheme } from 'react-native-paper';
+import { Text, TextInput, Button, Card, SegmentedButtons, IconButton, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,6 +18,9 @@ import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 import { extractErrorDetails } from '@my-many-books/shared-utils';
 import { API_BASE_URL } from '@/config/api';
 import { authService } from '@/services/authService';
+import { changeLanguage } from '@/i18n';
+import LanguageSelector from '@/components/LanguageSelector';
+import { AboutDialog } from '@/components/About/AboutDialog';
 
 type AuthMode = 'login' | 'register';
 const logoMark = require('../assets/logo-mark-primary.png');
@@ -69,6 +72,7 @@ export default function AuthScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [aboutDialogVisible, setAboutDialogVisible] = useState(false);
 
   const { login, register, refreshUser, loading } = useAuth();
   const params = useLocalSearchParams<{
@@ -307,6 +311,8 @@ export default function AuthScreen() {
         googleButton: { marginTop: 12 },
         footer: { alignItems: 'center' },
         footerText: { textAlign: 'center', opacity: 0.6 },
+        headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-end', paddingHorizontal: 4, marginBottom: 8 },
+        languageSelector: { marginTop: 16 },
       }),
     [theme]
   );
@@ -318,6 +324,15 @@ export default function AuthScreen() {
         style={styles.keyboardAvoidingView}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.headerRow}>
+            <IconButton
+              icon="information-outline"
+              size={22}
+              onPress={() => setAboutDialogVisible(true)}
+              accessibilityLabel={t('about')}
+            />
+          </View>
+
           <View style={styles.header}>
             <Image
               source={logoMark}
@@ -469,9 +484,20 @@ export default function AuthScreen() {
             <Text variant="bodySmall" style={styles.footerText}>
               {t('common:terms_of_service')}
             </Text>
+            <View style={styles.languageSelector}>
+              <LanguageSelector
+                value={i18n.language}
+                onLanguageChange={changeLanguage}
+              />
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <AboutDialog
+        visible={aboutDialogVisible}
+        onClose={() => setAboutDialogVisible(false)}
+      />
     </SafeAreaView>
   );
 }

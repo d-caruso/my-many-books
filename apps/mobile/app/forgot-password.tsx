@@ -5,9 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { AuthApiError, useAuth } from '@my-many-books/shared-auth';
+import { changeLanguage } from '@/i18n';
+import LanguageSelector from '@/components/LanguageSelector';
 
 export default function ForgotPasswordScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, loading, requestPasswordReset } = useAuth();
   const theme = useTheme();
 
@@ -60,6 +62,7 @@ export default function ForgotPasswordScreen() {
         successText: { color: theme.colors.tertiary, marginTop: 4 },
         submitButton: { marginTop: 16 },
         backButton: { marginTop: 8 },
+        languageSelector: { marginTop: 16, alignItems: 'center' },
       }),
     [theme]
   );
@@ -123,6 +126,13 @@ export default function ForgotPasswordScreen() {
             >
               {t('common:back_to_sign_in')}
             </Button>
+
+            <View style={styles.languageSelector}>
+              <LanguageSelector
+                value={i18n.language}
+                onLanguageChange={changeLanguage}
+              />
+            </View>
           </Card.Content>
         </Card>
       </View>
