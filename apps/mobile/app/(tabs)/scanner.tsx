@@ -6,6 +6,7 @@ import * as Clipboard from 'expo-clipboard';
 
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { BarcodeScannerPanel } from '@/components/scanner/BarcodeScannerPanel';
+import { ScannerErrorBoundary } from '@/components/ScannerErrorBoundary';
 import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
 
 export default function ScannerScreen() {
@@ -42,7 +43,9 @@ export default function ScannerScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <BarcodeScannerPanel onDetected={handleDetected} />
+      <ScannerErrorBoundary>
+        <BarcodeScannerPanel onDetected={handleDetected} />
+      </ScannerErrorBoundary>
     </SafeAreaView>
   );
 }

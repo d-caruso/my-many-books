@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { AuthApiError, useAuth } from '@my-many-books/shared-auth';
 import { changeLanguage } from '@/i18n';
 import LanguageSelector from '@/components/LanguageSelector';
+import { AuthErrorBoundary } from '@/components/AuthErrorBoundary';
 
 export default function ForgotPasswordScreen() {
   const { t, i18n } = useTranslation();
@@ -68,6 +69,7 @@ export default function ForgotPasswordScreen() {
   );
 
   return (
+    <AuthErrorBoundary>
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Card>
@@ -137,6 +139,7 @@ export default function ForgotPasswordScreen() {
         </Card>
       </View>
     </SafeAreaView>
+    </AuthErrorBoundary>
   );
 }
 

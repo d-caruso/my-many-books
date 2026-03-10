@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { AuthApiError, useAuth } from '@my-many-books/shared-auth';
+import { AuthErrorBoundary } from '@/components/AuthErrorBoundary';
 
 export default function VerifyEmailScreen() {
   const { t } = useTranslation('common');
@@ -99,6 +100,7 @@ export default function VerifyEmailScreen() {
   );
 
   return (
+    <AuthErrorBoundary>
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Card>
@@ -207,6 +209,7 @@ export default function VerifyEmailScreen() {
         </Card>
       </View>
     </SafeAreaView>
+    </AuthErrorBoundary>
   );
 }
 

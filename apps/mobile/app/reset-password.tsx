@@ -10,6 +10,7 @@ import {
   validatePasswordStrength,
 } from '@my-many-books/shared-validation';
 import { resolveValidationError } from '@/utils/resolveValidationError';
+import { AuthErrorBoundary } from '@/components/AuthErrorBoundary';
 
 const getFirstParam = (value: string | string[] | undefined): string => {
   if (Array.isArray(value)) {
@@ -115,6 +116,7 @@ export default function ResetPasswordScreen() {
   );
 
   return (
+    <AuthErrorBoundary>
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Card>
@@ -227,6 +229,7 @@ export default function ResetPasswordScreen() {
         </Card>
       </View>
     </SafeAreaView>
+    </AuthErrorBoundary>
   );
 }
 

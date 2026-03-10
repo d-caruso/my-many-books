@@ -125,7 +125,7 @@ function DefaultErrorFallback({
   errorId: string | null;
   onRetry: () => void;
 }) {
-  const { t } = useTranslation('errors');
+  const { t } = useTranslation();
   const theme = useTheme();
 
   return (
@@ -143,7 +143,7 @@ function DefaultErrorFallback({
         marginBottom: 16,
         textAlign: 'center',
       }}>
-        {t('boundary.title', 'Something went wrong')}
+        {t('common:page_error_title')}
       </Text>
 
       <Text style={{
@@ -152,7 +152,7 @@ function DefaultErrorFallback({
         marginBottom: 8,
         textAlign: 'center',
       }}>
-        {t('boundary.message', 'The app encountered an unexpected error and needs to reload this section.')}
+        {t('common:page_error_message')}
       </Text>
 
       <Text style={{
@@ -161,7 +161,7 @@ function DefaultErrorFallback({
         marginBottom: 24,
         textAlign: 'center',
       }}>
-        {t('boundary.errorDetails', 'Error: {{message}}', { message: error.message })}
+        {`Error: ${error.message}`}
       </Text>
 
       {errorId && (
@@ -172,7 +172,7 @@ function DefaultErrorFallback({
           textAlign: 'center',
           fontFamily: 'monospace',
         }}>
-          {t('boundary.errorId', 'Error ID: {{errorId}}', { errorId })}
+          {`Error ID: ${errorId}`}
         </Text>
       )}
 
@@ -181,7 +181,7 @@ function DefaultErrorFallback({
         onPress={onRetry}
         style={{ marginBottom: 16 }}
       >
-        {t('boundary.retry', 'Try Again')}
+        {t('common:retry')}
       </Button>
 
       <TouchableOpacity
@@ -198,7 +198,7 @@ function DefaultErrorFallback({
           fontSize: 12,
           color: theme.colors.onSurfaceVariant,
         }}>
-          {t('boundary.showDetails', 'Show Details')}
+          {t('common:show_details', 'Show Details')}
         </Text>
       </TouchableOpacity>
     </View>

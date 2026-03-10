@@ -23,7 +23,7 @@ import { authorRepository } from '@/services/database/AuthorRepository';
 import { categoryRepository } from '@/services/database/CategoryRepository';
 import { formatFullName, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import type { Author, Category } from '@my-many-books/shared-types';
-
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 type SearchMode = 'title' | 'author' | 'isbn';
 type SortOption = DbSortField;
 type SortOrder = SortDirection;
@@ -253,6 +253,7 @@ export default function SearchScreen() {
   );
 
   return (
+    <PageErrorBoundary>
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text variant="headlineMedium" style={styles.title} accessibilityRole="header">
@@ -438,6 +439,7 @@ export default function SearchScreen() {
         {feedbackMessage}
       </Snackbar>
     </SafeAreaView>
+    </PageErrorBoundary>
   );
 }
 

@@ -21,6 +21,7 @@ import { authService } from '@/services/authService';
 import { changeLanguage } from '@/i18n';
 import LanguageSelector from '@/components/LanguageSelector';
 import { AboutDialog } from '@/components/About/AboutDialog';
+import { AuthErrorBoundary } from '@/components/AuthErrorBoundary';
 
 type AuthMode = 'login' | 'register';
 const logoMark = require('../assets/logo-mark-primary.png');
@@ -318,6 +319,7 @@ export default function AuthScreen() {
   );
 
   return (
+    <AuthErrorBoundary>
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -499,6 +501,7 @@ export default function AuthScreen() {
         onClose={() => setAboutDialogVisible(false)}
       />
     </SafeAreaView>
+    </AuthErrorBoundary>
   );
 }
 

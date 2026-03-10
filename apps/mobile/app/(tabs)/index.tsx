@@ -19,6 +19,7 @@ import { useNetworkState } from '@/hooks/useNetworkState';
 import { Book } from '@/types';
 import type { UiBook } from '@/types/ui';
 import type { ListRenderItem } from 'react-native';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
 export default function BooksScreen() {
   const { t } = useTranslation();
@@ -277,6 +278,7 @@ export default function BooksScreen() {
   );
 
   return (
+    <PageErrorBoundary>
     <SafeAreaView style={styles.container}>
       {renderList()}
       <Snackbar
@@ -291,5 +293,6 @@ export default function BooksScreen() {
         {welcomeMessage}
       </Snackbar>
     </SafeAreaView>
+    </PageErrorBoundary>
   );
 }

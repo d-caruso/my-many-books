@@ -10,6 +10,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { changeLanguage } from '@/i18n';
 import LanguageSelector from '@/components/LanguageSelector';
 import { AboutDialog } from '@/components/About/AboutDialog';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -44,6 +45,7 @@ export default function ProfileScreen() {
   };
 
   return (
+    <PageErrorBoundary>
     <SafeAreaView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <ScrollView style={styles.scrollView}>
         <Card style={styles.profileCard}>
@@ -236,6 +238,7 @@ export default function ProfileScreen() {
         onClose={() => setAboutDialogVisible(false)}
       />
     </SafeAreaView>
+    </PageErrorBoundary>
   );
 }
 

@@ -40,5 +40,11 @@
   "scan_another": "Scansiona un altro",
   "book_found": "Libro trovato!",
   "isbn_colon": "ISBN: {{isbn}}",
-  "add_to_library": "Aggiungi alla libreria"
+  "add_to_library": "Aggiungi alla libreria",
+  "error_title": "Scanner non disponibile",
+  "error_permission_denied": "Il permesso fotocamera è stato negato. Consenti l'accesso alla fotocamera nelle impostazioni del dispositivo.",
+  "error_no_camera": "Nessuna fotocamera trovata su questo dispositivo.",
+  "error_camera_in_use": "La fotocamera è già in uso da un'altra app.",
+  "error_generic": "Lo scanner ha riscontrato un errore. Riprova.",
+  "error_close": "Chiudi scanner"
 }
