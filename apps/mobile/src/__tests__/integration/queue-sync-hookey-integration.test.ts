@@ -7,17 +7,16 @@ import { OPERATION_TYPES, RESOURCE_TYPES } from '../../services/hooks/eventsSche
 // Import AsyncStorage from setup
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { bookAPI, authorAPI, categoryAPI } from '../../services/api';
+import { bookRepository } from '../../services/database/BookRepository';
+import { authorRepository } from '../../services/database/AuthorRepository';
+import { categoryRepository } from '../../services/database/CategoryRepository';
+
 // Mock all external dependencies
 jest.mock('../../services/api');
 jest.mock('../../services/database/BookRepository');
-jest.mock('../../services/database/AuthorRepository'); 
+jest.mock('../../services/database/AuthorRepository');
 jest.mock('../../services/database/CategoryRepository');
-
-// Import mocked services once
-const { bookAPI, authorAPI, categoryAPI } = require('../../services/api');
-const { bookRepository } = require('../../services/database/BookRepository');
-const { authorRepository } = require('../../services/database/AuthorRepository');
-const { categoryRepository } = require('../../services/database/CategoryRepository');
 
 describe('Queue-Sync Hookey Integration (End-to-End)', () => {
   const eventLog: { eventType: string; data: unknown; timestamp: number }[] = [];

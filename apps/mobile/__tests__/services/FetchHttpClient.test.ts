@@ -4,8 +4,7 @@
 
 import { ApiError, ErrorCode, getClientErrorCode } from '../../src/types/errors';
 import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const i18n = require('../../src/i18n').default;
+import i18n from '../../src/i18n';
 
 // Mock NetInfo
 jest.mock('@react-native-community/netinfo', () => ({
@@ -14,6 +13,7 @@ jest.mock('@react-native-community/netinfo', () => ({
 
 // Mock i18n
 jest.mock('../../src/i18n', () => ({
+  __esModule: true,
   default: {
     t: jest.fn((key: string) => {
       if (key === 'offline.errors.noConnection') return 'No internet connection';
