@@ -94,7 +94,8 @@ export default function BookDetailScreen() {
             <View style={styles.headerActions}>
               <IconButton
                 icon="pencil"
-                disabled
+                disabled={actionLoading}
+                onPress={() => router.push(`/book/edit/${id}`)}
                 accessibilityLabel={t('books:edit_book')}
               />
               <IconButton
