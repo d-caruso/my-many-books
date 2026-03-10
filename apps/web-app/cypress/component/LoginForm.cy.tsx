@@ -3,8 +3,12 @@ import { mount } from 'cypress/react';
 import React from 'react';
 import { MockAuthProvider } from '../support/component-helpers';
 
+interface TestLoginFormProps {
+  onSwitchToRegister: () => void;
+}
+
 // Create a simplified LoginForm component for testing without external dependencies
-const TestLoginForm: React.FC<{ onSwitchToRegister: () => void }> = ({ onSwitchToRegister }) => {
+const TestLoginForm: React.FC<TestLoginFormProps> = ({ onSwitchToRegister }) => {
   const [formData, setFormData] = React.useState({
     email: '',
     password: ''
@@ -33,7 +37,6 @@ const TestLoginForm: React.FC<{ onSwitchToRegister: () => void }> = ({ onSwitchT
     // Mock login logic
     setTimeout(() => {
       setLoading(false);
-      console.log('Login submitted:', formData);
     }, 100);
   };
 
@@ -111,7 +114,7 @@ const TestLoginForm: React.FC<{ onSwitchToRegister: () => void }> = ({ onSwitchT
 };
 
 describe('LoginForm Component', () => {
-  let mockProps: any;
+  let mockProps: TestLoginFormProps;
 
   beforeEach(() => {
     mockProps = {

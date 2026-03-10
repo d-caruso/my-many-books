@@ -2,14 +2,37 @@
 import { mount } from 'cypress/react';
 import React from 'react';
 
-// Simplified BookCard component for testing
-const TestBookCard: React.FC<{
-  book: any;
+type TestBookStatus = 'want-to-read' | 'reading' | 'read';
+
+interface TestBook {
+  id: number;
+  title: string;
+  author: string;
+  isbn: string;
+  publishedDate: string;
+  status: TestBookStatus;
+  categories: string[];
+  thumbnail: string | null;
+  rating: number;
+  description: string;
+}
+
+interface TestBookCardProps {
+  book: TestBook;
   onEdit: () => void;
   onDelete: () => void;
-  onStatusChange: (id: number, status: string) => void;
+  onStatusChange: (id: number, status: TestBookStatus) => void;
   viewMode?: 'grid' | 'list';
-}> = ({ book, onEdit, onDelete, onStatusChange, viewMode = 'grid' }) => {
+}
+
+// Simplified BookCard component for testing
+const TestBookCard: React.FC<TestBookCardProps> = ({
+  book,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  viewMode = 'grid',
+}) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   return (
@@ -116,7 +139,7 @@ const TestBookCard: React.FC<{
 };
 
 describe('BookCard Component', () => {
-  const mockBook = {
+  const mockBook: TestBook = {
     id: 1,
     title: 'The Great Gatsby',
     author: 'F. Scott Fitzgerald',
@@ -129,7 +152,7 @@ describe('BookCard Component', () => {
     description: 'A classic American novel about the Jazz Age.'
   };
 
-  let mockProps: any;
+  let mockProps: TestBookCardProps;
 
   beforeEach(() => {
     mockProps = {

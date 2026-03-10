@@ -1,7 +1,12 @@
 import { NavigationManager } from '../NavigationManager';
 import type { NavigationAdapter, NavigationEvent, Route } from '../types';
 
-const createAdapter = (overrides: Partial<NavigationAdapter> = {}): NavigationAdapter => {
+type TestNavigationAdapter = NavigationAdapter & {
+  __setCanGoBack: (value: boolean) => void;
+  __setCanGoForward: (value: boolean) => void;
+};
+
+const createAdapter = (overrides: Partial<NavigationAdapter> = {}): TestNavigationAdapter => {
   let canBack = false;
   let canForward = false;
 
@@ -68,8 +73,8 @@ describe('NavigationManager', () => {
     const adapter = createAdapter();
     const manager = new NavigationManager(adapter);
 
-    (adapter as any).__setCanGoBack(true);
-    (adapter as any).__setCanGoForward(false);
+    adapter.__setCanGoBack(true);
+    adapter.__setCanGoForward(false);
 
     const route: Route = { id: 'r1', name: 'home', path: '/', metadata: { breadcrumb: 'Home' } };
     adapter.onRouteChange?.(route);
@@ -87,8 +92,8 @@ describe('NavigationManager', () => {
     await expect(manager.goBack()).rejects.toThrow('Cannot go back');
     await expect(manager.goForward()).rejects.toThrow('Cannot go forward');
 
-    (adapter as any).__setCanGoBack(true);
-    (adapter as any).__setCanGoForward(true);
+    adapter.__setCanGoBack(true);
+    adapter.__setCanGoForward(true);
     adapter.onRouteChange?.({ id: 'r1', name: 'home', path: '/' });
 
     await manager.goBack();
@@ -119,4 +124,3 @@ describe('NavigationManager', () => {
     expect(manager.canAccessRoute(roleRoute, ['admin'])).toBe(true);
   });
 });
-

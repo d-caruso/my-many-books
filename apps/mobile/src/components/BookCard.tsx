@@ -43,6 +43,7 @@ interface BookCardProps {
   onDelete?: () => void;
   onResolveConflict?: (id: number | string, choice: 'local' | 'server') => void;
   showActions?: boolean;
+  containerStyle?: object;
 }
 
 export const BookCard: React.FC<BookCardProps> = ({
@@ -52,6 +53,7 @@ export const BookCard: React.FC<BookCardProps> = ({
   onDelete,
   onResolveConflict,
   showActions = true,
+  containerStyle,
 }) => {
   const { t } = useTranslation('offline');
   const theme = useTheme();
@@ -61,7 +63,7 @@ export const BookCard: React.FC<BookCardProps> = ({
 
   return (
     <Card
-      style={styles.card}
+      style={[styles.card, containerStyle]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`View details for ${book.title} by ${book.authors?.map(a => a.name).join(', ') || t('books:unknown_author')}`}

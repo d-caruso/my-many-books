@@ -29,7 +29,7 @@ async function seedCategories() {
     try {
       console.log(`Creating category: ${categoryName}`);
       
-      const response = await axios.post(`${API_BASE_URL}/categories`, {
+      await axios.post(`${API_BASE_URL}/categories`, {
         name: categoryName
       }, {
         headers: {

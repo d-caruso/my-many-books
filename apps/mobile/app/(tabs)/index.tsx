@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { View, FlatList, RefreshControl } from 'react-native';
+import { View, FlatList, RefreshControl, useWindowDimensions } from 'react-native';
 import { FAB, Searchbar, Chip, Text, Snackbar, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import { StyleSheet } from 'react-native';
@@ -21,10 +21,18 @@ import type { UiBook } from '@/types/ui';
 import type { ListRenderItem } from 'react-native';
 import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
+function getNumColumns(width: number): number {
+  if (width >= 900) return 3;
+  if (width >= 600) return 2;
+  return 1;
+}
+
 export default function BooksScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const numColumns = getNumColumns(width);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
@@ -142,6 +150,7 @@ export default function BooksScreen() {
       onStatusChange={(status) => handleStatusChange(item.id, status)}
       onDelete={() => handleDeleteBook(item.id)}
       onResolveConflict={(id, choice) => handleResolveConflict(Number(id), choice)}
+      containerStyle={numColumns > 1 ? styles.gridItem : undefined}
     />
   );
 
@@ -193,6 +202,10 @@ export default function BooksScreen() {
           right: 0,
           bottom: 0,
         },
+        gridItem: {
+          flex: 1,
+          margin: 6,
+        },
       }),
     [theme]
   );
@@ -237,9 +250,11 @@ export default function BooksScreen() {
       )}
 
       <FlatList
+        key={numColumns}
         data={books}
         renderItem={renderBook}
         keyExtractor={(item) => item.id.toString()}
+        numColumns={numColumns}
         contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl

@@ -19,7 +19,7 @@ describe('traceIdGenerator', () => {
 
     const next: NextFunction = jest.fn(() => {
       expect(getCurrentTraceId()).toBe('trace-123');
-      expect((req as any).traceId).toBe('trace-123');
+      expect(req.traceId).toBe('trace-123');
     });
 
     traceIdMiddleware()(req, res, next);
@@ -35,7 +35,7 @@ describe('traceIdGenerator', () => {
 
     traceIdMiddleware()(req, res, next);
 
-    expect((req as any).traceId).toBe('trace-abc');
+    expect(req.traceId).toBe('trace-abc');
     expect(res.setHeader).toHaveBeenCalledWith('X-Trace-Id', 'trace-abc');
   });
 
@@ -46,7 +46,8 @@ describe('traceIdGenerator', () => {
 
     traceIdMiddleware()(req, res, next);
 
-    const traceId = (req as any).traceId as string;
+    const traceId = req.traceId;
+    expect(traceId).toBeDefined();
     expect(traceId).toMatch(/^[0-9a-f]{16}$/);
     expect(res.setHeader).toHaveBeenCalledWith('X-Trace-Id', traceId);
   });

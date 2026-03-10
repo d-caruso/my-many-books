@@ -23,9 +23,8 @@ describe('shared-types settings definitions', () => {
       expect(SettingTypeSchema.safeParse(def.type).success).toBe(true);
       expect(def.description.length).toBeGreaterThan(0);
       if (def.allowedValues) {
-        expect(def.allowedValues).toContain(def.defaultValue as any);
+        expect(def.allowedValues).toContain(def.defaultValue);
       }
     }
   });
 });
-

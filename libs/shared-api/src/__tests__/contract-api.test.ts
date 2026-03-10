@@ -4,6 +4,19 @@ import { AddressInfo } from 'net';
 import { createApiClient, HttpClient, RequestConfig, SettingsApi } from '../index';
 
 type SuccessEnvelope<T> = { success: true; data: T };
+interface HttpRequestError extends Error {
+  status: number;
+  response: unknown;
+}
+
+const isSuccessEnvelope = <T>(payload: unknown): payload is SuccessEnvelope<T> => {
+  if (typeof payload !== 'object' || payload === null) {
+    return false;
+  }
+
+  const candidate = payload as { success?: unknown; data?: unknown };
+  return candidate.success === true && 'data' in candidate && candidate.data !== undefined;
+};
 
 function getItemOrThrow<T>(items: readonly T[], index: number, label: string): T {
   const item = items[index];
@@ -49,21 +62,14 @@ class UnwrappingFetchHttpClient implements HttpClient {
       const payload = text ? JSON.parse(text) : undefined;
 
       if (!response.ok) {
-        const error: any = new Error(`HTTP Error ${response.status}`);
+        const error = new Error(`HTTP Error ${response.status}`) as HttpRequestError;
         error.status = response.status;
         error.response = payload;
         throw error;
       }
 
-      if (
-        payload &&
-        typeof payload === 'object' &&
-        'success' in payload &&
-        (payload as any).success === true &&
-        'data' in payload &&
-        (payload as any).data !== undefined
-      ) {
-        return (payload as SuccessEnvelope<T>).data;
+      if (isSuccessEnvelope<T>(payload)) {
+        return payload.data;
       }
 
       return payload as T;
@@ -89,7 +95,7 @@ class UnwrappingFetchHttpClient implements HttpClient {
   }
 }
 
-const readJsonBody = async (req: IncomingMessage): Promise<any> => {
+const readJsonBody = async (req: IncomingMessage): Promise<unknown> => {
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
     chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
@@ -155,10 +161,14 @@ describe('shared-api contract (success envelope)', () => {
 
       if (method === 'PUT' && path === '/users') {
         const body = await readJsonBody(req);
+        const parsedBody =
+          typeof body === 'object' && body !== null
+            ? (body as Partial<typeof currentUser>)
+            : {};
         currentUser = {
           ...currentUser,
-          ...body,
-          updateDate: new Date('2025-01-02T00:00:00.000Z').toISOString(),
+          ...parsedBody,
+          updatedAt: new Date('2025-01-02T00:00:00.000Z').toISOString(),
         };
         return json(res, 200, { success: true, data: currentUser });
       }

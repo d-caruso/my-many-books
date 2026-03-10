@@ -2,21 +2,30 @@ const sendMock = jest.fn();
 const describeLogStreamsCommandMock = jest.fn((input) => ({ __type: 'DescribeLogStreamsCommand', input }));
 const createLogStreamCommandMock = jest.fn((input) => ({ __type: 'CreateLogStreamCommand', input }));
 const putLogEventsCommandMock = jest.fn((input) => ({ __type: 'PutLogEventsCommand', input }));
+const mockLoggerError = jest.fn();
+const mockLoggerInfo = jest.fn();
 
 jest.mock('@aws-sdk/client-cloudwatch-logs', () => ({
   CloudWatchLogsClient: jest.fn().mockImplementation(() => ({ send: sendMock })),
-  DescribeLogStreamsCommand: function DescribeLogStreamsCommand(input: any) {
+  DescribeLogStreamsCommand: function DescribeLogStreamsCommand(input: unknown) {
     return describeLogStreamsCommandMock(input);
   },
-  CreateLogStreamCommand: function CreateLogStreamCommand(input: any) {
+  CreateLogStreamCommand: function CreateLogStreamCommand(input: unknown) {
     return createLogStreamCommandMock(input);
   },
-  PutLogEventsCommand: function PutLogEventsCommand(input: any) {
+  PutLogEventsCommand: function PutLogEventsCommand(input: unknown) {
     return putLogEventsCommandMock(input);
   },
 }));
 
-import { CloudWatchAdapter } from '../../../adapters/CloudWatchAdapter';
+jest.mock('../../../services/logger', () => ({
+  getLogger: () => ({
+    error: mockLoggerError,
+    info: mockLoggerInfo,
+  }),
+}));
+
+import { CloudWatchAdapter, type CloudWatchAdapterConfig } from '../../../adapters/CloudWatchAdapter';
 import type { LogEntry } from '../../../interfaces/LogEntry';
 
 const logA: LogEntry = {
@@ -46,13 +55,22 @@ const logZero: LogEntry = {
   metadata: {},
 };
 
+const createConfig = (
+  overrides: Partial<CloudWatchAdapterConfig> = {}
+): CloudWatchAdapterConfig => ({
+  name: 'cloudwatch-test',
+  logGroupName: 'group',
+  logStreamName: 'stream',
+  region: 'eu-west-1',
+  retries: 0,
+  ...overrides,
+});
+
 describe('CloudWatchAdapter', () => {
   let setIntervalSpy: jest.SpyInstance;
   let clearIntervalSpy: jest.SpyInstance;
-  let intervalHandle: any;
+  let intervalHandle: NodeJS.Timeout & { unref: jest.Mock };
   let intervalCallback: (() => void) | undefined;
-  let consoleLogSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(() => {
     sendMock.mockReset();
@@ -60,33 +78,32 @@ describe('CloudWatchAdapter', () => {
     createLogStreamCommandMock.mockClear();
     putLogEventsCommandMock.mockClear();
 
-    intervalHandle = { unref: jest.fn() };
+    intervalHandle = { unref: jest.fn() } as unknown as NodeJS.Timeout & { unref: jest.Mock };
     intervalCallback = undefined;
-    setIntervalSpy = jest.spyOn(global, 'setInterval').mockImplementation((cb: any) => {
-      intervalCallback = cb;
-      return intervalHandle;
-    });
+    setIntervalSpy = jest.spyOn(global, 'setInterval').mockImplementation(
+      ((cb: () => void): NodeJS.Timeout => {
+        intervalCallback = cb;
+        return intervalHandle;
+      }) as unknown as typeof setInterval
+    );
     clearIntervalSpy = jest.spyOn(global, 'clearInterval').mockImplementation(() => {});
-
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockLoggerError.mockClear();
+    mockLoggerInfo.mockClear();
   });
 
   afterEach(() => {
     setIntervalSpy.mockRestore();
     clearIntervalSpy.mockRestore();
-    consoleLogSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
   });
 
   it('starts a flush timer and unrefs it', () => {
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       flushInterval: 123,
       retries: 0,
-    } as any);
+    }));
 
     expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 123);
     expect(intervalHandle.unref).toHaveBeenCalledTimes(1);
@@ -94,13 +111,13 @@ describe('CloudWatchAdapter', () => {
   });
 
   it('logs errors from the periodic flush timer', async () => {
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       flushInterval: 123,
       retries: 0,
-    } as any);
+    }));
 
     const flushSpy = jest
       .spyOn(adapter, 'flush')
@@ -110,10 +127,9 @@ describe('CloudWatchAdapter', () => {
     intervalCallback?.();
     await Promise.resolve();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      '[cloudwatch]',
-      'Flush timer error:',
-      expect.any(Error)
+    expect(mockLoggerError).toHaveBeenCalledWith(
+      { adapter: 'cloudwatch', details: [expect.any(Error)] },
+      'Flush timer error:'
     );
 
     flushSpy.mockRestore();
@@ -121,26 +137,26 @@ describe('CloudWatchAdapter', () => {
   });
 
   it('creates a log stream if missing and sends sorted log events', async () => {
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') {
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') {
         return { logStreams: [] };
       }
-      if (command.__type === 'CreateLogStreamCommand') {
+      if ((command as { __type?: string }).__type === 'CreateLogStreamCommand') {
         return {};
       }
-      if (command.__type === 'PutLogEventsCommand') {
+      if ((command as { __type?: string }).__type === 'PutLogEventsCommand') {
         return { nextSequenceToken: 'next' };
       }
       throw new Error('unexpected command');
     });
 
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       bufferSize: 2,
       retries: 0,
-    } as any);
+    }));
 
     await adapter.write([logB, logA]);
     await adapter.flush();
@@ -165,20 +181,20 @@ describe('CloudWatchAdapter', () => {
   });
 
   it('sorts log events correctly when a timestamp is 0', async () => {
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') return { logStreams: [] };
-      if (command.__type === 'CreateLogStreamCommand') return {};
-      if (command.__type === 'PutLogEventsCommand') return { nextSequenceToken: 'next' };
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') return { logStreams: [] };
+      if ((command as { __type?: string }).__type === 'CreateLogStreamCommand') return {};
+      if ((command as { __type?: string }).__type === 'PutLogEventsCommand') return { nextSequenceToken: 'next' };
       throw new Error('unexpected command');
     });
 
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       bufferSize: 2,
       retries: 0,
-    } as any);
+    }));
 
     await adapter.write([logB, logZero]);
     await adapter.flush();
@@ -191,26 +207,26 @@ describe('CloudWatchAdapter', () => {
   });
 
   it('creates a log stream when DescribeLogStreams returns no logStreams field', async () => {
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') {
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') {
         return {};
       }
-      if (command.__type === 'CreateLogStreamCommand') {
+      if ((command as { __type?: string }).__type === 'CreateLogStreamCommand') {
         return {};
       }
-      if (command.__type === 'PutLogEventsCommand') {
+      if ((command as { __type?: string }).__type === 'PutLogEventsCommand') {
         return { nextSequenceToken: 'next' };
       }
       throw new Error('unexpected command');
     });
 
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       bufferSize: 1,
       retries: 0,
-    } as any);
+    }));
 
     await adapter.write([logA]);
     expect(createLogStreamCommandMock).toHaveBeenCalledTimes(1);
@@ -218,14 +234,14 @@ describe('CloudWatchAdapter', () => {
   });
 
   it('does not write when disabled or when logs are empty', async () => {
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       enabled: false,
       bufferSize: 1,
       retries: 0,
-    } as any);
+    }));
 
     await adapter.write([logA]);
     await adapter.write([]);
@@ -236,12 +252,12 @@ describe('CloudWatchAdapter', () => {
   });
 
   it('flush is a no-op when buffer is empty', async () => {
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       retries: 0,
-    } as any);
+    }));
 
     await adapter.flush();
     expect(sendMock).not.toHaveBeenCalled();
@@ -249,20 +265,20 @@ describe('CloudWatchAdapter', () => {
   });
 
   it('buffers logs until bufferSize is reached', async () => {
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') return { logStreams: [] };
-      if (command.__type === 'CreateLogStreamCommand') return {};
-      if (command.__type === 'PutLogEventsCommand') return { nextSequenceToken: 'next' };
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') return { logStreams: [] };
+      if ((command as { __type?: string }).__type === 'CreateLogStreamCommand') return {};
+      if ((command as { __type?: string }).__type === 'PutLogEventsCommand') return { nextSequenceToken: 'next' };
       return {};
     });
 
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       bufferSize: 2,
       retries: 0,
-    } as any);
+    }));
 
     await adapter.write([logA]);
     expect(putLogEventsCommandMock).toHaveBeenCalledTimes(0);
@@ -275,16 +291,16 @@ describe('CloudWatchAdapter', () => {
 
   it('resets sequenceToken on InvalidSequenceTokenException and retries later', async () => {
     let phase = 0;
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') {
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') {
         return phase === 0
           ? { logStreams: [{ logStreamName: 'stream', uploadSequenceToken: 'upload' }] }
           : { logStreams: [{ logStreamName: 'stream' }] };
       }
-      if (command.__type === 'PutLogEventsCommand') {
+      if ((command as { __type?: string }).__type === 'PutLogEventsCommand') {
         if (phase === 0) {
           phase = 1;
-          const err: any = new Error('invalid token');
+          const err = new Error('invalid token');
           err.name = 'InvalidSequenceTokenException';
           throw err;
         }
@@ -293,13 +309,13 @@ describe('CloudWatchAdapter', () => {
       throw new Error('unexpected command');
     });
 
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       bufferSize: 1,
       retries: 0,
-    } as any);
+    }));
 
     await adapter.write([logA]); // triggers flush and fails
     await adapter.flush(); // retries later and succeeds
@@ -313,16 +329,16 @@ describe('CloudWatchAdapter', () => {
 
   it('also resets sequenceToken on DataAlreadyAcceptedException', async () => {
     let phase = 0;
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') {
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') {
         return phase === 0
           ? { logStreams: [{ logStreamName: 'stream', uploadSequenceToken: 'upload' }] }
           : { logStreams: [{ logStreamName: 'stream' }] };
       }
-      if (command.__type === 'PutLogEventsCommand') {
+      if ((command as { __type?: string }).__type === 'PutLogEventsCommand') {
         if (phase === 0) {
           phase = 1;
-          const err: any = new Error('already accepted');
+          const err = new Error('already accepted');
           err.name = 'DataAlreadyAcceptedException';
           throw err;
         }
@@ -331,13 +347,13 @@ describe('CloudWatchAdapter', () => {
       throw new Error('unexpected command');
     });
 
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       bufferSize: 1,
       retries: 0,
-    } as any);
+    }));
 
     await adapter.write([logA]);
     await adapter.flush();
@@ -349,28 +365,28 @@ describe('CloudWatchAdapter', () => {
   });
 
   it('handles ResourceAlreadyExistsException during stream creation', async () => {
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') {
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') {
         return { logStreams: [] };
       }
-      if (command.__type === 'CreateLogStreamCommand') {
-        const err: any = new Error('exists');
+      if ((command as { __type?: string }).__type === 'CreateLogStreamCommand') {
+        const err = new Error('exists');
         err.name = 'ResourceAlreadyExistsException';
         throw err;
       }
-      if (command.__type === 'PutLogEventsCommand') {
+      if ((command as { __type?: string }).__type === 'PutLogEventsCommand') {
         return { nextSequenceToken: 'next' };
       }
       throw new Error('unexpected command');
     });
 
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       bufferSize: 1,
       retries: 0,
-    } as any);
+    }));
 
     await adapter.write([logA]);
     await adapter.destroy();
@@ -378,30 +394,30 @@ describe('CloudWatchAdapter', () => {
   });
 
   it('keeps logs in buffer when ensureLogStream fails with a non-ResourceAlreadyExists error', async () => {
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') {
-        const err: any = new Error('denied');
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') {
+        const err = new Error('denied');
         err.name = 'AccessDeniedException';
         throw err;
       }
       throw new Error('unexpected command');
     });
 
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       bufferSize: 1,
       retries: 0,
-    } as any);
+    }));
 
     await adapter.write([logA]); // triggers flush and fails before PutLogEvents
     expect(putLogEventsCommandMock).toHaveBeenCalledTimes(0);
 
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') return { logStreams: [] };
-      if (command.__type === 'CreateLogStreamCommand') return {};
-      if (command.__type === 'PutLogEventsCommand') return { nextSequenceToken: 'next' };
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') return { logStreams: [] };
+      if ((command as { __type?: string }).__type === 'CreateLogStreamCommand') return {};
+      if ((command as { __type?: string }).__type === 'PutLogEventsCommand') return { nextSequenceToken: 'next' };
       return {};
     });
 
@@ -412,33 +428,36 @@ describe('CloudWatchAdapter', () => {
   });
 
   it('keeps logs in buffer when flush fails', async () => {
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') return { logStreams: [] };
-      if (command.__type === 'CreateLogStreamCommand') return {};
-      if (command.__type === 'PutLogEventsCommand') throw new Error('cw-down');
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') return { logStreams: [] };
+      if ((command as { __type?: string }).__type === 'CreateLogStreamCommand') return {};
+      if ((command as { __type?: string }).__type === 'PutLogEventsCommand') throw new Error('cw-down');
       return {};
     });
 
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       bufferSize: 1,
       retries: 0,
-    } as any);
+    }));
 
     await adapter.write([logA]); // triggers flush and fails
 
-    sendMock.mockImplementation(async (command: any) => {
-      if (command.__type === 'DescribeLogStreamsCommand') return { logStreams: [] };
-      if (command.__type === 'CreateLogStreamCommand') return {};
-      if (command.__type === 'PutLogEventsCommand') return { nextSequenceToken: 'next' };
+    sendMock.mockImplementation(async (command: unknown) => {
+      if ((command as { __type?: string }).__type === 'DescribeLogStreamsCommand') return { logStreams: [] };
+      if ((command as { __type?: string }).__type === 'CreateLogStreamCommand') return {};
+      if ((command as { __type?: string }).__type === 'PutLogEventsCommand') return { nextSequenceToken: 'next' };
       return {};
     });
 
     await adapter.flush();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('[cloudwatch]', 'Failed to flush logs to CloudWatch:', 'cw-down');
+    expect(mockLoggerError).toHaveBeenCalledWith(
+      { adapter: 'cloudwatch', details: ['cw-down'] },
+      'Failed to flush logs to CloudWatch:'
+    );
     expect(putLogEventsCommandMock).toHaveBeenCalledTimes(2);
 
     await adapter.destroy();
@@ -446,22 +465,22 @@ describe('CloudWatchAdapter', () => {
 
   it('healthCheck returns true/false based on DescribeLogStreams', async () => {
     sendMock.mockResolvedValueOnce({ logStreams: [] });
-    const adapter = new CloudWatchAdapter({
+    const adapter = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       retries: 0,
-    } as any);
+    }));
     await expect(adapter.healthCheck()).resolves.toBe(true);
     await adapter.destroy();
 
     sendMock.mockRejectedValueOnce(new Error('nope'));
-    const adapter2 = new CloudWatchAdapter({
+    const adapter2 = new CloudWatchAdapter(createConfig({
       logGroupName: 'group',
       logStreamName: 'stream',
       region: 'eu-west-1',
       retries: 0,
-    } as any);
+    }));
     await expect(adapter2.healthCheck()).resolves.toBe(false);
     await adapter2.destroy();
   });

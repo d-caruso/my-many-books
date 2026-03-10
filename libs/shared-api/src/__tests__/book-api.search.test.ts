@@ -161,7 +161,7 @@ describe('BookApi (Search & Status)', () => {
     });
 
     it('should validate filters with SearchFiltersSchema', async () => {
-      const invalidFilters = { query: 'x' } as any;
+      const invalidFilters = { query: 'x' } as unknown as SearchFilters;
 
       await expect(bookApi.searchBooks(invalidFilters)).rejects.toThrow(ZodError);
     });
@@ -254,7 +254,7 @@ describe('BookApi (Search & Status)', () => {
     });
 
     it('should validate status with BookStatusSchema', async () => {
-      await expect(bookApi.updateBookStatus(1, 'invalid-status' as any)).rejects.toThrow(
+      await expect(bookApi.updateBookStatus(1, 'invalid-status' as unknown as (typeof BOOK_STATUSES)[number])).rejects.toThrow(
         ZodError
       );
     });

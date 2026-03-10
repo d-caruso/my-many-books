@@ -7,6 +7,7 @@
 
 import { LogStorage } from '../interfaces/LogStorage';
 import { LogEntry } from '../interfaces/LogEntry';
+import { getLogger } from './logger';
 
 /**
  * Configuration options for LogManager
@@ -281,16 +282,43 @@ export class LogManager {
   }
 
   /**
-   * Log an error (uses console.error as fallback)
+   * Build a structured message/details payload
    */
-  private logError(...args: unknown[]): void {
-    console.error('[LogManager]', ...args);
+  private formatLogPayload(args: unknown[]): { message: string; details?: unknown[] } {
+    if (args.length === 0) {
+      return { message: 'LogManager event' };
+    }
+
+    const [first, ...rest] = args;
+    if (typeof first === 'string') {
+      return rest.length > 0 ? { message: first, details: rest } : { message: first };
+    }
+
+    return {
+      message: 'LogManager event',
+      details: args,
+    };
   }
 
   /**
-   * Log an info message (uses console.log as fallback)
+   * Log an error through shared logger
+   */
+  private logError(...args: unknown[]): void {
+    const payload = this.formatLogPayload(args);
+    getLogger().error(
+      payload.details ? { component: 'LogManager', details: payload.details } : { component: 'LogManager' },
+      payload.message
+    );
+  }
+
+  /**
+   * Log an info message through shared logger
    */
   private logInfo(...args: unknown[]): void {
-    console.log('[LogManager]', ...args);
+    const payload = this.formatLogPayload(args);
+    getLogger().info(
+      payload.details ? { component: 'LogManager', details: payload.details } : { component: 'LogManager' },
+      payload.message
+    );
   }
 }

@@ -74,6 +74,10 @@ vi.mock('@my-many-books/shared-api', () => ({
 const mockApiService = {
   getAuditLoggingStatus: vi.fn(),
   updateAuditLoggingStatus: vi.fn(),
+  getFullTextSearchStatus: vi.fn(),
+  updateFullTextSearchStatus: vi.fn(),
+  getHttpClient: vi.fn(() => ({})),
+  getApiConfig: vi.fn(() => ({ baseURL: 'http://localhost:3000', timeout: 10000 })),
   baseURL: 'http://localhost:3000',
   get: vi.fn(),
   post: vi.fn(),
@@ -82,7 +86,7 @@ const mockApiService = {
 } as unknown as ApiService;
 
 const mockSettingsApi = {
-  getSettings: vi.fn(),
+  getSettings: vi.fn().mockResolvedValue([]),
   getAllSettingsAdmin: vi.fn(),
   updateSetting: vi.fn(),
   toggleActive: vi.fn(),
@@ -96,6 +100,14 @@ describe('Admin Settings Integration', () => {
       source: 'default',
       canChange: true,
     });
+    mockApiService.getFullTextSearchStatus.mockResolvedValue({
+      enabled: true,
+      source: 'database',
+      canChange: true,
+      sortableFields: ['title', 'createdAt'],
+      defaultSort: 'title',
+    });
+    mockSettingsApi.getSettings.mockResolvedValue([]);
   });
 
   const renderAdminSettings = () => {

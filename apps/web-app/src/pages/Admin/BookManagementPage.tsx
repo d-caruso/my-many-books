@@ -62,6 +62,13 @@ interface BookFormData {
   userId?: number | null;
 }
 
+interface AdminBooksResponse {
+  books: Book[];
+  pagination?: {
+    total?: number;
+  };
+}
+
 const EDITION_DATE_ERROR_I18N_KEY = 'validation:book_edition_date_invalid';
 
 export const BookManagementPage: React.FC = () => {
@@ -100,7 +107,7 @@ export const BookManagementPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await getAdminBooks(
+      const response = await getAdminBooks<AdminBooksResponse>(
         paginationModel.page + 1,
         paginationModel.pageSize,
         searchTerm || undefined

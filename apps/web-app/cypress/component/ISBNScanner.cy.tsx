@@ -1,8 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { mount } from 'cypress/react';
 import React from 'react';
+
+interface MockScanResult {
+  isbn: string;
+  success: boolean;
+}
+
+interface MockISBNScannerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onScanSuccess?: (result: MockScanResult) => void;
+  onScanError?: () => void;
+}
 // Mock ISBNScanner component with proper data-testids
-const MockISBNScanner: React.FC<any> = (props) => {
+const MockISBNScanner: React.FC<MockISBNScannerProps> = (props) => {
   if (!props.isOpen) return null;
   
   return (
@@ -157,7 +169,7 @@ const MockISBNScanner: React.FC<any> = (props) => {
 };
 
 describe('ISBNScanner Component', () => {
-  let mockProps: any;
+  let mockProps: MockISBNScannerProps;
 
   beforeEach(() => {
     mockProps = {

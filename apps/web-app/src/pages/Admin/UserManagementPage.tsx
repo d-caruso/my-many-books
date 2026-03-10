@@ -1,6 +1,7 @@
 import { extractErrorMessage } from '@my-many-books/shared-utils';
 import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '../../utils/logger';
+import type { UserProfile, UserRole } from '@my-many-books/shared-types';
 import {
   Box,
   Typography,
@@ -34,24 +35,16 @@ import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
 import { useApi } from '../../contexts/ApiContext';
 import { DataGridErrorBoundary } from '../../components/ErrorBoundary';
+import type { AdminUsersResponse } from '../../services/admin-types';
 
-interface User {
-  id: number;
-  email: string;
-  name: string;
-  surname: string;
-  isActive: boolean;
-  role: 'user' | 'admin';
-  creationDate: string;
-  updateDate: string;
-}
+type User = UserProfile;
 
 interface UserFormData {
   name: string;
   surname: string;
   email: string;
   isActive: boolean;
-  role: 'user' | 'admin';
+  role: UserRole;
 }
 
 export const UserManagementPage: React.FC = () => {
@@ -92,14 +85,14 @@ export const UserManagementPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await getAdminUsers(
+      const response: AdminUsersResponse = await getAdminUsers(
         paginationModel.page + 1,
         paginationModel.pageSize,
         searchTerm || undefined
       );
 
       setUsers(response.users);
-      setTotalRows(response.pagination?.total || 0);
+      setTotalRows(response.pagination?.totalItems ?? response.pagination?.total ?? 0);
     } catch (err: unknown) {
       logger.error('Failed to fetch users:', err);
       setError(extractErrorMessage(err) ?? 'Failed to load users');
@@ -215,7 +208,7 @@ export const UserManagementPage: React.FC = () => {
       ),
     },
     {
-      field: 'creationDate',
+      field: 'createdAt',
       headerName: t('pages:admin.users.created', 'Created'),
       width: 180,
       valueFormatter: (params) => new Date(params).toLocaleString(),

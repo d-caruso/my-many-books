@@ -119,6 +119,10 @@ jobs:
         working-directory: apps/api
         run: npm run lint
 
+      - name: Lint Web App
+        working-directory: apps/web-app
+        run: npm run lint
+
       - name: Typecheck Mobile
         working-directory: apps/mobile
         run: npm run typecheck

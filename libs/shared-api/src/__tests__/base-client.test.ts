@@ -1,9 +1,31 @@
-import { BaseApiClient, ApiClientConfig } from '../base-client';
+import { BaseApiClient, ApiClientConfig, RequestConfig } from '../base-client';
 import { MockHttpClient } from '../__mocks__/MockHttpClient';
+
+class TestableBaseApiClient extends BaseApiClient {
+  public getPublic<T>(endpoint: string, config?: RequestConfig): Promise<T> {
+    return this.get<T>(endpoint, config);
+  }
+
+  public postPublic<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<T> {
+    return this.post<T>(endpoint, data, config);
+  }
+
+  public putPublic<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<T> {
+    return this.put<T>(endpoint, data, config);
+  }
+
+  public patchPublic<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<T> {
+    return this.patch<T>(endpoint, data, config);
+  }
+
+  public deletePublic<T>(endpoint: string, config?: RequestConfig): Promise<T> {
+    return this.delete<T>(endpoint, config);
+  }
+}
 
 describe('BaseApiClient', () => {
   let mockHttpClient: MockHttpClient;
-  let baseClient: BaseApiClient;
+  let baseClient: TestableBaseApiClient;
   let config: ApiClientConfig;
 
   beforeEach(() => {
@@ -20,26 +42,26 @@ describe('BaseApiClient', () => {
 
   describe('Constructor and Configuration', () => {
     it('should create instance with valid config', () => {
-      baseClient = new BaseApiClient(mockHttpClient, config);
+      baseClient = new TestableBaseApiClient(mockHttpClient, config);
       expect(baseClient).toBeInstanceOf(BaseApiClient);
     });
 
     it('should use provided baseURL', async () => {
-      baseClient = new BaseApiClient(mockHttpClient, config);
+      baseClient = new TestableBaseApiClient(mockHttpClient, config);
       mockHttpClient.setResponse('/test', { data: { success: true }, status: 200 });
 
-      await (baseClient as any).get('/test');
+      await baseClient.getPublic('/test');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.url).toBe('https://api.example.com/test');
     });
 
     it('should allow changing baseURL via setBaseURL', async () => {
-      baseClient = new BaseApiClient(mockHttpClient, config);
+      baseClient = new TestableBaseApiClient(mockHttpClient, config);
       baseClient.setBaseURL('https://api.newdomain.com');
       mockHttpClient.setResponse('/test', { data: { success: true }, status: 200 });
 
-      await (baseClient as any).get('/test');
+      await baseClient.getPublic('/test');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.url).toBe('https://api.newdomain.com/test');
@@ -47,20 +69,20 @@ describe('BaseApiClient', () => {
 
     it('should use default timeout of 10000ms when not specified', async () => {
       const configWithoutTimeout = { baseURL: 'https://api.example.com' };
-      baseClient = new BaseApiClient(mockHttpClient, configWithoutTimeout);
+      baseClient = new TestableBaseApiClient(mockHttpClient, configWithoutTimeout);
       mockHttpClient.setResponse('/test', { data: { success: true }, status: 200 });
 
-      await (baseClient as any).get('/test');
+      await baseClient.getPublic('/test');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.config?.timeout).toBe(10000);
     });
 
     it('should use custom timeout when specified', async () => {
-      baseClient = new BaseApiClient(mockHttpClient, config);
+      baseClient = new TestableBaseApiClient(mockHttpClient, config);
       mockHttpClient.setResponse('/test', { data: { success: true }, status: 200 });
 
-      await (baseClient as any).get('/test');
+      await baseClient.getPublic('/test');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.config?.timeout).toBe(5000);
@@ -69,10 +91,10 @@ describe('BaseApiClient', () => {
 
   describe('Authentication Token Injection', () => {
     it('should not add Authorization header when getAuthToken is not provided', async () => {
-      baseClient = new BaseApiClient(mockHttpClient, config);
+      baseClient = new TestableBaseApiClient(mockHttpClient, config);
       mockHttpClient.setResponse('/test', { data: { success: true }, status: 200 });
 
-      await (baseClient as any).get('/test');
+      await baseClient.getPublic('/test');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.config?.headers?.['Authorization']).toBeUndefined();
@@ -83,10 +105,10 @@ describe('BaseApiClient', () => {
         ...config,
         getAuthToken: jest.fn(() => null),
       };
-      baseClient = new BaseApiClient(mockHttpClient, configWithAuth);
+      baseClient = new TestableBaseApiClient(mockHttpClient, configWithAuth);
       mockHttpClient.setResponse('/test', { data: { success: true }, status: 200 });
 
-      await (baseClient as any).get('/test');
+      await baseClient.getPublic('/test');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.config?.headers?.['Authorization']).toBeUndefined();
@@ -99,10 +121,10 @@ describe('BaseApiClient', () => {
         ...config,
         getAuthToken: jest.fn(() => mockToken),
       };
-      baseClient = new BaseApiClient(mockHttpClient, configWithAuth);
+      baseClient = new TestableBaseApiClient(mockHttpClient, configWithAuth);
       mockHttpClient.setResponse('/test', { data: { success: true }, status: 200 });
 
-      await (baseClient as any).get('/test');
+      await baseClient.getPublic('/test');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.config?.headers?.['Authorization']).toBe(`Bearer ${mockToken}`);
@@ -114,12 +136,12 @@ describe('BaseApiClient', () => {
         ...config,
         getAuthToken: jest.fn(() => 'token'),
       };
-      baseClient = new BaseApiClient(mockHttpClient, configWithAuth);
+      baseClient = new TestableBaseApiClient(mockHttpClient, configWithAuth);
       mockHttpClient.setDefaultResponse({ data: { success: true }, status: 200 });
 
-      await (baseClient as any).get('/test1');
-      await (baseClient as any).post('/test2', {});
-      await (baseClient as any).put('/test3', {});
+      await baseClient.getPublic('/test1');
+      await baseClient.postPublic('/test2', {});
+      await baseClient.putPublic('/test3', {});
 
       expect(configWithAuth.getAuthToken).toHaveBeenCalledTimes(3);
     });
@@ -127,19 +149,19 @@ describe('BaseApiClient', () => {
 
   describe('Default Headers', () => {
     beforeEach(() => {
-      baseClient = new BaseApiClient(mockHttpClient, config);
+      baseClient = new TestableBaseApiClient(mockHttpClient, config);
       mockHttpClient.setDefaultResponse({ data: { success: true }, status: 200 });
     });
 
     it('should include Content-Type: application/json by default', async () => {
-      await (baseClient as any).get('/test');
+      await baseClient.getPublic('/test');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.config?.headers?.['Content-Type']).toBe('application/json');
     });
 
     it('should allow overriding default headers', async () => {
-      await (baseClient as any).get('/test', {
+      await baseClient.getPublic('/test', {
         headers: { 'Content-Type': 'application/xml' },
       });
 
@@ -148,7 +170,7 @@ describe('BaseApiClient', () => {
     });
 
     it('should merge custom headers with default headers', async () => {
-      await (baseClient as any).get('/test', {
+      await baseClient.getPublic('/test', {
         headers: {
           'X-Custom-Header': 'custom-value',
           'X-Another-Header': 'another-value',
@@ -164,12 +186,12 @@ describe('BaseApiClient', () => {
 
   describe('HTTP Method Delegation', () => {
     beforeEach(() => {
-      baseClient = new BaseApiClient(mockHttpClient, config);
+      baseClient = new TestableBaseApiClient(mockHttpClient, config);
       mockHttpClient.setDefaultResponse({ data: { result: 'success' }, status: 200 });
     });
 
     it('should delegate GET requests correctly', async () => {
-      const result = await (baseClient as any).get('/users');
+      const result = await baseClient.getPublic('/users');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('GET');
@@ -179,7 +201,7 @@ describe('BaseApiClient', () => {
 
     it('should delegate POST requests with data correctly', async () => {
       const postData = { name: 'John', email: 'john@example.com' };
-      const result = await (baseClient as any).post('/users', postData);
+      const result = await baseClient.postPublic('/users', postData);
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('POST');
@@ -190,7 +212,7 @@ describe('BaseApiClient', () => {
 
     it('should delegate PUT requests with data correctly', async () => {
       const putData = { name: 'John Updated' };
-      const result = await (baseClient as any).put('/users/1', putData);
+      const result = await baseClient.putPublic('/users/1', putData);
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('PUT');
@@ -201,7 +223,7 @@ describe('BaseApiClient', () => {
 
     it('should delegate PATCH requests with data correctly', async () => {
       const patchData = { email: 'newemail@example.com' };
-      const result = await (baseClient as any).patch('/users/1', patchData);
+      const result = await baseClient.patchPublic('/users/1', patchData);
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('PATCH');
@@ -211,7 +233,7 @@ describe('BaseApiClient', () => {
     });
 
     it('should delegate DELETE requests correctly', async () => {
-      const result = await (baseClient as any).delete('/users/1');
+      const result = await baseClient.deletePublic('/users/1');
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('DELETE');
@@ -225,12 +247,12 @@ describe('BaseApiClient', () => {
         params: { page: 1, limit: 10 },
       };
 
-      await (baseClient as any).get('/users', requestConfig);
+      await baseClient.getPublic('/users', requestConfig);
       const getRequest = mockHttpClient.getLastRequest();
       expect(getRequest?.config?.headers?.['X-Custom']).toBe('value');
       expect(getRequest?.config?.params).toEqual({ page: 1, limit: 10 });
 
-      await (baseClient as any).post('/users', { name: 'Test' }, requestConfig);
+      await baseClient.postPublic('/users', { name: 'Test' }, requestConfig);
       const postRequest = mockHttpClient.getLastRequest();
       expect(postRequest?.config?.headers?.['X-Custom']).toBe('value');
     });
@@ -243,18 +265,18 @@ describe('BaseApiClient', () => {
         ...config,
         onUnauthorized,
       };
-      baseClient = new BaseApiClient(mockHttpClient, configWithCallback);
+      baseClient = new TestableBaseApiClient(mockHttpClient, configWithCallback);
       mockHttpClient.setResponse('/test', { data: {}, status: 401 });
 
-      await expect((baseClient as any).get('/test')).rejects.toThrow();
+      await expect(baseClient.getPublic('/test')).rejects.toThrow();
       expect(onUnauthorized).toHaveBeenCalledTimes(1);
     });
 
     it('should not call onUnauthorized when callback is not provided', async () => {
-      baseClient = new BaseApiClient(mockHttpClient, config);
+      baseClient = new TestableBaseApiClient(mockHttpClient, config);
       mockHttpClient.setResponse('/test', { data: {}, status: 401 });
 
-      await expect((baseClient as any).get('/test')).rejects.toThrow('HTTP Error 401');
+      await expect(baseClient.getPublic('/test')).rejects.toThrow('HTTP Error 401');
     });
 
     it('should not call onUnauthorized for non-401 errors', async () => {
@@ -263,10 +285,10 @@ describe('BaseApiClient', () => {
         ...config,
         onUnauthorized,
       };
-      baseClient = new BaseApiClient(mockHttpClient, configWithCallback);
+      baseClient = new TestableBaseApiClient(mockHttpClient, configWithCallback);
       mockHttpClient.setResponse('/test', { data: {}, status: 500 });
 
-      await expect((baseClient as any).get('/test')).rejects.toThrow();
+      await expect(baseClient.getPublic('/test')).rejects.toThrow();
       expect(onUnauthorized).not.toHaveBeenCalled();
     });
 
@@ -276,10 +298,10 @@ describe('BaseApiClient', () => {
         ...config,
         onUnauthorized,
       };
-      baseClient = new BaseApiClient(mockHttpClient, configWithCallback);
+      baseClient = new TestableBaseApiClient(mockHttpClient, configWithCallback);
       mockHttpClient.setResponse('/test', { data: {}, status: 401 });
 
-      await expect((baseClient as any).get('/test')).rejects.toThrow();
+      await expect(baseClient.getPublic('/test')).rejects.toThrow();
       expect(onUnauthorized).toHaveBeenCalledTimes(1);
     });
 
@@ -289,57 +311,57 @@ describe('BaseApiClient', () => {
         ...config,
         onUnauthorized,
       };
-      baseClient = new BaseApiClient(mockHttpClient, configWithCallback);
+      baseClient = new TestableBaseApiClient(mockHttpClient, configWithCallback);
       mockHttpClient.setResponse('/test', { data: {}, status: 401 });
 
-      await expect((baseClient as any).get('/test')).rejects.toThrow('HTTP Error 401');
+      await expect(baseClient.getPublic('/test')).rejects.toThrow('HTTP Error 401');
       expect(onUnauthorized).toHaveBeenCalled();
     });
   });
 
   describe('Error Propagation', () => {
     beforeEach(() => {
-      baseClient = new BaseApiClient(mockHttpClient, config);
+      baseClient = new TestableBaseApiClient(mockHttpClient, config);
     });
 
     it('should propagate 400 errors', async () => {
       mockHttpClient.setResponse('/test', { data: { error: 'Bad Request' }, status: 400 });
-      await expect((baseClient as any).get('/test')).rejects.toThrow('HTTP Error 400');
+      await expect(baseClient.getPublic('/test')).rejects.toThrow('HTTP Error 400');
     });
 
     it('should propagate 404 errors', async () => {
       mockHttpClient.setResponse('/test', { data: { error: 'Not Found' }, status: 404 });
-      await expect((baseClient as any).get('/test')).rejects.toThrow('HTTP Error 404');
+      await expect(baseClient.getPublic('/test')).rejects.toThrow('HTTP Error 404');
     });
 
     it('should propagate 500 errors', async () => {
       mockHttpClient.setResponse('/test', { data: { error: 'Server Error' }, status: 500 });
-      await expect((baseClient as any).get('/test')).rejects.toThrow('HTTP Error 500');
+      await expect(baseClient.getPublic('/test')).rejects.toThrow('HTTP Error 500');
     });
 
     it('should propagate network errors', async () => {
       const networkError = new Error('Network error');
       mockHttpClient.get = jest.fn().mockRejectedValue(networkError);
 
-      await expect((baseClient as any).get('/test')).rejects.toThrow('Network error');
+      await expect(baseClient.getPublic('/test')).rejects.toThrow('Network error');
     });
   });
 
   describe('Request Config Merging', () => {
     beforeEach(() => {
-      baseClient = new BaseApiClient(mockHttpClient, config);
+      baseClient = new TestableBaseApiClient(mockHttpClient, config);
       mockHttpClient.setDefaultResponse({ data: { success: true }, status: 200 });
     });
 
     it('should merge global timeout with request-specific config', async () => {
-      await (baseClient as any).get('/test', { timeout: 3000 });
+      await baseClient.getPublic('/test', { timeout: 3000 });
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.config?.timeout).toBe(3000);
     });
 
     it('should merge params from request config', async () => {
-      await (baseClient as any).get('/test', {
+      await baseClient.getPublic('/test', {
         params: { page: 2, limit: 20 },
       });
 
@@ -353,7 +375,7 @@ describe('BaseApiClient', () => {
         'X-Request-ID': '12345',
       };
 
-      await (baseClient as any).get('/test', { headers: customHeaders });
+      await baseClient.getPublic('/test', { headers: customHeaders });
 
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.config?.headers?.['X-API-Key']).toBe('secret');

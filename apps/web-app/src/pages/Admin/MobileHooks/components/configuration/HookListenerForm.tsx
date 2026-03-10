@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -7,7 +7,6 @@ import {
   FormControlLabel,
   Paper,
   Switch,
-  TextField,
   Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -31,10 +30,7 @@ export const HookListenerForm: React.FC = () => {
   const [form, setForm] = useState<ListenerSettingsFormState>({
     analyticsEnabled: true,
     errorReportingEnabled: true,
-    offlineStorageEnabled: true,
     performanceMonitoringEnabled: true,
-    batchUploadInterval: 300,
-    maxOfflineEvents: 1000,
     lastUpdated: null,
     version: undefined,
   });
@@ -49,8 +45,8 @@ export const HookListenerForm: React.FC = () => {
         setForm({
           ...payload.settings,
           lastUpdated: payload.lastUpdated,
-	          version: payload.version,
-	        });
+          version: payload.version,
+        });
       } catch {
         setError(t('admin.mobile_hooks.errors.listener_settings.load'));
       } finally {
@@ -61,40 +57,16 @@ export const HookListenerForm: React.FC = () => {
     void run();
   }, [apiService, t]);
 
-  const validationError = useMemo(() => {
-    if (form.batchUploadInterval < 60 || form.batchUploadInterval > 3600) {
-      return t('admin.mobile_hooks.errors.validation.batch_upload_interval_range', {
-        min: 60,
-        max: 3600,
-      });
-    }
-    if (form.maxOfflineEvents < 100 || form.maxOfflineEvents > 10000) {
-      return t('admin.mobile_hooks.errors.validation.max_offline_events_range', {
-        min: 100,
-        max: 10000,
-      });
-    }
-    return null;
-  }, [form.batchUploadInterval, form.maxOfflineEvents, t]);
-
   const save = async () => {
     setError(null);
     setSuccess(null);
 
     try {
-      if (validationError) {
-        setError(validationError);
-        return;
-      }
-
       setSaving(true);
       const result = await apiService.updateAdminMobileHooksListenerSettings({
         analyticsEnabled: form.analyticsEnabled,
         errorReportingEnabled: form.errorReportingEnabled,
-        offlineStorageEnabled: form.offlineStorageEnabled,
         performanceMonitoringEnabled: form.performanceMonitoringEnabled,
-        batchUploadInterval: form.batchUploadInterval,
-        maxOfflineEvents: form.maxOfflineEvents,
       });
 
       setForm(prev => ({
@@ -130,7 +102,7 @@ export const HookListenerForm: React.FC = () => {
             {t('admin.mobile_hooks.configuration.listener_settings.description')}
           </Typography>
         </Box>
-        <Button variant="contained" onClick={() => void save()} disabled={saving || Boolean(validationError)}>
+        <Button variant="contained" onClick={() => void save()} disabled={saving}>
           {saving ? <CircularProgress size={16} /> : t('admin.mobile_hooks.actions.save')}
         </Button>
       </Box>
@@ -161,12 +133,6 @@ export const HookListenerForm: React.FC = () => {
         </Alert>
       ) : null}
 
-      {validationError ? (
-        <Alert severity="warning" sx={{ mt: 2 }}>
-          {validationError}
-        </Alert>
-      ) : null}
-
       <Box sx={{ mt: 2 }} display="flex" flexDirection="column" gap={1}>
         <FormControlLabel
           control={
@@ -191,17 +157,6 @@ export const HookListenerForm: React.FC = () => {
         <FormControlLabel
           control={
             <Switch
-              checked={form.offlineStorageEnabled}
-              onChange={(e) =>
-                setForm(prev => ({ ...prev, offlineStorageEnabled: e.target.checked }))
-              }
-            />
-          }
-          label={t('admin.mobile_hooks.configuration.listener_settings.offline_storage_enabled')}
-        />
-        <FormControlLabel
-          control={
-            <Switch
               checked={form.performanceMonitoringEnabled}
               onChange={(e) =>
                 setForm(prev => ({ ...prev, performanceMonitoringEnabled: e.target.checked }))
@@ -209,25 +164,6 @@ export const HookListenerForm: React.FC = () => {
             />
           }
           label={t('admin.mobile_hooks.configuration.listener_settings.performance_monitoring_enabled')}
-        />
-      </Box>
-
-      <Box sx={{ mt: 2 }} display="flex" gap={2} flexWrap="wrap">
-        <TextField
-          label={t('admin.mobile_hooks.configuration.listener_settings.batch_upload_interval_seconds')}
-          type="number"
-          value={form.batchUploadInterval}
-          onChange={(e) =>
-            setForm(prev => ({ ...prev, batchUploadInterval: Number(e.target.value) }))
-          }
-          inputProps={{ min: 60, max: 3600 }}
-        />
-        <TextField
-          label={t('admin.mobile_hooks.configuration.listener_settings.max_offline_events')}
-          type="number"
-          value={form.maxOfflineEvents}
-          onChange={(e) => setForm(prev => ({ ...prev, maxOfflineEvents: Number(e.target.value) }))}
-          inputProps={{ min: 100, max: 10000 }}
         />
       </Box>
     </Paper>

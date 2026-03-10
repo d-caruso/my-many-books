@@ -2,23 +2,60 @@
 import { mount } from 'cypress/react';
 import React from 'react';
 
-// Full-featured SearchFilter component for testing
-const SearchFilter: React.FC<{
-  onSearchChange: (value: string | any) => void;
-  onFilterChange: (filters: any) => void;
-  onSortChange: (sort: any) => void;
+type SearchQueryPayload = string | { isbn: string };
+
+type TestStatusFilter = 'all' | 'want-to-read' | 'reading' | 'read';
+
+interface TestDateRangeFilter {
+  from?: string;
+  to?: string;
+}
+
+interface TestFilters {
+  status?: TestStatusFilter;
+  categories?: string[];
+  author?: string;
+  minRating?: number;
+  dateRange?: TestDateRangeFilter;
+}
+
+interface TestSort {
+  field: string;
+  direction?: string;
+}
+
+interface FilterPreset {
+  name: string;
+  filters: TestFilters;
+}
+
+interface SearchFilterProps {
+  onSearchChange: (value: SearchQueryPayload) => void;
+  onFilterChange: (filters: TestFilters) => void;
+  onSortChange: (sort: TestSort) => void;
   categories: string[];
   authors: string[];
   totalBooks: number;
   filteredCount?: number;
-}> = ({ onSearchChange, onFilterChange, onSortChange, categories, authors, totalBooks, filteredCount }) => {
+}
+
+// Full-featured SearchFilter component for testing
+const SearchFilter: React.FC<SearchFilterProps> = ({
+  onSearchChange,
+  onFilterChange,
+  onSortChange,
+  categories,
+  authors,
+  totalBooks,
+  filteredCount,
+}) => {
   const [searchValue, setSearchValue] = React.useState('');
   const [showFilters, setShowFilters] = React.useState(false);
   const [showAdvanced, setShowAdvanced] = React.useState(false);
   const [showSuggestions, setShowSuggestions] = React.useState(false);
-  const [filters, setFilters] = React.useState<any>({});
+  const [filters, setFilters] = React.useState<TestFilters>({});
   const [debounceTimer, setDebounceTimer] = React.useState<NodeJS.Timeout | null>(null);
-  const [filterPresets, setFilterPresets] = React.useState<any[]>([
+  const [filterPresets, setFilterPresets] = React.useState<FilterPreset[]>([
     { name: 'Currently Reading', filters: { status: 'reading' } }
   ]);
   const [showPresetModal, setShowPresetModal] = React.useState(false);
@@ -54,8 +91,8 @@ const SearchFilter: React.FC<{
     setDebounceTimer(timer);
   };
 
-  const handleFilterChange = (newFilters: any) => {
-    const updatedFilters = { ...filters, ...newFilters };
+  const handleFilterChange = (newFilters: Partial<TestFilters>) => {
+    const updatedFilters: TestFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
     onFilterChange(updatedFilters);
   };
@@ -86,7 +123,7 @@ const SearchFilter: React.FC<{
     }
   };
 
-  const applyPreset = (preset: any) => {
+  const applyPreset = (preset: FilterPreset) => {
     setFilters(preset.filters);
     onFilterChange(preset.filters);
   };
@@ -143,7 +180,7 @@ const SearchFilter: React.FC<{
         {/* Search Suggestions */}
         {showSuggestions && filteredSuggestions.length > 0 && (
           <div data-testid="search-suggestions" className="absolute top-full left-0 right-0 bg-white border rounded shadow-lg z-10 mt-1">
-            {filteredSuggestions.map((suggestion, index) => (
+            {filteredSuggestions.map((suggestion) => (
               <button
                 key={suggestion}
                 data-testid="suggestion-item"
@@ -444,7 +481,7 @@ describe('SearchFilter Component', () => {
   const mockCategories = ['Fiction', 'Non-Fiction', 'Science Fiction', 'Biography'];
   const mockAuthors = ['F. Scott Fitzgerald', 'George Orwell', 'Jane Austen'];
   
-  let mockProps: any;
+  let mockProps: SearchFilterProps;
 
   beforeEach(() => {
     mockProps = {

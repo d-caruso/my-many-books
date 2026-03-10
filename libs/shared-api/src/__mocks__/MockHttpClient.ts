@@ -13,6 +13,11 @@ export interface RequestCapture {
   config?: RequestConfig;
 }
 
+interface MockHttpError extends Error {
+  status: number;
+  response: MockResponse<unknown>;
+}
+
 /**
  * Mock HTTP client for testing purposes.
  * Captures all requests and returns configurable responses.
@@ -102,7 +107,7 @@ export class MockHttpClient implements HttpClient {
 
   private handleResponse<T>(response: MockResponse<T>): Promise<T> {
     if (response.status >= 400) {
-      const error: any = new Error(`HTTP Error ${response.status}`);
+      const error = new Error(`HTTP Error ${response.status}`) as MockHttpError;
       error.status = response.status;
       error.response = response;
       return Promise.reject(error);

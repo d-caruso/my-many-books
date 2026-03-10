@@ -7,6 +7,10 @@ import type {
   AuditLoggingStatus,
   FullTextSearchStatus,
   MobileAnalyticsStatsResponse,
+  AdminPinnedSearchResult,
+  AdminPinnedSearchResultsResponse,
+  AdminPinnedSearchCreateRequest,
+  AdminUsersResponse,
   AdminMobileHooksListenerSettingsResponse,
   AdminMobileHooksListenerSettingsUpdateResponse,
   AdminMobileHooksConfigListenersResponse,
@@ -29,9 +33,11 @@ import type {
   AdminMobileHooksRecentEventsResponse,
   AdminHookSummary,
   AdminHookStats,
+  AdminDashboardStats,
   AdminHookExecution,
   AdminHookExecutionResponse,
 } from './admin-types';
+import type { ResourceType } from '@my-many-books/shared-types';
 
 export class AdminApiService {
   protected httpClient: HttpClient;
@@ -166,7 +172,7 @@ export class AdminApiService {
   }
 
   // Admin stats
-  async getAdminStats(): Promise<unknown> {
+  async getAdminStats(): Promise<AdminDashboardStats> {
     return this.fetchAdminData('/admin/stats/summary');
   }
 
@@ -373,8 +379,50 @@ export class AdminApiService {
     );
   }
 
+  // Admin search pinned results
+  async getAdminPinnedSearchResults(
+    resourceType?: ResourceType
+  ): Promise<AdminPinnedSearchResultsResponse> {
+    const queryParams = new URLSearchParams();
+    if (resourceType) {
+      queryParams.append('resource_type', resourceType);
+    }
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `/admin/search/pinned?${queryString}` : '/admin/search/pinned';
+    return this.fetchAdminData(endpoint);
+  }
+
+  async createAdminPinnedSearchResult(
+    request: AdminPinnedSearchCreateRequest
+  ): Promise<AdminPinnedSearchResult> {
+    return this.fetchAdminData('/admin/search/pinned', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async updateAdminPinnedSearchPriority(
+    id: number,
+    priority: number
+  ): Promise<AdminPinnedSearchResult> {
+    return this.fetchAdminData(`/admin/search/pinned/${id}/priority`, {
+      method: 'PATCH',
+      body: JSON.stringify({ priority }),
+    });
+  }
+
+  async deleteAdminPinnedSearchResult(id: number): Promise<void> {
+    await this.fetchAdminData(`/admin/search/pinned/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Admin users
-  async getAdminUsers(page: number = 1, limit: number = 10, search?: string): Promise<unknown> {
+  async getAdminUsers(
+    page: number = 1,
+    limit: number = 10,
+    search?: string
+  ): Promise<AdminUsersResponse> {
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -382,7 +430,20 @@ export class AdminApiService {
     if (search) {
       queryParams.append('search', search);
     }
-    return this.fetchAdminData(`/admin/users?${queryParams.toString()}`);
+    const payload = await this.fetchAdminPayload<Pick<AdminUsersResponse, 'users'>>(
+      `/admin/users?${queryParams.toString()}`
+    );
+    const pagination = payload.pagination as AdminUsersResponse['pagination'] | undefined;
+
+    return {
+      users: payload.data?.users || [],
+      pagination: pagination
+        ? {
+            ...pagination,
+            total: pagination.total ?? pagination.totalItems,
+          }
+        : undefined,
+    };
   }
 
   async getAdminUser(id: number): Promise<unknown> {
@@ -403,7 +464,12 @@ export class AdminApiService {
   }
 
   // Admin books
-  async getAdminBooks(page: number = 1, limit: number = 10, search?: string, userId?: number): Promise<unknown> {
+  async getAdminBooks<TResponse = unknown>(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    userId?: number
+  ): Promise<TResponse> {
     const queryParams = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),

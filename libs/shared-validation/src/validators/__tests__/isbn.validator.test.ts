@@ -90,7 +90,7 @@ describe('validateIsbn', () => {
     });
 
     it('should reject null/undefined', () => {
-      const result = validateIsbn(null as any);
+      const result = validateIsbn(null as unknown as string);
       expect(result.isValid).toBe(false);
     });
 

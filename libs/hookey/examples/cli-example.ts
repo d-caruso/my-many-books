@@ -1,5 +1,6 @@
 import { HookSystem } from '../src/HookSystem';
 import { LogAction } from '../src/actions/LogAction';
+import { getLogger } from '@my-many-books/shared-logging';
 
 type UserPayload = {
   id: number;
@@ -8,6 +9,7 @@ type UserPayload = {
 };
 
 async function runCliExample() {
+  const logger = getLogger();
   const hookSystem = new HookSystem();
   await hookSystem.registerHook(
     {
@@ -27,11 +29,13 @@ async function runCliExample() {
     name: 'Hookey User',
   };
 
-  console.log('Triggering user.created via CLI example');
+  logger.info('Triggering user.created via CLI example');
   await hookSystem.trigger('user.created', payload);
-  console.log('Hook execution finished, check the log for details');
+  logger.info('Hook execution finished, check the log for details');
 }
 
 void runCliExample().catch(error => {
-  console.error('Hookey CLI example failed', error);
+  const logger = getLogger();
+  const err = error instanceof Error ? error : new Error(String(error));
+  logger.error({ err }, 'Hookey CLI example failed');
 });

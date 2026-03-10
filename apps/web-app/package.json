@@ -57,7 +57,7 @@
     "prebuild": "npm run sync-translations",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src",
+    "lint": "nx run web-app:lint",
     "test": "vitest",
     "test:web-app:components": "vitest run --config vitest.config.components.ts",
     "test:web-app:components:auth": "vitest run --config vitest.config.components.ts src/__tests__/components/Auth",
@@ -106,12 +106,6 @@
     "test:coverage:full": "npm run test:coverage && npm run cypress:run --coverage",
     "eject": "react-scripts eject",
     "typecheck": "tsc --noEmit"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [

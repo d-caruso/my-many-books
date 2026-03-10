@@ -1,4 +1,5 @@
 import express from 'express';
+import { getLogger } from '@my-many-books/shared-logging';
 import { HookSystem } from '../src/HookSystem';
 import { LogAction } from '../src/actions/LogAction';
 import { expressHookEmitter } from '../src/adapters/expressHookMiddleware';
@@ -9,6 +10,7 @@ type BookPayload = {
 };
 
 async function createExampleApp() {
+  const logger = getLogger();
   const hookSystem = new HookSystem();
   await hookSystem.registerHook(
     {
@@ -36,7 +38,7 @@ async function createExampleApp() {
   });
 
   const server = app.listen(4004, () => {
-    console.log('Hookey Express example running on http://localhost:4004');
+    logger.info('Hookey Express example running on http://localhost:4004');
   });
 
   return server;

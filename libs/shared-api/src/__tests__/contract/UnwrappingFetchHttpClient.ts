@@ -1,5 +1,15 @@
 import { HttpClient, RequestConfig } from '../../base-client';
 
+interface ApiSuccessEnvelope {
+  success: true;
+  data: unknown;
+}
+
+interface HttpRequestError extends Error {
+  status: number;
+  response: Response;
+}
+
 const toSearchParams = (params?: Record<string, unknown>): string => {
   if (!params) return '';
   const searchParams = new URLSearchParams();
@@ -12,15 +22,11 @@ const toSearchParams = (params?: Record<string, unknown>): string => {
 };
 
 const maybeUnwrapApiResponse = (data: unknown): unknown => {
-  if (
-    data &&
-    typeof data === 'object' &&
-    'success' in data &&
-    (data as any).success === true &&
-    'data' in data &&
-    (data as any).data !== undefined
-  ) {
-    return (data as any).data;
+  if (typeof data === 'object' && data !== null) {
+    const payload = data as { success?: unknown; data?: unknown };
+    if (payload.success === true && 'data' in payload && payload.data !== undefined) {
+      return (payload as ApiSuccessEnvelope).data;
+    }
   }
   return data;
 };
@@ -40,7 +46,7 @@ export class UnwrappingFetchHttpClient implements HttpClient {
     });
 
     if (!response.ok) {
-      const error: any = new Error(`HTTP Error ${response.status}`);
+      const error = new Error(`HTTP Error ${response.status}`) as HttpRequestError;
       error.status = response.status;
       error.response = response;
       throw error;
@@ -74,4 +80,3 @@ export class UnwrappingFetchHttpClient implements HttpClient {
     return this.request<T>('DELETE', url, undefined, config);
   }
 }
-

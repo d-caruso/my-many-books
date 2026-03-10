@@ -4,6 +4,7 @@ import { render as rtlRender, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { UserManagementPage } from '../../../pages/Admin/UserManagementPage';
 import { ApiProvider } from '../../../contexts/ApiContext';
 
@@ -79,17 +80,17 @@ describe('UserManagementPage', () => {
   });
 
   test('renders user management title', () => {
-    mockApiService.getAdminUsers.mockResolvedValue({ users: [], pagination: { total: 0 } });
+    mockApiService.getAdminUsers.mockResolvedValue({ users: [], pagination: { totalItems: 0 } });
     renderWithProvider(<UserManagementPage />);
     expect(screen.getByText('User Management')).toBeInTheDocument();
   });
 
   test('fetches and displays users', async () => {
     const users = [
-      { id: 1, name: 'John', surname: 'Doe', email: 'john@example.com', role: 'user', isActive: true, creationDate: new Date().toISOString() },
-      { id: 2, name: 'Jane', surname: 'Doe', email: 'jane@example.com', role: 'admin', isActive: false, creationDate: new Date().toISOString() },
+      { id: 1, name: 'John', surname: 'Doe', email: 'john@example.com', role: 'user', isActive: true, fullName: 'John Doe', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 2, name: 'Jane', surname: 'Doe', email: 'jane@example.com', role: 'admin', isActive: false, fullName: 'Jane Doe', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     ];
-    mockApiService.getAdminUsers.mockResolvedValue({ users, pagination: { total: 2 } });
+    mockApiService.getAdminUsers.mockResolvedValue({ users, pagination: { totalItems: 2 } });
     renderWithProvider(<UserManagementPage />);
 
     await waitFor(() => {

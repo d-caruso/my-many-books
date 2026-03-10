@@ -100,7 +100,7 @@ describe('Pino Configuration', () => {
     });
 
     it('should include custom error properties', () => {
-      const error: any = new Error('Test error');
+      const error: Error & { code?: string; statusCode?: number } = new Error('Test error');
       error.code = 'TEST_CODE';
       error.statusCode = 500;
 
@@ -249,7 +249,7 @@ describe('Pino Configuration', () => {
       const config = createPinoConfig('production');
       expect(typeof config.timestamp).toBe('function');
       if (typeof config.timestamp === 'function') {
-        expect(config.timestamp()).toMatch(/\"time\":\".+\"/);
+        expect(config.timestamp()).toMatch(/"time":".+"/);
       }
 
       expect(config.formatters?.level).toBeDefined();

@@ -312,11 +312,11 @@ describe('validateEventPattern', () => {
   });
 
   it('rejects null', () => {
-    expect(() => validateEventPattern(null as any)).toThrow('Event pattern must be a non-empty string');
+    expect(() => validateEventPattern(null as unknown as string)).toThrow('Event pattern must be a non-empty string');
   });
 
   it('rejects undefined', () => {
-    expect(() => validateEventPattern(undefined as any)).toThrow('Event pattern must be a non-empty string');
+    expect(() => validateEventPattern(undefined as unknown as string)).toThrow('Event pattern must be a non-empty string');
   });
 
   it('rejects excessive wildcards (ReDoS)', () => {

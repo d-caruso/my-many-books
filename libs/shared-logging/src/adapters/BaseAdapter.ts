@@ -4,6 +4,7 @@
 
 import { LogStorage, StorageAdapterConfig } from '../interfaces/LogStorage';
 import { LogEntry } from '../interfaces/LogEntry';
+import { getLogger } from '../services/logger';
 
 /**
  * Resolved configuration with all required properties
@@ -95,17 +96,41 @@ export abstract class BaseAdapter implements LogStorage {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  /**
-   * Log an error (uses console.error as fallback)
-   */
-  protected logError(...args: unknown[]): void {
-    console.error(`[${this.name}]`, ...args);
+  private formatLogPayload(args: unknown[]): { message: string; details?: unknown[] } {
+    if (args.length === 0) {
+      return { message: 'Adapter log event' };
+    }
+
+    const [first, ...rest] = args;
+    if (typeof first === 'string') {
+      return rest.length > 0 ? { message: first, details: rest } : { message: first };
+    }
+
+    return {
+      message: 'Adapter log event',
+      details: args,
+    };
   }
 
   /**
-   * Log info (uses console.log as fallback)
+   * Log an error through shared logger
+   */
+  protected logError(...args: unknown[]): void {
+    const payload = this.formatLogPayload(args);
+    getLogger().error(
+      payload.details ? { adapter: this.name, details: payload.details } : { adapter: this.name },
+      payload.message
+    );
+  }
+
+  /**
+   * Log info through shared logger
    */
   protected logInfo(...args: unknown[]): void {
-    console.log(`[${this.name}]`, ...args);
+    const payload = this.formatLogPayload(args);
+    getLogger().info(
+      payload.details ? { adapter: this.name, details: payload.details } : { adapter: this.name },
+      payload.message
+    );
   }
 }

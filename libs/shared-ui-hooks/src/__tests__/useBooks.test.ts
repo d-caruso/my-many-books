@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
+import type { Book, PaginatedResponse } from '@my-many-books/shared-types';
 
 import { useBooks } from '../useBooks';
 
@@ -152,7 +153,9 @@ describe('useBooks', () => {
 
   it('uses provided pageSize and falls back when books/pagination are missing', async () => {
     const api = {
-      getBooks: jest.fn().mockResolvedValue({ books: undefined, pagination: undefined } as any),
+      getBooks: jest
+        .fn()
+        .mockResolvedValue({ books: undefined, pagination: undefined } as unknown as PaginatedResponse<Book>),
       createBook: jest.fn(),
       updateBook: jest.fn(),
       deleteBook: jest.fn(),
@@ -276,8 +279,8 @@ describe('useBooks', () => {
   it('refreshBooks loads page 1 and loadMore returns early when blocked', async () => {
     const now = new Date().toISOString();
     const deferred = (() => {
-      let resolve!: (value: any) => void;
-      const promise = new Promise<any>((res) => {
+      let resolve!: (value: PaginatedResponse<Book>) => void;
+      const promise = new Promise<PaginatedResponse<Book>>((res) => {
         resolve = res;
       });
       return { promise, resolve };

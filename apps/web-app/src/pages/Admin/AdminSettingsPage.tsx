@@ -13,9 +13,9 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Grid,
   type SelectChangeEvent,
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import { extractErrorMessage } from '@my-many-books/shared-utils';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
@@ -106,12 +106,15 @@ export const AdminSettingsPage: React.FC = () => {
 
   const handleSortableFieldsChange = async (event: SelectChangeEvent<string[]>) => {
     if (!searchStatus) return;
+    const sortableFields = typeof event.target.value === 'string'
+      ? event.target.value.split(',')
+      : event.target.value;
 
     try {
       setSearchUpdating(true);
       setSearchError(null);
       const data = await apiService.updateFullTextSearchStatus({
-        sortableFields: event.target.value,
+        sortableFields,
       });
       setSearchStatus(data);
     } catch (err: unknown) {
@@ -202,7 +205,7 @@ export const AdminSettingsPage: React.FC = () => {
     try {
       setAppSettingsLoading(true);
       setAppSettingsError(null);
-      const settingsApi = new SettingsApi(apiClient);
+      const settingsApi = new SettingsApi(apiClient.getHttpClient(), apiClient.getApiConfig());
       const settings = await settingsApi.getAllSettingsAdmin();
       setAppSettings(settings);
     } catch (err: unknown) {
@@ -218,7 +221,7 @@ export const AdminSettingsPage: React.FC = () => {
     try {
       setUpdatingSettings(prev => new Set(prev).add(key));
       setAppSettingsError(null);
-      const settingsApi = new SettingsApi(apiClient);
+      const settingsApi = new SettingsApi(apiClient.getHttpClient(), apiClient.getApiConfig());
       const updated = await settingsApi.updateSetting(key, value);
 
       // Update local state
@@ -245,7 +248,7 @@ export const AdminSettingsPage: React.FC = () => {
     try {
       setUpdatingSettings(prev => new Set(prev).add(key));
       setAppSettingsError(null);
-      const settingsApi = new SettingsApi(apiClient);
+      const settingsApi = new SettingsApi(apiClient.getHttpClient(), apiClient.getApiConfig());
       const updated = await settingsApi.toggleActive(key, active);
 
       // Update local state

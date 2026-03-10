@@ -3,6 +3,7 @@ import { render as rtlRender, screen, waitFor, fireEvent } from '@testing-librar
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SearchManagementPage } from '../../../pages/Admin/SearchManagementPage';
 import { ApiProvider } from '../../../contexts/ApiContext';
 
@@ -10,11 +11,16 @@ vi.mock('../../../pages/Admin/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="admin-layout">{children}</div>,
 }));
 
+const mockGetAdminPinnedSearchResults = vi.fn();
+const mockCreateAdminPinnedSearchResult = vi.fn();
+const mockUpdateAdminPinnedSearchPriority = vi.fn();
+const mockDeleteAdminPinnedSearchResult = vi.fn();
+
 const mockApiService = {
-  get: vi.fn().mockResolvedValue({ data: { results: [], total: 0 } }),
-  post: vi.fn().mockResolvedValue({}),
-  patch: vi.fn().mockResolvedValue({}),
-  delete: vi.fn().mockResolvedValue({}),
+  getAdminPinnedSearchResults: mockGetAdminPinnedSearchResults,
+  createAdminPinnedSearchResult: mockCreateAdminPinnedSearchResult,
+  updateAdminPinnedSearchPriority: mockUpdateAdminPinnedSearchPriority,
+  deleteAdminPinnedSearchResult: mockDeleteAdminPinnedSearchResult,
   baseURL: 'http://localhost:3000',
 } as unknown as import('../../../services/api').ApiService;
 
@@ -62,7 +68,7 @@ const renderWithProvider = (component: React.ReactElement) => {
 describe('SearchManagementPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockApiService.get.mockResolvedValue({ data: { results: [], total: 0 } });
+    mockGetAdminPinnedSearchResults.mockResolvedValue({ results: [], total: 0 });
   });
 
   test('renders page title', async () => {
@@ -103,8 +109,8 @@ describe('SearchManagementPage', () => {
       { id: 2, resource_type: 'author', resource_id: 456, priority: 1, active: true },
     ];
 
-    mockApiService.get.mockResolvedValueOnce({
-      data: { results: mockResults, total: 2 }
+    mockGetAdminPinnedSearchResults.mockResolvedValueOnce({
+      results: mockResults, total: 2
     });
 
     renderWithProvider(<SearchManagementPage />);
@@ -120,8 +126,8 @@ describe('SearchManagementPage', () => {
       { id: 1, resource_type: 'book', resource_id: 123, priority: 0, active: true },
     ];
 
-    mockApiService.get.mockResolvedValueOnce({
-      data: { results: mockResults, total: 1 }
+    mockGetAdminPinnedSearchResults.mockResolvedValueOnce({
+      results: mockResults, total: 1
     });
 
     renderWithProvider(<SearchManagementPage />);
@@ -137,8 +143,8 @@ describe('SearchManagementPage', () => {
       { id: 2, resource_type: 'author', resource_id: 456, priority: 1, active: false },
     ];
 
-    mockApiService.get.mockResolvedValueOnce({
-      data: { results: mockResults, total: 2 }
+    mockGetAdminPinnedSearchResults.mockResolvedValueOnce({
+      results: mockResults, total: 2
     });
 
     renderWithProvider(<SearchManagementPage />);
@@ -154,8 +160,8 @@ describe('SearchManagementPage', () => {
       { id: 1, resource_type: 'book', resource_id: 123, priority: 0, active: true },
     ];
 
-    mockApiService.get.mockResolvedValueOnce({
-      data: { results: mockResults, total: 1 }
+    mockGetAdminPinnedSearchResults.mockResolvedValueOnce({
+      results: mockResults, total: 1
     });
 
     renderWithProvider(<SearchManagementPage />);
@@ -168,12 +174,12 @@ describe('SearchManagementPage', () => {
     fireEvent.click(unpinButton);
 
     await waitFor(() => {
-      expect(mockApiService.delete).toHaveBeenCalledWith('/admin/search/pinned/1');
+      expect(mockDeleteAdminPinnedSearchResult).toHaveBeenCalledWith(1);
     });
   });
 
   test('handles API errors gracefully', async () => {
-    mockApiService.get.mockRejectedValueOnce({
+    mockGetAdminPinnedSearchResults.mockRejectedValueOnce({
       response: { data: { message: 'API Error occurred' } }
     });
 
@@ -185,7 +191,7 @@ describe('SearchManagementPage', () => {
   });
 
   test('handles API errors without response data', async () => {
-    mockApiService.get.mockRejectedValueOnce(new Error('Network Error'));
+    mockGetAdminPinnedSearchResults.mockRejectedValueOnce(new Error('Network Error'));
 
     renderWithProvider(<SearchManagementPage />);
 
@@ -204,7 +210,7 @@ describe('SearchManagementPage', () => {
     const selector = screen.getByLabelText('Resource Type');
 
     // Clear previous calls
-    mockApiService.get.mockClear();
+    mockGetAdminPinnedSearchResults.mockClear();
 
     // Change to 'book' filter
     fireEvent.mouseDown(selector);
@@ -213,7 +219,7 @@ describe('SearchManagementPage', () => {
 
     // Should trigger a new API call with resource_type filter
     await waitFor(() => {
-      expect(mockApiService.get).toHaveBeenCalled();
+      expect(mockGetAdminPinnedSearchResults).toHaveBeenCalled();
     });
   });
 });

@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { FormManager } from '../FormManager';
 import { FormValidator } from '../FormValidator';
 import { useFormAutoSave } from '../hooks';
-import type { FormConfig, FormSubmissionResult } from '../types';
+import type { FieldValue, FormConfig, FormEvent, FormSubmissionResult } from '../types';
 
 const createConfig = (): FormConfig => ({
   fields: [
@@ -19,12 +19,12 @@ const createConfig = (): FormConfig => ({
 
 describe('shared-forms integration', () => {
   test('submit handles thrown submission handler errors', async () => {
-    const handler = jest.fn<Promise<FormSubmissionResult>, any[]>(async () => {
+    const handler = jest.fn<Promise<FormSubmissionResult>, [Record<string, FieldValue>]>(async () => {
       throw new Error('Network down');
     });
 
     const manager = new FormManager(createConfig(), handler);
-    const events: any[] = [];
+    const events: FormEvent[] = [];
     manager.addEventListener((event) => events.push(event));
 
     const result = await manager.submit();
@@ -35,7 +35,7 @@ describe('shared-forms integration', () => {
   });
 
   test('submit preserves existing validation state when server returns string error', async () => {
-    const handler = jest.fn<Promise<FormSubmissionResult>, any[]>(async () => ({
+    const handler = jest.fn<Promise<FormSubmissionResult>, [Record<string, FieldValue>]>(async () => ({
       success: false,
       errors: 'Bad request',
       timestamp: new Date(),
@@ -55,7 +55,7 @@ describe('shared-forms integration', () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     const saveHandler = jest
-      .fn<Promise<void>, any[]>()
+      .fn<Promise<void>, [Record<string, FieldValue>]>()
       .mockRejectedValueOnce(new Error('Save failed'))
       .mockResolvedValueOnce(undefined);
 
@@ -78,4 +78,3 @@ describe('shared-forms integration', () => {
     jest.useRealTimers();
   });
 });
-

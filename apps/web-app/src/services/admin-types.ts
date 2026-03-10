@@ -4,9 +4,49 @@ import type {
   MobileAnalyticsStats,
   MobileAnalyticsActionTypeBreakdown,
   MobileAnalyticsProcessingStatus,
+  PaginationMetadata,
+  ResourceType,
+  UserProfile,
 } from '@my-many-books/shared-types';
 
 export type MobileAnalyticsStatsResponse = MobileAnalyticsStats;
+
+export interface AdminDashboardStats {
+  totalUsers: number;
+  activeUsers: number;
+  adminUsers: number;
+  totalBooks: number;
+  timestamp?: string;
+}
+
+export interface AdminPinnedSearchResult {
+  id: number;
+  resource_type: ResourceType;
+  resource_id: number;
+  priority: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminPinnedSearchResultsResponse {
+  results: AdminPinnedSearchResult[];
+  total: number;
+}
+
+export interface AdminPinnedSearchCreateRequest {
+  resource_type: ResourceType;
+  resource_id: number;
+  priority: number;
+  active?: boolean;
+}
+
+export interface AdminUsersResponse {
+  users: UserProfile[];
+  pagination?: PaginationMetadata & {
+    total?: number;
+  };
+}
 
 export interface AuditLoggingStatus {
   enabled: boolean;
