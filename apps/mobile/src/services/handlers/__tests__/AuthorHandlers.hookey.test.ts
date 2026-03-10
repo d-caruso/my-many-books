@@ -1,5 +1,6 @@
 import { AuthorHandlerFactory, Author, CreateAuthorPayload } from '../AuthorHandlers';
 import { mobileHooks, MOBILE_EVENTS } from '../../hooks/mobileHooks';
+import { createClientGateway } from '../gateways/clientGateway';
 import type { HttpClient } from '../gateways/clientGateway';
 
 const mockHttpClient: HttpClient = {
@@ -61,7 +62,7 @@ describe('AuthorHandlers Hookey Integration', () => {
       };
 
       // Mock the underlying gateway to return success
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockAuthor);
 
       const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
@@ -109,7 +110,7 @@ describe('AuthorHandlers Hookey Integration', () => {
       };
 
       // Mock the underlying gateway to throw error
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockRejectedValue(new Error('Create failed'));
 
       const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
@@ -155,7 +156,7 @@ describe('AuthorHandlers Hookey Integration', () => {
       const authorId = 'author-123';
 
       // Mock the underlying gateway to return success
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.delete.mockResolvedValue(undefined);
 
       const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
@@ -214,7 +215,7 @@ describe('AuthorHandlers Hookey Integration', () => {
         updateDate: '2024-01-01'
       };
 
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockAuthor);
 
       const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
@@ -244,7 +245,7 @@ describe('AuthorHandlers Hookey Integration', () => {
         updateDate: '2024-01-01'
       };
 
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockAuthor);
 
       const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
@@ -275,7 +276,7 @@ describe('AuthorHandlers Hookey Integration', () => {
         updateDate: '2024-01-01'
       };
 
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockAuthor);
 
       const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);

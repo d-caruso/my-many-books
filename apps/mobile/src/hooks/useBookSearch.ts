@@ -149,7 +149,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     } finally {
       setLoading(false);
     }
-  }, [isOffline]);
+  }, [isOffline, t]);
 
   // Update the ref with the latest searchBooks function
   searchBooksRef.current = searchBooks;
@@ -180,7 +180,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const loadMore = useCallback(async (): Promise<void> => {
     if (!hasMore || loading || !searchBooksRef.current) {

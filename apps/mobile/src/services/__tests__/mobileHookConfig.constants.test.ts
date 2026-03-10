@@ -12,6 +12,7 @@ import {
 } from '../hooks/eventsSchema';
 
 import { MOBILE_APP_SETTING_KEYS, MOBILE_HOOK_SETTING_KEYS } from '@my-many-books/shared-types';
+import { mobileHookConfigService } from '../hooks/mobileHookConfigService';
 
 describe('Mobile Hook Configuration Constants', () => {
   describe('Event constants are properly exported', () => {
@@ -156,9 +157,6 @@ describe('Mobile Hook Configuration Constants', () => {
 
   describe('Constants usage validation', () => {
     it('should validate that mobile config service uses proper constants', () => {
-      // Import the service to check if it uses the constants
-      const { mobileHookConfigService } = require('../hooks/mobileHookConfigService');
-      
       // The service should be defined and use our constants in its implementation
       expect(mobileHookConfigService).toBeDefined();
       

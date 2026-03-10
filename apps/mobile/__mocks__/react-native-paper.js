@@ -1,9 +1,12 @@
 const React = require('react');
 
-const createPrimitive = (name) =>
-  React.forwardRef(({ children, ...props }, ref) =>
+const createPrimitive = (name) => {
+  const component = React.forwardRef(({ children, ...props }, ref) =>
     React.createElement(name, { ...props, ref }, children)
   );
+  component.displayName = name;
+  return component;
+};
 
 export const MD3LightTheme = {
   colors: {

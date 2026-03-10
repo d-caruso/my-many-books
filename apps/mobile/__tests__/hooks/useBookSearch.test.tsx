@@ -306,11 +306,11 @@ describe('useBookSearch Hook', () => {
 
   it('should handle empty query', async () => {
     function EmptyQueryComponent() {
-      const hook = useBookSearch();
+      const { searchBooks, books } = useBookSearch();
       React.useEffect(() => {
-        hook.searchBooks('');
-      }, []);
-      return <Text testID="result">{hook.books.length}</Text>;
+        searchBooks('');
+      }, [searchBooks]);
+      return <Text testID="result">{books.length}</Text>;
     }
 
     let tree: renderer.ReactTestRenderer;
@@ -323,12 +323,12 @@ describe('useBookSearch Hook', () => {
 
   it('should return null for empty ISBN', async () => {
     function ISBNComponent() {
-      const hook = useBookSearch();
+      const { searchByISBN } = useBookSearch();
       const [result, setResult] = React.useState<Book | null | undefined>(undefined);
 
       React.useEffect(() => {
-        hook.searchByISBN('   ').then(setResult);
-      }, []);
+        searchByISBN('   ').then(setResult);
+      }, [searchByISBN]);
 
       return <Text testID="result">{result === null ? 'null' : result === undefined ? 'undefined' : 'book'}</Text>;
     }
@@ -359,12 +359,12 @@ describe('useBookSearch Hook', () => {
     mockApiMocks.searchByISBN.mockResolvedValueOnce(mockBook);
 
     function ISBNSearchComponent() {
-      const hook = useBookSearch();
+      const { searchByISBN } = useBookSearch();
       const [result, setResult] = React.useState<Book | null | undefined>(undefined);
 
       React.useEffect(() => {
-        hook.searchByISBN('1234567890').then(setResult);
-      }, []);
+        searchByISBN('1234567890').then(setResult);
+      }, [searchByISBN]);
 
       return <Text testID="result">{result?.title || 'none'}</Text>;
     }

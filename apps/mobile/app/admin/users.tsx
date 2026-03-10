@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Text, Card, ActivityIndicator, Searchbar, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,7 @@ export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page] = useState(1);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       const response = await adminAPI.getAdminUsers<{ users: User[]; total: number }>(page, 50, searchQuery || undefined);
@@ -32,11 +32,11 @@ export default function UserManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchQuery]);
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [loadUsers]);
 
   const onRefresh = async () => {
     setRefreshing(true);

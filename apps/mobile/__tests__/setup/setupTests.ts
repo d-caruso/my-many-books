@@ -1,5 +1,6 @@
 import 'react-native-gesture-handler/jestSetup';
 import '@testing-library/jest-dom';
+import NetInfo from '@react-native-community/netinfo';
 
 // Setup fake timers properly
 jest.useFakeTimers();
@@ -69,10 +70,19 @@ interface BetterSQLiteDB {
 }
 
 jest.mock('expo-sqlite', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Database = require('better-sqlite3');
 
   // Shared database instance per dbName for test persistence
   let currentDb: BetterSQLiteDB | null = null;
+
+  // Expose cleanup so afterAll can close the handle and allow Jest to exit
+  (global as typeof globalThis & { __closeSQLiteDb?: () => void }).__closeSQLiteDb = () => {
+    if (currentDb) {
+      currentDb.close();
+      currentDb = null;
+    }
+  };
 
   const createDbWrapper = (db: BetterSQLiteDB) => ({
     execAsync: async (sql: string) => {
@@ -248,7 +258,8 @@ jest.mock('expo-camera', () => ({
 }));
 
 jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: ({ name, size, color, style }: { name?: string; size?: number; color?: string; style?: unknown }) => 
+  MaterialIcons: ({ name, size, color, style }: { name?: string; size?: number; color?: string; style?: unknown }) =>
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('react').createElement('Text', { style }, `Icon-${name}`),
 }));
 
@@ -269,6 +280,7 @@ jest.mock('expo-router', () => ({
 
 // Mock React Native core with proper component definitions compatible with Testing Library
 jest.mock('react-native', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   
   // Create proper React Native component mocks with displayName for Testing Library compatibility
@@ -378,7 +390,6 @@ const mockUserAPI = {
 // Create apiUtils with real implementations for testing
 const mockApiUtils = {
   isOnline: async () => {
-    const NetInfo = require('@react-native-community/netinfo');
     const networkState = await NetInfo.fetch();
     return networkState.isConnected ?? false;
   },
@@ -463,3 +474,8 @@ jest.mock('@/hooks/useNetworkState', () => ({
     connectionType: 'wifi',
   })),
 }));
+
+afterAll(() => {
+  const g = global as typeof globalThis & { __closeSQLiteDb?: () => void };
+  g.__closeSQLiteDb?.();
+});

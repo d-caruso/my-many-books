@@ -164,7 +164,7 @@ export default function SearchScreen() {
       ? (isbnResult ? [isbnResult] : [])
       : books;
 
-  const statusOptions: Array<Book['status'] | 'all'> = [
+  const statusOptions: (Book['status'] | 'all')[] = [
     'all',
     BOOK_STATUS.READING,
     BOOK_STATUS.PAUSED,

@@ -1,5 +1,6 @@
 import { IDMappingService } from '../sync/IDMappingService';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
+import { databaseService } from '../database/DatabaseService';
 
 // Mock mobile hooks
 jest.mock('../hooks/mobileHooks', () => ({
@@ -26,6 +27,7 @@ jest.mock('../database/DatabaseService', () => ({
 }));
 
 const mockMobileHooks = mobileHooks as jest.Mocked<typeof mobileHooks>;
+const mockDatabaseService = databaseService as jest.Mocked<typeof databaseService>;
 
 describe('IDMappingService Hookey Integration', () => {
   let idMappingService: IDMappingService;
@@ -35,9 +37,8 @@ describe('IDMappingService Hookey Integration', () => {
     idMappingService = new IDMappingService();
     mockMobileHooks.emit.mockResolvedValue(undefined);
 
-    const { databaseService } = require('../database/DatabaseService');
-    databaseService.getAllAsync.mockResolvedValue([]);
-    databaseService.executeQuery.mockResolvedValue(undefined);
+    mockDatabaseService.getAllAsync.mockResolvedValue([]);
+    mockDatabaseService.executeQuery.mockResolvedValue(undefined);
   });
 
   describe('registerTempId', () => {
@@ -77,8 +78,7 @@ describe('IDMappingService Hookey Integration', () => {
     });
 
     it('should emit SYNC.FAILED when registration fails', async () => {
-      const { databaseService } = require('../database/DatabaseService');
-      databaseService.executeQuery.mockRejectedValue(new Error('Database error'));
+      mockDatabaseService.executeQuery.mockRejectedValue(new Error('Database error'));
 
       await expect(idMappingService.registerTempId('temp-789', 123, 'category')).rejects.toThrow();
 

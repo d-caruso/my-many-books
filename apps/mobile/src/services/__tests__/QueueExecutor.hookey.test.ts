@@ -1,5 +1,6 @@
 import { executeOperation, isRetriableError } from '../QueueExecutor';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
+import { apiClient } from '../api';
 import { QUEUE_OPERATION_STATUS } from '../hooks/eventsSchema';
 import { ApiError, ErrorCode } from '../../types/errors';
 import type { QueuedOperation } from '../../types/queue';
@@ -95,6 +96,7 @@ jest.mock('../sync/CleanupService', () => ({
 }));
 
 const mockMobileHooks = mobileHooks as jest.Mocked<typeof mobileHooks>;
+const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 
 describe('QueueExecutor Hookey Integration', () => {
   beforeEach(() => {
@@ -114,8 +116,7 @@ describe('QueueExecutor Hookey Integration', () => {
     };
 
     it('should emit EXECUTOR.OPERATION.START when operation begins', async () => {
-      const { apiClient } = require('../api');
-      apiClient.books.createBook.mockResolvedValue({ id: 'server-123' });
+      mockApiClient.books.createBook.mockResolvedValue({ id: 'server-123' });
 
       await executeOperation(mockOperation);
 
@@ -135,8 +136,7 @@ describe('QueueExecutor Hookey Integration', () => {
     });
 
     it('should emit EXECUTOR.OPERATION.SUCCESS when operation succeeds', async () => {
-      const { apiClient } = require('../api');
-      apiClient.books.createBook.mockResolvedValue({ id: 'server-123' });
+      mockApiClient.books.createBook.mockResolvedValue({ id: 'server-123' });
 
       await executeOperation(mockOperation);
 
@@ -157,8 +157,7 @@ describe('QueueExecutor Hookey Integration', () => {
     });
 
     it('should emit EXECUTOR.PERFORMANCE_METRIC for successful operations', async () => {
-      const { apiClient } = require('../api');
-      apiClient.books.createBook.mockResolvedValue({ id: 'server-123' });
+      mockApiClient.books.createBook.mockResolvedValue({ id: 'server-123' });
 
       await executeOperation(mockOperation);
 
@@ -182,8 +181,7 @@ describe('QueueExecutor Hookey Integration', () => {
     });
 
     it('should emit EXECUTOR.NETWORK_ERROR for network-related failures', async () => {
-      const { apiClient } = require('../api');
-      apiClient.books.createBook.mockRejectedValue(new Error('Network request failed'));
+      mockApiClient.books.createBook.mockRejectedValue(new Error('Network request failed'));
 
       await expect(executeOperation(mockOperation)).rejects.toThrow('Network request failed');
 
@@ -206,8 +204,7 @@ describe('QueueExecutor Hookey Integration', () => {
     });
 
     it('should emit EXECUTOR.VALIDATION_ERROR for validation-related failures', async () => {
-      const { apiClient } = require('../api');
-      apiClient.books.createBook.mockRejectedValue(new Error('Validation failed: title is required'));
+      mockApiClient.books.createBook.mockRejectedValue(new Error('Validation failed: title is required'));
 
       await expect(executeOperation(mockOperation)).rejects.toThrow('Validation failed: title is required');
 
@@ -225,8 +222,7 @@ describe('QueueExecutor Hookey Integration', () => {
     });
 
     it('should emit EXECUTOR.OPERATION.FAILED for unknown errors', async () => {
-      const { apiClient } = require('../api');
-      apiClient.books.createBook.mockRejectedValue(new Error('Unexpected database error'));
+      mockApiClient.books.createBook.mockRejectedValue(new Error('Unexpected database error'));
 
       await expect(executeOperation(mockOperation)).rejects.toThrow('Unexpected database error');
 
@@ -244,8 +240,7 @@ describe('QueueExecutor Hookey Integration', () => {
     });
 
     it('should emit EXECUTOR.PERFORMANCE_METRIC for failed operations', async () => {
-      const { apiClient } = require('../api');
-      apiClient.books.createBook.mockRejectedValue(new Error('Operation failed'));
+      mockApiClient.books.createBook.mockRejectedValue(new Error('Operation failed'));
 
       await expect(executeOperation(mockOperation)).rejects.toThrow('Operation failed');
 
@@ -263,7 +258,6 @@ describe('QueueExecutor Hookey Integration', () => {
     });
 
     it('should handle different resource types correctly', async () => {
-      const { apiClient } = require('../api');
       
       const authorOperation: QueuedOperation = {
         ...mockOperation,
@@ -271,7 +265,7 @@ describe('QueueExecutor Hookey Integration', () => {
         payload: { name: 'Test Author' }
       };
 
-      apiClient.authors.createAuthor.mockResolvedValue({ id: 'author-123' });
+      mockApiClient.authors.createAuthor.mockResolvedValue({ id: 'author-123' });
 
       await executeOperation(authorOperation);
 
@@ -413,7 +407,6 @@ describe('QueueExecutor Hookey Integration', () => {
     };
 
     it('should correctly categorize network errors', async () => {
-      const { apiClient } = require('../api');
       const networkErrors = [
         'Network request failed',
         'timeout occurred',
@@ -423,7 +416,7 @@ describe('QueueExecutor Hookey Integration', () => {
 
       for (const errorMessage of networkErrors) {
         jest.clearAllMocks();
-        apiClient.books.createBook.mockRejectedValue(new Error(errorMessage));
+        mockApiClient.books.createBook.mockRejectedValue(new Error(errorMessage));
 
         await expect(executeOperation(mockOperation)).rejects.toThrow(errorMessage);
 
@@ -437,7 +430,6 @@ describe('QueueExecutor Hookey Integration', () => {
     });
 
     it('should correctly categorize validation errors', async () => {
-      const { apiClient } = require('../api');
       const validationErrors = [
         'validation failed',
         'required field missing',
@@ -447,7 +439,7 @@ describe('QueueExecutor Hookey Integration', () => {
 
       for (const errorMessage of validationErrors) {
         jest.clearAllMocks();
-        apiClient.books.createBook.mockRejectedValue(new Error(errorMessage));
+        mockApiClient.books.createBook.mockRejectedValue(new Error(errorMessage));
 
         await expect(executeOperation(mockOperation)).rejects.toThrow(errorMessage);
 
@@ -463,8 +455,7 @@ describe('QueueExecutor Hookey Integration', () => {
 
   describe('performance metrics tracking', () => {
     it('should track execution duration accurately', async () => {
-      const { apiClient } = require('../api');
-      apiClient.books.createBook.mockResolvedValue({ id: 'test-123' });
+      mockApiClient.books.createBook.mockResolvedValue({ id: 'test-123' });
 
       const mockOperation: QueuedOperation = {
         id: 'perf-test',

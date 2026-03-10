@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Text, Card, ActivityIndicator, Searchbar, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -23,7 +23,7 @@ export default function BookManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page] = useState(1);
 
-  const loadBooks = async () => {
+  const loadBooks = useCallback(async () => {
     try {
       setLoading(true);
       const response = await adminAPI.getAdminBooks<{ books: Book[]; total: number }>(page, 50, searchQuery || undefined);
@@ -33,11 +33,11 @@ export default function BookManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchQuery]);
 
   useEffect(() => {
     loadBooks();
-  }, []);
+  }, [loadBooks]);
 
   const onRefresh = async () => {
     setRefreshing(true);

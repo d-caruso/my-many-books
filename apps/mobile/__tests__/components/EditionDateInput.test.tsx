@@ -5,6 +5,7 @@ import { EditionDateInput } from '@/components/EditionDateInput';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 jest.mock('@react-native-community/datetimepicker', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   return {
     __esModule: true,

@@ -1,3 +1,5 @@
+import Constants from 'expo-constants';
+
 type ApiConfigParts = {
   origin: string;
   prefix: string;
@@ -33,14 +35,8 @@ const buildApiBaseUrl = ({ origin, prefix, version }: ApiConfigParts): string =>
 };
 
 const getLegacyApiUrlFromExpoExtra = (): string | undefined => {
-  if (typeof require === 'undefined') {
-    return undefined;
-  }
-
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const Constants = require('expo-constants');
-    const apiUrl = Constants?.default?.expoConfig?.extra?.apiUrl;
+    const apiUrl = Constants?.expoConfig?.extra?.apiUrl;
     return typeof apiUrl === 'string' && apiUrl.trim() ? apiUrl : undefined;
   } catch {
     return undefined;
@@ -62,4 +58,3 @@ export const API_BASE_URL = normalizeBaseUrl(
       version: API_VERSION,
     })
 );
-
