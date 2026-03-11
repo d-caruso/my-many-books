@@ -47,6 +47,8 @@ describe('Database Service and Migrations (Task 4.2.3)', () => {
     it('should define CREATE_AUTHORS_TABLE statement', () => {
       expect(CREATE_AUTHORS_TABLE).toBeDefined();
       expect(CREATE_AUTHORS_TABLE).toContain('CREATE TABLE IF NOT EXISTS authors');
+      expect(CREATE_AUTHORS_TABLE).toContain('surname TEXT NOT NULL');
+      expect(CREATE_AUTHORS_TABLE).toContain('UNIQUE(name, surname)');
     });
 
     it('should define CREATE_CATEGORIES_TABLE statement', () => {
@@ -146,6 +148,21 @@ describe('Database Service and Migrations (Task 4.2.3)', () => {
       expect(columnNames).toContain('sync_status');
       expect(columnNames).toContain('deleted');
       expect(columnNames).toContain('temp_id');
+      expect(columnNames).toContain('creation_date');
+      expect(columnNames).toContain('update_date');
+    });
+
+    it('should have authors table with normalized name fields', async () => {
+      const tableInfo = await databaseService.getAllAsync(
+        'PRAGMA table_info(authors)',
+        []
+      );
+
+      const columnNames = tableInfo.map((col: { name: string }) => col.name);
+
+      expect(columnNames).toContain('name');
+      expect(columnNames).toContain('surname');
+      expect(columnNames).toContain('nationality');
       expect(columnNames).toContain('creation_date');
       expect(columnNames).toContain('update_date');
     });

@@ -7,33 +7,9 @@ import { useNetworkState } from './useNetworkState';
 import { useTranslation } from 'react-i18next';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
 import {
-  SEARCH_SORT_BY_FIELDS,
   SORT_DIRECTIONS,
   type SearchFilters,
 } from '@my-many-books/shared-types';
-import { DB_SORT_FIELDS } from '@/constants/db';
-
-type OfflineSortField =
-  | typeof DB_SORT_FIELDS[keyof typeof DB_SORT_FIELDS]
-  | 'status';
-
-const mapSortByToOfflineField = (
-  sortBy?: SearchQuery['sortBy']
-): OfflineSortField => {
-  switch (sortBy) {
-    case SEARCH_SORT_BY_FIELDS.TITLE:
-      return DB_SORT_FIELDS.TITLE;
-    case SEARCH_SORT_BY_FIELDS.STATUS:
-      return 'status';
-    case SEARCH_SORT_BY_FIELDS.CREATED_AT:
-      return DB_SORT_FIELDS.CREATION_DATE;
-    case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
-    case undefined:
-      return DB_SORT_FIELDS.UPDATE_DATE;
-    case SEARCH_SORT_BY_FIELDS.AUTHOR:
-      throw new Error('Offline author sorting is not supported yet');
-  }
-};
 
 interface BookSearchState {
   books: Book[];
@@ -52,18 +28,6 @@ interface BookSearchActions {
   loadMore: () => Promise<void>;
 }
 
-const buildOfflineSearchParams = (
-  query: string,
-  filters: Partial<SearchQuery>
-) => ({
-  query: query.trim(),
-  status: filters.status,
-  authorId: filters.authorId,
-  categoryId: filters.categoryId,
-  sortBy: mapSortByToOfflineField(filters.sortBy),
-  sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.DESC,
-});
-
 export const useBookSearch = (): BookSearchState & BookSearchActions => {
   const { t } = useTranslation('offline');
   const [offlineBooks, setOfflineBooks] = useState<Book[]>([]);
@@ -79,7 +43,14 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
   const isOffline = !isOnline;
 
   const runOfflineSearch = useCallback(async (query: string, filters: Partial<SearchQuery> = {}) => {
-    const localBooks = await bookRepository.searchWithFilters(buildOfflineSearchParams(query, filters));
+    const localBooks = await bookRepository.searchWithFilters({
+      query: query.trim(),
+      status: filters.status,
+      authorId: filters.authorId,
+      categoryId: filters.categoryId,
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.DESC,
+    });
     return localBooks.map(localBook => localBook.entity);
   }, []);
 

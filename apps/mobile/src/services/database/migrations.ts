@@ -2,7 +2,7 @@ import { databaseService } from './DatabaseService';
 import { ALL_TABLES } from './schema';
 
 const SCHEMA_VERSION_KEY = 'schema_version';
-const CURRENT_SCHEMA_VERSION = 5;
+const CURRENT_SCHEMA_VERSION = 6;
 
 /**
  * Database migration system
@@ -82,6 +82,11 @@ export class MigrationSystem {
       // Migrate to version 5: Rename sync/meta columns to drop leading underscores
       if (currentVersion < 5) {
         await this.migrateToVersion5();
+      }
+
+      // Migrate to version 6: Normalize authors table for name + surname storage
+      if (currentVersion < 6) {
+        await this.migrateToVersion6();
       }
 
       await this.setVersion(CURRENT_SCHEMA_VERSION);
@@ -287,6 +292,97 @@ export class MigrationSystem {
       console.log('Migration to version 5 completed successfully');
     } catch (error) {
       console.error('Migration to version 5 failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Migrate to version 6: Normalize authors table for name + surname storage
+   */
+  private async migrateToVersion6(): Promise<void> {
+    console.log('Migrating to schema version 6: Normalizing authors table...');
+    const db = databaseService.getDatabase();
+
+    try {
+      const authorTableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(authors)');
+      const hasSurname = authorTableInfo.some((col) => col.name === 'surname');
+      const hasNationality = authorTableInfo.some((col) => col.name === 'nationality');
+      const hasCreationDate = authorTableInfo.some((col) => col.name === 'creation_date');
+      const hasUpdateDate = authorTableInfo.some((col) => col.name === 'update_date');
+
+      if (hasSurname && hasNationality && hasCreationDate && hasUpdateDate) {
+        await db.execAsync('CREATE INDEX IF NOT EXISTS idx_authors_surname_name ON authors(surname, name);');
+        await db.execAsync('CREATE INDEX IF NOT EXISTS idx_authors_server_id ON authors(server_id);');
+        console.log('Authors table already normalized, skipping table rebuild');
+        return;
+      }
+
+      await db.execAsync('PRAGMA foreign_keys = OFF;');
+      await db.execAsync('BEGIN TRANSACTION;');
+
+      const timestampFallback = new Date().toISOString();
+
+      await db.execAsync(`
+        CREATE TABLE authors_v6 (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          surname TEXT NOT NULL DEFAULT '',
+          nationality TEXT,
+          creation_date TEXT NOT NULL,
+          update_date TEXT NOT NULL,
+          server_id INTEGER,
+          sync_status TEXT DEFAULT 'synced',
+          server_updated_at TEXT,
+          UNIQUE(name, surname)
+        );
+      `);
+
+      await db.execAsync(`
+        INSERT INTO authors_v6 (
+          id,
+          name,
+          surname,
+          nationality,
+          creation_date,
+          update_date,
+          server_id,
+          sync_status,
+          server_updated_at
+        )
+        SELECT
+          id,
+          name,
+          '',
+          NULL,
+          COALESCE(server_updated_at, '${timestampFallback}'),
+          COALESCE(server_updated_at, '${timestampFallback}'),
+          server_id,
+          COALESCE(sync_status, 'synced'),
+          server_updated_at
+        FROM authors;
+      `);
+
+      await db.execAsync('DROP TABLE authors;');
+      await db.execAsync('ALTER TABLE authors_v6 RENAME TO authors;');
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_authors_name ON authors(name);');
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_authors_surname_name ON authors(surname, name);');
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_authors_server_id ON authors(server_id);');
+
+      await db.execAsync('COMMIT;');
+      await db.execAsync('PRAGMA foreign_keys = ON;');
+      console.log('Migration to version 6 completed successfully');
+    } catch (error) {
+      try {
+        await db.execAsync('ROLLBACK;');
+      } catch {
+        // Ignore rollback errors after failed migration.
+      }
+      try {
+        await db.execAsync('PRAGMA foreign_keys = ON;');
+      } catch {
+        // Ignore foreign-key reset failures after failed migration.
+      }
+      console.error('Migration to version 6 failed:', error);
       throw error;
     }
   }

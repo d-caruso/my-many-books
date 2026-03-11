@@ -31,10 +31,15 @@ export const CREATE_BOOKS_TABLE = `
 export const CREATE_AUTHORS_TABLE = `
   CREATE TABLE IF NOT EXISTS authors (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    surname TEXT NOT NULL DEFAULT '',
+    nationality TEXT,
+    creation_date TEXT NOT NULL,
+    update_date TEXT NOT NULL,
     server_id INTEGER,
     sync_status TEXT DEFAULT '${SYNC_STATUS.SYNCED}',
-    server_updated_at TEXT
+    server_updated_at TEXT,
+    UNIQUE(name, surname)
   );
 `;
 
@@ -97,7 +102,10 @@ export const CREATE_INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_books_update_date ON books(update_date);',
   'CREATE INDEX IF NOT EXISTS idx_books_creation_date ON books(creation_date);',
   'CREATE INDEX IF NOT EXISTS idx_authors_name ON authors(name);',
+  'CREATE INDEX IF NOT EXISTS idx_authors_surname_name ON authors(surname, name);',
+  'CREATE INDEX IF NOT EXISTS idx_authors_server_id ON authors(server_id);',
   'CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name);',
+  'CREATE INDEX IF NOT EXISTS idx_categories_server_id ON categories(server_id);',
 
   // Composite indexes for common filter combinations
   'CREATE INDEX IF NOT EXISTS idx_books_status_update_date ON books(status, update_date);',

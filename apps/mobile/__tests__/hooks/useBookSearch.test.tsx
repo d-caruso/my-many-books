@@ -2,7 +2,6 @@ import React from 'react';
 import renderer from 'react-test-renderer';
 import type { Book } from '@/types';
 import { BOOK_STATUS, SEARCH_SORT_BY_FIELDS, SORT_DIRECTIONS } from '@my-many-books/shared-types';
-import { DB_SORT_FIELDS } from '@/constants/db';
 
 // Import after mocks
 import { useBookSearch } from '@/hooks/useBookSearch';
@@ -274,7 +273,7 @@ describe('useBookSearch Hook', () => {
     expect(mockDbMocks.searchWithFilters).toHaveBeenCalledWith(
       expect.objectContaining({
         query: 'test',
-        sortBy: DB_SORT_FIELDS.UPDATE_DATE,
+        sortBy: undefined,
         sortOrder: SORT_DIRECTIONS.DESC,
       })
     );

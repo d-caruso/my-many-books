@@ -403,13 +403,14 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Add book_authors entry
       const db = databaseService.getDatabase();
+      const now = new Date().toISOString();
       await db.runAsync(
-        'INSERT OR IGNORE INTO authors (name) VALUES (?)',
-        ['Test Author']
+        'INSERT OR IGNORE INTO authors (name, surname, creation_date, update_date) VALUES (?, ?, ?, ?)',
+        ['Test', 'Author', now, now]
       );
       const author = await databaseService.getFirstAsync<{ id: number }>(
-        'SELECT id FROM authors WHERE name = ?',
-        ['Test Author']
+        'SELECT id FROM authors WHERE name = ? AND surname = ?',
+        ['Test', 'Author']
       );
       await db.runAsync(
         'INSERT INTO book_authors (book_id, author_id) VALUES (?, ?)',
@@ -447,15 +448,16 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const nonExistentBookId = 'temp-nonexistent-9999';
 
       const db = databaseService.getDatabase();
+      const now = new Date().toISOString();
 
       // Step 1: Create an author
       await db.runAsync(
-        'INSERT OR IGNORE INTO authors (name) VALUES (?)',
-        ['Orphaned Author']
+        'INSERT OR IGNORE INTO authors (name, surname, creation_date, update_date) VALUES (?, ?, ?, ?)',
+        ['Orphaned', 'Author', now, now]
       );
       const author = await databaseService.getFirstAsync<{ id: number }>(
-        'SELECT id FROM authors WHERE name = ?',
-        ['Orphaned Author']
+        'SELECT id FROM authors WHERE name = ? AND surname = ?',
+        ['Orphaned', 'Author']
       );
 
       // Step 2: Manually insert book_authors entry for a non-existent book

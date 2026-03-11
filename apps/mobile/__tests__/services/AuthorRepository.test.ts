@@ -24,19 +24,21 @@ describe('AuthorRepository', () => {
 
   describe('create', () => {
     it('should create a new author', async () => {
-      const author = await authorRepository.create('J.K. Rowling');
+      const author = await authorRepository.create({ name: 'J.K.', surname: 'Rowling' });
 
       expect(author).toBeDefined();
       expect(author.entity.id).toBeDefined();
-      expect(author.entity.name).toBe('J.K. Rowling');
+      expect(author.entity.name).toBe('J.K.');
+      expect(author.entity.surname).toBe('Rowling');
     });
 
-    it('should return existing author if name already exists', async () => {
-      const author1 = await authorRepository.create('J.K. Rowling');
-      const author2 = await authorRepository.create('J.K. Rowling');
+    it('should return existing author if name and surname already exist', async () => {
+      const author1 = await authorRepository.create({ name: 'J.K.', surname: 'Rowling' });
+      const author2 = await authorRepository.create({ name: 'J.K.', surname: 'Rowling' });
 
       expect(author1.entity.id).toBe(author2.entity.id);
       expect(author1.entity.name).toBe(author2.entity.name);
+      expect(author1.entity.surname).toBe(author2.entity.surname);
 
       // Verify only one author exists
       const all = await authorRepository.findAll();
@@ -45,29 +47,33 @@ describe('AuthorRepository', () => {
   });
 
   describe('findAll', () => {
-    it('should return all authors sorted by name', async () => {
-      await authorRepository.create('Zach Author');
-      await authorRepository.create('Alice Author');
-      await authorRepository.create('Bob Author');
+    it('should return all authors sorted by surname then name', async () => {
+      await authorRepository.create({ name: 'Zach', surname: 'Author' });
+      await authorRepository.create({ name: 'Alice', surname: 'Author' });
+      await authorRepository.create({ name: 'Bob', surname: 'Brown' });
 
       const authors = await authorRepository.findAll();
 
       expect(authors).toHaveLength(3);
-      expect(authors[0].entity.name).toBe('Alice Author');
-      expect(authors[1].entity.name).toBe('Bob Author');
-      expect(authors[2].entity.name).toBe('Zach Author');
+      expect(authors[0].entity.surname).toBe('Author');
+      expect(authors[0].entity.name).toBe('Alice');
+      expect(authors[1].entity.surname).toBe('Author');
+      expect(authors[1].entity.name).toBe('Zach');
+      expect(authors[2].entity.surname).toBe('Brown');
+      expect(authors[2].entity.name).toBe('Bob');
     });
   });
 
   describe('findById', () => {
     it('should find author by ID', async () => {
-      const created = await authorRepository.create('Test Author');
+      const created = await authorRepository.create({ name: 'Test', surname: 'Author' });
 
       const found = await authorRepository.findById(created.entity.id);
 
       expect(found).toBeDefined();
       expect(found?.entity.id).toBe(created.entity.id);
-      expect(found?.entity.name).toBe('Test Author');
+      expect(found?.entity.name).toBe('Test');
+      expect(found?.entity.surname).toBe('Author');
     });
 
     it('should return null for non-existent ID', async () => {
@@ -78,36 +84,43 @@ describe('AuthorRepository', () => {
   });
 
   describe('findByName', () => {
-    it('should find author by name', async () => {
-      await authorRepository.create('Stephen King');
+    it('should find author by name and surname', async () => {
+      await authorRepository.create({ name: 'Stephen', surname: 'King' });
 
-      const found = await authorRepository.findByName('Stephen King');
+      const found = await authorRepository.findByName('Stephen', 'King');
 
       expect(found).toBeDefined();
-      expect(found?.entity.name).toBe('Stephen King');
+      expect(found?.entity.name).toBe('Stephen');
+      expect(found?.entity.surname).toBe('King');
     });
 
     it('should return null for non-existent name', async () => {
-      const found = await authorRepository.findByName('Non-existent Author');
+      const found = await authorRepository.findByName('Non-existent', 'Author');
 
       expect(found).toBeNull();
     });
   });
 
   describe('update', () => {
-    it('should update author name', async () => {
-      const author = await authorRepository.create('Old Name');
+    it('should update author fields', async () => {
+      const author = await authorRepository.create({ name: 'Old', surname: 'Name' });
 
-      const updated = await authorRepository.update(author.entity.id, 'New Name');
+      const updated = await authorRepository.update(author.entity.id, {
+        name: 'New',
+        surname: 'Name',
+        nationality: 'British',
+      });
 
       expect(updated.entity.id).toBe(author.entity.id);
-      expect(updated.entity.name).toBe('New Name');
+      expect(updated.entity.name).toBe('New');
+      expect(updated.entity.surname).toBe('Name');
+      expect(updated.entity.nationality).toBe('British');
     });
   });
 
   describe('delete', () => {
     it('should delete author', async () => {
-      const author = await authorRepository.create('Test Author');
+      const author = await authorRepository.create({ name: 'Test', surname: 'Author' });
 
       await authorRepository.delete(author.entity.id);
 
@@ -116,8 +129,10 @@ describe('AuthorRepository', () => {
     });
 
     it('should cascade delete from book_authors junction table', async () => {
-      const book = await bookRepository.create(new LocalBook({ title: 'Test Book', authors: [{ name: 'Test Author' }] } as Book));
-      const author = await authorRepository.findByName('Test Author');
+      const book = await bookRepository.create(
+        new LocalBook({ title: 'Test Book', authors: [{ name: 'Test', surname: 'Author' }] } as Book)
+      );
+      const author = await authorRepository.findByName('Test', 'Author');
 
       // Verify junction entry exists
       let junctionEntry = await databaseService.getFirstAsync(
@@ -141,16 +156,22 @@ describe('AuthorRepository', () => {
   describe('findByBookId', () => {
     it('should find authors for a book', async () => {
       const book = await bookRepository.create(
-        new LocalBook({ title: 'Test Book', authors: [{ name: 'Author 1' }, { name: 'Author 3' }] } as Book)
+        new LocalBook({
+          title: 'Test Book',
+          authors: [
+            { name: 'Author', surname: 'One' },
+            { name: 'Author', surname: 'Three' },
+          ],
+        } as Book)
       );
-      await authorRepository.create('Author 2'); // unlinked
+      await authorRepository.create({ name: 'Author', surname: 'Two' }); // unlinked
 
       const authors = await authorRepository.findByBookId(String(book.entity.id));
 
       expect(authors).toHaveLength(2);
-      expect(authors.some(a => a.entity.name === 'Author 1')).toBe(true);
-      expect(authors.some(a => a.entity.name === 'Author 3')).toBe(true);
-      expect(authors.some(a => a.entity.name === 'Author 2')).toBe(false);
+      expect(authors.some(a => a.entity.name === 'Author' && a.entity.surname === 'One')).toBe(true);
+      expect(authors.some(a => a.entity.name === 'Author' && a.entity.surname === 'Three')).toBe(true);
+      expect(authors.some(a => a.entity.name === 'Author' && a.entity.surname === 'Two')).toBe(false);
     });
 
     it('should return empty array for book with no authors', async () => {
