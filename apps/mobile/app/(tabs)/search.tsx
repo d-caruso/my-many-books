@@ -285,15 +285,15 @@ export default function SearchScreen() {
   const getSortOptionLabel = useCallback((option: SortOption): string => {
     switch (option) {
       case SEARCH_SORT_BY_FIELDS.TITLE:
-        return t('books:title');
+        return t('books:sort_title');
       case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
-        return t('books:last_updated');
+        return t('books:sort_updatedAt');
       case SEARCH_SORT_BY_FIELDS.CREATED_AT:
-        return t('books:added');
+        return t('books:sort_createdAt');
       case SEARCH_SORT_BY_FIELDS.AUTHOR:
-        return t('books:author');
+        return t('books:sort_author');
       case SEARCH_SORT_BY_FIELDS.STATUS:
-        return t('books:status');
+        return t('books:sort_status');
     }
   }, [t]);
 

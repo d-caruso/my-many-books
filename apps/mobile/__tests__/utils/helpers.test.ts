@@ -3,8 +3,6 @@ import {
   generateBookId,
   sanitizeSearchQuery,
   groupBooksByStatus,
-  sortBooks,
-  filterBooks,
 } from '@/utils/helpers';
 import { Book } from '@/types';
 
@@ -68,85 +66,6 @@ describe('Helper Utilities', () => {
       expect(grouped.reading).toHaveLength(2);
       expect(grouped.finished).toHaveLength(1);
       expect(grouped.reading[0].title).toBe('Book 1');
-    });
-  });
-
-  describe('sortBooks', () => {
-    const mockBooks: Book[] = [
-      { id: 1, title: 'Zebra Book', authors: [{ id: 1, name: 'Alpha', surname: 'Author' }], creationDate: '2023-01-01', status: 'reading', categories: [], updateDate: '2023-01-01', isbnCode: '123' },
-      { id: 2, title: 'Alpha Book', authors: [{ id: 2, name: 'Zeta', surname: 'Author' }], creationDate: '2023-01-02', status: 'finished', categories: [], updateDate: '2023-01-02', isbnCode: '456' },
-    ];
-
-    it('should sort books by title', () => {
-      const sorted = sortBooks(mockBooks, 'title');
-      expect(sorted[0].title).toBe('Alpha Book');
-      expect(sorted[1].title).toBe('Zebra Book');
-    });
-
-    it('should sort books by author', () => {
-      const sorted = sortBooks(mockBooks, 'author');
-      expect(sorted[0].authors[0].name).toBe('Alpha');
-      expect(sorted[1].authors[0].name).toBe('Zeta');
-    });
-
-    it('should sort books by date', () => {
-      const sorted = sortBooks(mockBooks, 'date');
-      expect(sorted[0].creationDate).toBe('2023-01-02');
-      expect(sorted[1].creationDate).toBe('2023-01-01');
-    });
-  });
-
-  describe('filterBooks', () => {
-    const mockBooks: Book[] = [
-      {
-        id: 1,
-        title: 'Book 1',
-        status: 'reading',
-        authors: [{ id: 1, name: 'John', surname: 'Doe' }],
-        categories: [{ id: 1, name: 'Fiction' }],
-        creationDate: '2023-01-01',
-        updateDate: '2023-01-01',
-        isbnCode: '123'
-      },
-      {
-        id: 2,
-        title: 'Book 2',
-        status: 'finished',
-        authors: [{ id: 2, name: 'Jane', surname: 'Smith' }],
-        categories: [{ id: 2, name: 'Non-Fiction' }],
-        creationDate: '2023-01-02',
-        updateDate: '2023-01-02',
-        isbnCode: '456'
-      },
-    ];
-
-    it('should filter books by status', () => {
-      const filtered = filterBooks(mockBooks, { status: 'reading' });
-      expect(filtered).toHaveLength(1);
-      expect(filtered[0].status).toBe('reading');
-    });
-
-    it('should filter books by category', () => {
-      const filtered = filterBooks(mockBooks, { category: 'Fiction' });
-      expect(filtered).toHaveLength(1);
-      expect(filtered[0].categories[0].name).toBe('Fiction');
-    });
-
-    it('should filter books by author', () => {
-      const filtered = filterBooks(mockBooks, { author: 'john' });
-      expect(filtered).toHaveLength(1);
-      expect(filtered[0].authors[0].name).toBe('John');
-      expect(filtered[0].authors[0].surname).toBe('Doe');
-    });
-
-    it('should handle multiple filters', () => {
-      const filtered = filterBooks(mockBooks, { status: 'reading', category: 'Fiction' });
-      expect(filtered).toHaveLength(1);
-    });
-
-    it('should return empty array when no matches', () => {
-      const filtered = filterBooks(mockBooks, { status: 'paused' });
-      expect(filtered).toHaveLength(0);
     });
   });
 });

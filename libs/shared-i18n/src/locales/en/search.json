@@ -17,8 +17,7 @@
     "status_finished": "Finished",
     "sort_label": "Sort by",
     "sort_title": "Title (A-Z)",
-    "sort_author": "Author (A-Z)",
-    "sort_date": "Recently added"
+    "sort_author": "Author (A-Z)"
   },
   "filter": {
     "title": "Filters",
