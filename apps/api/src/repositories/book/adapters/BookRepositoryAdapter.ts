@@ -11,7 +11,11 @@ import {
   BookListOptions,
   BookQueryOptions,
   BookSearchFilters,
+  BookSearchRowsResult,
+  BookSearchRowsWithRelevance,
+  BookSortedSearchOptions,
   PaginatedResult,
+  PinnedBookResult,
 } from '../BookRepositoryTypes';
 import { RepositoryAdapter } from '../../interfaces/adapters/RepositoryAdapter';
 
@@ -40,6 +44,21 @@ export interface BookRepositoryAdapter
     filters: BookSearchFilters,
     options?: BookListOptions
   ): Promise<PaginatedResult<BookEntity>>;
+  searchFulltext(
+    query: string,
+    userId?: number,
+    limit?: number,
+    offset?: number
+  ): Promise<BookSearchRowsWithRelevance>;
+  searchLike(
+    query: string,
+    userId?: number,
+    limit?: number,
+    offset?: number
+  ): Promise<BookSearchRowsResult>;
+  searchFulltextSorted(options: BookSortedSearchOptions): Promise<BookSearchRowsWithRelevance>;
+  searchLikeSorted(options: BookSortedSearchOptions): Promise<BookSearchRowsResult>;
+  findPinned(userId?: number): Promise<PinnedBookResult[]>;
   countUserBooks(userId: number, status?: BookStatus): Promise<number>;
   findRecentUserBooks(userId: number, limit: number): Promise<BookEntity[]>;
 }

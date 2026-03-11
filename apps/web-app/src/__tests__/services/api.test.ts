@@ -1,4 +1,13 @@
-import type { Book, Author, Category, User, UserProfile, PaginatedResponse } from '@my-many-books/shared-types';
+import {
+  SEARCH_SORT_BY_FIELDS,
+  SORT_DIRECTIONS,
+  type Book,
+  type Author,
+  type Category,
+  type User,
+  type UserProfile,
+  type PaginatedResponse,
+} from '@my-many-books/shared-types';
 import type { AuthorApi, BookApi, CategoryApi, UserApi } from '@my-many-books/shared-api';
 
 // Import after mocks are set up (avoid importing default instance to prevent axios creation)
@@ -125,6 +134,11 @@ Object.defineProperty(window, 'location', {
 // Mock environment variables
 const originalEnv = process.env;
 
+const getAuthorSortKey = (book: Book) =>
+  book.authors?.[0] ? `${book.authors[0].surname} ${book.authors[0].name}` : '';
+
+const getNumericDate = (value?: string) => (value ? new Date(value).getTime() : 0);
+
 
 describe('ApiService with Industry Standard Testing', () => {
   let mockApiClient: ReturnType<typeof createMockApiClient>;
@@ -220,7 +234,7 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockSearchResults sorts by title', async () => {
-      const searchParams = { sortBy: 'title' };
+      const searchParams = { sortBy: SEARCH_SORT_BY_FIELDS.TITLE };
       const result = await getMockSearchResults(searchParams);
 
       const titles = result.books.map((book: Book) => book.title);
@@ -229,18 +243,21 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockSearchResults sorts by author', async () => {
-      const searchParams = { sortBy: 'author' };
+      const searchParams = { sortBy: SEARCH_SORT_BY_FIELDS.AUTHOR };
       const result = await getMockSearchResults(searchParams);
 
       const authors = result.books.map((book: Book) => 
-        book.authors?.[0] ? `${book.authors[0].name} ${book.authors[0].surname}` : ''
+        book.authors?.[0] ? `${book.authors[0].surname} ${book.authors[0].name}` : ''
       );
       const sortedAuthors = [...authors].sort();
       expect(authors).toEqual(sortedAuthors);
     });
 
-    test('getMockSearchResults sorts by date-added', async () => {
-      const searchParams = { sortBy: 'date-added' };
+    test('getMockSearchResults sorts by createdAt', async () => {
+      const searchParams = {
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      };
       const result = await getMockSearchResults(searchParams);
 
       // Should be sorted by creation date descending (newest first)
@@ -248,6 +265,85 @@ describe('ApiService with Industry Standard Testing', () => {
       for (let i = 1; i < dates.length; i++) {
         expect(dates[i-1]).toBeGreaterThanOrEqual(dates[i]);
       }
+    });
+
+    test('getMockSearchResults sorts by updatedAt', async () => {
+      const searchParams = {
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      };
+      const result = await getMockSearchResults(searchParams);
+
+      const dates = result.books.map((book: Book) => new Date(book.updateDate).getTime());
+      const sortedDates = [...dates].sort((a, b) => a - b);
+      expect(dates).toEqual(sortedDates);
+    });
+
+    test('getMockSearchResults sorts by status', async () => {
+      const searchParams = {
+        sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      };
+      const result = await getMockSearchResults(searchParams);
+
+      const statuses = result.books.map((book: Book) => book.status ?? '');
+      const sortedStatuses = [...statuses].sort();
+      expect(statuses).toEqual(sortedStatuses);
+    });
+
+    test('getMockSearchResults sorts by title descending', async () => {
+      const result = await getMockSearchResults({
+        sortBy: SEARCH_SORT_BY_FIELDS.TITLE,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      const titles = result.books.map((book: Book) => book.title);
+      const sortedTitles = [...titles].sort((a, b) => b.localeCompare(a));
+      expect(titles).toEqual(sortedTitles);
+    });
+
+    test('getMockSearchResults sorts by author descending', async () => {
+      const result = await getMockSearchResults({
+        sortBy: SEARCH_SORT_BY_FIELDS.AUTHOR,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      const authors = result.books.map(getAuthorSortKey);
+      const sortedAuthors = [...authors].sort((a, b) => b.localeCompare(a));
+      expect(authors).toEqual(sortedAuthors);
+    });
+
+    test('getMockSearchResults sorts by status descending', async () => {
+      const result = await getMockSearchResults({
+        sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      const statuses = result.books.map((book: Book) => book.status ?? '');
+      const sortedStatuses = [...statuses].sort((a, b) => b.localeCompare(a));
+      expect(statuses).toEqual(sortedStatuses);
+    });
+
+    test('getMockSearchResults sorts by createdAt ascending', async () => {
+      const result = await getMockSearchResults({
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      });
+
+      const dates = result.books.map((book: Book) => getNumericDate(book.creationDate));
+      const sortedDates = [...dates].sort((a, b) => a - b);
+      expect(dates).toEqual(sortedDates);
+    });
+
+    test('getMockSearchResults sorts by updatedAt descending', async () => {
+      const result = await getMockSearchResults({
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      const dates = result.books.map((book: Book) => getNumericDate(book.updateDate));
+      const sortedDates = [...dates].sort((a, b) => b - a);
+      expect(dates).toEqual(sortedDates);
     });
 
     test('getMockSearchResults filters by categoryId', async () => {

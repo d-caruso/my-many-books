@@ -1,4 +1,5 @@
 import {
+  SEARCH_SORT_BY_FIELDS,
   SORT_DIRECTIONS,
   type Author,
   type Book,
@@ -133,20 +134,30 @@ export function getMockSearchResults(searchParams: {
 
     if (searchParams.sortBy) {
       switch (searchParams.sortBy) {
-        case 'title':
+        case SEARCH_SORT_BY_FIELDS.TITLE:
           filteredBooks.sort((a, b) => direction * a.title.localeCompare(b.title));
           break;
-        case 'author':
+        case SEARCH_SORT_BY_FIELDS.AUTHOR:
           filteredBooks.sort((a, b) => {
-            const aAuthor = a.authors?.[0] ? `${a.authors[0].name} ${a.authors[0].surname}` : '';
-            const bAuthor = b.authors?.[0] ? `${b.authors[0].name} ${b.authors[0].surname}` : '';
+            const aAuthor = a.authors?.[0] ? `${a.authors[0].surname} ${a.authors[0].name}` : '';
+            const bAuthor = b.authors?.[0] ? `${b.authors[0].surname} ${b.authors[0].name}` : '';
             return direction * aAuthor.localeCompare(bAuthor);
           });
           break;
-        case 'date-added':
+        case SEARCH_SORT_BY_FIELDS.STATUS:
+          filteredBooks.sort((a, b) => direction * (a.status ?? '').localeCompare(b.status ?? ''));
+          break;
+        case SEARCH_SORT_BY_FIELDS.CREATED_AT:
           filteredBooks.sort((a, b) => {
             const aDate = a.creationDate ? new Date(a.creationDate).getTime() : 0;
             const bDate = b.creationDate ? new Date(b.creationDate).getTime() : 0;
+            return direction * (aDate - bDate);
+          });
+          break;
+        case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
+          filteredBooks.sort((a, b) => {
+            const aDate = a.updateDate ? new Date(a.updateDate).getTime() : 0;
+            const bDate = b.updateDate ? new Date(b.updateDate).getTime() : 0;
             return direction * (aDate - bDate);
           });
           break;

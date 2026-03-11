@@ -1,6 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
+import {
+  SEARCH_SORT_BY_FIELDS,
+  SORT_DIRECTIONS,
+} from '@my-many-books/shared-types';
 import { Book } from '../../../types';
 
 // Import after mocks
@@ -31,15 +35,40 @@ vi.mock('../../../hooks/useBookSearch', () => ({
 
 // Mock child components
 vi.mock('../../../components/Search/BookSearchForm', () => ({
-  BookSearchForm: ({ onSearch, loading, initialQuery }: { onSearch: (q: string, f: Record<string, unknown>) => void; loading?: boolean; initialQuery?: string }) => (
-    <div data-testid="book-search-form">
+  BookSearchForm: ({
+    onSearch,
+    loading,
+    initialQuery,
+    initialFilters,
+  }: {
+    onSearch: (q: string, f: Record<string, unknown>) => void;
+    loading?: boolean;
+    initialQuery?: string;
+    initialFilters?: Record<string, unknown>;
+  }) => (
+    <div
+      data-testid="book-search-form"
+      data-initial-query={initialQuery ?? ''}
+      data-initial-filters={JSON.stringify(initialFilters ?? {})}
+    >
       <input
         data-testid="search-input"
         defaultValue={initialQuery}
         onChange={(e) => onSearch(e.target.value, {})}
       />
-      <button data-testid="search-button" disabled={loading}>
+      <button data-testid="search-button" disabled={loading} onClick={() => onSearch(initialQuery ?? '', {})}>
         Search
+      </button>
+      <button
+        data-testid="search-created-desc"
+        onClick={() =>
+          onSearch('sorted query', {
+            sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+            sortOrder: SORT_DIRECTIONS.DESC,
+          })
+        }
+      >
+        Search Created Desc
       </button>
     </div>
   ),
@@ -239,6 +268,39 @@ describe('BookSearchPage', () => {
     expect(mockSearchBooks).toHaveBeenCalledWith('test query', {});
   });
 
+  test('writes sortBy and sortOrder to URL params on search submission', () => {
+    renderWithRouter();
+
+    fireEvent.click(screen.getByTestId('search-created-desc'));
+
+    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams));
+    const params = mockSetSearchParams.mock.calls.at(-1)?.[0] as URLSearchParams;
+    expect(params.get('q')).toBe('sorted query');
+    expect(params.get('sortBy')).toBe(SEARCH_SORT_BY_FIELDS.CREATED_AT);
+    expect(params.get('sortOrder')).toBe(SORT_DIRECTIONS.DESC);
+    expect(mockSearchBooks).toHaveBeenCalledWith('sorted query', {
+      sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+      sortOrder: SORT_DIRECTIONS.DESC,
+    });
+  });
+
+  test.each([
+    [SEARCH_SORT_BY_FIELDS.CREATED_AT, SORT_DIRECTIONS.DESC],
+    [SEARCH_SORT_BY_FIELDS.UPDATED_AT, SORT_DIRECTIONS.ASC],
+    [SEARCH_SORT_BY_FIELDS.STATUS, SORT_DIRECTIONS.DESC],
+    [SEARCH_SORT_BY_FIELDS.AUTHOR, SORT_DIRECTIONS.ASC],
+  ])(
+    'reads %s and %s from URL params into search filters',
+    (sortBy, sortOrder) => {
+      renderWithRouter(`?q=history&sortBy=${sortBy}&sortOrder=${sortOrder}`);
+
+      expect(mockSearchBooks).toHaveBeenCalledWith('history', {
+        sortBy,
+        sortOrder,
+      });
+    }
+  );
+
   test('handles book selection', async () => {
     mockUseBookSearch.mockReturnValue({
       ...defaultHookState,
@@ -336,6 +398,23 @@ describe('BookSearchPage', () => {
     
     const searchButton = screen.getByTestId('search-button');
     expect(searchButton).toBeDisabled();
+  });
+
+  test('passes URL-derived initial filters to BookSearchForm', () => {
+    renderWithRouter(
+      `?q=history&sortBy=${SEARCH_SORT_BY_FIELDS.CREATED_AT}&sortOrder=${SORT_DIRECTIONS.DESC}&status=finished`
+    );
+
+    const searchForm = screen.getByTestId('book-search-form');
+    expect(searchForm).toHaveAttribute('data-initial-query', 'history');
+    expect(searchForm).toHaveAttribute(
+      'data-initial-filters',
+      JSON.stringify({
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+        sortOrder: SORT_DIRECTIONS.DESC,
+        status: 'finished',
+      })
+    );
   });
 
   test('passes correct props to BookSearchResults', () => {

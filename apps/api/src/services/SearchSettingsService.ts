@@ -9,7 +9,7 @@
  */
 
 import { getLogger, type AppLogger } from '@my-many-books/shared-logging';
-import { SETTING_KEYS } from '@my-many-books/shared-types';
+import { SEARCH_SORT_BY_FIELDS, SEARCH_SORT_BY_FIELD_VALUES, SETTING_KEYS } from '@my-many-books/shared-types';
 import { Setting } from '../models';
 import { SettingAttributes } from '../models/Setting';
 
@@ -145,7 +145,7 @@ export class SearchSettingsService {
     }
 
     // Default sortable fields
-    return ['title', 'createdAt', 'updatedAt'];
+    return [...SEARCH_SORT_BY_FIELD_VALUES];
   }
 
   /**
@@ -167,7 +167,7 @@ export class SearchSettingsService {
     }
 
     // Default sort
-    return 'title';
+    return SEARCH_SORT_BY_FIELDS.TITLE;
   }
 
   /**

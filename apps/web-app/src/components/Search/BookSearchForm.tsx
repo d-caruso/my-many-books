@@ -21,6 +21,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import {
   SearchFiltersSchema,
   SEARCH_QUERY_MIN_LENGTH,
+  SEARCH_SORT_BY_FIELDS,
   SORT_DIRECTIONS,
 } from '@my-many-books/shared-types';
 import type { SearchFilters, Author } from '@my-many-books/shared-types';
@@ -28,22 +29,31 @@ import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my
 import { useCategories } from '../../hooks/useCategories';
 import { AuthorAutocomplete } from './AuthorAutocomplete';
 
+const EMPTY_SEARCH_FILTERS: SearchFilters = {};
+
+const hasActiveFilterValues = (filters: SearchFilters) =>
+  Object.values(filters).some(
+    value => value !== undefined && value !== '' && value !== null
+  );
+
 interface BookSearchFormProps {
   onSearch: (query: string, filters: SearchFilters) => void;
   loading?: boolean;
   initialQuery?: string;
+  initialFilters?: SearchFilters;
 }
 
 export const BookSearchForm: React.FC<BookSearchFormProps> = ({
   onSearch,
   loading = false,
-  initialQuery = ''
+  initialQuery = '',
+  initialFilters = EMPTY_SEARCH_FILTERS,
 }) => {
   const { t } = useTranslation('search');
   const { t: tCategories, i18n } = useTranslation('categories');
   const [query, setQuery] = useState(initialQuery);
-  const [filters, setFilters] = useState<SearchFilters>({});
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [filters, setFilters] = useState<SearchFilters>(() => ({ ...initialFilters }));
+  const [showAdvanced, setShowAdvanced] = useState(() => hasActiveFilterValues(initialFilters));
   const [selectedAuthor, setSelectedAuthor] = useState<Author | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const categorySortComparator = useMemo(
@@ -59,13 +69,22 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
     setValidationError(null);
   }, [initialQuery]);
 
+  useEffect(() => {
+    setFilters({ ...initialFilters });
+    setShowAdvanced(hasActiveFilterValues(initialFilters));
+    setSelectedAuthor((prev) =>
+      initialFilters.authorId !== undefined && prev?.id === initialFilters.authorId ? prev : null
+    );
+    setValidationError(null);
+  }, [initialFilters]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation: require either valid query (from shared schema) OR at least one filter
     const parsedQuery = SearchFiltersSchema.shape.query.safeParse(query.trim());
     const hasValidQuery = parsedQuery.success && !!parsedQuery.data;
-    const hasFilters = Object.values(filters).some(value => value !== undefined && value !== '' && value !== null);
+    const hasFilters = hasActiveFilterValues(filters);
 
     if (!hasValidQuery && !hasFilters) {
       setValidationError(t('form.validation_error', { min: SEARCH_QUERY_MIN_LENGTH }));
@@ -220,6 +239,7 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                 {/* Author search */}
                 <AuthorAutocomplete
                   value={selectedAuthor}
+                  selectedAuthorId={filters.authorId}
                   onChange={handleAuthorChange}
                   placeholder={t('form.author_placeholder')}
                   disabled={loading}
@@ -283,13 +303,15 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                   <Select
                     labelId="sortBy-label"
                     id="sortBy"
-                    value={filters.sortBy || 'title'}
+                    value={filters.sortBy || SEARCH_SORT_BY_FIELDS.TITLE}
                     onChange={(e) => handleFilterChange('sortBy', e.target.value)}
                     label={t('sorting.label')}
                   >
-                    <MenuItem value="title">{t('sorting.fields.title')}</MenuItem>
-                    <MenuItem value="author">{t('form.author_label')}</MenuItem>
-                    <MenuItem value="date-added">{t('sorting.fields.createdAt')}</MenuItem>
+                    <MenuItem value={SEARCH_SORT_BY_FIELDS.TITLE}>{t('sorting.fields.title')}</MenuItem>
+                    <MenuItem value={SEARCH_SORT_BY_FIELDS.AUTHOR}>{t('filter.author.label')}</MenuItem>
+                    <MenuItem value={SEARCH_SORT_BY_FIELDS.STATUS}>{t('sorting.fields.status')}</MenuItem>
+                    <MenuItem value={SEARCH_SORT_BY_FIELDS.CREATED_AT}>{t('sorting.fields.createdAt')}</MenuItem>
+                    <MenuItem value={SEARCH_SORT_BY_FIELDS.UPDATED_AT}>{t('sorting.fields.updatedAt')}</MenuItem>
                   </Select>
                 </FormControl>
 

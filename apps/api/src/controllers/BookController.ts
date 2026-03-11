@@ -17,7 +17,14 @@ import { validateIsbn } from '../utils/isbn';
 import { isbnService } from '../services/isbnService';
 import { UniversalRequest } from '../types';
 import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
-import { BOOK_STATUSES, DATABASE_FIELDS, SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import {
+  BOOK_STATUSES,
+  SEARCH_SORT_BY_FIELD_VALUES,
+  SORT_DIRECTION_VALUES,
+  SORT_DIRECTIONS,
+  type SearchSortByField,
+  type SortDirection,
+} from '@my-many-books/shared-types';
 import { BookService, BookServiceError, BookUserContext } from '../services/book/BookService';
 import { CreateBookDTO } from '../dtos/book/CreateBookDTO';
 import { UpdateBookDTO } from '../dtos/book/UpdateBookDTO';
@@ -28,7 +35,7 @@ import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
 import { BookSearchService } from '../services/search/BookSearchService';
 import { BookSearchResultDTO } from '../dtos/book/BookSearchResultDTO';
-import { SEARCH_SORT_TYPES, SEARCH_RESULT_STATUS } from '@my-many-books/shared-types';
+import { SEARCH_RESULT_STATUS } from '@my-many-books/shared-types';
 
 export interface BookSearchFilters {
   title?: string;
@@ -106,10 +113,12 @@ export class BookController extends BaseController {
     }
   }
 
-  private isSortableField(
-    value: string
-  ): value is (typeof Book.SORTABLE_FIELD_VALUES)[number] {
-    return Book.SORTABLE_FIELD_VALUES.some(field => field === value);
+  private isSearchSortableField(value: string): value is SearchSortByField {
+    return SEARCH_SORT_BY_FIELD_VALUES.some(field => field === value);
+  }
+
+  private isSortDirection(value: string): value is SortDirection {
+    return SORT_DIRECTION_VALUES.some(direction => direction === value);
   }
 
   /**
@@ -333,28 +342,25 @@ export class BookController extends BaseController {
       return this.searchBooksLegacy(request);
     }
 
-    // Validate sortBy against Book.SORTABLE_FIELD_VALUES or allow 'relevance'
-    let sortBy: string | undefined;
+    // Validate sortBy against the shared public search sort fields.
+    let sortBy: SearchSortByField | undefined;
 
-    if (sortOrderParam !== 'asc' && sortOrderParam !== 'desc') {
+    if (!this.isSortDirection(sortOrderParam)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
         errors: {
-          sortOrder: `Invalid sortOrder: ${sortOrderParam}. Must be 'asc' or 'desc'`,
+          sortOrder: `Invalid sortOrder: ${sortOrderParam}. Must be one of ${SORT_DIRECTION_VALUES.join(', ')}`,
         },
       });
     }
-    const sortOrder: 'asc' | 'desc' = sortOrderParam;
+    const sortOrder: SortDirection = sortOrderParam;
 
     if (sortByParam) {
-      if (sortByParam === SEARCH_SORT_TYPES.RELEVANCE) {
-        // Relevance sorting - no sortBy field needed
-        sortBy = undefined;
-      } else if (this.isSortableField(sortByParam)) {
+      if (this.isSearchSortableField(sortByParam)) {
         sortBy = sortByParam;
       } else {
         return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
           errors: {
-            sortBy: `Invalid sortBy field: ${sortByParam}. Must be one of: ${Book.SORTABLE_FIELD_VALUES.join(', ')}, ${SEARCH_SORT_TYPES.RELEVANCE}`,
+            sortBy: `Invalid sortBy field: ${sortByParam}. Must be one of: ${SEARCH_SORT_BY_FIELD_VALUES.join(', ')}`,
           },
         });
       }
@@ -401,7 +407,7 @@ export class BookController extends BaseController {
             { limit: bookIds.length, includeAssociations: true }
           );
 
-          // Preserve original order from BookSearchService (pinned first, then by sortBy/relevance)
+          // Preserve original order from BookSearchService (pinned first, then by explicit/default search sort)
           const bookMap = new Map(rows.map(b => [b.id, b]));
           filteredResults = results
             .map(r => {
@@ -454,8 +460,28 @@ export class BookController extends BaseController {
     const status = this.getQueryParameter(request, 'status');
     const authorId = this.getQueryParameter(request, 'authorId');
     const categoryId = this.getQueryParameter(request, 'categoryId');
-    const sortBy = this.getQueryParameter(request, 'sortBy') || 'title';
+    const sortByParam = this.getQueryParameter(request, 'sortBy') || 'title';
+    const sortOrderParam = this.getQueryParameter(request, 'sortOrder') || SORT_DIRECTIONS.ASC;
     const pagination = this.getPaginationParams(request);
+
+    if (!this.isSortDirection(sortOrderParam)) {
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
+        errors: {
+          sortOrder: `Invalid sortOrder: ${sortOrderParam}. Must be one of ${SORT_DIRECTION_VALUES.join(', ')}`,
+        },
+      });
+    }
+
+    if (!this.isSearchSortableField(sortByParam)) {
+      return this.createErrorResponseI18n('errors:validation_failed', 400, undefined, {
+        errors: {
+          sortBy: `Invalid sortBy field: ${sortByParam}. Must be one of: ${SEARCH_SORT_BY_FIELD_VALUES.join(', ')}`,
+        },
+      });
+    }
+
+    const sortBy: SearchSortByField = sortByParam;
+    const sortOrder: SortDirection = sortOrderParam;
 
     // Build base where conditions
     const whereConditions: WhereOptions<BookAttributes>[] = [];
@@ -478,14 +504,6 @@ export class BookController extends BaseController {
       whereConditions.push({ status: normalizedStatus });
     }
 
-    // Determine sort order
-    const orderDirectionMap: Record<string, { orderBy: string; orderDirection: typeof SORT_DIRECTIONS[keyof typeof SORT_DIRECTIONS] }> = {
-      [DATABASE_FIELDS.CREATION_DATE]: { orderBy: DATABASE_FIELDS.CREATION_DATE, orderDirection: SORT_DIRECTIONS.DESC },
-      [DATABASE_FIELDS.UPDATE_DATE]:   { orderBy: DATABASE_FIELDS.UPDATE_DATE,   orderDirection: SORT_DIRECTIONS.DESC },
-      [Book.SORTABLE_FIELDS.STATUS]:   { orderBy: Book.SORTABLE_FIELDS.STATUS,   orderDirection: SORT_DIRECTIONS.ASC  },
-    };
-    const orderOptions = orderDirectionMap[sortBy] ?? { orderBy: Book.SORTABLE_FIELDS.TITLE, orderDirection: SORT_DIRECTIONS.ASC };
-
     const result = await this.bookRepository.search(
       {
         userId: request.user?.id,
@@ -496,8 +514,8 @@ export class BookController extends BaseController {
       {
         limit: pagination.limit,
         offset: pagination.offset,
-        orderBy: orderOptions.orderBy,
-        orderDirection: orderOptions.orderDirection,
+        orderBy: sortBy,
+        orderDirection: sortOrder,
         includeAssociations: true,
       }
     );

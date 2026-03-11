@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { SEARCH_SORT_BY_FIELDS, SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { BookSearchForm } from '../../../components/Search/BookSearchForm';
 import { useCategories } from '../../../hooks/useCategories';
 import { setupMuiMock } from '../../test-utils/setupMuiMock';
@@ -133,6 +134,27 @@ describe('BookSearchForm', () => {
     expect(getSearchInput()).toHaveValue('Initial Query');
   });
 
+  test('shows initial filters when provided', async () => {
+    render(
+      <BookSearchForm
+        {...defaultProps}
+        initialFilters={{
+          status: 'finished',
+          sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+          sortOrder: SORT_DIRECTIONS.DESC,
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Reading progress')).toBeVisible();
+    });
+
+    expect(getSelectDisplayText('Reading progress')).toBe('Finished');
+    expect(getSelectDisplayText('Sort by')).toBe('Add date');
+    expect(getSelectDisplayText('Order')).toBe('Descending');
+  });
+
   test('calls onSearch when form is submitted with valid query', () => {
     render(<BookSearchForm {...defaultProps} />);
 
@@ -205,6 +227,55 @@ describe('BookSearchForm', () => {
     await selectOption('Sort by', 'Title');
     await waitFor(() => {
       expect(getSelectDisplayText('Sort by')).toBe('Title');
+    });
+  });
+
+  test('renders sort options in the required order', async () => {
+    render(<BookSearchForm {...defaultProps} />);
+
+    openAdvancedFilters();
+    const listbox = await openSelectListbox('Sort by');
+    const optionTexts = within(listbox)
+      .getAllByRole('option')
+      .map((option) => option.textContent?.trim());
+
+    expect(optionTexts).toEqual([
+      'Title',
+      'Author',
+      'Status',
+      'Add date',
+      'Last updated',
+    ]);
+  });
+
+  test('keeps the sort order select visible and functional', async () => {
+    render(<BookSearchForm {...defaultProps} />);
+
+    openAdvancedFilters();
+
+    expect(screen.getByLabelText('Order')).toBeVisible();
+    expect(getSelectDisplayText('Order')).toBe('Ascending');
+
+    await selectOption('Order', 'Descending');
+
+    await waitFor(() => {
+      expect(getSelectDisplayText('Order')).toBe('Descending');
+    });
+  });
+
+  test('submits selected sortBy and sortOrder filters', async () => {
+    render(<BookSearchForm {...defaultProps} />);
+
+    fireEvent.change(getSearchInput(), { target: { value: 'History' } });
+    openAdvancedFilters();
+
+    await selectOption('Sort by', 'Last updated');
+    await selectOption('Order', 'Descending');
+    fireEvent.click(getSearchButton());
+
+    expect(mockOnSearch).toHaveBeenCalledWith('History', {
+      sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+      sortOrder: SORT_DIRECTIONS.DESC,
     });
   });
 
@@ -331,7 +402,7 @@ describe('BookSearchForm', () => {
     expect(mockOnSearch).toHaveBeenCalledWith('test query', {
       categoryId: 1,
       status: 'finished',
-      sortBy: 'date-added',
+      sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
     });
   });
 

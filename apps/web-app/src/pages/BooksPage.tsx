@@ -108,39 +108,36 @@ const BooksPage: React.FC = () => {
   const searchActive = Boolean(
     searchQuery || searchCategoryId || searchAuthorId || searchSortBy || searchSortOrder || searchStatus
   );
-
-  const runCurrentSearch = useCallback(async () => {
-    const query = searchParams.get('q') || '';
+  const initialSearchFilters = useMemo<Partial<SearchFilters>>(() => {
     const filters: Partial<SearchFilters> = {};
-    const categoryId = searchParams.get('categoryId');
-    const authorId = searchParams.get('authorId');
-    const sortBy = searchParams.get('sortBy');
-    const sortOrder = searchParams.get('sortOrder');
-    const status = searchParams.get('status');
 
-    if (categoryId) filters.categoryId = parseInt(categoryId);
-    if (authorId) filters.authorId = parseInt(authorId);
-    if (sortBy) {
-      const parsedSortBy = SearchFiltersSchema.shape.sortBy.safeParse(sortBy);
+    if (searchCategoryId) filters.categoryId = Number.parseInt(searchCategoryId, 10);
+    if (searchAuthorId) filters.authorId = Number.parseInt(searchAuthorId, 10);
+    if (searchSortBy) {
+      const parsedSortBy = SearchFiltersSchema.shape.sortBy.safeParse(searchSortBy);
       if (parsedSortBy.success) {
         filters.sortBy = parsedSortBy.data;
       }
     }
-    if (sortOrder) {
-      const parsedSortOrder = SearchFiltersSchema.shape.sortOrder.safeParse(sortOrder);
+    if (searchSortOrder) {
+      const parsedSortOrder = SearchFiltersSchema.shape.sortOrder.safeParse(searchSortOrder);
       if (parsedSortOrder.success) {
         filters.sortOrder = parsedSortOrder.data;
       }
     }
-    if (status) {
-      const parsedStatus = SearchFiltersSchema.shape.status.safeParse(status);
+    if (searchStatus) {
+      const parsedStatus = SearchFiltersSchema.shape.status.safeParse(searchStatus);
       if (parsedStatus.success) {
         filters.status = parsedStatus.data;
       }
     }
 
-    await searchBooks(query, filters);
-  }, [searchParams, searchBooks]);
+    return filters;
+  }, [searchAuthorId, searchCategoryId, searchSortBy, searchSortOrder, searchStatus]);
+
+  const runCurrentSearch = useCallback(async () => {
+    await searchBooks(searchQuery, initialSearchFilters);
+  }, [initialSearchFilters, searchBooks, searchQuery]);
 
   useEffect(() => {
     if (!user) return;
@@ -611,6 +608,7 @@ const BooksPage: React.FC = () => {
           onSearch={handleSearch}
           loading={searchLoading}
           initialQuery={searchParams.get('q') || ''}
+          initialFilters={initialSearchFilters}
         />
       </Box>
 

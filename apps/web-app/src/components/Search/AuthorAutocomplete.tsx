@@ -18,6 +18,7 @@ import { useApi } from '../../contexts/ApiContext';
 
 interface AuthorAutocompleteProps {
   value?: Author | null;
+  selectedAuthorId?: number;
   onChange: (author: Author | null) => void;
   placeholder?: string;
   disabled?: boolean;
@@ -31,6 +32,7 @@ const formatAuthorLabel = (author: Author) =>
 
 export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   value,
+  selectedAuthorId,
   onChange,
   placeholder,
   disabled = false,
@@ -45,15 +47,6 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const mountedRef = useRef(true);
-
-  // Update search term when value changes externally
-  useEffect(() => {
-    if (value) {
-      setSearchTerm(formatAuthorLabel(value));
-    } else {
-      setSearchTerm('');
-    }
-  }, [value]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -106,6 +99,27 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
 
     return authors.filter((author) => author.userId === userIdFilter);
   }, [authors, userIdFilter]);
+
+  const resolvedValue = useMemo(() => {
+    if (value) {
+      return value;
+    }
+
+    if (selectedAuthorId === undefined) {
+      return null;
+    }
+
+    return scopedAuthors.find((author) => author.id === selectedAuthorId) ?? null;
+  }, [scopedAuthors, selectedAuthorId, value]);
+
+  // Update search term when value changes externally
+  useEffect(() => {
+    if (resolvedValue) {
+      setSearchTerm(formatAuthorLabel(resolvedValue));
+    } else {
+      setSearchTerm('');
+    }
+  }, [resolvedValue]);
 
   const filteredAuthors = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -169,7 +183,7 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
   return (
     <Box data-testid="autocomplete">
       <Autocomplete
-        value={value}
+        value={resolvedValue}
         onChange={handleSelectionChange}
         inputValue={searchTerm}
         onInputChange={handleInputChange}
