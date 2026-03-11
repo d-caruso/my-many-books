@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { View, FlatList, ScrollView } from 'react-native';
-import { Searchbar, Text, SegmentedButtons, Chip, Menu, Button, IconButton, Snackbar, useTheme } from 'react-native-paper';
+import { Searchbar, Text, Chip, Menu, Button, IconButton, Snackbar, useTheme } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -26,25 +26,28 @@ import { categoryRepository } from '@/services/database/CategoryRepository';
 import { formatFullName, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import type { Author, Category } from '@my-many-books/shared-types';
 import { PageErrorBoundary } from '@/components/PageErrorBoundary';
-type SearchMode = 'title' | 'author' | 'isbn';
+import { AuthorSelectorModal } from '@/components/book/AuthorSelectorModal';
+import { CategorySelectorModal } from '@/components/book/CategorySelectorModal';
+
 type SortOption = SearchSortByField;
 type SortOrder = SortDirection;
 
 const SORT_OPTIONS: readonly SortOption[] = [
   SEARCH_SORT_BY_FIELDS.TITLE,
-  SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+  SEARCH_SORT_BY_FIELDS.AUTHOR,
+  SEARCH_SORT_BY_FIELDS.STATUS,
   SEARCH_SORT_BY_FIELDS.CREATED_AT,
+  SEARCH_SORT_BY_FIELDS.UPDATED_AT,
 ];
 
 export default function SearchScreen() {
-  const { t } = useTranslation('offline');
+  const { t } = useTranslation(['offline', 'common', 'accessibility']);
   const theme = useTheme();
-  const { scannedIsbn, scannerCopy } = useLocalSearchParams<{
-    scannedIsbn?: string;
+  const { isbn, scannerCopy } = useLocalSearchParams<{
+    isbn?: string;
     scannerCopy?: ScannerCopyStatus;
   }>();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchMode, setSearchMode] = useState<SearchMode>('title');
   const [isbnResult, setIsbnResult] = useState<Book | null>(null);
   const [statusFilter, setStatusFilter] = useState<Book['status'] | 'all'>('all');
   const [sortBy, setSortBy] = useState<SortOption>(SEARCH_SORT_BY_FIELDS.UPDATED_AT);
@@ -56,6 +59,8 @@ export default function SearchScreen() {
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [authorSelectorVisible, setAuthorSelectorVisible] = useState(false);
+  const [categorySelectorVisible, setCategorySelectorVisible] = useState(false);
   const handledScannerParamsRef = useRef<string | null>(null);
 
   const {
@@ -67,6 +72,15 @@ export default function SearchScreen() {
     searchByISBN,
     clearSearch,
   } = useBookSearch();
+
+  const hasActiveFilters =
+    statusFilter !== 'all' || selectedAuthorId !== null || selectedCategoryId !== null;
+  const selectedAuthor = selectedAuthorId === null
+    ? null
+    : availableAuthors.find((author) => Number(author.id) === selectedAuthorId) ?? null;
+  const selectedCategory = selectedCategoryId === null
+    ? null
+    : availableCategories.find((category) => Number(category.id) === selectedCategoryId) ?? null;
 
   // Load filter options — from API online, from SQLite offline
   useEffect(() => {
@@ -96,45 +110,53 @@ export default function SearchScreen() {
   }, [isOffline]);
 
   const performSearch = useCallback(async () => {
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() && !hasActiveFilters) {
       setIsbnResult(null);
       clearSearch();
       return;
     }
 
-    if (searchMode === 'isbn') {
-      const book = await searchByISBN(searchQuery);
-      setIsbnResult(book);
-    } else {
-      setIsbnResult(null);
-      const filters: Partial<SearchQuery> = {};
+    setIsbnResult(null);
+    const filters: Partial<SearchQuery> = {};
 
-      if (statusFilter !== 'all') {
-        filters.status = statusFilter;
-      }
-      if (selectedAuthorId !== null) {
-        filters.authorId = selectedAuthorId;
-      }
-      if (selectedCategoryId !== null) {
-        filters.categoryId = selectedCategoryId;
-      }
-      filters.sortBy = sortBy;
-      filters.sortOrder = sortOrder;
-
-      await searchBooks(searchQuery, filters);
+    if (statusFilter !== 'all') {
+      filters.status = statusFilter;
     }
-  }, [searchQuery, searchMode, statusFilter, selectedAuthorId, selectedCategoryId, sortBy, sortOrder, searchBooks, searchByISBN, clearSearch]);
+    if (selectedAuthorId !== null) {
+      filters.authorId = selectedAuthorId;
+    }
+    if (selectedCategoryId !== null) {
+      filters.categoryId = selectedCategoryId;
+    }
+    filters.sortBy = sortBy;
+    filters.sortOrder = sortOrder;
+
+    await searchBooks(searchQuery, filters);
+  }, [
+    clearSearch,
+    hasActiveFilters,
+    searchBooks,
+    searchQuery,
+    selectedAuthorId,
+    selectedCategoryId,
+    sortBy,
+    sortOrder,
+    statusFilter,
+  ]);
 
   useEffect(() => {
-    if (!scannedIsbn) return;
+    if (!isbn) return;
 
-    const payloadKey = `${scannedIsbn}:${scannerCopy || ''}`;
+    const payloadKey = `${isbn}:${scannerCopy || ''}`;
     if (handledScannerParamsRef.current === payloadKey) return;
     handledScannerParamsRef.current = payloadKey;
 
     const timer = setTimeout(() => {
-      setSearchMode('isbn');
-      setSearchQuery(scannedIsbn);
+      searchByISBN(isbn).then((result) => {
+        setIsbnResult(result);
+        setSearchQuery('');
+        clearSearch();
+      });
 
       if (scannerCopy === SCANNER_COPY_STATUS.SUCCESS || scannerCopy === SCANNER_COPY_STATUS.FAILED) {
         setFeedbackMessage(
@@ -148,7 +170,7 @@ export default function SearchScreen() {
 
     router.replace('/(tabs)/search');
     return () => clearTimeout(timer);
-  }, [scannedIsbn, scannerCopy, t]);
+  }, [isbn, scannerCopy, searchByISBN, clearSearch, t]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -165,10 +187,7 @@ export default function SearchScreen() {
     />
   );
 
-  const displayedBooks =
-    searchMode === 'isbn' && searchQuery.trim()
-      ? (isbnResult ? [isbnResult] : [])
-      : books;
+  const displayedBooks = isbnResult ? [isbnResult] : books;
 
   const statusOptions: (Book['status'] | 'all')[] = [
     'all',
@@ -197,11 +216,8 @@ export default function SearchScreen() {
           marginBottom: 16,
           fontWeight: 'bold',
         },
-        segmentedButtons: {
-          marginBottom: 16,
-        },
         searchbar: {
-          marginBottom: 8,
+          marginBottom: 16,
         },
         errorContainer: {
           padding: 16,
@@ -236,6 +252,15 @@ export default function SearchScreen() {
         },
         filterChip: {
           marginRight: 8,
+        },
+        selectorRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+          marginBottom: 16,
+        },
+        selectorButton: {
+          flex: 1,
         },
         sortContainer: {
           flexDirection: 'row',
@@ -280,23 +305,12 @@ export default function SearchScreen() {
           {t('books:search_books')}
         </Text>
 
-        <SegmentedButtons
-          value={searchMode}
-          onValueChange={(value) => setSearchMode(value as SearchMode)}
-          buttons={[
-            { value: 'title', label: t('books:search_by_title_tab') },
-            { value: 'author', label: t('books:search_by_author_tab') },
-            { value: 'isbn', label: t('books:search_by_isbn_tab') },
-          ]}
-          style={styles.segmentedButtons}
-        />
-
         <Searchbar
-          placeholder={t('books:search_by_placeholder', { mode: searchMode.toLowerCase() })}
+          placeholder={t('books:search_books_placeholder')}
           onChangeText={setSearchQuery}
           value={searchQuery}
           style={styles.searchbar}
-          accessibilityLabel="Search books by title, author, or ISBN"
+          accessibilityLabel={t('accessibility:search_books_label', { defaultValue: 'Search books' })}
         />
 
         {/* Status Filter */}
@@ -321,56 +335,47 @@ export default function SearchScreen() {
         <Text variant="labelMedium" style={styles.filterLabel}>
           {t('books:filter_by_author')}
         </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
-          <Chip
-            selected={selectedAuthorId === null}
-            onPress={() => setSelectedAuthorId(null)}
-            style={styles.filterChip}
+        <View style={styles.selectorRow}>
+          <Button
+            mode="outlined"
+            onPress={() => setAuthorSelectorVisible(true)}
+            style={styles.selectorButton}
           >
-            {t('books:all_authors')}
-          </Chip>
-          {availableAuthors.map((author) => {
-            const displayName = formatFullName(author.name, author.surname);
-            return (
-              <Chip
-                key={author.id}
-                selected={selectedAuthorId === Number(author.id)}
-                onPress={() => setSelectedAuthorId(
-                  selectedAuthorId === Number(author.id) ? null : Number(author.id)
-                )}
-                style={styles.filterChip}
-              >
-                {displayName}
-              </Chip>
-            );
-          })}
-        </ScrollView>
+            {selectedAuthor === null
+              ? t('books:select_author')
+              : formatFullName(selectedAuthor.name, selectedAuthor.surname)}
+          </Button>
+          {selectedAuthorId !== null ? (
+            <IconButton
+              icon="close"
+              onPress={() => setSelectedAuthorId(null)}
+              accessibilityLabel={`${t('common:clear_all')} ${t('books:filter_by_author')}`}
+            />
+          ) : null}
+        </View>
 
         {/* Category Filter */}
         <Text variant="labelMedium" style={styles.filterLabel}>
           {t('books:filter_by_category')}
         </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
-          <Chip
-            selected={selectedCategoryId === null}
-            onPress={() => setSelectedCategoryId(null)}
-            style={styles.filterChip}
+        <View style={styles.selectorRow}>
+          <Button
+            mode="outlined"
+            onPress={() => setCategorySelectorVisible(true)}
+            style={styles.selectorButton}
           >
-            {t('books:all_categories')}
-          </Chip>
-          {availableCategories.map((cat) => (
-            <Chip
-              key={cat.id}
-              selected={selectedCategoryId === Number(cat.id)}
-              onPress={() => setSelectedCategoryId(
-                selectedCategoryId === Number(cat.id) ? null : Number(cat.id)
-              )}
-              style={styles.filterChip}
-            >
-              {getCategoryDisplayName(cat, t)}
-            </Chip>
-          ))}
-        </ScrollView>
+            {selectedCategory === null
+              ? t('books:select_category')
+              : getCategoryDisplayName(selectedCategory, t)}
+          </Button>
+          {selectedCategoryId !== null ? (
+            <IconButton
+              icon="close"
+              onPress={() => setSelectedCategoryId(null)}
+              accessibilityLabel={`${t('common:clear_all')} ${t('books:filter_by_category')}`}
+            />
+          ) : null}
+        </View>
 
         {/* Sort Controls */}
         <View style={styles.sortContainer}>
@@ -445,10 +450,30 @@ export default function SearchScreen() {
             <EmptyState
               icon="search"
               title={t('books:start_searching')}
-              description={t('books:enter_title_author_isbn_to_begin')}
+              description={t('books:search_books_placeholder')}
             />
           ) : null
         }
+      />
+
+      <AuthorSelectorModal
+        visible={authorSelectorVisible}
+        authors={availableAuthors}
+        selectedAuthorIds={selectedAuthorId === null ? [] : [selectedAuthorId]}
+        loading={false}
+        onClose={() => setAuthorSelectorVisible(false)}
+        onSelectAuthor={(author) => setSelectedAuthorId(Number(author.id))}
+      />
+
+      <CategorySelectorModal
+        visible={categorySelectorVisible}
+        categories={availableCategories}
+        selectedCategoryIds={selectedCategoryId === null ? [] : [selectedCategoryId]}
+        loading={false}
+        onClose={() => setCategorySelectorVisible(false)}
+        onToggleCategory={(categoryId) => {
+          setSelectedCategoryId((currentId) => (currentId === categoryId ? null : categoryId));
+        }}
       />
 
       <Snackbar

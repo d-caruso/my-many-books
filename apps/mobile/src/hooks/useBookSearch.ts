@@ -73,7 +73,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     filters: Partial<SearchQuery> = {},
     page: number = 1
   ): Promise<void> => {
-    if (!query.trim() && !filters.categoryId && !filters.authorId) {
+    if (!query.trim() && !filters.categoryId && !filters.authorId && !filters.status) {
       setBooks([]);
       setLoading(false);
       setError(null);

@@ -11,7 +11,7 @@ interface AuthorSelectorModalProps {
   loading?: boolean;
   onClose: () => void;
   onSelectAuthor: (author: Author) => void;
-  onAddAuthorPress: () => void;
+  onAddAuthorPress?: () => void;
 }
 
 export function AuthorSelectorModal({
@@ -58,14 +58,18 @@ export function AuthorSelectorModal({
               autoCapitalize="words"
             />
 
-            <View style={styles.actionRow}>
-              <Button mode="outlined" onPress={onAddAuthorPress}>
-                {t('books:add_author')}
-              </Button>
-              <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
-                {loading ? t('books:loading_categories') : t('books:search_add_authors')}
-              </Text>
-            </View>
+            {(onAddAuthorPress || loading) && (
+              <View style={styles.actionRow}>
+                {onAddAuthorPress ? (
+                  <Button mode="outlined" onPress={onAddAuthorPress}>
+                    {t('books:add_author')}
+                  </Button>
+                ) : null}
+                <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
+                  {loading ? t('books:loading_categories') : t('books:search_add_authors')}
+                </Text>
+              </View>
+            )}
 
             <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
               {filteredAuthors.map((author) => {

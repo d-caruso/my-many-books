@@ -12,7 +12,7 @@ interface CategorySelectorModalProps {
   loading?: boolean;
   onClose: () => void;
   onToggleCategory: (categoryId: number) => void;
-  onAddCategoryPress: () => void;
+  onAddCategoryPress?: () => void;
 }
 
 export function CategorySelectorModal({
@@ -33,9 +33,11 @@ export function CategorySelectorModal({
         <Dialog.Title>{t('books:select_category')}</Dialog.Title>
         <Dialog.Content>
           <View style={styles.content}>
-            <Button mode="outlined" onPress={onAddCategoryPress}>
-              {t('books:add_category')}
-            </Button>
+            {onAddCategoryPress ? (
+              <Button mode="outlined" onPress={onAddCategoryPress}>
+                {t('books:add_category')}
+              </Button>
+            ) : null}
 
             <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
               {loading ? (
