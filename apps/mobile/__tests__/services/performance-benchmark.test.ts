@@ -164,7 +164,7 @@ describe('Performance Benchmarks', () => {
     // Sort by rating
     const sortStart = Date.now();
     const topRated = await bookRepository.searchWithFilters({
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
       sortOrder: SORT_DIRECTIONS.DESC,
     });
     const sortTime = Date.now() - sortStart;

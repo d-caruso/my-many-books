@@ -466,10 +466,10 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
     switch (orderBy) {
       case SEARCH_SORT_BY_FIELDS.AUTHOR:
         return this.buildAuthorOrderClause(direction);
-      case SEARCH_SORT_BY_FIELDS.CREATED_AT:
+      case SEARCH_SORT_BY_FIELDS.CREATION_DATE:
       case DATABASE_FIELDS.CREATION_DATE:
         return [['creationDate', direction], ['id', 'ASC']];
-      case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
+      case SEARCH_SORT_BY_FIELDS.UPDATE_DATE:
       case DATABASE_FIELDS.UPDATE_DATE:
         return [['updateDate', direction], ['id', 'ASC']];
       case SEARCH_SORT_BY_FIELDS.STATUS:
@@ -556,9 +556,9 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
         ].join(', ');
       case SEARCH_SORT_BY_FIELDS.STATUS:
         return `${tableAlias}.status ${direction}, ${tableAlias}.id ASC`;
-      case SEARCH_SORT_BY_FIELDS.CREATED_AT:
+      case SEARCH_SORT_BY_FIELDS.CREATION_DATE:
         return `${tableAlias}.creation_date ${direction}, ${tableAlias}.id ASC`;
-      case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
+      case SEARCH_SORT_BY_FIELDS.UPDATE_DATE:
         return `${tableAlias}.update_date ${direction}, ${tableAlias}.id ASC`;
       case SEARCH_SORT_BY_FIELDS.TITLE:
       default:

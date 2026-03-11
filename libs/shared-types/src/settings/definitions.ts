@@ -90,7 +90,7 @@ export const SETTING_DEFINITIONS = {
         key: 'search.fulltext.sortable_fields',
         category: 'features',
         type: 'json',
-        defaultValue: ['title', 'createdAt', 'updatedAt'],
+        defaultValue: ['title', 'creationDate', 'updateDate'],
         description: 'Fields that can be used for sorting search results'
       } as SettingDefinition<string[]>,
       DEFAULT_SORT: {

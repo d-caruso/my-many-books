@@ -167,9 +167,9 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[3].entity.title).toBe('1984');
     });
 
-    it('should sort by updatedAt descending when explicitly requested', async () => {
+    it('should sort by updateDate descending when explicitly requested', async () => {
       const results = await bookRepository.searchWithFilters({
-        sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
         sortOrder: SORT_DIRECTIONS.DESC,
       });
 
@@ -180,9 +180,9 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[3].entity.title).toBe('The Great Gatsby');
     });
 
-    it('should sort by updatedAt ascending', async () => {
+    it('should sort by updateDate ascending', async () => {
       const results = await bookRepository.searchWithFilters({
-        sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
         sortOrder: SORT_DIRECTIONS.ASC,
       });
 
@@ -191,7 +191,7 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[3].entity.title).toBe('Pride and Prejudice');
     });
 
-    it('should sort by updatedAt by default', async () => {
+    it('should sort by updateDate by default', async () => {
       const results = await bookRepository.searchWithFilters({});
 
       expect(results).toHaveLength(4);
@@ -199,9 +199,9 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[0].entity.title).toBe('Pride and Prejudice');
     });
 
-    it('should sort by createdAt ascending', async () => {
+    it('should sort by creationDate ascending', async () => {
       const results = await bookRepository.searchWithFilters({
-        sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
         sortOrder: SORT_DIRECTIONS.ASC,
       });
 
@@ -210,9 +210,9 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[3].entity.title).toBe('Pride and Prejudice');
     });
 
-    it('should sort by createdAt descending', async () => {
+    it('should sort by creationDate descending', async () => {
       const results = await bookRepository.searchWithFilters({
-        sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
         sortOrder: SORT_DIRECTIONS.DESC,
       });
 
@@ -286,7 +286,7 @@ describe('Offline Search, Filter, and Sort', () => {
       // Search for completed books, sorted by rating
       const results = await bookRepository.searchWithFilters({
         status: BOOK_STATUS.FINISHED,
-        sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
         sortOrder: SORT_DIRECTIONS.DESC,
       });
 

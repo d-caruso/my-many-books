@@ -10,8 +10,8 @@ export const SEARCH_SORT_BY_FIELDS = Object.freeze({
   TITLE: 'title',
   AUTHOR: 'author',
   STATUS: 'status',
-  CREATED_AT: 'createdAt',
-  UPDATED_AT: 'updatedAt',
+  CREATION_DATE: 'creationDate',
+  UPDATE_DATE: 'updateDate',
 } as const);
 
 export const SEARCH_SORT_BY_FIELD_VALUES = Object.freeze(

@@ -481,7 +481,7 @@ export class BookRepository {
       status,
       authorId,
       categoryId,
-      sortBy = SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+      sortBy = SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
       sortOrder = SORT_DIRECTIONS.DESC,
     } = options;
 
@@ -606,7 +606,7 @@ export class BookRepository {
         return ` ORDER BY LOWER(b.title) ${direction}, b.update_date DESC`;
       case SEARCH_SORT_BY_FIELDS.STATUS:
         return ` ORDER BY b.status ${direction}, LOWER(b.title) ASC`;
-      case SEARCH_SORT_BY_FIELDS.CREATED_AT:
+      case SEARCH_SORT_BY_FIELDS.CREATION_DATE:
         return ` ORDER BY b.creation_date ${direction}, LOWER(b.title) ASC`;
       case SEARCH_SORT_BY_FIELDS.AUTHOR: {
         const surnameExpr = `LOWER(COALESCE((
@@ -628,7 +628,7 @@ export class BookRepository {
 
         return ` ORDER BY ${surnameExpr} ${direction}, ${nameExpr} ${direction}, LOWER(b.title) ASC`;
       }
-      case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
+      case SEARCH_SORT_BY_FIELDS.UPDATE_DATE:
       default:
         return ` ORDER BY b.update_date ${direction}, LOWER(b.title) ASC`;
     }

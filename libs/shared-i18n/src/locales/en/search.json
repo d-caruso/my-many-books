@@ -77,8 +77,8 @@
     "fields": {
       "relevance": "Relevance",
       "title": "Title",
-      "createdAt": "Add date",
-      "updatedAt": "Last updated",
+      "creationDate": "Add date",
+      "updateDate": "Last updated",
       "status": "Status",
       "isbnCode": "ISBN",
       "editionNumber": "Edition",

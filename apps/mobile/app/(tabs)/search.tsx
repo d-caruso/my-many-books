@@ -36,8 +36,8 @@ const SORT_OPTIONS: readonly SortOption[] = [
   SEARCH_SORT_BY_FIELDS.TITLE,
   SEARCH_SORT_BY_FIELDS.AUTHOR,
   SEARCH_SORT_BY_FIELDS.STATUS,
-  SEARCH_SORT_BY_FIELDS.CREATED_AT,
-  SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+  SEARCH_SORT_BY_FIELDS.CREATION_DATE,
+  SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
 ];
 
 export default function SearchScreen() {
@@ -50,7 +50,7 @@ export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isbnResult, setIsbnResult] = useState<Book | null>(null);
   const [statusFilter, setStatusFilter] = useState<Book['status'] | 'all'>('all');
-  const [sortBy, setSortBy] = useState<SortOption>(SEARCH_SORT_BY_FIELDS.UPDATED_AT);
+  const [sortBy, setSortBy] = useState<SortOption>(SEARCH_SORT_BY_FIELDS.UPDATE_DATE);
   const [sortOrder, setSortOrder] = useState<SortOrder>(SORT_DIRECTIONS.DESC);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedAuthorId, setSelectedAuthorId] = useState<number | null>(null);
@@ -286,10 +286,10 @@ export default function SearchScreen() {
     switch (option) {
       case SEARCH_SORT_BY_FIELDS.TITLE:
         return t('books:sort_title');
-      case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
-        return t('books:sort_updatedAt');
-      case SEARCH_SORT_BY_FIELDS.CREATED_AT:
-        return t('books:sort_createdAt');
+      case SEARCH_SORT_BY_FIELDS.UPDATE_DATE:
+        return t('books:sort_updateDate');
+      case SEARCH_SORT_BY_FIELDS.CREATION_DATE:
+        return t('books:sort_creationDate');
       case SEARCH_SORT_BY_FIELDS.AUTHOR:
         return t('books:sort_author');
       case SEARCH_SORT_BY_FIELDS.STATUS:

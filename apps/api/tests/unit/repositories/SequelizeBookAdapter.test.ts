@@ -188,14 +188,14 @@ describe('SequelizeBookAdapter (unit)', () => {
     expect(result[0]).toMatchObject({ id: 1, title: 'Test Book' });
   });
 
-  it('search maps createdAt sort to creationDate ordering', async () => {
+  it('search maps creationDate sort to creationDate ordering', async () => {
     (Book.findAndCountAll as jest.Mock).mockResolvedValue({
       rows: [createModelMock()],
       count: 1,
     });
 
     await adapter.search({}, {
-      orderBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+      orderBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
       orderDirection: SORT_DIRECTIONS.DESC,
     } as any);
 

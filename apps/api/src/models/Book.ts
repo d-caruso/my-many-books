@@ -33,8 +33,8 @@ export class Book extends IdBaseModel<BookAttributes, BookCreationAttributes> im
   // Sortable fields for search and list endpoints
   static readonly SORTABLE_FIELDS = Object.freeze({
     TITLE: 'title',
-    CREATED_AT: 'createdAt',
-    UPDATED_AT: 'updatedAt',
+    CREATION_DATE: 'creationDate',
+    UPDATE_DATE: 'updateDate',
     STATUS: 'status',
     ISBN_CODE: 'isbnCode',
     EDITION_NUMBER: 'editionNumber',

@@ -29,6 +29,14 @@ import { FullTextSearchService } from './FullTextSearchService';
 import { BaseSearchOptions, SortField, SearchResult } from './ISearchable';
 import { BookSearchResultDTO, toBookSearchResultDTO } from '../../dtos/book/BookSearchResultDTO';
 import { SearchConfig } from './SearchConfig';
+import type {
+  BookSearchRowsResult,
+  BookSearchRowsWithRelevance,
+} from '../../repositories/book/BookRepositoryTypes';
+
+const hasRelevanceScores = (
+  result: BookSearchRowsResult | BookSearchRowsWithRelevance
+): result is BookSearchRowsWithRelevance => 'relevanceScores' in result;
 
 @injectable()
 export class BookSearchService extends FullTextSearchService<BookEntity> {
@@ -116,9 +124,9 @@ export class BookSearchService extends FullTextSearchService<BookEntity> {
         }
         return `${author.surname ?? ''}\u0000${author.name}`;
       }
-      case SEARCH_SORT_BY_FIELDS.CREATED_AT:
+      case SEARCH_SORT_BY_FIELDS.CREATION_DATE:
         return result.creationDate;
-      case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
+      case SEARCH_SORT_BY_FIELDS.UPDATE_DATE:
         return result.updateDate;
       default:
         return super.getFieldValue(result, field);
@@ -172,10 +180,9 @@ export class BookSearchService extends FullTextSearchService<BookEntity> {
           limit,
           offset,
         });
-    const relevanceScores =
-      'relevanceScores' in searchResult && searchResult.relevanceScores instanceof Map
-        ? searchResult.relevanceScores
-        : undefined;
+    const relevanceScores: Map<number, number> | undefined = hasRelevanceScores(searchResult)
+      ? searchResult.relevanceScores
+      : undefined;
 
     const pinnedItems: SearchResult<BookEntity>[] = [];
     const regularItems: SearchResult<BookEntity>[] = [];

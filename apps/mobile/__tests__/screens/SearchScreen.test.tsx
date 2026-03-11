@@ -18,8 +18,8 @@ const SORT_OPTIONS = [
   SEARCH_SORT_BY_FIELDS.TITLE,
   SEARCH_SORT_BY_FIELDS.AUTHOR,
   SEARCH_SORT_BY_FIELDS.STATUS,
-  SEARCH_SORT_BY_FIELDS.CREATED_AT,
-  SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+  SEARCH_SORT_BY_FIELDS.CREATION_DATE,
+  SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
 ] as const;
 
 function SearchScreenDouble() {
@@ -29,7 +29,7 @@ function SearchScreenDouble() {
   const [selectedAuthorId, setSelectedAuthorId] = React.useState<number | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<number | null>(null);
   const [sortBy, setSortBy] = React.useState<typeof SORT_OPTIONS[number]>(
-    SEARCH_SORT_BY_FIELDS.UPDATED_AT
+    SEARCH_SORT_BY_FIELDS.UPDATE_DATE
   );
   const [sortOrder, setSortOrder] = React.useState<(typeof SORT_DIRECTIONS)[keyof typeof SORT_DIRECTIONS]>(
     SORT_DIRECTIONS.DESC
@@ -106,9 +106,9 @@ function SearchScreenDouble() {
                 ? 'author'
                 : option === SEARCH_SORT_BY_FIELDS.STATUS
                   ? 'status'
-                  : option === SEARCH_SORT_BY_FIELDS.CREATED_AT
-                    ? 'createdAt'
-                    : 'updatedAt'}`}</Text>
+                  : option === SEARCH_SORT_BY_FIELDS.CREATION_DATE
+                    ? 'creationDate'
+                    : 'updateDate'}`}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -180,8 +180,8 @@ describe('SearchScreen', () => {
       'books:sort_title',
       'books:sort_author',
       'books:sort_status',
-      'books:sort_createdAt',
-      'books:sort_updatedAt',
+      'books:sort_creationDate',
+      'books:sort_updateDate',
     ]);
   });
 
@@ -198,7 +198,7 @@ describe('SearchScreen', () => {
 
     expect(mockSearchBooks).toHaveBeenLastCalledWith('', {
       status: BOOK_STATUS.READING,
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
       sortOrder: SORT_DIRECTIONS.DESC,
     });
   });
@@ -217,7 +217,7 @@ describe('SearchScreen', () => {
     let filters = mockSearchBooks.mock.calls.at(-1)?.[1] as Record<string, unknown>;
     expect(filters).toMatchObject({
       authorId: 42,
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
       sortOrder: SORT_DIRECTIONS.DESC,
     });
     expect(filters).not.toHaveProperty('author');
@@ -230,7 +230,7 @@ describe('SearchScreen', () => {
     expect(filters).toMatchObject({
       authorId: 42,
       categoryId: 7,
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
       sortOrder: SORT_DIRECTIONS.DESC,
     });
     expect(filters).not.toHaveProperty('category');
@@ -248,7 +248,7 @@ describe('SearchScreen', () => {
     });
 
     expect(mockSearchBooks).toHaveBeenLastCalledWith('gatsby', {
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
       sortOrder: SORT_DIRECTIONS.DESC,
     });
 
@@ -257,7 +257,7 @@ describe('SearchScreen', () => {
     });
 
     expect(mockSearchBooks).toHaveBeenLastCalledWith('gatsby', {
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
       sortOrder: SORT_DIRECTIONS.ASC,
     });
   });

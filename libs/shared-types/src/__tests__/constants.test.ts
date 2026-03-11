@@ -48,14 +48,14 @@ describe("Mobile Configuration Constants", () => {
       expect(SEARCH_SORT_BY_FIELDS.TITLE).toBe("title");
       expect(SEARCH_SORT_BY_FIELDS.AUTHOR).toBe("author");
       expect(SEARCH_SORT_BY_FIELDS.STATUS).toBe("status");
-      expect(SEARCH_SORT_BY_FIELDS.CREATED_AT).toBe("createdAt");
-      expect(SEARCH_SORT_BY_FIELDS.UPDATED_AT).toBe("updatedAt");
+      expect(SEARCH_SORT_BY_FIELDS.CREATION_DATE).toBe("creationDate");
+      expect(SEARCH_SORT_BY_FIELDS.UPDATE_DATE).toBe("updateDate");
       expect(SEARCH_SORT_BY_FIELD_VALUES).toEqual([
         "title",
         "author",
         "status",
-        "createdAt",
-        "updatedAt",
+        "creationDate",
+        "updateDate",
       ]);
     });
   });
