@@ -243,6 +243,10 @@ describe('useBookSearch Hook', () => {
       sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
       sortOrder: SORT_DIRECTIONS.ASC,
     });
+
+    const params = mockApiMocks.searchBooks.mock.calls[0][0] as Record<string, unknown>;
+    expect(params).not.toHaveProperty('update_date');
+    expect(params).not.toHaveProperty('creation_date');
   });
 
   it('should use local repository when offline', async () => {
@@ -277,6 +281,9 @@ describe('useBookSearch Hook', () => {
         sortOrder: SORT_DIRECTIONS.DESC,
       })
     );
+    const offlineParams = mockDbMocks.searchWithFilters.mock.calls[0][0] as Record<string, unknown>;
+    expect(offlineParams).not.toHaveProperty('update_date');
+    expect(offlineParams).not.toHaveProperty('creation_date');
     expect(mockApiMocks.searchBooks).not.toHaveBeenCalled();
   });
 

@@ -180,6 +180,17 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[3].entity.title).toBe('The Great Gatsby');
     });
 
+    it('should sort by updatedAt ascending', async () => {
+      const results = await bookRepository.searchWithFilters({
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      });
+
+      expect(results).toHaveLength(4);
+      expect(results[0].entity.title).toBe('The Great Gatsby');
+      expect(results[3].entity.title).toBe('Pride and Prejudice');
+    });
+
     it('should sort by updatedAt by default', async () => {
       const results = await bookRepository.searchWithFilters({});
 
@@ -199,6 +210,17 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[3].entity.title).toBe('Pride and Prejudice');
     });
 
+    it('should sort by createdAt descending', async () => {
+      const results = await bookRepository.searchWithFilters({
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      expect(results).toHaveLength(4);
+      expect(results[0].entity.title).toBe('Pride and Prejudice');
+      expect(results[3].entity.title).toBe('The Great Gatsby');
+    });
+
     it('should sort by status ascending', async () => {
       const results = await bookRepository.searchWithFilters({
         sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
@@ -208,6 +230,17 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results).toHaveLength(4);
       expect(results[0].entity.title).toBe('Pride and Prejudice');
       expect(results[1].entity.title).toBe('The Great Gatsby');
+    });
+
+    it('should sort by status descending', async () => {
+      const results = await bookRepository.searchWithFilters({
+        sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      expect(results).toHaveLength(4);
+      expect(results[0].entity.title).toBe('1984');
+      expect(results[1].entity.title).toBe('To Kill a Mockingbird');
     });
 
     it('should sort by author using surname then name ascending', async () => {

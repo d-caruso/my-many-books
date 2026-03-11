@@ -2,7 +2,7 @@ import { databaseService } from './DatabaseService';
 import { ALL_TABLES } from './schema';
 
 const SCHEMA_VERSION_KEY = 'schema_version';
-const CURRENT_SCHEMA_VERSION = 6;
+export const CURRENT_SCHEMA_VERSION = 6;
 
 /**
  * Database migration system

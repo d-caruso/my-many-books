@@ -58,6 +58,7 @@ export const Provider = ({ children }) => children;
 export const Button = createPrimitive('Button');
 export const Text = createPrimitive('Text');
 export const TextInput = createPrimitive('TextInput');
+export const Searchbar = createPrimitive('Searchbar');
 export const Chip = createPrimitive('Chip');
 export const IconButton = createPrimitive('IconButton');
 export const ActivityIndicator = createPrimitive('ActivityIndicator');

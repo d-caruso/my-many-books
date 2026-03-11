@@ -1,6 +1,6 @@
 // Test for database service and migrations (Task 4.2.3)
 import { databaseService } from '../../src/services/database/DatabaseService';
-import { migrationSystem } from '../../src/services/database/migrations';
+import { CURRENT_SCHEMA_VERSION, migrationSystem } from '../../src/services/database/migrations';
 import {
   CREATE_BOOKS_TABLE,
   CREATE_AUTHORS_TABLE,
@@ -114,7 +114,7 @@ describe('Database Service and Migrations (Task 4.2.3)', () => {
 
       const version = Number(versionRow!.value);
       expect(typeof version).toBe('number');
-      expect(version).toBeGreaterThanOrEqual(1);
+      expect(version).toBe(CURRENT_SCHEMA_VERSION);
     });
 
     it('should be idempotent (running twice is safe)', async () => {
