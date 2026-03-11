@@ -43,6 +43,14 @@ vi.mock('@mui/icons-material/Warning', () => ({
   default: () => <div data-testid="warning-icon">Warning</div>,
 }));
 
+vi.mock('@mui/icons-material/ArrowUpward', () => ({
+  default: () => <div data-testid="arrow-up-icon">↑</div>,
+}));
+
+vi.mock('@mui/icons-material/ArrowDownward', () => ({
+  default: () => <div data-testid="arrow-down-icon">↓</div>,
+}));
+
 const mockUseCategories = vi.mocked(useCategories);
 
 const mockCategories = [
@@ -152,7 +160,7 @@ describe('BookSearchForm', () => {
 
     expect(getSelectDisplayText('Reading progress')).toBe('Finished');
     expect(getSelectDisplayText('Sort by')).toBe('Add date');
-    expect(getSelectDisplayText('Order')).toBe('Descending');
+    expect(screen.getByTestId('sort-order-label')).toHaveTextContent('Descending');
   });
 
   test('calls onSearch when form is submitted with valid query', () => {
@@ -248,18 +256,19 @@ describe('BookSearchForm', () => {
     ]);
   });
 
-  test('keeps the sort order select visible and functional', async () => {
+  test('toggles sort order with button', async () => {
     render(<BookSearchForm {...defaultProps} />);
 
     openAdvancedFilters();
 
-    expect(screen.getByLabelText('Order')).toBeVisible();
-    expect(getSelectDisplayText('Order')).toBe('Ascending');
+    const orderButton = screen.getByLabelText('Order');
+    expect(orderButton).toBeVisible();
+    expect(screen.getByTestId('sort-order-label')).toHaveTextContent('Ascending');
 
-    await selectOption('Order', 'Descending');
+    fireEvent.click(orderButton);
 
     await waitFor(() => {
-      expect(getSelectDisplayText('Order')).toBe('Descending');
+      expect(screen.getByTestId('sort-order-label')).toHaveTextContent('Descending');
     });
   });
 
@@ -270,7 +279,7 @@ describe('BookSearchForm', () => {
     openAdvancedFilters();
 
     await selectOption('Sort by', 'Last updated');
-    await selectOption('Order', 'Descending');
+    fireEvent.click(screen.getByLabelText('Order'));
     fireEvent.click(getSearchButton());
 
     expect(mockOnSearch).toHaveBeenCalledWith('History', {

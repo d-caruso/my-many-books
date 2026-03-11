@@ -12,12 +12,16 @@ import {
   Collapse,
   InputAdornment,
   Alert,
-  Stack
+  Stack,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ClearIcon from '@mui/icons-material/Clear';
 import WarningIcon from '@mui/icons-material/Warning';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import {
   SearchFiltersSchema,
   SEARCH_QUERY_MIN_LENGTH,
@@ -110,6 +114,8 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
     setSelectedAuthor(author);
     handleFilterChange('authorId', author?.id);
   };
+
+  const currentOrder = filters.sortOrder || SORT_DIRECTIONS.ASC;
 
   const clearFilters = () => {
     setFilters({});
@@ -286,15 +292,13 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                 </FormControl>
               </Box>
 
-              {/* Second row - Sort By and Sort Order */}
+              {/* Second row - Sort By and Sort Order toggle */}
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'repeat(2, 1fr)'
-                  },
+                  gridTemplateColumns: '1fr auto',
                   gap: 2,
+                  alignItems: 'center',
                   maxWidth: { xs: '100%', md: '600px' }
                 }}
               >
@@ -315,20 +319,22 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                   </Select>
                 </FormControl>
 
-                <FormControl fullWidth size="small">
-                  <InputLabel id="sortOrder-label">{t('sorting.direction_label')}</InputLabel>
-                  <Select
-                    labelId="sortOrder-label"
-                    id="sortOrder"
-                    value={filters.sortOrder || SORT_DIRECTIONS.ASC}
-                    onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
-                    label={t('sorting.direction_label')}
-                  >
-                    <MenuItem value={SORT_DIRECTIONS.ASC}>{t('sorting.directions.asc')}</MenuItem>
-                    <MenuItem value={SORT_DIRECTIONS.DESC}>{t('sorting.directions.desc')}</MenuItem>
-                  </Select>
-                </FormControl>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <Tooltip title={t('sorting.direction_label')}>
+                    <IconButton
+                      aria-label={t('sorting.direction_label')}
+                      size="small"
+                      onClick={() => handleFilterChange('sortOrder', currentOrder === SORT_DIRECTIONS.ASC ? SORT_DIRECTIONS.DESC : SORT_DIRECTIONS.ASC)}
+                    >
+                      {currentOrder === SORT_DIRECTIONS.ASC ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+                    </IconButton>
+                  </Tooltip>
+                  <Box component="span" data-testid="sort-order-label" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
+                    {currentOrder === SORT_DIRECTIONS.ASC ? t('sorting.directions.asc') : t('sorting.directions.desc')}
+                  </Box>
+                </Box>
               </Box>
+
             </Stack>
           </Box>
         </Collapse>
