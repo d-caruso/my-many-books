@@ -49,7 +49,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
       authorId: filters.authorId,
       categoryId: filters.categoryId,
       sortBy: filters.sortBy,
-      sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.DESC,
+      sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.ASC,
     });
     return localBooks.map(localBook => localBook.entity);
   }, []);

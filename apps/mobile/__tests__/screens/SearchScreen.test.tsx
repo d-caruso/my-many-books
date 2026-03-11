@@ -29,13 +29,13 @@ function SearchScreenDouble() {
   const [selectedAuthorId, setSelectedAuthorId] = React.useState<number | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<number | null>(null);
   const [sortBy, setSortBy] = React.useState<typeof SORT_OPTIONS[number]>(
-    SEARCH_SORT_BY_FIELDS.UPDATE_DATE
+    SEARCH_SORT_BY_FIELDS.TITLE
   );
   const [sortOrder, setSortOrder] = React.useState<(typeof SORT_DIRECTIONS)[keyof typeof SORT_DIRECTIONS]>(
-    SORT_DIRECTIONS.DESC
+    SORT_DIRECTIONS.ASC
   );
 
-  React.useEffect(() => {
+  const handleSubmit = React.useCallback(() => {
     const hasActiveFilters =
       statusFilter !== 'all' || selectedAuthorId !== null || selectedCategoryId !== null;
 
@@ -70,6 +70,9 @@ function SearchScreenDouble() {
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
+      <TouchableOpacity testID="search-submit" onPress={handleSubmit}>
+        <Text>common:search</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity
         testID="status-chip-reading"
@@ -185,7 +188,7 @@ describe('SearchScreen', () => {
     ]);
   });
 
-  it('should search with status when a status chip is selected', async () => {
+  it('should not search when a status chip is selected without submitting', async () => {
     let tree!: renderer.ReactTestRenderer;
 
     renderer.act(() => {
@@ -196,14 +199,32 @@ describe('SearchScreen', () => {
       tree.root.findByProps({ testID: 'status-chip-reading' }).props.onPress();
     });
 
+    expect(mockSearchBooks).not.toHaveBeenCalled();
+  });
+
+  it('should search with status after explicit submit', async () => {
+    let tree!: renderer.ReactTestRenderer;
+
+    renderer.act(() => {
+      tree = renderer.create(<SearchScreenDouble />);
+    });
+
+    await renderer.act(async () => {
+      tree.root.findByProps({ testID: 'status-chip-reading' }).props.onPress();
+    });
+
+    await renderer.act(async () => {
+      tree.root.findByProps({ testID: 'search-submit' }).props.onPress();
+    });
+
     expect(mockSearchBooks).toHaveBeenLastCalledWith('', {
       status: BOOK_STATUS.READING,
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
-      sortOrder: SORT_DIRECTIONS.DESC,
+      sortBy: SEARCH_SORT_BY_FIELDS.TITLE,
+      sortOrder: SORT_DIRECTIONS.ASC,
     });
   });
 
-  it('should use authorId and categoryId in outbound search params', async () => {
+  it('should use authorId and categoryId in outbound search params after explicit submit', async () => {
     let tree!: renderer.ReactTestRenderer;
 
     renderer.act(() => {
@@ -214,29 +235,26 @@ describe('SearchScreen', () => {
       tree.root.findByProps({ testID: 'author-selector' }).props.onPress();
     });
 
-    let filters = mockSearchBooks.mock.calls.at(-1)?.[1] as Record<string, unknown>;
-    expect(filters).toMatchObject({
-      authorId: 42,
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
-      sortOrder: SORT_DIRECTIONS.DESC,
-    });
-    expect(filters).not.toHaveProperty('author');
-
     await renderer.act(async () => {
       tree.root.findByProps({ testID: 'category-selector' }).props.onPress();
     });
 
-    filters = mockSearchBooks.mock.calls.at(-1)?.[1] as Record<string, unknown>;
+    await renderer.act(async () => {
+      tree.root.findByProps({ testID: 'search-submit' }).props.onPress();
+    });
+
+    const filters = mockSearchBooks.mock.calls.at(-1)?.[1] as Record<string, unknown>;
     expect(filters).toMatchObject({
       authorId: 42,
       categoryId: 7,
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
-      sortOrder: SORT_DIRECTIONS.DESC,
+      sortBy: SEARCH_SORT_BY_FIELDS.TITLE,
+      sortOrder: SORT_DIRECTIONS.ASC,
     });
+    expect(filters).not.toHaveProperty('author');
     expect(filters).not.toHaveProperty('category');
   });
 
-  it('should update outbound sort direction', async () => {
+  it('should update outbound sort direction after explicit submit', async () => {
     let tree!: renderer.ReactTestRenderer;
 
     renderer.act(() => {
@@ -247,18 +265,19 @@ describe('SearchScreen', () => {
       tree.root.findByProps({ testID: 'search-input' }).props.onChangeText('gatsby');
     });
 
-    expect(mockSearchBooks).toHaveBeenLastCalledWith('gatsby', {
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
-      sortOrder: SORT_DIRECTIONS.DESC,
-    });
+    expect(mockSearchBooks).not.toHaveBeenCalled();
 
     await renderer.act(async () => {
       tree.root.findByProps({ testID: 'sort-direction-toggle' }).props.onPress();
     });
 
+    await renderer.act(async () => {
+      tree.root.findByProps({ testID: 'search-submit' }).props.onPress();
+    });
+
     expect(mockSearchBooks).toHaveBeenLastCalledWith('gatsby', {
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
-      sortOrder: SORT_DIRECTIONS.ASC,
+      sortBy: SEARCH_SORT_BY_FIELDS.TITLE,
+      sortOrder: SORT_DIRECTIONS.DESC,
     });
   });
 });

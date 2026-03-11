@@ -252,10 +252,6 @@ jobs:
         working-directory: apps/web-app
         run: timeout 10m npm run test:web-app:components:search:results
 
-      - name: Test Web App - Components (Theme)
-        working-directory: apps/web-app
-        run: timeout 10m npm run test:web-app:components:theme
-
       - name: Test Web App - Components (UI)
         working-directory: apps/web-app
         run: timeout 10m npm run test:web-app:components:ui

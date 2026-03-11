@@ -191,12 +191,14 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[3].entity.title).toBe('Pride and Prejudice');
     });
 
-    it('should sort by updateDate by default', async () => {
+    it('should sort by title ascending by default', async () => {
       const results = await bookRepository.searchWithFilters({});
 
       expect(results).toHaveLength(4);
-      // Most recently updated should be first (Pride and Prejudice was added last)
-      expect(results[0].entity.title).toBe('Pride and Prejudice');
+      expect(results[0].entity.title).toBe('1984');
+      expect(results[1].entity.title).toBe('Pride and Prejudice');
+      expect(results[2].entity.title).toBe('The Great Gatsby');
+      expect(results[3].entity.title).toBe('To Kill a Mockingbird');
     });
 
     it('should sort by creationDate ascending', async () => {

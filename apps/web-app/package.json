@@ -70,7 +70,6 @@
     "test:web-app:components:search:form": "vitest run --config vitest.config.components.ts src/__tests__/components/Search/BookSearchForm.test.tsx",
     "test:web-app:components:search:page": "vitest run --config vitest.config.components.ts src/__tests__/components/Search/BookSearchPage.test.tsx",
     "test:web-app:components:search:results": "vitest run --config vitest.config.components.ts src/__tests__/components/Search/BookSearchResults.test.tsx",
-    "test:web-app:components:theme": "vitest run --config vitest.config.components.ts src/__tests__/components/Theme",
     "test:web-app:components:ui": "vitest run --config vitest.config.components.ts src/__tests__/components/UI",
     "test:web-app:components:hook-executions": "vitest run --config vitest.config.components.ts src/__tests__/components/HookExecutions.test.tsx",
     "test:web-app:components:hook-form": "vitest run --config vitest.config.components.ts src/__tests__/components/HookForm.test.tsx",

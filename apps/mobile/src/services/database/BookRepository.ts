@@ -481,8 +481,8 @@ export class BookRepository {
       status,
       authorId,
       categoryId,
-      sortBy = SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
-      sortOrder = SORT_DIRECTIONS.DESC,
+      sortBy = SEARCH_SORT_BY_FIELDS.TITLE,
+      sortOrder = SORT_DIRECTIONS.ASC,
     } = options;
 
     let sql = 'SELECT DISTINCT b.* FROM books b';

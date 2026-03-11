@@ -278,7 +278,7 @@ describe('useBookSearch Hook', () => {
       expect.objectContaining({
         query: 'test',
         sortBy: undefined,
-        sortOrder: SORT_DIRECTIONS.DESC,
+        sortOrder: SORT_DIRECTIONS.ASC,
       })
     );
     const offlineParams = mockDbMocks.searchWithFilters.mock.calls[0][0] as Record<string, unknown>;

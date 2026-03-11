@@ -50,8 +50,8 @@ export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isbnResult, setIsbnResult] = useState<Book | null>(null);
   const [statusFilter, setStatusFilter] = useState<Book['status'] | 'all'>('all');
-  const [sortBy, setSortBy] = useState<SortOption>(SEARCH_SORT_BY_FIELDS.UPDATE_DATE);
-  const [sortOrder, setSortOrder] = useState<SortOrder>(SORT_DIRECTIONS.DESC);
+  const [sortBy, setSortBy] = useState<SortOption>(SEARCH_SORT_BY_FIELDS.TITLE);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(SORT_DIRECTIONS.ASC);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedAuthorId, setSelectedAuthorId] = useState<number | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
@@ -172,12 +172,9 @@ export default function SearchScreen() {
     return () => clearTimeout(timer);
   }, [isbn, scannerCopy, searchByISBN, clearSearch, t]);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      performSearch();
-    }, 300);
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, performSearch]);
+  const handleSubmit = useCallback(() => {
+    void performSearch();
+  }, [performSearch]);
 
   const renderBook = ({ item }: { item: Book }) => (
     <BookCard
@@ -278,6 +275,9 @@ export default function SearchScreen() {
         sortButtonContent: {
           paddingHorizontal: 8,
         },
+        searchButton: {
+          marginBottom: 16,
+        },
       }),
     [theme]
   );
@@ -311,7 +311,16 @@ export default function SearchScreen() {
           value={searchQuery}
           style={styles.searchbar}
           accessibilityLabel={t('accessibility:search_books_label', { defaultValue: 'Search books' })}
+          onSubmitEditing={handleSubmit}
         />
+        <Button
+          mode="contained"
+          onPress={handleSubmit}
+          style={styles.searchButton}
+          disabled={loading}
+        >
+          {loading ? t('common:searching') : t('common:search')}
+        </Button>
 
         {/* Status Filter */}
         <Text variant="labelMedium" style={styles.filterLabel}>
