@@ -10,6 +10,7 @@ import { BookCard } from '@/components/BookCard';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useBookSearch } from '@/hooks/useBookSearch';
+import { useBooks } from '@/hooks/useBooks';
 import { Book } from '@my-many-books/shared-types';
 import { BOOK_STATUS } from '@my-many-books/shared-types';
 import type { SearchQuery } from '@/types';
@@ -73,6 +74,17 @@ export default function SearchScreen() {
     searchByISBN,
     clearSearch,
   } = useBookSearch();
+
+  const { updateBookStatus } = useBooks();
+
+  const handleStatusChange = useCallback(async (bookId: number, status: Book['status']) => {
+    try {
+      await updateBookStatus(bookId, status);
+    } catch {
+      setFeedbackMessage(t('books:status_update_failed', { defaultValue: 'Failed to update status' }));
+      setFeedbackVisible(true);
+    }
+  }, [updateBookStatus, t]);
 
   const hasActiveFilters =
     statusFilter !== 'all' || selectedAuthorId !== null || selectedCategoryId !== null;
@@ -183,8 +195,7 @@ export default function SearchScreen() {
   const renderBook = ({ item }: { item: Book }) => (
     <BookCard
       book={item}
-      onPress={() => {}}
-      showActions={false}
+      onStatusChange={(status) => void handleStatusChange(Number(item.id), status)}
     />
   );
 

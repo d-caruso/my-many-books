@@ -143,14 +143,16 @@ export const BookCard: React.FC<BookCardProps> = ({
                   titleStyle={!isOnline ? { color: theme.colors.secondary } : undefined}
                 />
               ))}
-              <Menu.Item
-                onPress={() => {
-                  onDelete?.();
-                  setMenuVisible(false);
-                }}
-                title={t('delete')}
-                titleStyle={{ color: !isOnline ? theme.colors.secondary : theme.colors.error }}
-              />
+              {onDelete && (
+                <Menu.Item
+                  onPress={() => {
+                    onDelete();
+                    setMenuVisible(false);
+                  }}
+                  title={t('delete')}
+                  titleStyle={{ color: !isOnline ? theme.colors.secondary : theme.colors.error }}
+                />
+              )}
             </Menu>
           </View>
         )}
