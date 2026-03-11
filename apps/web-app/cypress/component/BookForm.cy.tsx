@@ -2,15 +2,40 @@
 import { mount } from 'cypress/react';
 import React from 'react';
 
-// Simplified BookForm component for testing
-const TestBookForm: React.FC<{
+type TestBookStatus = 'want-to-read' | 'reading' | 'read';
+
+interface TestBookFormData {
+  title: string;
+  author: string;
+  isbn: string;
+  status: TestBookStatus;
+  publishedDate: string;
+  categories: string[];
+}
+
+interface TestBook extends TestBookFormData {
+  id: number;
+}
+
+type TestBookFormErrors = Partial<Record<keyof TestBookFormData | 'category', string>>;
+
+interface TestBookFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: TestBookFormData) => void | Promise<void>;
   isLoading?: boolean;
-  book?: any;
-}> = ({ isOpen, onClose, onSubmit, isLoading = false, book }) => {
-  const [formData, setFormData] = React.useState({
+  book?: TestBook;
+}
+
+// Simplified BookForm component for testing
+const TestBookForm: React.FC<TestBookFormProps> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  isLoading = false,
+  book,
+}) => {
+  const [formData, setFormData] = React.useState<TestBookFormData>({
     title: book?.title || '',
     author: book?.author || '',
     isbn: book?.isbn || '',
@@ -18,7 +43,7 @@ const TestBookForm: React.FC<{
     publishedDate: book?.publishedDate || '',
     categories: book?.categories || []
   });
-  const [errors, setErrors] = React.useState<any>({});
+  const [errors, setErrors] = React.useState<TestBookFormErrors>({});
   const [categoryInput, setCategoryInput] = React.useState('');
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   
@@ -34,7 +59,7 @@ const TestBookForm: React.FC<{
   }
 
   const validateForm = () => {
-    const newErrors: any = {};
+    const newErrors: TestBookFormErrors = {};
     
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
@@ -134,7 +159,7 @@ const TestBookForm: React.FC<{
     }));
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = <K extends keyof TestBookFormData>(field: K, value: TestBookFormData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
@@ -221,7 +246,7 @@ const TestBookForm: React.FC<{
               data-testid="book-status-select"
               id="status"
               value={formData.status}
-              onChange={(e) => handleInputChange('status', e.target.value)}
+              onChange={(e) => handleInputChange('status', e.target.value as TestBookStatus)}
               disabled={isLoading}
               className="w-full px-3 py-2 border rounded"
             >
@@ -322,7 +347,7 @@ const TestBookForm: React.FC<{
 };
 
 describe('BookForm Component', () => {
-  const mockBook = {
+  const mockBook: TestBook = {
     id: 1,
     title: 'The Great Gatsby',
     author: 'F. Scott Fitzgerald',
@@ -332,7 +357,7 @@ describe('BookForm Component', () => {
     categories: ['Fiction', 'Classic']
   };
 
-  let mockProps: any;
+  let mockProps: TestBookFormProps;
 
   beforeEach(() => {
     mockProps = {

@@ -7,17 +7,16 @@ import { OPERATION_TYPES, RESOURCE_TYPES } from '../../services/hooks/eventsSche
 // Import AsyncStorage from setup
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { bookAPI, authorAPI, categoryAPI, apiClient } from '../../services/api';
+import { bookRepository } from '../../services/database/BookRepository';
+import { authorRepository } from '../../services/database/AuthorRepository';
+import { categoryRepository } from '../../services/database/CategoryRepository';
+
 // Mock all external dependencies
 jest.mock('../../services/api');
 jest.mock('../../services/database/BookRepository');
-jest.mock('../../services/database/AuthorRepository'); 
+jest.mock('../../services/database/AuthorRepository');
 jest.mock('../../services/database/CategoryRepository');
-
-// Import mocked services once
-const { bookAPI, authorAPI, categoryAPI } = require('../../services/api');
-const { bookRepository } = require('../../services/database/BookRepository');
-const { authorRepository } = require('../../services/database/AuthorRepository');
-const { categoryRepository } = require('../../services/database/CategoryRepository');
 
 describe('Queue-Sync Hookey Integration (End-to-End)', () => {
   const eventLog: { eventType: string; data: unknown; timestamp: number }[] = [];
@@ -158,7 +157,6 @@ describe('Queue-Sync Hookey Integration (End-to-End)', () => {
       // AsyncStorage is already properly mocked in beforeEach
 
       // Mock conflict scenario
-      const { apiClient } = require('../../services/api');
       
       // Setup book data that will create a conflict
       const localBookData = { 
@@ -213,7 +211,6 @@ describe('Queue-Sync Hookey Integration (End-to-End)', () => {
       // AsyncStorage is already properly mocked in beforeEach
 
       // Mock API to return data that will cause merge failure
-      const { apiClient } = require('../../services/api');
       const invalidBookData = { id: 'invalid-book', title: 'Test Book' };
       
       apiClient.books.getBooks.mockResolvedValue([invalidBookData]);
@@ -330,7 +327,6 @@ describe('Queue-Sync Hookey Integration (End-to-End)', () => {
       // AsyncStorage is already properly mocked in beforeEach
       
       // Mock successful sync
-      const { bookAPI, authorAPI, categoryAPI } = require('../../services/api');
       bookAPI.getBooks = jest.fn().mockResolvedValue([]);
       authorAPI.getAuthors = jest.fn().mockResolvedValue([]);
       categoryAPI.getCategories = jest.fn().mockResolvedValue([]);

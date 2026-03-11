@@ -57,7 +57,7 @@
     "prebuild": "npm run sync-translations",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src",
+    "lint": "nx run web-app:lint",
     "test": "vitest",
     "test:web-app:components": "vitest run --config vitest.config.components.ts",
     "test:web-app:components:auth": "vitest run --config vitest.config.components.ts src/__tests__/components/Auth",
@@ -70,7 +70,6 @@
     "test:web-app:components:search:form": "vitest run --config vitest.config.components.ts src/__tests__/components/Search/BookSearchForm.test.tsx",
     "test:web-app:components:search:page": "vitest run --config vitest.config.components.ts src/__tests__/components/Search/BookSearchPage.test.tsx",
     "test:web-app:components:search:results": "vitest run --config vitest.config.components.ts src/__tests__/components/Search/BookSearchResults.test.tsx",
-    "test:web-app:components:theme": "vitest run --config vitest.config.components.ts src/__tests__/components/Theme",
     "test:web-app:components:ui": "vitest run --config vitest.config.components.ts src/__tests__/components/UI",
     "test:web-app:components:hook-executions": "vitest run --config vitest.config.components.ts src/__tests__/components/HookExecutions.test.tsx",
     "test:web-app:components:hook-form": "vitest run --config vitest.config.components.ts src/__tests__/components/HookForm.test.tsx",
@@ -105,13 +104,8 @@
     "test:all": "npm run test:unit && npm run cypress:component && npm run e2e",
     "test:coverage:full": "npm run test:coverage && npm run cypress:run --coverage",
     "eject": "react-scripts eject",
-    "typecheck": "tsc --noEmit"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.test.json"
   },
   "browserslist": {
     "production": [

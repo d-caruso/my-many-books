@@ -1,11 +1,17 @@
 import { SyncService } from '../sync/SyncService';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
+import { operationQueue } from '../OperationQueue';
+import { bookAPI, authorAPI, categoryAPI } from '../api';
+import { bookRepository } from '../database/BookRepository';
+import { authorRepository } from '../database/AuthorRepository';
+import { categoryRepository } from '../database/CategoryRepository';
+import { hasBookConflict, hasAuthorConflict, hasCategoryConflict } from '../../utils/conflictDetection';
 
 // Mock all external dependencies
 jest.mock('../hooks/mobileHooks', () => {
   // Import the actual event tree and build function
   const actualMobileHooks = jest.requireActual('../hooks/mobileHooks');
-  
+
   return {
     mobileHooks: {
       emit: jest.fn().mockResolvedValue(undefined),
@@ -95,7 +101,18 @@ jest.mock('../sync/CleanupService', () => ({
   },
 }));
 
+// Typed mock references
 const mockMobileHooks = mobileHooks as jest.Mocked<typeof mobileHooks>;
+const mockOperationQueue = operationQueue as jest.Mocked<typeof operationQueue>;
+const mockBookAPI = bookAPI as jest.Mocked<typeof bookAPI>;
+const mockAuthorAPI = authorAPI as jest.Mocked<typeof authorAPI>;
+const mockCategoryAPI = categoryAPI as jest.Mocked<typeof categoryAPI>;
+const mockBookRepository = bookRepository as jest.Mocked<typeof bookRepository>;
+const mockAuthorRepository = authorRepository as jest.Mocked<typeof authorRepository>;
+const mockCategoryRepository = categoryRepository as jest.Mocked<typeof categoryRepository>;
+const mockHasBookConflict = hasBookConflict as jest.Mock;
+const mockHasAuthorConflict = hasAuthorConflict as jest.Mock;
+const mockHasCategoryConflict = hasCategoryConflict as jest.Mock;
 
 describe('SyncService Hookey Integration', () => {
   let syncService: SyncService;
@@ -108,13 +125,10 @@ describe('SyncService Hookey Integration', () => {
 
   describe('performSync', () => {
     it('should emit SYNC.START when sync begins', async () => {
-      const { operationQueue } = require('../OperationQueue');
-      operationQueue.getPendingOperations.mockReturnValue([]);
-      
-      const { bookAPI, authorAPI, categoryAPI } = require('../api');
-      bookAPI.getBooks.mockResolvedValue({ books: [] });
-      authorAPI.getAuthors.mockResolvedValue([]);
-      categoryAPI.getCategories.mockResolvedValue([]);
+      mockOperationQueue.getPendingOperations.mockReturnValue([]);
+      mockBookAPI.getBooks.mockResolvedValue({ books: [] });
+      mockAuthorAPI.getAuthors.mockResolvedValue([]);
+      mockCategoryAPI.getCategories.mockResolvedValue([]);
 
       await syncService.performSync();
 
@@ -126,24 +140,21 @@ describe('SyncService Hookey Integration', () => {
       expect(startCalls[0][1]).toEqual(expect.objectContaining({
         sessionId: expect.stringMatching(/^sync-session-\d+$/),
         syncType: 'bidirectional',
-        lastSyncTime: null, // AsyncStorage.getItem returns null when mocked
+        lastSyncTime: null,
         timestamp: expect.any(String)
       }));
     });
 
     it('should emit SYNC.UPLOAD.START and UPLOAD.COMPLETE during push phase', async () => {
-      const { operationQueue } = require('../OperationQueue');
       const mockOps = [
         { id: 'op1', type: 'create', resource: 'book' },
         { id: 'op2', type: 'update', resource: 'book' }
       ];
-      operationQueue.getPendingOperations.mockReturnValue(mockOps);
-      operationQueue.processQueue.mockResolvedValue(undefined);
-
-      const { bookAPI, authorAPI, categoryAPI } = require('../api');
-      bookAPI.getBooks.mockResolvedValue({ books: [] });
-      authorAPI.getAuthors.mockResolvedValue([]);
-      categoryAPI.getCategories.mockResolvedValue([]);
+      mockOperationQueue.getPendingOperations.mockReturnValue(mockOps);
+      mockOperationQueue.processQueue.mockResolvedValue(undefined);
+      mockBookAPI.getBooks.mockResolvedValue({ books: [] });
+      mockAuthorAPI.getAuthors.mockResolvedValue([]);
+      mockCategoryAPI.getCategories.mockResolvedValue([]);
 
       await syncService.performSync();
 
@@ -169,34 +180,26 @@ describe('SyncService Hookey Integration', () => {
     });
 
     it('should emit SYNC.DOWNLOAD.START and entity SYNC.PULL events during pull phase', async () => {
-      const { operationQueue } = require('../OperationQueue');
-      operationQueue.getPendingOperations.mockReturnValue([]);
-
-      const { bookAPI, authorAPI, categoryAPI } = require('../api');
-      bookAPI.getBooks.mockResolvedValue({ 
+      mockOperationQueue.getPendingOperations.mockReturnValue([]);
+      mockBookAPI.getBooks.mockResolvedValue({
         books: [
           { id: 1, title: 'Test Book', status: 'reading' }
-        ] 
+        ]
       });
-      authorAPI.getAuthors.mockResolvedValue([
+      mockAuthorAPI.getAuthors.mockResolvedValue([
         { id: 1, name: 'Test Author' }
       ]);
-      categoryAPI.getCategories.mockResolvedValue([
+      mockCategoryAPI.getCategories.mockResolvedValue([
         { id: 1, name: 'Test Category' }
       ]);
 
-      const { bookRepository } = require('../database/BookRepository');
-      bookRepository.findByServerId.mockResolvedValue(null);
-      
-      const { authorRepository } = require('../database/AuthorRepository');
-      authorRepository.findByServerId.mockResolvedValue(null);
-      authorRepository.findByName.mockResolvedValue(null);
-      authorRepository.create.mockResolvedValue({ id: 'author-1' });
-      
-      const { categoryRepository } = require('../database/CategoryRepository');
-      categoryRepository.findByServerId.mockResolvedValue(null);
-      categoryRepository.findByName.mockResolvedValue(null);
-      categoryRepository.create.mockResolvedValue({ id: 'category-1' });
+      mockBookRepository.findByServerId.mockResolvedValue(null);
+      mockAuthorRepository.findByServerId.mockResolvedValue(null);
+      mockAuthorRepository.findByName.mockResolvedValue(null);
+      mockAuthorRepository.create.mockResolvedValue({ id: 'author-1' });
+      mockCategoryRepository.findByServerId.mockResolvedValue(null);
+      mockCategoryRepository.findByName.mockResolvedValue(null);
+      mockCategoryRepository.create.mockResolvedValue({ id: 'category-1' });
 
       await syncService.performSync();
 
@@ -221,13 +224,10 @@ describe('SyncService Hookey Integration', () => {
     });
 
     it('should emit SYNC.COMPLETE when sync succeeds', async () => {
-      const { operationQueue } = require('../OperationQueue');
-      operationQueue.getPendingOperations.mockReturnValue([]);
-
-      const { bookAPI, authorAPI, categoryAPI } = require('../api');
-      bookAPI.getBooks.mockResolvedValue({ books: [] });
-      authorAPI.getAuthors.mockResolvedValue([]);
-      categoryAPI.getCategories.mockResolvedValue([]);
+      mockOperationQueue.getPendingOperations.mockReturnValue([]);
+      mockBookAPI.getBooks.mockResolvedValue({ books: [] });
+      mockAuthorAPI.getAuthors.mockResolvedValue([]);
+      mockCategoryAPI.getCategories.mockResolvedValue([]);
 
       await syncService.performSync();
 
@@ -246,15 +246,12 @@ describe('SyncService Hookey Integration', () => {
     });
 
     it('should emit SYNC.FAILED when sync encounters errors', async () => {
-      const { operationQueue } = require('../OperationQueue');
       // Mock some operations to trigger upload phase
-      operationQueue.getPendingOperations.mockReturnValue([{ id: 'test-op', type: 'create' }]);
-      operationQueue.processQueue.mockRejectedValue(new Error('Queue processing failed'));
-
-      const { bookAPI, authorAPI, categoryAPI } = require('../api');
-      bookAPI.getBooks.mockResolvedValue({ books: [] });
-      authorAPI.getAuthors.mockResolvedValue([]);
-      categoryAPI.getCategories.mockResolvedValue([]);
+      mockOperationQueue.getPendingOperations.mockReturnValue([{ id: 'test-op', type: 'create' }]);
+      mockOperationQueue.processQueue.mockRejectedValue(new Error('Queue processing failed'));
+      mockBookAPI.getBooks.mockResolvedValue({ books: [] });
+      mockAuthorAPI.getAuthors.mockResolvedValue([]);
+      mockCategoryAPI.getCategories.mockResolvedValue([]);
 
       await syncService.performSync();
 
@@ -263,7 +260,7 @@ describe('SyncService Hookey Integration', () => {
       );
 
       expect(failedCalls.length).toBeGreaterThanOrEqual(1); // At least upload failed
-      
+
       const uploadFailedCall = failedCalls.find(([, payload]) => (payload as Record<string, unknown>).stage === 'upload');
       expect(uploadFailedCall).toBeDefined();
       expect(uploadFailedCall[1]).toEqual(expect.objectContaining({
@@ -276,10 +273,10 @@ describe('SyncService Hookey Integration', () => {
     it('should not start sync if already in progress', async () => {
       // Start first sync
       const firstSyncPromise = syncService.performSync();
-      
+
       // Try to start second sync while first is running
       const secondSyncResult = await syncService.performSync();
-      
+
       // Wait for first sync to complete
       await firstSyncPromise;
 
@@ -295,17 +292,13 @@ describe('SyncService Hookey Integration', () => {
 
   describe('conflict detection', () => {
     it('should emit SYNC.CONFLICT.DETECTED for book conflicts', async () => {
-      const { hasBookConflict } = require('../../utils/conflictDetection');
-      const { bookRepository } = require('../database/BookRepository');
-      
-      hasBookConflict.mockReturnValue(true);
-      bookRepository.findByServerId.mockResolvedValue({
+      mockHasBookConflict.mockReturnValue(true);
+      mockBookRepository.findByServerId.mockResolvedValue({
         entity: { id: 'local-book-1', title: 'Local Title', updateDate: '2024-01-01T00:00:00Z' },
         syncStatus: 'synced',
       });
 
-      const { bookAPI } = require('../api');
-      bookAPI.getBooks.mockResolvedValue({
+      mockBookAPI.getBooks.mockResolvedValue({
         books: [{
           id: 1,
           title: 'Server Title',
@@ -314,12 +307,9 @@ describe('SyncService Hookey Integration', () => {
         }]
       });
 
-      const { operationQueue } = require('../OperationQueue');
-      operationQueue.getPendingOperations.mockReturnValue([]);
-
-      const { authorAPI, categoryAPI } = require('../api');
-      authorAPI.getAuthors.mockResolvedValue([]);
-      categoryAPI.getCategories.mockResolvedValue([]);
+      mockOperationQueue.getPendingOperations.mockReturnValue([]);
+      mockAuthorAPI.getAuthors.mockResolvedValue([]);
+      mockCategoryAPI.getCategories.mockResolvedValue([]);
 
       await syncService.performSync();
 
@@ -340,28 +330,21 @@ describe('SyncService Hookey Integration', () => {
     });
 
     it('should emit SYNC.CONFLICT.DETECTED for author conflicts', async () => {
-      const { hasAuthorConflict } = require('../../utils/conflictDetection');
-      const { authorRepository } = require('../database/AuthorRepository');
-      
-      hasAuthorConflict.mockReturnValue(true);
-      authorRepository.findByServerId.mockResolvedValue({
+      mockHasAuthorConflict.mockReturnValue(true);
+      mockAuthorRepository.findByServerId.mockResolvedValue({
         entity: { id: 'local-author-1', name: 'Local Author' },
         serverUpdatedAt: undefined,
       });
 
-      const { authorAPI } = require('../api');
-      authorAPI.getAuthors.mockResolvedValue([{
+      mockAuthorAPI.getAuthors.mockResolvedValue([{
         id: 1,
         name: 'Server Author',
         updateDate: '2024-01-01T00:00:00Z'
       }]);
 
-      const { operationQueue } = require('../OperationQueue');
-      operationQueue.getPendingOperations.mockReturnValue([]);
-
-      const { bookAPI, categoryAPI } = require('../api');
-      bookAPI.getBooks.mockResolvedValue({ books: [] });
-      categoryAPI.getCategories.mockResolvedValue([]);
+      mockOperationQueue.getPendingOperations.mockReturnValue([]);
+      mockBookAPI.getBooks.mockResolvedValue({ books: [] });
+      mockCategoryAPI.getCategories.mockResolvedValue([]);
 
       await syncService.performSync();
 
@@ -380,28 +363,21 @@ describe('SyncService Hookey Integration', () => {
     });
 
     it('should emit SYNC.CONFLICT.DETECTED for category conflicts', async () => {
-      const { hasCategoryConflict } = require('../../utils/conflictDetection');
-      const { categoryRepository } = require('../database/CategoryRepository');
-      
-      hasCategoryConflict.mockReturnValue(true);
-      categoryRepository.findByServerId.mockResolvedValue({
+      mockHasCategoryConflict.mockReturnValue(true);
+      mockCategoryRepository.findByServerId.mockResolvedValue({
         entity: { id: 'local-category-1', name: 'Local Category' },
         serverUpdatedAt: undefined,
       });
 
-      const { categoryAPI } = require('../api');
-      categoryAPI.getCategories.mockResolvedValue([{
+      mockCategoryAPI.getCategories.mockResolvedValue([{
         id: 1,
         name: 'Server Category',
         updateDate: '2024-01-01T00:00:00Z'
       }]);
 
-      const { operationQueue } = require('../OperationQueue');
-      operationQueue.getPendingOperations.mockReturnValue([]);
-
-      const { bookAPI, authorAPI } = require('../api');
-      bookAPI.getBooks.mockResolvedValue({ books: [] });
-      authorAPI.getAuthors.mockResolvedValue([]);
+      mockOperationQueue.getPendingOperations.mockReturnValue([]);
+      mockBookAPI.getBooks.mockResolvedValue({ books: [] });
+      mockAuthorAPI.getAuthors.mockResolvedValue([]);
 
       await syncService.performSync();
 
@@ -425,17 +401,14 @@ describe('SyncService Hookey Integration', () => {
       const mockLastSyncTime = '2024-01-01T00:00:00Z';
       jest.spyOn(syncService, 'getLastSyncTime').mockResolvedValue(mockLastSyncTime);
 
-      const { operationQueue } = require('../OperationQueue');
-      operationQueue.getPendingOperations.mockReturnValue([]);
-
-      const { bookAPI, authorAPI, categoryAPI } = require('../api');
-      bookAPI.getBooks.mockResolvedValue({ books: [] });
-      authorAPI.getAuthors.mockResolvedValue([]);
-      categoryAPI.getCategories.mockResolvedValue([]);
+      mockOperationQueue.getPendingOperations.mockReturnValue([]);
+      mockBookAPI.getBooks.mockResolvedValue({ books: [] });
+      mockAuthorAPI.getAuthors.mockResolvedValue([]);
+      mockCategoryAPI.getCategories.mockResolvedValue([]);
 
       await syncService.performIncrementalSync();
 
-      expect(bookAPI.getBooks).toHaveBeenCalledWith(
+      expect(mockBookAPI.getBooks).toHaveBeenCalledWith(
         1, // page
         50, // SYNC_PAGE_SIZE
         true, // includeAuthors
@@ -443,22 +416,17 @@ describe('SyncService Hookey Integration', () => {
         mockLastSyncTime // updatedSince
       );
 
-      expect(authorAPI.getAuthors).toHaveBeenCalledWith(mockLastSyncTime);
-      expect(categoryAPI.getCategories).toHaveBeenCalledWith(mockLastSyncTime);
+      expect(mockAuthorAPI.getAuthors).toHaveBeenCalledWith(mockLastSyncTime);
+      expect(mockCategoryAPI.getCategories).toHaveBeenCalledWith(mockLastSyncTime);
     });
   });
 
   describe('error scenarios', () => {
     it('should emit SYNC.FAILED when API calls fail', async () => {
-      const { operationQueue } = require('../OperationQueue');
-      operationQueue.getPendingOperations.mockReturnValue([]);
-
-      const { bookAPI } = require('../api');
-      bookAPI.getBooks.mockRejectedValue(new Error('API Error'));
-
-      const { authorAPI, categoryAPI } = require('../api');
-      authorAPI.getAuthors.mockResolvedValue([]);
-      categoryAPI.getCategories.mockResolvedValue([]);
+      mockOperationQueue.getPendingOperations.mockReturnValue([]);
+      mockBookAPI.getBooks.mockRejectedValue(new Error('API Error'));
+      mockAuthorAPI.getAuthors.mockResolvedValue([]);
+      mockCategoryAPI.getCategories.mockResolvedValue([]);
 
       await syncService.performSync();
 
@@ -474,13 +442,10 @@ describe('SyncService Hookey Integration', () => {
     });
 
     it('should handle empty API responses gracefully', async () => {
-      const { operationQueue } = require('../OperationQueue');
-      operationQueue.getPendingOperations.mockReturnValue([]);
-
-      const { bookAPI, authorAPI, categoryAPI } = require('../api');
-      bookAPI.getBooks.mockResolvedValue({}); // Empty response
-      authorAPI.getAuthors.mockResolvedValue(null); // Null response
-      categoryAPI.getCategories.mockResolvedValue(undefined); // Undefined response
+      mockOperationQueue.getPendingOperations.mockReturnValue([]);
+      mockBookAPI.getBooks.mockResolvedValue({});
+      mockAuthorAPI.getAuthors.mockResolvedValue(null);
+      mockCategoryAPI.getCategories.mockResolvedValue(undefined);
 
       await expect(syncService.performSync()).resolves.not.toThrow();
     });

@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Text, Button, Surface } from 'react-native-paper';
+import { View } from 'react-native';
+import { Text, Button, Surface, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 
 interface ErrorDisplayProps {
@@ -18,6 +18,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   onDismiss,
 }) => {
   const { t } = useTranslation('offline');
+  const theme = useTheme();
 
   if (!error) {
     return null;
@@ -30,24 +31,35 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
                         error.message?.includes('connection');
 
   return (
-    <Surface style={styles.container} elevation={2}>
-      <View style={styles.content}>
-        <Text variant="titleMedium" style={styles.title}>
+    <Surface
+      style={{
+        margin: 16,
+        padding: 16,
+        borderRadius: 8,
+        backgroundColor: theme.colors.errorContainer,
+      }}
+      elevation={2}
+    >
+      <View style={{ marginBottom: 12 }}>
+        <Text
+          variant="titleMedium"
+          style={{ color: theme.colors.error, fontWeight: 'bold', marginBottom: 8 }}
+        >
           {isValidationError ? t('errors.validationError') :
            isNetworkError ? t('errors.networkError') : t('errors.generalError')}
         </Text>
-        <Text variant="bodyMedium" style={styles.message}>
+        <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
           {error.message}
         </Text>
       </View>
-      <View style={styles.actions}>
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
         {onRetry && (
-          <Button mode="contained" onPress={onRetry} style={styles.button}>
+          <Button mode="contained" onPress={onRetry} style={{ marginLeft: 8 }}>
             {t('common.retry', 'Retry')}
           </Button>
         )}
         {onDismiss && (
-          <Button mode="outlined" onPress={onDismiss} style={styles.button}>
+          <Button mode="outlined" onPress={onDismiss} style={{ marginLeft: 8 }}>
             {t('common.dismiss', 'Dismiss')}
           </Button>
         )}
@@ -55,31 +67,3 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
     </Surface>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
-    backgroundColor: '#FFEBEE',
-  },
-  content: {
-    marginBottom: 12,
-  },
-  title: {
-    color: '#C62828',
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  message: {
-    color: '#424242',
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-  button: {
-    marginLeft: 8,
-  },
-});

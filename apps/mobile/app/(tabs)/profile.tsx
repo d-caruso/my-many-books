@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { List, Text, Avatar, Button, Card, Switch, Snackbar } from 'react-native-paper';
+import { List, Text, Avatar, Button, Card, Switch, Snackbar, useTheme as usePaperTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
@@ -10,10 +10,12 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { changeLanguage } from '@/i18n';
 import LanguageSelector from '@/components/LanguageSelector';
 import { AboutDialog } from '@/components/About/AboutDialog';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { setThemeMode, isDark } = useTheme();
+  const paperTheme = usePaperTheme();
   const { t, i18n } = useTranslation();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -43,7 +45,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <PageErrorBoundary>
+    <SafeAreaView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <ScrollView style={styles.scrollView}>
         <Card style={styles.profileCard}>
           <Card.Content style={styles.profileContent}>
@@ -210,7 +213,7 @@ export default function ProfileScreen() {
             mode="outlined"
             onPress={handleLogout}
             icon="logout"
-            style={styles.logoutButton}
+            style={[styles.logoutButton, { borderColor: paperTheme.colors.error }]}
             accessibilityLabel={t('logout')}
           >
             {t('logout')}
@@ -235,13 +238,13 @@ export default function ProfileScreen() {
         onClose={() => setAboutDialogVisible(false)}
       />
     </SafeAreaView>
+    </PageErrorBoundary>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   scrollView: {
     flex: 1,
@@ -290,7 +293,5 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
   },
-  logoutButton: {
-    borderColor: '#f44336',
-  },
+  logoutButton: {},
 });

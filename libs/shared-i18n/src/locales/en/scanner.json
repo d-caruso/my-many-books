@@ -40,5 +40,11 @@
   "scan_another": "Scan another",
   "book_found": "Book found!",
   "isbn_colon": "ISBN: {{isbn}}",
-  "add_to_library": "Add to library"
+  "add_to_library": "Add to library",
+  "error_title": "Scanner unavailable",
+  "error_permission_denied": "Camera permission was denied. Please allow camera access in your device settings.",
+  "error_no_camera": "No camera was found on this device.",
+  "error_camera_in_use": "The camera is already in use by another app.",
+  "error_generic": "The scanner encountered an error. Please try again.",
+  "error_close": "Close Scanner"
 }

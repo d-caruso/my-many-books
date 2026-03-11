@@ -7,6 +7,7 @@ import { BookCard } from '@/components/BookCard';
 
 // Mock react-native-paper (copied from BookCard.test.tsx)
 jest.mock('react-native-paper', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   const actual = jest.requireActual('react-native-paper');
 

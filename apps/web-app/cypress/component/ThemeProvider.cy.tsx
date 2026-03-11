@@ -345,7 +345,7 @@ describe('ThemeProvider and ThemeToggle Components', () => {
   describe('Performance', () => {
     it('does not cause unnecessary re-renders', () => {
       const CountingComponent = () => {
-        const { theme } = useTheme();
+        const { theme: _theme } = useTheme();
         const [renderCount, setRenderCount] = React.useState(0);
         
         React.useEffect(() => {

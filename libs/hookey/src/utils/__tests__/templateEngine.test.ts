@@ -155,15 +155,15 @@ describe('replaceTemplateVariables', () => {
   });
 
   it('returns original template if template is not a string', () => {
-    expect(replaceTemplateVariables(null as any, { name: 'Test' })).toBe(null);
-    expect(replaceTemplateVariables(undefined as any, { name: 'Test' })).toBe(undefined);
-    expect(replaceTemplateVariables(123 as any, { name: 'Test' })).toBe(123);
+    expect(replaceTemplateVariables(null as unknown as string, { name: 'Test' })).toBe(null);
+    expect(replaceTemplateVariables(undefined as unknown as string, { name: 'Test' })).toBe(undefined);
+    expect(replaceTemplateVariables(123 as unknown as string, { name: 'Test' })).toBe(123);
   });
 
   it('returns template unchanged if data is not an object', () => {
     const template = 'Hello {{name}}!';
-    expect(replaceTemplateVariables(template, null as any)).toBe(template);
-    expect(replaceTemplateVariables(template, undefined as any)).toBe(template);
-    expect(replaceTemplateVariables(template, 'invalid' as any)).toBe(template);
+    expect(replaceTemplateVariables(template, null as unknown as Record<string, unknown>)).toBe(template);
+    expect(replaceTemplateVariables(template, undefined as unknown as Record<string, unknown>)).toBe(template);
+    expect(replaceTemplateVariables(template, 'invalid' as unknown as Record<string, unknown>)).toBe(template);
   });
 });

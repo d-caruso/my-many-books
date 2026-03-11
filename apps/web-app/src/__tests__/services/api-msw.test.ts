@@ -6,7 +6,7 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
-import type { Book, Category, User, PaginatedResponse } from '@my-many-books/shared-types';
+import { BOOK_STATUS, type Book, type Category, type User, type PaginatedResponse } from '@my-many-books/shared-types';
 import { createApiService } from '../../services/api';
 import type { HttpClient, RequestConfig } from '@my-many-books/shared-api';
 import { API_BASE_PATH } from '../utils/apiBasePath';
@@ -173,7 +173,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
         isbnCode: '123456789',
         editionNumber: 1,
         editionDate: '2024-01-01',
-        status: 'reading' as const,
+        status: BOOK_STATUS.READING,
         notes: 'Test notes',
         selectedAuthors: [{ id: 1, name: 'Test', surname: 'Author' }],
         selectedCategories: [1, 2],
@@ -190,7 +190,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
             isbnCode: '123456789',
             editionNumber: 1,
             editionDate: '2024-01-01',
-            status: 'reading',
+            status: BOOK_STATUS.READING,
             notes: 'Test notes',
             authorIds: [1],
             categoryIds: [1, 2],
@@ -307,8 +307,8 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
   describe('Search Functionality', () => {
     test('searchBooks makes HTTP request with search parameters', async () => {
       const searchParams = {
-        q: 'gatsby',
-        status: 'finished',
+        query: 'gatsby',
+        status: BOOK_STATUS.FINISHED,
         page: 1,
         limit: 5
       };
@@ -324,7 +324,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
                 id: 1,
                 title: 'The Great Gatsby',
                 isbnCode: '9780743273565',
-                status: 'finished',
+                status: BOOK_STATUS.FINISHED,
                 userId: 1,
                 authors: [],
                 categories: [],
@@ -360,7 +360,7 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
             id: 99,
             title: 'The Great Gatsby',
             isbnCode: isbn,
-            status: 'finished',
+            status: BOOK_STATUS.FINISHED,
             userId: 1,
             authors: [],
             categories: [],

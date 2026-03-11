@@ -1,4 +1,4 @@
-import { formatEditionDate } from '../../utils/formatEditionDate';
+import { formatEditionDate } from '../editionDate';
 
 describe('formatEditionDate', () => {
   it('should return empty string for null/undefined/empty', () => {

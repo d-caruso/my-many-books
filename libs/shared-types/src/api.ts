@@ -4,6 +4,8 @@
 
 import { z } from 'zod';
 import { BookSchema, BookStatusSchema } from './book';
+import { SORT_DIRECTION_VALUES } from './constants/sort-directions';
+import { SEARCH_SORT_BY_FIELD_VALUES } from './constants/search';
 
 export const PaginationMetadataSchema = z.object({
   currentPage: z.number().int().nonnegative(),
@@ -39,7 +41,18 @@ export const SearchFiltersSchema = z.object({
   status: BookStatusSchema.optional(),
   authorId: z.number().int().positive().optional(),
   categoryId: z.number().int().positive().optional(),
-  sortBy: z.enum(['title', 'author', 'date-added']).optional(),
+  sortBy: z.enum(
+    SEARCH_SORT_BY_FIELD_VALUES as [
+      typeof SEARCH_SORT_BY_FIELD_VALUES[number],
+      ...typeof SEARCH_SORT_BY_FIELD_VALUES[number][]
+    ]
+  ).optional(),
+  sortOrder: z.enum(
+    SORT_DIRECTION_VALUES as [
+      typeof SORT_DIRECTION_VALUES[number],
+      ...typeof SORT_DIRECTION_VALUES[number][]
+    ]
+  ).optional(),
   page: z.number().int().positive().optional(),
   limit: z.number().int().positive().optional(),
 });

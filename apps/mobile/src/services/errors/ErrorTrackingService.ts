@@ -32,7 +32,7 @@ export interface ErrorEventData extends ErrorContext {
 
 class ErrorTrackingService {
   private isTrackingActive = false;
-  private errorHandlers: Array<() => void> = [];
+  private errorHandlers: (() => void)[] = [];
   private userActionHistory: string[] = [];
   private readonly MAX_USER_ACTIONS = 10;
   private globalErrorHandler: ((error: unknown, isFatal: boolean) => void) | null = null;

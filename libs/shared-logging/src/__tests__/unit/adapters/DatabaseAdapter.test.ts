@@ -1,6 +1,16 @@
 import { Op } from 'sequelize';
-import { DatabaseAdapter } from '../../../adapters/DatabaseAdapter';
+import { DatabaseAdapter, type DatabaseAdapterConfig } from '../../../adapters/DatabaseAdapter';
 import type { AuditLogEntry, LogEntry } from '../../../interfaces/LogEntry';
+
+const mockLoggerError = jest.fn();
+const mockLoggerInfo = jest.fn();
+
+jest.mock('../../../services/logger', () => ({
+  getLogger: () => ({
+    error: mockLoggerError,
+    info: mockLoggerInfo,
+  }),
+}));
 
 const baseLog: LogEntry = {
   timestamp: new Date('2025-01-01T00:00:00.000Z'),
@@ -23,7 +33,24 @@ const auditLog: AuditLogEntry = {
   userAgent: 'agent',
 };
 
+const createAdapter = (
+  model: Pick<DatabaseAdapterConfig['model'], 'bulkCreate' | 'findAll' | 'findOne'>,
+  overrides: Partial<DatabaseAdapterConfig> = {}
+): DatabaseAdapter => {
+  const config: DatabaseAdapterConfig = {
+    name: 'database-test',
+    model: model as unknown as DatabaseAdapterConfig['model'],
+    ...overrides,
+  };
+  return new DatabaseAdapter(config);
+};
+
 describe('DatabaseAdapter', () => {
+  beforeEach(() => {
+    mockLoggerError.mockClear();
+    mockLoggerInfo.mockClear();
+  });
+
   it('filters non-audit logs and bulk inserts audit logs', async () => {
     const model = {
       bulkCreate: jest.fn().mockResolvedValue(undefined),
@@ -31,7 +58,7 @@ describe('DatabaseAdapter', () => {
       findOne: jest.fn(),
     };
 
-    const adapter = new DatabaseAdapter({ model } as any);
+    const adapter = createAdapter(model);
     await expect(adapter.write([baseLog, auditLog])).resolves.toBeUndefined();
 
     expect(model.bulkCreate).toHaveBeenCalledTimes(1);
@@ -56,7 +83,7 @@ describe('DatabaseAdapter', () => {
       findOne: jest.fn(),
     };
 
-    const adapter = new DatabaseAdapter({ model } as any);
+    const adapter = createAdapter(model);
     const withoutDetails: AuditLogEntry = { ...auditLog, details: undefined };
 
     await adapter.write([withoutDetails]);
@@ -72,7 +99,7 @@ describe('DatabaseAdapter', () => {
       findOne: jest.fn(),
     };
 
-    const adapter = new DatabaseAdapter({ model } as any);
+    const adapter = createAdapter(model);
     await expect(adapter.write([baseLog])).resolves.toBeUndefined();
     expect(model.bulkCreate).not.toHaveBeenCalled();
   });
@@ -84,23 +111,24 @@ describe('DatabaseAdapter', () => {
       findOne: jest.fn(),
     };
 
-    const adapter = new DatabaseAdapter({ model, enabled: false } as any);
+    const adapter = createAdapter(model, { enabled: false });
     await expect(adapter.write([auditLog])).resolves.toBeUndefined();
     expect(model.bulkCreate).not.toHaveBeenCalled();
   });
 
   it('rethrows errors and logs on write failures', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const model = {
       bulkCreate: jest.fn().mockRejectedValue(new Error('db-down')),
       findAll: jest.fn(),
       findOne: jest.fn(),
     };
 
-    const adapter = new DatabaseAdapter({ model, retries: 0 } as any);
+    const adapter = createAdapter(model, { retries: 0 });
     await expect(adapter.write([auditLog])).rejects.toThrow('db-down');
-    expect(consoleErrorSpy).toHaveBeenCalledWith('[database]', 'Failed to write audit logs to database:', 'db-down');
-    consoleErrorSpy.mockRestore();
+    expect(mockLoggerError).toHaveBeenCalledWith(
+      { adapter: 'database', details: ['db-down'] },
+      'Failed to write audit logs to database:'
+    );
   });
 
   it('queries with filters and maps records to AuditLogEntry', async () => {
@@ -123,7 +151,7 @@ describe('DatabaseAdapter', () => {
       findOne: jest.fn(),
     };
 
-    const adapter = new DatabaseAdapter({ model } as any);
+    const adapter = createAdapter(model);
     const startDate = new Date('2025-01-01T00:00:00.000Z');
     const endDate = new Date('2025-01-03T00:00:00.000Z');
 
@@ -165,7 +193,7 @@ describe('DatabaseAdapter', () => {
       findOne: jest.fn(),
     };
 
-    const adapter = new DatabaseAdapter({ model } as any);
+    const adapter = createAdapter(model);
     await adapter.query({});
 
     const args = model.findAll.mock.calls[0]?.[0];
@@ -181,7 +209,7 @@ describe('DatabaseAdapter', () => {
       findOne: jest.fn(),
     };
 
-    const adapter = new DatabaseAdapter({ model } as any);
+    const adapter = createAdapter(model);
     const startDate = new Date('2025-01-01T00:00:00.000Z');
     await adapter.query({ startDate });
 
@@ -197,7 +225,7 @@ describe('DatabaseAdapter', () => {
       findOne: jest.fn().mockRejectedValue(new Error('db-down')),
     };
 
-    const adapter = new DatabaseAdapter({ model } as any);
+    const adapter = createAdapter(model);
     await expect(adapter.healthCheck()).resolves.toBe(false);
   });
 
@@ -208,25 +236,22 @@ describe('DatabaseAdapter', () => {
       findOne: jest.fn().mockResolvedValue({}),
     };
 
-    const adapter = new DatabaseAdapter({ model } as any);
+    const adapter = createAdapter(model);
     await expect(adapter.healthCheck()).resolves.toBe(true);
   });
 
   it('logs and rethrows query errors', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const model = {
       bulkCreate: jest.fn(),
       findAll: jest.fn().mockRejectedValue(new Error('query-fail')),
       findOne: jest.fn(),
     };
 
-    const adapter = new DatabaseAdapter({ model } as any);
+    const adapter = createAdapter(model);
     await expect(adapter.query({ userId: 'u1' })).rejects.toThrow('query-fail');
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      '[database]',
-      'Failed to query audit logs from database:',
-      'query-fail'
+    expect(mockLoggerError).toHaveBeenCalledWith(
+      { adapter: 'database', details: ['query-fail'] },
+      'Failed to query audit logs from database:'
     );
-    consoleErrorSpy.mockRestore();
   });
 });

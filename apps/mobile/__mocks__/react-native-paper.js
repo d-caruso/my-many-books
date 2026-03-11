@@ -1,9 +1,12 @@
 const React = require('react');
 
-const createPrimitive = (name) =>
-  React.forwardRef(({ children, ...props }, ref) =>
+const createPrimitive = (name) => {
+  const component = React.forwardRef(({ children, ...props }, ref) =>
     React.createElement(name, { ...props, ref }, children)
   );
+  component.displayName = name;
+  return component;
+};
 
 export const MD3LightTheme = {
   colors: {
@@ -55,6 +58,7 @@ export const Provider = ({ children }) => children;
 export const Button = createPrimitive('Button');
 export const Text = createPrimitive('Text');
 export const TextInput = createPrimitive('TextInput');
+export const Searchbar = createPrimitive('Searchbar');
 export const Chip = createPrimitive('Chip');
 export const IconButton = createPrimitive('IconButton');
 export const ActivityIndicator = createPrimitive('ActivityIndicator');

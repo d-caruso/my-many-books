@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Card, Text, TextInput } from 'react-native-paper';
+import { Button, Card, Text, TextInput, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,26 +9,12 @@ import {
   validatePasswordConfirmation,
   validatePasswordStrength,
 } from '@my-many-books/shared-validation';
-
-const getErrorMessage = (
-  t: (key: string, options?: Record<string, unknown>) => string,
-  i18nKey: string | undefined,
-  fallbackMessage: string | undefined,
-): string => {
-  if (i18nKey) {
-    return t(i18nKey, { defaultValue: fallbackMessage });
-  }
-
-  if (fallbackMessage) {
-    return fallbackMessage;
-  }
-
-  return t('common:unexpected_error');
-};
+import { resolveValidationError } from '@/utils/resolveValidationError';
 
 export default function AccountScreen() {
   const { t, i18n } = useTranslation();
   const { user, loading, changePassword } = useAuth();
+  const theme = useTheme();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -41,10 +27,6 @@ export default function AccountScreen() {
       router.replace('/auth');
     }
   }, [loading, user]);
-
-  if (!user) {
-    return null;
-  }
 
   const clearFeedback = (): void => {
     if (submitError) {
@@ -65,14 +47,14 @@ export default function AccountScreen() {
 
     const passwordValidation = validatePasswordStrength(newPassword);
     if (!passwordValidation.isValid) {
-      setSubmitError(getErrorMessage(t, passwordValidation.i18nKey, passwordValidation.error));
+      setSubmitError(resolveValidationError(t, passwordValidation.i18nKey, passwordValidation.error));
       return;
     }
 
     const confirmationValidation = validatePasswordConfirmation(newPassword, confirmPassword);
     if (!confirmationValidation.isValid) {
       setSubmitError(
-        getErrorMessage(t, confirmationValidation.i18nKey, confirmationValidation.error),
+        resolveValidationError(t, confirmationValidation.i18nKey, confirmationValidation.error),
       );
       return;
     }
@@ -108,6 +90,25 @@ export default function AccountScreen() {
     !currentPassword.trim() ||
     !newPassword.trim() ||
     !confirmPassword.trim();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.colors.background },
+        content: { padding: 16 },
+        title: { marginBottom: 8, fontWeight: '700' },
+        subtitle: { marginBottom: 16, opacity: 0.8 },
+        input: { marginBottom: 12 },
+        errorText: { color: theme.colors.error, marginTop: 4 },
+        successText: { color: theme.colors.tertiary, marginTop: 4 },
+        submitButton: { marginTop: 16 },
+      }),
+    [theme]
+  );
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -198,34 +199,3 @@ export default function AccountScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  content: {
-    padding: 16,
-  },
-  title: {
-    marginBottom: 8,
-    fontWeight: '700',
-  },
-  subtitle: {
-    marginBottom: 16,
-    opacity: 0.8,
-  },
-  input: {
-    marginBottom: 12,
-  },
-  errorText: {
-    color: '#b00020',
-    marginTop: 4,
-  },
-  successText: {
-    color: '#0f766e',
-    marginTop: 4,
-  },
-  submitButton: {
-    marginTop: 16,
-  },
-});

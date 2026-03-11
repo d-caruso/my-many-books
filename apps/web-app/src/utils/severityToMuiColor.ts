@@ -1,4 +1,4 @@
-import type { Severity } from '@my-many-books/shared-design';
+import type { Severity } from '@my-many-books/shared-types';
 
 export type MuiChipColor = 'success' | 'warning' | 'error' | 'default';
 

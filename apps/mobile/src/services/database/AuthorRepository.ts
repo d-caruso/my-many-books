@@ -5,15 +5,18 @@ import type { SyncStatus } from '@/types';
 import { SYNC_STATUS } from '@/types';
 import type { SQLiteBindValue } from 'expo-sqlite';
 
+type AuthorWriteInput = Pick<Author, 'name' | 'surname'> &
+  Partial<Pick<Author, 'nationality' | 'userId' | 'creationDate' | 'updateDate'>>;
+
 export class AuthorRepository {
   /**
    * Find all authors
    */
   async findAll(): Promise<LocalAuthor[]> {
     const authors = await databaseService.getAllAsync(
-      'SELECT * FROM authors ORDER BY name ASC'
+      'SELECT * FROM authors ORDER BY surname ASC, name ASC'
     );
-    return authors.map(this.mapRowToAuthor);
+    return authors.map((author) => this.mapRowToAuthor(author));
   }
 
   /**
@@ -28,30 +31,41 @@ export class AuthorRepository {
   }
 
   /**
-   * Find author by name
+   * Find author by name and surname
    */
-  async findByName(name: string): Promise<LocalAuthor | null> {
+  async findByName(name: string, surname: string): Promise<LocalAuthor | null> {
     const author = await databaseService.getFirstAsync(
-      'SELECT * FROM authors WHERE name = ?',
-      [name]
+      'SELECT * FROM authors WHERE name = ? AND surname = ?',
+      [name, surname]
     );
     return author ? this.mapRowToAuthor(author) : null;
   }
 
   /**
-   * Create new author (or get existing if name already exists)
+   * Create new author (or get existing if name and surname already exist)
    */
-  async create(name: string): Promise<LocalAuthor> {
-    // Check if author already exists
-    const existing = await this.findByName(name);
+  async create(author: AuthorWriteInput): Promise<LocalAuthor> {
+    const normalized = this.normalizeAuthor(author);
+    const existing = await this.findByName(normalized.name, normalized.surname);
     if (existing) {
       return existing;
     }
 
-    // Create new author
     const result = await databaseService.executeQuery(
-      'INSERT INTO authors (name) VALUES (?)',
-      [name]
+      `INSERT INTO authors (
+        name,
+        surname,
+        nationality,
+        creation_date,
+        update_date
+      ) VALUES (?, ?, ?, ?, ?)`,
+      [
+        normalized.name,
+        normalized.surname,
+        normalized.nationality,
+        normalized.creationDate,
+        normalized.updateDate,
+      ]
     );
 
     const created = await this.findById(result.lastInsertRowId);
@@ -62,12 +76,35 @@ export class AuthorRepository {
   }
 
   /**
-   * Update author name
+   * Update author
    */
-  async update(id: number, name: string): Promise<LocalAuthor> {
+  async update(id: number, author: AuthorWriteInput): Promise<LocalAuthor> {
+    const current = await this.findById(id);
+    if (!current) {
+      throw new Error('Author not found');
+    }
+
+    const normalized = this.normalizeAuthor({
+      name: author.name ?? current.entity.name,
+      surname: author.surname ?? current.entity.surname,
+      nationality: author.nationality ?? current.entity.nationality,
+      userId: author.userId ?? current.entity.userId,
+      creationDate: author.creationDate ?? current.entity.creationDate,
+      updateDate: author.updateDate ?? new Date().toISOString(),
+    });
+
     await databaseService.executeQuery(
-      'UPDATE authors SET name = ? WHERE id = ?',
-      [name, id]
+      `UPDATE authors
+       SET name = ?, surname = ?, nationality = ?, creation_date = ?, update_date = ?
+       WHERE id = ?`,
+      [
+        normalized.name,
+        normalized.surname,
+        normalized.nationality,
+        normalized.creationDate,
+        normalized.updateDate,
+        id,
+      ]
     );
 
     const updated = await this.findById(id);
@@ -95,10 +132,23 @@ export class AuthorRepository {
       `SELECT a.* FROM authors a
        INNER JOIN book_authors ba ON a.id = ba.author_id
        WHERE ba.book_id = ?
-       ORDER BY a.name ASC`,
+       ORDER BY a.surname ASC, a.name ASC`,
       [bookId]
     );
-    return authors.map(this.mapRowToAuthor);
+    return authors.map((author) => this.mapRowToAuthor(author));
+  }
+
+  private normalizeAuthor(author: AuthorWriteInput): Required<AuthorWriteInput> {
+    const timestamp = new Date().toISOString();
+
+    return {
+      name: author.name.trim(),
+      surname: author.surname.trim(),
+      nationality: author.nationality ?? null,
+      userId: author.userId ?? undefined,
+      creationDate: author.creationDate ?? timestamp,
+      updateDate: author.updateDate ?? timestamp,
+    };
   }
 
   private mapRowToAuthor(row: Record<string, unknown>): LocalAuthor {

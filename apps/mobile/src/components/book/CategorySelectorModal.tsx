@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Checkbox, Dialog, List, Portal, Text } from 'react-native-paper';
+import { Button, Checkbox, Dialog, List, Portal, RadioButton, Text, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@my-many-books/shared-types';
 import { getCategoryDisplayName } from '@my-many-books/shared-utils';
@@ -10,9 +10,10 @@ interface CategorySelectorModalProps {
   categories: Category[];
   selectedCategoryIds: number[];
   loading?: boolean;
+  singleSelect?: boolean;
   onClose: () => void;
   onToggleCategory: (categoryId: number) => void;
-  onAddCategoryPress: () => void;
+  onAddCategoryPress?: () => void;
 }
 
 export function CategorySelectorModal({
@@ -20,11 +21,13 @@ export function CategorySelectorModal({
   categories,
   selectedCategoryIds,
   loading = false,
+  singleSelect = false,
   onClose,
   onToggleCategory,
   onAddCategoryPress,
 }: CategorySelectorModalProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   return (
     <Portal>
@@ -32,34 +35,51 @@ export function CategorySelectorModal({
         <Dialog.Title>{t('books:select_category')}</Dialog.Title>
         <Dialog.Content>
           <View style={styles.content}>
-            <Button mode="outlined" onPress={onAddCategoryPress}>
-              {t('books:add_category')}
-            </Button>
+            {onAddCategoryPress ? (
+              <Button mode="outlined" onPress={onAddCategoryPress}>
+                {t('books:add_category')}
+              </Button>
+            ) : null}
 
             <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
               {loading ? (
-                <Text variant="bodySmall" style={styles.helperText}>
+                <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
                   {t('books:loading_categories')}
                 </Text>
               ) : null}
 
               {!loading &&
                 categories.map((category) => {
-                  const checked = selectedCategoryIds.includes(Number(category.id));
+                  const categoryId = Number(category.id);
+                  const checked = selectedCategoryIds.includes(categoryId);
                   return (
                     <List.Item
                       key={String(category.id)}
                       title={getCategoryDisplayName(category, t)}
-                      onPress={() => onToggleCategory(Number(category.id))}
-                      left={() => (
-                        <Checkbox status={checked ? 'checked' : 'unchecked'} />
-                      )}
+                      onPress={() => {
+                        onToggleCategory(categoryId);
+                        if (singleSelect) onClose();
+                      }}
+                      left={() =>
+                        singleSelect ? (
+                          <RadioButton
+                            value={String(categoryId)}
+                            status={checked ? 'checked' : 'unchecked'}
+                            onPress={() => {
+                              onToggleCategory(categoryId);
+                              onClose();
+                            }}
+                          />
+                        ) : (
+                          <Checkbox status={checked ? 'checked' : 'unchecked'} />
+                        )
+                      }
                     />
                   );
                 })}
 
               {!loading && categories.length === 0 ? (
-                <Text variant="bodySmall" style={styles.helperText}>
+                <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
                   {t('books:no_categories_found', { defaultValue: 'No categories found' })}
                 </Text>
               ) : null}
@@ -85,7 +105,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   helperText: {
-    color: '#64748b',
     textAlign: 'center',
     paddingVertical: 16,
   },

@@ -17,8 +17,7 @@
     "status_finished": "Completato",
     "sort_label": "Ordina per",
     "sort_title": "Titolo (A-Z)",
-    "sort_author": "Autore (A-Z)",
-    "sort_date": "Aggiunti di recente"
+    "sort_author": "Autore (A-Z)"
   },
   "filter": {
     "title": "Filtri",
@@ -78,8 +77,8 @@
     "fields": {
       "relevance": "Rilevanza",
       "title": "Titolo",
-      "createdAt": "Data aggiunta",
-      "updatedAt": "Ultimo aggiornamento",
+      "creationDate": "Data aggiunta",
+      "updateDate": "Ultimo aggiornamento",
       "status": "Stato",
       "isbnCode": "ISBN",
       "editionNumber": "Edizione",

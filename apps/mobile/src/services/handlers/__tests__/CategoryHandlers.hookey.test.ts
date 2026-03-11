@@ -1,5 +1,6 @@
 import { CategoryHandlerFactory, Category, CreateCategoryPayload } from '../CategoryHandlers';
 import { mobileHooks, MOBILE_EVENTS } from '../../hooks/mobileHooks';
+import { createClientGateway } from '../gateways/clientGateway';
 import type { HttpClient } from '../gateways/clientGateway';
 
 const mockHttpClient: HttpClient = {
@@ -61,7 +62,7 @@ describe('CategoryHandlers Hookey Integration', () => {
       };
 
       // Mock the underlying gateway to return success
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockCategory);
 
       const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
@@ -122,7 +123,7 @@ describe('CategoryHandlers Hookey Integration', () => {
       const categoryId = 'category-123';
 
       // Mock the underlying gateway to return success
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.delete.mockResolvedValue(undefined);
 
       const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
@@ -177,7 +178,7 @@ describe('CategoryHandlers Hookey Integration', () => {
         updateDate: '2024-01-01'
       };
 
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockCategory);
 
       const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
@@ -207,7 +208,7 @@ describe('CategoryHandlers Hookey Integration', () => {
         updateDate: '2024-01-01'
       };
 
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockCategory);
 
       const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);

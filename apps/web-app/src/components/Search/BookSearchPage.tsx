@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,11 +7,11 @@ import {
   CircularProgress,
   Container,
   Typography,
-  Grid,
   Paper,
   Snackbar,
   Alert,
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
@@ -21,6 +21,7 @@ import FilterIcon from '@mui/icons-material/FilterList';
 import { BookSearchForm } from './BookSearchForm';
 import { BookSearchResults } from './BookSearchResults';
 import { useBookSearch } from '../../hooks/useBookSearch';
+import { SearchFiltersSchema } from '@my-many-books/shared-types';
 import type { Book, SearchFilters } from '@my-many-books/shared-types';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../../constants/scanner';
 import { useProtectedViewTransition } from '../../contexts/ViewTransitionContext';
@@ -42,7 +43,6 @@ const BookSearchPage: React.FC = () => {
     loadMore
   } = useBookSearch();
 
-  const [initialQuery] = useState(searchParams.get('q') || '');
   const [isbnBook, setIsbnBook] = useState<Book | null>(null);
   const [scannerNoticeOpen, setScannerNoticeOpen] = useState(false);
   const [scannerNoticeMessage, setScannerNoticeMessage] = useState('');
@@ -50,6 +50,38 @@ const BookSearchPage: React.FC = () => {
   const isbnParam = searchParams.get('isbn');
   const scannerSource = searchParams.get('scannerSource');
   const scannerCopy = searchParams.get('scannerCopy');
+  const initialQuery = searchParams.get('q') || '';
+  const categoryId = searchParams.get('categoryId');
+  const authorId = searchParams.get('authorId');
+  const sortBy = searchParams.get('sortBy');
+  const sortOrder = searchParams.get('sortOrder');
+  const status = searchParams.get('status');
+  const initialFilters = useMemo<SearchFilters>(() => {
+    const filters: SearchFilters = {};
+
+    if (categoryId) filters.categoryId = Number.parseInt(categoryId, 10);
+    if (authorId) filters.authorId = Number.parseInt(authorId, 10);
+    if (sortBy) {
+      const parsedSortBy = SearchFiltersSchema.shape.sortBy.safeParse(sortBy);
+      if (parsedSortBy.success) {
+        filters.sortBy = parsedSortBy.data;
+      }
+    }
+    if (sortOrder) {
+      const parsedSortOrder = SearchFiltersSchema.shape.sortOrder.safeParse(sortOrder);
+      if (parsedSortOrder.success) {
+        filters.sortOrder = parsedSortOrder.data;
+      }
+    }
+    if (status) {
+      const parsedStatus = SearchFiltersSchema.shape.status.safeParse(status);
+      if (parsedStatus.success) {
+        filters.status = parsedStatus.data;
+      }
+    }
+
+    return filters;
+  }, [authorId, categoryId, sortBy, sortOrder, status]);
 
   // Load initial search results from URL params
   useEffect(() => {
@@ -97,23 +129,27 @@ const BookSearchPage: React.FC = () => {
       return;
     }
 
-    const query = searchParams.get('q');
-    const categoryId = searchParams.get('categoryId');
-    const authorId = searchParams.get('authorId');
-    const sortBy = searchParams.get('sortBy');
-    const status = searchParams.get('status');
-
-    if (query || categoryId || authorId || sortBy || status) {
-      const filters: SearchFilters = {};
-
-      if (categoryId) filters.categoryId = parseInt(categoryId);
-      if (authorId) filters.authorId = parseInt(authorId);
-      if (sortBy) filters.sortBy = sortBy as SearchFilters['sortBy'];
-      if (status) filters.status = status as SearchFilters['status'];
-
-      searchBooks(query || '', filters);
+    if (initialQuery || categoryId || authorId || sortBy || sortOrder || status) {
+      searchBooks(initialQuery, initialFilters);
     }
-  }, [searchParams, searchBooks, isbnParam, searchByISBN, scannerSource, scannerCopy, navigate, setSearchParams, t]);
+  }, [
+    searchParams,
+    searchBooks,
+    isbnParam,
+    searchByISBN,
+    scannerSource,
+    scannerCopy,
+    navigate,
+    setSearchParams,
+    t,
+    initialQuery,
+    categoryId,
+    authorId,
+    sortBy,
+    sortOrder,
+    status,
+    initialFilters,
+  ]);
 
   const handleSearch = (query: string, filters: SearchFilters) => {
     // Update URL params
@@ -124,7 +160,7 @@ const BookSearchPage: React.FC = () => {
     }
 
     Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== '') {
+      if (value != null && value !== '') {
         params.set(key, value.toString());
       }
     });
@@ -171,6 +207,7 @@ const BookSearchPage: React.FC = () => {
           onSearch={handleSearch}
           loading={loading}
           initialQuery={initialQuery}
+          initialFilters={initialFilters}
         />
       </Box>
 

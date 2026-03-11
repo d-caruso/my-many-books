@@ -6,6 +6,16 @@ import { LogManager } from '../../services/LogManager';
 import { LogStorage } from '../../interfaces/LogStorage';
 import { LogEntry } from '../../interfaces/LogEntry';
 
+const mockLoggerError = jest.fn();
+const mockLoggerInfo = jest.fn();
+
+jest.mock('../../services/logger', () => ({
+  getLogger: () => ({
+    error: mockLoggerError,
+    info: mockLoggerInfo,
+  }),
+}));
+
 // Mock adapter implementation
 class MockAdapter implements LogStorage {
   name: string;
@@ -49,8 +59,6 @@ describe('LogManager', () => {
   let mockAdapter1: MockAdapter;
   let mockAdapter2: MockAdapter;
   let logManager: LogManager;
-  let consoleErrorSpy: jest.SpyInstance;
-  let consoleLogSpy: jest.SpyInstance;
 
   const createMockLog = (message: string): LogEntry => ({
     timestamp: new Date(),
@@ -62,8 +70,8 @@ describe('LogManager', () => {
   });
 
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    mockLoggerError.mockClear();
+    mockLoggerInfo.mockClear();
 
     mockAdapter1 = new MockAdapter('adapter1');
     mockAdapter2 = new MockAdapter('adapter2');
@@ -72,11 +80,6 @@ describe('LogManager', () => {
       circuitBreakerThreshold: 3,
       verboseErrors: false,
     });
-  });
-
-  afterEach(() => {
-    consoleErrorSpy.mockRestore();
-    consoleLogSpy.mockRestore();
   });
 
   describe('write', () => {
@@ -136,11 +139,11 @@ describe('LogManager', () => {
     it('handles non-Error rejections as Unknown error', async () => {
       const badAdapter: LogStorage = {
         name: 'bad',
-        write: jest.fn(async () => {
+        write: jest.fn<Promise<void>, [LogEntry[]]>(async () => {
           throw 'nope';
-        }) as any,
-        flush: jest.fn(async () => {}) as any,
-        healthCheck: jest.fn(async () => true) as any,
+        }),
+        flush: jest.fn<Promise<void>, []>(async () => {}),
+        healthCheck: jest.fn<Promise<boolean>, []>(async () => true),
       };
 
       const lm = new LogManager([badAdapter], {
@@ -151,10 +154,9 @@ describe('LogManager', () => {
 
       await lm.write(createMockLog('x'));
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[LogManager]',
-        'Adapter bad failed:',
-        'Adapter bad write failed: Unknown error'
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        { component: 'LogManager', details: ['Adapter bad write failed: Unknown error'] },
+        'Adapter bad failed:'
       );
     });
   });
@@ -278,10 +280,9 @@ describe('LogManager', () => {
       mockAdapter1.shouldFail = true;
       await lm.write(log);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[LogManager]',
-        'Adapter adapter1 failed:',
-        'Adapter adapter1 write failed: Mock adapter1 write failed'
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        { component: 'LogManager', details: ['Adapter adapter1 write failed: Mock adapter1 write failed'] },
+        'Adapter adapter1 failed:'
       );
     });
 
@@ -301,8 +302,8 @@ describe('LogManager', () => {
       mockAdapter1.shouldFail = false;
       await lm.write(log);
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[LogManager]',
+      expect(mockLoggerInfo).toHaveBeenCalledWith(
+        { component: 'LogManager' },
         'Circuit breaker closed for adapter adapter1'
       );
     });

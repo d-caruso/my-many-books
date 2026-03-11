@@ -13,7 +13,38 @@ jest.mock('../../../middleware/traceIdGenerator', () => ({
 }));
 
 import type { Request, Response } from 'express';
+import type { Logger } from 'pino';
 import { requestLoggerMiddleware } from '../../../middleware/requestLogger';
+
+interface RequestLoggerOptionsUnderTest {
+  logger: Logger;
+  customLogLevel: (req: Request, res: Response, err: Error | null) => string;
+  customProps: (req: Request, res: Response) => Record<string, unknown>;
+  autoLogging: { ignore: (req: Request) => boolean };
+  customSuccessMessage: (req: Request, res: Response) => string;
+  customErrorMessage: (req: Request, res: Response, error: Error) => string;
+}
+
+const createLogger = (): Logger => ({ info: jest.fn() }) as unknown as Logger;
+
+const createMockRequest = (overrides: Partial<Request> = {}): Request =>
+  ({
+    method: 'GET',
+    url: '/anything',
+    ...overrides,
+  }) as unknown as Request;
+
+const createMockResponse = (statusCode: number): Response =>
+  ({ statusCode }) as unknown as Response;
+
+const getPinoHttpOptions = (): RequestLoggerOptionsUnderTest => {
+  const calls = pinoHttpMock.mock.calls as unknown[][];
+  const firstCall = calls[0];
+  if (!firstCall || firstCall.length === 0) {
+    throw new Error('Expected pino-http to be called at least once');
+  }
+  return firstCall[0] as RequestLoggerOptionsUnderTest;
+};
 
 describe('requestLoggerMiddleware', () => {
   beforeEach(() => {
@@ -24,15 +55,15 @@ describe('requestLoggerMiddleware', () => {
   });
 
   it('uses provided logger and fixed level when options.level is set', () => {
-    const customLogger = { info: jest.fn() };
+    const customLogger = createLogger();
 
-    requestLoggerMiddleware({ logger: customLogger as any, level: 'debug' });
+    requestLoggerMiddleware({ logger: customLogger, level: 'debug' });
 
     expect(pinoHttpMock).toHaveBeenCalledTimes(1);
-    const options = (pinoHttpMock as any).mock.calls[0][0];
+    const options = getPinoHttpOptions();
 
     expect(options.logger).toBe(customLogger);
-    expect(options.customLogLevel({}, { statusCode: 500 }, null)).toBe('debug');
+    expect(options.customLogLevel(createMockRequest(), createMockResponse(500), null)).toBe('debug');
   });
 
   it('creates a default pino logger when no logger is provided', () => {
@@ -44,66 +75,69 @@ describe('requestLoggerMiddleware', () => {
   });
 
   it('selects log levels based on response status', () => {
-    const customLogger = { info: jest.fn() };
-    requestLoggerMiddleware({ logger: customLogger as any });
+    const customLogger = createLogger();
+    requestLoggerMiddleware({ logger: customLogger });
 
-    const options = (pinoHttpMock as any).mock.calls[0][0];
-    expect(options.customLogLevel({} as Request, { statusCode: 200 } as Response, null)).toBe('info');
-    expect(options.customLogLevel({} as Request, { statusCode: 302 } as Response, null)).toBe('info');
-    expect(options.customLogLevel({} as Request, { statusCode: 404 } as Response, null)).toBe('warn');
-    expect(options.customLogLevel({} as Request, { statusCode: 500 } as Response, null)).toBe('error');
+    const options = getPinoHttpOptions();
+    expect(options.customLogLevel(createMockRequest(), createMockResponse(200), null)).toBe('info');
+    expect(options.customLogLevel(createMockRequest(), createMockResponse(302), null)).toBe('info');
+    expect(options.customLogLevel(createMockRequest(), createMockResponse(404), null)).toBe('warn');
+    expect(options.customLogLevel(createMockRequest(), createMockResponse(500), null)).toBe('error');
   });
 
   it('adds traceId and custom fields via customProps', () => {
-    const customLogger = { info: jest.fn() };
-    requestLoggerMiddleware({ logger: customLogger as any, customFields: { foo: 'bar' } });
+    const customLogger = createLogger();
+    requestLoggerMiddleware({ logger: customLogger, customFields: { foo: 'bar' } });
 
-    const options = (pinoHttpMock as any).mock.calls[0][0];
-    expect(options.customProps({} as Request, {} as Response)).toEqual({ traceId: 'trace-123', foo: 'bar' });
+    const options = getPinoHttpOptions();
+    expect(options.customProps(createMockRequest(), createMockResponse(200))).toEqual({
+      traceId: 'trace-123',
+      foo: 'bar',
+    });
   });
 
   it('adds only traceId when customFields is not provided', () => {
-    const customLogger = { info: jest.fn() };
-    requestLoggerMiddleware({ logger: customLogger as any });
+    const customLogger = createLogger();
+    requestLoggerMiddleware({ logger: customLogger });
 
-    const options = (pinoHttpMock as any).mock.calls[0][0];
-    expect(options.customProps({} as Request, {} as Response)).toEqual({ traceId: 'trace-123' });
+    const options = getPinoHttpOptions();
+    expect(options.customProps(createMockRequest(), createMockResponse(200))).toEqual({ traceId: 'trace-123' });
   });
 
   it('uses shouldLog to control autoLogging.ignore', () => {
-    const customLogger = { info: jest.fn() };
+    const customLogger = createLogger();
     const shouldLog = jest.fn().mockReturnValue(false);
 
-    requestLoggerMiddleware({ logger: customLogger as any, shouldLog });
-    const options = (pinoHttpMock as any).mock.calls[0][0];
+    requestLoggerMiddleware({ logger: customLogger, shouldLog });
+    const options = getPinoHttpOptions();
 
-    expect(options.autoLogging.ignore({ url: '/anything' } as any)).toBe(true);
+    expect(options.autoLogging.ignore(createMockRequest())).toBe(true);
 
     shouldLog.mockReturnValue(true);
-    expect(options.autoLogging.ignore({ url: '/anything' } as any)).toBe(false);
+    expect(options.autoLogging.ignore(createMockRequest())).toBe(false);
   });
 
   it('skips /health by default', () => {
-    const customLogger = { info: jest.fn() };
-    requestLoggerMiddleware({ logger: customLogger as any });
-    const options = (pinoHttpMock as any).mock.calls[0][0];
-    expect(options.autoLogging.ignore({ url: '/health' } as any)).toBe(true);
-    expect(options.autoLogging.ignore({ url: '/not-health' } as any)).toBe(false);
+    const customLogger = createLogger();
+    requestLoggerMiddleware({ logger: customLogger });
+    const options = getPinoHttpOptions();
+    expect(options.autoLogging.ignore(createMockRequest({ url: '/health' }))).toBe(true);
+    expect(options.autoLogging.ignore(createMockRequest({ url: '/not-health' }))).toBe(false);
   });
 
   it('formats success and error messages', () => {
-    const customLogger = { info: jest.fn() };
-    requestLoggerMiddleware({ logger: customLogger as any });
-    const options = (pinoHttpMock as any).mock.calls[0][0];
+    const customLogger = createLogger();
+    requestLoggerMiddleware({ logger: customLogger });
+    const options = getPinoHttpOptions();
 
-    expect(options.customSuccessMessage({ method: 'GET', url: '/x' } as any, { statusCode: 200 } as any)).toBe(
+    expect(options.customSuccessMessage(createMockRequest({ method: 'GET', url: '/x' }), createMockResponse(200))).toBe(
       'GET /x - 200'
     );
 
     expect(
       options.customErrorMessage(
-        { method: 'GET', url: '/x' } as any,
-        { statusCode: 500 } as any,
+        createMockRequest({ method: 'GET', url: '/x' }),
+        createMockResponse(500),
         new Error('boom')
       )
     ).toBe('GET /x - 500 - boom');

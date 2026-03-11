@@ -5,16 +5,7 @@ import { authorAPI, categoryAPI } from '@/services/api';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
 import { useTranslation } from 'react-i18next';
 import { createCategoryDisplayNameComparator } from '@my-many-books/shared-utils';
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === 'string') {
-    return error;
-  }
-  return String(error);
-};
+import { getErrorMessage } from '@/utils/helpers';
 
 const sortAuthors = (authors: Author[]): Author[] =>
   [...authors].sort((a, b) => `${a.surname} ${a.name}`.localeCompare(`${b.surname} ${b.name}`));

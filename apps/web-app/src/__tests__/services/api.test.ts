@@ -1,4 +1,14 @@
-import type { Book, Author, Category, User, UserProfile, PaginatedResponse } from '@my-many-books/shared-types';
+import {
+  BOOK_STATUS,
+  SEARCH_SORT_BY_FIELDS,
+  SORT_DIRECTIONS,
+  type Book,
+  type Author,
+  type Category,
+  type User,
+  type UserProfile,
+  type PaginatedResponse,
+} from '@my-many-books/shared-types';
 import type { AuthorApi, BookApi, CategoryApi, UserApi } from '@my-many-books/shared-api';
 
 // Import after mocks are set up (avoid importing default instance to prevent axios creation)
@@ -125,6 +135,11 @@ Object.defineProperty(window, 'location', {
 // Mock environment variables
 const originalEnv = process.env;
 
+const getAuthorSortKey = (book: Book) =>
+  book.authors?.[0] ? `${book.authors[0].surname} ${book.authors[0].name}` : '';
+
+const getNumericDate = (value?: string) => (value ? new Date(value).getTime() : 0);
+
 
 describe('ApiService with Industry Standard Testing', () => {
   let mockApiClient: ReturnType<typeof createMockApiClient>;
@@ -195,7 +210,7 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockSearchResults filters by query', async () => {
-      const searchParams = { q: 'gatsby' };
+      const searchParams = { query: 'gatsby' };
       const result = await getMockSearchResults(searchParams);
 
       expect(result.books.some((book: Book) => 
@@ -204,10 +219,10 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockSearchResults filters by status', async () => {
-      const searchParams = { status: 'finished' };
+      const searchParams = { status: BOOK_STATUS.FINISHED };
       const result = await getMockSearchResults(searchParams);
 
-      expect(result.books.every((book: Book) => book.status === 'finished')).toBe(true);
+      expect(result.books.every((book: Book) => book.status === BOOK_STATUS.FINISHED)).toBe(true);
     });
 
     test('getMockSearchResults filters by author', async () => {
@@ -220,7 +235,7 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockSearchResults sorts by title', async () => {
-      const searchParams = { sortBy: 'title' };
+      const searchParams = { sortBy: SEARCH_SORT_BY_FIELDS.TITLE };
       const result = await getMockSearchResults(searchParams);
 
       const titles = result.books.map((book: Book) => book.title);
@@ -229,18 +244,21 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockSearchResults sorts by author', async () => {
-      const searchParams = { sortBy: 'author' };
+      const searchParams = { sortBy: SEARCH_SORT_BY_FIELDS.AUTHOR };
       const result = await getMockSearchResults(searchParams);
 
       const authors = result.books.map((book: Book) => 
-        book.authors?.[0] ? `${book.authors[0].name} ${book.authors[0].surname}` : ''
+        book.authors?.[0] ? `${book.authors[0].surname} ${book.authors[0].name}` : ''
       );
       const sortedAuthors = [...authors].sort();
       expect(authors).toEqual(sortedAuthors);
     });
 
-    test('getMockSearchResults sorts by date-added', async () => {
-      const searchParams = { sortBy: 'date-added' };
+    test('getMockSearchResults sorts by creationDate', async () => {
+      const searchParams = {
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      };
       const result = await getMockSearchResults(searchParams);
 
       // Should be sorted by creation date descending (newest first)
@@ -248,6 +266,85 @@ describe('ApiService with Industry Standard Testing', () => {
       for (let i = 1; i < dates.length; i++) {
         expect(dates[i-1]).toBeGreaterThanOrEqual(dates[i]);
       }
+    });
+
+    test('getMockSearchResults sorts by updateDate', async () => {
+      const searchParams = {
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      };
+      const result = await getMockSearchResults(searchParams);
+
+      const dates = result.books.map((book: Book) => new Date(book.updateDate).getTime());
+      const sortedDates = [...dates].sort((a, b) => a - b);
+      expect(dates).toEqual(sortedDates);
+    });
+
+    test('getMockSearchResults sorts by status', async () => {
+      const searchParams = {
+        sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      };
+      const result = await getMockSearchResults(searchParams);
+
+      const statuses = result.books.map((book: Book) => book.status ?? '');
+      const sortedStatuses = [...statuses].sort();
+      expect(statuses).toEqual(sortedStatuses);
+    });
+
+    test('getMockSearchResults sorts by title descending', async () => {
+      const result = await getMockSearchResults({
+        sortBy: SEARCH_SORT_BY_FIELDS.TITLE,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      const titles = result.books.map((book: Book) => book.title);
+      const sortedTitles = [...titles].sort((a, b) => b.localeCompare(a));
+      expect(titles).toEqual(sortedTitles);
+    });
+
+    test('getMockSearchResults sorts by author descending', async () => {
+      const result = await getMockSearchResults({
+        sortBy: SEARCH_SORT_BY_FIELDS.AUTHOR,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      const authors = result.books.map(getAuthorSortKey);
+      const sortedAuthors = [...authors].sort((a, b) => b.localeCompare(a));
+      expect(authors).toEqual(sortedAuthors);
+    });
+
+    test('getMockSearchResults sorts by status descending', async () => {
+      const result = await getMockSearchResults({
+        sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      const statuses = result.books.map((book: Book) => book.status ?? '');
+      const sortedStatuses = [...statuses].sort((a, b) => b.localeCompare(a));
+      expect(statuses).toEqual(sortedStatuses);
+    });
+
+    test('getMockSearchResults sorts by creationDate ascending', async () => {
+      const result = await getMockSearchResults({
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      });
+
+      const dates = result.books.map((book: Book) => getNumericDate(book.creationDate));
+      const sortedDates = [...dates].sort((a, b) => a - b);
+      expect(dates).toEqual(sortedDates);
+    });
+
+    test('getMockSearchResults sorts by updateDate descending', async () => {
+      const result = await getMockSearchResults({
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      const dates = result.books.map((book: Book) => getNumericDate(book.updateDate));
+      const sortedDates = [...dates].sort((a, b) => b - a);
+      expect(dates).toEqual(sortedDates);
     });
 
     test('getMockSearchResults filters by categoryId', async () => {
@@ -308,7 +405,7 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('searchBooks uses mock data in development mode', async () => {
-      const searchParams = { q: 'gatsby' };
+      const searchParams = { query: 'gatsby' };
       const result = await testApiService.searchBooks(searchParams);
 
       expect(result).toHaveProperty('books');
@@ -452,7 +549,7 @@ describe('ApiService with Industry Standard Testing', () => {
           isbnCode: '123456789',
           editionNumber: 1,
           editionDate: '2024-01-01',
-          status: 'reading' as const,
+          status: BOOK_STATUS.READING,
           notes: 'Test notes',
           selectedAuthors: [{ id: 1, name: 'Test', surname: 'Author' }],
           selectedCategories: [1, 2],
@@ -462,7 +559,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'New Book',
           isbnCode: '123456789',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
           userId: 1,
           authors: [],
           categories: [],
@@ -478,7 +575,7 @@ describe('ApiService with Industry Standard Testing', () => {
           isbnCode: '123456789',
           editionNumber: 1,
           editionDate: '2024-01-01',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
           notes: 'Test notes',
           authorIds: [1],
           categoryIds: [1, 2],
@@ -491,12 +588,12 @@ describe('ApiService with Industry Standard Testing', () => {
         const mockResult = { books: [], total: 0, hasMore: false, page: 1 };
         mockApiClient.books.searchBooks.mockResolvedValue(mockResult);
 
-        const searchParams = { q: 'test', status: 'finished' };
+        const searchParams = { query: 'test', status: BOOK_STATUS.FINISHED };
         const result = await testApiService.searchBooks(searchParams);
 
         expect(mockApiClient.books.searchBooks).toHaveBeenCalledWith({
           query: 'test',
-          status: 'finished',
+          status: BOOK_STATUS.FINISHED,
           sortBy: undefined,
           authorId: undefined,
           categoryId: undefined,
@@ -511,7 +608,7 @@ describe('ApiService with Industry Standard Testing', () => {
         const mockResult = { books: [], total: 0, hasMore: false, page: 1 };
         mockApiClient.books.searchBooks.mockResolvedValue(mockResult);
 
-        await testApiService.searchBooks({ q: 'a', categoryId: 1 });
+        await testApiService.searchBooks({ query: 'a', categoryId: 1 });
 
         expect(mockApiClient.books.searchBooks).toHaveBeenCalledWith({
           query: undefined,
@@ -529,7 +626,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'Test Book',
           isbnCode: '123456789',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
           userId: 1,
           authors: [],
           categories: [],
@@ -556,7 +653,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'Updated Book',
           isbnCode: '123456789',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
           userId: 1,
           authors: [],
           categories: [],
@@ -585,7 +682,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'Updated Title',
           isbnCode: '123456789',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
           userId: 1,
           authors: [],
           categories: [],

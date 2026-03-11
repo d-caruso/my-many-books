@@ -1,12 +1,13 @@
 import React, { createContext, useContext, ReactNode } from 'react';
+import type { AuthUser } from '@my-many-books/shared-types';
 
 // Mock AuthContext for testing
 interface MockAuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (userData: { email: string; password: string; name: string; surname: string }) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (userData: any) => void;
-  user: any;
+  updateUser: (userData: Partial<AuthUser>) => void;
+  user: AuthUser | null;
   token: string | null;
   loading: boolean;
 }
@@ -26,18 +27,10 @@ export const useAuth = () => useContext(MockAuthContext);
 // Create a MockAuthProvider that matches the real AuthProvider interface
 export const MockAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const mockContextValue: MockAuthContextType = {
-    login: async (email: string, password: string) => {
-      console.log('Mock login:', email, password);
-    },
-    register: async (userData: { email: string; password: string; name: string; surname: string }) => {
-      console.log('Mock register:', userData);
-    },
-    logout: async () => {
-      console.log('Mock logout');
-    },
-    updateUser: (userData: any) => {
-      console.log('Mock updateUser:', userData);
-    },
+    login: async (_email: string, _password: string) => {},
+    register: async (_userData: { email: string; password: string; name: string; surname: string }) => {},
+    logout: async () => {},
+    updateUser: (_userData: Partial<AuthUser>) => {},
     user: null,
     token: null,
     loading: false,

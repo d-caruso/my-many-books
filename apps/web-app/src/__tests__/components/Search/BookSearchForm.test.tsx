@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { SEARCH_SORT_BY_FIELDS, SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { BookSearchForm } from '../../../components/Search/BookSearchForm';
 import { useCategories } from '../../../hooks/useCategories';
 import { setupMuiMock } from '../../test-utils/setupMuiMock';
@@ -42,6 +43,14 @@ vi.mock('@mui/icons-material/Warning', () => ({
   default: () => <div data-testid="warning-icon">Warning</div>,
 }));
 
+vi.mock('@mui/icons-material/ArrowUpward', () => ({
+  default: () => <div data-testid="arrow-up-icon">↑</div>,
+}));
+
+vi.mock('@mui/icons-material/ArrowDownward', () => ({
+  default: () => <div data-testid="arrow-down-icon">↓</div>,
+}));
+
 const mockUseCategories = vi.mocked(useCategories);
 
 const mockCategories = [
@@ -49,6 +58,19 @@ const mockCategories = [
   { id: 2, name: 'Non-Fiction' },
   { id: 3, name: 'Science Fiction' },
 ];
+
+const createCategoriesHookResult = (
+  overrides: Partial<ReturnType<typeof useCategories>> = {}
+): ReturnType<typeof useCategories> => ({
+  categories: mockCategories,
+  loading: false,
+  sorting: false,
+  error: null,
+  loadCategories: vi.fn(),
+  createCategory: vi.fn(),
+  refreshCategories: vi.fn(),
+  ...overrides,
+});
 
 const getSearchInput = () =>
   screen.getByPlaceholderText('Search by title, author, ISBN...');
@@ -94,11 +116,7 @@ describe('BookSearchForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseCategories.mockReturnValue({
-      categories: mockCategories,
-      loading: false,
-      sorting: false,
-    });
+    mockUseCategories.mockReturnValue(createCategoriesHookResult());
   });
 
   test('renders search form elements', () => {
@@ -122,6 +140,27 @@ describe('BookSearchForm', () => {
     render(<BookSearchForm {...defaultProps} initialQuery="Initial Query" />);
 
     expect(getSearchInput()).toHaveValue('Initial Query');
+  });
+
+  test('shows initial filters when provided', async () => {
+    render(
+      <BookSearchForm
+        {...defaultProps}
+        initialFilters={{
+          status: 'finished',
+          sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
+          sortOrder: SORT_DIRECTIONS.DESC,
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Reading progress')).toBeVisible();
+    });
+
+    expect(getSelectDisplayText('Reading progress')).toBe('Finished');
+    expect(getSelectDisplayText('Sort by')).toBe('Add date');
+    expect(screen.getByTestId('sort-order-label')).toHaveTextContent('Descending');
   });
 
   test('calls onSearch when form is submitted with valid query', () => {
@@ -199,6 +238,56 @@ describe('BookSearchForm', () => {
     });
   });
 
+  test('renders sort options in the required order', async () => {
+    render(<BookSearchForm {...defaultProps} />);
+
+    openAdvancedFilters();
+    const listbox = await openSelectListbox('Sort by');
+    const optionTexts = within(listbox)
+      .getAllByRole('option')
+      .map((option) => option.textContent?.trim());
+
+    expect(optionTexts).toEqual([
+      'Title',
+      'Author',
+      'Status',
+      'Add date',
+      'Last updated',
+    ]);
+  });
+
+  test('toggles sort order with button', async () => {
+    render(<BookSearchForm {...defaultProps} />);
+
+    openAdvancedFilters();
+
+    const orderButton = screen.getByLabelText('Order');
+    expect(orderButton).toBeVisible();
+    expect(screen.getByTestId('sort-order-label')).toHaveTextContent('Ascending');
+
+    fireEvent.click(orderButton);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sort-order-label')).toHaveTextContent('Descending');
+    });
+  });
+
+  test('submits selected sortBy and sortOrder filters', async () => {
+    render(<BookSearchForm {...defaultProps} />);
+
+    fireEvent.change(getSearchInput(), { target: { value: 'History' } });
+    openAdvancedFilters();
+
+    await selectOption('Sort by', 'Last updated');
+    fireEvent.click(screen.getByLabelText('Order'));
+    fireEvent.click(getSearchButton());
+
+    expect(mockOnSearch).toHaveBeenCalledWith('History', {
+      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
+      sortOrder: SORT_DIRECTIONS.DESC,
+    });
+  });
+
   test('handles author selection', () => {
     render(<BookSearchForm {...defaultProps} />);
 
@@ -260,7 +349,9 @@ describe('BookSearchForm', () => {
   });
 
   test('handles categories loading state', () => {
-    mockUseCategories.mockReturnValue({ categories: [], loading: true, sorting: false });
+    mockUseCategories.mockReturnValue(
+      createCategoriesHookResult({ categories: [], loading: true })
+    );
     render(<BookSearchForm {...defaultProps} />);
 
     openAdvancedFilters();
@@ -270,13 +361,12 @@ describe('BookSearchForm', () => {
 
   test('renders categories in the order provided by the category hook (localized sorting happens in hook)', async () => {
     mockUseCategories.mockReturnValue({
+      ...createCategoriesHookResult(),
       categories: [
         { id: 2, name: 'Apple' },
         { id: 3, name: 'Banana' },
         { id: 1, name: 'Zebra' },
       ],
-      loading: false,
-      sorting: false,
     });
 
     render(<BookSearchForm {...defaultProps} />);
@@ -315,13 +405,13 @@ describe('BookSearchForm', () => {
     openAdvancedFilters();
     await selectOption('Category', 'Fiction');
     await selectOption('Reading progress', 'Finished');
-    await selectOption('Sort by', 'Relevance');
+    await selectOption('Sort by', 'Add date');
     fireEvent.click(getSearchButton());
 
     expect(mockOnSearch).toHaveBeenCalledWith('test query', {
       categoryId: 1,
       status: 'finished',
-      sortBy: 'relevance',
+      sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
     });
   });
 

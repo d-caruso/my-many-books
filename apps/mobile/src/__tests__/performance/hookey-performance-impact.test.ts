@@ -6,16 +6,15 @@ import { operationQueue } from '../../services/OperationQueue';
 import { syncService } from '../../services/sync/SyncService';
 import { OPERATION_TYPES, RESOURCE_TYPES } from '../../services/hooks/eventsSchema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { bookAPI, authorAPI, categoryAPI } from '../../services/api';
+import { bookRepository } from '../../services/database/BookRepository';
+import { authorRepository } from '../../services/database/AuthorRepository';
+import { categoryRepository } from '../../services/database/CategoryRepository';
 
 jest.mock('../../services/api');
 jest.mock('../../services/database/BookRepository');
 jest.mock('../../services/database/AuthorRepository');
 jest.mock('../../services/database/CategoryRepository');
-// Import mocked services
-const { bookAPI, authorAPI, categoryAPI } = require('../../services/api');
-const { bookRepository } = require('../../services/database/BookRepository');
-const { authorRepository } = require('../../services/database/AuthorRepository');
-const { categoryRepository } = require('../../services/database/CategoryRepository');
 
 // Performance test configuration
 const PERFORMANCE_THRESHOLD_MS = 5; // Max acceptable overhead per operation

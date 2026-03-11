@@ -21,39 +21,43 @@ import { PushPinOutlined as UnpinIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { RESOURCE_TYPES } from '@my-many-books/shared-types';
+import type { ResourceType } from '@my-many-books/shared-types';
 import { AdminLayout } from './AdminLayout';
 import { useApi } from '../../contexts/ApiContext';
+import type { AdminPinnedSearchResult } from '../../services/admin-types';
 
-interface PinnedResult {
-  id: number;
-  resource_type: string;
-  resource_id: number;
-  priority: number;
-  active: boolean;
-}
+const ALL_RESOURCE_TYPES = 'all' as const;
+type ResourceTypeFilter = ResourceType | typeof ALL_RESOURCE_TYPES;
 
 export const SearchManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
+  const {
+    getAdminPinnedSearchResults,
+    updateAdminPinnedSearchPriority,
+    deleteAdminPinnedSearchResult,
+    createAdminPinnedSearchResult,
+  } = apiService;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pinnedResults, setPinnedResults] = useState<PinnedResult[]>([]);
-  const [selectedResourceType, setSelectedResourceType] = useState<string>('all');
+  const [pinnedResults, setPinnedResults] = useState<AdminPinnedSearchResult[]>([]);
+  const [selectedResourceType, setSelectedResourceType] = useState<ResourceTypeFilter>(ALL_RESOURCE_TYPES);
 
   const fetchPinnedResults = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const queryParam = selectedResourceType !== 'all' ? `?resource_type=${selectedResourceType}` : '';
-      const response = await apiService.get(`/admin/search/pinned${queryParam}`);
-      setPinnedResults(response.data.results || []);
+      const response = await getAdminPinnedSearchResults(
+        selectedResourceType === ALL_RESOURCE_TYPES ? undefined : selectedResourceType
+      );
+      setPinnedResults(response.results || []);
     } catch (err: unknown) {
       setError(extractErrorMessage(err) ?? 'Failed to fetch pinned results');
     } finally {
       setLoading(false);
     }
-  }, [apiService, selectedResourceType]);
+  }, [getAdminPinnedSearchResults, selectedResourceType]);
 
   useEffect(() => {
     fetchPinnedResults();
@@ -76,9 +80,7 @@ export const SearchManagementPage: React.FC = () => {
 
     // Update priority on server
     try {
-      await apiService.patch(`/admin/search/pinned/${reorderedItem.id}/priority`, {
-        priority: result.destination.index,
-      });
+      await updateAdminPinnedSearchPriority(reorderedItem.id, result.destination.index);
     } catch {
       setError('Failed to update priority');
       // Revert on error
@@ -88,20 +90,20 @@ export const SearchManagementPage: React.FC = () => {
 
   const handleUnpin = async (id: number) => {
     try {
-      await apiService.delete(`/admin/search/pinned/${id}`);
+      await deleteAdminPinnedSearchResult(id);
       setPinnedResults(pinnedResults.filter(item => item.id !== id));
     } catch {
       setError('Failed to unpin result');
     }
   };
 
-  const _handlePin = async (resourceType: string, resourceId: number) => {
+  const _handlePin = async (resourceType: ResourceType, resourceId: number) => {
     try {
       const maxPriority = pinnedResults.length > 0
         ? Math.max(...pinnedResults.map(r => r.priority))
         : -1;
 
-      await apiService.post('/admin/search/pinned', {
+      await createAdminPinnedSearchResult({
         resource_type: resourceType,
         resource_id: resourceId,
         priority: maxPriority + 1,
@@ -130,9 +132,9 @@ export const SearchManagementPage: React.FC = () => {
               labelId="resource-type-label"
               value={selectedResourceType}
               label={t('search.pinned.resource_type', 'Resource Type')}
-              onChange={(e) => setSelectedResourceType(e.target.value)}
+              onChange={(e) => setSelectedResourceType(e.target.value as ResourceTypeFilter)}
             >
-              <MenuItem value="all">{t('search.pinned.all', 'All')}</MenuItem>
+              <MenuItem value={ALL_RESOURCE_TYPES}>{t('search.pinned.all', 'All')}</MenuItem>
               <MenuItem value={RESOURCE_TYPES.BOOK}>
                 {t('search.pinned.resource_book', 'Books')}
               </MenuItem>

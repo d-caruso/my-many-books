@@ -33,7 +33,7 @@ export const QueueManagementScreen: React.FC = () => {
       case QUEUE_OPERATION_STATUS.PENDING:
         return theme.colors.primary;
       case QUEUE_OPERATION_STATUS.RETRYING:
-        return '#FF9800';
+        return theme.colors.secondary;
       case QUEUE_OPERATION_STATUS.FAILED:
         return theme.colors.error;
       default:

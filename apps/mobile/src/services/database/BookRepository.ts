@@ -1,14 +1,28 @@
 import { LocalBook } from '@/entities/LocalBook';
 import { databaseService } from './DatabaseService';
-import type { Book } from '@my-many-books/shared-types';
+import {
+  SEARCH_SORT_BY_FIELDS,
+  SORT_DIRECTIONS,
+  type Author,
+  type Book,
+  type Category,
+  type SearchFilters,
+} from '@my-many-books/shared-types';
 import { SyncStatus, SYNC_STATUS } from '@/types';
 import type { SQLiteBindValue } from 'expo-sqlite';
-import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
-import { DB_SORT_FIELDS } from '@/constants/db';
-import type { DbSortField } from '@/constants/db';
+import { authorRepository } from './AuthorRepository';
+import { categoryRepository } from './CategoryRepository';
 
 // Counter to ensure unique IDs even when Date.now() returns same value
 let idCounter = 0;
+
+type OfflineSearchOptions = Pick<
+  SearchFilters,
+  'query' | 'status' | 'authorId' | 'categoryId' | 'sortBy' | 'sortOrder'
+>;
+
+type AuthorInput = Pick<Author, 'name' | 'surname'> & Partial<Pick<Author, 'nationality'>>;
+type CategoryInput = Pick<Category, 'name'> & Partial<Pick<Category, 'translationKey'>>;
 
 export class BookRepository {
   /**
@@ -18,7 +32,7 @@ export class BookRepository {
     const books = await databaseService.getAllAsync(
       'SELECT * FROM books WHERE deleted = 0 ORDER BY update_date DESC'
     );
-    return books.map(this.mapRowToBook);
+    return books.map((book) => this.mapRowToBook(book));
   }
 
   /**
@@ -85,15 +99,8 @@ export class BookRepository {
         ]
       );
 
-      // Handle author relationships
-      if (entity.authors) {
-        await this.createAuthorRelationships(id, entity.authors as (string | { name: string })[]);
-      }
-
-      // Handle category relationships
-      if (entity.categories) {
-        await this.createCategoryRelationships(id, entity.categories as (string | { name: string })[]);
-      }
+      await this.syncAuthorRelationships(id, entity.authors);
+      await this.syncCategoryRelationships(id, entity.categories);
 
       await databaseService.executeQuery('COMMIT');
     } catch (error) {
@@ -115,31 +122,48 @@ export class BookRepository {
     const now = new Date().toISOString();
     const entity = book.entity;
 
-    await databaseService.executeQuery(
-      `UPDATE books SET
-        title = COALESCE(?, title),
-        authors = COALESCE(?, authors),
-        status = COALESCE(?, status),
-        rating = COALESCE(?, rating),
-        notes = COALESCE(?, notes),
-        update_date = ?,
-        server_id = COALESCE(?, server_id),
-        sync_status = COALESCE(?, sync_status),
-        server_updated_at = COALESCE(?, server_updated_at)
-      WHERE id = ?`,
-      [
-        entity.title,
-        this.serializeText(entity.authors),
-        entity.status,
-        (entity as Record<string, unknown>).rating as number | null ?? null,
-        entity.notes,
-        now,
-        book.serverId,
-        book.syncStatus,
-        book.serverUpdatedAt,
-        id,
-      ]
-    );
+    await databaseService.executeQuery('BEGIN TRANSACTION');
+
+    try {
+      await databaseService.executeQuery(
+        `UPDATE books SET
+          title = COALESCE(?, title),
+          authors = COALESCE(?, authors),
+          status = COALESCE(?, status),
+          rating = COALESCE(?, rating),
+          notes = COALESCE(?, notes),
+          update_date = ?,
+          server_id = COALESCE(?, server_id),
+          sync_status = COALESCE(?, sync_status),
+          server_updated_at = COALESCE(?, server_updated_at)
+        WHERE id = ?`,
+        [
+          entity.title,
+          this.serializeText(entity.authors),
+          entity.status,
+          (entity as Record<string, unknown>).rating as number | null ?? null,
+          entity.notes,
+          entity.updateDate || now,
+          book.serverId,
+          book.syncStatus,
+          book.serverUpdatedAt,
+          id,
+        ]
+      );
+
+      if (entity.authors !== undefined) {
+        await this.syncAuthorRelationships(id, entity.authors, true);
+      }
+
+      if (entity.categories !== undefined) {
+        await this.syncCategoryRelationships(id, entity.categories, true);
+      }
+
+      await databaseService.executeQuery('COMMIT');
+    } catch (error) {
+      await databaseService.executeQuery('ROLLBACK');
+      throw error;
+    }
 
     const updated = await this.findById(id);
     if (!updated) {
@@ -340,78 +364,94 @@ export class BookRepository {
     // Check if book exists
     const existingBook = await this.findById(bookId);
     
-    if (existingBook) {
-      const existingEntity = existingBook.entity;
+    await databaseService.executeQuery('BEGIN TRANSACTION');
 
-      // Book exists - update it
-      const now = new Date().toISOString();
-      await databaseService.executeQuery(
-        `UPDATE books SET
-          title = ?,
-          authors = ?,
-          isbn = ?,
-          thumbnail = ?,
-          description = ?,
-          published_date = ?,
-          page_count = ?,
-          rating = ?,
-          status = ?,
-          notes = ?,
-          user_id = ?,
-          update_date = ?,
-          sync_status = ?,
-          server_updated_at = ?
-        WHERE id = ?`,
-        [
-          entity.title || existingEntity.title,
-          Array.isArray(entity.authors) ? JSON.stringify(entity.authors) : entity.authors || existingEntity.authors,
-          entity.isbnCode || existingEntity.isbnCode,
-          //TODO commented out fields that are not currently set in the API/DB but may be relevant for future features
-          //entity.thumbnail || existingEntity.thumbnail,
-          //entity.description || existingEntity.description,
-          //entity.publishedDate || existingEntity.publishedDate,
-          //entity.pageCount || existingEntity.pageCount,
-          //entity.rating || existingEntity.rating,
-          entity.status || existingEntity.status,
-          entity.notes || existingEntity.notes,
-          entity.userId || existingEntity.userId,
-          entity.updateDate || now,
-          book.syncStatus || existingBook.syncStatus,
-          book.serverUpdatedAt || existingBook.serverUpdatedAt,
-          bookId,
-        ]
-      );
-    } else {
-      // Book doesn't exist - create it
-      const now = new Date().toISOString();
-      await databaseService.executeQuery(
-        `INSERT INTO books (
-          id, title, authors, isbn, thumbnail, description, published_date,
-          page_count, rating, status, notes, user_id, creation_date, update_date,
-          sync_status, temp_id, deleted, server_updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          bookId,
-          entity.title || '',
-          this.serializeText(entity.authors),
-          entity.isbnCode || null,
-          //TODO commented out fields that are not currently set in the API/DB but may be relevant for future features
-          //book.thumbnail || null,
-          //book.description || null,
-          //book.publishedDate || null,
-          //book.pageCount || null,
-          //book.rating || null,
-          entity.status || 'want-to-read',
-          entity.notes || null,
-          entity.userId || null,
-          entity.creationDate || now,
-          entity.updateDate || now,
-          book.syncStatus || SYNC_STATUS.SYNCED,
-          book.tempId || null,
-          book.deleted ? 1 : 0,
-          book.serverUpdatedAt || null,
-        ]
-      );
+    try {
+      if (existingBook) {
+        const existingEntity = existingBook.entity;
+        const now = new Date().toISOString();
+
+        await databaseService.executeQuery(
+          `UPDATE books SET
+            title = ?,
+            authors = ?,
+            isbn = ?,
+            thumbnail = ?,
+            description = ?,
+            published_date = ?,
+            page_count = ?,
+            rating = ?,
+            status = ?,
+            notes = ?,
+            user_id = ?,
+            update_date = ?,
+            sync_status = ?,
+            server_updated_at = ?
+          WHERE id = ?`,
+          [
+            entity.title || existingEntity.title,
+            this.serializeText(entity.authors ?? existingEntity.authors),
+            entity.isbnCode || existingEntity.isbnCode,
+            null,
+            null,
+            null,
+            null,
+            (entity as Record<string, unknown>).rating as number | null ??
+              (existingEntity as Record<string, unknown>).rating as number | null ??
+              null,
+            entity.status || existingEntity.status,
+            entity.notes ?? existingEntity.notes ?? null,
+            entity.userId || existingEntity.userId || null,
+            entity.updateDate || now,
+            book.syncStatus || existingBook.syncStatus,
+            book.serverUpdatedAt || existingBook.serverUpdatedAt,
+            bookId,
+          ]
+        );
+      } else {
+        const now = new Date().toISOString();
+
+        await databaseService.executeQuery(
+          `INSERT INTO books (
+            id, title, authors, isbn, thumbnail, description, published_date,
+            page_count, rating, status, notes, user_id, creation_date, update_date,
+            sync_status, temp_id, deleted, server_updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            bookId,
+            entity.title || '',
+            this.serializeText(entity.authors),
+            entity.isbnCode || null,
+            null,
+            null,
+            null,
+            null,
+            (entity as Record<string, unknown>).rating as number | null ?? null,
+            entity.status || 'want-to-read',
+            entity.notes || null,
+            entity.userId || null,
+            entity.creationDate || now,
+            entity.updateDate || now,
+            book.syncStatus || SYNC_STATUS.SYNCED,
+            book.tempId || null,
+            book.deleted ? 1 : 0,
+            book.serverUpdatedAt || null,
+          ]
+        );
+      }
+
+      if (entity.authors !== undefined) {
+        await this.syncAuthorRelationships(bookId, entity.authors, true);
+      }
+
+      if (entity.categories !== undefined) {
+        await this.syncCategoryRelationships(bookId, entity.categories, true);
+      }
+
+      await databaseService.executeQuery('COMMIT');
+    } catch (error) {
+      await databaseService.executeQuery('ROLLBACK');
+      throw error;
     }
 
     const result = await this.findById(bookId);
@@ -429,69 +469,83 @@ export class BookRepository {
       'SELECT * FROM books WHERE deleted = 0 AND status = ? ORDER BY update_date DESC',
       [status]
     );
-    return books.map(this.mapRowToBook);
+    return books.map((book) => this.mapRowToBook(book));
   }
 
   /**
    * Advanced search with filters and sorting
    */
-  async searchWithFilters(options: {
-    query?: string;
-    status?: string;
-    author?: string;
-    category?: string;
-    sortBy?: DbSortField;
-    sortOrder?: typeof SORT_DIRECTIONS[keyof typeof SORT_DIRECTIONS];
-  }): Promise<LocalBook[]> {
-    const { query, status, author, category, sortBy = DB_SORT_FIELDS.UPDATE_DATE, sortOrder = SORT_DIRECTIONS.DESC } = options;
+  async searchWithFilters(options: OfflineSearchOptions = {}): Promise<LocalBook[]> {
+    const {
+      query,
+      status,
+      authorId,
+      categoryId,
+      sortBy = SEARCH_SORT_BY_FIELDS.TITLE,
+      sortOrder = SORT_DIRECTIONS.ASC,
+    } = options;
 
     let sql = 'SELECT DISTINCT b.* FROM books b';
-    let joins = '';
+    const joins: string[] = [];
     const params: SQLiteBindValue[] = [];
     const whereConditions = ['b.deleted = 0'];
 
-    // Add joins if filtering by author or category
-    if (author || category) {
-      if (author) {
-        joins += ' LEFT JOIN book_authors ba ON b.id = ba.book_id LEFT JOIN authors a ON ba.author_id = a.id';
-      }
-      if (category) {
-        joins += ' LEFT JOIN book_categories bc ON b.id = bc.book_id LEFT JOIN categories c ON bc.category_id = c.id';
-      }
+    if (authorId) {
+      joins.push('INNER JOIN book_authors ba_filter ON b.id = ba_filter.book_id');
+      whereConditions.push('ba_filter.author_id = ?');
+      params.push(authorId);
     }
 
-    sql += joins + ' WHERE ' + whereConditions.join(' AND ');
+    if (categoryId) {
+      joins.push('INNER JOIN book_categories bc_filter ON b.id = bc_filter.book_id');
+      whereConditions.push('bc_filter.category_id = ?');
+      params.push(categoryId);
+    }
 
-    // Add search condition
+    if (joins.length > 0) {
+      sql += ` ${joins.join(' ')}`;
+    }
+
     if (query && query.trim()) {
-      sql += ' AND (b.title LIKE ? OR b.authors LIKE ? OR b.description LIKE ?)';
       const searchTerm = `%${query.trim()}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
+      whereConditions.push(`(
+        b.title LIKE ? COLLATE NOCASE
+        OR COALESCE(b.authors, '') LIKE ? COLLATE NOCASE
+        OR COALESCE(b.description, '') LIKE ? COLLATE NOCASE
+        OR EXISTS (
+          SELECT 1
+          FROM book_authors ba_search
+          INNER JOIN authors a_search ON a_search.id = ba_search.author_id
+          WHERE ba_search.book_id = b.id
+            AND (
+              a_search.name LIKE ? COLLATE NOCASE
+              OR a_search.surname LIKE ? COLLATE NOCASE
+              OR TRIM(a_search.name || ' ' || a_search.surname) LIKE ? COLLATE NOCASE
+              OR TRIM(a_search.surname || ' ' || a_search.name) LIKE ? COLLATE NOCASE
+            )
+        )
+      )`);
+      params.push(
+        searchTerm,
+        searchTerm,
+        searchTerm,
+        searchTerm,
+        searchTerm,
+        searchTerm,
+        searchTerm
+      );
     }
 
-    // Add status filter
     if (status) {
-      sql += ' AND b.status = ?';
+      whereConditions.push('b.status = ?');
       params.push(status);
     }
 
-    // Add author filter
-    if (author) {
-      sql += ' AND a.name LIKE ?';
-      params.push(`%${author}%`);
-    }
-
-    // Add category filter
-    if (category) {
-      sql += ' AND c.name LIKE ?';
-      params.push(`%${category}%`);
-    }
-
-    // Add sorting
-    sql += ` ORDER BY b.${sortBy} ${sortOrder}`;
+    sql += ` WHERE ${whereConditions.join(' AND ')}`;
+    sql += this.buildSortClause(sortBy, sortOrder);
 
     const books = await databaseService.getAllAsync(sql, params);
-    return books.map(this.mapRowToBook);
+    return books.map((book) => this.mapRowToBook(book));
   }
 
   /**
@@ -502,7 +556,7 @@ export class BookRepository {
       'SELECT * FROM books WHERE sync_status IN (?, ?) ORDER BY update_date DESC',
       [SYNC_STATUS.PENDING, SYNC_STATUS.FAILED]
     );
-    return books.map(this.mapRowToBook);
+    return books.map((book) => this.mapRowToBook(book));
   }
 
   /**
@@ -516,7 +570,7 @@ export class BookRepository {
       status: row.status as Book['status'],
       notes: row.notes as string | null,
       userId: row.user_id as number,
-      authors: row.authors as Book['authors'],
+      authors: this.deserializeAuthors(row.authors),
       categories: row.categories as Book['categories'],
       creationDate: row.creation_date as string,
       updateDate: row.update_date as string,
@@ -535,89 +589,195 @@ export class BookRepository {
     return this.searchWithFilters({ query });
   }
 
-
-  /**
-   * Create author relationships for a book (Phase 4 fix)
-   */
-  private async createAuthorRelationships(bookId: string, authors: (string | { name: string })[]): Promise<void> {
-    if (!authors) return;
-    
-    // Handle different author formats (string, array of strings, array of objects)
-    const authorNames = Array.isArray(authors) 
-      ? authors.map(a => typeof a === 'string' ? a : a.name).filter(Boolean)
-      : typeof authors === 'string' 
-        ? [authors]
-        : [];
-
-    for (const authorName of authorNames) {
-      // Insert or get author
-      const authorResult = await databaseService.getFirstAsync(
-        'SELECT id FROM authors WHERE name = ?',
-        [authorName]
-      );
-      
-      let authorId;
-      if (!authorResult) {
-        // Create new author - let SQLite auto-generate INTEGER id
-        const result = await databaseService.executeQuery(
-          'INSERT INTO authors (name) VALUES (?)',
-          [authorName]
-        );
-        authorId = result.lastInsertRowId;
-      } else {
-        authorId = authorResult.id;
-      }
-
-      // Create book-author relationship
-      await databaseService.executeQuery(
-        'INSERT OR IGNORE INTO book_authors (book_id, author_id) VALUES (?, ?)',
-        [bookId, authorId]
-      );
-    }
-  }
-
   private serializeText(value: unknown): string | null {
     if (value == null) return null;
     if (typeof value === 'string') return value;
     return JSON.stringify(value);
   }
 
-  /**
-   * Create category relationships for a book (Phase 4 fix)
-   */
-  private async createCategoryRelationships(bookId: string, categories: (string | { name: string })[]): Promise<void> {
-    if (!categories) return;
-    
-    // Handle different category formats
-    const categoryNames = Array.isArray(categories)
-      ? categories.map(c => typeof c === 'string' ? c : c.name).filter(Boolean)
-      : typeof categories === 'string'
-        ? [categories]
-        : [];
+  private buildSortClause(
+    sortBy: OfflineSearchOptions['sortBy'],
+    sortOrder: OfflineSearchOptions['sortOrder']
+  ): string {
+    const direction = sortOrder === SORT_DIRECTIONS.ASC ? SORT_DIRECTIONS.ASC : SORT_DIRECTIONS.DESC;
 
-    for (const categoryName of categoryNames) {
-      // Insert or get category
-      const categoryResult = await databaseService.getFirstAsync(
-        'SELECT id FROM categories WHERE name = ?',
-        [categoryName]
-      );
-      
-      let categoryId;
-      if (!categoryResult) {
-        // Create new category - let SQLite auto-generate INTEGER id
-        const result = await databaseService.executeQuery(
-          'INSERT INTO categories (name) VALUES (?)',
-          [categoryName]
-        );
-        categoryId = result.lastInsertRowId;
-      } else {
-        categoryId = categoryResult.id;
+    switch (sortBy) {
+      case SEARCH_SORT_BY_FIELDS.TITLE:
+        return ` ORDER BY LOWER(b.title) ${direction}, b.update_date DESC`;
+      case SEARCH_SORT_BY_FIELDS.STATUS:
+        return ` ORDER BY b.status ${direction}, LOWER(b.title) ASC`;
+      case SEARCH_SORT_BY_FIELDS.CREATION_DATE:
+        return ` ORDER BY b.creation_date ${direction}, LOWER(b.title) ASC`;
+      case SEARCH_SORT_BY_FIELDS.AUTHOR: {
+        const surnameExpr = `LOWER(COALESCE((
+          SELECT a_sort.surname
+          FROM book_authors ba_sort
+          INNER JOIN authors a_sort ON a_sort.id = ba_sort.author_id
+          WHERE ba_sort.book_id = b.id
+          ORDER BY LOWER(a_sort.surname) ${direction}, LOWER(a_sort.name) ${direction}, a_sort.id ${direction}
+          LIMIT 1
+        ), ''))`;
+        const nameExpr = `LOWER(COALESCE((
+          SELECT a_sort.name
+          FROM book_authors ba_sort
+          INNER JOIN authors a_sort ON a_sort.id = ba_sort.author_id
+          WHERE ba_sort.book_id = b.id
+          ORDER BY LOWER(a_sort.surname) ${direction}, LOWER(a_sort.name) ${direction}, a_sort.id ${direction}
+          LIMIT 1
+        ), ''))`;
+
+        return ` ORDER BY ${surnameExpr} ${direction}, ${nameExpr} ${direction}, LOWER(b.title) ASC`;
       }
+      case SEARCH_SORT_BY_FIELDS.UPDATE_DATE:
+      default:
+        return ` ORDER BY b.update_date ${direction}, LOWER(b.title) ASC`;
+    }
+  }
 
-      // Create book-category relationship
+  private deserializeAuthors(value: unknown): Book['authors'] {
+    if (Array.isArray(value)) {
+      return value as Book['authors'];
+    }
+
+    if (typeof value !== 'string' || !value.trim()) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(value) as Book['authors'];
+    } catch {
+      return [{ id: 0, name: value, surname: '' }];
+    }
+  }
+
+  private normalizeAuthorsInput(authors: unknown): AuthorInput[] {
+    if (!authors) {
+      return [];
+    }
+
+    if (typeof authors === 'string') {
+      return authors.trim() ? [{ name: authors.trim(), surname: '' }] : [];
+    }
+
+    if (!Array.isArray(authors)) {
+      return [];
+    }
+
+    return authors
+      .map((author) => {
+        if (typeof author === 'string') {
+          return author.trim() ? { name: author.trim(), surname: '' } : null;
+        }
+
+        if (!author || typeof author !== 'object') {
+          return null;
+        }
+
+        const authorRecord = author as {
+          name?: unknown;
+          surname?: unknown;
+          nationality?: unknown;
+        };
+        const name = typeof authorRecord.name === 'string' ? authorRecord.name.trim() : '';
+        const surname =
+          typeof authorRecord.surname === 'string' ? authorRecord.surname.trim() : '';
+        const nationality =
+          typeof authorRecord.nationality === 'string' ? authorRecord.nationality : undefined;
+
+        if (!name) {
+          return null;
+        }
+
+        return { name, surname, nationality };
+      })
+      .filter(this.isDefined);
+  }
+
+  private normalizeCategoriesInput(categories: unknown): CategoryInput[] {
+    if (!categories) {
+      return [];
+    }
+
+    if (typeof categories === 'string') {
+      return categories.trim() ? [{ name: categories.trim() }] : [];
+    }
+
+    if (!Array.isArray(categories)) {
+      return [];
+    }
+
+    return categories
+      .map((category) => {
+        if (typeof category === 'string') {
+          return category.trim() ? { name: category.trim() } : null;
+        }
+
+        if (!category || typeof category !== 'object') {
+          return null;
+        }
+
+        const categoryRecord = category as {
+          name?: unknown;
+          translationKey?: unknown;
+        };
+        const name = typeof categoryRecord.name === 'string' ? categoryRecord.name.trim() : '';
+        const translationKey =
+          typeof categoryRecord.translationKey === 'string'
+            ? categoryRecord.translationKey
+            : undefined;
+
+        if (!name) {
+          return null;
+        }
+
+        return { name, translationKey };
+      })
+      .filter(this.isDefined);
+  }
+
+  private isDefined<T>(value: T | null): value is T {
+    return value !== null;
+  }
+
+  private async syncAuthorRelationships(
+    bookId: string,
+    authors: unknown,
+    replaceExisting: boolean = false
+  ): Promise<void> {
+    if (replaceExisting) {
+      await databaseService.executeQuery('DELETE FROM book_authors WHERE book_id = ?', [bookId]);
+    }
+
+    const normalizedAuthors = this.normalizeAuthorsInput(authors);
+
+    for (const author of normalizedAuthors) {
+      const localAuthor = await authorRepository.create(author);
+      await databaseService.executeQuery(
+        'INSERT OR IGNORE INTO book_authors (book_id, author_id) VALUES (?, ?)',
+        [bookId, localAuthor.entity.id]
+      );
+    }
+  }
+
+  private async syncCategoryRelationships(
+    bookId: string,
+    categories: unknown,
+    replaceExisting: boolean = false
+  ): Promise<void> {
+    if (replaceExisting) {
+      await databaseService.executeQuery('DELETE FROM book_categories WHERE book_id = ?', [bookId]);
+    }
+
+    const normalizedCategories = this.normalizeCategoriesInput(categories);
+
+    for (const category of normalizedCategories) {
+      const localCategory = await categoryRepository.create(
+        category.name,
+        category.translationKey ?? null
+      );
       await databaseService.executeQuery(
         'INSERT OR IGNORE INTO book_categories (book_id, category_id) VALUES (?, ?)',
-        [bookId, categoryId]
+        [bookId, localCategory.entity.id]
       );
     }
   }

@@ -1,5 +1,6 @@
 import { BookHandlerFactory, Book, CreateBookPayload } from '../BookHandlers';
 import { mobileHooks, MOBILE_EVENTS } from '../../hooks/mobileHooks';
+import { createClientGateway } from '../gateways/clientGateway';
 import type { HttpClient } from '../gateways/clientGateway';
 
 const mockHttpClient: HttpClient = {
@@ -61,7 +62,7 @@ describe('BookHandlers Hookey Integration', () => {
       };
 
       // Mock the underlying gateway to return success
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockBook);
 
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
@@ -109,7 +110,7 @@ describe('BookHandlers Hookey Integration', () => {
       };
 
       // Mock the underlying gateway to throw error
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockRejectedValue(new Error('Create failed'));
 
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
@@ -157,7 +158,7 @@ describe('BookHandlers Hookey Integration', () => {
       };
 
       // Mock the underlying gateway to return tempId string
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue('temp-123');
 
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
@@ -179,7 +180,7 @@ describe('BookHandlers Hookey Integration', () => {
       const bookId = 'book-123';
 
       // Mock the underlying gateway to return success
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.delete.mockResolvedValue(undefined);
 
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
@@ -238,7 +239,7 @@ describe('BookHandlers Hookey Integration', () => {
         updateDate: '2024-01-01'
       };
 
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockBook);
 
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
@@ -268,7 +269,7 @@ describe('BookHandlers Hookey Integration', () => {
         updateDate: '2024-01-01'
       };
 
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockBook);
 
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
@@ -299,7 +300,7 @@ describe('BookHandlers Hookey Integration', () => {
         updateDate: '2024-01-01'
       };
 
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockBook);
 
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
@@ -331,7 +332,7 @@ describe('BookHandlers Hookey Integration', () => {
         updateDate: '2024-01-01'
       };
 
-      const mockGateway = require('../gateways/clientGateway').createClientGateway();
+      const mockGateway = (createClientGateway as jest.Mock)();
       mockGateway.create.mockResolvedValue(mockBook);
 
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);

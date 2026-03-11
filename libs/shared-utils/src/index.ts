@@ -23,3 +23,6 @@ export * from './entityManagementErrors';
 
 // Category display utilities
 export * from './categoryDisplay';
+
+// Book card data formatting
+export * from './bookCard';

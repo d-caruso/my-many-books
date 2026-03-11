@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Text, Card, ActivityIndicator, Searchbar, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { adminAPI } from '@/services/api';
+import { getStatusColor } from '@my-many-books/shared-design';
 
 interface Book {
   id: number;
@@ -22,7 +23,7 @@ export default function BookManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page] = useState(1);
 
-  const loadBooks = async () => {
+  const loadBooks = useCallback(async () => {
     try {
       setLoading(true);
       const response = await adminAPI.getAdminBooks<{ books: Book[]; total: number }>(page, 50, searchQuery || undefined);
@@ -32,11 +33,11 @@ export default function BookManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchQuery]);
 
   useEffect(() => {
     loadBooks();
-  }, []);
+  }, [loadBooks]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -54,19 +55,6 @@ export default function BookManagement() {
       </View>
     );
   }
-
-  const getStatusColor = (status?: string | null) => {
-    switch (status) {
-      case 'reading':
-        return '#2196f3';
-      case 'paused':
-        return '#ff9800';
-      case 'finished':
-        return '#4caf50';
-      default:
-        return '#9e9e9e';
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -126,7 +114,7 @@ export default function BookManagement() {
                   <View style={styles.bookFooter}>
                     <Chip
                       mode="flat"
-                      style={{ backgroundColor: getStatusColor(book.status) }}
+                      style={{ backgroundColor: getStatusColor(book.status ?? undefined) }}
                       accessible={true}
                       accessibilityLabel={t('accessibility:book_status', 'Status: {{status}}', { status: status })}
                     >

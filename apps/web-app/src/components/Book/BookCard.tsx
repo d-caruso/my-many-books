@@ -20,7 +20,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
 import { getCategoryDisplayName } from '@my-many-books/shared-utils';
-import { formatEditionDate } from '../../utils/formatEditionDate';
+import { formatEditionDate } from '@my-many-books/shared-forms';
 
 interface BookCardProps {
   book: Book;

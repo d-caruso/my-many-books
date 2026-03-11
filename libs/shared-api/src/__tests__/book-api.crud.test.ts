@@ -180,7 +180,7 @@ describe('BookApi (CRUD)', () => {
     });
 
     it('should validate input data with BookFormSchema', async () => {
-      const invalidData = { invalid: 'data' } as any;
+      const invalidData = { invalid: 'data' } as unknown as BookFormData;
 
       await expect(bookApi.createBook(invalidData)).rejects.toThrow(ZodError);
     });
@@ -229,7 +229,7 @@ describe('BookApi (CRUD)', () => {
     });
 
     it('should validate input data with partial BookFormSchema', async () => {
-      const invalidData = { status: 'invalid-status' } as any;
+      const invalidData = { status: 'invalid-status' } as unknown as Partial<BookFormData>;
 
       await expect(bookApi.updateBook(1, invalidData)).rejects.toThrow(ZodError);
     });
@@ -279,7 +279,7 @@ describe('BookApi (CRUD)', () => {
     });
 
     it('should validate input data with partial BookFormSchema', async () => {
-      const invalidData = { authorIds: 'not-an-array' } as any;
+      const invalidData = { authorIds: 'not-an-array' } as unknown as Partial<BookFormData>;
 
       await expect(bookApi.patchBook(1, invalidData)).rejects.toThrow(ZodError);
     });

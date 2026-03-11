@@ -47,6 +47,13 @@ export default function RootLayout() {
                         }}
                       />
                       <Stack.Screen
+                        name="verify-email"
+                        options={{
+                          title: t('common:verify_email_title'),
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
                         name="forgot-password"
                         options={{
                           title: t('common:forgot_password_title'),

@@ -1,14 +1,8 @@
-import { 
-  formatDate, 
-  getStatusLabel, 
-  getStatusColor, 
-  validateISBN, 
-  truncateText,
+import {
+  formatDate,
   generateBookId,
   sanitizeSearchQuery,
   groupBooksByStatus,
-  sortBooks,
-  filterBooks,
 } from '@/utils/helpers';
 import { Book } from '@/types';
 
@@ -31,93 +25,6 @@ describe('Helper Utilities', () => {
     it('should handle null/undefined dates', () => {
       expect(formatDate(null as string)).toBe('Invalid Date');
       expect(formatDate(undefined as string)).toBe('Invalid Date');
-    });
-  });
-
-  describe('getStatusLabel', () => {
-    it('should return correct labels for all statuses', () => {
-      expect(getStatusLabel('reading')).toBe('Reading');
-      expect(getStatusLabel('paused')).toBe('Paused');
-      expect(getStatusLabel('finished')).toBe('Finished');
-    });
-
-    it('should handle unknown status', () => {
-      expect(getStatusLabel('unknown' as 'reading' | 'paused' | 'finished')).toBe('Unknown');
-    });
-  });
-
-  describe('getStatusColor', () => {
-    it('should return correct colors for all statuses', () => {
-      expect(getStatusColor('reading')).toBe('#FF9800');
-      expect(getStatusColor('paused')).toBe('#2196F3');
-      expect(getStatusColor('finished')).toBe('#4CAF50');
-    });
-
-    it('should handle unknown status', () => {
-      expect(getStatusColor('unknown' as 'reading' | 'paused' | 'finished')).toBe('#757575');
-    });
-  });
-
-  describe('validateISBN', () => {
-    it('should validate correct ISBN-10', () => {
-      expect(validateISBN('0134685997')).toBe(true);
-      expect(validateISBN('0-13-468599-7')).toBe(true);
-    });
-
-    it('should validate correct ISBN-13', () => {
-      expect(validateISBN('9780134685991')).toBe(true);
-      expect(validateISBN('978-0-13-468599-1')).toBe(true);
-    });
-
-    it('should reject invalid ISBNs', () => {
-      expect(validateISBN('123')).toBe(false);
-      expect(validateISBN('1234567890123')).toBe(false);
-      expect(validateISBN('invalid-isbn')).toBe(false);
-      expect(validateISBN('')).toBe(false);
-    });
-
-    it('should handle null/undefined', () => {
-      expect(validateISBN(null as string)).toBe(false);
-      expect(validateISBN(undefined as string)).toBe(false);
-    });
-  });
-
-  describe('truncateText', () => {
-    it('should truncate text longer than limit', () => {
-      const longText = 'This is a very long text that should be truncated';
-      const truncated = truncateText(longText, 20);
-      
-      expect(truncated).toBe('This is a very long ...');
-      expect(truncated.length).toBeLessThanOrEqual(23); // 20 + '...' = 23
-    });
-
-    it('should not truncate text shorter than limit', () => {
-      const shortText = 'Short text';
-      const result = truncateText(shortText, 20);
-      
-      expect(result).toBe('Short text');
-    });
-
-    it('should handle exact length', () => {
-      const exactText = 'Exactly twenty chars';
-      const result = truncateText(exactText, 20);
-      
-      expect(result).toBe('Exactly twenty chars');
-    });
-
-    it('should handle empty text', () => {
-      expect(truncateText('', 10)).toBe('');
-    });
-
-    it('should handle null/undefined', () => {
-      expect(truncateText(null as string, 10)).toBe('');
-      expect(truncateText(undefined as string, 10)).toBe('');
-    });
-
-    it('should handle very small limits', () => {
-      const text = 'Hello world';
-      expect(truncateText(text, 1)).toBe('H...');
-      expect(truncateText(text, 0)).toBe('...');
     });
   });
 
@@ -159,85 +66,6 @@ describe('Helper Utilities', () => {
       expect(grouped.reading).toHaveLength(2);
       expect(grouped.finished).toHaveLength(1);
       expect(grouped.reading[0].title).toBe('Book 1');
-    });
-  });
-
-  describe('sortBooks', () => {
-    const mockBooks: Book[] = [
-      { id: 1, title: 'Zebra Book', authors: [{ id: 1, name: 'Alpha', surname: 'Author' }], creationDate: '2023-01-01', status: 'reading', categories: [], updateDate: '2023-01-01', isbnCode: '123' },
-      { id: 2, title: 'Alpha Book', authors: [{ id: 2, name: 'Zeta', surname: 'Author' }], creationDate: '2023-01-02', status: 'finished', categories: [], updateDate: '2023-01-02', isbnCode: '456' },
-    ];
-
-    it('should sort books by title', () => {
-      const sorted = sortBooks(mockBooks, 'title');
-      expect(sorted[0].title).toBe('Alpha Book');
-      expect(sorted[1].title).toBe('Zebra Book');
-    });
-
-    it('should sort books by author', () => {
-      const sorted = sortBooks(mockBooks, 'author');
-      expect(sorted[0].authors[0].name).toBe('Alpha');
-      expect(sorted[1].authors[0].name).toBe('Zeta');
-    });
-
-    it('should sort books by date', () => {
-      const sorted = sortBooks(mockBooks, 'date');
-      expect(sorted[0].creationDate).toBe('2023-01-02');
-      expect(sorted[1].creationDate).toBe('2023-01-01');
-    });
-  });
-
-  describe('filterBooks', () => {
-    const mockBooks: Book[] = [
-      {
-        id: 1,
-        title: 'Book 1',
-        status: 'reading',
-        authors: [{ id: 1, name: 'John', surname: 'Doe' }],
-        categories: [{ id: 1, name: 'Fiction' }],
-        creationDate: '2023-01-01',
-        updateDate: '2023-01-01',
-        isbnCode: '123'
-      },
-      {
-        id: 2,
-        title: 'Book 2',
-        status: 'finished',
-        authors: [{ id: 2, name: 'Jane', surname: 'Smith' }],
-        categories: [{ id: 2, name: 'Non-Fiction' }],
-        creationDate: '2023-01-02',
-        updateDate: '2023-01-02',
-        isbnCode: '456'
-      },
-    ];
-
-    it('should filter books by status', () => {
-      const filtered = filterBooks(mockBooks, { status: 'reading' });
-      expect(filtered).toHaveLength(1);
-      expect(filtered[0].status).toBe('reading');
-    });
-
-    it('should filter books by category', () => {
-      const filtered = filterBooks(mockBooks, { category: 'Fiction' });
-      expect(filtered).toHaveLength(1);
-      expect(filtered[0].categories[0].name).toBe('Fiction');
-    });
-
-    it('should filter books by author', () => {
-      const filtered = filterBooks(mockBooks, { author: 'john' });
-      expect(filtered).toHaveLength(1);
-      expect(filtered[0].authors[0].name).toBe('John');
-      expect(filtered[0].authors[0].surname).toBe('Doe');
-    });
-
-    it('should handle multiple filters', () => {
-      const filtered = filterBooks(mockBooks, { status: 'reading', category: 'Fiction' });
-      expect(filtered).toHaveLength(1);
-    });
-
-    it('should return empty array when no matches', () => {
-      const filtered = filterBooks(mockBooks, { status: 'paused' });
-      expect(filtered).toHaveLength(0);
     });
   });
 });

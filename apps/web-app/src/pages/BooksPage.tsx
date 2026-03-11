@@ -9,8 +9,7 @@ import ListIcon from '@mui/icons-material/ViewList';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@my-many-books/shared-auth';
 import type { Book, BookFormData as SharedBookFormInput, BookStatusChangeBehavior, SearchFilters } from '@my-many-books/shared-types';
-import { SETTING_KEYS, BOOK_STATUS_CHANGE_BEHAVIOR } from '@my-many-books/shared-types';
-import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
+import { SETTING_KEYS, BOOK_STATUS_CHANGE_BEHAVIOR, POST_LOGIN_WELCOME_STORAGE_KEY, SearchFiltersSchema } from '@my-many-books/shared-types';
 import { BookList, BookForm, BookDetails, type BookFormData } from '../components/Book';
 import { BookSearchForm } from '../components/Search';
 import { useBookSearch } from '../hooks/useBookSearch';
@@ -102,26 +101,43 @@ const BooksPage: React.FC = () => {
   const searchCategoryId = searchParams.get('categoryId');
   const searchAuthorId = searchParams.get('authorId');
   const searchSortBy = searchParams.get('sortBy');
+  const searchSortOrder = searchParams.get('sortOrder');
   const searchStatus = searchParams.get('status');
   const searchModeParam = searchParams.get('mode');
   const searchQuery = searchParams.get('q') || '';
-  const searchActive = Boolean(searchQuery || searchCategoryId || searchAuthorId || searchSortBy || searchStatus);
+  const searchActive = Boolean(
+    searchQuery || searchCategoryId || searchAuthorId || searchSortBy || searchSortOrder || searchStatus
+  );
+  const initialSearchFilters = useMemo<Partial<SearchFilters>>(() => {
+    const filters: Partial<SearchFilters> = {};
+
+    if (searchCategoryId) filters.categoryId = Number.parseInt(searchCategoryId, 10);
+    if (searchAuthorId) filters.authorId = Number.parseInt(searchAuthorId, 10);
+    if (searchSortBy) {
+      const parsedSortBy = SearchFiltersSchema.shape.sortBy.safeParse(searchSortBy);
+      if (parsedSortBy.success) {
+        filters.sortBy = parsedSortBy.data;
+      }
+    }
+    if (searchSortOrder) {
+      const parsedSortOrder = SearchFiltersSchema.shape.sortOrder.safeParse(searchSortOrder);
+      if (parsedSortOrder.success) {
+        filters.sortOrder = parsedSortOrder.data;
+      }
+    }
+    if (searchStatus) {
+      const parsedStatus = SearchFiltersSchema.shape.status.safeParse(searchStatus);
+      if (parsedStatus.success) {
+        filters.status = parsedStatus.data;
+      }
+    }
+
+    return filters;
+  }, [searchAuthorId, searchCategoryId, searchSortBy, searchSortOrder, searchStatus]);
 
   const runCurrentSearch = useCallback(async () => {
-    const query = searchParams.get('q') || '';
-    const filters: Partial<SearchFilters> = {};
-    const categoryId = searchParams.get('categoryId');
-    const authorId = searchParams.get('authorId');
-    const sortBy = searchParams.get('sortBy');
-    const status = searchParams.get('status');
-
-    if (categoryId) filters.categoryId = parseInt(categoryId);
-    if (authorId) filters.authorId = parseInt(authorId);
-    if (sortBy) filters.sortBy = sortBy;
-    if (status) filters.status = status;
-
-    await searchBooks(query, filters);
-  }, [searchParams, searchBooks]);
+    await searchBooks(searchQuery, initialSearchFilters);
+  }, [initialSearchFilters, searchBooks, searchQuery]);
 
   useEffect(() => {
     if (!user) return;
@@ -592,6 +608,7 @@ const BooksPage: React.FC = () => {
           onSearch={handleSearch}
           loading={searchLoading}
           initialQuery={searchParams.get('q') || ''}
+          initialFilters={initialSearchFilters}
         />
       </Box>
 

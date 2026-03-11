@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
-import { Dialog, Portal, Text, Button, Divider, Chip } from 'react-native-paper';
+import { View, ScrollView } from 'react-native';
+import { Dialog, Portal, Text, Button, Divider, Chip, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Book } from '@/types';
 
@@ -23,6 +23,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
   onDismiss,
 }) => {
   const { t } = useTranslation('offline');
+  const theme = useTheme();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
@@ -62,94 +63,110 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
 
   return (
     <Portal>
-      <Dialog 
-        visible={visible} 
+      <Dialog
+        visible={visible}
         onDismiss={onDismiss}
-        style={styles.dialog}
+        style={{ maxHeight: '80%' }}
       >
-        <Dialog.Title style={styles.title}>
+        <Dialog.Title style={{ textAlign: 'center', color: theme.colors.error }}>
           {t('sync.conflicts.title')}
         </Dialog.Title>
-        
+
         <Dialog.Content>
-          <Text variant="bodyMedium" style={styles.subtitle}>
+          <Text variant="bodyMedium" style={{ textAlign: 'center', marginBottom: 16, opacity: 0.7 }}>
             {t('sync.conflicts.subtitle', { title: localBook.title })}
           </Text>
 
-          <View style={styles.timestampContainer}>
-            <View style={styles.timestampItem}>
-              <Chip icon="phone" style={styles.localChip}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 24 }}>
+            <View style={{ alignItems: 'center' }}>
+              <Chip
+                icon="phone"
+                style={{ backgroundColor: theme.colors.primary, marginBottom: 4 }}
+              >
                 {t('sync.conflicts.localVersion')}
               </Chip>
-              <Text variant="bodySmall" style={styles.timestamp}>
+              <Text variant="bodySmall" style={{ opacity: 0.6 }}>
                 {formatDate(localBook.updateDate)}
               </Text>
             </View>
-            
-            <View style={styles.timestampItem}>
-              <Chip icon="cloud" style={styles.serverChip}>
+
+            <View style={{ alignItems: 'center' }}>
+              <Chip
+                icon="cloud"
+                style={{ backgroundColor: theme.colors.secondary, marginBottom: 4 }}
+              >
                 {t('sync.conflicts.serverVersion')}
               </Chip>
-              <Text variant="bodySmall" style={styles.timestamp}>
+              <Text variant="bodySmall" style={{ opacity: 0.6 }}>
                 {formatDate(serverBook.updateDate)}
               </Text>
             </View>
           </View>
 
-          <ScrollView style={styles.differencesContainer}>
+          <ScrollView style={{ maxHeight: 300 }}>
             {differences.map((diff, index) => (
-              <View key={diff.field} style={styles.differenceItem}>
-                <Text variant="titleSmall" style={styles.fieldTitle}>
+              <View key={diff.field} style={{ marginBottom: 16 }}>
+                <Text variant="titleSmall" style={{ fontWeight: 'bold', marginBottom: 8, textTransform: 'capitalize' }}>
                   {t(`books:${diff.field}`)}
                 </Text>
-                
-                <View style={styles.comparisonRow}>
-                  <View style={styles.versionColumn}>
-                    <Text variant="labelSmall" style={styles.versionLabel}>
+
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  <View style={{
+                    flex: 1,
+                    backgroundColor: theme.colors.surfaceVariant,
+                    padding: 12,
+                    borderRadius: 8,
+                  }}>
+                    <Text variant="labelSmall" style={{ fontWeight: 'bold', marginBottom: 4, textTransform: 'uppercase' }}>
                       {t('sync.conflicts.local')}
                     </Text>
-                    <Text 
-                      variant="bodyMedium" 
-                      style={[styles.versionValue, styles.localValue]}
+                    <Text
+                      variant="bodyMedium"
+                      style={{ minHeight: 20, color: theme.colors.primary }}
                       numberOfLines={2}
                     >
                       {diff.local}
                     </Text>
                   </View>
-                  
-                  <View style={styles.versionColumn}>
-                    <Text variant="labelSmall" style={styles.versionLabel}>
+
+                  <View style={{
+                    flex: 1,
+                    backgroundColor: theme.colors.surfaceVariant,
+                    padding: 12,
+                    borderRadius: 8,
+                  }}>
+                    <Text variant="labelSmall" style={{ fontWeight: 'bold', marginBottom: 4, textTransform: 'uppercase' }}>
                       {t('sync.conflicts.server')}
                     </Text>
-                    <Text 
-                      variant="bodyMedium" 
-                      style={[styles.versionValue, styles.serverValue]}
+                    <Text
+                      variant="bodyMedium"
+                      style={{ minHeight: 20, color: theme.colors.secondary }}
                       numberOfLines={2}
                     >
                       {diff.server}
                     </Text>
                   </View>
                 </View>
-                
-                {index < differences.length - 1 && <Divider style={styles.divider} />}
+
+                {index < differences.length - 1 && <Divider style={{ marginTop: 12 }} />}
               </View>
             ))}
           </ScrollView>
         </Dialog.Content>
 
-        <Dialog.Actions style={styles.actions}>
-          <Button 
-            mode="outlined" 
+        <Dialog.Actions style={{ justifyContent: 'space-between', paddingHorizontal: 16 }}>
+          <Button
+            mode="outlined"
             onPress={() => onResolve('local')}
-            style={styles.button}
+            style={{ flex: 1, marginHorizontal: 4 }}
             icon="phone"
           >
             {t('sync.conflicts.keepLocal')}
           </Button>
-          <Button 
-            mode="contained" 
+          <Button
+            mode="contained"
             onPress={() => onResolve('server')}
-            style={styles.button}
+            style={{ flex: 1, marginHorizontal: 4 }}
             icon="cloud-download"
           >
             {t('sync.conflicts.useServer')}
@@ -159,83 +176,3 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
     </Portal>
   );
 };
-
-const styles = StyleSheet.create({
-  dialog: {
-    maxHeight: '80%',
-  },
-  title: {
-    textAlign: 'center',
-    color: '#d32f2f',
-  },
-  subtitle: {
-    textAlign: 'center',
-    marginBottom: 16,
-    opacity: 0.7,
-  },
-  timestampContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 24,
-  },
-  timestampItem: {
-    alignItems: 'center',
-  },
-  localChip: {
-    backgroundColor: '#2196F3',
-    marginBottom: 4,
-  },
-  serverChip: {
-    backgroundColor: '#FF9800',
-    marginBottom: 4,
-  },
-  timestamp: {
-    opacity: 0.6,
-  },
-  differencesContainer: {
-    maxHeight: 300,
-  },
-  differenceItem: {
-    marginBottom: 16,
-  },
-  fieldTitle: {
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textTransform: 'capitalize',
-  },
-  comparisonRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  versionColumn: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 8,
-  },
-  versionLabel: {
-    fontWeight: 'bold',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  versionValue: {
-    minHeight: 20,
-  },
-  localValue: {
-    color: '#2196F3',
-  },
-  serverValue: {
-    color: '#FF9800',
-  },
-  divider: {
-    marginTop: 12,
-  },
-  actions: {
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-  },
-  button: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-});

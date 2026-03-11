@@ -1,6 +1,11 @@
 {
   "title": "Title",
   "author": "Author",
+  "sort_title": "Title",
+  "sort_author": "Author",
+  "sort_status": "Status",
+  "sort_creationDate": "Added",
+  "sort_updateDate": "Last updated",
   "authors": "Authors",
   "isbn": "ISBN",
   "publisher": "Publisher",

@@ -91,6 +91,7 @@ export class BookApi extends BaseApiClient {
     if (parsedFilters.categoryId)
       params.append('categoryId', parsedFilters.categoryId.toString());
     if (parsedFilters.sortBy) params.append('sortBy', parsedFilters.sortBy);
+    if (parsedFilters.sortOrder) params.append('sortOrder', parsedFilters.sortOrder);
     if (parsedFilters.page) params.append('page', parsedFilters.page.toString());
     if (parsedFilters.limit) params.append('limit', parsedFilters.limit.toString());
 

@@ -17,6 +17,7 @@ import { operationQueue } from '../../src/services/OperationQueue';
 import { databaseService } from '../../src/services/database/DatabaseService';
 import { migrationSystem } from '../../src/services/database/migrations';
 import { bookAPI, authorAPI, categoryAPI, apiClient } from '../../src/services/api';
+import { executeOperation } from '../../src/services/QueueExecutor';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LocalBook } from '../../src/entities/LocalBook';
 import { SYNC_STATUS } from '../../src/types';
@@ -211,8 +212,6 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
         status: 'pending' as const,
       };
 
-      // Import executeOperation
-      const { executeOperation } = require('../../src/services/QueueExecutor');
       await executeOperation(operation);
 
       // Verify: ID mapping registered
@@ -404,13 +403,14 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Add book_authors entry
       const db = databaseService.getDatabase();
+      const now = new Date().toISOString();
       await db.runAsync(
-        'INSERT OR IGNORE INTO authors (name) VALUES (?)',
-        ['Test Author']
+        'INSERT OR IGNORE INTO authors (name, surname, creation_date, update_date) VALUES (?, ?, ?, ?)',
+        ['Test', 'Author', now, now]
       );
       const author = await databaseService.getFirstAsync<{ id: number }>(
-        'SELECT id FROM authors WHERE name = ?',
-        ['Test Author']
+        'SELECT id FROM authors WHERE name = ? AND surname = ?',
+        ['Test', 'Author']
       );
       await db.runAsync(
         'INSERT INTO book_authors (book_id, author_id) VALUES (?, ?)',
@@ -448,15 +448,16 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
       const nonExistentBookId = 'temp-nonexistent-9999';
 
       const db = databaseService.getDatabase();
+      const now = new Date().toISOString();
 
       // Step 1: Create an author
       await db.runAsync(
-        'INSERT OR IGNORE INTO authors (name) VALUES (?)',
-        ['Orphaned Author']
+        'INSERT OR IGNORE INTO authors (name, surname, creation_date, update_date) VALUES (?, ?, ?, ?)',
+        ['Orphaned', 'Author', now, now]
       );
       const author = await databaseService.getFirstAsync<{ id: number }>(
-        'SELECT id FROM authors WHERE name = ?',
-        ['Orphaned Author']
+        'SELECT id FROM authors WHERE name = ? AND surname = ?',
+        ['Orphaned', 'Author']
       );
 
       // Step 2: Manually insert book_authors entry for a non-existent book
@@ -492,7 +493,7 @@ describe('End-to-End Sync Integration (Task 5.5.3)', () => {
 
       // Manually set old timestamp and failed status
       const queue = operationQueue as unknown as Record<string, unknown>;
-      const op = (queue.queue as Array<Record<string, unknown>>).find((o) => o.id === opId);
+      const op = (queue.queue as Record<string, unknown>[]).find((o) => o.id === opId);
       if (op) {
         op.timestamp = oldTimestamp;
         op.status = 'failed';

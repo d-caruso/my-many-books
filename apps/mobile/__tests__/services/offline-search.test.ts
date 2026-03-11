@@ -3,9 +3,11 @@ import { databaseService } from '../../src/services/database/DatabaseService';
 import { migrationSystem } from '../../src/services/database/migrations';
 import { LocalBook } from '../../src/entities/LocalBook';
 import type { Book } from '../../src/types';
-import { BOOK_STATUS } from '@my-many-books/shared-types';
-import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
-import { DB_SORT_FIELDS } from '../../src/constants/db';
+import {
+  BOOK_STATUS,
+  SEARCH_SORT_BY_FIELDS,
+  SORT_DIRECTIONS,
+} from '@my-many-books/shared-types';
 
 describe('Offline Search, Filter, and Sort', () => {
   beforeAll(async () => {
@@ -19,14 +21,52 @@ describe('Offline Search, Filter, and Sort', () => {
 
   beforeEach(async () => {
     // Clear database before each test
+    await databaseService.executeQuery('DELETE FROM book_authors');
+    await databaseService.executeQuery('DELETE FROM authors');
     await databaseService.executeQuery('DELETE FROM books');
 
     // Populate test data with explicit timestamps to ensure proper ordering
     const now = Date.now();
-    await bookRepository.create(new LocalBook({ title: 'The Great Gatsby', authors: 'F. Scott Fitzgerald', status: BOOK_STATUS.FINISHED, rating: 5, updateDate: new Date(now - 3000).toISOString() } as unknown as Book));
-    await bookRepository.create(new LocalBook({ title: 'To Kill a Mockingbird', authors: 'Harper Lee', status: BOOK_STATUS.READING, rating: 4, updateDate: new Date(now - 2000).toISOString() } as unknown as Book));
-    await bookRepository.create(new LocalBook({ title: '1984', authors: 'George Orwell', status: BOOK_STATUS.READING, rating: null, updateDate: new Date(now - 1000).toISOString() } as unknown as Book));
-    await bookRepository.create(new LocalBook({ title: 'Pride and Prejudice', authors: 'Jane Austen', status: BOOK_STATUS.FINISHED, rating: 5, updateDate: new Date(now).toISOString() } as unknown as Book));
+    await bookRepository.create(
+      new LocalBook({
+        title: 'The Great Gatsby',
+        authors: [{ id: 1, name: 'F. Scott', surname: 'Fitzgerald' }],
+        status: BOOK_STATUS.FINISHED,
+        rating: 5,
+        creationDate: new Date(now - 4000).toISOString(),
+        updateDate: new Date(now - 3000).toISOString(),
+      } as unknown as Book)
+    );
+    await bookRepository.create(
+      new LocalBook({
+        title: 'To Kill a Mockingbird',
+        authors: [{ id: 2, name: 'Harper', surname: 'Lee' }],
+        status: BOOK_STATUS.READING,
+        rating: 4,
+        creationDate: new Date(now - 3000).toISOString(),
+        updateDate: new Date(now - 2000).toISOString(),
+      } as unknown as Book)
+    );
+    await bookRepository.create(
+      new LocalBook({
+        title: '1984',
+        authors: [{ id: 3, name: 'George', surname: 'Orwell' }],
+        status: BOOK_STATUS.READING,
+        rating: null,
+        creationDate: new Date(now - 2000).toISOString(),
+        updateDate: new Date(now - 1000).toISOString(),
+      } as unknown as Book)
+    );
+    await bookRepository.create(
+      new LocalBook({
+        title: 'Pride and Prejudice',
+        authors: [{ id: 4, name: 'Jane', surname: 'Austen' }],
+        status: BOOK_STATUS.FINISHED,
+        rating: 5,
+        creationDate: new Date(now - 1000).toISOString(),
+        updateDate: new Date(now).toISOString(),
+      } as unknown as Book)
+    );
   });
 
   describe('Offline Search', () => {
@@ -105,7 +145,7 @@ describe('Offline Search, Filter, and Sort', () => {
   describe('Offline Sorting', () => {
     it('should sort by title ascending', async () => {
       const results = await bookRepository.searchWithFilters({
-        sortBy: DB_SORT_FIELDS.TITLE,
+        sortBy: SEARCH_SORT_BY_FIELDS.TITLE,
         sortOrder: SORT_DIRECTIONS.ASC,
       });
 
@@ -118,7 +158,7 @@ describe('Offline Search, Filter, and Sort', () => {
 
     it('should sort by title descending', async () => {
       const results = await bookRepository.searchWithFilters({
-        sortBy: DB_SORT_FIELDS.TITLE,
+        sortBy: SEARCH_SORT_BY_FIELDS.TITLE,
         sortOrder: SORT_DIRECTIONS.DESC,
       });
 
@@ -127,9 +167,9 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[3].entity.title).toBe('1984');
     });
 
-    it('should sort by update_date descending when explicitly requested', async () => {
+    it('should sort by updateDate descending when explicitly requested', async () => {
       const results = await bookRepository.searchWithFilters({
-        sortBy: DB_SORT_FIELDS.UPDATE_DATE,
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
         sortOrder: SORT_DIRECTIONS.DESC,
       });
 
@@ -140,12 +180,93 @@ describe('Offline Search, Filter, and Sort', () => {
       expect(results[3].entity.title).toBe('The Great Gatsby');
     });
 
-    it('should sort by update_date by default', async () => {
+    it('should sort by updateDate ascending', async () => {
+      const results = await bookRepository.searchWithFilters({
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      });
+
+      expect(results).toHaveLength(4);
+      expect(results[0].entity.title).toBe('The Great Gatsby');
+      expect(results[3].entity.title).toBe('Pride and Prejudice');
+    });
+
+    it('should sort by title ascending by default', async () => {
       const results = await bookRepository.searchWithFilters({});
 
       expect(results).toHaveLength(4);
-      // Most recently updated should be first (Pride and Prejudice was added last)
+      expect(results[0].entity.title).toBe('1984');
+      expect(results[1].entity.title).toBe('Pride and Prejudice');
+      expect(results[2].entity.title).toBe('The Great Gatsby');
+      expect(results[3].entity.title).toBe('To Kill a Mockingbird');
+    });
+
+    it('should sort by creationDate ascending', async () => {
+      const results = await bookRepository.searchWithFilters({
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      });
+
+      expect(results).toHaveLength(4);
+      expect(results[0].entity.title).toBe('The Great Gatsby');
+      expect(results[3].entity.title).toBe('Pride and Prejudice');
+    });
+
+    it('should sort by creationDate descending', async () => {
+      const results = await bookRepository.searchWithFilters({
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      expect(results).toHaveLength(4);
       expect(results[0].entity.title).toBe('Pride and Prejudice');
+      expect(results[3].entity.title).toBe('The Great Gatsby');
+    });
+
+    it('should sort by status ascending', async () => {
+      const results = await bookRepository.searchWithFilters({
+        sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      });
+
+      expect(results).toHaveLength(4);
+      expect(results[0].entity.title).toBe('Pride and Prejudice');
+      expect(results[1].entity.title).toBe('The Great Gatsby');
+    });
+
+    it('should sort by status descending', async () => {
+      const results = await bookRepository.searchWithFilters({
+        sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      expect(results).toHaveLength(4);
+      expect(results[0].entity.title).toBe('1984');
+      expect(results[1].entity.title).toBe('To Kill a Mockingbird');
+    });
+
+    it('should sort by author using surname then name ascending', async () => {
+      const results = await bookRepository.searchWithFilters({
+        sortBy: SEARCH_SORT_BY_FIELDS.AUTHOR,
+        sortOrder: SORT_DIRECTIONS.ASC,
+      });
+
+      expect(results).toHaveLength(4);
+      expect(results[0].entity.title).toBe('Pride and Prejudice');
+      expect(results[1].entity.title).toBe('The Great Gatsby');
+      expect(results[2].entity.title).toBe('To Kill a Mockingbird');
+      expect(results[3].entity.title).toBe('1984');
+    });
+
+    it('should sort by author using surname then name descending', async () => {
+      const results = await bookRepository.searchWithFilters({
+        sortBy: SEARCH_SORT_BY_FIELDS.AUTHOR,
+        sortOrder: SORT_DIRECTIONS.DESC,
+      });
+
+      expect(results).toHaveLength(4);
+      expect(results[0].entity.title).toBe('1984');
+      expect(results[3].entity.title).toBe('Pride and Prejudice');
     });
   });
 
@@ -154,7 +275,7 @@ describe('Offline Search, Filter, and Sort', () => {
       const results = await bookRepository.searchWithFilters({
         query: 'Pr',  // Matches "Pride and Prejudice"
         status: BOOK_STATUS.FINISHED,
-        sortBy: DB_SORT_FIELDS.TITLE,
+        sortBy: SEARCH_SORT_BY_FIELDS.TITLE,
         sortOrder: SORT_DIRECTIONS.ASC,
       });
 
@@ -167,7 +288,7 @@ describe('Offline Search, Filter, and Sort', () => {
       // Search for completed books, sorted by rating
       const results = await bookRepository.searchWithFilters({
         status: BOOK_STATUS.FINISHED,
-        sortBy: DB_SORT_FIELDS.UPDATE_DATE,
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
         sortOrder: SORT_DIRECTIONS.DESC,
       });
 

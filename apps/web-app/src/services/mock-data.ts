@@ -1,4 +1,13 @@
-import type { Book, Category, Author, PaginatedResponse, SearchResult } from '@my-many-books/shared-types';
+import {
+  SEARCH_SORT_BY_FIELDS,
+  SORT_DIRECTIONS,
+  type Author,
+  type Book,
+  type Category,
+  type PaginatedResponse,
+  type SearchFilters,
+  type SearchResult,
+} from '@my-many-books/shared-types';
 import { env } from '../config/env';
 
 export function getMockBooks(): Promise<PaginatedResponse<Book>> {
@@ -81,20 +90,12 @@ export function getMockAuthors(): Promise<Author[]> {
   ]);
 }
 
-export function getMockSearchResults(searchParams: {
-  q?: string;
-  page?: number;
-  limit?: number;
-  status?: string;
-  sortBy?: string;
-  authorId?: number;
-  categoryId?: number;
-}): Promise<SearchResult> {
+export function getMockSearchResults(searchParams: SearchFilters): Promise<SearchResult> {
   return getMockBooks().then(data => {
     let filteredBooks = data.books || [];
 
-    if (searchParams.q) {
-      const query = searchParams.q.toLowerCase();
+    if (searchParams.query) {
+      const query = searchParams.query.toLowerCase();
       filteredBooks = filteredBooks.filter(book =>
         book.title.toLowerCase().includes(query) ||
         book.authors?.some(author =>
@@ -120,23 +121,35 @@ export function getMockSearchResults(searchParams: {
       );
     }
 
+    const direction = searchParams.sortOrder === SORT_DIRECTIONS.DESC ? -1 : 1;
+
     if (searchParams.sortBy) {
       switch (searchParams.sortBy) {
-        case 'title':
-          filteredBooks.sort((a, b) => a.title.localeCompare(b.title));
+        case SEARCH_SORT_BY_FIELDS.TITLE:
+          filteredBooks.sort((a, b) => direction * a.title.localeCompare(b.title));
           break;
-        case 'author':
+        case SEARCH_SORT_BY_FIELDS.AUTHOR:
           filteredBooks.sort((a, b) => {
-            const aAuthor = a.authors?.[0] ? `${a.authors[0].name} ${a.authors[0].surname}` : '';
-            const bAuthor = b.authors?.[0] ? `${b.authors[0].name} ${b.authors[0].surname}` : '';
-            return aAuthor.localeCompare(bAuthor);
+            const aAuthor = a.authors?.[0] ? `${a.authors[0].surname} ${a.authors[0].name}` : '';
+            const bAuthor = b.authors?.[0] ? `${b.authors[0].surname} ${b.authors[0].name}` : '';
+            return direction * aAuthor.localeCompare(bAuthor);
           });
           break;
-        case 'date-added':
+        case SEARCH_SORT_BY_FIELDS.STATUS:
+          filteredBooks.sort((a, b) => direction * (a.status ?? '').localeCompare(b.status ?? ''));
+          break;
+        case SEARCH_SORT_BY_FIELDS.CREATION_DATE:
           filteredBooks.sort((a, b) => {
             const aDate = a.creationDate ? new Date(a.creationDate).getTime() : 0;
             const bDate = b.creationDate ? new Date(b.creationDate).getTime() : 0;
-            return bDate - aDate;
+            return direction * (aDate - bDate);
+          });
+          break;
+        case SEARCH_SORT_BY_FIELDS.UPDATE_DATE:
+          filteredBooks.sort((a, b) => {
+            const aDate = a.updateDate ? new Date(a.updateDate).getTime() : 0;
+            const bDate = b.updateDate ? new Date(b.updateDate).getTime() : 0;
+            return direction * (aDate - bDate);
           });
           break;
       }

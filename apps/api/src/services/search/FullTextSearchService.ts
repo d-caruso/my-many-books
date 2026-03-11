@@ -186,7 +186,7 @@ export abstract class FullTextSearchService<T extends { id: number }> {
 
   /**
    * Sort by relevance score with stable secondary sort
-   * Uses updatedAt DESC as secondary sort, then id ASC as final tie-breaker
+   * Uses updateDate DESC as secondary sort, then id ASC as final tie-breaker
    */
   protected sortByRelevanceWithSecondarySort(results: SearchResult<T>[]): void {
     results.sort((a, b) => {
@@ -198,7 +198,7 @@ export abstract class FullTextSearchService<T extends { id: number }> {
         return bScore - aScore;
       }
 
-      // Secondary sort: updatedAt (descending - newer first)
+      // Secondary sort: updateDate (descending - newer first)
       const aUpdated = a.updateDate ? new Date(a.updateDate).getTime() : 0;
       const bUpdated = b.updateDate ? new Date(b.updateDate).getTime() : 0;
       if (aUpdated !== bUpdated) {

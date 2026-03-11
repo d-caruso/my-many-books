@@ -13,7 +13,12 @@ import {
   ISBN_CONSTRAINTS,
   ISBN_PATTERNS,
 } from '@my-many-books/shared-validation';
-import { BOOK_STATUSES, SORT_DIRECTION_VALUES, SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import {
+  BOOK_STATUSES,
+  SEARCH_SORT_BY_FIELD_VALUES,
+  SORT_DIRECTION_VALUES,
+  SORT_DIRECTIONS,
+} from '@my-many-books/shared-types';
 
 /**
  * Create book schema
@@ -74,7 +79,7 @@ export const searchBooksQuerySchema = Joi.object({
   q: Joi.string().min(1).max(255).trim().optional(),
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
-  sortBy: Joi.string().optional(),
+  sortBy: Joi.string().valid(...SEARCH_SORT_BY_FIELD_VALUES).optional(),
   sortOrder: Joi.string().valid(...SORT_DIRECTION_VALUES).default(SORT_DIRECTIONS.ASC),
   status: Joi.string().valid(...BOOK_STATUSES).optional(),
   authorId: Joi.number().integer().optional(),
@@ -92,7 +97,7 @@ export const getBooksQuerySchema = Joi.object({
   categoryId: commonSchemas.id.optional(),
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
-  sortBy: Joi.string().optional(),
+  sortBy: Joi.string().valid(...SEARCH_SORT_BY_FIELD_VALUES).optional(),
   sortOrder: Joi.string().valid(...SORT_DIRECTION_VALUES).default(SORT_DIRECTIONS.ASC),
   includeAuthors: Joi.string().optional().valid('true', 'false').default('false'),
   includeCategories: Joi.string().optional().valid('true', 'false').default('false'),

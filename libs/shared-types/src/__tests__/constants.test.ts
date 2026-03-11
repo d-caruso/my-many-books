@@ -8,6 +8,8 @@ import {
   AUTH_ENDPOINTS,
   PASSWORD_POLICY,
   PASSWORD_RESET_POLICY,
+  SEARCH_SORT_BY_FIELDS,
+  SEARCH_SORT_BY_FIELD_VALUES,
   USER_ACCOUNT_PATCH_ACTIONS,
 } from "../index";
 
@@ -37,5 +39,23 @@ describe("Mobile Configuration Constants", () => {
       expect(PASSWORD_POLICY.MIN_LENGTH).toBe(8);
       expect(PASSWORD_POLICY.REQUIRE_SYMBOLS).toBe(false);
       expect(PASSWORD_RESET_POLICY.TOKEN_TTL_MINUTES).toBe(60);
+    });
+
+    it("should expose search sort-by field constants", () => {
+      expect(Object.isFrozen(SEARCH_SORT_BY_FIELDS)).toBe(true);
+      expect(Object.isFrozen(SEARCH_SORT_BY_FIELD_VALUES)).toBe(true);
+
+      expect(SEARCH_SORT_BY_FIELDS.TITLE).toBe("title");
+      expect(SEARCH_SORT_BY_FIELDS.AUTHOR).toBe("author");
+      expect(SEARCH_SORT_BY_FIELDS.STATUS).toBe("status");
+      expect(SEARCH_SORT_BY_FIELDS.CREATION_DATE).toBe("creationDate");
+      expect(SEARCH_SORT_BY_FIELDS.UPDATE_DATE).toBe("updateDate");
+      expect(SEARCH_SORT_BY_FIELD_VALUES).toEqual([
+        "title",
+        "author",
+        "status",
+        "creationDate",
+        "updateDate",
+      ]);
     });
   });

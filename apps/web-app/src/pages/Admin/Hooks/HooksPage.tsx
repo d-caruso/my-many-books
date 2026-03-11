@@ -1,5 +1,5 @@
 import { extractErrorMessage } from '@my-many-books/shared-utils';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { logger } from '../../../utils/logger';
 import {
   Box,
@@ -22,7 +22,7 @@ import { AdminLayout } from '../AdminLayout';
 import { useApi } from '../../../contexts/ApiContext';
 import { HookStatsCard } from './components/HookStatsCard';
 import { HooksList } from './HooksList';
-import { HookForm, HookFormData } from './HookForm';
+import { HookForm, HookFormData, HookActionType } from './HookForm';
 import type { AdminHookSummary, AdminHookStats } from '../../../services/api';
 
 export const HooksPage: React.FC = () => {
@@ -37,6 +37,30 @@ export const HooksPage: React.FC = () => {
   const [reloading, setReloading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingHook, setEditingHook] = useState<AdminHookSummary | null>(null);
+
+  const toHookActionType = (value: string): HookActionType => {
+    return value === 'email' || value === 'database' ? value : 'log';
+  };
+
+  const editingHookInitialData = useMemo<Partial<HookFormData> | undefined>(() => {
+    if (!editingHook) {
+      return undefined;
+    }
+
+    return {
+      name: editingHook.name,
+      description: editingHook.description ?? '',
+      eventPattern: editingHook.eventPattern,
+      actionType: toHookActionType(editingHook.actionType),
+      priority: editingHook.priority,
+      isActive: editingHook.isActive,
+      actionConfig: editingHook.actionConfig
+        ? typeof editingHook.actionConfig === 'string'
+          ? editingHook.actionConfig
+          : JSON.stringify(editingHook.actionConfig, null, 2)
+        : undefined,
+    };
+  }, [editingHook]);
 
   const loadHooksData = useCallback(async () => {
     try {
@@ -276,20 +300,7 @@ export const HooksPage: React.FC = () => {
             loading={loading}
             onEdit={(id) => {
               const hookToEdit = hooks.find((hook) => hook.id === id) || null;
-              if (hookToEdit) {
-                // Convert actionConfig object to JSON string for the form
-                const hookForForm = {
-                  ...hookToEdit,
-                  actionConfig: hookToEdit.actionConfig
-                    ? typeof hookToEdit.actionConfig === 'string'
-                      ? hookToEdit.actionConfig
-                      : JSON.stringify(hookToEdit.actionConfig, null, 2)
-                    : undefined,
-                };
-                setEditingHook(hookForForm as AdminHookSummary);
-              } else {
-                setEditingHook(null);
-              }
+              setEditingHook(hookToEdit);
               setIsFormOpen(true);
             }}
             onViewExecutions={(id) => navigate(`/admin/hooks/${id}/executions`)}
@@ -301,7 +312,7 @@ export const HooksPage: React.FC = () => {
       </Box>
       <HookForm
         open={isFormOpen}
-        initialData={editingHook ?? undefined}
+        initialData={editingHookInitialData}
         onClose={handleCloseForm}
         onSave={handleSaveHook}
       />

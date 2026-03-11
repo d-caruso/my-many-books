@@ -3,6 +3,7 @@ import renderer from 'react-test-renderer';
 import type { Book } from '@/types';
 import { BookCard } from '@/components/BookCard';
 import { BOOK_STATUS } from '@my-many-books/shared-types';
+import { getStatusColor } from '@my-many-books/shared-design';
 
 // Mock the translation function to return mock strings for testing
 jest.mock('react-i18next', () => ({
@@ -48,27 +49,27 @@ describe('BookCard', () => {
 
   describe('Utility functions', () => {
     it('should return blue for reading status', () => {
-      const result = BookCardModule.getStatusColor(BOOK_STATUS.READING);
-      expect(result).toBe('#2196F3');
+      const result = getStatusColor(BOOK_STATUS.READING);
+      expect(result).toBe('#1976D2');
     });
 
     it('should return green for finished status', () => {
-      const result = BookCardModule.getStatusColor(BOOK_STATUS.FINISHED);
-      expect(result).toBe('#4CAF50');
+      const result = getStatusColor(BOOK_STATUS.FINISHED);
+      expect(result).toBe('#2E7D32');
     });
 
     it('should return default gray for unknown status', () => {
-      const result = BookCardModule.getStatusColor('want-to-read' as 'reading' | 'finished' | 'paused');
+      const result = getStatusColor('want-to-read' as 'reading' | 'finished' | 'paused');
       expect(result).toBe('#757575');
     });
 
-    it('should return purple for paused status', () => {
-      const result = BookCardModule.getStatusColor(BOOK_STATUS.PAUSED);
-      expect(result).toBe('#9C27B0');
+    it('should return orange for paused status', () => {
+      const result = getStatusColor(BOOK_STATUS.PAUSED);
+      expect(result).toBe('#ED6C02');
     });
 
     it('should return default gray for truly unknown status', () => {
-      const result = BookCardModule.getStatusColor('unknown' as 'reading' | 'finished' | 'paused');
+      const result = getStatusColor('unknown' as 'reading' | 'finished' | 'paused');
       expect(result).toBe('#757575');
     });
 

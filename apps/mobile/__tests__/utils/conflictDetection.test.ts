@@ -1,18 +1,14 @@
-// Test for conflict detection utilities
-// Tests conflict detection and resolution logic
+import { hasConflict, resolveConflict } from '../../src/utils/conflictDetection';
 
 describe('Conflict Detection', () => {
-  it('should import conflict detection utilities', () => {
-    const utilsModule = require('../../src/utils/conflictDetection');
-    expect(utilsModule.hasConflict).toBeDefined();
-    expect(typeof utilsModule.hasConflict).toBe('function');
-    expect(utilsModule.resolveConflict).toBeDefined();
-    expect(typeof utilsModule.resolveConflict).toBe('function');
+  it('should export conflict detection utilities', () => {
+    expect(hasConflict).toBeDefined();
+    expect(typeof hasConflict).toBe('function');
+    expect(resolveConflict).toBeDefined();
+    expect(typeof resolveConflict).toBe('function');
   });
 
   it('should detect no conflict when timestamps match', () => {
-    const { hasConflict } = require('../../src/utils/conflictDetection');
-
     const timestamp = new Date().toISOString();
     const localBook = {
       id: 1,
@@ -30,8 +26,6 @@ describe('Conflict Detection', () => {
   });
 
   it('should detect conflict when server is newer', () => {
-    const { hasConflict } = require('../../src/utils/conflictDetection');
-
     const oldTimestamp = new Date('2024-01-01').toISOString();
     const newTimestamp = new Date('2024-01-02').toISOString();
 
@@ -51,8 +45,6 @@ describe('Conflict Detection', () => {
   });
 
   it('should resolve conflict choosing server version', () => {
-    const { resolveConflict } = require('../../src/utils/conflictDetection');
-
     const localBook = {
       id: 1,
       title: 'Test Book Local',
@@ -71,8 +63,6 @@ describe('Conflict Detection', () => {
   });
 
   it('should resolve conflict choosing local version', () => {
-    const { resolveConflict } = require('../../src/utils/conflictDetection');
-
     const localBook = {
       id: 1,
       title: 'Test Book Local',

@@ -2,10 +2,9 @@
 import type {
   Book,
   User as SharedUser,
-  SortDirection,
   BookFormData,
+  SearchFilters,
 } from '@my-many-books/shared-types';
-import type { DbSortField } from '@/constants/db';
 
 export type { Book };
 
@@ -73,16 +72,7 @@ export interface AppTheme {
 
 export type StatusBarStyle = 'auto' | 'light' | 'dark';
 
-export interface SearchQuery {
-  q?: string;
-  author?: string;
-  category?: string;
-  status?: Book['status'];
-  limit?: number;
-  offset?: number;
-  sortBy?: DbSortField;
-  sortOrder?: SortDirection;
-}
+export type SearchQuery = Omit<SearchFilters, 'query'>;
 
 // API Response types
 export interface ApiResponse<T = object> {

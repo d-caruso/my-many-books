@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Dialog, List, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, Dialog, List, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useManageAuthors } from '@my-many-books/shared-ui-hooks';
 import type { Author } from '@my-many-books/shared-types';
@@ -20,6 +20,7 @@ export function ManageAuthorsDialog({
   onAuthorDeleted,
 }: ManageAuthorsDialogProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
@@ -131,8 +132,8 @@ export function ManageAuthorsDialog({
         <Dialog.Content>
           <View style={styles.content}>
             {error ? (
-              <View style={styles.errorBox}>
-                <Text variant="bodySmall" style={styles.errorText}>
+              <View style={[styles.errorBox, { backgroundColor: theme.colors.errorContainer }]}>
+                <Text variant="bodySmall" style={[styles.errorText, { color: theme.colors.error }]}>
                   {t(error.i18nKey, {
                     defaultValue:
                       error.message ||
@@ -153,8 +154,8 @@ export function ManageAuthorsDialog({
             />
 
             {editingId != null ? (
-              <View style={styles.editorBox}>
-                <Text variant="bodySmall" style={styles.editorLabel}>
+              <View style={[styles.editorBox, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
+                <Text variant="bodySmall" style={[styles.editorLabel, { color: theme.colors.onSurface }]}>
                   {t('common:edit')}
                 </Text>
                 <TextInput
@@ -188,7 +189,7 @@ export function ManageAuthorsDialog({
 
             <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
               {loading ? (
-                <Text variant="bodySmall" style={styles.helperText}>
+                <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
                   {t('dialogs:author.loading', { defaultValue: 'Loading authors...' })}
                 </Text>
               ) : null}
@@ -212,7 +213,7 @@ export function ManageAuthorsDialog({
                             setPendingDeleteId(Number(author.id));
                           }}
                           disabled={mutating}
-                          textColor="#b91c1c"
+                          textColor={theme.colors.error}
                         >
                           {t('common:delete')}
                         </Button>
@@ -222,7 +223,7 @@ export function ManageAuthorsDialog({
                 ))}
 
               {!loading && filteredAuthors.length === 0 ? (
-                <Text variant="bodySmall" style={styles.helperText}>
+                <Text variant="bodySmall" style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
                   {t('dialogs:author.no_results', { defaultValue: 'No authors found' })}
                 </Text>
               ) : null}
@@ -268,24 +269,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   errorBox: {
-    backgroundColor: '#ffebee',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  errorText: {
-    color: '#b91c1c',
-  },
+  errorText: {},
   editorBox: {
     gap: 8,
     padding: 10,
     borderRadius: 8,
-    backgroundColor: '#f8fafc',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
   },
   editorLabel: {
-    color: '#334155',
     fontWeight: '600',
   },
   inlineActionsRow: {
@@ -300,7 +295,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   helperText: {
-    color: '#64748b',
     textAlign: 'center',
     paddingVertical: 12,
   },

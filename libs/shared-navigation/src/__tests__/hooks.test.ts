@@ -22,7 +22,12 @@ import {
 } from '../hooks';
 import { createRoute } from '../routes';
 
-const createAdapter = () => {
+type TestNavigationAdapter = NavigationAdapter & {
+  __setCanGoBack: (value: boolean) => void;
+  __setCanGoForward: (value: boolean) => void;
+};
+
+const createAdapter = (): TestNavigationAdapter => {
   let canBack = false;
   let canForward = false;
 
@@ -74,8 +79,8 @@ describe('shared-navigation hooks', () => {
 
   test('useNavigation delegates to NavigationManager methods', async () => {
     const adapter = createAdapter();
-    (adapter as any).__setCanGoBack(true);
-    (adapter as any).__setCanGoForward(true);
+    adapter.__setCanGoBack(true);
+    adapter.__setCanGoForward(true);
 
     const manager = new NavigationManager(adapter);
     setNavigationManager(manager);

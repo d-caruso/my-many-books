@@ -17,6 +17,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from './AdminLayout';
 import { useApi } from '../../contexts/ApiContext';
+import type { AdminDashboardStats } from '../../services/api';
 
 interface StatCardProps {
   title: string;
@@ -58,18 +59,10 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
   );
 };
 
-interface DashboardStats {
-  totalUsers: number;
-  activeUsers: number;
-  adminUsers: number;
-  totalBooks: number;
-  timestamp?: string;
-}
-
 export const AdminDashboardPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

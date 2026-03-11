@@ -1,5 +1,6 @@
-// Test for QueueManagementScreen component
-// Tests queue management UI functionality
+import { QueueManagementScreen } from '../../src/components/QueueManagementScreen';
+import { useQueueStatus } from '../../src/hooks/useQueueStatus';
+import { operationQueue } from '../../src/services/OperationQueue';
 
 // Mock uuid
 jest.mock('uuid', () => ({
@@ -7,21 +8,18 @@ jest.mock('uuid', () => ({
 }));
 
 describe('QueueManagementScreen Component', () => {
-  it('should import QueueManagementScreen component', () => {
-    const componentModule = require('../../src/components/QueueManagementScreen');
-    expect(componentModule.QueueManagementScreen).toBeDefined();
-    expect(typeof componentModule.QueueManagementScreen).toBe('function');
+  it('should export QueueManagementScreen component', () => {
+    expect(QueueManagementScreen).toBeDefined();
+    expect(typeof QueueManagementScreen).toBe('function');
   });
 
-  it('should verify useQueueStatus hook exists', () => {
-    const hookModule = require('../../src/hooks/useQueueStatus');
-    expect(hookModule.useQueueStatus).toBeDefined();
-    expect(typeof hookModule.useQueueStatus).toBe('function');
+  it('should export useQueueStatus hook', () => {
+    expect(useQueueStatus).toBeDefined();
+    expect(typeof useQueueStatus).toBe('function');
   });
 
-  it('should verify operationQueue has dequeue method', () => {
-    const queueModule = require('../../src/services/OperationQueue');
-    expect(queueModule.operationQueue.dequeue).toBeDefined();
-    expect(typeof queueModule.operationQueue.dequeue).toBe('function');
+  it('should export operationQueue with dequeue method', () => {
+    expect(operationQueue.dequeue).toBeDefined();
+    expect(typeof operationQueue.dequeue).toBe('function');
   });
 });

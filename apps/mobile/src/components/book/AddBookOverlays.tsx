@@ -3,13 +3,14 @@ import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Author, Category } from '@my-many-books/shared-types';
 import { BarcodeScannerPanel } from '@/components/scanner/BarcodeScannerPanel';
+import { ScannerErrorBoundary } from '@/components/ScannerErrorBoundary';
 import { AddAuthorDialog } from './AddAuthorDialog';
 import { AddCategoryDialog } from './AddCategoryDialog';
 import { AuthorSelectorModal } from './AuthorSelectorModal';
 import { CategorySelectorModal } from './CategorySelectorModal';
 import { ManageAuthorsDialog } from './ManageAuthorsDialog';
 import { ManageCategoriesDialog } from './ManageCategoriesDialog';
-import { addBookStyles as styles } from './addBookStyles';
+import { useAddBookStyles } from './addBookStyles';
 
 interface AddBookOverlaysProps {
   scannerOpen: boolean;
@@ -46,6 +47,8 @@ interface AddBookOverlaysProps {
 }
 
 export function AddBookOverlays(props: AddBookOverlaysProps) {
+  const styles = useAddBookStyles();
+
   return (
     <>
       <Modal
@@ -55,7 +58,9 @@ export function AddBookOverlays(props: AddBookOverlaysProps) {
         onRequestClose={props.onScannerClose}
       >
         <SafeAreaView style={styles.scannerModalContainer}>
-          <BarcodeScannerPanel onDetected={props.onScannerDetected} onClose={props.onScannerClose} />
+          <ScannerErrorBoundary onClose={props.onScannerClose}>
+            <BarcodeScannerPanel onDetected={props.onScannerDetected} onClose={props.onScannerClose} />
+          </ScannerErrorBoundary>
         </SafeAreaView>
       </Modal>
 

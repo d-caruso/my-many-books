@@ -24,7 +24,7 @@ const VerifyEmailPage: React.FC = () => {
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [resendError, setResendError] = useState('');
   const [cooldown, setCooldown] = useState(0);
-  const cooldownRef = useRef<ReturnType<typeof setInterval>>();
+  const cooldownRef = useRef<number | null>(null);
   const autoSubmitted = useRef(false);
 
   const redirectWithResult = (success: boolean, errorMessage?: string) => {
@@ -56,11 +56,16 @@ const VerifyEmailPage: React.FC = () => {
 
   const startCooldown = useCallback(() => {
     setCooldown(30);
-    clearInterval(cooldownRef.current);
-    cooldownRef.current = setInterval(() => {
+    if (cooldownRef.current !== null) {
+      window.clearInterval(cooldownRef.current);
+    }
+    cooldownRef.current = window.setInterval(() => {
       setCooldown(prev => {
         if (prev <= 1) {
-          clearInterval(cooldownRef.current);
+          if (cooldownRef.current !== null) {
+            window.clearInterval(cooldownRef.current);
+            cooldownRef.current = null;
+          }
           return 0;
         }
         return prev - 1;
@@ -69,7 +74,11 @@ const VerifyEmailPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    return () => clearInterval(cooldownRef.current);
+    return () => {
+      if (cooldownRef.current !== null) {
+        window.clearInterval(cooldownRef.current);
+      }
+    };
   }, []);
 
   const handleResend = async () => {

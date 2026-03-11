@@ -1,6 +1,6 @@
 import { FormManager } from '../FormManager';
 import { FormValidator } from '../FormValidator';
-import type { FormConfig, FormField, FormSubmissionResult } from '../types';
+import type { FieldValue, FormConfig, FormEvent, FormField, FormSubmissionResult } from '../types';
 
 const flushMicrotasks = async () => {
   await Promise.resolve();
@@ -40,7 +40,7 @@ describe('FormManager', () => {
     const config: FormConfig = { fields: [createTextField({ name: 'title', value: '' })] };
     const manager = new FormManager(config);
 
-    const events: any[] = [];
+    const events: FormEvent[] = [];
     manager.addEventListener((event) => events.push(event));
 
     manager.setFieldValue('title', 'New');
@@ -63,7 +63,7 @@ describe('FormManager', () => {
   });
 
   test('validationMode=onChange triggers validation', async () => {
-    const validateSpy = jest.spyOn(FormValidator.prototype as any, 'validateField');
+    const validateSpy = jest.spyOn(FormValidator.prototype, 'validateField');
     validateSpy.mockResolvedValue(['Required']);
 
     const config: FormConfig = {
@@ -89,7 +89,7 @@ describe('FormManager', () => {
   });
 
   test('validationMode=onBlur triggers validation when touched', async () => {
-    const validateSpy = jest.spyOn(FormValidator.prototype as any, 'validateField');
+    const validateSpy = jest.spyOn(FormValidator.prototype, 'validateField');
     validateSpy.mockResolvedValue(['Required']);
 
     const config: FormConfig = {
@@ -125,7 +125,7 @@ describe('FormManager', () => {
     };
 
     const manager = new FormManager(config);
-    const events: any[] = [];
+    const events: FormEvent[] = [];
     manager.addEventListener((event) => events.push(event));
 
     const ok = await manager.validateForm();
@@ -136,7 +136,7 @@ describe('FormManager', () => {
   });
 
   test('submit returns validation errors and does not call submissionHandler', async () => {
-    const handler = jest.fn<Promise<FormSubmissionResult>, any[]>(async () => ({
+    const handler = jest.fn<Promise<FormSubmissionResult>, [Record<string, FieldValue>]>(async () => ({
       success: true,
       timestamp: new Date(),
     }));
@@ -168,7 +168,7 @@ describe('FormManager', () => {
   });
 
   test('successful submit emits SUBMISSION_SUCCESS and optionally resets form', async () => {
-    const handler = jest.fn<Promise<FormSubmissionResult>, any[]>(async () => ({
+    const handler = jest.fn<Promise<FormSubmissionResult>, [Record<string, FieldValue>]>(async () => ({
       success: true,
       data: { ok: true },
       timestamp: new Date(),
@@ -180,7 +180,7 @@ describe('FormManager', () => {
     };
 
     const manager = new FormManager(config, handler);
-    const events: any[] = [];
+    const events: FormEvent[] = [];
     manager.addEventListener((event) => events.push(event));
 
     manager.setFieldValue('title', 'Changed');
@@ -193,7 +193,7 @@ describe('FormManager', () => {
   });
 
   test('server-side field errors are merged into state', async () => {
-    const handler = jest.fn<Promise<FormSubmissionResult>, any[]>(async () => ({
+    const handler = jest.fn<Promise<FormSubmissionResult>, [Record<string, FieldValue>]>(async () => ({
       success: false,
       errors: { title: ['Server says no'] },
       timestamp: new Date(),
@@ -234,7 +234,7 @@ describe('FormManager', () => {
 
   test('setErrors replaces errors and emits VALIDATION_ERROR', () => {
     const manager = new FormManager({ fields: [createTextField({ name: 'title', value: 'x' })] });
-    const events: any[] = [];
+    const events: FormEvent[] = [];
     manager.addEventListener((event) => events.push(event));
 
     manager.setErrors({ title: ['Bad'] });
@@ -256,7 +256,7 @@ describe('FormManager', () => {
   });
 
   test('addField and removeField mutate form state', async () => {
-    const validateSpy = jest.spyOn(FormValidator.prototype as any, 'validateField');
+    const validateSpy = jest.spyOn(FormValidator.prototype, 'validateField');
     validateSpy.mockResolvedValue([]);
 
     const manager = new FormManager({ fields: [createTextField({ name: 'title', value: 'x' })] });

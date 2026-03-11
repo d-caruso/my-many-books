@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { View, FlatList, RefreshControl } from 'react-native';
-import { FAB, Searchbar, Chip, Text, Snackbar } from 'react-native-paper';
+import { useEffect, useState, useMemo } from 'react';
+import { View, FlatList, RefreshControl, useWindowDimensions } from 'react-native';
+import { FAB, Searchbar, Chip, Text, Snackbar, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,16 +19,24 @@ import { useNetworkState } from '@/hooks/useNetworkState';
 import { Book } from '@/types';
 import type { UiBook } from '@/types/ui';
 import type { ListRenderItem } from 'react-native';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
+
+function getNumColumns(width: number): number {
+  if (width >= 900) return 3;
+  if (width >= 600) return 2;
+  return 1;
+}
 
 export default function BooksScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const numColumns = getNumColumns(width);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState('');
-  const [selectedBook, setSelectedBook] = useState<UiBook | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'details'>('list');
   const { isOnline } = useNetworkState();
   
   const {
@@ -108,13 +116,7 @@ export default function BooksScreen() {
   };
 
   const handleBookPress = (book: UiBook) => {
-    setSelectedBook(book);
-    setViewMode('details');
-  };
-
-  const handleBackToList = () => {
-    setSelectedBook(null);
-    setViewMode('list');
+    router.push(`/book/${book.id}`);
   };
 
   const handleStatusChange = async (bookId: number, status: Book['status']) => {
@@ -148,10 +150,67 @@ export default function BooksScreen() {
       onStatusChange={(status) => handleStatusChange(item.id, status)}
       onDelete={() => handleDeleteBook(item.id)}
       onResolveConflict={(id, choice) => handleResolveConflict(Number(id), choice)}
+      containerStyle={numColumns > 1 ? styles.gridItem : undefined}
     />
   );
 
-  if (loading && books.length === 0 && viewMode === 'list') {
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background,
+        },
+        header: {
+          padding: 16,
+          backgroundColor: theme.colors.surface,
+          elevation: 2,
+          shadowColor: theme.colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        },
+        title: {
+          marginBottom: 16,
+          fontWeight: 'bold',
+        },
+        searchbar: {
+          marginBottom: 8,
+        },
+        chipContainer: {
+          flexDirection: 'row',
+          marginTop: 8,
+        },
+        chip: {
+          marginRight: 8,
+        },
+        errorContainer: {
+          padding: 16,
+          backgroundColor: theme.colors.errorContainer,
+        },
+        errorText: {
+          color: theme.colors.error,
+          textAlign: 'center',
+        },
+        listContainer: {
+          padding: 16,
+          flexGrow: 1,
+        },
+        fab: {
+          position: 'absolute',
+          margin: 16,
+          right: 0,
+          bottom: 0,
+        },
+        gridItem: {
+          flex: 1,
+          margin: 6,
+        },
+      }),
+    [theme]
+  );
+
+  if (loading && books.length === 0) {
     return <LoadingSpinner />;
   }
 
@@ -191,9 +250,11 @@ export default function BooksScreen() {
       )}
 
       <FlatList
+        key={numColumns}
         data={books}
         renderItem={renderBook}
         keyExtractor={(item) => item.id.toString()}
+        numColumns={numColumns}
         contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl
@@ -231,72 +292,10 @@ export default function BooksScreen() {
     </>
   );
 
-  const renderDetails = () => {
-    if (!selectedBook) return null;
-    return (
-      <View style={styles.detailsContainer}>
-        <View style={styles.detailsHeader}>
-          <Text variant="headlineMedium" style={styles.title} accessibilityRole="header">
-            {selectedBook.title}
-          </Text>
-          <Chip
-            style={styles.statusChip}
-            accessibilityLabel={t('books:reading_status')}
-          >
-            {selectedBook.status}
-          </Chip>
-        </View>
-        <Text variant="bodyMedium" style={styles.detailsText}>
-          {selectedBook.authors?.map(a => a.name).join(', ') || t('books:unknown_author')}
-        </Text>
-        {selectedBook.notes ? (
-          <Text variant="bodySmall" style={styles.detailsText}>
-            {selectedBook.notes}
-          </Text>
-        ) : null}
-        <View style={styles.detailsActions}>
-          <Chip
-            icon="check"
-            onPress={() => handleStatusChange(selectedBook.id, 'reading')}
-          >
-            {t('books:reading')}
-          </Chip>
-          <Chip
-            icon="pause"
-            onPress={() => handleStatusChange(selectedBook.id, 'paused')}
-          >
-            {t('books:paused')}
-          </Chip>
-          <Chip
-            icon="check-all"
-            onPress={() => handleStatusChange(selectedBook.id, 'finished')}
-          >
-            {t('books:finished')}
-          </Chip>
-        </View>
-        <View style={styles.detailsFooter}>
-          <Chip icon="delete" onPress={() => handleDeleteBook(selectedBook.id)} accessibilityLabel={t('books:delete_book')}>
-            {t('books:delete_book')}
-          </Chip>
-          {selectedBook.meta?.hasConflict && (
-            <Chip
-              icon="alert"
-              onPress={() => handleResolveConflict(selectedBook.id, 'local')}
-            >
-              {t('conflicts:resolve_local', { defaultValue: 'Resolve (local)' })}
-            </Chip>
-          )}
-          <Chip icon="arrow-left" onPress={handleBackToList} accessibilityLabel={t('common:back')}>
-            {t('common:back')}
-          </Chip>
-        </View>
-      </View>
-    );
-  };
-
   return (
+    <PageErrorBoundary>
     <SafeAreaView style={styles.container}>
-      {viewMode === 'details' ? renderDetails() : renderList()}
+      {renderList()}
       <Snackbar
         visible={welcomeVisible}
         onDismiss={() => setWelcomeVisible(false)}
@@ -309,84 +308,6 @@ export default function BooksScreen() {
         {welcomeMessage}
       </Snackbar>
     </SafeAreaView>
+    </PageErrorBoundary>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    padding: 16,
-    backgroundColor: 'white',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  title: {
-    marginBottom: 16,
-    fontWeight: 'bold',
-  },
-  searchbar: {
-    marginBottom: 8,
-  },
-  chipContainer: {
-    flexDirection: 'row',
-    marginTop: 8,
-  },
-  chip: {
-    marginRight: 8,
-  },
-  errorContainer: {
-    padding: 16,
-    backgroundColor: '#ffebee',
-  },
-  errorText: {
-    color: '#c62828',
-    textAlign: 'center',
-  },
-  listContainer: {
-    padding: 16,
-    flexGrow: 1,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-  },
-  fabDisabled: {
-    opacity: 0.5,
-  },
-  detailsContainer: {
-    flex: 1,
-    padding: 16,
-    gap: 12,
-  },
-  detailsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  statusChip: {
-    alignSelf: 'flex-start',
-  },
-  detailsText: {
-    marginTop: 4,
-  },
-  detailsActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 12,
-  },
-  detailsFooter: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 16,
-  },
-});

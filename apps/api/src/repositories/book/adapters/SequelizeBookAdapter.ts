@@ -4,7 +4,13 @@
 // ================================================================
 
 import { FindAndCountOptions, FindOptions, IncludeOptions, Op, QueryTypes, WhereOptions, literal } from 'sequelize';
-import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import {
+  DATABASE_FIELDS,
+  SEARCH_SORT_BY_FIELDS,
+  SORT_DIRECTIONS,
+  type SearchSortByField,
+  type SortDirection,
+} from '@my-many-books/shared-types';
 import { Book } from '@/models/Book';
 import { Author } from '@/models/Author';
 import { Category } from '@/models/Category';
@@ -24,6 +30,125 @@ import {
 import { BookRepositoryAdapter } from './BookRepositoryAdapter';
 
 export class SequelizeBookAdapter implements BookRepositoryAdapter {
+  async searchFulltextSorted(options: {
+    query: string;
+    userId?: number;
+    sortBy: SearchSortByField;
+    sortOrder?: SortDirection;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ rows: BookEntity[]; total: number; relevanceScores: Map<number, number> }> {
+    const { query, userId, sortBy, sortOrder = SORT_DIRECTIONS.ASC, limit = 20, offset = 0 } = options;
+    const orderClause = this.buildSearchSortSql(sortBy, sortOrder, 'b');
+
+    const sql = `
+      SELECT
+        b.*,
+        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE) as relevance_score
+      FROM books b
+      ${userId ? 'WHERE b.user_id = :userId AND' : 'WHERE'}
+        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
+      ORDER BY ${orderClause}
+      LIMIT :limit OFFSET :offset
+    `;
+
+    const countSql = `
+      SELECT COUNT(*) as total
+      FROM books b
+      ${userId ? 'WHERE b.user_id = :userId AND' : 'WHERE'}
+        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
+    `;
+
+    const replacements: Record<string, unknown> = {
+      searchQuery: query,
+      limit,
+      offset,
+    };
+    if (userId) {
+      replacements['userId'] = userId;
+    }
+
+    interface FulltextRow { id: number; relevance_score: number; }
+    interface CountRow { total: number; }
+
+    const [results, countResults] = await Promise.all([
+      Book.sequelize!.query<FulltextRow>(sql, {
+        replacements,
+        type: QueryTypes.SELECT,
+      }),
+      Book.sequelize!.query<CountRow>(countSql, {
+        replacements,
+        type: QueryTypes.SELECT,
+      }),
+    ]);
+
+    const relevanceScores = new Map<number, number>();
+    const bookIds = results.map((row) => {
+      relevanceScores.set(row.id, row.relevance_score);
+      return row.id;
+    });
+
+    const books = await Book.findAll({
+      where: { id: bookIds },
+      include: [
+        { model: BookAuthor, as: 'bookAuthors', separate: true, include: [{ model: Author, as: 'author' }] },
+        { model: BookCategory, as: 'bookCategories', separate: true, include: [{ model: Category, as: 'category' }] },
+      ],
+    });
+
+    return {
+      rows: books.map(book => this.toDomain(book)!),
+      total: countResults[0]?.total ?? 0,
+      relevanceScores,
+    };
+  }
+
+  async searchLikeSorted(options: {
+    query: string;
+    userId?: number;
+    sortBy: SearchSortByField;
+    sortOrder?: SortDirection;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ rows: BookEntity[]; total: number }> {
+    const { query, userId, sortBy, sortOrder = SORT_DIRECTIONS.ASC, limit = 20, offset = 0 } = options;
+    const whereConditions: WhereOptions<BookAttributes>[] = [
+      {
+        [Op.or]: [
+          { title: { [Op.like]: `%${query}%` } },
+          { notes: { [Op.like]: `%${query}%` } },
+        ],
+      },
+    ];
+
+    if (userId) {
+      whereConditions.push({ userId });
+    }
+
+    const where: WhereOptions<BookAttributes> =
+      whereConditions.length > 1 ? { [Op.and]: whereConditions } : whereConditions[0]!;
+
+    const { rows, count } = await Book.findAndCountAll({
+      where,
+      limit,
+      offset,
+      distinct: true,
+      include: [
+        { model: BookAuthor, as: 'bookAuthors', separate: true, include: [{ model: Author, as: 'author' }] },
+        { model: BookCategory, as: 'bookCategories', separate: true, include: [{ model: Category, as: 'category' }] },
+      ],
+      order: this.buildOrderClause({
+        orderBy: sortBy,
+        orderDirection: sortOrder,
+      }),
+    });
+
+    return {
+      rows: rows.map(book => this.toDomain(book)!),
+      total: count,
+    };
+  }
+
   findById(id: number, options?: BookQueryOptions): Promise<BookEntity | null> {
     return Book.findByPk(id, this.buildFindOptions(options)).then(book => this.toDomain(book));
   }
@@ -334,12 +459,25 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
     return conditions.length > 0 ? { [Op.and]: conditions } : {};
   }
 
-  private buildOrderClause(options?: BookListOptions): Array<[string, string]> {
-    if (!options?.orderBy) {
-      return [['title', 'ASC']];
-    }
+  private buildOrderClause(options?: BookListOptions): Array<[string | ReturnType<typeof literal>, string]> {
+    const direction = this.normalizeOrderDirection(options?.orderDirection);
+    const orderBy = options?.orderBy;
 
-    return [[options.orderBy, options.orderDirection ?? SORT_DIRECTIONS.ASC]];
+    switch (orderBy) {
+      case SEARCH_SORT_BY_FIELDS.AUTHOR:
+        return this.buildAuthorOrderClause(direction);
+      case SEARCH_SORT_BY_FIELDS.CREATION_DATE:
+      case DATABASE_FIELDS.CREATION_DATE:
+        return [['creationDate', direction], ['id', 'ASC']];
+      case SEARCH_SORT_BY_FIELDS.UPDATE_DATE:
+      case DATABASE_FIELDS.UPDATE_DATE:
+        return [['updateDate', direction], ['id', 'ASC']];
+      case SEARCH_SORT_BY_FIELDS.STATUS:
+        return [['status', direction], ['id', 'ASC']];
+      case SEARCH_SORT_BY_FIELDS.TITLE:
+      default:
+        return [['title', direction], ['id', 'ASC']];
+    }
   }
 
   private getPagination(options?: BookListOptions): { limit: number; offset: number } {
@@ -378,6 +516,54 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       id: category.id,
       name: category.name,
     }));
+  }
+
+  private normalizeOrderDirection(direction?: SortDirection): 'ASC' | 'DESC' {
+    return direction === SORT_DIRECTIONS.DESC ? 'DESC' : 'ASC';
+  }
+
+  private buildAuthorOrderClause(
+    direction: 'ASC' | 'DESC',
+    outerAlias: string = 'Book'
+  ): Array<[ReturnType<typeof literal>, string] | [string, string]> {
+    const surnameOrder = literal(
+      `COALESCE((SELECT a.surname FROM book_authors ba INNER JOIN authors a ON ba.author_id = a.id WHERE ba.book_id = ${outerAlias}.id ORDER BY a.surname ASC, a.name ASC LIMIT 1), '')`
+    );
+    const nameOrder = literal(
+      `COALESCE((SELECT a.name FROM book_authors ba INNER JOIN authors a ON ba.author_id = a.id WHERE ba.book_id = ${outerAlias}.id ORDER BY a.surname ASC, a.name ASC LIMIT 1), '')`
+    );
+
+    return [
+      [surnameOrder, direction],
+      [nameOrder, direction],
+      ['id', 'ASC'],
+    ];
+  }
+
+  private buildSearchSortSql(
+    sortBy: SearchSortByField,
+    sortOrder: SortDirection,
+    tableAlias: string
+  ): string {
+    const direction = this.normalizeOrderDirection(sortOrder);
+
+    switch (sortBy) {
+      case SEARCH_SORT_BY_FIELDS.AUTHOR:
+        return [
+          `COALESCE((SELECT a.surname FROM book_authors ba INNER JOIN authors a ON ba.author_id = a.id WHERE ba.book_id = ${tableAlias}.id ORDER BY a.surname ASC, a.name ASC LIMIT 1), '') ${direction}`,
+          `COALESCE((SELECT a.name FROM book_authors ba INNER JOIN authors a ON ba.author_id = a.id WHERE ba.book_id = ${tableAlias}.id ORDER BY a.surname ASC, a.name ASC LIMIT 1), '') ${direction}`,
+          `${tableAlias}.id ASC`,
+        ].join(', ');
+      case SEARCH_SORT_BY_FIELDS.STATUS:
+        return `${tableAlias}.status ${direction}, ${tableAlias}.id ASC`;
+      case SEARCH_SORT_BY_FIELDS.CREATION_DATE:
+        return `${tableAlias}.creation_date ${direction}, ${tableAlias}.id ASC`;
+      case SEARCH_SORT_BY_FIELDS.UPDATE_DATE:
+        return `${tableAlias}.update_date ${direction}, ${tableAlias}.id ASC`;
+      case SEARCH_SORT_BY_FIELDS.TITLE:
+      default:
+        return `${tableAlias}.title ${direction}, ${tableAlias}.id ASC`;
+    }
   }
 
   // ===== FULLTEXT Search Methods ==========================================

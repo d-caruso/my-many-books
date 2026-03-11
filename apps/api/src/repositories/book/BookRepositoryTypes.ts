@@ -5,6 +5,10 @@
 
 import { BookCreationAttributes, BookStatus } from '@/models/interfaces/ModelInterfaces';
 import {
+  type SearchSortByField,
+  type SortDirection,
+} from '@my-many-books/shared-types';
+import {
   ListOptions,
   QueryOptions,
   PaginatedResult as AdapterPaginatedResult,
@@ -42,6 +46,29 @@ export interface BookSearchFilters {
 export interface BookListOptions extends ListOptions {
   includeAssociations?: boolean;
   filters?: Partial<BookSearchFilters>;
+}
+
+export interface BookSortedSearchOptions {
+  query: string;
+  userId?: number;
+  sortBy: SearchSortByField;
+  sortOrder?: SortDirection;
+  limit?: number;
+  offset?: number;
+}
+
+export interface BookSearchRowsResult {
+  rows: BookEntity[];
+  total: number;
+}
+
+export interface BookSearchRowsWithRelevance extends BookSearchRowsResult {
+  relevanceScores: Map<number, number>;
+}
+
+export interface PinnedBookResult {
+  resourceId: number;
+  priority: number;
 }
 
 export type PaginatedResult<T extends BookEntity = BookEntity> = AdapterPaginatedResult<T>;

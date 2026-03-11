@@ -8,7 +8,11 @@ import { ApiProvider } from '../../contexts/ApiContext';
 import { SettingsProvider } from '../../contexts/SettingsContext';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../../constants/scanner';
 import { useAuth } from '@my-many-books/shared-auth';
-import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
+import {
+  POST_LOGIN_WELCOME_STORAGE_KEY,
+  SEARCH_SORT_BY_FIELDS,
+  SORT_DIRECTIONS,
+} from '@my-many-books/shared-types';
 import type { ApiService } from '../../services/api';
 import type { SettingsApi } from '@my-many-books/shared-api';
 import type { Book } from '../../types';
@@ -147,10 +151,37 @@ vi.mock('../../components/Book', () => ({
 }));
 
 vi.mock('../../components/Search', () => ({
-  BookSearchForm: ({ onSearch, loading, initialQuery }: { onSearch: (q: string, f: Record<string, unknown>) => void; loading?: boolean; initialQuery?: string }) => (
-    <div data-testid="search-form" data-loading={loading} data-initial-query={initialQuery}>
+  BookSearchForm: ({
+    onSearch,
+    loading,
+    initialQuery,
+    initialFilters,
+  }: {
+    onSearch: (q: string, f: Record<string, unknown>) => void;
+    loading?: boolean;
+    initialQuery?: string;
+    initialFilters?: Record<string, unknown>;
+  }) => (
+    <div
+      data-testid="search-form"
+      data-loading={loading}
+      data-initial-query={initialQuery}
+      data-initial-filters={JSON.stringify(initialFilters ?? {})}
+    >
       <button data-testid="search-button" onClick={() => onSearch(initialQuery || 'query', { categoryId: 2 })}>
         Search
+      </button>
+      <button
+        data-testid="sorted-search-button"
+        onClick={() =>
+          onSearch(initialQuery || 'query', {
+            sortBy: SEARCH_SORT_BY_FIELDS.AUTHOR,
+            sortOrder: SORT_DIRECTIONS.DESC,
+            status: 'finished',
+          })
+        }
+      >
+        Search Sorted
       </button>
     </div>
   ),
@@ -314,6 +345,19 @@ describe('BooksPage', () => {
     expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams));
   });
 
+  test('writes sortBy and sortOrder query params for sorted searches', () => {
+    renderBooksPage();
+
+    fireEvent.click(screen.getByTestId('sorted-search-button'));
+
+    expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams));
+    const params = mockSetSearchParams.mock.calls.at(-1)?.[0] as URLSearchParams;
+    expect(params.get('q')).toBe('query');
+    expect(params.get('sortBy')).toBe(SEARCH_SORT_BY_FIELDS.AUTHOR);
+    expect(params.get('sortOrder')).toBe(SORT_DIRECTIONS.DESC);
+    expect(params.get('status')).toBe('finished');
+  });
+
   test('clears search chip resets params and results', () => {
     currentSearchParams = new URLSearchParams([['q', 'history']]);
     renderBooksPage();
@@ -346,6 +390,51 @@ describe('BooksPage', () => {
       sortBy: 'title',
     });
   });
+
+  test('passes URL-derived initial filters to BookSearchForm', () => {
+    currentSearchParams = new URLSearchParams([
+      ['q', 'history'],
+      ['sortBy', SEARCH_SORT_BY_FIELDS.STATUS],
+      ['sortOrder', SORT_DIRECTIONS.DESC],
+      ['status', 'finished'],
+    ]);
+
+    renderBooksPage();
+
+    const searchForm = screen.getByTestId('search-form');
+    expect(searchForm).toHaveAttribute('data-initial-query', 'history');
+    expect(searchForm).toHaveAttribute(
+      'data-initial-filters',
+      JSON.stringify({
+        sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+        sortOrder: SORT_DIRECTIONS.DESC,
+        status: 'finished',
+      })
+    );
+  });
+
+  test.each([
+    [SEARCH_SORT_BY_FIELDS.CREATION_DATE, SORT_DIRECTIONS.DESC],
+    [SEARCH_SORT_BY_FIELDS.UPDATE_DATE, SORT_DIRECTIONS.ASC],
+    [SEARCH_SORT_BY_FIELDS.STATUS, SORT_DIRECTIONS.DESC],
+    [SEARCH_SORT_BY_FIELDS.AUTHOR, SORT_DIRECTIONS.ASC],
+  ])(
+    'runs search with %s and %s from URL params',
+    (sortBy, sortOrder) => {
+      currentSearchParams = new URLSearchParams([
+        ['q', 'history'],
+        ['sortBy', sortBy],
+        ['sortOrder', sortOrder],
+      ]);
+
+      renderBooksPage();
+
+      expect(bookSearchState.searchBooks).toHaveBeenCalledWith('history', {
+        sortBy,
+        sortOrder,
+      });
+    }
+  );
 
   test('opens add mode when mode=add param is provided', async () => {
     currentSearchParams = new URLSearchParams([['mode', 'add']]);

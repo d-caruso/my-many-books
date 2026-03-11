@@ -1,5 +1,8 @@
 import { CleanupService } from '../sync/CleanupService';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
+import { databaseService } from '../database/DatabaseService';
+import { operationQueue } from '../OperationQueue';
+import { idMappingService } from '../sync/IDMappingService';
 
 // Mock mobile hooks
 jest.mock('../hooks/mobileHooks', () => {
@@ -45,6 +48,9 @@ jest.mock('../sync/IDMappingService', () => ({
 }));
 
 const mockMobileHooks = mobileHooks as jest.Mocked<typeof mobileHooks>;
+const mockDatabaseService = databaseService as jest.Mocked<typeof databaseService>;
+const mockOperationQueue = operationQueue as jest.Mocked<typeof operationQueue>;
+const mockIdMappingService = idMappingService as jest.Mocked<typeof idMappingService>;
 
 describe('CleanupService Hookey Integration', () => {
   let cleanupService: CleanupService;
@@ -54,22 +60,19 @@ describe('CleanupService Hookey Integration', () => {
     cleanupService = new CleanupService();
     mockMobileHooks.emit.mockResolvedValue(undefined);
 
-    const { databaseService } = require('../database/DatabaseService');
-    databaseService.getAllAsync.mockResolvedValue([]);
-    databaseService.executeQuery.mockResolvedValue(undefined);
-    databaseService.getFirstAsync.mockResolvedValue(null);
-    
-    const db = databaseService.getDatabase();
+    mockDatabaseService.getAllAsync.mockResolvedValue([]);
+    mockDatabaseService.executeQuery.mockResolvedValue(undefined);
+    mockDatabaseService.getFirstAsync.mockResolvedValue(null);
+
+    const db = mockDatabaseService.getDatabase();
     db.runAsync.mockResolvedValue(undefined);
 
-    const { operationQueue } = require('../OperationQueue');
-    operationQueue.getFailedOperations.mockReturnValue([]);
-    operationQueue.getPendingOperations.mockReturnValue([]);
-    operationQueue.getAllOperations.mockReturnValue([]);
-    operationQueue.dequeue.mockResolvedValue(undefined);
+    mockOperationQueue.getFailedOperations.mockReturnValue([]);
+    mockOperationQueue.getPendingOperations.mockReturnValue([]);
+    mockOperationQueue.getAllOperations.mockReturnValue([]);
+    mockOperationQueue.dequeue.mockResolvedValue(undefined);
 
-    const { idMappingService } = require('../sync/IDMappingService');
-    idMappingService.getAllMappings.mockResolvedValue([]);
+    mockIdMappingService.getAllMappings.mockResolvedValue([]);
   });
 
   describe('performFullCleanup', () => {
@@ -158,19 +161,15 @@ describe('CleanupService Hookey Integration', () => {
     });
 
     it('should emit SYNC.COMPLETE with cleanup results', async () => {
-      const { databaseService } = require('../database/DatabaseService');
-      const { operationQueue } = require('../OperationQueue');
-      
-      // Mock some orphaned data
       const mockFailedOps = [
         { id: 'old-op-1', timestamp: Date.now() - (8 * 24 * 60 * 60 * 1000) }, // 8 days old
         { id: 'old-op-2', timestamp: Date.now() - (10 * 24 * 60 * 60 * 1000) }, // 10 days old
       ];
       
-      operationQueue.getFailedOperations.mockReturnValue(mockFailedOps);
-      databaseService.getAllAsync
-        .mockResolvedValueOnce([]) // orphaned books
-        .mockResolvedValueOnce([]); // old mappings
+      mockOperationQueue.getFailedOperations.mockReturnValue(mockFailedOps);
+      mockDatabaseService.getAllAsync
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
 
       await cleanupService.cleanupOrphanedTempIds();
 
@@ -193,24 +192,22 @@ describe('CleanupService Hookey Integration', () => {
     });
 
     it('should clean up old operations based on age', async () => {
-      const { operationQueue } = require('../OperationQueue');
-      
-      const oldOperation = { 
+      const oldOperation = {
         id: 'very-old-op', 
         timestamp: Date.now() - (10 * 24 * 60 * 60 * 1000) // 10 days old
       };
-      const recentOperation = { 
-        id: 'recent-op', 
-        timestamp: Date.now() - (1 * 24 * 60 * 60 * 1000) // 1 day old
+      const recentOperation = {
+        id: 'recent-op',
+        timestamp: Date.now() - (1 * 24 * 60 * 60 * 1000)
       };
-      
-      operationQueue.getFailedOperations.mockReturnValue([oldOperation, recentOperation]);
+
+      mockOperationQueue.getFailedOperations.mockReturnValue([oldOperation, recentOperation]);
 
       await cleanupService.cleanupOrphanedTempIds();
 
       // Should only remove the old operation
-      expect(operationQueue.dequeue).toHaveBeenCalledWith('very-old-op');
-      expect(operationQueue.dequeue).not.toHaveBeenCalledWith('recent-op');
+      expect(mockOperationQueue.dequeue).toHaveBeenCalledWith('very-old-op');
+      expect(mockOperationQueue.dequeue).not.toHaveBeenCalledWith('recent-op');
     });
   });
 
@@ -248,18 +245,15 @@ describe('CleanupService Hookey Integration', () => {
     });
 
     it('should emit VALIDATION_FAILED for books pending without operations', async () => {
-      const { databaseService } = require('../database/DatabaseService');
-      const { operationQueue } = require('../OperationQueue');
-      
       const pendingBooks = [
         { id: 'book-1', title: 'Test Book', sync_status: 'pending' }
       ];
       
-      databaseService.getAllAsync
-        .mockResolvedValueOnce(pendingBooks) // pending books
-        .mockResolvedValueOnce([]); // failed books
-      
-      operationQueue.getAllOperations.mockReturnValue([]); // No operations in queue
+      mockDatabaseService.getAllAsync
+        .mockResolvedValueOnce(pendingBooks)
+        .mockResolvedValueOnce([]);
+
+      mockOperationQueue.getAllOperations.mockReturnValue([]);
 
       await cleanupService.fixInconsistentSyncStates();
 
@@ -279,7 +273,6 @@ describe('CleanupService Hookey Integration', () => {
     });
 
     it('should emit VALIDATION_FAILED for failed books with server IDs', async () => {
-      const { databaseService } = require('../database/DatabaseService');
       
       const failedBooks = [
         { 
@@ -290,9 +283,9 @@ describe('CleanupService Hookey Integration', () => {
         }
       ];
       
-      databaseService.getAllAsync
-        .mockResolvedValueOnce([]) // pending books
-        .mockResolvedValueOnce(failedBooks); // failed books
+      mockDatabaseService.getAllAsync
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce(failedBooks);
 
       await cleanupService.fixInconsistentSyncStates();
 
@@ -313,7 +306,6 @@ describe('CleanupService Hookey Integration', () => {
     });
 
     it('should emit VALIDATION_FAILED for recent failures marked for retry', async () => {
-      const { databaseService } = require('../database/DatabaseService');
       
       const recentFailedBooks = [
         { 
@@ -324,9 +316,9 @@ describe('CleanupService Hookey Integration', () => {
         }
       ];
       
-      databaseService.getAllAsync
-        .mockResolvedValueOnce([]) // pending books
-        .mockResolvedValueOnce(recentFailedBooks); // failed books
+      mockDatabaseService.getAllAsync
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce(recentFailedBooks);
 
       await cleanupService.fixInconsistentSyncStates();
 
@@ -349,8 +341,7 @@ describe('CleanupService Hookey Integration', () => {
 
   describe('error handling', () => {
     it('should handle database errors gracefully during cleanup', async () => {
-      const { databaseService } = require('../database/DatabaseService');
-      databaseService.executeQuery.mockRejectedValue(new Error('Database connection failed'));
+      mockDatabaseService.executeQuery.mockRejectedValue(new Error('Database connection failed'));
 
       // Should not throw
       await expect(cleanupService.performFullCleanup()).resolves.toBeDefined();

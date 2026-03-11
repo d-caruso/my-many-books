@@ -1,5 +1,4 @@
 import { Book } from '@/types';
-import { BOOK_STATUS } from '@my-many-books/shared-types';
 
 export const formatDate = (dateString: string): string => {
   try {
@@ -17,84 +16,6 @@ export const formatDate = (dateString: string): string => {
   }
 };
 
-export const getStatusLabel = (status: Book['status']): string => {
-  switch (status) {
-    case BOOK_STATUS.READING:
-      return 'Reading';
-    case BOOK_STATUS.PAUSED:
-      return 'Paused';
-    case BOOK_STATUS.FINISHED:
-      return 'Finished';
-    default:
-      return 'Unknown';
-  }
-};
-
-export const getStatusColor = (status: Book['status']): string => {
-  switch (status) {
-    case BOOK_STATUS.READING:
-      return '#FF9800'; // Orange
-    case BOOK_STATUS.PAUSED:
-      return '#2196F3'; // Blue
-    case BOOK_STATUS.FINISHED:
-      return '#4CAF50'; // Green
-    default:
-      return '#757575'; // Gray
-  }
-};
-
-export const validateISBN = (isbn: string): boolean => {
-  if (!isbn || typeof isbn !== 'string') return false;
-  
-  // Remove hyphens and spaces
-  const cleanISBN = isbn.replace(/[-\s]/g, '');
-  
-  // Check if it's all digits
-  if (!/^\d+$/.test(cleanISBN)) return false;
-  
-  // Check length (ISBN-10 or ISBN-13)
-  if (cleanISBN.length === 10) {
-    return validateISBN10(cleanISBN);
-  } else if (cleanISBN.length === 13) {
-    return validateISBN13(cleanISBN);
-  }
-  
-  return false;
-};
-
-const validateISBN10 = (isbn: string): boolean => {
-  let sum = 0;
-  for (let i = 0; i < 9; i++) {
-    sum += parseInt(isbn[i]) * (10 - i);
-  }
-  
-  const checkDigit = isbn[9];
-  const calculatedCheck = (11 - (sum % 11)) % 11;
-  const expectedCheck = checkDigit === 'X' ? 10 : parseInt(checkDigit);
-  
-  return calculatedCheck === expectedCheck;
-};
-
-const validateISBN13 = (isbn: string): boolean => {
-  let sum = 0;
-  for (let i = 0; i < 12; i++) {
-    const digit = parseInt(isbn[i]);
-    sum += i % 2 === 0 ? digit : digit * 3;
-  }
-  
-  const checkDigit = parseInt(isbn[12]);
-  const calculatedCheck = (10 - (sum % 10)) % 10;
-  
-  return calculatedCheck === checkDigit;
-};
-
-export const truncateText = (text: string, limit: number): string => {
-  if (!text || typeof text !== 'string') return '';
-  
-  if (text.length <= limit) return text;
-  
-  return text.substring(0, limit) + '...';
-};
 
 export const generateBookId = (): string => {
   return `book_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -120,47 +41,5 @@ export const groupBooksByStatus = (books: Book[]): Record<Book['status'], Book[]
   }, {} as Record<Book['status'], Book[]>);
 };
 
-export const sortBooks = (books: Book[], sortBy: 'title' | 'author' | 'date'): Book[] => {
-  return [...books].sort((a, b) => {
-    switch (sortBy) {
-      case 'title':
-        return a.title.localeCompare(b.title);
-      case 'author':
-        const authorA = a.authors[0]?.name || 'Unknown';
-        const authorB = b.authors[0]?.name || 'Unknown';
-        return authorA.localeCompare(authorB);
-      case 'date':
-        return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime();
-      default:
-        return 0;
-    }
-  });
-};
-
-export const filterBooks = (books: Book[], filters: {
-  status?: Book['status'];
-  category?: string;
-  author?: string;
-}): Book[] => {
-  return books.filter(book => {
-    if (filters.status && book.status !== filters.status) {
-      return false;
-    }
-    
-    if (filters.category && !book.categories.some(cat => cat.name === filters.category)) {
-      return false;
-    }
-    
-    if (filters.author && !book.authors.some(author => 
-      author.name.toLowerCase().includes(filters.author!.toLowerCase())
-    )) {
-      return false;
-    }
-    
-    return true;
-  });
-};
-
-export const getErrorMessage = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
+export const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);

@@ -3,6 +3,13 @@ import { mount } from 'cypress/react';
 import React from 'react';
 import { MockAuthProvider, TestWrapper } from '../support/component-helpers';
 
+interface TestBookCardData {
+  id: number;
+  title: string;
+  author: string;
+  isbn: string;
+}
+
 // Simple test components to verify component functionality
 const TestLoginForm: React.FC<{ onSwitchToRegister: () => void }> = ({ onSwitchToRegister }) => (
   <div data-testid="test-login-form">
@@ -16,7 +23,11 @@ const TestLoginForm: React.FC<{ onSwitchToRegister: () => void }> = ({ onSwitchT
   </div>
 );
 
-const TestBookCard: React.FC<{ book: any; onEdit: () => void; onDelete: () => void }> = ({ book, onEdit, onDelete }) => (
+const TestBookCard: React.FC<{ book: TestBookCardData; onEdit: () => void; onDelete: () => void }> = ({
+  book,
+  onEdit,
+  onDelete,
+}) => (
   <div data-testid="test-book-card">
     <h3>{book.title}</h3>
     <p>{book.author}</p>

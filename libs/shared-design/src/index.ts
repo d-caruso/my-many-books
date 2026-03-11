@@ -1,16 +1,10 @@
 /**
  * Shared design system for My Many Books monorepo
- * Platform-agnostic design tokens, themes, and component styles
+ * Platform-agnostic design primitives
  */
 
-// Design tokens
-export { designTokens } from './tokens';
+// Canonical color palette and book status helpers
+export * from './colors';
 
-// Theme definitions
+// Theme definitions (unused — see themes.ts TODO)
 export { themes } from './themes';
-
-// Component styles
-export { componentStyles } from './components';
-
-// Severity helpers
-export { SEVERITY, type Severity, severityToHex } from './severity';

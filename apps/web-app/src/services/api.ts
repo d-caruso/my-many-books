@@ -15,7 +15,7 @@ import type {
   SearchResult,
   User,
 } from '@my-many-books/shared-types';
-import { SearchFiltersSchema } from '@my-many-books/shared-types';
+import { BOOK_STATUS, SearchFiltersSchema } from '@my-many-books/shared-types';
 import { env } from '../config/env';
 import { authService } from './authService';
 import { AxiosHttpClient } from './http-client';
@@ -169,8 +169,8 @@ class ApiService extends AdminApiService {
     const editionDate = sanitizeString(bookData.editionDate);
     backendData.editionDate = editionDate ?? null;
 
-    if (bookData.status) {
-      backendData.status = bookData.status;
+    if ('status' in bookData) {
+      backendData.status = bookData.status ?? null;
     }
 
     const notes = sanitizeString(bookData.notes);
@@ -190,7 +190,11 @@ class ApiService extends AdminApiService {
 
     if (isPartialUpdate) {
       const status = backendData.status;
-      if (status === 'reading' || status === 'paused' || status === 'finished') {
+      if (
+        status === BOOK_STATUS.READING ||
+        status === BOOK_STATUS.PAUSED ||
+        status === BOOK_STATUS.FINISHED
+      ) {
         return this.apiClient.books.patchBook(id, { status });
       }
     }
@@ -207,28 +211,22 @@ class ApiService extends AdminApiService {
   }
 
   // Search books with enhanced filters
-  async searchBooks(searchParams: {
-    q?: string;
-    page?: number;
-    limit?: number;
-    status?: string;
-    sortBy?: string;
-    authorId?: number;
-    categoryId?: number;
-  }): Promise<SearchResult> {
+  async searchBooks(searchParams: SearchFilters): Promise<SearchResult> {
     if (isDevelopmentWithoutApiConfig()) {
       return getMockSearchResults(searchParams);
     }
 
-    const parsedQuery = SearchFiltersSchema.shape.query.safeParse(searchParams.q?.trim() ?? '');
+    const parsedQuery = SearchFiltersSchema.shape.query.safeParse(searchParams.query?.trim() ?? '');
     const query = parsedQuery.success ? parsedQuery.data : undefined;
     const parsedStatus = SearchFiltersSchema.shape.status.safeParse(searchParams.status);
     const parsedSortBy = SearchFiltersSchema.shape.sortBy.safeParse(searchParams.sortBy);
+    const parsedSortOrder = SearchFiltersSchema.shape.sortOrder.safeParse(searchParams.sortOrder);
 
     const filters: SearchFilters = {
       query,
       status: parsedStatus.success ? parsedStatus.data : undefined,
       sortBy: parsedSortBy.success ? parsedSortBy.data : undefined,
+      sortOrder: parsedSortOrder.success ? parsedSortOrder.data : undefined,
       authorId: searchParams.authorId,
       categoryId: searchParams.categoryId,
       page: searchParams.page,
@@ -239,7 +237,7 @@ class ApiService extends AdminApiService {
   }
 
   // ISBN lookup
-  async searchByISBN(isbn: string): Promise<unknown> {
+  async searchByISBN(isbn: string): Promise<Book | null> {
     return this.apiClient.books.searchByISBN(isbn);
   }
 

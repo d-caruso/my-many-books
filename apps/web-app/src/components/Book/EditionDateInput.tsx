@@ -354,11 +354,9 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
           disablePortal
-          slotProps={{
-            paper: {
-              'data-testid': 'editionDate-calendar-popover',
-              sx: { mt: 1, p: 1 },
-            },
+          PaperProps={{
+            'data-testid': 'editionDate-calendar-popover',
+            sx: { mt: 1, p: 1 },
           }}
         >
           <LocalizationProvider

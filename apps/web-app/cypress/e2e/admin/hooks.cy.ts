@@ -75,7 +75,6 @@ describe('Admin hooks (E2E)', () => {
   it('lists hooks created through the admin API and allows edits', () => {
     const hookName = `E2E Hook ${Date.now()}`;
     const updatedName = `${hookName} Updated`;
-    let hookId: number;
 
     // Set up intercept for ANY PUT to hooks (we'll verify hookId later)
     cy.intercept('PUT', '**/admin/hooks/*').as('updateHook');
@@ -83,10 +82,6 @@ describe('Admin hooks (E2E)', () => {
     cy.loginAsAdmin()
       .then(({ tokens }) => {
         return createHook(tokens.idToken, hookName, 'book.create.after');
-      })
-      .then((response) => {
-        hookId = response.body?.data?.id ?? response.body?.id;
-        console.log('[E2E DEBUG] Created hook with ID:', hookId);
       });
 
     cy.visit('/admin/hooks');
@@ -137,10 +132,6 @@ describe('Admin hooks (E2E)', () => {
 
     // Wait for PUT request and verify it succeeded
     cy.wait('@updateHook', { timeout: 10000 }).then((interception) => {
-      console.log('[E2E DEBUG] PUT Response Status:', interception.response?.statusCode);
-      console.log('[E2E DEBUG] PUT Response Body:', interception.response?.body);
-      console.log('[E2E DEBUG] PUT Request URL:', interception.request.url);
-
       // Verify the response was successful
       expect(interception.response?.statusCode).to.be.oneOf([200, 201]);
     });

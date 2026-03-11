@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Card, Text, TextInput } from 'react-native-paper';
+import { Button, Card, Text, TextInput, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,8 @@ import {
   validatePasswordConfirmation,
   validatePasswordStrength,
 } from '@my-many-books/shared-validation';
+import { resolveValidationError } from '@/utils/resolveValidationError';
+import { AuthErrorBoundary } from '@/components/AuthErrorBoundary';
 
 const getFirstParam = (value: string | string[] | undefined): string => {
   if (Array.isArray(value)) {
@@ -18,25 +20,10 @@ const getFirstParam = (value: string | string[] | undefined): string => {
   return value ?? '';
 };
 
-const getErrorMessage = (
-  t: (key: string, options?: Record<string, unknown>) => string,
-  i18nKey: string | undefined,
-  fallbackMessage: string | undefined,
-): string => {
-  if (i18nKey) {
-    return t(i18nKey, { defaultValue: fallbackMessage });
-  }
-
-  if (fallbackMessage) {
-    return fallbackMessage;
-  }
-
-  return t('common:unexpected_error');
-};
-
 export default function ResetPasswordScreen() {
   const { t, i18n } = useTranslation();
   const { user, loading, confirmPasswordReset } = useAuth();
+  const theme = useTheme();
   const params = useLocalSearchParams<{
     email?: string | string[];
     code?: string | string[];
@@ -74,14 +61,14 @@ export default function ResetPasswordScreen() {
 
     const passwordValidation = validatePasswordStrength(newPassword);
     if (!passwordValidation.isValid) {
-      setSubmitError(getErrorMessage(t, passwordValidation.i18nKey, passwordValidation.error));
+      setSubmitError(resolveValidationError(t, passwordValidation.i18nKey, passwordValidation.error));
       return;
     }
 
     const confirmationValidation = validatePasswordConfirmation(newPassword, confirmPassword);
     if (!confirmationValidation.isValid) {
       setSubmitError(
-        getErrorMessage(t, confirmationValidation.i18nKey, confirmationValidation.error),
+        resolveValidationError(t, confirmationValidation.i18nKey, confirmationValidation.error),
       );
       return;
     }
@@ -112,7 +99,24 @@ export default function ResetPasswordScreen() {
     }
   };
 
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.colors.background },
+        content: { padding: 16 },
+        title: { marginBottom: 8, fontWeight: '700' },
+        subtitle: { marginBottom: 16, opacity: 0.8 },
+        input: { marginBottom: 12 },
+        errorText: { color: theme.colors.error, marginTop: 4 },
+        successText: { color: theme.colors.tertiary, marginTop: 4 },
+        submitButton: { marginTop: 16 },
+        backButton: { marginTop: 8 },
+      }),
+    [theme]
+  );
+
   return (
+    <AuthErrorBoundary>
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Card>
@@ -225,40 +229,7 @@ export default function ResetPasswordScreen() {
         </Card>
       </View>
     </SafeAreaView>
+    </AuthErrorBoundary>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  content: {
-    padding: 16,
-  },
-  title: {
-    marginBottom: 8,
-    fontWeight: '700',
-  },
-  subtitle: {
-    marginBottom: 16,
-    opacity: 0.8,
-  },
-  input: {
-    marginBottom: 12,
-  },
-  errorText: {
-    color: '#b00020',
-    marginTop: 4,
-  },
-  successText: {
-    color: '#0f766e',
-    marginTop: 4,
-  },
-  submitButton: {
-    marginTop: 16,
-  },
-  backButton: {
-    marginTop: 8,
-  },
-});

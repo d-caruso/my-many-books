@@ -8,16 +8,15 @@ import { OPERATION_TYPES, RESOURCE_TYPES, QUEUE_OPERATION_STATUS } from '../../s
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiError, ErrorCode } from '../../types/errors';
 
+import { bookAPI, authorAPI, categoryAPI } from '../../services/api';
+import { bookRepository } from '../../services/database/BookRepository';
+import { authorRepository } from '../../services/database/AuthorRepository';
+import { categoryRepository } from '../../services/database/CategoryRepository';
+
 jest.mock('../../services/api');
 jest.mock('../../services/database/BookRepository');
 jest.mock('../../services/database/AuthorRepository');
 jest.mock('../../services/database/CategoryRepository');
-
-// Import mocked services
-const { bookAPI, authorAPI, categoryAPI } = require('../../services/api');
-const { bookRepository } = require('../../services/database/BookRepository');
-const { authorRepository } = require('../../services/database/AuthorRepository');
-const { categoryRepository } = require('../../services/database/CategoryRepository');
 
 // Error scenario test configuration
 const ERROR_TEST_TIMEOUT = 15000; // 15 seconds for error scenario tests

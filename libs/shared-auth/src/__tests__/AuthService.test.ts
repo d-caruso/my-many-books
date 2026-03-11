@@ -511,15 +511,15 @@ describe('AuthService', () => {
           throw new Error('boom');
         }),
         getUser: jest.fn(async () => null),
-        setTokens: jest.fn(async () => {}),
+        setTokens: jest.fn(async (_tokens: AuthTokens) => {}),
         removeTokens: jest.fn(async () => {}),
-        setUser: jest.fn(async () => {}),
+        setUser: jest.fn(async (_user: User) => {}),
         removeUser: jest.fn(async () => {}),
         clear: jest.fn(async () => {}),
-      };
+      } satisfies StorageAdapter;
 
       authService = new AuthService({
-        storage: storage as any,
+        storage,
         apiUrl: API_BASE_URL,
       });
 

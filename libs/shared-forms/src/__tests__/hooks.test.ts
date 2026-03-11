@@ -13,7 +13,7 @@ import {
   useSearchForm,
   useUserForm,
 } from '../hooks';
-import type { FormConfig, FormField, FormSubmissionResult } from '../types';
+import type { FieldValue, FormConfig, FormField, FormSubmissionResult } from '../types';
 
 const createTitleField = (value = ''): FormField => ({
   id: 'title',
@@ -96,7 +96,7 @@ describe('shared-forms React hooks', () => {
   });
 
   test('useFormSubmission exposes submit() and tracks last result', async () => {
-    const handler = jest.fn<Promise<FormSubmissionResult>, any[]>(async () => ({
+    const handler = jest.fn<Promise<FormSubmissionResult>, [Record<string, FieldValue>]>(async () => ({
       success: true,
       timestamp: new Date(),
     }));

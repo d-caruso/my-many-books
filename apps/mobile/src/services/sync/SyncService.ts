@@ -35,6 +35,8 @@ interface ServerBook {
 interface ServerAuthor {
   id: number;
   name: string;
+  surname: string;
+  nationality?: string | null;
   updateDate?: string;
 }
 
@@ -691,6 +693,14 @@ export class SyncService {
             timestamp: new Date().toISOString()
           });
 
+          await authorRepository.update(localAuthor.entity.id, {
+            name: serverAuthor.name,
+            surname: serverAuthor.surname,
+            nationality: serverAuthor.nationality ?? null,
+            creationDate: localAuthor.entity.creationDate,
+            updateDate: serverAuthor.updateDate,
+          });
+
           await authorRepository.updateSyncFields(localAuthor.entity.id, {
             serverUpdatedAt: serverAuthor.updateDate,
             syncStatus: SYNC_STATUS.SYNCED,
@@ -705,8 +715,10 @@ export class SyncService {
         }
       }
     } else {
-      // Author doesn't exist locally - find by name or create new
-      const existingByName = await authorRepository.findByName(serverAuthor.name);
+      const existingByName = await authorRepository.findByName(
+        serverAuthor.name,
+        serverAuthor.surname
+      );
       
       if (existingByName) {
         // Found by name - update with server_id
@@ -734,7 +746,12 @@ export class SyncService {
           timestamp: new Date().toISOString()
         });
         
-        const newAuthor = await authorRepository.create(serverAuthor.name);
+        const newAuthor = await authorRepository.create({
+          name: serverAuthor.name,
+          surname: serverAuthor.surname,
+          nationality: serverAuthor.nationality ?? null,
+          updateDate: serverAuthor.updateDate,
+        });
         await authorRepository.updateSyncFields(newAuthor.entity.id, {
           serverId,
           serverUpdatedAt: serverAuthor.updateDate || new Date().toISOString(),

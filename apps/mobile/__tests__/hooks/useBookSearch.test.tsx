@@ -1,6 +1,7 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
 import type { Book } from '@/types';
+import { BOOK_STATUS, SEARCH_SORT_BY_FIELDS, SORT_DIRECTIONS } from '@my-many-books/shared-types';
 
 // Import after mocks
 import { useBookSearch } from '@/hooks/useBookSearch';
@@ -76,11 +77,6 @@ function BookSearchTestComponent({ testId }: { testId: string }) {
 }
 
 describe('useBookSearch Hook', () => {
-  beforeAll(() => {
-    // Use real timers for this test suite (override global fake timers)
-    jest.useRealTimers();
-  });
-
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsOnline = true;
@@ -90,9 +86,8 @@ describe('useBookSearch Hook', () => {
     mockDbMocks.searchWithFilters.mockResolvedValue([]);
   });
 
-  afterAll(() => {
-    // Restore fake timers
-    jest.useFakeTimers();
+  beforeAll(() => {
+    jest.useRealTimers();
   });
 
   it('should import the hook', () => {
@@ -201,10 +196,57 @@ describe('useBookSearch Hook', () => {
     });
 
     expect(mockApiMocks.searchBooks).toHaveBeenCalledWith({
-      q: 'test',
+      query: 'test',
       page: 1,
       limit: 20,
+      status: undefined,
+      authorId: undefined,
+      categoryId: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
     });
+  });
+
+  it('should send only shared search contract fields when online filters are provided', async () => {
+    function FilteredSearchComponent() {
+      const { searchBooks } = useBookSearch();
+
+      React.useEffect(() => {
+        void searchBooks('filtered', {
+          status: BOOK_STATUS.FINISHED,
+          authorId: 5,
+          categoryId: 8,
+          sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+          sortOrder: SORT_DIRECTIONS.ASC,
+          limit: 10,
+        });
+      }, [searchBooks]);
+
+      return null;
+    }
+
+    mockApiMocks.searchBooks.mockResolvedValueOnce({ books: [], total: 0, hasMore: false });
+
+    await renderer.act(async () => {
+      renderer.create(<FilteredSearchComponent />);
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(mockApiMocks.searchBooks).toHaveBeenCalledWith({
+      query: 'filtered',
+      page: 1,
+      limit: 10,
+      status: BOOK_STATUS.FINISHED,
+      authorId: 5,
+      categoryId: 8,
+      sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+      sortOrder: SORT_DIRECTIONS.ASC,
+    });
+
+    const params = mockApiMocks.searchBooks.mock.calls[0][0] as Record<string, unknown>;
+    expect(params).not.toHaveProperty('update_date');
+    expect(params).not.toHaveProperty('creation_date');
   });
 
   it('should use local repository when offline', async () => {
@@ -235,10 +277,13 @@ describe('useBookSearch Hook', () => {
     expect(mockDbMocks.searchWithFilters).toHaveBeenCalledWith(
       expect.objectContaining({
         query: 'test',
-        sortBy: 'update_date',
-        sortOrder: 'desc',
+        sortBy: undefined,
+        sortOrder: SORT_DIRECTIONS.ASC,
       })
     );
+    const offlineParams = mockDbMocks.searchWithFilters.mock.calls[0][0] as Record<string, unknown>;
+    expect(offlineParams).not.toHaveProperty('update_date');
+    expect(offlineParams).not.toHaveProperty('creation_date');
     expect(mockApiMocks.searchBooks).not.toHaveBeenCalled();
   });
 
@@ -306,11 +351,11 @@ describe('useBookSearch Hook', () => {
 
   it('should handle empty query', async () => {
     function EmptyQueryComponent() {
-      const hook = useBookSearch();
+      const { searchBooks, books } = useBookSearch();
       React.useEffect(() => {
-        hook.searchBooks('');
-      }, []);
-      return <Text testID="result">{hook.books.length}</Text>;
+        searchBooks('');
+      }, [searchBooks]);
+      return <Text testID="result">{books.length}</Text>;
     }
 
     let tree: renderer.ReactTestRenderer;
@@ -323,12 +368,12 @@ describe('useBookSearch Hook', () => {
 
   it('should return null for empty ISBN', async () => {
     function ISBNComponent() {
-      const hook = useBookSearch();
+      const { searchByISBN } = useBookSearch();
       const [result, setResult] = React.useState<Book | null | undefined>(undefined);
 
       React.useEffect(() => {
-        hook.searchByISBN('   ').then(setResult);
-      }, []);
+        searchByISBN('   ').then(setResult);
+      }, [searchByISBN]);
 
       return <Text testID="result">{result === null ? 'null' : result === undefined ? 'undefined' : 'book'}</Text>;
     }
@@ -359,12 +404,12 @@ describe('useBookSearch Hook', () => {
     mockApiMocks.searchByISBN.mockResolvedValueOnce(mockBook);
 
     function ISBNSearchComponent() {
-      const hook = useBookSearch();
+      const { searchByISBN } = useBookSearch();
       const [result, setResult] = React.useState<Book | null | undefined>(undefined);
 
       React.useEffect(() => {
-        hook.searchByISBN('1234567890').then(setResult);
-      }, []);
+        searchByISBN('1234567890').then(setResult);
+      }, [searchByISBN]);
 
       return <Text testID="result">{result?.title || 'none'}</Text>;
     }
@@ -419,9 +464,14 @@ describe('useBookSearch Hook', () => {
 
     expect(mockApiMocks.searchBooks).toHaveBeenCalledTimes(2);
     expect(mockApiMocks.searchBooks).toHaveBeenNthCalledWith(2, {
-      q: 'test',
+      query: 'test',
       page: 2,
       limit: 20,
+      status: undefined,
+      authorId: undefined,
+      categoryId: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
     });
   });
 });

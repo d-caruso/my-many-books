@@ -1,16 +1,17 @@
 import { BaseAdapter } from '../../../adapters/BaseAdapter';
 import type { LogEntry } from '../../../interfaces/LogEntry';
+import type { StorageAdapterConfig } from '../../../interfaces/LogStorage';
 
 class TestAdapter extends BaseAdapter {
   readonly name = 'test';
   public delays: number[] = [];
 
-  constructor(config: any) {
+  constructor(config: Partial<StorageAdapterConfig>) {
     super(config);
   }
 
   getResolvedConfig() {
-    return (this as any).config;
+    return this.config;
   }
 
   async write(_logs: LogEntry[]): Promise<void> {}
@@ -20,7 +21,7 @@ class TestAdapter extends BaseAdapter {
   }
 
   public retryPublic<T>(fn: () => Promise<T>, maxRetries?: number): Promise<T> {
-    return (this as any).retry(fn, maxRetries);
+    return this.retry(fn, maxRetries);
   }
 
   protected override delay(ms: number): Promise<void> {
@@ -38,7 +39,7 @@ class DelayAdapter extends BaseAdapter {
   }
 
   delayPublic(ms: number): Promise<void> {
-    return (this as any).delay(ms);
+    return this.delay(ms);
   }
 }
 

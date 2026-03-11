@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Card, Text, IconButton, Menu, Chip } from 'react-native-paper';
+import { Card, Text, IconButton, Menu, Chip, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { Book } from '@/types';
 import type { EntityMeta, UiBook } from '@/types/ui';
@@ -8,20 +8,7 @@ import { useNetworkState } from '@/hooks/useNetworkState';
 import { SyncStatusBadge } from './SyncStatusBadge';
 import { ConflictDialog } from './ConflictDialog';
 import { BOOK_STATUS } from '@my-many-books/shared-types';
-
-// Move utility functions back for direct coverage tracking
-export function getStatusColor(status: Book['status']) {
-  switch (status) {
-    case BOOK_STATUS.READING:
-      return '#2196F3';
-    case BOOK_STATUS.FINISHED:
-      return '#4CAF50';
-    case BOOK_STATUS.PAUSED:
-      return '#9C27B0';
-    default:
-      return '#757575';
-  }
-}
+import { getStatusColor } from '@my-many-books/shared-design';
 
 export function getStatusLabel(status: Book['status'], t?: (key: string) => string) {
   // If t function is not provided, this shouldn't be called
@@ -56,6 +43,7 @@ interface BookCardProps {
   onDelete?: () => void;
   onResolveConflict?: (id: number | string, choice: 'local' | 'server') => void;
   showActions?: boolean;
+  containerStyle?: object;
 }
 
 export const BookCard: React.FC<BookCardProps> = ({
@@ -65,15 +53,17 @@ export const BookCard: React.FC<BookCardProps> = ({
   onDelete,
   onResolveConflict,
   showActions = true,
+  containerStyle,
 }) => {
   const { t } = useTranslation('offline');
+  const theme = useTheme();
   const [menuVisible, setMenuVisible] = React.useState(false);
   const [conflictDialogVisible, setConflictDialogVisible] = React.useState(false);
   const { isOnline } = useNetworkState();
 
   return (
     <Card
-      style={styles.card}
+      style={[styles.card, containerStyle]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`View details for ${book.title} by ${book.authors?.map(a => a.name).join(', ') || t('books:unknown_author')}`}
@@ -150,17 +140,19 @@ export const BookCard: React.FC<BookCardProps> = ({
                     setMenuVisible(false);
                   }}
                   title={t('books:mark_as_status', { status: getStatusLabel(status, t) })}
-                  titleStyle={!isOnline ? { color: '#ff9800' } : undefined}
+                  titleStyle={!isOnline ? { color: theme.colors.secondary } : undefined}
                 />
               ))}
-              <Menu.Item
-                onPress={() => {
-                  onDelete?.();
-                  setMenuVisible(false);
-                }}
-                title={t('delete')}
-                titleStyle={{ color: !isOnline ? '#ff9800' : '#f44336' }}
-              />
+              {onDelete && (
+                <Menu.Item
+                  onPress={() => {
+                    onDelete();
+                    setMenuVisible(false);
+                  }}
+                  title={t('delete')}
+                  titleStyle={{ color: !isOnline ? theme.colors.secondary : theme.colors.error }}
+                />
+              )}
             </Menu>
           </View>
         )}
@@ -200,7 +192,6 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 4,
     marginRight: 12,
-    backgroundColor: '#f0f0f0',
   },
   textContent: {
     flex: 1,
@@ -232,7 +223,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   conflictChip: {
-    backgroundColor: '#f44336',
     alignSelf: 'flex-start',
   },
   conflictChipText: {

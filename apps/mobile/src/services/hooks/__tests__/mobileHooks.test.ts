@@ -222,8 +222,4 @@ describe('MOBILE_EVENTS export', () => {
     expect(MOBILE_EVENTS.ERROR).toBeDefined();
   });
 
-  it('should match events from events module', () => {
-    const { MOBILE_EVENTS: directEvents } = require('../eventsSchema');
-    expect(MOBILE_EVENTS).toEqual(directEvents);
-  });
 });

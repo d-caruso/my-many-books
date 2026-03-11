@@ -18,7 +18,7 @@ import AddIcon from '@mui/icons-material/Add';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
 import { getCategoryDisplayName } from '@my-many-books/shared-utils';
-import { formatEditionDate } from '../../utils/formatEditionDate';
+import { formatEditionDate } from '@my-many-books/shared-forms';
 
 interface BookSearchResultsProps {
   books: Book[];

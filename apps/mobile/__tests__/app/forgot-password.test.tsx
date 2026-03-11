@@ -4,6 +4,12 @@ import { router } from 'expo-router';
 import ForgotPasswordScreen from '../../app/forgot-password';
 import { useAuth } from '@my-many-books/shared-auth';
 
+jest.mock('@/i18n', () => ({
+  changeLanguage: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/components/LanguageSelector', () => () => null);
+
 jest.mock('@my-many-books/shared-auth', () => ({
   useAuth: jest.fn(),
   AuthApiError: class AuthApiError extends Error {

@@ -1,6 +1,10 @@
 // Test for API service integration with operation queue
 // Tests automatic queueing of failed operations
 
+import { operationQueue } from '../../src/services/OperationQueue';
+import { isRetriableError } from '../../src/services/QueueExecutor';
+import { ApiError, ErrorCode } from '../../src/types/errors';
+
 // Mock uuid before unknown imports
 jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mock-uuid-1234'),
@@ -8,8 +12,9 @@ jest.mock('uuid', () => ({
 
 describe('API Queue Integration', () => {
   it('should verify bookAPI has write operations', () => {
+    // Cache-bust to bypass the global @/services/api mock from setupTests
     delete require.cache[require.resolve('../../src/services/api')];
-
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { bookAPI } = require('../../src/services/api');
 
     expect(bookAPI.createBook).toBeDefined();
@@ -21,20 +26,13 @@ describe('API Queue Integration', () => {
   });
 
   it('should verify queue integration imports', () => {
-    const queueModule = require('../../src/services/OperationQueue');
-    const executorModule = require('../../src/services/QueueExecutor');
-
-    expect(queueModule.operationQueue).toBeDefined();
-    expect(executorModule.isRetriableError).toBeDefined();
-    expect(typeof executorModule.isRetriableError).toBe('function');
+    expect(operationQueue).toBeDefined();
+    expect(isRetriableError).toBeDefined();
+    expect(typeof isRetriableError).toBe('function');
   });
 
   it('should verify isRetriableError detects network errors', () => {
-    const { isRetriableError } = require('../../src/services/QueueExecutor');
-    const { ApiError } = require('../../src/types/errors');
-
     // Network errors are retriable via ApiError
-    const { ErrorCode } = require('../../src/types/errors');
     expect(isRetriableError(new ApiError(ErrorCode.NETWORK_FAILED, 'Network request failed', undefined, true))).toBe(true);
     expect(isRetriableError(new ApiError(ErrorCode.NETWORK_TIMEOUT, 'timeout', undefined, true))).toBe(true);
     expect(isRetriableError(new ApiError(ErrorCode.NETWORK_TIMEOUT, 'Request timeout', undefined, true))).toBe(true);
@@ -42,16 +40,12 @@ describe('API Queue Integration', () => {
   });
 
   it('should verify isRetriableError rejects validation errors', () => {
-    const { isRetriableError } = require('../../src/services/QueueExecutor');
-
     // Validation errors are NOT retriable
     expect(isRetriableError({ status: 400 })).toBe(false);
     expect(isRetriableError({ status: 422 })).toBe(false);
   });
 
   it('should verify OperationQueue can enqueue operations', async () => {
-    const { operationQueue } = require('../../src/services/OperationQueue');
-
     await operationQueue.initialize();
     await operationQueue.clear(); // Start fresh
 
@@ -71,8 +65,6 @@ describe('API Queue Integration', () => {
   });
 
   it('should verify operation payload structure for CREATE', async () => {
-    const { operationQueue } = require('../../src/services/OperationQueue');
-
     await operationQueue.initialize();
     await operationQueue.clear();
 
@@ -91,8 +83,6 @@ describe('API Queue Integration', () => {
   });
 
   it('should verify operation payload structure for UPDATE', async () => {
-    const { operationQueue } = require('../../src/services/OperationQueue');
-
     await operationQueue.initialize();
     await operationQueue.clear();
 
@@ -110,8 +100,6 @@ describe('API Queue Integration', () => {
   });
 
   it('should verify operation payload structure for DELETE', async () => {
-    const { operationQueue } = require('../../src/services/OperationQueue');
-
     await operationQueue.initialize();
     await operationQueue.clear();
 

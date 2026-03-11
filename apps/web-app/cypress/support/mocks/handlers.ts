@@ -2,6 +2,19 @@ import { rest } from 'msw';
 
 const API_BASE_URL = 'http://localhost:3001/api';
 
+interface AuthLoginRequestBody {
+  email?: string;
+  password?: string;
+}
+
+const getRequestBodyRecord = (body: unknown): Record<string, unknown> => {
+  if (typeof body !== 'object' || body === null) {
+    return {};
+  }
+
+  return body as Record<string, unknown>;
+};
+
 export const handlers = [
   // Books API
   rest.get(`${API_BASE_URL}/books`, (req, res, ctx) => {
@@ -77,7 +90,8 @@ export const handlers = [
 
   // Auth API
   rest.post(`${API_BASE_URL}/auth/login`, (req, res, ctx) => {
-    const { email, password } = req.body as any;
+    const body = getRequestBodyRecord(req.body) as AuthLoginRequestBody;
+    const { email, password } = body;
     
     if (email === 'test@example.com' && password === 'password123') {
       return res(
@@ -100,13 +114,15 @@ export const handlers = [
   }),
 
   rest.post(`${API_BASE_URL}/auth/register`, (req, res, ctx) => {
+    const requestBody = getRequestBodyRecord(req.body);
+
     return res(
       ctx.status(201),
       ctx.json({
         token: 'mock-jwt-token',
         user: {
           id: Date.now(),
-          ...(req.body as any)
+          ...requestBody
         }
       })
     );

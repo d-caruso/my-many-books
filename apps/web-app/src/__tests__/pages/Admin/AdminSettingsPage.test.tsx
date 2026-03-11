@@ -55,6 +55,8 @@ const mockApiService = {
   updateAuditLoggingStatus: vi.fn(),
   getFullTextSearchStatus: vi.fn(),
   updateFullTextSearchStatus: vi.fn(),
+  getHttpClient: vi.fn(() => ({})),
+  getApiConfig: vi.fn(() => ({ baseURL: 'http://localhost:3000', timeout: 10000 })),
   baseURL: 'http://localhost:3000',
   get: vi.fn(),
   post: vi.fn(),
@@ -160,14 +162,14 @@ describe('AdminSettingsPage', () => {
       enabled: true,
       source: 'database',
       canChange: true,
-      sortableFields: ['title', 'createdAt'],
+      sortableFields: ['title', 'creationDate'],
       defaultSort: 'title',
     });
     mockApiService.getFullTextSearchStatus.mockResolvedValue({
       enabled: true,
       source: 'database',
       canChange: true,
-      sortableFields: ['title', 'createdAt'],
+      sortableFields: ['title', 'creationDate'],
       defaultSort: 'title',
     });
 

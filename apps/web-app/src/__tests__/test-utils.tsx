@@ -148,7 +148,6 @@ const createTestI18n = () => {
               sort_label: 'Sort By',
               sort_title: 'Title (A-Z)',
               sort_author: 'Author (A-Z)',
-              sort_date: 'Recently Added',
             },
             results: {
               showing_count_one: 'Showing {{count}} of {{total}} book',

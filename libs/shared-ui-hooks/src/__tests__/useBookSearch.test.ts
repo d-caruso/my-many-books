@@ -1,12 +1,13 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { BOOK_STATUS } from '@my-many-books/shared-types';
 
 import { useBookSearch } from '../useBookSearch';
 
 describe('useBookSearch', () => {
   it('trims query, calls API with q/page/limit, and supports loadMore', async () => {
     const now = new Date().toISOString();
-    const book1 = { id: 1, isbnCode: '111', title: 'B1', status: 'reading', creationDate: now, updateDate: now } as const;
-    const book2 = { id: 2, isbnCode: '222', title: 'B2', status: 'reading', creationDate: now, updateDate: now } as const;
+    const book1 = { id: 1, isbnCode: '111', title: 'B1', status: BOOK_STATUS.READING, creationDate: now, updateDate: now } as const;
+    const book2 = { id: 2, isbnCode: '222', title: 'B2', status: BOOK_STATUS.READING, creationDate: now, updateDate: now } as const;
 
     const api = {
       searchBooks: jest
@@ -19,10 +20,10 @@ describe('useBookSearch', () => {
     const { result } = renderHook(() => useBookSearch(api));
 
     await act(async () => {
-      await result.current.searchBooks('  hello  ', { status: 'reading' });
+      await result.current.searchBooks('  hello  ', { status: BOOK_STATUS.READING });
     });
 
-    expect(api.searchBooks).toHaveBeenCalledWith({ q: 'hello', page: 1, limit: 20, status: 'reading' });
+    expect(api.searchBooks).toHaveBeenCalledWith({ query: 'hello', page: 1, limit: 20, status: BOOK_STATUS.READING });
     expect(result.current.books).toEqual([book1]);
     expect(result.current.hasMore).toBe(true);
     expect(result.current.totalCount).toBe(2);
@@ -32,7 +33,7 @@ describe('useBookSearch', () => {
       await result.current.loadMore();
     });
 
-    expect(api.searchBooks).toHaveBeenLastCalledWith({ q: 'hello', page: 2, limit: 20, status: 'reading' });
+    expect(api.searchBooks).toHaveBeenLastCalledWith({ query: 'hello', page: 2, limit: 20, status: BOOK_STATUS.READING });
     await waitFor(() => expect(result.current.books).toEqual([book1, book2]));
     expect(result.current.currentPage).toBe(2);
     expect(result.current.hasMore).toBe(false);
@@ -87,10 +88,10 @@ describe('useBookSearch', () => {
     const { result } = renderHook(() => useBookSearch(api));
 
     await act(async () => {
-      await result.current.searchBooks('  ', { status: 'reading' });
+      await result.current.searchBooks('  ', { status: BOOK_STATUS.READING });
     });
 
-    expect(api.searchBooks).toHaveBeenCalledWith({ page: 1, limit: 20, status: 'reading' });
+    expect(api.searchBooks).toHaveBeenCalledWith({ page: 1, limit: 20, status: BOOK_STATUS.READING });
   });
 
   it('does not forward short query when filters are active', async () => {
@@ -102,10 +103,10 @@ describe('useBookSearch', () => {
     const { result } = renderHook(() => useBookSearch(api));
 
     await act(async () => {
-      await result.current.searchBooks('a', { status: 'reading' });
+      await result.current.searchBooks('a', { status: BOOK_STATUS.READING });
     });
 
-    expect(api.searchBooks).toHaveBeenCalledWith({ page: 1, limit: 20, status: 'reading' });
+    expect(api.searchBooks).toHaveBeenCalledWith({ page: 1, limit: 20, status: BOOK_STATUS.READING });
   });
 
   it('returns null for blank ISBN and captures errors for failed ISBN searches', async () => {

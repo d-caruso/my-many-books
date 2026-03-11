@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
-import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
+import { Text, TextInput, Button, Card, SegmentedButtons, IconButton, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,6 +18,10 @@ import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 import { extractErrorDetails } from '@my-many-books/shared-utils';
 import { API_BASE_URL } from '@/config/api';
 import { authService } from '@/services/authService';
+import { changeLanguage } from '@/i18n';
+import LanguageSelector from '@/components/LanguageSelector';
+import { AboutDialog } from '@/components/About/AboutDialog';
+import { AuthErrorBoundary } from '@/components/AuthErrorBoundary';
 
 type AuthMode = 'login' | 'register';
 const logoMark = require('../assets/logo-mark-primary.png');
@@ -59,6 +63,7 @@ const generatePkceCodeVerifier = (): string => {
 
 export default function AuthScreen() {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -68,6 +73,7 @@ export default function AuthScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [aboutDialogVisible, setAboutDialogVisible] = useState(false);
 
   const { login, register, refreshUser, loading } = useAuth();
   const params = useLocalSearchParams<{
@@ -195,6 +201,8 @@ export default function AuthScreen() {
           surname: '',
           locale: i18n.language || 'en',
         });
+        router.replace({ pathname: '/verify-email', params: { email } });
+        return;
       } else {
         await login(email, password);
         try {
@@ -277,13 +285,56 @@ export default function AuthScreen() {
     resetForm();
   };
 
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.colors.background },
+        keyboardAvoidingView: { flex: 1 },
+        scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 16 },
+        header: { alignItems: 'center', marginBottom: 32 },
+        logo: { width: 64, height: 64, marginBottom: 12 },
+        title: { fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
+        subtitle: { textAlign: 'center', opacity: 0.7 },
+        authCard: { marginBottom: 32 },
+        segmentedButtons: { marginBottom: 24 },
+        errorContainer: {
+          backgroundColor: theme.colors.errorContainer,
+          padding: 12,
+          borderRadius: 8,
+          marginBottom: 16,
+        },
+        errorText: { color: theme.colors.error, textAlign: 'center' },
+        input: { marginBottom: 16 },
+        passwordHelpText: { marginTop: -10, marginBottom: 12, opacity: 0.75 },
+        submitButton: { marginTop: 8 },
+        forgotPasswordButton: { alignSelf: 'flex-end', marginTop: -8, marginBottom: 8 },
+        forgotPasswordButtonContent: { justifyContent: 'flex-end' },
+        googleButton: { marginTop: 12 },
+        footer: { alignItems: 'center' },
+        footerText: { textAlign: 'center', opacity: 0.6 },
+        headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-end', paddingHorizontal: 4, marginBottom: 8 },
+        languageSelector: { marginTop: 16 },
+      }),
+    [theme]
+  );
+
   return (
+    <AuthErrorBoundary>
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.headerRow}>
+            <IconButton
+              icon="information-outline"
+              size={22}
+              onPress={() => setAboutDialogVisible(true)}
+              accessibilityLabel={t('about')}
+            />
+          </View>
+
           <View style={styles.header}>
             <Image
               source={logoMark}
@@ -435,87 +486,22 @@ export default function AuthScreen() {
             <Text variant="bodySmall" style={styles.footerText}>
               {t('common:terms_of_service')}
             </Text>
+            <View style={styles.languageSelector}>
+              <LanguageSelector
+                value={i18n.language}
+                onLanguageChange={changeLanguage}
+              />
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <AboutDialog
+        visible={aboutDialogVisible}
+        onClose={() => setAboutDialogVisible(false)}
+      />
     </SafeAreaView>
+    </AuthErrorBoundary>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 16,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  logo: {
-    width: 64,
-    height: 64,
-    marginBottom: 12,
-  },
-  title: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-  authCard: {
-    marginBottom: 32,
-  },
-  segmentedButtons: {
-    marginBottom: 24,
-  },
-  errorContainer: {
-    backgroundColor: '#ffebee',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: '#c62828',
-    textAlign: 'center',
-  },
-  input: {
-    marginBottom: 16,
-  },
-  passwordHelpText: {
-    marginTop: -10,
-    marginBottom: 12,
-    opacity: 0.75,
-  },
-  submitButton: {
-    marginTop: 8,
-  },
-  forgotPasswordButton: {
-    alignSelf: 'flex-end',
-    marginTop: -8,
-    marginBottom: 8,
-  },
-  forgotPasswordButtonContent: {
-    justifyContent: 'flex-end',
-  },
-  googleButton: {
-    marginTop: 12,
-  },
-  footer: {
-    alignItems: 'center',
-  },
-  footerText: {
-    textAlign: 'center',
-    opacity: 0.6,
-  },
-});

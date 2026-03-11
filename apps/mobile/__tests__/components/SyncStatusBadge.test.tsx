@@ -1,15 +1,8 @@
-// Test for SyncStatusBadge component
-// Tests sync status badge visibility and behavior
+import { SyncStatusBadge } from '../../src/components/SyncStatusBadge';
 
 describe('SyncStatusBadge Component', () => {
-  it('should import SyncStatusBadge component', () => {
-    const componentModule = require('../../src/components/SyncStatusBadge');
-    expect(componentModule.SyncStatusBadge).toBeDefined();
-    expect(typeof componentModule.SyncStatusBadge).toBe('function');
-  });
-
-  it('should verify SyncStatus type exists', () => {
-    const typesModule = require('../../src/types');
-    expect(typesModule).toBeDefined();
+  it('should export SyncStatusBadge component', () => {
+    expect(SyncStatusBadge).toBeDefined();
+    expect(typeof SyncStatusBadge).toBe('function');
   });
 });

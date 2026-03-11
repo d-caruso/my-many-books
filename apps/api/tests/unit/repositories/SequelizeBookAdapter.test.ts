@@ -1,6 +1,6 @@
 import { SequelizeBookAdapter } from '../../../src/repositories/book/adapters/SequelizeBookAdapter';
 import { Book } from '../../../src/models/Book';
-import { BOOK_STATUS } from '@my-many-books/shared-types';
+import { BOOK_STATUS, SEARCH_SORT_BY_FIELDS, SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { Author } from '../../../src/models/Author';
 import { Category } from '../../../src/models/Category';
 import { Op } from 'sequelize';
@@ -45,6 +45,9 @@ describe('SequelizeBookAdapter (unit)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (Book as unknown as { sequelize?: unknown }).sequelize = {
+      query: jest.fn(),
+    };
   });
 
   const createModelMock = (plain = mockBookPlain) => ({
@@ -183,5 +186,61 @@ describe('SequelizeBookAdapter (unit)', () => {
     });
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({ id: 1, title: 'Test Book' });
+  });
+
+  it('search maps creationDate sort to creationDate ordering', async () => {
+    (Book.findAndCountAll as jest.Mock).mockResolvedValue({
+      rows: [createModelMock()],
+      count: 1,
+    });
+
+    await adapter.search({}, {
+      orderBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
+      orderDirection: SORT_DIRECTIONS.DESC,
+    } as any);
+
+    const args = (Book.findAndCountAll as jest.Mock).mock.calls[0][0];
+    expect(args.order).toEqual([
+      ['creationDate', 'DESC'],
+      ['id', 'ASC'],
+    ]);
+  });
+
+  it('search maps author sort to literal surname/name ordering', async () => {
+    (Book.findAndCountAll as jest.Mock).mockResolvedValue({
+      rows: [createModelMock()],
+      count: 1,
+    });
+
+    await adapter.search({}, {
+      orderBy: SEARCH_SORT_BY_FIELDS.AUTHOR,
+      orderDirection: SORT_DIRECTIONS.ASC,
+    } as any);
+
+    const args = (Book.findAndCountAll as jest.Mock).mock.calls[0][0];
+    expect(args.order).toHaveLength(3);
+    expect(args.order[0][1]).toBe('ASC');
+    expect((args.order[0][0] as { val: string }).val).toContain('a.surname');
+    expect((args.order[1][0] as { val: string }).val).toContain('a.name');
+  });
+
+  it('searchFulltextSorted orders author results via SQL clause', async () => {
+    const sequelizeQuery = (Book as unknown as { sequelize: { query: jest.Mock } }).sequelize.query;
+    sequelizeQuery
+      .mockResolvedValueOnce([{ id: 1, relevance_score: 12 }])
+      .mockResolvedValueOnce([{ total: 1 }]);
+    (Book.findAll as jest.Mock).mockResolvedValue([createModelMock()]);
+
+    await adapter.searchFulltextSorted({
+      query: 'test',
+      sortBy: SEARCH_SORT_BY_FIELDS.AUTHOR,
+      sortOrder: SORT_DIRECTIONS.DESC,
+      limit: 10,
+      offset: 0,
+    });
+
+    expect(sequelizeQuery).toHaveBeenCalledTimes(2);
+    expect(sequelizeQuery.mock.calls[0][0]).toContain('ORDER BY COALESCE((SELECT a.surname');
+    expect(sequelizeQuery.mock.calls[0][0]).toContain('DESC');
   });
 });

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Button, IconButton, Text, TextInput } from 'react-native-paper';
+import { Button, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import DateTimePicker, {
   DateTimePickerAndroid,
 } from '@react-native-community/datetimepicker';
@@ -61,6 +61,7 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
   helperText,
 }) => {
   const { t } = useTranslation(['books', 'common']);
+  const theme = useTheme();
   const currentEditionYear = getCurrentEditionYear();
   const maxCalendarDate = new Date(currentEditionYear, 11, 31);
   const [year, setYear] = useState('');
@@ -209,6 +210,71 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
     </View>
   );
 
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { marginBottom: 16 },
+        sectionLabel: { marginBottom: 8, fontWeight: '600' },
+        row: { flexDirection: 'row', alignItems: 'flex-end' },
+        yearField: { flex: 1.4, marginRight: 8 },
+        smallField: { flex: 1, marginRight: 8 },
+        calendarField: { width: 64, alignItems: 'center' },
+        fieldLabel: {
+          marginBottom: 6,
+          fontSize: 12,
+          color: theme.colors.onSurfaceVariant,
+          minHeight: 16,
+        },
+        selectorButton: {
+          minHeight: 56,
+          borderWidth: 1,
+          borderColor: theme.colors.outline,
+          borderRadius: 12,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: theme.colors.surface,
+          paddingHorizontal: 8,
+        },
+        selectorButtonMuted: { opacity: 0.6 },
+        calendarButton: {
+          margin: 0,
+          borderWidth: 1,
+          borderColor: theme.colors.outline,
+          width: 56,
+          height: 56,
+          borderRadius: 12,
+        },
+        calendarButtonError: { borderColor: theme.colors.error },
+        optionsContainer: { marginTop: 8 },
+        optionsRow: { flexDirection: 'row', alignItems: 'center', paddingRight: 8 },
+        optionChip: {
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderWidth: 1,
+          borderColor: theme.colors.outline,
+          borderRadius: 16,
+          marginRight: 8,
+          backgroundColor: theme.colors.surface,
+        },
+        optionChipClear: { minWidth: 36, alignItems: 'center' },
+        inlineCalendarContainer: {
+          marginTop: 12,
+          padding: 8,
+          borderWidth: 1,
+          borderColor: theme.colors.outlineVariant,
+          borderRadius: 12,
+          backgroundColor: theme.colors.surface,
+        },
+        helperText: {
+          marginTop: 6,
+          fontSize: 12,
+          color: theme.colors.onSurfaceVariant,
+        },
+        helperTextError: { color: theme.colors.error },
+      }),
+    [theme]
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.sectionLabel}>{t('books:edition_date')}</Text>
@@ -304,97 +370,5 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  sectionLabel: {
-    marginBottom: 8,
-    fontWeight: '600',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-  yearField: {
-    flex: 1.4,
-    marginRight: 8,
-  },
-  smallField: {
-    flex: 1,
-    marginRight: 8,
-  },
-  calendarField: {
-    width: 64,
-    alignItems: 'center',
-  },
-  fieldLabel: {
-    marginBottom: 6,
-    fontSize: 12,
-    color: '#5f6368',
-    minHeight: 16,
-  },
-  selectorButton: {
-    minHeight: 56,
-    borderWidth: 1,
-    borderColor: '#c4c7c5',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 8,
-  },
-  selectorButtonMuted: {
-    opacity: 0.6,
-  },
-  calendarButton: {
-    margin: 0,
-    borderWidth: 1,
-    borderColor: '#c4c7c5',
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-  },
-  calendarButtonError: {
-    borderColor: '#b3261e',
-  },
-  optionsContainer: {
-    marginTop: 8,
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingRight: 8,
-  },
-  optionChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#c4c7c5',
-    borderRadius: 16,
-    marginRight: 8,
-    backgroundColor: '#fff',
-  },
-  optionChipClear: {
-    minWidth: 36,
-    alignItems: 'center',
-  },
-  inlineCalendarContainer: {
-    marginTop: 12,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 12,
-    backgroundColor: '#fff',
-  },
-  helperText: {
-    marginTop: 6,
-    fontSize: 12,
-    color: '#5f6368',
-  },
-  helperTextError: {
-    color: '#b3261e',
-  },
-});
 
 export default EditionDateInput;

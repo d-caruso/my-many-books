@@ -26,8 +26,8 @@ describe('string.utils', () => {
 
     it('should handle edge cases', () => {
       expect(normalizeIsbn('')).toBe('');
-      expect(normalizeIsbn(null as any)).toBe('');
-      expect(normalizeIsbn(undefined as any)).toBe('');
+      expect(normalizeIsbn(null as unknown as string)).toBe('');
+      expect(normalizeIsbn(undefined as unknown as string)).toBe('');
     });
   });
 
@@ -44,9 +44,9 @@ describe('string.utils', () => {
 
     it('should handle edge cases', () => {
       expect(removeWhitespace('')).toBe('');
-      expect(removeWhitespace(null as any)).toBe('');
-      expect(removeWhitespace(undefined as any)).toBe('');
-      expect(removeWhitespace(123 as any)).toBe('');
+      expect(removeWhitespace(null as unknown as string)).toBe('');
+      expect(removeWhitespace(undefined as unknown as string)).toBe('');
+      expect(removeWhitespace(123 as unknown as string)).toBe('');
     });
   });
 
@@ -59,9 +59,9 @@ describe('string.utils', () => {
 
     it('should handle edge cases', () => {
       expect(normalizeUppercase('')).toBe('');
-      expect(normalizeUppercase(null as any)).toBe('');
-      expect(normalizeUppercase(undefined as any)).toBe('');
-      expect(normalizeUppercase(123 as any)).toBe('');
+      expect(normalizeUppercase(null as unknown as string)).toBe('');
+      expect(normalizeUppercase(undefined as unknown as string)).toBe('');
+      expect(normalizeUppercase(123 as unknown as string)).toBe('');
     });
   });
 
@@ -79,9 +79,9 @@ describe('string.utils', () => {
 
     it('should handle edge cases', () => {
       expect(trim('')).toBe('');
-      expect(trim(null as any)).toBe('');
-      expect(trim(undefined as any)).toBe('');
-      expect(trim(123 as any)).toBe('');
+      expect(trim(null as unknown as string)).toBe('');
+      expect(trim(undefined as unknown as string)).toBe('');
+      expect(trim(123 as unknown as string)).toBe('');
     });
   });
 
@@ -120,9 +120,9 @@ describe('string.utils', () => {
 
     it('should handle edge cases', () => {
       expect(isNumeric('')).toBe(false);
-      expect(isNumeric(null as any)).toBe(false);
-      expect(isNumeric(undefined as any)).toBe(false);
-      expect(isNumeric(123 as any)).toBe(false);
+      expect(isNumeric(null as unknown as string)).toBe(false);
+      expect(isNumeric(undefined as unknown as string)).toBe(false);
+      expect(isNumeric(123 as unknown as string)).toBe(false);
     });
   });
 
@@ -163,8 +163,8 @@ describe('string.utils', () => {
 
     it('should handle edge cases', () => {
       expect(truncate('', 10)).toBe('');
-      expect(truncate(null as any, 10)).toBe(null);
-      expect(truncate(undefined as any, 10)).toBe(undefined);
+      expect(truncate(null as unknown as string, 10)).toBe(null);
+      expect(truncate(undefined as unknown as string, 10)).toBe(undefined);
     });
 
     it('should handle exact length', () => {

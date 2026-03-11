@@ -13,7 +13,11 @@ import {
   BookListOptions,
   BookQueryOptions,
   BookSearchFilters,
+  BookSearchRowsResult,
+  BookSearchRowsWithRelevance,
+  BookSortedSearchOptions,
   PaginatedResult,
+  PinnedBookResult,
 } from './BookRepositoryTypes';
 import { getBookRepositoryAdapter } from './adapters/BookRepositoryAdapterFactory';
 import { BookRepositoryAdapter } from './adapters/BookRepositoryAdapter';
@@ -51,6 +55,36 @@ export class BookRepository implements BookRepositoryContract {
     options?: BookListOptions
   ): Promise<PaginatedResult<BookEntity>> {
     return this.adapter.search(filters, options);
+  }
+
+  searchFulltext(
+    query: string,
+    userId?: number,
+    limit?: number,
+    offset?: number
+  ): Promise<BookSearchRowsWithRelevance> {
+    return this.adapter.searchFulltext(query, userId, limit, offset);
+  }
+
+  searchLike(
+    query: string,
+    userId?: number,
+    limit?: number,
+    offset?: number
+  ): Promise<BookSearchRowsResult> {
+    return this.adapter.searchLike(query, userId, limit, offset);
+  }
+
+  searchFulltextSorted(options: BookSortedSearchOptions): Promise<BookSearchRowsWithRelevance> {
+    return this.adapter.searchFulltextSorted(options);
+  }
+
+  searchLikeSorted(options: BookSortedSearchOptions): Promise<BookSearchRowsResult> {
+    return this.adapter.searchLikeSorted(options);
+  }
+
+  findPinned(userId?: number): Promise<PinnedBookResult[]> {
+    return this.adapter.findPinned(userId);
   }
 
   countUserBooks(userId: number, status?: BookStatus): Promise<number> {

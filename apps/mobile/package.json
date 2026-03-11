@@ -23,6 +23,7 @@
     "@my-many-books/hookey": "file:../../libs/hookey",
     "@my-many-books/shared-api": "file:../../libs/shared-api",
     "@my-many-books/shared-auth": "file:../../libs/shared-auth",
+    "@my-many-books/shared-design": "file:../../libs/shared-design",
     "@my-many-books/shared-forms": "file:../../libs/shared-forms",
     "@my-many-books/shared-i18n": "file:../../libs/shared-i18n",
     "@my-many-books/shared-types": "file:../../libs/shared-types",
@@ -84,6 +85,7 @@
     "jest": "^29.7.0",
     "jest-expo": "~54.0.13",
     "react-test-renderer": "19.1.0",
+    "ts-jest": "^29.4.6",
     "typescript": "^5.9.3"
   },
   "private": true

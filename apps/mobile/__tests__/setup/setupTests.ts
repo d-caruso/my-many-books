@@ -1,5 +1,6 @@
 import 'react-native-gesture-handler/jestSetup';
 import '@testing-library/jest-dom';
+import NetInfo from '@react-native-community/netinfo';
 
 // Setup fake timers properly
 jest.useFakeTimers();
@@ -69,10 +70,19 @@ interface BetterSQLiteDB {
 }
 
 jest.mock('expo-sqlite', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Database = require('better-sqlite3');
 
   // Shared database instance per dbName for test persistence
   let currentDb: BetterSQLiteDB | null = null;
+
+  // Expose cleanup so afterAll can close the handle and allow Jest to exit
+  (global as typeof globalThis & { __closeSQLiteDb?: () => void }).__closeSQLiteDb = () => {
+    if (currentDb) {
+      currentDb.close();
+      currentDb = null;
+    }
+  };
 
   const createDbWrapper = (db: BetterSQLiteDB) => ({
     execAsync: async (sql: string) => {
@@ -146,69 +156,22 @@ jest.mock('../../src/i18n', () => ({
 }));
 
 // Mock i18next for internationalization with actual translations
-jest.mock('react-i18next', () => ({
-  useTranslation: (namespace?: string) => ({
-    t: (key: string, params?: unknown) => {
-      // Map of translation keys to actual English translations for testing
-      const translations: Record<string, string> = {
-        // Common
-        'loading': 'Loading...',
-        'save': 'Save',
-        'cancel': 'Cancel',
-        'delete': 'Delete',
-        'search': 'Search',
-        'settings': 'Settings',
-        'ok': 'OK',
-        'logout': 'Logout',
-        'profile': 'Profile',
-        'user': 'User',
-        'scan': 'Scan',
-        'dark_mode': 'Dark Mode',
-        'toggle_dark_theme': 'Toggle dark theme',
-        'language': 'Language',
-        'language_changed_successfully': 'Language changed successfully',
-        // Books namespace
-        'books:my_books': 'My Books',
-        'books:add_book': 'Add Book',
-        'books:search_books': 'Search Books',
-        'books:no_books_found': 'No books found',
-        'books:unknown_author': 'Unknown Author',
-        'books:reading': 'Reading',
-        'books:completed': 'Completed',
-        'books:want_to_read': 'Want to Read',
-        // Scanner namespace
-        'scanner:scan_barcode': 'Scan ISBN Barcode',
-        'scanner:book_found': 'Book Found!',
-      };
+jest.mock('react-i18next', () => {
+  const mockI18n = { language: 'en', changeLanguage: jest.fn(() => Promise.resolve()) };
+  const tByNamespace: Record<string, (key: string) => string> = {};
 
-      // Handle namespace prefix (e.g., 'books:my_books')
-      let translationKey = key;
-      if (namespace && !key.includes(':')) {
-        translationKey = `${namespace}:${key}`;
+  return {
+    useTranslation: (namespace?: string) => {
+      const nsKey = namespace ?? '';
+      if (!tByNamespace[nsKey]) {
+        tByNamespace[nsKey] = (key: string) => key;
       }
-
-      let result = translations[translationKey] || key;
-
-      // Interpolate params if provided
-      if (params && typeof params === 'object') {
-        Object.keys(params).forEach(param => {
-          result = result.replace(`{{${param}}}`, String(params[param]));
-        });
-      }
-
-      return result;
+      return { t: tByNamespace[nsKey], i18n: mockI18n };
     },
-    i18n: {
-      language: 'en',
-      changeLanguage: jest.fn(() => Promise.resolve()),
-    },
-  }),
-  Trans: ({ children }: { children: unknown }) => children,
-  initReactI18next: {
-    type: '3rdParty',
-    init: jest.fn(),
-  },
-}));
+    Trans: ({ children }: { children: unknown }) => children,
+    initReactI18next: { type: '3rdParty', init: jest.fn() },
+  };
+});
 
 // Mock expo-localization
 jest.mock('expo-localization', () => ({
@@ -248,7 +211,8 @@ jest.mock('expo-camera', () => ({
 }));
 
 jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: ({ name, size, color, style }: { name?: string; size?: number; color?: string; style?: unknown }) => 
+  MaterialIcons: ({ name, size, color, style }: { name?: string; size?: number; color?: string; style?: unknown }) =>
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('react').createElement('Text', { style }, `Icon-${name}`),
 }));
 
@@ -269,6 +233,7 @@ jest.mock('expo-router', () => ({
 
 // Mock React Native core with proper component definitions compatible with Testing Library
 jest.mock('react-native', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   
   // Create proper React Native component mocks with displayName for Testing Library compatibility
@@ -378,7 +343,6 @@ const mockUserAPI = {
 // Create apiUtils with real implementations for testing
 const mockApiUtils = {
   isOnline: async () => {
-    const NetInfo = require('@react-native-community/netinfo');
     const networkState = await NetInfo.fetch();
     return networkState.isConnected ?? false;
   },
@@ -463,3 +427,8 @@ jest.mock('@/hooks/useNetworkState', () => ({
     connectionType: 'wifi',
   })),
 }));
+
+afterAll(() => {
+  const g = global as typeof globalThis & { __closeSQLiteDb?: () => void };
+  g.__closeSQLiteDb?.();
+});

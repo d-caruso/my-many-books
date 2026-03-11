@@ -1,5 +1,5 @@
-// Test for SyncQueueBadge component
-// Tests badge visibility and pending count display
+import { SyncQueueBadge } from '../../src/components/SyncQueueBadge';
+import { useQueueStatus } from '../../src/hooks/useQueueStatus';
 
 // Mock uuid
 jest.mock('uuid', () => ({
@@ -7,15 +7,13 @@ jest.mock('uuid', () => ({
 }));
 
 describe('SyncQueueBadge Component', () => {
-  it('should import SyncQueueBadge component', () => {
-    const componentModule = require('../../src/components/SyncQueueBadge');
-    expect(componentModule.SyncQueueBadge).toBeDefined();
-    expect(typeof componentModule.SyncQueueBadge).toBe('function');
+  it('should export SyncQueueBadge component', () => {
+    expect(SyncQueueBadge).toBeDefined();
+    expect(typeof SyncQueueBadge).toBe('function');
   });
 
-  it('should import useQueueStatus hook', () => {
-    const hookModule = require('../../src/hooks/useQueueStatus');
-    expect(hookModule.useQueueStatus).toBeDefined();
-    expect(typeof hookModule.useQueueStatus).toBe('function');
+  it('should export useQueueStatus hook', () => {
+    expect(useQueueStatus).toBeDefined();
+    expect(typeof useQueueStatus).toBe('function');
   });
 });
