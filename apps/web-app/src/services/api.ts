@@ -211,8 +211,9 @@ class ApiService extends AdminApiService {
     q?: string;
     page?: number;
     limit?: number;
-    status?: string;
-    sortBy?: string;
+    status?: SearchFilters['status'];
+    sortBy?: SearchFilters['sortBy'];
+    sortOrder?: SearchFilters['sortOrder'];
     authorId?: number;
     categoryId?: number;
   }): Promise<SearchResult> {
@@ -224,11 +225,13 @@ class ApiService extends AdminApiService {
     const query = parsedQuery.success ? parsedQuery.data : undefined;
     const parsedStatus = SearchFiltersSchema.shape.status.safeParse(searchParams.status);
     const parsedSortBy = SearchFiltersSchema.shape.sortBy.safeParse(searchParams.sortBy);
+    const parsedSortOrder = SearchFiltersSchema.shape.sortOrder.safeParse(searchParams.sortOrder);
 
     const filters: SearchFilters = {
       query,
       status: parsedStatus.success ? parsedStatus.data : undefined,
       sortBy: parsedSortBy.success ? parsedSortBy.data : undefined,
+      sortOrder: parsedSortOrder.success ? parsedSortOrder.data : undefined,
       authorId: searchParams.authorId,
       categoryId: searchParams.categoryId,
       page: searchParams.page,
@@ -239,7 +242,7 @@ class ApiService extends AdminApiService {
   }
 
   // ISBN lookup
-  async searchByISBN(isbn: string): Promise<unknown> {
+  async searchByISBN(isbn: string): Promise<Book | null> {
     return this.apiClient.books.searchByISBN(isbn);
   }
 

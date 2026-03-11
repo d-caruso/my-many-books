@@ -175,7 +175,9 @@ export const AuthorAutocomplete: React.FC<AuthorAutocompleteProps> = ({
         onInputChange={handleInputChange}
         options={filteredAuthors}
         getOptionLabel={formatAuthorLabel}
-        ListboxProps={{ 'data-testid': 'options-list' }}
+        ListboxProps={
+          { 'data-testid': 'options-list' } as React.HTMLAttributes<HTMLUListElement>
+        }
         renderOption={(props, option, { index }) => {
           const { key, ...otherProps } = props;
           return (

@@ -15,6 +15,10 @@ import { TransformStream } from 'web-streams-polyfill/dist/ponyfill';
 
 import type { SetupServerApi } from 'msw/node';
 
+interface GridRowData extends Record<string, unknown> {
+  id?: React.Key;
+}
+
 interface GridColumnDef {
   field: string;
   renderCell?: (params: Record<string, unknown>) => React.ReactNode;
@@ -22,13 +26,27 @@ interface GridColumnDef {
 }
 
 interface DataGridMockProps {
-  rows?: Record<string, unknown>[];
+  rows?: GridRowData[];
   columns?: GridColumnDef[];
   loading?: boolean;
   components?: Record<string, React.ComponentType<Record<string, unknown>> | undefined>;
   componentsProps?: Record<string, Record<string, unknown> | undefined>;
   slots?: Record<string, React.ComponentType<Record<string, unknown>> | undefined>;
   slotProps?: Record<string, Record<string, unknown> | undefined>;
+}
+
+function toReactNode(value: unknown): React.ReactNode {
+  if (
+    value == null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    React.isValidElement(value)
+  ) {
+    return value;
+  }
+
+  return String(value);
 }
 
 vi.mock('@mui/x-data-grid', () => {
@@ -55,31 +73,34 @@ vi.mock('@mui/x-data-grid', () => {
     const resolvedLoadingOverlay = slots?.loadingOverlay ?? components.LoadingOverlay;
     const resolvedNoRowsOverlay = slots?.noRowsOverlay ?? components.NoRowsOverlay;
 
-    const rowElements = rows.map((row) => {
+    const rowElements = rows.map((row, rowIndex) => {
+      const rowKey = row.id ?? `row-${rowIndex}`;
+
       const cells = columns.map((column) => {
         const rawValue = row[column.field];
         const params = {
           row,
           value: rawValue,
-          id: row.id,
-          field: column.field
+          id: rowKey,
+          field: column.field,
         };
 
         if (column.field === 'actions') {
-          const cellContent = column.renderCell ? column.renderCell(params) : null;
+          const cellContent = toReactNode(column.renderCell ? column.renderCell(params) : null);
           return React.createElement(
             'div',
-            { key: `${row.id}-actions`, 'data-testid': 'mock-row-actions' },
+            { key: `${rowKey}-actions`, 'data-testid': 'mock-row-actions' },
             cellContent
           );
         }
 
         const value = column.valueGetter ? column.valueGetter(params) : rawValue;
-        const cellContent = column.renderCell ? column.renderCell({ ...params, value }) : value;
+        const renderedCell = column.renderCell ? column.renderCell({ ...params, value }) : value;
+        const cellContent = toReactNode(renderedCell);
 
         return React.createElement(
           'span',
-          { key: `${row.id}-${column.field}`, 'data-testid': `mock-cell-${column.field}` },
+          { key: `${rowKey}-${column.field}`, 'data-testid': `mock-cell-${column.field}` },
           cellContent
         );
       });
@@ -90,7 +111,7 @@ vi.mock('@mui/x-data-grid', () => {
 
       return React.createElement(
         'div',
-        { key: row.id, 'data-testid': 'mock-row' },
+        { key: rowKey, 'data-testid': 'mock-row' },
         ...cells,
         loadingNode
       );
@@ -138,38 +159,9 @@ afterEach(() => serverInstance?.resetHandlers());
 afterAll(() => serverInstance?.close());
 
 const vitestGlobals = globalThis as typeof globalThis & {
-  vi?: {
-    fn: () => {
-      mockImplementation?: (impl: (...args: unknown[]) => unknown) => unknown;
-      mockReturnValue?: (value: unknown) => unknown;
-      mockResolvedValue?: (value: unknown) => unknown;
-      mockRejectedValue?: (value: unknown) => unknown;
-      mockReset?: () => unknown;
-    };
-  };
+  vi?: typeof vi;
 };
-const safeVi = vitestGlobals.vi ?? {
-  fn: () => {
-    type Stub = (() => undefined) & {
-      mockImplementation: (impl: unknown) => Stub;
-      mockReturnValue: (val: unknown) => Stub;
-      mockResolvedValue: (val: unknown) => Stub;
-      mockRejectedValue: (val: unknown) => Stub;
-      mockReset: () => Stub;
-      mockReturnValueOnce: (val: unknown) => Stub;
-      mockResolvedValueOnce: (val: unknown) => Stub;
-    };
-    const stub = (() => undefined) as unknown as Stub;
-    stub.mockImplementation = () => stub;
-    stub.mockReturnValue = () => stub;
-    stub.mockResolvedValue = () => stub;
-    stub.mockRejectedValue = () => stub;
-    stub.mockReset = () => stub;
-    stub.mockReturnValueOnce = () => stub;
-    stub.mockResolvedValueOnce = () => stub;
-    return stub;
-  },
-};
+const safeVi = vitestGlobals.vi ?? vi;
 
 // Browser API polyfills for jsdom environment
 // These are global browser APIs that don't exist in Node/jsdom

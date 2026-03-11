@@ -7,7 +7,7 @@ import {
   FormHelperText
 } from '@mui/material';
 
-interface ResponsiveSelectProps extends Omit<SelectProps, 'variant'> {
+interface ResponsiveSelectProps extends Omit<SelectProps, 'variant' | 'error'> {
   label?: string;
   error?: string;
   helperText?: string;

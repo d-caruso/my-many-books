@@ -50,6 +50,19 @@ const mockCategories = [
   { id: 3, name: 'Science Fiction' },
 ];
 
+const createCategoriesHookResult = (
+  overrides: Partial<ReturnType<typeof useCategories>> = {}
+): ReturnType<typeof useCategories> => ({
+  categories: mockCategories,
+  loading: false,
+  sorting: false,
+  error: null,
+  loadCategories: vi.fn(),
+  createCategory: vi.fn(),
+  refreshCategories: vi.fn(),
+  ...overrides,
+});
+
 const getSearchInput = () =>
   screen.getByPlaceholderText('Search by title, author, ISBN...');
 
@@ -94,11 +107,7 @@ describe('BookSearchForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseCategories.mockReturnValue({
-      categories: mockCategories,
-      loading: false,
-      sorting: false,
-    });
+    mockUseCategories.mockReturnValue(createCategoriesHookResult());
   });
 
   test('renders search form elements', () => {
@@ -260,7 +269,9 @@ describe('BookSearchForm', () => {
   });
 
   test('handles categories loading state', () => {
-    mockUseCategories.mockReturnValue({ categories: [], loading: true, sorting: false });
+    mockUseCategories.mockReturnValue(
+      createCategoriesHookResult({ categories: [], loading: true })
+    );
     render(<BookSearchForm {...defaultProps} />);
 
     openAdvancedFilters();
@@ -270,13 +281,12 @@ describe('BookSearchForm', () => {
 
   test('renders categories in the order provided by the category hook (localized sorting happens in hook)', async () => {
     mockUseCategories.mockReturnValue({
+      ...createCategoriesHookResult(),
       categories: [
         { id: 2, name: 'Apple' },
         { id: 3, name: 'Banana' },
         { id: 1, name: 'Zebra' },
       ],
-      loading: false,
-      sorting: false,
     });
 
     render(<BookSearchForm {...defaultProps} />);
@@ -315,13 +325,13 @@ describe('BookSearchForm', () => {
     openAdvancedFilters();
     await selectOption('Category', 'Fiction');
     await selectOption('Reading progress', 'Finished');
-    await selectOption('Sort by', 'Relevance');
+    await selectOption('Sort by', 'Add date');
     fireEvent.click(getSearchButton());
 
     expect(mockOnSearch).toHaveBeenCalledWith('test query', {
       categoryId: 1,
       status: 'finished',
-      sortBy: 'relevance',
+      sortBy: 'date-added',
     });
   });
 

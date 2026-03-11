@@ -8,7 +8,6 @@ import {
   Stack,
   IconButton,
   Chip,
-  Grid,
   FormControl,
   InputLabel,
   Select,
@@ -21,6 +20,7 @@ import {
   CircularProgress,
   Backdrop
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
@@ -236,7 +236,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                   )}
                 </Grid>
 
-<Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="flex-start">
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="flex-start">
                   {onStatusChange && (
                     <Box sx={{ minWidth: 200 }}>
                       <Typography variant="subtitle2" color="text.secondary" gutterBottom>

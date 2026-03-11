@@ -14,13 +14,13 @@ import {
   Box,
   Typography,
   Alert,
-  Grid,
   Button as MuiButton,
   Stack,
   Divider,
   InputAdornment,
   IconButton,
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -50,7 +50,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [resendError, setResendError] = useState('');
   const [cooldown, setCooldown] = useState(0);
-  const cooldownRef = useRef<ReturnType<typeof setInterval>>();
+  const cooldownRef = useRef<number | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const passwordRuleLabels = getRequiredPasswordRuleTypes().map((rule) =>
@@ -63,11 +63,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
   const startCooldown = useCallback(() => {
     setCooldown(30);
-    clearInterval(cooldownRef.current);
-    cooldownRef.current = setInterval(() => {
+    if (cooldownRef.current !== null) {
+      window.clearInterval(cooldownRef.current);
+    }
+    cooldownRef.current = window.setInterval(() => {
       setCooldown(prev => {
         if (prev <= 1) {
-          clearInterval(cooldownRef.current);
+          if (cooldownRef.current !== null) {
+            window.clearInterval(cooldownRef.current);
+            cooldownRef.current = null;
+          }
           return 0;
         }
         return prev - 1;
@@ -76,7 +81,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   }, []);
 
   useEffect(() => {
-    return () => clearInterval(cooldownRef.current);
+    return () => {
+      if (cooldownRef.current !== null) {
+        window.clearInterval(cooldownRef.current);
+      }
+    };
   }, []);
 
   const handleResend = async () => {

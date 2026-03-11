@@ -7,11 +7,11 @@ import {
   CircularProgress,
   Container,
   Typography,
-  Grid,
   Paper,
   Snackbar,
   Alert,
 } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
@@ -21,6 +21,7 @@ import FilterIcon from '@mui/icons-material/FilterList';
 import { BookSearchForm } from './BookSearchForm';
 import { BookSearchResults } from './BookSearchResults';
 import { useBookSearch } from '../../hooks/useBookSearch';
+import { SearchFiltersSchema } from '@my-many-books/shared-types';
 import type { Book, SearchFilters } from '@my-many-books/shared-types';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../../constants/scanner';
 import { useProtectedViewTransition } from '../../contexts/ViewTransitionContext';
@@ -101,14 +102,26 @@ const BookSearchPage: React.FC = () => {
     const categoryId = searchParams.get('categoryId');
     const authorId = searchParams.get('authorId');
     const sortBy = searchParams.get('sortBy');
+    const sortOrder = searchParams.get('sortOrder');
     const status = searchParams.get('status');
 
-    if (query || categoryId || authorId || sortBy || status) {
+    if (query || categoryId || authorId || sortBy || sortOrder || status) {
       const filters: SearchFilters = {};
 
       if (categoryId) filters.categoryId = parseInt(categoryId);
       if (authorId) filters.authorId = parseInt(authorId);
-      if (sortBy) filters.sortBy = sortBy as SearchFilters['sortBy'];
+      if (sortBy) {
+        const parsedSortBy = SearchFiltersSchema.shape.sortBy.safeParse(sortBy);
+        if (parsedSortBy.success) {
+          filters.sortBy = parsedSortBy.data;
+        }
+      }
+      if (sortOrder) {
+        const parsedSortOrder = SearchFiltersSchema.shape.sortOrder.safeParse(sortOrder);
+        if (parsedSortOrder.success) {
+          filters.sortOrder = parsedSortOrder.data;
+        }
+      }
       if (status) filters.status = status as SearchFilters['status'];
 
       searchBooks(query || '', filters);
@@ -124,7 +137,7 @@ const BookSearchPage: React.FC = () => {
     }
 
     Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== '') {
+      if (value != null && value !== '') {
         params.set(key, value.toString());
       }
     });

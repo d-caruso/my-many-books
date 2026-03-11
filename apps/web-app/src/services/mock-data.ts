@@ -1,4 +1,12 @@
-import type { Book, Category, Author, PaginatedResponse, SearchResult } from '@my-many-books/shared-types';
+import {
+  SORT_DIRECTIONS,
+  type Author,
+  type Book,
+  type Category,
+  type PaginatedResponse,
+  type SearchFilters,
+  type SearchResult,
+} from '@my-many-books/shared-types';
 import { env } from '../config/env';
 
 export function getMockBooks(): Promise<PaginatedResponse<Book>> {
@@ -85,8 +93,9 @@ export function getMockSearchResults(searchParams: {
   q?: string;
   page?: number;
   limit?: number;
-  status?: string;
-  sortBy?: string;
+  status?: SearchFilters['status'];
+  sortBy?: SearchFilters['sortBy'];
+  sortOrder?: SearchFilters['sortOrder'];
   authorId?: number;
   categoryId?: number;
 }): Promise<SearchResult> {
@@ -120,23 +129,25 @@ export function getMockSearchResults(searchParams: {
       );
     }
 
+    const direction = searchParams.sortOrder === SORT_DIRECTIONS.DESC ? -1 : 1;
+
     if (searchParams.sortBy) {
       switch (searchParams.sortBy) {
         case 'title':
-          filteredBooks.sort((a, b) => a.title.localeCompare(b.title));
+          filteredBooks.sort((a, b) => direction * a.title.localeCompare(b.title));
           break;
         case 'author':
           filteredBooks.sort((a, b) => {
             const aAuthor = a.authors?.[0] ? `${a.authors[0].name} ${a.authors[0].surname}` : '';
             const bAuthor = b.authors?.[0] ? `${b.authors[0].name} ${b.authors[0].surname}` : '';
-            return aAuthor.localeCompare(bAuthor);
+            return direction * aAuthor.localeCompare(bAuthor);
           });
           break;
         case 'date-added':
           filteredBooks.sort((a, b) => {
             const aDate = a.creationDate ? new Date(a.creationDate).getTime() : 0;
             const bDate = b.creationDate ? new Date(b.creationDate).getTime() : 0;
-            return bDate - aDate;
+            return direction * (aDate - bDate);
           });
           break;
       }

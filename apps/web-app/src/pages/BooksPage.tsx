@@ -9,8 +9,7 @@ import ListIcon from '@mui/icons-material/ViewList';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@my-many-books/shared-auth';
 import type { Book, BookFormData as SharedBookFormInput, BookStatusChangeBehavior, SearchFilters } from '@my-many-books/shared-types';
-import { SETTING_KEYS, BOOK_STATUS_CHANGE_BEHAVIOR } from '@my-many-books/shared-types';
-import { POST_LOGIN_WELCOME_STORAGE_KEY } from '@my-many-books/shared-types';
+import { SETTING_KEYS, BOOK_STATUS_CHANGE_BEHAVIOR, POST_LOGIN_WELCOME_STORAGE_KEY, SearchFiltersSchema } from '@my-many-books/shared-types';
 import { BookList, BookForm, BookDetails, type BookFormData } from '../components/Book';
 import { BookSearchForm } from '../components/Search';
 import { useBookSearch } from '../hooks/useBookSearch';
@@ -102,10 +101,13 @@ const BooksPage: React.FC = () => {
   const searchCategoryId = searchParams.get('categoryId');
   const searchAuthorId = searchParams.get('authorId');
   const searchSortBy = searchParams.get('sortBy');
+  const searchSortOrder = searchParams.get('sortOrder');
   const searchStatus = searchParams.get('status');
   const searchModeParam = searchParams.get('mode');
   const searchQuery = searchParams.get('q') || '';
-  const searchActive = Boolean(searchQuery || searchCategoryId || searchAuthorId || searchSortBy || searchStatus);
+  const searchActive = Boolean(
+    searchQuery || searchCategoryId || searchAuthorId || searchSortBy || searchSortOrder || searchStatus
+  );
 
   const runCurrentSearch = useCallback(async () => {
     const query = searchParams.get('q') || '';
@@ -113,12 +115,29 @@ const BooksPage: React.FC = () => {
     const categoryId = searchParams.get('categoryId');
     const authorId = searchParams.get('authorId');
     const sortBy = searchParams.get('sortBy');
+    const sortOrder = searchParams.get('sortOrder');
     const status = searchParams.get('status');
 
     if (categoryId) filters.categoryId = parseInt(categoryId);
     if (authorId) filters.authorId = parseInt(authorId);
-    if (sortBy) filters.sortBy = sortBy;
-    if (status) filters.status = status;
+    if (sortBy) {
+      const parsedSortBy = SearchFiltersSchema.shape.sortBy.safeParse(sortBy);
+      if (parsedSortBy.success) {
+        filters.sortBy = parsedSortBy.data;
+      }
+    }
+    if (sortOrder) {
+      const parsedSortOrder = SearchFiltersSchema.shape.sortOrder.safeParse(sortOrder);
+      if (parsedSortOrder.success) {
+        filters.sortOrder = parsedSortOrder.data;
+      }
+    }
+    if (status) {
+      const parsedStatus = SearchFiltersSchema.shape.status.safeParse(status);
+      if (parsedStatus.success) {
+        filters.status = parsedStatus.data;
+      }
+    }
 
     await searchBooks(query, filters);
   }, [searchParams, searchBooks]);

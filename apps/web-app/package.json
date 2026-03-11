@@ -105,7 +105,8 @@
     "test:all": "npm run test:unit && npm run cypress:component && npm run e2e",
     "test:coverage:full": "npm run test:coverage && npm run cypress:run --coverage",
     "eject": "react-scripts eject",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.test.json"
   },
   "browserslist": {
     "production": [

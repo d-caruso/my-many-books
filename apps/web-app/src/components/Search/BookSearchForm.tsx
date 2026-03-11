@@ -18,7 +18,11 @@ import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ClearIcon from '@mui/icons-material/Clear';
 import WarningIcon from '@mui/icons-material/Warning';
-import { SearchFiltersSchema, SEARCH_QUERY_MIN_LENGTH } from '@my-many-books/shared-types';
+import {
+  SearchFiltersSchema,
+  SEARCH_QUERY_MIN_LENGTH,
+  SORT_DIRECTIONS,
+} from '@my-many-books/shared-types';
 import type { SearchFilters, Author } from '@my-many-books/shared-types';
 import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { useCategories } from '../../hooks/useCategories';
@@ -284,10 +288,8 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                     label={t('sorting.label')}
                   >
                     <MenuItem value="title">{t('sorting.fields.title')}</MenuItem>
-                    <MenuItem value="relevance">{t('sorting.fields.relevance')}</MenuItem>
-                    <MenuItem value="createdAt">{t('sorting.fields.createdAt')}</MenuItem>
-                    <MenuItem value="updatedAt">{t('sorting.fields.updatedAt')}</MenuItem>
-                    <MenuItem value="status">{t('sorting.fields.status')}</MenuItem>
+                    <MenuItem value="author">{t('form.author_label')}</MenuItem>
+                    <MenuItem value="date-added">{t('sorting.fields.createdAt')}</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -296,13 +298,12 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                   <Select
                     labelId="sortOrder-label"
                     id="sortOrder"
-                    value={filters.sortOrder || 'asc'}
+                    value={filters.sortOrder || SORT_DIRECTIONS.ASC}
                     onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
                     label={t('sorting.direction_label')}
-                    disabled={filters.sortBy === 'relevance'}
                   >
-                    <MenuItem value="asc">{t('sorting.directions.asc')}</MenuItem>
-                    <MenuItem value="desc">{t('sorting.directions.desc')}</MenuItem>
+                    <MenuItem value={SORT_DIRECTIONS.ASC}>{t('sorting.directions.asc')}</MenuItem>
+                    <MenuItem value={SORT_DIRECTIONS.DESC}>{t('sorting.directions.desc')}</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
