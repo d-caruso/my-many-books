@@ -1,7 +1,7 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
 import type { Book } from '@/types';
-import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import { BOOK_STATUS, SEARCH_SORT_BY_FIELDS, SORT_DIRECTIONS } from '@my-many-books/shared-types';
 import { DB_SORT_FIELDS } from '@/constants/db';
 
 // Import after mocks
@@ -205,6 +205,44 @@ describe('useBookSearch Hook', () => {
       categoryId: undefined,
       sortBy: undefined,
       sortOrder: undefined,
+    });
+  });
+
+  it('should send only shared search contract fields when online filters are provided', async () => {
+    function FilteredSearchComponent() {
+      const { searchBooks } = useBookSearch();
+
+      React.useEffect(() => {
+        void searchBooks('filtered', {
+          status: BOOK_STATUS.FINISHED,
+          authorId: 5,
+          categoryId: 8,
+          sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+          sortOrder: SORT_DIRECTIONS.ASC,
+          limit: 10,
+        });
+      }, [searchBooks]);
+
+      return null;
+    }
+
+    mockApiMocks.searchBooks.mockResolvedValueOnce({ books: [], total: 0, hasMore: false });
+
+    await renderer.act(async () => {
+      renderer.create(<FilteredSearchComponent />);
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(mockApiMocks.searchBooks).toHaveBeenCalledWith({
+      query: 'filtered',
+      page: 1,
+      limit: 10,
+      status: BOOK_STATUS.FINISHED,
+      authorId: 5,
+      categoryId: 8,
+      sortBy: SEARCH_SORT_BY_FIELDS.STATUS,
+      sortOrder: SORT_DIRECTIONS.ASC,
     });
   });
 

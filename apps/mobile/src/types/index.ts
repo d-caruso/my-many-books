@@ -2,9 +2,8 @@
 import type {
   Book,
   User as SharedUser,
-  SortDirection,
   BookFormData,
-  SearchSortByField,
+  SearchFilters,
 } from '@my-many-books/shared-types';
 
 export type { Book };
@@ -73,15 +72,7 @@ export interface AppTheme {
 
 export type StatusBarStyle = 'auto' | 'light' | 'dark';
 
-export interface SearchQuery {
-  page?: number;
-  authorId?: number;
-  categoryId?: number;
-  status?: Book['status'];
-  limit?: number;
-  sortBy?: SearchSortByField;
-  sortOrder?: SortDirection;
-}
+export type SearchQuery = Omit<SearchFilters, 'query'>;
 
 // API Response types
 export interface ApiResponse<T = object> {

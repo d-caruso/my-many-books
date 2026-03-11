@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useBookSearch as useSharedBookSearch, type BookSearchAPI } from '@my-many-books/shared-ui-hooks';
 import { Book, SearchQuery } from '@/types';
 import { bookAPI } from '@/services/api';
 import { bookRepository } from '@/services/database/BookRepository';
@@ -8,6 +9,7 @@ import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mob
 import {
   SEARCH_SORT_BY_FIELDS,
   SORT_DIRECTIONS,
+  type SearchFilters,
 } from '@my-many-books/shared-types';
 import { DB_SORT_FIELDS } from '@/constants/db';
 
@@ -50,197 +52,210 @@ interface BookSearchActions {
   loadMore: () => Promise<void>;
 }
 
+const buildOfflineSearchParams = (
+  query: string,
+  filters: Partial<SearchQuery>
+) => ({
+  query: query.trim(),
+  status: filters.status,
+  authorId: filters.authorId,
+  categoryId: filters.categoryId,
+  sortBy: mapSortByToOfflineField(filters.sortBy),
+  sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.DESC,
+});
+
 export const useBookSearch = (): BookSearchState & BookSearchActions => {
   const { t } = useTranslation('offline');
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [lastQuery, setLastQuery] = useState<string>('');
-  const [lastFilters, setLastFilters] = useState<Partial<SearchQuery>>({});
+  const [offlineBooks, setOfflineBooks] = useState<Book[]>([]);
+  const [offlineLoading, setOfflineLoading] = useState(false);
+  const [offlineError, setOfflineError] = useState<string | null>(null);
+  const [offlineHasMore, setOfflineHasMore] = useState(false);
+  const [offlineTotalCount, setOfflineTotalCount] = useState(0);
+  const [offlineCurrentPage, setOfflineCurrentPage] = useState(1);
+  const [fallbackError, setFallbackError] = useState<string | null>(null);
 
   // Network state for offline detection
   const { isOnline } = useNetworkState();
   const isOffline = !isOnline;
 
-  // Use ref to store the latest searchBooks function to avoid circular dependencies
-  const searchBooksRef = useRef<((query: string, filters?: Partial<SearchQuery>, page?: number) => Promise<void>) | null>(null);
+  const runOfflineSearch = useCallback(async (query: string, filters: Partial<SearchQuery> = {}) => {
+    const localBooks = await bookRepository.searchWithFilters(buildOfflineSearchParams(query, filters));
+    return localBooks.map(localBook => localBook.entity);
+  }, []);
+
+  const clearOfflineSearch = useCallback(() => {
+    setOfflineBooks([]);
+    setOfflineLoading(false);
+    setOfflineError(null);
+    setOfflineHasMore(false);
+    setOfflineTotalCount(0);
+    setOfflineCurrentPage(1);
+  }, []);
+
+  const emitSearchError = useCallback((operation: 'search' | 'isbn_search', payload: { query?: string; isbn?: string; error: unknown }) => {
+    const err = payload.error as { response?: { data?: { message?: string }; status?: number }; message?: string };
+    mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
+      operation,
+      resource: RESOURCE_TYPES.BOOK,
+      error: err.response?.data?.message || err.message,
+      statusCode: err.response?.status,
+      ...(payload.query ? { query: payload.query } : {}),
+      ...(payload.isbn ? { isbn: payload.isbn } : {}),
+      source: operation === 'search' ? 'useBookSearch_searchBooks' : 'useBookSearch_searchByISBN'
+    });
+  }, []);
+
+  const onlineApi = useMemo<BookSearchAPI<Book, SearchFilters>>(
+    () => ({
+      searchBooks: async (params) => {
+        setFallbackError(null);
+
+        try {
+          return await bookAPI.searchBooks(params);
+        } catch (error) {
+          emitSearchError('search', { query: params.query, error });
+
+          try {
+            const localBooks = await runOfflineSearch(params.query ?? '', params);
+            setFallbackError(t('search.showingOfflineResults'));
+
+            return {
+              books: localBooks,
+              total: localBooks.length,
+              hasMore: false,
+              page: params.page ?? 1,
+            };
+          } catch {
+            throw new Error(t('search.searchFailed'));
+          }
+        }
+      },
+      searchByISBN: async (isbn) => {
+        try {
+          return await bookAPI.searchByISBN(isbn);
+        } catch (error) {
+          emitSearchError('isbn_search', { isbn, error });
+          throw new Error(t('search.bookNotFound'));
+        }
+      },
+    }),
+    [emitSearchError, runOfflineSearch, t]
+  );
+
+  const {
+    books: onlineBooks,
+    loading: onlineLoading,
+    error: onlineError,
+    hasMore: onlineHasMore,
+    totalCount: onlineTotalCount,
+    currentPage: onlineCurrentPage,
+    searchBooks: sharedSearchBooks,
+    searchByISBN: sharedSearchByISBN,
+    clearSearch: sharedClearSearch,
+    loadMore: sharedLoadMore,
+  } = useSharedBookSearch<Book, SearchFilters>(onlineApi);
 
   const searchBooks = useCallback(async (
     query: string,
     filters: Partial<SearchQuery> = {},
     page: number = 1
   ): Promise<void> => {
-    if (!query.trim() && !filters.categoryId && !filters.authorId && !filters.status) {
-      setBooks([]);
-      setLoading(false);
-      setError(null);
-      setHasMore(false);
-      setTotalCount(0);
-      setCurrentPage(1);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    // If offline, use SQLite for search
     if (isOffline) {
-      try {
-        // Use advanced search with filters and sorting
-        const localBooks = await bookRepository.searchWithFilters({
-          query: query.trim(),
-          status: filters.status,
-          authorId: filters.authorId,
-          categoryId: filters.categoryId,
-          sortBy: mapSortByToOfflineField(filters.sortBy),
-          sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.DESC,
-        });
+      if (!query.trim() && !filters.categoryId && !filters.authorId && !filters.status) {
+        clearOfflineSearch();
+        return;
+      }
 
-        setBooks(localBooks.map(lb => lb.entity));
-        setTotalCount(localBooks.length);
-        setHasMore(false); // No pagination for offline search
-        setCurrentPage(1);
-        setLastQuery(query);
-        setLastFilters(filters);
+      setOfflineLoading(true);
+      setOfflineError(null);
+
+      try {
+        const localBooks = await runOfflineSearch(query, filters);
+        setOfflineBooks(localBooks);
+        setOfflineTotalCount(localBooks.length);
+        setOfflineHasMore(false);
+        setOfflineCurrentPage(1);
       } catch (err: unknown) {
         console.error('Offline book search failed:', err);
-        setError(t('search.offlineSearchFailed'));
-        setBooks([]);
-        setTotalCount(0);
-        setHasMore(false);
+        setOfflineError(t('search.offlineSearchFailed'));
+        setOfflineBooks([]);
+        setOfflineTotalCount(0);
+        setOfflineHasMore(false);
       } finally {
-        setLoading(false);
+        setOfflineLoading(false);
       }
       return;
     }
 
-    // Online search using API
-    try {
-      const searchParams = {
-        query: query.trim() || undefined,
-        page,
-        limit: filters.limit ?? 20,
-        status: filters.status,
-        authorId: filters.authorId,
-        categoryId: filters.categoryId,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
-      };
-
-      const response = await bookAPI.searchBooks(searchParams);
-
-      if (page === 1) {
-        setBooks(response.books);
-      } else {
-        setBooks(prev => [...prev, ...response.books]);
-      }
-
-      setTotalCount(response.total);
-      setHasMore(response.hasMore);
-      setCurrentPage(page);
-      setLastQuery(query);
-      setLastFilters(filters);
-
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string }; status?: number }; message?: string };
-      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
-        operation: 'search',
-        resource: RESOURCE_TYPES.BOOK,
-        error: e.response?.data?.message || e.message,
-        statusCode: e.response?.status,
-        query,
-        source: 'useBookSearch_searchBooks'
-      });
-      setError(t('search.searchFailed'));
-
-      // Fallback to offline search on network error
-      try {
-        const localBooks = await bookRepository.searchWithFilters({
-          query: query.trim(),
-          status: filters.status,
-          authorId: filters.authorId,
-          categoryId: filters.categoryId,
-          sortBy: mapSortByToOfflineField(filters.sortBy),
-          sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.DESC,
-        });
-        setBooks(localBooks.map(lb => lb.entity));
-        setTotalCount(localBooks.length);
-        setHasMore(false);
-        setError(t('search.showingOfflineResults'));
-      } catch {
-        setBooks([]);
-        setTotalCount(0);
-        setHasMore(false);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [isOffline, t]);
-
-  // Update the ref with the latest searchBooks function
-  searchBooksRef.current = searchBooks;
+    setFallbackError(null);
+    await sharedSearchBooks(query, filters, page);
+  }, [clearOfflineSearch, isOffline, runOfflineSearch, sharedSearchBooks, t]);
 
   const searchByISBN = useCallback(async (isbn: string): Promise<Book | null> => {
     if (!isbn.trim()) {
       return null;
     }
 
-    setLoading(true);
-    setError(null);
+    if (isOffline) {
+      setOfflineLoading(true);
+      setOfflineError(null);
 
-    try {
-      const book = await bookAPI.searchByISBN(isbn);
-      return book;
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string }; status?: number }; message?: string };
-      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
-        operation: 'isbn_search',
-        resource: RESOURCE_TYPES.BOOK,
-        error: e.response?.data?.message || e.message,
-        statusCode: e.response?.status,
-        isbn,
-        source: 'useBookSearch_searchByISBN'
-      });
-      setError(t('search.bookNotFound'));
-      return null;
-    } finally {
-      setLoading(false);
+      try {
+        return await bookAPI.searchByISBN(isbn);
+      } catch (error) {
+        emitSearchError('isbn_search', { isbn, error });
+        setOfflineError(t('search.bookNotFound'));
+        return null;
+      } finally {
+        setOfflineLoading(false);
+      }
     }
-  }, [t]);
+
+    setFallbackError(null);
+    return sharedSearchByISBN(isbn);
+  }, [emitSearchError, isOffline, sharedSearchByISBN, t]);
 
   const loadMore = useCallback(async (): Promise<void> => {
-    if (!hasMore || loading || !searchBooksRef.current) {
+    if (isOffline) {
       return;
     }
 
-    await searchBooksRef.current(lastQuery, lastFilters, currentPage + 1);
-  }, [hasMore, loading, lastQuery, lastFilters, currentPage]);
+    await sharedLoadMore();
+  }, [isOffline, sharedLoadMore]);
 
   const clearSearch = useCallback((): void => {
-    setBooks([]);
-    setLoading(false);
-    setError(null);
-    setHasMore(false);
-    setTotalCount(0);
-    setCurrentPage(1);
-    setLastQuery('');
-    setLastFilters({});
-  }, []);
+    setFallbackError(null);
+    clearOfflineSearch();
+    sharedClearSearch();
+  }, [clearOfflineSearch, sharedClearSearch]);
+
+  if (isOffline) {
+    return {
+      books: offlineBooks,
+      loading: offlineLoading,
+      error: offlineError,
+      hasMore: offlineHasMore,
+      totalCount: offlineTotalCount,
+      currentPage: offlineCurrentPage,
+      isOffline,
+      searchBooks,
+      searchByISBN,
+      clearSearch,
+      loadMore,
+    };
+  }
 
   return {
-    books,
-    loading,
-    error,
-    hasMore,
-    totalCount,
-    currentPage,
+    books: onlineBooks,
+    loading: onlineLoading,
+    error: fallbackError ?? onlineError,
+    hasMore: onlineHasMore,
+    totalCount: onlineTotalCount,
+    currentPage: onlineCurrentPage,
     isOffline,
     searchBooks,
     searchByISBN,
     clearSearch,
-    loadMore
+    loadMore,
   };
 };
