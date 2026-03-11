@@ -65,7 +65,7 @@ export function CategorySelectorModal({
                           <RadioButton
                             value={String(categoryId)}
                             status={checked ? 'checked' : 'unchecked'}
-                            onValueChange={() => {
+                            onPress={() => {
                               onToggleCategory(categoryId);
                               onClose();
                             }}

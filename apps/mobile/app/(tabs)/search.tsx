@@ -474,7 +474,7 @@ export default function SearchScreen() {
         ListEmptyComponent={
           !loading && isbnNotFound ? (
             <EmptyState
-              icon="barcode-scan"
+              icon="qr-code-scanner"
               title={t('books:no_books_found')}
               description={t('books:isbn_not_found', { defaultValue: 'No book found for this ISBN' })}
             />
