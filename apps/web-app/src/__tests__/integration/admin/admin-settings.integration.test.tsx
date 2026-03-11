@@ -104,7 +104,7 @@ describe('Admin Settings Integration', () => {
       enabled: true,
       source: 'database',
       canChange: true,
-      sortableFields: ['title', 'createdAt'],
+      sortableFields: ['title', 'creationDate'],
       defaultSort: 'title',
     });
     mockSettingsApi.getSettings.mockResolvedValue([]);

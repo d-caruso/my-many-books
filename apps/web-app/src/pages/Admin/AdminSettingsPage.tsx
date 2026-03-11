@@ -421,8 +421,8 @@ export const AdminSettingsPage: React.FC = () => {
                   disabled={searchUpdating}
                 >
                   <MenuItem value="title">{t('search.fulltext.field.title', 'Title')}</MenuItem>
-                  <MenuItem value="createdAt">{t('search.fulltext.field.created_at', 'Created At')}</MenuItem>
-                  <MenuItem value="updatedAt">{t('search.fulltext.field.updated_at', 'Updated At')}</MenuItem>
+                  <MenuItem value="creationDate">{t('search.fulltext.field.created_at', 'Created At')}</MenuItem>
+                  <MenuItem value="updateDate">{t('search.fulltext.field.updated_at', 'Updated At')}</MenuItem>
                   <MenuItem value="status">{t('search.fulltext.field.status', 'Status')}</MenuItem>
                   <MenuItem value="isbnCode">{t('search.fulltext.field.isbn', 'ISBN')}</MenuItem>
                   <MenuItem value="editionNumber">{t('search.fulltext.field.edition_number', 'Edition Number')}</MenuItem>
@@ -440,8 +440,8 @@ export const AdminSettingsPage: React.FC = () => {
                   disabled={searchUpdating}
                 >
                   <MenuItem value="title">{t('search.fulltext.sort.title', 'Title')}</MenuItem>
-                  <MenuItem value="createdAt">{t('search.fulltext.sort.created_at', 'Created At')}</MenuItem>
-                  <MenuItem value="updatedAt">{t('search.fulltext.sort.updated_at', 'Updated At')}</MenuItem>
+                  <MenuItem value="creationDate">{t('search.fulltext.sort.created_at', 'Created At')}</MenuItem>
+                  <MenuItem value="updateDate">{t('search.fulltext.sort.updated_at', 'Updated At')}</MenuItem>
                   <MenuItem value="relevance">{t('search.fulltext.sort.relevance', 'Relevance')}</MenuItem>
                 </Select>
               </FormControl>

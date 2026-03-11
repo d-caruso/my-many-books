@@ -63,7 +63,7 @@ vi.mock('../../../components/Search/BookSearchForm', () => ({
         data-testid="search-created-desc"
         onClick={() =>
           onSearch('sorted query', {
-            sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+            sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
             sortOrder: SORT_DIRECTIONS.DESC,
           })
         }
@@ -276,17 +276,17 @@ describe('BookSearchPage', () => {
     expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(URLSearchParams));
     const params = mockSetSearchParams.mock.calls.at(-1)?.[0] as URLSearchParams;
     expect(params.get('q')).toBe('sorted query');
-    expect(params.get('sortBy')).toBe(SEARCH_SORT_BY_FIELDS.CREATED_AT);
+    expect(params.get('sortBy')).toBe(SEARCH_SORT_BY_FIELDS.CREATION_DATE);
     expect(params.get('sortOrder')).toBe(SORT_DIRECTIONS.DESC);
     expect(mockSearchBooks).toHaveBeenCalledWith('sorted query', {
-      sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+      sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
       sortOrder: SORT_DIRECTIONS.DESC,
     });
   });
 
   test.each([
-    [SEARCH_SORT_BY_FIELDS.CREATED_AT, SORT_DIRECTIONS.DESC],
-    [SEARCH_SORT_BY_FIELDS.UPDATED_AT, SORT_DIRECTIONS.ASC],
+    [SEARCH_SORT_BY_FIELDS.CREATION_DATE, SORT_DIRECTIONS.DESC],
+    [SEARCH_SORT_BY_FIELDS.UPDATE_DATE, SORT_DIRECTIONS.ASC],
     [SEARCH_SORT_BY_FIELDS.STATUS, SORT_DIRECTIONS.DESC],
     [SEARCH_SORT_BY_FIELDS.AUTHOR, SORT_DIRECTIONS.ASC],
   ])(
@@ -402,7 +402,7 @@ describe('BookSearchPage', () => {
 
   test('passes URL-derived initial filters to BookSearchForm', () => {
     renderWithRouter(
-      `?q=history&sortBy=${SEARCH_SORT_BY_FIELDS.CREATED_AT}&sortOrder=${SORT_DIRECTIONS.DESC}&status=finished`
+      `?q=history&sortBy=${SEARCH_SORT_BY_FIELDS.CREATION_DATE}&sortOrder=${SORT_DIRECTIONS.DESC}&status=finished`
     );
 
     const searchForm = screen.getByTestId('book-search-form');
@@ -410,7 +410,7 @@ describe('BookSearchPage', () => {
     expect(searchForm).toHaveAttribute(
       'data-initial-filters',
       JSON.stringify({
-        sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
         sortOrder: SORT_DIRECTIONS.DESC,
         status: 'finished',
       })

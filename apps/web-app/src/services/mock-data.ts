@@ -138,14 +138,14 @@ export function getMockSearchResults(searchParams: SearchFilters): Promise<Searc
         case SEARCH_SORT_BY_FIELDS.STATUS:
           filteredBooks.sort((a, b) => direction * (a.status ?? '').localeCompare(b.status ?? ''));
           break;
-        case SEARCH_SORT_BY_FIELDS.CREATED_AT:
+        case SEARCH_SORT_BY_FIELDS.CREATION_DATE:
           filteredBooks.sort((a, b) => {
             const aDate = a.creationDate ? new Date(a.creationDate).getTime() : 0;
             const bDate = b.creationDate ? new Date(b.creationDate).getTime() : 0;
             return direction * (aDate - bDate);
           });
           break;
-        case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
+        case SEARCH_SORT_BY_FIELDS.UPDATE_DATE:
           filteredBooks.sort((a, b) => {
             const aDate = a.updateDate ? new Date(a.updateDate).getTime() : 0;
             const bDate = b.updateDate ? new Date(b.updateDate).getTime() : 0;

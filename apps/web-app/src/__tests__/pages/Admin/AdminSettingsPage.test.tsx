@@ -162,14 +162,14 @@ describe('AdminSettingsPage', () => {
       enabled: true,
       source: 'database',
       canChange: true,
-      sortableFields: ['title', 'createdAt'],
+      sortableFields: ['title', 'creationDate'],
       defaultSort: 'title',
     });
     mockApiService.getFullTextSearchStatus.mockResolvedValue({
       enabled: true,
       source: 'database',
       canChange: true,
-      sortableFields: ['title', 'createdAt'],
+      sortableFields: ['title', 'creationDate'],
       defaultSort: 'title',
     });
 

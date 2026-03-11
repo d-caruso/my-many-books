@@ -254,9 +254,9 @@ describe('ApiService with Industry Standard Testing', () => {
       expect(authors).toEqual(sortedAuthors);
     });
 
-    test('getMockSearchResults sorts by createdAt', async () => {
+    test('getMockSearchResults sorts by creationDate', async () => {
       const searchParams = {
-        sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
         sortOrder: SORT_DIRECTIONS.DESC,
       };
       const result = await getMockSearchResults(searchParams);
@@ -268,9 +268,9 @@ describe('ApiService with Industry Standard Testing', () => {
       }
     });
 
-    test('getMockSearchResults sorts by updatedAt', async () => {
+    test('getMockSearchResults sorts by updateDate', async () => {
       const searchParams = {
-        sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
         sortOrder: SORT_DIRECTIONS.ASC,
       };
       const result = await getMockSearchResults(searchParams);
@@ -325,9 +325,9 @@ describe('ApiService with Industry Standard Testing', () => {
       expect(statuses).toEqual(sortedStatuses);
     });
 
-    test('getMockSearchResults sorts by createdAt ascending', async () => {
+    test('getMockSearchResults sorts by creationDate ascending', async () => {
       const result = await getMockSearchResults({
-        sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+        sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
         sortOrder: SORT_DIRECTIONS.ASC,
       });
 
@@ -336,9 +336,9 @@ describe('ApiService with Industry Standard Testing', () => {
       expect(dates).toEqual(sortedDates);
     });
 
-    test('getMockSearchResults sorts by updatedAt descending', async () => {
+    test('getMockSearchResults sorts by updateDate descending', async () => {
       const result = await getMockSearchResults({
-        sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+        sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
         sortOrder: SORT_DIRECTIONS.DESC,
       });
 

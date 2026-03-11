@@ -310,8 +310,8 @@ export const BookSearchForm: React.FC<BookSearchFormProps> = ({
                     <MenuItem value={SEARCH_SORT_BY_FIELDS.TITLE}>{t('sorting.fields.title')}</MenuItem>
                     <MenuItem value={SEARCH_SORT_BY_FIELDS.AUTHOR}>{t('filter.author.label')}</MenuItem>
                     <MenuItem value={SEARCH_SORT_BY_FIELDS.STATUS}>{t('sorting.fields.status')}</MenuItem>
-                    <MenuItem value={SEARCH_SORT_BY_FIELDS.CREATED_AT}>{t('sorting.fields.createdAt')}</MenuItem>
-                    <MenuItem value={SEARCH_SORT_BY_FIELDS.UPDATED_AT}>{t('sorting.fields.updatedAt')}</MenuItem>
+                    <MenuItem value={SEARCH_SORT_BY_FIELDS.CREATION_DATE}>{t('sorting.fields.creationDate')}</MenuItem>
+                    <MenuItem value={SEARCH_SORT_BY_FIELDS.UPDATE_DATE}>{t('sorting.fields.updateDate')}</MenuItem>
                   </Select>
                 </FormControl>
 

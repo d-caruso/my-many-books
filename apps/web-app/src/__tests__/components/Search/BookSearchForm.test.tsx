@@ -140,7 +140,7 @@ describe('BookSearchForm', () => {
         {...defaultProps}
         initialFilters={{
           status: 'finished',
-          sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+          sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
           sortOrder: SORT_DIRECTIONS.DESC,
         }}
       />
@@ -274,7 +274,7 @@ describe('BookSearchForm', () => {
     fireEvent.click(getSearchButton());
 
     expect(mockOnSearch).toHaveBeenCalledWith('History', {
-      sortBy: SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+      sortBy: SEARCH_SORT_BY_FIELDS.UPDATE_DATE,
       sortOrder: SORT_DIRECTIONS.DESC,
     });
   });
@@ -402,7 +402,7 @@ describe('BookSearchForm', () => {
     expect(mockOnSearch).toHaveBeenCalledWith('test query', {
       categoryId: 1,
       status: 'finished',
-      sortBy: SEARCH_SORT_BY_FIELDS.CREATED_AT,
+      sortBy: SEARCH_SORT_BY_FIELDS.CREATION_DATE,
     });
   });
 
