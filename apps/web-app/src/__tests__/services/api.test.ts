@@ -1,4 +1,5 @@
 import {
+  BOOK_STATUS,
   SEARCH_SORT_BY_FIELDS,
   SORT_DIRECTIONS,
   type Book,
@@ -209,7 +210,7 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockSearchResults filters by query', async () => {
-      const searchParams = { q: 'gatsby' };
+      const searchParams = { query: 'gatsby' };
       const result = await getMockSearchResults(searchParams);
 
       expect(result.books.some((book: Book) => 
@@ -218,10 +219,10 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('getMockSearchResults filters by status', async () => {
-      const searchParams = { status: 'finished' };
+      const searchParams = { status: BOOK_STATUS.FINISHED };
       const result = await getMockSearchResults(searchParams);
 
-      expect(result.books.every((book: Book) => book.status === 'finished')).toBe(true);
+      expect(result.books.every((book: Book) => book.status === BOOK_STATUS.FINISHED)).toBe(true);
     });
 
     test('getMockSearchResults filters by author', async () => {
@@ -404,7 +405,7 @@ describe('ApiService with Industry Standard Testing', () => {
     });
 
     test('searchBooks uses mock data in development mode', async () => {
-      const searchParams = { q: 'gatsby' };
+      const searchParams = { query: 'gatsby' };
       const result = await testApiService.searchBooks(searchParams);
 
       expect(result).toHaveProperty('books');
@@ -548,7 +549,7 @@ describe('ApiService with Industry Standard Testing', () => {
           isbnCode: '123456789',
           editionNumber: 1,
           editionDate: '2024-01-01',
-          status: 'reading' as const,
+          status: BOOK_STATUS.READING,
           notes: 'Test notes',
           selectedAuthors: [{ id: 1, name: 'Test', surname: 'Author' }],
           selectedCategories: [1, 2],
@@ -558,7 +559,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'New Book',
           isbnCode: '123456789',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
           userId: 1,
           authors: [],
           categories: [],
@@ -574,7 +575,7 @@ describe('ApiService with Industry Standard Testing', () => {
           isbnCode: '123456789',
           editionNumber: 1,
           editionDate: '2024-01-01',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
           notes: 'Test notes',
           authorIds: [1],
           categoryIds: [1, 2],
@@ -587,12 +588,12 @@ describe('ApiService with Industry Standard Testing', () => {
         const mockResult = { books: [], total: 0, hasMore: false, page: 1 };
         mockApiClient.books.searchBooks.mockResolvedValue(mockResult);
 
-        const searchParams = { q: 'test', status: 'finished' };
+        const searchParams = { query: 'test', status: BOOK_STATUS.FINISHED };
         const result = await testApiService.searchBooks(searchParams);
 
         expect(mockApiClient.books.searchBooks).toHaveBeenCalledWith({
           query: 'test',
-          status: 'finished',
+          status: BOOK_STATUS.FINISHED,
           sortBy: undefined,
           authorId: undefined,
           categoryId: undefined,
@@ -607,7 +608,7 @@ describe('ApiService with Industry Standard Testing', () => {
         const mockResult = { books: [], total: 0, hasMore: false, page: 1 };
         mockApiClient.books.searchBooks.mockResolvedValue(mockResult);
 
-        await testApiService.searchBooks({ q: 'a', categoryId: 1 });
+        await testApiService.searchBooks({ query: 'a', categoryId: 1 });
 
         expect(mockApiClient.books.searchBooks).toHaveBeenCalledWith({
           query: undefined,
@@ -625,7 +626,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'Test Book',
           isbnCode: '123456789',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
           userId: 1,
           authors: [],
           categories: [],
@@ -652,7 +653,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'Updated Book',
           isbnCode: '123456789',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
           userId: 1,
           authors: [],
           categories: [],
@@ -681,7 +682,7 @@ describe('ApiService with Industry Standard Testing', () => {
           id: 1,
           title: 'Updated Title',
           isbnCode: '123456789',
-          status: 'reading',
+          status: BOOK_STATUS.READING,
           userId: 1,
           authors: [],
           categories: [],

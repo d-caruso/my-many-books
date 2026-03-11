@@ -438,12 +438,19 @@ export class BookRepository {
   async searchWithFilters(options: {
     query?: string;
     status?: string;
-    author?: string;
-    category?: string;
-    sortBy?: DbSortField;
+    authorId?: number;
+    categoryId?: number;
+    sortBy?: DbSortField | 'status';
     sortOrder?: typeof SORT_DIRECTIONS[keyof typeof SORT_DIRECTIONS];
   }): Promise<LocalBook[]> {
-    const { query, status, author, category, sortBy = DB_SORT_FIELDS.UPDATE_DATE, sortOrder = SORT_DIRECTIONS.DESC } = options;
+    const {
+      query,
+      status,
+      authorId,
+      categoryId,
+      sortBy = DB_SORT_FIELDS.UPDATE_DATE,
+      sortOrder = SORT_DIRECTIONS.DESC,
+    } = options;
 
     let sql = 'SELECT DISTINCT b.* FROM books b';
     let joins = '';
@@ -451,11 +458,11 @@ export class BookRepository {
     const whereConditions = ['b.deleted = 0'];
 
     // Add joins if filtering by author or category
-    if (author || category) {
-      if (author) {
+    if (authorId || categoryId) {
+      if (authorId) {
         joins += ' LEFT JOIN book_authors ba ON b.id = ba.book_id LEFT JOIN authors a ON ba.author_id = a.id';
       }
-      if (category) {
+      if (categoryId) {
         joins += ' LEFT JOIN book_categories bc ON b.id = bc.book_id LEFT JOIN categories c ON bc.category_id = c.id';
       }
     }
@@ -476,15 +483,15 @@ export class BookRepository {
     }
 
     // Add author filter
-    if (author) {
-      sql += ' AND a.name LIKE ?';
-      params.push(`%${author}%`);
+    if (authorId) {
+      sql += ' AND ba.author_id = ?';
+      params.push(authorId);
     }
 
     // Add category filter
-    if (category) {
-      sql += ' AND c.name LIKE ?';
-      params.push(`%${category}%`);
+    if (categoryId) {
+      sql += ' AND bc.category_id = ?';
+      params.push(categoryId);
     }
 
     // Add sorting

@@ -28,7 +28,6 @@ export type BookSearchResult<TBook extends Book = Book> = Omit<SearchResult, 'bo
 };
 
 type BookSearchQuery<TFilters extends SearchFilters> = Partial<TFilters> & {
-  q?: string;
   page?: number;
   limit?: number;
 };
@@ -85,7 +84,7 @@ export const useBookSearch = <TBook extends Book = Book, TFilters extends Search
           ...filters,
         };
         if (validQuery) {
-          searchParams.q = validQuery;
+          searchParams.query = validQuery;
         }
 
         const response = await api.searchBooks(searchParams);

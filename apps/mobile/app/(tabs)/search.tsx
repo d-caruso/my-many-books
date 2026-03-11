@@ -13,10 +13,12 @@ import { useBookSearch } from '@/hooks/useBookSearch';
 import { Book } from '@my-many-books/shared-types';
 import { BOOK_STATUS } from '@my-many-books/shared-types';
 import type { SearchQuery } from '@/types';
-import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
-import type { SortDirection } from '@my-many-books/shared-types';
-import { DB_SORT_FIELDS } from '@/constants/db';
-import type { DbSortField } from '@/constants/db';
+import {
+  SEARCH_SORT_BY_FIELDS,
+  SORT_DIRECTIONS,
+  type SearchSortByField,
+  type SortDirection,
+} from '@my-many-books/shared-types';
 import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
 import { authorAPI, categoryAPI } from '@/services/api';
 import { authorRepository } from '@/services/database/AuthorRepository';
@@ -25,8 +27,14 @@ import { formatFullName, getCategoryDisplayName } from '@my-many-books/shared-ut
 import type { Author, Category } from '@my-many-books/shared-types';
 import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 type SearchMode = 'title' | 'author' | 'isbn';
-type SortOption = DbSortField;
+type SortOption = SearchSortByField;
 type SortOrder = SortDirection;
+
+const SORT_OPTIONS: readonly SortOption[] = [
+  SEARCH_SORT_BY_FIELDS.TITLE,
+  SEARCH_SORT_BY_FIELDS.UPDATED_AT,
+  SEARCH_SORT_BY_FIELDS.CREATED_AT,
+];
 
 export default function SearchScreen() {
   const { t } = useTranslation('offline');
@@ -39,11 +47,11 @@ export default function SearchScreen() {
   const [searchMode, setSearchMode] = useState<SearchMode>('title');
   const [isbnResult, setIsbnResult] = useState<Book | null>(null);
   const [statusFilter, setStatusFilter] = useState<Book['status'] | 'all'>('all');
-  const [sortBy, setSortBy] = useState<SortOption>(DB_SORT_FIELDS.TITLE);
+  const [sortBy, setSortBy] = useState<SortOption>(SEARCH_SORT_BY_FIELDS.UPDATED_AT);
   const [sortOrder, setSortOrder] = useState<SortOrder>(SORT_DIRECTIONS.DESC);
   const [showSortMenu, setShowSortMenu] = useState(false);
-  const [selectedAuthorName, setSelectedAuthorName] = useState<string | null>(null);
-  const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
+  const [selectedAuthorId, setSelectedAuthorId] = useState<number | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [availableAuthors, setAvailableAuthors] = useState<Author[]>([]);
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
@@ -101,24 +109,21 @@ export default function SearchScreen() {
       setIsbnResult(null);
       const filters: Partial<SearchQuery> = {};
 
-      if (searchMode === 'author') {
-        filters.author = searchQuery;
-      }
       if (statusFilter !== 'all') {
         filters.status = statusFilter;
       }
-      if (selectedAuthorName) {
-        filters.author = selectedAuthorName;
+      if (selectedAuthorId !== null) {
+        filters.authorId = selectedAuthorId;
       }
-      if (selectedCategoryName) {
-        filters.category = selectedCategoryName;
+      if (selectedCategoryId !== null) {
+        filters.categoryId = selectedCategoryId;
       }
       filters.sortBy = sortBy;
       filters.sortOrder = sortOrder;
 
       await searchBooks(searchQuery, filters);
     }
-  }, [searchQuery, searchMode, statusFilter, selectedAuthorName, selectedCategoryName, sortBy, sortOrder, searchBooks, searchByISBN, clearSearch]);
+  }, [searchQuery, searchMode, statusFilter, selectedAuthorId, selectedCategoryId, sortBy, sortOrder, searchBooks, searchByISBN, clearSearch]);
 
   useEffect(() => {
     if (!scannedIsbn) return;
@@ -252,6 +257,21 @@ export default function SearchScreen() {
     [theme]
   );
 
+  const getSortOptionLabel = useCallback((option: SortOption): string => {
+    switch (option) {
+      case SEARCH_SORT_BY_FIELDS.TITLE:
+        return t('books:title');
+      case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
+        return t('books:last_updated');
+      case SEARCH_SORT_BY_FIELDS.CREATED_AT:
+        return t('books:added');
+      case SEARCH_SORT_BY_FIELDS.AUTHOR:
+        return t('books:author');
+      case SEARCH_SORT_BY_FIELDS.STATUS:
+        return t('books:status');
+    }
+  }, [t]);
+
   return (
     <PageErrorBoundary>
     <SafeAreaView style={styles.container}>
@@ -303,8 +323,8 @@ export default function SearchScreen() {
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
           <Chip
-            selected={selectedAuthorName === null}
-            onPress={() => setSelectedAuthorName(null)}
+            selected={selectedAuthorId === null}
+            onPress={() => setSelectedAuthorId(null)}
             style={styles.filterChip}
           >
             {t('books:all_authors')}
@@ -314,9 +334,9 @@ export default function SearchScreen() {
             return (
               <Chip
                 key={author.id}
-                selected={selectedAuthorName === displayName}
-                onPress={() => setSelectedAuthorName(
-                  selectedAuthorName === displayName ? null : displayName
+                selected={selectedAuthorId === Number(author.id)}
+                onPress={() => setSelectedAuthorId(
+                  selectedAuthorId === Number(author.id) ? null : Number(author.id)
                 )}
                 style={styles.filterChip}
               >
@@ -332,8 +352,8 @@ export default function SearchScreen() {
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
           <Chip
-            selected={selectedCategoryName === null}
-            onPress={() => setSelectedCategoryName(null)}
+            selected={selectedCategoryId === null}
+            onPress={() => setSelectedCategoryId(null)}
             style={styles.filterChip}
           >
             {t('books:all_categories')}
@@ -341,9 +361,9 @@ export default function SearchScreen() {
           {availableCategories.map((cat) => (
             <Chip
               key={cat.id}
-              selected={selectedCategoryName === cat.name}
-              onPress={() => setSelectedCategoryName(
-                selectedCategoryName === cat.name ? null : cat.name
+              selected={selectedCategoryId === Number(cat.id)}
+              onPress={() => setSelectedCategoryId(
+                selectedCategoryId === Number(cat.id) ? null : Number(cat.id)
               )}
               style={styles.filterChip}
             >
@@ -367,18 +387,18 @@ export default function SearchScreen() {
                 contentStyle={styles.sortButtonContent}
                 style={styles.sortButton}
               >
-                {t(`books:sort_${sortBy}`)} ({sortOrder === SORT_DIRECTIONS.ASC ? '↑' : '↓'})
+                {getSortOptionLabel(sortBy)} ({sortOrder === SORT_DIRECTIONS.ASC ? '↑' : '↓'})
               </Button>
             }
           >
-            {(Object.values(DB_SORT_FIELDS) as SortOption[]).map((option) => (
+            {SORT_OPTIONS.map((option) => (
               <Menu.Item
                 key={option}
                 onPress={() => {
                   setSortBy(option);
                   setShowSortMenu(false);
                 }}
-                title={t(`books:sort_${option}`)}
+                title={getSortOptionLabel(option)}
                 titleStyle={sortBy === option ? { fontWeight: 'bold' } : undefined}
               />
             ))}
@@ -442,4 +462,3 @@ export default function SearchScreen() {
     </PageErrorBoundary>
   );
 }
-

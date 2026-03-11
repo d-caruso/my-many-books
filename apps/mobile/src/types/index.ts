@@ -4,8 +4,8 @@ import type {
   User as SharedUser,
   SortDirection,
   BookFormData,
+  SearchSortByField,
 } from '@my-many-books/shared-types';
-import type { DbSortField } from '@/constants/db';
 
 export type { Book };
 
@@ -74,13 +74,12 @@ export interface AppTheme {
 export type StatusBarStyle = 'auto' | 'light' | 'dark';
 
 export interface SearchQuery {
-  q?: string;
-  author?: string;
-  category?: string;
+  page?: number;
+  authorId?: number;
+  categoryId?: number;
   status?: Book['status'];
   limit?: number;
-  offset?: number;
-  sortBy?: DbSortField;
+  sortBy?: SearchSortByField;
   sortOrder?: SortDirection;
 }
 

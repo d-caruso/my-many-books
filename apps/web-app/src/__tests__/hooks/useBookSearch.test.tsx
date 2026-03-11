@@ -88,7 +88,7 @@ describe('useBookSearch', () => {
       });
 
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
-        q: 'test query',
+        query: 'test query',
         page: 1,
         limit: SHARED_DEFAULT_LIMIT,
       });
@@ -123,7 +123,7 @@ describe('useBookSearch', () => {
       });
 
       expect(mockBookAPI.searchBooks).toHaveBeenCalledWith({
-        q: 'query',
+        query: 'query',
         page: 1,
         limit: SHARED_DEFAULT_LIMIT,
         categoryId: 1,

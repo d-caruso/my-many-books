@@ -1,6 +1,8 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
 import type { Book } from '@/types';
+import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import { DB_SORT_FIELDS } from '@/constants/db';
 
 // Import after mocks
 import { useBookSearch } from '@/hooks/useBookSearch';
@@ -195,9 +197,14 @@ describe('useBookSearch Hook', () => {
     });
 
     expect(mockApiMocks.searchBooks).toHaveBeenCalledWith({
-      q: 'test',
+      query: 'test',
       page: 1,
       limit: 20,
+      status: undefined,
+      authorId: undefined,
+      categoryId: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
     });
   });
 
@@ -229,8 +236,8 @@ describe('useBookSearch Hook', () => {
     expect(mockDbMocks.searchWithFilters).toHaveBeenCalledWith(
       expect.objectContaining({
         query: 'test',
-        sortBy: 'update_date',
-        sortOrder: 'desc',
+        sortBy: DB_SORT_FIELDS.UPDATE_DATE,
+        sortOrder: SORT_DIRECTIONS.DESC,
       })
     );
     expect(mockApiMocks.searchBooks).not.toHaveBeenCalled();
@@ -413,9 +420,14 @@ describe('useBookSearch Hook', () => {
 
     expect(mockApiMocks.searchBooks).toHaveBeenCalledTimes(2);
     expect(mockApiMocks.searchBooks).toHaveBeenNthCalledWith(2, {
-      q: 'test',
+      query: 'test',
       page: 2,
       limit: 20,
+      status: undefined,
+      authorId: undefined,
+      categoryId: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
     });
   });
 });

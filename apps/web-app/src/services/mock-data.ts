@@ -90,21 +90,12 @@ export function getMockAuthors(): Promise<Author[]> {
   ]);
 }
 
-export function getMockSearchResults(searchParams: {
-  q?: string;
-  page?: number;
-  limit?: number;
-  status?: SearchFilters['status'];
-  sortBy?: SearchFilters['sortBy'];
-  sortOrder?: SearchFilters['sortOrder'];
-  authorId?: number;
-  categoryId?: number;
-}): Promise<SearchResult> {
+export function getMockSearchResults(searchParams: SearchFilters): Promise<SearchResult> {
   return getMockBooks().then(data => {
     let filteredBooks = data.books || [];
 
-    if (searchParams.q) {
-      const query = searchParams.q.toLowerCase();
+    if (searchParams.query) {
+      const query = searchParams.query.toLowerCase();
       filteredBooks = filteredBooks.filter(book =>
         book.title.toLowerCase().includes(query) ||
         book.authors?.some(author =>

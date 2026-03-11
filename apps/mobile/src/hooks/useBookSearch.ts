@@ -5,8 +5,33 @@ import { bookRepository } from '@/services/database/BookRepository';
 import { useNetworkState } from './useNetworkState';
 import { useTranslation } from 'react-i18next';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
-import { SORT_DIRECTIONS } from '@my-many-books/shared-types';
+import {
+  SEARCH_SORT_BY_FIELDS,
+  SORT_DIRECTIONS,
+} from '@my-many-books/shared-types';
 import { DB_SORT_FIELDS } from '@/constants/db';
+
+type OfflineSortField =
+  | typeof DB_SORT_FIELDS[keyof typeof DB_SORT_FIELDS]
+  | 'status';
+
+const mapSortByToOfflineField = (
+  sortBy?: SearchQuery['sortBy']
+): OfflineSortField => {
+  switch (sortBy) {
+    case SEARCH_SORT_BY_FIELDS.TITLE:
+      return DB_SORT_FIELDS.TITLE;
+    case SEARCH_SORT_BY_FIELDS.STATUS:
+      return 'status';
+    case SEARCH_SORT_BY_FIELDS.CREATED_AT:
+      return DB_SORT_FIELDS.CREATION_DATE;
+    case SEARCH_SORT_BY_FIELDS.UPDATED_AT:
+    case undefined:
+      return DB_SORT_FIELDS.UPDATE_DATE;
+    case SEARCH_SORT_BY_FIELDS.AUTHOR:
+      throw new Error('Offline author sorting is not supported yet');
+  }
+};
 
 interface BookSearchState {
   books: Book[];
@@ -48,7 +73,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     filters: Partial<SearchQuery> = {},
     page: number = 1
   ): Promise<void> => {
-    if (!query.trim() && !filters.category && !filters.author) {
+    if (!query.trim() && !filters.categoryId && !filters.authorId) {
       setBooks([]);
       setLoading(false);
       setError(null);
@@ -68,9 +93,9 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
         const localBooks = await bookRepository.searchWithFilters({
           query: query.trim(),
           status: filters.status,
-          author: filters.author,
-          category: filters.category,
-          sortBy: filters.sortBy ?? DB_SORT_FIELDS.UPDATE_DATE,
+          authorId: filters.authorId,
+          categoryId: filters.categoryId,
+          sortBy: mapSortByToOfflineField(filters.sortBy),
           sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.DESC,
         });
 
@@ -95,10 +120,14 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     // Online search using API
     try {
       const searchParams = {
-        q: query.trim(),
+        query: query.trim() || undefined,
         page,
-        limit: 20,
-        ...filters
+        limit: filters.limit ?? 20,
+        status: filters.status,
+        authorId: filters.authorId,
+        categoryId: filters.categoryId,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
       };
 
       const response = await bookAPI.searchBooks(searchParams);
@@ -132,9 +161,9 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
         const localBooks = await bookRepository.searchWithFilters({
           query: query.trim(),
           status: filters.status,
-          author: filters.author,
-          category: filters.category,
-          sortBy: filters.sortBy ?? DB_SORT_FIELDS.UPDATE_DATE,
+          authorId: filters.authorId,
+          categoryId: filters.categoryId,
+          sortBy: mapSortByToOfflineField(filters.sortBy),
           sortOrder: filters.sortOrder ?? SORT_DIRECTIONS.DESC,
         });
         setBooks(localBooks.map(lb => lb.entity));
