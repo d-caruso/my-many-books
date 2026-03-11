@@ -3,6 +3,7 @@ import renderer from 'react-test-renderer';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import {
   BOOK_STATUS,
+  SEARCH_QUERY_MIN_LENGTH,
   SEARCH_SORT_BY_FIELDS,
   SORT_DIRECTIONS,
 } from '@my-many-books/shared-types';
@@ -35,13 +36,20 @@ function SearchScreenDouble() {
     SORT_DIRECTIONS.ASC
   );
 
+  const [validationError, setValidationError] = React.useState<string | null>(null);
+
   const handleSubmit = React.useCallback(() => {
+    const trimmedQuery = searchQuery.trim();
+    const hasValidQuery = trimmedQuery.length >= SEARCH_QUERY_MIN_LENGTH;
     const hasActiveFilters =
       statusFilter !== 'all' || selectedAuthorId !== null || selectedCategoryId !== null;
 
-    if (!searchQuery && !hasActiveFilters) {
+    if (!hasValidQuery && !hasActiveFilters) {
+      setValidationError('books:search_min_chars');
       return;
     }
+
+    setValidationError(null);
 
     const filters: Record<string, unknown> = {
       sortBy,
@@ -60,7 +68,7 @@ function SearchScreenDouble() {
       filters.categoryId = selectedCategoryId;
     }
 
-    void searchBooks(searchQuery, filters);
+    void searchBooks(trimmedQuery, filters);
   }, [searchBooks, searchQuery, selectedAuthorId, selectedCategoryId, sortBy, sortOrder, statusFilter]);
 
   return (
@@ -73,6 +81,7 @@ function SearchScreenDouble() {
       <TouchableOpacity testID="search-submit" onPress={handleSubmit}>
         <Text>common:search</Text>
       </TouchableOpacity>
+      {validationError && <Text testID="validation-error">{validationError}</Text>}
 
       <TouchableOpacity
         testID="status-chip-reading"
@@ -151,6 +160,59 @@ describe('SearchScreen', () => {
       clearSearch: jest.fn(),
       loadMore: jest.fn(),
     });
+  });
+
+  it('should show validation error when submitting with no query and no filters', async () => {
+    let tree!: renderer.ReactTestRenderer;
+
+    renderer.act(() => {
+      tree = renderer.create(<SearchScreenDouble />);
+    });
+
+    await renderer.act(async () => {
+      tree.root.findByProps({ testID: 'search-submit' }).props.onPress();
+    });
+
+    expect(tree.root.findByProps({ testID: 'validation-error' }).props.children).toBe('books:search_min_chars');
+    expect(mockSearchBooks).not.toHaveBeenCalled();
+  });
+
+  it('should show validation error when query is shorter than SEARCH_QUERY_MIN_LENGTH and no filters', async () => {
+    let tree!: renderer.ReactTestRenderer;
+
+    renderer.act(() => {
+      tree = renderer.create(<SearchScreenDouble />);
+    });
+
+    await renderer.act(async () => {
+      tree.root.findByProps({ testID: 'search-input' }).props.onChangeText('a');
+    });
+
+    await renderer.act(async () => {
+      tree.root.findByProps({ testID: 'search-submit' }).props.onPress();
+    });
+
+    expect(tree.root.findByProps({ testID: 'validation-error' }).props.children).toBe('books:search_min_chars');
+    expect(mockSearchBooks).not.toHaveBeenCalled();
+  });
+
+  it('should allow submit with only filters and no query', async () => {
+    let tree!: renderer.ReactTestRenderer;
+
+    renderer.act(() => {
+      tree = renderer.create(<SearchScreenDouble />);
+    });
+
+    await renderer.act(async () => {
+      tree.root.findByProps({ testID: 'status-chip-reading' }).props.onPress();
+    });
+
+    await renderer.act(async () => {
+      tree.root.findByProps({ testID: 'search-submit' }).props.onPress();
+    });
+
+    expect(tree.root.findAllByProps({ testID: 'validation-error' })).toHaveLength(0);
+    expect(mockSearchBooks).toHaveBeenCalled();
   });
 
   it('should keep status chips and use selectors instead of author/category chips', () => {

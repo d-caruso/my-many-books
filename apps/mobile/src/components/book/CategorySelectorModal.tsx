@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Checkbox, Dialog, List, Portal, Text, useTheme } from 'react-native-paper';
+import { Button, Checkbox, Dialog, List, Portal, RadioButton, Text, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import type { Category } from '@my-many-books/shared-types';
 import { getCategoryDisplayName } from '@my-many-books/shared-utils';
@@ -10,6 +10,7 @@ interface CategorySelectorModalProps {
   categories: Category[];
   selectedCategoryIds: number[];
   loading?: boolean;
+  singleSelect?: boolean;
   onClose: () => void;
   onToggleCategory: (categoryId: number) => void;
   onAddCategoryPress?: () => void;
@@ -20,6 +21,7 @@ export function CategorySelectorModal({
   categories,
   selectedCategoryIds,
   loading = false,
+  singleSelect = false,
   onClose,
   onToggleCategory,
   onAddCategoryPress,
@@ -48,15 +50,30 @@ export function CategorySelectorModal({
 
               {!loading &&
                 categories.map((category) => {
-                  const checked = selectedCategoryIds.includes(Number(category.id));
+                  const categoryId = Number(category.id);
+                  const checked = selectedCategoryIds.includes(categoryId);
                   return (
                     <List.Item
                       key={String(category.id)}
                       title={getCategoryDisplayName(category, t)}
-                      onPress={() => onToggleCategory(Number(category.id))}
-                      left={() => (
-                        <Checkbox status={checked ? 'checked' : 'unchecked'} />
-                      )}
+                      onPress={() => {
+                        onToggleCategory(categoryId);
+                        if (singleSelect) onClose();
+                      }}
+                      left={() =>
+                        singleSelect ? (
+                          <RadioButton
+                            value={String(categoryId)}
+                            status={checked ? 'checked' : 'unchecked'}
+                            onValueChange={() => {
+                              onToggleCategory(categoryId);
+                              onClose();
+                            }}
+                          />
+                        ) : (
+                          <Checkbox status={checked ? 'checked' : 'unchecked'} />
+                        )
+                      }
                     />
                   );
                 })}

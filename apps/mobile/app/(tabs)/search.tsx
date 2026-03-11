@@ -14,6 +14,7 @@ import { Book } from '@my-many-books/shared-types';
 import { BOOK_STATUS } from '@my-many-books/shared-types';
 import type { SearchQuery } from '@/types';
 import {
+  SEARCH_QUERY_MIN_LENGTH,
   SEARCH_SORT_BY_FIELDS,
   SORT_DIRECTIONS,
   type SearchSortByField,
@@ -110,9 +111,12 @@ export default function SearchScreen() {
   }, [isOffline]);
 
   const performSearch = useCallback(async () => {
-    if (!searchQuery.trim() && !hasActiveFilters) {
-      setIsbnResult(null);
-      clearSearch();
+    const trimmedQuery = searchQuery.trim();
+    const hasValidQuery = trimmedQuery.length >= SEARCH_QUERY_MIN_LENGTH;
+
+    if (!hasValidQuery && !hasActiveFilters) {
+      setFeedbackMessage(t('books:search_min_chars'));
+      setFeedbackVisible(true);
       return;
     }
 
@@ -131,9 +135,8 @@ export default function SearchScreen() {
     filters.sortBy = sortBy;
     filters.sortOrder = sortOrder;
 
-    await searchBooks(searchQuery, filters);
+    await searchBooks(trimmedQuery, filters);
   }, [
-    clearSearch,
     hasActiveFilters,
     searchBooks,
     searchQuery,
@@ -142,6 +145,7 @@ export default function SearchScreen() {
     sortBy,
     sortOrder,
     statusFilter,
+    t,
   ]);
 
   useEffect(() => {
@@ -479,6 +483,7 @@ export default function SearchScreen() {
         categories={availableCategories}
         selectedCategoryIds={selectedCategoryId === null ? [] : [selectedCategoryId]}
         loading={false}
+        singleSelect
         onClose={() => setCategorySelectorVisible(false)}
         onToggleCategory={(categoryId) => {
           setSelectedCategoryId((currentId) => (currentId === categoryId ? null : categoryId));
