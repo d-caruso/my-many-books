@@ -51,6 +51,7 @@ export default function SearchScreen() {
   }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [isbnResult, setIsbnResult] = useState<Book | null>(null);
+  const [isbnNotFound, setIsbnNotFound] = useState(false);
   const [statusFilter, setStatusFilter] = useState<Book['status'] | 'all'>('all');
   const [sortBy, setSortBy] = useState<SortOption>(SEARCH_SORT_BY_FIELDS.TITLE);
   const [sortOrder, setSortOrder] = useState<SortOrder>(SORT_DIRECTIONS.ASC);
@@ -69,10 +70,12 @@ export default function SearchScreen() {
     books,
     loading,
     error,
+    hasMore,
     isOffline,
     searchBooks,
     searchByISBN,
     clearSearch,
+    loadMore,
   } = useBookSearch();
 
   const { updateBookStatus } = useBooks();
@@ -133,6 +136,7 @@ export default function SearchScreen() {
     }
 
     setIsbnResult(null);
+    setIsbnNotFound(false);
     const filters: Partial<SearchQuery> = {};
 
     if (statusFilter !== 'all') {
@@ -170,6 +174,7 @@ export default function SearchScreen() {
     const timer = setTimeout(() => {
       searchByISBN(isbn).then((result) => {
         setIsbnResult(result);
+        setIsbnNotFound(result === null);
         setSearchQuery('');
         clearSearch();
       });
@@ -456,15 +461,24 @@ export default function SearchScreen() {
         </View>
       )}
 
-      {loading && displayedBooks.length === 0 && <LoadingSpinner />}
+      {loading && displayedBooks.length === 0 && !isbnResult && <LoadingSpinner />}
 
       <FlatList
         data={displayedBooks}
         renderItem={renderBook}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
+        onEndReached={() => { if (hasMore && !loading && !isbnResult) void loadMore(); }}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={loading && displayedBooks.length > 0 ? <LoadingSpinner /> : null}
         ListEmptyComponent={
-          !loading && searchQuery.trim() ? (
+          !loading && isbnNotFound ? (
+            <EmptyState
+              icon="barcode-scan"
+              title={t('books:no_books_found')}
+              description={t('books:isbn_not_found', { defaultValue: 'No book found for this ISBN' })}
+            />
+          ) : !loading && searchQuery.trim() ? (
             <EmptyState
               icon="search"
               title={t('books:no_books_found')}
