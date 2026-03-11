@@ -169,8 +169,8 @@ class ApiService extends AdminApiService {
     const editionDate = sanitizeString(bookData.editionDate);
     backendData.editionDate = editionDate ?? null;
 
-    if (bookData.status) {
-      backendData.status = bookData.status;
+    if ('status' in bookData) {
+      backendData.status = bookData.status ?? null;
     }
 
     const notes = sanitizeString(bookData.notes);

@@ -17,13 +17,10 @@ export const useBooks = (options: UseBooksOptions = {}) => {
     createBook: data => bookAPI.createBook(data),
     updateBook: (id, data) => bookAPI.updateBook(id, data),
     deleteBook: id => bookAPI.deleteBook(id),
-    updateBookStatus: async (id, status) => {
-      if (status == null) {
-        throw new Error('Book status is required');
-      }
-
-      return bookAPI.updateBookStatus(id, status as NonNullable<Book['status']>);
-    },
+    updateBookStatus: (id, status) =>
+      status == null
+        ? bookAPI.updateBook(id, { status: null })
+        : bookAPI.updateBookStatus(id, status as NonNullable<Book['status']>),
   }), [bookAPI]);
 
   return useSharedBooks(api, {
