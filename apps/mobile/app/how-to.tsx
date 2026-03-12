@@ -1,8 +1,9 @@
 import { View, ScrollView, StyleSheet } from 'react-native';
-import { Card, Text, useTheme } from 'react-native-paper';
+import { Button, Card, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 import {
   HOW_TO_SECTIONS,
@@ -83,6 +84,22 @@ export default function HowToScreen() {
                           </View>
                         ))}
                       </View>
+
+                      {item.ctaPath && (
+                        <View style={styles.ctaContainer} testID={`how-to-cta-container-${item.id}`}>
+                          <Button
+                            mode="contained"
+                            onPress={() =>
+                              router.push(
+                                item.ctaPath as Parameters<typeof router.push>[0]
+                              )
+                            }
+                            testID={`how-to-cta-${item.id}`}
+                          >
+                            {t(item.ctaLabelKey ?? 'cta_try_it_now')}
+                          </Button>
+                        </View>
+                      )}
                     </Card.Content>
                   </Card>
                 );
@@ -156,6 +173,10 @@ const styles = StyleSheet.create({
   },
   stepText: {
     flex: 1,
+  },
+  ctaContainer: {
+    marginTop: 16,
+    alignItems: 'flex-end',
   },
   noGuides: {
     opacity: 0.6,
