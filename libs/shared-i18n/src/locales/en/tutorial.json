@@ -1,8 +1,18 @@
 {
-  "page_title": "How to",
+  "page_title": "How-to guides",
   "page_description": "Short guides for the most common actions in My Many Books.",
   "no_guides_available": "No guides available right now.",
+  "toc_label": "On this page",
   "cta_try_it_now": "Try it now",
+  "cta": {
+    "add_book": "Add a book",
+    "go_to_library": "Go to My Books",
+    "open_scanner": "Open Scanner",
+    "go_to_account": "Go to Account"
+  },
+  "cta_note": {
+    "camera_required": "Camera required. Best used on mobile."
+  },
   "video": {
     "label": "Mini video",
     "fallback": "Video is temporarily unavailable."

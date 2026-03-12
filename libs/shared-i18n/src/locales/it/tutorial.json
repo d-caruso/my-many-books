@@ -1,8 +1,18 @@
 {
-  "page_title": "Come fare",
+  "page_title": "Guide pratiche",
   "page_description": "Guide rapide per le azioni piu comuni in My Many Books.",
   "no_guides_available": "Nessuna guida disponibile al momento.",
+  "toc_label": "In questa pagina",
   "cta_try_it_now": "Prova ora",
+  "cta": {
+    "add_book": "Aggiungi un libro",
+    "go_to_library": "Vai ai miei libri",
+    "open_scanner": "Apri scanner",
+    "go_to_account": "Vai all'account"
+  },
+  "cta_note": {
+    "camera_required": "Richiede fotocamera. Ideale su mobile."
+  },
   "video": {
     "label": "Mini video",
     "fallback": "Video temporaneamente non disponibile."

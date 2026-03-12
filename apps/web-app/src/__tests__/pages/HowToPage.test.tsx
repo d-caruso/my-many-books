@@ -22,10 +22,20 @@ const i18nReady = testI18n.use(initReactI18next).init({
   resources: {
     en: {
       tutorial: {
-        page_title: 'How to',
+        page_title: 'How-to guides',
         page_description: 'Quick guides',
         no_guides_available: 'No guides available right now.',
+        toc_label: 'On this page',
         cta_try_it_now: 'Try it now',
+        cta: {
+          add_book: 'Add a book',
+          go_to_library: 'Go to My Books',
+          open_scanner: 'Open Scanner',
+          go_to_account: 'Go to Account',
+        },
+        cta_note: {
+          camera_required: 'Camera required. Best used on mobile.',
+        },
         video: {
           label: 'Mini video',
           fallback: 'Video is temporarily unavailable.',
@@ -71,10 +81,10 @@ describe('HowToPage', () => {
     await i18nReady;
   });
 
-  test('renders all phase 3 tutorial cards', () => {
+  test('renders all tutorial cards', () => {
     renderHowToPage();
 
-    expect(screen.getByRole('heading', { level: 1, name: 'How to' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'How-to guides' })).toBeInTheDocument();
     expect(screen.getAllByTestId(/^how-to-card-/)).toHaveLength(visibleCardsCount);
     expect(screen.queryByTestId('how-to-card-change-password')).not.toBeInTheDocument();
   });
@@ -95,7 +105,7 @@ describe('HowToPage', () => {
   test('renders CTA as last element for every visible card', () => {
     renderHowToPage();
 
-    const ctaButtons = screen.getAllByRole('button', { name: 'Try it now' });
+    const ctaButtons = screen.getAllByTestId(/^how-to-cta-(?!container)/);
     expect(ctaButtons).toHaveLength(visibleCardsCount);
 
     visibleSections.forEach((section) => {
@@ -110,11 +120,19 @@ describe('HowToPage', () => {
     });
   });
 
-  test('renders mini-video blocks for every visible card', () => {
+  test('renders table of contents with links for each visible card', () => {
     renderHowToPage();
 
-    expect(screen.getAllByTestId(/^how-to-video-/)).toHaveLength(visibleCardsCount * 3);
-    expect(screen.getAllByTestId(/^how-to-video-.*-element$/)).toHaveLength(visibleCardsCount);
+    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    expect(nav).toBeInTheDocument();
+
+    const links = within(nav).getAllByRole('link');
+    expect(links).toHaveLength(visibleCardsCount);
+
+    const hrefs = links.map((link) => link.getAttribute('href'));
+    visibleSections.flatMap((s) => s.items).forEach((item) => {
+      expect(hrefs).toContain(`#how-to-card-${item.id}`);
+    });
   });
 
   test('renders change password card and CTA when password feature is enabled', () => {

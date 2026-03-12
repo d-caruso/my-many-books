@@ -31,10 +31,6 @@ export const MiniVideoPlayer: React.FC<MiniVideoPlayerProps> = ({
 
   return (
     <Stack spacing={1} sx={{ mt: 2 }} data-testid={dataTestId}>
-      <Typography variant="subtitle2" component="h4">
-        {label}
-      </Typography>
-
       {hasPlaybackError ? (
         <Alert severity="info" data-testid={`${dataTestId}-fallback`}>
           {fallbackMessage}

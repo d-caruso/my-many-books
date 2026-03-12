@@ -21,6 +21,7 @@ export interface TutorialItem {
   stepsKeys: string[];
   ctaLabelKey?: string;
   ctaPath?: string;
+  ctaNoteKey?: string;
   video?: TutorialVideo;
   availability?: TutorialAvailability;
 }
@@ -62,6 +63,8 @@ interface TutorialItemConfig {
   id: string;
   cardKey: string;
   ctaPath: string;
+  ctaLabelKey?: string;
+  ctaNoteKey?: string;
   video?: TutorialVideoConfig;
   availability?: TutorialAvailability;
 }
@@ -86,6 +89,8 @@ const buildTutorialItem = ({
   id,
   cardKey,
   ctaPath,
+  ctaLabelKey,
+  ctaNoteKey,
   video,
   availability,
 }: TutorialItemConfig): TutorialItem => ({
@@ -93,8 +98,9 @@ const buildTutorialItem = ({
   titleKey: `cards.${cardKey}.title`,
   descriptionKey: `cards.${cardKey}.description`,
   stepsKeys: buildStepsKeys(`cards.${cardKey}`),
-  ctaLabelKey: DEFAULT_CTA_LABEL_KEY,
+  ctaLabelKey: ctaLabelKey ?? DEFAULT_CTA_LABEL_KEY,
   ctaPath,
+  ...(ctaNoteKey ? { ctaNoteKey } : {}),
   ...(video ? { video: buildTutorialVideo(video) } : {}),
   ...(availability ? { availability } : {}),
 });
@@ -103,7 +109,9 @@ interface LibraryTutorialItemConfig {
   id: string;
   cardKey: string;
   ctaPath: string;
-  mediaBaseName: string;
+  ctaLabelKey?: string;
+  ctaNoteKey?: string;
+  mediaBaseName?: string;
   durationLabel?: string;
   availability?: TutorialAvailability;
 }
@@ -112,6 +120,8 @@ const buildLibraryTutorialItem = ({
   id,
   cardKey,
   ctaPath,
+  ctaLabelKey,
+  ctaNoteKey,
   mediaBaseName,
   durationLabel,
   availability,
@@ -120,11 +130,11 @@ const buildLibraryTutorialItem = ({
     id,
     cardKey,
     ctaPath,
-    video: {
-      mediaBaseName,
-      captionKey: `videos.${cardKey}.caption`,
-      durationLabel,
-    },
+    ctaLabelKey,
+    ctaNoteKey,
+    ...(mediaBaseName
+      ? { video: { mediaBaseName, captionKey: `videos.${cardKey}.caption`, durationLabel } }
+      : {}),
     availability,
   });
 
@@ -133,57 +143,50 @@ const LIBRARY_TUTORIAL_ITEM_CONFIGS: LibraryTutorialItemConfig[] = [
     id: 'add-book',
     cardKey: 'add_book',
     ctaPath: '/?mode=add',
-    mediaBaseName: 'add-book',
-    durationLabel: '00:20',
+    ctaLabelKey: 'cta.add_book',
   },
   {
     id: 'modify-book',
     cardKey: 'modify_book',
     ctaPath: '/',
-    mediaBaseName: 'edit-book',
-    durationLabel: '00:20',
+    ctaLabelKey: 'cta.go_to_library',
   },
   {
     id: 'delete-book',
     cardKey: 'delete_book',
     ctaPath: '/',
-    mediaBaseName: 'delete-book',
-    durationLabel: '00:15',
+    ctaLabelKey: 'cta.go_to_library',
   },
   {
     id: 'scanner',
     cardKey: 'scanner',
     ctaPath: '/scanner',
-    mediaBaseName: 'scanner',
-    durationLabel: '00:25',
+    ctaLabelKey: 'cta.open_scanner',
+    ctaNoteKey: 'cta_note.camera_required',
   },
   {
     id: 'assign-authors-categories',
     cardKey: 'assign_authors_categories',
     ctaPath: '/?mode=add',
-    mediaBaseName: 'assign-author-category',
-    durationLabel: '00:20',
+    ctaLabelKey: 'cta.add_book',
   },
   {
     id: 'add-authors-categories',
     cardKey: 'add_authors_categories',
     ctaPath: '/?mode=add',
-    mediaBaseName: 'add-author-category',
-    durationLabel: '00:20',
+    ctaLabelKey: 'cta.add_book',
   },
   {
     id: 'modify-delete-authors-categories',
     cardKey: 'modify_delete_authors_categories',
     ctaPath: '/?mode=add',
-    mediaBaseName: 'manage-author-category',
-    durationLabel: '00:20',
+    ctaLabelKey: 'cta.add_book',
   },
   {
     id: 'change-password',
     cardKey: 'change_password',
     ctaPath: '/account',
-    mediaBaseName: 'change-password',
-    durationLabel: '00:15',
+    ctaLabelKey: 'cta.go_to_account',
     availability: 'userPasswordFeature',
   },
 ];
