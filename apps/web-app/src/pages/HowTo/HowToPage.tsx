@@ -76,7 +76,7 @@ const HowToPage: React.FC = () => {
                       >
                         <Button
                           variant="contained"
-                          onClick={() => navigate(item.ctaPath)}
+                          onClick={() => navigate(item.ctaPath!)}
                           data-testid={`how-to-cta-${item.id}`}
                         >
                           {t(item.ctaLabelKey ?? 'cta_try_it_now', 'Try it now')}
