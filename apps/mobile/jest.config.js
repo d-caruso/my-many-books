@@ -31,6 +31,7 @@ module.exports = {
     '^react-native-paper$': '<rootDir>/__mocks__/react-native-paper.js',
     '^react-native-safe-area-context$': '<rootDir>/__mocks__/react-native-safe-area-context.js',
     '^expo-camera$': '<rootDir>/__mocks__/expo-camera.js',
+    '^expo-video$': '<rootDir>/__mocks__/expo-video.js',
     '^@expo/vector-icons$': '<rootDir>/__mocks__/@expo/vector-icons.js',
     '^expo-router$': '<rootDir>/__mocks__/expo-router.js',
     '^../i18n$': '<rootDir>/__mocks__/i18n.js',

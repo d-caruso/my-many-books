@@ -6,12 +6,17 @@ import HowToScreen from '../../app/how-to';
 
 const mockRouter = router as { push: jest.Mock };
 
-jest.mock('../../src/pages/HowTo/howToContent', () => ({
-  ...jest.requireActual('../../src/pages/HowTo/howToContent'),
-  getTutorialCapabilities: jest.fn(() => ({ userPasswordFeature: false })),
-}));
+jest.mock('../../src/pages/HowTo/howToContent', () => {
+  const actual = jest.requireActual('../../src/pages/HowTo/howToContent');
+  return {
+    ...actual,
+    getTutorialCapabilities: jest.fn(() => ({ userPasswordFeature: false })),
+    getVisibleTutorialSections: jest.fn(actual.getVisibleTutorialSections),
+  };
+});
 
 const mockGetTutorialCapabilities = howToContent.getTutorialCapabilities as jest.Mock;
+const mockGetVisibleTutorialSections = howToContent.getVisibleTutorialSections as jest.Mock;
 
 describe('HowToScreen', () => {
   const { HOW_TO_SECTIONS, getVisibleTutorialSections } = howToContent;
@@ -110,5 +115,43 @@ describe('HowToScreen', () => {
     expect(cta).toBeDefined();
     cta.props.onPress();
     expect(mockRouter.push).toHaveBeenCalledWith('/account');
+  });
+
+  it('renders no video player when no cards have video configured', () => {
+    const root = renderScreen();
+    const videoPlayers = root.findAll(
+      (node) =>
+        typeof node.type === 'string' &&
+        typeof node.props.testID === 'string' &&
+        node.props.testID.startsWith('how-to-video-')
+    );
+    expect(videoPlayers).toHaveLength(0);
+  });
+
+  it('renders MiniVideoPlayer between steps and CTA when a card has video configured', () => {
+    const videoCard = {
+      id: 'add-book',
+      titleKey: 'cards.add_book.title',
+      descriptionKey: 'cards.add_book.description',
+      stepsKeys: ['s1', 's2', 's3'],
+      ctaPath: '/book/add' as const,
+      ctaLabelKey: 'cta.add_book',
+      video: { src: 'https://cdn.example.com/tutorials/add-book.mp4', captionKey: 'videos.add_book.caption' },
+    };
+    mockGetVisibleTutorialSections.mockReturnValueOnce([
+      { id: 'library', titleKey: 'sections.library_workflows', items: [videoCard] },
+    ]);
+
+    const root = renderScreen();
+
+    const videoPlayer = root.findAll(
+      (node) => typeof node.type === 'string' && node.props.testID === 'how-to-video-add-book'
+    );
+    expect(videoPlayer).toHaveLength(1);
+
+    const cta = root.findAll(
+      (node) => typeof node.type === 'string' && node.props.testID === 'how-to-cta-add-book'
+    );
+    expect(cta).toHaveLength(1);
   });
 });

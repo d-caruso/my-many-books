@@ -58,7 +58,8 @@
             "enableShrinkResourcesInReleaseBuilds": false
           }
         }
-      ]
+      ],
+      "expo-video"
     ],
     "scheme": "my-many-books",
     "experiments": {

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { PageErrorBoundary } from '@/components/PageErrorBoundary';
+import MiniVideoPlayer from '@/components/Tutorial/MiniVideoPlayer';
 import {
   HOW_TO_SECTIONS,
   getTutorialCapabilities,
@@ -84,6 +85,16 @@ export default function HowToScreen() {
                           </View>
                         ))}
                       </View>
+
+                      {item.video && (
+                        <MiniVideoPlayer
+                          video={item.video}
+                          label={t(item.titleKey)}
+                          caption={t(item.video.captionKey)}
+                          fallbackMessage={t('video.fallback')}
+                          testID={`how-to-video-${item.id}`}
+                        />
+                      )}
 
                       {item.ctaPath && (
                         <View style={styles.ctaContainer} testID={`how-to-cta-container-${item.id}`}>
