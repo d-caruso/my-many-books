@@ -1,0 +1,90 @@
+import React from 'react';
+import renderer from 'react-test-renderer';
+import * as howToContent from '../../src/pages/HowTo/howToContent';
+import HowToScreen from '../../app/how-to';
+
+jest.mock('../../src/pages/HowTo/howToContent', () => ({
+  ...jest.requireActual('../../src/pages/HowTo/howToContent'),
+  getTutorialCapabilities: jest.fn(() => ({ userPasswordFeature: false })),
+}));
+
+const mockGetTutorialCapabilities = howToContent.getTutorialCapabilities as jest.Mock;
+
+describe('HowToScreen', () => {
+  const { HOW_TO_SECTIONS, getVisibleTutorialSections } = howToContent;
+  const defaultSections = getVisibleTutorialSections(HOW_TO_SECTIONS, { userPasswordFeature: false });
+  const defaultCardCount = defaultSections.reduce((n, s) => n + s.items.length, 0);
+
+  beforeEach(() => {
+    mockGetTutorialCapabilities.mockReturnValue({ userPasswordFeature: false });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('renders all visible tutorial cards', () => {
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<HowToScreen />);
+    });
+
+    const root = (tree as renderer.ReactTestRenderer).root;
+    const cards = root.findAll(
+      (node) =>
+        typeof node.type === 'string' &&
+        typeof node.props.testID === 'string' &&
+        node.props.testID.startsWith('how-to-card-')
+    );
+    expect(cards).toHaveLength(defaultCardCount);
+  });
+
+  it('does not render change-password card by default', () => {
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<HowToScreen />);
+    });
+
+    const root = (tree as renderer.ReactTestRenderer).root;
+    const card = root.findAll(
+      (node) => typeof node.type === 'string' && node.props.testID === 'how-to-card-change-password'
+    );
+    expect(card).toHaveLength(0);
+  });
+
+  it('renders change-password card when feature flag is enabled', () => {
+    mockGetTutorialCapabilities.mockReturnValue({ userPasswordFeature: true });
+
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<HowToScreen />);
+    });
+
+    const root = (tree as renderer.ReactTestRenderer).root;
+    const card = root.findAll(
+      (node) => typeof node.type === 'string' && node.props.testID === 'how-to-card-change-password'
+    );
+    expect(card).toHaveLength(1);
+  });
+
+  it('renders 3-5 steps for each visible card', () => {
+    let tree: renderer.ReactTestRenderer | undefined;
+    renderer.act(() => {
+      tree = renderer.create(<HowToScreen />);
+    });
+
+    const root = (tree as renderer.ReactTestRenderer).root;
+    defaultSections.forEach((section) => {
+      section.items.forEach((item) => {
+        const steps = root.findAll(
+          (node) =>
+            typeof node.type === 'string' &&
+            typeof node.props.testID === 'string' &&
+            node.props.testID.startsWith(`how-to-step-${item.id}-`)
+        );
+        expect(steps.length).toBeGreaterThanOrEqual(3);
+        expect(steps.length).toBeLessThanOrEqual(5);
+      });
+    });
+  });
+});
