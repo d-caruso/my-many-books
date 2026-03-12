@@ -4,17 +4,19 @@ This file provides comprehensive guidance to Claude Code.
 
 ## BEFORE STARTING ANY WORK - MANDATORY CHECKLIST
   - [ ] Am I on develop or main? If YES -> STOP and create a branch
-  - [ ] Have I created a feature/fix/refactor/* branch?
-  - [ ] Branch name format: feature/*, fix/*, refactor/*, docs/*
+  - [ ] Have I created a branch following the naming rules in [BRANCHING_STRATEGY.md](./BRANCHING_STRATEGY.md)?
+  - [ ] Branch name format: `feature/*`, `task/*`, `fix/*`, `hotfix/*`, `refactor/*`, `docs/*`
 
 ## ⚠️ CRITICAL - BRANCH WORKFLOW (VIOLATION = FAILURE)
+
+**Full branching rules are defined in [BRANCHING_STRATEGY.md](./BRANCHING_STRATEGY.md). Read and follow it.**
 
 **YOU MUST NEVER COMMIT DIRECTLY TO `develop` OR `main`**
 Before typing ANY git command:
   1. Run `git branch` - check current branch
   2. If on `develop` or `main` -> CREATE A NEW BRANCH IMMEDIATELY
-  3. ALL work must be on feature/task/fix/refactor/* branches
-  4. If any branch-naming rules conflict (e.g. “only feature/*” vs a doc requiring task/*), STOP before running any git command and ask which convention is authoritative for this repo/task.
+  3. ALL work must be on `feature/*`, `task/*`, `fix/*`, `hotfix/*`, `refactor/*`, or `docs/*` branches
+  4. If any branch-naming rules conflict, STOP and ask before running any git command
   5. Only merge to develop and to main after asking confirmation via explicit merge command
   6. Only merge to develop and to main via explicit merge command
 
@@ -30,6 +32,7 @@ Avoid building functionality on speculation. Implement features only when they a
 
 ### Design Principles
 
+- **DRY (Don't Repeat Yourself)**: Every piece of knowledge must have a single, authoritative representation. Extract shared logic; never duplicate.
 - **Dependency Inversion**: High-level modules should not depend on low-level modules. Both should depend on abstractions.
 - **Open/Closed Principle**: Software entities should be open for extension but closed for modification.
 - **Single Responsibility**: Each function, class, and module should have one clear purpose.
@@ -46,19 +49,34 @@ Avoid building functionality on speculation. Implement features only when they a
 
 ## 🔄 Git Workflow
 
-### Branch Strategy
+See [BRANCHING_STRATEGY.md](./BRANCHING_STRATEGY.md) for the full branching strategy, workflow, and quality gates.
+
+### Branch Types
 
 - `main` - Production-ready code. Never work directly on this branch.
-- `develop` - Integration branch for features. Never work directly on this branch.
-- `feature/*` - New features
-- `fix/*` - Bug fixes
-- `docs/*` - Documentation updates
-- `refactor/*` - Code refactoring
+- `develop` - Integration branch. Never work directly on this branch.
+- `feature/<name>` - New features (merges to `develop`)
+- `feature/<name>-Phase<N>-<label>` - Phase branch within a large feature
+- `task/<name>-Task<N.N>-<label>` - Task branch within a phase or feature
+- `fix/<name>` - Bug fixes
+- `hotfix/<name>` - Critical fixes within a feature branch
+- `refactor/<name>` - Code refactoring
+- `docs/<name>` - Documentation updates
 
 ### Commit Messages
 
-- Never include any reference to Claude Code in commit messages
-- max 6 lines of text
+- Never include any reference to AI tools in commit messages
+- Max 6 lines of text
+- Format: `[TASK]`, `[FIX]`, `[TEST]`, `[DOCS]`, `[HOTFIX]`
+
+### Pre-Merge Checks (run per changed package, in order, one at a time)
+
+1. `npm run build` — wait for completion
+2. `npm run typecheck` — wait for completion
+3. `npm run lint` — wait for completion
+4. `npm test -- <specific-test-file>` — run only tests for changed files; if passing, run `npm test` on the full package
+
+**Never run checks on the whole codebase. Always wait for each run to finish before starting the next.**
 
 ## 📚 DOCUMENTATION UPDATE POLICY
 
@@ -170,5 +188,7 @@ After completing a feature, verify:
 - **Always verify file paths and module names** before use
 - **Test your code** - No feature is complete without tests
 - **Document your decisions** - Future developers (including yourself) will thank you
+- **Reuse before creating** - Check `libs/shared-contracts`, `libs/shared-utils`, and other libs for existing constants, types, and interfaces before defining new ones
+- **No hardcoded user-facing strings** - All text shown to the user must use translation keys from `libs/shared-i18n`
 
 ---
