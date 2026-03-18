@@ -5,6 +5,10 @@ import { Text, TouchableOpacity } from 'react-native';
 import ScannerScreen from '../../app/(tabs)/scanner';
 import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
+import {
+  HOOK_PAYLOAD_DESTINATIONS,
+  HOOK_PAYLOAD_SOURCES,
+} from '@/services/hooks/hookPayloadConstants';
 
 const mockSetStringAsync = jest.fn();
 const mockUseBookSearch = useBookSearch as jest.MockedFunction<typeof useBookSearch>;
@@ -93,7 +97,7 @@ describe('ScannerScreen hookey emits', () => {
       MOBILE_EVENTS.SCANNER.ISBN.DETECTED,
       expect.objectContaining({
         isbn: '9780306406157',
-        source: 'scanner_screen',
+        source: HOOK_PAYLOAD_SOURCES.SCANNER_SCREEN,
       })
     );
     expect(mobileHooks.emit).toHaveBeenCalledWith(
@@ -107,7 +111,7 @@ describe('ScannerScreen hookey emits', () => {
       MOBILE_EVENTS.SCANNER.ROUTE_DECISION,
       expect.objectContaining({
         isbn: '9780306406157',
-        destination: 'search',
+        destination: HOOK_PAYLOAD_DESTINATIONS.SEARCH,
         matchedBookId: 11,
       })
     );

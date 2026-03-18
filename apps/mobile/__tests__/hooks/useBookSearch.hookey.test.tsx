@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react-hooks';
 
 import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+import { HOOK_PAYLOAD_SOURCES } from '@/services/hooks/hookPayloadConstants';
 
 const mockSharedSearchBooks = jest.fn();
 const mockSharedSearchByIsbn = jest.fn();
@@ -80,7 +81,7 @@ describe('useBookSearch hookey emits', () => {
         filters: expect.objectContaining({
           status: 'reading',
         }),
-        source: 'useBookSearch.searchBooks',
+        source: HOOK_PAYLOAD_SOURCES.USE_BOOK_SEARCH_SEARCH_BOOKS,
       })
     );
   });

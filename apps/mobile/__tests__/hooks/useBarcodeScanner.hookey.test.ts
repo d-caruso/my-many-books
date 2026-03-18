@@ -3,6 +3,7 @@ import { Camera } from 'expo-camera';
 
 import { useBarcodeScanner } from '../../src/hooks/useBarcodeScanner';
 import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+import { HOOK_PAYLOAD_SOURCES } from '@/services/hooks/hookPayloadConstants';
 
 jest.mock('expo-camera', () => ({
   Camera: {
@@ -40,14 +41,14 @@ describe('useBarcodeScanner hookey emits', () => {
       1,
       MOBILE_EVENTS.SCANNER.PERMISSION.REQUEST,
       expect.objectContaining({
-        source: 'useBarcodeScanner.requestPermission',
+        source: HOOK_PAYLOAD_SOURCES.USE_BARCODE_SCANNER_REQUEST_PERMISSION,
       })
     );
     expect(mobileHooks.emit).toHaveBeenNthCalledWith(
       2,
       MOBILE_EVENTS.SCANNER.PERMISSION.GRANTED,
       expect.objectContaining({
-        source: 'useBarcodeScanner.requestPermission',
+        source: HOOK_PAYLOAD_SOURCES.USE_BARCODE_SCANNER_REQUEST_PERMISSION,
       })
     );
   });

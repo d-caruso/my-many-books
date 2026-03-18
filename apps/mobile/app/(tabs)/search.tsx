@@ -31,6 +31,10 @@ import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 import { AuthorSelectorModal } from '@/components/book/AuthorSelectorModal';
 import { CategorySelectorModal } from '@/components/book/CategorySelectorModal';
 import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+import {
+  HOOK_PAYLOAD_SELECTION_CONTEXTS,
+  HOOK_PAYLOAD_SOURCES,
+} from '@/services/hooks/hookPayloadConstants';
 
 type SortOption = SearchSortByField;
 type SortOrder = SortDirection;
@@ -203,8 +207,10 @@ export default function SearchScreen() {
       bookId: book.id,
       title: book.title,
       query: searchQuery.trim(),
-      source: 'search_screen',
-      selectionContext: isbn ? 'isbn' : 'query',
+      source: HOOK_PAYLOAD_SOURCES.SEARCH_SCREEN,
+      selectionContext: isbn
+        ? HOOK_PAYLOAD_SELECTION_CONTEXTS.ISBN
+        : HOOK_PAYLOAD_SELECTION_CONTEXTS.QUERY,
     });
     router.push(`/book/${book.id}`);
   }, [isbn, searchQuery]);

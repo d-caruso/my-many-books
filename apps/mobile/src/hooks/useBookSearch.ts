@@ -7,6 +7,10 @@ import { useNetworkState } from './useNetworkState';
 import { useTranslation } from 'react-i18next';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
 import {
+  HOOK_PAYLOAD_OPERATIONS,
+  HOOK_PAYLOAD_SOURCES,
+} from '@/services/hooks/hookPayloadConstants';
+import {
   SORT_DIRECTIONS,
   type SearchFilters,
 } from '@my-many-books/shared-types';
@@ -27,6 +31,9 @@ interface BookSearchActions {
   clearSearch: () => void;
   loadMore: () => Promise<void>;
 }
+
+type SearchErrorOperation =
+  (typeof HOOK_PAYLOAD_OPERATIONS)[keyof typeof HOOK_PAYLOAD_OPERATIONS];
 
 export const useBookSearch = (): BookSearchState & BookSearchActions => {
   const { t } = useTranslation('offline');
@@ -55,7 +62,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
           ...(filters.sortOrder ? { sortOrder: filters.sortOrder } : {}),
         },
         isOffline,
-        source: 'useBookSearch.searchBooks',
+        source: HOOK_PAYLOAD_SOURCES.USE_BOOK_SEARCH_SEARCH_BOOKS,
       });
     },
     [isOffline]
@@ -82,7 +89,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     setOfflineCurrentPage(1);
   }, []);
 
-  const emitSearchError = useCallback((operation: 'search' | 'isbn_search', payload: { query?: string; isbn?: string; error: unknown }) => {
+  const emitSearchError = useCallback((operation: SearchErrorOperation, payload: { query?: string; isbn?: string; error: unknown }) => {
     const err = payload.error as { response?: { data?: { message?: string }; status?: number }; message?: string };
     mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
       operation,
@@ -91,7 +98,9 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
       statusCode: err.response?.status,
       ...(payload.query ? { query: payload.query } : {}),
       ...(payload.isbn ? { isbn: payload.isbn } : {}),
-      source: operation === 'search' ? 'useBookSearch_searchBooks' : 'useBookSearch_searchByISBN'
+      source: operation === HOOK_PAYLOAD_OPERATIONS.SEARCH
+        ? HOOK_PAYLOAD_SOURCES.USE_BOOK_SEARCH_SEARCH_BOOKS_ERROR
+        : HOOK_PAYLOAD_SOURCES.USE_BOOK_SEARCH_SEARCH_BY_ISBN_ERROR
     });
   }, []);
 
@@ -103,7 +112,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
         try {
           return await bookAPI.searchBooks(params);
         } catch (error) {
-          emitSearchError('search', { query: params.query, error });
+          emitSearchError(HOOK_PAYLOAD_OPERATIONS.SEARCH, { query: params.query, error });
 
           try {
             const localBooks = await runOfflineSearch(params.query ?? '', params);
@@ -124,7 +133,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
         try {
           return await bookAPI.searchByISBN(isbn);
         } catch (error) {
-          emitSearchError('isbn_search', { isbn, error });
+          emitSearchError(HOOK_PAYLOAD_OPERATIONS.ISBN_SEARCH, { isbn, error });
           throw new Error(t('search.bookNotFound'));
         }
       },
@@ -196,7 +205,7 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
       try {
         return await bookAPI.searchByISBN(isbn);
       } catch (error) {
-        emitSearchError('isbn_search', { isbn, error });
+        emitSearchError(HOOK_PAYLOAD_OPERATIONS.ISBN_SEARCH, { isbn, error });
         setOfflineError(t('search.bookNotFound'));
         return null;
       } finally {

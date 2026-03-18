@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Camera } from 'expo-camera';
 import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+import { HOOK_PAYLOAD_SOURCES } from '@/services/hooks/hookPayloadConstants';
 
 interface BarcodeScannerState {
   hasPermission: boolean | null;
@@ -23,7 +24,7 @@ export const useBarcodeScanner = (): BarcodeScannerState & BarcodeScannerActions
 
   const requestPermission = useCallback(async () => {
     mobileHooks.emit(MOBILE_EVENTS.SCANNER.PERMISSION.REQUEST, {
-      source: 'useBarcodeScanner.requestPermission',
+      source: HOOK_PAYLOAD_SOURCES.USE_BARCODE_SCANNER_REQUEST_PERMISSION,
     });
 
     try {
@@ -32,13 +33,13 @@ export const useBarcodeScanner = (): BarcodeScannerState & BarcodeScannerActions
 
       if (status === 'granted') {
         mobileHooks.emit(MOBILE_EVENTS.SCANNER.PERMISSION.GRANTED, {
-          source: 'useBarcodeScanner.requestPermission',
+          source: HOOK_PAYLOAD_SOURCES.USE_BARCODE_SCANNER_REQUEST_PERMISSION,
         });
         return;
       }
 
       mobileHooks.emit(MOBILE_EVENTS.SCANNER.PERMISSION.DENIED, {
-        source: 'useBarcodeScanner.requestPermission',
+        source: HOOK_PAYLOAD_SOURCES.USE_BARCODE_SCANNER_REQUEST_PERMISSION,
         status,
       });
 
@@ -46,7 +47,7 @@ export const useBarcodeScanner = (): BarcodeScannerState & BarcodeScannerActions
     } catch (err) {
       console.error('Failed to request camera permission:', err);
       mobileHooks.emit(MOBILE_EVENTS.SCANNER.PERMISSION.DENIED, {
-        source: 'useBarcodeScanner.requestPermission',
+        source: HOOK_PAYLOAD_SOURCES.USE_BARCODE_SCANNER_REQUEST_PERMISSION,
         error: err instanceof Error ? err.message : String(err),
       });
       setError('Failed to request camera permission');

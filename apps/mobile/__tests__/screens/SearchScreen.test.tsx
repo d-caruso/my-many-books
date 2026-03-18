@@ -9,6 +9,10 @@ import {
 } from '@my-many-books/shared-types';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+import {
+  HOOK_PAYLOAD_SELECTION_CONTEXTS,
+  HOOK_PAYLOAD_SOURCES,
+} from '@/services/hooks/hookPayloadConstants';
 
 const mockPush = jest.fn();
 
@@ -163,8 +167,8 @@ function SearchSelectionDouble() {
     mobileHooks.emit(MOBILE_EVENTS.SEARCH.RESULT_SELECTED, {
       bookId: 5,
       title: 'Selected Result',
-      selectionContext: 'query',
-      source: 'search_screen',
+      selectionContext: HOOK_PAYLOAD_SELECTION_CONTEXTS.QUERY,
+      source: HOOK_PAYLOAD_SOURCES.SEARCH_SCREEN,
     });
     mockPush('/book/5');
   }, []);
@@ -396,8 +400,8 @@ describe('SearchScreen', () => {
       expect.objectContaining({
         bookId: 5,
         title: 'Selected Result',
-        selectionContext: 'query',
-        source: 'search_screen',
+        selectionContext: HOOK_PAYLOAD_SELECTION_CONTEXTS.QUERY,
+        source: HOOK_PAYLOAD_SOURCES.SEARCH_SCREEN,
       })
     );
     expect(mockPush).toHaveBeenCalledWith('/book/5');

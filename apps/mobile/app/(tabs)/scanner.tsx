@@ -11,6 +11,10 @@ import { resolveScannedIsbnRoute } from '@/utils/isbnScannerRouting';
 import { normalizeISBN, validateISBN } from '@my-many-books/shared-utils';
 import { useTranslation } from 'react-i18next';
 import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+import {
+  HOOK_PAYLOAD_DESTINATIONS,
+  HOOK_PAYLOAD_SOURCES,
+} from '@/services/hooks/hookPayloadConstants';
 
 type ScannerMode = 'scan' | 'manual';
 
@@ -37,7 +41,7 @@ export default function ScannerScreen() {
       mobileHooks.emit(MOBILE_EVENTS.SCANNER.ISBN.DETECTED, {
         isbn,
         rawIsbn,
-        source: 'scanner_screen',
+        source: HOOK_PAYLOAD_SOURCES.SCANNER_SCREEN,
       });
     }
 
@@ -49,14 +53,14 @@ export default function ScannerScreen() {
       mobileHooks.emit(MOBILE_EVENTS.SCANNER.COPY.SUCCESS, {
         isbn,
         inputMode,
-        source: 'scanner_screen',
+        source: HOOK_PAYLOAD_SOURCES.SCANNER_SCREEN,
       });
     } catch {
       copyStatus = SCANNER_COPY_STATUS.FAILED;
       mobileHooks.emit(MOBILE_EVENTS.SCANNER.COPY.FAILURE, {
         isbn,
         inputMode,
-        source: 'scanner_screen',
+        source: HOOK_PAYLOAD_SOURCES.SCANNER_SCREEN,
       });
     }
 
@@ -66,10 +70,10 @@ export default function ScannerScreen() {
         mobileHooks.emit(MOBILE_EVENTS.SCANNER.ROUTE_DECISION, {
           isbn,
           inputMode,
-          destination: 'search',
+          destination: HOOK_PAYLOAD_DESTINATIONS.SEARCH,
           matchedBookId: book.id,
           copyStatus,
-          source: 'scanner_screen',
+          source: HOOK_PAYLOAD_SOURCES.SCANNER_SCREEN,
         });
         router.push({
           pathname: '/(tabs)/search',
@@ -91,9 +95,9 @@ export default function ScannerScreen() {
     mobileHooks.emit(MOBILE_EVENTS.SCANNER.ROUTE_DECISION, {
       isbn,
       inputMode,
-      destination: 'book_add',
+      destination: HOOK_PAYLOAD_DESTINATIONS.BOOK_ADD,
       copyStatus,
-      source: 'scanner_screen',
+      source: HOOK_PAYLOAD_SOURCES.SCANNER_SCREEN,
     });
     router.push({
       pathname: '/book/add',
