@@ -5,12 +5,6 @@ import {
 } from '../../../src/services/category/CategoryService';
 import { UniversalRequest } from '../../../src/types';
 import { CategoryEntity } from '../../../src/repositories/category/CategoryRepositoryTypes';
-import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
-import { EVENTS } from '../../../src/services/hooks/events';
-
-jest.mock('../../../src/services/hooks/hookSystem', () => ({
-  emitHookEvent: jest.fn().mockResolvedValue(undefined),
-}));
 
 // Container will use real dependency injection
 
@@ -30,7 +24,6 @@ describe('CategoryController', () => {
   let mockRepository: any;
   let mockBookRepository: any;
   let baseRequest: UniversalRequest;
-  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
   const buildCategory = (overrides: Partial<CategoryEntity> = {}): CategoryEntity => ({
     id: 1,
@@ -74,7 +67,6 @@ describe('CategoryController', () => {
     };
 
     jest.clearAllMocks();
-    emitHookEventMock.mockClear();
   });
 
   describe('createCategory', () => {
@@ -94,13 +86,6 @@ describe('CategoryController', () => {
       );
       expect(response.statusCode).toBe(201);
       expect(response.data).toMatchObject({ id: 1, name: 'Fiction', userId: 1 });
-      expect(emitHookEventMock).toHaveBeenCalledWith(
-        EVENTS.CATEGORY.CREATE.BEFORE,
-        expect.objectContaining({
-          user: { id: 1, role: 'user' },
-          input: { name: 'Fiction' },
-        })
-      );
     });
 
 
@@ -176,14 +161,6 @@ describe('CategoryController', () => {
         expect.any(Object)
       );
       expect(response.data).toMatchObject({ id: 2, name: 'Updated', userId: 1 });
-      expect(emitHookEventMock).toHaveBeenCalledWith(
-        EVENTS.CATEGORY.UPDATE.BEFORE,
-        expect.objectContaining({
-          categoryId: 2,
-          user: { id: 1, role: 'user' },
-          input: { name: 'Updated' },
-        })
-      );
     });
 
   });
@@ -204,14 +181,6 @@ describe('CategoryController', () => {
         true
       );
       expect(response.statusCode).toBe(204);
-      expect(emitHookEventMock).toHaveBeenCalledWith(
-        EVENTS.CATEGORY.DELETE.BEFORE,
-        expect.objectContaining({
-          categoryId: 3,
-          user: { id: 1, role: 'user' },
-          force: true,
-        })
-      );
     });
   });
 

@@ -77,28 +77,35 @@ class BookService {
     input: CreateBookInput,
     userContext?: BookUserContext | null
   ): Promise<BookEntity> {
-    const ownerId = this.resolveOwnerId(input.userId, userContext);
-    await this.ensureIsbnUnique(input.isbnCode, ownerId);
-    await this.validateAssociations(ownerId, input.authorIds, input.categoryIds);
-
-    const associations = this.extractAssociations(input);
-    const payload = this.normalizePayload({ ...input, userId: ownerId });
-
-    let createdBook: BookEntity;
-    try {
-      createdBook = await this.bookRepository.create(payload, associations);
-    } catch (error) {
-      if (error instanceof UniqueConstraintError) {
-        throw new BookServiceError('ISBN_EXISTS');
-      }
-      throw error;
-    }
-    await this.emitBookEvent(EVENTS.BOOK.CREATE.AFTER, {
-      book: createdBook,
-      user: this.mapEventUser(userContext),
+    const user = this.mapEventUser(userContext);
+    await this.emitBookEvent(EVENTS.BOOK.CREATE.BEFORE, {
+      user,
       input,
     });
-    return createdBook;
+
+    try {
+      const ownerId = this.resolveOwnerId(input.userId, userContext);
+      await this.ensureIsbnUnique(input.isbnCode, ownerId);
+      await this.validateAssociations(ownerId, input.authorIds, input.categoryIds);
+
+      const associations = this.extractAssociations(input);
+      const payload = this.normalizePayload({ ...input, userId: ownerId });
+
+      const createdBook = await this.bookRepository.create(payload, associations);
+      await this.emitBookEvent(EVENTS.BOOK.CREATE.AFTER, {
+        book: createdBook,
+        user,
+        input,
+      });
+      return createdBook;
+    } catch (error) {
+      await this.emitBookEvent(EVENTS.BOOK.CREATE.FAILURE, {
+        user,
+        input,
+        error,
+      });
+      throw error;
+    }
   }
 
   async updateBook(
@@ -106,78 +113,129 @@ class BookService {
     input: UpdateBookInput,
     userContext: BookUserContext
   ): Promise<BookEntity> {
-    const book = await this.bookRepository.findById(bookId);
-    if (!book) {
-      throw new BookServiceError('BOOK_NOT_FOUND');
-    }
-
-    this.ensureOwnership(book, userContext);
-
-    if (input.isbnCode && input.isbnCode !== book.isbnCode) {
-      await this.ensureIsbnUnique(input.isbnCode, book.userId);
-    }
-
-    await this.validateAssociations(book.userId, input.authorIds, input.categoryIds);
-
-    const associations = this.extractAssociations(input);
-    const statusWillChange = input.status !== undefined && input.status !== book.status;
-
-    if (statusWillChange) {
-      await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.BEFORE, {
-        bookId,
-        previousStatus: book.status ?? null,
-        nextStatus: input.status ?? null,
-        book,
-        user: this.mapEventUser(userContext),
-        changes: input,
-      });
-    }
-
-    const payload = this.normalizePartialPayload(input);
-
-    const updated = await this.bookRepository.update(bookId, payload, associations);
-    if (!updated) {
-      throw new BookServiceError('BOOK_NOT_FOUND');
-    }
-
-    await this.emitBookEvent(EVENTS.BOOK.UPDATE.AFTER, {
+    const user = this.mapEventUser(userContext);
+    await this.emitBookEvent(EVENTS.BOOK.UPDATE.BEFORE, {
       bookId,
-      book: updated,
-      user: this.mapEventUser(userContext),
-      changes: input,
+      user,
+      input,
     });
 
-    if (book.status !== updated.status) {
-      await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.AFTER, {
-        bookId,
-        previousStatus: book.status ?? null,
-        newStatus: updated.status ?? null,
-        book: updated,
-        user: this.mapEventUser(userContext),
-      });
-    }
+    let book: BookEntity | null = null;
+    let statusWillChange = false;
 
-    return updated;
+    try {
+      book = await this.bookRepository.findById(bookId);
+      if (!book) {
+        throw new BookServiceError('BOOK_NOT_FOUND');
+      }
+
+      this.ensureOwnership(book, userContext);
+
+      if (input.isbnCode && input.isbnCode !== book.isbnCode) {
+        await this.ensureIsbnUnique(input.isbnCode, book.userId);
+      }
+
+      await this.validateAssociations(book.userId, input.authorIds, input.categoryIds);
+
+      const associations = this.extractAssociations(input);
+      statusWillChange = input.status !== undefined && input.status !== book.status;
+
+      if (statusWillChange) {
+        await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.BEFORE, {
+          bookId,
+          previousStatus: book.status ?? null,
+          nextStatus: input.status ?? null,
+          book,
+          user,
+          changes: input,
+        });
+      }
+
+      const payload = this.normalizePartialPayload(input);
+
+      const updated = await this.bookRepository.update(bookId, payload, associations);
+      if (!updated) {
+        throw new BookServiceError('BOOK_NOT_FOUND');
+      }
+
+      await this.emitBookEvent(EVENTS.BOOK.UPDATE.AFTER, {
+        bookId,
+        book: updated,
+        user,
+        changes: input,
+      });
+
+      if (book.status !== updated.status) {
+        await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.AFTER, {
+          bookId,
+          previousStatus: book.status ?? null,
+          newStatus: updated.status ?? null,
+          book: updated,
+          user,
+        });
+      }
+
+      return updated;
+    } catch (error) {
+      await this.emitBookEvent(EVENTS.BOOK.UPDATE.FAILURE, {
+        bookId,
+        user,
+        input,
+        error,
+      });
+
+      if (statusWillChange && book) {
+        await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.FAILURE, {
+          bookId,
+          previousStatus: book.status ?? null,
+          nextStatus: input.status ?? null,
+          book,
+          user,
+          changes: input,
+          error,
+        });
+      }
+
+      throw error;
+    }
   }
 
   async deleteBook(bookId: number, userContext: BookUserContext): Promise<void> {
-    const book = await this.bookRepository.findById(bookId);
-    if (!book) {
-      throw new BookServiceError('BOOK_NOT_FOUND');
-    }
-
-    this.ensureOwnership(book, userContext);
-
-    const deleted = await this.bookRepository.delete(bookId);
-    if (!deleted) {
-      throw new BookServiceError('BOOK_NOT_FOUND');
-    }
-
-    await this.emitBookEvent(EVENTS.BOOK.DELETE.AFTER, {
+    const user = this.mapEventUser(userContext);
+    await this.emitBookEvent(EVENTS.BOOK.DELETE.BEFORE, {
       bookId,
-      book,
-      user: this.mapEventUser(userContext),
+      user,
     });
+
+    let book: BookEntity | null = null;
+
+    try {
+      book = await this.bookRepository.findById(bookId);
+      if (!book) {
+        throw new BookServiceError('BOOK_NOT_FOUND');
+      }
+
+      this.ensureOwnership(book, userContext);
+
+      const deleted = await this.bookRepository.delete(bookId);
+      if (!deleted) {
+        throw new BookServiceError('BOOK_NOT_FOUND');
+      }
+
+      await this.emitBookEvent(EVENTS.BOOK.DELETE.AFTER, {
+        bookId,
+        book,
+        user,
+      });
+    } catch (error) {
+      await this.emitBookEvent(EVENTS.BOOK.DELETE.FAILURE, {
+        bookId,
+        book,
+        user,
+        error,
+      });
+      throw error;
+    }
   }
 
   // ===== helpers ==========================================================

@@ -204,11 +204,11 @@ describe('HookSystem service', () => {
           throw new Error('HookSystem has not been initialized');
         });
 
-      await expect(hookService.emitHookEvent(EVENTS.BOOK.CREATE.BEFORE)).resolves.toBeUndefined();
+      await expect(hookService.emitHookEvent(EVENTS.BOOK.CREATE.FAILURE)).resolves.toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         {
           err: expect.any(Error),
-          eventName: EVENTS.BOOK.CREATE.BEFORE,
+          eventName: EVENTS.BOOK.CREATE.FAILURE,
         },
         'Skipped hook event'
       );

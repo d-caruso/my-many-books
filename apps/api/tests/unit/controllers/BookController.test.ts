@@ -5,8 +5,6 @@ import { BOOK_STATUS } from '@my-many-books/shared-types';
 import { container } from '../../../src/container';
 import { TYPES } from '../../../src/container/types';
 import { BookService } from '../../../src/services/book/BookService';
-import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
-import { EVENTS } from '../../../src/services/hooks/events';
 import { UniversalRequest } from '../../../src/types';
 
 // Mock dependencies
@@ -38,9 +36,6 @@ jest.mock('@/models/Book', () => {
   };
 });
 jest.mock('../../../src/services/isbnService');
-jest.mock('../../../src/services/hooks/hookSystem', () => ({
-  emitHookEvent: jest.fn().mockResolvedValue(undefined),
-}));
 
 // Container will use real dependency injection
 
@@ -89,7 +84,6 @@ describe('BookController', () => {
   let createBookSpy: jest.SpyInstance;
   let updateBookSpy: jest.SpyInstance;
   let deleteBookSpy: jest.SpyInstance;
-  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
   beforeEach(() => {
     container.snapshot();
@@ -98,7 +92,6 @@ describe('BookController', () => {
     deleteBookSpy = jest.spyOn(BookService.prototype, 'deleteBook');
     bookController = container.get<BookController>(TYPES.BookController);
     jest.clearAllMocks();
-    emitHookEventMock.mockClear();
 
     mockRequest = {
       headers: { 'accept-language': 'en' },
@@ -151,13 +144,6 @@ describe('BookController', () => {
         id: 1,
         title: 'Test Book',
       });
-      expect(emitHookEventMock).toHaveBeenCalledWith(
-        EVENTS.BOOK.CREATE.BEFORE,
-        expect.objectContaining({
-          user: { id: 1, role: 'user' },
-          input: expect.objectContaining({ title: 'Test Book' }),
-        })
-      );
     });
 
     // Note: ISBN validation is now handled by middleware (validateBody in bookRoutes.ts)
@@ -208,44 +194,6 @@ describe('BookController', () => {
       expect(result.statusCode).toBe(404);
       expect(result.success).toBe(false);
       expect(result.error).toBe('Book not found');
-    });
-  });
-
-  describe('hook events', () => {
-    it('emits book.update.before before updating', async () => {
-      mockRequest.body = JSON.stringify({ title: 'Updated Title' });
-      mockRequest.user = { id: 2, email: "test@example.com", role: 'user', provider: "cognito" };
-      mockRequest.params = { id: '5' };
-      updateBookSpy.mockResolvedValue({
-        id: 5,
-        title: 'Updated Title',
-      } as any);
-
-      await bookController.updateBook(mockRequest);
-
-      expect(emitHookEventMock).toHaveBeenCalledWith(
-        EVENTS.BOOK.UPDATE.BEFORE,
-        expect.objectContaining({
-          bookId: 5,
-          user: { id: 2, role: 'user' },
-        })
-      );
-    });
-
-    it('emits book.delete.before before deleting', async () => {
-      mockRequest.params = { id: '9' };
-      mockRequest.user = { id: 4, email: "test@example.com", role: 'user', provider: "cognito" };
-      deleteBookSpy.mockResolvedValue(undefined);
-
-      await bookController.deleteBook(mockRequest);
-
-      expect(emitHookEventMock).toHaveBeenCalledWith(
-        EVENTS.BOOK.DELETE.BEFORE,
-        expect.objectContaining({
-          bookId: 9,
-          user: { id: 4, role: 'user' },
-        })
-      );
     });
   });
 

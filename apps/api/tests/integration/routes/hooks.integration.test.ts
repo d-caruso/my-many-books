@@ -397,7 +397,7 @@ describe('Hook API Integration Tests', () => {
         {
           id: 2,
           hookId: 1,
-          eventName: EVENTS.BOOK.UPDATE.AFTER,
+          eventName: EVENTS.BOOK.UPDATE.FAILURE,
           success: false,
           errorMessage: 'Test error',
           executedAt: new Date(),

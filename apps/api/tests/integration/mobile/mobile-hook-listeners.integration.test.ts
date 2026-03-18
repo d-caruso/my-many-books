@@ -118,7 +118,7 @@ describe('Mobile Hook Listeners Integration Tests', () => {
       // Verify CRUD operations exist for all entities
       const entities = ['BOOK', 'AUTHOR', 'CATEGORY'];
       const operations = ['CREATE', 'UPDATE', 'DELETE'];
-      const states = ['BEFORE', 'AFTER'];
+      const states = ['BEFORE', 'AFTER', 'FAILURE'];
 
       entities.forEach(entityName => {
         const entity = EVENTS[entityName as keyof typeof EVENTS];
@@ -137,10 +137,13 @@ describe('Mobile Hook Listeners Integration Tests', () => {
       // Test a few key event names for proper format using existing EVENTS
       expect(EVENTS.BOOK.CREATE.BEFORE).toBe('book.create.before');
       expect(EVENTS.BOOK.CREATE.AFTER).toBe('book.create.after');
+      expect(EVENTS.BOOK.CREATE.FAILURE).toBe('book.create.failure');
       expect(EVENTS.AUTHOR.UPDATE.BEFORE).toBe('author.update.before');
       expect(EVENTS.AUTHOR.UPDATE.AFTER).toBe('author.update.after');
+      expect(EVENTS.AUTHOR.UPDATE.FAILURE).toBe('author.update.failure');
       expect(EVENTS.CATEGORY.DELETE.BEFORE).toBe('category.delete.before');
       expect(EVENTS.CATEGORY.DELETE.AFTER).toBe('category.delete.after');
+      expect(EVENTS.CATEGORY.DELETE.FAILURE).toBe('category.delete.failure');
       expect(EVENTS.USER.LOGIN.BEFORE).toBe('user.login.before');
       expect(EVENTS.AUTH.LOGIN.FAILURE).toBe('auth.login.failure');
     });
@@ -186,10 +189,13 @@ describe('Mobile Hook Listeners Integration Tests', () => {
       const hookEventTypes = [
         EVENTS.BOOK.CREATE.BEFORE,
         EVENTS.BOOK.CREATE.AFTER,
+        EVENTS.BOOK.CREATE.FAILURE,
         EVENTS.AUTHOR.UPDATE.BEFORE,
         EVENTS.AUTHOR.UPDATE.AFTER,
+        EVENTS.AUTHOR.UPDATE.FAILURE,
         EVENTS.CATEGORY.DELETE.BEFORE,
         EVENTS.CATEGORY.DELETE.AFTER,
+        EVENTS.CATEGORY.DELETE.FAILURE,
         EVENTS.USER.LOGIN.BEFORE,
         EVENTS.USER.LOGIN.AFTER,
       ];
@@ -243,10 +249,13 @@ describe('Mobile Hook Listeners Integration Tests', () => {
       const entityEvents = [
         EVENTS.BOOK.CREATE.BEFORE,
         EVENTS.BOOK.CREATE.AFTER,
+        EVENTS.BOOK.CREATE.FAILURE,
         EVENTS.BOOK.UPDATE.BEFORE,
         EVENTS.BOOK.UPDATE.AFTER,
+        EVENTS.BOOK.UPDATE.FAILURE,
         EVENTS.BOOK.DELETE.BEFORE,
         EVENTS.BOOK.DELETE.AFTER,
+        EVENTS.BOOK.DELETE.FAILURE,
       ];
 
       for (const eventType of entityEvents) {

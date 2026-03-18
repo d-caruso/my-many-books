@@ -115,21 +115,36 @@ class CategoryService {
     input: CreateCategoryInput,
     userContext: CategoryUserContext
   ): Promise<CategoryEntity> {
-    const ownerId = this.resolveOwnerId(input.userId, userContext);
-    await this.ensureUniqueName(input.name, ownerId);
-
-    const payload: CategoryCreationAttributes = {
-      name: input.name,
-      userId: ownerId,
-    };
-
-    const created = await this.categoryRepository.create(payload);
-    await this.emitCategoryEvent(EVENTS.CATEGORY.CREATE.AFTER, {
-      category: created,
-      user: this.mapEventUser(userContext),
+    const user = this.mapEventUser(userContext);
+    await this.emitCategoryEvent(EVENTS.CATEGORY.CREATE.BEFORE, {
+      user,
       input,
     });
-    return created;
+
+    try {
+      const ownerId = this.resolveOwnerId(input.userId, userContext);
+      await this.ensureUniqueName(input.name, ownerId);
+
+      const payload: CategoryCreationAttributes = {
+        name: input.name,
+        userId: ownerId,
+      };
+
+      const created = await this.categoryRepository.create(payload);
+      await this.emitCategoryEvent(EVENTS.CATEGORY.CREATE.AFTER, {
+        category: created,
+        user,
+        input,
+      });
+      return created;
+    } catch (error) {
+      await this.emitCategoryEvent(EVENTS.CATEGORY.CREATE.FAILURE, {
+        user,
+        input,
+        error,
+      });
+      throw error;
+    }
   }
 
   async updateCategory(
@@ -137,35 +152,52 @@ class CategoryService {
     input: UpdateCategoryInput,
     userContext: CategoryUserContext
   ): Promise<CategoryEntity> {
-    const existing = await this.categoryRepository.findById(id);
-    if (!existing) {
-      throw new CategoryServiceError('CATEGORY_NOT_FOUND');
-    }
-
-    this.ensureOwnership(existing, userContext);
-
-    if (input.name && input.name !== existing.name) {
-      await this.ensureUniqueName(input.name, existing.userId);
-    }
-
-    const payload: Partial<CategoryCreationAttributes> = {};
-    if (input.name !== undefined) {
-      payload.name = input.name;
-    }
-
-    const updated = await this.categoryRepository.update(id, payload);
-    if (!updated) {
-      throw new CategoryServiceError('CATEGORY_NOT_FOUND');
-    }
-
-    await this.emitCategoryEvent(EVENTS.CATEGORY.UPDATE.AFTER, {
+    const user = this.mapEventUser(userContext);
+    await this.emitCategoryEvent(EVENTS.CATEGORY.UPDATE.BEFORE, {
       categoryId: id,
-      category: updated,
-      user: this.mapEventUser(userContext),
-      changes: input,
+      user,
+      input,
     });
 
-    return updated;
+    try {
+      const existing = await this.categoryRepository.findById(id);
+      if (!existing) {
+        throw new CategoryServiceError('CATEGORY_NOT_FOUND');
+      }
+
+      this.ensureOwnership(existing, userContext);
+
+      if (input.name && input.name !== existing.name) {
+        await this.ensureUniqueName(input.name, existing.userId);
+      }
+
+      const payload: Partial<CategoryCreationAttributes> = {};
+      if (input.name !== undefined) {
+        payload.name = input.name;
+      }
+
+      const updated = await this.categoryRepository.update(id, payload);
+      if (!updated) {
+        throw new CategoryServiceError('CATEGORY_NOT_FOUND');
+      }
+
+      await this.emitCategoryEvent(EVENTS.CATEGORY.UPDATE.AFTER, {
+        categoryId: id,
+        category: updated,
+        user,
+        changes: input,
+      });
+
+      return updated;
+    } catch (error) {
+      await this.emitCategoryEvent(EVENTS.CATEGORY.UPDATE.FAILURE, {
+        categoryId: id,
+        user,
+        input,
+        error,
+      });
+      throw error;
+    }
   }
 
   async deleteCategory(
@@ -173,29 +205,50 @@ class CategoryService {
     userContext: CategoryUserContext,
     force?: boolean
   ): Promise<void> {
-    const existing = await this.categoryRepository.findById(id);
-    if (!existing) {
-      throw new CategoryServiceError('CATEGORY_NOT_FOUND');
-    }
-
-    this.ensureOwnership(existing, userContext);
-
-    const bookCount = await this.categoryRepository.countBooks(id);
-    if (bookCount > 0 && !force) {
-      throw new CategoryServiceError('CATEGORY_HAS_BOOKS');
-    }
-
-    const deleted = await this.categoryRepository.delete(id);
-    if (!deleted) {
-      throw new CategoryServiceError('CATEGORY_NOT_FOUND');
-    }
-
-    await this.emitCategoryEvent(EVENTS.CATEGORY.DELETE.AFTER, {
+    const user = this.mapEventUser(userContext);
+    const forceDelete = force ?? false;
+    await this.emitCategoryEvent(EVENTS.CATEGORY.DELETE.BEFORE, {
       categoryId: id,
-      category: existing,
-      user: this.mapEventUser(userContext),
-      force: force ?? false,
+      user,
+      force: forceDelete,
     });
+
+    let existing: CategoryEntity | null = null;
+
+    try {
+      existing = await this.categoryRepository.findById(id);
+      if (!existing) {
+        throw new CategoryServiceError('CATEGORY_NOT_FOUND');
+      }
+
+      this.ensureOwnership(existing, userContext);
+
+      const bookCount = await this.categoryRepository.countBooks(id);
+      if (bookCount > 0 && !forceDelete) {
+        throw new CategoryServiceError('CATEGORY_HAS_BOOKS');
+      }
+
+      const deleted = await this.categoryRepository.delete(id);
+      if (!deleted) {
+        throw new CategoryServiceError('CATEGORY_NOT_FOUND');
+      }
+
+      await this.emitCategoryEvent(EVENTS.CATEGORY.DELETE.AFTER, {
+        categoryId: id,
+        category: existing,
+        user,
+        force: forceDelete,
+      });
+    } catch (error) {
+      await this.emitCategoryEvent(EVENTS.CATEGORY.DELETE.FAILURE, {
+        categoryId: id,
+        category: existing,
+        user,
+        force: forceDelete,
+        error,
+      });
+      throw error;
+    }
   }
 
   // ===== helpers ==========================================================

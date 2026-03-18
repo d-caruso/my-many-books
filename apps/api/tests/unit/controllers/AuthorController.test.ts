@@ -5,13 +5,7 @@ import { TYPES } from '../../../src/container/types';
 import { AuthorService } from '../../../src/services/author/AuthorService';
 import { AuthorRepository } from '../../../src/repositories/author/AuthorRepository';
 import { BookRepository } from '../../../src/repositories/book/BookRepository';
-import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
-import { EVENTS } from '../../../src/services/hooks/events';
 import { UniversalRequest } from '../../../src/types';
-
-jest.mock('../../../src/services/hooks/hookSystem', () => ({
-  emitHookEvent: jest.fn().mockResolvedValue(undefined),
-}));
 
 // Container will use real dependency injection, but we mock the underlying services
 
@@ -61,8 +55,6 @@ describe('AuthorController', () => {
   let searchByQuerySpy: jest.SpyInstance;
   let bookSearchSpy: jest.SpyInstance;
 
-  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
-
   beforeEach(() => {
     container.snapshot();
     authorController = container.get<AuthorController>(TYPES.AuthorController);
@@ -87,7 +79,6 @@ describe('AuthorController', () => {
       params: {},
       user: { id: 1, email: "test@example.com", role: 'user', provider: "cognito" },
     };
-    emitHookEventMock.mockClear();
   });
 
   afterEach(() => {
@@ -140,13 +131,6 @@ describe('AuthorController', () => {
       expect(response.statusCode).toBe(201);
       expect(response.success).toBe(true);
       expect((response.data as { id: number }).id).toBe(1);
-      expect(emitHookEventMock).toHaveBeenCalledWith(
-        EVENTS.AUTHOR.CREATE.BEFORE,
-        expect.objectContaining({
-          user: { id: 1, role: 'user' },
-          input: expect.objectContaining(payload),
-        })
-      );
     });
 
   });
@@ -171,14 +155,6 @@ describe('AuthorController', () => {
         expect.objectContaining({ userId: 1 })
       );
       expect(response.statusCode).toBe(200);
-      expect(emitHookEventMock).toHaveBeenCalledWith(
-        EVENTS.AUTHOR.UPDATE.BEFORE,
-        expect.objectContaining({
-          authorId: 1,
-          user: { id: 1, role: 'user' },
-          input: expect.objectContaining({ nationality: 'US' }),
-        })
-      );
     });
 
   });
@@ -196,13 +172,6 @@ describe('AuthorController', () => {
         false
       );
       expect(response.statusCode).toBe(204);
-      expect(emitHookEventMock).toHaveBeenCalledWith(
-        EVENTS.AUTHOR.DELETE.BEFORE,
-        expect.objectContaining({
-          authorId: 2,
-          user: { id: 1, role: 'user' },
-        })
-      );
     });
   });
 

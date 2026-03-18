@@ -32,8 +32,6 @@ import { UpdateBookDTO } from '../dtos/book/UpdateBookDTO';
 import { toBookResponseDTO } from '../dtos/book/BookResponseDTO';
 import { Repository as BookRepositoryContract } from '../repositories/book/Repository';
 import { TYPES } from '../container/types';
-import { emitHookEvent } from '../services/hooks/hookSystem';
-import { EVENTS } from '../services/hooks/events';
 import { BookSearchService } from '../services/search/BookSearchService';
 import { BookSearchResultDTO } from '../dtos/book/BookSearchResultDTO';
 import { TransformedAuthorData, TransformedCategoryData } from '../types/bookData';
@@ -137,11 +135,6 @@ export class BookController extends BaseController {
     const serviceInput = dto.toServiceInput();
     const userContext = this.getUserContext(request);
 
-    await emitHookEvent(EVENTS.BOOK.CREATE.BEFORE, {
-      user: this.mapRequestUser(request),
-      input: serviceInput,
-    });
-
     try {
       const createdBook = await this.bookService.createBook(serviceInput, userContext);
       return this.createSuccessResponse(
@@ -235,10 +228,6 @@ export class BookController extends BaseController {
 
     try {
       const numericBookId = Number(bookId);
-      await emitHookEvent(EVENTS.BOOK.DELETE.BEFORE, {
-        user: this.mapRequestUser(request),
-        bookId: numericBookId,
-      });
       await this.bookService.deleteBook(numericBookId, this.getUserContext(request)!);
       return this.createSuccessResponse(null, this.t('common:book_deleted'), undefined, 204);
     } catch (error) {
@@ -838,12 +827,6 @@ export class BookController extends BaseController {
   ): Promise<ApiResponse> {
     try {
       const updateInput = dto.toServiceInput();
-      await emitHookEvent(EVENTS.BOOK.UPDATE.BEFORE, {
-        user: this.mapRequestUser(request),
-        bookId,
-        input: updateInput,
-      });
-
       const updated = await this.bookService.updateBook(
         bookId,
         updateInput,
@@ -853,19 +836,6 @@ export class BookController extends BaseController {
     } catch (error) {
       return this.handleBookServiceError(error);
     }
-  }
-
-  private mapRequestUser(request: UniversalRequest): { id: number; role?: string } | null {
-    if (!request.user) {
-      return null;
-    }
-    const user: { id: number; role?: string } = {
-      id: request.user.id,
-    };
-    if (request.user.role) {
-      user.role = request.user.role;
-    }
-    return user;
   }
 
   async deleteBookForUser(request: UniversalRequest): Promise<ApiResponse> {

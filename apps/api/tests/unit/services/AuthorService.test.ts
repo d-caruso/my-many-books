@@ -54,7 +54,16 @@ describe('AuthorService', () => {
       userId: 1,
     });
     expect(author.id).toBe(1);
-    expect(emitHookEventMock).toHaveBeenCalledWith(
+    expect(emitHookEventMock).toHaveBeenNthCalledWith(
+      1,
+      EVENTS.AUTHOR.CREATE.BEFORE,
+      expect.objectContaining({
+        user: { id: 1, role: 'user' },
+        input: expect.objectContaining({ name: 'John', surname: 'Doe' }),
+      })
+    );
+    expect(emitHookEventMock).toHaveBeenNthCalledWith(
+      2,
       EVENTS.AUTHOR.CREATE.AFTER,
       expect.objectContaining({
         author: expect.objectContaining({ id: 1 }),
@@ -69,6 +78,23 @@ describe('AuthorService', () => {
       await expect(
         service.createAuthor({ name: 'John', surname: 'Doe' }, userContext)
       ).rejects.toThrow(AuthorServiceError);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.AUTHOR.CREATE.BEFORE,
+        expect.objectContaining({
+          user: { id: 1, role: 'user' },
+          input: { name: 'John', surname: 'Doe' },
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.AUTHOR.CREATE.FAILURE,
+        expect.objectContaining({
+          user: { id: 1, role: 'user' },
+          input: { name: 'John', surname: 'Doe' },
+          error: expect.any(AuthorServiceError),
+        })
+      );
     });
   });
 
@@ -99,7 +125,17 @@ describe('AuthorService', () => {
       expect.objectContaining({ name: 'New' })
     );
     expect(updated.name).toBe('New');
-    expect(emitHookEventMock).toHaveBeenCalledWith(
+    expect(emitHookEventMock).toHaveBeenNthCalledWith(
+      1,
+      EVENTS.AUTHOR.UPDATE.BEFORE,
+      expect.objectContaining({
+        authorId: 2,
+        user: { id: 1, role: 'user' },
+        input: { name: 'New' },
+      })
+    );
+    expect(emitHookEventMock).toHaveBeenNthCalledWith(
+      2,
       EVENTS.AUTHOR.UPDATE.AFTER,
       expect.objectContaining({
         authorId: 2,
@@ -120,6 +156,25 @@ describe('AuthorService', () => {
       await expect(
         service.updateAuthor(3, { name: 'Hack' }, userContext)
       ).rejects.toThrow(AuthorServiceError);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.AUTHOR.UPDATE.BEFORE,
+        expect.objectContaining({
+          authorId: 3,
+          user: { id: 1, role: 'user' },
+          input: { name: 'Hack' },
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.AUTHOR.UPDATE.FAILURE,
+        expect.objectContaining({
+          authorId: 3,
+          user: { id: 1, role: 'user' },
+          input: { name: 'Hack' },
+          error: expect.any(AuthorServiceError),
+        })
+      );
     });
   });
 
@@ -138,7 +193,17 @@ describe('AuthorService', () => {
 
       expect(repository.countBooks).toHaveBeenCalledWith(4);
       expect(repository.delete).toHaveBeenCalledWith(4);
-      expect(emitHookEventMock).toHaveBeenCalledWith(
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.AUTHOR.DELETE.BEFORE,
+        expect.objectContaining({
+          authorId: 4,
+          user: { id: 1, role: 'user' },
+          force: false,
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
         EVENTS.AUTHOR.DELETE.AFTER,
         expect.objectContaining({
           authorId: 4,
@@ -157,6 +222,25 @@ describe('AuthorService', () => {
       repository.countBooks.mockResolvedValue(2);
 
       await expect(service.deleteAuthor(4, userContext)).rejects.toThrow(AuthorServiceError);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.AUTHOR.DELETE.BEFORE,
+        expect.objectContaining({
+          authorId: 4,
+          user: { id: 1, role: 'user' },
+          force: false,
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.AUTHOR.DELETE.FAILURE,
+        expect.objectContaining({
+          authorId: 4,
+          user: { id: 1, role: 'user' },
+          force: false,
+          error: expect.any(AuthorServiceError),
+        })
+      );
     });
   });
 });

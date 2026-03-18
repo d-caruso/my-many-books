@@ -41,7 +41,16 @@ describe('CategoryService', () => {
     expect(repository.findByName).toHaveBeenCalledWith('Fiction', 1);
     expect(repository.create).toHaveBeenCalledWith({ name: 'Fiction', userId: 1 });
     expect(result.id).toBe(1);
-    expect(emitHookEventMock).toHaveBeenCalledWith(
+    expect(emitHookEventMock).toHaveBeenNthCalledWith(
+      1,
+      EVENTS.CATEGORY.CREATE.BEFORE,
+      expect.objectContaining({
+        user: { id: 1, role: 'user' },
+        input: { name: 'Fiction' },
+      })
+    );
+    expect(emitHookEventMock).toHaveBeenNthCalledWith(
+      2,
       EVENTS.CATEGORY.CREATE.AFTER,
       expect.objectContaining({
         category: expect.objectContaining({ id: 1 }),
@@ -55,6 +64,23 @@ describe('CategoryService', () => {
 
       await expect(service.createCategory({ name: 'Fiction' }, userContext)).rejects.toThrow(
         CategoryServiceError
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.CATEGORY.CREATE.BEFORE,
+        expect.objectContaining({
+          user: { id: 1, role: 'user' },
+          input: { name: 'Fiction' },
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.CATEGORY.CREATE.FAILURE,
+        expect.objectContaining({
+          user: { id: 1, role: 'user' },
+          input: { name: 'Fiction' },
+          error: expect.any(CategoryServiceError),
+        })
       );
     });
   });
@@ -86,7 +112,17 @@ describe('CategoryService', () => {
 
     expect(repository.update).toHaveBeenCalledWith(7, { name: 'New' });
     expect(updated.name).toBe('New');
-    expect(emitHookEventMock).toHaveBeenCalledWith(
+    expect(emitHookEventMock).toHaveBeenNthCalledWith(
+      1,
+      EVENTS.CATEGORY.UPDATE.BEFORE,
+      expect.objectContaining({
+        categoryId: 7,
+        user: { id: 1, role: 'user' },
+        input: { name: 'New' },
+      })
+    );
+    expect(emitHookEventMock).toHaveBeenNthCalledWith(
+      2,
       EVENTS.CATEGORY.UPDATE.AFTER,
       expect.objectContaining({
         categoryId: 7,
@@ -102,6 +138,25 @@ describe('CategoryService', () => {
       await expect(service.updateCategory(1, { name: 'Test' }, userContext)).rejects.toThrow(
         CategoryServiceError
       );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.CATEGORY.UPDATE.BEFORE,
+        expect.objectContaining({
+          categoryId: 1,
+          user: { id: 1, role: 'user' },
+          input: { name: 'Test' },
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.CATEGORY.UPDATE.FAILURE,
+        expect.objectContaining({
+          categoryId: 1,
+          user: { id: 1, role: 'user' },
+          input: { name: 'Test' },
+          error: expect.any(CategoryServiceError),
+        })
+      );
     });
   });
 
@@ -113,6 +168,25 @@ describe('CategoryService', () => {
       await expect(service.deleteCategory(3, userContext)).rejects.toThrow(
         CategoryServiceError
       );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.CATEGORY.DELETE.BEFORE,
+        expect.objectContaining({
+          categoryId: 3,
+          user: { id: 1, role: 'user' },
+          force: false,
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.CATEGORY.DELETE.FAILURE,
+        expect.objectContaining({
+          categoryId: 3,
+          user: { id: 1, role: 'user' },
+          force: false,
+          error: expect.any(CategoryServiceError),
+        })
+      );
     });
 
     it('deletes when allowed', async () => {
@@ -123,7 +197,17 @@ describe('CategoryService', () => {
     await service.deleteCategory(3, userContext);
 
     expect(repository.delete).toHaveBeenCalledWith(3);
-    expect(emitHookEventMock).toHaveBeenCalledWith(
+    expect(emitHookEventMock).toHaveBeenNthCalledWith(
+      1,
+      EVENTS.CATEGORY.DELETE.BEFORE,
+      expect.objectContaining({
+        categoryId: 3,
+        user: { id: 1, role: 'user' },
+        force: false,
+      })
+    );
+    expect(emitHookEventMock).toHaveBeenNthCalledWith(
+      2,
       EVENTS.CATEGORY.DELETE.AFTER,
       expect.objectContaining({
         categoryId: 3,

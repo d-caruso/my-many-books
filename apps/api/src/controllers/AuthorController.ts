@@ -21,8 +21,6 @@ import { Repository as BookRepositoryContract } from '../repositories/book/Repos
 import { SORT_DIRECTIONS, DATABASE_FIELDS, ERROR_CODES } from '@my-many-books/shared-types';
 import { ApiErrorPayload } from '../common/ApiResponse';
 import { USER_ROLES } from '@my-many-books/shared-auth';
-import { emitHookEvent } from '../services/hooks/hookSystem';
-import { EVENTS } from '../services/hooks/events';
 export interface AuthorSearchFilters {
   name?: string;
   surname?: string;
@@ -66,11 +64,6 @@ export class AuthorController extends BaseController {
     const body = this.parseBody(request);
     const dto = CreateAuthorDTO.from(body);
     const serviceInput = dto.toServiceInput();
-
-    await emitHookEvent(EVENTS.AUTHOR.CREATE.BEFORE, {
-      user: this.mapRequestUser(request),
-      input: serviceInput,
-    });
 
     try {
       const createdAuthor = await this.authorService.createAuthor(
@@ -138,12 +131,6 @@ export class AuthorController extends BaseController {
     const dto = UpdateAuthorDTO.from(body);
     const updateInput = dto.toServiceInput();
 
-    await emitHookEvent(EVENTS.AUTHOR.UPDATE.BEFORE, {
-      user: this.mapRequestUser(request),
-      authorId: Number(authorId),
-      input: updateInput,
-    });
-
     try {
       const updated = await this.authorService.updateAuthor(
         Number(authorId),
@@ -176,12 +163,6 @@ export class AuthorController extends BaseController {
 
     const numericAuthorId = Number(authorId);
     const forceDelete = this.getQueryParameter(request, 'force') === 'true';
-
-    await emitHookEvent(EVENTS.AUTHOR.DELETE.BEFORE, {
-      user: this.mapRequestUser(request),
-      authorId: numericAuthorId,
-      force: forceDelete,
-    });
 
     try {
       await this.authorService.deleteAuthor(numericAuthorId, this.getUserContext(request)!, forceDelete);
@@ -343,16 +324,4 @@ export class AuthorController extends BaseController {
   }
 
 
-  private mapRequestUser(request: UniversalRequest): { id: number; role?: string } | null {
-    if (!request.user) {
-      return null;
-    }
-    const summary: { id: number; role?: string } = {
-      id: request.user.id,
-    };
-    if (request.user.role) {
-      summary.role = request.user.role;
-    }
-    return summary;
-  }
 }

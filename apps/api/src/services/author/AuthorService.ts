@@ -65,23 +65,38 @@ class AuthorService {
     input: CreateAuthorInput,
     userContext: AuthorUserContext
   ): Promise<AuthorEntity> {
-    const ownerId = this.resolveOwnerId(input.userId, userContext);
-    await this.ensureUniqueName(input.name, input.surname, ownerId);
-
-    const payload: AuthorCreationAttributes = {
-      name: input.name,
-      surname: input.surname,
-      nationality: input.nationality ?? null,
-      userId: ownerId,
-    };
-
-    const createdAuthor = await this.authorRepository.create(payload);
-    await this.emitAuthorEvent(EVENTS.AUTHOR.CREATE.AFTER, {
-      author: createdAuthor,
-      user: this.mapEventUser(userContext),
+    const user = this.mapEventUser(userContext);
+    await this.emitAuthorEvent(EVENTS.AUTHOR.CREATE.BEFORE, {
+      user,
       input,
     });
-    return createdAuthor;
+
+    try {
+      const ownerId = this.resolveOwnerId(input.userId, userContext);
+      await this.ensureUniqueName(input.name, input.surname, ownerId);
+
+      const payload: AuthorCreationAttributes = {
+        name: input.name,
+        surname: input.surname,
+        nationality: input.nationality ?? null,
+        userId: ownerId,
+      };
+
+      const createdAuthor = await this.authorRepository.create(payload);
+      await this.emitAuthorEvent(EVENTS.AUTHOR.CREATE.AFTER, {
+        author: createdAuthor,
+        user,
+        input,
+      });
+      return createdAuthor;
+    } catch (error) {
+      await this.emitAuthorEvent(EVENTS.AUTHOR.CREATE.FAILURE, {
+        user,
+        input,
+        error,
+      });
+      throw error;
+    }
   }
 
   async updateAuthor(
@@ -89,70 +104,108 @@ class AuthorService {
     input: UpdateAuthorInput,
     userContext: AuthorUserContext
   ): Promise<AuthorEntity> {
-    const existing = await this.authorRepository.findById(id);
-    if (!existing) {
-      throw new AuthorServiceError('AUTHOR_NOT_FOUND');
-    }
-
-    this.ensureOwnership(existing, userContext);
-
-    const nextName = input.name ?? existing.name;
-    const nextSurname = input.surname ?? existing.surname;
-    if (nextName !== existing.name || nextSurname !== existing.surname) {
-      await this.ensureUniqueName(nextName, nextSurname, existing.userId);
-    }
-
-    const payload: Partial<AuthorCreationAttributes> = {};
-
-    if (input.name !== undefined) {
-      payload.name = input.name;
-    }
-
-    if (input.surname !== undefined) {
-      payload.surname = input.surname;
-    }
-
-    if (input.nationality !== undefined) {
-      payload.nationality = input.nationality;
-    }
-
-    const updated = await this.authorRepository.update(id, payload);
-    if (!updated) {
-      throw new AuthorServiceError('AUTHOR_NOT_FOUND');
-    }
-    await this.emitAuthorEvent(EVENTS.AUTHOR.UPDATE.AFTER, {
+    const user = this.mapEventUser(userContext);
+    await this.emitAuthorEvent(EVENTS.AUTHOR.UPDATE.BEFORE, {
       authorId: id,
-      author: updated,
-      user: this.mapEventUser(userContext),
-      changes: input,
+      user,
+      input,
     });
 
-    return updated;
+    try {
+      const existing = await this.authorRepository.findById(id);
+      if (!existing) {
+        throw new AuthorServiceError('AUTHOR_NOT_FOUND');
+      }
+
+      this.ensureOwnership(existing, userContext);
+
+      const nextName = input.name ?? existing.name;
+      const nextSurname = input.surname ?? existing.surname;
+      if (nextName !== existing.name || nextSurname !== existing.surname) {
+        await this.ensureUniqueName(nextName, nextSurname, existing.userId);
+      }
+
+      const payload: Partial<AuthorCreationAttributes> = {};
+
+      if (input.name !== undefined) {
+        payload.name = input.name;
+      }
+
+      if (input.surname !== undefined) {
+        payload.surname = input.surname;
+      }
+
+      if (input.nationality !== undefined) {
+        payload.nationality = input.nationality;
+      }
+
+      const updated = await this.authorRepository.update(id, payload);
+      if (!updated) {
+        throw new AuthorServiceError('AUTHOR_NOT_FOUND');
+      }
+      await this.emitAuthorEvent(EVENTS.AUTHOR.UPDATE.AFTER, {
+        authorId: id,
+        author: updated,
+        user,
+        changes: input,
+      });
+
+      return updated;
+    } catch (error) {
+      await this.emitAuthorEvent(EVENTS.AUTHOR.UPDATE.FAILURE, {
+        authorId: id,
+        user,
+        input,
+        error,
+      });
+      throw error;
+    }
   }
 
   async deleteAuthor(id: number, userContext: AuthorUserContext, force?: boolean): Promise<void> {
-    const existing = await this.authorRepository.findById(id);
-    if (!existing) {
-      throw new AuthorServiceError('AUTHOR_NOT_FOUND');
-    }
-
-    this.ensureOwnership(existing, userContext);
-
-    const bookCount = await this.authorRepository.countBooks(id);
-    if (bookCount > 0 && !force) {
-      throw new AuthorServiceError('AUTHOR_HAS_BOOKS');
-    }
-
-    const deleted = await this.authorRepository.delete(id);
-    if (!deleted) {
-      throw new AuthorServiceError('AUTHOR_NOT_FOUND');
-    }
-
-    await this.emitAuthorEvent(EVENTS.AUTHOR.DELETE.AFTER, {
+    const user = this.mapEventUser(userContext);
+    const forceDelete = force ?? false;
+    await this.emitAuthorEvent(EVENTS.AUTHOR.DELETE.BEFORE, {
       authorId: id,
-      author: existing,
-      user: this.mapEventUser(userContext),
+      user,
+      force: forceDelete,
     });
+
+    let existing: AuthorEntity | null = null;
+
+    try {
+      existing = await this.authorRepository.findById(id);
+      if (!existing) {
+        throw new AuthorServiceError('AUTHOR_NOT_FOUND');
+      }
+
+      this.ensureOwnership(existing, userContext);
+
+      const bookCount = await this.authorRepository.countBooks(id);
+      if (bookCount > 0 && !forceDelete) {
+        throw new AuthorServiceError('AUTHOR_HAS_BOOKS');
+      }
+
+      const deleted = await this.authorRepository.delete(id);
+      if (!deleted) {
+        throw new AuthorServiceError('AUTHOR_NOT_FOUND');
+      }
+
+      await this.emitAuthorEvent(EVENTS.AUTHOR.DELETE.AFTER, {
+        authorId: id,
+        author: existing,
+        user,
+      });
+    } catch (error) {
+      await this.emitAuthorEvent(EVENTS.AUTHOR.DELETE.FAILURE, {
+        authorId: id,
+        author: existing,
+        user,
+        force: forceDelete,
+        error,
+      });
+      throw error;
+    }
   }
 
   // ===== helpers ==========================================================
