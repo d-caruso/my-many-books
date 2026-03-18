@@ -1,4 +1,4 @@
-import { bookAPI } from '../../src/services/api';
+import { apiHttpClient, bookAPI } from '../../src/services/api';
 import { mobileHooks, MOBILE_EVENTS } from '../../src/services/hooks/mobileHooks';
 
 jest.mock('expo-secure-store', () => ({
@@ -231,5 +231,43 @@ describe('bookAPI hookey lifecycle emits', () => {
         resourceType: 'book',
       })
     );
+  });
+
+  it('emits session-expired events when refresh fails after a 401', async () => {
+    const mockFetch = jest.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      statusText: 'Unauthorized',
+      json: () => Promise.resolve({}),
+    });
+    global.fetch = mockFetch as typeof fetch;
+
+    const { authService } = jest.requireMock('../../src/services/authService') as {
+      authService: {
+        getIdToken: jest.Mock;
+        silentRefresh: jest.Mock;
+        logout: jest.Mock;
+      };
+    };
+
+    authService.getIdToken.mockResolvedValue('id-token');
+    authService.silentRefresh.mockResolvedValue(false);
+    authService.logout.mockResolvedValue(undefined);
+
+    await expect(apiHttpClient.get('/protected')).rejects.toThrow();
+
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.AUTH.SESSION.EXPIRED,
+      expect.objectContaining({
+        reason: 'refresh_failed_after_unauthorized',
+        metadata: expect.objectContaining({
+          source: 'api_http_client',
+          statusCode: 401,
+          method: 'GET',
+          url: '/protected',
+        }),
+      })
+    );
+    expect(authService.logout).toHaveBeenCalledTimes(1);
   });
 });

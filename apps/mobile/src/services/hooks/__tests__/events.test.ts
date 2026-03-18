@@ -8,6 +8,8 @@ describe('Mobile Events', () => {
       expect(MOBILE_EVENTS.BOOK).toBeDefined();
       expect(MOBILE_EVENTS.AUTHOR).toBeDefined();
       expect(MOBILE_EVENTS.CATEGORY).toBeDefined();
+      expect(MOBILE_EVENTS.USER).toBeDefined();
+      expect(MOBILE_EVENTS.AUTH).toBeDefined();
       expect(MOBILE_EVENTS.QUEUE).toBeDefined();
       expect(MOBILE_EVENTS.EXECUTOR).toBeDefined();
       expect(MOBILE_EVENTS.SYNC).toBeDefined();
@@ -30,10 +32,15 @@ describe('Mobile Events', () => {
       expect(MOBILE_EVENTS.BOOK.STATUS.CHANGE).toEqual(HOOK_EVENTS.BOOK.STATUS.CHANGE);
       expect(MOBILE_EVENTS.AUTHOR.UPDATE).toEqual(HOOK_EVENTS.AUTHOR.UPDATE);
       expect(MOBILE_EVENTS.CATEGORY.DELETE).toEqual(HOOK_EVENTS.CATEGORY.DELETE);
+      expect(MOBILE_EVENTS.USER.LOGIN).toEqual(HOOK_EVENTS.USER.LOGIN);
+      expect(MOBILE_EVENTS.USER.PASSWORD.CHANGE).toEqual(HOOK_EVENTS.USER.PASSWORD.CHANGE);
+      expect(MOBILE_EVENTS.AUTH.REFRESH).toEqual(HOOK_EVENTS.AUTH.REFRESH);
+      expect(MOBILE_EVENTS.AUTH.VERIFY_EMAIL).toEqual(HOOK_EVENTS.AUTH.VERIFY_EMAIL);
 
       expect(MOBILE_EVENTS.QUEUE.PROCESS.START).toBe('queue.process.start');
       expect(MOBILE_EVENTS.SYNC.UPLOAD.COMPLETE).toBe('sync.upload.complete');
       expect(MOBILE_EVENTS.ERROR.API_RESPONSE).toBe('error.api_response');
+      expect(MOBILE_EVENTS.AUTH.SESSION.EXPIRED).toBe('auth.session.expired');
     });
 
     it('should omit READ operations from the shared entity trees', () => {
@@ -100,6 +107,8 @@ describe('Mobile Events', () => {
         MOBILE_EVENTS.BOOK.CREATE.BEFORE,
         MOBILE_EVENTS.AUTHOR.UPDATE.AFTER,
         MOBILE_EVENTS.CATEGORY.DELETE.FAILURE,
+        MOBILE_EVENTS.USER.LOGIN.AFTER,
+        MOBILE_EVENTS.AUTH.SESSION.EXPIRED,
         MOBILE_EVENTS.QUEUE.PROCESS.START,
         MOBILE_EVENTS.SYNC.CONFLICT.DETECTED,
         MOBILE_EVENTS.NETWORK.TYPE_CHANGED,

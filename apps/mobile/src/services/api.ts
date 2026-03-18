@@ -6,8 +6,9 @@ import i18n from '../i18n';
 import { operationQueue } from './OperationQueue';
 import { isRetriableError } from './QueueExecutor';
 import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/eventsSchema';
+import { createAuthLifecyclePayload } from './hooks/authLifecycleEvents';
 import { emitDomainMutationLifecycle, createDomainMutationPayload } from './hooks/domainMutationEvents';
-import { MOBILE_EVENTS } from './hooks/mobileHooks';
+import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
 import type { OperationType } from './hooks/eventsSchema';
 import type { BookOperationPayload, UserOperationPayload, SettingsOperationPayload } from '../types/queue';
 import type { BookFormData, BookStatus } from '@my-many-books/shared-types';
@@ -121,6 +122,16 @@ class FetchHttpClient implements HttpClient {
           if (refreshed) {
             return this.fetchWithTimeout<T>(url, options, true);
           }
+
+          await mobileHooks.emit(MOBILE_EVENTS.AUTH.SESSION.EXPIRED, {
+            ...createAuthLifecyclePayload({
+              source: 'api_http_client',
+              statusCode: response.status,
+              method: options.method || 'GET',
+              url,
+            }),
+            reason: 'refresh_failed_after_unauthorized',
+          });
 
           // Token refresh failed - logout user
           await authService.logout();

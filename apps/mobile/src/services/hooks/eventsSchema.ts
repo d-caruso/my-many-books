@@ -1,6 +1,7 @@
 import {
   buildTreeSchema,
   EventName,
+  HOOK_EVENTS,
   HOOK_PHASES,
   MUTATION_OPERATIONS,
 } from '@my-many-books/shared-utils';
@@ -193,7 +194,23 @@ const schema = {
   },
 } as const;
 
-export const MOBILE_EVENTS = Object.freeze(buildTreeSchema(schema));
+const mobileInfrastructureEvents = buildTreeSchema(schema);
+const mobileSessionEvents = buildTreeSchema({
+  AUTH: {
+    SESSION: {
+      EXPIRED: null,
+    },
+  },
+} as const).AUTH.SESSION;
+
+export const MOBILE_EVENTS = Object.freeze({
+  ...mobileInfrastructureEvents,
+  USER: HOOK_EVENTS.USER,
+  AUTH: {
+    ...HOOK_EVENTS.AUTH,
+    SESSION: mobileSessionEvents,
+  },
+});
 
 export type EventsTree = typeof MOBILE_EVENTS;
 
