@@ -14,6 +14,7 @@ export * from './formatting';
 
 // Build Tree Schema utility
 export * from './buildTreeSchema';
+export * from './hook-events';
 
 // Error extraction utilities
 export * from './errorExtraction';

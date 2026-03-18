@@ -142,7 +142,7 @@ describe('Mobile Hook Listeners Integration Tests', () => {
       expect(EVENTS.CATEGORY.DELETE.BEFORE).toBe('category.delete.before');
       expect(EVENTS.CATEGORY.DELETE.AFTER).toBe('category.delete.after');
       expect(EVENTS.USER.LOGIN.BEFORE).toBe('user.login.before');
-      expect(EVENTS.AUTH.LOGIN.FAILED).toBe('auth.login.failed');
+      expect(EVENTS.AUTH.LOGIN.FAILURE).toBe('auth.login.failure');
     });
   });
 
@@ -217,7 +217,7 @@ describe('Mobile Hook Listeners Integration Tests', () => {
         EVENTS.USER.LOGIN.AFTER,
         EVENTS.USER.LOGOUT.BEFORE,
         EVENTS.USER.LOGOUT.AFTER,
-        EVENTS.AUTH.LOGIN.FAILED,
+        EVENTS.AUTH.LOGIN.FAILURE,
       ];
 
       for (const eventType of authEventTypes) {
@@ -324,7 +324,7 @@ describe('Mobile Hook Listeners Integration Tests', () => {
 
       // Should not throw, but handle gracefully
       await expect(
-        mockEmitHookEvent(EVENTS.AUTH.LOGIN.FAILED, {
+        mockEmitHookEvent(EVENTS.AUTH.LOGIN.FAILURE, {
           errorMessage: 'Test error',
           timestamp: new Date().toISOString(),
         })

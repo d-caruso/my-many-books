@@ -1,4 +1,9 @@
-import { buildTreeSchema, EventName } from '@my-many-books/shared-utils';
+import {
+  buildTreeSchema,
+  EventName,
+  HOOK_PHASES,
+  MUTATION_OPERATIONS,
+} from '@my-many-books/shared-utils';
 
 // ================================================================
 // REUSABLE EVENT PATTERNS
@@ -7,13 +12,9 @@ import { buildTreeSchema, EventName } from '@my-many-books/shared-utils';
 // easy extensibility without duplication.
 
 /**
- * Base operation states used by all CRUD and sync operations
- * 
- * Usage examples:
- * - New operation state? Add to OPERATION_STATES once (affects all operations)
- * - Custom timing? Add TIMEOUT: null here
+ * Sync-specific operation states used by mobile-only queue and sync flows.
  */
-const OPERATION_STATES = {
+const SYNC_OPERATION_STATES = {
   START: null,
   SUCCESS: null,
   FAILED: null,
@@ -28,31 +29,28 @@ const OPERATION_STATES = {
  * - MERGE: Merge server data with local data
  */
 const SYNC_OPERATIONS = {
-  PULL: OPERATION_STATES,
+  PULL: SYNC_OPERATION_STATES,
   CONFLICT: {
     DETECTED: null,
     RESOLVED: null,
   },
-  MERGE: OPERATION_STATES,
+  MERGE: SYNC_OPERATION_STATES,
 } as const;
 
 /**
  * Complete entity operation pattern
  * 
  * All entities inherit this exact structure for perfect consistency:
- * - Standard CRUD operations (CREATE, READ, UPDATE, DELETE)
+ * - Shared mutation operations (CREATE, UPDATE, DELETE)
  * - Sync operations for offline/online data management
  * 
  * Extensibility examples:
  * - New entity? Just add: USER: ENTITY_OPERATIONS
- * - Custom entity? Use: ADMIN: { ...ENTITY_OPERATIONS, SPECIAL: { AUDIT: OPERATION_STATES } }
+ * - Custom entity? Use: ADMIN: { ...ENTITY_OPERATIONS, SPECIAL: { AUDIT: SYNC_OPERATION_STATES } }
  * - All entities get new features automatically when patterns are extended
  */
 const ENTITY_OPERATIONS = {
-  CREATE: OPERATION_STATES,
-  READ: OPERATION_STATES,
-  UPDATE: OPERATION_STATES,
-  DELETE: OPERATION_STATES,
+  ...MUTATION_OPERATIONS,
   SYNC: SYNC_OPERATIONS,
 } as const;
 
@@ -69,14 +67,19 @@ const schema = {
   
   /**
    * Book entity events
-   * Supports: CREATE, READ, UPDATE, DELETE + SYNC operations
+   * Supports: CREATE, UPDATE, DELETE + SYNC operations
    * 
    * Example events generated:
-   * - MOBILE_EVENTS.BOOK.CREATE.START ("book.create.start")
+   * - MOBILE_EVENTS.BOOK.CREATE.BEFORE ("book.create.before")
    * - MOBILE_EVENTS.BOOK.SYNC.PULL.SUCCESS ("book.sync.pull.success")
    * - MOBILE_EVENTS.BOOK.SYNC.CONFLICT.DETECTED ("book.sync.conflict.detected")
    */
-  BOOK: ENTITY_OPERATIONS,
+  BOOK: {
+    ...ENTITY_OPERATIONS,
+    STATUS: {
+      CHANGE: HOOK_PHASES,
+    },
+  },
   
   /**
    * Author entity events
