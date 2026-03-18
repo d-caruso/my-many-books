@@ -1,3 +1,5 @@
+import { HOOK_EVENTS } from '@my-many-books/shared-utils';
+
 import { MOBILE_EVENTS } from '../eventsSchema';
 
 describe('Mobile Events', () => {
@@ -21,6 +23,23 @@ describe('Mobile Events', () => {
       
       expect(MOBILE_EVENTS.AUTHOR.UPDATE.BEFORE).toBe('author.update.before');
       expect(MOBILE_EVENTS.CATEGORY.DELETE.AFTER).toBe('category.delete.after');
+    });
+
+    it('should compose shared mutation trees with local mobile infrastructure trees', () => {
+      expect(MOBILE_EVENTS.BOOK.CREATE).toEqual(HOOK_EVENTS.BOOK.CREATE);
+      expect(MOBILE_EVENTS.BOOK.STATUS.CHANGE).toEqual(HOOK_EVENTS.BOOK.STATUS.CHANGE);
+      expect(MOBILE_EVENTS.AUTHOR.UPDATE).toEqual(HOOK_EVENTS.AUTHOR.UPDATE);
+      expect(MOBILE_EVENTS.CATEGORY.DELETE).toEqual(HOOK_EVENTS.CATEGORY.DELETE);
+
+      expect(MOBILE_EVENTS.QUEUE.PROCESS.START).toBe('queue.process.start');
+      expect(MOBILE_EVENTS.SYNC.UPLOAD.COMPLETE).toBe('sync.upload.complete');
+      expect(MOBILE_EVENTS.ERROR.API_RESPONSE).toBe('error.api_response');
+    });
+
+    it('should omit READ operations from the shared entity trees', () => {
+      expect('READ' in MOBILE_EVENTS.BOOK).toBe(false);
+      expect('READ' in MOBILE_EVENTS.AUTHOR).toBe(false);
+      expect('READ' in MOBILE_EVENTS.CATEGORY).toBe(false);
     });
 
     it('should generate correct event names for queue operations', () => {

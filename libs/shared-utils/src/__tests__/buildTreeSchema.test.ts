@@ -1,4 +1,5 @@
 import { buildTreeSchema } from "../buildTreeSchema";
+import { HOOK_PHASES, MUTATION_OPERATIONS } from "../hook-events";
 
 describe("buildTreeSchema", () => {
   it("should build simple flat schema", () => {
@@ -47,18 +48,15 @@ describe("buildTreeSchema", () => {
     });
   });
 
-  it("should build deeply nested schema", () => {
+  it("should build deeply nested schema with unified hook phases", () => {
     const schema = {
       BOOK: {
         CREATE: {
-          START: null,
-          SUCCESS: null,
-          FAILED: null,
-        },
-        UPDATE: {
           BEFORE: null,
           AFTER: null,
+          FAILURE: null,
         },
+        UPDATE: HOOK_PHASES,
         DELETE: null,
       },
     } as const;
@@ -68,14 +66,15 @@ describe("buildTreeSchema", () => {
     expect(result).toEqual({
       BOOK: {
         CREATE: {
-          START: "book.create.start",
-          SUCCESS: "book.create.success",
-          FAILED: "book.create.failed",
+          BEFORE: "book.create.before",
+          AFTER: "book.create.after",
+          FAILURE: "book.create.failure",
           ANY: "book.create.*",
         },
         UPDATE: {
           BEFORE: "book.update.before",
           AFTER: "book.update.after",
+          FAILURE: "book.update.failure",
           ANY: "book.update.*",
         },
         DELETE: "book.delete",
@@ -115,8 +114,9 @@ describe("buildTreeSchema", () => {
     const schema = {
       BOOK: {
         CREATE: {
-          START: null,
-          SUCCESS: null,
+          BEFORE: null,
+          AFTER: null,
+          FAILURE: null,
         },
       },
     } as const;
@@ -124,24 +124,26 @@ describe("buildTreeSchema", () => {
     const result = buildTreeSchema(schema);
 
     // TypeScript should know these paths exist
-    expect(typeof result.BOOK.CREATE.START).toBe("string");
-    expect(typeof result.BOOK.CREATE.SUCCESS).toBe("string");
+    expect(typeof result.BOOK.CREATE.BEFORE).toBe("string");
+    expect(typeof result.BOOK.CREATE.AFTER).toBe("string");
+    expect(typeof result.BOOK.CREATE.FAILURE).toBe("string");
     expect(typeof result.BOOK.CREATE.ANY).toBe("string");
     expect(typeof result.BOOK.ANY).toBe("string");
     expect(typeof result.ANY).toBe("string");
 
     // Should have correct values
-    expect(result.BOOK.CREATE.START).toBe("book.create.start");
-    expect(result.BOOK.CREATE.SUCCESS).toBe("book.create.success");
+    expect(result.BOOK.CREATE.BEFORE).toBe("book.create.before");
+    expect(result.BOOK.CREATE.AFTER).toBe("book.create.after");
+    expect(result.BOOK.CREATE.FAILURE).toBe("book.create.failure");
   });
 
-  it("should work with complex real-world schema", () => {
+  it("should build mutation operations spread with before/after/failure phases", () => {
     const schema = {
       BOOK: {
-        CREATE: { START: null, SUCCESS: null, FAILED: null },
-        READ: { START: null, SUCCESS: null, FAILED: null },
-        UPDATE: { START: null, SUCCESS: null, FAILED: null },
-        DELETE: { START: null, SUCCESS: null, FAILED: null },
+        ...MUTATION_OPERATIONS,
+        STATUS: {
+          CHANGE: HOOK_PHASES,
+        },
       },
       QUEUE: {
         ENQUEUE: null,
@@ -159,12 +161,16 @@ describe("buildTreeSchema", () => {
     const result = buildTreeSchema(schema);
 
     // Test a few key paths
-    expect(result.BOOK.CREATE.FAILED).toBe("book.create.failed");
+    expect(result.BOOK.CREATE.BEFORE).toBe("book.create.before");
+    expect(result.BOOK.UPDATE.AFTER).toBe("book.update.after");
+    expect(result.BOOK.DELETE.FAILURE).toBe("book.delete.failure");
+    expect(result.BOOK.STATUS.CHANGE.FAILURE).toBe("book.status.change.failure");
     expect(result.QUEUE.PROCESS.START).toBe("queue.process.start");
     expect(result.ERROR.NETWORK_TIMEOUT).toBe("error.network_timeout");
 
     // Test wildcard generation
     expect(result.BOOK.CREATE.ANY).toBe("book.create.*");
+    expect(result.BOOK.STATUS.CHANGE.ANY).toBe("book.status.change.*");
     expect(result.QUEUE.ANY).toBe("queue.*");
     expect(result.ANY).toBe("*");
   });
