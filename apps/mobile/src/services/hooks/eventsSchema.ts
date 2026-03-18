@@ -224,8 +224,43 @@ const mobileSessionEvents = buildTreeSchema({
   },
 } as const).AUTH.SESSION;
 
+const mobileBookEvents = {
+  ...mobileInfrastructureEvents.BOOK,
+  SYNC: {
+    ...mobileInfrastructureEvents.BOOK.SYNC,
+    CONFLICT: {
+      ...mobileInfrastructureEvents.BOOK.SYNC.CONFLICT,
+      USER_RESOLVED: 'book.sync.conflict.user_resolved' as EventName,
+    },
+  },
+} as const;
+
+const mobileQueueEvents = {
+  ...mobileInfrastructureEvents.QUEUE,
+  RETRY_MANUAL: 'queue.retry.manual' as EventName,
+  DISCARD_MANUAL: 'queue.discard.manual' as EventName,
+} as const;
+
+const mobileSyncEvents = {
+  ...mobileInfrastructureEvents.SYNC,
+  RESUME_MANUAL: 'sync.resume.manual' as EventName,
+} as const;
+
+const mobileThemeEvents = {
+  CHANGED: 'theme.changed' as EventName,
+} as const;
+
+const mobileLanguageEvents = {
+  CHANGED: 'language.changed' as EventName,
+} as const;
+
 export const MOBILE_EVENTS = Object.freeze({
   ...mobileInfrastructureEvents,
+  BOOK: mobileBookEvents,
+  QUEUE: mobileQueueEvents,
+  SYNC: mobileSyncEvents,
+  THEME: mobileThemeEvents,
+  LANGUAGE: mobileLanguageEvents,
   USER: HOOK_EVENTS.USER,
   AUTH: {
     ...HOOK_EVENTS.AUTH,

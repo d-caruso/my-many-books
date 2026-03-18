@@ -485,6 +485,8 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     }
 
     try {
+      let resultingSyncStatus: string = conflictedBook.meta.syncStatus;
+
       if (choice === 'local') {
         // Keep local version, mark for re-sync to server
         const updatedUi: UiBook = {
@@ -508,7 +510,8 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
           console.log(`Conflict resolved for book ${bookId}: keeping local version - will retry via queue`);
           // If immediate update fails, it's already marked as pending and will be queued automatically
         }
-        
+
+        resultingSyncStatus = SYNC_STATUS.PENDING;
       } else {
         // Use server version - need to fetch latest from server
         const numericId = Number(bookId);
@@ -529,8 +532,16 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         ));
 
         console.log(`Conflict resolved for book ${bookId}: using server version`);
+        resultingSyncStatus = resolvedUi.meta.syncStatus;
       }
-      
+
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.SYNC.CONFLICT.USER_RESOLVED, {
+        bookId: stringId,
+        choice,
+        previousSyncStatus: conflictedBook.meta.syncStatus,
+        resultingSyncStatus,
+        source: 'useBooks.resolveConflict',
+      });
     } catch (error) {
       console.error('Failed to resolve conflict:', error);
       throw new Error(t('conflicts.resolutionFailed'));

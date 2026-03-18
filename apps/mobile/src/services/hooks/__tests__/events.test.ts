@@ -31,6 +31,11 @@ describe('Mobile Events', () => {
       expect(MOBILE_EVENTS.SEARCH.RESULT_SELECTED).toBe('search.result_selected');
       expect(MOBILE_EVENTS.SCANNER.PERMISSION.REQUEST).toBe('scanner.permission.request');
       expect(MOBILE_EVENTS.SCANNER.ISBN.DETECTED).toBe('scanner.isbn.detected');
+      expect(MOBILE_EVENTS.BOOK.SYNC.CONFLICT.USER_RESOLVED).toBe('book.sync.conflict.user_resolved');
+      expect(MOBILE_EVENTS.QUEUE.RETRY_MANUAL).toBe('queue.retry.manual');
+      expect(MOBILE_EVENTS.SYNC.RESUME_MANUAL).toBe('sync.resume.manual');
+      expect(MOBILE_EVENTS.THEME.CHANGED).toBe('theme.changed');
+      expect(MOBILE_EVENTS.LANGUAGE.CHANGED).toBe('language.changed');
     });
 
     it('should compose shared mutation trees with local mobile infrastructure trees', () => {
@@ -45,6 +50,7 @@ describe('Mobile Events', () => {
 
       expect(MOBILE_EVENTS.SCANNER.COPY.SUCCESS).toBe('scanner.copy.success');
       expect(MOBILE_EVENTS.SCANNER.ROUTE_DECISION).toBe('scanner.route_decision');
+      expect(MOBILE_EVENTS.QUEUE.DISCARD_MANUAL).toBe('queue.discard.manual');
       expect(MOBILE_EVENTS.QUEUE.PROCESS.START).toBe('queue.process.start');
       expect(MOBILE_EVENTS.SYNC.UPLOAD.COMPLETE).toBe('sync.upload.complete');
       expect(MOBILE_EVENTS.ERROR.API_RESPONSE).toBe('error.api_response');
@@ -119,6 +125,9 @@ describe('Mobile Events', () => {
         MOBILE_EVENTS.AUTH.SESSION.EXPIRED,
         MOBILE_EVENTS.SEARCH.RESULT_SELECTED,
         MOBILE_EVENTS.SCANNER.PERMISSION.GRANTED,
+        MOBILE_EVENTS.QUEUE.RETRY_MANUAL,
+        MOBILE_EVENTS.BOOK.SYNC.CONFLICT.USER_RESOLVED,
+        MOBILE_EVENTS.THEME.CHANGED,
         MOBILE_EVENTS.QUEUE.PROCESS.START,
         MOBILE_EVENTS.SYNC.CONFLICT.DETECTED,
         MOBILE_EVENTS.NETWORK.TYPE_CHANGED,

@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { themes } from '@my-many-books/shared-design';
+import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -61,9 +62,18 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   };
 
   const setThemeMode = async (mode: ThemeMode) => {
+    if (mode === themeMode) {
+      return;
+    }
+
     try {
       await AsyncStorage.setItem('themeMode', mode);
       setThemeModeState(mode);
+      mobileHooks.emit(MOBILE_EVENTS.THEME.CHANGED, {
+        previousThemeMode: themeMode,
+        nextThemeMode: mode,
+        source: 'ThemeContext.setThemeMode',
+      });
     } catch (error) {
       console.error('Failed to save theme:', error);
     }

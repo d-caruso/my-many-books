@@ -9,6 +9,7 @@ jest.mock('../../src/hooks/useBooks', () => jest.requireActual('../../src/hooks/
 jest.mock('../../src/services/api', () => ({
   bookAPI: {
     getBooks: jest.fn(),
+    getBook: jest.fn(),
     createBook: jest.fn(),
     updateBook: jest.fn(),
     updateBookStatus: jest.fn(),
@@ -393,6 +394,57 @@ describe('useBooks Hook Coverage', () => {
       expect.objectContaining({
         operation: 'UPDATE',
         resource: 'book',
+      })
+    );
+
+    React.useState = originalUseState;
+    React.useCallback = originalUseCallback;
+    React.useEffect = originalUseEffect;
+  });
+
+  it('should emit conflict user_resolved after local conflict resolution', async () => {
+    mockBookAPI.updateBook.mockResolvedValue({ id: 1, title: 'Book 1' });
+
+    const originalUseState = React.useState;
+    const originalUseCallback = React.useCallback;
+    const originalUseEffect = React.useEffect;
+
+    const conflictingBook = {
+      id: 1,
+      title: 'Book 1',
+      status: 'reading',
+      creationDate: '2026-03-18T00:00:00.000Z',
+      updateDate: '2026-03-18T00:00:00.000Z',
+      authors: [],
+      categories: [],
+      meta: {
+        syncStatus: 'failed',
+        hasConflict: true,
+        tempId: undefined,
+        serverUpdatedAt: undefined,
+        serverId: 1,
+        rollbackData: null,
+      },
+    };
+
+    const mockSetter = jest.fn();
+    React.useState = jest.fn(() => [[conflictingBook], mockSetter]);
+    React.useCallback = jest.fn((fn) => fn);
+    React.useEffect = jest.fn(() => {});
+
+    const hook = useBooks();
+
+    await hook.resolveConflict(1, 'local');
+
+    expect(mockBookAPI.updateBook).toHaveBeenCalledWith('1', conflictingBook);
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.BOOK.SYNC.CONFLICT.USER_RESOLVED,
+      expect.objectContaining({
+        bookId: '1',
+        choice: 'local',
+        previousSyncStatus: 'failed',
+        resultingSyncStatus: 'pending',
+        source: 'useBooks.resolveConflict',
       })
     );
 

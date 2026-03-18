@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '@my-many-books/shared-i18n';
+import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
 // Import translations from shared library
 import enCommon from '@my-many-books/shared-i18n/src/locales/en/common.json';
@@ -74,8 +75,17 @@ export const saveLanguagePreference = async (language: string): Promise<void> =>
  * Change language and persist to AsyncStorage
  */
 export const changeLanguage = async (language: string): Promise<void> => {
+  const previousLanguage = i18n.language;
   await i18n.changeLanguage(language);
   await saveLanguagePreference(language);
+
+  if (previousLanguage !== language) {
+    mobileHooks.emit(MOBILE_EVENTS.LANGUAGE.CHANGED, {
+      previousLanguage,
+      nextLanguage: language,
+      source: 'i18n.changeLanguage',
+    });
+  }
 };
 
 // Initialize i18n

@@ -58,7 +58,7 @@ export default function BooksScreen() {
     clearSearch,
   } = useBookSearch();
 
-  const { performFullSync } = useSyncQueue();
+  const { resumeSync } = useSyncQueue();
 
   const books = isSearching ? searchResults : userBooks;
   const loading = isSearching ? searchLoading : userBooksLoading;
@@ -256,7 +256,7 @@ export default function BooksScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={async () => {
-              await performFullSync();
+              await resumeSync();
               await refreshBooks();
             }}
           />

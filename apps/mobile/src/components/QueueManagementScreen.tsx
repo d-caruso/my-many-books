@@ -7,6 +7,7 @@ import { operationQueue } from '../services/OperationQueue';
 import type { QueuedOperation } from '../types/queue';
 import { useSyncQueue } from '../hooks/useSyncQueue';
 import { QUEUE_OPERATION_STATUS } from '@/services/hooks';
+import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
 /**
  * Screen for managing queued operations
@@ -17,14 +18,32 @@ export const QueueManagementScreen: React.FC = () => {
   const { operations, refreshQueue } = useQueueStatus();
   const { processQueue } = useSyncQueue();
 
-  const handleRetry = async (operationId: string) => {
-    await operationQueue.retryOperation(operationId);
+  const handleRetry = async (operation: QueuedOperation) => {
+    mobileHooks.emit(MOBILE_EVENTS.QUEUE.RETRY_MANUAL, {
+      operationId: operation.id,
+      operationType: operation.type,
+      resource: operation.resource,
+      status: operation.status,
+      retryCount: operation.retryCount,
+      source: 'QueueManagementScreen.handleRetry',
+    });
+
+    await operationQueue.retryOperation(operation.id);
     await processQueue(); // Process the queue to attempt the retry
     await refreshQueue();
   };
 
-  const handleDiscard = async (operationId: string) => {
-    await operationQueue.dequeue(operationId);
+  const handleDiscard = async (operation: QueuedOperation) => {
+    mobileHooks.emit(MOBILE_EVENTS.QUEUE.DISCARD_MANUAL, {
+      operationId: operation.id,
+      operationType: operation.type,
+      resource: operation.resource,
+      status: operation.status,
+      retryCount: operation.retryCount,
+      source: 'QueueManagementScreen.handleDiscard',
+    });
+
+    await operationQueue.dequeue(operation.id);
     await refreshQueue();
   };
 
@@ -67,14 +86,14 @@ export const QueueManagementScreen: React.FC = () => {
               <IconButton
                 icon="refresh"
                 size={20}
-                onPress={() => handleRetry(item.id)}
+                onPress={() => handleRetry(item)}
                 testID={`retry-${item.id}`}
               />
             )}
             <IconButton
               icon="delete"
               size={20}
-              onPress={() => handleDiscard(item.id)}
+              onPress={() => handleDiscard(item)}
               testID={`discard-${item.id}`}
             />
           </View>

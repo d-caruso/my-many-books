@@ -4,6 +4,7 @@ import { useSyncQueue } from '../../src/hooks/useSyncQueue';
 import { operationQueue } from '../../src/services/OperationQueue';
 import { executeOperation, isRetriableError } from '../../src/services/QueueExecutor';
 import { syncService } from '../../src/services/sync/SyncService';
+import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
 // Mock network state
 let mockNetworkState = {
@@ -33,10 +34,21 @@ jest.mock('../../src/services/sync/SyncService', () => ({
   },
 }));
 
+jest.mock('@/services/hooks/mobileHooks', () => {
+  const actual = jest.requireActual('../../src/services/hooks/eventsSchema');
+  return {
+    mobileHooks: {
+      emit: jest.fn().mockResolvedValue(undefined),
+    },
+    MOBILE_EVENTS: actual.MOBILE_EVENTS,
+  };
+});
+
 const mockProcessQueue = operationQueue.processQueue as jest.Mock;
 const mockExecuteOperation = executeOperation as jest.Mock;
 const mockIsRetriableError = isRetriableError as jest.Mock;
 const mockPerformFullSync = syncService.performSync as jest.Mock;
+const mockMobileHooks = mobileHooks as jest.Mocked<typeof mobileHooks>;
 
 describe('useSyncQueue Hook', () => {
   beforeEach(() => {
@@ -62,6 +74,8 @@ describe('useSyncQueue Hook', () => {
       expect(typeof result.current.processQueue).toBe('function');
       expect(result.current.performFullSync).toBeDefined();
       expect(typeof result.current.performFullSync).toBe('function');
+      expect(result.current.resumeSync).toBeDefined();
+      expect(typeof result.current.resumeSync).toBe('function');
       expect(result.current.isRetriableError).toBeDefined();
       expect(typeof result.current.isRetriableError).toBe('function');
     });
@@ -164,6 +178,22 @@ describe('useSyncQueue Hook', () => {
       });
 
       // Should call both queue processing and bidirectional sync
+      expect(mockProcessQueue).toHaveBeenCalledWith(mockExecuteOperation);
+    });
+
+    it('should emit manual sync resume when resumeSync is invoked', async () => {
+      const { result } = renderHook(() => useSyncQueue());
+
+      await act(async () => {
+        await result.current.resumeSync();
+      });
+
+      expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+        MOBILE_EVENTS.SYNC.RESUME_MANUAL,
+        expect.objectContaining({
+          source: 'useSyncQueue.resumeSync',
+        })
+      );
       expect(mockProcessQueue).toHaveBeenCalledWith(mockExecuteOperation);
     });
 

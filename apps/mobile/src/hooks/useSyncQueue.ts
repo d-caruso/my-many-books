@@ -3,6 +3,7 @@ import { useNetworkState } from './useNetworkState';
 import { operationQueue } from '../services/OperationQueue';
 import { executeOperation, isRetriableError } from '../services/QueueExecutor';
 import { syncService } from '../services/sync/SyncService';
+import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
 /**
  * Hook to manage sync queue and trigger processing when online
@@ -35,6 +36,13 @@ export function useSyncQueue() {
     }
   }, []);
 
+  const resumeSync = useCallback(async () => {
+    mobileHooks.emit(MOBILE_EVENTS.SYNC.RESUME_MANUAL, {
+      source: 'useSyncQueue.resumeSync',
+    });
+    await performFullSync();
+  }, [performFullSync]);
+
   // Process queue and perform bidirectional sync when network comes back online
   useEffect(() => {
     if (isOnline) {
@@ -45,6 +53,7 @@ export function useSyncQueue() {
   return {
     processQueue,
     performFullSync,
+    resumeSync,
     isRetriableError,
   };
 }
