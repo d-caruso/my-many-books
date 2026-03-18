@@ -15,12 +15,12 @@ describe('Mobile Events', () => {
     });
 
     it('should generate correct event names for CRUD operations', () => {
-      expect(MOBILE_EVENTS.BOOK.CREATE.START).toBe('book.create.start');
-      expect(MOBILE_EVENTS.BOOK.CREATE.SUCCESS).toBe('book.create.success');
-      expect(MOBILE_EVENTS.BOOK.CREATE.FAILED).toBe('book.create.failed');
+      expect(MOBILE_EVENTS.BOOK.CREATE.BEFORE).toBe('book.create.before');
+      expect(MOBILE_EVENTS.BOOK.CREATE.AFTER).toBe('book.create.after');
+      expect(MOBILE_EVENTS.BOOK.CREATE.FAILURE).toBe('book.create.failure');
       
-      expect(MOBILE_EVENTS.AUTHOR.UPDATE.START).toBe('author.update.start');
-      expect(MOBILE_EVENTS.CATEGORY.DELETE.SUCCESS).toBe('category.delete.success');
+      expect(MOBILE_EVENTS.AUTHOR.UPDATE.BEFORE).toBe('author.update.before');
+      expect(MOBILE_EVENTS.CATEGORY.DELETE.AFTER).toBe('category.delete.after');
     });
 
     it('should generate correct event names for queue operations', () => {
@@ -65,11 +65,11 @@ describe('Mobile Events', () => {
   describe('Type Safety', () => {
     it('should provide type-safe event access', () => {
       // These should compile without TypeScript errors
-      const bookCreateStart: string = MOBILE_EVENTS.BOOK.CREATE.START;
+      const bookCreateBefore: string = MOBILE_EVENTS.BOOK.CREATE.BEFORE;
       const queueEnqueue: string = MOBILE_EVENTS.QUEUE.ENQUEUE;
       const networkOnline: string = MOBILE_EVENTS.NETWORK.ONLINE;
       
-      expect(typeof bookCreateStart).toBe('string');
+      expect(typeof bookCreateBefore).toBe('string');
       expect(typeof queueEnqueue).toBe('string');
       expect(typeof networkOnline).toBe('string');
     });
@@ -78,9 +78,9 @@ describe('Mobile Events', () => {
   describe('Event Naming Consistency', () => {
     it('should use lowercase dot-separated naming', () => {
       const allEvents = [
-        MOBILE_EVENTS.BOOK.CREATE.START,
-        MOBILE_EVENTS.AUTHOR.UPDATE.SUCCESS,
-        MOBILE_EVENTS.CATEGORY.DELETE.FAILED,
+        MOBILE_EVENTS.BOOK.CREATE.BEFORE,
+        MOBILE_EVENTS.AUTHOR.UPDATE.AFTER,
+        MOBILE_EVENTS.CATEGORY.DELETE.FAILURE,
         MOBILE_EVENTS.QUEUE.PROCESS.START,
         MOBILE_EVENTS.SYNC.CONFLICT.DETECTED,
         MOBILE_EVENTS.NETWORK.TYPE_CHANGED,

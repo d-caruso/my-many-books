@@ -79,8 +79,8 @@ export class CleanupService {
         (Date.now() - new Date(book.creation_date).getTime()) / (24 * 60 * 60 * 1000)
       );
 
-      if (ageInDays >= MAX_TEMP_ID_AGE_DAYS) {
-        mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.START, {
+      if (ageInDays > MAX_TEMP_ID_AGE_DAYS) {
+        mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.BEFORE, {
           bookId: book.id,
           reason: 'orphaned_cleanup',
           ageInDays: ageInDays,
@@ -93,7 +93,7 @@ export class CleanupService {
         await db.runAsync('DELETE FROM book_authors WHERE book_id = ?', [book.id]);
         await db.runAsync('DELETE FROM book_categories WHERE book_id = ?', [book.id]);
         
-        mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.SUCCESS, {
+        mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.AFTER, {
           bookId: book.id,
           reason: 'orphaned_cleanup',
           ageInDays: ageInDays,
@@ -333,7 +333,7 @@ export class CleanupService {
 
       // Clean up orphaned foreign key references
       if (orphanedAuthors.length > 0) {
-        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.START, {
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.BEFORE, {
           operation: 'cleanup_orphaned_links',
           count: orphanedAuthors.length,
           message: `Cleaning up ${orphanedAuthors.length} orphaned author links`,
@@ -345,7 +345,7 @@ export class CleanupService {
           WHERE book_id NOT IN (SELECT id FROM books WHERE deleted = 0)
         `);
         
-        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.SUCCESS, {
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.AFTER, {
           operation: 'cleanup_orphaned_links',
           count: orphanedAuthors.length,
           timestamp: new Date().toISOString()
@@ -353,7 +353,7 @@ export class CleanupService {
       }
 
       if (orphanedCategories.length > 0) {
-        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.START, {
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.BEFORE, {
           operation: 'cleanup_orphaned_links',
           count: orphanedCategories.length,
           message: `Cleaning up ${orphanedCategories.length} orphaned category links`,
@@ -365,7 +365,7 @@ export class CleanupService {
           WHERE book_id NOT IN (SELECT id FROM books WHERE deleted = 0)
         `);
         
-        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.SUCCESS, {
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.DELETE.AFTER, {
           operation: 'cleanup_orphaned_links',
           count: orphanedCategories.length,
           timestamp: new Date().toISOString()

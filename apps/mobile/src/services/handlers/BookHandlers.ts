@@ -100,15 +100,15 @@ class ValidatedBookHandler<THandler extends object> {
     const operationId = generateOperationId();
     const eventMetadata = createEventMetadata(operationId, data);
     
-    // Emit start event (fire and forget)
-    mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.START, eventMetadata);
+    // Emit before event (fire and forget)
+    mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.BEFORE, eventMetadata);
     
     try {
       validateCreateBookAndThrow(data);
       const result = await (this.handler as unknown as { create: (data: CreateBookPayload) => Promise<Book | string> }).create(data);
       
-      // Emit success event (fire and forget)
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.SUCCESS, {
+      // Emit after event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.AFTER, {
         ...eventMetadata,
         result: typeof result === 'string' ? { tempId: result } : { book: result },
       });
@@ -116,7 +116,7 @@ class ValidatedBookHandler<THandler extends object> {
       return result;
     } catch (error) {
       // Emit failure event (fire and forget)
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.FAILURE, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof BookValidationError ? 'validation' : 'unknown',
@@ -131,8 +131,8 @@ class ValidatedBookHandler<THandler extends object> {
     const operationId = generateOperationId();
     const eventMetadata = createEventMetadata(operationId, { ...data, id });
     
-    // Emit start event (fire and forget)
-    mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.START, eventMetadata);
+    // Emit before event (fire and forget)
+    mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.BEFORE, eventMetadata);
     
     try {
       if (!hasUpdateFields(data)) {
@@ -145,8 +145,8 @@ class ValidatedBookHandler<THandler extends object> {
       validateUpdateBookAndThrow(data);
       const result = await (this.handler as unknown as { update: (id: string, data: UpdateBookPayload) => Promise<Book | string> }).update(id, data);
       
-      // Emit success event (fire and forget)
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.SUCCESS, {
+      // Emit after event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.AFTER, {
         ...eventMetadata,
         result: typeof result === 'string' ? { tempId: result } : { book: result },
       });
@@ -154,7 +154,7 @@ class ValidatedBookHandler<THandler extends object> {
       return result;
     } catch (error) {
       // Emit failure event (fire and forget)
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.FAILURE, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof BookValidationError ? 'validation' : 'unknown',
@@ -169,8 +169,8 @@ class ValidatedBookHandler<THandler extends object> {
     const operationId = generateOperationId();
     const eventMetadata = createEventMetadata(operationId, { id });
     
-    // Emit start event (fire and forget)
-    mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.START, eventMetadata);
+    // Emit before event (fire and forget)
+    mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.BEFORE, eventMetadata);
     
     try {
       if (!id || typeof id !== 'string' || id.trim().length === 0) {
@@ -182,48 +182,11 @@ class ValidatedBookHandler<THandler extends object> {
       
       await (this.handler as unknown as { delete: (id: string) => Promise<void> }).delete(id);
       
-      // Emit success event (fire and forget)
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.SUCCESS, eventMetadata);
+      // Emit after event (fire and forget)
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.AFTER, eventMetadata);
     } catch (error) {
       // Emit failure event (fire and forget)
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.FAILED, {
-        ...eventMetadata,
-        error: error instanceof Error ? error.message : String(error),
-        errorType: error instanceof BookValidationError ? 'validation' : 'unknown',
-      });
-      
-      throw error;
-    }
-  }
-
-  async read?(id: string): Promise<Book> {
-    const operationId = generateOperationId();
-    const eventMetadata = createEventMetadata(operationId, { id });
-    
-    // Emit start event (fire and forget)
-    mobileHooks.emit(MOBILE_EVENTS.BOOK.READ.START, eventMetadata);
-    
-    try {
-      if (!id || typeof id !== 'string' || id.trim().length === 0) {
-        throw new BookValidationError(
-          [{ field: 'id', code: 'ID_REQUIRED', message: 'validation.book.id.required' }],
-          'Book ID is required for read operation'
-        );
-      }
-      
-      const handler = this.handler as unknown as { read?: (id: string) => Promise<Book> };
-      const result = await handler.read!(id);
-      
-      // Emit success event (fire and forget)
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.READ.SUCCESS, {
-        ...eventMetadata,
-        result: { book: result },
-      });
-      
-      return result;
-    } catch (error) {
-      // Emit failure event (fire and forget)
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.READ.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.FAILURE, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof BookValidationError ? 'validation' : 'unknown',
@@ -236,6 +199,10 @@ class ValidatedBookHandler<THandler extends object> {
   async list?(filters?: Record<string, unknown>): Promise<Book[]> {
     const handler = this.handler as unknown as { list?: (filters?: Record<string, unknown>) => Promise<Book[]> };
     return handler.list!(filters);
+  }
+
+  getRawHandler(): THandler {
+    return this.handler;
   }
 }
 

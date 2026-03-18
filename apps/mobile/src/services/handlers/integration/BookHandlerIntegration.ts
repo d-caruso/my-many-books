@@ -108,8 +108,10 @@ export class BookHandlerIntegration {
       create: (data: CreateBookPayload) => Promise<Book | string>;
       update: (id: string, data: UpdateBookPayload) => Promise<Book | string>;
       delete: (id: string) => Promise<void>;
-      read: (id: string) => Promise<Book>;
       list: (filters?: Record<string, unknown>) => Promise<Book[]>;
+      getRawHandler?: () => {
+        read?: (id: string) => Promise<Book>;
+      };
     };
 
     return {
@@ -158,7 +160,11 @@ export class BookHandlerIntegration {
       async read(id: string): Promise<Book> {
         // Resolve real server ID if this is a temp ID
         const realId = await this.resolveId(id);
-        return typedHandler.read(realId);
+        const rawHandler = typedHandler.getRawHandler?.();
+        if (!rawHandler?.read) {
+          throw new Error('Read handler is not available');
+        }
+        return rawHandler.read(realId);
       },
 
       async list(filters?: Record<string, unknown>): Promise<Book[]> {

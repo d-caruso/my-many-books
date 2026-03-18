@@ -314,31 +314,6 @@ describe('Book Handler Validation', () => {
     });
   });
 
-  describe('read validation', () => {
-    it('should accept valid book ID', async () => {
-      const mockBook: Book = {
-        id: '1',
-        title: 'Test Book',
-        author: 'Test Author',
-        status: 'reading',
-        creationDate: '2026-01-01',
-        updateDate: '2026-01-01',
-      };
-
-      handler.read = jest.fn().mockResolvedValue(mockBook);
-      const result = await handler.read('1');
-      expect(result).toEqual(mockBook);
-      expect(handler.read).toHaveBeenCalledWith('1');
-    });
-
-    it('should throw validation error for empty ID', async () => {
-      await expect(handler.read('')).rejects.toThrow(BookValidationError);
-    });
-
-    it('should throw validation error for whitespace-only ID', async () => {
-      await expect(handler.read('   ')).rejects.toThrow(BookValidationError);
-    });
-  });
 });
 
 describe('BookValidationError', () => {

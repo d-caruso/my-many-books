@@ -17,10 +17,9 @@ jest.mock('../../hooks/mobileHooks', () => ({
   },
   MOBILE_EVENTS: {
     AUTHOR: {
-      CREATE: { START: 'author.create.start', SUCCESS: 'author.create.success', FAILED: 'author.create.failed' },
-      read: { START: 'author.read.start', SUCCESS: 'author.read.success', FAILED: 'author.read.failed' },
-      UPDATE: { START: 'author.update.start', SUCCESS: 'author.update.success', FAILED: 'author.update.failed' },
-      DELETE: { START: 'author.delete.start', SUCCESS: 'author.delete.success', FAILED: 'author.delete.failed' },
+      CREATE: { BEFORE: 'author.create.before', AFTER: 'author.create.after', FAILURE: 'author.create.failure' },
+      UPDATE: { BEFORE: 'author.update.before', AFTER: 'author.update.after', FAILURE: 'author.update.failure' },
+      DELETE: { BEFORE: 'author.delete.before', AFTER: 'author.delete.after', FAILURE: 'author.delete.failure' },
     },
   },
 }));
@@ -45,7 +44,7 @@ describe('AuthorHandlers Hookey Integration', () => {
   });
 
   describe('create method hookey integration', () => {
-    it('should emit START and SUCCESS events for successful create', async () => {
+    it('should emit BEFORE and AFTER events for successful create', async () => {
       const createPayload: CreateAuthorPayload = {
         name: 'Test Author',
         bio: 'Test author biography',
@@ -68,9 +67,9 @@ describe('AuthorHandlers Hookey Integration', () => {
       const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
       await authorHandler.create(createPayload);
 
-      // Verify START event was emitted
+      // Verify BEFORE event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.AUTHOR.CREATE.START,
+        MOBILE_EVENTS.AUTHOR.CREATE.BEFORE,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'author',
@@ -83,9 +82,9 @@ describe('AuthorHandlers Hookey Integration', () => {
         })
       );
 
-      // Verify SUCCESS event was emitted
+      // Verify AFTER event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS,
+        MOBILE_EVENTS.AUTHOR.CREATE.AFTER,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'author',
@@ -98,11 +97,11 @@ describe('AuthorHandlers Hookey Integration', () => {
       // Verify events were called in correct order
       const calls = mockMobileHooks.emit.mock.calls;
       expect(calls).toHaveLength(2);
-      expect(calls[0][0]).toBe(MOBILE_EVENTS.AUTHOR.CREATE.START);
-      expect(calls[1][0]).toBe(MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS);
+      expect(calls[0][0]).toBe(MOBILE_EVENTS.AUTHOR.CREATE.BEFORE);
+      expect(calls[1][0]).toBe(MOBILE_EVENTS.AUTHOR.CREATE.AFTER);
     });
 
-    it('should emit START and FAILED events for failed create', async () => {
+    it('should emit BEFORE and FAILURE events for failed create', async () => {
       const createPayload: CreateAuthorPayload = {
         name: 'Test Author',
         bio: 'Test author biography',
@@ -117,17 +116,17 @@ describe('AuthorHandlers Hookey Integration', () => {
       
       await expect(authorHandler.create(createPayload)).rejects.toThrow('Create failed');
 
-      // Verify START event was emitted
+      // Verify BEFORE event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.AUTHOR.CREATE.START,
+        MOBILE_EVENTS.AUTHOR.CREATE.BEFORE,
         expect.objectContaining({
           resourceType: 'author'
         })
       );
 
-      // Verify FAILED event was emitted
+      // Verify FAILURE event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.AUTHOR.CREATE.FAILED,
+        MOBILE_EVENTS.AUTHOR.CREATE.FAILURE,
         expect.objectContaining({
           error: 'Create failed',
           errorType: 'unknown'
@@ -135,7 +134,7 @@ describe('AuthorHandlers Hookey Integration', () => {
       );
     });
 
-    it('should emit FAILED event with validation error type for validation failures', async () => {
+    it('should emit FAILURE event with validation error type for validation failures', async () => {
       const invalidPayload = { name: '', bio: 'Test bio' } as CreateAuthorPayload;
 
       const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
@@ -143,7 +142,7 @@ describe('AuthorHandlers Hookey Integration', () => {
       await expect(authorHandler.create(invalidPayload)).rejects.toThrow();
 
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.AUTHOR.CREATE.FAILED,
+        MOBILE_EVENTS.AUTHOR.CREATE.FAILURE,
         expect.objectContaining({
           errorType: 'validation'
         })
@@ -152,7 +151,7 @@ describe('AuthorHandlers Hookey Integration', () => {
   });
 
   describe('delete method hookey integration', () => {
-    it('should emit START and SUCCESS events for successful delete', async () => {
+    it('should emit BEFORE and AFTER events for successful delete', async () => {
       const authorId = 'author-123';
 
       // Mock the underlying gateway to return success
@@ -162,9 +161,9 @@ describe('AuthorHandlers Hookey Integration', () => {
       const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
       await authorHandler.delete(authorId);
 
-      // Verify START event was emitted
+      // Verify BEFORE event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.AUTHOR.DELETE.START,
+        MOBILE_EVENTS.AUTHOR.DELETE.BEFORE,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'author',
@@ -174,9 +173,9 @@ describe('AuthorHandlers Hookey Integration', () => {
         })
       );
 
-      // Verify SUCCESS event was emitted
+      // Verify AFTER event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.AUTHOR.DELETE.SUCCESS,
+        MOBILE_EVENTS.AUTHOR.DELETE.AFTER,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'author'
@@ -184,13 +183,13 @@ describe('AuthorHandlers Hookey Integration', () => {
       );
     });
 
-    it('should emit FAILED event for invalid author ID', async () => {
+    it('should emit FAILURE event for invalid author ID', async () => {
       const authorHandler = AuthorHandlerFactory.createClientGateway(mockHttpClient);
 
       await expect(authorHandler.delete('')).rejects.toThrow();
 
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.AUTHOR.DELETE.FAILED,
+        MOBILE_EVENTS.AUTHOR.DELETE.FAILURE,
         expect.objectContaining({
           errorType: 'validation'
         })
@@ -222,8 +221,8 @@ describe('AuthorHandlers Hookey Integration', () => {
       await authorHandler.create(createPayload);
 
       const calls = mockMobileHooks.emit.mock.calls;
-      const startCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.AUTHOR.CREATE.START);
-      const successCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS);
+      const startCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.AUTHOR.CREATE.BEFORE);
+      const successCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.AUTHOR.CREATE.AFTER);
 
       expect((startCall[1] as Record<string, unknown>).operationId).toBeDefined();
       expect((successCall[1] as Record<string, unknown>).operationId).toBe((startCall[1] as Record<string, unknown>).operationId);

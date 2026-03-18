@@ -87,14 +87,14 @@ describe('MobileHookListenersManager', () => {
     it('should handle analytics events directly', async () => {
       const analyticsListener = listenersManager['analyticsListener'];
       
-      await analyticsListener.handleEvent('book.create.success', { 
+      await analyticsListener.handleEvent('book.create.after', { 
         bookId: 'test-123', 
         title: 'Test Book' 
       });
 
       expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
         'analytics_events',
-        expect.stringContaining('book.create.success')
+        expect.stringContaining('book.create.after')
       );
     });
 
@@ -118,7 +118,7 @@ describe('MobileHookListenersManager', () => {
     it('should ignore non-error events', async () => {
       const errorReportingListener = listenersManager['errorReportingListener'];
       
-      await errorReportingListener.handleEvent('book.create.success', { 
+      await errorReportingListener.handleEvent('book.create.after', { 
         bookId: 'test-123' 
       });
 
@@ -155,13 +155,13 @@ describe('MobileHookListenersManager', () => {
     it('should store all events for offline processing', async () => {
       const offlineStorageListener = listenersManager['offlineStorageListener'];
       
-      await offlineStorageListener.handleEvent('book.create.success', { 
+      await offlineStorageListener.handleEvent('book.create.after', { 
         bookId: 'test-123' 
       });
 
       expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
         'offline_storage_events',
-        expect.stringContaining('book.create.success')
+        expect.stringContaining('book.create.after')
       );
     });
 
@@ -193,7 +193,7 @@ describe('MobileHookListenersManager', () => {
     it('should track operation start times', async () => {
       const performanceListener = listenersManager['performanceMonitoringListener'];
       
-      await performanceListener.handleEvent('book.create.START', { bookId: 'test-123' });
+      await performanceListener.handleEvent('book.create.before', { bookId: 'test-123' });
       
       // Should not store performance metrics yet - just tracking start time
       expect(mockAsyncStorage.setItem).not.toHaveBeenCalledWith(

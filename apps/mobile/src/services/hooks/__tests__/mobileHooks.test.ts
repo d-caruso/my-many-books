@@ -71,7 +71,7 @@ describe('MobileHookSystemManager', () => {
     });
 
     it('should emit events successfully', async () => {
-      await expect(manager.emit(MOBILE_EVENTS.BOOK.CREATE.START, {
+      await expect(manager.emit(MOBILE_EVENTS.BOOK.CREATE.BEFORE, {
         operationId: 'test-123',
         resourceType: 'book',
       })).resolves.not.toThrow();
@@ -97,12 +97,12 @@ describe('MobileHookSystemManager', () => {
       // Replace the system instance
       (manager as unknown as { hookSystem: typeof mockSystem }).hookSystem = mockSystem;
 
-      await manager.emit(MOBILE_EVENTS.BOOK.CREATE.START, {
+      await manager.emit(MOBILE_EVENTS.BOOK.CREATE.BEFORE, {
         operationId: 'test-123',
       });
 
       expect(mockSystem.trigger).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.CREATE.START,
+        MOBILE_EVENTS.BOOK.CREATE.BEFORE,
         expect.objectContaining({
           operationId: 'test-123',
           environment: 'mobile',
@@ -115,14 +115,14 @@ describe('MobileHookSystemManager', () => {
     it('should skip emission when disabled', async () => {
       const disabledManager = new MobileHookSystemManager({ isEnabled: false });
       
-      await expect(disabledManager.emit(MOBILE_EVENTS.BOOK.CREATE.START, {}))
+      await expect(disabledManager.emit(MOBILE_EVENTS.BOOK.CREATE.BEFORE, {}))
         .resolves.not.toThrow();
     });
 
     it('should skip emission in test environment', async () => {
       const testManager = new MobileHookSystemManager({ isTestEnvironment: true });
       
-      await expect(testManager.emit(MOBILE_EVENTS.BOOK.CREATE.START, {}))
+      await expect(testManager.emit(MOBILE_EVENTS.BOOK.CREATE.BEFORE, {}))
         .resolves.not.toThrow();
     });
   });
@@ -207,7 +207,7 @@ describe('mobileHooks singleton', () => {
 
   it('should handle concurrent emissions', async () => {
     const emissions = Array.from({ length: 10 }, (_, i) => 
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.READ.START, { bookId: i })
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.BEFORE, { bookId: i })
     );
 
     await expect(Promise.all(emissions)).resolves.not.toThrow();

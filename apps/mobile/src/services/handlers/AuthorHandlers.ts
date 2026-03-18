@@ -123,15 +123,15 @@ class ValidatedAuthorHandler<THandler extends object> {
     const operationId = generateOperationId();
     const eventMetadata = createEventMetadata(operationId, data);
     
-    // Emit start event
-    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.START, eventMetadata);
+    // Emit before event
+    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.BEFORE, eventMetadata);
     
     try {
       validateCreateAuthor(data);
       const result = await (this.handler as unknown as { create: (data: CreateAuthorPayload) => Promise<Author | string> }).create(data);
       
-      // Emit success event
-      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS, {
+      // Emit after event
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.AFTER, {
         ...eventMetadata,
         result: typeof result === 'string' ? { tempId: result } : { author: result },
       });
@@ -139,7 +139,7 @@ class ValidatedAuthorHandler<THandler extends object> {
       return result;
     } catch (error) {
       // Emit failure event
-      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.FAILURE, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof AuthorValidationError ? 'validation' : 'unknown',
@@ -154,8 +154,8 @@ class ValidatedAuthorHandler<THandler extends object> {
     const operationId = generateOperationId();
     const eventMetadata = createEventMetadata(operationId, { ...data, id });
     
-    // Emit start event
-    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.START, eventMetadata);
+    // Emit before event
+    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.BEFORE, eventMetadata);
     
     try {
       if (!hasUpdateFields(data)) {
@@ -168,8 +168,8 @@ class ValidatedAuthorHandler<THandler extends object> {
       validateUpdateAuthor(data);
       const result = await (this.handler as unknown as { update: (id: string, data: UpdateAuthorPayload) => Promise<Author | string> }).update(id, data);
       
-      // Emit success event
-      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.SUCCESS, {
+      // Emit after event
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.AFTER, {
         ...eventMetadata,
         result: typeof result === 'string' ? { tempId: result } : { author: result },
       });
@@ -177,7 +177,7 @@ class ValidatedAuthorHandler<THandler extends object> {
       return result;
     } catch (error) {
       // Emit failure event
-      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.FAILURE, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof AuthorValidationError ? 'validation' : 'unknown',
@@ -192,8 +192,8 @@ class ValidatedAuthorHandler<THandler extends object> {
     const operationId = generateOperationId();
     const eventMetadata = createEventMetadata(operationId, { id });
     
-    // Emit start event
-    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.START, eventMetadata);
+    // Emit before event
+    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.BEFORE, eventMetadata);
     
     try {
       if (!id || typeof id !== 'string' || id.trim().length === 0) {
@@ -205,48 +205,11 @@ class ValidatedAuthorHandler<THandler extends object> {
       
       await (this.handler as unknown as { delete: (id: string) => Promise<void> }).delete(id);
       
-      // Emit success event
-      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.SUCCESS, eventMetadata);
+      // Emit after event
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.AFTER, eventMetadata);
     } catch (error) {
       // Emit failure event
-      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.FAILED, {
-        ...eventMetadata,
-        error: error instanceof Error ? error.message : String(error),
-        errorType: error instanceof AuthorValidationError ? 'validation' : 'unknown',
-      });
-      
-      throw error;
-    }
-  }
-
-  async read?(id: string): Promise<Author> {
-    const operationId = generateOperationId();
-    const eventMetadata = createEventMetadata(operationId, { id });
-    
-    // Emit start event
-    mobileHooks.emit(MOBILE_EVENTS.AUTHOR.READ.START, eventMetadata);
-    
-    try {
-      if (!id || typeof id !== 'string' || id.trim().length === 0) {
-        throw new AuthorValidationError(
-          [{ field: 'id', code: 'ID_REQUIRED', message: 'validation.author.id.required' }],
-          'Author ID is required for read operation'
-        );
-      }
-      
-      const handler = this.handler as unknown as { read?: (id: string) => Promise<Author> };
-      const result = await handler.read!(id);
-      
-      // Emit success event
-      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.READ.SUCCESS, {
-        ...eventMetadata,
-        result: { author: result },
-      });
-      
-      return result;
-    } catch (error) {
-      // Emit failure event
-      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.READ.FAILED, {
+      mobileHooks.emit(MOBILE_EVENTS.AUTHOR.DELETE.FAILURE, {
         ...eventMetadata,
         error: error instanceof Error ? error.message : String(error),
         errorType: error instanceof AuthorValidationError ? 'validation' : 'unknown',

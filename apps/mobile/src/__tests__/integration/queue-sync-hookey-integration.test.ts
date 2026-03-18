@@ -303,13 +303,13 @@ describe('Queue-Sync Hookey Integration (End-to-End)', () => {
 
       // Verify all resource types emitted sync events
       const bookCreateEvents = eventLog.filter(event => 
-        event.eventType === MOBILE_EVENTS.BOOK.CREATE.SUCCESS
+        event.eventType === MOBILE_EVENTS.BOOK.CREATE.AFTER
       );
       const authorCreateEvents = eventLog.filter(event => 
-        event.eventType === MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS
+        event.eventType === MOBILE_EVENTS.AUTHOR.CREATE.AFTER
       );
       const categoryCreateEvents = eventLog.filter(event => 
-        event.eventType === MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS
+        event.eventType === MOBILE_EVENTS.CATEGORY.CREATE.AFTER
       );
 
       expect(bookCreateEvents.length).toBeGreaterThan(0);
@@ -409,7 +409,7 @@ describe('Queue-Sync Hookey Integration (End-to-End)', () => {
         event.eventType === MOBILE_EVENTS.BOOK.SYNC.PULL.SUCCESS
       );
       const bookCreateEvents = eventLog.filter(event => 
-        event.eventType === MOBILE_EVENTS.BOOK.CREATE.SUCCESS
+        event.eventType === MOBILE_EVENTS.BOOK.CREATE.AFTER
       );
       const authorFailureEvents = eventLog.filter(event => 
         event.eventType === MOBILE_EVENTS.AUTHOR.SYNC.PULL.FAILED
@@ -418,7 +418,7 @@ describe('Queue-Sync Hookey Integration (End-to-End)', () => {
         event.eventType === MOBILE_EVENTS.CATEGORY.SYNC.PULL.SUCCESS
       );
       const categoryCreateEvents = eventLog.filter(event => 
-        event.eventType === MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS
+        event.eventType === MOBILE_EVENTS.CATEGORY.CREATE.AFTER
       );
 
       // Books: either pull success OR create success

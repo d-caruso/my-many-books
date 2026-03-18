@@ -243,9 +243,9 @@ class PerformanceMonitoringListener {
 
     try {
       // Track performance metrics for operations
-      if (eventType.includes('.START')) {
+      if (eventType.includes('.BEFORE') || eventType.includes('.START')) {
         this.trackOperationStart(eventType);
-      } else if (eventType.includes('.SUCCESS') || eventType.includes('.COMPLETE')) {
+      } else if (eventType.includes('.AFTER') || eventType.includes('.COMPLETE')) {
         await this.trackOperationComplete(eventType, data);
       } else if (eventType.includes('PERFORMANCE_METRIC')) {
         await this.trackPerformanceMetric(eventType, data);
@@ -258,12 +258,12 @@ class PerformanceMonitoringListener {
   }
 
   private trackOperationStart(eventType: string): void {
-    const operationKey = eventType.replace('.START', '');
+    const operationKey = eventType.replace('.BEFORE', '').replace('.START', '');
     this.performanceStartTimes.set(operationKey, Date.now());
   }
 
   private async trackOperationComplete(eventType: string, data: unknown): Promise<void> {
-    const operationKey = eventType.replace('.SUCCESS', '').replace('.COMPLETE', '');
+    const operationKey = eventType.replace('.AFTER', '').replace('.COMPLETE', '');
     const startTime = this.performanceStartTimes.get(operationKey);
     
     if (startTime) {

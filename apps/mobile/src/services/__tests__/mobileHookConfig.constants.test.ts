@@ -27,10 +27,10 @@ describe('Mobile Hook Configuration Constants', () => {
       expect(MOBILE_EVENTS.CATEGORY).toBeDefined();
       
       // Check CRUD operations exist for entities
-      expect(MOBILE_EVENTS.BOOK.CREATE.START).toBeDefined();
-      expect(MOBILE_EVENTS.BOOK.READ.SUCCESS).toBeDefined();
-      expect(MOBILE_EVENTS.BOOK.UPDATE.FAILED).toBeDefined();
-      expect(MOBILE_EVENTS.BOOK.DELETE.START).toBeDefined();
+      expect(MOBILE_EVENTS.BOOK.CREATE.BEFORE).toBeDefined();
+      expect(MOBILE_EVENTS.BOOK.CREATE.AFTER).toBeDefined();
+      expect(MOBILE_EVENTS.BOOK.UPDATE.FAILURE).toBeDefined();
+      expect(MOBILE_EVENTS.BOOK.DELETE.BEFORE).toBeDefined();
       
       // Check sync operations exist
       expect(MOBILE_EVENTS.BOOK.SYNC.PULL.START).toBeDefined();
@@ -105,8 +105,8 @@ describe('Mobile Hook Configuration Constants', () => {
     it('should have consistent event naming patterns', () => {
       // All entity events should follow the same pattern
       const entityTypes = ['BOOK', 'AUTHOR', 'CATEGORY'];
-      const crudOperations = ['CREATE', 'READ', 'UPDATE', 'DELETE'];
-      const operationStates = ['START', 'SUCCESS', 'FAILED'];
+      const crudOperations = ['CREATE', 'UPDATE', 'DELETE'];
+      const operationStates = ['BEFORE', 'AFTER', 'FAILURE'];
 
       for (const entity of entityTypes) {
         for (const operation of crudOperations) {

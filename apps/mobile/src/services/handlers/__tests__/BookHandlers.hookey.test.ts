@@ -17,10 +17,9 @@ jest.mock('../../hooks/mobileHooks', () => ({
   },
   MOBILE_EVENTS: {
     BOOK: {
-      CREATE: { START: 'book.create.start', SUCCESS: 'book.create.success', FAILED: 'book.create.failed' },
-      READ: { START: 'book.read.start', SUCCESS: 'book.read.success', FAILED: 'book.read.failed' },
-      UPDATE: { START: 'book.update.start', SUCCESS: 'book.update.success', FAILED: 'book.update.failed' },
-      DELETE: { START: 'book.delete.start', SUCCESS: 'book.delete.success', FAILED: 'book.delete.failed' },
+      CREATE: { BEFORE: 'book.create.before', AFTER: 'book.create.after', FAILURE: 'book.create.failure' },
+      UPDATE: { BEFORE: 'book.update.before', AFTER: 'book.update.after', FAILURE: 'book.update.failure' },
+      DELETE: { BEFORE: 'book.delete.before', AFTER: 'book.delete.after', FAILURE: 'book.delete.failure' },
     },
   },
 }));
@@ -68,9 +67,9 @@ describe('BookHandlers Hookey Integration', () => {
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
       await bookHandler.create(createPayload);
 
-      // Verify START event was emitted
+      // Verify BEFORE event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.CREATE.START,
+        MOBILE_EVENTS.BOOK.CREATE.BEFORE,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'book',
@@ -83,9 +82,9 @@ describe('BookHandlers Hookey Integration', () => {
         })
       );
 
-      // Verify SUCCESS event was emitted
+      // Verify AFTER event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.CREATE.SUCCESS,
+        MOBILE_EVENTS.BOOK.CREATE.AFTER,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'book',
@@ -98,11 +97,11 @@ describe('BookHandlers Hookey Integration', () => {
       // Verify events were called in correct order
       const calls = mockMobileHooks.emit.mock.calls;
       expect(calls).toHaveLength(2);
-      expect(calls[0][0]).toBe(MOBILE_EVENTS.BOOK.CREATE.START);
-      expect(calls[1][0]).toBe(MOBILE_EVENTS.BOOK.CREATE.SUCCESS);
+      expect(calls[0][0]).toBe(MOBILE_EVENTS.BOOK.CREATE.BEFORE);
+      expect(calls[1][0]).toBe(MOBILE_EVENTS.BOOK.CREATE.AFTER);
     });
 
-    it('should emit START and FAILED events for failed create', async () => {
+    it('should emit BEFORE and FAILURE events for failed create', async () => {
       const createPayload: CreateBookPayload = {
         title: 'Test Book',
         author: 'Test Author',
@@ -117,17 +116,17 @@ describe('BookHandlers Hookey Integration', () => {
       
       await expect(bookHandler.create(createPayload)).rejects.toThrow('Create failed');
 
-      // Verify START event was emitted
+      // Verify BEFORE event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.CREATE.START,
+        MOBILE_EVENTS.BOOK.CREATE.BEFORE,
         expect.objectContaining({
           resourceType: 'book'
         })
       );
 
-      // Verify FAILED event was emitted
+      // Verify FAILURE event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.CREATE.FAILED,
+        MOBILE_EVENTS.BOOK.CREATE.FAILURE,
         expect.objectContaining({
           error: 'Create failed',
           errorType: 'unknown'
@@ -135,7 +134,7 @@ describe('BookHandlers Hookey Integration', () => {
       );
     });
 
-    it('should emit FAILED event with validation error type for validation failures', async () => {
+    it('should emit FAILURE event with validation error type for validation failures', async () => {
       const invalidPayload = { title: '', author: 'Test Author', status: 'reading' } as CreateBookPayload;
 
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
@@ -143,7 +142,7 @@ describe('BookHandlers Hookey Integration', () => {
       await expect(bookHandler.create(invalidPayload)).rejects.toThrow();
 
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.CREATE.FAILED,
+        MOBILE_EVENTS.BOOK.CREATE.FAILURE,
         expect.objectContaining({
           errorType: 'validation'
         })
@@ -165,7 +164,7 @@ describe('BookHandlers Hookey Integration', () => {
       await bookHandler.create(createPayload);
 
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.CREATE.SUCCESS,
+        MOBILE_EVENTS.BOOK.CREATE.AFTER,
         expect.objectContaining({
           result: expect.objectContaining({
             tempId: 'temp-123'
@@ -176,7 +175,7 @@ describe('BookHandlers Hookey Integration', () => {
   });
 
   describe('delete method hookey integration', () => {
-    it('should emit START and SUCCESS events for successful delete', async () => {
+    it('should emit BEFORE and AFTER events for successful delete', async () => {
       const bookId = 'book-123';
 
       // Mock the underlying gateway to return success
@@ -186,9 +185,9 @@ describe('BookHandlers Hookey Integration', () => {
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
       await bookHandler.delete(bookId);
 
-      // Verify START event was emitted
+      // Verify BEFORE event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.DELETE.START,
+        MOBILE_EVENTS.BOOK.DELETE.BEFORE,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'book',
@@ -198,9 +197,9 @@ describe('BookHandlers Hookey Integration', () => {
         })
       );
 
-      // Verify SUCCESS event was emitted
+      // Verify AFTER event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.DELETE.SUCCESS,
+        MOBILE_EVENTS.BOOK.DELETE.AFTER,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'book'
@@ -208,13 +207,13 @@ describe('BookHandlers Hookey Integration', () => {
       );
     });
 
-    it('should emit FAILED event for invalid book ID', async () => {
+    it('should emit FAILURE event for invalid book ID', async () => {
       const bookHandler = BookHandlerFactory.createClientGateway(mockHttpClient);
 
       await expect(bookHandler.delete('')).rejects.toThrow();
 
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.DELETE.FAILED,
+        MOBILE_EVENTS.BOOK.DELETE.FAILURE,
         expect.objectContaining({
           errorType: 'validation'
         })
@@ -246,8 +245,8 @@ describe('BookHandlers Hookey Integration', () => {
       await bookHandler.create(createPayload);
 
       const calls = mockMobileHooks.emit.mock.calls;
-      const startCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.BOOK.CREATE.START);
-      const successCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.BOOK.CREATE.SUCCESS);
+      const startCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.BOOK.CREATE.BEFORE);
+      const successCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.BOOK.CREATE.AFTER);
 
       expect((startCall[1] as Record<string, unknown>).operationId).toBeDefined();
       expect((successCall[1] as Record<string, unknown>).operationId).toBe((startCall[1] as Record<string, unknown>).operationId);
@@ -344,11 +343,11 @@ describe('BookHandlers Hookey Integration', () => {
       
       // Verify hooks were called
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.CREATE.START,
+        MOBILE_EVENTS.BOOK.CREATE.BEFORE,
         expect.any(Object)
       );
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.BOOK.CREATE.SUCCESS,
+        MOBILE_EVENTS.BOOK.CREATE.AFTER,
         expect.any(Object)
       );
     });

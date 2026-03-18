@@ -401,7 +401,7 @@ export class SyncService {
           // Server version is newer - update local
           const localId = String(localBook.entity.id);
           // Emit book update event
-          mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.START, {
+          mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.BEFORE, {
             bookId: localId,
             serverId,
             reason: 'server_sync',
@@ -416,7 +416,7 @@ export class SyncService {
           await bookRepository.update(localId, updatedBook);
 
           // Emit book update success event
-          mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.SUCCESS, {
+          mobileHooks.emit(MOBILE_EVENTS.BOOK.UPDATE.AFTER, {
             bookId: localId,
             serverId,
             reason: 'server_sync',
@@ -439,7 +439,7 @@ export class SyncService {
       const localId = String(serverId);
 
       // Emit book creation event
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.START, {
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.BEFORE, {
         bookId: localId,
         serverId,
         source: 'server_sync',
@@ -454,7 +454,7 @@ export class SyncService {
       await bookRepository.create(local);
       
       // Emit book creation success event
-      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.SUCCESS, {
+      mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.AFTER, {
         bookId: localId,
         serverId,
         source: 'server_sync',
@@ -685,7 +685,7 @@ export class SyncService {
 
         if (serverUpdateDate > localUpdateDate) {
           // Server version is newer - update local
-          mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.START, {
+          mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.BEFORE, {
             authorId: localAuthor.entity.id,
             serverId: serverAuthor.id,
             reason: 'server_sync',
@@ -706,7 +706,7 @@ export class SyncService {
             syncStatus: SYNC_STATUS.SYNCED,
           });
 
-          mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.SUCCESS, {
+          mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.AFTER, {
             authorId: localAuthor.entity.id,
             serverId: serverAuthor.id,
             reason: 'server_sync',
@@ -722,7 +722,7 @@ export class SyncService {
       
       if (existingByName) {
         // Found by name - update with server_id
-        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.START, {
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.UPDATE.BEFORE, {
           authorId: existingByName.entity.id,
           serverId: serverId,
           reason: 'server_id_mapping',
@@ -740,7 +740,7 @@ export class SyncService {
       } else {
         // Create new author
         // Emit author creation event
-        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.START, {
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.BEFORE, {
           authorName: serverAuthor.name,
           serverId,
           timestamp: new Date().toISOString()
@@ -759,7 +759,7 @@ export class SyncService {
         });
 
         // Emit author creation success event
-        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.SUCCESS, {
+        mobileHooks.emit(MOBILE_EVENTS.AUTHOR.CREATE.AFTER, {
           authorId: newAuthor.entity.id,
           authorName: serverAuthor.name,
           serverId,
@@ -811,7 +811,7 @@ export class SyncService {
 
         if (serverUpdateDate > localUpdateDate) {
           // Server version is newer - update local
-          mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.START, {
+          mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.BEFORE, {
             categoryId: localCategory.entity.id,
             serverId: serverCategory.id,
             reason: 'server_sync',
@@ -825,7 +825,7 @@ export class SyncService {
             syncStatus: SYNC_STATUS.SYNCED,
           });
 
-          mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.SUCCESS, {
+          mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.AFTER, {
             categoryId: localCategory.entity.id,
             serverId: serverCategory.id,
             reason: 'server_sync',
@@ -839,7 +839,7 @@ export class SyncService {
       
       if (existingByName) {
         // Found by name - update with server_id
-        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.START, {
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.UPDATE.BEFORE, {
           categoryId: existingByName.entity.id,
           serverId: serverId,
           reason: 'server_id_mapping',
@@ -858,7 +858,7 @@ export class SyncService {
       } else {
         // Create new category
         // Emit category creation event
-        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.START, {
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.BEFORE, {
           categoryName: serverCategory.name,
           serverId,
           timestamp: new Date().toISOString()
@@ -876,7 +876,7 @@ export class SyncService {
         });
 
         // Emit category creation success event
-        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS, {
+        mobileHooks.emit(MOBILE_EVENTS.CATEGORY.CREATE.AFTER, {
           categoryId: newCategory.entity.id,
           categoryName: serverCategory.name,
           serverId,

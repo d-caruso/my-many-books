@@ -17,10 +17,9 @@ jest.mock('../../hooks/mobileHooks', () => ({
   },
   MOBILE_EVENTS: {
     CATEGORY: {
-      CREATE: { START: 'category.create.start', SUCCESS: 'category.create.success', FAILED: 'category.create.failed' },
-      read: { START: 'category.read.start', SUCCESS: 'category.read.success', FAILED: 'category.read.failed' },
-      UPDATE: { START: 'category.update.start', SUCCESS: 'category.update.success', FAILED: 'category.update.failed' },
-      DELETE: { START: 'category.delete.start', SUCCESS: 'category.delete.success', FAILED: 'category.delete.failed' },
+      CREATE: { BEFORE: 'category.create.before', AFTER: 'category.create.after', FAILURE: 'category.create.failure' },
+      UPDATE: { BEFORE: 'category.update.before', AFTER: 'category.update.after', FAILURE: 'category.update.failure' },
+      DELETE: { BEFORE: 'category.delete.before', AFTER: 'category.delete.after', FAILURE: 'category.delete.failure' },
     },
   },
 }));
@@ -45,7 +44,7 @@ describe('CategoryHandlers Hookey Integration', () => {
   });
 
   describe('create method hookey integration', () => {
-    it('should emit START and SUCCESS events for successful create', async () => {
+    it('should emit BEFORE and AFTER events for successful create', async () => {
       const createPayload: CreateCategoryPayload = {
         name: 'Fiction',
         description: 'Fiction books category',
@@ -68,9 +67,9 @@ describe('CategoryHandlers Hookey Integration', () => {
       const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
       await categoryHandler.create(createPayload);
 
-      // Verify START event was emitted
+      // Verify BEFORE event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.CATEGORY.CREATE.START,
+        MOBILE_EVENTS.CATEGORY.CREATE.BEFORE,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'category',
@@ -83,9 +82,9 @@ describe('CategoryHandlers Hookey Integration', () => {
         })
       );
 
-      // Verify SUCCESS event was emitted
+      // Verify AFTER event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS,
+        MOBILE_EVENTS.CATEGORY.CREATE.AFTER,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'category',
@@ -98,11 +97,11 @@ describe('CategoryHandlers Hookey Integration', () => {
       // Verify events were called in correct order
       const calls = mockMobileHooks.emit.mock.calls;
       expect(calls).toHaveLength(2);
-      expect(calls[0][0]).toBe(MOBILE_EVENTS.CATEGORY.CREATE.START);
-      expect(calls[1][0]).toBe(MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS);
+      expect(calls[0][0]).toBe(MOBILE_EVENTS.CATEGORY.CREATE.BEFORE);
+      expect(calls[1][0]).toBe(MOBILE_EVENTS.CATEGORY.CREATE.AFTER);
     });
 
-    it('should emit FAILED event with validation error type for validation failures', async () => {
+    it('should emit FAILURE event with validation error type for validation failures', async () => {
       const invalidPayload = { name: '', description: 'Test description' } as CreateCategoryPayload;
 
       const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
@@ -110,7 +109,7 @@ describe('CategoryHandlers Hookey Integration', () => {
       await expect(categoryHandler.create(invalidPayload)).rejects.toThrow();
 
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.CATEGORY.CREATE.FAILED,
+        MOBILE_EVENTS.CATEGORY.CREATE.FAILURE,
         expect.objectContaining({
           errorType: 'validation'
         })
@@ -119,7 +118,7 @@ describe('CategoryHandlers Hookey Integration', () => {
   });
 
   describe('delete method hookey integration', () => {
-    it('should emit START and SUCCESS events for successful delete', async () => {
+    it('should emit BEFORE and AFTER events for successful delete', async () => {
       const categoryId = 'category-123';
 
       // Mock the underlying gateway to return success
@@ -129,9 +128,9 @@ describe('CategoryHandlers Hookey Integration', () => {
       const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
       await categoryHandler.delete(categoryId);
 
-      // Verify START event was emitted
+      // Verify BEFORE event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.CATEGORY.DELETE.START,
+        MOBILE_EVENTS.CATEGORY.DELETE.BEFORE,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'category',
@@ -141,9 +140,9 @@ describe('CategoryHandlers Hookey Integration', () => {
         })
       );
 
-      // Verify SUCCESS event was emitted
+      // Verify AFTER event was emitted
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.CATEGORY.DELETE.SUCCESS,
+        MOBILE_EVENTS.CATEGORY.DELETE.AFTER,
         expect.objectContaining({
           operationId: expect.stringMatching(/^op_\d+_[a-z0-9]+$/),
           resourceType: 'category'
@@ -151,13 +150,13 @@ describe('CategoryHandlers Hookey Integration', () => {
       );
     });
 
-    it('should emit FAILED event for invalid category ID', async () => {
+    it('should emit FAILURE event for invalid category ID', async () => {
       const categoryHandler = CategoryHandlerFactory.createClientGateway(mockHttpClient);
 
       await expect(categoryHandler.delete('')).rejects.toThrow();
 
       expect(mockMobileHooks.emit).toHaveBeenCalledWith(
-        MOBILE_EVENTS.CATEGORY.DELETE.FAILED,
+        MOBILE_EVENTS.CATEGORY.DELETE.FAILURE,
         expect.objectContaining({
           errorType: 'validation'
         })
@@ -185,8 +184,8 @@ describe('CategoryHandlers Hookey Integration', () => {
       await categoryHandler.create(createPayload);
 
       const calls = mockMobileHooks.emit.mock.calls;
-      const startCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.CATEGORY.CREATE.START);
-      const successCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.CATEGORY.CREATE.SUCCESS);
+      const startCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.CATEGORY.CREATE.BEFORE);
+      const successCall = calls.find(([eventName]) => eventName === MOBILE_EVENTS.CATEGORY.CREATE.AFTER);
 
       expect((startCall[1] as Record<string, unknown>).operationId).toBeDefined();
       expect((successCall[1] as Record<string, unknown>).operationId).toBe((startCall[1] as Record<string, unknown>).operationId);
