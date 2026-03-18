@@ -1,57 +1,36 @@
-import { extractErrorMessage } from '@my-many-books/shared-utils';
+import { RESOURCE_TYPES } from './eventsSchema';
+import {
+  createHookLifecyclePayload,
+  createHookOperationId,
+  emitHookLifecycle,
+  type HookAfterPayload,
+  type HookEventMetadata,
+  type HookLifecycleEvents,
+  type HookLifecyclePayload,
+} from './hookLifecycle';
 
-import type { MobileEventName } from './eventsSchema';
-import { mobileHooks } from './mobileHooks';
+export type DomainMutationResourceType =
+  (typeof RESOURCE_TYPES)[keyof typeof RESOURCE_TYPES];
 
-type HookLifecycleEvents = Readonly<{
-  BEFORE: MobileEventName;
-  AFTER: MobileEventName;
-  FAILURE: MobileEventName;
-}>;
+export type DomainMutationPayload<TMetadata extends HookEventMetadata = HookEventMetadata> =
+  HookLifecyclePayload<TMetadata> &
+    Readonly<{
+      resourceType: DomainMutationResourceType;
+    }>;
 
-type EventMetadata = Record<string, unknown> | undefined;
-
-export type DomainMutationPayload = Readonly<{
-  operationId: string;
-  resourceType: string;
-  timestamp: string;
-  metadata?: Record<string, unknown>;
-}>;
-
-export const createHookOperationId = (): string =>
-  `op_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-
-export const createDomainMutationPayload = (
-  resourceType: string,
-  metadata?: EventMetadata,
+export const createDomainMutationPayload = <TMetadata extends HookEventMetadata>(
+  resourceType: DomainMutationResourceType,
+  metadata?: TMetadata,
   operationId: string = createHookOperationId()
-): DomainMutationPayload => ({
-  operationId,
+): DomainMutationPayload<TMetadata> => ({
+  ...createHookLifecyclePayload(metadata, operationId),
   resourceType,
-  timestamp: new Date().toISOString(),
-  ...(metadata ? { metadata } : {}),
 });
 
-export const emitDomainMutationLifecycle = async <T>(
+export const emitDomainMutationLifecycle = <T, TAfterPayload extends HookAfterPayload = HookAfterPayload>(
   events: HookLifecycleEvents,
   payload: DomainMutationPayload,
   operation: () => Promise<T>,
-  buildAfterPayload?: (result: T) => Record<string, unknown>
-): Promise<T> => {
-  void mobileHooks.emit(events.BEFORE, payload);
-
-  try {
-    const result = await operation();
-    void mobileHooks.emit(events.AFTER, {
-      ...payload,
-      ...(buildAfterPayload ? buildAfterPayload(result) : {}),
-    });
-    return result;
-  } catch (error) {
-    void mobileHooks.emit(events.FAILURE, {
-      ...payload,
-      error: extractErrorMessage(error),
-    });
-    throw error;
-  }
-};
+  buildAfterPayload?: (result: T) => TAfterPayload
+): Promise<T> =>
+  emitHookLifecycle(events, payload, operation, buildAfterPayload);

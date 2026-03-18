@@ -13,6 +13,11 @@ import { AuthService } from '@my-many-books/shared-auth';
 import { extractErrorMessage } from '@my-many-books/shared-utils';
 
 import { emitAuthLifecycle, createAuthLifecyclePayload } from './hooks/authLifecycleEvents';
+import {
+  HOOK_PAYLOAD_ERRORS,
+  HOOK_PAYLOAD_PROVIDERS,
+  HOOK_PAYLOAD_SOURCES,
+} from './hooks/hookPayloadConstants';
 import { mobileHooks, MOBILE_EVENTS } from './hooks/mobileHooks';
 import { MobileStorageAdapter } from './MobileStorageAdapter';
 import { API_BASE_URL } from '../config/api';
@@ -36,8 +41,8 @@ const baseLogin = authService.login.bind(authService);
 authService.login = async (email: string, password: string): Promise<User> => {
   const payload = createAuthLifecyclePayload({
     email,
-    provider: 'password',
-    source: 'mobile_auth_service',
+    provider: HOOK_PAYLOAD_PROVIDERS.PASSWORD,
+    source: HOOK_PAYLOAD_SOURCES.MOBILE_AUTH_SERVICE,
   });
 
   return emitAuthLifecycle(
@@ -56,8 +61,8 @@ authService.loginWithGoogleCode = async (payload: {
   codeVerifier: string;
 }): Promise<User> => {
   const hookPayload = createAuthLifecyclePayload({
-    provider: 'google',
-    source: 'mobile_auth_service',
+    provider: HOOK_PAYLOAD_PROVIDERS.GOOGLE,
+    source: HOOK_PAYLOAD_SOURCES.MOBILE_AUTH_SERVICE,
   });
 
   return emitAuthLifecycle(
@@ -79,7 +84,7 @@ authService.register = async (userData: {
   const payload = createAuthLifecyclePayload({
     email: userData.email,
     locale: userData.locale,
-    source: 'mobile_auth_service',
+    source: HOOK_PAYLOAD_SOURCES.MOBILE_AUTH_SERVICE,
   });
 
   return emitAuthLifecycle(
@@ -93,7 +98,7 @@ authService.register = async (userData: {
 const baseLogout = authService.logout.bind(authService);
 authService.logout = async (): Promise<string | null> => {
   const payload = createAuthLifecyclePayload({
-    source: 'mobile_auth_service',
+    source: HOOK_PAYLOAD_SOURCES.MOBILE_AUTH_SERVICE,
   });
 
   return emitAuthLifecycle(
@@ -111,7 +116,7 @@ authService.logout = async (): Promise<string | null> => {
 const baseSilentRefresh = authService.silentRefresh.bind(authService);
 authService.silentRefresh = async (): Promise<boolean> => {
   const payload = createAuthLifecyclePayload({
-    source: 'mobile_auth_service',
+    source: HOOK_PAYLOAD_SOURCES.MOBILE_AUTH_SERVICE,
   });
 
   void mobileHooks.emit(MOBILE_EVENTS.AUTH.REFRESH.BEFORE, payload);
@@ -129,7 +134,7 @@ authService.silentRefresh = async (): Promise<boolean> => {
 
     void mobileHooks.emit(MOBILE_EVENTS.AUTH.REFRESH.FAILURE, {
       ...payload,
-      error: 'Session refresh failed',
+      error: HOOK_PAYLOAD_ERRORS.SESSION_REFRESH_FAILED,
     });
     return false;
   } catch (error) {
@@ -146,7 +151,7 @@ authService.verifyEmail = async (email: string, code: string): Promise<void> => 
   const payload = createAuthLifecyclePayload({
     email,
     codeLength: code.length,
-    source: 'mobile_auth_service',
+    source: HOOK_PAYLOAD_SOURCES.MOBILE_AUTH_SERVICE,
   });
 
   await emitAuthLifecycle(
@@ -160,7 +165,7 @@ const baseResendCode = authService.resendCode.bind(authService);
 authService.resendCode = async (email: string): Promise<void> => {
   const payload = createAuthLifecyclePayload({
     email,
-    source: 'mobile_auth_service',
+    source: HOOK_PAYLOAD_SOURCES.MOBILE_AUTH_SERVICE,
   });
 
   await emitAuthLifecycle(
@@ -180,7 +185,7 @@ authService.changePassword = async (input: {
   const payload = createAuthLifecyclePayload({
     userId: input.userId,
     locale: input.locale,
-    source: 'mobile_auth_service',
+    source: HOOK_PAYLOAD_SOURCES.MOBILE_AUTH_SERVICE,
   });
 
   return emitAuthLifecycle(
@@ -195,7 +200,7 @@ const baseRequestPasswordReset = authService.requestPasswordReset.bind(authServi
 authService.requestPasswordReset = async (email: string): Promise<ForgotPasswordResponse> => {
   const payload = createAuthLifecyclePayload({
     email,
-    source: 'mobile_auth_service',
+    source: HOOK_PAYLOAD_SOURCES.MOBILE_AUTH_SERVICE,
   });
 
   return emitAuthLifecycle(
@@ -217,7 +222,7 @@ authService.confirmPasswordReset = async (input: {
     email: input.email,
     codeLength: input.code.length,
     locale: input.locale,
-    source: 'mobile_auth_service',
+    source: HOOK_PAYLOAD_SOURCES.MOBILE_AUTH_SERVICE,
   });
 
   return emitAuthLifecycle(

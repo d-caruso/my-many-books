@@ -1,52 +1,26 @@
-import { extractErrorMessage } from '@my-many-books/shared-utils';
+import {
+  createHookLifecyclePayload,
+  createHookOperationId,
+  emitHookLifecycle,
+  type HookAfterPayload,
+  type HookEventMetadata,
+  type HookLifecycleEvents,
+  type HookLifecyclePayload,
+} from './hookLifecycle';
 
-import { createHookOperationId } from './domainMutationEvents';
-import type { MobileEventName } from './eventsSchema';
-import { mobileHooks } from './mobileHooks';
+export type AuthLifecyclePayload<TMetadata extends HookEventMetadata = HookEventMetadata> =
+  HookLifecyclePayload<TMetadata>;
 
-type HookLifecycleEvents = Readonly<{
-  BEFORE: MobileEventName;
-  AFTER: MobileEventName;
-  FAILURE: MobileEventName;
-}>;
-
-type EventMetadata = Record<string, unknown> | undefined;
-
-export type AuthLifecyclePayload = Readonly<{
-  operationId: string;
-  timestamp: string;
-  metadata?: Record<string, unknown>;
-}>;
-
-export const createAuthLifecyclePayload = (
-  metadata?: EventMetadata,
+export const createAuthLifecyclePayload = <TMetadata extends HookEventMetadata>(
+  metadata?: TMetadata,
   operationId: string = createHookOperationId()
-): AuthLifecyclePayload => ({
-  operationId,
-  timestamp: new Date().toISOString(),
-  ...(metadata ? { metadata } : {}),
-});
+): AuthLifecyclePayload<TMetadata> =>
+  createHookLifecyclePayload(metadata, operationId);
 
-export const emitAuthLifecycle = async <T>(
+export const emitAuthLifecycle = <T, TAfterPayload extends HookAfterPayload = HookAfterPayload>(
   events: HookLifecycleEvents,
   payload: AuthLifecyclePayload,
   operation: () => Promise<T>,
-  buildAfterPayload?: (result: T) => Record<string, unknown>
-): Promise<T> => {
-  void mobileHooks.emit(events.BEFORE, payload);
-
-  try {
-    const result = await operation();
-    void mobileHooks.emit(events.AFTER, {
-      ...payload,
-      ...(buildAfterPayload ? buildAfterPayload(result) : {}),
-    });
-    return result;
-  } catch (error) {
-    void mobileHooks.emit(events.FAILURE, {
-      ...payload,
-      error: extractErrorMessage(error),
-    });
-    throw error;
-  }
-};
+  buildAfterPayload?: (result: T) => TAfterPayload
+): Promise<T> =>
+  emitHookLifecycle(events, payload, operation, buildAfterPayload);

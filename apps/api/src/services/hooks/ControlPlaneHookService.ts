@@ -1,12 +1,9 @@
-import { emitHookEvent } from './hookSystem';
-
-export type LifecycleBranch = {
-  BEFORE: string;
-  AFTER: string;
-  FAILURE: string;
-};
-
-export type LifecyclePhase = keyof LifecycleBranch;
+import {
+  emitLifecycleEvent as emitLifecycleHookEvent,
+  type HookEventPayload,
+  type LifecycleBranch,
+  type LifecyclePhase,
+} from './lifecycleHooks';
 
 type RequestUserLike = {
   id: string | number;
@@ -17,9 +14,9 @@ class ControlPlaneHookService {
   emitLifecycleEvent(
     branch: LifecycleBranch,
     phase: LifecyclePhase,
-    payload: Record<string, unknown>
+    payload: HookEventPayload
   ): void {
-    void emitHookEvent(branch[phase], payload);
+    emitLifecycleHookEvent(branch, phase, payload);
   }
 
   getActorContext(user: RequestUserLike): { id: string | number; role?: string } | null {
