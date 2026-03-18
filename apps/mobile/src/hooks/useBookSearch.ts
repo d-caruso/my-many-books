@@ -42,6 +42,25 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
   const { isOnline } = useNetworkState();
   const isOffline = !isOnline;
 
+  const emitSearchQuery = useCallback(
+    (query: string, filters: Partial<SearchQuery>, page: number) => {
+      mobileHooks.emit(MOBILE_EVENTS.SEARCH.QUERY, {
+        query: query.trim(),
+        page,
+        filters: {
+          ...(filters.status ? { status: filters.status } : {}),
+          ...(filters.authorId != null ? { authorId: filters.authorId } : {}),
+          ...(filters.categoryId != null ? { categoryId: filters.categoryId } : {}),
+          ...(filters.sortBy ? { sortBy: filters.sortBy } : {}),
+          ...(filters.sortOrder ? { sortOrder: filters.sortOrder } : {}),
+        },
+        isOffline,
+        source: 'useBookSearch.searchBooks',
+      });
+    },
+    [isOffline]
+  );
+
   const runOfflineSearch = useCallback(async (query: string, filters: Partial<SearchQuery> = {}) => {
     const localBooks = await bookRepository.searchWithFilters({
       query: query.trim(),
@@ -137,6 +156,8 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
         return;
       }
 
+      emitSearchQuery(query, filters, page);
+
       setOfflineLoading(true);
       setOfflineError(null);
 
@@ -159,8 +180,9 @@ export const useBookSearch = (): BookSearchState & BookSearchActions => {
     }
 
     setFallbackError(null);
+    emitSearchQuery(query, filters, page);
     await sharedSearchBooks(query, filters, page);
-  }, [clearOfflineSearch, isOffline, runOfflineSearch, sharedSearchBooks, t]);
+  }, [clearOfflineSearch, emitSearchQuery, isOffline, runOfflineSearch, sharedSearchBooks, t]);
 
   const searchByISBN = useCallback(async (isbn: string): Promise<Book | null> => {
     if (!isbn.trim()) {

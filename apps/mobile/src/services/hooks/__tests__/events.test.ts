@@ -8,6 +8,8 @@ describe('Mobile Events', () => {
       expect(MOBILE_EVENTS.BOOK).toBeDefined();
       expect(MOBILE_EVENTS.AUTHOR).toBeDefined();
       expect(MOBILE_EVENTS.CATEGORY).toBeDefined();
+      expect(MOBILE_EVENTS.SEARCH).toBeDefined();
+      expect(MOBILE_EVENTS.SCANNER).toBeDefined();
       expect(MOBILE_EVENTS.USER).toBeDefined();
       expect(MOBILE_EVENTS.AUTH).toBeDefined();
       expect(MOBILE_EVENTS.QUEUE).toBeDefined();
@@ -25,6 +27,10 @@ describe('Mobile Events', () => {
       
       expect(MOBILE_EVENTS.AUTHOR.UPDATE.BEFORE).toBe('author.update.before');
       expect(MOBILE_EVENTS.CATEGORY.DELETE.AFTER).toBe('category.delete.after');
+      expect(MOBILE_EVENTS.SEARCH.QUERY).toBe('search.query');
+      expect(MOBILE_EVENTS.SEARCH.RESULT_SELECTED).toBe('search.result_selected');
+      expect(MOBILE_EVENTS.SCANNER.PERMISSION.REQUEST).toBe('scanner.permission.request');
+      expect(MOBILE_EVENTS.SCANNER.ISBN.DETECTED).toBe('scanner.isbn.detected');
     });
 
     it('should compose shared mutation trees with local mobile infrastructure trees', () => {
@@ -37,6 +43,8 @@ describe('Mobile Events', () => {
       expect(MOBILE_EVENTS.AUTH.REFRESH).toEqual(HOOK_EVENTS.AUTH.REFRESH);
       expect(MOBILE_EVENTS.AUTH.VERIFY_EMAIL).toEqual(HOOK_EVENTS.AUTH.VERIFY_EMAIL);
 
+      expect(MOBILE_EVENTS.SCANNER.COPY.SUCCESS).toBe('scanner.copy.success');
+      expect(MOBILE_EVENTS.SCANNER.ROUTE_DECISION).toBe('scanner.route_decision');
       expect(MOBILE_EVENTS.QUEUE.PROCESS.START).toBe('queue.process.start');
       expect(MOBILE_EVENTS.SYNC.UPLOAD.COMPLETE).toBe('sync.upload.complete');
       expect(MOBILE_EVENTS.ERROR.API_RESPONSE).toBe('error.api_response');
@@ -109,6 +117,8 @@ describe('Mobile Events', () => {
         MOBILE_EVENTS.CATEGORY.DELETE.FAILURE,
         MOBILE_EVENTS.USER.LOGIN.AFTER,
         MOBILE_EVENTS.AUTH.SESSION.EXPIRED,
+        MOBILE_EVENTS.SEARCH.RESULT_SELECTED,
+        MOBILE_EVENTS.SCANNER.PERMISSION.GRANTED,
         MOBILE_EVENTS.QUEUE.PROCESS.START,
         MOBILE_EVENTS.SYNC.CONFLICT.DETECTED,
         MOBILE_EVENTS.NETWORK.TYPE_CHANGED,

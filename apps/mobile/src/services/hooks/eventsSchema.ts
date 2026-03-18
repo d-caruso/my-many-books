@@ -94,6 +94,27 @@ const schema = {
    */
   CATEGORY: ENTITY_OPERATIONS,
 
+  SEARCH: {
+    QUERY: null,
+    RESULT_SELECTED: null,
+  },
+
+  SCANNER: {
+    PERMISSION: {
+      REQUEST: null,
+      GRANTED: null,
+      DENIED: null,
+    },
+    ISBN: {
+      DETECTED: null,
+    },
+    COPY: {
+      SUCCESS: null,
+      FAILURE: null,
+    },
+    ROUTE_DECISION: null,
+  },
+
   // Queue Events
   QUEUE: {
     ENQUEUE: null,

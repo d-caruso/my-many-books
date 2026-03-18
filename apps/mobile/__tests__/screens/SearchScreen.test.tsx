@@ -8,10 +8,29 @@ import {
   SORT_DIRECTIONS,
 } from '@my-many-books/shared-types';
 import { useBookSearch } from '@/hooks/useBookSearch';
+import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+
+const mockPush = jest.fn();
+
+jest.mock('expo-router', () => ({
+  router: {
+    push: mockPush,
+  },
+}));
 
 jest.mock('@/hooks/useBookSearch', () => ({
   useBookSearch: jest.fn(),
 }));
+
+jest.mock('@/services/hooks/mobileHooks', () => {
+  const actual = jest.requireActual('@/services/hooks/eventsSchema');
+  return {
+    mobileHooks: {
+      emit: jest.fn().mockResolvedValue(undefined),
+    },
+    MOBILE_EVENTS: actual.MOBILE_EVENTS,
+  };
+});
 
 const mockUseBookSearch = useBookSearch as jest.MockedFunction<typeof useBookSearch>;
 
@@ -136,6 +155,24 @@ function SearchScreenDouble() {
         <Text>{sortOrder}</Text>
       </TouchableOpacity>
     </View>
+  );
+}
+
+function SearchSelectionDouble() {
+  const handleBookPress = React.useCallback(() => {
+    mobileHooks.emit(MOBILE_EVENTS.SEARCH.RESULT_SELECTED, {
+      bookId: 5,
+      title: 'Selected Result',
+      selectionContext: 'query',
+      source: 'search_screen',
+    });
+    mockPush('/book/5');
+  }, []);
+
+  return (
+    <TouchableOpacity testID="result-card" onPress={handleBookPress}>
+      <Text>Selected Result</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -341,5 +378,28 @@ describe('SearchScreen', () => {
       sortBy: SEARCH_SORT_BY_FIELDS.TITLE,
       sortOrder: SORT_DIRECTIONS.DESC,
     });
+  });
+
+  it('should emit result-selected when opening a search result', async () => {
+    let tree!: renderer.ReactTestRenderer;
+
+    renderer.act(() => {
+      tree = renderer.create(<SearchSelectionDouble />);
+    });
+
+    await renderer.act(async () => {
+      tree.root.findByProps({ testID: 'result-card' }).props.onPress();
+    });
+
+    expect(mobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.SEARCH.RESULT_SELECTED,
+      expect.objectContaining({
+        bookId: 5,
+        title: 'Selected Result',
+        selectionContext: 'query',
+        source: 'search_screen',
+      })
+    );
+    expect(mockPush).toHaveBeenCalledWith('/book/5');
   });
 });

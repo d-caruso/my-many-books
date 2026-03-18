@@ -30,6 +30,7 @@ import type { Author, Category } from '@my-many-books/shared-types';
 import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 import { AuthorSelectorModal } from '@/components/book/AuthorSelectorModal';
 import { CategorySelectorModal } from '@/components/book/CategorySelectorModal';
+import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
 type SortOption = SearchSortByField;
 type SortOrder = SortDirection;
@@ -197,9 +198,21 @@ export default function SearchScreen() {
     void performSearch();
   }, [performSearch]);
 
+  const handleBookPress = useCallback((book: Book) => {
+    mobileHooks.emit(MOBILE_EVENTS.SEARCH.RESULT_SELECTED, {
+      bookId: book.id,
+      title: book.title,
+      query: searchQuery.trim(),
+      source: 'search_screen',
+      selectionContext: isbn ? 'isbn' : 'query',
+    });
+    router.push(`/book/${book.id}`);
+  }, [isbn, searchQuery]);
+
   const renderBook = ({ item }: { item: Book }) => (
     <BookCard
       book={item}
+      onPress={() => handleBookPress(item)}
       onStatusChange={(status) => void handleStatusChange(Number(item.id), status)}
     />
   );

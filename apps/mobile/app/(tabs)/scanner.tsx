@@ -10,6 +10,7 @@ import { SCANNER_COPY_STATUS } from '@/constants/scanner';
 import { resolveScannedIsbnRoute } from '@/utils/isbnScannerRouting';
 import { normalizeISBN, validateISBN } from '@my-many-books/shared-utils';
 import { useTranslation } from 'react-i18next';
+import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
 type ScannerMode = 'scan' | 'manual';
 
@@ -19,7 +20,7 @@ export default function ScannerScreen() {
   const [manualIsbn, setManualIsbn] = useState('');
   const [manualError, setManualError] = useState<string | null>(null);
 
-  const handleResolvedIsbn = useCallback(async (rawIsbn: string) => {
+  const handleResolvedIsbn = useCallback(async (rawIsbn: string, inputMode: ScannerMode) => {
     const isbn = normalizeISBN(rawIsbn);
 
     if (!isbn) {
@@ -32,9 +33,50 @@ export default function ScannerScreen() {
       return;
     }
 
+    if (inputMode === 'scan') {
+      mobileHooks.emit(MOBILE_EVENTS.SCANNER.ISBN.DETECTED, {
+        isbn,
+        rawIsbn,
+        source: 'scanner_screen',
+      });
+    }
+
+    let copyStatus: ScannerCopyStatus = SCANNER_COPY_STATUS.FAILED;
+
     try {
-      const route = await resolveScannedIsbnRoute(isbn);
-      router.replace(route);
+      await Clipboard.setStringAsync(isbn);
+      copyStatus = SCANNER_COPY_STATUS.SUCCESS;
+      mobileHooks.emit(MOBILE_EVENTS.SCANNER.COPY.SUCCESS, {
+        isbn,
+        inputMode,
+        source: 'scanner_screen',
+      });
+    } catch {
+      copyStatus = SCANNER_COPY_STATUS.FAILED;
+      mobileHooks.emit(MOBILE_EVENTS.SCANNER.COPY.FAILURE, {
+        isbn,
+        inputMode,
+        source: 'scanner_screen',
+      });
+    }
+
+    try {
+      const book = await searchByISBN(isbn);
+      if (book) {
+        mobileHooks.emit(MOBILE_EVENTS.SCANNER.ROUTE_DECISION, {
+          isbn,
+          inputMode,
+          destination: 'search',
+          matchedBookId: book.id,
+          copyStatus,
+          source: 'scanner_screen',
+        });
+        router.push({
+          pathname: '/(tabs)/search',
+          params: { isbn, scannerCopy: copyStatus },
+        });
+        return;
+      }
     } catch (error) {
       console.error('Failed to search book by ISBN:', error);
       router.replace({
@@ -45,15 +87,27 @@ export default function ScannerScreen() {
         },
       });
     }
-  }, [t]);
+
+    mobileHooks.emit(MOBILE_EVENTS.SCANNER.ROUTE_DECISION, {
+      isbn,
+      inputMode,
+      destination: 'book_add',
+      copyStatus,
+      source: 'scanner_screen',
+    });
+    router.push({
+      pathname: '/book/add',
+      params: { isbn, scannerCopy: copyStatus },
+    });
+  }, [searchByISBN, t]);
 
   const handleDetected = useCallback(async (isbn: string) => {
-    await handleResolvedIsbn(isbn);
+    await handleResolvedIsbn(isbn, 'scan');
   }, [handleResolvedIsbn]);
 
   const handleManualSubmit = useCallback(async () => {
     setManualError(null);
-    await handleResolvedIsbn(manualIsbn);
+    await handleResolvedIsbn(manualIsbn, 'manual');
   }, [handleResolvedIsbn, manualIsbn]);
 
   return (
