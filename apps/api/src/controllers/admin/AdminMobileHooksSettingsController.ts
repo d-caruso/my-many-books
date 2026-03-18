@@ -1,52 +1,48 @@
 // ================================================================
 // src/controllers/admin/AdminMobileHooksSettingsController.ts
 // Mobile hook settings management controller
-// manages listener-level mobile settings and operational state—fetch/update listener flags and limits, reset defaults, emergency enable/disable, health/status reporting
 // ================================================================
 
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
-import { AppSetting } from '../../models';
-import { AppSettingCreationAttributes } from '../../models/AppSetting';
-import { getAuditLogService } from '../../services/AuditLogService';
-import {
-  MOBILE_HOOK_SETTING_KEYS,
-  MOBILE_HOOKS_METADATA,
-  MOBILE_HOOKS_SETTINGS_ACTIONS,
-  MobileHooksListenerSettings,
-  HEALTH_STATUS,
-} from '@my-many-books/shared-types';
-import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
-import { EVENTS } from '../../services/hooks/events';
+import { type MobileHooksListenerSettings } from '@my-many-books/shared-types';
+import { mobileHooksConfigService } from '../../services/config/MobileHooksConfigService';
+import { DEFAULT_LISTENER_SETTINGS } from '../../services/config/mobileHooksConfigStore';
 
 export interface EmergencyStatusRequest {
   enabled: boolean;
   reason?: string;
 }
 
-// settings messages
 const MOBILE_HOOKS_SETTINGS_MESSAGES = {
   SUCCESS: {
     UPDATED: 'Mobile hooks settings updated successfully',
     RESET: 'Mobile hooks settings reset to defaults successfully',
   },
-  ERRORS: {
-    FETCH_FAILED: 'Failed to fetch mobile hooks settings',
-    UPDATE_FAILED: 'Failed to update mobile hooks settings',
-    RESET_FAILED: 'Failed to reset mobile hooks settings',
-    STATUS_FAILED: 'Failed to get mobile settings status',
-  },
-  HEALTH_ISSUES: {
-    DISABLED_FEATURES: 'Both analytics and error reporting are disabled',
-  },
 } as const;
 
-const DEFAULT_LISTENER_SETTINGS: MobileHooksListenerSettings = {
-  analyticsEnabled: true,
-  errorReportingEnabled: true,
-  performanceMonitoringEnabled: true,
-};
+const MOBILE_HOOKS_SETTINGS_SCHEMA = {
+  properties: {
+    analyticsEnabled: {
+      type: 'boolean',
+      description: 'Enable analytics event tracking',
+      default: true,
+    },
+    errorReportingEnabled: {
+      type: 'boolean',
+      description: 'Enable error and crash reporting',
+      default: true,
+    },
+    performanceMonitoringEnabled: {
+      type: 'boolean',
+      description: 'Enable performance monitoring',
+      default: true,
+    },
+  },
+  required: [],
+  defaults: DEFAULT_LISTENER_SETTINGS,
+} as const;
 
 export class AdminMobileHooksSettingsController extends BaseController {
   private isListenerSettingsUpdate(value: unknown): value is Partial<MobileHooksListenerSettings> {
@@ -71,22 +67,13 @@ export class AdminMobileHooksSettingsController extends BaseController {
     return value['reason'] === undefined || typeof value['reason'] === 'string';
   }
 
-  /**
-   * Get current mobile hook listener settings
-   */
   async getListenerSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
     try {
-      const settings = await this.loadSettings();
-
-      return this.createSuccessResponse({
-        settings,
-        lastUpdated: await this.getLastUpdated(),
-        version: MOBILE_HOOKS_METADATA.VERSION,
-      });
+      return this.createSuccessResponse(await mobileHooksConfigService.getListenerSettings());
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
@@ -95,9 +82,6 @@ export class AdminMobileHooksSettingsController extends BaseController {
     }
   }
 
-  /**
-   * Update mobile hook listener settings
-   */
   async updateListenerSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
@@ -109,95 +93,11 @@ export class AdminMobileHooksSettingsController extends BaseController {
     }
 
     try {
-      const previousSettings = await this.loadSettings();
-      const updatedSettings: Array<{ key: string; value: string }> = [];
-      const actor = controlPlaneHookService.getActorContext(request.user);
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.UPDATE,
-        'BEFORE',
-        {
-          actor,
-          previousSettings,
-          changes: body,
-        }
-      );
-
-      // Update each settings value that was provided
-      if (typeof body.analyticsEnabled === 'boolean') {
-        await this.saveSetting(
-          MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED,
-          String(body.analyticsEnabled)
-        );
-        updatedSettings.push({ key: 'analyticsEnabled', value: String(body.analyticsEnabled) });
-      }
-
-      if (typeof body.errorReportingEnabled === 'boolean') {
-        await this.saveSetting(
-          MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED,
-          String(body.errorReportingEnabled)
-        );
-        updatedSettings.push({
-          key: 'errorReportingEnabled',
-          value: String(body.errorReportingEnabled),
-        });
-      }
-
-      if (typeof body.performanceMonitoringEnabled === 'boolean') {
-        await this.saveSetting(
-          MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
-          String(body.performanceMonitoringEnabled)
-        );
-        updatedSettings.push({
-          key: 'performanceMonitoringEnabled',
-          value: String(body.performanceMonitoringEnabled),
-        });
-      }
-
-      // Log audit event
-      getAuditLogService().logActionFromRequest(
-        request,
-        MOBILE_HOOKS_SETTINGS_ACTIONS.UPDATE,
-        MOBILE_HOOKS_METADATA.RESOURCE_TYPE,
-        MOBILE_HOOKS_METADATA.ENTITY_ID,
-        {
-          changes: updatedSettings,
-          previousSettings,
-          newSettings: body,
-        }
-      );
-
-      const newSettings = await this.loadSettings();
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.UPDATE,
-        'AFTER',
-        {
-          actor,
-          previousSettings,
-          settings: newSettings,
-          updated: updatedSettings.map(s => s.key),
-        }
-      );
-
       return this.createSuccessResponse(
-        {
-          settings: newSettings,
-          updated: updatedSettings.map(s => s.key),
-          lastUpdated: new Date().toISOString(),
-        },
+        await mobileHooksConfigService.updateListenerSettings(body, request),
         MOBILE_HOOKS_SETTINGS_MESSAGES.SUCCESS.UPDATED
       );
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.UPDATE,
-        'FAILURE',
-        {
-          actor: controlPlaneHookService.getActorContext(request.user),
-          changes: body,
-          error,
-        }
-      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
@@ -205,80 +105,17 @@ export class AdminMobileHooksSettingsController extends BaseController {
     }
   }
 
-  /**
-   * Reset mobile hook listener settings to defaults
-   */
   async resetMobileSettings(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
     try {
-      const previousSettings = await this.loadSettings();
-      const actor = controlPlaneHookService.getActorContext(request.user);
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.RESET,
-        'BEFORE',
-        {
-          actor,
-          previousSettings,
-        }
-      );
-
-      // Reset all settings to defaults
-      await this.saveSetting(
-        MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED,
-        String(DEFAULT_LISTENER_SETTINGS.analyticsEnabled)
-      );
-      await this.saveSetting(
-        MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED,
-        String(DEFAULT_LISTENER_SETTINGS.errorReportingEnabled)
-      );
-      await this.saveSetting(
-        MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED,
-        String(DEFAULT_LISTENER_SETTINGS.performanceMonitoringEnabled)
-      );
-
-      // Log audit event
-      getAuditLogService().logActionFromRequest(
-        request,
-        'reset',
-        MOBILE_HOOKS_METADATA.RESOURCE_TYPE,
-        MOBILE_HOOKS_METADATA.ENTITY_ID,
-        {
-          previousSettings,
-          resetToDefaults: DEFAULT_LISTENER_SETTINGS,
-        }
-      );
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.RESET,
-        'AFTER',
-        {
-          actor,
-          previousSettings,
-          settings: DEFAULT_LISTENER_SETTINGS,
-        }
-      );
-
       return this.createSuccessResponse(
-        {
-          settings: DEFAULT_LISTENER_SETTINGS,
-          resetToDefaults: true,
-          lastUpdated: new Date().toISOString(),
-        },
-        'Mobile settings reset to defaults successfully'
+        await mobileHooksConfigService.resetMobileSettings(request),
+        MOBILE_HOOKS_SETTINGS_MESSAGES.SUCCESS.RESET
       );
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.RESET,
-        'FAILURE',
-        {
-          actor: controlPlaneHookService.getActorContext(request.user),
-          error,
-        }
-      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
@@ -286,113 +123,24 @@ export class AdminMobileHooksSettingsController extends BaseController {
     }
   }
 
-  /**
-   * Get mobile settings validation rules
-   */
   async getMobileSettingsSchema(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const schema = {
-      properties: {
-        analyticsEnabled: {
-          type: 'boolean',
-          description: 'Enable analytics event tracking',
-          default: true,
-        },
-        errorReportingEnabled: {
-          type: 'boolean',
-          description: 'Enable error and crash reporting',
-          default: true,
-        },
-        performanceMonitoringEnabled: {
-          type: 'boolean',
-          description: 'Enable performance monitoring',
-          default: true,
-        },
-      },
-      required: [],
-      defaults: DEFAULT_LISTENER_SETTINGS,
-    };
-
     return this.createSuccessResponse({
-      schema,
+      schema: MOBILE_HOOKS_SETTINGS_SCHEMA,
       version: '1.0.0',
     });
   }
 
-  /**
-   * Load current mobile settings from database
-   */
-  private async loadSettings(): Promise<MobileHooksListenerSettings> {
-    const settings = await AppSetting.findAll({
-      where: {
-        key: Object.values(MOBILE_HOOK_SETTING_KEYS),
-      },
-    });
-
-    const settingsMap = new Map(settings.map(s => [s.key, s.value]));
-
-    return {
-      analyticsEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.ANALYTICS_ENABLED),
-        DEFAULT_LISTENER_SETTINGS.analyticsEnabled
-      ),
-      errorReportingEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.ERROR_REPORTING_ENABLED),
-        DEFAULT_LISTENER_SETTINGS.errorReportingEnabled
-      ),
-      performanceMonitoringEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_HOOK_SETTING_KEYS.PERFORMANCE_MONITORING_ENABLED),
-        DEFAULT_LISTENER_SETTINGS.performanceMonitoringEnabled
-      ),
-    };
-  }
-
-  /**
-   * Update a single setting
-   */
-  private async saveSetting(key: string, value: string): Promise<void> {
-    const defaults: AppSettingCreationAttributes = {
-      key,
-      value,
-      active: true,
-      category: MOBILE_HOOKS_METADATA.CATEGORY,
-      type: MOBILE_HOOKS_METADATA.DATA_TYPE,
-      defaultValue: value,
-      description: `Mobile hook settings: ${key}`,
-      deleted: false,
-    };
-
-    const [setting] = await AppSetting.findOrCreate({
-      where: { key },
-      defaults,
-    });
-
-    if (setting.value !== value) {
-      await setting.update({ value });
-    }
-  }
-
-  /**
-   * Get current emergency status
-   */
   async getEmergencyStatus(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
     try {
-      const setting = await AppSetting.findOne({
-        where: { key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED },
-      });
-
-      return this.createSuccessResponse({
-        enabled: setting?.value !== 'false',
-        disabledAt: setting?.value === 'false' ? setting.updateDate : null,
-        disabledReason: await this.getEmergencyReason(),
-      });
+      return this.createSuccessResponse(await mobileHooksConfigService.getEmergencyStatus());
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
@@ -401,9 +149,6 @@ export class AdminMobileHooksSettingsController extends BaseController {
     }
   }
 
-  /**
-   * Update emergency status (enable/disable all mobile hooks)
-   */
   async updateEmergencyStatus(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
@@ -415,56 +160,10 @@ export class AdminMobileHooksSettingsController extends BaseController {
     }
 
     try {
-      const actor = controlPlaneHookService.getActorContext(request.user);
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.HOOKS.EMERGENCY.UPDATE,
-        'BEFORE',
-        {
-          actor,
-          changes: body,
-        }
+      return this.createSuccessResponse(
+        await mobileHooksConfigService.updateEmergencyStatus(body, request)
       );
-
-      await this.saveSetting(MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED, String(body.enabled));
-
-      if (body.reason) {
-        await this.saveSetting(MOBILE_HOOK_SETTING_KEYS.EMERGENCY_REASON, body.reason);
-      }
-
-      // Log audit event
-      getAuditLogService().logActionFromRequest(
-        request,
-        body.enabled ? 'emergency_enable' : 'emergency_disable',
-        MOBILE_HOOKS_METADATA.RESOURCE_TYPE,
-        MOBILE_HOOKS_METADATA.ENTITY_ID,
-        { enabled: body.enabled, reason: body.reason }
-      );
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.HOOKS.EMERGENCY.UPDATE,
-        'AFTER',
-        {
-          actor,
-          enabled: body.enabled,
-          reason: body.reason ?? null,
-        }
-      );
-
-      return this.createSuccessResponse({
-        enabled: body.enabled,
-        updatedAt: new Date().toISOString(),
-        message: body.enabled ? 'Mobile hooks enabled' : 'Mobile hooks disabled (emergency)',
-      });
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.HOOKS.EMERGENCY.UPDATE,
-        'FAILURE',
-        {
-          actor: controlPlaneHookService.getActorContext(request.user),
-          changes: body,
-          error,
-        }
-      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
@@ -472,72 +171,21 @@ export class AdminMobileHooksSettingsController extends BaseController {
     }
   }
 
-  /**
-   * Get mobile hooks health status
-   */
   async getHealth(request: UniversalRequest): Promise<ApiResponse> {
     await this.initializeI18n(request);
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
     try {
-      const settings = await this.loadSettings();
-      const emergencyEnabled = await this.isEmergencyEnabled();
-
-      const checks = {
-        settingsLoaded: true,
-        emergencyEnabled,
-        analyticsActive: settings.analyticsEnabled && emergencyEnabled,
-        errorReportingActive: settings.errorReportingEnabled && emergencyEnabled,
-        performanceMonitoringActive: settings.performanceMonitoringEnabled && emergencyEnabled,
-      };
-
-      const activeCount = Object.values(checks).filter(v => v === true).length;
-      const totalCount = Object.keys(checks).length;
-      const healthScore = Math.round((activeCount / totalCount) * 100);
-
+      return this.createSuccessResponse(await mobileHooksConfigService.getHealth());
+    } catch (error) {
       return this.createSuccessResponse({
-        status: emergencyEnabled ? (healthScore >= 80 ? HEALTH_STATUS.HEALTHY : HEALTH_STATUS.DEGRADED) : HEALTH_STATUS.DISABLED,
-        healthScore,
-        checks,
+        status: 'error',
+        healthScore: 0,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString(),
       });
-    } catch (error) {
-        return this.createSuccessResponse({
-          status: 'error',
-          healthScore: 0,
-          error: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date().toISOString(),
-        });
     }
-  }
-
-  private async isEmergencyEnabled(): Promise<boolean> {
-    const setting = await AppSetting.findOne({
-      where: { key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED },
-    });
-    return setting?.value !== 'false';
-  }
-
-  private async getEmergencyReason(): Promise<string | null> {
-    const setting = await AppSetting.findOne({
-      where: { key: MOBILE_HOOK_SETTING_KEYS.EMERGENCY_REASON },
-    });
-    return setting?.value || null;
-  }
-
-  /**
-   * Get the last updated timestamp for mobile settings
-   */
-  private async getLastUpdated(): Promise<string | null> {
-    const lastSetting = await AppSetting.findOne({
-      where: {
-        key: Object.values(MOBILE_HOOK_SETTING_KEYS),
-      },
-      order: [['updateDate', 'DESC']],
-    });
-
-    return lastSetting?.updateDate?.toISOString() || null;
   }
 }
 

@@ -7,12 +7,10 @@ import { injectable } from 'inversify';
 import { BaseController } from './base/BaseController';
 import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
-import { SettingsService } from '../services/SettingsService';
+import { settingsService } from '../services/config/SettingsService';
 import { UpdateSettingDTO } from '../dtos/setting/UpdateSettingDTO';
 import { ToggleActiveDTO } from '../dtos/setting/ToggleActiveDTO';
 import { toSettingResponseDTO } from '../dtos/setting/SettingResponseDTO';
-import { controlPlaneHookService } from '../services/hooks/ControlPlaneHookService';
-import { EVENTS } from '../services/hooks/events';
 
 @injectable()
 export class SettingsController extends BaseController {
@@ -23,7 +21,7 @@ export class SettingsController extends BaseController {
     await this.initializeI18n(request);
 
     try {
-      const settings = SettingsService.getAllSettings();
+      const settings = await settingsService.getAllSettings();
       return this.createSuccessResponse(settings.map(s => toSettingResponseDTO(s)));
     } catch {
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
@@ -42,7 +40,7 @@ export class SettingsController extends BaseController {
     }
 
     try {
-      const value = SettingsService.getSetting(key);
+      const value = settingsService.getSetting(key);
       if (value === null) {
         return this.createErrorResponseI18n('errors:setting_not_found', 404, { key });
       }
@@ -61,7 +59,7 @@ export class SettingsController extends BaseController {
     await this.initializeI18n(request);
 
     try {
-      const settings = await SettingsService.getAllSettingsAdmin();
+      const settings = await settingsService.getAllSettingsAdmin();
       return this.createSuccessResponse(settings.map(s => toSettingResponseDTO(s)));
     } catch {
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
@@ -88,33 +86,13 @@ export class SettingsController extends BaseController {
     try {
       const dto = UpdateSettingDTO.from(body);
       const serviceInput = dto.toServiceInput();
-      const actor = controlPlaneHookService.getActorContext(request.user);
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.UPDATE, 'BEFORE', {
-        actor,
-        key,
-        value: serviceInput.value,
-      });
-
-      const updated = await SettingsService.updateSetting(key, serviceInput.value);
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.UPDATE, 'AFTER', {
-        actor,
-        key,
-        setting: toSettingResponseDTO(updated),
-      });
+      const updated = await settingsService.updateSetting(key, serviceInput.value, request.user);
 
       return this.createSuccessResponse(
         toSettingResponseDTO(updated),
         this.t('settings:setting_updated')
       );
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.UPDATE, 'FAILURE', {
-        actor: controlPlaneHookService.getActorContext(request.user),
-        key,
-        body,
-        error,
-      });
       if (error instanceof Error) {
         if (error.message.includes('Value is required')) {
           return this.createErrorResponseI18n('errors:value_required', 400);
@@ -152,33 +130,13 @@ export class SettingsController extends BaseController {
     try {
       const dto = ToggleActiveDTO.from(body);
       const serviceInput = dto.toServiceInput();
-      const actor = controlPlaneHookService.getActorContext(request.user);
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.TOGGLE, 'BEFORE', {
-        actor,
-        key,
-        active: serviceInput.active,
-      });
-
-      const updated = await SettingsService.toggleActive(key, serviceInput.active);
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.TOGGLE, 'AFTER', {
-        actor,
-        key,
-        setting: toSettingResponseDTO(updated),
-      });
+      const updated = await settingsService.toggleActive(key, serviceInput.active, request.user);
 
       return this.createSuccessResponse(
         toSettingResponseDTO(updated),
         this.t('settings:setting_toggled')
       );
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.TOGGLE, 'FAILURE', {
-        actor: controlPlaneHookService.getActorContext(request.user),
-        key,
-        body,
-        error,
-      });
       if (error instanceof Error) {
         if (error.message.includes('Active field is required')) {
           return this.createErrorResponseI18n('errors:active_field_required', 400);

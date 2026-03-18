@@ -7,49 +7,17 @@
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
-import { AppSetting } from '../../models';
-import { AppSettingCreationAttributes } from '../../models/AppSetting';
-import { getAuditLogService } from '../../services/AuditLogService';
+import { MobileAppSettings } from '@my-many-books/shared-types';
 import {
-  MOBILE_APP_METADATA,
-  MOBILE_APP_SETTING_KEYS,
-  MOBILE_APP_SETTINGS_ACTIONS,
-  MobileAppSettings,
-} from '@my-many-books/shared-types';
-import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
-import { EVENTS } from '../../services/hooks/events';
-
-const DEFAULT_MOBILE_APP_SETTINGS: MobileAppSettings = {
-    offlineStorageEnabled: true,
-    batchUploadInterval: 300, // 5 minutes
-    maxOfflineEvents: 1000,
-};
+  mobileAppSettingsService,
+  MOBILE_APP_SETTINGS_SCHEMA,
+} from '../../services/config/MobileAppSettingsService';
 
 // settings messages
 const MOBILE_APP_SETTINGS_MESSAGES = {
   SUCCESS: {
     UPDATED: 'Mobile settings updated successfully',
-    RESET: 'Mobile settings reset to defaults successfully',
   },
-  ERRORS: {
-    FETCH_FAILED: 'Failed to fetch mobile settings',
-    UPDATE_FAILED: 'Failed to update mobile settings',
-    RESET_FAILED: 'Failed to reset mobile settings',
-    STATUS_FAILED: 'Failed to get mobile settings status',
-    BATCH_INTERVAL_INVALID: 'Batch upload interval must be between 60 and 3600 seconds',
-    MAX_EVENTS_INVALID: 'Max offline events must be between 100 and 10000',
-  },
-  HEALTH_ISSUES: {
-    LOW_BATCH_INTERVAL: 'Batch upload interval is too low (< 60 seconds)',
-    HIGH_EVENTS_LIMIT: 'High offline events limit may impact performance',
-    DISABLED_FEATURES: 'Both analytics and error reporting are disabled',
-  },
-} as const;
-
-const MobileAppSettingsKeys = {
-  offlineStorageEnabled: 'offlineStorageEnabled',
-  batchUploadInterval: 'batchUploadInterval',
-  maxOfflineEvents: 'maxOfflineEvents',
 } as const;
 
 export class AdminMobileAppSettingsController extends BaseController {
@@ -78,13 +46,7 @@ export class AdminMobileAppSettingsController extends BaseController {
     if (authError) return authError;
 
     try {
-      const settings = await this.loadSettings();
-
-      return this.createSuccessResponse({
-        settings,
-        lastUpdated: await this.getLastUpdated(),
-        version: MOBILE_APP_METADATA.VERSION,
-      });
+      return this.createSuccessResponse(await mobileAppSettingsService.getSettings());
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
@@ -92,21 +54,6 @@ export class AdminMobileAppSettingsController extends BaseController {
       return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }
-
-  /**
-   * Get the last updated timestamp for mobile app settings
-   */
-  private async getLastUpdated(): Promise<string | null> {
-    const lastSetting = await AppSetting.findOne({
-      where: {
-        key: Object.values(MOBILE_APP_SETTING_KEYS),
-      },
-      order: [['updateDate', 'DESC']],
-    });
-
-    return lastSetting?.updateDate?.toISOString() || null;
-  }
-
    /**
     * PUT /api/<version>/admin/mobile-app/settings
     * Update mobile app global settings
@@ -125,96 +72,18 @@ export class AdminMobileAppSettingsController extends BaseController {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
-    // Validate settings values
-    const validationError = this.validateSettings(body);
-    if (validationError) {
-      return validationError;
-    }
-
     try {
-        const previousSettings = await this.loadSettings();
-        const updatedSettings: Array<{ key: string; value: string }> = [];
-        const actor = controlPlaneHookService.getActorContext(request.user);
-
-        await controlPlaneHookService.emitLifecycleEvent(
-            EVENTS.CONFIG.MOBILE.APP.SETTINGS.UPDATE,
-            'BEFORE',
-            {
-                actor,
-                previousSettings,
-                changes: body,
-            }
-        );
-
-        // Update each settings value that was provided
-        if (typeof body.offlineStorageEnabled === 'boolean') {
-            await this.saveSetting(
-                MOBILE_APP_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
-                String(body.offlineStorageEnabled)
-            );
-            updatedSettings.push({ key: MobileAppSettingsKeys.offlineStorageEnabled, value: String(body.offlineStorageEnabled) });
-        }
-
-        if (typeof body.batchUploadInterval === 'number') {
-            await this.saveSetting(
-                MOBILE_APP_SETTING_KEYS.BATCH_UPLOAD_INTERVAL,
-                String(body.batchUploadInterval)
-            );
-            updatedSettings.push({ key: MobileAppSettingsKeys.batchUploadInterval, value: String(body.batchUploadInterval) });
-        }
-
-        if (typeof body.maxOfflineEvents === 'number') {
-            await this.saveSetting(
-                MOBILE_APP_SETTING_KEYS.MAX_OFFLINE_EVENTS,
-                String(body.maxOfflineEvents)
-            );
-            updatedSettings.push({ key: MobileAppSettingsKeys.maxOfflineEvents, value: String(body.maxOfflineEvents) });
-        }
-
-        // Log audit event
-        getAuditLogService().logActionFromRequest(
-            request,
-            MOBILE_APP_SETTINGS_ACTIONS.UPDATE,
-            MOBILE_APP_METADATA.RESOURCE_TYPE,
-            MOBILE_APP_METADATA.ENTITY_ID,
-            {
-                changes: updatedSettings,
-                previousSettings,
-                newSettings: body,
-            }
-        );
-
-        const newSettings = await this.loadSettings();
-
-        await controlPlaneHookService.emitLifecycleEvent(
-          EVENTS.CONFIG.MOBILE.APP.SETTINGS.UPDATE,
-          'AFTER',
-          {
-            actor,
-            previousSettings,
-            settings: newSettings,
-            updated: updatedSettings.map(s => s.key),
-          }
-        );
-
         return this.createSuccessResponse(
-        {
-            settings: newSettings,
-            updated: updatedSettings.map(s => s.key),
-            lastUpdated: new Date().toISOString(),
-        },
-        MOBILE_APP_SETTINGS_MESSAGES.SUCCESS.UPDATED
+          await mobileAppSettingsService.updateSettings(body, request),
+          MOBILE_APP_SETTINGS_MESSAGES.SUCCESS.UPDATED
         );
     } catch (error) {
-        await controlPlaneHookService.emitLifecycleEvent(
-          EVENTS.CONFIG.MOBILE.APP.SETTINGS.UPDATE,
-          'FAILURE',
-          {
-            actor: controlPlaneHookService.getActorContext(request.user),
-            changes: body,
-            error,
-          }
-        );
+        if (error instanceof Error && error.message === 'BATCH_UPLOAD_INTERVAL_INVALID') {
+          return this.createErrorResponseI18n('errors:batch_upload_interval_invalid', 400, { min: 60, max: 3600 });
+        }
+        if (error instanceof Error && error.message === 'MAX_OFFLINE_EVENTS_INVALID') {
+          return this.createErrorResponseI18n('errors:max_offline_events_invalid', 400, { min: 100, max: 10000 });
+        }
         if (error instanceof Error) {
           return this.createErrorResponse(error.message, 500);
         }
@@ -233,71 +102,11 @@ export class AdminMobileAppSettingsController extends BaseController {
     if (authError) return authError;
 
     try {
-        const previousSettings = await this.loadSettings();
-        const actor = controlPlaneHookService.getActorContext(request.user);
-
-        await controlPlaneHookService.emitLifecycleEvent(
-          EVENTS.CONFIG.MOBILE.APP.SETTINGS.RESET,
-          'BEFORE',
-          {
-            actor,
-            previousSettings,
-          }
-        );
-
-        // Reset all settings to defaults
-        await this.saveSetting(
-            MOBILE_APP_SETTING_KEYS.OFFLINE_STORAGE_ENABLED,
-            String(DEFAULT_MOBILE_APP_SETTINGS.offlineStorageEnabled)
-        );
-        await this.saveSetting(
-            MOBILE_APP_SETTING_KEYS.BATCH_UPLOAD_INTERVAL,
-            String(DEFAULT_MOBILE_APP_SETTINGS.batchUploadInterval)
-        );
-        await this.saveSetting(
-            MOBILE_APP_SETTING_KEYS.MAX_OFFLINE_EVENTS,
-            String(DEFAULT_MOBILE_APP_SETTINGS.maxOfflineEvents)
-        );
-
-      // Log audit event
-      getAuditLogService().logActionFromRequest(
-        request,
-        'reset',
-        MOBILE_APP_METADATA.RESOURCE_TYPE,
-        MOBILE_APP_METADATA.ENTITY_ID,
-        {
-          previousSettings,
-          resetToDefaults: DEFAULT_MOBILE_APP_SETTINGS,
-        }
-      );
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.APP.SETTINGS.RESET,
-        'AFTER',
-        {
-          actor,
-          previousSettings,
-          settings: DEFAULT_MOBILE_APP_SETTINGS,
-        }
-      );
-
       return this.createSuccessResponse(
-        {
-          settings: DEFAULT_MOBILE_APP_SETTINGS,
-          resetToDefaults: true,
-          lastUpdated: new Date().toISOString(),
-        },
+        await mobileAppSettingsService.resetSettings(request),
         'Mobile settings reset to defaults successfully'
       );
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.MOBILE.APP.SETTINGS.RESET,
-        'FAILURE',
-        {
-          actor: controlPlaneHookService.getActorContext(request.user),
-          error,
-        }
-      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
@@ -313,108 +122,10 @@ export class AdminMobileAppSettingsController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const schema = {
-      properties: {
-        [MobileAppSettingsKeys.offlineStorageEnabled]: {
-          type: 'boolean',
-          description: 'Enable or disable offline storage',
-          default: true,
-        },
-        [MobileAppSettingsKeys.batchUploadInterval]: {
-          type: 'number',
-          description: 'Batch upload interval in seconds',
-          minimum: 60,
-          maximum: 3600,
-          default: 300,
-        },
-        [MobileAppSettingsKeys.maxOfflineEvents]: {
-          type: 'number',
-          description: 'Maximum number of offline events to store',
-          minimum: 100,
-          maximum: 10000,
-          default: 1000,
-        },
-      },
-      required: [],
-      defaults: DEFAULT_MOBILE_APP_SETTINGS,
-    };
-
     return this.createSuccessResponse({
-      schema,
+      schema: MOBILE_APP_SETTINGS_SCHEMA,
       version: '1.0.0',
     });
-  }
-
-  /**
-   * Load current mobile settings from database
-   */
-  private async loadSettings(): Promise<MobileAppSettings> {
-    const settings = await AppSetting.findAll({
-      where: {
-        key: Object.values(MOBILE_APP_SETTING_KEYS),
-      },
-    });
-
-    const settingsMap = new Map(settings.map(s => [s.key, s.value]));
-
-    return {
-      offlineStorageEnabled: this.parseBoolean(
-        settingsMap.get(MOBILE_APP_SETTING_KEYS.OFFLINE_STORAGE_ENABLED),
-        DEFAULT_MOBILE_APP_SETTINGS.offlineStorageEnabled
-      ),
-      batchUploadInterval: this.parseNumber(
-        settingsMap.get(MOBILE_APP_SETTING_KEYS.BATCH_UPLOAD_INTERVAL),
-        DEFAULT_MOBILE_APP_SETTINGS.batchUploadInterval
-      ),
-      maxOfflineEvents: this.parseNumber(
-        settingsMap.get(MOBILE_APP_SETTING_KEYS.MAX_OFFLINE_EVENTS),
-        DEFAULT_MOBILE_APP_SETTINGS.maxOfflineEvents
-      ),
-    };
-  }
-
-  /**
-   * Update a single setting
-   */
-  private async saveSetting(key: string, value: string): Promise<void> {
-    const defaults: AppSettingCreationAttributes = {
-      key,
-      value,
-      active: true,
-      category: MOBILE_APP_METADATA.CATEGORY,
-      type: MOBILE_APP_METADATA.DATA_TYPE,
-      defaultValue: value,
-      description: `Mobile app settings: ${key}`,
-      deleted: false,
-    };
-
-    const [setting] = await AppSetting.findOrCreate({
-      where: { key },
-      defaults,
-    });
-
-    if (setting.value !== value) {
-      await setting.update({ value });
-    }
-  }
-
-  /**
-   * Validate mobile settings values
-   */
-  private validateSettings(settings: Partial<MobileAppSettings>): ApiResponse | null {
-    if (typeof settings.batchUploadInterval === 'number') {
-      if (settings.batchUploadInterval < 60 || settings.batchUploadInterval > 3600) {
-        return this.createErrorResponseI18n('errors:batch_upload_interval_invalid', 400, { min: 60, max: 3600 });
-      }
-    }
-
-    if (typeof settings.maxOfflineEvents === 'number') {
-      if (settings.maxOfflineEvents < 100 || settings.maxOfflineEvents > 10000) {
-        return this.createErrorResponseI18n('errors:max_offline_events_invalid', 400, { min: 100, max: 10000 });
-      }
-    }
-
-    return null;
   }
 }
 

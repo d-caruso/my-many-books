@@ -6,31 +6,12 @@
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
-import { AppSetting, AppSettingCreationAttributes } from '../../models';
-import { Op } from 'sequelize';
-import { getAuditLogService } from '../../services/AuditLogService';
-import { AUDIT_ACTIONS, RESOURCE_TYPES, EMERGENCY_SETTING_KEYS, EMERGENCY_ACTIONS, EMERGENCY } from '@my-many-books/shared-types';
-import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
-import { EVENTS } from '../../services/hooks/events';
+import {
+  emergencyConfigService,
+  type EmergencyConfigUpdateRequest,
+} from '../../services/config/EmergencyConfigService';
 
-export interface EmergencyConfigResponse {
-    mobileHooksEnabled: boolean;
-    apiHooksEnabled: boolean;
-    globalKillSwitch: boolean;
-    emergencyContacts: string[];
-    lastEmergencyAction: string | null;
-    emergencyReason: string | null;
-    emergencyActivatedBy: string | null;
-    emergencyActivatedAt: string | null;
-  }
-
-interface EmergencyConfigUpdateRequest {
-    mobileHooksEnabled?: boolean;
-    apiHooksEnabled?: boolean;
-    globalKillSwitch?: boolean;
-    emergencyContacts?: string[];
-    emergencyReason?: string | null;
-  }
+export type { EmergencyConfigResponse } from '../../services/config/EmergencyConfigService';
 
 export class EmergencyController extends BaseController {
   private isEmergencyConfigUpdateRequest(value: unknown): value is EmergencyConfigUpdateRequest {
@@ -84,8 +65,7 @@ export class EmergencyController extends BaseController {
     await this.initializeI18n(request);
 
     try {
-      const config = await this.loadEmergencyConfig();
-      return this.createSuccessResponse(config);
+      return this.createSuccessResponse(await emergencyConfigService.getConfig());
     } catch {
       return this.createErrorResponseI18n('errors:internal_error', 500);
     }
@@ -103,155 +83,12 @@ export class EmergencyController extends BaseController {
     }
 
     try {
-      const oldConfig = await this.loadEmergencyConfig();
-      const updatedSettings: string[] = [];
-      const actor = controlPlaneHookService.getActorContext(request.user);
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'BEFORE', {
-        actor,
-        previousConfig: oldConfig,
-        changes: body,
-      });
-
-      // Update emergency settings
-      if (typeof body.mobileHooksEnabled === 'boolean') {
-        await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.MOBILE_HOOKS_ENABLED, String(body.mobileHooksEnabled));
-        updatedSettings.push(EMERGENCY_SETTING_KEYS.MOBILE_HOOKS_ENABLED);
-      }
-
-      if (typeof body.apiHooksEnabled === 'boolean') {
-        await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.API_HOOKS_ENABLED, String(body.apiHooksEnabled));
-        updatedSettings.push(EMERGENCY_SETTING_KEYS.API_HOOKS_ENABLED);
-      }
-
-      if (typeof body.globalKillSwitch === 'boolean') {
-        await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.GLOBAL_KILL_SWITCH, String(body.globalKillSwitch));
-        updatedSettings.push(EMERGENCY_SETTING_KEYS.GLOBAL_KILL_SWITCH);
-        
-        // Track emergency activation
-        if (body.globalKillSwitch) {
-          await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.LAST_ACTION, EMERGENCY_ACTIONS.GLOBAL_KILL_SWITCH_ACTIVATED);
-          await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.ACTIVATED_BY, String(request.user?.id || 'system'));
-          await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.ACTIVATED_AT, new Date().toISOString());
-          if (body.emergencyReason) {
-            await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.REASON, body.emergencyReason);
-          }
-        } else {
-          await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.LAST_ACTION, EMERGENCY_ACTIONS.GLOBAL_KILL_SWITCH_DEACTIVATED);
-          await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.ACTIVATED_BY, String(request.user?.id || 'system'));
-          await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.ACTIVATED_AT, new Date().toISOString());
-        }
-      }
-
-      if (body.emergencyContacts !== undefined) {
-        await this.updateConfigSetting(EMERGENCY_SETTING_KEYS.CONTACTS, JSON.stringify(body.emergencyContacts));
-        updatedSettings.push(EMERGENCY_SETTING_KEYS.CONTACTS);
-      }
-
-      // Log critical emergency actions
-      if (body.globalKillSwitch !== undefined) {
-        getAuditLogService().logActionFromRequest(
-          request,
-          body.globalKillSwitch ? AUDIT_ACTIONS.EMERGENCY_ACTIVATE : AUDIT_ACTIONS.EMERGENCY_DEACTIVATE,
-          RESOURCE_TYPES.EMERGENCY_CONFIG,
-          EMERGENCY_SETTING_KEYS.GLOBAL_KILL_SWITCH,
-          {
-            oldConfig,
-            newConfig: body,
-            reason: body.emergencyReason || 'No reason provided',
-            changes: updatedSettings,
-          }
-        );
-      }
-
-      const newConfig = await this.loadEmergencyConfig();
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'AFTER', {
-        actor,
-        previousConfig: oldConfig,
-        config: newConfig,
-        updated: updatedSettings,
-      });
-
-      return this.createSuccessResponse({
-        config: newConfig,
-        updated: updatedSettings,
-        lastUpdated: new Date().toISOString(),
-      }, 'Emergency configuration updated successfully');
+      return this.createSuccessResponse(
+        await emergencyConfigService.updateConfig(body, request),
+        'Emergency configuration updated successfully'
+      );
     } catch {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'FAILURE', {
-        actor: controlPlaneHookService.getActorContext(request.user),
-        changes: body,
-        error: new Error('Emergency configuration update failed'),
-      });
       return this.createErrorResponseI18n('errors:internal_error', 500);
-    }
-  }
-
-  /**
-   * Load emergency configuration from database
-   */
-  private async loadEmergencyConfig(): Promise<EmergencyConfigResponse> {
-    const settings = await AppSetting.findAll({
-      where: {
-        key: {
-          [Op.like]: 'emergency.%'
-        },
-      },
-    });
-
-    const settingsMap = new Map(settings.map(s => [s.key, s.value]));
-
-    // Parse emergency contacts
-    const contactsStr = settingsMap.get(EMERGENCY_SETTING_KEYS.CONTACTS);
-    let emergencyContacts: string[] = [];
-    if (contactsStr) {
-      try {
-        const parsed: unknown = JSON.parse(contactsStr);
-        if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string')) {
-          emergencyContacts = parsed;
-        } else {
-          emergencyContacts = [];
-        }
-      } catch {
-        emergencyContacts = [];
-      }
-    }
-
-    return {
-      mobileHooksEnabled: this.parseBoolean(settingsMap.get(EMERGENCY_SETTING_KEYS.MOBILE_HOOKS_ENABLED), true),
-      apiHooksEnabled: this.parseBoolean(settingsMap.get(EMERGENCY_SETTING_KEYS.API_HOOKS_ENABLED), true),
-      globalKillSwitch: this.parseBoolean(settingsMap.get(EMERGENCY_SETTING_KEYS.GLOBAL_KILL_SWITCH), false),
-      emergencyContacts: emergencyContacts,
-      lastEmergencyAction: settingsMap.get(EMERGENCY_SETTING_KEYS.LAST_ACTION) || null,
-      emergencyReason: settingsMap.get(EMERGENCY_SETTING_KEYS.REASON) || null,
-      emergencyActivatedBy: settingsMap.get(EMERGENCY_SETTING_KEYS.ACTIVATED_BY) || null,
-      emergencyActivatedAt: settingsMap.get(EMERGENCY_SETTING_KEYS.ACTIVATED_AT) || null,
-    };
-  }
-
-  /**
-   * Update a single configuration setting
-   */
-  private async updateConfigSetting(key: string, value: string): Promise<void> {
-    const defaults: AppSettingCreationAttributes = {
-      key,
-      value,
-      active: true,
-      category: EMERGENCY,
-      type: 'string',
-      defaultValue: value,
-      description: `Emergency configuration: ${key}`,
-      deleted: false,
-    };
-
-    const [setting] = await AppSetting.findOrCreate({
-      where: { key },
-      defaults,
-    });
-
-    if (setting.value !== value) {
-      await setting.update({ value });
     }
   }
 }

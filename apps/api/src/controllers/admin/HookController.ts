@@ -6,21 +6,11 @@
 import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
-import { Hook, HookExecution } from '../../models';
 import {
-  HookAttributes,
   HookCreationAttributes,
-  HookExecutionAttributes,
   HookUpdateAttributes,
 } from '../../models/interfaces/ModelInterfaces';
-import { Op, WhereOptions } from 'sequelize';
-import { getAuditLogService } from '../../services/AuditLogService';
-import { reloadHookSystem } from '../../services/hooks/hookSystem';
-import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
-import { EVENTS } from '../../services/hooks/events';
-import { createModel } from '../../utils/sequelize-helpers';
-
-let lastReloadedAt: string | null = null;
+import { hookRegistryService } from '../../services/hooks/HookRegistryService';
 const HOOK_ACTION_TYPES = ['log', 'email', 'database'] as const;
 
 const isHookActionType = (value: unknown): value is HookCreationAttributes['actionType'] =>
@@ -96,30 +86,11 @@ export class HookController extends BaseController {
     const isActive = this.getQueryParameter(request, 'isActive');
     const search = this.getQueryParameter(request, 'search');
 
-    const where: WhereOptions<HookAttributes> = {};
-
-    if (isActive !== null && isActive !== undefined) {
-      where.isActive = isActive === 'true';
-    }
-
-    if (search) {
-      Object.assign(where, {
-        [Op.or]: [
-          { name: { [Op.like]: `%${search}%` } },
-          { description: { [Op.like]: `%${search}%` } },
-          { eventPattern: { [Op.like]: `%${search}%` } },
-        ],
-      });
-    }
-
-    const { count, rows: hooks } = await Hook.findAndCountAll({
-      where,
+    const { count, rows: hooks } = await hookRegistryService.listHooks({
       limit: pagination.limit,
       offset: pagination.offset,
-      order: [
-        ['priority', 'DESC'],
-        ['creationDate', 'DESC'],
-      ],
+      isActive: isActive !== null && isActive !== undefined ? isActive === 'true' : undefined,
+      search: search ?? undefined,
     });
 
     const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
@@ -137,7 +108,7 @@ export class HookController extends BaseController {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'hook' });
     }
 
-    const hook = await Hook.findByPk(Number(hookId));
+    const hook = await hookRegistryService.getHook(Number(hookId));
     if (!hook) {
       return this.createErrorResponseI18n('errors:hook_not_found', 404);
     }
@@ -166,32 +137,7 @@ export class HookController extends BaseController {
         priority: body.priority ?? 0,
         createdBy: request.user?.id ?? null,
       };
-      const actor = controlPlaneHookService.getActorContext(request.user);
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'BEFORE', {
-        actor,
-        input: hookData,
-      });
-
-      const hook = await createModel(Hook, hookData);
-
-      // Log audit event
-      getAuditLogService().logActionFromRequest(
-        request,
-        'create',
-        'hook',
-        String(hook.id),
-        {
-          name: hook.name,
-          eventPattern: hook.eventPattern,
-          actionType: hook.actionType,
-        }
-      );
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'AFTER', {
-        actor,
-        hook: hook.get({ plain: true }),
-      });
+      const hook = await hookRegistryService.createHook(hookData, request);
 
       return this.createSuccessResponse(
         hook.get({ plain: true }),
@@ -200,11 +146,6 @@ export class HookController extends BaseController {
         201
       );
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'FAILURE', {
-        actor: controlPlaneHookService.getActorContext(request.user),
-        input: body,
-        error,
-      });
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
@@ -228,54 +169,13 @@ export class HookController extends BaseController {
     }
 
     try {
-      const actor = controlPlaneHookService.getActorContext(request.user);
-      const hook = await Hook.findByPk(Number(hookId));
+      const hook = await hookRegistryService.updateHook(Number(hookId), body, request);
       if (!hook) {
         return this.createErrorResponseI18n('errors:hook_not_found', 404);
       }
 
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'BEFORE', {
-        actor,
-        hookId: Number(hookId),
-        changes: body,
-        hook: hook.get({ plain: true }),
-      });
-
-      const oldValues = hook.get({ plain: true });
-      await hook.update(body);
-
-      // Log audit event
-      getAuditLogService().logActionFromRequest(
-        request,
-        'update',
-        'hook',
-        String(hook.id),
-        {
-          changes: body,
-          oldValues: {
-            name: oldValues.name,
-            isActive: oldValues.isActive,
-            eventPattern: oldValues.eventPattern,
-          },
-        }
-      );
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'AFTER', {
-        actor,
-        hookId: Number(hookId),
-        hook: hook.get({ plain: true }),
-        previousHook: oldValues,
-        changes: body,
-      });
-
       return this.createSuccessResponse(hook.get({ plain: true }), 'Hook updated successfully');
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'FAILURE', {
-        actor: controlPlaneHookService.getActorContext(request.user),
-        hookId: Number(hookId),
-        changes: body,
-        error,
-      });
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
@@ -294,47 +194,13 @@ export class HookController extends BaseController {
     }
 
     try {
-      const actor = controlPlaneHookService.getActorContext(request.user);
-      const hook = await Hook.findByPk(Number(hookId));
+      const hook = await hookRegistryService.deleteHook(Number(hookId), request);
       if (!hook) {
         return this.createErrorResponseI18n('errors:hook_not_found', 404);
       }
 
-      const hookData = hook.get({ plain: true });
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'BEFORE', {
-        actor,
-        hookId: Number(hookId),
-        hook: hookData,
-      });
-
-      await hook.destroy();
-
-      // Log audit event
-      getAuditLogService().logActionFromRequest(
-        request,
-        'delete',
-        'hook',
-        String(hookData.id),
-        {
-          name: hookData.name,
-          eventPattern: hookData.eventPattern,
-        }
-      );
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'AFTER', {
-        actor,
-        hookId: Number(hookId),
-        hook: hookData,
-      });
-
       return this.createSuccessResponse(null, 'Hook deleted successfully', undefined, 204);
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'FAILURE', {
-        actor: controlPlaneHookService.getActorContext(request.user),
-        hookId: Number(hookId),
-        error,
-      });
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
@@ -348,26 +214,8 @@ export class HookController extends BaseController {
     if (authError) return authError;
 
     try {
-      const actor = controlPlaneHookService.getActorContext(request.user);
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'BEFORE', {
-        actor,
-      });
-
-      await reloadHookSystem();
-      lastReloadedAt = new Date().toISOString();
-
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'AFTER', {
-        actor,
-        reloadedAt: lastReloadedAt,
-      });
-
-      return this.createSuccessResponse({ reloadedAt: lastReloadedAt });
+      return this.createSuccessResponse(await hookRegistryService.reloadHooks(request.user));
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'FAILURE', {
-        actor: controlPlaneHookService.getActorContext(request.user),
-        error,
-      });
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
@@ -385,41 +233,23 @@ export class HookController extends BaseController {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'hook' });
     }
 
-    const hook = await Hook.findByPk(Number(hookId));
-    if (!hook) {
-      return this.createErrorResponseI18n('errors:hook_not_found', 404);
-    }
-
     const pagination = this.getPaginationParams(request);
-
     const successParam = this.getQueryParameter(request, 'success');
     const fromParam = this.getQueryParameter(request, 'from');
     const toParam = this.getQueryParameter(request, 'to');
 
-    const where: WhereOptions<HookExecutionAttributes> = { hookId: Number(hookId) };
-    if (successParam === 'true') {
-      where.success = true;
-    } else if (successParam === 'false') {
-      where.success = false;
-    }
-
-    if (fromParam || toParam) {
-      const range: { [Op.gte]?: Date; [Op.lte]?: Date } = {};
-      if (fromParam) {
-        range[Op.gte] = new Date(fromParam);
-      }
-      if (toParam) {
-        range[Op.lte] = new Date(toParam);
-      }
-      where.executedAt = range;
-    }
-
-    const { count, rows: executions } = await HookExecution.findAndCountAll({
-      where,
+    const executionsResult = await hookRegistryService.getHookExecutions(Number(hookId), {
       limit: pagination.limit,
       offset: pagination.offset,
-      order: [['executedAt', 'DESC']],
+      success:
+        successParam === 'true' ? true : successParam === 'false' ? false : undefined,
+      from: fromParam ?? undefined,
+      to: toParam ?? undefined,
     });
+    if (!executionsResult) {
+      return this.createErrorResponseI18n('errors:hook_not_found', 404);
+    }
+    const { count, rows: executions } = executionsResult;
 
     const meta = this.createPaginationMeta(pagination.page, pagination.limit, count);
 
@@ -432,19 +262,7 @@ export class HookController extends BaseController {
     if (authError) return authError;
 
     const limit = Number(this.getQueryParameter(request, 'limit')) || 50;
-    const maxLimit = Math.min(limit, 200); // Cap at 200
-
-    const executions = await HookExecution.findAll({
-      limit: maxLimit,
-      order: [['executedAt', 'DESC']],
-      include: [
-        {
-          model: Hook,
-          as: 'hook',
-          attributes: ['id', 'name', 'eventPattern'],
-        },
-      ],
-    });
+    const executions = await hookRegistryService.getRecentExecutions(limit);
 
     return this.createSuccessResponse({ executions });
   }
@@ -454,31 +272,7 @@ export class HookController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    const totalHooks = await Hook.count();
-    const activeHooks = await Hook.count({ where: { isActive: true } });
-    const totalExecutions = await HookExecution.count();
-    const successfulExecutions = await HookExecution.count({ where: { success: true } });
-    const failedExecutions = await HookExecution.count({ where: { success: false } });
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const executionsToday = await HookExecution.count({
-      where: { executedAt: { [Op.gte]: startOfDay } },
-    });
-
-    const stats = {
-      totalHooks,
-      activeHooks,
-      inactiveHooks: totalHooks - activeHooks,
-      totalExecutions,
-      successfulExecutions,
-      failedExecutions,
-      executionsToday,
-      lastReloadedAt,
-      successRate:
-        totalExecutions > 0 ? ((successfulExecutions / totalExecutions) * 100).toFixed(2) : '0.00',
-    };
-
-    return this.createSuccessResponse(stats);
+    return this.createSuccessResponse(await hookRegistryService.getHookStats());
   }
 }
 

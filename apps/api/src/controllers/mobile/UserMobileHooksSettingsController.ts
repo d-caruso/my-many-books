@@ -6,24 +6,13 @@
 import { UserBaseController } from '../base/UserBaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { UniversalRequest } from '../../types';
-import { AppSetting, AppSettingCreationAttributes } from '../../models';
-import { BASE_USER_PREFIX } from '@my-many-books/shared-types';
-import { Op } from 'sequelize';
-import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
-import { EVENTS } from '../../services/hooks/events';
-
-interface UserMobileConfigResponse {
-  userId: number;
-  analyticsEnabled: boolean;
-  lastUpdated: string | null;
-}
-
-export interface UserMobileConfigUpdateRequest {
-  analyticsEnabled?: boolean;
-}
+import {
+  userMobileConfigService,
+  type UserMobileHooksSettingsUpdateRequest,
+} from '../../services/config/UserMobileConfigService';
 
 export class UserMobileHooksSettingsController extends UserBaseController {
-  private isUserMobileHooksUpdateRequest(value: unknown): value is UserMobileConfigUpdateRequest {
+  private isUserMobileHooksUpdateRequest(value: unknown): value is UserMobileHooksSettingsUpdateRequest {
     if (!this.isRecord(value)) {
       return false;
     }
@@ -48,8 +37,9 @@ export class UserMobileHooksSettingsController extends UserBaseController {
     }
 
     try {
-      const config = await this.loadUserMobileConfig(userId);
-      return this.createSuccessResponse(config);
+      return this.createSuccessResponse(
+        await userMobileConfigService.getUserMobileHooksSettings(userId)
+      );
     } catch (error) {
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
@@ -80,127 +70,15 @@ export class UserMobileHooksSettingsController extends UserBaseController {
     }
 
     try {
-      const updatedSettings: string[] = [];
-      const actor = controlPlaneHookService.getActorContext(request.user);
-      const previousConfig = await this.loadUserMobileConfig(userId);
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.USER.MOBILE.HOOKS.SETTINGS.UPDATE,
-        'BEFORE',
-        {
-          actor,
-          userId,
-          previousConfig,
-          changes: body,
-        }
+      return this.createSuccessResponse(
+        await userMobileConfigService.updateUserMobileHooksSettings(userId, body, request),
+        'User mobile configuration updated successfully'
       );
-
-      // Update basic hook settings
-      
-      if (typeof body.analyticsEnabled === 'boolean') {
-        await this.updateUserConfigSetting(userId, 'analytics_enabled', String(body.analyticsEnabled));
-        updatedSettings.push('analytics_enabled');
-      }
-
-      const newConfig = await this.loadUserMobileConfig(userId);
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.USER.MOBILE.HOOKS.SETTINGS.UPDATE,
-        'AFTER',
-        {
-          actor,
-          userId,
-          previousConfig,
-          config: newConfig,
-          updated: updatedSettings,
-        }
-      );
-
-      return this.createSuccessResponse({
-        config: newConfig,
-        updated: updatedSettings,
-        lastUpdated: new Date().toISOString(),
-      }, 'User mobile configuration updated successfully');
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.USER.MOBILE.HOOKS.SETTINGS.UPDATE,
-        'FAILURE',
-        {
-          actor: controlPlaneHookService.getActorContext(request.user),
-          userId,
-          changes: body,
-          error,
-        }
-      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
       return this.createErrorResponseI18n('errors:internal_error', 500);
-    }
-  }
-
-  /**
-   * Load user-specific mobile configuration from database
-   */
-  private async loadUserMobileConfig(userId: number): Promise<UserMobileConfigResponse> {
-    const settings = await AppSetting.findAll({
-      where: {
-        key: {
-          [Op.like]: `${BASE_USER_PREFIX}.${userId}.%`
-        },
-      },
-    });
-
-    const settingsMap = new Map(settings.map(s => [s.key, s.value]));
-
-    const getUserBooleanSetting = (settingName: string, defaultValue: boolean): boolean => {
-      const key = `${BASE_USER_PREFIX}.${userId}.${settingName}`;
-      const value = settingsMap.get(key);
-      if (value === undefined) return defaultValue;
-      return value === 'true';
-    };
-
-    // Find last updated timestamp
-    const lastUpdatedSetting = await AppSetting.findOne({
-      where: {
-        key: {
-          [Op.like]: `${BASE_USER_PREFIX}.${userId}.%`
-        },
-      },
-      order: [['updateDate', 'DESC']],
-    });
-
-    return {
-      userId: userId,
-      analyticsEnabled: getUserBooleanSetting('analytics_enabled', true),
-      lastUpdated: lastUpdatedSetting?.updateDate?.toISOString() || null,
-    };
-  }
-
-  /**
-   * Update a user-specific configuration setting
-   */
-  private async updateUserConfigSetting(userId: number, settingName: string, value: string): Promise<void> {
-    const key = `${BASE_USER_PREFIX}.${userId}.${settingName}`;
-    
-    const defaults: AppSettingCreationAttributes = {
-      key,
-      value,
-      active: true,
-      category: 'user_mobile_config',
-      type: 'string',
-      defaultValue: value,
-      description: `User ${userId} mobile configuration: ${settingName}`,
-      deleted: false,
-    };
-
-    const [setting] = await AppSetting.findOrCreate({
-      where: { key },
-      defaults,
-    });
-
-    if (setting.value !== value) {
-      await setting.update({ value });
     }
   }
 }

@@ -7,11 +7,7 @@ import { BaseController } from '../base/BaseController';
 import { ApiResponse } from '../../common/ApiResponse';
 import { getLogger } from '@my-many-books/shared-logging';
 import { UniversalRequest } from '../../types';
-import { Setting } from '../../models';
-import { getAuditLogService } from '../../services/AuditLogService';
-import { SearchSettingsService } from '../../services/SearchSettingsService';
-import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
-import { EVENTS } from '../../services/hooks/events';
+import { settingsService } from '../../services/config/SettingsService';
 
 interface AuditLoggingUpdateRequest {
   enabled: boolean;
@@ -66,47 +62,12 @@ export class AdminSettingsController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    // Check env vars to determine source and if changeable
-    const forceDisabled = process.env['AUDIT_LOGGING_FORCE_DISABLED'] === 'true';
-    const forceEnabled = process.env['AUDIT_LOGGING_FORCE_ENABLED'] === 'true';
-
-    if (forceDisabled) {
-      return this.createSuccessResponse({
-        enabled: false,
-        source: 'force_disabled',
-        canChange: false,
-      });
-    }
-
-    if (forceEnabled) {
-      return this.createSuccessResponse({
-        enabled: true,
-        source: 'force_enabled',
-        canChange: false,
-      });
-    }
-
-    // Check database setting
     try {
-      const setting = await Setting.findOne({ where: { key: 'audit_logging_enabled' } });
-      if (setting) {
-        return this.createSuccessResponse({
-          enabled: setting.value === 'true',
-          source: 'database',
-          canChange: true,
-        });
-      }
+      return this.createSuccessResponse(await settingsService.getAuditLoggingStatus());
     } catch (error) {
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to query audit logging setting:');
       return this.createErrorResponseI18n('errors:internal_error', 500);
     }
-
-    // Default
-    return this.createSuccessResponse({
-      enabled: true,
-      source: 'default',
-      canChange: true,
-    });
   }
 
   /**
@@ -119,64 +80,19 @@ export class AdminSettingsController extends BaseController {
     const authError = this.ensureAuthenticated(request);
     if (authError) return authError;
 
-    // Check if changeable
-    const forceDisabled = process.env['AUDIT_LOGGING_FORCE_DISABLED'] === 'true';
-    const forceEnabled = process.env['AUDIT_LOGGING_FORCE_ENABLED'] === 'true';
-
-    if (forceDisabled || forceEnabled) {
-      return this.createErrorResponseI18n('errors:setting_enforced_by_config', 403);
-    }
-
     const body = this.parseBody(request);
     if (!this.isAuditLoggingUpdateRequest(body)) {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
     try {
-      const actor = controlPlaneHookService.getActorContext(request.user);
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.AUDIT_LOGGING.UPDATE,
-        'BEFORE',
-        {
-          actor,
-          enabled: body.enabled,
-        }
+      return this.createSuccessResponse(
+        await settingsService.updateAuditLoggingStatus(body.enabled, request)
       );
-
-      // Upsert setting
-      await Setting.upsert({
-        key: 'audit_logging_enabled',
-        value: body.enabled ? 'true' : 'false',
-        description: 'Enable or disable audit logging (true/false)',
-      });
-
-      // Invalidate cache
-      getAuditLogService().invalidateCache();
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.AUDIT_LOGGING.UPDATE,
-        'AFTER',
-        {
-          actor,
-          enabled: body.enabled,
-        }
-      );
-
-      return this.createSuccessResponse({
-        enabled: body.enabled,
-        source: 'database',
-        canChange: true,
-      });
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.AUDIT_LOGGING.UPDATE,
-        'FAILURE',
-        {
-          actor: controlPlaneHookService.getActorContext(request.user),
-          changes: body,
-          error,
-        }
-      );
+      if (error instanceof Error && error.message === 'SETTING_ENFORCED_BY_CONFIG') {
+        return this.createErrorResponseI18n('errors:setting_enforced_by_config', 403);
+      }
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to update audit logging setting:');
       return this.createErrorResponseI18n('errors:internal_error', 500);
     }
@@ -198,10 +114,7 @@ export class AdminSettingsController extends BaseController {
     if (authError) return authError;
 
     try {
-      const searchSettingsService = new SearchSettingsService();
-      const status = await searchSettingsService.getFulltextStatus();
-
-      return this.createSuccessResponse(status);
+      return this.createSuccessResponse(await settingsService.getSearchStatus());
     } catch (error) {
       getLogger().error(
         { err: error instanceof Error ? error : new Error(String(error)) },
@@ -228,64 +141,11 @@ export class AdminSettingsController extends BaseController {
     }
 
     try {
-      const searchSettingsService = new SearchSettingsService();
-      const actor = controlPlaneHookService.getActorContext(request.user);
-
-      // Check if enabled can be changed
-      if (body.enabled !== undefined) {
-        const forceDisabled = process.env['SEARCH_FULLTEXT_FORCE_DISABLED'] === 'true';
-        const forceEnabled = process.env['SEARCH_FULLTEXT_FORCE_ENABLED'] === 'true';
-
-        if (forceDisabled || forceEnabled) {
-          return this.createErrorResponseI18n('errors:setting_enforced_by_config', 403);
-        }
-      }
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.SEARCH.UPDATE,
-        'BEFORE',
-        {
-          actor,
-          changes: body,
-        }
-      );
-
-      if (body.enabled !== undefined) {
-        await searchSettingsService.updateFulltextEnabled(body.enabled);
-      }
-
-      if (body.sortableFields !== undefined) {
-        await searchSettingsService.updateSortableFields(body.sortableFields);
-      }
-
-      if (body.defaultSort !== undefined) {
-        await searchSettingsService.updateDefaultSort(body.defaultSort);
-      }
-
-      // Return updated status
-      const status = await searchSettingsService.getFulltextStatus();
-
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.SEARCH.UPDATE,
-        'AFTER',
-        {
-          actor,
-          changes: body,
-          status,
-        }
-      );
-
-      return this.createSuccessResponse(status);
+      return this.createSuccessResponse(await settingsService.updateSearchSettings(body, request));
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
-        EVENTS.CONFIG.SEARCH.UPDATE,
-        'FAILURE',
-        {
-          actor: controlPlaneHookService.getActorContext(request.user),
-          changes: body,
-          error,
-        }
-      );
+      if (error instanceof Error && error.message === 'SETTING_ENFORCED_BY_CONFIG') {
+        return this.createErrorResponseI18n('errors:setting_enforced_by_config', 403);
+      }
       getLogger().error(
         { err: error instanceof Error ? error : new Error(String(error)) },
         'Failed to update search settings:'
