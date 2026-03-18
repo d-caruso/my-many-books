@@ -124,7 +124,7 @@ class UserMobileConfigService {
     const previousConfig = await this.getUserMobileConfig(userId);
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.USER.MOBILE.CONFIG.UPDATE,
         'BEFORE',
         {
@@ -213,7 +213,7 @@ class UserMobileConfigService {
 
       const config = await this.getUserMobileConfig(userId);
 
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.USER.MOBILE.CONFIG.UPDATE,
         'AFTER',
         {
@@ -231,7 +231,7 @@ class UserMobileConfigService {
         lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.USER.MOBILE.CONFIG.UPDATE,
         'FAILURE',
         {
@@ -267,7 +267,7 @@ class UserMobileConfigService {
     const previousConfig = await this.getUserMobileHooksSettings(userId);
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.USER.MOBILE.HOOKS.SETTINGS.UPDATE,
         'BEFORE',
         {
@@ -289,7 +289,7 @@ class UserMobileConfigService {
 
       const config = await this.getUserMobileHooksSettings(userId);
 
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.USER.MOBILE.HOOKS.SETTINGS.UPDATE,
         'AFTER',
         {
@@ -307,7 +307,7 @@ class UserMobileConfigService {
         lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.USER.MOBILE.HOOKS.SETTINGS.UPDATE,
         'FAILURE',
         {

@@ -53,7 +53,7 @@ export class IDMappingService {
     await this.initialize();
 
     // Emit ID mapping start event
-    await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.START, {
+    void mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.START, {
       tempId,
       serverId,
       resourceType,
@@ -77,7 +77,7 @@ export class IDMappingService {
       console.log(`Registered ID mapping: ${tempId} → ${serverId} (${resourceType})`);
       
       // Emit ID mapping complete event
-      await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
+      void mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
         tempId,
         serverId,
         resourceType,
@@ -89,7 +89,7 @@ export class IDMappingService {
       console.error('Failed to persist ID mapping:', error);
       
       // Emit ID mapping failed event  
-      await mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
+      void mobileHooks.emit(MOBILE_EVENTS.SYNC.FAILED, {
         stage: 'id_mapping',
         operation: 'register',
         tempId,
@@ -127,7 +127,7 @@ export class IDMappingService {
     await this.initialize();
 
     // Emit ID mapping start event for resolution
-    await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.START, {
+    void mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.START, {
       operation: 'resolve_foreign_keys',
       dataType: typeof data,
       timestamp: new Date().toISOString()
@@ -158,7 +158,7 @@ export class IDMappingService {
           console.log(`Resolved foreign key: ${key}: ${value} → ${serverId}`);
           
           // Emit successful resolution event
-          await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
+          void mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
             operation: 'resolve_foreign_key',
             field: key,
             tempId: value,
@@ -171,7 +171,7 @@ export class IDMappingService {
           resolved[key] = value;
           
           // Emit unresolved ID event (not necessarily an error)
-          await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
+          void mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
             operation: 'resolve_foreign_key',
             field: key,
             tempId: value,
@@ -190,7 +190,7 @@ export class IDMappingService {
     }
 
     // Final emit for completion of full resolution process
-    await mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
+    void mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.COMPLETE, {
       operation: 'resolve_foreign_keys',
       dataType: typeof data,
       resolvedKeys: Object.keys(resolved).length,

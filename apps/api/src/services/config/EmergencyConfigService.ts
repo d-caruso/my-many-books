@@ -56,7 +56,7 @@ class EmergencyConfigService {
     const actor = controlPlaneHookService.getActorContext(request.user);
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'BEFORE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'BEFORE', {
         actor,
         previousConfig,
         changes,
@@ -127,7 +127,7 @@ class EmergencyConfigService {
 
       const config = await this.getConfig();
 
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'AFTER', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'AFTER', {
         actor,
         previousConfig,
         config,
@@ -140,7 +140,7 @@ class EmergencyConfigService {
         lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'FAILURE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'FAILURE', {
         actor,
         changes,
         error,

@@ -214,7 +214,7 @@ export class UserService {
       await this.ensureIdentityLink(created.id, normalizedProvider, providerUserId, normalizedEmail);
     }
 
-    await this.emitUserEvent(EVENTS.USER.PROVISION.AFTER, {
+    void emitHookEvent(EVENTS.USER.PROVISION.AFTER, {
       user: this.mapEventUser(created),
       provider: normalizedProvider,
       providerUserId,
@@ -237,7 +237,7 @@ export class UserService {
   }
 
   async updateCurrentUser(userId: number, input: UpdateUserProfileInput): Promise<UserEntity> {
-    await this.emitUserEvent(EVENTS.USER.UPDATE.BEFORE, {
+    void emitHookEvent(EVENTS.USER.UPDATE.BEFORE, {
       user: { id: userId },
       changes: input,
     });
@@ -253,14 +253,14 @@ export class UserService {
         throw new UserServiceError('USER_NOT_FOUND');
       }
 
-      await this.emitUserEvent(EVENTS.USER.UPDATE.AFTER, {
+      void emitHookEvent(EVENTS.USER.UPDATE.AFTER, {
         user: this.mapEventUser(updated),
         changes: input,
       });
 
       return updated;
     } catch (error) {
-      await this.emitUserEvent(EVENTS.USER.UPDATE.FAILURE, {
+      void emitHookEvent(EVENTS.USER.UPDATE.FAILURE, {
         user: { id: userId },
         changes: input,
         error,
@@ -323,7 +323,7 @@ export class UserService {
   }
 
   async deactivateAccount(userId: number): Promise<void> {
-    await this.emitUserEvent(EVENTS.USER.DEACTIVATE.BEFORE, {
+    void emitHookEvent(EVENTS.USER.DEACTIVATE.BEFORE, {
       user: { id: userId },
     });
 
@@ -342,11 +342,11 @@ export class UserService {
 
       clearUserCache(user.email);
 
-      await this.emitUserEvent(EVENTS.USER.DEACTIVATE.AFTER, {
+      void emitHookEvent(EVENTS.USER.DEACTIVATE.AFTER, {
         user: this.mapEventUser(updated),
       });
     } catch (error) {
-      await this.emitUserEvent(EVENTS.USER.DEACTIVATE.FAILURE, {
+      void emitHookEvent(EVENTS.USER.DEACTIVATE.FAILURE, {
         user: user ? this.mapEventUser(user) : { id: userId },
         error,
       });
@@ -355,7 +355,7 @@ export class UserService {
   }
 
   async deleteAccount(userId: number): Promise<void> {
-    await this.emitUserEvent(EVENTS.USER.DELETE.BEFORE, {
+    void emitHookEvent(EVENTS.USER.DELETE.BEFORE, {
       user: { id: userId },
     });
 
@@ -374,11 +374,11 @@ export class UserService {
 
       clearUserCache(user.email);
 
-      await this.emitUserEvent(EVENTS.USER.DELETE.AFTER, {
+      void emitHookEvent(EVENTS.USER.DELETE.AFTER, {
         user: this.mapEventUser(user),
       });
     } catch (error) {
-      await this.emitUserEvent(EVENTS.USER.DELETE.FAILURE, {
+      void emitHookEvent(EVENTS.USER.DELETE.FAILURE, {
         user: user ? this.mapEventUser(user) : { id: userId },
         error,
       });
@@ -390,30 +390,23 @@ export class UserService {
     userId: number,
     input: ChangePasswordInput
   ): Promise<PasswordChangeSession> {
-    await this.emitUserEvent(EVENTS.USER.PASSWORD.CHANGE.BEFORE, {
+    void emitHookEvent(EVENTS.USER.PASSWORD.CHANGE.BEFORE, {
       user: { id: userId, email: input.email },
     });
 
     try {
       const session = await cognitoPasswordService.changePassword(input);
-      await this.emitUserEvent(EVENTS.USER.PASSWORD.CHANGE.AFTER, {
+      void emitHookEvent(EVENTS.USER.PASSWORD.CHANGE.AFTER, {
         user: { id: userId, email: input.email },
       });
       return session;
     } catch (error) {
-      await this.emitUserEvent(EVENTS.USER.PASSWORD.CHANGE.FAILURE, {
+      void emitHookEvent(EVENTS.USER.PASSWORD.CHANGE.FAILURE, {
         user: { id: userId, email: input.email },
         error,
       });
       throw error;
     }
-  }
-
-  private async emitUserEvent(
-    eventName: string,
-    payload: Record<string, unknown>
-  ): Promise<void> {
-    await emitHookEvent(eventName, payload);
   }
 
   private mapEventUser(user: Pick<UserEntity, 'id' | 'email' | 'role' | 'isActive' | 'name' | 'surname'>): Record<string, unknown> {

@@ -53,7 +53,7 @@ export class AdminBookMutationService {
     context: AdminBookMutationContext | null
   ): Promise<BookEntity> {
     const admin = this.mapAdminContext(context);
-    await this.emitAdminBookEvent(EVENTS.BOOK.UPDATE.BEFORE, {
+    void emitHookEvent(EVENTS.BOOK.UPDATE.BEFORE, {
       bookId,
       input,
       admin,
@@ -81,7 +81,7 @@ export class AdminBookMutationService {
         throw new AdminBookMutationServiceError('BOOK_NOT_FOUND');
       }
 
-      await this.emitAdminBookEvent(EVENTS.BOOK.UPDATE.AFTER, {
+      void emitHookEvent(EVENTS.BOOK.UPDATE.AFTER, {
         bookId,
         book: updated,
         previousBook: existing,
@@ -91,7 +91,7 @@ export class AdminBookMutationService {
 
       return updated;
     } catch (error) {
-      await this.emitAdminBookEvent(EVENTS.BOOK.UPDATE.FAILURE, {
+      void emitHookEvent(EVENTS.BOOK.UPDATE.FAILURE, {
         bookId,
         book: existing,
         input,
@@ -107,7 +107,7 @@ export class AdminBookMutationService {
     context: AdminBookMutationContext | null
   ): Promise<void> {
     const admin = this.mapAdminContext(context);
-    await this.emitAdminBookEvent(EVENTS.BOOK.DELETE.BEFORE, {
+    void emitHookEvent(EVENTS.BOOK.DELETE.BEFORE, {
       bookId,
       admin,
     });
@@ -127,13 +127,13 @@ export class AdminBookMutationService {
         throw new AdminBookMutationServiceError('BOOK_NOT_FOUND');
       }
 
-      await this.emitAdminBookEvent(EVENTS.BOOK.DELETE.AFTER, {
+      void emitHookEvent(EVENTS.BOOK.DELETE.AFTER, {
         bookId,
         book: existing,
         admin,
       });
     } catch (error) {
-      await this.emitAdminBookEvent(EVENTS.BOOK.DELETE.FAILURE, {
+      void emitHookEvent(EVENTS.BOOK.DELETE.FAILURE, {
         bookId,
         book: existing,
         admin,
@@ -141,13 +141,6 @@ export class AdminBookMutationService {
       });
       throw error;
     }
-  }
-
-  private async emitAdminBookEvent(
-    eventName: string,
-    payload: Record<string, unknown>
-  ): Promise<void> {
-    await emitHookEvent(eventName, payload);
   }
 
   private ensureAdminPrivileges(context: AdminBookMutationContext | null): void {

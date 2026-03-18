@@ -31,7 +31,7 @@ export const updateHookActionListeners = async (
   const actor = controlPlaneHookService.getActorContext(request.user);
 
   try {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.LISTENERS.UPDATE,
       'BEFORE',
       {
@@ -74,7 +74,7 @@ export const updateHookActionListeners = async (
       updatedSettings.push('performanceMonitoring');
     }
 
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.LISTENERS.UPDATE,
       'AFTER',
       {
@@ -89,7 +89,7 @@ export const updateHookActionListeners = async (
       lastUpdated: new Date().toISOString(),
     };
   } catch (error) {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.LISTENERS.UPDATE,
       'FAILURE',
       { actor, changes, error }
@@ -117,7 +117,7 @@ export const updateListenerSettings = async (
   const actor = controlPlaneHookService.getActorContext(request.user);
 
   try {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.UPDATE,
       'BEFORE',
       {
@@ -160,7 +160,7 @@ export const updateListenerSettings = async (
 
     const settings = await loadListenerSettings();
 
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.UPDATE,
       'AFTER',
       {
@@ -177,7 +177,7 @@ export const updateListenerSettings = async (
       lastUpdated: new Date().toISOString(),
     };
   } catch (error) {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.UPDATE,
       'FAILURE',
       {
@@ -195,7 +195,7 @@ export const resetMobileSettings = async (request: UniversalRequest) => {
   const actor = controlPlaneHookService.getActorContext(request.user);
 
   try {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.RESET,
       'BEFORE',
       {
@@ -228,7 +228,7 @@ export const resetMobileSettings = async (request: UniversalRequest) => {
       }
     );
 
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.RESET,
       'AFTER',
       {
@@ -244,7 +244,7 @@ export const resetMobileSettings = async (request: UniversalRequest) => {
       lastUpdated: new Date().toISOString(),
     };
   } catch (error) {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.RESET,
       'FAILURE',
       { actor, error }
@@ -269,7 +269,7 @@ export const updateEmergencyStatus = async (
   const actor = controlPlaneHookService.getActorContext(request.user);
 
   try {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.EMERGENCY.UPDATE,
       'BEFORE',
       {
@@ -295,7 +295,7 @@ export const updateEmergencyStatus = async (
       { enabled: changes.enabled, reason: changes.reason }
     );
 
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.EMERGENCY.UPDATE,
       'AFTER',
       {
@@ -311,7 +311,7 @@ export const updateEmergencyStatus = async (
       message: changes.enabled ? 'Mobile hooks enabled' : 'Mobile hooks disabled (emergency)',
     };
   } catch (error) {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.EMERGENCY.UPDATE,
       'FAILURE',
       { actor, changes, error }

@@ -67,7 +67,7 @@ class HookRegistryService {
     const actor = controlPlaneHookService.getActorContext(request.user);
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'BEFORE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'BEFORE', {
         actor,
         input,
       });
@@ -80,14 +80,14 @@ class HookRegistryService {
         actionType: hook.actionType,
       });
 
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'AFTER', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'AFTER', {
         actor,
         hook: hook.get({ plain: true }),
       });
 
       return hook;
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'FAILURE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'FAILURE', {
         actor,
         input,
         error,
@@ -106,7 +106,7 @@ class HookRegistryService {
     const previousHook = hook.get({ plain: true });
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'BEFORE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'BEFORE', {
         actor,
         hookId: id,
         changes,
@@ -124,7 +124,7 @@ class HookRegistryService {
         },
       });
 
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'AFTER', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'AFTER', {
         actor,
         hookId: id,
         hook: hook.get({ plain: true }),
@@ -134,7 +134,7 @@ class HookRegistryService {
 
       return hook;
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'FAILURE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'FAILURE', {
         actor,
         hookId: id,
         changes,
@@ -154,7 +154,7 @@ class HookRegistryService {
     const hookData = hook.get({ plain: true });
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'BEFORE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'BEFORE', {
         actor,
         hookId: id,
         hook: hookData,
@@ -167,7 +167,7 @@ class HookRegistryService {
         eventPattern: hookData.eventPattern,
       });
 
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'AFTER', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'AFTER', {
         actor,
         hookId: id,
         hook: hookData,
@@ -175,7 +175,7 @@ class HookRegistryService {
 
       return hookData;
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'FAILURE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'FAILURE', {
         actor,
         hookId: id,
         error,
@@ -188,21 +188,21 @@ class HookRegistryService {
     const actor = controlPlaneHookService.getActorContext(user);
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'BEFORE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'BEFORE', {
         actor,
       });
 
       await reloadHookSystem();
       lastReloadedAt = new Date().toISOString();
 
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'AFTER', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'AFTER', {
         actor,
         reloadedAt: lastReloadedAt,
       });
 
       return { reloadedAt: lastReloadedAt };
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'FAILURE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'FAILURE', {
         actor,
         error,
       });

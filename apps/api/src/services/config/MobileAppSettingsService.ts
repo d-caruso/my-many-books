@@ -72,7 +72,7 @@ class MobileAppSettingsService {
     const actor = controlPlaneHookService.getActorContext(request.user);
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.MOBILE.APP.SETTINGS.UPDATE,
         'BEFORE',
         {
@@ -129,7 +129,7 @@ class MobileAppSettingsService {
 
       const settings = await this.loadSettings();
 
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.MOBILE.APP.SETTINGS.UPDATE,
         'AFTER',
         {
@@ -146,7 +146,7 @@ class MobileAppSettingsService {
         lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.MOBILE.APP.SETTINGS.UPDATE,
         'FAILURE',
         {
@@ -166,7 +166,7 @@ class MobileAppSettingsService {
     const actor = controlPlaneHookService.getActorContext(request.user);
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.MOBILE.APP.SETTINGS.RESET,
         'BEFORE',
         {
@@ -199,7 +199,7 @@ class MobileAppSettingsService {
         }
       );
 
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.MOBILE.APP.SETTINGS.RESET,
         'AFTER',
         {
@@ -215,7 +215,7 @@ class MobileAppSettingsService {
         lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.MOBILE.APP.SETTINGS.RESET,
         'FAILURE',
         {

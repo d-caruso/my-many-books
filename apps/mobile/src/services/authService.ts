@@ -114,26 +114,26 @@ authService.silentRefresh = async (): Promise<boolean> => {
     source: 'mobile_auth_service',
   });
 
-  await mobileHooks.emit(MOBILE_EVENTS.AUTH.REFRESH.BEFORE, payload);
+  void mobileHooks.emit(MOBILE_EVENTS.AUTH.REFRESH.BEFORE, payload);
 
   try {
     const refreshed = await baseSilentRefresh();
 
     if (refreshed) {
-      await mobileHooks.emit(MOBILE_EVENTS.AUTH.REFRESH.AFTER, {
+      void mobileHooks.emit(MOBILE_EVENTS.AUTH.REFRESH.AFTER, {
         ...payload,
         result: { refreshed: true },
       });
       return true;
     }
 
-    await mobileHooks.emit(MOBILE_EVENTS.AUTH.REFRESH.FAILURE, {
+    void mobileHooks.emit(MOBILE_EVENTS.AUTH.REFRESH.FAILURE, {
       ...payload,
       error: 'Session refresh failed',
     });
     return false;
   } catch (error) {
-    await mobileHooks.emit(MOBILE_EVENTS.AUTH.REFRESH.FAILURE, {
+    void mobileHooks.emit(MOBILE_EVENTS.AUTH.REFRESH.FAILURE, {
       ...payload,
       error: extractErrorMessage(error),
     });

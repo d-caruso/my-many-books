@@ -21,7 +21,7 @@ export class SettingsController extends BaseController {
     await this.initializeI18n(request);
 
     try {
-      const settings = await settingsService.getAllSettings();
+      const settings = settingsService.getAllSettings();
       return this.createSuccessResponse(settings.map(s => toSettingResponseDTO(s)));
     } catch {
       return this.createErrorResponseI18n('errors:internal_server_error', 500);

@@ -10,52 +10,52 @@ type LifecycleBranch = {
 type LifecyclePhase = keyof LifecycleBranch;
 
 class AuthLifecycleHookService {
-  private async emitLifecycleEvent(
+  private emitLifecycleEvent(
     branch: LifecycleBranch,
     phase: LifecyclePhase,
     payload: Record<string, unknown>
-  ): Promise<void> {
-    await emitHookEvent(branch[phase], payload);
+  ): void {
+    void emitHookEvent(branch[phase], payload);
   }
 
-  async emitUserLoginBefore(payload: Record<string, unknown>): Promise<void> {
-    await this.emitLifecycleEvent(EVENTS.USER.LOGIN, 'BEFORE', payload);
+  emitUserLoginBefore(payload: Record<string, unknown>): void {
+    this.emitLifecycleEvent(EVENTS.USER.LOGIN, 'BEFORE', payload);
   }
 
-  async emitUserLoginAfter(payload: Record<string, unknown>): Promise<void> {
-    await this.emitLifecycleEvent(EVENTS.USER.LOGIN, 'AFTER', payload);
+  emitUserLoginAfter(payload: Record<string, unknown>): void {
+    this.emitLifecycleEvent(EVENTS.USER.LOGIN, 'AFTER', payload);
   }
 
-  async emitAuthLoginFailure(payload: Record<string, unknown>): Promise<void> {
-    await emitHookEvent(EVENTS.AUTH.LOGIN.FAILURE, payload);
+  emitAuthLoginFailure(payload: Record<string, unknown>): void {
+    void emitHookEvent(EVENTS.AUTH.LOGIN.FAILURE, payload);
   }
 
-  async emitUserRegister(phase: LifecyclePhase, payload: Record<string, unknown>): Promise<void> {
-    await this.emitLifecycleEvent(EVENTS.USER.REGISTER, phase, payload);
+  emitUserRegister(phase: LifecyclePhase, payload: Record<string, unknown>): void {
+    this.emitLifecycleEvent(EVENTS.USER.REGISTER, phase, payload);
   }
 
-  async emitUserLogout(phase: LifecyclePhase, payload: Record<string, unknown>): Promise<void> {
-    await this.emitLifecycleEvent(EVENTS.USER.LOGOUT, phase, payload);
+  emitUserLogout(phase: LifecyclePhase, payload: Record<string, unknown>): void {
+    this.emitLifecycleEvent(EVENTS.USER.LOGOUT, phase, payload);
   }
 
-  async emitRefresh(phase: LifecyclePhase, payload: Record<string, unknown>): Promise<void> {
-    await this.emitLifecycleEvent(EVENTS.AUTH.REFRESH, phase, payload);
+  emitRefresh(phase: LifecyclePhase, payload: Record<string, unknown>): void {
+    this.emitLifecycleEvent(EVENTS.AUTH.REFRESH, phase, payload);
   }
 
-  async emitVerifyEmail(phase: LifecyclePhase, payload: Record<string, unknown>): Promise<void> {
-    await this.emitLifecycleEvent(EVENTS.AUTH.VERIFY_EMAIL, phase, payload);
+  emitVerifyEmail(phase: LifecyclePhase, payload: Record<string, unknown>): void {
+    this.emitLifecycleEvent(EVENTS.AUTH.VERIFY_EMAIL, phase, payload);
   }
 
-  async emitResendCode(phase: LifecyclePhase, payload: Record<string, unknown>): Promise<void> {
-    await this.emitLifecycleEvent(EVENTS.AUTH.RESEND_CODE, phase, payload);
+  emitResendCode(phase: LifecyclePhase, payload: Record<string, unknown>): void {
+    this.emitLifecycleEvent(EVENTS.AUTH.RESEND_CODE, phase, payload);
   }
 
-  async emitForgotPassword(phase: LifecyclePhase, payload: Record<string, unknown>): Promise<void> {
-    await this.emitLifecycleEvent(EVENTS.AUTH.FORGOT_PASSWORD, phase, payload);
+  emitForgotPassword(phase: LifecyclePhase, payload: Record<string, unknown>): void {
+    this.emitLifecycleEvent(EVENTS.AUTH.FORGOT_PASSWORD, phase, payload);
   }
 
-  async emitResetPassword(phase: LifecyclePhase, payload: Record<string, unknown>): Promise<void> {
-    await this.emitLifecycleEvent(EVENTS.AUTH.RESET_PASSWORD, phase, payload);
+  emitResetPassword(phase: LifecyclePhase, payload: Record<string, unknown>): void {
+    this.emitLifecycleEvent(EVENTS.AUTH.RESET_PASSWORD, phase, payload);
   }
 }
 

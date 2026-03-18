@@ -123,7 +123,7 @@ class FetchHttpClient implements HttpClient {
             return this.fetchWithTimeout<T>(url, options, true);
           }
 
-          await mobileHooks.emit(MOBILE_EVENTS.AUTH.SESSION.EXPIRED, {
+          void mobileHooks.emit(MOBILE_EVENTS.AUTH.SESSION.EXPIRED, {
             ...createAuthLifecyclePayload({
               source: 'api_http_client',
               statusCode: response.status,

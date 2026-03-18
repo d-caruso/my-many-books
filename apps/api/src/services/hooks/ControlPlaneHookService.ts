@@ -14,12 +14,12 @@ type RequestUserLike = {
 } | null | undefined;
 
 class ControlPlaneHookService {
-  async emitLifecycleEvent(
+  emitLifecycleEvent(
     branch: LifecycleBranch,
     phase: LifecyclePhase,
     payload: Record<string, unknown>
-  ): Promise<void> {
-    await emitHookEvent(branch[phase], payload);
+  ): void {
+    void emitHookEvent(branch[phase], payload);
   }
 
   getActorContext(user: RequestUserLike): { id: string | number; role?: string } | null {

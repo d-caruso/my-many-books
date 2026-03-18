@@ -116,7 +116,7 @@ class CategoryService {
     userContext: CategoryUserContext
   ): Promise<CategoryEntity> {
     const user = this.mapEventUser(userContext);
-    await this.emitCategoryEvent(EVENTS.CATEGORY.CREATE.BEFORE, {
+    void emitHookEvent(EVENTS.CATEGORY.CREATE.BEFORE, {
       user,
       input,
     });
@@ -131,14 +131,14 @@ class CategoryService {
       };
 
       const created = await this.categoryRepository.create(payload);
-      await this.emitCategoryEvent(EVENTS.CATEGORY.CREATE.AFTER, {
+      void emitHookEvent(EVENTS.CATEGORY.CREATE.AFTER, {
         category: created,
         user,
         input,
       });
       return created;
     } catch (error) {
-      await this.emitCategoryEvent(EVENTS.CATEGORY.CREATE.FAILURE, {
+      void emitHookEvent(EVENTS.CATEGORY.CREATE.FAILURE, {
         user,
         input,
         error,
@@ -153,7 +153,7 @@ class CategoryService {
     userContext: CategoryUserContext
   ): Promise<CategoryEntity> {
     const user = this.mapEventUser(userContext);
-    await this.emitCategoryEvent(EVENTS.CATEGORY.UPDATE.BEFORE, {
+    void emitHookEvent(EVENTS.CATEGORY.UPDATE.BEFORE, {
       categoryId: id,
       user,
       input,
@@ -181,7 +181,7 @@ class CategoryService {
         throw new CategoryServiceError('CATEGORY_NOT_FOUND');
       }
 
-      await this.emitCategoryEvent(EVENTS.CATEGORY.UPDATE.AFTER, {
+      void emitHookEvent(EVENTS.CATEGORY.UPDATE.AFTER, {
         categoryId: id,
         category: updated,
         user,
@@ -190,7 +190,7 @@ class CategoryService {
 
       return updated;
     } catch (error) {
-      await this.emitCategoryEvent(EVENTS.CATEGORY.UPDATE.FAILURE, {
+      void emitHookEvent(EVENTS.CATEGORY.UPDATE.FAILURE, {
         categoryId: id,
         user,
         input,
@@ -207,7 +207,7 @@ class CategoryService {
   ): Promise<void> {
     const user = this.mapEventUser(userContext);
     const forceDelete = force ?? false;
-    await this.emitCategoryEvent(EVENTS.CATEGORY.DELETE.BEFORE, {
+    void emitHookEvent(EVENTS.CATEGORY.DELETE.BEFORE, {
       categoryId: id,
       user,
       force: forceDelete,
@@ -233,14 +233,14 @@ class CategoryService {
         throw new CategoryServiceError('CATEGORY_NOT_FOUND');
       }
 
-      await this.emitCategoryEvent(EVENTS.CATEGORY.DELETE.AFTER, {
+      void emitHookEvent(EVENTS.CATEGORY.DELETE.AFTER, {
         categoryId: id,
         category: existing,
         user,
         force: forceDelete,
       });
     } catch (error) {
-      await this.emitCategoryEvent(EVENTS.CATEGORY.DELETE.FAILURE, {
+      void emitHookEvent(EVENTS.CATEGORY.DELETE.FAILURE, {
         categoryId: id,
         category: existing,
         user,
@@ -252,13 +252,6 @@ class CategoryService {
   }
 
   // ===== helpers ==========================================================
-
-  private async emitCategoryEvent(
-    eventName: string,
-    payload: Record<string, unknown>
-  ): Promise<void> {
-    await emitHookEvent(eventName, payload);
-  }
 
   private mapEventUser(
     userContext?: CategoryUserContext | null

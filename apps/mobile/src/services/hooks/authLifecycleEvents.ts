@@ -33,17 +33,17 @@ export const emitAuthLifecycle = async <T>(
   operation: () => Promise<T>,
   buildAfterPayload?: (result: T) => Record<string, unknown>
 ): Promise<T> => {
-  await mobileHooks.emit(events.BEFORE, payload);
+  void mobileHooks.emit(events.BEFORE, payload);
 
   try {
     const result = await operation();
-    await mobileHooks.emit(events.AFTER, {
+    void mobileHooks.emit(events.AFTER, {
       ...payload,
       ...(buildAfterPayload ? buildAfterPayload(result) : {}),
     });
     return result;
   } catch (error) {
-    await mobileHooks.emit(events.FAILURE, {
+    void mobileHooks.emit(events.FAILURE, {
       ...payload,
       error: extractErrorMessage(error),
     });

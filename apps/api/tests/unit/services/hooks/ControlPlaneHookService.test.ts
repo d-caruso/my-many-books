@@ -1,19 +1,23 @@
-import { controlPlaneHookService } from '../../../../src/services/hooks/ControlPlaneHookService';
-import { emitHookEvent } from '../../../../src/services/hooks/hookSystem';
-
 jest.mock('../../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
+const { controlPlaneHookService } = require('../../../../src/services/hooks/ControlPlaneHookService.ts');
+const { emitHookEvent } = require('../../../../src/services/hooks/hookSystem');
+
 describe('ControlPlaneHookService', () => {
-  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<
+    typeof import('../../../../src/services/hooks/hookSystem').emitHookEvent
+  >;
 
   beforeEach(() => {
     emitHookEventMock.mockClear();
   });
 
-  it('emits the selected lifecycle phase from a branch', async () => {
-    await controlPlaneHookService.emitLifecycleEvent(
+  it('emits the selected lifecycle phase from a branch without awaiting hook execution', () => {
+    emitHookEventMock.mockImplementation(() => new Promise(() => {}));
+
+    const result = controlPlaneHookService.emitLifecycleEvent(
       {
         BEFORE: 'config.settings.update.before',
         AFTER: 'config.settings.update.after',
@@ -23,6 +27,7 @@ describe('ControlPlaneHookService', () => {
       { key: 'audit_logging_enabled' }
     );
 
+    expect(result).toBeUndefined();
     expect(emitHookEventMock).toHaveBeenCalledWith('config.settings.update.after', {
       key: 'audit_logging_enabled',
     });

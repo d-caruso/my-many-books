@@ -66,7 +66,7 @@ class AuthorService {
     userContext: AuthorUserContext
   ): Promise<AuthorEntity> {
     const user = this.mapEventUser(userContext);
-    await this.emitAuthorEvent(EVENTS.AUTHOR.CREATE.BEFORE, {
+    void emitHookEvent(EVENTS.AUTHOR.CREATE.BEFORE, {
       user,
       input,
     });
@@ -83,14 +83,14 @@ class AuthorService {
       };
 
       const createdAuthor = await this.authorRepository.create(payload);
-      await this.emitAuthorEvent(EVENTS.AUTHOR.CREATE.AFTER, {
+      void emitHookEvent(EVENTS.AUTHOR.CREATE.AFTER, {
         author: createdAuthor,
         user,
         input,
       });
       return createdAuthor;
     } catch (error) {
-      await this.emitAuthorEvent(EVENTS.AUTHOR.CREATE.FAILURE, {
+      void emitHookEvent(EVENTS.AUTHOR.CREATE.FAILURE, {
         user,
         input,
         error,
@@ -105,7 +105,7 @@ class AuthorService {
     userContext: AuthorUserContext
   ): Promise<AuthorEntity> {
     const user = this.mapEventUser(userContext);
-    await this.emitAuthorEvent(EVENTS.AUTHOR.UPDATE.BEFORE, {
+    void emitHookEvent(EVENTS.AUTHOR.UPDATE.BEFORE, {
       authorId: id,
       user,
       input,
@@ -143,7 +143,7 @@ class AuthorService {
       if (!updated) {
         throw new AuthorServiceError('AUTHOR_NOT_FOUND');
       }
-      await this.emitAuthorEvent(EVENTS.AUTHOR.UPDATE.AFTER, {
+      void emitHookEvent(EVENTS.AUTHOR.UPDATE.AFTER, {
         authorId: id,
         author: updated,
         user,
@@ -152,7 +152,7 @@ class AuthorService {
 
       return updated;
     } catch (error) {
-      await this.emitAuthorEvent(EVENTS.AUTHOR.UPDATE.FAILURE, {
+      void emitHookEvent(EVENTS.AUTHOR.UPDATE.FAILURE, {
         authorId: id,
         user,
         input,
@@ -165,7 +165,7 @@ class AuthorService {
   async deleteAuthor(id: number, userContext: AuthorUserContext, force?: boolean): Promise<void> {
     const user = this.mapEventUser(userContext);
     const forceDelete = force ?? false;
-    await this.emitAuthorEvent(EVENTS.AUTHOR.DELETE.BEFORE, {
+    void emitHookEvent(EVENTS.AUTHOR.DELETE.BEFORE, {
       authorId: id,
       user,
       force: forceDelete,
@@ -191,13 +191,13 @@ class AuthorService {
         throw new AuthorServiceError('AUTHOR_NOT_FOUND');
       }
 
-      await this.emitAuthorEvent(EVENTS.AUTHOR.DELETE.AFTER, {
+      void emitHookEvent(EVENTS.AUTHOR.DELETE.AFTER, {
         authorId: id,
         author: existing,
         user,
       });
     } catch (error) {
-      await this.emitAuthorEvent(EVENTS.AUTHOR.DELETE.FAILURE, {
+      void emitHookEvent(EVENTS.AUTHOR.DELETE.FAILURE, {
         authorId: id,
         author: existing,
         user,
@@ -209,13 +209,6 @@ class AuthorService {
   }
 
   // ===== helpers ==========================================================
-
-  private async emitAuthorEvent(
-    eventName: string,
-    payload: Record<string, unknown>
-  ): Promise<void> {
-    await emitHookEvent(eventName, payload);
-  }
 
   private mapEventUser(
     userContext?: AuthorUserContext | null

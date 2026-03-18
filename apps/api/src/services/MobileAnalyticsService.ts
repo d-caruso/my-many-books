@@ -367,15 +367,15 @@ export class MobileAnalyticsService {
       .sort((a, b) => a.eventType.localeCompare(b.eventType));
   }
 
-  private async emitActionInvokedTelemetry(
+  private emitActionInvokedTelemetry(
     event: MobileAnalyticsEvent,
     execution: ActionExecutionRow
-  ): Promise<void> {
+  ): void {
     if (execution.status === 'skipped') {
       return;
     }
 
-    await emitHookEvent(EVENTS.HOOK.ACTION.INVOKED, {
+    void emitHookEvent(EVENTS.HOOK.ACTION.INVOKED, {
       analyticsEventId: event.id,
       eventId: event.eventId,
       eventType: event.eventType,
@@ -387,16 +387,16 @@ export class MobileAnalyticsService {
     });
   }
 
-  private async emitPerformanceWarning(
+  private emitPerformanceWarning(
     event: MobileAnalyticsEvent,
     durationMs: number,
     actionCount: number
-  ): Promise<void> {
+  ): void {
     if (durationMs <= PIPELINE_PERFORMANCE_WARNING_THRESHOLD_MS) {
       return;
     }
 
-    await emitHookEvent(EVENTS.HOOK.PERFORMANCE_WARNING, {
+    void emitHookEvent(EVENTS.HOOK.PERFORMANCE_WARNING, {
       analyticsEventId: event.id,
       eventId: event.eventId,
       eventType: event.eventType,
@@ -503,9 +503,9 @@ export class MobileAnalyticsService {
 
       if (executions.length) {
         await MobileHookActionExecution.bulkCreate(executions, { validate: true });
-        await Promise.all(
-          executions.map(execution => this.emitActionInvokedTelemetry(analyticsEvent, execution))
-        );
+        executions.forEach((execution) => {
+          this.emitActionInvokedTelemetry(analyticsEvent, execution);
+        });
       }
 
       await analyticsEvent.update({
@@ -523,7 +523,7 @@ export class MobileAnalyticsService {
       );
     } finally {
       if (event) {
-        await this.emitPerformanceWarning(event, Date.now() - startedAt, actionCount);
+        this.emitPerformanceWarning(event, Date.now() - startedAt, actionCount);
       }
     }
   }

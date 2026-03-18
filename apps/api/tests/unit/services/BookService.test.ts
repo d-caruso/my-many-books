@@ -96,6 +96,41 @@ describe('BookService', () => {
     );
   });
 
+  it('does not wait for hook emission before completing createBook', async () => {
+    emitHookEventMock.mockImplementation(() => new Promise(() => {}));
+    (repository.create as jest.Mock).mockResolvedValue({
+      id: 2,
+      title: 'Async Hooks',
+      isbnCode: '9999999999',
+      userId: 10,
+    });
+    (Author.findAll as jest.Mock).mockResolvedValue([]);
+    (Category.findAll as jest.Mock).mockResolvedValue([]);
+
+    await expect(
+      service.createBook(
+        {
+          title: 'Async Hooks',
+          isbnCode: '9999999999',
+        },
+        { userId: 10, role: USER_ROLES.USER }
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({
+        id: 2,
+        title: 'Async Hooks',
+      })
+    );
+
+    expect(repository.create).toHaveBeenCalled();
+    expect(emitHookEventMock).toHaveBeenCalledWith(
+      EVENTS.BOOK.CREATE.BEFORE,
+      expect.objectContaining({
+        user: { id: 10, role: USER_ROLES.USER },
+      })
+    );
+  });
+
   it('throws when trying to use duplicate ISBN', async () => {
     (repository.findByIsbnCode as jest.Mock).mockResolvedValue({
       id: 99,

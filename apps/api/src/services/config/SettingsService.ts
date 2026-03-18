@@ -38,7 +38,7 @@ class SettingsService {
     const actor = controlPlaneHookService.getActorContext(user);
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.UPDATE, 'BEFORE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.UPDATE, 'BEFORE', {
         actor,
         key,
         value,
@@ -46,7 +46,7 @@ class SettingsService {
 
       const updated = await RuntimeSettingsService.updateSetting(key, value);
 
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.UPDATE, 'AFTER', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.UPDATE, 'AFTER', {
         actor,
         key,
         setting: updated,
@@ -54,7 +54,7 @@ class SettingsService {
 
       return updated;
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.SETTINGS.UPDATE,
         'FAILURE',
         {
@@ -72,7 +72,7 @@ class SettingsService {
     const actor = controlPlaneHookService.getActorContext(user);
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.TOGGLE, 'BEFORE', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.TOGGLE, 'BEFORE', {
         actor,
         key,
         active,
@@ -80,7 +80,7 @@ class SettingsService {
 
       const updated = await RuntimeSettingsService.toggleActive(key, active);
 
-      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.TOGGLE, 'AFTER', {
+      void controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.TOGGLE, 'AFTER', {
         actor,
         key,
         setting: updated,
@@ -88,7 +88,7 @@ class SettingsService {
 
       return updated;
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.SETTINGS.TOGGLE,
         'FAILURE',
         {
@@ -149,7 +149,7 @@ class SettingsService {
     const actor = controlPlaneHookService.getActorContext(request.user);
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.AUDIT_LOGGING.UPDATE,
         'BEFORE',
         {
@@ -166,7 +166,7 @@ class SettingsService {
 
       getAuditLogService().invalidateCache();
 
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.AUDIT_LOGGING.UPDATE,
         'AFTER',
         {
@@ -181,7 +181,7 @@ class SettingsService {
         canChange: true,
       };
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.AUDIT_LOGGING.UPDATE,
         'FAILURE',
         {
@@ -216,7 +216,7 @@ class SettingsService {
     }
 
     try {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.SEARCH.UPDATE,
         'BEFORE',
         {
@@ -239,7 +239,7 @@ class SettingsService {
 
       const status = await searchSettingsService.getFulltextStatus();
 
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.SEARCH.UPDATE,
         'AFTER',
         {
@@ -251,7 +251,7 @@ class SettingsService {
 
       return status;
     } catch (error) {
-      await controlPlaneHookService.emitLifecycleEvent(
+      void controlPlaneHookService.emitLifecycleEvent(
         EVENTS.CONFIG.SEARCH.UPDATE,
         'FAILURE',
         {

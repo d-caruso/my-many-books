@@ -162,7 +162,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
     method: 'password',
   };
 
-  await authLifecycleHookService.emitUserLoginBefore(loginPayload);
+  void authLifecycleHookService.emitUserLoginBefore(loginPayload);
 
   try {
     const command = new InitiateAuthCommand({
@@ -177,7 +177,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
     const response: InitiateAuthCommandOutput = await cognitoClient.send(command);
 
     if (!response.AuthenticationResult) {
-      await authLifecycleHookService.emitAuthLoginFailure({
+      void authLifecycleHookService.emitAuthLoginFailure({
         ...loginPayload,
         reason: 'missing_authentication_result',
       });
@@ -190,7 +190,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
     try {
       decoded = await verifyCognitoIdToken(authResult.IdToken || '');
     } catch (error) {
-      await authLifecycleHookService.emitAuthLoginFailure({
+      void authLifecycleHookService.emitAuthLoginFailure({
         ...loginPayload,
         reason: 'invalid_id_token',
         ...toAuthErrorPayload(error),
@@ -209,7 +209,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
       'cognito'
     );
 
-    await authLifecycleHookService.emitUserLoginAfter({
+    void authLifecycleHookService.emitUserLoginAfter({
       ...loginPayload,
       user: toEventUser(user),
       isNewUser,
@@ -247,7 +247,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
           });
           const userResult = await cognitoClient.send(getUserCommand);
           if (userResult.UserStatus === 'UNCONFIRMED') {
-            await authLifecycleHookService.emitAuthLoginFailure({
+            void authLifecycleHookService.emitAuthLoginFailure({
               ...loginPayload,
               reason: 'email_not_verified',
               ...toAuthErrorPayload(error),
@@ -258,7 +258,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
         } catch {
           // user lookup failed, fall through to generic error
         }
-        await authLifecycleHookService.emitAuthLoginFailure({
+        void authLifecycleHookService.emitAuthLoginFailure({
           ...loginPayload,
           reason: 'invalid_credentials',
           ...toAuthErrorPayload(error),
@@ -268,7 +268,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
       }
 
       if (errorName === COGNITO_ERRORS.USER_NOT_FOUND) {
-        await authLifecycleHookService.emitAuthLoginFailure({
+        void authLifecycleHookService.emitAuthLoginFailure({
           ...loginPayload,
           reason: 'user_not_found',
           ...toAuthErrorPayload(error),
@@ -278,7 +278,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
       }
     }
 
-    await authLifecycleHookService.emitAuthLoginFailure({
+    void authLifecycleHookService.emitAuthLoginFailure({
       ...loginPayload,
       reason: 'auth_failed',
       ...toAuthErrorPayload(error),
@@ -379,7 +379,7 @@ router.get('/google/callback', oauthCallbackLimiter, async (req: Request, res: R
   };
   const cognitoError = typeof req.query['error'] === 'string' ? req.query['error'] : '';
   if (cognitoError) {
-    await authLifecycleHookService.emitAuthLoginFailure({
+    void authLifecycleHookService.emitAuthLoginFailure({
       ...loginPayload,
       reason: cognitoError,
     });
@@ -413,10 +413,10 @@ router.get('/google/callback', oauthCallbackLimiter, async (req: Request, res: R
   const redirectUri = getWebCallbackUri(req, AUTH_COOKIE_PATH);
 
   try {
-    await authLifecycleHookService.emitUserLoginBefore(loginPayload);
+    void authLifecycleHookService.emitUserLoginBefore(loginPayload);
     const tokenData = await exchangeOAuthCodeForTokens(code, redirectUri, codeVerifier);
     const session = await completeGoogleLogin(tokenData, 'google');
-    await authLifecycleHookService.emitUserLoginAfter({
+    void authLifecycleHookService.emitUserLoginAfter({
       ...loginPayload,
       user: session.user,
     });
@@ -443,7 +443,7 @@ router.get('/google/callback', oauthCallbackLimiter, async (req: Request, res: R
       'Google OAuth callback error:'
     );
 
-    await authLifecycleHookService.emitAuthLoginFailure({
+    void authLifecycleHookService.emitAuthLoginFailure({
       ...loginPayload,
       reason,
       ...toAuthErrorPayload(error),
@@ -483,10 +483,10 @@ router.post('/google/mobile/exchange', authLimiter, async (req: Request, res: Re
   }
 
   try {
-    await authLifecycleHookService.emitUserLoginBefore(loginPayload);
+    void authLifecycleHookService.emitUserLoginBefore(loginPayload);
     const tokenData = await exchangeOAuthCodeForTokens(code, redirectUri, codeVerifier);
     const session = await completeGoogleLogin(tokenData, 'google');
-    await authLifecycleHookService.emitUserLoginAfter({
+    void authLifecycleHookService.emitUserLoginAfter({
       ...loginPayload,
       user: session.user,
     });
@@ -513,7 +513,7 @@ router.post('/google/mobile/exchange', authLimiter, async (req: Request, res: Re
       'Google OAuth mobile exchange error:'
     );
 
-    await authLifecycleHookService.emitAuthLoginFailure({
+    void authLifecycleHookService.emitAuthLoginFailure({
       ...loginPayload,
       reason,
       ...toAuthErrorPayload(error),
@@ -532,7 +532,7 @@ router.post('/refresh', refreshLimiter, async (req: Request, res: Response): Pro
     const refreshToken = req.cookies?.['refresh_token'] as string | undefined;
 
     if (!refreshToken) {
-      await authLifecycleHookService.emitRefresh('FAILURE', {
+      void authLifecycleHookService.emitRefresh('FAILURE', {
         ...refreshPayload,
         reason: 'missing_refresh_token',
       });
@@ -540,7 +540,7 @@ router.post('/refresh', refreshLimiter, async (req: Request, res: Response): Pro
       return;
     }
 
-    await authLifecycleHookService.emitRefresh('BEFORE', refreshPayload);
+    void authLifecycleHookService.emitRefresh('BEFORE', refreshPayload);
 
     const command = new InitiateAuthCommand({
       AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
@@ -553,7 +553,7 @@ router.post('/refresh', refreshLimiter, async (req: Request, res: Response): Pro
     const response: InitiateAuthCommandOutput = await cognitoClient.send(command);
 
     if (!response.AuthenticationResult) {
-      await authLifecycleHookService.emitRefresh('FAILURE', {
+      void authLifecycleHookService.emitRefresh('FAILURE', {
         ...refreshPayload,
         reason: 'invalid_refresh_token',
       });
@@ -568,7 +568,7 @@ router.post('/refresh', refreshLimiter, async (req: Request, res: Response): Pro
     try {
       decoded = await verifyCognitoIdToken(authResult.IdToken || '');
     } catch (error) {
-      await authLifecycleHookService.emitRefresh('FAILURE', {
+      void authLifecycleHookService.emitRefresh('FAILURE', {
         ...refreshPayload,
         reason: 'invalid_id_token',
         ...toAuthErrorPayload(error),
@@ -588,7 +588,7 @@ router.post('/refresh', refreshLimiter, async (req: Request, res: Response): Pro
       'cognito'
     );
 
-    await authLifecycleHookService.emitRefresh('AFTER', {
+    void authLifecycleHookService.emitRefresh('AFTER', {
       ...refreshPayload,
       user: toEventUser(user),
       isNewUser,
@@ -612,7 +612,7 @@ router.post('/refresh', refreshLimiter, async (req: Request, res: Response): Pro
       { err: error instanceof Error ? error : new Error(String(error)) },
       'Refresh token error:'
     );
-    await authLifecycleHookService.emitRefresh('FAILURE', {
+    void authLifecycleHookService.emitRefresh('FAILURE', {
       ...refreshPayload,
       reason: 'refresh_failed',
       ...toAuthErrorPayload(error),
@@ -624,12 +624,12 @@ router.post('/refresh', refreshLimiter, async (req: Request, res: Response): Pro
   }
 });
 
-router.post('/logout', authLimiter, async (req: Request, res: Response): Promise<void> => {
+router.post('/logout', authLimiter, (req: Request, res: Response): void => {
   const logoutPayload = {
     hadRefreshToken: Boolean(req.cookies?.['refresh_token']),
   };
 
-  await authLifecycleHookService.emitUserLogout('BEFORE', logoutPayload);
+  void authLifecycleHookService.emitUserLogout('BEFORE', logoutPayload);
 
   try {
     res.clearCookie('refresh_token', { path: AUTH_COOKIE_PATH });
@@ -641,14 +641,14 @@ router.post('/logout', authLimiter, async (req: Request, res: Response): Promise
       // Cognito not configured, skip
     }
 
-    await authLifecycleHookService.emitUserLogout('AFTER', {
+    void authLifecycleHookService.emitUserLogout('AFTER', {
       ...logoutPayload,
       cognitoLogoutUrl,
     });
 
     sendSuccess(res, 200, { cognitoLogoutUrl }, 'Logout successful');
   } catch (error: unknown) {
-    await authLifecycleHookService.emitUserLogout('FAILURE', {
+    void authLifecycleHookService.emitUserLogout('FAILURE', {
       ...logoutPayload,
       ...toAuthErrorPayload(error),
     });
@@ -671,7 +671,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
     locale: locale ?? null,
   };
 
-  await authLifecycleHookService.emitUserRegister('BEFORE', registerPayload);
+  void authLifecycleHookService.emitUserRegister('BEFORE', registerPayload);
 
   try {
     const command = new SignUpCommand({
@@ -688,7 +688,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
 
     await cognitoClient.send(command);
 
-    await authLifecycleHookService.emitUserRegister('AFTER', {
+    void authLifecycleHookService.emitUserRegister('AFTER', {
       ...registerPayload,
       requiresVerification: true,
     });
@@ -720,14 +720,14 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
           if (isConfirmed) {
             const existsInDb = await User.findOne({ where: { email: normalizedEmail }, attributes: ['id'] });
             const code = existsInDb ? ERROR_CODES.CONFLICT : ERROR_CODES.EMAIL_REGISTERED_VIA_SOCIAL;
-            await authLifecycleHookService.emitUserRegister('FAILURE', {
+            void authLifecycleHookService.emitUserRegister('FAILURE', {
               ...registerPayload,
               reason: 'email_already_registered',
               ...toAuthErrorPayload(error),
             });
             sendError(res, 409, code, 'Email already registered');
           } else {
-            await authLifecycleHookService.emitUserRegister('FAILURE', {
+            void authLifecycleHookService.emitUserRegister('FAILURE', {
               ...registerPayload,
               reason: 'email_not_verified',
               ...toAuthErrorPayload(error),
@@ -735,7 +735,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
             sendError(res, 409, ERROR_CODES.EMAIL_NOT_VERIFIED, 'Email registered but not verified');
           }
         } catch {
-          await authLifecycleHookService.emitUserRegister('FAILURE', {
+          void authLifecycleHookService.emitUserRegister('FAILURE', {
             ...registerPayload,
             reason: 'email_already_registered',
             ...toAuthErrorPayload(error),
@@ -746,7 +746,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
       }
 
       if (errorName === COGNITO_ERRORS.INVALID_PASSWORD) {
-        await authLifecycleHookService.emitUserRegister('FAILURE', {
+        void authLifecycleHookService.emitUserRegister('FAILURE', {
           ...registerPayload,
           reason: 'invalid_password',
           ...toAuthErrorPayload(error),
@@ -756,7 +756,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
       }
     }
 
-    await authLifecycleHookService.emitUserRegister('FAILURE', {
+    void authLifecycleHookService.emitUserRegister('FAILURE', {
       ...registerPayload,
       reason: 'registration_failed',
       ...toAuthErrorPayload(error),
@@ -780,7 +780,7 @@ router.post('/verify-email', authLimiter, async (req: Request, res: Response): P
     email: normalizedEmail,
   };
 
-  await authLifecycleHookService.emitVerifyEmail('BEFORE', verifyPayload);
+  void authLifecycleHookService.emitVerifyEmail('BEFORE', verifyPayload);
 
   try {
     const command = new ConfirmSignUpCommand({
@@ -791,7 +791,7 @@ router.post('/verify-email', authLimiter, async (req: Request, res: Response): P
 
     await cognitoClient.send(command);
 
-    await authLifecycleHookService.emitVerifyEmail('AFTER', {
+    void authLifecycleHookService.emitVerifyEmail('AFTER', {
       ...verifyPayload,
       verified: true,
     });
@@ -807,7 +807,7 @@ router.post('/verify-email', authLimiter, async (req: Request, res: Response): P
       const errorName = (error as { name: string }).name;
 
       if (errorName === COGNITO_ERRORS.CODE_MISMATCH) {
-        await authLifecycleHookService.emitVerifyEmail('FAILURE', {
+        void authLifecycleHookService.emitVerifyEmail('FAILURE', {
           ...verifyPayload,
           reason: 'code_mismatch',
           ...toAuthErrorPayload(error),
@@ -817,7 +817,7 @@ router.post('/verify-email', authLimiter, async (req: Request, res: Response): P
       }
 
       if (errorName === COGNITO_ERRORS.EXPIRED_CODE) {
-        await authLifecycleHookService.emitVerifyEmail('FAILURE', {
+        void authLifecycleHookService.emitVerifyEmail('FAILURE', {
           ...verifyPayload,
           reason: 'expired_code',
           ...toAuthErrorPayload(error),
@@ -827,7 +827,7 @@ router.post('/verify-email', authLimiter, async (req: Request, res: Response): P
       }
 
       if (errorName === COGNITO_ERRORS.NOT_AUTHORIZED) {
-        await authLifecycleHookService.emitVerifyEmail('FAILURE', {
+        void authLifecycleHookService.emitVerifyEmail('FAILURE', {
           ...verifyPayload,
           reason: 'already_verified',
           ...toAuthErrorPayload(error),
@@ -837,7 +837,7 @@ router.post('/verify-email', authLimiter, async (req: Request, res: Response): P
       }
 
       if (errorName === COGNITO_ERRORS.USER_NOT_FOUND) {
-        await authLifecycleHookService.emitVerifyEmail('FAILURE', {
+        void authLifecycleHookService.emitVerifyEmail('FAILURE', {
           ...verifyPayload,
           reason: 'user_not_found',
           ...toAuthErrorPayload(error),
@@ -847,7 +847,7 @@ router.post('/verify-email', authLimiter, async (req: Request, res: Response): P
       }
     }
 
-    await authLifecycleHookService.emitVerifyEmail('FAILURE', {
+    void authLifecycleHookService.emitVerifyEmail('FAILURE', {
       ...verifyPayload,
       reason: 'verify_email_failed',
       ...toAuthErrorPayload(error),
@@ -871,7 +871,7 @@ router.post('/resend-code', authLimiter, async (req: Request, res: Response): Pr
     email: normalizedEmail,
   };
 
-  await authLifecycleHookService.emitResendCode('BEFORE', resendPayload);
+  void authLifecycleHookService.emitResendCode('BEFORE', resendPayload);
 
   try {
     const command = new ResendConfirmationCodeCommand({
@@ -881,7 +881,7 @@ router.post('/resend-code', authLimiter, async (req: Request, res: Response): Pr
 
     await cognitoClient.send(command);
 
-    await authLifecycleHookService.emitResendCode('AFTER', {
+    void authLifecycleHookService.emitResendCode('AFTER', {
       ...resendPayload,
       sent: true,
     });
@@ -897,7 +897,7 @@ router.post('/resend-code', authLimiter, async (req: Request, res: Response): Pr
       const errorName = (error as { name: string }).name;
 
       if (errorName === COGNITO_ERRORS.USER_NOT_FOUND) {
-        await authLifecycleHookService.emitResendCode('FAILURE', {
+        void authLifecycleHookService.emitResendCode('FAILURE', {
           ...resendPayload,
           reason: 'user_not_found',
           ...toAuthErrorPayload(error),
@@ -907,7 +907,7 @@ router.post('/resend-code', authLimiter, async (req: Request, res: Response): Pr
       }
 
       if (errorName === COGNITO_ERRORS.LIMIT_EXCEEDED) {
-        await authLifecycleHookService.emitResendCode('FAILURE', {
+        void authLifecycleHookService.emitResendCode('FAILURE', {
           ...resendPayload,
           reason: 'rate_limited',
           ...toAuthErrorPayload(error),
@@ -917,7 +917,7 @@ router.post('/resend-code', authLimiter, async (req: Request, res: Response): Pr
       }
 
       if (errorName === COGNITO_ERRORS.CODE_DELIVERY_FAILURE) {
-        await authLifecycleHookService.emitResendCode('FAILURE', {
+        void authLifecycleHookService.emitResendCode('FAILURE', {
           ...resendPayload,
           reason: 'code_delivery_failure',
           ...toAuthErrorPayload(error),
@@ -927,7 +927,7 @@ router.post('/resend-code', authLimiter, async (req: Request, res: Response): Pr
       }
     }
 
-    await authLifecycleHookService.emitResendCode('FAILURE', {
+    void authLifecycleHookService.emitResendCode('FAILURE', {
       ...resendPayload,
       reason: 'resend_code_failed',
       ...toAuthErrorPayload(error),
@@ -950,12 +950,12 @@ router.post('/forgot-password', authLimiter, async (req: Request, res: Response)
     email: normalizedEmail,
   };
 
-  await authLifecycleHookService.emitForgotPassword('BEFORE', forgotPasswordPayload);
+  void authLifecycleHookService.emitForgotPassword('BEFORE', forgotPasswordPayload);
 
   try {
     await cognitoPasswordService.requestForgotPassword({ email: normalizedEmail });
 
-    await authLifecycleHookService.emitForgotPassword('AFTER', {
+    void authLifecycleHookService.emitForgotPassword('AFTER', {
       ...forgotPasswordPayload,
       accepted: true,
       expiresInMinutes: PASSWORD_RESET_POLICY.TOKEN_TTL_MINUTES,
@@ -978,7 +978,7 @@ router.post('/forgot-password', authLimiter, async (req: Request, res: Response)
 
     const errorName = (error as { name?: string })?.name;
     if (errorName === COGNITO_ERRORS.LIMIT_EXCEEDED || errorName === COGNITO_ERRORS.TOO_MANY_REQUESTS) {
-      await authLifecycleHookService.emitForgotPassword('FAILURE', {
+      void authLifecycleHookService.emitForgotPassword('FAILURE', {
         ...forgotPasswordPayload,
         reason: 'rate_limited',
         ...toAuthErrorPayload(error),
@@ -993,7 +993,7 @@ router.post('/forgot-password', authLimiter, async (req: Request, res: Response)
     }
 
     if (errorName === COGNITO_PASSWORD_ERRORS.COGNITO_CONFIG_ERROR_NAME) {
-      await authLifecycleHookService.emitForgotPassword('FAILURE', {
+      void authLifecycleHookService.emitForgotPassword('FAILURE', {
         ...forgotPasswordPayload,
         reason: 'cognito_configuration_error',
         ...toAuthErrorPayload(error),
@@ -1002,7 +1002,7 @@ router.post('/forgot-password', authLimiter, async (req: Request, res: Response)
       return;
     }
 
-    await authLifecycleHookService.emitForgotPassword('FAILURE', {
+    void authLifecycleHookService.emitForgotPassword('FAILURE', {
       ...forgotPasswordPayload,
       reason: 'forgot_password_failed',
       ...toAuthErrorPayload(error),
@@ -1030,7 +1030,7 @@ router.post('/confirm-forgot-password', authLimiter, async (req: Request, res: R
     locale: locale ?? null,
   };
 
-  await authLifecycleHookService.emitResetPassword('BEFORE', resetPasswordPayload);
+  void authLifecycleHookService.emitResetPassword('BEFORE', resetPasswordPayload);
 
   try {
     await cognitoPasswordService.confirmForgotPassword({
@@ -1040,7 +1040,7 @@ router.post('/confirm-forgot-password', authLimiter, async (req: Request, res: R
       locale,
     });
 
-    await authLifecycleHookService.emitResetPassword('AFTER', {
+    void authLifecycleHookService.emitResetPassword('AFTER', {
       ...resetPasswordPayload,
       reset: true,
       signInRequired: true,
@@ -1063,7 +1063,7 @@ router.post('/confirm-forgot-password', authLimiter, async (req: Request, res: R
 
     const errorName = (error as { name?: string })?.name;
     if (errorName === COGNITO_PASSWORD_ERRORS.INVALID_PASSWORD_POLICY_ERROR_NAME) {
-      await authLifecycleHookService.emitResetPassword('FAILURE', {
+      void authLifecycleHookService.emitResetPassword('FAILURE', {
         ...resetPasswordPayload,
         reason: 'invalid_password_policy',
         ...toAuthErrorPayload(error),
@@ -1073,7 +1073,7 @@ router.post('/confirm-forgot-password', authLimiter, async (req: Request, res: R
     }
 
     if (errorName === COGNITO_PASSWORD_ERRORS.COGNITO_CONFIG_ERROR_NAME) {
-      await authLifecycleHookService.emitResetPassword('FAILURE', {
+      void authLifecycleHookService.emitResetPassword('FAILURE', {
         ...resetPasswordPayload,
         reason: 'cognito_configuration_error',
         ...toAuthErrorPayload(error),
@@ -1083,7 +1083,7 @@ router.post('/confirm-forgot-password', authLimiter, async (req: Request, res: R
     }
 
     if (errorName === COGNITO_ERRORS.CODE_MISMATCH) {
-      await authLifecycleHookService.emitResetPassword('FAILURE', {
+      void authLifecycleHookService.emitResetPassword('FAILURE', {
         ...resetPasswordPayload,
         reason: 'code_mismatch',
         ...toAuthErrorPayload(error),
@@ -1093,7 +1093,7 @@ router.post('/confirm-forgot-password', authLimiter, async (req: Request, res: R
     }
 
     if (errorName === COGNITO_ERRORS.EXPIRED_CODE) {
-      await authLifecycleHookService.emitResetPassword('FAILURE', {
+      void authLifecycleHookService.emitResetPassword('FAILURE', {
         ...resetPasswordPayload,
         reason: 'expired_code',
         ...toAuthErrorPayload(error),
@@ -1103,7 +1103,7 @@ router.post('/confirm-forgot-password', authLimiter, async (req: Request, res: R
     }
 
     if (errorName === COGNITO_ERRORS.LIMIT_EXCEEDED || errorName === COGNITO_ERRORS.TOO_MANY_REQUESTS) {
-      await authLifecycleHookService.emitResetPassword('FAILURE', {
+      void authLifecycleHookService.emitResetPassword('FAILURE', {
         ...resetPasswordPayload,
         reason: 'rate_limited',
         ...toAuthErrorPayload(error),
@@ -1117,7 +1117,7 @@ router.post('/confirm-forgot-password', authLimiter, async (req: Request, res: R
       return;
     }
 
-    await authLifecycleHookService.emitResetPassword('FAILURE', {
+    void authLifecycleHookService.emitResetPassword('FAILURE', {
       ...resetPasswordPayload,
       reason: 'reset_password_failed',
       ...toAuthErrorPayload(error),

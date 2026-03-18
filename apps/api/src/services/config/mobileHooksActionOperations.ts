@@ -34,7 +34,7 @@ export const updateActionMappings = async (
   const actor = controlPlaneHookService.getActorContext(request.user);
 
   try {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
       'BEFORE',
       {
@@ -73,7 +73,7 @@ export const updateActionMappings = async (
 
     const config = await loadActionConfig();
 
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
       'AFTER',
       {
@@ -91,7 +91,7 @@ export const updateActionMappings = async (
       lastUpdated: new Date().toISOString(),
     };
   } catch (error) {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
       'FAILURE',
       { actor, changes, error }
@@ -183,7 +183,7 @@ export const updateActionTypeSettings = async (
   const actor = controlPlaneHookService.getActorContext(request.user);
 
   try {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
       'BEFORE',
       {
@@ -211,7 +211,7 @@ export const updateActionTypeSettings = async (
       }
     );
 
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
       'AFTER',
       {
@@ -230,7 +230,7 @@ export const updateActionTypeSettings = async (
       lastUpdated: new Date().toISOString(),
     };
   } catch (error) {
-    await controlPlaneHookService.emitLifecycleEvent(
+    void controlPlaneHookService.emitLifecycleEvent(
       EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
       'FAILURE',
       {

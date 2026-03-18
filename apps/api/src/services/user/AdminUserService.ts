@@ -91,7 +91,7 @@ class AdminUserService {
     context: UserAdminContext
   ): Promise<UserEntity> {
     const admin = this.mapAdminContext(context);
-    await this.emitAdminUserEvent(EVENTS.USER.UPDATE.BEFORE, {
+    void emitHookEvent(EVENTS.USER.UPDATE.BEFORE, {
       userId: id,
       input,
       admin,
@@ -118,7 +118,7 @@ class AdminUserService {
 
       roleEventBranch = this.resolveRoleEventBranch(existing.role, input.role);
       if (roleEventBranch) {
-        await this.emitAdminUserEvent(roleEventBranch.BEFORE, {
+        void emitHookEvent(roleEventBranch.BEFORE, {
           userId: id,
           user: existing,
           previousRole: existing.role ?? null,
@@ -138,7 +138,7 @@ class AdminUserService {
         throw new AdminUserServiceError('USER_NOT_FOUND');
       }
 
-      await this.emitAdminUserEvent(EVENTS.USER.UPDATE.AFTER, {
+      void emitHookEvent(EVENTS.USER.UPDATE.AFTER, {
         userId: id,
         user: updated,
         changes: input,
@@ -146,7 +146,7 @@ class AdminUserService {
       });
 
       if (roleEventBranch) {
-        await this.emitAdminUserEvent(roleEventBranch.AFTER, {
+        void emitHookEvent(roleEventBranch.AFTER, {
           userId: id,
           user: updated,
           previousRole: existing.role ?? null,
@@ -157,7 +157,7 @@ class AdminUserService {
 
       return updated;
     } catch (error) {
-      await this.emitAdminUserEvent(EVENTS.USER.UPDATE.FAILURE, {
+      void emitHookEvent(EVENTS.USER.UPDATE.FAILURE, {
         userId: id,
         user: existing,
         input,
@@ -166,7 +166,7 @@ class AdminUserService {
       });
 
       if (roleEventBranch) {
-        await this.emitAdminUserEvent(roleEventBranch.FAILURE, {
+        void emitHookEvent(roleEventBranch.FAILURE, {
           userId: id,
           user: existing,
           previousRole: existing?.role ?? null,
@@ -183,7 +183,7 @@ class AdminUserService {
 
   async deleteUser(id: number, context: UserAdminContext): Promise<void> {
     const admin = this.mapAdminContext(context);
-    await this.emitAdminUserEvent(EVENTS.USER.DELETE.BEFORE, {
+    void emitHookEvent(EVENTS.USER.DELETE.BEFORE, {
       userId: id,
       admin,
     });
@@ -210,13 +210,13 @@ class AdminUserService {
         throw new AdminUserServiceError('USER_NOT_FOUND');
       }
 
-      await this.emitAdminUserEvent(EVENTS.USER.DELETE.AFTER, {
+      void emitHookEvent(EVENTS.USER.DELETE.AFTER, {
         userId: id,
         user: existing,
         admin,
       });
     } catch (error) {
-      await this.emitAdminUserEvent(EVENTS.USER.DELETE.FAILURE, {
+      void emitHookEvent(EVENTS.USER.DELETE.FAILURE, {
         userId: id,
         user: existing,
         admin,
@@ -237,13 +237,6 @@ class AdminUserService {
     if (context.role !== USER_ROLES.ADMIN) {
       throw new AdminUserServiceError('FORBIDDEN');
     }
-  }
-
-  private async emitAdminUserEvent(
-    eventName: string,
-    payload: Record<string, unknown>
-  ): Promise<void> {
-    await emitHookEvent(eventName, payload);
   }
 
   private mapAdminContext(

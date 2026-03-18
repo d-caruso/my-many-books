@@ -78,7 +78,7 @@ class BookService {
     userContext?: BookUserContext | null
   ): Promise<BookEntity> {
     const user = this.mapEventUser(userContext);
-    await this.emitBookEvent(EVENTS.BOOK.CREATE.BEFORE, {
+    void emitHookEvent(EVENTS.BOOK.CREATE.BEFORE, {
       user,
       input,
     });
@@ -92,14 +92,14 @@ class BookService {
       const payload = this.normalizePayload({ ...input, userId: ownerId });
 
       const createdBook = await this.bookRepository.create(payload, associations);
-      await this.emitBookEvent(EVENTS.BOOK.CREATE.AFTER, {
+      void emitHookEvent(EVENTS.BOOK.CREATE.AFTER, {
         book: createdBook,
         user,
         input,
       });
       return createdBook;
     } catch (error) {
-      await this.emitBookEvent(EVENTS.BOOK.CREATE.FAILURE, {
+      void emitHookEvent(EVENTS.BOOK.CREATE.FAILURE, {
         user,
         input,
         error,
@@ -114,7 +114,7 @@ class BookService {
     userContext: BookUserContext
   ): Promise<BookEntity> {
     const user = this.mapEventUser(userContext);
-    await this.emitBookEvent(EVENTS.BOOK.UPDATE.BEFORE, {
+    void emitHookEvent(EVENTS.BOOK.UPDATE.BEFORE, {
       bookId,
       user,
       input,
@@ -141,7 +141,7 @@ class BookService {
       statusWillChange = input.status !== undefined && input.status !== book.status;
 
       if (statusWillChange) {
-        await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.BEFORE, {
+        void emitHookEvent(EVENTS.BOOK.STATUS.CHANGE.BEFORE, {
           bookId,
           previousStatus: book.status ?? null,
           nextStatus: input.status ?? null,
@@ -158,7 +158,7 @@ class BookService {
         throw new BookServiceError('BOOK_NOT_FOUND');
       }
 
-      await this.emitBookEvent(EVENTS.BOOK.UPDATE.AFTER, {
+      void emitHookEvent(EVENTS.BOOK.UPDATE.AFTER, {
         bookId,
         book: updated,
         user,
@@ -166,7 +166,7 @@ class BookService {
       });
 
       if (book.status !== updated.status) {
-        await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.AFTER, {
+        void emitHookEvent(EVENTS.BOOK.STATUS.CHANGE.AFTER, {
           bookId,
           previousStatus: book.status ?? null,
           newStatus: updated.status ?? null,
@@ -177,7 +177,7 @@ class BookService {
 
       return updated;
     } catch (error) {
-      await this.emitBookEvent(EVENTS.BOOK.UPDATE.FAILURE, {
+      void emitHookEvent(EVENTS.BOOK.UPDATE.FAILURE, {
         bookId,
         user,
         input,
@@ -185,7 +185,7 @@ class BookService {
       });
 
       if (statusWillChange && book) {
-        await this.emitBookEvent(EVENTS.BOOK.STATUS.CHANGE.FAILURE, {
+        void emitHookEvent(EVENTS.BOOK.STATUS.CHANGE.FAILURE, {
           bookId,
           previousStatus: book.status ?? null,
           nextStatus: input.status ?? null,
@@ -202,7 +202,7 @@ class BookService {
 
   async deleteBook(bookId: number, userContext: BookUserContext): Promise<void> {
     const user = this.mapEventUser(userContext);
-    await this.emitBookEvent(EVENTS.BOOK.DELETE.BEFORE, {
+    void emitHookEvent(EVENTS.BOOK.DELETE.BEFORE, {
       bookId,
       user,
     });
@@ -222,13 +222,13 @@ class BookService {
         throw new BookServiceError('BOOK_NOT_FOUND');
       }
 
-      await this.emitBookEvent(EVENTS.BOOK.DELETE.AFTER, {
+      void emitHookEvent(EVENTS.BOOK.DELETE.AFTER, {
         bookId,
         book,
         user,
       });
     } catch (error) {
-      await this.emitBookEvent(EVENTS.BOOK.DELETE.FAILURE, {
+      void emitHookEvent(EVENTS.BOOK.DELETE.FAILURE, {
         bookId,
         book,
         user,
@@ -239,10 +239,6 @@ class BookService {
   }
 
   // ===== helpers ==========================================================
-
-  private async emitBookEvent(eventName: string, payload: Record<string, unknown>): Promise<void> {
-    await emitHookEvent(eventName, payload);
-  }
 
   private mapEventUser(userContext?: BookUserContext | null): { id: number; role?: string } | null {
     if (!userContext) {
