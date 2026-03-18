@@ -23,9 +23,39 @@ describe("HOOK_EVENTS", () => {
         "ANY": "*",
         "AUTH": {
           "ANY": "auth.*",
+          "FORGOT_PASSWORD": {
+            "AFTER": "auth.forgot_password.after",
+            "ANY": "auth.forgot_password.*",
+            "BEFORE": "auth.forgot_password.before",
+            "FAILURE": "auth.forgot_password.failure",
+          },
           "LOGIN": {
             "ANY": "auth.login.*",
             "FAILURE": "auth.login.failure",
+          },
+          "REFRESH": {
+            "AFTER": "auth.refresh.after",
+            "ANY": "auth.refresh.*",
+            "BEFORE": "auth.refresh.before",
+            "FAILURE": "auth.refresh.failure",
+          },
+          "RESEND_CODE": {
+            "AFTER": "auth.resend_code.after",
+            "ANY": "auth.resend_code.*",
+            "BEFORE": "auth.resend_code.before",
+            "FAILURE": "auth.resend_code.failure",
+          },
+          "RESET_PASSWORD": {
+            "AFTER": "auth.reset_password.after",
+            "ANY": "auth.reset_password.*",
+            "BEFORE": "auth.reset_password.before",
+            "FAILURE": "auth.reset_password.failure",
+          },
+          "VERIFY_EMAIL": {
+            "AFTER": "auth.verify_email.after",
+            "ANY": "auth.verify_email.*",
+            "BEFORE": "auth.verify_email.before",
+            "FAILURE": "auth.verify_email.failure",
           },
         },
         "AUTHOR": {
@@ -102,6 +132,18 @@ describe("HOOK_EVENTS", () => {
         },
         "USER": {
           "ANY": "user.*",
+          "DEACTIVATE": {
+            "AFTER": "user.deactivate.after",
+            "ANY": "user.deactivate.*",
+            "BEFORE": "user.deactivate.before",
+            "FAILURE": "user.deactivate.failure",
+          },
+          "DELETE": {
+            "AFTER": "user.delete.after",
+            "ANY": "user.delete.*",
+            "BEFORE": "user.delete.before",
+            "FAILURE": "user.delete.failure",
+          },
           "LOGIN": {
             "AFTER": "user.login.after",
             "ANY": "user.login.*",
@@ -113,6 +155,19 @@ describe("HOOK_EVENTS", () => {
             "ANY": "user.logout.*",
             "BEFORE": "user.logout.before",
             "FAILURE": "user.logout.failure",
+          },
+          "PASSWORD": {
+            "ANY": "user.password.*",
+            "CHANGE": {
+              "AFTER": "user.password.change.after",
+              "ANY": "user.password.change.*",
+              "BEFORE": "user.password.change.before",
+              "FAILURE": "user.password.change.failure",
+            },
+          },
+          "PROVISION": {
+            "AFTER": "user.provision.after",
+            "ANY": "user.provision.*",
           },
           "REGISTER": {
             "AFTER": "user.register.after",
@@ -168,6 +223,9 @@ describe("HOOK_EVENTS", () => {
       HOOK_EVENTS.USER.LOGIN,
       HOOK_EVENTS.USER.LOGOUT,
       HOOK_EVENTS.USER.UPDATE,
+      HOOK_EVENTS.USER.DEACTIVATE,
+      HOOK_EVENTS.USER.DELETE,
+      HOOK_EVENTS.USER.PASSWORD.CHANGE,
       HOOK_EVENTS.USER.ROLE.ADD,
       HOOK_EVENTS.USER.ROLE.CHANGE,
       HOOK_EVENTS.USER.ROLE.DELETE,
@@ -189,6 +247,13 @@ describe("HOOK_EVENTS", () => {
     expect(HOOK_EVENTS.AUTH.LOGIN).toEqual({
       FAILURE: "auth.login.failure",
       ANY: "auth.login.*",
+    });
+  });
+
+  it("should expose a dedicated after-only provisioning event", () => {
+    expect(HOOK_EVENTS.USER.PROVISION).toEqual({
+      AFTER: "user.provision.after",
+      ANY: "user.provision.*",
     });
   });
 });

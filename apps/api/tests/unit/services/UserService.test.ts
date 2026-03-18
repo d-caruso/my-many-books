@@ -4,6 +4,10 @@ import { Repository as BookRepositoryContract } from '../../../src/repositories/
 import { UserOnboardingService } from '../../../src/services/user/UserOnboardingService';
 import { UserAuthIdentity } from '../../../src/models/UserAuthIdentity';
 import { BOOK_STATUS } from '@my-many-books/shared-types';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
+
+const mockCognitoChangePassword = jest.fn();
 
 const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
 jest.mock('@my-many-books/shared-logging', () => ({
@@ -14,6 +18,14 @@ jest.mock('../../../src/models/UserAuthIdentity', () => ({
     findOne: jest.fn(),
     findOrCreate: jest.fn(),
     create: jest.fn(),
+  },
+}));
+jest.mock('../../../src/services/hooks/hookSystem', () => ({
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('../../../src/services/auth/cognitoPasswordService', () => ({
+  cognitoPasswordService: {
+    changePassword: (...args: unknown[]) => mockCognitoChangePassword(...args),
   },
 }));
 
@@ -27,6 +39,7 @@ describe('UserService', () => {
     create: jest.Mock;
   };
   let service: UserService;
+  const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
   beforeEach(() => {
     userRepository = {
@@ -57,6 +70,8 @@ describe('UserService', () => {
     userAuthIdentityModel.findOne.mockReset();
     userAuthIdentityModel.findOrCreate.mockReset();
     userAuthIdentityModel.create.mockReset();
+    emitHookEventMock.mockClear();
+    mockCognitoChangePassword.mockReset();
   });
 
   describe('findOrCreateUser', () => {
@@ -200,7 +215,14 @@ describe('UserService', () => {
     it('creates user when not found', async () => {
       userAuthIdentityModel.findOne.mockResolvedValue(null);
       userRepository.findByEmail.mockResolvedValue(null);
-      userRepository.create.mockResolvedValue({ id: 2 } as any);
+      userRepository.create.mockResolvedValue({
+        id: 2,
+        email: 'new@example.com',
+        role: 'user',
+        isActive: true,
+        name: 'Unknown',
+        surname: 'User',
+      } as any);
 
       const result = await service.findOrCreateUser(
         { email: 'new@example.com', name: null, surname: null },
@@ -214,6 +236,17 @@ describe('UserService', () => {
       role: 'user',
           name: 'Unknown',
           surname: 'User',
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.USER.PROVISION.AFTER,
+        expect.objectContaining({
+          provider: 'cognito',
+          defaultsSeeded: true,
+          user: expect.objectContaining({
+            id: 2,
+            email: 'new@example.com',
+          }),
         })
       );
     });
@@ -257,7 +290,14 @@ describe('UserService', () => {
 
   describe('updateCurrentUser', () => {
     it('updates user via repository', async () => {
-      userRepository.update.mockResolvedValue({ id: 1, name: 'Jane' } as any);
+      userRepository.update.mockResolvedValue({
+        id: 1,
+        email: 'jane@example.com',
+        role: 'user',
+        isActive: true,
+        name: 'Jane',
+        surname: 'Doe',
+      } as any);
 
       const updated = await service.updateCurrentUser(1, { name: 'Jane', surname: 'Doe' });
 
@@ -266,6 +306,22 @@ describe('UserService', () => {
         surname: 'Doe',
       });
       expect(updated).toMatchObject({ id: 1 });
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.UPDATE.BEFORE,
+        {
+          user: { id: 1 },
+          changes: { name: 'Jane', surname: 'Doe' },
+        }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.UPDATE.AFTER,
+        expect.objectContaining({
+          changes: { name: 'Jane', surname: 'Doe' },
+          user: expect.objectContaining({ id: 1, email: 'jane@example.com' }),
+        })
+      );
     });
 
     it('throws when user missing', async () => {
@@ -273,6 +329,23 @@ describe('UserService', () => {
       await expect(
         service.updateCurrentUser(1, { name: 'Jane', surname: 'Doe' })
       ).rejects.toBeInstanceOf(UserServiceError);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.UPDATE.BEFORE,
+        {
+          user: { id: 1 },
+          changes: { name: 'Jane', surname: 'Doe' },
+        }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.UPDATE.FAILURE,
+        expect.objectContaining({
+          user: { id: 1 },
+          changes: { name: 'Jane', surname: 'Doe' },
+          error: expect.any(UserServiceError),
+        })
+      );
     });
   });
 
@@ -297,23 +370,161 @@ describe('UserService', () => {
 
   describe('deactivateAccount', () => {
     it('updates isActive to false', async () => {
-      userRepository.findById.mockResolvedValue({ id: 1, email: 'test@example.com' } as any);
-      userRepository.update.mockResolvedValue({ id: 1 } as any);
+      userRepository.findById.mockResolvedValue({
+        id: 1,
+        email: 'test@example.com',
+        role: 'user',
+        isActive: true,
+        name: 'Test',
+        surname: 'User',
+      } as any);
+      userRepository.update.mockResolvedValue({
+        id: 1,
+        email: 'test@example.com',
+        role: 'user',
+        isActive: false,
+        name: 'Test',
+        surname: 'User',
+      } as any);
       await service.deactivateAccount(1);
       expect(userRepository.update).toHaveBeenCalledWith(1, { isActive: false });
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.DEACTIVATE.BEFORE,
+        { user: { id: 1 } }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.DEACTIVATE.AFTER,
+        expect.objectContaining({
+          user: expect.objectContaining({ id: 1, email: 'test@example.com', isActive: false }),
+        })
+      );
     });
 
     it('throws on missing user', async () => {
       userRepository.findById.mockResolvedValue(null);
       await expect(service.deactivateAccount(1)).rejects.toBeInstanceOf(UserServiceError);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.DEACTIVATE.BEFORE,
+        { user: { id: 1 } }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.DEACTIVATE.FAILURE,
+        expect.objectContaining({
+          user: { id: 1 },
+          error: expect.any(UserServiceError),
+        })
+      );
     });
   });
 
   describe('deleteAccount', () => {
     it('calls repository delete', async () => {
+      userRepository.findById.mockResolvedValue({
+        id: 1,
+        email: 'delete@example.com',
+        role: 'user',
+        isActive: true,
+        name: 'Delete',
+        surname: 'Me',
+      } as any);
       userRepository.delete.mockResolvedValue(true);
       await service.deleteAccount(1);
       expect(userRepository.delete).toHaveBeenCalledWith(1);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.DELETE.BEFORE,
+        { user: { id: 1 } }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.DELETE.AFTER,
+        expect.objectContaining({
+          user: expect.objectContaining({ id: 1, email: 'delete@example.com' }),
+        })
+      );
+    });
+
+    it('emits failure when delete target is missing', async () => {
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(service.deleteAccount(1)).rejects.toBeInstanceOf(UserServiceError);
+
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.DELETE.BEFORE,
+        { user: { id: 1 } }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.DELETE.FAILURE,
+        expect.objectContaining({
+          user: { id: 1 },
+          error: expect.any(UserServiceError),
+        })
+      );
+    });
+  });
+
+  describe('changePassword', () => {
+    it('emits before and after around the password change service', async () => {
+      mockCognitoChangePassword.mockResolvedValue({
+        accessToken: 'new-access',
+        idToken: 'new-id',
+        refreshToken: 'new-refresh',
+        expiresIn: 3600,
+      });
+
+      const result = await service.changePassword(1, {
+        email: 'user@example.com',
+        currentPassword: 'Current123!',
+        newPassword: 'NewPassword123!',
+      });
+
+      expect(result).toMatchObject({
+        accessToken: 'new-access',
+        refreshToken: 'new-refresh',
+      });
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.PASSWORD.CHANGE.BEFORE,
+        { user: { id: 1, email: 'user@example.com' } }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.PASSWORD.CHANGE.AFTER,
+        { user: { id: 1, email: 'user@example.com' } }
+      );
+    });
+
+    it('emits failure when the password change service throws', async () => {
+      const error = Object.assign(new Error('wrong password'), { name: 'NotAuthorizedException' });
+      mockCognitoChangePassword.mockRejectedValue(error);
+
+      await expect(
+        service.changePassword(1, {
+          email: 'user@example.com',
+          currentPassword: 'Current123!',
+          newPassword: 'NewPassword123!',
+        })
+      ).rejects.toThrow('wrong password');
+
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.PASSWORD.CHANGE.BEFORE,
+        { user: { id: 1, email: 'user@example.com' } }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.PASSWORD.CHANGE.FAILURE,
+        expect.objectContaining({
+          user: { id: 1, email: 'user@example.com' },
+          error,
+        })
+      );
     });
   });
 });

@@ -11,8 +11,8 @@ import { ApiResponse } from '../common/ApiResponse';
 import { UniversalRequest } from '../types';
 import { TYPES } from '../container/types';
 import { UserService as UserServiceImpl, UserServiceError } from '../services/user/UserService';
-import { AuthenticatedRequest, UserService } from '../middleware/auth';
-import { COGNITO_PASSWORD_ERRORS, cognitoPasswordService } from '../services/auth/cognitoPasswordService';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { COGNITO_PASSWORD_ERRORS } from '../services/auth/cognitoPasswordService';
 import { setRefreshTokenCookie } from '../services/auth/googleOAuth';
 import { AUTH_COOKIE_PATH } from '../constants/api';
 import { COGNITO_ERRORS } from '../constants/cognito';
@@ -103,14 +103,14 @@ export class AccountController extends UserBaseController {
     }
 
     try {
-      const session = await cognitoPasswordService.changePassword({
+      const session = await this.userService.changePassword(userIdParam, {
         email: authenticatedRequest.user.email,
         currentPassword,
         newPassword,
         locale,
       });
 
-      const user = await UserService.getUserById(userIdParam);
+      const user = await this.userService.getUserById(userIdParam);
       if (!user) {
         res
           .status(404)

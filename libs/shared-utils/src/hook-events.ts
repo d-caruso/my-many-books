@@ -26,6 +26,14 @@ const schema = {
     LOGIN: HOOK_PHASES,
     LOGOUT: HOOK_PHASES,
     UPDATE: HOOK_PHASES,
+    PROVISION: {
+      AFTER: null,
+    },
+    DEACTIVATE: HOOK_PHASES,
+    DELETE: HOOK_PHASES,
+    PASSWORD: {
+      CHANGE: HOOK_PHASES,
+    },
     ROLE: {
       ADD: HOOK_PHASES,
       CHANGE: HOOK_PHASES,
@@ -36,6 +44,11 @@ const schema = {
     LOGIN: {
       FAILURE: null,
     },
+    REFRESH: HOOK_PHASES,
+    VERIFY_EMAIL: HOOK_PHASES,
+    RESEND_CODE: HOOK_PHASES,
+    FORGOT_PASSWORD: HOOK_PHASES,
+    RESET_PASSWORD: HOOK_PHASES,
   },
 } as const;
 

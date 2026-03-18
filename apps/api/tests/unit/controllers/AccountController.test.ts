@@ -3,23 +3,14 @@ import { UserService, UserServiceError } from '../../../src/services/user/UserSe
 import { UniversalRequest } from '../../../src/types';
 import { NextFunction, Request, Response } from 'express';
 
-const mockCognitoChangePassword = jest.fn();
-const mockGetUserById = jest.fn();
 const mockSetRefreshTokenCookie = jest.fn();
-
 jest.mock('../../../src/services/auth/cognitoPasswordService', () => ({
   cognitoPasswordService: {
-    changePassword: (...args: unknown[]) => mockCognitoChangePassword(...args),
+    changePassword: jest.fn(),
   },
   COGNITO_PASSWORD_ERRORS: {
     INVALID_PASSWORD_POLICY_ERROR_NAME: 'InvalidPasswordPolicyError',
     COGNITO_CONFIG_ERROR_NAME: 'CognitoConfigurationError',
-  },
-}));
-
-jest.mock('../../../src/middleware/auth', () => ({
-  UserService: {
-    getUserById: (...args: unknown[]) => mockGetUserById(...args),
   },
 }));
 
@@ -77,6 +68,8 @@ describe('AccountController', () => {
     service = {
       initializeControllerContext: jest.fn(),
       deactivateAccount: jest.fn(),
+      changePassword: jest.fn(),
+      getUserById: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
 
     controller = new AccountController(service);
@@ -111,8 +104,8 @@ describe('AccountController', () => {
 
   describe('changePassword', () => {
     beforeEach(() => {
-      mockCognitoChangePassword.mockResolvedValue(session);
-      mockGetUserById.mockResolvedValue(dbUser);
+      service.changePassword.mockResolvedValue(session as any);
+      service.getUserById.mockResolvedValue(dbUser as any);
     });
 
     it('changes password and returns tokens with refreshed cookie', async () => {
@@ -122,7 +115,8 @@ describe('AccountController', () => {
 
       await controller.changePassword(req, res, next);
 
-      expect(mockCognitoChangePassword).toHaveBeenCalledWith(
+      expect(service.changePassword).toHaveBeenCalledWith(
+        1,
         expect.objectContaining({
           email: 'user@example.com',
           currentPassword: 'Current123',
@@ -165,7 +159,7 @@ describe('AccountController', () => {
 
     it('returns 400 for invalid password policy', async () => {
       const err = Object.assign(new Error('too weak'), { name: 'InvalidPasswordPolicyError' });
-      mockCognitoChangePassword.mockRejectedValue(err);
+      service.changePassword.mockRejectedValue(err);
       const res = buildRes();
       await controller.changePassword(buildExpressReq(), res, jest.fn());
       expect(res.status).toHaveBeenCalledWith(400);
@@ -173,7 +167,7 @@ describe('AccountController', () => {
 
     it('returns 401 for wrong current password', async () => {
       const err = Object.assign(new Error('wrong'), { name: 'NotAuthorizedException' });
-      mockCognitoChangePassword.mockRejectedValue(err);
+      service.changePassword.mockRejectedValue(err);
       const res = buildRes();
       await controller.changePassword(buildExpressReq(), res, jest.fn());
       expect(res.status).toHaveBeenCalledWith(401);
@@ -181,7 +175,7 @@ describe('AccountController', () => {
 
     it('returns 429 for rate limit exceeded', async () => {
       const err = Object.assign(new Error('limit'), { name: 'LimitExceededException' });
-      mockCognitoChangePassword.mockRejectedValue(err);
+      service.changePassword.mockRejectedValue(err);
       const res = buildRes();
       await controller.changePassword(buildExpressReq(), res, jest.fn());
       expect(res.status).toHaveBeenCalledWith(429);
@@ -189,7 +183,7 @@ describe('AccountController', () => {
 
     it('returns 500 for Cognito config error', async () => {
       const err = Object.assign(new Error('config'), { name: 'CognitoConfigurationError' });
-      mockCognitoChangePassword.mockRejectedValue(err);
+      service.changePassword.mockRejectedValue(err);
       const res = buildRes();
       await controller.changePassword(buildExpressReq(), res, jest.fn());
       expect(res.status).toHaveBeenCalledWith(500);
@@ -197,7 +191,7 @@ describe('AccountController', () => {
 
     it('calls next for unknown errors', async () => {
       const err = new Error('unexpected');
-      mockCognitoChangePassword.mockRejectedValue(err);
+      service.changePassword.mockRejectedValue(err);
       const next: NextFunction = jest.fn();
       await controller.changePassword(buildExpressReq(), buildRes(), next);
       expect(next).toHaveBeenCalledWith(err);

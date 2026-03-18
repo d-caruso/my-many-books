@@ -31,6 +31,7 @@ jest.mock('../../../src/models', () => ({
 }));
 jest.mock('../../../src/services/hooks/hookSystem', () => ({
   initializeHookSystem: jest.fn().mockResolvedValue(undefined),
+  emitHookEvent: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('@my-many-books/shared-i18n', () => ({
   initializeI18n: jest.fn().mockResolvedValue(undefined),
@@ -50,12 +51,15 @@ import { UserService } from '../../../src/middleware/auth';
 import { User } from '../../../src/models/User';
 import { BASE_PATH } from '../../utils/apiBasePath';
 import * as googleOAuth from '../../../src/services/auth/googleOAuth';
+import { emitHookEvent } from '../../../src/services/hooks/hookSystem';
+import { EVENTS } from '../../../src/services/hooks/events';
 
 const mockCognitoClient = CognitoIdentityProviderClient as jest.MockedClass<
   typeof CognitoIdentityProviderClient
 >;
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 const verifyCognitoIdTokenSpy = jest.spyOn(googleOAuth, 'verifyCognitoIdToken');
+const emitHookEventMock = emitHookEvent as jest.MockedFunction<typeof emitHookEvent>;
 
 const buildOAuthState = (platform: 'web' | 'mobile'): string => {
   const payload = Buffer.from(
@@ -100,6 +104,7 @@ describe('Auth Routes', () => {
     mockSend = jest.fn();
     mockCognitoClient.prototype.send = mockSend;
     mockedAxios.post.mockReset();
+    emitHookEventMock.mockClear();
     verifyCognitoIdTokenSpy.mockResolvedValue({
       sub: 'cognito-user-123',
       email: 'test@example.com',
@@ -175,6 +180,25 @@ describe('Auth Routes', () => {
       const refreshCookie = cookies.find((c: string) => c.startsWith('refresh_token='));
       expect(refreshCookie).toContain('HttpOnly');
       expect(refreshCookie).toContain(`Path=${BASE_PATH}/auth`);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.LOGIN.BEFORE,
+        expect.objectContaining({
+          email: 'test@example.com',
+          provider: 'cognito',
+          method: 'password',
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.LOGIN.AFTER,
+        expect.objectContaining({
+          email: 'test@example.com',
+          provider: 'cognito',
+          method: 'password',
+          user: expect.objectContaining({ id: 1, email: 'test@example.com' }),
+        })
+      );
     });
 
     it('should return 401 with invalid credentials', async () => {
@@ -189,6 +213,25 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(401);
       expect(response.body.error).toHaveProperty('message', 'Invalid email or password');
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.LOGIN.BEFORE,
+        expect.objectContaining({
+          email: 'test@example.com',
+          provider: 'cognito',
+          method: 'password',
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.AUTH.LOGIN.FAILURE,
+        expect.objectContaining({
+          email: 'test@example.com',
+          provider: 'cognito',
+          method: 'password',
+          reason: 'invalid_credentials',
+        })
+      );
     });
 
     it('should return 401 when user not found', async () => {
@@ -402,6 +445,25 @@ describe('Auth Routes', () => {
 
       const cookies = response.headers['set-cookie'] as unknown as string[];
       expect(cookies.some((c: string) => c.startsWith('refresh_token='))).toBe(true);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.LOGIN.BEFORE,
+        expect.objectContaining({
+          provider: 'google',
+          method: 'oauth',
+          platform: 'mobile',
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.LOGIN.AFTER,
+        expect.objectContaining({
+          provider: 'google',
+          method: 'oauth',
+          platform: 'mobile',
+          user: expect.objectContaining({ id: 99, email: 'google@example.com' }),
+        })
+      );
     });
 
     it(`POST ${BASE_PATH}/auth/google/mobile/exchange should reject missing PKCE verifier`, async () => {
@@ -497,6 +559,23 @@ describe('Auth Routes', () => {
         email: mockRefreshUser.email,
         role: mockRefreshUser.role,
       });
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.AUTH.REFRESH.BEFORE,
+        expect.objectContaining({
+          provider: 'cognito',
+          method: 'refresh_token',
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.AUTH.REFRESH.AFTER,
+        expect.objectContaining({
+          provider: 'cognito',
+          method: 'refresh_token',
+          user: expect.objectContaining({ id: 1, email: 'test@example.com' }),
+        })
+      );
     });
 
     it('should return 401 when ID token verification fails after refresh', async () => {
@@ -523,6 +602,14 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(401);
       expect(response.body.error).toHaveProperty('message', 'No refresh token');
+      expect(emitHookEventMock).toHaveBeenCalledWith(
+        EVENTS.AUTH.REFRESH.FAILURE,
+        expect.objectContaining({
+          provider: 'cognito',
+          method: 'refresh_token',
+          reason: 'missing_refresh_token',
+        })
+      );
     });
 
     it('should return 401 with invalid refresh token', async () => {
@@ -574,6 +661,20 @@ describe('Auth Routes', () => {
       const clearCookie = cookies.find((c: string) => c.startsWith('refresh_token=;'));
       expect(clearCookie).toBeDefined();
       expect(clearCookie).toContain(`Path=${BASE_PATH}/auth`);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.LOGOUT.BEFORE,
+        expect.objectContaining({
+          hadRefreshToken: false,
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.LOGOUT.AFTER,
+        expect.objectContaining({
+          hadRefreshToken: false,
+        })
+      );
     });
   });
 
@@ -597,6 +698,22 @@ describe('Auth Routes', () => {
       expect(response.body).toHaveProperty(
         'message',
         'Registration successful. Please check your email to verify your account.'
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.USER.REGISTER.BEFORE,
+        expect.objectContaining({
+          email: 'newuser@example.com',
+          provider: 'cognito',
+        })
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.USER.REGISTER.AFTER,
+        expect.objectContaining({
+          email: 'newuser@example.com',
+          requiresVerification: true,
+        })
       );
     });
 
@@ -743,6 +860,16 @@ describe('Auth Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
       expect(response.body.data).toHaveProperty('verified', true);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.AUTH.VERIFY_EMAIL.BEFORE,
+        { email: 'user@example.com' }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.AUTH.VERIFY_EMAIL.AFTER,
+        { email: 'user@example.com', verified: true }
+      );
     });
 
     it('should return 400 when email is missing', async () => {
@@ -823,6 +950,16 @@ describe('Auth Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
       expect(response.body.data).toHaveProperty('sent', true);
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.AUTH.RESEND_CODE.BEFORE,
+        { email: 'user@example.com' }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.AUTH.RESEND_CODE.AFTER,
+        { email: 'user@example.com', sent: true }
+      );
     });
 
     it('should return 400 when email is missing', async () => {
@@ -880,6 +1017,20 @@ describe('Auth Routes', () => {
         accepted: true,
         expiresInMinutes: 60,
       });
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.AUTH.FORGOT_PASSWORD.BEFORE,
+        { email: 'user@example.com' }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.AUTH.FORGOT_PASSWORD.AFTER,
+        {
+          email: 'user@example.com',
+          accepted: true,
+          expiresInMinutes: 60,
+        }
+      );
     });
 
     it('does not reveal whether the user exists', async () => {
@@ -914,6 +1065,24 @@ describe('Auth Routes', () => {
         reset: true,
         signInRequired: true,
       });
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        1,
+        EVENTS.AUTH.RESET_PASSWORD.BEFORE,
+        {
+          email: 'user@example.com',
+          locale: null,
+        }
+      );
+      expect(emitHookEventMock).toHaveBeenNthCalledWith(
+        2,
+        EVENTS.AUTH.RESET_PASSWORD.AFTER,
+        {
+          email: 'user@example.com',
+          locale: null,
+          reset: true,
+          signInRequired: true,
+        }
+      );
     });
 
     it('returns validation error for invalid code', async () => {

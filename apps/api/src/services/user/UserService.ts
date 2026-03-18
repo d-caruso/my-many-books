@@ -21,6 +21,9 @@ import { BOOK_STATUS } from '@my-many-books/shared-types';
 import { getLogger } from '@my-many-books/shared-logging';
 import { UserOnboardingService } from './UserOnboardingService';
 import { UserAuthIdentity } from '../../models/UserAuthIdentity';
+import { cognitoPasswordService, type PasswordChangeSession } from '../auth/cognitoPasswordService';
+import { emitHookEvent } from '../hooks/hookSystem';
+import { EVENTS } from '../hooks/events';
 
 export type UserServiceErrorCode = 'USER_NOT_FOUND';
 
@@ -47,6 +50,13 @@ export interface UserBooksOptions {
   limit?: number;
   offset?: number;
   status?: BookStatus;
+}
+
+export interface ChangePasswordInput {
+  email: string;
+  currentPassword: string;
+  newPassword: string;
+  locale?: string;
 }
 
 export interface UserStatsResult {
@@ -192,15 +202,24 @@ export class UserService {
     };
 
     const created = await this.userRepository.create(payload);
+    let defaultsSeeded = true;
     try {
       await this.userOnboardingService.seedDefaults(created.id);
     } catch (error) {
+      defaultsSeeded = false;
       this.logger.warn({ err: error }, 'Failed to seed defaults for new user');
     }
 
     if (providerUserId) {
       await this.ensureIdentityLink(created.id, normalizedProvider, providerUserId, normalizedEmail);
     }
+
+    await this.emitUserEvent(EVENTS.USER.PROVISION.AFTER, {
+      user: this.mapEventUser(created),
+      provider: normalizedProvider,
+      providerUserId,
+      defaultsSeeded,
+    });
 
     return { user: created, isNewUser: true };
   }
@@ -218,17 +237,36 @@ export class UserService {
   }
 
   async updateCurrentUser(userId: number, input: UpdateUserProfileInput): Promise<UserEntity> {
+    await this.emitUserEvent(EVENTS.USER.UPDATE.BEFORE, {
+      user: { id: userId },
+      changes: input,
+    });
+
     const payload: UserUpdateInput = {
       name: input.name,
       surname: input.surname,
     };
 
-    const updated = await this.userRepository.update(userId, payload);
-    if (!updated) {
-      throw new UserServiceError('USER_NOT_FOUND');
-    }
+    try {
+      const updated = await this.userRepository.update(userId, payload);
+      if (!updated) {
+        throw new UserServiceError('USER_NOT_FOUND');
+      }
 
-    return updated;
+      await this.emitUserEvent(EVENTS.USER.UPDATE.AFTER, {
+        user: this.mapEventUser(updated),
+        changes: input,
+      });
+
+      return updated;
+    } catch (error) {
+      await this.emitUserEvent(EVENTS.USER.UPDATE.FAILURE, {
+        user: { id: userId },
+        changes: input,
+        error,
+      });
+      throw error;
+    }
   }
 
   async listUserBooks(
@@ -285,21 +323,107 @@ export class UserService {
   }
 
   async deactivateAccount(userId: number): Promise<void> {
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UserServiceError('USER_NOT_FOUND');
+    await this.emitUserEvent(EVENTS.USER.DEACTIVATE.BEFORE, {
+      user: { id: userId },
+    });
+
+    let user: UserEntity | null = null;
+
+    try {
+      user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new UserServiceError('USER_NOT_FOUND');
+      }
+
+      const updated = await this.userRepository.update(userId, { isActive: false });
+      if (!updated) {
+        throw new UserServiceError('USER_NOT_FOUND');
+      }
+
+      clearUserCache(user.email);
+
+      await this.emitUserEvent(EVENTS.USER.DEACTIVATE.AFTER, {
+        user: this.mapEventUser(updated),
+      });
+    } catch (error) {
+      await this.emitUserEvent(EVENTS.USER.DEACTIVATE.FAILURE, {
+        user: user ? this.mapEventUser(user) : { id: userId },
+        error,
+      });
+      throw error;
     }
-    const updated = await this.userRepository.update(userId, { isActive: false });
-    if (!updated) {
-      throw new UserServiceError('USER_NOT_FOUND');
-    }
-    clearUserCache(user.email);
   }
 
   async deleteAccount(userId: number): Promise<void> {
-    const deleted = await this.userRepository.delete(userId);
-    if (!deleted) {
-      throw new UserServiceError('USER_NOT_FOUND');
+    await this.emitUserEvent(EVENTS.USER.DELETE.BEFORE, {
+      user: { id: userId },
+    });
+
+    let user: UserEntity | null = null;
+
+    try {
+      user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new UserServiceError('USER_NOT_FOUND');
+      }
+
+      const deleted = await this.userRepository.delete(userId);
+      if (!deleted) {
+        throw new UserServiceError('USER_NOT_FOUND');
+      }
+
+      clearUserCache(user.email);
+
+      await this.emitUserEvent(EVENTS.USER.DELETE.AFTER, {
+        user: this.mapEventUser(user),
+      });
+    } catch (error) {
+      await this.emitUserEvent(EVENTS.USER.DELETE.FAILURE, {
+        user: user ? this.mapEventUser(user) : { id: userId },
+        error,
+      });
+      throw error;
     }
+  }
+
+  async changePassword(
+    userId: number,
+    input: ChangePasswordInput
+  ): Promise<PasswordChangeSession> {
+    await this.emitUserEvent(EVENTS.USER.PASSWORD.CHANGE.BEFORE, {
+      user: { id: userId, email: input.email },
+    });
+
+    try {
+      const session = await cognitoPasswordService.changePassword(input);
+      await this.emitUserEvent(EVENTS.USER.PASSWORD.CHANGE.AFTER, {
+        user: { id: userId, email: input.email },
+      });
+      return session;
+    } catch (error) {
+      await this.emitUserEvent(EVENTS.USER.PASSWORD.CHANGE.FAILURE, {
+        user: { id: userId, email: input.email },
+        error,
+      });
+      throw error;
+    }
+  }
+
+  private async emitUserEvent(
+    eventName: string,
+    payload: Record<string, unknown>
+  ): Promise<void> {
+    await emitHookEvent(eventName, payload);
+  }
+
+  private mapEventUser(user: Pick<UserEntity, 'id' | 'email' | 'role' | 'isActive' | 'name' | 'surname'>): Record<string, unknown> {
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      name: user.name,
+      surname: user.surname,
+    };
   }
 }
