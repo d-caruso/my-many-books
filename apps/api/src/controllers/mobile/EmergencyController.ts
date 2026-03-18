@@ -10,6 +10,8 @@ import { AppSetting, AppSettingCreationAttributes } from '../../models';
 import { Op } from 'sequelize';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { AUDIT_ACTIONS, RESOURCE_TYPES, EMERGENCY_SETTING_KEYS, EMERGENCY_ACTIONS, EMERGENCY } from '@my-many-books/shared-types';
+import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
+import { EVENTS } from '../../services/hooks/events';
 
 export interface EmergencyConfigResponse {
     mobileHooksEnabled: boolean;
@@ -103,6 +105,13 @@ export class EmergencyController extends BaseController {
     try {
       const oldConfig = await this.loadEmergencyConfig();
       const updatedSettings: string[] = [];
+      const actor = controlPlaneHookService.getActorContext(request.user);
+
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'BEFORE', {
+        actor,
+        previousConfig: oldConfig,
+        changes: body,
+      });
 
       // Update emergency settings
       if (typeof body.mobileHooksEnabled === 'boolean') {
@@ -157,12 +166,24 @@ export class EmergencyController extends BaseController {
 
       const newConfig = await this.loadEmergencyConfig();
 
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'AFTER', {
+        actor,
+        previousConfig: oldConfig,
+        config: newConfig,
+        updated: updatedSettings,
+      });
+
       return this.createSuccessResponse({
         config: newConfig,
         updated: updatedSettings,
         lastUpdated: new Date().toISOString(),
       }, 'Emergency configuration updated successfully');
     } catch {
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.EMERGENCY.TOGGLE, 'FAILURE', {
+        actor: controlPlaneHookService.getActorContext(request.user),
+        changes: body,
+        error: new Error('Emergency configuration update failed'),
+      });
       return this.createErrorResponseI18n('errors:internal_error', 500);
     }
   }

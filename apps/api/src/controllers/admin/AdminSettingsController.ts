@@ -10,6 +10,8 @@ import { UniversalRequest } from '../../types';
 import { Setting } from '../../models';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { SearchSettingsService } from '../../services/SearchSettingsService';
+import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
+import { EVENTS } from '../../services/hooks/events';
 
 interface AuditLoggingUpdateRequest {
   enabled: boolean;
@@ -131,6 +133,16 @@ export class AdminSettingsController extends BaseController {
     }
 
     try {
+      const actor = controlPlaneHookService.getActorContext(request.user);
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.AUDIT_LOGGING.UPDATE,
+        'BEFORE',
+        {
+          actor,
+          enabled: body.enabled,
+        }
+      );
+
       // Upsert setting
       await Setting.upsert({
         key: 'audit_logging_enabled',
@@ -141,12 +153,30 @@ export class AdminSettingsController extends BaseController {
       // Invalidate cache
       getAuditLogService().invalidateCache();
 
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.AUDIT_LOGGING.UPDATE,
+        'AFTER',
+        {
+          actor,
+          enabled: body.enabled,
+        }
+      );
+
       return this.createSuccessResponse({
         enabled: body.enabled,
         source: 'database',
         canChange: true,
       });
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.AUDIT_LOGGING.UPDATE,
+        'FAILURE',
+        {
+          actor: controlPlaneHookService.getActorContext(request.user),
+          changes: body,
+          error,
+        }
+      );
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Failed to update audit logging setting:');
       return this.createErrorResponseI18n('errors:internal_error', 500);
     }
@@ -199,6 +229,7 @@ export class AdminSettingsController extends BaseController {
 
     try {
       const searchSettingsService = new SearchSettingsService();
+      const actor = controlPlaneHookService.getActorContext(request.user);
 
       // Check if enabled can be changed
       if (body.enabled !== undefined) {
@@ -208,7 +239,18 @@ export class AdminSettingsController extends BaseController {
         if (forceDisabled || forceEnabled) {
           return this.createErrorResponseI18n('errors:setting_enforced_by_config', 403);
         }
+      }
 
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.SEARCH.UPDATE,
+        'BEFORE',
+        {
+          actor,
+          changes: body,
+        }
+      );
+
+      if (body.enabled !== undefined) {
         await searchSettingsService.updateFulltextEnabled(body.enabled);
       }
 
@@ -222,8 +264,28 @@ export class AdminSettingsController extends BaseController {
 
       // Return updated status
       const status = await searchSettingsService.getFulltextStatus();
+
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.SEARCH.UPDATE,
+        'AFTER',
+        {
+          actor,
+          changes: body,
+          status,
+        }
+      );
+
       return this.createSuccessResponse(status);
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.SEARCH.UPDATE,
+        'FAILURE',
+        {
+          actor: controlPlaneHookService.getActorContext(request.user),
+          changes: body,
+          error,
+        }
+      );
       getLogger().error(
         { err: error instanceof Error ? error : new Error(String(error)) },
         'Failed to update search settings:'

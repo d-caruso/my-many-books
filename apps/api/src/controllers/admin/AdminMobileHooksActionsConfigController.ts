@@ -20,6 +20,8 @@ import { slackService } from '../../services/action-tests/SlackService';
 import { smsService } from '../../services/action-tests/SmsService';
 import { webhookService } from '../../services/action-tests/WebhookService';
 import type { ActionTestResult } from '../../services/action-tests/ActionTestResult';
+import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
+import { EVENTS } from '../../services/hooks/events';
 import { TABLE_NAMES } from '../../utils/constants';
 import { isJsonObject, isJsonValue, type JsonObject } from '../../types/json';
 
@@ -334,6 +336,29 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     try {
       const oldConfig = await this.loadConfig();
       const updatedSettings: string[] = [];
+      const actor = controlPlaneHookService.getActorContext(request.user);
+
+      if (body.actionSettings) {
+        for (const [actionType, settings] of Object.entries(body.actionSettings)) {
+          if (!this.isActionType(actionType)) {
+            return this.createErrorResponseI18n('errors:validation_failed', 400);
+          }
+
+          if (!isJsonObject(settings)) {
+            return this.createErrorResponseI18n('errors:validation_failed', 400);
+          }
+        }
+      }
+
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
+        'BEFORE',
+        {
+          actor,
+          changes: body,
+          previousConfig: oldConfig,
+        }
+      );
 
       // Update action mappings
       if (body.actions) {
@@ -344,14 +369,6 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
       // Update action settings
       if (body.actionSettings) {
         for (const [actionType, settings] of Object.entries(body.actionSettings)) {
-          if (!this.isActionType(actionType)) {
-            return this.createErrorResponseI18n('errors:validation_failed', 400);
-          }
-
-          if (!isJsonObject(settings)) {
-            return this.createErrorResponseI18n('errors:validation_failed', 400);
-          }
-
           const key = `${ACTIONS_BASE}.settings.${actionType}`;
           await this.updateConfigSetting(key, JSON.stringify(settings));
           updatedSettings.push(`actionSettings.${actionType}`);
@@ -373,6 +390,18 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
 
       const newConfig = await this.loadConfig();
 
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
+        'AFTER',
+        {
+          actor,
+          changes: body,
+          previousConfig: oldConfig,
+          config: newConfig,
+          updated: updatedSettings,
+        }
+      );
+
       return this.createSuccessResponse(
         {
           config: newConfig,
@@ -382,6 +411,15 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         'Hook action configuration updated successfully'
       );
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
+        'FAILURE',
+        {
+          actor: controlPlaneHookService.getActorContext(request.user),
+          changes: body,
+          error,
+        }
+      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
@@ -428,7 +466,10 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
     }
 
     try {
+      const actor = controlPlaneHookService.getActorContext(request.user);
       const updatedSettings: string[] = [];
+      const normalizedListeners: Record<string, boolean> = {};
+      const normalizedCategories: Record<string, boolean> = {};
 
       if (body.listeners !== undefined) {
         for (const [eventName, toggle] of Object.entries(body.listeners)) {
@@ -437,9 +478,7 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
           if (enabled === null) {
             return this.createErrorResponseI18n('errors:invalid_listener_toggle', 400, { event: eventName });
           }
-
-          await this.updateConfigSetting(`${LISTENERS_BASE}.${eventName}.enabled`, String(enabled));
-          updatedSettings.push(`listeners.${eventName}`);
+          normalizedListeners[eventName] = enabled;
         }
       }
 
@@ -450,10 +489,27 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
           if (enabled === null) {
             return this.createErrorResponseI18n('errors:validation_failed', 400);
           }
-
-          await this.updateConfigSetting(`${CATEGORIES_BASE}.${categoryName}.enabled`, String(enabled));
-          updatedSettings.push(`categories.${categoryName}`);
+          normalizedCategories[categoryName] = enabled;
         }
+      }
+
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.LISTENERS.UPDATE,
+        'BEFORE',
+        {
+          actor,
+          changes: body,
+        }
+      );
+
+      for (const [eventName, enabled] of Object.entries(normalizedListeners)) {
+        await this.updateConfigSetting(`${LISTENERS_BASE}.${eventName}.enabled`, String(enabled));
+        updatedSettings.push(`listeners.${eventName}`);
+      }
+
+      for (const [categoryName, enabled] of Object.entries(normalizedCategories)) {
+        await this.updateConfigSetting(`${CATEGORIES_BASE}.${categoryName}.enabled`, String(enabled));
+        updatedSettings.push(`categories.${categoryName}`);
       }
 
       if (typeof body.analytics === 'boolean') {
@@ -477,11 +533,30 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         updatedSettings.push('performanceMonitoring');
       }
 
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.LISTENERS.UPDATE,
+        'AFTER',
+        {
+          actor,
+          changes: body,
+          updated: updatedSettings,
+        }
+      );
+
       return this.createSuccessResponse({
         updated: updatedSettings,
         lastUpdated: new Date().toISOString(),
       });
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.LISTENERS.UPDATE,
+        'FAILURE',
+        {
+          actor: controlPlaneHookService.getActorContext(request.user),
+          changes: body,
+          error,
+        }
+      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
@@ -736,6 +811,18 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         return validationError;
       }
 
+      const actor = controlPlaneHookService.getActorContext(request.user);
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
+        'BEFORE',
+        {
+          actor,
+          actionType,
+          currentSettings,
+          changes: body,
+        }
+      );
+
       // Update the settings
       const key = `${ACTIONS_BASE}.settings.${actionType}`;
       await this.updateConfigSetting(key, JSON.stringify(updatedSettings));
@@ -753,6 +840,18 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         }
       );
 
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
+        'AFTER',
+        {
+          actor,
+          actionType,
+          previousSettings: currentSettings,
+          settings: nextActionSettings[actionType],
+          changes: body,
+        }
+      );
+
       return this.createSuccessResponse(
         {
           action_type: actionType,
@@ -763,6 +862,16 @@ export class AdminMobileHooksActionsConfigController extends BaseController {
         `${actionType} action settings updated successfully`
       );
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.ACTIONS.UPDATE,
+        'FAILURE',
+        {
+          actor: controlPlaneHookService.getActorContext(request.user),
+          actionType: request.params?.['action_type'] ?? null,
+          changes: body,
+          error,
+        }
+      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }

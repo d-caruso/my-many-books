@@ -1,0 +1,354 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HOOK_EVENTS should match the canonical shared hook event tree 1`] = `
+{
+  "ANY": "*",
+  "AUTH": {
+    "ANY": "auth.*",
+    "FORGOT_PASSWORD": {
+      "AFTER": "auth.forgot_password.after",
+      "ANY": "auth.forgot_password.*",
+      "BEFORE": "auth.forgot_password.before",
+      "FAILURE": "auth.forgot_password.failure",
+    },
+    "LOGIN": {
+      "ANY": "auth.login.*",
+      "FAILURE": "auth.login.failure",
+    },
+    "REFRESH": {
+      "AFTER": "auth.refresh.after",
+      "ANY": "auth.refresh.*",
+      "BEFORE": "auth.refresh.before",
+      "FAILURE": "auth.refresh.failure",
+    },
+    "RESEND_CODE": {
+      "AFTER": "auth.resend_code.after",
+      "ANY": "auth.resend_code.*",
+      "BEFORE": "auth.resend_code.before",
+      "FAILURE": "auth.resend_code.failure",
+    },
+    "RESET_PASSWORD": {
+      "AFTER": "auth.reset_password.after",
+      "ANY": "auth.reset_password.*",
+      "BEFORE": "auth.reset_password.before",
+      "FAILURE": "auth.reset_password.failure",
+    },
+    "VERIFY_EMAIL": {
+      "AFTER": "auth.verify_email.after",
+      "ANY": "auth.verify_email.*",
+      "BEFORE": "auth.verify_email.before",
+      "FAILURE": "auth.verify_email.failure",
+    },
+  },
+  "AUTHOR": {
+    "ANY": "author.*",
+    "CREATE": {
+      "AFTER": "author.create.after",
+      "ANY": "author.create.*",
+      "BEFORE": "author.create.before",
+      "FAILURE": "author.create.failure",
+    },
+    "DELETE": {
+      "AFTER": "author.delete.after",
+      "ANY": "author.delete.*",
+      "BEFORE": "author.delete.before",
+      "FAILURE": "author.delete.failure",
+    },
+    "UPDATE": {
+      "AFTER": "author.update.after",
+      "ANY": "author.update.*",
+      "BEFORE": "author.update.before",
+      "FAILURE": "author.update.failure",
+    },
+  },
+  "BOOK": {
+    "ANY": "book.*",
+    "CREATE": {
+      "AFTER": "book.create.after",
+      "ANY": "book.create.*",
+      "BEFORE": "book.create.before",
+      "FAILURE": "book.create.failure",
+    },
+    "DELETE": {
+      "AFTER": "book.delete.after",
+      "ANY": "book.delete.*",
+      "BEFORE": "book.delete.before",
+      "FAILURE": "book.delete.failure",
+    },
+    "STATUS": {
+      "ANY": "book.status.*",
+      "CHANGE": {
+        "AFTER": "book.status.change.after",
+        "ANY": "book.status.change.*",
+        "BEFORE": "book.status.change.before",
+        "FAILURE": "book.status.change.failure",
+      },
+    },
+    "UPDATE": {
+      "AFTER": "book.update.after",
+      "ANY": "book.update.*",
+      "BEFORE": "book.update.before",
+      "FAILURE": "book.update.failure",
+    },
+  },
+  "CATEGORY": {
+    "ANY": "category.*",
+    "CREATE": {
+      "AFTER": "category.create.after",
+      "ANY": "category.create.*",
+      "BEFORE": "category.create.before",
+      "FAILURE": "category.create.failure",
+    },
+    "DELETE": {
+      "AFTER": "category.delete.after",
+      "ANY": "category.delete.*",
+      "BEFORE": "category.delete.before",
+      "FAILURE": "category.delete.failure",
+    },
+    "UPDATE": {
+      "AFTER": "category.update.after",
+      "ANY": "category.update.*",
+      "BEFORE": "category.update.before",
+      "FAILURE": "category.update.failure",
+    },
+  },
+  "CONFIG": {
+    "ANY": "config.*",
+    "AUDIT_LOGGING": {
+      "ANY": "config.audit_logging.*",
+      "UPDATE": {
+        "AFTER": "config.audit_logging.update.after",
+        "ANY": "config.audit_logging.update.*",
+        "BEFORE": "config.audit_logging.update.before",
+        "FAILURE": "config.audit_logging.update.failure",
+      },
+    },
+    "MOBILE": {
+      "ANY": "config.mobile.*",
+      "APP": {
+        "ANY": "config.mobile.app.*",
+        "SETTINGS": {
+          "ANY": "config.mobile.app.settings.*",
+          "RESET": {
+            "AFTER": "config.mobile.app.settings.reset.after",
+            "ANY": "config.mobile.app.settings.reset.*",
+            "BEFORE": "config.mobile.app.settings.reset.before",
+            "FAILURE": "config.mobile.app.settings.reset.failure",
+          },
+          "UPDATE": {
+            "AFTER": "config.mobile.app.settings.update.after",
+            "ANY": "config.mobile.app.settings.update.*",
+            "BEFORE": "config.mobile.app.settings.update.before",
+            "FAILURE": "config.mobile.app.settings.update.failure",
+          },
+        },
+      },
+      "HOOKS": {
+        "ACTIONS": {
+          "ANY": "config.mobile.hooks.actions.*",
+          "UPDATE": {
+            "AFTER": "config.mobile.hooks.actions.update.after",
+            "ANY": "config.mobile.hooks.actions.update.*",
+            "BEFORE": "config.mobile.hooks.actions.update.before",
+            "FAILURE": "config.mobile.hooks.actions.update.failure",
+          },
+        },
+        "ANY": "config.mobile.hooks.*",
+        "EMERGENCY": {
+          "ANY": "config.mobile.hooks.emergency.*",
+          "UPDATE": {
+            "AFTER": "config.mobile.hooks.emergency.update.after",
+            "ANY": "config.mobile.hooks.emergency.update.*",
+            "BEFORE": "config.mobile.hooks.emergency.update.before",
+            "FAILURE": "config.mobile.hooks.emergency.update.failure",
+          },
+        },
+        "LISTENERS": {
+          "ANY": "config.mobile.hooks.listeners.*",
+          "UPDATE": {
+            "AFTER": "config.mobile.hooks.listeners.update.after",
+            "ANY": "config.mobile.hooks.listeners.update.*",
+            "BEFORE": "config.mobile.hooks.listeners.update.before",
+            "FAILURE": "config.mobile.hooks.listeners.update.failure",
+          },
+        },
+        "SETTINGS": {
+          "ANY": "config.mobile.hooks.settings.*",
+          "RESET": {
+            "AFTER": "config.mobile.hooks.settings.reset.after",
+            "ANY": "config.mobile.hooks.settings.reset.*",
+            "BEFORE": "config.mobile.hooks.settings.reset.before",
+            "FAILURE": "config.mobile.hooks.settings.reset.failure",
+          },
+          "UPDATE": {
+            "AFTER": "config.mobile.hooks.settings.update.after",
+            "ANY": "config.mobile.hooks.settings.update.*",
+            "BEFORE": "config.mobile.hooks.settings.update.before",
+            "FAILURE": "config.mobile.hooks.settings.update.failure",
+          },
+        },
+      },
+    },
+    "SEARCH": {
+      "ANY": "config.search.*",
+      "UPDATE": {
+        "AFTER": "config.search.update.after",
+        "ANY": "config.search.update.*",
+        "BEFORE": "config.search.update.before",
+        "FAILURE": "config.search.update.failure",
+      },
+    },
+    "SETTINGS": {
+      "ANY": "config.settings.*",
+      "TOGGLE": {
+        "AFTER": "config.settings.toggle.after",
+        "ANY": "config.settings.toggle.*",
+        "BEFORE": "config.settings.toggle.before",
+        "FAILURE": "config.settings.toggle.failure",
+      },
+      "UPDATE": {
+        "AFTER": "config.settings.update.after",
+        "ANY": "config.settings.update.*",
+        "BEFORE": "config.settings.update.before",
+        "FAILURE": "config.settings.update.failure",
+      },
+    },
+    "USER": {
+      "ANY": "config.user.*",
+      "MOBILE": {
+        "ANY": "config.user.mobile.*",
+        "CONFIG": {
+          "ANY": "config.user.mobile.config.*",
+          "UPDATE": {
+            "AFTER": "config.user.mobile.config.update.after",
+            "ANY": "config.user.mobile.config.update.*",
+            "BEFORE": "config.user.mobile.config.update.before",
+            "FAILURE": "config.user.mobile.config.update.failure",
+          },
+        },
+        "HOOKS": {
+          "ANY": "config.user.mobile.hooks.*",
+          "SETTINGS": {
+            "ANY": "config.user.mobile.hooks.settings.*",
+            "UPDATE": {
+              "AFTER": "config.user.mobile.hooks.settings.update.after",
+              "ANY": "config.user.mobile.hooks.settings.update.*",
+              "BEFORE": "config.user.mobile.hooks.settings.update.before",
+              "FAILURE": "config.user.mobile.hooks.settings.update.failure",
+            },
+          },
+        },
+      },
+    },
+  },
+  "EMERGENCY": {
+    "ANY": "emergency.*",
+    "TOGGLE": {
+      "AFTER": "emergency.toggle.after",
+      "ANY": "emergency.toggle.*",
+      "BEFORE": "emergency.toggle.before",
+      "FAILURE": "emergency.toggle.failure",
+    },
+  },
+  "HOOK": {
+    "ANY": "hook.*",
+    "CREATE": {
+      "AFTER": "hook.create.after",
+      "ANY": "hook.create.*",
+      "BEFORE": "hook.create.before",
+      "FAILURE": "hook.create.failure",
+    },
+    "DELETE": {
+      "AFTER": "hook.delete.after",
+      "ANY": "hook.delete.*",
+      "BEFORE": "hook.delete.before",
+      "FAILURE": "hook.delete.failure",
+    },
+    "RELOAD": {
+      "AFTER": "hook.reload.after",
+      "ANY": "hook.reload.*",
+      "BEFORE": "hook.reload.before",
+      "FAILURE": "hook.reload.failure",
+    },
+    "UPDATE": {
+      "AFTER": "hook.update.after",
+      "ANY": "hook.update.*",
+      "BEFORE": "hook.update.before",
+      "FAILURE": "hook.update.failure",
+    },
+  },
+  "USER": {
+    "ANY": "user.*",
+    "DEACTIVATE": {
+      "AFTER": "user.deactivate.after",
+      "ANY": "user.deactivate.*",
+      "BEFORE": "user.deactivate.before",
+      "FAILURE": "user.deactivate.failure",
+    },
+    "DELETE": {
+      "AFTER": "user.delete.after",
+      "ANY": "user.delete.*",
+      "BEFORE": "user.delete.before",
+      "FAILURE": "user.delete.failure",
+    },
+    "LOGIN": {
+      "AFTER": "user.login.after",
+      "ANY": "user.login.*",
+      "BEFORE": "user.login.before",
+      "FAILURE": "user.login.failure",
+    },
+    "LOGOUT": {
+      "AFTER": "user.logout.after",
+      "ANY": "user.logout.*",
+      "BEFORE": "user.logout.before",
+      "FAILURE": "user.logout.failure",
+    },
+    "PASSWORD": {
+      "ANY": "user.password.*",
+      "CHANGE": {
+        "AFTER": "user.password.change.after",
+        "ANY": "user.password.change.*",
+        "BEFORE": "user.password.change.before",
+        "FAILURE": "user.password.change.failure",
+      },
+    },
+    "PROVISION": {
+      "AFTER": "user.provision.after",
+      "ANY": "user.provision.*",
+    },
+    "REGISTER": {
+      "AFTER": "user.register.after",
+      "ANY": "user.register.*",
+      "BEFORE": "user.register.before",
+      "FAILURE": "user.register.failure",
+    },
+    "ROLE": {
+      "ADD": {
+        "AFTER": "user.role.add.after",
+        "ANY": "user.role.add.*",
+        "BEFORE": "user.role.add.before",
+        "FAILURE": "user.role.add.failure",
+      },
+      "ANY": "user.role.*",
+      "CHANGE": {
+        "AFTER": "user.role.change.after",
+        "ANY": "user.role.change.*",
+        "BEFORE": "user.role.change.before",
+        "FAILURE": "user.role.change.failure",
+      },
+      "DELETE": {
+        "AFTER": "user.role.delete.after",
+        "ANY": "user.role.delete.*",
+        "BEFORE": "user.role.delete.before",
+        "FAILURE": "user.role.delete.failure",
+      },
+    },
+    "UPDATE": {
+      "AFTER": "user.update.after",
+      "ANY": "user.update.*",
+      "BEFORE": "user.update.before",
+      "FAILURE": "user.update.failure",
+    },
+  },
+}
+`;

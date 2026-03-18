@@ -16,6 +16,8 @@ import {
   MOBILE_APP_SETTINGS_ACTIONS,
   MobileAppSettings,
 } from '@my-many-books/shared-types';
+import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
+import { EVENTS } from '../../services/hooks/events';
 
 const DEFAULT_MOBILE_APP_SETTINGS: MobileAppSettings = {
     offlineStorageEnabled: true,
@@ -132,6 +134,17 @@ export class AdminMobileAppSettingsController extends BaseController {
     try {
         const previousSettings = await this.loadSettings();
         const updatedSettings: Array<{ key: string; value: string }> = [];
+        const actor = controlPlaneHookService.getActorContext(request.user);
+
+        await controlPlaneHookService.emitLifecycleEvent(
+            EVENTS.CONFIG.MOBILE.APP.SETTINGS.UPDATE,
+            'BEFORE',
+            {
+                actor,
+                previousSettings,
+                changes: body,
+            }
+        );
 
         // Update each settings value that was provided
         if (typeof body.offlineStorageEnabled === 'boolean') {
@@ -173,6 +186,17 @@ export class AdminMobileAppSettingsController extends BaseController {
 
         const newSettings = await this.loadSettings();
 
+        await controlPlaneHookService.emitLifecycleEvent(
+          EVENTS.CONFIG.MOBILE.APP.SETTINGS.UPDATE,
+          'AFTER',
+          {
+            actor,
+            previousSettings,
+            settings: newSettings,
+            updated: updatedSettings.map(s => s.key),
+          }
+        );
+
         return this.createSuccessResponse(
         {
             settings: newSettings,
@@ -182,6 +206,15 @@ export class AdminMobileAppSettingsController extends BaseController {
         MOBILE_APP_SETTINGS_MESSAGES.SUCCESS.UPDATED
         );
     } catch (error) {
+        await controlPlaneHookService.emitLifecycleEvent(
+          EVENTS.CONFIG.MOBILE.APP.SETTINGS.UPDATE,
+          'FAILURE',
+          {
+            actor: controlPlaneHookService.getActorContext(request.user),
+            changes: body,
+            error,
+          }
+        );
         if (error instanceof Error) {
           return this.createErrorResponse(error.message, 500);
         }
@@ -201,6 +234,16 @@ export class AdminMobileAppSettingsController extends BaseController {
 
     try {
         const previousSettings = await this.loadSettings();
+        const actor = controlPlaneHookService.getActorContext(request.user);
+
+        await controlPlaneHookService.emitLifecycleEvent(
+          EVENTS.CONFIG.MOBILE.APP.SETTINGS.RESET,
+          'BEFORE',
+          {
+            actor,
+            previousSettings,
+          }
+        );
 
         // Reset all settings to defaults
         await this.saveSetting(
@@ -228,6 +271,16 @@ export class AdminMobileAppSettingsController extends BaseController {
         }
       );
 
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.APP.SETTINGS.RESET,
+        'AFTER',
+        {
+          actor,
+          previousSettings,
+          settings: DEFAULT_MOBILE_APP_SETTINGS,
+        }
+      );
+
       return this.createSuccessResponse(
         {
           settings: DEFAULT_MOBILE_APP_SETTINGS,
@@ -237,6 +290,14 @@ export class AdminMobileAppSettingsController extends BaseController {
         'Mobile settings reset to defaults successfully'
       );
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.APP.SETTINGS.RESET,
+        'FAILURE',
+        {
+          actor: controlPlaneHookService.getActorContext(request.user),
+          error,
+        }
+      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }

@@ -50,6 +50,60 @@ const schema = {
     FORGOT_PASSWORD: HOOK_PHASES,
     RESET_PASSWORD: HOOK_PHASES,
   },
+  HOOK: {
+    ...MUTATION_OPERATIONS,
+    RELOAD: HOOK_PHASES,
+  },
+  CONFIG: {
+    MOBILE: {
+      HOOKS: {
+        ACTIONS: {
+          UPDATE: HOOK_PHASES,
+        },
+        LISTENERS: {
+          UPDATE: HOOK_PHASES,
+        },
+        SETTINGS: {
+          UPDATE: HOOK_PHASES,
+          RESET: HOOK_PHASES,
+        },
+        EMERGENCY: {
+          UPDATE: HOOK_PHASES,
+        },
+      },
+      APP: {
+        SETTINGS: {
+          UPDATE: HOOK_PHASES,
+          RESET: HOOK_PHASES,
+        },
+      },
+    },
+    USER: {
+      MOBILE: {
+        CONFIG: {
+          UPDATE: HOOK_PHASES,
+        },
+        HOOKS: {
+          SETTINGS: {
+            UPDATE: HOOK_PHASES,
+          },
+        },
+      },
+    },
+    SETTINGS: {
+      UPDATE: HOOK_PHASES,
+      TOGGLE: HOOK_PHASES,
+    },
+    AUDIT_LOGGING: {
+      UPDATE: HOOK_PHASES,
+    },
+    SEARCH: {
+      UPDATE: HOOK_PHASES,
+    },
+  },
+  EMERGENCY: {
+    TOGGLE: HOOK_PHASES,
+  },
 } as const;
 
 export const HOOK_EVENTS = Object.freeze(buildTreeSchema(schema));

@@ -16,6 +16,8 @@ import {
 import { Op, WhereOptions } from 'sequelize';
 import { getAuditLogService } from '../../services/AuditLogService';
 import { reloadHookSystem } from '../../services/hooks/hookSystem';
+import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
+import { EVENTS } from '../../services/hooks/events';
 import { createModel } from '../../utils/sequelize-helpers';
 
 let lastReloadedAt: string | null = null;
@@ -164,6 +166,12 @@ export class HookController extends BaseController {
         priority: body.priority ?? 0,
         createdBy: request.user?.id ?? null,
       };
+      const actor = controlPlaneHookService.getActorContext(request.user);
+
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'BEFORE', {
+        actor,
+        input: hookData,
+      });
 
       const hook = await createModel(Hook, hookData);
 
@@ -180,6 +188,11 @@ export class HookController extends BaseController {
         }
       );
 
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'AFTER', {
+        actor,
+        hook: hook.get({ plain: true }),
+      });
+
       return this.createSuccessResponse(
         hook.get({ plain: true }),
         'Hook created successfully',
@@ -187,6 +200,11 @@ export class HookController extends BaseController {
         201
       );
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.CREATE, 'FAILURE', {
+        actor: controlPlaneHookService.getActorContext(request.user),
+        input: body,
+        error,
+      });
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
@@ -209,12 +227,20 @@ export class HookController extends BaseController {
       return this.createErrorResponseI18n('errors:validation_failed', 400);
     }
 
-    const hook = await Hook.findByPk(Number(hookId));
-    if (!hook) {
-      return this.createErrorResponseI18n('errors:hook_not_found', 404);
-    }
-
     try {
+      const actor = controlPlaneHookService.getActorContext(request.user);
+      const hook = await Hook.findByPk(Number(hookId));
+      if (!hook) {
+        return this.createErrorResponseI18n('errors:hook_not_found', 404);
+      }
+
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'BEFORE', {
+        actor,
+        hookId: Number(hookId),
+        changes: body,
+        hook: hook.get({ plain: true }),
+      });
+
       const oldValues = hook.get({ plain: true });
       await hook.update(body);
 
@@ -234,8 +260,22 @@ export class HookController extends BaseController {
         }
       );
 
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'AFTER', {
+        actor,
+        hookId: Number(hookId),
+        hook: hook.get({ plain: true }),
+        previousHook: oldValues,
+        changes: body,
+      });
+
       return this.createSuccessResponse(hook.get({ plain: true }), 'Hook updated successfully');
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.UPDATE, 'FAILURE', {
+        actor: controlPlaneHookService.getActorContext(request.user),
+        hookId: Number(hookId),
+        changes: body,
+        error,
+      });
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
@@ -253,13 +293,21 @@ export class HookController extends BaseController {
       return this.createErrorResponseI18n('errors:valid_id_required', 400, { resource: 'hook' });
     }
 
-    const hook = await Hook.findByPk(Number(hookId));
-    if (!hook) {
-      return this.createErrorResponseI18n('errors:hook_not_found', 404);
-    }
-
     try {
+      const actor = controlPlaneHookService.getActorContext(request.user);
+      const hook = await Hook.findByPk(Number(hookId));
+      if (!hook) {
+        return this.createErrorResponseI18n('errors:hook_not_found', 404);
+      }
+
       const hookData = hook.get({ plain: true });
+
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'BEFORE', {
+        actor,
+        hookId: Number(hookId),
+        hook: hookData,
+      });
+
       await hook.destroy();
 
       // Log audit event
@@ -274,8 +322,19 @@ export class HookController extends BaseController {
         }
       );
 
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'AFTER', {
+        actor,
+        hookId: Number(hookId),
+        hook: hookData,
+      });
+
       return this.createSuccessResponse(null, 'Hook deleted successfully', undefined, 204);
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.DELETE, 'FAILURE', {
+        actor: controlPlaneHookService.getActorContext(request.user),
+        hookId: Number(hookId),
+        error,
+      });
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 400);
       }
@@ -289,10 +348,26 @@ export class HookController extends BaseController {
     if (authError) return authError;
 
     try {
+      const actor = controlPlaneHookService.getActorContext(request.user);
+
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'BEFORE', {
+        actor,
+      });
+
       await reloadHookSystem();
       lastReloadedAt = new Date().toISOString();
+
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'AFTER', {
+        actor,
+        reloadedAt: lastReloadedAt,
+      });
+
       return this.createSuccessResponse({ reloadedAt: lastReloadedAt });
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.HOOK.RELOAD, 'FAILURE', {
+        actor: controlPlaneHookService.getActorContext(request.user),
+        error,
+      });
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }

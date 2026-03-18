@@ -11,6 +11,8 @@ import { SettingsService } from '../services/SettingsService';
 import { UpdateSettingDTO } from '../dtos/setting/UpdateSettingDTO';
 import { ToggleActiveDTO } from '../dtos/setting/ToggleActiveDTO';
 import { toSettingResponseDTO } from '../dtos/setting/SettingResponseDTO';
+import { controlPlaneHookService } from '../services/hooks/ControlPlaneHookService';
+import { EVENTS } from '../services/hooks/events';
 
 @injectable()
 export class SettingsController extends BaseController {
@@ -86,12 +88,33 @@ export class SettingsController extends BaseController {
     try {
       const dto = UpdateSettingDTO.from(body);
       const serviceInput = dto.toServiceInput();
+      const actor = controlPlaneHookService.getActorContext(request.user);
+
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.UPDATE, 'BEFORE', {
+        actor,
+        key,
+        value: serviceInput.value,
+      });
+
       const updated = await SettingsService.updateSetting(key, serviceInput.value);
+
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.UPDATE, 'AFTER', {
+        actor,
+        key,
+        setting: toSettingResponseDTO(updated),
+      });
+
       return this.createSuccessResponse(
         toSettingResponseDTO(updated),
         this.t('settings:setting_updated')
       );
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.UPDATE, 'FAILURE', {
+        actor: controlPlaneHookService.getActorContext(request.user),
+        key,
+        body,
+        error,
+      });
       if (error instanceof Error) {
         if (error.message.includes('Value is required')) {
           return this.createErrorResponseI18n('errors:value_required', 400);
@@ -129,12 +152,33 @@ export class SettingsController extends BaseController {
     try {
       const dto = ToggleActiveDTO.from(body);
       const serviceInput = dto.toServiceInput();
+      const actor = controlPlaneHookService.getActorContext(request.user);
+
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.TOGGLE, 'BEFORE', {
+        actor,
+        key,
+        active: serviceInput.active,
+      });
+
       const updated = await SettingsService.toggleActive(key, serviceInput.active);
+
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.TOGGLE, 'AFTER', {
+        actor,
+        key,
+        setting: toSettingResponseDTO(updated),
+      });
+
       return this.createSuccessResponse(
         toSettingResponseDTO(updated),
         this.t('settings:setting_toggled')
       );
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(EVENTS.CONFIG.SETTINGS.TOGGLE, 'FAILURE', {
+        actor: controlPlaneHookService.getActorContext(request.user),
+        key,
+        body,
+        error,
+      });
       if (error instanceof Error) {
         if (error.message.includes('Active field is required')) {
           return this.createErrorResponseI18n('errors:active_field_required', 400);

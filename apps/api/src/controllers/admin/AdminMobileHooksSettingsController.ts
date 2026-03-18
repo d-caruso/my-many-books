@@ -17,6 +17,8 @@ import {
   MobileHooksListenerSettings,
   HEALTH_STATUS,
 } from '@my-many-books/shared-types';
+import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
+import { EVENTS } from '../../services/hooks/events';
 
 export interface EmergencyStatusRequest {
   enabled: boolean;
@@ -109,6 +111,17 @@ export class AdminMobileHooksSettingsController extends BaseController {
     try {
       const previousSettings = await this.loadSettings();
       const updatedSettings: Array<{ key: string; value: string }> = [];
+      const actor = controlPlaneHookService.getActorContext(request.user);
+
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.UPDATE,
+        'BEFORE',
+        {
+          actor,
+          previousSettings,
+          changes: body,
+        }
+      );
 
       // Update each settings value that was provided
       if (typeof body.analyticsEnabled === 'boolean') {
@@ -156,6 +169,17 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
       const newSettings = await this.loadSettings();
 
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.UPDATE,
+        'AFTER',
+        {
+          actor,
+          previousSettings,
+          settings: newSettings,
+          updated: updatedSettings.map(s => s.key),
+        }
+      );
+
       return this.createSuccessResponse(
         {
           settings: newSettings,
@@ -165,6 +189,15 @@ export class AdminMobileHooksSettingsController extends BaseController {
         MOBILE_HOOKS_SETTINGS_MESSAGES.SUCCESS.UPDATED
       );
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.UPDATE,
+        'FAILURE',
+        {
+          actor: controlPlaneHookService.getActorContext(request.user),
+          changes: body,
+          error,
+        }
+      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
@@ -182,6 +215,16 @@ export class AdminMobileHooksSettingsController extends BaseController {
 
     try {
       const previousSettings = await this.loadSettings();
+      const actor = controlPlaneHookService.getActorContext(request.user);
+
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.RESET,
+        'BEFORE',
+        {
+          actor,
+          previousSettings,
+        }
+      );
 
       // Reset all settings to defaults
       await this.saveSetting(
@@ -209,6 +252,16 @@ export class AdminMobileHooksSettingsController extends BaseController {
         }
       );
 
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.RESET,
+        'AFTER',
+        {
+          actor,
+          previousSettings,
+          settings: DEFAULT_LISTENER_SETTINGS,
+        }
+      );
+
       return this.createSuccessResponse(
         {
           settings: DEFAULT_LISTENER_SETTINGS,
@@ -218,6 +271,14 @@ export class AdminMobileHooksSettingsController extends BaseController {
         'Mobile settings reset to defaults successfully'
       );
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.SETTINGS.RESET,
+        'FAILURE',
+        {
+          actor: controlPlaneHookService.getActorContext(request.user),
+          error,
+        }
+      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
@@ -354,6 +415,16 @@ export class AdminMobileHooksSettingsController extends BaseController {
     }
 
     try {
+      const actor = controlPlaneHookService.getActorContext(request.user);
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.EMERGENCY.UPDATE,
+        'BEFORE',
+        {
+          actor,
+          changes: body,
+        }
+      );
+
       await this.saveSetting(MOBILE_HOOK_SETTING_KEYS.EMERGENCY_ENABLED, String(body.enabled));
 
       if (body.reason) {
@@ -369,12 +440,31 @@ export class AdminMobileHooksSettingsController extends BaseController {
         { enabled: body.enabled, reason: body.reason }
       );
 
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.EMERGENCY.UPDATE,
+        'AFTER',
+        {
+          actor,
+          enabled: body.enabled,
+          reason: body.reason ?? null,
+        }
+      );
+
       return this.createSuccessResponse({
         enabled: body.enabled,
         updatedAt: new Date().toISOString(),
         message: body.enabled ? 'Mobile hooks enabled' : 'Mobile hooks disabled (emergency)',
       });
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.MOBILE.HOOKS.EMERGENCY.UPDATE,
+        'FAILURE',
+        {
+          actor: controlPlaneHookService.getActorContext(request.user),
+          changes: body,
+          error,
+        }
+      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }

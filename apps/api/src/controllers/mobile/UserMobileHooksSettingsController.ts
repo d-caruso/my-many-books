@@ -9,6 +9,8 @@ import { UniversalRequest } from '../../types';
 import { AppSetting, AppSettingCreationAttributes } from '../../models';
 import { BASE_USER_PREFIX } from '@my-many-books/shared-types';
 import { Op } from 'sequelize';
+import { controlPlaneHookService } from '../../services/hooks/ControlPlaneHookService';
+import { EVENTS } from '../../services/hooks/events';
 
 interface UserMobileConfigResponse {
   userId: number;
@@ -79,6 +81,19 @@ export class UserMobileHooksSettingsController extends UserBaseController {
 
     try {
       const updatedSettings: string[] = [];
+      const actor = controlPlaneHookService.getActorContext(request.user);
+      const previousConfig = await this.loadUserMobileConfig(userId);
+
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.USER.MOBILE.HOOKS.SETTINGS.UPDATE,
+        'BEFORE',
+        {
+          actor,
+          userId,
+          previousConfig,
+          changes: body,
+        }
+      );
 
       // Update basic hook settings
       
@@ -89,12 +104,34 @@ export class UserMobileHooksSettingsController extends UserBaseController {
 
       const newConfig = await this.loadUserMobileConfig(userId);
 
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.USER.MOBILE.HOOKS.SETTINGS.UPDATE,
+        'AFTER',
+        {
+          actor,
+          userId,
+          previousConfig,
+          config: newConfig,
+          updated: updatedSettings,
+        }
+      );
+
       return this.createSuccessResponse({
         config: newConfig,
         updated: updatedSettings,
         lastUpdated: new Date().toISOString(),
       }, 'User mobile configuration updated successfully');
     } catch (error) {
+      await controlPlaneHookService.emitLifecycleEvent(
+        EVENTS.CONFIG.USER.MOBILE.HOOKS.SETTINGS.UPDATE,
+        'FAILURE',
+        {
+          actor: controlPlaneHookService.getActorContext(request.user),
+          userId,
+          changes: body,
+          error,
+        }
+      );
       if (error instanceof Error) {
         return this.createErrorResponse(error.message, 500);
       }
