@@ -142,7 +142,7 @@ describe('Queue-Sync Hookey Integration (End-to-End)', () => {
       // ID mapping may not occur if no new items are created
       // Check if any creation events occurred first
       const createEvents = eventLog.filter(event => 
-        event.eventType.includes('CREATE.SUCCESS')
+        event.eventType.includes('CREATE.AFTER')
       );
       
       if (createEvents.length > 0) {
