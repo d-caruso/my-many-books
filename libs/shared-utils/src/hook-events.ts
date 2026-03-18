@@ -53,6 +53,10 @@ const schema = {
   HOOK: {
     ...MUTATION_OPERATIONS,
     RELOAD: HOOK_PHASES,
+    ACTION: {
+      INVOKED: null,
+    },
+    PERFORMANCE_WARNING: null,
   },
   CONFIG: {
     MOBILE: {

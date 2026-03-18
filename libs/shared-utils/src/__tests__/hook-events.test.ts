@@ -70,4 +70,9 @@ describe("HOOK_EVENTS", () => {
       ANY: "user.provision.*",
     });
   });
+
+  it("should expose pipeline telemetry hook events", () => {
+    expect(HOOK_EVENTS.HOOK.ACTION.INVOKED).toBe("hook.action.invoked");
+    expect(HOOK_EVENTS.HOOK.PERFORMANCE_WARNING).toBe("hook.performance_warning");
+  });
 });

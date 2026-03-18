@@ -251,6 +251,10 @@ exports[`HOOK_EVENTS should match the canonical shared hook event tree 1`] = `
     },
   },
   "HOOK": {
+    "ACTION": {
+      "ANY": "hook.action.*",
+      "INVOKED": "hook.action.invoked",
+    },
     "ANY": "hook.*",
     "CREATE": {
       "AFTER": "hook.create.after",
@@ -264,6 +268,7 @@ exports[`HOOK_EVENTS should match the canonical shared hook event tree 1`] = `
       "BEFORE": "hook.delete.before",
       "FAILURE": "hook.delete.failure",
     },
+    "PERFORMANCE_WARNING": "hook.performance_warning",
     "RELOAD": {
       "AFTER": "hook.reload.after",
       "ANY": "hook.reload.*",

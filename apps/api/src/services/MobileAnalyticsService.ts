@@ -14,6 +14,8 @@ import {
   HEALTH_STATUS,
   MobileAnalyticsEventTypeBreakdown,
 } from '@my-many-books/shared-types';
+import { EVENTS } from './hooks/events';
+import { emitHookEvent } from './hooks/hookSystem';
 
 export interface MobileEventData {
   eventId: string;
@@ -35,6 +37,16 @@ type RecentEventRow = {
   creationDate: Date;
   updateDate: Date;
 };
+
+type ActionExecutionRow = {
+  mobileAnalyticsEventId: number;
+  actionType: string;
+  status: 'success' | 'failed' | 'skipped';
+  errorMessage?: string;
+  executedAt: Date;
+};
+
+const PIPELINE_PERFORMANCE_WARNING_THRESHOLD_MS = 1000;
 
 const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -355,6 +367,46 @@ export class MobileAnalyticsService {
       .sort((a, b) => a.eventType.localeCompare(b.eventType));
   }
 
+  private async emitActionInvokedTelemetry(
+    event: MobileAnalyticsEvent,
+    execution: ActionExecutionRow
+  ): Promise<void> {
+    if (execution.status === 'skipped') {
+      return;
+    }
+
+    await emitHookEvent(EVENTS.HOOK.ACTION.INVOKED, {
+      analyticsEventId: event.id,
+      eventId: event.eventId,
+      eventType: event.eventType,
+      actionType: execution.actionType,
+      actionStatus: execution.status,
+      errorMessage: execution.errorMessage ?? null,
+      executedAt: execution.executedAt.toISOString(),
+      source: 'MobileAnalyticsService.processEventAsync',
+    });
+  }
+
+  private async emitPerformanceWarning(
+    event: MobileAnalyticsEvent,
+    durationMs: number,
+    actionCount: number
+  ): Promise<void> {
+    if (durationMs <= PIPELINE_PERFORMANCE_WARNING_THRESHOLD_MS) {
+      return;
+    }
+
+    await emitHookEvent(EVENTS.HOOK.PERFORMANCE_WARNING, {
+      analyticsEventId: event.id,
+      eventId: event.eventId,
+      eventType: event.eventType,
+      durationMs,
+      thresholdMs: PIPELINE_PERFORMANCE_WARNING_THRESHOLD_MS,
+      actionCount,
+      source: 'MobileAnalyticsService.processEventAsync',
+    });
+  }
+
   private async loadActionMappings(): Promise<Record<string, string[]>> {
     try {
       const record = await AppSetting.findOne({
@@ -385,21 +437,26 @@ export class MobileAnalyticsService {
    * Process event asynchronously (placeholder for real processing logic)
    */
   private async processEventAsync(eventId: number): Promise<void> {
+    const startedAt = Date.now();
+    let event: MobileAnalyticsEvent | null = null;
+    let actionCount = 0;
+
     try {
-      const event = await MobileAnalyticsEvent.findByPk(eventId);
+      event = await MobileAnalyticsEvent.findByPk(eventId);
       if (!event) return;
+      const analyticsEvent = event;
 
       const [actionMappings, listenerEnabled, emergency] = await Promise.all([
         this.loadActionMappings(),
-        this.isListenerEnabled(event.eventType),
+        this.isListenerEnabled(analyticsEvent.eventType),
         this.loadEmergencyStatus(),
       ]);
 
-      const actionTypes = actionMappings[event.eventType] || [];
+      const actionTypes = actionMappings[analyticsEvent.eventType] || [];
       const actionEnabledMap = await this.loadActionEnabledMap(actionTypes);
 
       const executedAt = new Date();
-      const executions = actionTypes.map(actionType => {
+      const executions: ActionExecutionRow[] = actionTypes.map(actionType => {
         const actionEnabled = actionEnabledMap[actionType] ?? this.defaultActionEnabled(actionType);
 
         const blockedByEmergency = emergency.enabled;
@@ -407,7 +464,7 @@ export class MobileAnalyticsService {
 
         if (blockedByEmergency) {
           return {
-            mobileAnalyticsEventId: event.id,
+            mobileAnalyticsEventId: analyticsEvent.id,
             actionType,
             status: 'skipped' as const,
             errorMessage: emergency.reason ? `Emergency enabled: ${emergency.reason}` : 'Emergency enabled',
@@ -417,17 +474,17 @@ export class MobileAnalyticsService {
 
         if (blockedByListener) {
           return {
-            mobileAnalyticsEventId: event.id,
+            mobileAnalyticsEventId: analyticsEvent.id,
             actionType,
             status: 'skipped' as const,
-            errorMessage: `Listener disabled for eventType: ${event.eventType}`,
+            errorMessage: `Listener disabled for eventType: ${analyticsEvent.eventType}`,
             executedAt,
           };
         }
 
         if (!actionEnabled) {
           return {
-            mobileAnalyticsEventId: event.id,
+            mobileAnalyticsEventId: analyticsEvent.id,
             actionType,
             status: 'skipped' as const,
             errorMessage: `Action disabled: ${actionType}`,
@@ -436,18 +493,22 @@ export class MobileAnalyticsService {
         }
 
         return {
-          mobileAnalyticsEventId: event.id,
+          mobileAnalyticsEventId: analyticsEvent.id,
           actionType,
           status: 'success' as const,
           executedAt,
         };
       });
+      actionCount = executions.length;
 
       if (executions.length) {
         await MobileHookActionExecution.bulkCreate(executions, { validate: true });
+        await Promise.all(
+          executions.map(execution => this.emitActionInvokedTelemetry(analyticsEvent, execution))
+        );
       }
 
-      await event.update({
+      await analyticsEvent.update({
         processingStatus: MOBILE_ANALYTICS_PROCESSING_STATUS.PROCESSED,
         processingError: null,
       });
@@ -460,6 +521,10 @@ export class MobileAnalyticsService {
         },
         { where: { id: eventId } }
       );
+    } finally {
+      if (event) {
+        await this.emitPerformanceWarning(event, Date.now() - startedAt, actionCount);
+      }
     }
   }
 
