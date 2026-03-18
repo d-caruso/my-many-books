@@ -3,6 +3,10 @@
 // ================================================================
 
 import { AdminBookController } from '../../../../src/controllers/admin/AdminBookController';
+import {
+  AdminBookMutationService,
+  AdminBookMutationServiceError,
+} from '../../../../src/services/book/AdminBookMutationService';
 import { User } from '../../../../src/models/User';
 import { UniversalRequest } from '../../../../src/types';
 import { Repository as BookRepositoryContract } from '../../../../src/repositories/book/Repository';
@@ -38,12 +42,17 @@ const mockBookEntity = (overrides = {}) => ({
 describe('AdminBookController', () => {
   let adminBookController: AdminBookController;
   let mockRepository: jest.Mocked<BookRepositoryContract>;
+  let mockMutationService: jest.Mocked<AdminBookMutationService>;
   let mockRequest: UniversalRequest;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockRepository = createMockBookRepository();
-    adminBookController = new AdminBookController(mockRepository);
+    mockMutationService = {
+      updateBook: jest.fn(),
+      deleteBook: jest.fn(),
+    } as unknown as jest.Mocked<AdminBookMutationService>;
+    adminBookController = new AdminBookController(mockRepository, mockMutationService);
 
     (adminBookController as any).initializeI18n = jest.fn().mockResolvedValue(undefined);
     (adminBookController as any).t = jest.fn((key: string) => {
@@ -63,6 +72,7 @@ describe('AdminBookController', () => {
       params: {},
       headers: { 'accept-language': 'en' },
       body: undefined,
+      user: { id: 99, email: 'admin@example.com', role: 'admin', provider: 'cognito' },
     };
   });
 
@@ -173,8 +183,7 @@ describe('AdminBookController', () => {
     it('should update a book successfully', async () => {
       const mockUser = { id: 1, name: 'Test', surname: 'User', getFullName: () => 'Test User' };
       const updatedBook = mockBookEntity({ title: 'New Title' });
-      mockRepository.findById.mockResolvedValue(mockBookEntity());
-      mockRepository.update.mockResolvedValue(updatedBook);
+      mockMutationService.updateBook.mockResolvedValue(updatedBook as any);
       (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
       mockRequest.params = { id: '1' };
       mockRequest.body = JSON.stringify({ title: 'New Title', userId: 1 });
@@ -185,7 +194,11 @@ describe('AdminBookController', () => {
       expect(result.success).toBe(true);
       expect((result.data as any).title).toBe('New Title');
       expect((result.data as any).userName).toBe('Test User');
-      expect(mockRepository.update).toHaveBeenCalledWith(1, expect.objectContaining({ title: 'New Title' }));
+      expect(mockMutationService.updateBook).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ title: 'New Title' }),
+        { userId: 99, role: 'admin' }
+      );
     });
 
     it('should return 400 if book ID is missing', async () => {
@@ -207,7 +220,7 @@ describe('AdminBookController', () => {
     });
 
     it('should return 404 if book to update is not found', async () => {
-      mockRepository.findById.mockResolvedValue(null);
+      mockMutationService.updateBook.mockRejectedValue(new AdminBookMutationServiceError('BOOK_NOT_FOUND'));
       mockRequest.params = { id: '999' };
       mockRequest.body = JSON.stringify({ title: 'New Title' });
 
@@ -218,8 +231,7 @@ describe('AdminBookController', () => {
     });
 
     it('should return 404 if new userId does not exist', async () => {
-      mockRepository.findById.mockResolvedValue(mockBookEntity());
-      (User.findByPk as jest.Mock).mockResolvedValue(null);
+      mockMutationService.updateBook.mockRejectedValue(new AdminBookMutationServiceError('USER_NOT_FOUND'));
       mockRequest.params = { id: '1' };
       mockRequest.body = JSON.stringify({ userId: 999 });
 
@@ -230,9 +242,7 @@ describe('AdminBookController', () => {
     });
 
     it('should return 500 on repository error', async () => {
-      mockRepository.findById.mockResolvedValue(mockBookEntity());
-      mockRepository.update.mockRejectedValue(new Error('Database error'));
-      (User.findByPk as jest.Mock).mockResolvedValue({ getFullName: () => 'Test User' });
+      mockMutationService.updateBook.mockRejectedValue(new Error('Database error'));
       mockRequest.params = { id: '1' };
       mockRequest.body = JSON.stringify({ title: 'New Title' });
 
@@ -244,14 +254,13 @@ describe('AdminBookController', () => {
 
   describe('deleteBook', () => {
     it('should delete a book successfully', async () => {
-      mockRepository.delete.mockResolvedValue(true);
       mockRequest.params = { id: '1' };
 
       const result = await adminBookController.deleteBook(mockRequest);
 
       expect(result.statusCode).toBe(200);
       expect(result.success).toBe(true);
-      expect(mockRepository.delete).toHaveBeenCalledWith(1);
+      expect(mockMutationService.deleteBook).toHaveBeenCalledWith(1, { userId: 99, role: 'admin' });
     });
 
     it('should return 400 if book ID is missing', async () => {
@@ -263,7 +272,7 @@ describe('AdminBookController', () => {
     });
 
     it('should return 404 if book to delete is not found', async () => {
-      mockRepository.delete.mockResolvedValue(false);
+      mockMutationService.deleteBook.mockRejectedValue(new AdminBookMutationServiceError('BOOK_NOT_FOUND'));
       mockRequest.params = { id: '999' };
 
       const result = await adminBookController.deleteBook(mockRequest);
@@ -273,7 +282,7 @@ describe('AdminBookController', () => {
     });
 
     it('should return 500 on repository error', async () => {
-      mockRepository.delete.mockRejectedValue(new Error('Database error'));
+      mockMutationService.deleteBook.mockRejectedValue(new Error('Database error'));
       mockRequest.params = { id: '1' };
 
       const result = await adminBookController.deleteBook(mockRequest);

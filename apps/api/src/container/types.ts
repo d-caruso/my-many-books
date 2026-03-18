@@ -16,6 +16,7 @@ const TYPES = {
   AdminUserRepository: Symbol.for('AdminUserRepository'),
   AdminUserService: Symbol.for('AdminUserService'),
   AdminUserController: Symbol.for('AdminUserController'),
+  AdminBookMutationService: Symbol.for('AdminBookMutationService'),
   AdminBookController: Symbol.for('AdminBookController'),
   AdminSearchController: Symbol.for('AdminSearchController'),
   UserRepository: Symbol.for('UserRepository'),

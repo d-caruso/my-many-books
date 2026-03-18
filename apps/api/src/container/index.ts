@@ -32,6 +32,7 @@ import { SearchSettingsService } from '../services/SearchSettingsService';
 import { BookSearchService } from '../services/search/BookSearchService';
 import { PinnedResultsService } from '../services/PinnedResultsService';
 import { UserOnboardingService } from '../services/user/UserOnboardingService';
+import { AdminBookMutationService } from '../services/book/AdminBookMutationService';
 
 const container = new Container({
   defaultScope: 'Singleton',
@@ -71,6 +72,11 @@ container
   .bind<AdminUserController>(TYPES.AdminUserController)
   .to(AdminUserController)
   .inTransientScope();
+
+container
+  .bind<AdminBookMutationService>(TYPES.AdminBookMutationService)
+  .to(AdminBookMutationService)
+  .inSingletonScope();
 
 container
   .bind<AdminBookController>(TYPES.AdminBookController)

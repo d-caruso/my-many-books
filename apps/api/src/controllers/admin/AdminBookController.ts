@@ -13,6 +13,11 @@ import { TYPES } from '../../container/types';
 import { Repository as BookRepositoryContract } from '../../repositories/book/Repository';
 import { BookSearchFilters } from '../../repositories/book/BookRepositoryTypes';
 import { SORT_DIRECTIONS, DATABASE_FIELDS } from '@my-many-books/shared-types';
+import {
+  AdminBookMutationContext,
+  AdminBookMutationService,
+  AdminBookMutationServiceError,
+} from '../../services/book/AdminBookMutationService';
 
 interface UpdateBookData {
   title?: string;
@@ -27,7 +32,9 @@ interface UpdateBookData {
 @injectable()
 export class AdminBookController extends BaseController {
   constructor(
-    @inject(TYPES.BookRepository) private readonly bookRepository: BookRepositoryContract
+    @inject(TYPES.BookRepository) private readonly bookRepository: BookRepositoryContract,
+    @inject(TYPES.AdminBookMutationService)
+    private readonly adminBookMutationService: AdminBookMutationService
   ) {
     super();
   }
@@ -175,22 +182,11 @@ export class AdminBookController extends BaseController {
         return this.createErrorResponseI18n('errors:invalid_request_body', 400);
       }
 
-      const existing = await this.bookRepository.findById(parseInt(bookId, 10));
-      if (!existing) {
-        return this.createErrorResponseI18n('errors:book_not_found', 404);
-      }
-
-      if (body.userId !== undefined && body.userId !== null) {
-        const user = await User.findByPk(body.userId);
-        if (!user) {
-          return this.createErrorResponseI18n('errors:user_not_found', 404);
-        }
-      }
-
-      const updated = await this.bookRepository.update(parseInt(bookId, 10), body);
-      if (!updated) {
-        return this.createErrorResponseI18n('errors:book_not_found', 404);
-      }
+      const updated = await this.adminBookMutationService.updateBook(
+        parseInt(bookId, 10),
+        body,
+        this.getAdminContext(request)
+      );
 
       let userName = null;
       if (updated.userId) {
@@ -204,6 +200,10 @@ export class AdminBookController extends BaseController {
 
       return this.createSuccessResponse({ ...updated, userName });
     } catch (error) {
+      if (error instanceof AdminBookMutationServiceError) {
+        return this.handleMutationServiceError(error);
+      }
+
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Update book error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
@@ -221,10 +221,10 @@ export class AdminBookController extends BaseController {
         return this.createErrorResponseI18n('errors:book_id_required', 400);
       }
 
-      const deleted = await this.bookRepository.delete(parseInt(bookId, 10));
-      if (!deleted) {
-        return this.createErrorResponseI18n('errors:book_not_found', 404);
-      }
+      await this.adminBookMutationService.deleteBook(
+        parseInt(bookId, 10),
+        this.getAdminContext(request)
+      );
 
       return this.createSuccessResponse(
         { message: this.t('success:book_deleted') },
@@ -233,8 +233,41 @@ export class AdminBookController extends BaseController {
         200
       );
     } catch (error) {
+      if (error instanceof AdminBookMutationServiceError) {
+        return this.handleMutationServiceError(error);
+      }
+
       getLogger().error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Delete book error:');
       return this.createErrorResponseI18n('errors:internal_server_error', 500);
+    }
+  }
+
+  private getAdminContext(request: UniversalRequest): AdminBookMutationContext | null {
+    if (!request.user) {
+      return null;
+    }
+
+    const context: AdminBookMutationContext = {
+      userId: request.user.id,
+    };
+
+    if (request.user.role) {
+      context.role = request.user.role;
+    }
+
+    return context;
+  }
+
+  private handleMutationServiceError(error: AdminBookMutationServiceError): ApiResponse {
+    switch (error.code) {
+      case 'BOOK_NOT_FOUND':
+        return this.createErrorResponseI18n('errors:book_not_found', 404);
+      case 'USER_NOT_FOUND':
+        return this.createErrorResponseI18n('errors:user_not_found', 404);
+      case 'FORBIDDEN':
+        return this.createErrorResponseI18n('errors:permission_denied', 403);
+      default:
+        return this.createErrorResponseI18n('errors:internal_server_error', 500);
     }
   }
 }
