@@ -6,6 +6,7 @@ import { bookRepository } from '../database/BookRepository';
 import { authorRepository } from '../database/AuthorRepository';
 import { categoryRepository } from '../database/CategoryRepository';
 import { hasBookConflict, hasAuthorConflict, hasCategoryConflict } from '../../utils/conflictDetection';
+import { mobileEventUploadService } from '../hooks/MobileEventUploadService';
 
 // Mock all external dependencies
 jest.mock('../hooks/mobileHooks', () => {
@@ -101,6 +102,16 @@ jest.mock('../sync/CleanupService', () => ({
   },
 }));
 
+jest.mock('../hooks/MobileEventUploadService', () => ({
+  mobileEventUploadService: {
+    uploadStoredEvents: jest.fn().mockResolvedValue({
+      totalLoaded: 0,
+      uploaded: 0,
+      remaining: 0,
+    }),
+  },
+}));
+
 // Typed mock references
 const mockMobileHooks = mobileHooks as jest.Mocked<typeof mobileHooks>;
 const mockOperationQueue = operationQueue as jest.Mocked<typeof operationQueue>;
@@ -113,6 +124,7 @@ const mockCategoryRepository = categoryRepository as jest.Mocked<typeof category
 const mockHasBookConflict = hasBookConflict as jest.Mock;
 const mockHasAuthorConflict = hasAuthorConflict as jest.Mock;
 const mockHasCategoryConflict = hasCategoryConflict as jest.Mock;
+const mockMobileEventUploadService = mobileEventUploadService as jest.Mocked<typeof mobileEventUploadService>;
 
 describe('SyncService Hookey Integration', () => {
   let syncService: SyncService;
@@ -243,6 +255,9 @@ describe('SyncService Hookey Integration', () => {
         duration: expect.any(Number),
         timestamp: expect.any(String)
       }));
+      expect(mockMobileEventUploadService.uploadStoredEvents).toHaveBeenCalledWith({
+        trigger: 'sync',
+      });
     });
 
     it('should emit SYNC.FAILED when sync encounters errors', async () => {

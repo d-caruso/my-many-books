@@ -1,6 +1,7 @@
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
 import { getErrorMessage } from '../../utils/helpers';
+import { mobileEventUploadService } from '../hooks/MobileEventUploadService';
 
 export interface NetworkEventData {
   isOnline: boolean;
@@ -146,6 +147,12 @@ export class NetworkService {
           mobileHooks.emit(MOBILE_EVENTS.NETWORK.RESTORED, {
             ...eventData,
             restoredFrom: eventData.previousState?.connectionType || 'unknown'
+          });
+
+          void mobileEventUploadService.uploadStoredEvents({ trigger: 'network_restored' }).catch((error) => {
+            if (__DEV__) {
+              console.warn('[NetworkService] Failed to upload stored hook events after network restore:', error);
+            }
           });
         }
       } else {

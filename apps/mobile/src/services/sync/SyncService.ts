@@ -11,6 +11,7 @@ import { Book } from '../../types';
 import { hasBookConflict, hasAuthorConflict, hasCategoryConflict } from '../../utils/conflictDetection';
 import { getErrorMessage } from '../../utils/helpers';
 import { mobileHooks, MOBILE_EVENTS } from '../hooks/mobileHooks';
+import { mobileEventUploadService } from '../hooks/MobileEventUploadService';
 import { RESOURCE_TYPES, CONFLICT_RESOLUTION_METHODS, VALIDATION_TYPES } from '../hooks/eventsSchema';
 import { SYNC_STATUS } from '@/types';
 
@@ -238,6 +239,14 @@ export class SyncService {
           error: error instanceof Error ? error.message : String(error),
           timestamp: new Date().toISOString()
         });
+      }
+
+      try {
+        await mobileEventUploadService.uploadStoredEvents({ trigger: 'sync' });
+      } catch (error) {
+        if (__DEV__) {
+          console.warn('[SyncService] Failed to upload stored hook events during sync:', error);
+        }
       }
 
       // Emit sync complete event

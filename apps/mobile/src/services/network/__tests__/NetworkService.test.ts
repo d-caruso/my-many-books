@@ -1,6 +1,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import { NetworkService } from '../NetworkService';
 import { mobileHooks, MOBILE_EVENTS } from '../../hooks/mobileHooks';
+import { mobileEventUploadService } from '../../hooks/MobileEventUploadService';
 
 // Mock NetInfo
 jest.mock('@react-native-community/netinfo', () => ({
@@ -28,6 +29,16 @@ jest.mock('../../hooks/mobileHooks', () => ({
     ERROR: {
       NETWORK_TIMEOUT: 'ERROR.NETWORK_TIMEOUT',
     },
+  },
+}));
+
+jest.mock('../../hooks/MobileEventUploadService', () => ({
+  mobileEventUploadService: {
+    uploadStoredEvents: jest.fn().mockResolvedValue({
+      totalLoaded: 0,
+      uploaded: 0,
+      remaining: 0,
+    }),
   },
 }));
 
@@ -257,6 +268,9 @@ describe('NetworkService', () => {
           restoredFrom: 'none',
         })
       );
+      expect(mobileEventUploadService.uploadStoredEvents).toHaveBeenCalledWith({
+        trigger: 'network_restored',
+      });
     });
   });
 

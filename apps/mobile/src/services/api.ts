@@ -327,7 +327,8 @@ const getCategoriesWithMobileCache = async (lastSyncTime?: string): Promise<Cate
   }
 };
 
-// Export raw apiClient for internal use (e.g., QueueExecutor)
+// Export raw apiClient and transport for internal services (e.g., QueueExecutor, hook uploads)
+export const apiHttpClient = httpClient;
 export { apiClient };
 
 /**
