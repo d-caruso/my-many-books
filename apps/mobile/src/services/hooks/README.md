@@ -1,60 +1,104 @@
 # Mobile Hook Services
 
-This directory hosts the mobile-specific wrapper around the shared Hookey runtime. It exposes `mobileHooks` for emitting events, the configuration priority service that enforces environment/admin/user controls, and the listener implementations that stage analytics, error reporting, offline queueing, and performance metrics before they are submitted to the backend.
+This directory contains the mobile-specific Hookey runtime, the listener implementations that stage telemetry locally, and the upload path that sends stored listener events to the backend.
 
 ## Technical Implementation Details
 
-- `mobileHooks.ts` builds a singleton `MobileHookSystemManager` that keeps an in-memory `HookSystem`. It guards every emission with a two-layer priority system: environment/test flags plus admin/user configs (via `mobileHookConfigService.shouldProcessHooks`). Emitted events are decorated with session/environment metadata to keep downstream analytics consistent (see [`mobileHooks.ts`](../apps/mobile/src/services/hooks/mobileHooks.ts)).
-- `mobileHookConfigService.ts` fetches `GET /config/mobile` and caches the Hookey settings (listeners, analytics, offline storage, performance monitoring). It also fetches `/users/{id}/mobile-config` for user overrides and exposes `setUserId` so the whitelist can change per-authenticated user (see [`mobileHookConfigService.ts`](../apps/mobile/src/services/hooks/mobileHookConfigService.ts)).
-- `mobileHookListeners.ts` defines four listener classes (analytics, error reporting, offline storage, performance monitoring), each registered through `HookSystem.registerExistingHook` with appropriate patterns and `HookAction` functions. They persist payloads into `AsyncStorage` buckets and respect `maxOfflineEvents` to bound memory (see [`mobileHookListeners.ts`](../apps/mobile/src/services/hooks/mobileHookListeners.ts)).
-- `eventsSchema.ts` exports the centralized `MOBILE_EVENTS`, `RESOURCE_TYPES`, and `OPERATION_STATUS` constants used by the admin UI, mobile diagnostics, and documentation to keep terminology consistent (see [`eventsSchema.ts`](../apps/mobile/src/services/hooks/eventsSchema.ts)).
+- `mobileHooks.ts` builds the singleton `MobileHookSystemManager`. Every emission is guarded by environment/test checks plus admin/user hook settings from `mobileHookConfigService`.
+- `eventsSchema.ts` composes mobile event constants from shared mutation constants in `@my-many-books/shared-utils`:
+  - `HOOK_PHASES`
+  - `MUTATION_OPERATIONS`
+  Business mutation events therefore use the shared `BEFORE / AFTER / FAILURE` contract, while mobile-only infrastructure events keep their existing operational naming.
+- `mobileHookListeners.ts` registers four listeners:
+  - analytics
+  - error reporting
+  - offline storage
+  - performance monitoring
+  Each listener persists events into its own AsyncStorage bucket.
+- `MobileEventUploadService.ts` reads the four listener buckets, converts them to the mobile analytics batch payload, and uploads them to `POST /mobile-analytics/events/batch`.
+- `NetworkService.ts` triggers upload when connectivity is restored.
+- `SyncService.ts` triggers upload as part of the user-requested sync flow.
 
-## Code Examples & Patterns
+## Shared Constants
 
-### Emitting events
+Canonical business event names live in `@my-many-books/shared-utils`.
+
+Example:
 
 ```ts
-import { mobileHooks } from './hooks';
+import { HOOK_EVENTS } from '@my-many-books/shared-utils';
 
-function onBookCreated(book: Book): void {
-  mobileHooks.emit('book.create.after', {
-    book,
-    metadata: {
-      entryPoint: 'scanner',
-    },
+HOOK_EVENTS.BOOK.CREATE.BEFORE;  // "book.create.before"
+HOOK_EVENTS.BOOK.CREATE.AFTER;   // "book.create.after"
+HOOK_EVENTS.BOOK.CREATE.FAILURE; // "book.create.failure"
+```
+
+Mobile app code usually consumes the composed mobile tree:
+
+```ts
+import { mobileHooks, MOBILE_EVENTS } from './hooks';
+
+async function onBookCreated(bookId: string): Promise<void> {
+  await mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.BEFORE, {
+    bookId,
+    entryPoint: 'scanner',
+  });
+
+  await mobileHooks.emit(MOBILE_EVENTS.BOOK.CREATE.AFTER, {
+    bookId,
+    entryPoint: 'scanner',
   });
 }
 ```
 
-### Using listener helpers
+Important rule:
 
-```ts
-import { mobileHooks } from './hooks';
-import { mobileHookConfigService } from './mobileHookConfigService';
+- `READ` events are intentionally not part of the mobile business event contract.
 
-async function enableHooksForUser(userId: string) {
-  mobileHookConfigService.setUserId(userId);
-  if (!mobileHooks.isOperational()) {
-    mobileHooks.getInstance()?.registerHook(...); // register additional runtime listeners if needed
-  }
-}
-```
+## Listener Buckets And Upload
 
-### Adding a new listener
+The mobile listeners persist telemetry in these AsyncStorage buckets:
 
-1. Extend `mobileHookListeners.ts` with a new listener class (e.g., `SecurityMonitoringListener`) that checks `shouldProcessHooks`.
-2. When registering listeners in `MobileHookListenersManager.registerListeners`, create a `HookConfig`/`HookAction` pair and call `hookSystem.registerExistingHook`.
-3. Emit new events from anywhere in the mobile app using `mobileHooks.emit('security.alert', payload)`.
+- `analytics_events`
+- `error_reporting_events`
+- `offline_storage_events`
+- `performance_monitoring_events`
 
-## Testing Guidelines
+`MobileEventUploadService` uploads those buckets in batches of up to 100 events:
 
-- Unit tests live under `apps/mobile/src/services/hooks/__tests__`. They mock `AsyncStorage`, `HookSystem`, and the `mobileHookConfigService` cache to exercise each listener’s `handleEvent` branches. Run them with `npm run test:mobile` or the encompassing Nx target.
-- Integration/performance suites rely on the Postman/Newman scripts (`benchmark:hookey-lifecycle`, `benchmark:hookey-memory`) to verify events reach the analytics service, action executions fire, and the HookSystem stays within memory guardrails. Follow the documentation in `docs/features/mobile/integrate-hookey-branching-strategy.md` for running those benchmarks in CI.
-- When adding listeners, update `apps/mobile/src/services/hooks/__tests__/` to cover both success and failure paths (including the priority skips). Use Jest’s `mockResolvedValueOnce` to simulate config fetches from the API and `Jest.advanceTimersByTime` for `AsyncStorage` persistence operations if needed.
+- full success removes uploaded events
+- partial success removes only successful entries
+- request failure keeps the remaining entries for the next retry
 
-## Maintenance Procedures
+Upload triggers:
 
-- Keep `mobileHookConfigService.ts` cache TTL aligned with the admin UI refresh rate (currently 5 minutes). Adjust `CACHE_TTL` when admin config latency changes.
-- Validate any config change in admin UI by running `npm run benchmark:hookey-handlers` and `npm run benchmark:hookey-lifecycle` to ensure live listeners respect the new toggles without exceeding latency targets.
-- Regularly clean `AsyncStorage` buckets (`analytics_events`, `error_events`, `offline_events`, `performance_metrics`) during development to prevent stale data from accumulating—consider injecting a debug helper that calls `AsyncStorage.removeItem`.
-- Document any new event types, metadata expectations, or offline artifacts in `docs/reference/mobile-hookey-events.md` immediately after implementation so the reference and admin docs stay synchronized.
+- `network.restored`
+- `SyncService.performSync()`
+
+Because the upload service now flushes stored listener events automatically, manual bucket cleanup should be limited to local development/debugging workflows.
+
+## Adding Or Updating Events
+
+1. For shared business mutation events, add or update constants in `@my-many-books/shared-utils` first.
+2. Compose mobile schema changes in `eventsSchema.ts` instead of inventing inline strings.
+3. Emit through `mobileHooks.emit(MOBILE_EVENTS...)`.
+4. If the event should be persisted for telemetry, confirm one of the listeners captures it.
+5. If payload shape or event naming changes, update:
+   - `docs/reference/mobile-hookey-events.md`
+   - this README
+
+## Testing Guidance
+
+- Hook listener tests live under `apps/mobile/src/services/hooks/__tests__`.
+- `MobileEventUploadService.test.ts` covers:
+  - full success
+  - partial success
+  - failure retention
+  - batch pagination
+- Network/sync integration tests should confirm the upload triggers fire from the active runtime paths, not dead code paths.
+
+## Maintenance Notes
+
+- Keep `mobileHookConfigService.ts` cache behavior aligned with admin/user config propagation.
+- Keep the shared business event contract and the mobile docs in sync in the same task.
+- During development, manual cleanup helpers may still call `AsyncStorage.removeItem(...)`, but production behavior should rely on `MobileEventUploadService`.
