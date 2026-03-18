@@ -2,6 +2,15 @@
 
 This directory contains the mobile-specific Hookey runtime, the listener implementations that stage telemetry locally, and the upload path that sends stored listener events to the backend.
 
+## Source Of Truth
+
+- Shared business mutation constants live in `@my-many-books/shared-utils`:
+  - `HOOK_PHASES`
+  - `MUTATION_OPERATIONS`
+  - `HOOK_EVENTS`
+- Mobile code consumes those shared mutation constants through the composed `MOBILE_EVENTS` tree in `eventsSchema.ts`.
+- Queue/sync/network/app/error families remain mobile-only operational events and are defined locally in `eventsSchema.ts`.
+
 ## Technical Implementation Details
 
 - `mobileHooks.ts` builds the singleton `MobileHookSystemManager`. Every emission is guarded by environment/test checks plus admin/user hook settings from `mobileHookConfigService`.
@@ -51,9 +60,10 @@ async function onBookCreated(bookId: string): Promise<void> {
 }
 ```
 
-Important rule:
+Important rules:
 
 - `READ` events are intentionally not part of the mobile business event contract.
+- Do not hard-code business event strings in mobile code. Extend shared constants first, then use `MOBILE_EVENTS`.
 
 ## Listener Buckets And Upload
 
@@ -76,6 +86,8 @@ Upload triggers:
 - `SyncService.performSync()`
 
 Because the upload service now flushes stored listener events automatically, manual bucket cleanup should be limited to local development/debugging workflows.
+
+Uploaded listener events are stored through the mobile analytics batch API. They are telemetry records, not server-side re-emits of the original Hookey event.
 
 ## Adding Or Updating Events
 
