@@ -6,9 +6,11 @@ import i18n from '../i18n';
 import { operationQueue } from './OperationQueue';
 import { isRetriableError } from './QueueExecutor';
 import { OPERATION_TYPES, RESOURCE_TYPES } from './hooks/eventsSchema';
+import { emitDomainMutationLifecycle, createDomainMutationPayload } from './hooks/domainMutationEvents';
+import { MOBILE_EVENTS } from './hooks/mobileHooks';
 import type { OperationType } from './hooks/eventsSchema';
 import type { BookOperationPayload, UserOperationPayload, SettingsOperationPayload } from '../types/queue';
-import type { BookFormData } from '@my-many-books/shared-types';
+import type { BookFormData, BookStatus } from '@my-many-books/shared-types';
 import type { MobileBookCreateData } from '../types';
 import { API_BASE_URL } from '../config/api';
 import type { Category } from '@my-many-books/shared-types';
@@ -331,9 +333,6 @@ const getCategoriesWithMobileCache = async (lastSyncTime?: string): Promise<Cate
 export const apiHttpClient = httpClient;
 export { apiClient };
 
-/**
- * Wrapper for API write operations that automatically queues on retriable errors
- */
 async function withQueueOnError<T>(
   operation: () => Promise<T>,
   operationType: OperationType,
@@ -362,51 +361,76 @@ async function withQueueOnError<T>(
   }
 }
 
-/**
- * Book API with automatic offline queueing.
- *
- * This is the ACTIVE pattern used throughout the app for book operations.
- * Write operations (create, update, delete) are wrapped with withQueueOnError
- * to automatically queue failed requests for later retry.
- *
- * Note: Alternative handler-based approach exists in handlers/BookHandlers.ts
- * but is not currently integrated. See docs/ARCHITECTURE_OVERVIEW.md for comparison.
- */
 export const bookAPI = {
   searchBooks: apiClient.books.searchBooks.bind(apiClient.books),
   searchByISBN: apiClient.books.searchByISBN.bind(apiClient.books),
   getBooks: apiClient.books.getBooks.bind(apiClient.books),
   getBook: apiClient.books.getBook.bind(apiClient.books),
 
-  // Write operations with automatic queueing
   createBook: async (book: MobileBookCreateData) => {
-    return withQueueOnError(
-      () => apiClient.books.createBook(book),
-      OPERATION_TYPES.CREATE,
-      RESOURCE_TYPES.BOOK,
-      { ...book, id: book._tempId }
+    return emitDomainMutationLifecycle(
+      MOBILE_EVENTS.BOOK.CREATE,
+      createDomainMutationPayload(RESOURCE_TYPES.BOOK, {
+        title: book.title,
+        status: book.status,
+        tempId: book._tempId,
+      }),
+      () =>
+        withQueueOnError(
+          () => apiClient.books.createBook(book),
+          OPERATION_TYPES.CREATE,
+          RESOURCE_TYPES.BOOK,
+          { ...book, id: book._tempId }
+        ),
+      (createdBook) => ({ result: { book: createdBook } })
     );
   },
 
   updateBook: async (id: string, book: unknown) => {
     const bookData = book as Record<string, unknown>;
-    return withQueueOnError(
-      () => apiClient.books.updateBook(Number(id), bookData as Partial<BookFormData>),
-      OPERATION_TYPES.UPDATE,
-      RESOURCE_TYPES.BOOK,
-      { id, ...bookData }
+    return emitDomainMutationLifecycle(
+      MOBILE_EVENTS.BOOK.UPDATE,
+      createDomainMutationPayload(RESOURCE_TYPES.BOOK, { bookId: id, changes: bookData }),
+      () =>
+        withQueueOnError(
+          () => apiClient.books.updateBook(Number(id), bookData as Partial<BookFormData>),
+          OPERATION_TYPES.UPDATE,
+          RESOURCE_TYPES.BOOK,
+          { id, ...bookData }
+        ),
+      (updatedBook) => ({ result: { book: updatedBook } })
     );
   },
 
   deleteBook: async (id: string) =>
-    withQueueOnError(
-      () => apiClient.books.deleteBook(Number(id)),
-      OPERATION_TYPES.DELETE,
-      RESOURCE_TYPES.BOOK,
-      { id }
+    emitDomainMutationLifecycle(
+      MOBILE_EVENTS.BOOK.DELETE,
+      createDomainMutationPayload(RESOURCE_TYPES.BOOK, { bookId: id }),
+      () =>
+        withQueueOnError(
+          () => apiClient.books.deleteBook(Number(id)),
+          OPERATION_TYPES.DELETE,
+          RESOURCE_TYPES.BOOK,
+          { id }
+        )
     ),
 
-  updateBookStatus: apiClient.books.updateBookStatus.bind(apiClient.books),
+  updateBookStatus: async (id: number, status: BookStatus) =>
+    emitDomainMutationLifecycle(
+      MOBILE_EVENTS.BOOK.UPDATE,
+      createDomainMutationPayload(RESOURCE_TYPES.BOOK, {
+        bookId: id,
+        changes: { status },
+      }),
+      () =>
+        withQueueOnError(
+          () => apiClient.books.updateBookStatus(id, status),
+          OPERATION_TYPES.UPDATE,
+          RESOURCE_TYPES.BOOK,
+          { id: String(id), status }
+        ),
+      (updatedBook) => ({ result: { book: updatedBook } })
+    ),
 };
 
 export const userAPI = {

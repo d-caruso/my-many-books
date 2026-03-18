@@ -4,6 +4,8 @@ import renderer, { act } from 'react-test-renderer';
 import type { Author, Category } from '@my-many-books/shared-types';
 import { ManageAuthorsDialog } from '@/components/book/ManageAuthorsDialog';
 import { ManageCategoriesDialog } from '@/components/book/ManageCategoriesDialog';
+import { authorAPI, categoryAPI } from '@/services/api';
+import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 
 const mockUseManageAuthors = jest.fn();
 const mockUseManageCategories = jest.fn();
@@ -28,10 +30,25 @@ jest.mock('@/services/api', () => ({
   },
 }));
 
+jest.mock('@/services/hooks/mobileHooks', () => {
+  const actual = jest.requireActual('@/services/hooks/eventsSchema');
+  return {
+    mobileHooks: {
+      emit: jest.fn().mockResolvedValue(undefined),
+    },
+    MOBILE_EVENTS: actual.MOBILE_EVENTS,
+  };
+});
+
+const mockAuthorAPI = authorAPI as jest.Mocked<typeof authorAPI>;
+const mockCategoryAPI = categoryAPI as jest.Mocked<typeof categoryAPI>;
+const mockMobileHooks = mobileHooks as jest.Mocked<typeof mobileHooks>;
+
 describe('mobile manage entity dialogs', () => {
   beforeEach(() => {
     mockUseManageAuthors.mockReset();
     mockUseManageCategories.mockReset();
+    jest.clearAllMocks();
   });
 
   const getButtonByLabel = (tree: renderer.ReactTestRenderer, label: string) =>
@@ -152,5 +169,142 @@ describe('mobile manage entity dialogs', () => {
       .join(' | ');
 
     expect(allText).toContain('dialogs:category.delete_blocked_has_books');
+  });
+
+  it('emits author update and delete lifecycle events through the dialog API', async () => {
+    let capturedApi!: {
+      updateAuthor: (id: number, data: Partial<{ name: string; surname: string }>) => Promise<Author>;
+      deleteAuthor: (id: number) => Promise<void>;
+    };
+
+    mockUseManageAuthors.mockImplementation((api: typeof capturedApi) => {
+      capturedApi = api;
+      return {
+        authors: [],
+        loading: false,
+        mutating: false,
+        error: null,
+        clearError: jest.fn(),
+        loadAuthors: jest.fn(),
+        refreshAuthors: jest.fn(),
+        createAuthor: jest.fn(),
+        updateAuthor: jest.fn(),
+        deleteAuthor: jest.fn(),
+      };
+    });
+
+    mockAuthorAPI.updateAuthor.mockResolvedValue({
+      id: 3,
+      name: 'Mary',
+      surname: 'Shelley',
+    } as never);
+    mockAuthorAPI.deleteAuthor.mockResolvedValue(undefined as never);
+
+    await act(async () => {
+      renderer.create(<ManageAuthorsDialog visible={true} onClose={jest.fn()} />);
+    });
+
+    await act(async () => {
+      await capturedApi.updateAuthor(3, { surname: 'Shelley' });
+      await capturedApi.deleteAuthor(3);
+    });
+
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.AUTHOR.UPDATE.BEFORE,
+      expect.objectContaining({
+        resourceType: 'author',
+        metadata: expect.objectContaining({
+          authorId: 3,
+          changes: { surname: 'Shelley' },
+        }),
+      })
+    );
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.AUTHOR.UPDATE.AFTER,
+      expect.objectContaining({
+        resourceType: 'author',
+        result: { author: expect.objectContaining({ id: 3, surname: 'Shelley' }) },
+      })
+    );
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.AUTHOR.DELETE.BEFORE,
+      expect.objectContaining({
+        resourceType: 'author',
+        metadata: { authorId: 3 },
+      })
+    );
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.AUTHOR.DELETE.AFTER,
+      expect.objectContaining({
+        resourceType: 'author',
+      })
+    );
+  });
+
+  it('emits category update and delete lifecycle events through the dialog API', async () => {
+    let capturedApi!: {
+      updateCategory: (id: number, data: Partial<{ name: string }>) => Promise<Category>;
+      deleteCategory: (id: number) => Promise<void>;
+    };
+
+    mockUseManageCategories.mockImplementation((api: typeof capturedApi) => {
+      capturedApi = api;
+      return {
+        categories: [],
+        loading: false,
+        sorting: false,
+        mutating: false,
+        error: null,
+        clearError: jest.fn(),
+        loadCategories: jest.fn(),
+        refreshCategories: jest.fn(),
+        createCategory: jest.fn(),
+        updateCategory: jest.fn(),
+        deleteCategory: jest.fn(),
+      };
+    });
+
+    mockCategoryAPI.updateCategory.mockResolvedValue({ id: 4, name: 'Sci-Fi' } as never);
+    mockCategoryAPI.deleteCategory.mockResolvedValue(undefined as never);
+
+    await act(async () => {
+      renderer.create(<ManageCategoriesDialog visible={true} onClose={jest.fn()} />);
+    });
+
+    await act(async () => {
+      await capturedApi.updateCategory(4, { name: 'Sci-Fi' });
+      await capturedApi.deleteCategory(4);
+    });
+
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.CATEGORY.UPDATE.BEFORE,
+      expect.objectContaining({
+        resourceType: 'category',
+        metadata: expect.objectContaining({
+          categoryId: 4,
+          changes: { name: 'Sci-Fi' },
+        }),
+      })
+    );
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.CATEGORY.UPDATE.AFTER,
+      expect.objectContaining({
+        resourceType: 'category',
+        result: { category: expect.objectContaining({ id: 4, name: 'Sci-Fi' }) },
+      })
+    );
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.CATEGORY.DELETE.BEFORE,
+      expect.objectContaining({
+        resourceType: 'category',
+        metadata: { categoryId: 4 },
+      })
+    );
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.CATEGORY.DELETE.AFTER,
+      expect.objectContaining({
+        resourceType: 'category',
+      })
+    );
   });
 });

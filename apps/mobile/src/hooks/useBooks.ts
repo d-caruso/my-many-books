@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { extractErrorMessage, extractErrorDetails } from '@my-many-books/shared-utils';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
 import { OPERATION_TYPES } from '@/services/hooks/eventsSchema';
+import { createDomainMutationPayload, emitDomainMutationLifecycle } from '@/services/hooks/domainMutationEvents';
 import { LocalBook } from '@/entities/LocalBook';
 
 import { EntityMeta, UiBook } from '@/types/ui';
@@ -405,6 +406,8 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
 
   const updateBookStatus = useCallback(async (id: number | string, status: Book['status']): Promise<void> => {
     const stringId = String(id);
+    const previousBook = books.find(book => String(book.id) === stringId);
+    const previousStatus = previousBook?.status ?? null;
 
     // Update SQLite and local state immediately (optimistic)
       await bookRepository.updateSyncFields(stringId, { syncStatus: SYNC_STATUS.PENDING });
@@ -413,13 +416,38 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
     ));
 
     try {
-      // Try to update on server
-      await bookAPI.updateBook(stringId, { status });
+      const updatedBook = await emitDomainMutationLifecycle(
+        MOBILE_EVENTS.BOOK.STATUS.CHANGE,
+        createDomainMutationPayload(RESOURCE_TYPES.BOOK, {
+          bookId: stringId,
+          previousStatus,
+          nextStatus: status,
+        }),
+        () => bookAPI.updateBookStatus(Number(stringId), status),
+        (book) => ({
+          result: {
+            book,
+            previousStatus,
+            newStatus: book.status ?? null,
+          },
+        })
+      );
 
       // Mark as synced
       await bookRepository.updateSyncFields(stringId, { syncStatus: SYNC_STATUS.SYNCED });
       setBooks(prev => prev.map(book =>
-        String(book.id) === stringId ? { ...book, meta: { ...book.meta, syncStatus: SYNC_STATUS.SYNCED } } : book
+        String(book.id) === stringId
+          ? {
+              ...book,
+              status: updatedBook.status,
+              updateDate: updatedBook.updateDate,
+              meta: {
+                ...book.meta,
+                syncStatus: SYNC_STATUS.SYNCED,
+                serverUpdatedAt: updatedBook.updateDate,
+              },
+            }
+          : book
       ));
     } catch (err: unknown) {
       console.error('Failed to update book status:', err);
@@ -446,7 +474,7 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
         throw new Error(t('books.updateStatusFailed'));
       }
     }
-  }, [t]);
+  }, [books, t]);
 
   const resolveConflict = useCallback(async (bookId: number | string, choice: 'local' | 'server'): Promise<void> => {
     const stringId = String(bookId);

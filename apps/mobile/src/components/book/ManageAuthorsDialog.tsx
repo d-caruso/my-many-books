@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { useManageAuthors } from '@my-many-books/shared-ui-hooks';
 import type { Author } from '@my-many-books/shared-types';
 import { authorAPI } from '@/services/api';
+import { RESOURCE_TYPES } from '@/services/hooks/eventsSchema';
+import { MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+import { createDomainMutationPayload, emitDomainMutationLifecycle } from '@/services/hooks/domainMutationEvents';
 
 interface ManageAuthorsDialogProps {
   visible: boolean;
@@ -35,8 +38,22 @@ export function ManageAuthorsDialog({
       updateAuthor: (
         id: number,
         data: Partial<{ name: string; surname: string; nationality?: string | null }>
-      ) => authorAPI.updateAuthor(id, data),
-      deleteAuthor: (id: number) => authorAPI.deleteAuthor(id),
+      ) =>
+        emitDomainMutationLifecycle<Author>(
+          MOBILE_EVENTS.AUTHOR.UPDATE,
+          createDomainMutationPayload(RESOURCE_TYPES.AUTHOR, {
+            authorId: id,
+            changes: data,
+          }),
+          () => authorAPI.updateAuthor(id, data),
+          (author) => ({ result: { author } })
+        ),
+      deleteAuthor: (id: number) =>
+        emitDomainMutationLifecycle<void>(
+          MOBILE_EVENTS.AUTHOR.DELETE,
+          createDomainMutationPayload(RESOURCE_TYPES.AUTHOR, { authorId: id }),
+          () => authorAPI.deleteAuthor(id)
+        ),
     }),
     []
   );

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import type { Author, Category } from '@my-many-books/shared-types';
 import { authorAPI, categoryAPI } from '@/services/api';
 import { mobileHooks, MOBILE_EVENTS, RESOURCE_TYPES } from '@/services/hooks/mobileHooks';
+import { createDomainMutationPayload, emitDomainMutationLifecycle } from '@/services/hooks/domainMutationEvents';
 import { useTranslation } from 'react-i18next';
 import { createCategoryDisplayNameComparator } from '@my-many-books/shared-utils';
 import { getErrorMessage } from '@/utils/helpers';
@@ -89,7 +90,16 @@ export function useAddBookEntities() {
 
   const createAuthorAndSelect = useCallback(
     async (input: { name: string; surname: string; nationality?: string }) => {
-      const created = await authorAPI.createAuthor(input);
+      const created = await emitDomainMutationLifecycle<Author>(
+        MOBILE_EVENTS.AUTHOR.CREATE,
+        createDomainMutationPayload(RESOURCE_TYPES.AUTHOR, {
+          name: input.name,
+          surname: input.surname,
+          nationality: input.nationality,
+        }),
+        () => authorAPI.createAuthor(input),
+        (author) => ({ result: { author } })
+      );
       await loadAuthors();
       setSelectedAuthors((prev) =>
         prev.some((author) => Number(author.id) === Number(created.id)) ? prev : [...prev, created]
@@ -101,7 +111,14 @@ export function useAddBookEntities() {
 
   const createCategoryAndSelect = useCallback(
     async (input: { name: string }) => {
-      const created = await categoryAPI.createCategory(input);
+      const created = await emitDomainMutationLifecycle<Category>(
+        MOBILE_EVENTS.CATEGORY.CREATE,
+        createDomainMutationPayload(RESOURCE_TYPES.CATEGORY, {
+          name: input.name,
+        }),
+        () => categoryAPI.createCategory(input),
+        (category) => ({ result: { category } })
+      );
       await loadCategories();
       setSelectedCategoryIds((prev) =>
         prev.includes(Number(created.id)) ? prev : [...prev, Number(created.id)]

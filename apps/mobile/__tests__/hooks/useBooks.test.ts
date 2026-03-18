@@ -1,6 +1,7 @@
 import React from 'react';
 import { useBooks } from '../../src/hooks/useBooks';
 import { bookAPI } from '../../src/services/api';
+import { mobileHooks, MOBILE_EVENTS } from '../../src/services/hooks/mobileHooks';
 
 // Override the global setupTests mock — use the real implementation
 jest.mock('../../src/hooks/useBooks', () => jest.requireActual('../../src/hooks/useBooks'));
@@ -10,16 +11,55 @@ jest.mock('../../src/services/api', () => ({
     getBooks: jest.fn(),
     createBook: jest.fn(),
     updateBook: jest.fn(),
+    updateBookStatus: jest.fn(),
     deleteBook: jest.fn(),
   },
 }));
+
+jest.mock('../../src/services/hooks/mobileHooks', () => {
+  const actual = jest.requireActual('../../src/services/hooks/eventsSchema');
+  return {
+    mobileHooks: {
+      emit: jest.fn().mockResolvedValue(undefined),
+    },
+    MOBILE_EVENTS: actual.MOBILE_EVENTS,
+    RESOURCE_TYPES: actual.RESOURCE_TYPES,
+  };
+});
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),
 }));
 
+jest.mock('../../src/services/database/BookRepository', () => ({
+  bookRepository: {
+    findAll: jest.fn().mockResolvedValue([]),
+    upsert: jest.fn().mockResolvedValue(undefined),
+    create: jest.fn().mockResolvedValue(undefined),
+    update: jest.fn().mockResolvedValue(undefined),
+    delete: jest.fn().mockResolvedValue(undefined),
+    hardDelete: jest.fn().mockResolvedValue(undefined),
+    updateSyncFields: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('../../src/services/database/DatabaseService', () => ({
+  databaseService: {
+    openDatabase: jest.fn().mockResolvedValue(undefined),
+    getFirstAsync: jest.fn().mockResolvedValue(null),
+    executeQuery: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('../../src/services/database/migrations', () => ({
+  migrationSystem: {
+    runMigrations: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 const mockBookAPI = bookAPI as jest.Mocked<typeof bookAPI>;
+const mockMobileHooks = mobileHooks as jest.Mocked<typeof mobileHooks>;
 
 describe('useBooks Hook Coverage', () => {
   beforeEach(() => {
@@ -265,7 +305,12 @@ describe('useBooks Hook Coverage', () => {
   });
 
   it('should test updateBookStatus functionality', async () => {
-    mockBookAPI.updateBook.mockResolvedValue(undefined);
+    mockBookAPI.updateBookStatus.mockResolvedValue({
+      id: 1,
+      title: 'Book 1',
+      status: 'completed',
+      updateDate: new Date().toISOString(),
+    });
 
     const originalUseState = React.useState;
     const originalUseCallback = React.useCallback;
@@ -280,10 +325,76 @@ describe('useBooks Hook Coverage', () => {
 
     try {
       await hook.updateBookStatus(1, 'completed');
-      expect(mockBookAPI.updateBook).toHaveBeenCalledWith(1, { status: 'completed' });
+      expect(mockBookAPI.updateBookStatus).toHaveBeenCalledWith(1, 'completed');
+      expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+        MOBILE_EVENTS.BOOK.STATUS.CHANGE.BEFORE,
+        expect.objectContaining({
+          resourceType: 'book',
+          metadata: expect.objectContaining({
+            bookId: '1',
+            previousStatus: 'reading',
+            nextStatus: 'completed',
+          }),
+        })
+      );
+      expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+        MOBILE_EVENTS.BOOK.STATUS.CHANGE.AFTER,
+        expect.objectContaining({
+          resourceType: 'book',
+          result: expect.objectContaining({
+            book: expect.objectContaining({ id: 1, status: 'completed' }),
+            previousStatus: 'reading',
+            newStatus: 'completed',
+          }),
+        })
+      );
     } catch {
-      expect(mockBookAPI.updateBook).toBeDefined();
+      expect(mockBookAPI.updateBookStatus).toBeDefined();
     }
+
+    React.useState = originalUseState;
+    React.useCallback = originalUseCallback;
+    React.useEffect = originalUseEffect;
+  });
+
+  it('should emit status change failure for non-retriable status update errors', async () => {
+    mockBookAPI.updateBookStatus.mockRejectedValue({
+      response: { status: 400 },
+      message: 'Status update failed',
+    });
+
+    const originalUseState = React.useState;
+    const originalUseCallback = React.useCallback;
+    const originalUseEffect = React.useEffect;
+
+    const mockSetter = jest.fn();
+    React.useState = jest.fn(() => [[{ id: 1, title: 'Book 1', status: 'reading', meta: {} }], mockSetter]);
+    React.useCallback = jest.fn((fn) => fn);
+    React.useEffect = jest.fn(() => {});
+
+    const hook = useBooks();
+
+    await expect(hook.updateBookStatus(1, 'completed')).rejects.toThrow('books.updateStatusFailed');
+
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.BOOK.STATUS.CHANGE.FAILURE,
+      expect.objectContaining({
+        resourceType: 'book',
+        metadata: expect.objectContaining({
+          bookId: '1',
+          previousStatus: 'reading',
+          nextStatus: 'completed',
+        }),
+        error: expect.any(String),
+      })
+    );
+    expect(mockMobileHooks.emit).toHaveBeenCalledWith(
+      MOBILE_EVENTS.ERROR.API_RESPONSE,
+      expect.objectContaining({
+        operation: 'UPDATE',
+        resource: 'book',
+      })
+    );
 
     React.useState = originalUseState;
     React.useCallback = originalUseCallback;

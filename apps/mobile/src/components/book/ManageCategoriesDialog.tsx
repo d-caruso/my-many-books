@@ -6,6 +6,9 @@ import { useManageCategories } from '@my-many-books/shared-ui-hooks';
 import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import type { Category } from '@my-many-books/shared-types';
 import { categoryAPI } from '@/services/api';
+import { RESOURCE_TYPES } from '@/services/hooks/eventsSchema';
+import { MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
+import { createDomainMutationPayload, emitDomainMutationLifecycle } from '@/services/hooks/domainMutationEvents';
 
 interface ManageCategoriesDialogProps {
   visible: boolean;
@@ -34,8 +37,22 @@ export function ManageCategoriesDialog({
     () => ({
       getCategories: () => categoryAPI.getCategories(),
       createCategory: (data: { name: string }) => categoryAPI.createCategory(data),
-      updateCategory: (id: number, data: Partial<{ name: string }>) => categoryAPI.updateCategory(id, data),
-      deleteCategory: (id: number) => categoryAPI.deleteCategory(id),
+      updateCategory: (id: number, data: Partial<{ name: string }>) =>
+        emitDomainMutationLifecycle<Category>(
+          MOBILE_EVENTS.CATEGORY.UPDATE,
+          createDomainMutationPayload(RESOURCE_TYPES.CATEGORY, {
+            categoryId: id,
+            changes: data,
+          }),
+          () => categoryAPI.updateCategory(id, data),
+          (category) => ({ result: { category } })
+        ),
+      deleteCategory: (id: number) =>
+        emitDomainMutationLifecycle<void>(
+          MOBILE_EVENTS.CATEGORY.DELETE,
+          createDomainMutationPayload(RESOURCE_TYPES.CATEGORY, { categoryId: id }),
+          () => categoryAPI.deleteCategory(id)
+        ),
     }),
     []
   );

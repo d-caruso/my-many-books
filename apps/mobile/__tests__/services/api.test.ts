@@ -14,7 +14,7 @@ jest.mock('expo-secure-store', () => ({
 }));
 
 // Mock shared-api dependency for tests 1–4
-jest.mock('@my-many-books/shared-api', () => ({
+jest.mock('@my-many-books/shared-api/', () => ({
   createApiClient: jest.fn(() => ({
     books: {
       getBooks: jest.fn(),
@@ -127,7 +127,7 @@ describe('API Service Coverage', () => {
     };
 
     jest.unmock('@/services/api');
-    jest.doMock('@my-many-books/shared-api', () => ({
+    jest.doMock('@my-many-books/shared-api/', () => ({
       createApiClient: jest.fn(() => ({
         books: {
           getBooks: jest.fn(),
@@ -228,7 +228,7 @@ describe('API Service Coverage', () => {
     delete process.env.EXPO_PUBLIC_API_VERSION;
 
     jest.unmock('@/services/api');
-    jest.doMock('@my-many-books/shared-api', () => ({
+    jest.doMock('@my-many-books/shared-api/', () => ({
       createApiClient: jest.fn(() => ({
         books: {
           getBooks: jest.fn(),
@@ -330,7 +330,7 @@ describe('API Service Coverage', () => {
       },
     }));
 
-    jest.doMock('@my-many-books/shared-api', () => ({
+    jest.doMock('@my-many-books/shared-api/', () => ({
       createApiClient: jest.fn(() => ({
         books: {
           getBooks: jest.fn(),
@@ -416,7 +416,7 @@ describe('API Service Coverage', () => {
       },
     }));
 
-    jest.doMock('@my-many-books/shared-api', () => ({
+    jest.doMock('@my-many-books/shared-api/', () => ({
       createApiClient: jest.fn(() => ({
         books: {
           getBooks: jest.fn(),
