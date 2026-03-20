@@ -22,12 +22,19 @@ provider:
   # Environment variables
   environment:
     NODE_ENV: ${self:provider.stage}
-    DB_HOST: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabaseEndpoint, ''}
-    DB_PORT: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabasePort, '3306'}
+    # Legacy AWS RDS config:
+    # DB_HOST: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabaseEndpoint, ''}
+    # DB_PORT: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabasePort, '3306'}
+    # DB_USER: admin
+    # DB_PASSWORD: ${self:custom.dbCredentials.password}
+    # DB_SSL: 'true'
+    # Misterdomain MariaDB:
+    DB_HOST: '217.64.201.48'
+    DB_PORT: '3306'
     DB_NAME: my_many_books
-    DB_USER: admin
+    DB_USER: mmb_api
     DB_PASSWORD: ${self:custom.dbCredentials.password}
-    DB_SSL: 'true'
+    DB_SSL: 'false'
     DB_POOL_MAX: ${env:DB_POOL_MAX, '20'}
     DB_POOL_MIN: ${env:DB_POOL_MIN, '5'}
     API_VERSION: ${env:API_VERSION, '1.0.0'}
