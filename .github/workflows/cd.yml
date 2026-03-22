@@ -505,56 +505,45 @@ jobs:
           echo "Installing workspace dependencies..."
           npm ci
 
-          # Get database connection details from CloudFormation stack
-          STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
-
-          DB_ENDPOINT=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query 'Stacks[0].Outputs[?OutputKey==`DatabaseEndpoint`].OutputValue' \
-            --output text)
-
-          DB_PORT=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query 'Stacks[0].Outputs[?OutputKey==`DatabasePort`].OutputValue' \
-            --output text)
-
-          if [ -z "$DB_ENDPOINT" ] || [ -z "$DB_PORT" ]; then
-            echo "Could not retrieve database connection details from CloudFormation"
-            exit 1
-          fi
-
-          # Get database credentials from Secrets Manager
-          SECRET_ARN=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query 'Stacks[0].Outputs[?OutputKey==`DatabaseSecretArn`].OutputValue' \
-            --output text)
-
-          DB_CREDENTIALS=$(aws secretsmanager get-secret-value \
-            --secret-id "$SECRET_ARN" \
-            --query 'SecretString' \
-            --output text)
-
-          DB_USER=$(echo "$DB_CREDENTIALS" | jq -r '.username')
-          DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
+          # Legacy AWS RDS config:
+          # STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
+          # DB_ENDPOINT=$(aws cloudformation describe-stacks \
+          #   --stack-name "$STACK_NAME" \
+          #   --query 'Stacks[0].Outputs[?OutputKey==`DatabaseEndpoint`].OutputValue' \
+          #   --output text)
+          # DB_PORT=$(aws cloudformation describe-stacks \
+          #   --stack-name "$STACK_NAME" \
+          #   --query 'Stacks[0].Outputs[?OutputKey==`DatabasePort`].OutputValue' \
+          #   --output text)
+          # SECRET_ARN=$(aws cloudformation describe-stacks \
+          #   --stack-name "$STACK_NAME" \
+          #   --query 'Stacks[0].Outputs[?OutputKey==`DatabaseSecretArn`].OutputValue' \
+          #   --output text)
+          # DB_CREDENTIALS=$(aws secretsmanager get-secret-value \
+          #   --secret-id "$SECRET_ARN" \
+          #   --query 'SecretString' \
+          #   --output text)
+          # DB_USER=$(echo "$DB_CREDENTIALS" | jq -r '.username')
+          # DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
 
           echo "Running database migrations..."
           NODE_ENV="${{ needs.setup.outputs.environment }}" \
-          DB_HOST="$DB_ENDPOINT" \
-          DB_PORT="$DB_PORT" \
-          DB_NAME="my_many_books" \
-          DB_USER="$DB_USER" \
-          DB_PASSWORD="$DB_PASSWORD" \
-          DB_SSL="true" \
+          DB_HOST="${{ secrets.DB_HOST }}" \
+          DB_PORT="${{ secrets.DB_PORT }}" \
+          DB_NAME="${{ secrets.DB_NAME }}" \
+          DB_USER="${{ secrets.DB_USER }}" \
+          DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+          DB_SSL="${{ secrets.DB_SSL }}" \
           npm run -w my-many-books-api db:migrate
 
           echo "Running database seeders..."
           NODE_ENV="${{ needs.setup.outputs.environment }}" \
-          DB_HOST="$DB_ENDPOINT" \
-          DB_PORT="$DB_PORT" \
-          DB_NAME="my_many_books" \
-          DB_USER="$DB_USER" \
-          DB_PASSWORD="$DB_PASSWORD" \
-          DB_SSL="true" \
+          DB_HOST="${{ secrets.DB_HOST }}" \
+          DB_PORT="${{ secrets.DB_PORT }}" \
+          DB_NAME="${{ secrets.DB_NAME }}" \
+          DB_USER="${{ secrets.DB_USER }}" \
+          DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+          DB_SSL="${{ secrets.DB_SSL }}" \
           npm run -w my-many-books-api db:seed
 
   deploy-api:
@@ -605,30 +594,12 @@ jobs:
         working-directory: apps/api
         run: npm run build
 
-      - name: Get Database Credentials
-        id: db-credentials
-        run: |
-          STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
-          SECRET_ARN=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query 'Stacks[0].Outputs[?OutputKey==`DatabaseSecretArn`].OutputValue' \
-            --output text)
-
-          DB_CREDENTIALS=$(aws secretsmanager get-secret-value \
-            --secret-id "$SECRET_ARN" \
-            --query 'SecretString' \
-            --output text)
-
-          DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
-          echo "db-password=$DB_PASSWORD" >> $GITHUB_OUTPUT
-          echo "Database credentials retrieved from Secrets Manager"
-
       - name: Deploy API with Serverless
         working-directory: apps/api
         run: |
           export NODE_ENV=${{ needs.setup.outputs.environment }}
           export STAGE=${{ needs.setup.outputs.environment }}
-          export DB_PASSWORD="${{ steps.db-credentials.outputs.db-password }}"
+          export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
 
           # Serverless Framework authentication
           export SERVERLESS_ACCESS_KEY=${{ secrets.SERVERLESS_ACCESS_KEY }}
