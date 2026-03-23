@@ -1,5 +1,6 @@
-import React from 'react';
-import { TextField, TextFieldProps } from '@mui/material';
+import React, { useState } from 'react';
+import { IconButton, InputAdornment, TextField, TextFieldProps } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 interface ResponsiveInputProps
   extends Omit<TextFieldProps, 'error' | 'helperText' | 'variant'> {
@@ -18,8 +19,11 @@ export const ResponsiveInput: React.FC<ResponsiveInputProps> = ({
   type,
   ...props
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
   const displayHelper = error ?? helperText;
   const shouldShrink = type === 'date' || props.InputLabelProps?.shrink;
+  const isPassword = type === 'password';
+  const resolvedType = isPassword && showPassword ? 'text' : type;
 
   return (
     <TextField
@@ -30,10 +34,24 @@ export const ResponsiveInput: React.FC<ResponsiveInputProps> = ({
       required={isRequired ?? required}
       error={Boolean(error)}
       helperText={displayHelper}
-      type={type}
+      type={resolvedType}
       InputLabelProps={{
         ...props.InputLabelProps,
         shrink: shouldShrink,
+      }}
+      InputProps={{
+        ...props.InputProps,
+        endAdornment: isPassword ? (
+          <InputAdornment position="end">
+            <IconButton
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              onClick={() => setShowPassword((prev) => !prev)}
+              edge="end"
+            >
+              {showPassword ? <VisibilityOff /> : <Visibility />}
+            </IconButton>
+          </InputAdornment>
+        ) : (props.InputProps?.endAdornment ?? undefined),
       }}
     />
   );
