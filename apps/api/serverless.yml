@@ -54,6 +54,9 @@ provider:
     GOOGLE_BOOKS_API_KEY: ${env:GOOGLE_BOOKS_API_KEY, ''}
     GOOGLE_BOOKS_BASE_URL: ${env:GOOGLE_BOOKS_BASE_URL, 'https://www.googleapis.com/books/v1'}
     
+    # Frontend Configuration (for CORS)
+    FRONTEND_URL: ${env:FRONTEND_URL, 'https://mymanybooks.com'}
+
     # Performance settings
     CACHE_TTL: ${env:CACHE_TTL, '3600'}
     REQUEST_TIMEOUT: ${env:REQUEST_TIMEOUT, '10000'}
