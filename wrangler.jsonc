@@ -1,5 +1,5 @@
 {
-  "name": "my-many-books",
+  "name": "app",
   "compatibility_date": "2026-03-12",
   "assets": {
     "directory": "./apps/web-app/build",
