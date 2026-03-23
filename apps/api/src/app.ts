@@ -59,10 +59,11 @@ if (securityHeadersEnabled) {
 // ===== CORE MIDDLEWARE =====
 app.use(
   cors({
-    origin: [process.env['FRONTEND_URL'], /^http:\/\/localhost:\d+$/].filter(Boolean) as (
-      | string
-      | RegExp
-    )[],
+    origin: [
+      process.env['FRONTEND_URL'],
+      process.env['FRONTEND_URL']?.replace('://', '://www.'),
+      /^http:\/\/localhost:\d+$/,
+    ].filter(Boolean) as (string | RegExp)[],
     credentials: true,
   })
 );
