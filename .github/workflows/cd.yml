@@ -416,6 +416,8 @@ jobs:
           PARAMETERS="$PARAMETERS ParameterKey=ServiceName,ParameterValue=my-many-books-api"
           PARAMETERS="$PARAMETERS ParameterKey=GoogleClientId,ParameterValue=$GOOGLE_CLIENT_ID"
           PARAMETERS="$PARAMETERS ParameterKey=GoogleClientSecret,ParameterValue=$GOOGLE_CLIENT_SECRET"
+          WEB_APP_URL=${{ needs.setup.outputs.environment == 'prod' && secrets.WEB_APP_URL_PROD || secrets.WEB_APP_URL_DEV }}
+          PARAMETERS="$PARAMETERS ParameterKey=WebAppUrl,ParameterValue=$WEB_APP_URL"
 
           # Check if stack exists and get its status
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" >/dev/null 2>&1; then
