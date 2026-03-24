@@ -87,6 +87,11 @@ provider:
           Action:
             - execute-api:Invoke
           Resource: 'arn:aws:execute-api:*:*:*'
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminGetUser
+            - cognito-idp:AdminUserGlobalSignOut
+          Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
         # Legacy: Secrets Manager access (no longer needed - using GitHub Secrets)
         # - Effect: Allow
         #   Action:
