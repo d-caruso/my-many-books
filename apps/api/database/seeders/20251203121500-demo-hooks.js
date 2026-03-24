@@ -115,9 +115,17 @@ module.exports = {
       },
     ];
 
-    await queryInterface.bulkInsert('hooks', hooks, {
-      ignoreDuplicates: true,
-    });
+    const existingCount = await queryInterface.sequelize.query(
+      'SELECT COUNT(*) as count FROM hooks',
+      { type: queryInterface.sequelize.QueryTypes.SELECT }
+    );
+    const count = Number(existingCount[0]?.count ?? existingCount[0]?.['COUNT(*)'] ?? 0);
+    if (count > 0) {
+      console.warn('[seed:demo-hooks] Skipping: hooks table already has data.');
+      return;
+    }
+
+    await queryInterface.bulkInsert('hooks', hooks);
   },
 
   async down(queryInterface, Sequelize) {

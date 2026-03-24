@@ -48,11 +48,10 @@ export class LogAction implements HookAction {
     const message = this.buildMessage(context.eventName);
     const payload = this.includeMetadata ? context.payload : undefined;
 
-    const loggerMethod = this.logger[this.level];
     if (payload !== undefined) {
-      loggerMethod({ payload }, message);
+      this.logger[this.level]({ payload }, message);
     } else {
-      loggerMethod(message);
+      this.logger[this.level](message);
     }
 
     if (this.destination === 'file' && this.filePath) {
