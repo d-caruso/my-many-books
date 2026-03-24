@@ -3,6 +3,11 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+    if (process.env.NODE_ENV === 'prod') {
+      console.warn('[seed:demo-hooks] Skipping: demo data must not be seeded in production.');
+      return;
+    }
+
     const now = new Date();
 
     const tableCheck = await queryInterface.sequelize.query(
@@ -114,16 +119,6 @@ module.exports = {
         update_date: now,
       },
     ];
-
-    const existingCount = await queryInterface.sequelize.query(
-      'SELECT COUNT(*) as count FROM hooks',
-      { type: queryInterface.sequelize.QueryTypes.SELECT }
-    );
-    const count = Number(existingCount[0]?.count ?? existingCount[0]?.['COUNT(*)'] ?? 0);
-    if (count > 0) {
-      console.warn('[seed:demo-hooks] Skipping: hooks table already has data.');
-      return;
-    }
 
     await queryInterface.bulkInsert('hooks', hooks);
   },
