@@ -731,8 +731,21 @@ jobs:
             }"
           fi
           
-          # Sync build files to S3
-          aws s3 sync build/ s3://$BUCKET_NAME --delete
+          # Sync build files to S3 with per-type cache headers
+          # 1. Hashed assets (JS/CSS) — immutable, cache 1 year
+          aws s3 sync build/assets/ s3://$BUCKET_NAME/assets/ \
+            --cache-control "public, max-age=31536000, immutable"
+
+          # 2. Translation files — cache 1 hour (rarely change between deploys)
+          aws s3 sync build/locales/ s3://$BUCKET_NAME/locales/ \
+            --cache-control "public, max-age=3600"
+
+          # 3. index.html and all other root files — always revalidate
+          aws s3 sync build/ s3://$BUCKET_NAME/ \
+            --exclude "assets/*" \
+            --exclude "locales/*" \
+            --cache-control "no-cache" \
+            --delete
           
           # Invalidate CloudFront cache (optional - skip if no permissions)
           if aws cloudfront list-distributions >/dev/null 2>&1; then
