@@ -17,9 +17,11 @@ describe('useManageCategories', () => {
 
     const { result } = renderHook(() => useManageCategories(api));
 
-    await waitFor(() => expect(api.getCategories).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.categories.map((c) => c.name)).toEqual(['Alpha', 'Zed']);
+    await waitFor(() => {
+      expect(api.getCategories).toHaveBeenCalledTimes(1);
+      expect(result.current.loading).toBe(false);
+      expect(result.current.categories.map((c) => c.name)).toEqual(['Alpha', 'Zed']);
+    });
   });
 
   it('creates category with trimmed name and updates local list', async () => {
