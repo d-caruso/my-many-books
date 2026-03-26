@@ -19,6 +19,7 @@ import { VIEW_TRANSITION_FADE_IN_TIMING, VIEW_TRANSITION_FADE_OUT_LEAD_MS } from
 
 // Eager load MUI theme wrapper (always needed on landing page)
 import { ThemedApp } from './components/ThemedApp';
+import i18n from './i18n';
 
 // Lazy load error fallback (only shown on errors)
 const RootErrorFallback = lazy(() => import('./components/ErrorBoundary/RootErrorFallback').then(m => ({ default: m.RootErrorFallback })));
@@ -185,6 +186,13 @@ const ProtectedMainContent: React.FC<React.PropsWithChildren> = ({ children }) =
 };
 
 function App() {
+  // Background-load namespaces not needed on the auth page.
+  // Fires after first render so auth view is not blocked, but namespaces are
+  // ready in cache before the user navigates to the protected area.
+  useEffect(() => {
+    void i18n.loadNamespaces(['dialogs', 'categories']);
+  }, []);
+
   const visuallyHidden = {
     border: 0,
     clip: 'rect(0 0 0 0)',
