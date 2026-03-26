@@ -41,6 +41,21 @@ export const rateLimitConfigs = {
   },
 
   /**
+   * Token refresh endpoint
+   * Lenient: machine-initiated, requires valid httpOnly cookie (no brute-force vector).
+   * Only failed attempts count so normal usage never triggers a 429.
+   */
+  refresh: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: isDevelopment ? 1000 : 60, // 60 requests per 15min in prod (≈4/min headroom)
+    message: i18n.t('errors.rate_limit_auth'),
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true, // only count failures
+    skipFailedRequests: false,
+  },
+
+  /**
    * Standard API endpoints (authenticated users)
    * Moderate limits for normal operations
    */
