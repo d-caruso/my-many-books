@@ -5,7 +5,8 @@ import Backend from 'i18next-http-backend';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '@my-many-books/shared-i18n';
 
 // Configure i18next with HTTP backend for async translation loading
-i18n
+// i18nReady resolves once translations are loaded — used to defer React render
+export const i18nReady: Promise<void> = i18n
   .use(Backend) // Load translations asynchronously via HTTP
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -65,6 +66,7 @@ i18n
     partialBundledLanguages: true,
 
     debug: false, // Disable i18next debug logging
-  });
+  })
+  .then(() => {});
 
 export default i18n;

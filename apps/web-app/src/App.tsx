@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { APP_ROUTES } from '@my-many-books/shared-navigation';
@@ -17,27 +17,18 @@ import { runFadeOut, useFadeInOnChange, useLanguageChangeFade } from './hooks/us
 import { ViewTransitionProvider, useProtectedViewTransition } from './contexts/ViewTransitionContext';
 import { VIEW_TRANSITION_FADE_IN_TIMING, VIEW_TRANSITION_FADE_OUT_LEAD_MS } from './constants/animations';
 
-// Defer i18n initialization until after first render
-let i18nInitialized = false;
-const initI18n = async () => {
-  if (!i18nInitialized) {
-    await import('./i18n');
-    i18nInitialized = true;
-  }
-};
-
 // Eager load MUI theme wrapper (always needed on landing page)
 import { ThemedApp } from './components/ThemedApp';
 
 // Lazy load error fallback (only shown on errors)
 const RootErrorFallback = lazy(() => import('./components/ErrorBoundary/RootErrorFallback').then(m => ({ default: m.RootErrorFallback })));
 
-// Eager load landing page components (always needed on first render)
-import BooksPage from './pages/BooksPage';
+// Eager load auth page — landing page for unauthenticated users
+import AuthPage from './pages/AuthPage';
 import { Navbar } from './components/Navigation';
 
 // Lazy load non-landing pages for route-based code splitting
-const AuthPage = lazy(() => import('./pages/AuthPage'));
+const BooksPage = lazy(() => import('./pages/BooksPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
@@ -194,7 +185,6 @@ const ProtectedMainContent: React.FC<React.PropsWithChildren> = ({ children }) =
 };
 
 function App() {
-  const [appReady, setAppReady] = useState(false);
   const visuallyHidden = {
     border: 0,
     clip: 'rect(0 0 0 0)',
@@ -206,16 +196,6 @@ function App() {
     width: 1,
   };
 
-  useEffect(() => {
-    // Initialize i18n (HTML loading screen shows during this)
-    const initApp = async () => {
-      await initI18n();
-      setAppReady(true);
-    };
-
-    initApp();
-  }, []);
-
   // Hide HTML loading screen after content has painted
   const onContentReady = useCallback((node: HTMLElement | null) => {
     if (node) {
@@ -224,10 +204,6 @@ function App() {
       });
     }
   }, []);
-
-  if (!appReady) {
-    return null;
-  }
 
   return (
     <ErrorBoundary fallback={(error, reset) => (
