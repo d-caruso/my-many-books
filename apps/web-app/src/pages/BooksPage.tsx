@@ -221,7 +221,7 @@ const BooksPage: React.FC = () => {
 
     clearSearch();
     loadBooks(1);
-  }, [searchActive, searchModeParam, searchParams, setSearchParams, runCurrentSearch, clearSearch, loadBooks]);
+  }, [searchActive, searchModeParam, setSearchParams, runCurrentSearch, clearSearch, loadBooks]);
 
   const displayedBooks = searchActive ? searchResults : libraryBooks;
   const displayedLoading = searchActive ? searchLoading : booksLoading;
