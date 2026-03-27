@@ -53,6 +53,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip API requests — dynamic data, no benefit from SW caching, and raw 304
+  // responses from the SW break XHR clients that expect a full response body.
+  const url = new URL(event.request.url);
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
