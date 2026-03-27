@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys ]
+    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys, task/auth-loading-skeleton ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys ]
+    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys, task/auth-loading-skeleton ]
   workflow_dispatch:
     inputs:
       run_tests:
