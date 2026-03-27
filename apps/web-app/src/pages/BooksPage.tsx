@@ -165,54 +165,63 @@ const BooksPage: React.FC = () => {
     setWelcomeNoticeOpen(true);
   }, [user, t]);
 
+  // Effect: scanner/add-mode URL param processing.
+  // Fires when mode=add is present in the URL (scanner redirect with ISBN).
   useEffect(() => {
-    if (searchModeParam === 'add') {
-      const isbnFromUrl = searchParams.get('isbn') || undefined;
-      const scannerSource = searchParams.get('scannerSource');
-      const scannerCopy = searchParams.get('scannerCopy');
-      const restoreDraft = searchParams.get('restoreDraft') === '1' || scannerSource === 'scanner';
-      let restoredDraft: Partial<BookFormData> | null = null;
+    if (searchModeParam !== 'add') return;
 
-      if (restoreDraft) {
+    const isbnFromUrl = searchParams.get('isbn') || undefined;
+    const scannerSource = searchParams.get('scannerSource');
+    const scannerCopy = searchParams.get('scannerCopy');
+    const restoreDraft = searchParams.get('restoreDraft') === '1' || scannerSource === 'scanner';
+    let restoredDraft: Partial<BookFormData> | null = null;
+
+    if (restoreDraft) {
+      try {
+        const storedDraft = window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
+        if (storedDraft) {
+          restoredDraft = JSON.parse(storedDraft) as Partial<BookFormData>;
+        }
+      } catch {
+        restoredDraft = null;
+      } finally {
         try {
-          const storedDraft = window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
-          if (storedDraft) {
-            restoredDraft = JSON.parse(storedDraft) as Partial<BookFormData>;
-          }
+          window.sessionStorage.removeItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
         } catch {
-          restoredDraft = null;
-        } finally {
-          try {
-            window.sessionStorage.removeItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
-          } catch {
-            // ignore storage cleanup failures
-          }
+          // ignore storage cleanup failures
         }
       }
-
-      setInitialDraft(restoredDraft);
-      setInitialIsbn(isbnFromUrl);
-      if (scannerSource === 'scanner') {
-        setScannerNoticeMessage(
-          scannerCopy === 'success'
-            ? t('isbn_copied', { ns: 'scanner', defaultValue: 'ISBN copied' })
-            : t('isbn_detected', { ns: 'scanner', defaultValue: 'ISBN detected' })
-        );
-        setScannerNoticeOpen(true);
-      }
-      setSelectedBook(null);
-      setPageMode('add');
-      setActionError(null);
-      window.scrollTo({ top: 0 });
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete('mode');
-      newParams.delete('isbn');
-      newParams.delete('scannerSource');
-      newParams.delete('scannerCopy');
-      newParams.delete('restoreDraft');
-      setSearchParams(newParams, { replace: true });
-      return;
     }
+
+    setInitialDraft(restoredDraft);
+    setInitialIsbn(isbnFromUrl);
+    if (scannerSource === 'scanner') {
+      setScannerNoticeMessage(
+        scannerCopy === 'success'
+          ? t('isbn_copied', { ns: 'scanner', defaultValue: 'ISBN copied' })
+          : t('isbn_detected', { ns: 'scanner', defaultValue: 'ISBN detected' })
+      );
+      setScannerNoticeOpen(true);
+    }
+    setSelectedBook(null);
+    setPageMode('add');
+    setActionError(null);
+    window.scrollTo({ top: 0 });
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('mode');
+    newParams.delete('isbn');
+    newParams.delete('scannerSource');
+    newParams.delete('scannerCopy');
+    newParams.delete('restoreDraft');
+    setSearchParams(newParams, { replace: true });
+  }, [searchModeParam, searchParams, setSearchParams, t]);
+
+  // Effect: load books list or run active search.
+  // setSearchParams is intentionally excluded from deps — it is only used in the add-mode
+  // effect above. Including it here would cause spurious re-runs because React Router
+  // recreates setSearchParams whenever searchParams changes reference.
+  useEffect(() => {
+    if (searchModeParam === 'add') return;
 
     if (searchActive) {
       runCurrentSearch();
@@ -221,7 +230,7 @@ const BooksPage: React.FC = () => {
 
     clearSearch();
     loadBooks(1);
-  }, [searchActive, searchModeParam, setSearchParams, runCurrentSearch, clearSearch, loadBooks]);
+  }, [searchActive, searchModeParam, runCurrentSearch, clearSearch, loadBooks]);
 
   const displayedBooks = searchActive ? searchResults : libraryBooks;
   const displayedLoading = searchActive ? searchLoading : booksLoading;
