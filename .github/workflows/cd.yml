@@ -2,7 +2,7 @@ name: Monorepo CD
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys, task/auth-loading-skeleton ]
+    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys, task/improve-web-performance ]
     tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
@@ -68,6 +68,9 @@ jobs:
             echo "environment=prod" >> $GITHUB_OUTPUT
             echo "should-deploy=true" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/task/improve-web-performance" ]; then
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "should-deploy=true" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
