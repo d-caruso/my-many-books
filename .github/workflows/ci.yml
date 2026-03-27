@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys, task/improve-web-performance ]
+    branches: [ main, develop, feature/architecture-improvements ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys, task/improve-web-performance ]
+    branches: [ main, develop, feature/architecture-improvements ]
   workflow_dispatch:
     inputs:
       run_tests:

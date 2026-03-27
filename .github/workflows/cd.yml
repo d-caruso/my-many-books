@@ -2,7 +2,7 @@ name: Monorepo CD
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys, task/improve-web-performance ]
+    branches: [ main, develop, feature/architecture-improvements ]
     tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
@@ -37,7 +37,7 @@ jobs:
       affected-projects: ${{ steps.affected.outputs.projects }}
       deploy-api: ${{ steps.projects.outputs.deploy-api }}
       deploy-web-app: ${{ steps.projects.outputs.deploy-web-app }}
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -70,9 +70,6 @@ jobs:
           elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "should-deploy=true" >> $GITHUB_OUTPUT
-          elif [ "${{ github.ref }}" = "refs/heads/task/improve-web-performance" ]; then
-            echo "environment=dev" >> $GITHUB_OUTPUT
-            echo "should-deploy=true" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             echo "environment=prod" >> $GITHUB_OUTPUT
             echo "should-deploy=true" >> $GITHUB_OUTPUT
@@ -97,13 +94,13 @@ jobs:
         id: projects
         run: |
           PROJECTS="${{ steps.affected.outputs.projects }}"
-          
+
           if [[ "$PROJECTS" == *"api"* ]]; then
             echo "deploy-api=true" >> $GITHUB_OUTPUT
           else
             echo "deploy-api=false" >> $GITHUB_OUTPUT
           fi
-          
+
           if [[ "$PROJECTS" == *"web-app"* ]]; then
             echo "deploy-web-app=true" >> $GITHUB_OUTPUT
           else
@@ -115,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup]
     if: needs.setup.outputs.should-deploy == 'true'
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -129,7 +126,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Use lockfile if compatible, otherwise regenerate  
+          # Use lockfile if compatible, otherwise regenerate
           if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
@@ -234,10 +231,10 @@ jobs:
         run: |
           STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
           TEMPLATE_FILE="apps/api/deployment/cloudformation/infrastructure.yml"
-          
+
           # Set parameters based on environment
           PARAMETERS="ParameterKey=Environment,ParameterValue=${{ needs.setup.outputs.environment }}"
-          
+
           case "${{ needs.setup.outputs.environment }}" in
             "prod")
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.small"
@@ -255,7 +252,7 @@ jobs:
               PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=false"
               ;;
           esac
-          
+
           # Check if stack exists and get its status
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" >/dev/null 2>&1; then
             STACK_STATUS=$(aws cloudformation describe-stacks \
@@ -375,7 +372,7 @@ jobs:
               exit 1
             fi
           fi
-          
+
           echo "Infrastructure deployment completed successfully"
 
       - name: Deploy Cognito Stack
@@ -478,7 +475,7 @@ jobs:
 
       - name: Run Database Migrations
         run: |
-          # Install all workspace dependencies from root (includes all workspace packages) 
+          # Install all workspace dependencies from root (includes all workspace packages)
           echo "Installing workspace dependencies..."
           npm ci
 
@@ -548,7 +545,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Use lockfile if compatible, otherwise regenerate  
+          # Use lockfile if compatible, otherwise regenerate
           if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
@@ -603,7 +600,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Use lockfile if compatible, otherwise regenerate  
+          # Use lockfile if compatible, otherwise regenerate
           if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
@@ -670,26 +667,26 @@ jobs:
         run: |
           BUCKET_NAME="my-many-books-web-${{ needs.setup.outputs.environment }}"
           echo "Deploying web app to S3 bucket: $BUCKET_NAME"
-          
+
           # Create bucket if it doesn't exist
           if ! aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
             echo "Creating S3 bucket: $BUCKET_NAME"
             aws s3 mb s3://$BUCKET_NAME
-          
+
             # Disable public access block to allow public website
             echo "Disabling public access block..."
             aws s3api put-public-access-block \
               --bucket "$BUCKET_NAME" \
               --public-access-block-configuration \
               "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
-          
+
             # Wait for public access block to be applied
             sleep 5
-          
+
             # Enable static website hosting
             echo "Enabling static website hosting..."
             aws s3 website s3://$BUCKET_NAME --index-document index.html --error-document index.html
-          
+
             # Set public read policy
             echo "Setting bucket policy..."
             aws s3api put-bucket-policy --bucket "$BUCKET_NAME" --policy "{
@@ -705,7 +702,7 @@ jobs:
               ]
             }"
           fi
-          
+
           # Sync build files to S3 with per-type cache headers
           # 1. Hashed assets (JS/CSS) — immutable, cache 1 year
           aws s3 sync build/assets/ s3://$BUCKET_NAME/assets/ \
@@ -721,7 +718,7 @@ jobs:
             --exclude "locales/*" \
             --cache-control "no-cache" \
             --delete
-          
+
           # Invalidate CloudFront cache (optional - skip if no permissions)
           if aws cloudfront list-distributions >/dev/null 2>&1; then
             DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[0].DomainName=='$BUCKET_NAME.s3.amazonaws.com'].Id | [0]" --output text)
@@ -789,9 +786,9 @@ jobs:
             echo "No API URL configured, skipping health checks"
             exit 0
           fi
-          
+
           echo "Running health checks against ${{ env.API_BASE_URL }}"
-          
+
           for i in {1..30}; do
             if curl -f ${{ env.API_BASE_URL }}/health; then
               echo "Health check passed"
@@ -809,7 +806,7 @@ jobs:
             echo "No API URL configured, skipping smoke tests"
             exit 0
           fi
-          
+
           if [ -f "postman/My-Many-Books-API.postman_collection.json" ]; then
             newman run postman/My-Many-Books-API.postman_collection.json \
               --env-var "baseUrl=${{ env.API_BASE_URL }}" \
