@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useMemo, useRef } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { APP_ROUTES } from '@my-many-books/shared-navigation';
@@ -205,12 +205,14 @@ function App() {
     width: 1,
   };
 
-  // Hide HTML loading screen as soon as React has mounted — before auth check completes.
-  // The AppShellSkeleton is visible during the auth wait instead of the HTML spinner.
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      document.body.classList.add('app-mounted');
-    });
+  // Hide HTML loading screen once auth has completed and real content has painted.
+  // The AppShellSkeleton renders beneath the semi-transparent spinner during the wait.
+  const onContentReady = useCallback((node: HTMLElement | null) => {
+    if (node) {
+      requestAnimationFrame(() => {
+        document.body.classList.add('app-mounted');
+      });
+    }
   }, []);
 
   return (
@@ -226,7 +228,7 @@ function App() {
                   <SettingsProvider>
                   <Router>
                     <AuthErrorBoundary>
-                    <Box sx={{ minHeight: '100vh', position: 'relative' }}>
+                    <Box ref={onContentReady} sx={{ minHeight: '100vh', position: 'relative' }}>
                       {/* Skip to main content link for keyboard navigation */}
                       <Box
                         component="a"
