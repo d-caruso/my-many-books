@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppBar, Box, Container, Skeleton, Toolbar } from '@mui/material';
+import { AppBar, Box, CircularProgress, Container, Skeleton, Toolbar } from '@mui/material';
 
 const BOOK_ROW_COUNT = 6;
 
@@ -50,6 +50,11 @@ export const AppShellSkeleton: React.FC = () => (
       {Array.from({ length: BOOK_ROW_COUNT }).map((_, i) => (
         <Skeleton key={i} variant="rounded" height={72} sx={{ mb: 1.5 }} />
       ))}
+
+      {/* Spinner centred below the skeleton rows */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+        <CircularProgress size={32} />
+      </Box>
     </Container>
   </>
 );
