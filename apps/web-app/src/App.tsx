@@ -27,6 +27,7 @@ const RootErrorFallback = lazy(() => import('./components/ErrorBoundary/RootErro
 
 // Eager load auth page — landing page for unauthenticated users
 import AuthPage from './pages/AuthPage';
+import MySpeedTest from './pages/MySpeedTest';
 import { Navbar } from './components/Navigation';
 
 // Lazy load non-landing pages for route-based code splitting
@@ -262,6 +263,7 @@ function App() {
                         <Routes>
                           {/* Public routes */}
                           <Route path={APP_ROUTES.auth.path} element={<AuthPage />} />
+                          <Route path="/demo" element={<MySpeedTest />} />
                           <Route path="/auth/verify" element={<VerifyEmailPage />} />
                           <Route path={APP_ROUTES['forgot-password'].path} element={<ForgotPasswordPage />} />
                           <Route path={APP_ROUTES['reset-password'].path} element={<ResetPasswordPage />} />
