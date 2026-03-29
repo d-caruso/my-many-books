@@ -15,9 +15,16 @@ const MySpeedTest: React.FC = () => {
       return;
     }
 
+    console.log('[MySpeedTest] calling login...');
     login('speedtest@mymanybooks.com', 'SpeedTest2026!')
-      .then(() => { window.location.replace('/'); })
-      .catch(() => navigate('/auth', { replace: true }));
+      .then(() => {
+        console.log('[MySpeedTest] login succeeded, replacing location');
+        window.location.replace('/');
+      })
+      .catch((err: unknown) => {
+        console.error('[MySpeedTest] login failed:', err);
+        void navigate('/auth', { replace: true });
+      });
   }, []);
 
   return <NativeLoading />;
