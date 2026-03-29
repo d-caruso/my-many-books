@@ -45,8 +45,8 @@ provider:
     # Security settings
     API_KEYS_ENABLED: ${env:API_KEYS_ENABLED, 'false'}
     COGNITO_ENABLED: ${env:COGNITO_ENABLED, 'true'}
-    COGNITO_USER_POOL_ID: ${cf:my-many-books-cognito-${self:provider.stage}.CognitoUserPoolId}
-    COGNITO_USER_POOL_CLIENT_ID: ${cf:my-many-books-cognito-${self:provider.stage}.CognitoUserPoolClientId}
+    COGNITO_USER_POOL_ID: ${cf:my-many-books-api-${self:provider.stage}.CognitoUserPoolId}
+    COGNITO_USER_POOL_CLIENT_ID: ${cf:my-many-books-api-${self:provider.stage}.CognitoUserPoolClientId}
     SECURITY_HEADERS_ENABLED: ${env:SECURITY_HEADERS_ENABLED, 'true'}
     
     # External service settings
