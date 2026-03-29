@@ -148,6 +148,28 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/*'
 
+  # EventBridge rule — fires every 5 minutes to keep Lambda warm
+  KeepWarmRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub '${AWS::StackName}-keep-warm'
+      Description: Pings the API Lambda every 5 minutes to prevent cold starts
+      ScheduleExpression: rate(5 minutes)
+      State: ENABLED
+      Targets:
+        - Id: KeepWarmTarget
+          Arn: !GetAtt ApiLambdaFunction.Arn
+          Input: '{"source":"keep-warm"}'
+
+  # Permission for EventBridge to invoke the Lambda
+  LambdaKeepWarmInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ApiLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt KeepWarmRule.Arn
+
   # API Gateway Deployment
   ApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment

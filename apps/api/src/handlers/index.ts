@@ -11,9 +11,15 @@ import app, { initPromise } from '../app';
 const serverlessHandler = serverless(app);
 
 export const handler = async (
-  event: APIGatewayProxyEvent,
+  event: APIGatewayProxyEvent & { source?: string },
   context: Context
 ): Promise<APIGatewayProxyResult> => {
+  // Keep-warm ping from EventBridge — initialize DB but skip HTTP processing
+  if (event.source === 'keep-warm') {
+    await initPromise;
+    return { statusCode: 200, body: 'warm' };
+  }
+
   // Wait for database initialization to complete before processing requests
   await initPromise;
   return serverlessHandler(event, context) as Promise<APIGatewayProxyResult>;
