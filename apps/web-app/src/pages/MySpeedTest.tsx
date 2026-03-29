@@ -16,7 +16,7 @@ const MySpeedTest: React.FC = () => {
     }
 
     login('speedtest@mymanybooks.com', 'SpeedTest2026!')
-      .then(() => navigate('/', { replace: true }))
+      .then(() => { window.location.replace('/'); })
       .catch(() => navigate('/auth', { replace: true }));
   }, []);
 
