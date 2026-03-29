@@ -15,13 +15,16 @@ const MySpeedTest: React.FC = () => {
       return;
     }
 
+    // eslint-disable-next-line no-console
     console.log('[MySpeedTest] calling login...');
     login('speedtest@mymanybooks.com', 'SpeedTest2026!')
       .then(() => {
+        // eslint-disable-next-line no-console
         console.log('[MySpeedTest] login succeeded, replacing location');
         window.location.replace('/');
       })
       .catch((err: unknown) => {
+        // eslint-disable-next-line no-console
         console.error('[MySpeedTest] login failed:', err);
         void navigate('/auth', { replace: true });
       });
