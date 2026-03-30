@@ -51,8 +51,9 @@ import { authLimiter, refreshLimiter } from '../middleware/rateLimiters';
 
 const router: express.Router = Router();
 
+const cognitoRegion = (process.env['COGNITO_USER_POOL_ID'] ?? '').split('_')[0] || 'us-east-1';
 const cognitoClient = new CognitoIdentityProviderClient({
-  region: process.env['AWS_REGION'] || 'us-east-1',
+  region: cognitoRegion,
 });
 
 interface LoginRequest {
