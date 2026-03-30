@@ -85,7 +85,7 @@ Resources:
   CognitoCustomMessageLambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${ServiceName}-custom-message-role-${Environment}'
+      RoleName: !Sub '${ServiceName}-custom-message-role-${Environment}-${AWS::Region}'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -202,7 +202,7 @@ Resources:
   CognitoPostConfirmationLambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${ServiceName}-post-confirmation-role-${Environment}'
+      RoleName: !Sub '${ServiceName}-post-confirmation-role-${Environment}-${AWS::Region}'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -337,7 +337,7 @@ Resources:
   CognitoAuthRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${ServiceName}-authenticated-role-${Environment}'
+      RoleName: !Sub '${ServiceName}-authenticated-role-${Environment}-${AWS::Region}'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
