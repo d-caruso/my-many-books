@@ -53,7 +53,7 @@ export default defineConfig({
             'react-dom/client',
             'react-router-dom'
           ],
-          // Material UI - separate chunk for caching, loads with ThemedApp (deferred)
+          // Material UI - separate chunk for caching
           'vendor-mui': [
             '@mui/material',
             '@emotion/react',

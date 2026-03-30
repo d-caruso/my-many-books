@@ -25,10 +25,12 @@ import i18n from './i18n';
 // Lazy load error fallback (only shown on errors)
 const RootErrorFallback = lazy(() => import('./components/ErrorBoundary/RootErrorFallback').then(m => ({ default: m.RootErrorFallback })));
 
-// Eager load auth page — landing page for unauthenticated users
-import AuthPage from './pages/AuthPage';
-import MySpeedTest from './pages/MySpeedTest';
 import { Navbar } from './components/Navigation';
+
+// Lazy load all pages — AuthProvider shows AppShellSkeleton during auth check,
+// giving lazy bundles time to load before they're needed
+const AuthPage = lazy(() => import('./pages/AuthPage'));
+const MySpeedTest = lazy(() => import('./pages/MySpeedTest'));
 
 // Lazy load non-landing pages for route-based code splitting
 const BooksPage = lazy(() => import('./pages/BooksPage'));
