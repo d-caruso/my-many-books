@@ -302,6 +302,7 @@ Resources:
         - !Ref MobileAuthCallbackUrl
       LogoutURLs:
         - !Ref WebAppUrl
+        - !Sub '${WebAppUrl}/auth'
         - !Sub 'https://${ServiceName}-web-${Environment}.s3-website-${AWS::Region}.amazonaws.com'
       AccessTokenValidity: 24
       IdTokenValidity: 24
