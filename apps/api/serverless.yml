@@ -9,7 +9,7 @@ frameworkVersion: '4.19.1'
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ${opt:region, 'us-west-2'}
+  region: ${opt:region, 'eu-south-1'}
   stage: ${opt:stage, 'dev'}
   memorySize: 512
   timeout: 30
@@ -45,8 +45,8 @@ provider:
     # Security settings
     API_KEYS_ENABLED: ${env:API_KEYS_ENABLED, 'false'}
     COGNITO_ENABLED: ${env:COGNITO_ENABLED, 'true'}
-    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID, 'us-east-1_Z3UJFi7H1'}
-    COGNITO_USER_POOL_CLIENT_ID: ${env:COGNITO_USER_POOL_CLIENT_ID, 'ngp5erm1kict6658a14ta4ugb'}
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID, 'eu-south-1_7DrGnKIth'}
+    COGNITO_USER_POOL_CLIENT_ID: ${env:COGNITO_USER_POOL_CLIENT_ID, '6q8tp4bklciquql00oo5ut7b0o'}
     SECURITY_HEADERS_ENABLED: ${env:SECURITY_HEADERS_ENABLED, 'true'}
     
     # External service settings
