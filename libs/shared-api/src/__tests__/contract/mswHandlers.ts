@@ -1,4 +1,4 @@
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { z } from 'zod';
 import {
   AppSettingsArraySchema,
@@ -209,33 +209,34 @@ export const contractFixtures = {
 };
 
 export const handlers = [
-  rest.get(`${API_BASE_URL}/books`, (req, res, ctx) => {
-    expect(req.url.searchParams.get('includeAuthors')).toBe('true');
-    expect(req.url.searchParams.get('includeCategories')).toBe('true');
-    return res(ctx.json(booksResponse));
+  http.get(`${API_BASE_URL}/books`, ({ request }) => {
+    const url = new URL(request.url);
+    expect(url.searchParams.get('includeAuthors')).toBe('true');
+    expect(url.searchParams.get('includeCategories')).toBe('true');
+    return HttpResponse.json(booksResponse);
   }),
 
-  rest.get(`${API_BASE_URL}/authors`, (_req, res, ctx) => res(ctx.json(authorsResponse))),
+  http.get(`${API_BASE_URL}/authors`, () => HttpResponse.json(authorsResponse)),
 
-  rest.get(`${API_BASE_URL}/categories`, (_req, res, ctx) => res(ctx.json(categoriesResponse))),
+  http.get(`${API_BASE_URL}/categories`, () => HttpResponse.json(categoriesResponse)),
 
-  rest.get(`${API_BASE_URL}/settings`, (_req, res, ctx) => res(ctx.json(settingsResponse))),
+  http.get(`${API_BASE_URL}/settings`, () => HttpResponse.json(settingsResponse)),
 
-  rest.get(`${API_BASE_URL}/settings/admin`, (_req, res, ctx) => res(ctx.json(settingsResponse))),
+  http.get(`${API_BASE_URL}/settings/admin`, () => HttpResponse.json(settingsResponse)),
 
-  rest.patch(`${API_BASE_URL}/settings/admin/:key`, async (req, res, ctx) => {
-    const body = (await req.json()) as { value?: unknown };
+  http.patch(`${API_BASE_URL}/settings/admin/:key`, async ({ request, params }) => {
+    const body = (await request.json()) as { value?: unknown };
     if (!('value' in body)) {
-      return res(ctx.status(400), ctx.json({ error: 'Missing value' }));
+      return HttpResponse.json({ error: 'Missing value' }, { status: 400 });
     }
 
     const updated = settingsData.map((s) =>
-      s.key === req.params['key'] ? { ...s, value: JSON.stringify(body.value) } : s
+      s.key === params['key'] ? { ...s, value: JSON.stringify(body.value) } : s
     );
 
-    const updatedSetting = updated.find((s) => s.key === req.params['key']);
+    const updatedSetting = updated.find((s) => s.key === params['key']);
     if (!updatedSetting) {
-      return res(ctx.status(404), ctx.json({ error: 'Not found' }));
+      return HttpResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const response = successResponseSchema(AppSettingsArraySchema.element).parse({
@@ -243,32 +244,32 @@ export const handlers = [
       data: updatedSetting,
     });
 
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
-  rest.patch(`${API_BASE_URL}/settings/admin/:key/toggle`, async (req, res, ctx) => {
-      const body = (await req.json()) as { active?: unknown };
-      if (typeof body.active !== 'boolean') {
-        return res(ctx.status(400), ctx.json({ error: 'Invalid active' }));
-      }
+  http.patch(`${API_BASE_URL}/settings/admin/:key/toggle`, async ({ request, params }) => {
+    const body = (await request.json()) as { active?: unknown };
+    if (typeof body.active !== 'boolean') {
+      return HttpResponse.json({ error: 'Invalid active' }, { status: 400 });
+    }
 
-      const updatedSetting = settingsData.find((s) => s.key === req.params['key']);
-      if (!updatedSetting) {
-        return res(ctx.status(404), ctx.json({ error: 'Not found' }));
-      }
+    const updatedSetting = settingsData.find((s) => s.key === params['key']);
+    if (!updatedSetting) {
+      return HttpResponse.json({ error: 'Not found' }, { status: 404 });
+    }
 
-      const response = successResponseSchema(AppSettingsArraySchema.element).parse({
-        success: true,
-        data: { ...updatedSetting, active: body.active },
-      });
+    const response = successResponseSchema(AppSettingsArraySchema.element).parse({
+      success: true,
+      data: { ...updatedSetting, active: body.active },
+    });
 
-      return res(ctx.json(response));
-    }),
+    return HttpResponse.json(response);
+  }),
 
-  rest.get(`${API_BASE_URL}/users`, (_req, res, ctx) => res(ctx.json(userProfileResponse))),
+  http.get(`${API_BASE_URL}/users`, () => HttpResponse.json(userProfileResponse)),
 
-  rest.put(`${API_BASE_URL}/users`, async (req, res, ctx) => {
-    const body = (await req.json()) as Partial<{
+  http.put(`${API_BASE_URL}/users`, async ({ request }) => {
+    const body = (await request.json()) as Partial<{
       email: string;
       name: string;
       surname: string;
@@ -290,30 +291,30 @@ export const handlers = [
       message: 'User profile updated successfully',
     });
 
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
-  rest.delete(`${API_BASE_URL}/users`, (_req, res, ctx) =>
-    res(ctx.status(200), ctx.json({ success: true, data: null, message: 'Account deleted successfully' }))
+  http.delete(`${API_BASE_URL}/users`, () =>
+    HttpResponse.json({ success: true, data: null, message: 'Account deleted successfully' })
   ),
 
-  rest.post(`${API_BASE_URL}/auth/login`, (_req, res, ctx) => res(ctx.json(loginResponse))),
+  http.post(`${API_BASE_URL}/auth/login`, () => HttpResponse.json(loginResponse)),
 
-  rest.post(`${API_BASE_URL}/auth/register`, (_req, res, ctx) => res(ctx.json(registerResponse))),
+  http.post(`${API_BASE_URL}/auth/register`, () => HttpResponse.json(registerResponse)),
 
-  rest.post(`${API_BASE_URL}/auth/refresh`, (_req, res, ctx) => res(ctx.json(refreshResponse))),
+  http.post(`${API_BASE_URL}/auth/refresh`, () => HttpResponse.json(refreshResponse)),
 
-  rest.post(`${API_BASE_URL}/auth/logout`, (_req, res, ctx) => res(ctx.json(logoutResponse))),
+  http.post(`${API_BASE_URL}/auth/logout`, () => HttpResponse.json(logoutResponse)),
 
-  rest.get(`${API_BASE_URL}/health`, (_req, res, ctx) => res(ctx.json(healthResponse))),
+  http.get(`${API_BASE_URL}/health`, () => HttpResponse.json(healthResponse)),
 
-  rest.get(`${API_BASE_URL}/auth/google/start`, (_req, res, ctx) => res(ctx.json(googleStartMobileResponse))),
+  http.get(`${API_BASE_URL}/auth/google/start`, () => HttpResponse.json(googleStartMobileResponse)),
 
-  rest.post(`${API_BASE_URL}/auth/google/mobile/start`, (_req, res, ctx) =>
-    res(ctx.json(googleStartMobileResponse))
+  http.post(`${API_BASE_URL}/auth/google/mobile/start`, () =>
+    HttpResponse.json(googleStartMobileResponse)
   ),
 
-  rest.post(`${API_BASE_URL}/auth/google/mobile/exchange`, (_req, res, ctx) =>
-    res(ctx.json(googleMobileExchangeResponse))
+  http.post(`${API_BASE_URL}/auth/google/mobile/exchange`, () =>
+    HttpResponse.json(googleMobileExchangeResponse)
   ),
 ];

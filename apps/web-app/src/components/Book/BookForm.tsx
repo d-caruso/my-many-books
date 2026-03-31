@@ -699,7 +699,6 @@ export const BookForm: React.FC<BookFormProps> = ({
               gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
               gap: 2,
               minWidth: 0,
-              overflow: 'hidden',
             }}
           >
             {/* Edition Number */}
@@ -720,7 +719,7 @@ export const BookForm: React.FC<BookFormProps> = ({
             />
 
             {/* Edition Date */}
-            <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
+            <Box sx={{ minWidth: 0 }}>
               <EditionDateInput
                 value={formData.editionDate}
                 onChange={(val) => handleInputChange('editionDate', val)}

@@ -312,7 +312,7 @@ Resources:
       - DatabaseSecret
       - Database
     Properties:
-      RoleName: !Sub '${AWS::StackName}-lambda-role'
+      RoleName: !Sub '${AWS::StackName}-lambda-role-${AWS::Region}'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -375,7 +375,7 @@ Resources:
   DeploymentBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${AWS::StackName}-deployments-${AWS::AccountId}'
+      BucketName: !Sub '${AWS::StackName}-deploy-${AWS::Region}'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:

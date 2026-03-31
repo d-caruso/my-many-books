@@ -47,11 +47,13 @@ import { completeGoogleLogin } from '../services/auth/googleOAuthSession';
 import { COGNITO_PASSWORD_ERRORS, cognitoPasswordService } from '../services/auth/cognitoPasswordService';
 import { AUTH_COOKIE_PATH } from '../constants/api';
 import { COGNITO_ERRORS } from '../constants/cognito';
+import { authLimiter, refreshLimiter } from '../middleware/rateLimiters';
 
 const router: express.Router = Router();
 
+const cognitoRegion = (process.env['COGNITO_USER_POOL_ID'] ?? '').split('_')[0] || 'us-east-1';
 const cognitoClient = new CognitoIdentityProviderClient({
-  region: process.env['AWS_REGION'] || 'us-east-1',
+  region: cognitoRegion,
 });
 
 interface LoginRequest {
@@ -122,7 +124,7 @@ const sendError = (
 ): void => {
   res.status(statusCode).json(createErrorResponse(code, message, details));
 };
-router.post('/login', async (req: Request, res: Response): Promise<void> => {
+router.post('/login', authLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body as LoginRequest;
 
@@ -219,7 +221,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-router.get('/google/start', (req: Request, res: Response): void => {
+router.get('/google/start', authLimiter, (req: Request, res: Response): void => {
   try {
     const { platform = 'web', redirectUri, codeChallenge } = req.query as GoogleStartQuery;
 
@@ -271,7 +273,7 @@ router.get('/google/start', (req: Request, res: Response): void => {
   }
 });
 
-router.post('/google/mobile/start', (req: Request, res: Response): void => {
+router.post('/google/mobile/start', authLimiter, (req: Request, res: Response): void => {
   try {
     const { redirectUri, codeVerifier } = req.body as GoogleMobileStartRequest;
 
@@ -301,7 +303,7 @@ router.post('/google/mobile/start', (req: Request, res: Response): void => {
   }
 });
 
-router.get('/google/callback', async (req: Request, res: Response): Promise<void> => {
+router.get('/google/callback', authLimiter, async (req: Request, res: Response): Promise<void> => {
   const cognitoError = typeof req.query['error'] === 'string' ? req.query['error'] : '';
   if (cognitoError) {
     clearGooglePkceVerifierCookie(res, AUTH_COOKIE_PATH);
@@ -364,7 +366,7 @@ router.get('/google/callback', async (req: Request, res: Response): Promise<void
   }
 });
 
-router.post('/google/mobile/exchange', async (req: Request, res: Response): Promise<void> => {
+router.post('/google/mobile/exchange', authLimiter, async (req: Request, res: Response): Promise<void> => {
   const { code, state, redirectUri, codeVerifier } = req.body as GoogleMobileExchangeRequest;
 
   if (!code || !state || !redirectUri || !codeVerifier) {
@@ -417,7 +419,7 @@ router.post('/google/mobile/exchange', async (req: Request, res: Response): Prom
   }
 });
 
-router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
+router.post('/refresh', refreshLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const refreshToken = req.cookies?.['refresh_token'] as string | undefined;
 
@@ -488,7 +490,7 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-router.post('/logout', (_req: Request, res: Response): void => {
+router.post('/logout', authLimiter, (_req: Request, res: Response): void => {
   res.clearCookie('refresh_token', { path: AUTH_COOKIE_PATH });
   let cognitoLogoutUrl: string | null = null;
   try {
@@ -500,7 +502,7 @@ router.post('/logout', (_req: Request, res: Response): void => {
   sendSuccess(res, 200, { cognitoLogoutUrl }, 'Logout successful');
 });
 
-router.post('/register', async (req: Request, res: Response): Promise<void> => {
+router.post('/register', authLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, name, surname, locale } = req.body as RegisterRequest;
 
@@ -571,7 +573,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-router.post('/verify-email', async (req: Request, res: Response): Promise<void> => {
+router.post('/verify-email', authLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, code } = req.body as VerifyEmailRequest;
 
@@ -624,7 +626,7 @@ router.post('/verify-email', async (req: Request, res: Response): Promise<void> 
   }
 });
 
-router.post('/resend-code', async (req: Request, res: Response): Promise<void> => {
+router.post('/resend-code', authLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email } = req.body as ResendCodeRequest;
 
@@ -671,7 +673,7 @@ router.post('/resend-code', async (req: Request, res: Response): Promise<void> =
   }
 });
 
-router.post('/forgot-password', async (req: Request, res: Response): Promise<void> => {
+router.post('/forgot-password', authLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email } = req.body as ForgotPasswordRequest;
     if (!email || typeof email !== 'string') {
@@ -716,7 +718,7 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<voi
   }
 });
 
-router.post('/confirm-forgot-password', async (req: Request, res: Response): Promise<void> => {
+router.post('/confirm-forgot-password', authLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, code, newPassword, locale } = req.body as ConfirmForgotPasswordRequest;
     if (!email || !code || !newPassword) {

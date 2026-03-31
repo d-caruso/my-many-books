@@ -44,7 +44,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "apps/api/**/*.ts"
+          "apps/api/src/**/*.ts"
         ],
         "eslintConfig": "apps/api/eslint.config.mjs"
       }

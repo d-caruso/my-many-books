@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { APP_ROUTES } from '@my-many-books/shared-navigation';
@@ -12,32 +12,28 @@ import { AuthErrorBoundary } from './components/ErrorBoundary/AuthErrorBoundary'
 import { PageErrorBoundary } from './components/ErrorBoundary/PageErrorBoundary';
 import { NativeLoading } from './components/NativeLoading';
 import { AboutPopupGate } from './components/About/AboutPopupGate';
+import { AppShellSkeleton } from './components/AppShellSkeleton';
 import { Box } from '@mui/material';
 import { runFadeOut, useFadeInOnChange, useLanguageChangeFade } from './hooks/useLanguageChangeFade';
 import { ViewTransitionProvider, useProtectedViewTransition } from './contexts/ViewTransitionContext';
 import { VIEW_TRANSITION_FADE_IN_TIMING, VIEW_TRANSITION_FADE_OUT_LEAD_MS } from './constants/animations';
 
-// Defer i18n initialization until after first render
-let i18nInitialized = false;
-const initI18n = async () => {
-  if (!i18nInitialized) {
-    await import('./i18n');
-    i18nInitialized = true;
-  }
-};
-
 // Eager load MUI theme wrapper (always needed on landing page)
 import { ThemedApp } from './components/ThemedApp';
+import i18n from './i18n';
 
 // Lazy load error fallback (only shown on errors)
 const RootErrorFallback = lazy(() => import('./components/ErrorBoundary/RootErrorFallback').then(m => ({ default: m.RootErrorFallback })));
 
-// Eager load landing page components (always needed on first render)
-import BooksPage from './pages/BooksPage';
 import { Navbar } from './components/Navigation';
 
-// Lazy load non-landing pages for route-based code splitting
+// Lazy load all pages — AuthProvider shows AppShellSkeleton during auth check,
+// giving lazy bundles time to load before they're needed
 const AuthPage = lazy(() => import('./pages/AuthPage'));
+const MySpeedTest = lazy(() => import('./pages/MySpeedTest'));
+
+// Lazy load non-landing pages for route-based code splitting
+const BooksPage = lazy(() => import('./pages/BooksPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
@@ -195,7 +191,13 @@ const ProtectedMainContent: React.FC<React.PropsWithChildren> = ({ children }) =
 };
 
 function App() {
-  const [appReady, setAppReady] = useState(false);
+  // Background-load namespaces not needed on the auth page.
+  // Fires after first render so auth view is not blocked, but namespaces are
+  // ready in cache before the user navigates to the protected area.
+  useEffect(() => {
+    void i18n.loadNamespaces(['dialogs', 'categories', 'tutorial']);
+  }, []);
+
   const visuallyHidden = {
     border: 0,
     clip: 'rect(0 0 0 0)',
@@ -207,17 +209,8 @@ function App() {
     width: 1,
   };
 
-  useEffect(() => {
-    // Initialize i18n (HTML loading screen shows during this)
-    const initApp = async () => {
-      await initI18n();
-      setAppReady(true);
-    };
-
-    initApp();
-  }, []);
-
-  // Hide HTML loading screen after content has painted
+  // Hide HTML loading screen once auth has completed and real content has painted.
+  // The AppShellSkeleton renders beneath the semi-transparent spinner during the wait.
   const onContentReady = useCallback((node: HTMLElement | null) => {
     if (node) {
       requestAnimationFrame(() => {
@@ -225,10 +218,6 @@ function App() {
       });
     }
   }, []);
-
-  if (!appReady) {
-    return null;
-  }
 
   return (
     <ErrorBoundary fallback={(error, reset) => (
@@ -239,7 +228,7 @@ function App() {
         <ThemedApp>
           <PWAProvider>
             <ApiProvider>
-                  <AuthProvider authService={authService} loadingComponent={<></>}>
+                  <AuthProvider authService={authService} loadingComponent={<AppShellSkeleton />}>
                   <SettingsProvider>
                   <Router>
                     <AuthErrorBoundary>
@@ -277,6 +266,7 @@ function App() {
                         <Routes>
                           {/* Public routes */}
                           <Route path={APP_ROUTES.auth.path} element={<AuthPage />} />
+                          <Route path="/demo" element={<MySpeedTest />} />
                           <Route path="/auth/verify" element={<VerifyEmailPage />} />
                           <Route path={APP_ROUTES['forgot-password'].path} element={<ForgotPasswordPage />} />
                           <Route path={APP_ROUTES['reset-password'].path} element={<ResetPasswordPage />} />

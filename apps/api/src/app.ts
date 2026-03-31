@@ -25,7 +25,7 @@ import adminMobileAnalyticsRoutes from './routes/adminMobileAnalyticsRoutes';
 import adminMobileHooksRoutes from './routes/adminMobileHooksRoutes';
 import mobileAnalyticsRoutes from './routes/mobileAnalyticsRoutes';
 import configRoutes from './routes/configRoutes';
-import { authLimiter, publicLimiter } from './middleware/rateLimiters';
+import { publicLimiter } from './middleware/rateLimiters';
 import { expressErrorHandler } from './middleware/expressErrorHandler';
 import { initializeHookSystem } from './services/hooks/hookSystem';
 import { traceIdMiddleware, requestLoggerMiddleware } from '@my-many-books/shared-logging';
@@ -59,10 +59,11 @@ if (securityHeadersEnabled) {
 // ===== CORE MIDDLEWARE =====
 app.use(
   cors({
-    origin: [process.env['FRONTEND_URL'], /^http:\/\/localhost:\d+$/].filter(Boolean) as (
-      | string
-      | RegExp
-    )[],
+    origin: [
+      process.env['FRONTEND_URL'],
+      process.env['FRONTEND_URL']?.replace('://', '://www.'),
+      /^http:\/\/localhost:\d+$/,
+    ].filter(Boolean) as (string | RegExp)[],
     credentials: true,
   })
 );
@@ -86,7 +87,7 @@ app.get(`${BASE_PATH}/health`, publicLimiter, (_req, res): void => {
 });
 
 // ===== ROUTES =====
-app.use(`${BASE_PATH}/auth`, authLimiter, authRoutes);
+app.use(`${BASE_PATH}/auth`, authRoutes);
 app.use(`${BASE_PATH}/books`, bookRoutes);
 app.use(`${BASE_PATH}/users`, userRoutes);
 app.use(`${BASE_PATH}/authors`, authorRoutes);

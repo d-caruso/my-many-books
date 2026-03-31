@@ -3,6 +3,10 @@ import i18n from 'i18next';
 import { authService } from './authService';
 import type { HttpClient, RequestConfig } from '@my-many-books/shared-api';
 
+// Shared mutex: ensures only one silentRefresh() runs at a time.
+// Concurrent 401 responses all await the same promise and share the result.
+let refreshInFlight: Promise<boolean> | null = null;
+
 export class AxiosHttpClient implements HttpClient {
   private axios;
 
@@ -61,8 +65,13 @@ export class AxiosHttpClient implements HttpClient {
         }
 
         if (error.response?.status === 401) {
-          // Try to refresh token
-          const refreshed = await authService.silentRefresh();
+          // Deduplicate concurrent refresh calls: all 401s share one silentRefresh() promise.
+          if (!refreshInFlight) {
+            refreshInFlight = authService.silentRefresh().finally(() => {
+              refreshInFlight = null;
+            });
+          }
+          const refreshed = await refreshInFlight;
 
           if (refreshed) {
             // Retry the original request

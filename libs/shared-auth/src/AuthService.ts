@@ -70,6 +70,16 @@ export class AuthService {
     throw new Error('Invalid API success envelope');
   }
 
+  private async throwIfError(response: Response, fallback: string): Promise<void> {
+    if (response.ok) return;
+    if (response.status === 429) {
+      throw new AuthApiError('RATE_LIMIT_EXCEEDED', 'Too many requests', getAuthErrorI18nKey('RATE_LIMIT_EXCEEDED'));
+    }
+    const payload = await this.readJsonPayloadOrUndefined(response);
+    const { code, message } = this.extractApiError(payload, fallback);
+    throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+  }
+
   private extractApiError(
     payload: unknown,
     fallback: string,
@@ -140,9 +150,7 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const errorPayload = await this.readJsonPayloadOrUndefined(response);
-      const { code, message } = this.extractApiError(errorPayload, 'Login failed');
-      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      await this.throwIfError(response,'Login failed');
     }
 
     const payload = await this.readJsonPayload(response);
@@ -164,9 +172,7 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const errorPayload = await this.readJsonPayloadOrUndefined(response);
-      const { code, message } = this.extractApiError(errorPayload, 'Google login failed');
-      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      await this.throwIfError(response,'Google login failed');
     }
 
     const responseBody = await this.readJsonPayload(response);
@@ -188,9 +194,7 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const errorPayload = await this.readJsonPayloadOrUndefined(response);
-      const { code, message } = this.extractApiError(errorPayload, 'Registration failed');
-      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      await this.throwIfError(response,'Registration failed');
     }
 
     const payload = await this.readJsonPayload(response);
@@ -364,9 +368,7 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const errorPayload = await this.readJsonPayloadOrUndefined(response);
-      const { code, message } = this.extractApiError(errorPayload, 'Email verification failed');
-      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      await this.throwIfError(response,'Email verification failed');
     }
   }
 
@@ -378,9 +380,7 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const errorPayload = await this.readJsonPayloadOrUndefined(response);
-      const { code, message } = this.extractApiError(errorPayload, 'Failed to resend verification code');
-      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      await this.throwIfError(response,'Failed to resend verification code');
     }
   }
 
@@ -408,9 +408,7 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const errorPayload = await this.readJsonPayloadOrUndefined(response);
-      const { code, message } = this.extractApiError(errorPayload, 'Password change failed');
-      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      await this.throwIfError(response,'Password change failed');
     }
 
     const payload = await this.readJsonPayload(response);
@@ -436,12 +434,7 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const errorPayload = await this.readJsonPayloadOrUndefined(response);
-      const { code, message } = this.extractApiError(
-        errorPayload,
-        'Failed to process password reset request'
-      );
-      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      await this.throwIfError(response,'Failed to process password reset request');
     }
 
     const payload = await this.readJsonPayload(response);
@@ -462,9 +455,7 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const errorPayload = await this.readJsonPayloadOrUndefined(response);
-      const { code, message } = this.extractApiError(errorPayload, 'Failed to reset password');
-      throw new AuthApiError(code, message, getAuthErrorI18nKey(code));
+      await this.throwIfError(response,'Failed to reset password');
     }
 
     const payload = await this.readJsonPayload(response);

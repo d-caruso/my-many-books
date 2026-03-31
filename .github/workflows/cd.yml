@@ -2,7 +2,7 @@ name: Monorepo CD
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys ]
+    branches: [ main, develop, feature/architecture-improvements ]
     tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
@@ -23,7 +23,7 @@ on:
 
 env:
   NODE_VERSION: '22.x'
-  AWS_REGION: 'us-west-2'
+  AWS_REGION: 'eu-south-1'
   API_PREFIX: '/api'
   API_ROUTE_VERSION: 'v1'
 
@@ -37,7 +37,7 @@ jobs:
       affected-projects: ${{ steps.affected.outputs.projects }}
       deploy-api: ${{ steps.projects.outputs.deploy-api }}
       deploy-web-app: ${{ steps.projects.outputs.deploy-web-app }}
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -94,13 +94,13 @@ jobs:
         id: projects
         run: |
           PROJECTS="${{ steps.affected.outputs.projects }}"
-          
+
           if [[ "$PROJECTS" == *"api"* ]]; then
             echo "deploy-api=true" >> $GITHUB_OUTPUT
           else
             echo "deploy-api=false" >> $GITHUB_OUTPUT
           fi
-          
+
           if [[ "$PROJECTS" == *"web-app"* ]]; then
             echo "deploy-web-app=true" >> $GITHUB_OUTPUT
           else
@@ -112,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup]
     if: needs.setup.outputs.should-deploy == 'true'
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -126,7 +126,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Use lockfile if compatible, otherwise regenerate  
+          # Use lockfile if compatible, otherwise regenerate
           if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
@@ -148,34 +148,6 @@ jobs:
             cd libs/shared-i18n && npm run build && cd ../..
             echo "Building shared-logging..."
             cd libs/shared-logging && npm run build && cd ../..
-
-            # --- INSERT THE FOLLOWING LINES HERE ---
-            echo "--- START DEBUG OUTPUT ---"
-            echo "Current working directory before API build check: $(pwd)"
-            echo "Contents of libs/shared-i18n/dist/:"
-            ls -la libs/shared-i18n/dist/
-            echo "Contents of libs/shared-i18n/dist/index.d.ts:"
-            cat libs/shared-i18n/dist/index.d.ts
-            echo "Contents of node_modules/@my-many-books/shared-i18n/ (symlink check from root):"
-            ls -la node_modules/@my-many-books/shared-i18n || echo "node_modules/@my-many-books/shared-i18n not found or not a symlink"
-            echo "Contents of apps/api/node_modules/@my-many-books/shared-i18n/ (symlink check from apps/api perspective):"
-            ls -la apps/api/node_modules/@my-many-books/shared-i18n || echo "apps/api/node_modules/@my-many-books/shared-i18n not found or not a symlink (expected to be symlinked to root node_modules)"
-            echo "---"
-
-            echo "=== Debugging shared-auth ==="
-            echo "Contents of libs/shared-auth/dist/:"
-            ls -la libs/shared-auth/dist/
-            echo "Contents of libs/shared-auth/dist/index.d.ts:"
-            cat libs/shared-auth/dist/index.d.ts
-            echo "---"
-
-            echo "=== Running tsc --traceResolution from apps/api ==="
-            cd apps/api
-            tsc --project tsconfig.build.json --traceResolution > ../../tsc_trace_resolution_api.log 2>&1
-            cat ../../tsc_trace_resolution_api.log
-            cd ../.. # Go back to root
-            echo "--- END DEBUG OUTPUT ---"
-            # --- END OF INSERTION ---
 
             IFS=',' read -ra ADDR <<< "$BUILD_PROJECTS"
             for project in "${ADDR[@]}"; do
@@ -259,10 +231,10 @@ jobs:
         run: |
           STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
           TEMPLATE_FILE="apps/api/deployment/cloudformation/infrastructure.yml"
-          
+
           # Set parameters based on environment
           PARAMETERS="ParameterKey=Environment,ParameterValue=${{ needs.setup.outputs.environment }}"
-          
+
           case "${{ needs.setup.outputs.environment }}" in
             "prod")
               PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.small"
@@ -280,7 +252,7 @@ jobs:
               PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=false"
               ;;
           esac
-          
+
           # Check if stack exists and get its status
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" >/dev/null 2>&1; then
             STACK_STATUS=$(aws cloudformation describe-stacks \
@@ -400,7 +372,7 @@ jobs:
               exit 1
             fi
           fi
-          
+
           echo "Infrastructure deployment completed successfully"
 
       - name: Deploy Cognito Stack
@@ -416,6 +388,8 @@ jobs:
           PARAMETERS="$PARAMETERS ParameterKey=ServiceName,ParameterValue=my-many-books-api"
           PARAMETERS="$PARAMETERS ParameterKey=GoogleClientId,ParameterValue=$GOOGLE_CLIENT_ID"
           PARAMETERS="$PARAMETERS ParameterKey=GoogleClientSecret,ParameterValue=$GOOGLE_CLIENT_SECRET"
+          WEB_APP_URL=${{ needs.setup.outputs.environment == 'prod' && secrets.WEB_APP_URL_PROD || secrets.WEB_APP_URL_DEV }}
+          PARAMETERS="$PARAMETERS ParameterKey=WebAppUrl,ParameterValue=$WEB_APP_URL"
 
           # Check if stack exists and get its status
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" >/dev/null 2>&1; then
@@ -501,60 +475,49 @@ jobs:
 
       - name: Run Database Migrations
         run: |
-          # Install all workspace dependencies from root (includes all workspace packages) 
+          # Install all workspace dependencies from root (includes all workspace packages)
           echo "Installing workspace dependencies..."
           npm ci
 
-          # Get database connection details from CloudFormation stack
-          STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
-
-          DB_ENDPOINT=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query 'Stacks[0].Outputs[?OutputKey==`DatabaseEndpoint`].OutputValue' \
-            --output text)
-
-          DB_PORT=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query 'Stacks[0].Outputs[?OutputKey==`DatabasePort`].OutputValue' \
-            --output text)
-
-          if [ -z "$DB_ENDPOINT" ] || [ -z "$DB_PORT" ]; then
-            echo "Could not retrieve database connection details from CloudFormation"
-            exit 1
-          fi
-
-          # Get database credentials from Secrets Manager
-          SECRET_ARN=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query 'Stacks[0].Outputs[?OutputKey==`DatabaseSecretArn`].OutputValue' \
-            --output text)
-
-          DB_CREDENTIALS=$(aws secretsmanager get-secret-value \
-            --secret-id "$SECRET_ARN" \
-            --query 'SecretString' \
-            --output text)
-
-          DB_USER=$(echo "$DB_CREDENTIALS" | jq -r '.username')
-          DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
+          # Legacy AWS RDS config:
+          # STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
+          # DB_ENDPOINT=$(aws cloudformation describe-stacks \
+          #   --stack-name "$STACK_NAME" \
+          #   --query 'Stacks[0].Outputs[?OutputKey==`DatabaseEndpoint`].OutputValue' \
+          #   --output text)
+          # DB_PORT=$(aws cloudformation describe-stacks \
+          #   --stack-name "$STACK_NAME" \
+          #   --query 'Stacks[0].Outputs[?OutputKey==`DatabasePort`].OutputValue' \
+          #   --output text)
+          # SECRET_ARN=$(aws cloudformation describe-stacks \
+          #   --stack-name "$STACK_NAME" \
+          #   --query 'Stacks[0].Outputs[?OutputKey==`DatabaseSecretArn`].OutputValue' \
+          #   --output text)
+          # DB_CREDENTIALS=$(aws secretsmanager get-secret-value \
+          #   --secret-id "$SECRET_ARN" \
+          #   --query 'SecretString' \
+          #   --output text)
+          # DB_USER=$(echo "$DB_CREDENTIALS" | jq -r '.username')
+          # DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
 
           echo "Running database migrations..."
           NODE_ENV="${{ needs.setup.outputs.environment }}" \
-          DB_HOST="$DB_ENDPOINT" \
-          DB_PORT="$DB_PORT" \
-          DB_NAME="my_many_books" \
-          DB_USER="$DB_USER" \
-          DB_PASSWORD="$DB_PASSWORD" \
-          DB_SSL="true" \
+          DB_HOST="${{ secrets.DB_HOST }}" \
+          DB_PORT="${{ secrets.DB_PORT }}" \
+          DB_NAME="${{ secrets.DB_NAME }}" \
+          DB_USER="${{ secrets.DB_USER }}" \
+          DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+          DB_SSL="${{ secrets.DB_SSL }}" \
           npm run -w my-many-books-api db:migrate
 
           echo "Running database seeders..."
           NODE_ENV="${{ needs.setup.outputs.environment }}" \
-          DB_HOST="$DB_ENDPOINT" \
-          DB_PORT="$DB_PORT" \
-          DB_NAME="my_many_books" \
-          DB_USER="$DB_USER" \
-          DB_PASSWORD="$DB_PASSWORD" \
-          DB_SSL="true" \
+          DB_HOST="${{ secrets.DB_HOST }}" \
+          DB_PORT="${{ secrets.DB_PORT }}" \
+          DB_NAME="${{ secrets.DB_NAME }}" \
+          DB_USER="${{ secrets.DB_USER }}" \
+          DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+          DB_SSL="${{ secrets.DB_SSL }}" \
           npm run -w my-many-books-api db:seed
 
   deploy-api:
@@ -582,7 +545,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Use lockfile if compatible, otherwise regenerate  
+          # Use lockfile if compatible, otherwise regenerate
           if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
@@ -605,30 +568,12 @@ jobs:
         working-directory: apps/api
         run: npm run build
 
-      - name: Get Database Credentials
-        id: db-credentials
-        run: |
-          STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
-          SECRET_ARN=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query 'Stacks[0].Outputs[?OutputKey==`DatabaseSecretArn`].OutputValue' \
-            --output text)
-
-          DB_CREDENTIALS=$(aws secretsmanager get-secret-value \
-            --secret-id "$SECRET_ARN" \
-            --query 'SecretString' \
-            --output text)
-
-          DB_PASSWORD=$(echo "$DB_CREDENTIALS" | jq -r '.password')
-          echo "db-password=$DB_PASSWORD" >> $GITHUB_OUTPUT
-          echo "Database credentials retrieved from Secrets Manager"
-
       - name: Deploy API with Serverless
         working-directory: apps/api
         run: |
           export NODE_ENV=${{ needs.setup.outputs.environment }}
           export STAGE=${{ needs.setup.outputs.environment }}
-          export DB_PASSWORD="${{ steps.db-credentials.outputs.db-password }}"
+          export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
 
           # Serverless Framework authentication
           export SERVERLESS_ACCESS_KEY=${{ secrets.SERVERLESS_ACCESS_KEY }}
@@ -655,7 +600,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Use lockfile if compatible, otherwise regenerate  
+          # Use lockfile if compatible, otherwise regenerate
           if ! npm ci --ignore-scripts 2>/dev/null; then
             echo "Lockfile incompatible, regenerating..."
             rm -f package-lock.json
@@ -722,26 +667,26 @@ jobs:
         run: |
           BUCKET_NAME="my-many-books-web-${{ needs.setup.outputs.environment }}"
           echo "Deploying web app to S3 bucket: $BUCKET_NAME"
-          
+
           # Create bucket if it doesn't exist
           if ! aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
             echo "Creating S3 bucket: $BUCKET_NAME"
             aws s3 mb s3://$BUCKET_NAME
-          
+
             # Disable public access block to allow public website
             echo "Disabling public access block..."
             aws s3api put-public-access-block \
               --bucket "$BUCKET_NAME" \
               --public-access-block-configuration \
               "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
-          
+
             # Wait for public access block to be applied
             sleep 5
-          
+
             # Enable static website hosting
             echo "Enabling static website hosting..."
             aws s3 website s3://$BUCKET_NAME --index-document index.html --error-document index.html
-          
+
             # Set public read policy
             echo "Setting bucket policy..."
             aws s3api put-bucket-policy --bucket "$BUCKET_NAME" --policy "{
@@ -757,10 +702,23 @@ jobs:
               ]
             }"
           fi
-          
-          # Sync build files to S3
-          aws s3 sync build/ s3://$BUCKET_NAME --delete
-          
+
+          # Sync build files to S3 with per-type cache headers
+          # 1. Hashed assets (JS/CSS) — immutable, cache 1 year
+          aws s3 sync build/assets/ s3://$BUCKET_NAME/assets/ \
+            --cache-control "public, max-age=31536000, immutable"
+
+          # 2. Translation files — cache 1 hour (rarely change between deploys)
+          aws s3 sync build/locales/ s3://$BUCKET_NAME/locales/ \
+            --cache-control "public, max-age=3600"
+
+          # 3. index.html and all other root files — always revalidate
+          aws s3 sync build/ s3://$BUCKET_NAME/ \
+            --exclude "assets/*" \
+            --exclude "locales/*" \
+            --cache-control "no-cache" \
+            --delete
+
           # Invalidate CloudFront cache (optional - skip if no permissions)
           if aws cloudfront list-distributions >/dev/null 2>&1; then
             DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[0].DomainName=='$BUCKET_NAME.s3.amazonaws.com'].Id | [0]" --output text)
@@ -828,9 +786,9 @@ jobs:
             echo "No API URL configured, skipping health checks"
             exit 0
           fi
-          
+
           echo "Running health checks against ${{ env.API_BASE_URL }}"
-          
+
           for i in {1..30}; do
             if curl -f ${{ env.API_BASE_URL }}/health; then
               echo "Health check passed"
@@ -848,7 +806,7 @@ jobs:
             echo "No API URL configured, skipping smoke tests"
             exit 0
           fi
-          
+
           if [ -f "postman/My-Many-Books-API.postman_collection.json" ]; then
             newman run postman/My-Many-Books-API.postman_collection.json \
               --env-var "baseUrl=${{ env.API_BASE_URL }}" \

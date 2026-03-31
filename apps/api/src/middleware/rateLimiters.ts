@@ -23,6 +23,20 @@ export const authLimiter = rateLimit({
 });
 
 /**
+ * Token refresh rate limiter (/auth/refresh)
+ * Lenient: 60 requests per 15 minutes, only failed attempts counted.
+ */
+export const refreshLimiter = rateLimit({
+  windowMs: rateLimitConfigs.refresh.windowMs,
+  max: rateLimitConfigs.refresh.max,
+  message: rateLimitConfigs.refresh.message,
+  standardHeaders: rateLimitConfigs.refresh.standardHeaders,
+  legacyHeaders: rateLimitConfigs.refresh.legacyHeaders,
+  skipSuccessfulRequests: rateLimitConfigs.refresh.skipSuccessfulRequests,
+  skipFailedRequests: rateLimitConfigs.refresh.skipFailedRequests,
+});
+
+/**
  * Standard API rate limiter (authenticated endpoints)
  * Moderate: 1000 requests per hour
  */

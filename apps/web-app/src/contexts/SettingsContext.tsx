@@ -8,6 +8,7 @@ import { logger } from '../utils/logger';
 import { AppSetting } from '@my-many-books/shared-types';
 import { SettingsApi } from '@my-many-books/shared-api';
 import { useApi } from './ApiContext';
+import { useAuth } from '@my-many-books/shared-auth';
 
 interface SettingsContextValue {
   settings: Map<string, AppSetting>;
@@ -30,6 +31,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   settingsApi: injectedSettingsApi
 }) => {
   const { apiService } = useApi();
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const settingsApi = useMemo(
     () =>
       injectedSettingsApi ||
@@ -61,6 +64,13 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   }, [settingsApi]);
 
   useEffect(() => {
+    // Skip for unauthenticated users — settings are not needed on the auth page.
+    // Re-runs when userId changes (null → id after login), fetching on first authenticated mount.
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+
     let ignore = false;
 
     const load = async () => {
@@ -86,7 +96,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
     load();
     return () => { ignore = true; };
-  }, [settingsApi]);
+  }, [settingsApi, userId]);
 
   const getSetting = useCallback((key: string): AppSetting | undefined => {
     return settings.get(key);

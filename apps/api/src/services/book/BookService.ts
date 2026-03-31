@@ -3,6 +3,7 @@
 // Business logic layer for book operations
 // ================================================================
 
+import { UniqueConstraintError } from 'sequelize';
 import { inject, injectable } from 'inversify';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { TYPES } from '../../container/types';
@@ -81,7 +82,15 @@ class BookService {
     const associations = this.extractAssociations(input);
     const payload = this.normalizePayload({ ...input, userId: ownerId });
 
-    const createdBook = await this.bookRepository.create(payload, associations);
+    let createdBook: BookEntity;
+    try {
+      createdBook = await this.bookRepository.create(payload, associations);
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        throw new BookServiceError('ISBN_EXISTS');
+      }
+      throw error;
+    }
     await this.emitBookEvent(EVENTS.BOOK.CREATE.AFTER, {
       book: createdBook,
       user: this.mapEventUser(userContext),

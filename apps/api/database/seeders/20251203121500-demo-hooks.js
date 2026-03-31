@@ -3,6 +3,11 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+    if (process.env.NODE_ENV === 'prod') {
+      console.warn('[seed:demo-hooks] Skipping: demo data must not be seeded in production.');
+      return;
+    }
+
     const now = new Date();
 
     const tableCheck = await queryInterface.sequelize.query(
@@ -115,9 +120,7 @@ module.exports = {
       },
     ];
 
-    await queryInterface.bulkInsert('hooks', hooks, {
-      ignoreDuplicates: true,
-    });
+    await queryInterface.bulkInsert('hooks', hooks);
   },
 
   async down(queryInterface, Sequelize) {

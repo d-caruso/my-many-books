@@ -5,6 +5,12 @@ import { ApiProvider } from '../../contexts/ApiContext';
 import type { SettingsApi } from '@my-many-books/shared-api';
 import type { ApiService } from '../../services/api';
 
+// SettingsProvider now calls useAuth() — provide a logged-in user so it doesn't throw
+vi.mock('@my-many-books/shared-auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@my-many-books/shared-auth')>();
+  return { ...actual, useAuth: vi.fn().mockReturnValue({ user: { id: 1 } }) };
+});
+
 const mockSettingsApi = {
   getSettings: vi.fn(),
   getAllSettingsAdmin: vi.fn(),

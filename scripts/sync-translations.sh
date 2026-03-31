@@ -31,21 +31,14 @@ fi
 mkdir -p "$DEST_DIR"
 
 # Sync translations (one-way: source -> destination)
-# -a: archive mode (preserves timestamps, permissions)
-# -v: verbose
-# --delete: delete files in destination that don't exist in source
-# --exclude: don't delete README.md in destination
-rsync -av --delete --exclude='README.md' "$SOURCE_DIR/" "$DEST_DIR/"
+# Clear destination first to replicate rsync --delete behaviour
+rm -rf "$DEST_DIR"
+mkdir -p "$DEST_DIR"
+cp -r "$SOURCE_DIR/." "$DEST_DIR/"
 
-# Check rsync exit code
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ Translations synced successfully!${NC}"
-    echo -e "${GREEN}  Source: $SOURCE_DIR${NC}"
-    echo -e "${GREEN}  Destination: $DEST_DIR${NC}"
-else
-    echo -e "${RED}✗ Error syncing translations${NC}"
-    exit 1
-fi
+echo -e "${GREEN}✓ Translations synced successfully!${NC}"
+echo -e "${GREEN}  Source: $SOURCE_DIR${NC}"
+echo -e "${GREEN}  Destination: $DEST_DIR${NC}"
 
 # Show what was synced
 echo ""

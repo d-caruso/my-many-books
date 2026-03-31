@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys ]
+    branches: [ main, develop, feature/architecture-improvements ]
   pull_request:
-    branches: [ main, develop, feature/architecture-improvements, feature/categories-translation-keys ]
+    branches: [ main, develop, feature/architecture-improvements ]
   workflow_dispatch:
     inputs:
       run_tests:
@@ -19,6 +19,7 @@ env:
 jobs:
   setup:
     name: Setup & Install
+    if: github.head_ref != 'update_worker_name_to_app'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

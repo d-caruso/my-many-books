@@ -20,7 +20,6 @@ import {
   InputAdornment,
   IconButton,
 } from '@mui/material';
-import Grid from '@mui/material/GridLegacy';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -292,8 +291,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             </Alert>
           )}
 
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
               <ResponsiveInput
                 type="text"
                 id="name"
@@ -304,8 +303,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 required
                 disabled={loading}
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </Box>
+            <Box sx={{ flex: 1 }}>
               <ResponsiveInput
                 type="text"
                 id="surname"
@@ -316,8 +315,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 required
                 disabled={loading}
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <ResponsiveInput
             type="email"
