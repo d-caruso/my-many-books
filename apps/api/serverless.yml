@@ -49,6 +49,12 @@ provider:
     COGNITO_USER_POOL_CLIENT_ID: ${env:COGNITO_USER_POOL_CLIENT_ID, '6q8tp4bklciquql00oo5ut7b0o'}
     SECURITY_HEADERS_ENABLED: ${env:SECURITY_HEADERS_ENABLED, 'true'}
     
+    # Google OAuth settings
+    GOOGLE_OAUTH_STATE_SECRET: ${env:GOOGLE_OAUTH_STATE_SECRET}
+    GOOGLE_OAUTH_REDIRECT_URI_WEB: ${env:GOOGLE_OAUTH_REDIRECT_URI_WEB, 'https://api.mymanybooks.com/api/v1/auth/google/callback'}
+    GOOGLE_OAUTH_REDIRECT_URIS_MOBILE: ${env:GOOGLE_OAUTH_REDIRECT_URIS_MOBILE, 'my-many-books://auth'}
+    GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX: ${env:GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX, 'my-many-books://'}
+
     # External service settings
     OPEN_LIBRARY_BASE_URL: ${env:OPEN_LIBRARY_BASE_URL, 'https://openlibrary.org'}
     GOOGLE_BOOKS_API_KEY: ${env:GOOGLE_BOOKS_API_KEY, ''}
