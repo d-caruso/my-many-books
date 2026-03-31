@@ -47,7 +47,7 @@ import { completeGoogleLogin } from '../services/auth/googleOAuthSession';
 import { COGNITO_PASSWORD_ERRORS, cognitoPasswordService } from '../services/auth/cognitoPasswordService';
 import { AUTH_COOKIE_PATH } from '../constants/api';
 import { COGNITO_ERRORS } from '../constants/cognito';
-import { authLimiter, refreshLimiter } from '../middleware/rateLimiters';
+import { authLimiter, oauthCallbackLimiter, refreshLimiter } from '../middleware/rateLimiters';
 
 const router: express.Router = Router();
 
@@ -303,7 +303,7 @@ router.post('/google/mobile/start', authLimiter, (req: Request, res: Response): 
   }
 });
 
-router.get('/google/callback', authLimiter, async (req: Request, res: Response): Promise<void> => {
+router.get('/google/callback', oauthCallbackLimiter, async (req: Request, res: Response): Promise<void> => {
   const cognitoError = typeof req.query['error'] === 'string' ? req.query['error'] : '';
   if (cognitoError) {
     clearGooglePkceVerifierCookie(res, AUTH_COOKIE_PATH);

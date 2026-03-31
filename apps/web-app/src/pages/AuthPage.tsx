@@ -16,6 +16,7 @@ const oauthErrorKey: Record<string, string> = {
   missing_code_or_state: 'oauth_error_missing_code',
   invalid_pkce_verifier: 'oauth_error_pkce_failed',
   oauth_exchange_failed: 'oauth_error_exchange_failed',
+  rate_limited: 'oauth_error_rate_limited',
 };
 
 const AuthPage: React.FC = () => {

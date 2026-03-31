@@ -32,7 +32,22 @@ export const rateLimitConfigs = {
    */
   auth: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: isDevelopment ? 100 : 5, // 5 requests per 15min in prod, 100 in dev
+    max: isDevelopment ? 100 : 10, // 10 requests per 15min in prod, 100 in dev
+    message: i18n.t('errors.rate_limit_auth'),
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: false,
+    skipFailedRequests: false,
+  },
+
+  /**
+   * OAuth callback endpoint (/auth/google/callback)
+   * More lenient than auth: one callback per login attempt, secured by state + PKCE.
+   * Uses a browser redirect on limit so the user sees a proper error page.
+   */
+  oauthCallback: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: isDevelopment ? 100 : 20, // 20 requests per 15min in prod
     message: i18n.t('errors.rate_limit_auth'),
     standardHeaders: true,
     legacyHeaders: false,

@@ -10,7 +10,7 @@ import { AuthenticatedRequest } from './auth';
 
 /**
  * Auth rate limiter (login, register, password reset)
- * Very restrictive: 5 requests per 15 minutes
+ * Very restrictive: 10 requests per 15 minutes
  */
 export const authLimiter = rateLimit({
   windowMs: rateLimitConfigs.auth.windowMs,
@@ -20,6 +20,24 @@ export const authLimiter = rateLimit({
   legacyHeaders: rateLimitConfigs.auth.legacyHeaders,
   skipSuccessfulRequests: rateLimitConfigs.auth.skipSuccessfulRequests,
   skipFailedRequests: rateLimitConfigs.auth.skipFailedRequests,
+});
+
+/**
+ * OAuth callback rate limiter (/auth/google/callback)
+ * More lenient than auth limiter. Redirects to frontend error page on limit
+ * so the browser shows a proper error instead of a blank JSON response.
+ */
+export const oauthCallbackLimiter = rateLimit({
+  windowMs: rateLimitConfigs.oauthCallback.windowMs,
+  max: rateLimitConfigs.oauthCallback.max,
+  standardHeaders: rateLimitConfigs.oauthCallback.standardHeaders,
+  legacyHeaders: rateLimitConfigs.oauthCallback.legacyHeaders,
+  skipSuccessfulRequests: rateLimitConfigs.oauthCallback.skipSuccessfulRequests,
+  skipFailedRequests: rateLimitConfigs.oauthCallback.skipFailedRequests,
+  handler: (_req, res) => {
+    const frontendUrl = (process.env['FRONTEND_URL'] || 'http://localhost:3000').replace(/\/+$/, '');
+    res.redirect(`${frontendUrl}/auth?google=error&reason=rate_limited`);
+  },
 });
 
 /**

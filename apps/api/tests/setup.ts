@@ -10,6 +10,7 @@ jest.mock('../src/middleware/rateLimiters', () => {
   const passThrough = (_req: unknown, _res: unknown, next: () => void) => next();
   return {
     authLimiter: passThrough,
+    oauthCallbackLimiter: passThrough,
     refreshLimiter: passThrough,
     standardLimiter: passThrough,
     adminLimiter: passThrough,
