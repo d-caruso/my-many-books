@@ -219,10 +219,12 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
 
     try {
       // Try to create on server - include temp ID for queue processing
-      const newBook = await bookAPI.createBook({
-        ...(bookPayload as BookFormData),
-        _tempId: tempId,
-      });
+      const newBook = await emitDomainMutationLifecycle(
+        MOBILE_EVENTS.BOOK.CREATE,
+        createDomainMutationPayload(RESOURCE_TYPES.BOOK, { tempId, input: bookPayload }),
+        () => bookAPI.createBook({ ...(bookPayload as BookFormData), _tempId: tempId }),
+        (book) => ({ result: { book } })
+      );
 
       // Replace temp book with real book from server in SQLite
       await bookRepository.hardDelete(tempId);
@@ -295,7 +297,12 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
 
     try {
       // Try to update on server
-      const updatedBook = await bookAPI.updateBook(stringId, bookData);
+      const updatedBook = await emitDomainMutationLifecycle(
+        MOBILE_EVENTS.BOOK.UPDATE,
+        createDomainMutationPayload(RESOURCE_TYPES.BOOK, { bookId: stringId, changes: bookData }),
+        () => bookAPI.updateBook(stringId, bookData),
+        (book) => ({ result: { book } })
+      );
 
       // Update with server response and check for conflicts
       const optimisticBook = books.find(b => String(b.id) === stringId);
@@ -374,7 +381,11 @@ export const useBooks = (): UseBooksState & UseBooksActions => {
 
     try {
       // Try to delete on server
-      await bookAPI.deleteBook(stringId);
+      await emitDomainMutationLifecycle<void>(
+        MOBILE_EVENTS.BOOK.DELETE,
+        createDomainMutationPayload(RESOURCE_TYPES.BOOK, { bookId: stringId }),
+        () => bookAPI.deleteBook(stringId)
+      );
 
       // On success, permanently delete from SQLite
       await bookRepository.hardDelete(stringId);

@@ -235,7 +235,7 @@ export class HookSystem {
       return promise;
     }
 
-    let timer: NodeJS.Timeout | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
         reject(new Error(`Hook "${hook.name}" timed out after ${this.timeoutMs}ms`));

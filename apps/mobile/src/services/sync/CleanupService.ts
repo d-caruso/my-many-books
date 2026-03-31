@@ -79,7 +79,7 @@ export class CleanupService {
         (Date.now() - new Date(book.creation_date).getTime()) / (24 * 60 * 60 * 1000)
       );
 
-      if (ageInDays > MAX_TEMP_ID_AGE_DAYS) {
+      if (ageInDays >= MAX_TEMP_ID_AGE_DAYS) {
         mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.BEFORE, {
           bookId: book.id,
           reason: 'orphaned_cleanup',

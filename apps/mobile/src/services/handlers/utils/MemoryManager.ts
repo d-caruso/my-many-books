@@ -66,7 +66,7 @@ export class TimeBasedCache<K, V> {
   private cache = new Map<K, { value: V; timestamp: number }>();
   private ttl: number;
   private cleanupInterval: number;
-  private cleanupTimer?: NodeJS.Timeout;
+  private cleanupTimer?: ReturnType<typeof setInterval>;
 
   constructor(ttl: number = 300000, cleanupInterval: number = 60000) {
     this.ttl = ttl;
@@ -352,7 +352,7 @@ export const MemoryUtils = {
    * Create a debounced function to reduce memory allocations
    */
   debounce<T extends Function>(func: T, wait: number): T {
-    let timeout: NodeJS.Timeout | undefined;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     
     return ((...args: unknown[]) => {
       const later = () => {

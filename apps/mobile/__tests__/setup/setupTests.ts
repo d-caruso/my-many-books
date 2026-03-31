@@ -328,6 +328,7 @@ const mockBookAPI = {
   deleteBook: jest.fn(),
   searchBooks: jest.fn(() => Promise.resolve({ books: [], totalCount: 0, hasMore: false })),
   searchByIsbn: jest.fn(() => Promise.resolve({ book: null })),
+  searchByISBN: jest.fn(() => Promise.resolve(null)),
   setBaseURL: jest.fn(),
 };
 
