@@ -60,6 +60,7 @@
   "oauth_error_pkce_failed": "Authentication verification failed. Please try again.",
   "oauth_error_exchange_failed": "Could not complete Google sign-in. Please try again.",
   "oauth_error_generic": "Google sign-in failed. Please try again.",
+  "oauth_error_rate_limited": "Too many sign-in attempts. Please try again in 15 minutes.",
   "try_again": "Try again",
   "email_required": "Email is required",
   "email_invalid": "Please enter a valid email address",

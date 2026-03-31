@@ -60,6 +60,7 @@
   "oauth_error_pkce_failed": "Verifica dell'autenticazione non riuscita. Riprova.",
   "oauth_error_exchange_failed": "Impossibile completare l'accesso con Google. Riprova.",
   "oauth_error_generic": "Accesso con Google non riuscito. Riprova.",
+  "oauth_error_rate_limited": "Troppi tentativi di accesso. Riprova tra 15 minuti.",
   "try_again": "Riprova",
   "email_required": "L'email è obbligatoria",
   "email_invalid": "Inserisci un indirizzo email valido",
