@@ -27,7 +27,7 @@ Parameters:
 
   ApiAuthCallbackUrl:
     Type: String
-    Default: http://localhost:3001/api/v1/auth/google/callback
+    Default: https://api.mymanybooks.com/api/v1/auth/google/callback
     Description: API callback URL used for Cognito authorization code redirect
 
   MobileAuthCallbackUrl:
@@ -299,6 +299,7 @@ Resources:
         - Google
       CallbackURLs:
         - !Ref ApiAuthCallbackUrl
+        - http://localhost:3001/api/v1/auth/google/callback
         - !Ref MobileAuthCallbackUrl
       LogoutURLs:
         - !Ref WebAppUrl
