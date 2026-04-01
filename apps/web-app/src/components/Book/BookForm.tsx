@@ -111,6 +111,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   const { searchByISBN } = useBookSearch();
   const isAddMode = !book;
   const nonIsbnFieldsDisabled = loading || isAddMode;
+  const [isLooking, setIsLooking] = useState(false);
   const defaultTitle = book ? t('books:edit_book_form') : t('books:add_new_book');
   const [formData, setFormData] = useState<BookFormData>(() =>
     buildNewBookFormData(!book ? initialIsbn : undefined, !book ? initialDraft : null)
@@ -344,6 +345,22 @@ export const BookForm: React.FC<BookFormProps> = ({
     setEmbeddedScannerOpen(true);
   };
 
+  const handleIsbnLookup = async (): Promise<void> => {
+    const isbnValue = formData.isbnCode.trim();
+
+    if (!isbnValue || isLooking) {
+      return;
+    }
+
+    setIsLooking(true);
+
+    try {
+      await searchByISBN(isbnValue);
+    } finally {
+      setIsLooking(false);
+    }
+  };
+
   const handleEmbeddedScannerClose = () => {
     setEmbeddedScannerOpen(false);
   };
@@ -394,6 +411,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   const isbnHintText = t('books:isbn_no_dashes_spaces_hint', {
     defaultValue: 'Write the code without dashes or spaces',
   });
+  const lookupButtonLabel = t('books:isbn_lookup_button');
   const editionDateHelperText =
     errors.editionDate === EDITION_DATE_ERROR_I18N_KEY
       ? t(EDITION_DATE_ERROR_I18N_KEY, {
@@ -464,7 +482,7 @@ export const BookForm: React.FC<BookFormProps> = ({
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: '1fr auto', md: '1fr' },
+                gridTemplateColumns: { xs: '1fr', sm: '1fr auto', md: '1fr auto' },
                 gap: 2,
                 alignItems: 'start'
               }}
@@ -476,8 +494,14 @@ export const BookForm: React.FC<BookFormProps> = ({
                 label={t('books:isbn')}
                 value={formData.isbnCode}
                 onChange={(e) => handleInputChange('isbnCode', e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void handleIsbnLookup();
+                  }
+                }}
                 placeholder={t('books:isbn_placeholder')}
-                disabled={loading}
+                disabled={loading || isLooking}
                 error={!!errors.isbnCode}
                 helperText={errors.isbnCode || isbnHintText}
                 inputProps={{
@@ -486,25 +510,50 @@ export const BookForm: React.FC<BookFormProps> = ({
                 }}
                 sx={{ fontFamily: 'monospace' }}
               />
-              <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-                <Tooltip title={t('books:scan_isbn')}>
-                  <span>
-                    <Button
-                      variant="outlined"
-                      startIcon={<QrCodeScannerIcon aria-hidden="true" />}
-                      onClick={handleScanIsbn}
-                      disabled={loading}
-                      aria-label={t('books:scan_isbn')}
-                      sx={{
-                        width: { xs: '100%', sm: 'auto' },
-                        minHeight: 56,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {t('books:scan_isbn')}
-                    </Button>
-                  </span>
-                </Tooltip>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: 2,
+                  width: { xs: '100%', sm: 'auto' },
+                  alignItems: 'stretch',
+                }}
+              >
+                <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                  <Tooltip title={t('books:scan_isbn')}>
+                    <span>
+                      <Button
+                        variant="outlined"
+                        startIcon={<QrCodeScannerIcon aria-hidden="true" />}
+                        onClick={handleScanIsbn}
+                        disabled={loading || isLooking}
+                        aria-label={t('books:scan_isbn')}
+                        sx={{
+                          width: { xs: '100%', sm: 'auto' },
+                          minHeight: 56,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {t('books:scan_isbn')}
+                      </Button>
+                    </span>
+                  </Tooltip>
+                </Box>
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    void handleIsbnLookup();
+                  }}
+                  disabled={loading || isLooking || !formData.isbnCode.trim()}
+                  aria-label={lookupButtonLabel}
+                  sx={{
+                    width: { xs: '100%', sm: 'auto' },
+                    minHeight: 56,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {isLooking ? <CircularProgress size={16} color="inherit" /> : lookupButtonLabel}
+                </Button>
               </Box>
             </Box>
           ) : (

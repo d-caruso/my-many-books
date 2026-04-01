@@ -21,7 +21,7 @@ export const ManualISBNInput: React.FC<ManualISBNInputProps> = ({
   onCancel,
   isOpen
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['scanner', 'books']);
   const [isbn, setIsbn] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -188,7 +188,7 @@ export const ManualISBNInput: React.FC<ManualISBNInputProps> = ({
               variant="contained"
               fullWidth
             >
-              {t('scanner:add_book')}
+              {t('books:isbn_lookup_button')}
             </Button>
           </Stack>
         </Stack>

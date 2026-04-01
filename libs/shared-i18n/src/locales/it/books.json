@@ -125,6 +125,7 @@
   "mark_as_status": "Segna come {{status}}",
   "want_to_read": "Da leggere",
   "isbn_optional": "ISBN (Opzionale)",
+  "isbn_lookup_button": "Cerca",
   "lookup": "Cerca",
   "title_required_field": "Titolo *",
   "author_field": "Autore",

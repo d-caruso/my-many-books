@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -128,6 +128,7 @@ const i18nReady = testI18n.use(initReactI18next).init({
         isbn: 'ISBN',
         isbn_placeholder: 'Enter ISBN',
         isbn_no_dashes_spaces_hint: 'Write the code without dashes or spaces',
+        isbn_lookup_button: 'Look up',
         scan_isbn: 'Scan ISBN',
         author: 'Author',
         search_add_authors: 'Search authors',
@@ -188,6 +189,49 @@ describe('BookForm', () => {
     expect(screen.getByLabelText(/title/i)).toBeDisabled();
     expect(screen.getByLabelText(/notes/i)).toBeDisabled();
     expect(screen.getByRole('button', { name: /save book/i })).toBeDisabled();
+  });
+
+  test('calls searchByISBN when the lookup button is clicked', async () => {
+    mockSearchByISBN.mockResolvedValue(null);
+
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: /isbn/i }), {
+      target: { value: '9780140449136' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /look up/i }));
+
+    await waitFor(() => {
+      expect(mockSearchByISBN).toHaveBeenCalledWith('9780140449136');
+    });
+  });
+
+  test('calls searchByISBN when Enter is pressed in the ISBN field', async () => {
+    mockSearchByISBN.mockResolvedValue(null);
+
+    renderBookForm();
+
+    const isbnInput = screen.getByRole('textbox', { name: /isbn/i });
+
+    fireEvent.change(isbnInput, { target: { value: '9780140449136' } });
+    fireEvent.keyDown(isbnInput, { key: 'Enter', code: 'Enter', charCode: 13 });
+
+    await waitFor(() => {
+      expect(mockSearchByISBN).toHaveBeenCalledWith('9780140449136');
+    });
+  });
+
+  test('shows a loading indicator while ISBN lookup is in progress', async () => {
+    mockSearchByISBN.mockImplementation(() => new Promise(() => undefined));
+
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: /isbn/i }), {
+      target: { value: '9780140449136' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /look up/i }));
+
+    expect(await screen.findByRole('progressbar')).toBeInTheDocument();
   });
 
   test('updates and removes selected authors from manage dialog callbacks', () => {
