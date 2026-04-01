@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavig
 import { AuthProvider } from '@my-many-books/shared-auth';
 import { APP_ROUTES } from '@my-many-books/shared-navigation';
 import { authService } from './services/authService';
-import { ApiProvider, useApi } from './contexts/ApiContext';
+import { ApiProvider } from './contexts/ApiContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { PWAProvider } from './contexts/PWAContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -78,7 +78,6 @@ const ScannerRoute: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { fadeOutMainContent, runMainContentTransition } = useProtectedViewTransition();
-  const { bookAPI } = useApi();
   const didNavigate = useRef(false);
   const scannerParams = new URLSearchParams(location.search);
   const returnTo = scannerParams.get('returnTo');
@@ -91,21 +90,21 @@ const ScannerRoute: React.FC = () => {
     didNavigate.current = true;
     fadeOutMainContent();
 
-    const [copyStatus, book] = await Promise.all([
+    const [copyStatus] = await Promise.all([
       navigator.clipboard?.writeText
         ? navigator.clipboard.writeText(result.isbn).then(() => 'success' as const).catch(() => 'failed' as const)
         : Promise.resolve('failed' as const),
-      bookAPI.searchByISBN(result.isbn).catch(() => null),
       new Promise<void>(resolve => setTimeout(resolve, VIEW_TRANSITION_FADE_OUT_LEAD_MS)),
     ]);
 
-    const commonParams = { scannerSource: 'scanner', scannerCopy: copyStatus };
-
-    if (book) {
-      navigate(`/search?${new URLSearchParams({ isbn: result.isbn, ...commonParams }).toString()}`);
-    } else {
-      navigate(`/?${new URLSearchParams({ mode: 'add', isbn: result.isbn, ...commonParams }).toString()}`);
-    }
+    navigate(
+      `/?${new URLSearchParams({
+        mode: 'add',
+        isbn: result.isbn,
+        scannerSource: 'scanner',
+        scannerCopy: copyStatus,
+      }).toString()}`
+    );
   };
 
   return (

@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import type { Author, Category } from '@my-many-books/shared-types';
 import { BarcodeScannerPanel } from '@/components/scanner/BarcodeScannerPanel';
 import { ScannerErrorBoundary } from '@/components/ScannerErrorBoundary';
+import { resolveScannedIsbnRoute } from '@/utils/isbnScannerRouting';
 import { AddAuthorDialog } from './AddAuthorDialog';
 import { AddCategoryDialog } from './AddCategoryDialog';
 import { AuthorSelectorModal } from './AuthorSelectorModal';
@@ -15,7 +17,7 @@ import { useAddBookStyles } from './addBookStyles';
 interface AddBookOverlaysProps {
   scannerOpen: boolean;
   onScannerClose: () => void;
-  onScannerDetected: (isbn: string) => void;
+  onScannerDetected?: (isbn: string) => void | Promise<void>;
   authorSelectorOpen: boolean;
   availableAuthors: Author[];
   selectedAuthorIds: number[];
@@ -48,6 +50,17 @@ interface AddBookOverlaysProps {
 
 export function AddBookOverlays(props: AddBookOverlaysProps) {
   const styles = useAddBookStyles();
+  const { onScannerClose, onScannerDetected } = props;
+  const handleScannerDetected = useCallback(async (isbn: string) => {
+    if (onScannerDetected) {
+      await onScannerDetected(isbn);
+      return;
+    }
+
+    const route = await resolveScannedIsbnRoute(isbn);
+    onScannerClose();
+    router.replace(route);
+  }, [onScannerClose, onScannerDetected]);
 
   return (
     <>
@@ -59,7 +72,7 @@ export function AddBookOverlays(props: AddBookOverlaysProps) {
       >
         <SafeAreaView style={styles.scannerModalContainer}>
           <ScannerErrorBoundary onClose={props.onScannerClose}>
-            <BarcodeScannerPanel onDetected={props.onScannerDetected} onClose={props.onScannerClose} />
+            <BarcodeScannerPanel onDetected={handleScannerDetected} onClose={props.onScannerClose} />
           </ScannerErrorBoundary>
         </SafeAreaView>
       </Modal>

@@ -2,13 +2,12 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Clipboard from 'expo-clipboard';
 import { Button, Text, TextInput } from 'react-native-paper';
 
-import { useBookSearch } from '@/hooks/useBookSearch';
 import { BarcodeScannerPanel } from '@/components/scanner/BarcodeScannerPanel';
 import { ScannerErrorBoundary } from '@/components/ScannerErrorBoundary';
-import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
+import { SCANNER_COPY_STATUS } from '@/constants/scanner';
+import { resolveScannedIsbnRoute } from '@/utils/isbnScannerRouting';
 import { normalizeISBN, validateISBN } from '@my-many-books/shared-utils';
 import { useTranslation } from 'react-i18next';
 
@@ -16,7 +15,6 @@ type ScannerMode = 'scan' | 'manual';
 
 export default function ScannerScreen() {
   const { t } = useTranslation('scanner');
-  const { searchByISBN } = useBookSearch();
   const [mode, setMode] = useState<ScannerMode>('scan');
   const [manualIsbn, setManualIsbn] = useState('');
   const [manualError, setManualError] = useState<string | null>(null);
@@ -34,33 +32,20 @@ export default function ScannerScreen() {
       return;
     }
 
-    let copyStatus: ScannerCopyStatus = SCANNER_COPY_STATUS.FAILED;
-
     try {
-      await Clipboard.setStringAsync(isbn);
-      copyStatus = SCANNER_COPY_STATUS.SUCCESS;
-    } catch {
-      copyStatus = SCANNER_COPY_STATUS.FAILED;
-    }
-
-    try {
-      const book = await searchByISBN(isbn);
-      if (book) {
-        router.push({
-          pathname: '/(tabs)/search',
-          params: { isbn, scannerCopy: copyStatus },
-        });
-        return;
-      }
+      const route = await resolveScannedIsbnRoute(isbn);
+      router.replace(route);
     } catch (error) {
       console.error('Failed to search book by ISBN:', error);
+      router.replace({
+        pathname: '/book/add',
+        params: {
+          isbn,
+          scannerCopy: SCANNER_COPY_STATUS.FAILED,
+        },
+      });
     }
-
-    router.push({
-      pathname: '/book/add',
-      params: { isbn, scannerCopy: copyStatus },
-    });
-  }, [searchByISBN, t]);
+  }, [t]);
 
   const handleDetected = useCallback(async (isbn: string) => {
     await handleResolvedIsbn(isbn);

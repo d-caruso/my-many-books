@@ -97,6 +97,10 @@ export const Alert = ({ children, severity, ...props }: ReactChildren & { severi
   React.createElement('div', { 'data-testid': `alert-${severity || 'info'}`, ...props }, children)
 );
 
+export const Snackbar = ({ children, open, ...props }: ReactChildren & { open?: boolean; [key: string]: unknown }) => (
+  open ? React.createElement('div', { 'data-testid': 'snackbar', ...props }, children) : null
+);
+
 export const Dialog = ({ children, open, onClose, ...props }: ReactChildren & { open?: boolean; onClose?: () => void; [key: string]: unknown }) => (
   open ? React.createElement('div', { 'data-testid': 'dialog', ...props }, [
     React.createElement('div', {

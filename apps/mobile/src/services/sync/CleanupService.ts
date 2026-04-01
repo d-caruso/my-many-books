@@ -79,7 +79,7 @@ export class CleanupService {
         (Date.now() - new Date(book.creation_date).getTime()) / (24 * 60 * 60 * 1000)
       );
 
-      if (ageInDays > MAX_TEMP_ID_AGE_DAYS) {
+      if (ageInDays >= MAX_TEMP_ID_AGE_DAYS) {
         mobileHooks.emit(MOBILE_EVENTS.BOOK.DELETE.START, {
           bookId: book.id,
           reason: 'orphaned_cleanup',
@@ -124,7 +124,7 @@ export class CleanupService {
       );
 
       // If book doesn't exist and mapping is old, remove it
-      if (!bookExists && ageInDays > MAX_TEMP_ID_AGE_DAYS) {
+      if (!bookExists && ageInDays >= MAX_TEMP_ID_AGE_DAYS) {
         mobileHooks.emit(MOBILE_EVENTS.SYNC.ID_MAPPING.START, {
           operation: 'remove_stale_mapping',
           tempId: mapping.temp_id,

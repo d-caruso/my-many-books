@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
+import { Text, TextInput, Button, Card, SegmentedButtons, Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import * as Clipboard from 'expo-clipboard';
 
 import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
@@ -19,10 +18,9 @@ import { AuthorsSection } from '@/components/book/AuthorsSection';
 import { CategoriesSection } from '@/components/book/CategoriesSection';
 import { AddBookOverlays } from '@/components/book/AddBookOverlays';
 import { useAddBookStyles } from '@/components/book/addBookStyles';
-import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
 
 export default function EditBookScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, fromIsbnScan } = useLocalSearchParams<{ id: string; fromIsbnScan?: '1' }>();
   const { t } = useTranslation();
   const styles = useAddBookStyles();
   const { books, updateBook } = useBooks();
@@ -38,6 +36,8 @@ export default function EditBookScreen() {
   const [notes, setNotes] = useState(book?.notes ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isbnFeedbackVisible, setIsbnFeedbackVisible] = useState(false);
+  const [isbnFeedbackMessage, setIsbnFeedbackMessage] = useState('');
   const [scannerOpen, setScannerOpen] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [authorSelectorOpen, setAuthorSelectorOpen] = useState(false);
@@ -48,6 +48,7 @@ export default function EditBookScreen() {
   const [manageCategoriesDialogOpen, setManageCategoriesDialogOpen] = useState(false);
 
   const entitiesInitialisedRef = useRef(false);
+  const handledScannerArrivalRef = useRef(false);
 
   const {
     availableAuthors,
@@ -82,6 +83,21 @@ export default function EditBookScreen() {
     setSelectedAuthors(book.authors as typeof availableAuthors);
     setSelectedCategoryIds(book.categories.map(c => Number(c.id)));
   }, [book?.authors, book?.categories, availableAuthors, availableCategories, setSelectedAuthors, setSelectedCategoryIds]);
+
+  useEffect(() => {
+    if (fromIsbnScan !== '1' || handledScannerArrivalRef.current) {
+      return;
+    }
+
+    handledScannerArrivalRef.current = true;
+    setIsbnFeedbackMessage(t('books:isbn_owned_book_found'));
+    setIsbnFeedbackVisible(true);
+
+    router.replace({
+      pathname: '/book/edit/[id]',
+      params: { id },
+    });
+  }, [fromIsbnScan, id, t]);
 
   const handleIsbnChange = (value: string) => {
     if (duplicateWarning) setDuplicateWarning(null);
@@ -126,49 +142,6 @@ export default function EditBookScreen() {
       setLoading(false);
     }
   };
-
-  const handleEmbeddedScannerDetected = useCallback(async (isbnValue: string) => {
-    let copyStatus: ScannerCopyStatus = SCANNER_COPY_STATUS.FAILED;
-    try {
-      await Clipboard.setStringAsync(isbnValue);
-      copyStatus = SCANNER_COPY_STATUS.SUCCESS;
-    } catch {
-      copyStatus = SCANNER_COPY_STATUS.FAILED;
-    }
-
-    let existingBook: Book | null = null;
-    try {
-      existingBook = await searchByISBN(isbnValue);
-    } catch (err) {
-      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
-        operation: 'embedded_scanner_isbn_lookup',
-        resource: RESOURCE_TYPES.BOOK,
-        error: err instanceof Error ? err.message : String(err),
-        isbn: isbnValue,
-        source: 'book_edit_embedded_scanner',
-      });
-    }
-
-    setIsbnCode(isbnValue);
-    // Only warn about duplicates if it's a different book
-    setDuplicateWarning(
-      existingBook && String(existingBook.id) !== id
-        ? t('scanner:isbn_already_exists_in_library', {
-            defaultValue: 'A book with this ISBN already exists in your library.',
-          })
-        : null
-    );
-    setScannerOpen(false);
-
-    // Log clipboard outcome
-    if (copyStatus === SCANNER_COPY_STATUS.FAILED) {
-      mobileHooks.emit(MOBILE_EVENTS.ERROR.VALIDATION, {
-        operation: 'clipboard_copy',
-        error: 'Failed to copy ISBN to clipboard',
-        source: 'book_edit_embedded_scanner',
-      });
-    }
-  }, [searchByISBN, id, t]);
 
   const handleCreateAuthor = useCallback(async (input: { name: string; surname: string; nationality?: string }) => {
     const created = await createAuthorAndSelect(input);
@@ -376,7 +349,6 @@ export default function EditBookScreen() {
       <AddBookOverlays
         scannerOpen={scannerOpen}
         onScannerClose={() => setScannerOpen(false)}
-        onScannerDetected={handleEmbeddedScannerDetected}
         authorSelectorOpen={authorSelectorOpen}
         availableAuthors={availableAuthors}
         selectedAuthorIds={selectedAuthors.map((author) => Number(author.id))}
@@ -412,6 +384,17 @@ export default function EditBookScreen() {
         onCategoryUpdated={handleCategoryUpdated}
         onCategoryDeleted={handleCategoryDeleted}
       />
+      <Snackbar
+        visible={isbnFeedbackVisible}
+        onDismiss={() => setIsbnFeedbackVisible(false)}
+        duration={3000}
+        action={{
+          label: t('ok'),
+          onPress: () => setIsbnFeedbackVisible(false),
+        }}
+      >
+        {isbnFeedbackMessage}
+      </Snackbar>
     </SafeAreaView>
   );
 }
