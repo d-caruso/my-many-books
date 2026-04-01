@@ -3,7 +3,7 @@
 // ================================================================
 
 import { getLogger } from '@my-many-books/shared-logging';
-import { OpenLibraryBook } from '@/types/openLibrary';
+import { OpenLibraryBook, OpenLibrarySubjectEntry } from '@/types/openLibrary';
 import {
   TransformedBookData,
   TransformedAuthorData,
@@ -92,47 +92,37 @@ export class DataTransformer {
   }
 
   private static extractCategories(olBook: OpenLibraryBook): TransformedCategoryData[] {
-    const categories: TransformedCategoryData[] = [];
-
-    // Extract subjects
-    if (olBook.subjects) {
-      olBook.subjects.forEach(subject => {
-        if (subject && subject.trim().length > 0) {
-          categories.push({
-            name: DataTransformer.normalizeCategory(subject),
-            type: 'subject',
-          });
-        }
-      });
-    }
-
-    // Extract subject places as topics
-    if (olBook.subject_places) {
-      olBook.subject_places.forEach(place => {
-        if (place && place.trim().length > 0) {
-          categories.push({
-            name: DataTransformer.normalizeCategory(place),
-            type: 'topic',
-          });
-        }
-      });
-    }
-
-    // Extract subject times as topics
-    if (olBook.subject_times) {
-      olBook.subject_times.forEach(time => {
-        if (time && time.trim().length > 0) {
-          categories.push({
-            name: DataTransformer.normalizeCategory(time),
-            type: 'topic',
-          });
-        }
-      });
-    }
+    const categories: TransformedCategoryData[] = [
+      ...DataTransformer.extractCategoriesByType(olBook.subjects, 'subject'),
+      ...DataTransformer.extractCategoriesByType(olBook.subject_places, 'topic'),
+      ...DataTransformer.extractCategoriesByType(olBook.subject_times, 'topic'),
+    ];
 
     // Remove duplicates and limit to reasonable number
     const uniqueCategories = DataTransformer.deduplicateCategories(categories);
     return uniqueCategories.slice(0, 10); // Limit to 10 categories max
+  }
+
+  private static extractCategoriesByType(
+    entries: OpenLibrarySubjectEntry[] | undefined,
+    type: 'subject' | 'topic'
+  ): TransformedCategoryData[] {
+    if (!entries || entries.length === 0) {
+      return [];
+    }
+
+    return entries
+      .map(entry => DataTransformer.normalizeSubjectEntry(entry))
+      .filter(entry => entry.length > 0)
+      .map(entry => ({
+        name: DataTransformer.normalizeCategory(entry),
+        type,
+      }));
+  }
+
+  private static normalizeSubjectEntry(entry: OpenLibrarySubjectEntry): string {
+    const value = typeof entry === 'string' ? entry : entry.name;
+    return value.trim();
   }
 
   private static normalizeCategory(category: string): string {

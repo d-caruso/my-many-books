@@ -93,6 +93,77 @@ describe('DataTransformer', () => {
       expect(result.categories.find(c => c.name === '21st century' && c.type === 'topic')).toBeDefined();
     });
 
+    describe('OpenLibrary payload hardening', () => {
+      it('handles subjects as plain strings', () => {
+        const result = DataTransformer.transformBook(
+          { title: 'Test', subjects: ['Fiction', 'Drama'] },
+          '9780140449136'
+        );
+
+        expect(result.categories).toEqual([
+          { name: 'Fiction', type: 'subject' },
+          { name: 'Drama', type: 'subject' },
+        ]);
+      });
+
+      it('handles subjects as objects with name and url', () => {
+        const result = DataTransformer.transformBook(
+          {
+            title: 'Test',
+            subjects: [
+              { name: 'Fiction', url: 'https://openlibrary.org/subjects/fiction' },
+              { name: 'Drama', url: 'https://openlibrary.org/subjects/drama' },
+            ],
+          },
+          '9780140449136'
+        );
+
+        expect(result.categories).toEqual([
+          { name: 'Fiction', type: 'subject' },
+          { name: 'Drama', type: 'subject' },
+        ]);
+      });
+
+      it('handles a mixed array of strings and objects', () => {
+        const result = DataTransformer.transformBook(
+          {
+            title: 'Test',
+            subjects: ['Fiction', { name: 'Drama', url: 'https://openlibrary.org/subjects/drama' }],
+          },
+          '9780140449136'
+        );
+
+        expect(result.categories).toEqual([
+          { name: 'Fiction', type: 'subject' },
+          { name: 'Drama', type: 'subject' },
+        ]);
+      });
+
+      it('does not throw for real ISBN 9780140449136 payload shape', () => {
+        expect(() =>
+          DataTransformer.transformBook(
+            {
+              title: 'Test',
+              subjects: [
+                {
+                  name: 'Ancient Greece',
+                  url: 'https://openlibrary.org/subjects/ancient_greece',
+                },
+              ],
+              subject_places: [
+                {
+                  name: 'Greece',
+                  url: 'https://openlibrary.org/subjects/place:greece',
+                },
+              ],
+              subject_times: ['Ancient'],
+            },
+            '9780140449136'
+          )
+        ).not.toThrow();
+      });
+    });
+
     it('should parse edition dates correctly', () => {
       const testCases = [
         { input: '2023', expected: '2023' },
