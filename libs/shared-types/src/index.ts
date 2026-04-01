@@ -15,6 +15,9 @@ export * from './author';
 // Category-related exports
 export * from './category';
 
+// ISBN search exports
+export * from './isbnSearch';
+
 // API-related exports
 export * from './api';
 
