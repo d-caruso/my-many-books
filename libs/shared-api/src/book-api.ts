@@ -2,12 +2,14 @@
  * Book API client - platform agnostic
  */
 
-import { BaseApiClient, HTTP_STATUS_NOT_FOUND } from './base-client';
+import { BaseApiClient } from './base-client';
 import {
   Book,
   BookFormData,
   BookFormSchema,
   BookSchema,
+  IsbnSearchResponse,
+  IsbnSearchResponseSchema,
   BookStatus,
   BookStatusSchema,
   PaginatedResponse,
@@ -21,14 +23,6 @@ import {
 const PaginatedBooksSchema = createPaginatedResponseSchema(BookSchema);
 
 export class BookApi extends BaseApiClient {
-  private parseIsbnSearchResponse(response: unknown): Book | null {
-    if (response === null || response === undefined) {
-      return null;
-    }
-
-    return BookSchema.parse(response);
-  }
-
   async getBooks(
     page: number = 1,
     limit: number = 10,
@@ -99,16 +93,9 @@ export class BookApi extends BaseApiClient {
     return SearchResultSchema.parse(response);
   }
 
-  async searchByISBN(isbn: string): Promise<Book | null> {
-    try {
-      const response = await this.get<unknown>(`/books/search/isbn/${encodeURIComponent(isbn)}`);
-      return this.parseIsbnSearchResponse(response);
-    } catch (error: unknown) {
-      if (this.getErrorStatus(error) === HTTP_STATUS_NOT_FOUND) {
-        return null;
-      }
-      throw error;
-    }
+  async searchByISBN(isbn: string): Promise<IsbnSearchResponse> {
+    const response = await this.get<unknown>(`/books/search/isbn/${encodeURIComponent(isbn)}`);
+    return IsbnSearchResponseSchema.parse(response);
   }
 
   async updateBookStatus(id: number, status: BookStatus): Promise<Book> {
