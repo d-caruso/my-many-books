@@ -129,6 +129,7 @@ const i18nReady = testI18n.use(initReactI18next).init({
         isbn_placeholder: 'Enter ISBN',
         isbn_no_dashes_spaces_hint: 'Write the code without dashes or spaces',
         isbn_lookup_button: 'Look up',
+        isbn_owned_book_found: 'You have this book',
         scan_isbn: 'Scan ISBN',
         author: 'Author',
         search_add_authors: 'Search authors',
@@ -232,6 +233,28 @@ describe('BookForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /look up/i }));
 
     expect(await screen.findByRole('progressbar')).toBeInTheDocument();
+  });
+
+  test('switches to edit mode and shows owned-book snackbar when ISBN matches a local book', async () => {
+    mockSearchByISBN.mockResolvedValue({
+      id: 1,
+      title: 'Iliad',
+      isbnCode: '9780140449136',
+      userId: 2,
+      authors: [],
+      categories: [],
+    });
+
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: /isbn/i }), {
+      target: { value: '9780140449136' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /look up/i }));
+
+    expect(await screen.findByText('You have this book')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Iliad')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /update book/i })).not.toBeDisabled();
   });
 
   test('updates and removes selected authors from manage dialog callbacks', () => {

@@ -382,6 +382,14 @@ const BooksPage: React.FC = () => {
     categoryIds: formData.selectedCategories,
   });
 
+  const handleResolvedLocalBook = (resolvedBook: Book) => {
+    setSelectedBook(resolvedBook);
+    setPageMode('edit');
+    setActionError(null);
+    setInitialIsbn(undefined);
+    setInitialDraft(null);
+  };
+
   const handleFormSubmit = async (formData: BookFormData) => {
     setActionLoading(true);
     setActionError(null);
@@ -488,6 +496,7 @@ const BooksPage: React.FC = () => {
             book={selectedBook}
             onSubmit={handleFormSubmit}
             onCancel={handleCancel}
+            onResolvedLocalBook={handleResolvedLocalBook}
             loading={actionLoading}
             initialIsbn={initialIsbn}
             initialDraft={initialDraft}

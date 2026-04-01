@@ -103,10 +103,11 @@ vi.mock('../../components/Book', () => ({
       {loading && <div data-testid="book-loading">Loading</div>}
     </div>
   ),
-  BookForm: ({ book, onSubmit, onCancel, loading, scannerPrefillNotice, initialDraft, initialIsbn }: {
+  BookForm: ({ book, onSubmit, onCancel, onResolvedLocalBook, loading, scannerPrefillNotice, initialDraft, initialIsbn }: {
     book?: Book | null;
     onSubmit: (data: unknown) => void;
     onCancel: () => void;
+    onResolvedLocalBook?: (book: Book) => void;
     loading?: boolean;
     scannerPrefillNotice?: string;
     initialDraft?: { title?: string; isbnCode?: string };
@@ -121,6 +122,21 @@ vi.mock('../../components/Book', () => ({
       data-initial-draft-isbn={initialDraft?.isbnCode ?? ''}
       data-initial-isbn={initialIsbn ?? ''}
     >
+      <button
+        data-testid="resolve-local-book"
+        onClick={() =>
+          onResolvedLocalBook?.({
+            id: 77,
+            title: 'Owned Book',
+            isbnCode: '9780140449136',
+            userId: 1,
+            authors: [],
+            categories: [],
+          })
+        }
+      >
+        Resolve local book
+      </button>
       <button data-testid="form-submit" onClick={() => onSubmit({ title: 'Form Book', isbn: '123', selectedAuthors: [], selectedCategories: [] })}>
         Submit
       </button>
@@ -311,6 +327,27 @@ describe('BooksPage', () => {
     await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     fireEvent.click(screen.getByTestId('form-cancel'));
     await waitFor(() => expect(screen.getByTestId('book-list')).toBeInTheDocument());
+  });
+
+  test('switches add flow to update flow when the form resolves a local ISBN hit', async () => {
+    renderBooksPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /add book/i }));
+    await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId('resolve-local-book'));
+
+    await waitFor(() => expect(screen.getByTestId('book-form')).toHaveAttribute('data-book-id', '77'));
+
+    fireEvent.click(screen.getByTestId('form-submit'));
+
+    await waitFor(() => {
+      expect(booksState.updateBook).toHaveBeenCalledWith(
+        77,
+        expect.objectContaining({ title: 'Form Book' })
+      );
+    });
+    expect(booksState.createBook).not.toHaveBeenCalled();
   });
 
   test('navigates to scanner when scan isbn button is clicked', async () => {
