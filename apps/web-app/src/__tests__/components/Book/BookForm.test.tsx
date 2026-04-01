@@ -143,6 +143,8 @@ const i18nReady = testI18n.use(initReactI18next).init({
         isbn_invalid: 'Invalid ISBN format',
         isbn_owned_book_found: 'You have this book',
         isbn_valid_no_metadata: 'Valid ISBN - fill in the details',
+        isbn_metadata_loaded: 'Book details loaded from ISBN',
+        isbn_entities_auto_created: 'Added to your library: {{authors}} author(s), {{categories}} category(ies)',
         scan_isbn: 'Scan ISBN',
         author: 'Author',
         search_add_authors: 'Search authors',
@@ -174,7 +176,7 @@ const i18nReady = testI18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
-const t = (key: string): string => testI18n.t(key);
+const t = (key: string, options?: Record<string, unknown>): string => testI18n.t(key, options);
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const translatedLabelMatcher = (key: string): RegExp => new RegExp(escapeRegExp(t(key)), 'i');
 
@@ -352,6 +354,66 @@ describe('BookForm', () => {
       expect(mockGetAuthors).toHaveBeenCalledTimes(1);
       expect(mockLoadCategories).toHaveBeenCalledTimes(1);
     });
+  });
+
+  test('shows metadata-loaded snackbar for external ISBN results', async () => {
+    mockCategories = [{ id: 5, name: 'Classics' }];
+    mockGetAuthors.mockResolvedValue([
+      { id: 10, name: 'Homer', surname: 'Poet', nationality: 'Greek' },
+    ]);
+    mockDetailedIsbnSearch.mockResolvedValue({
+      found: true,
+      external: true,
+      book: {
+        title: 'Iliad',
+        authorIds: [10],
+        categoryIds: [5],
+        createdAuthorIds: [],
+        createdCategoryIds: [],
+      },
+    });
+
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') }), {
+      target: { value: '9780140449136' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: t('books:isbn_lookup_button') }));
+
+    expect(await screen.findByText(t('books:isbn_metadata_loaded'))).toBeInTheDocument();
+    expect(screen.queryByText(t('books:isbn_entities_auto_created', { authors: 0, categories: 0 }))).not.toBeInTheDocument();
+  });
+
+  test('shows auto-created entity counts when external ISBN resolution creates authors or categories', async () => {
+    mockCategories = [{ id: 5, name: 'Classics' }];
+    mockGetAuthors.mockResolvedValue([
+      { id: 10, name: 'Homer', surname: 'Poet', nationality: 'Greek' },
+    ]);
+    mockDetailedIsbnSearch.mockResolvedValue({
+      found: true,
+      external: true,
+      book: {
+        title: 'Iliad',
+        authorIds: [10],
+        categoryIds: [5],
+        createdAuthorIds: [10],
+        createdCategoryIds: [5, 6],
+      },
+    });
+
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') }), {
+      target: { value: '9780140449136' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: t('books:isbn_lookup_button') }));
+
+    expect(await screen.findByText(t('books:isbn_metadata_loaded'))).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        t('books:isbn_entities_auto_created', { authors: 1, categories: 2 })
+      )
+    ).toBeInTheDocument();
   });
 
   test('updates and removes selected authors from manage dialog callbacks', () => {

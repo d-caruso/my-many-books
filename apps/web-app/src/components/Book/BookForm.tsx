@@ -152,6 +152,10 @@ export const BookForm: React.FC<BookFormProps> = ({
     severity: 'error' | 'info' | 'success' | 'warning';
     message: string;
   } | null>(null);
+  const [secondaryIsbnAlert, setSecondaryIsbnAlert] = useState<{
+    severity: 'error' | 'info' | 'success' | 'warning';
+    message: string;
+  } | null>(null);
 
   // Initialize form with book data
   useEffect(() => {
@@ -287,6 +291,9 @@ export const BookForm: React.FC<BookFormProps> = ({
       if (isbnAlert) {
         setIsbnAlert(null);
       }
+      if (secondaryIsbnAlert) {
+        setSecondaryIsbnAlert(null);
+      }
     }
 
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -420,12 +427,29 @@ export const BookForm: React.FC<BookFormProps> = ({
         severity: 'info',
         message: t('books:isbn_owned_book_found'),
       });
+      setSecondaryIsbnAlert(null);
       onResolvedLocalBook?.(result.book);
       return;
     }
 
     if (result.found && result.external) {
       await applyExternalPrefill(result.book);
+      setIsbnAlert({
+        severity: 'success',
+        message: t('books:isbn_metadata_loaded'),
+      });
+
+      if (result.book.createdAuthorIds.length > 0 || result.book.createdCategoryIds.length > 0) {
+        setSecondaryIsbnAlert({
+          severity: 'info',
+          message: t('books:isbn_entities_auto_created', {
+            authors: result.book.createdAuthorIds.length,
+            categories: result.book.createdCategoryIds.length,
+          }),
+        });
+      } else {
+        setSecondaryIsbnAlert(null);
+      }
       return;
     }
 
@@ -436,6 +460,7 @@ export const BookForm: React.FC<BookFormProps> = ({
         severity: 'success',
         message: t('books:isbn_valid_no_metadata'),
       });
+      setSecondaryIsbnAlert(null);
     }
   };
 
@@ -450,6 +475,7 @@ export const BookForm: React.FC<BookFormProps> = ({
     if (!validation.isValid) {
       setIsResolved(false);
       setIsbnAlert(null);
+      setSecondaryIsbnAlert(null);
       setErrors(prev => ({
         ...prev,
         isbnCode: t('books:isbn_invalid'),
@@ -977,6 +1003,25 @@ export const BookForm: React.FC<BookFormProps> = ({
             sx={{ width: '100%' }}
           >
             {isbnAlert.message}
+          </Alert>
+        ) : undefined}
+      </Snackbar>
+
+      <Snackbar
+        open={Boolean(secondaryIsbnAlert)}
+        autoHideDuration={4000}
+        onClose={() => setSecondaryIsbnAlert(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        sx={{ top: 96 }}
+      >
+        {secondaryIsbnAlert ? (
+          <Alert
+            severity={secondaryIsbnAlert.severity}
+            variant="filled"
+            onClose={() => setSecondaryIsbnAlert(null)}
+            sx={{ width: '100%' }}
+          >
+            {secondaryIsbnAlert.message}
           </Alert>
         ) : undefined}
       </Snackbar>
