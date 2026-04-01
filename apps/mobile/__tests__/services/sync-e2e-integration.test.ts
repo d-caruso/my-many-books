@@ -1,5 +1,5 @@
 /**
- * End-to-End Sync Integration Tests (Phase 5 - Task 5.5.3)
+ * End-to-End Sync Integration Tests
  *
  * Tests the complete sync lifecycle:
  * - Create offline → sync → ID mapping → update → sync
@@ -69,7 +69,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   removeItem: jest.fn(),
 }));
 
-describe('End-to-End Sync Integration (Task 5.5.3)', () => {
+describe('End-to-End Sync Integration', () => {
   beforeAll(async () => {
     await databaseService.openDatabase();
     await migrationSystem.runMigrations();
