@@ -181,10 +181,24 @@ describe('BookForm', () => {
     });
   });
 
+  test('locks all add-book fields except ISBN on initial open', () => {
+    renderBookForm();
+
+    expect(screen.getByRole('textbox', { name: /isbn/i })).not.toBeDisabled();
+    expect(screen.getByLabelText(/title/i)).toBeDisabled();
+    expect(screen.getByLabelText(/notes/i)).toBeDisabled();
+    expect(screen.getByRole('button', { name: /save book/i })).toBeDisabled();
+  });
+
   test('updates and removes selected authors from manage dialog callbacks', () => {
     renderBookForm({
-      initialDraft: {
-        selectedAuthors: [{ id: 999, name: 'Virginia', surname: 'Woolf', nationality: null }],
+      book: {
+        id: 10,
+        title: 'Existing Book',
+        isbnCode: '9781566199094',
+        userId: 42,
+        authors: [{ id: 999, name: 'Virginia', surname: 'Woolf', nationality: null }],
+        categories: [],
       },
     });
 
@@ -201,8 +215,16 @@ describe('BookForm', () => {
 
   test('removes deleted category from selection and reloads categories after manage callback', () => {
     renderBookForm({
-      initialDraft: {
-        selectedCategories: [123, 456],
+      book: {
+        id: 10,
+        title: 'Existing Book',
+        isbnCode: '9781566199094',
+        userId: 42,
+        authors: [],
+        categories: [
+          { id: 123, name: 'Classics' },
+          { id: 456, name: 'Poetry' },
+        ],
       },
     });
 
@@ -258,10 +280,13 @@ describe('BookForm', () => {
   test('applies scanned isbn inline and shows duplicate warning (without copied notice) while preserving typed fields', async () => {
     mockSearchByISBN.mockResolvedValue({ id: 42, title: 'Existing book' });
 
-    renderBookForm();
+    renderBookForm({
+      initialDraft: {
+        title: 'Typed title',
+        notes: 'Typed notes',
+      },
+    });
 
-    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Typed title' } });
-    fireEvent.change(screen.getByLabelText(/notes/i), { target: { value: 'Typed notes' } });
     fireEvent.click(screen.getByRole('button', { name: /scan isbn/i }));
     fireEvent.click(screen.getByTestId('embedded-scan-success'));
 
@@ -273,7 +298,16 @@ describe('BookForm', () => {
   });
 
   test('reloads author autocomplete options after creating a new author', () => {
-    renderBookForm();
+    renderBookForm({
+      book: {
+        id: 10,
+        title: 'Existing Book',
+        isbnCode: '9781566199094',
+        userId: 42,
+        authors: [],
+        categories: [],
+      },
+    });
 
     expect(screen.getByTestId('author-autocomplete-reload-trigger')).toHaveTextContent('0');
 
