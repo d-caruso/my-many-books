@@ -26,9 +26,10 @@ import AddIcon from '@mui/icons-material/Add';
 import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { useTranslation } from 'react-i18next';
-import type { Book, Author, Category, IsbnSearchResponse } from '@my-many-books/shared-types';
+import type { Book, Author, Category, ExternalBookPrefill, IsbnSearchResponse } from '@my-many-books/shared-types';
 import { useCategories } from '../../hooks/useCategories';
 import { useBookSearch } from '../../hooks/useBookSearch';
+import { useApi } from '../../contexts/ApiContext';
 import { AuthorAutocomplete } from '../Search/AuthorAutocomplete';
 import { AddAuthorDialog } from '../Author/AddAuthorDialog';
 import { ManageAuthorsDialog } from '../Author/ManageAuthorsDialog';
@@ -113,6 +114,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   onScannerPrefillNoticeDismiss
 }) => {
   const { t, i18n } = useTranslation(['books', 'common', 'scanner', 'validation', 'categories']);
+  const { authorAPI } = useApi();
   const categorySortComparator = useMemo(
     () => createCategoryDisplayNameComparator<Category>(t, i18n.language),
     [t, i18n.language]
@@ -147,6 +149,10 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [showEmbeddedScannerNotice, setShowEmbeddedScannerNotice] = useState(false);
   const [duplicateIsbnWarning, setDuplicateIsbnWarning] = useState<string | null>(null);
   const [isbnAlert, setIsbnAlert] = useState<{
+    severity: 'error' | 'info' | 'success' | 'warning';
+    message: string;
+  } | null>(null);
+  const [secondaryIsbnAlert, setSecondaryIsbnAlert] = useState<{
     severity: 'error' | 'info' | 'success' | 'warning';
     message: string;
   } | null>(null);
@@ -285,6 +291,9 @@ export const BookForm: React.FC<BookFormProps> = ({
       if (isbnAlert) {
         setIsbnAlert(null);
       }
+      if (secondaryIsbnAlert) {
+        setSecondaryIsbnAlert(null);
+      }
     }
 
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -365,7 +374,51 @@ export const BookForm: React.FC<BookFormProps> = ({
     setEmbeddedScannerOpen(true);
   };
 
-  const handleResolutionResult = (result: IsbnSearchResponse) => {
+  const resolvePrefillAuthors = async (authorIds: number[]): Promise<Author[]> => {
+    if (authorIds.length === 0) {
+      return [];
+    }
+
+    try {
+      const authors = await authorAPI.getAuthors();
+      const authorsById = new Map(authors.map((author) => [author.id, author]));
+
+      return authorIds.flatMap((authorId) => {
+        const author = authorsById.get(authorId);
+        return author ? [author] : [];
+      });
+    } catch (error: unknown) {
+      logger.error('Failed to load resolved ISBN authors:', error);
+      return [];
+    }
+  };
+
+  const applyExternalPrefill = async (prefill: ExternalBookPrefill): Promise<void> => {
+    const resolvedAuthors = await resolvePrefillAuthors(prefill.authorIds);
+
+    try {
+      await loadCategories();
+    } catch (error: unknown) {
+      logger.error('Failed to refresh resolved ISBN categories:', error);
+    }
+
+    setResolvedLocalBook(null);
+    setFormData((prev) => ({
+      ...prev,
+      title: prefill.title ?? prev.title,
+      editionNumber: prefill.editionNumber ?? prev.editionNumber,
+      editionDate: prefill.editionDate ?? prev.editionDate ?? '',
+      status: prefill.status ?? prev.status,
+      notes: prefill.notes ?? prev.notes ?? '',
+      selectedAuthors: resolvedAuthors,
+      selectedCategories: [...prefill.categoryIds],
+    }));
+    setErrors({});
+    setIsResolved(true);
+    setAuthorAutocompleteReloadTrigger((prev) => prev + 1);
+  };
+
+  const handleResolutionResult = async (result: IsbnSearchResponse): Promise<void> => {
     if (result.found && !result.external) {
       setResolvedLocalBook(result.book);
       setFormData(buildBookFormData(result.book));
@@ -374,7 +427,29 @@ export const BookForm: React.FC<BookFormProps> = ({
         severity: 'info',
         message: t('books:isbn_owned_book_found'),
       });
+      setSecondaryIsbnAlert(null);
       onResolvedLocalBook?.(result.book);
+      return;
+    }
+
+    if (result.found && result.external) {
+      await applyExternalPrefill(result.book);
+      setIsbnAlert({
+        severity: 'success',
+        message: t('books:isbn_metadata_loaded'),
+      });
+
+      if (result.book.createdAuthorIds.length > 0 || result.book.createdCategoryIds.length > 0) {
+        setSecondaryIsbnAlert({
+          severity: 'info',
+          message: t('books:isbn_entities_auto_created', {
+            authors: result.book.createdAuthorIds.length,
+            categories: result.book.createdCategoryIds.length,
+          }),
+        });
+      } else {
+        setSecondaryIsbnAlert(null);
+      }
       return;
     }
 
@@ -385,6 +460,7 @@ export const BookForm: React.FC<BookFormProps> = ({
         severity: 'success',
         message: t('books:isbn_valid_no_metadata'),
       });
+      setSecondaryIsbnAlert(null);
     }
   };
 
@@ -399,6 +475,7 @@ export const BookForm: React.FC<BookFormProps> = ({
     if (!validation.isValid) {
       setIsResolved(false);
       setIsbnAlert(null);
+      setSecondaryIsbnAlert(null);
       setErrors(prev => ({
         ...prev,
         isbnCode: t('books:isbn_invalid'),
@@ -427,7 +504,7 @@ export const BookForm: React.FC<BookFormProps> = ({
       }));
 
       const result = await lookupByIsbn(normalizedIsbn);
-      handleResolutionResult(result);
+      await handleResolutionResult(result);
     } finally {
       setIsLooking(false);
     }
@@ -926,6 +1003,25 @@ export const BookForm: React.FC<BookFormProps> = ({
             sx={{ width: '100%' }}
           >
             {isbnAlert.message}
+          </Alert>
+        ) : undefined}
+      </Snackbar>
+
+      <Snackbar
+        open={Boolean(secondaryIsbnAlert)}
+        autoHideDuration={4000}
+        onClose={() => setSecondaryIsbnAlert(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        sx={{ top: 96 }}
+      >
+        {secondaryIsbnAlert ? (
+          <Alert
+            severity={secondaryIsbnAlert.severity}
+            variant="filled"
+            onClose={() => setSecondaryIsbnAlert(null)}
+            sx={{ width: '100%' }}
+          >
+            {secondaryIsbnAlert.message}
           </Alert>
         ) : undefined}
       </Snackbar>
