@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Paper,
   TextField,
@@ -148,6 +148,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [embeddedScannerNotice, setEmbeddedScannerNotice] = useState<string | null>(null);
   const [showEmbeddedScannerNotice, setShowEmbeddedScannerNotice] = useState(false);
   const [duplicateIsbnWarning, setDuplicateIsbnWarning] = useState<string | null>(null);
+  const autoLookupIsbnRef = useRef<string | null>(null);
   const [isbnAlert, setIsbnAlert] = useState<{
     severity: 'error' | 'info' | 'success' | 'warning';
     message: string;
@@ -509,6 +510,25 @@ export const BookForm: React.FC<BookFormProps> = ({
       setIsLooking(false);
     }
   };
+
+  useEffect(() => {
+    if (!isAddMode || !initialIsbn || !scannerPrefillNotice) {
+      autoLookupIsbnRef.current = null;
+      return;
+    }
+
+    const trimmedInitialIsbn = initialIsbn.trim();
+    if (
+      trimmedInitialIsbn.length === 0 ||
+      formData.isbnCode.trim() !== trimmedInitialIsbn ||
+      autoLookupIsbnRef.current === trimmedInitialIsbn
+    ) {
+      return;
+    }
+
+    autoLookupIsbnRef.current = trimmedInitialIsbn;
+    void handleIsbnLookup();
+  }, [formData.isbnCode, handleIsbnLookup, initialIsbn, isAddMode, scannerPrefillNotice]);
 
   const handleEmbeddedScannerClose = () => {
     setEmbeddedScannerOpen(false);

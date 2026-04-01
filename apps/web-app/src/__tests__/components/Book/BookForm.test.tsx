@@ -263,6 +263,32 @@ describe('BookForm', () => {
     expect(await screen.findByRole('progressbar')).toBeInTheDocument();
   });
 
+  test('auto-resolves scanner-prefilled ISBN through the standard lookup flow on mount', async () => {
+    mockDetailedIsbnSearch.mockResolvedValue({
+      found: true,
+      external: false,
+      book: {
+        id: 1,
+        title: 'Iliad',
+        isbnCode: '9780140449136',
+        userId: 2,
+        authors: [],
+        categories: [],
+      },
+    });
+
+    renderBookForm({
+      initialIsbn: '9780140449136',
+      scannerPrefillNotice: 'ISBN copied',
+    });
+
+    await waitFor(() => {
+      expect(mockDetailedIsbnSearch).toHaveBeenCalledWith('9780140449136');
+    });
+    expect(await screen.findByText(t('books:isbn_owned_book_found'))).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: t('books:update_book') })).not.toBeDisabled();
+  });
+
   test('switches to edit mode and shows owned-book snackbar when ISBN matches a local book', async () => {
     mockDetailedIsbnSearch.mockResolvedValue({
       found: true,
