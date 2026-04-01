@@ -237,7 +237,7 @@ const testI18n = i18n.createInstance();
 const i18nReady = testI18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['pages'],
+  ns: ['pages', 'scanner'],
   defaultNS: 'pages',
   resources: {
     en: {
@@ -259,6 +259,10 @@ const i18nReady = testI18n.use(initReactI18next).init({
           no_books_empty: 'No books yet',
           load_more: 'Load more',
         },
+      },
+      scanner: {
+        isbn_copied: 'ISBN copied',
+        isbn_detected: 'ISBN detected',
       },
     },
   },
@@ -506,7 +510,7 @@ describe('BooksPage', () => {
     expect(updatedParams.get('scannerCopy')).toBeNull();
   });
 
-  test('preserves add-book draft on scanner success and overrides isbn with scanned value', async () => {
+  test('does not restore or clear add-book draft on scanner success without restoreDraft', async () => {
     window.sessionStorage.setItem(
       ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY,
       JSON.stringify({
@@ -527,10 +531,17 @@ describe('BooksPage', () => {
 
     await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     const form = screen.getByTestId('book-form');
-    expect(form).toHaveAttribute('data-initial-draft-title', 'Typed before scan');
-    expect(form).toHaveAttribute('data-initial-draft-isbn', 'old-isbn');
+    expect(form).toHaveAttribute('data-scanner-notice', t('isbn_copied', { ns: 'scanner' }));
+    expect(form).toHaveAttribute('data-initial-draft-title', '');
+    expect(form).toHaveAttribute('data-initial-draft-isbn', '');
     expect(form).toHaveAttribute('data-initial-isbn', '9780000000000');
-    expect(window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY)).toBeNull();
+    expect(window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY)).toBe(
+      JSON.stringify({
+        title: 'Typed before scan',
+        isbnCode: 'old-isbn',
+        notes: 'Keep this note',
+      })
+    );
   });
 
   test('restores add-book draft after closing scanner and clears restore state', async () => {
