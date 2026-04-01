@@ -125,6 +125,7 @@
   "mark_as_status": "Mark as {{status}}",
   "want_to_read": "Want to read",
   "isbn_optional": "ISBN (Optional)",
+  "isbn_lookup_button": "Look up",
   "lookup": "Lookup",
   "title_required_field": "Title *",
   "author_field": "Author",
