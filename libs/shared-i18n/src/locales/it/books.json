@@ -72,6 +72,7 @@
   "title_required": "Il titolo è obbligatorio",
   "isbn_required": "L'ISBN è obbligatorio",
   "isbn_invalid": "Formato ISBN non valido",
+  "isbn_owned_book_found": "Hai questo libro",
   "edition_number_min": "Il numero di edizione deve essere almeno 1",
   "added": "Aggiunto",
   "last_updated": "Ultimo aggiornamento",

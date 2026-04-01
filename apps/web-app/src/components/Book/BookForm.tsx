@@ -15,6 +15,7 @@ import {
   Stack,
   Divider,
   Alert,
+  Snackbar,
   Tooltip,
   IconButton,
 } from '@mui/material';
@@ -44,6 +45,7 @@ interface BookFormProps {
   book?: Book | null;
   onSubmit: (bookData: BookFormData) => Promise<void>;
   onCancel: () => void;
+  onResolvedLocalBook?: (book: Book) => void;
   loading?: boolean;
   title?: string;
   apiErrors?: Array<{ field: string; message: string }>;
@@ -84,10 +86,22 @@ const buildNewBookFormData = (
   };
 };
 
+const buildBookFormData = (book: Book): BookFormData => ({
+  title: book.title,
+  isbnCode: book.isbnCode,
+  editionNumber: book.editionNumber ?? undefined,
+  editionDate: book.editionDate ?? '',
+  status: book.status ?? undefined,
+  notes: book.notes || '',
+  selectedAuthors: book.authors || [],
+  selectedCategories: book.categories?.map((cat: Category) => cat.id) || [],
+});
+
 export const BookForm: React.FC<BookFormProps> = ({
   book,
   onSubmit,
   onCancel,
+  onResolvedLocalBook,
   loading = false,
   title,
   apiErrors = [],
@@ -109,10 +123,12 @@ export const BookForm: React.FC<BookFormProps> = ({
   } = useCategories({ sortComparator: categorySortComparator });
   const categoriesBusy = categoriesLoading || categoriesSorting;
   const { searchByISBN } = useBookSearch();
-  const isAddMode = !book;
+  const [resolvedLocalBook, setResolvedLocalBook] = useState<Book | null>(null);
+  const activeBook = book ?? resolvedLocalBook;
+  const isAddMode = !activeBook;
   const nonIsbnFieldsDisabled = loading || isAddMode;
   const [isLooking, setIsLooking] = useState(false);
-  const defaultTitle = book ? t('books:edit_book_form') : t('books:add_new_book');
+  const defaultTitle = activeBook ? t('books:edit_book_form') : t('books:add_new_book');
   const [formData, setFormData] = useState<BookFormData>(() =>
     buildNewBookFormData(!book ? initialIsbn : undefined, !book ? initialDraft : null)
   );
@@ -127,25 +143,20 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [embeddedScannerNotice, setEmbeddedScannerNotice] = useState<string | null>(null);
   const [showEmbeddedScannerNotice, setShowEmbeddedScannerNotice] = useState(false);
   const [duplicateIsbnWarning, setDuplicateIsbnWarning] = useState<string | null>(null);
+  const [isbnAlert, setIsbnAlert] = useState<{
+    severity: 'error' | 'info' | 'success' | 'warning';
+    message: string;
+  } | null>(null);
 
   // Initialize form with book data
   useEffect(() => {
-    if (book) {
-      setFormData({
-        title: book.title,
-        isbnCode: book.isbnCode,
-        editionNumber: book.editionNumber ?? undefined,
-        editionDate: book.editionDate ?? '',
-        status: book.status ?? undefined,
-        notes: book.notes || '',
-        selectedAuthors: book.authors || [],
-        selectedCategories: book.categories?.map((cat: Category) => cat.id) || []
-      });
+    if (activeBook) {
+      setFormData(buildBookFormData(activeBook));
     }
-  }, [book]);
+  }, [activeBook]);
 
   useEffect(() => {
-    if (book) {
+    if (activeBook) {
       return;
     }
 
@@ -155,7 +166,7 @@ export const BookForm: React.FC<BookFormProps> = ({
 
     // Scanner round-trip draft restoration can arrive after initial mount.
     setFormData(buildNewBookFormData(initialIsbn, initialDraft));
-  }, [book, initialDraft, initialIsbn]);
+  }, [activeBook, initialDraft, initialIsbn]);
 
   useEffect(() => {
     setShowScannerPrefillNotice(Boolean(scannerPrefillNotice));
@@ -355,7 +366,18 @@ export const BookForm: React.FC<BookFormProps> = ({
     setIsLooking(true);
 
     try {
-      await searchByISBN(isbnValue);
+      const existingBook = await searchByISBN(isbnValue);
+
+      if (existingBook) {
+        setResolvedLocalBook(existingBook);
+        setFormData(buildBookFormData(existingBook));
+        setErrors({});
+        setIsbnAlert({
+          severity: 'info',
+          message: t('books:isbn_owned_book_found'),
+        });
+        onResolvedLocalBook?.(existingBook);
+      }
     } finally {
       setIsLooking(false);
     }
@@ -478,7 +500,7 @@ export const BookForm: React.FC<BookFormProps> = ({
             </Alert>
           )}
 
-          {!book ? (
+          {isAddMode ? (
             <Box
               sx={{
                 display: 'grid',
@@ -622,7 +644,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                 placeholder={t('books:search_add_authors')}
                 disabled={nonIsbnFieldsDisabled}
                 reloadTrigger={authorAutocompleteReloadTrigger}
-                userIdFilter={book?.userId}
+                userIdFilter={activeBook?.userId}
               />
             </Box>
 
@@ -834,11 +856,29 @@ export const BookForm: React.FC<BookFormProps> = ({
                 '&:hover': { bgcolor: 'primary.dark' }
               }}
             >
-              {loading ? t('books:saving') : book ? t('books:update_book') : t('books:save_book')}
+              {loading ? t('books:saving') : activeBook ? t('books:update_book') : t('books:save_book')}
             </Button>
           </Box>
         </Stack>
       </Box>
+
+      <Snackbar
+        open={Boolean(isbnAlert)}
+        autoHideDuration={4000}
+        onClose={() => setIsbnAlert(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        {isbnAlert ? (
+          <Alert
+            severity={isbnAlert.severity}
+            variant="filled"
+            onClose={() => setIsbnAlert(null)}
+            sx={{ width: '100%' }}
+          >
+            {isbnAlert.message}
+          </Alert>
+        ) : undefined}
+      </Snackbar>
 
       {/* Dialogs */}
       <AddAuthorDialog
