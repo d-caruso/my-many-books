@@ -108,6 +108,7 @@ vi.mock('../../components/Book', () => ({
     onSubmit: (data: unknown) => void;
     onCancel: () => void;
     onResolvedLocalBook?: (book: Book) => void;
+    onIsbnSearch?: (isbn: string) => Promise<unknown>;
     loading?: boolean;
     scannerPrefillNotice?: string;
     initialDraft?: { title?: string; isbnCode?: string };
@@ -206,6 +207,7 @@ vi.mock('../../components/Search', () => ({
 
 const mockApiService = {
   getBooks: vi.fn(),
+  searchByIsbnDetailed: vi.fn().mockResolvedValue({ found: false }),
   baseURL: 'http://localhost:3000',
   get: vi.fn(),
   post: vi.fn(),
@@ -276,6 +278,8 @@ const renderBooksPage = () =>
     </I18nextProvider>
   );
 
+const t = (key: string, options?: Record<string, unknown>) => testI18n.t(key, options);
+
 describe('BooksPage', () => {
   const mockUseAuth = vi.mocked(useAuth);
 
@@ -323,7 +327,7 @@ describe('BooksPage', () => {
 
   test('opens and cancels add book form', async () => {
     renderBooksPage();
-    fireEvent.click(screen.getByRole('button', { name: /add book/i }));
+    fireEvent.click(screen.getByRole('button', { name: t('pages:books.add_book') }));
     await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     fireEvent.click(screen.getByTestId('form-cancel'));
     await waitFor(() => expect(screen.getByTestId('book-list')).toBeInTheDocument());
@@ -332,7 +336,7 @@ describe('BooksPage', () => {
   test('switches add flow to update flow when the form resolves a local ISBN hit', async () => {
     renderBooksPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /add book/i }));
+    fireEvent.click(screen.getByRole('button', { name: t('pages:books.add_book') }));
     await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
 
     fireEvent.click(screen.getByTestId('resolve-local-book'));

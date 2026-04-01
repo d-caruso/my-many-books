@@ -26,7 +26,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { useTranslation } from 'react-i18next';
-import type { Book, Author, Category } from '@my-many-books/shared-types';
+import type { Book, Author, Category, IsbnSearchResponse } from '@my-many-books/shared-types';
 import { useCategories } from '../../hooks/useCategories';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import { AuthorAutocomplete } from '../Search/AuthorAutocomplete';
@@ -35,7 +35,7 @@ import { ManageAuthorsDialog } from '../Author/ManageAuthorsDialog';
 import { AddCategoryDialog } from '../Category/AddCategoryDialog';
 import { ManageCategoriesDialog } from '../Category/ManageCategoriesDialog';
 import { EmbeddedScannerFlow } from '../Scanner/EmbeddedScannerFlow';
-import { normalizeIsbn } from '@my-many-books/shared-validation';
+import { normalizeIsbn, validateIsbn } from '@my-many-books/shared-validation';
 import { createCategoryDisplayNameComparator, getCategoryDisplayName } from '@my-many-books/shared-utils';
 import { createBookSchema } from '../../validation/bookSchemas';
 import { EditionDateInput } from './EditionDateInput';
@@ -46,6 +46,7 @@ interface BookFormProps {
   onSubmit: (bookData: BookFormData) => Promise<void>;
   onCancel: () => void;
   onResolvedLocalBook?: (book: Book) => void;
+  onIsbnSearch?: (isbn: string) => Promise<IsbnSearchResponse>;
   loading?: boolean;
   title?: string;
   apiErrors?: Array<{ field: string; message: string }>;
@@ -102,6 +103,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   onSubmit,
   onCancel,
   onResolvedLocalBook,
+  onIsbnSearch,
   loading = false,
   title,
   apiErrors = [],
@@ -126,7 +128,8 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [resolvedLocalBook, setResolvedLocalBook] = useState<Book | null>(null);
   const activeBook = book ?? resolvedLocalBook;
   const isAddMode = !activeBook;
-  const nonIsbnFieldsDisabled = loading || isAddMode;
+  const [isResolved, setIsResolved] = useState(false);
+  const nonIsbnFieldsDisabled = loading || (isAddMode && !isResolved);
   const [isLooking, setIsLooking] = useState(false);
   const defaultTitle = activeBook ? t('books:edit_book_form') : t('books:add_new_book');
   const [formData, setFormData] = useState<BookFormData>(() =>
@@ -267,6 +270,9 @@ export const BookForm: React.FC<BookFormProps> = ({
       onScannerPrefillNoticeDismiss?.();
     }
     if (field === 'isbnCode') {
+      if (!activeBook) {
+        setIsResolved(false);
+      }
       if (showEmbeddedScannerNotice) {
         setShowEmbeddedScannerNotice(false);
       }
@@ -275,6 +281,9 @@ export const BookForm: React.FC<BookFormProps> = ({
       }
       if (duplicateIsbnWarning) {
         setDuplicateIsbnWarning(null);
+      }
+      if (isbnAlert) {
+        setIsbnAlert(null);
       }
     }
 
@@ -356,6 +365,29 @@ export const BookForm: React.FC<BookFormProps> = ({
     setEmbeddedScannerOpen(true);
   };
 
+  const handleResolutionResult = (result: IsbnSearchResponse) => {
+    if (result.found && !result.external) {
+      setResolvedLocalBook(result.book);
+      setFormData(buildBookFormData(result.book));
+      setErrors({});
+      setIsbnAlert({
+        severity: 'info',
+        message: t('books:isbn_owned_book_found'),
+      });
+      onResolvedLocalBook?.(result.book);
+      return;
+    }
+
+    if (!result.found) {
+      setResolvedLocalBook(null);
+      setIsResolved(true);
+      setIsbnAlert({
+        severity: 'success',
+        message: t('books:isbn_valid_no_metadata'),
+      });
+    }
+  };
+
   const handleIsbnLookup = async (): Promise<void> => {
     const isbnValue = formData.isbnCode.trim();
 
@@ -363,21 +395,39 @@ export const BookForm: React.FC<BookFormProps> = ({
       return;
     }
 
+    const validation = validateIsbn(isbnValue);
+    if (!validation.isValid) {
+      setIsResolved(false);
+      setIsbnAlert(null);
+      setErrors(prev => ({
+        ...prev,
+        isbnCode: t('books:isbn_invalid'),
+      }));
+      return;
+    }
+
+    const normalizedIsbn = validation.normalizedIsbn ?? normalizeIsbn(isbnValue);
+    const lookupByIsbn = onIsbnSearch ?? (async (isbn: string): Promise<IsbnSearchResponse> => {
+      const existingBook = await searchByISBN(isbn);
+      return existingBook
+        ? { found: true, external: false, book: existingBook }
+        : { found: false };
+    });
+
     setIsLooking(true);
 
     try {
-      const existingBook = await searchByISBN(isbnValue);
+      setFormData(prev => ({
+        ...prev,
+        isbnCode: normalizedIsbn,
+      }));
+      setErrors(prev => ({
+        ...prev,
+        isbnCode: undefined,
+      }));
 
-      if (existingBook) {
-        setResolvedLocalBook(existingBook);
-        setFormData(buildBookFormData(existingBook));
-        setErrors({});
-        setIsbnAlert({
-          severity: 'info',
-          message: t('books:isbn_owned_book_found'),
-        });
-        onResolvedLocalBook?.(existingBook);
-      }
+      const result = await lookupByIsbn(normalizedIsbn);
+      handleResolutionResult(result);
     } finally {
       setIsLooking(false);
     }

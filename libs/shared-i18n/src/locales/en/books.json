@@ -73,6 +73,7 @@
   "isbn_required": "ISBN is required",
   "isbn_invalid": "Invalid ISBN format",
   "isbn_owned_book_found": "You have this book",
+  "isbn_valid_no_metadata": "Valid ISBN - fill in the details",
   "edition_number_min": "Edition number must be at least 1",
   "added": "Added",
   "last_updated": "Last updated",
