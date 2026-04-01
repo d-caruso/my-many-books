@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
+import { Text, TextInput, Button, Card, SegmentedButtons, Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -24,11 +24,12 @@ import { deserializeExternalBookPrefill } from '@/utils/isbnScannerRouting';
 export default function AddBookScreen() {
   const { t } = useTranslation();
   const styles = useAddBookStyles();
-  const { isbn, bookData, scannerCopy, prefill } = useLocalSearchParams<{
+  const { isbn, bookData, scannerCopy, prefill, isbnNotice } = useLocalSearchParams<{
     isbn?: string;
     bookData?: string;
     scannerCopy?: ScannerCopyStatus;
     prefill?: string;
+    isbnNotice?: 'valid_no_metadata';
   }>();
   const [title, setTitle] = useState('');
   const [isbnCode, setIsbnCode] = useState(isbn || '');
@@ -37,8 +38,15 @@ export default function AddBookScreen() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [feedbackVisible, setFeedbackVisible] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackState, setFeedbackState] = useState<{
+    visible: boolean;
+    message: string;
+    queue: string[];
+  }>({
+    visible: false,
+    message: '',
+    queue: [],
+  });
   const [scannerOpen, setScannerOpen] = useState(false);
   const [authorSelectorOpen, setAuthorSelectorOpen] = useState(false);
   const [categorySelectorOpen, setCategorySelectorOpen] = useState(false);
@@ -46,7 +54,8 @@ export default function AddBookScreen() {
   const [manageAuthorsDialogOpen, setManageAuthorsDialogOpen] = useState(false);
   const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
   const [manageCategoriesDialogOpen, setManageCategoriesDialogOpen] = useState(false);
-  const handledScannerFeedbackRef = useRef<string | null>(null);
+  const handledRouteFeedbackRef = useRef<string | null>(null);
+  const handledPrefillFeedbackRef = useRef<string | null>(null);
   const appliedPrefillFieldsRef = useRef<string | null>(null);
   const appliedPrefillSelectionsRef = useRef<string | null>(null);
 
@@ -149,23 +158,88 @@ export default function AddBookScreen() {
     setSelectedCategoryIds,
   ]);
 
+  const enqueueFeedback = useCallback((message: string) => {
+    if (!message) {
+      return;
+    }
+
+    setFeedbackState((currentState) => {
+      if (!currentState.visible && !currentState.message) {
+        return {
+          ...currentState,
+          visible: true,
+          message,
+        };
+      }
+
+      return {
+        ...currentState,
+        queue: [...currentState.queue, message],
+      };
+    });
+  }, []);
+
+  const dismissFeedback = useCallback(() => {
+    setFeedbackState((currentState) => {
+      if (currentState.queue.length === 0) {
+        return {
+          visible: false,
+          message: '',
+          queue: [],
+        };
+      }
+
+      const [nextMessage, ...remainingQueue] = currentState.queue;
+      return {
+        visible: true,
+        message: nextMessage,
+        queue: remainingQueue,
+      };
+    });
+  }, []);
+
   useEffect(() => {
-    if (!scannerCopy) {
+    if (!prefill || !parsedPrefill) {
       return;
     }
 
-    const feedbackKey = `${scannerCopy}:${isbn || ''}`;
-    if (handledScannerFeedbackRef.current === feedbackKey) {
+    if (handledPrefillFeedbackRef.current === prefill) {
       return;
     }
-    handledScannerFeedbackRef.current = feedbackKey;
 
-    setFeedbackMessage(
-      scannerCopy === SCANNER_COPY_STATUS.SUCCESS
-        ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
-        : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
-    );
-    setFeedbackVisible(true);
+    handledPrefillFeedbackRef.current = prefill;
+    enqueueFeedback(t('books:isbn_metadata_loaded'));
+
+    if (parsedPrefill.createdAuthorIds.length > 0 || parsedPrefill.createdCategoryIds.length > 0) {
+      enqueueFeedback(
+        t('books:isbn_entities_auto_created', {
+          authors: parsedPrefill.createdAuthorIds.length,
+          categories: parsedPrefill.createdCategoryIds.length,
+        })
+      );
+    }
+  }, [enqueueFeedback, parsedPrefill, prefill, t]);
+
+  useEffect(() => {
+    if (!scannerCopy && !isbnNotice) {
+      return;
+    }
+
+    const feedbackKey = `${scannerCopy || ''}:${isbnNotice || ''}:${isbn || ''}:${prefill || ''}`;
+    if (handledRouteFeedbackRef.current === feedbackKey) {
+      return;
+    }
+    handledRouteFeedbackRef.current = feedbackKey;
+
+    if (isbnNotice === 'valid_no_metadata') {
+      enqueueFeedback(t('books:isbn_valid_no_metadata'));
+    } else if (!prefill && scannerCopy) {
+      enqueueFeedback(
+        scannerCopy === SCANNER_COPY_STATUS.SUCCESS
+          ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
+          : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
+      );
+    }
 
     router.replace({
       pathname: '/book/add',
@@ -175,24 +249,14 @@ export default function AddBookScreen() {
         ...(prefill ? { prefill } : {}),
       },
     });
-  }, [scannerCopy, isbn, bookData, prefill, t]);
-
-  useEffect(() => {
-    if (!feedbackVisible) {
-      return;
-    }
-
-    const timeoutId = setTimeout(() => {
-      setFeedbackVisible(false);
-    }, 4000);
-
-    return () => clearTimeout(timeoutId);
-  }, [feedbackVisible]);
+  }, [bookData, enqueueFeedback, isbn, isbnNotice, prefill, scannerCopy, t]);
 
   const handleIsbnChange = (value: string) => {
-    if (feedbackVisible) {
-      setFeedbackVisible(false);
-    }
+    setFeedbackState({
+      visible: false,
+      message: '',
+      queue: [],
+    });
     setIsbnCode(value);
   };
 
@@ -292,14 +356,6 @@ export default function AddBookScreen() {
                 <View style={styles.errorContainer}>
                   <Text variant="bodyMedium" style={styles.errorText} accessibilityLiveRegion="assertive" nativeID="addBookError">
                     {error}
-                  </Text>
-                </View>
-              )}
-
-              {feedbackVisible && !!feedbackMessage && (
-                <View style={styles.scannerNoticeContainer} accessibilityLiveRegion="polite">
-                  <Text variant="bodyMedium" style={styles.scannerNoticeText}>
-                    {feedbackMessage}
                   </Text>
                 </View>
               )}
@@ -463,6 +519,17 @@ export default function AddBookScreen() {
         onCategoryUpdated={handleCategoryUpdated}
         onCategoryDeleted={handleCategoryDeleted}
       />
+      <Snackbar
+        visible={feedbackState.visible}
+        onDismiss={dismissFeedback}
+        duration={3000}
+        action={{
+          label: t('ok'),
+          onPress: dismissFeedback,
+        }}
+      >
+        {feedbackState.message}
+      </Snackbar>
     </SafeAreaView>
   );
 }

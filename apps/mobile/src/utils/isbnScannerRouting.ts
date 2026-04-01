@@ -11,6 +11,7 @@ export type MobileIsbnScannerRoute =
         isbn: string;
         scannerCopy: ScannerCopyStatus;
         prefill?: string;
+        isbnNotice?: 'valid_no_metadata';
       };
     }
   | {
@@ -84,6 +85,7 @@ export async function resolveScannedIsbnRoute(isbn: string): Promise<MobileIsbnS
     params: {
       isbn,
       scannerCopy,
+      isbnNotice: 'valid_no_metadata',
     },
   };
 }

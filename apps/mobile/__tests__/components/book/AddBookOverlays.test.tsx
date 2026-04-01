@@ -227,6 +227,7 @@ describe('AddBookOverlays — ISBN resolution routing', () => {
       pathname: '/book/add',
       params: {
         isbn: '9780140449136',
+        isbnNotice: 'valid_no_metadata',
         scannerCopy: SCANNER_COPY_STATUS.SUCCESS,
       },
     });

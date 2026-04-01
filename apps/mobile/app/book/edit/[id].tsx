@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
+import { Text, TextInput, Button, Card, SegmentedButtons, Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -20,7 +20,7 @@ import { AddBookOverlays } from '@/components/book/AddBookOverlays';
 import { useAddBookStyles } from '@/components/book/addBookStyles';
 
 export default function EditBookScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, fromIsbnScan } = useLocalSearchParams<{ id: string; fromIsbnScan?: '1' }>();
   const { t } = useTranslation();
   const styles = useAddBookStyles();
   const { books, updateBook } = useBooks();
@@ -36,6 +36,8 @@ export default function EditBookScreen() {
   const [notes, setNotes] = useState(book?.notes ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isbnFeedbackVisible, setIsbnFeedbackVisible] = useState(false);
+  const [isbnFeedbackMessage, setIsbnFeedbackMessage] = useState('');
   const [scannerOpen, setScannerOpen] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [authorSelectorOpen, setAuthorSelectorOpen] = useState(false);
@@ -46,6 +48,7 @@ export default function EditBookScreen() {
   const [manageCategoriesDialogOpen, setManageCategoriesDialogOpen] = useState(false);
 
   const entitiesInitialisedRef = useRef(false);
+  const handledScannerArrivalRef = useRef(false);
 
   const {
     availableAuthors,
@@ -80,6 +83,21 @@ export default function EditBookScreen() {
     setSelectedAuthors(book.authors as typeof availableAuthors);
     setSelectedCategoryIds(book.categories.map(c => Number(c.id)));
   }, [book?.authors, book?.categories, availableAuthors, availableCategories, setSelectedAuthors, setSelectedCategoryIds]);
+
+  useEffect(() => {
+    if (fromIsbnScan !== '1' || handledScannerArrivalRef.current) {
+      return;
+    }
+
+    handledScannerArrivalRef.current = true;
+    setIsbnFeedbackMessage(t('books:isbn_owned_book_found'));
+    setIsbnFeedbackVisible(true);
+
+    router.replace({
+      pathname: '/book/edit/[id]',
+      params: { id },
+    });
+  }, [fromIsbnScan, id, t]);
 
   const handleIsbnChange = (value: string) => {
     if (duplicateWarning) setDuplicateWarning(null);
@@ -366,6 +384,17 @@ export default function EditBookScreen() {
         onCategoryUpdated={handleCategoryUpdated}
         onCategoryDeleted={handleCategoryDeleted}
       />
+      <Snackbar
+        visible={isbnFeedbackVisible}
+        onDismiss={() => setIsbnFeedbackVisible(false)}
+        duration={3000}
+        action={{
+          label: t('ok'),
+          onPress: () => setIsbnFeedbackVisible(false),
+        }}
+      >
+        {isbnFeedbackMessage}
+      </Snackbar>
     </SafeAreaView>
   );
 }

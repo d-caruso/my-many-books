@@ -6,7 +6,7 @@ export type RootStackParamList = {
   auth: undefined;
   'book/[id]': { id: string };
   'book/edit/[id]': { id: string; fromIsbnScan?: '1'; scannerCopy?: ScannerCopyStatus };
-  'book/add': { isbn?: string; bookData?: string; prefill?: string; scannerCopy?: ScannerCopyStatus };
+  'book/add': { isbn?: string; bookData?: string; prefill?: string; scannerCopy?: ScannerCopyStatus; isbnNotice?: 'valid_no_metadata' };
   scanner: undefined;
 };
 
@@ -20,5 +20,5 @@ export type TabParamList = {
 export type BookStackParamList = {
   details: { book: Book };
   edit: { book: Book };
-  add: { isbn?: string; bookData?: string; prefill?: string; scannerCopy?: ScannerCopyStatus };
+  add: { isbn?: string; bookData?: string; prefill?: string; scannerCopy?: ScannerCopyStatus; isbnNotice?: 'valid_no_metadata' };
 };
