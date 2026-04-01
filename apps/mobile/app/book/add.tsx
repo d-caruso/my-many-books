@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, TextInput, Button, Card, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import * as Clipboard from 'expo-clipboard';
 
 import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
@@ -20,14 +19,16 @@ import { CategoriesSection } from '@/components/book/CategoriesSection';
 import { AddBookOverlays } from '@/components/book/AddBookOverlays';
 import { useAddBookStyles } from '@/components/book/addBookStyles';
 import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
+import { deserializeExternalBookPrefill } from '@/utils/isbnScannerRouting';
 
 export default function AddBookScreen() {
   const { t } = useTranslation();
   const styles = useAddBookStyles();
-  const { isbn, bookData, scannerCopy } = useLocalSearchParams<{
+  const { isbn, bookData, scannerCopy, prefill } = useLocalSearchParams<{
     isbn?: string;
     bookData?: string;
     scannerCopy?: ScannerCopyStatus;
+    prefill?: string;
   }>();
   const [title, setTitle] = useState('');
   const [isbnCode, setIsbnCode] = useState(isbn || '');
@@ -45,8 +46,9 @@ export default function AddBookScreen() {
   const [manageAuthorsDialogOpen, setManageAuthorsDialogOpen] = useState(false);
   const [addCategoryDialogOpen, setAddCategoryDialogOpen] = useState(false);
   const [manageCategoriesDialogOpen, setManageCategoriesDialogOpen] = useState(false);
-  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const handledScannerFeedbackRef = useRef<string | null>(null);
+  const appliedPrefillFieldsRef = useRef<string | null>(null);
+  const appliedPrefillSelectionsRef = useRef<string | null>(null);
 
   const { createBook } = useBooks();
   const { searchByISBN } = useBookSearch();
@@ -59,6 +61,8 @@ export default function AddBookScreen() {
     authorsLoading,
     categoriesLoading,
     categoriesSorting,
+    setSelectedAuthors,
+    setSelectedCategoryIds,
     selectAuthor,
     removeAuthor,
     toggleCategory,
@@ -70,6 +74,7 @@ export default function AddBookScreen() {
     handleCategoryDeleted,
   } = useAddBookEntities();
   const categoriesBusy = categoriesLoading || categoriesSorting;
+  const parsedPrefill = useMemo(() => deserializeExternalBookPrefill(prefill), [prefill]);
 
   useEffect(() => {
     if (isbn) {
@@ -95,6 +100,56 @@ export default function AddBookScreen() {
   }, [bookData]);
 
   useEffect(() => {
+    if (!prefill || !parsedPrefill) {
+      return;
+    }
+
+    if (appliedPrefillFieldsRef.current === prefill) {
+      return;
+    }
+
+    appliedPrefillFieldsRef.current = prefill;
+    appliedPrefillSelectionsRef.current = null;
+
+    setTitle(parsedPrefill.title || '');
+    setIsbnCode(parsedPrefill.isbnCode || isbn || '');
+    setStatus(parsedPrefill.status ?? null);
+    setEditionDate(parsedPrefill.editionDate || '');
+    setNotes(parsedPrefill.notes || '');
+  }, [isbn, parsedPrefill, prefill]);
+
+  useEffect(() => {
+    if (!prefill || !parsedPrefill) {
+      return;
+    }
+
+    if (appliedPrefillSelectionsRef.current === prefill) {
+      return;
+    }
+
+    if (parsedPrefill.authorIds.length > 0 && availableAuthors.length === 0) {
+      return;
+    }
+
+    if (parsedPrefill.categoryIds.length > 0 && availableCategories.length === 0) {
+      return;
+    }
+
+    setSelectedAuthors(
+      availableAuthors.filter((author) => parsedPrefill.authorIds.includes(Number(author.id)))
+    );
+    setSelectedCategoryIds([...parsedPrefill.categoryIds]);
+    appliedPrefillSelectionsRef.current = prefill;
+  }, [
+    availableAuthors,
+    availableCategories,
+    parsedPrefill,
+    prefill,
+    setSelectedAuthors,
+    setSelectedCategoryIds,
+  ]);
+
+  useEffect(() => {
     if (!scannerCopy) {
       return;
     }
@@ -117,9 +172,10 @@ export default function AddBookScreen() {
       params: {
         ...(isbn ? { isbn } : {}),
         ...(bookData ? { bookData } : {}),
+        ...(prefill ? { prefill } : {}),
       },
     });
-  }, [scannerCopy, isbn, bookData, t]);
+  }, [scannerCopy, isbn, bookData, prefill, t]);
 
   useEffect(() => {
     if (!feedbackVisible) {
@@ -137,9 +193,6 @@ export default function AddBookScreen() {
     if (feedbackVisible) {
       setFeedbackVisible(false);
     }
-    if (duplicateWarning) {
-      setDuplicateWarning(null);
-    }
     setIsbnCode(value);
   };
 
@@ -154,52 +207,6 @@ export default function AddBookScreen() {
     setAddCategoryDialogOpen(false);
     return created;
   }, [createCategoryAndSelect]);
-
-  const handleEmbeddedScannerDetected = useCallback(async (isbnValue: string) => {
-    let copyStatus: ScannerCopyStatus = SCANNER_COPY_STATUS.FAILED;
-
-    try {
-      await Clipboard.setStringAsync(isbnValue);
-      copyStatus = SCANNER_COPY_STATUS.SUCCESS;
-    } catch {
-      copyStatus = SCANNER_COPY_STATUS.FAILED;
-    }
-
-    let existingBook: Book | null = null;
-    try {
-      existingBook = await searchByISBN(isbnValue);
-    } catch (err) {
-      mobileHooks.emit(MOBILE_EVENTS.ERROR.API_RESPONSE, {
-        operation: 'embedded_scanner_isbn_lookup',
-        resource: RESOURCE_TYPES.BOOK,
-        error: err instanceof Error ? err.message : String(err),
-        isbn: isbnValue,
-        source: 'book_add_embedded_scanner',
-      });
-      existingBook = null;
-    }
-
-    setIsbnCode(isbnValue);
-    if (existingBook) {
-      setFeedbackVisible(false);
-      setFeedbackMessage('');
-    } else {
-      setFeedbackMessage(
-        copyStatus === SCANNER_COPY_STATUS.SUCCESS
-          ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
-          : t('scanner:isbn_detected', { defaultValue: 'ISBN detected' })
-      );
-      setFeedbackVisible(true);
-    }
-    setDuplicateWarning(
-      existingBook
-        ? t('scanner:isbn_already_exists_in_library', {
-            defaultValue: 'A book with this ISBN already exists in your library.',
-          })
-        : null
-    );
-    setScannerOpen(false);
-  }, [searchByISBN, t]);
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -293,14 +300,6 @@ export default function AddBookScreen() {
                 <View style={styles.scannerNoticeContainer} accessibilityLiveRegion="polite">
                   <Text variant="bodyMedium" style={styles.scannerNoticeText}>
                     {feedbackMessage}
-                  </Text>
-                </View>
-              )}
-
-              {duplicateWarning && (
-                <View style={styles.duplicateWarningContainer} accessibilityLiveRegion="polite">
-                  <Text variant="bodyMedium" style={styles.duplicateWarningText}>
-                    {duplicateWarning}
                   </Text>
                 </View>
               )}
@@ -429,7 +428,6 @@ export default function AddBookScreen() {
       <AddBookOverlays
         scannerOpen={scannerOpen}
         onScannerClose={() => setScannerOpen(false)}
-        onScannerDetected={handleEmbeddedScannerDetected}
         authorSelectorOpen={authorSelectorOpen}
         availableAuthors={availableAuthors}
         selectedAuthorIds={selectedAuthors.map((author) => Number(author.id))}

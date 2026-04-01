@@ -1,11 +1,12 @@
 import { Book } from '@/types';
+import type { ScannerCopyStatus } from '@/constants/scanner';
 
 export type RootStackParamList = {
   '(tabs)': undefined;
   auth: undefined;
   'book/[id]': { id: string };
-  'book/edit/[id]': { id: string };
-  'book/add': { isbn?: string; bookData?: string };
+  'book/edit/[id]': { id: string; fromIsbnScan?: '1'; scannerCopy?: ScannerCopyStatus };
+  'book/add': { isbn?: string; bookData?: string; prefill?: string; scannerCopy?: ScannerCopyStatus };
   scanner: undefined;
 };
 
@@ -19,5 +20,5 @@ export type TabParamList = {
 export type BookStackParamList = {
   details: { book: Book };
   edit: { book: Book };
-  add: { isbn?: string; bookData?: string };
+  add: { isbn?: string; bookData?: string; prefill?: string; scannerCopy?: ScannerCopyStatus };
 };
