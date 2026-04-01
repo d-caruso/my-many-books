@@ -113,7 +113,7 @@ vi.mock('../../../components/Scanner/EmbeddedScannerFlow', () => ({
       <div data-testid="embedded-scanner-flow">
         <button
           data-testid="embedded-scan-success"
-          onClick={() => onScanSuccess({ isbn: '9781234567890', success: true })}
+          onClick={() => onScanSuccess({ isbn: '9780140449136', success: true })}
         >
           Scan success
         </button>
@@ -528,8 +528,19 @@ describe('BookForm', () => {
     expect(screen.getByLabelText(/notes/i)).toHaveValue('Recovered notes');
   });
 
-  test('applies scanned isbn inline and shows the canonical owned-book alert while preserving typed fields', async () => {
-    mockSearchByISBN.mockResolvedValue({ id: 42, title: 'Existing book' });
+  test('applies scanned isbn inline, shows the canonical owned-book alert, and loads the existing book data', async () => {
+    mockDetailedIsbnSearch.mockResolvedValue({
+      found: true,
+      external: false,
+      book: {
+        id: 42,
+        title: 'Existing book',
+        isbnCode: '9780140449136',
+        userId: 1,
+        authors: [],
+        categories: [],
+      },
+    });
 
     renderBookForm({
       initialDraft: {
@@ -543,9 +554,9 @@ describe('BookForm', () => {
 
     expect(await screen.findByText(t('books:isbn_owned_book_found'))).toBeInTheDocument();
     expect(screen.queryByText(t('scanner:isbn_copied'))).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/title/i)).toHaveValue('Typed title');
-    expect(screen.getByLabelText(/notes/i)).toHaveValue('Typed notes');
-    expect(screen.getByRole('textbox', { name: /isbn/i })).toHaveValue('9781234567890');
+    // Form loads the existing book data (edit view behavior)
+    expect(screen.getByLabelText(/title/i)).toHaveValue('Existing book');
+    expect(screen.getByRole('textbox', { name: /isbn/i })).toHaveValue('9780140449136');
   });
 
   test('reloads author autocomplete options after creating a new author', () => {

@@ -461,11 +461,9 @@ export const BookForm: React.FC<BookFormProps> = ({
     }
   };
 
-  const handleIsbnLookup = async (): Promise<void> => {
-    const isbnValue = formData.isbnCode.trim();
-
+  const resolveIsbn = async (isbnValue: string): Promise<IsbnSearchResponse | null> => {
     if (!isbnValue || isLooking) {
-      return;
+      return null;
     }
 
     const validation = validateIsbn(isbnValue);
@@ -477,7 +475,7 @@ export const BookForm: React.FC<BookFormProps> = ({
         ...prev,
         isbnCode: t('books:isbn_invalid'),
       }));
-      return;
+      return null;
     }
 
     const normalizedIsbn = validation.normalizedIsbn ?? normalizeIsbn(isbnValue);
@@ -502,9 +500,14 @@ export const BookForm: React.FC<BookFormProps> = ({
 
       const result = await lookupByIsbn(normalizedIsbn);
       await handleResolutionResult(result);
+      return result;
     } finally {
       setIsLooking(false);
     }
+  };
+
+  const handleIsbnLookup = async (): Promise<void> => {
+    await resolveIsbn(formData.isbnCode.trim());
   };
 
   useEffect(() => {
@@ -530,7 +533,7 @@ export const BookForm: React.FC<BookFormProps> = ({
     setEmbeddedScannerOpen(false);
   };
 
-  const handleEmbeddedScannerSuccess = async (result: { isbn: string }) => {
+  const handleEmbeddedScannerSuccess = async (result: { isbn: string }): Promise<void> => {
     const scannedIsbn = result.isbn;
     let copyStatus: 'success' | 'failed' = 'failed';
 
@@ -543,28 +546,15 @@ export const BookForm: React.FC<BookFormProps> = ({
       copyStatus = 'failed';
     }
 
-    let existingBook: Book | null = null;
-    try {
-      existingBook = await searchByISBN(scannedIsbn);
-    } catch {
-      existingBook = null;
-    }
-
     setFormData(prev => ({ ...prev, isbnCode: scannedIsbn }));
     setErrors(prev => ({ ...prev, isbnCode: undefined }));
-    setIsbnAlert(
-      existingBook
-        ? {
-            severity: 'info',
-            message: t('books:isbn_owned_book_found'),
-          }
-        : null
-    );
-    setSecondaryIsbnAlert(null);
-    if (existingBook) {
-      setEmbeddedScannerNotice(null);
-      setShowEmbeddedScannerNotice(false);
-    } else {
+    setEmbeddedScannerOpen(false);
+
+    const resolution = await resolveIsbn(scannedIsbn);
+
+    // Show clipboard confirmation only when resolution did not produce a more
+    // informative snackbar (local hit and external hit both set isbnAlert).
+    if (resolution === null || !resolution.found) {
       setEmbeddedScannerNotice(
         copyStatus === 'success'
           ? t('scanner:isbn_copied', { defaultValue: 'ISBN copied' })
@@ -572,7 +562,6 @@ export const BookForm: React.FC<BookFormProps> = ({
       );
       setShowEmbeddedScannerNotice(true);
     }
-    setEmbeddedScannerOpen(false);
   };
 
   const isbnHintText = t('books:isbn_no_dashes_spaces_hint', {
