@@ -238,7 +238,13 @@ class ApiService extends AdminApiService {
 
   // ISBN lookup
   async searchByISBN(isbn: string): Promise<Book | null> {
-    return this.apiClient.books.searchByISBN(isbn);
+    const result = await this.apiClient.books.searchByISBN(isbn);
+
+    if (!result.found || result.external) {
+      return null;
+    }
+
+    return result.book;
   }
 
   // Categories methods with development mock data fallback

@@ -357,15 +357,19 @@ describe('API Service with MSW HTTP Layer Mocking', () => {
       server.use(
         http.get(`*${API_BASE_PATH}/books/search/isbn/${isbn}`, () => {
           const payload = {
-            id: 99,
-            title: 'The Great Gatsby',
-            isbnCode: isbn,
-            status: BOOK_STATUS.FINISHED,
-            userId: 1,
-            authors: [],
-            categories: [],
-            creationDate: new Date().toISOString(),
-            updateDate: new Date().toISOString(),
+            found: true,
+            external: false,
+            book: {
+              id: 99,
+              title: 'The Great Gatsby',
+              isbnCode: isbn,
+              status: BOOK_STATUS.FINISHED,
+              userId: 1,
+              authors: [],
+              categories: [],
+              creationDate: new Date().toISOString(),
+              updateDate: new Date().toISOString(),
+            },
           };
 
           return HttpResponse.json(payload);

@@ -109,6 +109,8 @@ export const BookForm: React.FC<BookFormProps> = ({
   } = useCategories({ sortComparator: categorySortComparator });
   const categoriesBusy = categoriesLoading || categoriesSorting;
   const { searchByISBN } = useBookSearch();
+  const isAddMode = !book;
+  const nonIsbnFieldsDisabled = loading || isAddMode;
   const defaultTitle = book ? t('books:edit_book_form') : t('books:add_new_book');
   const [formData, setFormData] = useState<BookFormData>(() =>
     buildNewBookFormData(!book ? initialIsbn : undefined, !book ? initialDraft : null)
@@ -425,7 +427,7 @@ export const BookForm: React.FC<BookFormProps> = ({
             value={formData.title}
             onChange={(e) => handleInputChange('title', e.target.value)}
             placeholder={t('books:enter_book_title')}
-            disabled={loading}
+            disabled={nonIsbnFieldsDisabled}
             error={!!errors.title}
             helperText={errors.title}
           />
@@ -545,7 +547,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                     <IconButton
                       size="small"
                       onClick={() => setAddAuthorDialogOpen(true)}
-                      disabled={loading}
+                      disabled={nonIsbnFieldsDisabled}
                       aria-label={t('common:add')}
                     >
                       <AddIcon fontSize="small" />
@@ -557,7 +559,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                     <IconButton
                       size="small"
                       onClick={() => setManageAuthorsDialogOpen(true)}
-                      disabled={loading}
+                      disabled={nonIsbnFieldsDisabled}
                       aria-label={t('common:manage', { defaultValue: 'Manage' })}
                     >
                       <EditNoteOutlinedIcon fontSize="small" />
@@ -569,7 +571,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                 value={null}
                 onChange={handleAuthorAdd}
                 placeholder={t('books:search_add_authors')}
-                disabled={loading}
+                disabled={nonIsbnFieldsDisabled}
                 reloadTrigger={authorAutocompleteReloadTrigger}
                 userIdFilter={book?.userId}
               />
@@ -588,6 +590,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   id="status"
                   value={formData.status || ''}
                   onChange={(e) => handleInputChange('status', !e.target.value ? undefined : e.target.value as NonNullable<Book['status']>)}
+                  disabled={nonIsbnFieldsDisabled}
                 >
                   <MenuItem value="">&nbsp;</MenuItem>
                   <MenuItem value="reading">{t('books:reading')}</MenuItem>
@@ -608,7 +611,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                     label={`${author.name} ${author.surname}`}
                     onDelete={() => handleAuthorRemove(author.id)}
                     deleteIcon={<CloseIcon />}
-                    disabled={loading}
+                    disabled={nonIsbnFieldsDisabled}
                     color="primary"
                     variant="outlined"
                   />
@@ -628,7 +631,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   <IconButton
                     size="small"
                     onClick={() => setAddCategoryDialogOpen(true)}
-                    disabled={loading}
+                    disabled={nonIsbnFieldsDisabled}
                     aria-label={t('common:add')}
                   >
                     <AddIcon fontSize="small" />
@@ -640,7 +643,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   <IconButton
                     size="small"
                     onClick={() => setManageCategoriesDialogOpen(true)}
-                    disabled={loading}
+                    disabled={nonIsbnFieldsDisabled}
                     aria-label={t('common:manage', { defaultValue: 'Manage' })}
                   >
                     <EditNoteOutlinedIcon fontSize="small" />
@@ -677,7 +680,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                       <Checkbox
                         checked={formData.selectedCategories.includes(category.id)}
                         onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
-                        disabled={loading}
+                        disabled={nonIsbnFieldsDisabled}
                         size="small"
                       />
                     }
@@ -713,7 +716,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               )}
               placeholder={t('books:edition_number_placeholder')}
               inputProps={{ min: 1 }}
-              disabled={loading}
+              disabled={nonIsbnFieldsDisabled}
               error={!!errors.editionNumber}
               helperText={errors.editionNumber}
             />
@@ -723,7 +726,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               <EditionDateInput
                 value={formData.editionDate}
                 onChange={(val) => handleInputChange('editionDate', val)}
-                disabled={loading}
+                disabled={nonIsbnFieldsDisabled}
                 error={!!errors.editionDate}
                 helperText={editionDateHelperText}
               />
@@ -740,7 +743,7 @@ export const BookForm: React.FC<BookFormProps> = ({
             value={formData.notes}
             onChange={(e) => handleInputChange('notes', e.target.value)}
             placeholder={t('books:add_notes_placeholder')}
-            disabled={loading}
+            disabled={nonIsbnFieldsDisabled}
           />
 
           <Divider />
@@ -773,7 +776,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               type="submit"
               variant="contained"
               size="large"
-              disabled={loading}
+              disabled={nonIsbnFieldsDisabled}
               startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
               sx={{
                 minWidth: 160,

@@ -713,14 +713,23 @@ describe('ApiService with Industry Standard Testing', () => {
 
       test('searchByISBN delegates to API client with correct parameters', async () => {
         const isbn = '9780743273565';
-        const mockResult = { title: 'Book Title', isbn };
+        const mockResult = {
+          found: true,
+          external: false,
+          book: {
+            id: 99,
+            title: 'Book Title',
+            isbnCode: isbn,
+            userId: 1,
+          },
+        };
         mockApiClient.books.searchByISBN.mockResolvedValue(mockResult);
 
         const result = await testApiService.searchByISBN(isbn);
 
         expect(mockApiClient.books.searchByISBN).toHaveBeenCalledWith(isbn);
         expect(mockApiClient.books.searchByISBN).toHaveBeenCalledTimes(1);
-        expect(result).toEqual(mockResult);
+        expect(result).toEqual(mockResult.book);
       });
     });
 
