@@ -163,7 +163,6 @@ const i18nReady = testI18n.use(initReactI18next).init({
       scanner: {
         isbn_copied: 'ISBN copied',
         isbn_detected: 'ISBN detected',
-        isbn_already_exists_in_library: 'A book with this ISBN already exists in your library.',
       },
       common: {
         close: 'Close',
@@ -529,7 +528,7 @@ describe('BookForm', () => {
     expect(screen.getByLabelText(/notes/i)).toHaveValue('Recovered notes');
   });
 
-  test('applies scanned isbn inline and shows duplicate warning (without copied notice) while preserving typed fields', async () => {
+  test('applies scanned isbn inline and shows the canonical owned-book alert while preserving typed fields', async () => {
     mockSearchByISBN.mockResolvedValue({ id: 42, title: 'Existing book' });
 
     renderBookForm({
@@ -542,8 +541,8 @@ describe('BookForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /scan isbn/i }));
     fireEvent.click(screen.getByTestId('embedded-scan-success'));
 
-    expect(await screen.findByText('A book with this ISBN already exists in your library.')).toBeInTheDocument();
-    expect(screen.queryByText('ISBN copied')).not.toBeInTheDocument();
+    expect(await screen.findByText(t('books:isbn_owned_book_found'))).toBeInTheDocument();
+    expect(screen.queryByText(t('scanner:isbn_copied'))).not.toBeInTheDocument();
     expect(screen.getByLabelText(/title/i)).toHaveValue('Typed title');
     expect(screen.getByLabelText(/notes/i)).toHaveValue('Typed notes');
     expect(screen.getByRole('textbox', { name: /isbn/i })).toHaveValue('9781234567890');

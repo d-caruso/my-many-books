@@ -147,7 +147,6 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [embeddedScannerOpen, setEmbeddedScannerOpen] = useState(false);
   const [embeddedScannerNotice, setEmbeddedScannerNotice] = useState<string | null>(null);
   const [showEmbeddedScannerNotice, setShowEmbeddedScannerNotice] = useState(false);
-  const [duplicateIsbnWarning, setDuplicateIsbnWarning] = useState<string | null>(null);
   const autoLookupIsbnRef = useRef<string | null>(null);
   const [isbnAlert, setIsbnAlert] = useState<{
     severity: 'error' | 'info' | 'success' | 'warning';
@@ -285,9 +284,6 @@ export const BookForm: React.FC<BookFormProps> = ({
       }
       if (embeddedScannerNotice) {
         setEmbeddedScannerNotice(null);
-      }
-      if (duplicateIsbnWarning) {
-        setDuplicateIsbnWarning(null);
       }
       if (isbnAlert) {
         setIsbnAlert(null);
@@ -556,13 +552,15 @@ export const BookForm: React.FC<BookFormProps> = ({
 
     setFormData(prev => ({ ...prev, isbnCode: scannedIsbn }));
     setErrors(prev => ({ ...prev, isbnCode: undefined }));
-    setDuplicateIsbnWarning(
+    setIsbnAlert(
       existingBook
-        ? t('scanner:isbn_already_exists_in_library', {
-            defaultValue: 'A book with this ISBN already exists in your library.',
-          })
+        ? {
+            severity: 'info',
+            message: t('books:isbn_owned_book_found'),
+          }
         : null
     );
+    setSecondaryIsbnAlert(null);
     if (existingBook) {
       setEmbeddedScannerNotice(null);
       setShowEmbeddedScannerNotice(false);
@@ -638,12 +636,6 @@ export const BookForm: React.FC<BookFormProps> = ({
               }}
             >
               {embeddedScannerNotice}
-            </Alert>
-          )}
-
-          {duplicateIsbnWarning && (
-            <Alert severity="warning" onClose={() => setDuplicateIsbnWarning(null)}>
-              {duplicateIsbnWarning}
             </Alert>
           )}
 
