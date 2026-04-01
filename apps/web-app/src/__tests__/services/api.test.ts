@@ -731,6 +731,20 @@ describe('ApiService with Industry Standard Testing', () => {
         expect(mockApiClient.books.searchByISBN).toHaveBeenCalledTimes(1);
         expect(result).toEqual(mockResult.book);
       });
+
+      test('searchByIsbnDetailed delegates to API client and returns the full response', async () => {
+        const isbn = '9780743273565';
+        const mockResult = {
+          found: false,
+        };
+        mockApiClient.books.searchByISBN.mockResolvedValue(mockResult);
+
+        const result = await testApiService.searchByIsbnDetailed(isbn);
+
+        expect(mockApiClient.books.searchByISBN).toHaveBeenCalledWith(isbn);
+        expect(mockApiClient.books.searchByISBN).toHaveBeenCalledTimes(1);
+        expect(result).toEqual(mockResult);
+      });
     });
 
     describe('Categories Methods', () => {
