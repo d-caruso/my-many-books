@@ -103,10 +103,12 @@ vi.mock('../../components/Book', () => ({
       {loading && <div data-testid="book-loading">Loading</div>}
     </div>
   ),
-  BookForm: ({ book, onSubmit, onCancel, loading, scannerPrefillNotice, initialDraft, initialIsbn }: {
+  BookForm: ({ book, onSubmit, onCancel, onResolvedLocalBook, loading, scannerPrefillNotice, initialDraft, initialIsbn }: {
     book?: Book | null;
     onSubmit: (data: unknown) => void;
     onCancel: () => void;
+    onResolvedLocalBook?: (book: Book) => void;
+    onIsbnSearch?: (isbn: string) => Promise<unknown>;
     loading?: boolean;
     scannerPrefillNotice?: string;
     initialDraft?: { title?: string; isbnCode?: string };
@@ -121,6 +123,21 @@ vi.mock('../../components/Book', () => ({
       data-initial-draft-isbn={initialDraft?.isbnCode ?? ''}
       data-initial-isbn={initialIsbn ?? ''}
     >
+      <button
+        data-testid="resolve-local-book"
+        onClick={() =>
+          onResolvedLocalBook?.({
+            id: 77,
+            title: 'Owned Book',
+            isbnCode: '9780140449136',
+            userId: 1,
+            authors: [],
+            categories: [],
+          })
+        }
+      >
+        Resolve local book
+      </button>
       <button data-testid="form-submit" onClick={() => onSubmit({ title: 'Form Book', isbn: '123', selectedAuthors: [], selectedCategories: [] })}>
         Submit
       </button>
@@ -190,6 +207,7 @@ vi.mock('../../components/Search', () => ({
 
 const mockApiService = {
   getBooks: vi.fn(),
+  searchByIsbnDetailed: vi.fn().mockResolvedValue({ found: false }),
   baseURL: 'http://localhost:3000',
   get: vi.fn(),
   post: vi.fn(),
@@ -219,7 +237,7 @@ const testI18n = i18n.createInstance();
 const i18nReady = testI18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['pages'],
+  ns: ['pages', 'scanner'],
   defaultNS: 'pages',
   resources: {
     en: {
@@ -242,6 +260,10 @@ const i18nReady = testI18n.use(initReactI18next).init({
           load_more: 'Load more',
         },
       },
+      scanner: {
+        isbn_copied: 'ISBN copied',
+        isbn_detected: 'ISBN detected',
+      },
     },
   },
   interpolation: {
@@ -259,6 +281,8 @@ const renderBooksPage = () =>
       </ApiProvider>
     </I18nextProvider>
   );
+
+const t = (key: string, options?: Record<string, unknown>) => testI18n.t(key, options);
 
 describe('BooksPage', () => {
   const mockUseAuth = vi.mocked(useAuth);
@@ -307,10 +331,31 @@ describe('BooksPage', () => {
 
   test('opens and cancels add book form', async () => {
     renderBooksPage();
-    fireEvent.click(screen.getByRole('button', { name: /add book/i }));
+    fireEvent.click(screen.getByRole('button', { name: t('pages:books.add_book') }));
     await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     fireEvent.click(screen.getByTestId('form-cancel'));
     await waitFor(() => expect(screen.getByTestId('book-list')).toBeInTheDocument());
+  });
+
+  test('switches add flow to update flow when the form resolves a local ISBN hit', async () => {
+    renderBooksPage();
+
+    fireEvent.click(screen.getByRole('button', { name: t('pages:books.add_book') }));
+    await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId('resolve-local-book'));
+
+    await waitFor(() => expect(screen.getByTestId('book-form')).toHaveAttribute('data-book-id', '77'));
+
+    fireEvent.click(screen.getByTestId('form-submit'));
+
+    await waitFor(() => {
+      expect(booksState.updateBook).toHaveBeenCalledWith(
+        77,
+        expect.objectContaining({ title: 'Form Book' })
+      );
+    });
+    expect(booksState.createBook).not.toHaveBeenCalled();
   });
 
   test('navigates to scanner when scan isbn button is clicked', async () => {
@@ -465,7 +510,7 @@ describe('BooksPage', () => {
     expect(updatedParams.get('scannerCopy')).toBeNull();
   });
 
-  test('preserves add-book draft on scanner success and overrides isbn with scanned value', async () => {
+  test('does not restore or clear add-book draft on scanner success without restoreDraft', async () => {
     window.sessionStorage.setItem(
       ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY,
       JSON.stringify({
@@ -486,10 +531,17 @@ describe('BooksPage', () => {
 
     await waitFor(() => expect(screen.getByTestId('book-form')).toBeInTheDocument());
     const form = screen.getByTestId('book-form');
-    expect(form).toHaveAttribute('data-initial-draft-title', 'Typed before scan');
-    expect(form).toHaveAttribute('data-initial-draft-isbn', 'old-isbn');
+    expect(form).toHaveAttribute('data-scanner-notice', t('isbn_copied', { ns: 'scanner' }));
+    expect(form).toHaveAttribute('data-initial-draft-title', '');
+    expect(form).toHaveAttribute('data-initial-draft-isbn', '');
     expect(form).toHaveAttribute('data-initial-isbn', '9780000000000');
-    expect(window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY)).toBeNull();
+    expect(window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY)).toBe(
+      JSON.stringify({
+        title: 'Typed before scan',
+        isbnCode: 'old-isbn',
+        notes: 'Keep this note',
+      })
+    );
   });
 
   test('restores add-book draft after closing scanner and clears restore state', async () => {

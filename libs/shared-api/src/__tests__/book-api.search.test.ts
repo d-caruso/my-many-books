@@ -1,7 +1,13 @@
 import { BookApi } from '../book-api';
 import { MockHttpClient } from '../__mocks__/MockHttpClient';
 import { ZodError } from 'zod';
-import { Book, BOOK_STATUSES, SearchFilters, SearchResult } from '@my-many-books/shared-types';
+import {
+  Book,
+  BOOK_STATUSES,
+  IsbnSearchResponse,
+  SearchFilters,
+  SearchResult,
+} from '@my-many-books/shared-types';
 
 describe('BookApi (Search & Status)', () => {
   let mockHttpClient: MockHttpClient;
@@ -178,29 +184,66 @@ describe('BookApi (Search & Status)', () => {
   });
 
   describe('searchByISBN', () => {
-    it('should search for a book by ISBN', async () => {
+    it('returns { found: false } when API returns not-found shape', async () => {
       mockHttpClient.setResponse('/books/search/isbn/978-0-123-45678-9', {
-        data: mockBook,
+        data: { found: false },
         status: 200,
       });
 
       const result = await bookApi.searchByISBN('978-0-123-45678-9');
 
-      expect(result).toEqual(mockBook);
+      expect(result).toEqual({ found: false });
+    });
+
+    it('returns local book shape when found in DB', async () => {
+      mockHttpClient.setResponse('/books/search/isbn/978-0-123-45678-9', {
+        data: {
+          found: true,
+          external: false,
+          book: mockBook,
+        },
+        status: 200,
+      });
+
+      const result = await bookApi.searchByISBN('978-0-123-45678-9');
+
+      expect(result.found).toBe(true);
+      if (!result.found || result.external) {
+        throw new Error('Expected a local DB hit');
+      }
+      const localResult = result as Extract<IsbnSearchResponse, { found: true; external: false }>;
+
+      expect(localResult.book.id).toBe(1);
       const lastRequest = mockHttpClient.getLastRequest();
       expect(lastRequest?.method).toBe('GET');
       expect(lastRequest?.url).toContain('/books/search/isbn/978-0-123-45678-9');
     });
 
-    it('should return null when book not found (404)', async () => {
-      mockHttpClient.setResponse('/books/search/isbn/999-9-999-99999-9', {
-        data: { error: 'Not found' },
-        status: 404,
+    it('returns external prefill shape when found externally', async () => {
+      mockHttpClient.setResponse('/books/search/isbn/978-0-123-45678-9', {
+        data: {
+          found: true,
+          external: true,
+          book: {
+            title: 'Iliad',
+            authorIds: [10],
+            categoryIds: [5],
+            createdAuthorIds: [10],
+            createdCategoryIds: [],
+          },
+        },
+        status: 200,
       });
 
-      const result = await bookApi.searchByISBN('999-9-999-99999-9');
+      const result = await bookApi.searchByISBN('978-0-123-45678-9');
 
-      expect(result).toBeNull();
+      expect(result.found).toBe(true);
+      if (!result.found || !result.external) {
+        throw new Error('Expected an external metadata hit');
+      }
+      const externalResult = result as Extract<IsbnSearchResponse, { found: true; external: true }>;
+
+      expect(externalResult.book.authorIds).toEqual([10]);
     });
 
     it('should reject legacy wrapped ISBN search responses', async () => {
@@ -212,10 +255,9 @@ describe('BookApi (Search & Status)', () => {
       await expect(bookApi.searchByISBN('978-0-123-45678-9')).rejects.toThrow(ZodError);
     });
 
-    it('should validate response against BookSchema', async () => {
-      const invalidBook = { id: 1, title: 'Missing isbnCode' };
+    it('throws on malformed response instead of silently returning null', async () => {
       mockHttpClient.setResponse('/books/search/isbn/978-0-123-45678-9', {
-        data: invalidBook,
+        data: { unexpected: true },
         status: 200,
       });
 
@@ -224,7 +266,7 @@ describe('BookApi (Search & Status)', () => {
       );
     });
 
-    it('should propagate non-404 errors', async () => {
+    it('should propagate HTTP errors', async () => {
       mockHttpClient.setResponse('/books/search/isbn/978-0-123-45678-9', {
         data: { error: 'Server error' },
         status: 500,

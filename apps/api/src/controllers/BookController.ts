@@ -20,6 +20,7 @@ import { createModel, findOrCreateModel } from '../utils/sequelize-helpers';
 import {
   BOOK_STATUSES,
   SEARCH_SORT_BY_FIELD_VALUES,
+  SEARCH_RESULT_STATUS,
   SORT_DIRECTION_VALUES,
   SORT_DIRECTIONS,
   type SearchSortByField,
@@ -35,7 +36,7 @@ import { emitHookEvent } from '../services/hooks/hookSystem';
 import { EVENTS } from '../services/hooks/events';
 import { BookSearchService } from '../services/search/BookSearchService';
 import { BookSearchResultDTO } from '../dtos/book/BookSearchResultDTO';
-import { SEARCH_RESULT_STATUS } from '@my-many-books/shared-types';
+import { TransformedAuthorData, TransformedCategoryData } from '../types/bookData';
 
 export interface BookSearchFilters {
   title?: string;
@@ -548,20 +549,46 @@ export class BookController extends BaseController {
       return this.createErrorResponseI18n('errors:invalid_isbn', 400, { error: validation.error });
     }
 
-    // Check local database first
-    const localBook = await this.bookRepository.findByIsbnCode(validation.normalizedIsbn!);
+    const localBook = await this.bookRepository.findByIsbnCode(
+      validation.normalizedIsbn!,
+      request.user?.id
+    );
 
     if (localBook) {
-      return this.createSuccessResponse(localBook);
+      return this.createSuccessResponse({
+        found: true,
+        external: false,
+        book: localBook,
+      });
     }
 
-    // If not found locally, try ISBN service
     const result = await isbnService.lookupBook(validation.normalizedIsbn!);
-    if (result.success && result.book) {
-      return this.createSuccessResponse(result.book);
+    if (!result.success || !result.book) {
+      return this.createSuccessResponse({ found: false });
     }
 
-    return this.createSuccessResponse(null);
+    const userId = request.user!.id;
+    const { authorIds, createdAuthorIds } = await this.resolveAuthors(result.book.authors, userId);
+    const { categoryIds, createdCategoryIds } = await this.resolveCategories(
+      result.book.categories,
+      userId
+    );
+
+    return this.createSuccessResponse({
+      found: true,
+      external: true,
+      book: {
+        title: result.book.title,
+        isbnCode: validation.normalizedIsbn!,
+        editionNumber: result.book.editionNumber ?? null,
+        editionDate: result.book.editionDate ?? null,
+        notes: result.book.description ?? null,
+        authorIds,
+        categoryIds,
+        createdAuthorIds,
+        createdCategoryIds,
+      },
+    });
   }
 
   /**
@@ -688,6 +715,79 @@ export class BookController extends BaseController {
    */
   private async getBookWithAssociations(id: number): Promise<object | null> {
     return this.bookRepository.findById(id);
+  }
+
+  private async resolveAuthors(
+    authors: TransformedAuthorData[] | undefined,
+    userId: number
+  ): Promise<{ authorIds: number[]; createdAuthorIds: number[] }> {
+    if (!authors || authors.length === 0) {
+      return { authorIds: [], createdAuthorIds: [] };
+    }
+
+    const resolvedAuthors = await Promise.all(
+      authors.map(author =>
+        findOrCreateModel(Author, {
+          where: {
+            name: author.name,
+            surname: author.surname || '',
+            userId,
+          },
+          defaults: {
+            name: author.name,
+            surname: author.surname || '',
+            nationality: author.nationality || null,
+            userId,
+          },
+        })
+      )
+    );
+
+    return {
+      authorIds: [...new Set(resolvedAuthors.map(([resolvedAuthor]) => resolvedAuthor.id))],
+      createdAuthorIds: [
+        ...new Set(
+          resolvedAuthors
+            .filter(([, created]) => created)
+            .map(([resolvedAuthor]) => resolvedAuthor.id)
+        ),
+      ],
+    };
+  }
+
+  private async resolveCategories(
+    categories: TransformedCategoryData[] | undefined,
+    userId: number
+  ): Promise<{ categoryIds: number[]; createdCategoryIds: number[] }> {
+    if (!categories || categories.length === 0) {
+      return { categoryIds: [], createdCategoryIds: [] };
+    }
+
+    const resolvedCategories = await Promise.all(
+      categories.map(category =>
+        findOrCreateModel(Category, {
+          where: {
+            name: category.name.trim(),
+            userId,
+          },
+          defaults: {
+            name: category.name.trim(),
+            userId,
+          },
+        })
+      )
+    );
+
+    return {
+      categoryIds: [...new Set(resolvedCategories.map(([resolvedCategory]) => resolvedCategory.id))],
+      createdCategoryIds: [
+        ...new Set(
+          resolvedCategories
+            .filter(([, created]) => created)
+            .map(([resolvedCategory]) => resolvedCategory.id)
+        ),
+      ],
+    };
   }
 
   // User-specific methods for route compatibility

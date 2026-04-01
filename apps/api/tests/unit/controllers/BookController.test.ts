@@ -335,6 +335,73 @@ describe('BookController', () => {
     });
   });
 
+  describe('searchBooksByIsbn', () => {
+    it('returns found:false when ISBN is not in local DB and external service has no data', async () => {
+      jest.spyOn((bookController as any).bookRepository, 'findByIsbnCode').mockResolvedValue(null);
+      (isbnService.lookupBook as jest.Mock).mockResolvedValue({ success: false });
+
+      mockRequest.params = { isbn: '9780140449136' };
+      mockRequest.user = { id: 2, email: 'test@example.com', role: 'user', provider: 'cognito' };
+
+      const response = await bookController.searchBooksByIsbn(mockRequest);
+
+      expect(response.success).toBe(true);
+      expect(response.data).toEqual({ found: false });
+    });
+
+    it('returns found:true, external:false for a local DB hit', async () => {
+      const localBook = { id: 1, isbnCode: '9780140449136', title: 'Iliad', userId: 2 };
+      const findByIsbnCodeSpy = jest
+        .spyOn((bookController as any).bookRepository, 'findByIsbnCode')
+        .mockResolvedValue(localBook);
+
+      mockRequest.params = { isbn: '9780140449136' };
+      mockRequest.user = { id: 2, email: 'test@example.com', role: 'user', provider: 'cognito' };
+
+      const response = await bookController.searchBooksByIsbn(mockRequest);
+
+      expect(findByIsbnCodeSpy).toHaveBeenCalledWith('9780140449136', 2);
+      expect(response.data).toMatchObject({ found: true, external: false, book: localBook });
+      expect(isbnService.lookupBook).not.toHaveBeenCalled();
+    });
+
+    it('returns found:true, external:true with auto-created IDs for an external hit', async () => {
+      jest.spyOn((bookController as any).bookRepository, 'findByIsbnCode').mockResolvedValue(null);
+      (isbnService.lookupBook as jest.Mock).mockResolvedValue({
+        success: true,
+        book: {
+          title: 'Iliad',
+          authors: [{ name: 'Homer', surname: '' }],
+          categories: [{ name: 'Epic', type: 'subject' }],
+          editionDate: '1999',
+          description: 'A classic epic',
+        },
+      });
+      (Author.findOrCreate as jest.Mock).mockResolvedValue([{ id: 10 }, true]);
+      (Category.findOrCreate as jest.Mock).mockResolvedValue([{ id: 5 }, false]);
+
+      mockRequest.params = { isbn: '9780140449136' };
+      mockRequest.user = { id: 2, email: 'test@example.com', role: 'user', provider: 'cognito' };
+
+      const response = await bookController.searchBooksByIsbn(mockRequest);
+
+      expect(response.data).toMatchObject({
+        found: true,
+        external: true,
+        book: {
+          title: 'Iliad',
+          isbnCode: '9780140449136',
+          editionDate: '1999',
+          notes: 'A classic epic',
+          authorIds: [10],
+          createdAuthorIds: [10],
+          categoryIds: [5],
+          createdCategoryIds: [],
+        },
+      });
+    });
+  });
+
   describe('user-specific methods', () => {
     // ... (rest of user-specific tests)
     it('should require authentication for getUserBooks', async () => {
