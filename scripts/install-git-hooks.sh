@@ -15,6 +15,12 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 HOOKS_DIR="$PROJECT_ROOT/.git/hooks"
 
+# Skip installation in git worktrees — hooks are already installed in the main repo
+if [ ! -d "$PROJECT_ROOT/.git" ]; then
+  echo -e "${GREEN}✓ Git hooks already installed (worktree detected, skipping).${NC}"
+  exit 0
+fi
+
 # Create hooks directory if it doesn't exist
 mkdir -p "$HOOKS_DIR"
 
