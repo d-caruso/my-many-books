@@ -163,7 +163,6 @@ const i18nReady = testI18n.use(initReactI18next).init({
       scanner: {
         isbn_copied: 'ISBN copied',
         isbn_detected: 'ISBN detected',
-        isbn_already_exists_in_library: 'A book with this ISBN already exists in your library.',
       },
       common: {
         close: 'Close',
@@ -261,6 +260,32 @@ describe('BookForm', () => {
     fireEvent.click(screen.getByRole('button', { name: t('books:isbn_lookup_button') }));
 
     expect(await screen.findByRole('progressbar')).toBeInTheDocument();
+  });
+
+  test('auto-resolves scanner-prefilled ISBN through the standard lookup flow on mount', async () => {
+    mockDetailedIsbnSearch.mockResolvedValue({
+      found: true,
+      external: false,
+      book: {
+        id: 1,
+        title: 'Iliad',
+        isbnCode: '9780140449136',
+        userId: 2,
+        authors: [],
+        categories: [],
+      },
+    });
+
+    renderBookForm({
+      initialIsbn: '9780140449136',
+      scannerPrefillNotice: 'ISBN copied',
+    });
+
+    await waitFor(() => {
+      expect(mockDetailedIsbnSearch).toHaveBeenCalledWith('9780140449136');
+    });
+    expect(await screen.findByText(t('books:isbn_owned_book_found'))).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: t('books:update_book') })).not.toBeDisabled();
   });
 
   test('switches to edit mode and shows owned-book snackbar when ISBN matches a local book', async () => {
@@ -503,7 +528,7 @@ describe('BookForm', () => {
     expect(screen.getByLabelText(/notes/i)).toHaveValue('Recovered notes');
   });
 
-  test('applies scanned isbn inline and shows duplicate warning (without copied notice) while preserving typed fields', async () => {
+  test('applies scanned isbn inline and shows the canonical owned-book alert while preserving typed fields', async () => {
     mockSearchByISBN.mockResolvedValue({ id: 42, title: 'Existing book' });
 
     renderBookForm({
@@ -516,8 +541,8 @@ describe('BookForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /scan isbn/i }));
     fireEvent.click(screen.getByTestId('embedded-scan-success'));
 
-    expect(await screen.findByText('A book with this ISBN already exists in your library.')).toBeInTheDocument();
-    expect(screen.queryByText('ISBN copied')).not.toBeInTheDocument();
+    expect(await screen.findByText(t('books:isbn_owned_book_found'))).toBeInTheDocument();
+    expect(screen.queryByText(t('scanner:isbn_copied'))).not.toBeInTheDocument();
     expect(screen.getByLabelText(/title/i)).toHaveValue('Typed title');
     expect(screen.getByLabelText(/notes/i)).toHaveValue('Typed notes');
     expect(screen.getByRole('textbox', { name: /isbn/i })).toHaveValue('9781234567890');

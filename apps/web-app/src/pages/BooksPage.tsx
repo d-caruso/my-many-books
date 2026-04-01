@@ -52,8 +52,7 @@ const BooksPage: React.FC = () => {
   const [initialDraft, setInitialDraft] = useState<Partial<BookFormData> | null>(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('mode') !== 'add') return null;
-    const scannerSource = params.get('scannerSource');
-    if (scannerSource !== 'scanner' && params.get('restoreDraft') !== '1') return null;
+    if (params.get('restoreDraft') !== '1') return null;
     try {
       const stored = window.sessionStorage.getItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
       return stored ? (JSON.parse(stored) as Partial<BookFormData>) : null;
@@ -175,7 +174,7 @@ const BooksPage: React.FC = () => {
     const isbnFromUrl = searchParams.get('isbn') || undefined;
     const scannerSource = searchParams.get('scannerSource');
     const scannerCopy = searchParams.get('scannerCopy');
-    const restoreDraft = searchParams.get('restoreDraft') === '1' || scannerSource === 'scanner';
+    const restoreDraft = searchParams.get('restoreDraft') === '1';
     let restoredDraft: Partial<BookFormData> | null = null;
 
     if (restoreDraft) {

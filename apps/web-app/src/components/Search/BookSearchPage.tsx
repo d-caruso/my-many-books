@@ -23,7 +23,6 @@ import { BookSearchResults } from './BookSearchResults';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import { SearchFiltersSchema } from '@my-many-books/shared-types';
 import type { Book, SearchFilters } from '@my-many-books/shared-types';
-import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../../constants/scanner';
 import { useProtectedViewTransition } from '../../contexts/ViewTransitionContext';
 
 const BookSearchPage: React.FC = () => {
@@ -107,12 +106,6 @@ const BookSearchPage: React.FC = () => {
         }
 
         if (result && scannerSource === 'scanner') {
-          try {
-            window.sessionStorage.removeItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
-          } catch {
-            // Non-blocking cleanup; search UX should proceed.
-          }
-
           setScannerNoticeMessage(
             scannerCopy === 'success'
               ? t('isbn_copied', { ns: 'scanner', defaultValue: 'ISBN copied' })
