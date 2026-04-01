@@ -10,6 +10,7 @@ import type {
   Author,
   Book,
   Category,
+  IsbnSearchResponse,
   PaginatedResponse,
   SearchFilters,
   SearchResult,
@@ -238,6 +239,16 @@ class ApiService extends AdminApiService {
 
   // ISBN lookup
   async searchByISBN(isbn: string): Promise<Book | null> {
+    const result = await this.searchByIsbnDetailed(isbn);
+
+    if (!result.found || result.external) {
+      return null;
+    }
+
+    return result.book;
+  }
+
+  async searchByIsbnDetailed(isbn: string): Promise<IsbnSearchResponse> {
     return this.apiClient.books.searchByISBN(isbn);
   }
 

@@ -18,6 +18,7 @@ import { useSetting } from '../hooks/useSetting';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../constants/scanner';
 import { runFadeOut, useFadeInOnChange } from '../hooks/useLanguageChangeFade';
 import { useProtectedViewTransition } from '../contexts/ViewTransitionContext';
+import { useApi } from '../contexts/ApiContext';
 import { VIEW_TRANSITION_FADE_OUT_LEAD_MS } from '../constants/animations';
 import { extractErrorMessage } from '@my-many-books/shared-utils';
 
@@ -30,6 +31,7 @@ const BOOKS_PAGE_MODE_FADE_IN_TIMING = '1s ease-in-out forwards';
 const BooksPage: React.FC = () => {
   const { t } = useTranslation(['pages', 'scanner', 'common']);
   const { user } = useAuth();
+  const { bookAPI } = useApi();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -382,6 +384,14 @@ const BooksPage: React.FC = () => {
     categoryIds: formData.selectedCategories,
   });
 
+  const handleResolvedLocalBook = (resolvedBook: Book) => {
+    setSelectedBook(resolvedBook);
+    setPageMode('edit');
+    setActionError(null);
+    setInitialIsbn(undefined);
+    setInitialDraft(null);
+  };
+
   const handleFormSubmit = async (formData: BookFormData) => {
     setActionLoading(true);
     setActionError(null);
@@ -488,6 +498,8 @@ const BooksPage: React.FC = () => {
             book={selectedBook}
             onSubmit={handleFormSubmit}
             onCancel={handleCancel}
+            onResolvedLocalBook={handleResolvedLocalBook}
+            onIsbnSearch={(isbn) => bookAPI.searchByIsbnDetailed(isbn)}
             loading={actionLoading}
             initialIsbn={initialIsbn}
             initialDraft={initialDraft}

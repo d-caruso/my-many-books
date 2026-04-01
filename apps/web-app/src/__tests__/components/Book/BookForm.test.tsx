@@ -1,11 +1,12 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { BookForm } from '../../../components/Book/BookForm';
 
 const mockSearchByISBN = vi.fn();
+const mockDetailedIsbnSearch = vi.fn();
 const mockLoadCategories = vi.fn();
 let latestAuthorAutocompleteProps: Record<string, unknown> | null = null;
 
@@ -128,6 +129,10 @@ const i18nReady = testI18n.use(initReactI18next).init({
         isbn: 'ISBN',
         isbn_placeholder: 'Enter ISBN',
         isbn_no_dashes_spaces_hint: 'Write the code without dashes or spaces',
+        isbn_lookup_button: 'Look up',
+        isbn_invalid: 'Invalid ISBN format',
+        isbn_owned_book_found: 'You have this book',
+        isbn_valid_no_metadata: 'Valid ISBN - fill in the details',
         scan_isbn: 'Scan ISBN',
         author: 'Author',
         search_add_authors: 'Search authors',
@@ -159,10 +164,19 @@ const i18nReady = testI18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
+const t = (key: string): string => testI18n.t(key);
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const translatedLabelMatcher = (key: string): RegExp => new RegExp(escapeRegExp(t(key)), 'i');
+
 const renderBookForm = (props: Partial<React.ComponentProps<typeof BookForm>> = {}) =>
   render(
     <I18nextProvider i18n={testI18n}>
-      <BookForm onSubmit={vi.fn().mockResolvedValue(undefined)} onCancel={vi.fn()} {...props} />
+      <BookForm
+        onSubmit={vi.fn().mockResolvedValue(undefined)}
+        onCancel={vi.fn()}
+        onIsbnSearch={mockDetailedIsbnSearch}
+        {...props}
+      />
     </I18nextProvider>
   );
 
@@ -173,6 +187,7 @@ describe('BookForm', () => {
 
   beforeEach(() => {
     mockSearchByISBN.mockReset();
+    mockDetailedIsbnSearch.mockReset();
     mockLoadCategories.mockReset();
     latestAuthorAutocompleteProps = null;
     Object.defineProperty(navigator, 'clipboard', {
@@ -181,10 +196,121 @@ describe('BookForm', () => {
     });
   });
 
+  test('locks all add-book fields except ISBN on initial open', () => {
+    renderBookForm();
+
+    expect(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') })).not.toBeDisabled();
+    expect(screen.getByLabelText(translatedLabelMatcher('books:title'))).toBeDisabled();
+    expect(screen.getByLabelText(translatedLabelMatcher('books:notes'))).toBeDisabled();
+    expect(screen.getByRole('button', { name: t('books:save_book') })).toBeDisabled();
+  });
+
+  test('calls the ISBN lookup handler when the lookup button is clicked', async () => {
+    mockDetailedIsbnSearch.mockResolvedValue({ found: false });
+
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') }), {
+      target: { value: '9780140449136' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: t('books:isbn_lookup_button') }));
+
+    await waitFor(() => {
+      expect(mockDetailedIsbnSearch).toHaveBeenCalledWith('9780140449136');
+    });
+  });
+
+  test('calls the ISBN lookup handler when Enter is pressed in the ISBN field', async () => {
+    mockDetailedIsbnSearch.mockResolvedValue({ found: false });
+
+    renderBookForm();
+
+    const isbnInput = screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') });
+
+    fireEvent.change(isbnInput, { target: { value: '9780140449136' } });
+    fireEvent.keyDown(isbnInput, { key: 'Enter', code: 'Enter', charCode: 13 });
+
+    await waitFor(() => {
+      expect(mockDetailedIsbnSearch).toHaveBeenCalledWith('9780140449136');
+    });
+  });
+
+  test('shows a loading indicator while ISBN lookup is in progress', async () => {
+    mockDetailedIsbnSearch.mockImplementation(() => new Promise(() => undefined));
+
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') }), {
+      target: { value: '9780140449136' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: t('books:isbn_lookup_button') }));
+
+    expect(await screen.findByRole('progressbar')).toBeInTheDocument();
+  });
+
+  test('switches to edit mode and shows owned-book snackbar when ISBN matches a local book', async () => {
+    mockDetailedIsbnSearch.mockResolvedValue({
+      found: true,
+      external: false,
+      book: {
+        id: 1,
+        title: 'Iliad',
+        isbnCode: '9780140449136',
+        userId: 2,
+        authors: [],
+        categories: [],
+      },
+    });
+
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') }), {
+      target: { value: '9780140449136' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: t('books:isbn_lookup_button') }));
+
+    expect(await screen.findByText(t('books:isbn_owned_book_found'))).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Iliad')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: t('books:update_book') })).not.toBeDisabled();
+  });
+
+  test('unlocks the form and shows valid-ISBN snackbar when ISBN has no result', async () => {
+    mockDetailedIsbnSearch.mockResolvedValue({ found: false });
+
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') }), {
+      target: { value: '9780140449136' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: t('books:isbn_lookup_button') }));
+
+    expect(await screen.findByText(t('books:isbn_valid_no_metadata'))).toBeInTheDocument();
+    expect(screen.getByLabelText(translatedLabelMatcher('books:title'))).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: t('books:save_book') })).not.toBeDisabled();
+  });
+
+  test('shows validation error and does not call the API for invalid ISBN input', async () => {
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') }), {
+      target: { value: 'NOT-AN-ISBN' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: t('books:isbn_lookup_button') }));
+
+    expect(mockDetailedIsbnSearch).not.toHaveBeenCalled();
+    expect(await screen.findByText(t('books:isbn_invalid'))).toBeInTheDocument();
+    expect(screen.getByLabelText(translatedLabelMatcher('books:title'))).toBeDisabled();
+  });
+
   test('updates and removes selected authors from manage dialog callbacks', () => {
     renderBookForm({
-      initialDraft: {
-        selectedAuthors: [{ id: 999, name: 'Virginia', surname: 'Woolf', nationality: null }],
+      book: {
+        id: 10,
+        title: 'Existing Book',
+        isbnCode: '9781566199094',
+        userId: 42,
+        authors: [{ id: 999, name: 'Virginia', surname: 'Woolf', nationality: null }],
+        categories: [],
       },
     });
 
@@ -201,8 +327,16 @@ describe('BookForm', () => {
 
   test('removes deleted category from selection and reloads categories after manage callback', () => {
     renderBookForm({
-      initialDraft: {
-        selectedCategories: [123, 456],
+      book: {
+        id: 10,
+        title: 'Existing Book',
+        isbnCode: '9781566199094',
+        userId: 42,
+        authors: [],
+        categories: [
+          { id: 123, name: 'Classics' },
+          { id: 456, name: 'Poetry' },
+        ],
       },
     });
 
@@ -258,10 +392,13 @@ describe('BookForm', () => {
   test('applies scanned isbn inline and shows duplicate warning (without copied notice) while preserving typed fields', async () => {
     mockSearchByISBN.mockResolvedValue({ id: 42, title: 'Existing book' });
 
-    renderBookForm();
+    renderBookForm({
+      initialDraft: {
+        title: 'Typed title',
+        notes: 'Typed notes',
+      },
+    });
 
-    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Typed title' } });
-    fireEvent.change(screen.getByLabelText(/notes/i), { target: { value: 'Typed notes' } });
     fireEvent.click(screen.getByRole('button', { name: /scan isbn/i }));
     fireEvent.click(screen.getByTestId('embedded-scan-success'));
 
@@ -273,7 +410,16 @@ describe('BookForm', () => {
   });
 
   test('reloads author autocomplete options after creating a new author', () => {
-    renderBookForm();
+    renderBookForm({
+      book: {
+        id: 10,
+        title: 'Existing Book',
+        isbnCode: '9781566199094',
+        userId: 42,
+        authors: [],
+        categories: [],
+      },
+    });
 
     expect(screen.getByTestId('author-autocomplete-reload-trigger')).toHaveTextContent('0');
 
