@@ -8,13 +8,23 @@ import { BookForm } from '../../../components/Book/BookForm';
 const mockSearchByISBN = vi.fn();
 const mockDetailedIsbnSearch = vi.fn();
 const mockLoadCategories = vi.fn();
+const mockGetAuthors = vi.fn();
+let mockCategories: Array<{ id: number; name: string; translationKey?: string | null }> = [];
 let latestAuthorAutocompleteProps: Record<string, unknown> | null = null;
 
 vi.mock('../../../hooks/useCategories', () => ({
   useCategories: () => ({
-    categories: [],
+    categories: mockCategories,
     loading: false,
     loadCategories: mockLoadCategories,
+  }),
+}));
+
+vi.mock('../../../contexts/ApiContext', () => ({
+  useApi: () => ({
+    authorAPI: {
+      getAuthors: mockGetAuthors,
+    },
   }),
 }));
 
@@ -189,6 +199,9 @@ describe('BookForm', () => {
     mockSearchByISBN.mockReset();
     mockDetailedIsbnSearch.mockReset();
     mockLoadCategories.mockReset();
+    mockGetAuthors.mockReset();
+    mockGetAuthors.mockResolvedValue([]);
+    mockCategories = [];
     latestAuthorAutocompleteProps = null;
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
@@ -300,6 +313,45 @@ describe('BookForm', () => {
     expect(mockDetailedIsbnSearch).not.toHaveBeenCalled();
     expect(await screen.findByText(t('books:isbn_invalid'))).toBeInTheDocument();
     expect(screen.getByLabelText(translatedLabelMatcher('books:title'))).toBeDisabled();
+  });
+
+  test('prefills add-book fields from API-resolved external metadata', async () => {
+    mockCategories = [{ id: 5, name: 'Classics' }];
+    mockGetAuthors.mockResolvedValue([
+      { id: 10, name: 'Homer', surname: 'Poet', nationality: 'Greek' },
+    ]);
+    mockDetailedIsbnSearch.mockResolvedValue({
+      found: true,
+      external: true,
+      book: {
+        title: 'Iliad',
+        editionDate: '2024-01',
+        notes: 'Loaded from ISBN metadata',
+        authorIds: [10],
+        categoryIds: [5],
+        createdAuthorIds: [],
+        createdCategoryIds: [],
+      },
+    });
+
+    renderBookForm();
+
+    fireEvent.change(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') }), {
+      target: { value: '9780140449136' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: t('books:isbn_lookup_button') }));
+
+    expect(await screen.findByDisplayValue('Iliad')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('Loaded from ISBN metadata')).toBeInTheDocument();
+    expect(screen.getByLabelText(translatedLabelMatcher('books:title'))).not.toBeDisabled();
+    expect(screen.getByRole('checkbox', { name: 'Classics' })).toBeChecked();
+    expect(screen.getByText('Homer Poet')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: t('books:save_book') })).not.toBeDisabled();
+
+    await waitFor(() => {
+      expect(mockGetAuthors).toHaveBeenCalledTimes(1);
+      expect(mockLoadCategories).toHaveBeenCalledTimes(1);
+    });
   });
 
   test('updates and removes selected authors from manage dialog callbacks', () => {
