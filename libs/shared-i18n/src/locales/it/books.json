@@ -74,6 +74,8 @@
   "isbn_invalid": "Formato ISBN non valido",
   "isbn_owned_book_found": "Hai questo libro",
   "isbn_valid_no_metadata": "ISBN valido - completa i dettagli",
+  "isbn_metadata_loaded": "Dettagli del libro caricati dall'ISBN",
+  "isbn_entities_auto_created": "Aggiunti alla tua libreria: {{authors}} autore/i, {{categories}} categoria/e",
   "edition_number_min": "Il numero di edizione deve essere almeno 1",
   "added": "Aggiunto",
   "last_updated": "Ultimo aggiornamento",
