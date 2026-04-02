@@ -774,6 +774,24 @@ export const BookForm: React.FC<BookFormProps> = ({
                 reloadTrigger={authorAutocompleteReloadTrigger}
                 userIdFilter={activeBook?.userId}
               />
+              {/* Selected Authors Display */}
+              {formData.selectedAuthors.length > 0 && (
+                <Box mt={1}>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {formData.selectedAuthors.map((author) => (
+                      <Chip
+                        key={author.id}
+                        label={`${author.name} ${author.surname}`}
+                        onDelete={() => handleAuthorRemove(author.id)}
+                        deleteIcon={<CloseIcon />}
+                        disabled={nonIsbnFieldsDisabled}
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Stack>
+                </Box>
+              )}
             </Box>
 
             {/* Status */}
@@ -799,25 +817,6 @@ export const BookForm: React.FC<BookFormProps> = ({
               </FormControl>
             </Box>
           </Box>
-
-          {/* Selected Authors Display */}
-          {formData.selectedAuthors.length > 0 && (
-            <Box>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {formData.selectedAuthors.map((author) => (
-                  <Chip
-                    key={author.id}
-                    label={`${author.name} ${author.surname}`}
-                    onDelete={() => handleAuthorRemove(author.id)}
-                    deleteIcon={<CloseIcon />}
-                    disabled={nonIsbnFieldsDisabled}
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Stack>
-            </Box>
-          )}
 
           {/* Categories */}
           <Box>
