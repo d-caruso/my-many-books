@@ -11,6 +11,8 @@ export class UpdateBookDTO {
   notes?: string;
   authorIds?: number[];
   categoryIds?: number[];
+  coverImageUrlMedium?: string | null;
+  coverImageUrlLarge?: string | null;
 
   static from(body: unknown): UpdateBookDTO {
     return plainToInstance(UpdateBookDTO, body ?? {});
@@ -27,6 +29,8 @@ export class UpdateBookDTO {
     if (this.notes !== undefined) input.notes = this.notes;
     if (this.authorIds !== undefined) input.authorIds = this.authorIds;
     if (this.categoryIds !== undefined) input.categoryIds = this.categoryIds;
+    if (this.coverImageUrlMedium !== undefined) input.coverImageUrlMedium = this.coverImageUrlMedium;
+    if (this.coverImageUrlLarge !== undefined) input.coverImageUrlLarge = this.coverImageUrlLarge;
 
     return input;
   }

@@ -74,17 +74,18 @@ export class BookRepository {
         `INSERT INTO books (
           id, title, authors, isbn, thumbnail, description, published_date,
           page_count, rating, status, notes, user_id, creation_date, update_date,
-          server_id, sync_status, temp_id, deleted, server_updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          server_id, sync_status, temp_id, deleted, server_updated_at,
+          cover_image_url_medium, cover_image_url_large
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           entity.title || '',
           this.serializeText(entity.authors),
           entity.isbnCode || null,
-          null,                                           // thumbnail (not yet in API)
-          null,                                           // description (not yet in API)
-          null,                                           // published_date (not yet in API)
-          null,                                           // page_count (not yet in API)
+          null,
+          null,
+          null,
+          null,
           (entity as Record<string, unknown>).rating as number | null ?? null,
           entity.status || 'want-to-read',
           entity.notes || null,
@@ -96,6 +97,8 @@ export class BookRepository {
           book.tempId || null,
           book.deleted ? 1 : 0,
           book.serverUpdatedAt || null,
+          entity.coverImageUrlMedium || null,
+          entity.coverImageUrlLarge || null,
         ]
       );
 
@@ -135,7 +138,9 @@ export class BookRepository {
           update_date = ?,
           server_id = COALESCE(?, server_id),
           sync_status = COALESCE(?, sync_status),
-          server_updated_at = COALESCE(?, server_updated_at)
+          server_updated_at = COALESCE(?, server_updated_at),
+          cover_image_url_medium = COALESCE(?, cover_image_url_medium),
+          cover_image_url_large = COALESCE(?, cover_image_url_large)
         WHERE id = ?`,
         [
           entity.title,
@@ -147,6 +152,8 @@ export class BookRepository {
           book.serverId,
           book.syncStatus,
           book.serverUpdatedAt,
+          entity.coverImageUrlMedium || null,
+          entity.coverImageUrlLarge || null,
           id,
         ]
       );
@@ -213,10 +220,11 @@ export class BookRepository {
         `INSERT INTO books (
           id, title, authors, isbn, thumbnail, description, published_date,
           page_count, rating, status, notes, user_id, creation_date, update_date,
-          server_id, sync_status, temp_id, deleted, server_updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          server_id, sync_status, temp_id, deleted, server_updated_at,
+          cover_image_url_medium, cover_image_url_large
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          serverIdStr,           // Use server ID as primary key
+          serverIdStr,
           tempRecord.title,
           tempRecord.authors,
           tempRecord.isbn,
@@ -229,12 +237,14 @@ export class BookRepository {
           tempRecord.notes,
           tempRecord.user_id,
           tempRecord.creation_date,
-          new Date().toISOString(), // Update the update_date
-          serverId,              // Set server_id 
-          SYNC_STATUS.SYNCED,    // Mark as synced
-          tempId,                // Keep reference to original temp_id
-          0,                     // Not deleted
-          new Date().toISOString() // Server updated at
+          new Date().toISOString(),
+          serverId,
+          SYNC_STATUS.SYNCED,
+          tempId,
+          0,
+          new Date().toISOString(),
+          tempRecord.cover_image_url_medium,
+          tempRecord.cover_image_url_large,
         ]
       );
 
@@ -386,7 +396,9 @@ export class BookRepository {
             user_id = ?,
             update_date = ?,
             sync_status = ?,
-            server_updated_at = ?
+            server_updated_at = ?,
+            cover_image_url_medium = ?,
+            cover_image_url_large = ?
           WHERE id = ?`,
           [
             entity.title || existingEntity.title,
@@ -405,6 +417,8 @@ export class BookRepository {
             entity.updateDate || now,
             book.syncStatus || existingBook.syncStatus,
             book.serverUpdatedAt || existingBook.serverUpdatedAt,
+            entity.coverImageUrlMedium ?? existingEntity.coverImageUrlMedium ?? null,
+            entity.coverImageUrlLarge ?? existingEntity.coverImageUrlLarge ?? null,
             bookId,
           ]
         );
@@ -415,8 +429,9 @@ export class BookRepository {
           `INSERT INTO books (
             id, title, authors, isbn, thumbnail, description, published_date,
             page_count, rating, status, notes, user_id, creation_date, update_date,
-            sync_status, temp_id, deleted, server_updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            sync_status, temp_id, deleted, server_updated_at,
+            cover_image_url_medium, cover_image_url_large
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             bookId,
             entity.title || '',
@@ -436,6 +451,8 @@ export class BookRepository {
             book.tempId || null,
             book.deleted ? 1 : 0,
             book.serverUpdatedAt || null,
+            entity.coverImageUrlMedium || null,
+            entity.coverImageUrlLarge || null,
           ]
         );
       }
@@ -575,6 +592,8 @@ export class BookRepository {
       creationDate: row.creation_date as string,
       updateDate: row.update_date as string,
       rating: row.rating as number | null | undefined,
+      coverImageUrlMedium: (row.cover_image_url_medium as string | null) ?? undefined,
+      coverImageUrlLarge: (row.cover_image_url_large as string | null) ?? undefined,
     } as Book;
     const local = new LocalBook(book);
     local.serverId = row.server_id as number | undefined;
