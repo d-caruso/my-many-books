@@ -49,23 +49,19 @@ export class DataTransformer {
       return [];
     }
 
-    return olBook.authors.map(author => {
+    return olBook.authors.flatMap(author => {
       const authorName = author.name.trim();
-      const { name, surname } = DataTransformer.parseAuthorName(authorName);
-
-      return {
-        name,
-        surname,
-        nationality: undefined, // Open Library doesn't provide nationality in book API
-      };
+      const parsed = DataTransformer.parseAuthorName(authorName);
+      if (!parsed) return [];
+      return [{ name: parsed.name, surname: parsed.surname, nationality: undefined }];
     });
   }
 
-  private static parseAuthorName(authorName: string): { name: string; surname: string } {
+  private static parseAuthorName(authorName: string): { name: string; surname: string } | null {
     const parts = authorName.split(' ').filter(part => part.length > 0);
 
     if (parts.length === 0) {
-      return { name: 'Unknown', surname: 'Author' };
+      return null;
     }
 
     if (parts.length === 1) {
