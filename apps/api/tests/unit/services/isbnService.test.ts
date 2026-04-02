@@ -64,11 +64,8 @@ describe('IsbnService', () => {
     publishers: ['Penguin Classics'],
     pages: 541,
     language: 'en',
-    coverUrls: {
-      small: 'https://covers.openlibrary.org/b/isbn/9780140449136-S.jpg',
-      medium: 'https://covers.openlibrary.org/b/isbn/9780140449136-M.jpg',
-      large: 'https://covers.openlibrary.org/b/isbn/9780140449136-L.jpg',
-    },
+    coverImageUrlMedium: 'https://covers.openlibrary.org/b/isbn/9780140449136-M.jpg',
+    coverImageUrlLarge: 'https://covers.openlibrary.org/b/isbn/9780140449136-L.jpg',
     description: 'Homer\'s epic poem of Odysseus\' journey home.',
     physicalFormat: 'Paperback',
     weight: '340g',

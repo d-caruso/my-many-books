@@ -27,6 +27,8 @@ export interface BookEntity extends BaseEntity<number> {
   userId?: number;
   creationDate: Date;
   updateDate?: Date;
+  coverImageUrlMedium?: string | null;
+  coverImageUrlLarge?: string | null;
   authors?: BookAuthorSummary[];
   categories?: BookCategorySummary[];
 }

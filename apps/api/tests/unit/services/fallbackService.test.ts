@@ -151,8 +151,6 @@ describe('FallbackService', () => {
       expect(result).toBeDefined();
       expect(result!.book).toBeDefined();
       expect(result!.book!.title).toBe(testTitle);
-      expect(result!.book!.description).toContain('manual source');
-      expect(result!.book!.description).toContain('high confidence');
     });
   });
 
@@ -223,7 +221,6 @@ describe('FallbackService', () => {
       
       expect(result).toBeDefined();
       expect(result!.book).toBeDefined();
-      expect(result!.book!.description).toBe('Book information from cache source (low confidence)');
       expect(result!.book!.categories![0]!.name).toBe('General');
       expect(result!.book!.categories![0]!.type).toBe('subject');
     });

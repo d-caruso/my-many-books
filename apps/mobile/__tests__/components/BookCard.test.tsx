@@ -169,5 +169,26 @@ describe('BookCard', () => {
       const testInstance = tree!.root;
       expect(() => testInstance.findByProps({ 'data-testid': 'book-actions' })).toThrow();
     });
+
+    it('should render without error when coverImageUrlMedium is provided', () => {
+      const bookWithCover = { ...mockBook, coverImageUrlMedium: 'https://covers.openlibrary.org/b/id/1-M.jpg' };
+      let tree: renderer.ReactTestRenderer | undefined;
+      expect(() => {
+        renderer.act(() => {
+          tree = renderer.create(React.createElement(BookCard, { book: bookWithCover }));
+        });
+      }).not.toThrow();
+      expect(tree).toBeDefined();
+    });
+
+    it('should render without error when coverImageUrlMedium is absent', () => {
+      let tree: renderer.ReactTestRenderer | undefined;
+      expect(() => {
+        renderer.act(() => {
+          tree = renderer.create(React.createElement(BookCard, { book: mockBook }));
+        });
+      }).not.toThrow();
+      expect(tree).toBeDefined();
+    });
   });
 });

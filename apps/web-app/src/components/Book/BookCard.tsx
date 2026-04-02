@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   CardActions,
+  CardMedia,
   Typography,
   Chip,
   IconButton,
@@ -15,7 +16,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
-// import BookIcon from '@mui/icons-material/MenuBook'; // used in commented-out cover section
+import BookIcon from '@mui/icons-material/MenuBook';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
@@ -202,22 +203,30 @@ export const BookCard: React.FC<BookCardProps> = ({
         </Box>
       )}
 
-      {/* Book cover placeholder — hidden until real covers are supported
       <Box position="relative">
-        <CardMedia
-          sx={{
-            height: 200,
-            bgcolor: 'grey.100',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'grey.500'
-          }}
-          role="img"
-          aria-label={t('books:book_cover_placeholder')}
-        >
-          <BookIcon sx={{ fontSize: 48 }} aria-hidden="true" />
-        </CardMedia>
+        {book.coverImageUrlMedium ? (
+          <CardMedia
+            component="img"
+            height={200}
+            image={book.coverImageUrlMedium}
+            alt={book.title}
+          />
+        ) : (
+          <Box
+            sx={{
+              height: 200,
+              bgcolor: 'grey.100',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'grey.500',
+            }}
+            role="img"
+            aria-label={t('books:no_cover')}
+          >
+            <BookIcon sx={{ fontSize: 48 }} aria-hidden="true" />
+          </Box>
+        )}
 
         {book.status && (
           <Box position="absolute" top={8} right={8}>
@@ -234,34 +243,20 @@ export const BookCard: React.FC<BookCardProps> = ({
             position="absolute"
             top={8}
             left={8}
-            sx={{
-              opacity: 0,
-              '&:hover': { opacity: 1 },
-              transition: 'opacity 0.2s'
-            }}
+            sx={{ opacity: 0, '&:hover': { opacity: 1 }, transition: 'opacity 0.2s' }}
           >
             <Stack direction="row" spacing={0.5}>
               {onEdit && (
                 <IconButton
                   size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(book);
-                  }}
-                  sx={{
-                    bgcolor: 'rgba(0,0,0,0.5)',
-                    color: 'white',
-                    '&:hover': {
-                      bgcolor: 'rgba(0,0,0,0.7)'
-                    }
-                  }}
+                  onClick={(e) => { e.stopPropagation(); onEdit(book); }}
+                  sx={{ bgcolor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}
                   title={t('books:edit_book_title')}
                   aria-label={t('books:edit_book_title')}
                 >
                   <EditIcon fontSize="small" aria-hidden="true" />
                 </IconButton>
               )}
-
               {onDelete && (
                 <IconButton
                   size="small"
@@ -271,13 +266,7 @@ export const BookCard: React.FC<BookCardProps> = ({
                       onDelete(book.id);
                     }
                   }}
-                  sx={{
-                    bgcolor: 'rgba(0,0,0,0.5)',
-                    color: 'white',
-                    '&:hover': {
-                      bgcolor: 'error.main'
-                    }
-                  }}
+                  sx={{ bgcolor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { bgcolor: 'error.main' } }}
                   title={t('books:delete_book_title')}
                   aria-label={t('books:delete_book_title')}
                 >
@@ -288,7 +277,6 @@ export const BookCard: React.FC<BookCardProps> = ({
           </Box>
         )}
       </Box>
-      */}
 
       <CardContent sx={{ flexGrow: 1, p: { xs: 2, sm: 2.5 } }}>
         <Typography

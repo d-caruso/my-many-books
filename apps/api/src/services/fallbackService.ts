@@ -81,17 +81,10 @@ export class FallbackService {
           type: 'subject',
         },
       ],
-      subtitle: undefined,
       editionNumber: undefined,
       editionDate: undefined,
-      publishers: undefined,
-      pages: undefined,
-      language: undefined,
-      coverUrls: undefined,
-      description: `Book information from ${fallbackData.source} source (${fallbackData.confidence} confidence)`,
-      physicalFormat: undefined,
-      weight: undefined,
-      dimensions: undefined,
+      coverImageUrlMedium: undefined,
+      coverImageUrlLarge: undefined,
     };
   }
 

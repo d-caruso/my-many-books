@@ -33,7 +33,8 @@ export class DataTransformer {
       // publishers: olBook.publishers,
       // pages: olBook.number_of_pages,
       // language: DataTransformer.extractLanguage(olBook),
-      // coverUrls: DataTransformer.extractCoverUrls(olBook),
+      coverImageUrlMedium: olBook.cover?.medium || undefined,
+      coverImageUrlLarge: olBook.cover?.large || undefined,
       // description: olBook.notes (OL notes are internal catalog metadata, not user-facing)
       // physicalFormat: olBook.physical_format,
       // weight: olBook.weight,
@@ -213,50 +214,4 @@ export class DataTransformer {
     }
   }
 
-  private static extractLanguage(olBook: OpenLibraryBook): string | undefined {
-    if (!olBook.languages || olBook.languages.length === 0) {
-      return undefined;
-    }
-
-    // Open Library language format: { key: "/languages/eng" }
-    const language = olBook.languages[0];
-    if (!language) {
-      return undefined;
-    }
-
-    const langKey = language.key;
-    const langCode = langKey.split('/').pop();
-
-    // Convert common language codes to readable names
-    const languageMap: Record<string, string> = {
-      eng: 'English',
-      spa: 'Spanish',
-      fre: 'French',
-      ger: 'German',
-      ita: 'Italian',
-      por: 'Portuguese',
-      rus: 'Russian',
-      jpn: 'Japanese',
-      chi: 'Chinese',
-      ara: 'Arabic',
-    };
-
-    return langCode ? languageMap[langCode] || langCode : undefined;
-  }
-
-  private static extractCoverUrls(
-    olBook: OpenLibraryBook
-  ):
-    | { small?: string | undefined; medium?: string | undefined; large?: string | undefined }
-    | undefined {
-    if (!olBook.cover) {
-      return undefined;
-    }
-
-    return {
-      small: olBook.cover.small || undefined,
-      medium: olBook.cover.medium || undefined,
-      large: olBook.cover.large || undefined,
-    };
-  }
 }

@@ -202,4 +202,21 @@ describe('BookCard', () => {
 
     expect(screen.queryByTestId('select')).not.toBeInTheDocument();
   });
+
+  test('renders cover image when coverImageUrlMedium is provided', () => {
+    const bookWithCover = { ...mockBook, coverImageUrlMedium: 'https://covers.openlibrary.org/b/id/1-M.jpg' };
+    render(<BookCard book={bookWithCover} />);
+
+    const img = screen.getByRole('img', { name: 'Test Book' });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('src', 'https://covers.openlibrary.org/b/id/1-M.jpg');
+    expect(screen.queryByRole('img', { name: /no cover/i })).not.toBeInTheDocument();
+  });
+
+  test('renders cover placeholder when coverImageUrlMedium is absent', () => {
+    render(<BookCard book={mockBook} />);
+
+    expect(screen.getByRole('img', { name: /no cover/i })).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Test Book' })).not.toBeInTheDocument();
+  });
 });
