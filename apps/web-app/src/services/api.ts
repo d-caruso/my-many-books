@@ -146,7 +146,9 @@ class ApiService extends AdminApiService {
       ...(bookData.status && { status: bookData.status }),
       ...(sanitizeString(bookData.notes) && { notes: sanitizeString(bookData.notes) }),
       ...(authorIds && { authorIds }),
-      ...(categoryIds && { categoryIds })
+      ...(categoryIds && { categoryIds }),
+      ...(bookData.coverImageUrlMedium !== undefined && { coverImageUrlMedium: bookData.coverImageUrlMedium }),
+      ...(bookData.coverImageUrlLarge !== undefined && { coverImageUrlLarge: bookData.coverImageUrlLarge }),
     };
 
     return this.apiClient.books.createBook(backendData);
@@ -186,6 +188,9 @@ class ApiService extends AdminApiService {
     if (categoryIds) {
       backendData.categoryIds = categoryIds;
     }
+
+    if (bookData.coverImageUrlMedium !== undefined) backendData.coverImageUrlMedium = bookData.coverImageUrlMedium;
+    if (bookData.coverImageUrlLarge !== undefined) backendData.coverImageUrlLarge = bookData.coverImageUrlLarge;
 
     const isPartialUpdate = Object.keys(backendData).length === 1 && backendData.status !== undefined;
 

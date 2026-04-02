@@ -66,6 +66,8 @@ export interface BookFormData {
   notes?: string;
   selectedAuthors: Author[];
   selectedCategories: number[];
+  coverImageUrlMedium?: string | null;
+  coverImageUrlLarge?: string | null;
 }
 
 const EDITION_DATE_ERROR_I18N_KEY = 'validation:book_edition_date_invalid';
@@ -97,6 +99,8 @@ const buildBookFormData = (book: Book): BookFormData => ({
   notes: book.notes || '',
   selectedAuthors: book.authors || [],
   selectedCategories: book.categories?.map((cat: Category) => cat.id) || [],
+  coverImageUrlMedium: book.coverImageUrlMedium ?? null,
+  coverImageUrlLarge: book.coverImageUrlLarge ?? null,
 });
 
 export const BookForm: React.FC<BookFormProps> = ({
@@ -411,6 +415,8 @@ export const BookForm: React.FC<BookFormProps> = ({
       notes: prefill.notes ?? prev.notes ?? '',
       selectedAuthors: resolvedAuthors,
       selectedCategories: [...prefill.categoryIds],
+      coverImageUrlMedium: prefill.coverImageUrlMedium ?? null,
+      coverImageUrlLarge: prefill.coverImageUrlLarge ?? null,
     }));
     setErrors({});
     setIsResolved(true);
