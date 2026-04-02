@@ -55,6 +55,8 @@ export interface BookAttributes
   status?: BookStatus | null | undefined;
   notes?: string | null | undefined;
   userId?: number | null | undefined;
+  coverImageUrlMedium?: string | null | undefined;
+  coverImageUrlLarge?: string | null | undefined;
   creationDate: CreationOptional<Date>;
   updateDate?: CreationOptional<Date | undefined>;
 }
@@ -67,6 +69,8 @@ export interface BookCreationAttributes {
   status?: BookStatus | null;
   notes?: string | null;
   userId?: number | null;
+  coverImageUrlMedium?: string | null;
+  coverImageUrlLarge?: string | null;
   updateDate?: Date | undefined;
 }
 

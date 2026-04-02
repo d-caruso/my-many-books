@@ -587,6 +587,8 @@ export class BookController extends BaseController {
         categoryIds,
         createdAuthorIds,
         createdCategoryIds,
+        coverImageUrlMedium: result.book.coverImageUrlMedium ?? null,
+        coverImageUrlLarge: result.book.coverImageUrlLarge ?? null,
       },
     });
   }

@@ -21,6 +21,8 @@ export const CREATE_BOOKS_TABLE = `
     creation_date TEXT NOT NULL,
     update_date TEXT NOT NULL,
     server_id INTEGER,
+    cover_image_url_medium TEXT,
+    cover_image_url_large TEXT,
     sync_status TEXT DEFAULT '${SYNC_STATUS.SYNCED}',
     temp_id TEXT,
     deleted INTEGER DEFAULT 0,

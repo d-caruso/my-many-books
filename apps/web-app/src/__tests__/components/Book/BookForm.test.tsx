@@ -210,13 +210,15 @@ describe('BookForm', () => {
     });
   });
 
-  test('locks all add-book fields except ISBN on initial open', () => {
+  test('locks all add-book fields except ISBN on initial open', async () => {
     renderBookForm();
 
-    expect(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') })).not.toBeDisabled();
-    expect(screen.getByLabelText(translatedLabelMatcher('books:title'))).toBeDisabled();
-    expect(screen.getByLabelText(translatedLabelMatcher('books:notes'))).toBeDisabled();
-    expect(screen.getByRole('button', { name: t('books:save_book') })).toBeDisabled();
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') })).not.toBeDisabled();
+      expect(screen.getByLabelText(translatedLabelMatcher('books:title'))).toBeDisabled();
+      expect(screen.getByLabelText(translatedLabelMatcher('books:notes'))).toBeDisabled();
+      expect(screen.getByRole('button', { name: t('books:save_book') })).toBeDisabled();
+    });
   });
 
   test('calls the ISBN lookup handler when the lookup button is clicked', async () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render as rtlRender, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { vi, afterEach } from 'vitest';
 import { HookForm } from '../../pages/Admin/Hooks/HookForm';
 import { BrowserRouter } from 'react-router-dom';
@@ -109,7 +109,7 @@ describe('HookForm', () => {
     fireEvent.click(saveButton);
 
     // Wait for async operation to complete
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Test Hook' }));
       expect(onClose).toHaveBeenCalled();
     });
