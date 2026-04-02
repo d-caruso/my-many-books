@@ -391,7 +391,6 @@ export class MigrationSystem {
       throw error;
     }
   }
-}
 
   /**
    * Migrate to version 7: Add cover image URL columns to books
