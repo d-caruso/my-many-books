@@ -8,6 +8,7 @@ import { useBooks } from '@/hooks/useBooks';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useNetworkState } from '@/hooks/useNetworkState';
 import { useAddBookEntities } from '@/hooks/useAddBookEntities';
+import { ISBN_NOTICE } from '@/constants/scanner';
 import enBooks from '@my-many-books/shared-i18n/src/locales/en/books.json';
 import enCommon from '@my-many-books/shared-i18n/src/locales/en/common.json';
 
@@ -296,7 +297,7 @@ describe('Mobile ISBN snackbars', () => {
   it('shows the valid-no-metadata snackbar on add screen when the scanner route carries isbnNotice', async () => {
     mockUseLocalSearchParams.mockReturnValue({
       isbn: '9780140449136',
-      isbnNotice: 'valid_no_metadata',
+      isbnNotice: ISBN_NOTICE.VALID_NO_METADATA,
     });
 
     let tree!: renderer.ReactTestRenderer;

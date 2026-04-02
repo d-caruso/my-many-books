@@ -18,7 +18,7 @@ import { AuthorsSection } from '@/components/book/AuthorsSection';
 import { CategoriesSection } from '@/components/book/CategoriesSection';
 import { AddBookOverlays } from '@/components/book/AddBookOverlays';
 import { useAddBookStyles } from '@/components/book/addBookStyles';
-import { SCANNER_COPY_STATUS, ScannerCopyStatus } from '@/constants/scanner';
+import { ISBN_NOTICE, SCANNER_COPY_STATUS, type IsbnNotice, type ScannerCopyStatus } from '@/constants/scanner';
 import { deserializeExternalBookPrefill } from '@/utils/isbnScannerRouting';
 
 export default function AddBookScreen() {
@@ -29,7 +29,7 @@ export default function AddBookScreen() {
     bookData?: string;
     scannerCopy?: ScannerCopyStatus;
     prefill?: string;
-    isbnNotice?: 'valid_no_metadata';
+    isbnNotice?: IsbnNotice;
   }>();
   const [title, setTitle] = useState('');
   const [isbnCode, setIsbnCode] = useState(isbn || '');
@@ -231,7 +231,7 @@ export default function AddBookScreen() {
     }
     handledRouteFeedbackRef.current = feedbackKey;
 
-    if (isbnNotice === 'valid_no_metadata') {
+    if (isbnNotice === ISBN_NOTICE.VALID_NO_METADATA) {
       enqueueFeedback(t('books:isbn_valid_no_metadata'));
     } else if (!prefill && scannerCopy) {
       enqueueFeedback(
