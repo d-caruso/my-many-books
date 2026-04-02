@@ -63,6 +63,7 @@ app.use(
       process.env['FRONTEND_URL'],
       process.env['FRONTEND_URL']?.replace('://', '://www.'),
       /^http:\/\/localhost:\d+$/,
+      /^https:\/\/[^.]+\.my-many-books\.workers\.dev$/,
     ].filter(Boolean) as (string | RegExp)[],
     credentials: true,
   })
