@@ -62,7 +62,7 @@ describe('FallbackService - Simple Coverage', () => {
       expect(result?.isbn).toBe(testIsbn);
     });
 
-    it('should generate minimal book for unknown ISBN', () => {
+    it('should return null for unknown ISBN with no static data', () => {
       const testIsbn = '9780123456789';
       mockValidateIsbn.mockReturnValue({
         isValid: true,
@@ -70,8 +70,7 @@ describe('FallbackService - Simple Coverage', () => {
       });
 
       const result = fallbackService.getFallbackBook(testIsbn);
-      expect(result).toBeDefined();
-      expect(result?.success).toBe(true);
+      expect(result).toBeNull();
     });
   });
 

@@ -2,7 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 
 import type { ExternalBookPrefill } from '@my-many-books/shared-types';
 import { bookAPI } from '@/services/api';
-import { SCANNER_COPY_STATUS, type ScannerCopyStatus } from '@/constants/scanner';
+import { ISBN_NOTICE, SCANNER_COPY_STATUS, type IsbnNotice, type ScannerCopyStatus } from '@/constants/scanner';
 
 export type MobileIsbnScannerRoute =
   | {
@@ -11,7 +11,7 @@ export type MobileIsbnScannerRoute =
         isbn: string;
         scannerCopy: ScannerCopyStatus;
         prefill?: string;
-        isbnNotice?: 'valid_no_metadata';
+        isbnNotice?: IsbnNotice;
       };
     }
   | {
@@ -85,7 +85,7 @@ export async function resolveScannedIsbnRoute(isbn: string): Promise<MobileIsbnS
     params: {
       isbn,
       scannerCopy,
-      isbnNotice: 'valid_no_metadata',
+      isbnNotice: ISBN_NOTICE.VALID_NO_METADATA,
     },
   };
 }

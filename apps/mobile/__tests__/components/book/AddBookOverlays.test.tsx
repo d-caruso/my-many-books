@@ -6,7 +6,7 @@ import * as Clipboard from 'expo-clipboard';
 
 import { AddBookOverlays } from '@/components/book/AddBookOverlays';
 import { bookAPI } from '@/services/api';
-import { SCANNER_COPY_STATUS } from '@/constants/scanner';
+import { ISBN_NOTICE, SCANNER_COPY_STATUS } from '@/constants/scanner';
 
 jest.mock('react-native', () => {
   const actual = jest.requireActual('react-native');
@@ -227,7 +227,7 @@ describe('AddBookOverlays — ISBN resolution routing', () => {
       pathname: '/book/add',
       params: {
         isbn: '9780140449136',
-        isbnNotice: 'valid_no_metadata',
+        isbnNotice: ISBN_NOTICE.VALID_NO_METADATA,
         scannerCopy: SCANNER_COPY_STATUS.SUCCESS,
       },
     });

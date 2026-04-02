@@ -195,46 +195,6 @@ const BookSearchPage: React.FC = () => {
         </Typography>
       </Box>
 
-      <Box mb={4}>
-        <BookSearchForm
-          onSearch={handleSearch}
-          loading={loading}
-          initialQuery={initialQuery}
-          initialFilters={initialFilters}
-        />
-      </Box>
-
-      {(books.length > 0 || error) && (
-        <Box
-          mb={4}
-          display="flex"
-          flexWrap="wrap"
-          justifyContent="space-between"
-          alignItems="center"
-          gap={2}
-        >
-          <Button
-            onClick={handleClearSearch}
-            color="inherit"
-            size="small"
-            startIcon={<CloseIcon />}
-          >
-            {t('books:clear_search')}
-          </Button>
-          <Button
-            onClick={() => {
-              runMainContentTransition(() => {
-                navigate('/?mode=add');
-              });
-            }}
-            variant="contained"
-            startIcon={<AddIcon />}
-          >
-            {t('books:add_new_book')}
-          </Button>
-        </Box>
-      )}
-
       {/* Search results */}
       <BookSearchResults
         books={isbnParam ? (isbnBook ? [isbnBook] : []) : books}
@@ -301,6 +261,46 @@ const BookSearchPage: React.FC = () => {
               </Paper>
             </Grid>
           </Grid>
+        </Box>
+      )}
+
+      <Box mt={4}>
+        <BookSearchForm
+          onSearch={handleSearch}
+          loading={loading}
+          initialQuery={initialQuery}
+          initialFilters={initialFilters}
+        />
+      </Box>
+
+      {(books.length > 0 || error) && (
+        <Box
+          mt={2}
+          display="flex"
+          flexWrap="wrap"
+          justifyContent="space-between"
+          alignItems="center"
+          gap={2}
+        >
+          <Button
+            onClick={handleClearSearch}
+            color="inherit"
+            size="small"
+            startIcon={<CloseIcon />}
+          >
+            {t('books:clear_search')}
+          </Button>
+          <Button
+            onClick={() => {
+              runMainContentTransition(() => {
+                navigate('/?mode=add');
+              });
+            }}
+            variant="contained"
+            startIcon={<AddIcon />}
+          >
+            {t('books:add_new_book')}
+          </Button>
         </Box>
       )}
 

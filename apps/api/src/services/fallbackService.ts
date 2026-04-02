@@ -41,14 +41,7 @@ export class FallbackService {
       };
     }
 
-    // Generate minimal book data based on ISBN
-    const fallbackBook = this.generateMinimalBook(normalizedIsbn);
-    return {
-      success: true,
-      isbn: normalizedIsbn,
-      book: fallbackBook,
-      source: 'api',
-    };
+    return null;
   }
 
   /**
@@ -69,40 +62,6 @@ export class FallbackService {
     });
 
     return true;
-  }
-
-  /**
-   * Generate minimal book data when no information is available
-   */
-  private generateMinimalBook(isbn: string): TransformedBookData {
-    return {
-      isbnCode: isbn,
-      title: `Book ${isbn.substring(isbn.length - 4)}`, // Use last 4 digits
-      authors: [
-        {
-          name: 'Unknown',
-          surname: 'Author',
-          nationality: undefined,
-        },
-      ],
-      categories: [
-        {
-          name: 'Unknown',
-          type: 'subject',
-        },
-      ],
-      subtitle: undefined,
-      editionNumber: undefined,
-      editionDate: undefined,
-      publishers: undefined,
-      pages: undefined,
-      language: undefined,
-      coverUrls: undefined,
-      description: undefined,
-      physicalFormat: undefined,
-      weight: undefined,
-      dimensions: undefined,
-    };
   }
 
   private convertToTransformedBook(fallbackData: FallbackBookData): TransformedBookData {
