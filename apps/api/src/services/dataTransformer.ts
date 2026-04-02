@@ -24,19 +24,20 @@ export class DataTransformer {
     return {
       isbnCode: normalizedIsbn,
       title: DataTransformer.extractTitle(olBook),
-      subtitle: olBook.subtitle,
       authors: DataTransformer.extractAuthors(olBook),
       categories: DataTransformer.extractCategories(olBook),
       editionNumber: DataTransformer.extractEditionNumber(olBook),
       editionDate: DataTransformer.extractEditionDate(olBook),
-      publishers: olBook.publishers,
-      pages: olBook.number_of_pages,
-      language: DataTransformer.extractLanguage(olBook),
-      coverUrls: DataTransformer.extractCoverUrls(olBook),
-      description: olBook.notes,
-      physicalFormat: olBook.physical_format,
-      weight: olBook.weight,
-      dimensions: olBook.physical_dimensions,
+      // Not used by the client — kept in TransformedBookData for future use:
+      // subtitle: olBook.subtitle,
+      // publishers: olBook.publishers,
+      // pages: olBook.number_of_pages,
+      // language: DataTransformer.extractLanguage(olBook),
+      // coverUrls: DataTransformer.extractCoverUrls(olBook),
+      // description: olBook.notes (OL notes are internal catalog metadata, not user-facing)
+      // physicalFormat: olBook.physical_format,
+      // weight: olBook.weight,
+      // dimensions: olBook.physical_dimensions,
     };
   }
 
