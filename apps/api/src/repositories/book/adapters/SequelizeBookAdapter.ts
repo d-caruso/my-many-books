@@ -44,10 +44,10 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
     const sql = `
       SELECT
         b.*,
-        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE) as relevance_score
+        MATCH(b.title, b.notes, b.isbn_code) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE) as relevance_score
       FROM books b
       ${userId ? 'WHERE b.user_id = :userId AND' : 'WHERE'}
-        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
+        MATCH(b.title, b.notes, b.isbn_code) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
       ORDER BY ${orderClause}
       LIMIT :limit OFFSET :offset
     `;
@@ -56,7 +56,7 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       SELECT COUNT(*) as total
       FROM books b
       ${userId ? 'WHERE b.user_id = :userId AND' : 'WHERE'}
-        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
+        MATCH(b.title, b.notes, b.isbn_code) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
     `;
 
     const replacements: Record<string, unknown> = {
@@ -117,6 +117,7 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
         [Op.or]: [
           { title: { [Op.like]: `%${query}%` } },
           { notes: { [Op.like]: `%${query}%` } },
+          { isbnCode: { [Op.like]: `%${query}%` } },
         ],
       },
     ];
@@ -587,10 +588,10 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
     const sql = `
       SELECT
         b.*,
-        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE) as relevance_score
+        MATCH(b.title, b.notes, b.isbn_code) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE) as relevance_score
       FROM books b
       ${userId ? 'WHERE b.user_id = :userId AND' : 'WHERE'}
-        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
+        MATCH(b.title, b.notes, b.isbn_code) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
       ORDER BY relevance_score DESC
       LIMIT :limit OFFSET :offset
     `;
@@ -599,7 +600,7 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
       SELECT COUNT(*) as total
       FROM books b
       ${userId ? 'WHERE b.user_id = :userId AND' : 'WHERE'}
-        MATCH(b.title, b.notes) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
+        MATCH(b.title, b.notes, b.isbn_code) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)
     `;
 
     const replacements: Record<string, unknown> = {
@@ -662,6 +663,7 @@ export class SequelizeBookAdapter implements BookRepositoryAdapter {
         [Op.or]: [
           { title: { [Op.like]: `%${query}%` } },
           { notes: { [Op.like]: `%${query}%` } },
+          { isbnCode: { [Op.like]: `%${query}%` } },
         ],
       },
     ];
