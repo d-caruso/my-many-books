@@ -29,6 +29,8 @@ export const BookSchema = z.object({
   userId: z.number().int().optional(),
   authors: AuthorSchema.pick({ id: true, name: true, surname: true }).array().optional(),
   categories: CategorySchema.pick({ id: true, name: true, translationKey: true }).array().optional(),
+  coverImageUrlMedium: z.string().url().nullable().optional(),
+  coverImageUrlLarge: z.string().url().nullable().optional(),
   creationDate: z.string().optional(),
   updateDate: z.string().optional(),
 });
@@ -44,6 +46,8 @@ export const BookFormSchema = z.object({
   notes: z.string().nullable().optional(),
   authorIds: z.array(z.number().int()).optional(),
   categoryIds: z.array(z.number().int()).optional(),
+  coverImageUrlMedium: z.string().url().nullable().optional(),
+  coverImageUrlLarge: z.string().url().nullable().optional(),
 });
 
 export type BookFormData = z.infer<typeof BookFormSchema>;

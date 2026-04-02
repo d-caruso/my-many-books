@@ -24,6 +24,7 @@ import Grid from '@mui/material/GridLegacy';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { SelectChangeEvent } from '@mui/material/Select';
 import type { Book, Author, Category } from '@my-many-books/shared-types';
@@ -159,23 +160,32 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
 
         <Box sx={{ p: 4 }}>
           <Grid container spacing={4}>
-            {/* Book cover placeholder — hidden until real covers are supported
             <Grid item xs={12} md={4}>
-              <Box
-                sx={{
-                  aspectRatio: '3/4',
-                  bgcolor: 'grey.100',
-                  borderRadius: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'text.disabled',
-                }}
-              >
-                <MenuBookIcon sx={{ fontSize: 72 }} />
-              </Box>
+              {book.coverImageUrlLarge ? (
+                <Box
+                  component="img"
+                  src={book.coverImageUrlLarge}
+                  alt={book.title}
+                  sx={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 2 }}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    aspectRatio: '3/4',
+                    bgcolor: 'grey.100',
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'text.disabled',
+                  }}
+                  role="img"
+                  aria-label={t('books:no_cover')}
+                >
+                  <MenuBookIcon sx={{ fontSize: 72 }} />
+                </Box>
+              )}
             </Grid>
-            */}
 
             <Grid item xs={12} md={8}>
               <Stack spacing={3} sx={{ width: '100%' }}>

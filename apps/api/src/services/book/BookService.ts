@@ -56,6 +56,8 @@ export interface CreateBookInput {
   authorIds?: number[];
   categoryIds?: number[];
   userId?: number;
+  coverImageUrlMedium?: string | null;
+  coverImageUrlLarge?: string | null;
 }
 
 export type UpdateBookInput = Partial<CreateBookInput>;
@@ -314,6 +316,8 @@ class BookService {
       status: input.status,
       notes: input.notes,
       userId: input.userId,
+      coverImageUrlMedium: input.coverImageUrlMedium,
+      coverImageUrlLarge: input.coverImageUrlLarge,
     };
   }
 
@@ -328,6 +332,8 @@ class BookService {
     if (input.status !== undefined) payload.status = input.status;
     if (input.notes !== undefined) payload.notes = input.notes;
     if (input.isbnCode !== undefined) payload.isbnCode = input.isbnCode;
+    if (input.coverImageUrlMedium !== undefined) payload.coverImageUrlMedium = input.coverImageUrlMedium;
+    if (input.coverImageUrlLarge !== undefined) payload.coverImageUrlLarge = input.coverImageUrlLarge;
 
     return payload;
   }

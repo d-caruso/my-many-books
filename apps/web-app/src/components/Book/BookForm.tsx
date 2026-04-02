@@ -147,6 +147,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [embeddedScannerOpen, setEmbeddedScannerOpen] = useState(false);
   const [embeddedScannerNotice, setEmbeddedScannerNotice] = useState<string | null>(null);
   const [showEmbeddedScannerNotice, setShowEmbeddedScannerNotice] = useState(false);
+  const [isbnCoverPreview, setIsbnCoverPreview] = useState<string | null>(null);
   const autoLookupIsbnRef = useRef<string | null>(null);
   const [isbnAlert, setIsbnAlert] = useState<{
     severity: 'error' | 'info' | 'success' | 'warning';
@@ -278,6 +279,7 @@ export const BookForm: React.FC<BookFormProps> = ({
     if (field === 'isbnCode') {
       if (!activeBook) {
         setIsResolved(false);
+        setIsbnCoverPreview(null);
       }
       if (showEmbeddedScannerNotice) {
         setShowEmbeddedScannerNotice(false);
@@ -431,6 +433,7 @@ export const BookForm: React.FC<BookFormProps> = ({
 
     if (result.found && result.external) {
       await applyExternalPrefill(result.book);
+      setIsbnCoverPreview(result.book.coverImageUrlMedium ?? null);
       setIsbnAlert({
         severity: 'success',
         message: t('books:isbn_metadata_loaded'),
@@ -726,6 +729,18 @@ export const BookForm: React.FC<BookFormProps> = ({
             />
           )}
 
+          {/* Cover preview from ISBN lookup */}
+          {isbnCoverPreview && (
+            <Box display="flex" justifyContent="center">
+              <Box
+                component="img"
+                src={isbnCoverPreview}
+                alt={t('books:cover_image')}
+                sx={{ height: 120, borderRadius: 1, boxShadow: 1 }}
+              />
+            </Box>
+          )}
+
           {/* Authors and Reading Status */}
           <Box
             sx={{
@@ -774,6 +789,24 @@ export const BookForm: React.FC<BookFormProps> = ({
                 reloadTrigger={authorAutocompleteReloadTrigger}
                 userIdFilter={activeBook?.userId}
               />
+              {/* Selected Authors Display */}
+              {formData.selectedAuthors.length > 0 && (
+                <Box mt={1}>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {formData.selectedAuthors.map((author) => (
+                      <Chip
+                        key={author.id}
+                        label={`${author.name} ${author.surname}`}
+                        onDelete={() => handleAuthorRemove(author.id)}
+                        deleteIcon={<CloseIcon />}
+                        disabled={nonIsbnFieldsDisabled}
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Stack>
+                </Box>
+              )}
             </Box>
 
             {/* Status */}
@@ -799,25 +832,6 @@ export const BookForm: React.FC<BookFormProps> = ({
               </FormControl>
             </Box>
           </Box>
-
-          {/* Selected Authors Display */}
-          {formData.selectedAuthors.length > 0 && (
-            <Box>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {formData.selectedAuthors.map((author) => (
-                  <Chip
-                    key={author.id}
-                    label={`${author.name} ${author.surname}`}
-                    onDelete={() => handleAuthorRemove(author.id)}
-                    deleteIcon={<CloseIcon />}
-                    disabled={nonIsbnFieldsDisabled}
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Stack>
-            </Box>
-          )}
 
           {/* Categories */}
           <Box>

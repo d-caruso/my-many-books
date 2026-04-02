@@ -6,6 +6,8 @@ export const ExternalBookPrefillSchema = BookFormSchema.partial().extend({
   categoryIds: z.array(z.number().int()),
   createdAuthorIds: z.array(z.number().int()),
   createdCategoryIds: z.array(z.number().int()),
+  coverImageUrlMedium: z.string().url().nullable().optional(),
+  coverImageUrlLarge: z.string().url().nullable().optional(),
 });
 
 export type ExternalBookPrefill = z.infer<typeof ExternalBookPrefillSchema>;

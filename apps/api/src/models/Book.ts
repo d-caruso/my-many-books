@@ -19,6 +19,8 @@ export class Book extends IdBaseModel<BookAttributes, BookCreationAttributes> im
   public status?: BookStatus | null;
   public notes?: string | null;
   public userId?: number | null;
+  public coverImageUrlMedium?: string | null;
+  public coverImageUrlLarge?: string | null;
 
   // Associations
   public authors?: Author[];
@@ -111,6 +113,16 @@ export class Book extends IdBaseModel<BookAttributes, BookCreationAttributes> im
             len: [0, 2000],
           },
         },
+        coverImageUrlMedium: {
+          type: DataTypes.STRING(500),
+          allowNull: true,
+          field: 'cover_image_url_medium',
+        },
+        coverImageUrlLarge: {
+          type: DataTypes.STRING(500),
+          allowNull: true,
+          field: 'cover_image_url_large',
+        },
         userId: {
           type: DataTypes.INTEGER,
           allowNull: true,
@@ -166,6 +178,8 @@ export class Book extends IdBaseModel<BookAttributes, BookCreationAttributes> im
       status: this.status,
       notes: this.notes,
       userId: this.userId,
+      coverImageUrlMedium: this.coverImageUrlMedium,
+      coverImageUrlLarge: this.coverImageUrlLarge,
       creationDate: this.creationDate,
       updateDate: this.updateDate,
     };

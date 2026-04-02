@@ -400,6 +400,64 @@ describe('BookController', () => {
         },
       });
     });
+
+    it('includes cover image URLs in external hit response', async () => {
+      jest.spyOn((bookController as any).bookRepository, 'findByIsbnCode').mockResolvedValue(null);
+      (isbnService.lookupBook as jest.Mock).mockResolvedValue({
+        success: true,
+        book: {
+          title: 'Iliad',
+          authors: [{ name: 'Homer', surname: '' }],
+          categories: [],
+          coverImageUrlMedium: 'https://covers.openlibrary.org/b/id/1-M.jpg',
+          coverImageUrlLarge: 'https://covers.openlibrary.org/b/id/1-L.jpg',
+        },
+      });
+      (Author.findOrCreate as jest.Mock).mockResolvedValue([{ id: 10 }, true]);
+      (Category.findOrCreate as jest.Mock).mockResolvedValue([{ id: 5 }, false]);
+
+      mockRequest.params = { isbn: '9780140449136' };
+      mockRequest.user = { id: 2, email: 'test@example.com', role: 'user', provider: 'cognito' };
+
+      const response = await bookController.searchBooksByIsbn(mockRequest);
+
+      expect(response.data).toMatchObject({
+        found: true,
+        external: true,
+        book: {
+          coverImageUrlMedium: 'https://covers.openlibrary.org/b/id/1-M.jpg',
+          coverImageUrlLarge: 'https://covers.openlibrary.org/b/id/1-L.jpg',
+        },
+      });
+    });
+
+    it('passes null cover image URLs when cover is absent from external hit', async () => {
+      jest.spyOn((bookController as any).bookRepository, 'findByIsbnCode').mockResolvedValue(null);
+      (isbnService.lookupBook as jest.Mock).mockResolvedValue({
+        success: true,
+        book: {
+          title: 'Iliad',
+          authors: [{ name: 'Homer', surname: '' }],
+          categories: [],
+        },
+      });
+      (Author.findOrCreate as jest.Mock).mockResolvedValue([{ id: 10 }, true]);
+      (Category.findOrCreate as jest.Mock).mockResolvedValue([{ id: 5 }, false]);
+
+      mockRequest.params = { isbn: '9780140449136' };
+      mockRequest.user = { id: 2, email: 'test@example.com', role: 'user', provider: 'cognito' };
+
+      const response = await bookController.searchBooksByIsbn(mockRequest);
+
+      expect(response.data).toMatchObject({
+        found: true,
+        external: true,
+        book: {
+          coverImageUrlMedium: null,
+          coverImageUrlLarge: null,
+        },
+      });
+    });
   });
 
   describe('user-specific methods', () => {
