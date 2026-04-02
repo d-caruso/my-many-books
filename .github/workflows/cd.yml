@@ -232,26 +232,7 @@ jobs:
           STACK_NAME="my-many-books-infrastructure-${{ needs.setup.outputs.environment }}"
           TEMPLATE_FILE="apps/api/deployment/cloudformation/infrastructure.yml"
 
-          # Set parameters based on environment
           PARAMETERS="ParameterKey=Environment,ParameterValue=${{ needs.setup.outputs.environment }}"
-
-          case "${{ needs.setup.outputs.environment }}" in
-            "prod")
-              PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.small"
-              PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=50"
-              PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=true"
-              ;;
-            "staging")
-              PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.micro"
-              PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=20"
-              PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=false"
-              ;;
-            "dev")
-              PARAMETERS="$PARAMETERS ParameterKey=DatabaseInstanceClass,ParameterValue=db.t3.micro"
-              PARAMETERS="$PARAMETERS ParameterKey=DatabaseAllocatedStorage,ParameterValue=20"
-              PARAMETERS="$PARAMETERS ParameterKey=EnableMultiAZ,ParameterValue=false"
-              ;;
-          esac
 
           # Check if stack exists and get its status
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" >/dev/null 2>&1; then
