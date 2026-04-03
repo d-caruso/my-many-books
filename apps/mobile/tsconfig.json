@@ -56,6 +56,9 @@
       "@my-many-books/hookey": [
         "../../libs/hookey/src"
       ],
+      "@my-many-books/shared-logging": [
+        "../../libs/shared-logging/src"
+      ],
       "@my-many-books/shared-design": [
         "../../libs/shared-design/src"
       ]

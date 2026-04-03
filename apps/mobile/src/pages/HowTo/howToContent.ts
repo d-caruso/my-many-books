@@ -50,8 +50,10 @@ const DEFAULT_STEPS_PER_CARD = 4;
 const buildStepsKeys = (cardKey: string, count = DEFAULT_STEPS_PER_CARD): string[] =>
   Array.from({ length: count }, (_, i) => `cards.${cardKey}.step_${i + 1}`);
 
-const isFeatureEnabled = (value: string | undefined): boolean =>
-  String(value ?? '').toLowerCase() === 'true';
+const isFeatureEnabled = (value: string | boolean | undefined): boolean => {
+  if (typeof value === 'boolean') return value;
+  return String(value ?? '').toLowerCase() === 'true';
+};
 
 export const getTutorialCapabilities = (): TutorialCapabilities => ({
   userPasswordFeature: isFeatureEnabled(process.env.EXPO_PUBLIC_FEATURE_USER_PASSWORD),
@@ -106,7 +108,7 @@ const LIBRARY_ITEMS: TutorialItem[] = [
     titleKey: 'cards.scanner.title',
     descriptionKey: 'cards.scanner.description',
     stepsKeys: buildStepsKeys('scanner'),
-    ctaPath: '/scanner',
+    ctaPath: '/(tabs)/scanner',
     ctaLabelKey: 'cta.open_scanner',
   },
   {

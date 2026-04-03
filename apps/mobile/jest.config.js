@@ -26,6 +26,7 @@ module.exports = {
     '^@my-many-books/shared-design$': '<rootDir>/../../libs/shared-design/src',
     '^@my-many-books/shared-i18n/(.*)$': '<rootDir>/../../libs/shared-i18n/$1',
     '^@my-many-books/hookey$': '<rootDir>/../../libs/hookey/src',
+    '^@my-many-books/shared-logging$': '<rootDir>/../../libs/shared-logging/src',
     '^@react-native-async-storage/async-storage$': '<rootDir>/__mocks__/@react-native-async-storage/async-storage.js',
     '^react-native$': '<rootDir>/__mocks__/react-native.js',
     '^react-native-paper$': '<rootDir>/__mocks__/react-native-paper.js',

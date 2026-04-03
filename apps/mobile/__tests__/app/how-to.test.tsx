@@ -105,6 +105,15 @@ describe('HowToScreen', () => {
     expect(mockRouter.push).toHaveBeenCalledWith('/book/add');
   });
 
+  it('calls router.push with /(tabs)/scanner for the scanner CTA', () => {
+    const root = renderScreen();
+    const scannerCta = root.findAll(
+      (node) => typeof node.type === 'string' && node.props.testID === 'how-to-cta-scanner'
+    )[0];
+    scannerCta.props.onPress();
+    expect(mockRouter.push).toHaveBeenCalledWith('/(tabs)/scanner');
+  });
+
   it('renders change-password CTA and navigates to /account when feature flag is enabled', () => {
     mockGetTutorialCapabilities.mockReturnValue({ userPasswordFeature: true });
 
