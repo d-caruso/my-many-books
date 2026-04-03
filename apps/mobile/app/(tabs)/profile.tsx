@@ -173,7 +173,7 @@ export default function ProfileScreen() {
               description={t('get_help_and_contact_support')}
               left={() => <List.Icon icon="help-circle" />}
               right={() => <List.Icon icon="chevron-right" />}
-              onPress={() => {}}
+              onPress={() => router.push('/how-to')}
               accessibilityRole="button"
               accessibilityLabel={`${t('help_and_support')}, ${t('get_help_and_contact_support')}`}
             />

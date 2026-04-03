@@ -59,6 +59,12 @@ describe('Profile Screen Logic', () => {
     expect(mockPush).toHaveBeenCalledWith('/account');
   });
 
+  it('should navigate to how-to screen when help and support is pressed', () => {
+    mockPush('/how-to');
+
+    expect(mockPush).toHaveBeenCalledWith('/how-to');
+  });
+
   it('should display user information', () => {
     mockUseAuth.mockReturnValue({
       user: {

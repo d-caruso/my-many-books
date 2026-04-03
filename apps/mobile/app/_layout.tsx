@@ -96,6 +96,13 @@ export default function RootLayout() {
                         }}
                       />
                       <Stack.Screen
+                        name="how-to"
+                        options={{
+                          title: t('common:how_to'),
+                          presentation: 'card',
+                        }}
+                      />
+                      <Stack.Screen
                         name="admin"
                         options={{
                           headerShown: false,
