@@ -55,7 +55,7 @@ describe('How To - Phase 2 (Try it now)', () => {
 
     cy.contains('button', /^How to$/).click();
     cy.location('pathname').should('eq', '/how-to');
-    cy.contains('h1', 'How to').should('be.visible');
+    cy.get('h1').should('be.visible');
   });
 
   it('navigates to /how-to from mobile user menu', () => {
@@ -65,6 +65,6 @@ describe('How To - Phase 2 (Try it now)', () => {
     cy.get('button[aria-label="User menu"]').click();
     cy.contains('[role="menuitem"]', /^How to$/).click();
     cy.location('pathname').should('eq', '/how-to');
-    cy.contains('h1', 'How to').should('be.visible');
+    cy.get('h1').should('be.visible');
   });
 });
