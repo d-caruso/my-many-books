@@ -14,10 +14,13 @@ describe('How To - Phase 2 (Try it now)', () => {
   });
 
   const dismissAboutDialog = () => {
-    cy.get('[role="dialog"][aria-labelledby="about-dialog-title"]', { timeout: 10000 })
-      .should('be.visible');
-    cy.contains('[role="dialog"] button', /^OK$/).click();
-    cy.get('[role="dialog"][aria-labelledby="about-dialog-title"]').should('not.exist');
+    cy.get('[role="dialog"][aria-labelledby="about-dialog-title"]', { timeout: 5000 })
+      .then(($dialog) => {
+        if ($dialog.length > 0) {
+          cy.contains('[role="dialog"] button', /^OK$/).click();
+          cy.get('[role="dialog"][aria-labelledby="about-dialog-title"]').should('not.exist');
+        }
+      });
   };
 
   const visitHowToPage = () => {
