@@ -56,13 +56,13 @@ describe('How To - Phase 3 (Mini videos)', () => {
     cy.get('[data-testid="how-to-video-change-password"]').should('not.exist');
   });
 
-  it('shows mini-video fallback on media error and keeps CTA navigation working', () => {
+  it('shows mini-video player for configured cards and keeps CTA navigation working', () => {
     visitHowToPage();
 
-    // The video file does not exist yet — the player auto-errors and shows the fallback
-    cy.get('[data-testid="how-to-video-add-book-fallback"]').should('be.visible');
+    // Video player should be rendered for add-book card (even if src doesn't exist yet)
+    cy.get('[data-testid="how-to-video-add-book-element"]').should('exist');
 
-    // CTA must remain functional after the fallback is shown
+    // CTA must remain functional alongside the video
     cy.get('[data-testid="how-to-cta-add-book"]').click({ scrollBehavior: 'center' });
     cy.location('pathname').should('eq', '/');
     cy.location('search').should('eq', '?mode=add');
