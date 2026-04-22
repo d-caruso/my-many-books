@@ -6,13 +6,15 @@ export interface OpenLibraryResponse {
   [isbn: string]: OpenLibraryBook | undefined;
 }
 
+export type OpenLibrarySubjectEntry = string | { name: string; url?: string };
+
 export interface OpenLibraryBook {
   title?: string;
   subtitle?: string;
   authors?: OpenLibraryAuthor[];
-  subjects?: string[];
-  subject_places?: string[];
-  subject_times?: string[];
+  subjects?: OpenLibrarySubjectEntry[];
+  subject_places?: OpenLibrarySubjectEntry[];
+  subject_times?: OpenLibrarySubjectEntry[];
   publishers?: string[];
   publish_date?: string;
   publish_places?: string[];

@@ -32,12 +32,6 @@ type ResourceTypeFilter = ResourceType | typeof ALL_RESOURCE_TYPES;
 export const SearchManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
-  const {
-    getAdminPinnedSearchResults,
-    updateAdminPinnedSearchPriority,
-    deleteAdminPinnedSearchResult,
-    createAdminPinnedSearchResult,
-  } = apiService;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +42,7 @@ export const SearchManagementPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getAdminPinnedSearchResults(
+      const response = await apiService.getAdminPinnedSearchResults(
         selectedResourceType === ALL_RESOURCE_TYPES ? undefined : selectedResourceType
       );
       setPinnedResults(response.results || []);
@@ -57,7 +51,7 @@ export const SearchManagementPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [getAdminPinnedSearchResults, selectedResourceType]);
+  }, [apiService.getAdminPinnedSearchResults, selectedResourceType]);
 
   useEffect(() => {
     fetchPinnedResults();
@@ -80,7 +74,7 @@ export const SearchManagementPage: React.FC = () => {
 
     // Update priority on server
     try {
-      await updateAdminPinnedSearchPriority(reorderedItem.id, result.destination.index);
+      await apiService.updateAdminPinnedSearchPriority(reorderedItem.id, result.destination.index);
     } catch {
       setError('Failed to update priority');
       // Revert on error
@@ -90,7 +84,7 @@ export const SearchManagementPage: React.FC = () => {
 
   const handleUnpin = async (id: number) => {
     try {
-      await deleteAdminPinnedSearchResult(id);
+      await apiService.deleteAdminPinnedSearchResult(id);
       setPinnedResults(pinnedResults.filter(item => item.id !== id));
     } catch {
       setError('Failed to unpin result');
@@ -103,7 +97,7 @@ export const SearchManagementPage: React.FC = () => {
         ? Math.max(...pinnedResults.map(r => r.priority))
         : -1;
 
-      await createAdminPinnedSearchResult({
+      await apiService.createAdminPinnedSearchResult({
         resource_type: resourceType,
         resource_id: resourceId,
         priority: maxPriority + 1,

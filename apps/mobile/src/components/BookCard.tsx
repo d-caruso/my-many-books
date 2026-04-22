@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 import { Card, Text, IconButton, Menu, Chip, useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { Book } from '@/types';
@@ -70,9 +70,15 @@ export const BookCard: React.FC<BookCardProps> = ({
     >
       <Card.Content style={styles.content}>
         <View style={styles.bookInfo}>
-          {/*{book.thumbnail && (
-            <Image source={{ uri: book.thumbnail }} style={styles.thumbnail} accessibilityLabel={`${book.title} thumbnail`} />
-          )}*/}
+          {book.coverImageUrlMedium ? (
+            <Image
+              source={{ uri: book.coverImageUrlMedium }}
+              style={styles.thumbnail}
+              accessibilityLabel={`${book.title} thumbnail`}
+            />
+          ) : (
+            <View style={styles.thumbnailPlaceholder} />
+          )}
           
           <View style={styles.textContent}>
             <Text variant="titleMedium" style={styles.title} numberOfLines={2} testID="book-title" accessibilityRole="header">
@@ -192,6 +198,13 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 4,
     marginRight: 12,
+  },
+  thumbnailPlaceholder: {
+    width: 60,
+    height: 80,
+    borderRadius: 4,
+    marginRight: 12,
+    backgroundColor: '#f0f0f0',
   },
   textContent: {
     flex: 1,

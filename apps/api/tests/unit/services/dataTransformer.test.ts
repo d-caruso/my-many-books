@@ -10,25 +10,19 @@ describe('DataTransformer', () => {
     it('should transform basic book data correctly', () => {
       const olBook: OpenLibraryBook = {
         title: 'Test Book',
-        subtitle: 'A Test Subtitle',
         authors: [{ name: 'John Doe' }],
         subjects: ['Fiction', 'Science Fiction'],
-        publishers: ['Test Publisher'],
         publish_date: '2023',
-        number_of_pages: 300,
       };
 
       const result = DataTransformer.transformBook(olBook, '9780451524935');
 
       expect(result.isbnCode).toBe('9780451524935');
       expect(result.title).toBe('Test Book');
-      expect(result.subtitle).toBe('A Test Subtitle');
       expect(result.authors).toHaveLength(1);
       expect(result.authors[0]!.name).toBe('John');
       expect(result.authors[0]!.surname).toBe('Doe');
       expect(result.categories).toHaveLength(2);
-      expect(result.publishers).toEqual(['Test Publisher']);
-      expect(result.pages).toBe(300);
     });
 
     it('should handle missing title gracefully', () => {
@@ -93,6 +87,77 @@ describe('DataTransformer', () => {
       expect(result.categories.find(c => c.name === '21st century' && c.type === 'topic')).toBeDefined();
     });
 
+    describe('OpenLibrary payload hardening', () => {
+      it('handles subjects as plain strings', () => {
+        const result = DataTransformer.transformBook(
+          { title: 'Test', subjects: ['Fiction', 'Drama'] },
+          '9780140449136'
+        );
+
+        expect(result.categories).toEqual([
+          { name: 'Fiction', type: 'subject' },
+          { name: 'Drama', type: 'subject' },
+        ]);
+      });
+
+      it('handles subjects as objects with name and url', () => {
+        const result = DataTransformer.transformBook(
+          {
+            title: 'Test',
+            subjects: [
+              { name: 'Fiction', url: 'https://openlibrary.org/subjects/fiction' },
+              { name: 'Drama', url: 'https://openlibrary.org/subjects/drama' },
+            ],
+          },
+          '9780140449136'
+        );
+
+        expect(result.categories).toEqual([
+          { name: 'Fiction', type: 'subject' },
+          { name: 'Drama', type: 'subject' },
+        ]);
+      });
+
+      it('handles a mixed array of strings and objects', () => {
+        const result = DataTransformer.transformBook(
+          {
+            title: 'Test',
+            subjects: ['Fiction', { name: 'Drama', url: 'https://openlibrary.org/subjects/drama' }],
+          },
+          '9780140449136'
+        );
+
+        expect(result.categories).toEqual([
+          { name: 'Fiction', type: 'subject' },
+          { name: 'Drama', type: 'subject' },
+        ]);
+      });
+
+      it('does not throw for real ISBN 9780140449136 payload shape', () => {
+        expect(() =>
+          DataTransformer.transformBook(
+            {
+              title: 'Test',
+              subjects: [
+                {
+                  name: 'Ancient Greece',
+                  url: 'https://openlibrary.org/subjects/ancient_greece',
+                },
+              ],
+              subject_places: [
+                {
+                  name: 'Greece',
+                  url: 'https://openlibrary.org/subjects/place:greece',
+                },
+              ],
+              subject_times: ['Ancient'],
+            },
+            '9780140449136'
+          )
+        ).not.toThrow();
+      });
+    });
+
     it('should parse edition dates correctly', () => {
       const testCases = [
         { input: '2023', expected: '2023' },
@@ -118,17 +183,6 @@ describe('DataTransformer', () => {
       });
     });
 
-    it('should extract language correctly', () => {
-      const olBook: OpenLibraryBook = {
-        title: 'Test',
-        languages: [{ key: '/languages/eng' }],
-      };
-
-      const result = DataTransformer.transformBook(olBook, '9780451524935');
-
-      expect(result.language).toBe('English');
-    });
-
     it('should deduplicate categories', () => {
       const olBook: OpenLibraryBook = {
         title: 'Test',
@@ -149,6 +203,30 @@ describe('DataTransformer', () => {
       expect(() => {
         DataTransformer.transformBook(olBook, 'invalid-isbn');
       }).toThrow('Invalid ISBN provided for transformation');
+    });
+
+    it('should extract cover image URLs from OL cover field', () => {
+      const olBook: OpenLibraryBook = {
+        title: 'Test Book',
+        cover: {
+          medium: 'https://covers.openlibrary.org/b/id/12345-M.jpg',
+          large: 'https://covers.openlibrary.org/b/id/12345-L.jpg',
+        },
+      };
+
+      const result = DataTransformer.transformBook(olBook, '9780451524935');
+
+      expect(result.coverImageUrlMedium).toBe('https://covers.openlibrary.org/b/id/12345-M.jpg');
+      expect(result.coverImageUrlLarge).toBe('https://covers.openlibrary.org/b/id/12345-L.jpg');
+    });
+
+    it('should set cover URLs to undefined when cover field is absent', () => {
+      const olBook: OpenLibraryBook = { title: 'Test Book' };
+
+      const result = DataTransformer.transformBook(olBook, '9780451524935');
+
+      expect(result.coverImageUrlMedium).toBeUndefined();
+      expect(result.coverImageUrlLarge).toBeUndefined();
     });
   });
 });

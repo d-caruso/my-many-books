@@ -66,6 +66,8 @@ export const createBookSchema = z.object({
   notes: z.string().max(BOOK_CONSTRAINTS.NOTES.MAX_LENGTH, 'Notes too long').nullable().optional(),
   selectedAuthors: z.array(z.any()).optional(), // Author objects
   selectedCategories: z.array(z.number()).optional(),
+  coverImageUrlMedium: z.string().nullable().optional(),
+  coverImageUrlLarge: z.string().nullable().optional(),
 });
 
 /**

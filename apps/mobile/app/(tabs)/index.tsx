@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { View, FlatList, RefreshControl, useWindowDimensions } from 'react-native';
 import { FAB, Searchbar, Chip, Text, Snackbar, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
@@ -154,61 +154,57 @@ export default function BooksScreen() {
     />
   );
 
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: theme.colors.background,
-        },
-        header: {
-          padding: 16,
-          backgroundColor: theme.colors.surface,
-          elevation: 2,
-          shadowColor: theme.colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-        },
-        title: {
-          marginBottom: 16,
-          fontWeight: 'bold',
-        },
-        searchbar: {
-          marginBottom: 8,
-        },
-        chipContainer: {
-          flexDirection: 'row',
-          marginTop: 8,
-        },
-        chip: {
-          marginRight: 8,
-        },
-        errorContainer: {
-          padding: 16,
-          backgroundColor: theme.colors.errorContainer,
-        },
-        errorText: {
-          color: theme.colors.error,
-          textAlign: 'center',
-        },
-        listContainer: {
-          padding: 16,
-          flexGrow: 1,
-        },
-        fab: {
-          position: 'absolute',
-          margin: 16,
-          right: 0,
-          bottom: 0,
-        },
-        gridItem: {
-          flex: 1,
-          margin: 6,
-        },
-      }),
-    [theme]
-  );
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    header: {
+      padding: 16,
+      backgroundColor: theme.colors.surface,
+      elevation: 2,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    title: {
+      marginBottom: 16,
+      fontWeight: 'bold',
+    },
+    searchbar: {
+      marginBottom: 8,
+    },
+    chipContainer: {
+      flexDirection: 'row',
+      marginTop: 8,
+    },
+    chip: {
+      marginRight: 8,
+    },
+    errorContainer: {
+      padding: 16,
+      backgroundColor: theme.colors.errorContainer,
+    },
+    errorText: {
+      color: theme.colors.error,
+      textAlign: 'center',
+    },
+    listContainer: {
+      padding: 16,
+      flexGrow: 1,
+    },
+    fab: {
+      position: 'absolute',
+      margin: 16,
+      right: 0,
+      bottom: 0,
+    },
+    gridItem: {
+      flex: 1,
+      margin: 6,
+    },
+  });
 
   if (loading && books.length === 0) {
     return <LoadingSpinner />;

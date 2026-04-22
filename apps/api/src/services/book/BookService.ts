@@ -3,6 +3,7 @@
 // Business logic layer for book operations
 // ================================================================
 
+import { UniqueConstraintError } from 'sequelize';
 import { inject, injectable } from 'inversify';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { TYPES } from '../../container/types';
@@ -55,6 +56,8 @@ export interface CreateBookInput {
   authorIds?: number[];
   categoryIds?: number[];
   userId?: number;
+  coverImageUrlMedium?: string | null;
+  coverImageUrlLarge?: string | null;
 }
 
 export type UpdateBookInput = Partial<CreateBookInput>;
@@ -81,7 +84,15 @@ class BookService {
     const associations = this.extractAssociations(input);
     const payload = this.normalizePayload({ ...input, userId: ownerId });
 
-    const createdBook = await this.bookRepository.create(payload, associations);
+    let createdBook: BookEntity;
+    try {
+      createdBook = await this.bookRepository.create(payload, associations);
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        throw new BookServiceError('ISBN_EXISTS');
+      }
+      throw error;
+    }
     await this.emitBookEvent(EVENTS.BOOK.CREATE.AFTER, {
       book: createdBook,
       user: this.mapEventUser(userContext),
@@ -305,6 +316,8 @@ class BookService {
       status: input.status,
       notes: input.notes,
       userId: input.userId,
+      coverImageUrlMedium: input.coverImageUrlMedium,
+      coverImageUrlLarge: input.coverImageUrlLarge,
     };
   }
 
@@ -319,6 +332,8 @@ class BookService {
     if (input.status !== undefined) payload.status = input.status;
     if (input.notes !== undefined) payload.notes = input.notes;
     if (input.isbnCode !== undefined) payload.isbnCode = input.isbnCode;
+    if (input.coverImageUrlMedium !== undefined) payload.coverImageUrlMedium = input.coverImageUrlMedium;
+    if (input.coverImageUrlLarge !== undefined) payload.coverImageUrlLarge = input.coverImageUrlLarge;
 
     return payload;
   }

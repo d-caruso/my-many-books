@@ -1,5 +1,5 @@
 // Create API services from shared libraries with mobile-specific configurations
-import { createApiClient, HttpClient, ApiClientConfig, RequestConfig } from '@my-many-books/shared-api/';
+import { createApiClient, HttpClient, ApiClientConfig, RequestConfig } from '@my-many-books/shared-api';
 import { authService } from './authService';
 import NetInfo from '@react-native-community/netinfo';
 import i18n from '../i18n';

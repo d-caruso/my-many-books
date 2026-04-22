@@ -10,6 +10,7 @@ import type {
   Author,
   Book,
   Category,
+  IsbnSearchResponse,
   PaginatedResponse,
   SearchFilters,
   SearchResult,
@@ -145,7 +146,9 @@ class ApiService extends AdminApiService {
       ...(bookData.status && { status: bookData.status }),
       ...(sanitizeString(bookData.notes) && { notes: sanitizeString(bookData.notes) }),
       ...(authorIds && { authorIds }),
-      ...(categoryIds && { categoryIds })
+      ...(categoryIds && { categoryIds }),
+      ...(bookData.coverImageUrlMedium !== undefined && { coverImageUrlMedium: bookData.coverImageUrlMedium }),
+      ...(bookData.coverImageUrlLarge !== undefined && { coverImageUrlLarge: bookData.coverImageUrlLarge }),
     };
 
     return this.apiClient.books.createBook(backendData);
@@ -185,6 +188,9 @@ class ApiService extends AdminApiService {
     if (categoryIds) {
       backendData.categoryIds = categoryIds;
     }
+
+    if (bookData.coverImageUrlMedium !== undefined) backendData.coverImageUrlMedium = bookData.coverImageUrlMedium;
+    if (bookData.coverImageUrlLarge !== undefined) backendData.coverImageUrlLarge = bookData.coverImageUrlLarge;
 
     const isPartialUpdate = Object.keys(backendData).length === 1 && backendData.status !== undefined;
 
@@ -238,6 +244,16 @@ class ApiService extends AdminApiService {
 
   // ISBN lookup
   async searchByISBN(isbn: string): Promise<Book | null> {
+    const result = await this.searchByIsbnDetailed(isbn);
+
+    if (!result.found || result.external) {
+      return null;
+    }
+
+    return result.book;
+  }
+
+  async searchByIsbnDetailed(isbn: string): Promise<IsbnSearchResponse> {
     return this.apiClient.books.searchByISBN(isbn);
   }
 

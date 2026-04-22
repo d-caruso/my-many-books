@@ -3,7 +3,7 @@
 // ================================================================
 
 import { getLogger } from '@my-many-books/shared-logging';
-import { OpenLibraryBook } from '@/types/openLibrary';
+import { OpenLibraryBook, OpenLibrarySubjectEntry } from '@/types/openLibrary';
 import {
   TransformedBookData,
   TransformedAuthorData,
@@ -24,19 +24,21 @@ export class DataTransformer {
     return {
       isbnCode: normalizedIsbn,
       title: DataTransformer.extractTitle(olBook),
-      subtitle: olBook.subtitle,
       authors: DataTransformer.extractAuthors(olBook),
       categories: DataTransformer.extractCategories(olBook),
       editionNumber: DataTransformer.extractEditionNumber(olBook),
       editionDate: DataTransformer.extractEditionDate(olBook),
-      publishers: olBook.publishers,
-      pages: olBook.number_of_pages,
-      language: DataTransformer.extractLanguage(olBook),
-      coverUrls: DataTransformer.extractCoverUrls(olBook),
-      description: olBook.notes,
-      physicalFormat: olBook.physical_format,
-      weight: olBook.weight,
-      dimensions: olBook.physical_dimensions,
+      // Not used by the client — kept in TransformedBookData for future use:
+      // subtitle: olBook.subtitle,
+      // publishers: olBook.publishers,
+      // pages: olBook.number_of_pages,
+      // language: DataTransformer.extractLanguage(olBook),
+      coverImageUrlMedium: olBook.cover?.medium || undefined,
+      coverImageUrlLarge: olBook.cover?.large || undefined,
+      // description: olBook.notes (OL notes are internal catalog metadata, not user-facing)
+      // physicalFormat: olBook.physical_format,
+      // weight: olBook.weight,
+      // dimensions: olBook.physical_dimensions,
     };
   }
 
@@ -49,23 +51,19 @@ export class DataTransformer {
       return [];
     }
 
-    return olBook.authors.map(author => {
+    return olBook.authors.flatMap(author => {
       const authorName = author.name.trim();
-      const { name, surname } = DataTransformer.parseAuthorName(authorName);
-
-      return {
-        name,
-        surname,
-        nationality: undefined, // Open Library doesn't provide nationality in book API
-      };
+      const parsed = DataTransformer.parseAuthorName(authorName);
+      if (!parsed) return [];
+      return [{ name: parsed.name, surname: parsed.surname, nationality: undefined }];
     });
   }
 
-  private static parseAuthorName(authorName: string): { name: string; surname: string } {
+  private static parseAuthorName(authorName: string): { name: string; surname: string } | null {
     const parts = authorName.split(' ').filter(part => part.length > 0);
 
     if (parts.length === 0) {
-      return { name: 'Unknown', surname: 'Author' };
+      return null;
     }
 
     if (parts.length === 1) {
@@ -92,47 +90,37 @@ export class DataTransformer {
   }
 
   private static extractCategories(olBook: OpenLibraryBook): TransformedCategoryData[] {
-    const categories: TransformedCategoryData[] = [];
-
-    // Extract subjects
-    if (olBook.subjects) {
-      olBook.subjects.forEach(subject => {
-        if (subject && subject.trim().length > 0) {
-          categories.push({
-            name: DataTransformer.normalizeCategory(subject),
-            type: 'subject',
-          });
-        }
-      });
-    }
-
-    // Extract subject places as topics
-    if (olBook.subject_places) {
-      olBook.subject_places.forEach(place => {
-        if (place && place.trim().length > 0) {
-          categories.push({
-            name: DataTransformer.normalizeCategory(place),
-            type: 'topic',
-          });
-        }
-      });
-    }
-
-    // Extract subject times as topics
-    if (olBook.subject_times) {
-      olBook.subject_times.forEach(time => {
-        if (time && time.trim().length > 0) {
-          categories.push({
-            name: DataTransformer.normalizeCategory(time),
-            type: 'topic',
-          });
-        }
-      });
-    }
+    const categories: TransformedCategoryData[] = [
+      ...DataTransformer.extractCategoriesByType(olBook.subjects, 'subject'),
+      ...DataTransformer.extractCategoriesByType(olBook.subject_places, 'topic'),
+      ...DataTransformer.extractCategoriesByType(olBook.subject_times, 'topic'),
+    ];
 
     // Remove duplicates and limit to reasonable number
     const uniqueCategories = DataTransformer.deduplicateCategories(categories);
     return uniqueCategories.slice(0, 10); // Limit to 10 categories max
+  }
+
+  private static extractCategoriesByType(
+    entries: OpenLibrarySubjectEntry[] | undefined,
+    type: 'subject' | 'topic'
+  ): TransformedCategoryData[] {
+    if (!entries || entries.length === 0) {
+      return [];
+    }
+
+    return entries
+      .map(entry => DataTransformer.normalizeSubjectEntry(entry))
+      .filter(entry => entry.length > 0)
+      .map(entry => ({
+        name: DataTransformer.normalizeCategory(entry),
+        type,
+      }));
+  }
+
+  private static normalizeSubjectEntry(entry: OpenLibrarySubjectEntry): string {
+    const value = typeof entry === 'string' ? entry : entry.name;
+    return value.trim();
   }
 
   private static normalizeCategory(category: string): string {
@@ -226,50 +214,4 @@ export class DataTransformer {
     }
   }
 
-  private static extractLanguage(olBook: OpenLibraryBook): string | undefined {
-    if (!olBook.languages || olBook.languages.length === 0) {
-      return undefined;
-    }
-
-    // Open Library language format: { key: "/languages/eng" }
-    const language = olBook.languages[0];
-    if (!language) {
-      return undefined;
-    }
-
-    const langKey = language.key;
-    const langCode = langKey.split('/').pop();
-
-    // Convert common language codes to readable names
-    const languageMap: Record<string, string> = {
-      eng: 'English',
-      spa: 'Spanish',
-      fre: 'French',
-      ger: 'German',
-      ita: 'Italian',
-      por: 'Portuguese',
-      rus: 'Russian',
-      jpn: 'Japanese',
-      chi: 'Chinese',
-      ara: 'Arabic',
-    };
-
-    return langCode ? languageMap[langCode] || langCode : undefined;
-  }
-
-  private static extractCoverUrls(
-    olBook: OpenLibraryBook
-  ):
-    | { small?: string | undefined; medium?: string | undefined; large?: string | undefined }
-    | undefined {
-    if (!olBook.cover) {
-      return undefined;
-    }
-
-    return {
-      small: olBook.cover.small || undefined,
-      medium: olBook.cover.medium || undefined,
-      large: olBook.cover.large || undefined,
-    };
-  }
 }

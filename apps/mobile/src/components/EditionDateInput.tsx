@@ -210,70 +210,66 @@ export const EditionDateInput: React.FC<EditionDateInputProps> = ({
     </View>
   );
 
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        container: { marginBottom: 16 },
-        sectionLabel: { marginBottom: 8, fontWeight: '600' },
-        row: { flexDirection: 'row', alignItems: 'flex-end' },
-        yearField: { flex: 1.4, marginRight: 8 },
-        smallField: { flex: 1, marginRight: 8 },
-        calendarField: { width: 64, alignItems: 'center' },
-        fieldLabel: {
-          marginBottom: 6,
-          fontSize: 12,
-          color: theme.colors.onSurfaceVariant,
-          minHeight: 16,
-        },
-        selectorButton: {
-          minHeight: 56,
-          borderWidth: 1,
-          borderColor: theme.colors.outline,
-          borderRadius: 12,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: theme.colors.surface,
-          paddingHorizontal: 8,
-        },
-        selectorButtonMuted: { opacity: 0.6 },
-        calendarButton: {
-          margin: 0,
-          borderWidth: 1,
-          borderColor: theme.colors.outline,
-          width: 56,
-          height: 56,
-          borderRadius: 12,
-        },
-        calendarButtonError: { borderColor: theme.colors.error },
-        optionsContainer: { marginTop: 8 },
-        optionsRow: { flexDirection: 'row', alignItems: 'center', paddingRight: 8 },
-        optionChip: {
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          borderWidth: 1,
-          borderColor: theme.colors.outline,
-          borderRadius: 16,
-          marginRight: 8,
-          backgroundColor: theme.colors.surface,
-        },
-        optionChipClear: { minWidth: 36, alignItems: 'center' },
-        inlineCalendarContainer: {
-          marginTop: 12,
-          padding: 8,
-          borderWidth: 1,
-          borderColor: theme.colors.outlineVariant,
-          borderRadius: 12,
-          backgroundColor: theme.colors.surface,
-        },
-        helperText: {
-          marginTop: 6,
-          fontSize: 12,
-          color: theme.colors.onSurfaceVariant,
-        },
-        helperTextError: { color: theme.colors.error },
-      }),
-    [theme]
-  );
+  const styles = StyleSheet.create({
+    container: { marginBottom: 16 },
+    sectionLabel: { marginBottom: 8, fontWeight: '600' },
+    row: { flexDirection: 'row', alignItems: 'flex-end' },
+    yearField: { flex: 1.4, marginRight: 8 },
+    smallField: { flex: 1, marginRight: 8 },
+    calendarField: { width: 64, alignItems: 'center' },
+    fieldLabel: {
+      marginBottom: 6,
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      minHeight: 16,
+    },
+    selectorButton: {
+      minHeight: 56,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: 8,
+    },
+    selectorButtonMuted: { opacity: 0.6 },
+    calendarButton: {
+      margin: 0,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      width: 56,
+      height: 56,
+      borderRadius: 12,
+    },
+    calendarButtonError: { borderColor: theme.colors.error },
+    optionsContainer: { marginTop: 8 },
+    optionsRow: { flexDirection: 'row', alignItems: 'center', paddingRight: 8 },
+    optionChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      borderRadius: 16,
+      marginRight: 8,
+      backgroundColor: theme.colors.surface,
+    },
+    optionChipClear: { minWidth: 36, alignItems: 'center' },
+    inlineCalendarContainer: {
+      marginTop: 12,
+      padding: 8,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
+      borderRadius: 12,
+      backgroundColor: theme.colors.surface,
+    },
+    helperText: {
+      marginTop: 6,
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+    },
+    helperTextError: { color: theme.colors.error },
+  });
 
   return (
     <View style={styles.container}>

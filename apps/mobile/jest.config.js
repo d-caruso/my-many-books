@@ -22,6 +22,7 @@ module.exports = {
     '^@my-many-books/shared-forms$': '<rootDir>/../../libs/shared-forms/src',
     '^@my-many-books/shared-auth$': '<rootDir>/../../libs/shared-auth/src',
     '^@my-many-books/shared-i18n$': '<rootDir>/../../libs/shared-i18n/src',
+    '^@my-many-books/shared-logging$': '<rootDir>/../../libs/shared-logging/src',
     '^@my-many-books/shared-validation$': '<rootDir>/../../libs/shared-validation/src',
     '^@my-many-books/shared-design$': '<rootDir>/../../libs/shared-design/src',
     '^@my-many-books/shared-i18n/(.*)$': '<rootDir>/../../libs/shared-i18n/$1',

@@ -9,7 +9,7 @@ frameworkVersion: '4.19.1'
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ${opt:region, 'us-west-2'}
+  region: ${opt:region, 'eu-south-1'}
   stage: ${opt:stage, 'dev'}
   memorySize: 512
   timeout: 30
@@ -22,12 +22,19 @@ provider:
   # Environment variables
   environment:
     NODE_ENV: ${self:provider.stage}
-    DB_HOST: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabaseEndpoint, ''}
-    DB_PORT: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabasePort, '3306'}
+    # Legacy AWS RDS config:
+    # DB_HOST: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabaseEndpoint, ''}
+    # DB_PORT: ${cf:my-many-books-infrastructure-${self:provider.stage}.DatabasePort, '3306'}
+    # DB_USER: admin
+    # DB_PASSWORD: ${self:custom.dbCredentials.password}
+    # DB_SSL: 'true'
+    # Misterdomain MariaDB:
+    DB_HOST: '217.64.201.48'
+    DB_PORT: '3306'
     DB_NAME: my_many_books
-    DB_USER: admin
-    DB_PASSWORD: ${self:custom.dbCredentials.password}
-    DB_SSL: 'true'
+    DB_USER: mmb_api
+    DB_PASSWORD: ${env:DB_PASSWORD}
+    DB_SSL: 'false'
     DB_POOL_MAX: ${env:DB_POOL_MAX, '20'}
     DB_POOL_MIN: ${env:DB_POOL_MIN, '5'}
     API_VERSION: ${env:API_VERSION, '1.0.0'}
@@ -38,15 +45,24 @@ provider:
     # Security settings
     API_KEYS_ENABLED: ${env:API_KEYS_ENABLED, 'false'}
     COGNITO_ENABLED: ${env:COGNITO_ENABLED, 'true'}
-    COGNITO_USER_POOL_ID: ${cf:my-many-books-cognito-${self:provider.stage}.CognitoUserPoolId}
-    COGNITO_CLIENT_ID: ${cf:my-many-books-cognito-${self:provider.stage}.CognitoUserPoolClientId}
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID, 'eu-south-1_7DrGnKIth'}
+    COGNITO_USER_POOL_CLIENT_ID: ${env:COGNITO_USER_POOL_CLIENT_ID, '6q8tp4bklciquql00oo5ut7b0o'}
     SECURITY_HEADERS_ENABLED: ${env:SECURITY_HEADERS_ENABLED, 'true'}
     
+    # Google OAuth settings
+    GOOGLE_OAUTH_STATE_SECRET: ${env:GOOGLE_OAUTH_STATE_SECRET}
+    GOOGLE_OAUTH_REDIRECT_URI_WEB: ${env:GOOGLE_OAUTH_REDIRECT_URI_WEB, 'https://api.mymanybooks.com/api/v1/auth/google/callback'}
+    GOOGLE_OAUTH_REDIRECT_URIS_MOBILE: ${env:GOOGLE_OAUTH_REDIRECT_URIS_MOBILE, 'my-many-books://auth'}
+    GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX: ${env:GOOGLE_OAUTH_REDIRECT_URI_MOBILE_PREFIX, 'my-many-books://'}
+
     # External service settings
     OPEN_LIBRARY_BASE_URL: ${env:OPEN_LIBRARY_BASE_URL, 'https://openlibrary.org'}
     GOOGLE_BOOKS_API_KEY: ${env:GOOGLE_BOOKS_API_KEY, ''}
     GOOGLE_BOOKS_BASE_URL: ${env:GOOGLE_BOOKS_BASE_URL, 'https://www.googleapis.com/books/v1'}
     
+    # Frontend Configuration (for CORS)
+    FRONTEND_URL: ${env:FRONTEND_URL, 'https://mymanybooks.com'}
+
     # Performance settings
     CACHE_TTL: ${env:CACHE_TTL, '3600'}
     REQUEST_TIMEOUT: ${env:REQUEST_TIMEOUT, '10000'}
@@ -79,8 +95,14 @@ provider:
           Resource: 'arn:aws:execute-api:*:*:*'
         - Effect: Allow
           Action:
-            - secretsmanager:GetSecretValue
-          Resource: 'arn:aws:secretsmanager:*:*:secret:my-many-books-infrastructure-*'
+            - cognito-idp:AdminGetUser
+            - cognito-idp:AdminUserGlobalSignOut
+          Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+        # Legacy: Secrets Manager access (no longer needed - using GitHub Secrets)
+        # - Effect: Allow
+        #   Action:
+        #     - secretsmanager:GetSecretValue
+        #   Resource: 'arn:aws:secretsmanager:*:*:secret:my-many-books-infrastructure-*'
 
   # Tags for resource management  
   tags:
@@ -117,8 +139,8 @@ build:
       - react-dom
 
 custom:
-  # Fetch DB credentials from Secrets Manager
-  dbCredentials: ${ssm:/aws/reference/secretsmanager/my-many-books-infrastructure-${self:provider.stage}-db-credentials}
+  # Legacy: Fetch DB credentials from Secrets Manager
+  # dbCredentials: ${ssm:/aws/reference/secretsmanager/my-many-books-infrastructure-${self:provider.stage}-db-credentials}
 
   serverless-offline:
     httpPort: 3000
@@ -132,31 +154,9 @@ functions:
       - http:
           path: /{proxy+}
           method: ANY
-          cors:
-            origin: '*'
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - X-Requested-With
-            allowCredentials: true
       - http:
           path: /
           method: ANY
-          cors:
-            origin: '*'
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - X-Requested-With
-            allowCredentials: true
 
 # CloudFormation Resources
 # Cognito resources moved to standalone cognito-stack.yml

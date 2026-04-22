@@ -70,6 +70,12 @@ vi.mock('@my-many-books/shared-api', () => ({
   })),
 }));
 
+// SettingsProvider now calls useAuth() — provide a logged-in user so it doesn't throw
+vi.mock('@my-many-books/shared-auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@my-many-books/shared-auth')>();
+  return { ...actual, useAuth: vi.fn().mockReturnValue({ user: { id: 1 } }) };
+});
+
 // Mock API service
 const mockApiService = {
   getAuditLoggingStatus: vi.fn(),

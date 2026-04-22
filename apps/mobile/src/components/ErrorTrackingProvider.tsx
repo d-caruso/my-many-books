@@ -8,7 +8,7 @@ interface ErrorTrackingProviderProps {
 /**
  * Provider component that initializes and manages error tracking
  */
-export function ErrorTrackingProvider({ children }: ErrorTrackingProviderProps): JSX.Element {
+export function ErrorTrackingProvider({ children }: ErrorTrackingProviderProps): React.JSX.Element {
   useEffect(() => {
     // Start error tracking when app initializes
     errorTrackingService.startTracking();

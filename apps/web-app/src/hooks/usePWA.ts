@@ -52,6 +52,10 @@ export const usePWA = (): PWAState & PWAActions => {
 
     // Register service worker once
     if ('serviceWorker' in navigator && !swRegistrationPromise) {
+      // Capture before registration: null on first visit, set on subsequent visits.
+      // Only reload on controller change when updating an existing SW, not on initial activation.
+      const hadController = Boolean(navigator.serviceWorker.controller);
+
       swRegistrationPromise = navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
@@ -81,9 +85,12 @@ export const usePWA = (): PWAState & PWAActions => {
           return undefined;
         });
 
-      // Handle controller change
+      // Reload when SW updates (new version deployed). Skip on initial activation to
+      // avoid a redundant full-page reload caused by clientsClaim() in sw.ts.
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
+        if (hadController) {
+          window.location.reload();
+        }
       });
     } else if (swRegistrationPromise) {
       // Reuse existing promise

@@ -23,7 +23,6 @@ import { BookSearchResults } from './BookSearchResults';
 import { useBookSearch } from '../../hooks/useBookSearch';
 import { SearchFiltersSchema } from '@my-many-books/shared-types';
 import type { Book, SearchFilters } from '@my-many-books/shared-types';
-import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../../constants/scanner';
 import { useProtectedViewTransition } from '../../contexts/ViewTransitionContext';
 
 const BookSearchPage: React.FC = () => {
@@ -107,12 +106,6 @@ const BookSearchPage: React.FC = () => {
         }
 
         if (result && scannerSource === 'scanner') {
-          try {
-            window.sessionStorage.removeItem(ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY);
-          } catch {
-            // Non-blocking cleanup; search UX should proceed.
-          }
-
           setScannerNoticeMessage(
             scannerCopy === 'success'
               ? t('isbn_copied', { ns: 'scanner', defaultValue: 'ISBN copied' })
@@ -202,46 +195,6 @@ const BookSearchPage: React.FC = () => {
         </Typography>
       </Box>
 
-      <Box mb={4}>
-        <BookSearchForm
-          onSearch={handleSearch}
-          loading={loading}
-          initialQuery={initialQuery}
-          initialFilters={initialFilters}
-        />
-      </Box>
-
-      {(books.length > 0 || error) && (
-        <Box
-          mb={4}
-          display="flex"
-          flexWrap="wrap"
-          justifyContent="space-between"
-          alignItems="center"
-          gap={2}
-        >
-          <Button
-            onClick={handleClearSearch}
-            color="inherit"
-            size="small"
-            startIcon={<CloseIcon />}
-          >
-            {t('books:clear_search')}
-          </Button>
-          <Button
-            onClick={() => {
-              runMainContentTransition(() => {
-                navigate('/?mode=add');
-              });
-            }}
-            variant="contained"
-            startIcon={<AddIcon />}
-          >
-            {t('books:add_new_book')}
-          </Button>
-        </Box>
-      )}
-
       {/* Search results */}
       <BookSearchResults
         books={isbnParam ? (isbnBook ? [isbnBook] : []) : books}
@@ -308,6 +261,46 @@ const BookSearchPage: React.FC = () => {
               </Paper>
             </Grid>
           </Grid>
+        </Box>
+      )}
+
+      <Box mt={4}>
+        <BookSearchForm
+          onSearch={handleSearch}
+          loading={loading}
+          initialQuery={initialQuery}
+          initialFilters={initialFilters}
+        />
+      </Box>
+
+      {(books.length > 0 || error) && (
+        <Box
+          mt={2}
+          display="flex"
+          flexWrap="wrap"
+          justifyContent="space-between"
+          alignItems="center"
+          gap={2}
+        >
+          <Button
+            onClick={handleClearSearch}
+            color="inherit"
+            size="small"
+            startIcon={<CloseIcon />}
+          >
+            {t('books:clear_search')}
+          </Button>
+          <Button
+            onClick={() => {
+              runMainContentTransition(() => {
+                navigate('/?mode=add');
+              });
+            }}
+            variant="contained"
+            startIcon={<AddIcon />}
+          >
+            {t('books:add_new_book')}
+          </Button>
         </Box>
       )}
 

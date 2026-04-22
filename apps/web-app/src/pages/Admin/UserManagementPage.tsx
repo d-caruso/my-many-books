@@ -50,7 +50,6 @@ interface UserFormData {
 export const UserManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const { apiService } = useApi();
-  const { getAdminUsers, updateAdminUser, deleteAdminUser } = apiService;
 
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +84,7 @@ export const UserManagementPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response: AdminUsersResponse = await getAdminUsers(
+      const response: AdminUsersResponse = await apiService.getAdminUsers(
         paginationModel.page + 1,
         paginationModel.pageSize,
         searchTerm || undefined
@@ -99,7 +98,7 @@ export const UserManagementPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [getAdminUsers, paginationModel.page, paginationModel.pageSize, searchTerm]);
+  }, [apiService.getAdminUsers, paginationModel.page, paginationModel.pageSize, searchTerm]);
 
   useEffect(() => {
     fetchUsers();
@@ -136,7 +135,7 @@ export const UserManagementPage: React.FC = () => {
       setFormLoading(true);
       setFormError(null);
 
-      await updateAdminUser(selectedUser.id, formData);
+      await apiService.updateAdminUser(selectedUser.id, formData);
 
       setEditDialogOpen(false);
       setSelectedUser(null);
@@ -165,7 +164,7 @@ export const UserManagementPage: React.FC = () => {
     try {
       setDeleteLoading(true);
 
-      await deleteAdminUser(userToDelete.id);
+      await apiService.deleteAdminUser(userToDelete.id);
 
       setDeleteDialogOpen(false);
       setUserToDelete(null);

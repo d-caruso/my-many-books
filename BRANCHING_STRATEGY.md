@@ -44,14 +44,45 @@ For simple features, task branches merge directly into the feature branch — no
 
 ### 1. Start Work
 
-```bash
-# Always check current branch first
-git branch
+Always check your current branch before creating anything:
 
-# If on develop or main — STOP and create a branch
+```bash
+git branch
+# If on develop or main — STOP. Create a branch first.
+```
+
+**Feature branch** — created from `develop`:
+```bash
 git checkout develop
 git pull origin develop
 git checkout -b feature/<name>
+```
+
+**Phase branch** — created from its feature branch, only after the previous phase is merged:
+```bash
+git checkout feature/<name>
+git pull origin feature/<name>
+git checkout -b feature/<name>-Phase<N>-<label>
+```
+
+**Task branch** — created from its phase branch (or directly from the feature branch for simple features):
+```bash
+git checkout feature/<name>-Phase<N>-<label>
+git pull origin feature/<name>-Phase<N>-<label>
+git checkout -b task/<name>-Task<N.N>-<label>
+```
+
+**Fix / Refactor / Docs branch** — created from `develop`:
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b fix/<name>
+```
+
+**Hotfix branch** — created from the feature branch it targets:
+```bash
+git checkout feature/<name>
+git checkout -b hotfix/<description>
 ```
 
 ### 2. Commit Format

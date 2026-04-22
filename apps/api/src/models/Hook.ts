@@ -76,6 +76,11 @@ export class Hook extends IdBaseModel<HookAttributes, HookCreationAttributes> im
           type: DataTypes.JSON,
           allowNull: false,
           field: 'action_config',
+          get(): Record<string, unknown> {
+            const value = this.getDataValue('actionConfig') as Record<string, unknown> | string;
+            // MySQL 8.0 returns JSON columns as objects, MariaDB returns them as strings
+            return typeof value === 'string' ? JSON.parse(value) as Record<string, unknown> : value;
+          },
         },
         isActive: {
           type: DataTypes.BOOLEAN,

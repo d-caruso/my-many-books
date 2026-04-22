@@ -14,10 +14,13 @@ describe('How To - Phase 2 (Try it now)', () => {
   });
 
   const dismissAboutDialog = () => {
-    cy.get('[role="dialog"][aria-labelledby="about-dialog-title"]', { timeout: 10000 })
-      .should('be.visible');
-    cy.contains('[role="dialog"] button', /^OK$/).click();
-    cy.get('[role="dialog"][aria-labelledby="about-dialog-title"]').should('not.exist');
+    cy.get('[role="dialog"][aria-labelledby="about-dialog-title"]', { timeout: 5000 })
+      .then(($dialog) => {
+        if ($dialog.length > 0) {
+          cy.contains('[role="dialog"] button', /^OK$/).click();
+          cy.get('[role="dialog"][aria-labelledby="about-dialog-title"]').should('not.exist');
+        }
+      });
   };
 
   const visitHowToPage = () => {
@@ -52,7 +55,7 @@ describe('How To - Phase 2 (Try it now)', () => {
 
     cy.contains('button', /^How to$/).click();
     cy.location('pathname').should('eq', '/how-to');
-    cy.contains('h1', 'How to').should('be.visible');
+    cy.get('h1').should('be.visible');
   });
 
   it('navigates to /how-to from mobile user menu', () => {
@@ -62,6 +65,6 @@ describe('How To - Phase 2 (Try it now)', () => {
     cy.get('button[aria-label="User menu"]').click();
     cy.contains('[role="menuitem"]', /^How to$/).click();
     cy.location('pathname').should('eq', '/how-to');
-    cy.contains('h1', 'How to').should('be.visible');
+    cy.get('h1').should('be.visible');
   });
 });

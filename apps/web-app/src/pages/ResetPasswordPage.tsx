@@ -50,12 +50,23 @@ const ResetPasswordPage: React.FC = () => {
   }
 
   const updateField = (field: keyof ResetFormState, value: string) => {
-    setForm((previous) => ({ ...previous, [field]: value }));
-    if (fieldErrors[field]) {
-      setFieldErrors((previous) => ({ ...previous, [field]: undefined }));
-    }
+    const nextForm = { ...form, [field]: value };
+    setForm(nextForm);
     if (submitError) {
       setSubmitError(null);
+    }
+    if (field === 'newPassword' || field === 'confirmNewPassword') {
+      const confirmValue = field === 'confirmNewPassword' ? value : nextForm.confirmNewPassword;
+      const newValue = field === 'newPassword' ? value : nextForm.newPassword;
+      if (confirmValue) {
+        const result = validatePasswordConfirmation(newValue, confirmValue);
+        setFieldErrors((previous) => ({
+          ...previous,
+          confirmNewPassword: result.isValid ? undefined : t(result.i18nKey || 'common:passwords_no_match'),
+        }));
+      }
+    } else if (fieldErrors[field]) {
+      setFieldErrors((previous) => ({ ...previous, [field]: undefined }));
     }
   };
 

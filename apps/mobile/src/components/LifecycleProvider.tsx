@@ -8,7 +8,7 @@ interface LifecycleProviderProps {
 /**
  * Provider component that initializes and manages app lifecycle monitoring
  */
-export function LifecycleProvider({ children }: LifecycleProviderProps): JSX.Element {
+export function LifecycleProvider({ children }: LifecycleProviderProps): React.JSX.Element {
   useEffect(() => {
     // Start lifecycle monitoring when app initializes
     appLifecycleService.startMonitoring();

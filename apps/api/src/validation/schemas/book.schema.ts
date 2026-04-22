@@ -38,8 +38,8 @@ export const createBookSchema = Joi.object({
   editionDate: bookValidationSchema.editionDate,
   status: bookValidationSchema.status,
   notes: bookValidationSchema.notes,
-  authorIds: Joi.array().items(commonSchemas.id).min(1).optional(),
-  categoryIds: Joi.array().items(commonSchemas.id).min(1).optional(),
+  authorIds: Joi.array().items(commonSchemas.id).optional(),
+  categoryIds: Joi.array().items(commonSchemas.id).optional(),
 });
 
 /**

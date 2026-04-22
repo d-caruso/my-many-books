@@ -144,6 +144,7 @@ const LIBRARY_TUTORIAL_ITEM_CONFIGS: LibraryTutorialItemConfig[] = [
     cardKey: 'add_book',
     ctaPath: '/?mode=add',
     ctaLabelKey: 'cta.add_book',
+    mediaBaseName: 'add-book',
   },
   {
     id: 'modify-book',

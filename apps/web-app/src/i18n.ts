@@ -5,7 +5,8 @@ import Backend from 'i18next-http-backend';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '@my-many-books/shared-i18n';
 
 // Configure i18next with HTTP backend for async translation loading
-i18n
+// i18nReady resolves once translations are loaded — used to defer React render
+export const i18nReady: Promise<void> = i18n
   .use(Backend) // Load translations asynchronously via HTTP
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -30,12 +31,10 @@ i18n
     fallbackLng: DEFAULT_LANGUAGE, // Keep fallback for missing keys, but don't load files
     supportedLngs: SUPPORTED_LANGUAGES.map((l) => l.code),
 
-    // Load critical namespaces upfront (preloaded in HTML for parallel loading)
-    // These are needed immediately on app startup: common, pages, books, search, pwa
-    // search is included because BookSearchForm renders on BooksPage (default landing page)
-    // pwa is included because InstallPrompt renders immediately
-    // dialogs is now eagerly loaded to ensure modal copy is available when UI switches languages
-    ns: ['common', 'pages', 'books', 'search', 'pwa', 'dialogs', 'scanner', 'accessibility', 'categories', 'tutorial'],
+    // Load only namespaces needed for the auth view upfront (preloaded in HTML for parallel loading).
+    // dialogs, categories and tutorial are excluded — they are not used on the auth page and are
+    // instead loaded in the background from App after the first render (see i18n.loadNamespaces call there).
+    ns: ['common', 'pages', 'books', 'search', 'pwa', 'scanner', 'accessibility'],
     defaultNS: 'common',
 
     // Prevent preloading all languages - only load detected language
@@ -65,6 +64,7 @@ i18n
     partialBundledLanguages: true,
 
     debug: false, // Disable i18next debug logging
-  });
+  })
+  .then(() => {});
 
 export default i18n;

@@ -50,13 +50,18 @@ export default defineConfig({
           'vendor-react': [
             'react',
             'react-dom',
+            'react-dom/client',
             'react-router-dom'
           ],
-          // Material UI - separate chunk for caching, loads with ThemedApp (deferred)
+          // Material UI - separate chunk for caching
           'vendor-mui': [
             '@mui/material',
             '@emotion/react',
             '@emotion/styled'
+          ],
+          // ZXing barcode scanner — only needed when scanner opens
+          'vendor-scanner': [
+            '@zxing/library',
           ],
           // MUI icons - removed to bundle with pages that use them
           // AWS Amplify - removed to defer loading until auth actions

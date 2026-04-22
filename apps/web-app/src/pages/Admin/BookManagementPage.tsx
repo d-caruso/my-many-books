@@ -74,7 +74,6 @@ const EDITION_DATE_ERROR_I18N_KEY = 'validation:book_edition_date_invalid';
 export const BookManagementPage: React.FC = () => {
   const { t } = useTranslation(['pages', 'validation', 'common']);
   const { apiService } = useApi();
-  const { getAdminBooks, updateAdminBook, deleteAdminBook } = apiService;
 
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +106,7 @@ export const BookManagementPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await getAdminBooks<AdminBooksResponse>(
+      const response = await apiService.getAdminBooks<AdminBooksResponse>(
         paginationModel.page + 1,
         paginationModel.pageSize,
         searchTerm || undefined
@@ -121,7 +120,7 @@ export const BookManagementPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [getAdminBooks, paginationModel.page, paginationModel.pageSize, searchTerm]);
+  }, [apiService.getAdminBooks, paginationModel.page, paginationModel.pageSize, searchTerm]);
 
   useEffect(() => {
     fetchBooks();
@@ -182,7 +181,7 @@ export const BookManagementPage: React.FC = () => {
         isbnCode: normalized || formData.isbnCode,
       };
 
-      await updateAdminBook(selectedBook.id, submissionData);
+      await apiService.updateAdminBook(selectedBook.id, submissionData);
 
       setEditDialogOpen(false);
       setSelectedBook(null);
@@ -211,7 +210,7 @@ export const BookManagementPage: React.FC = () => {
     try {
       setDeleteLoading(true);
 
-      await deleteAdminBook(bookToDelete.id);
+      await apiService.deleteAdminBook(bookToDelete.id);
 
       setDeleteDialogOpen(false);
       setBookToDelete(null);

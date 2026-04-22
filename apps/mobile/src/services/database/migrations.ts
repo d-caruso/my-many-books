@@ -2,7 +2,7 @@ import { databaseService } from './DatabaseService';
 import { ALL_TABLES } from './schema';
 
 const SCHEMA_VERSION_KEY = 'schema_version';
-export const CURRENT_SCHEMA_VERSION = 6;
+export const CURRENT_SCHEMA_VERSION = 7;
 
 /**
  * Database migration system
@@ -87,6 +87,11 @@ export class MigrationSystem {
       // Migrate to version 6: Normalize authors table for name + surname storage
       if (currentVersion < 6) {
         await this.migrateToVersion6();
+      }
+
+      // Migrate to version 7: Add cover image URL columns
+      if (currentVersion < 7) {
+        await this.migrateToVersion7();
       }
 
       await this.setVersion(CURRENT_SCHEMA_VERSION);
@@ -383,6 +388,34 @@ export class MigrationSystem {
         // Ignore foreign-key reset failures after failed migration.
       }
       console.error('Migration to version 6 failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Migrate to version 7: Add cover image URL columns to books
+   */
+  private async migrateToVersion7(): Promise<void> {
+    console.log('Migrating to schema version 7: Adding cover image URL columns...');
+    const db = databaseService.getDatabase();
+
+    try {
+      const tableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(books)');
+      const hasMedium = tableInfo.some((col) => col.name === 'cover_image_url_medium');
+      const hasLarge = tableInfo.some((col) => col.name === 'cover_image_url_large');
+
+      if (!hasMedium) {
+        await db.execAsync('ALTER TABLE books ADD COLUMN cover_image_url_medium TEXT;');
+        console.log('Added cover_image_url_medium column to books table');
+      }
+      if (!hasLarge) {
+        await db.execAsync('ALTER TABLE books ADD COLUMN cover_image_url_large TEXT;');
+        console.log('Added cover_image_url_large column to books table');
+      }
+
+      console.log('Migration to version 7 completed successfully');
+    } catch (error) {
+      console.error('Migration to version 7 failed:', error);
       throw error;
     }
   }

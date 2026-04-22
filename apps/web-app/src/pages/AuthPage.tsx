@@ -9,8 +9,6 @@ import { AboutDialog } from '../components/About/AboutDialog';
 import { useAuth } from '@my-many-books/shared-auth';
 import { buildUrl } from '@my-many-books/shared-navigation';
 import { useLanguageChangeFade } from '../hooks/useLanguageChangeFade';
-import type { VerifyEmailNavState } from '../types/authNavState';
-
 type AuthMode = 'login' | 'register';
 
 const oauthErrorKey: Record<string, string> = {
@@ -18,6 +16,7 @@ const oauthErrorKey: Record<string, string> = {
   missing_code_or_state: 'oauth_error_missing_code',
   invalid_pkce_verifier: 'oauth_error_pkce_failed',
   oauth_exchange_failed: 'oauth_error_exchange_failed',
+  rate_limited: 'oauth_error_rate_limited',
 };
 
 const AuthPage: React.FC = () => {
@@ -70,25 +69,6 @@ const AuthPage: React.FC = () => {
       ignore = true;
     };
   }, [location.search, navigate, refreshUser, t]);
-
-  const verifyStateProcessed = useRef(false);
-
-  useEffect(() => {
-    const state = location.state as VerifyEmailNavState | null;
-    if (state?.success === undefined || verifyStateProcessed.current) return;
-    verifyStateProcessed.current = true;
-
-    if (state.success) {
-      setMode('login');
-      setSnackbar({ open: true, message: t('verify_email_success'), severity: 'success' });
-    } else {
-      setMode('register');
-      setSnackbar({ open: true, message: state.errorMessage || t('verify_email_failed'), severity: 'error' });
-    }
-
-    // Clear state to prevent re-showing on refresh
-    navigate(authPath, { replace: true, state: {} });
-  }, [location.state, navigate, t]);
 
   // If user is already authenticated, redirect to home
   if (user) {

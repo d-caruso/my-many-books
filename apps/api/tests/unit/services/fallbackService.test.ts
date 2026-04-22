@@ -69,7 +69,7 @@ describe('FallbackService', () => {
       expect(result!.source).toBe('api');
     });
 
-    it('should generate minimal book data for unknown ISBN', () => {
+    it('should return null for unknown ISBN with no static data', () => {
       const testIsbn = '9780123456789';
       mockValidateIsbn.mockReturnValue({
         isValid: true,
@@ -78,50 +78,7 @@ describe('FallbackService', () => {
 
       const result = fallbackService.getFallbackBook(testIsbn);
 
-      expect(result).toBeDefined();
-      expect(result!.success).toBe(true);
-      expect(result!.isbn).toBe(testIsbn);
-      expect(result!.book).toBeDefined();
-      expect(result!.book!.title).toBe('Book 6789'); // Last 4 digits
-      expect(result!.book!.categories![0]!.name).toBe('Unknown');
-      expect(result!.source).toBe('api');
-    });
-
-    it('should include correct book structure for fallback data', () => {
-      const testIsbn = '9780123456789';
-      mockValidateIsbn.mockReturnValue({
-        isValid: true,
-        normalizedIsbn: testIsbn,
-      });
-
-      const result = fallbackService.getFallbackBook(testIsbn);
-
-      expect(result).toBeDefined();
-      expect(result!.book).toBeDefined();
-      expect(result!.book!).toEqual({
-        isbnCode: testIsbn,
-        title: 'Book 6789',
-        authors: [{
-          name: 'Unknown',
-          surname: 'Author',
-          nationality: undefined
-        }],
-        categories: [{
-          name: 'Unknown',
-          type: 'subject'
-        }],
-        subtitle: undefined,
-        editionNumber: undefined,
-        editionDate: undefined,
-        publishers: undefined,
-        pages: undefined,
-        language: undefined,
-        coverUrls: undefined,
-        description: undefined,
-        physicalFormat: undefined,
-        weight: undefined,
-        dimensions: undefined
-      });
+      expect(result).toBeNull();
     });
   });
 
@@ -194,8 +151,6 @@ describe('FallbackService', () => {
       expect(result).toBeDefined();
       expect(result!.book).toBeDefined();
       expect(result!.book!.title).toBe(testTitle);
-      expect(result!.book!.description).toContain('manual source');
-      expect(result!.book!.description).toContain('high confidence');
     });
   });
 
@@ -266,36 +221,13 @@ describe('FallbackService', () => {
       
       expect(result).toBeDefined();
       expect(result!.book).toBeDefined();
-      expect(result!.book!.description).toBe('Book information from cache source (low confidence)');
       expect(result!.book!.categories![0]!.name).toBe('General');
       expect(result!.book!.categories![0]!.type).toBe('subject');
     });
   });
 
-  describe('generateMinimalBook', () => {
-    it('should generate correct minimal book structure', () => {
-      const testIsbn = '9780987654321';
-      mockValidateIsbn.mockReturnValue({
-        isValid: true,
-        normalizedIsbn: testIsbn,
-      });
-
-      const result = fallbackService.getFallbackBook(testIsbn);
-
-      expect(result).toBeDefined();
-      expect(result!.book).toBeDefined();
-      expect(result!.book!.title).toBe('Book 4321'); // Last 4 digits
-      expect(result!.book!.authors).toHaveLength(1);
-      expect(result!.book!.authors![0]!.name).toBe('Unknown');
-      expect(result!.book!.authors![0]!.surname).toBe('Author');
-      expect(result!.book!.categories).toHaveLength(1);
-      expect(result!.book!.categories![0]!.name).toBe('Unknown');
-      expect(result!.book!.categories![0]!.type).toBe('subject');
-    });
-  });
-
   describe('edge cases', () => {
-    it('should handle ISBN with different lengths correctly', () => {
+    it('should return null for unknown ISBN regardless of format', () => {
       const shortIsbn = '9780123';
       mockValidateIsbn.mockReturnValue({
         isValid: true,
@@ -303,17 +235,14 @@ describe('FallbackService', () => {
       });
 
       const result = fallbackService.getFallbackBook(shortIsbn);
-      expect(result).toBeDefined();
-      expect(result!.book).toBeDefined();
-      expect(result!.book!.title).toBe('Book 0123'); // Last 4 digits
+      expect(result).toBeNull();
     });
 
     it('should handle multiple calls correctly', () => {
       const testIsbn = '9781111111111';
-      
-      // Clear mock call history to get accurate count for this test
+
       mockValidateIsbn.mockClear();
-      
+
       const result1 = fallbackService.getFallbackBook(testIsbn);
       const result2 = fallbackService.getFallbackBook(testIsbn);
 
