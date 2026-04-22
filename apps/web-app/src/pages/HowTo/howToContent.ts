@@ -14,6 +14,14 @@ export interface TutorialVideo {
 
 export type TutorialAvailability = 'always' | 'userPasswordFeature';
 
+export interface TourStep {
+  targetSelector: string;
+  titleKey: string;
+  bodyKey: string;
+  navigateTo?: string;
+  prerequisiteClicks?: string[];
+}
+
 export interface TutorialItem {
   id: string;
   titleKey: string;
@@ -24,6 +32,7 @@ export interface TutorialItem {
   ctaNoteKey?: string;
   video?: TutorialVideo;
   availability?: TutorialAvailability;
+  tourSteps?: TourStep[];
 }
 
 export interface TutorialSection {
