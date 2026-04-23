@@ -91,4 +91,13 @@ describe('howToContent tour step definitions', () => {
     expect(section.items.every((item) => item.tourSteps && item.tourSteps.length > 0)).toBe(true);
     expect(section.items.some((item) => item.id === 'change-password')).toBe(false);
   });
+
+  test('add book tour starts by navigating to the library page', () => {
+    const addBookItem = allItems.find((item) => item.id === 'add-book');
+
+    expect(addBookItem?.tourSteps?.[0]).toMatchObject({
+      targetSelector: '[data-tour-id="add-book-btn"]',
+      navigateTo: '/',
+    });
+  });
 });

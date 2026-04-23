@@ -147,19 +147,34 @@ export class GuidedTourService {
       popover: this.buildPopover(step),
     });
 
+    this.scheduleOverlayZIndex();
+  }
+
+  private scheduleOverlayZIndex(): void {
     this.applyOverlayZIndex();
+
+    requestAnimationFrame(() => {
+      if (this.running) {
+        this.applyOverlayZIndex();
+      }
+    });
   }
 
   private applyOverlayZIndex(): void {
-    const overlay = document.querySelector('.driver-overlay');
-    const popover = document.querySelector('.driver-popover');
+    const overlay = document.querySelector<HTMLElement | SVGElement>('.driver-overlay');
+    const stage = document.querySelector<HTMLElement | SVGElement>('.driver-stage');
+    const popover = document.querySelector<HTMLElement>('.driver-popover');
 
-    if (overlay instanceof HTMLElement) {
+    if (overlay) {
       overlay.style.zIndex = String(TOUR_OVERLAY_Z_INDEX);
     }
 
+    if (stage) {
+      stage.style.zIndex = String(TOUR_OVERLAY_Z_INDEX + 1);
+    }
+
     if (popover instanceof HTMLElement) {
-      popover.style.zIndex = String(TOUR_OVERLAY_Z_INDEX + 1);
+      popover.style.zIndex = String(TOUR_OVERLAY_Z_INDEX + 2);
     }
   }
 

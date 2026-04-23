@@ -1,6 +1,7 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import type { Config, Driver } from 'driver.js';
 import type { TourStep } from '../../../pages/HowTo/howToContent';
+import { TOUR_OVERLAY_Z_INDEX } from '../../../constants/tour';
 import { GuidedTourService } from '../../../services/guidedTour/GuidedTourService';
 
 const { mockHighlight, mockDestroy, mockDriver, mockDriverFactory } = vi.hoisted(() => {
@@ -90,6 +91,26 @@ describe('GuidedTourService', () => {
         }),
       })
     );
+  });
+
+  it('applies deterministic stacking to Driver.js overlay elements', async () => {
+    const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    overlay.classList.add('driver-overlay');
+    document.body.appendChild(overlay);
+
+    const stage = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    stage.classList.add('driver-stage');
+    document.body.appendChild(stage);
+
+    const popover = document.createElement('div');
+    popover.classList.add('driver-popover');
+    document.body.appendChild(popover);
+
+    await service.start(sampleSteps);
+
+    expect(overlay.style.zIndex).toBe(String(TOUR_OVERLAY_Z_INDEX));
+    expect(stage.style.zIndex).toBe(String(TOUR_OVERLAY_Z_INDEX + 1));
+    expect(popover.style.zIndex).toBe(String(TOUR_OVERLAY_Z_INDEX + 2));
   });
 
   it('does not start when steps array is empty', async () => {

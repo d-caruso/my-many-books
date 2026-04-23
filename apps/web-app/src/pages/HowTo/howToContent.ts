@@ -158,6 +158,7 @@ const ADD_BOOK_TOUR: TourStep[] = [
     targetSelector: '[data-tour-id="add-book-btn"]',
     titleKey: 'tutorial:tour.add_book.step1.title',
     bodyKey: 'tutorial:tour.add_book.step1.body',
+    navigateTo: '/',
   },
   {
     targetSelector: '[data-tour-id="isbn-field"]',
