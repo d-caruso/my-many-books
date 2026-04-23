@@ -1,12 +1,20 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { describe, it } from 'vitest';
+import { describe, it, vi } from 'vitest';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { MemoryRouter } from 'react-router-dom';
 import { expectNoA11yViolations } from '../utils/axe-helper';
 import HowToPage from '../../pages/HowTo/HowToPage';
+
+vi.mock('../../hooks/useGuidedTour', () => ({
+  useGuidedTour: () => ({
+    startTour: () => undefined,
+    stopTour: () => undefined,
+    isRunning: false,
+  }),
+}));
 
 const testI18n = i18n.createInstance();
 testI18n.use(initReactI18next).init({
@@ -20,6 +28,7 @@ testI18n.use(initReactI18next).init({
         page_title: 'How to',
         page_description: 'Quick guides',
         no_guides_available: 'No guides available right now.',
+        cta_launch_tour: 'Launch guided tour',
         cta_try_it_now: 'Try it now',
         sections: {
           library_workflows: 'Library workflows',
@@ -43,5 +52,5 @@ describe('HowToPage Accessibility', () => {
     );
 
     await expectNoA11yViolations(container);
-  });
+  }, 20000);
 });

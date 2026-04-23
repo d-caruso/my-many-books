@@ -10,7 +10,9 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LockIcon from '@mui/icons-material/Lock';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import { MiniVideoPlayer } from '../../components/Tutorial/MiniVideoPlayer';
+import { useGuidedTour } from '../../hooks/useGuidedTour';
 import {
   HOW_TO_SECTIONS,
   getTutorialCapabilities,
@@ -31,6 +33,7 @@ const CARD_ICONS: Record<string, React.ElementType> = {
 const HowToPage: React.FC = () => {
   const { t } = useTranslation('tutorial');
   const navigate = useNavigate();
+  const { startTour } = useGuidedTour();
   const capabilities = getTutorialCapabilities();
   const visibleSections = getVisibleTutorialSections(HOW_TO_SECTIONS, capabilities);
 
@@ -122,7 +125,7 @@ const HowToPage: React.FC = () => {
                         />
                       )}
 
-                      {item.ctaPath && (
+                      {(item.tourSteps?.length || item.ctaPath) && (
                         <Box
                           sx={{
                             mt: 2,
@@ -133,13 +136,26 @@ const HowToPage: React.FC = () => {
                           }}
                           data-testid={`how-to-cta-container-${item.id}`}
                         >
-                          <Button
-                            variant="contained"
-                            onClick={() => navigate(item.ctaPath!)}
-                            data-testid={`how-to-cta-${item.id}`}
-                          >
-                            {t(item.ctaLabelKey ?? 'cta_try_it_now')}
-                          </Button>
+                          {item.tourSteps && item.tourSteps.length > 0 && (
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              startIcon={<PlayCircleOutlineIcon />}
+                              onClick={() => startTour(item.tourSteps!)}
+                              data-testid={`how-to-tour-${item.id}`}
+                            >
+                              {t('cta_launch_tour')}
+                            </Button>
+                          )}
+                          {item.ctaPath && (
+                            <Button
+                              variant="contained"
+                              onClick={() => navigate(item.ctaPath!)}
+                              data-testid={`how-to-cta-${item.id}`}
+                            >
+                              {t(item.ctaLabelKey ?? 'cta_try_it_now')}
+                            </Button>
+                          )}
                           {item.ctaNoteKey && (
                             <Typography variant="caption" color="text.secondary">
                               {t(item.ctaNoteKey)}

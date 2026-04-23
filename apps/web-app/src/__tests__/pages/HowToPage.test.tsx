@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { vi } from 'vitest';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
@@ -12,6 +12,19 @@ import {
   type TutorialCapabilities,
 } from '../../pages/HowTo/howToContent';
 import * as howToContent from '../../pages/HowTo/howToContent';
+
+const guidedTourMocks = vi.hoisted(() => ({
+  startTour: vi.fn(),
+  stopTour: vi.fn(),
+}));
+
+vi.mock('../../hooks/useGuidedTour', () => ({
+  useGuidedTour: () => ({
+    startTour: guidedTourMocks.startTour,
+    stopTour: guidedTourMocks.stopTour,
+    isRunning: false,
+  }),
+}));
 
 const testI18n = i18n.createInstance();
 const i18nReady = testI18n.use(initReactI18next).init({
@@ -26,6 +39,7 @@ const i18nReady = testI18n.use(initReactI18next).init({
         page_description: 'Quick guides',
         no_guides_available: 'No guides available right now.',
         toc_label: 'On this page',
+        cta_launch_tour: 'Launch guided tour',
         cta_try_it_now: 'Try it now',
         cta: {
           add_book: 'Add a book',
@@ -81,6 +95,11 @@ describe('HowToPage', () => {
     await i18nReady;
   });
 
+  beforeEach(() => {
+    guidedTourMocks.startTour.mockClear();
+    guidedTourMocks.stopTour.mockClear();
+  });
+
   test('renders all tutorial cards', () => {
     renderHowToPage();
 
@@ -102,7 +121,7 @@ describe('HowToPage', () => {
     });
   });
 
-  test('renders CTA as last element for every visible card', () => {
+  test('renders CTA controls as last element for every visible card', () => {
     renderHowToPage();
 
     const ctaButtons = screen.getAllByTestId(/^how-to-cta-(?!container)/);
@@ -118,6 +137,33 @@ describe('HowToPage', () => {
         expect(cardContent?.lastElementChild).toBe(within(card).getByTestId(`how-to-cta-container-${item.id}`));
       });
     });
+  });
+
+  test('renders launch guided tour button when tourSteps are populated', () => {
+    renderHowToPage();
+
+    const tourButton = screen.getByTestId('how-to-tour-add-book');
+
+    expect(tourButton).toBeInTheDocument();
+    expect(tourButton).toHaveTextContent('Launch guided tour');
+  });
+
+  test('renders both tour button and CTA button when both are configured', () => {
+    renderHowToPage();
+
+    expect(screen.getByTestId('how-to-tour-add-book')).toBeInTheDocument();
+    expect(screen.getByTestId('how-to-cta-add-book')).toBeInTheDocument();
+  });
+
+  test('calls startTour with the card steps when tour button is clicked', () => {
+    renderHowToPage();
+
+    fireEvent.click(screen.getByTestId('how-to-tour-add-book'));
+
+    const addBookItem = HOW_TO_SECTIONS.flatMap((section) => section.items).find(
+      (item) => item.id === 'add-book'
+    );
+    expect(guidedTourMocks.startTour).toHaveBeenCalledWith(addBookItem?.tourSteps);
   });
 
   test('renders table of contents with links for each visible card', () => {
