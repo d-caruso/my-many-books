@@ -221,6 +221,33 @@ describe('BookForm', () => {
     });
   });
 
+  test('renders guided tour target ids on key form controls', () => {
+    const { container } = renderBookForm();
+
+    expect(screen.getByLabelText(translatedLabelMatcher('books:title'))).toHaveAttribute(
+      'data-tour-id',
+      'book-form-title-field'
+    );
+    expect(screen.getByRole('textbox', { name: translatedLabelMatcher('books:isbn') })).toHaveAttribute(
+      'data-tour-id',
+      'isbn-field'
+    );
+    expect(screen.getByRole('button', { name: t('books:isbn_lookup_button') })).toHaveAttribute(
+      'data-tour-id',
+      'isbn-lookup-btn'
+    );
+    expect(screen.getByRole('button', { name: t('books:save_book') })).toHaveAttribute(
+      'data-tour-id',
+      'book-form-save-btn'
+    );
+    expect(container.querySelector('[data-tour-id="book-form-author-select"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour-id="book-form-category-select"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour-id="book-form-author-add-btn"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour-id="book-form-author-manage-btn"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour-id="book-form-category-add-btn"]')).not.toBeNull();
+    expect(container.querySelector('[data-tour-id="book-form-category-manage-btn"]')).not.toBeNull();
+  });
+
   test('calls the ISBN lookup handler when the lookup button is clicked', async () => {
     mockDetailedIsbnSearch.mockResolvedValue({ found: false });
 

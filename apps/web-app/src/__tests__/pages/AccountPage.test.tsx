@@ -94,4 +94,14 @@ describe('AccountPage', () => {
       expect(screen.getByText('Invalid email or password')).toBeInTheDocument();
     });
   });
+
+  test('renders guided tour target ids for the password section and submit button', () => {
+    const { container } = render(<AccountPage />);
+
+    expect(container.querySelector('[data-tour-id="account-password-section"]')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Change password' })).toHaveAttribute(
+      'data-tour-id',
+      'account-password-save-btn'
+    );
+  });
 });

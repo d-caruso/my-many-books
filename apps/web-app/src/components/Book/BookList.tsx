@@ -89,7 +89,7 @@ export const BookList: React.FC<BookListProps> = ({
   if (viewMode === 'list') {
     return (
       <Stack spacing={2} sx={{ ...fadeIn, width: '100%', minWidth: 0 }}>
-        {books.map((book) => (
+        {books.map((book, index) => (
           <BookCard
             key={book.id}
             book={book}
@@ -100,6 +100,7 @@ export const BookList: React.FC<BookListProps> = ({
             showActions={showActions}
             compact={true}
             saving={savingStatusBookId === book.id}
+            dataTourId={index === 0 ? 'book-card-first' : undefined}
           />
         ))}
       </Stack>
@@ -123,7 +124,7 @@ export const BookList: React.FC<BookListProps> = ({
         ...fadeIn,
       }}
     >
-      {books.map((book) => (
+      {books.map((book, index) => (
         <Box key={book.id} sx={{ minWidth: 0 }}>
           <BookCard
             book={book}
@@ -134,6 +135,7 @@ export const BookList: React.FC<BookListProps> = ({
             showActions={showActions}
             saving={savingStatusBookId === book.id}
             compact={false}
+            dataTourId={index === 0 ? 'book-card-first' : undefined}
           />
         </Box>
       ))}

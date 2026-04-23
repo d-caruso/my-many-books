@@ -80,6 +80,17 @@ describe('ManageCategoriesDialog', () => {
     expect(onCategoryUpdated).toHaveBeenCalledWith({ id: 2, name: 'Mystery & Crime' });
   });
 
+  test('marks the dialog root with the guided tour target id', async () => {
+    mockCategoryApi.getCategories.mockResolvedValue([]);
+
+    renderDialog();
+
+    await waitFor(() => {
+      expect(mockCategoryApi.getCategories).toHaveBeenCalled();
+    });
+    expect(document.querySelector('[data-tour-id="entity-manage-dialog"]')).not.toBeNull();
+  });
+
   test('shows conflict error when deleting a category used by books', async () => {
     mockCategoryApi.getCategories.mockResolvedValue([{ id: 1, name: 'Classics' }]);
     mockCategoryApi.deleteCategory.mockRejectedValue({

@@ -599,6 +599,7 @@ const BooksPage: React.FC = () => {
             onClick={handleAddBook}
             size="large"
             aria-label={t('pages:books.add_book')}
+            data-tour-id="add-book-btn"
             sx={{ width: { xs: '100%', sm: 'auto' } }}
           >
             <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>

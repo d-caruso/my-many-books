@@ -31,6 +31,21 @@ describe('ManualISBNInput', () => {
     expect(screen.getByLabelText('ISBN (10 or 13 digits)')).toBeInTheDocument();
   });
 
+  test('marks the manual ISBN field with the guided tour target id', () => {
+    render(
+      <ManualISBNInput
+        isOpen={true}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    expect(screen.getByLabelText('ISBN (10 or 13 digits)')).toHaveAttribute(
+      'data-tour-id',
+      'scanner-manual-input'
+    );
+  });
+
   test('does not render when isOpen is false', () => {
     const { container } = render(
       <ManualISBNInput

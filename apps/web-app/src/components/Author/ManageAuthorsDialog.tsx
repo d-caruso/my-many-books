@@ -151,7 +151,13 @@ export const ManageAuthorsDialog: React.FC<ManageAuthorsDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={mutating ? undefined : onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={mutating ? undefined : onClose}
+      maxWidth="md"
+      fullWidth
+      data-tour-id="entity-manage-dialog"
+    >
       <DialogTitle>{t('dialogs:author.manage_title', { defaultValue: 'Manage authors' })}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>

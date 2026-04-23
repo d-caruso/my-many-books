@@ -89,6 +89,17 @@ describe('ManageAuthorsDialog', () => {
     );
   });
 
+  test('marks the dialog root with the guided tour target id', async () => {
+    mockAuthorApi.getAuthors.mockResolvedValue([]);
+
+    renderDialog();
+
+    await waitFor(() => {
+      expect(mockAuthorApi.getAuthors).toHaveBeenCalled();
+    });
+    expect(document.querySelector('[data-tour-id="entity-manage-dialog"]')).not.toBeNull();
+  });
+
   test('shows conflict error when deleting an author used by books', async () => {
     mockAuthorApi.getAuthors.mockResolvedValue([
       { id: 2, name: 'Virginia', surname: 'Woolf', nationality: 'British' },

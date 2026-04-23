@@ -337,6 +337,15 @@ describe('BooksPage', () => {
     await waitFor(() => expect(screen.getByTestId('book-list')).toBeInTheDocument());
   });
 
+  test('marks the add book button with the guided tour target id', () => {
+    renderBooksPage();
+
+    expect(screen.getByRole('button', { name: t('pages:books.add_book') })).toHaveAttribute(
+      'data-tour-id',
+      'add-book-btn'
+    );
+  });
+
   test('switches add flow to update flow when the form resolves a local ISBN hit', async () => {
     renderBooksPage();
 

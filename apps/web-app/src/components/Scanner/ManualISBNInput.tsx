@@ -153,7 +153,7 @@ export const ManualISBNInput: React.FC<ManualISBNInputProps> = ({
             placeholder={t('scanner:isbn_placeholder')}
             error={!!error}
             helperText={error}
-            inputProps={{ maxLength: 17 }}
+            inputProps={{ maxLength: 17, 'data-tour-id': 'scanner-manual-input' }}
             autoComplete="off"
           />
 

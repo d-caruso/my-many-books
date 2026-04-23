@@ -129,6 +129,23 @@ describe('ScannerModal', () => {
     expect(screen.queryByTestId('manual-isbn-input')).not.toBeInTheDocument();
   });
 
+  test('marks the back-to-scanner button with the guided tour target id', () => {
+    render(
+      <ScannerModal
+        isOpen={true}
+        onScanSuccess={mockOnScanSuccess}
+        onClose={mockOnClose}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /enter manually/i }));
+
+    expect(screen.getByRole('button', { name: /back to scanner/i })).toHaveAttribute(
+      'data-tour-id',
+      'scanner-scan-btn'
+    );
+  });
+
   test('handles successful camera scan', () => {
     render(
       <ScannerModal

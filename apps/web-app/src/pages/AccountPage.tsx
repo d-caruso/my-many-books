@@ -110,7 +110,7 @@ const AccountPage: React.FC = () => {
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Paper elevation={2} sx={{ p: 4 }}>
+      <Paper elevation={2} sx={{ p: 4 }} data-tour-id="account-password-section">
         <Stack spacing={2} component="form" onSubmit={handleSubmit}>
           <Typography variant="h5" component="h1">
             {t('common:account_title')}
@@ -216,6 +216,7 @@ const AccountPage: React.FC = () => {
               loading={loading}
               disabled={isSubmitDisabled}
               fullWidth
+              data-tour-id="account-password-save-btn"
             >
               {loading ? t('common:changing_password') : t('common:change_password')}
             </ResponsiveButton>

@@ -135,7 +135,13 @@ export const ManageCategoriesDialog: React.FC<ManageCategoriesDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={mutating ? undefined : onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={mutating ? undefined : onClose}
+      maxWidth="sm"
+      fullWidth
+      data-tour-id="entity-manage-dialog"
+    >
       <DialogTitle>{t('dialogs:category.manage_title', { defaultValue: 'Manage categories' })}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>

@@ -32,6 +32,7 @@ interface BookCardProps {
   showActions?: boolean;
   compact?: boolean;
   saving?: boolean;
+  dataTourId?: string;
 }
 
 export const BookCard: React.FC<BookCardProps> = ({
@@ -43,6 +44,7 @@ export const BookCard: React.FC<BookCardProps> = ({
   showActions = true,
   compact = false,
   saving = false,
+  dataTourId,
 }) => {
   const { t } = useTranslation(['books', 'common', 'accessibility']);
 
@@ -91,6 +93,7 @@ export const BookCard: React.FC<BookCardProps> = ({
     return (
       <Card 
         data-testid="card"
+        data-tour-id={dataTourId}
         sx={{ 
           cursor: onClick ? 'pointer' : 'default',
           '&:hover': {
@@ -172,6 +175,7 @@ export const BookCard: React.FC<BookCardProps> = ({
   return (
     <Card 
       data-testid="card"
+      data-tour-id={dataTourId}
       sx={{ 
         cursor: onClick ? 'pointer' : 'default',
         '&:hover': {

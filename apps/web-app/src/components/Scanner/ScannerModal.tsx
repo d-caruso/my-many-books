@@ -104,6 +104,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
               onClick={() => handleModeSwitch('scan')}
               startIcon={<BackIcon />}
               variant="outlined"
+              data-tour-id="scanner-scan-btn"
             >
               {t('scanner:back_to_scanner')}
             </Button>

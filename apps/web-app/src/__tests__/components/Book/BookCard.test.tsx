@@ -83,6 +83,12 @@ describe('BookCard', () => {
     expect(handleClick).toHaveBeenCalledWith(mockBook);
   });
 
+  test('applies the guided tour id to the card root when provided', () => {
+    render(<BookCard book={mockBook} dataTourId="book-card-first" />);
+
+    expect(screen.getByTestId('card')).toHaveAttribute('data-tour-id', 'book-card-first');
+  });
+
   test('calls onEdit when edit button is clicked', () => {
     const handleEdit = vi.fn();
     render(<BookCard book={mockBook} onEdit={handleEdit} compact />);

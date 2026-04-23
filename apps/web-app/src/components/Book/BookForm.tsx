@@ -613,6 +613,7 @@ export const BookForm: React.FC<BookFormProps> = ({
             disabled={nonIsbnFieldsDisabled}
             error={!!errors.title}
             helperText={errors.title}
+            inputProps={{ 'data-tour-id': 'book-form-title-field' }}
           />
 
           {/* ISBN */}
@@ -666,6 +667,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                 inputProps={{
                   inputMode: 'numeric',
                   pattern: '[0-9]*',
+                  'data-tour-id': 'isbn-field',
                 }}
                 sx={{ fontFamily: 'monospace' }}
               />
@@ -705,6 +707,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   }}
                   disabled={loading || isLooking || !formData.isbnCode.trim()}
                   aria-label={lookupButtonLabel}
+                  data-tour-id="isbn-lookup-btn"
                   sx={{
                     width: { xs: '100%', sm: 'auto' },
                     minHeight: 56,
@@ -730,6 +733,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               inputProps={{
                 inputMode: 'numeric',
                 pattern: '[0-9]*',
+                'data-tour-id': 'isbn-field',
               }}
               sx={{ fontFamily: 'monospace' }}
             />
@@ -769,6 +773,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                       onClick={() => setAddAuthorDialogOpen(true)}
                       disabled={nonIsbnFieldsDisabled}
                       aria-label={t('common:add')}
+                      data-tour-id="book-form-author-add-btn"
                     >
                       <AddIcon fontSize="small" />
                     </IconButton>
@@ -781,38 +786,41 @@ export const BookForm: React.FC<BookFormProps> = ({
                       onClick={() => setManageAuthorsDialogOpen(true)}
                       disabled={nonIsbnFieldsDisabled}
                       aria-label={t('common:manage', { defaultValue: 'Manage' })}
+                      data-tour-id="book-form-author-manage-btn"
                     >
                       <EditNoteOutlinedIcon fontSize="small" />
                     </IconButton>
                   </span>
                 </Tooltip>
               </Box>
-              <AuthorAutocomplete
-                value={null}
-                onChange={handleAuthorAdd}
-                placeholder={t('books:search_add_authors')}
-                disabled={nonIsbnFieldsDisabled}
-                reloadTrigger={authorAutocompleteReloadTrigger}
-                userIdFilter={activeBook?.userId}
-              />
-              {/* Selected Authors Display */}
-              {formData.selectedAuthors.length > 0 && (
-                <Box mt={1}>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {formData.selectedAuthors.map((author) => (
-                      <Chip
-                        key={author.id}
-                        label={`${author.name} ${author.surname}`}
-                        onDelete={() => handleAuthorRemove(author.id)}
-                        deleteIcon={<CloseIcon />}
-                        disabled={nonIsbnFieldsDisabled}
-                        color="primary"
-                        variant="outlined"
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
+              <Box data-tour-id="book-form-author-select">
+                <AuthorAutocomplete
+                  value={null}
+                  onChange={handleAuthorAdd}
+                  placeholder={t('books:search_add_authors')}
+                  disabled={nonIsbnFieldsDisabled}
+                  reloadTrigger={authorAutocompleteReloadTrigger}
+                  userIdFilter={activeBook?.userId}
+                />
+                {/* Selected Authors Display */}
+                {formData.selectedAuthors.length > 0 && (
+                  <Box mt={1}>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {formData.selectedAuthors.map((author) => (
+                        <Chip
+                          key={author.id}
+                          label={`${author.name} ${author.surname}`}
+                          onDelete={() => handleAuthorRemove(author.id)}
+                          deleteIcon={<CloseIcon />}
+                          disabled={nonIsbnFieldsDisabled}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+              </Box>
             </Box>
 
             {/* Status */}
@@ -852,6 +860,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                     onClick={() => setAddCategoryDialogOpen(true)}
                     disabled={nonIsbnFieldsDisabled}
                     aria-label={t('common:add')}
+                    data-tour-id="book-form-category-add-btn"
                   >
                     <AddIcon fontSize="small" />
                   </IconButton>
@@ -864,6 +873,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                     onClick={() => setManageCategoriesDialogOpen(true)}
                     disabled={nonIsbnFieldsDisabled}
                     aria-label={t('common:manage', { defaultValue: 'Manage' })}
+                    data-tour-id="book-form-category-manage-btn"
                   >
                     <EditNoteOutlinedIcon fontSize="small" />
                   </IconButton>
@@ -871,47 +881,49 @@ export const BookForm: React.FC<BookFormProps> = ({
               </Tooltip>
             </Box>
 
-            {categoriesBusy ? (
-              <Box display="flex" alignItems="center" gap={1}>
-                <CircularProgress size={16} />
-                <Typography variant="body2" color="text.secondary">
-                  {t('books:loading_categories')}
-                </Typography>
-              </Box>
-            ) : (
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
-                  gap: 1,
-                  maxHeight: 200,
-                  overflowY: 'auto',
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  p: 2
-                }}
-              >
-                {categories.map((category) => (
-                  <FormControlLabel
-                    key={category.id}
-                    control={
-                      <Checkbox
-                        checked={formData.selectedCategories.includes(category.id)}
-                        onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
-                        disabled={nonIsbnFieldsDisabled}
-                        size="small"
-                      />
-                    }
-                    label={
-                      <Typography variant="body2">
-                        {getCategoryDisplayName(category, t)}
-                      </Typography>
-                    }
-                  />
-                ))}
-              </Box>
-            )}
+            <Box data-tour-id="book-form-category-select">
+              {categoriesBusy ? (
+                <Box display="flex" alignItems="center" gap={1}>
+                  <CircularProgress size={16} />
+                  <Typography variant="body2" color="text.secondary">
+                    {t('books:loading_categories')}
+                  </Typography>
+                </Box>
+              ) : (
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
+                    gap: 1,
+                    maxHeight: 200,
+                    overflowY: 'auto',
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    p: 2
+                  }}
+                >
+                  {categories.map((category) => (
+                    <FormControlLabel
+                      key={category.id}
+                      control={
+                        <Checkbox
+                          checked={formData.selectedCategories.includes(category.id)}
+                          onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
+                          disabled={nonIsbnFieldsDisabled}
+                          size="small"
+                        />
+                      }
+                      label={
+                        <Typography variant="body2">
+                          {getCategoryDisplayName(category, t)}
+                        </Typography>
+                      }
+                    />
+                  ))}
+                </Box>
+              )}
+            </Box>
           </Box>
 
           {/* Edition Info */}
@@ -997,6 +1009,7 @@ export const BookForm: React.FC<BookFormProps> = ({
               size="large"
               disabled={nonIsbnFieldsDisabled}
               startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+              data-tour-id="book-form-save-btn"
               sx={{
                 minWidth: 160,
                 order: { xs: 1, sm: 2 },

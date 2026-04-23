@@ -136,7 +136,12 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
           <Typography variant="h6">{t('books:book_details')}</Typography>
           <Stack direction="row" spacing={1}>
             {onEdit && (
-              <IconButton aria-label={t('books:edit_book_title')} onClick={() => onEdit(book)} disabled={loading}>
+              <IconButton
+                aria-label={t('books:edit_book_title')}
+                onClick={() => onEdit(book)}
+                disabled={loading}
+                data-tour-id="book-detail-edit-btn"
+              >
                 <EditIcon fontSize="small" />
               </IconButton>
             )}
@@ -146,6 +151,7 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
                 color="error"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={loading}
+                data-tour-id="book-detail-delete-btn"
               >
                 <DeleteIcon fontSize="small" />
               </IconButton>
@@ -321,7 +327,13 @@ export const BookDetails: React.FC<BookDetailsProps> = ({
           <Button onClick={() => setShowDeleteConfirm(false)} disabled={loading}>
             {t('common:cancel')}
           </Button>
-          <Button onClick={handleDelete} color="error" variant="contained" disabled={loading}>
+          <Button
+            onClick={handleDelete}
+            color="error"
+            variant="contained"
+            disabled={loading}
+            data-tour-id="delete-confirm-btn"
+          >
             {loading ? t('books:deleting') : t('books:delete_book')}
           </Button>
         </DialogActions>
