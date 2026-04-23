@@ -1,5 +1,5 @@
 import React from 'react';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { SettingsProvider, useSettings } from '../../contexts/SettingsContext';
 import { ApiProvider } from '../../contexts/ApiContext';
 import type { SettingsApi } from '@my-many-books/shared-api';
@@ -36,6 +36,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 describe('SettingsContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
   });
 
   describe('initialization', () => {
@@ -275,6 +276,40 @@ describe('SettingsContext', () => {
 
       const value = result.current.getSettingValue('test.invalid');
       expect(value).toBe('invalid json');
+    });
+  });
+
+  describe('updateSetting', () => {
+    it('stores onboarding completion locally for the authenticated user', async () => {
+      mockSettingsApi.getSettings.mockResolvedValue([
+        {
+          key: 'onboarding.completed',
+          value: 'false',
+          type: 'boolean',
+          category: 'ui',
+          defaultValue: 'false',
+          description: 'Whether the user has completed or skipped the first-login onboarding tour',
+          active: true,
+          deleted: false,
+          creationDate: new Date().toISOString(),
+        },
+      ]);
+
+      const { result } = renderHook(() => useSettings(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.updateSetting('onboarding.completed', true);
+      });
+
+      expect(window.localStorage.getItem('web:setting:onboarding.completed:user:1')).toBe('true');
+      await waitFor(() => {
+        expect(result.current.getSettingValue<boolean>('onboarding.completed')).toBe(true);
+      });
+      expect(mockSettingsApi.updateSetting).not.toHaveBeenCalled();
     });
   });
 

@@ -17,6 +17,7 @@ import { Box } from '@mui/material';
 import { runFadeOut, useFadeInOnChange, useLanguageChangeFade } from './hooks/useLanguageChangeFade';
 import { ViewTransitionProvider, useProtectedViewTransition } from './contexts/ViewTransitionContext';
 import { VIEW_TRANSITION_FADE_IN_TIMING, VIEW_TRANSITION_FADE_OUT_LEAD_MS } from './constants/animations';
+import { OnboardingProvider } from './providers/OnboardingProvider';
 
 // Eager load MUI theme wrapper (always needed on landing page)
 import { ThemedApp } from './components/ThemedApp';
@@ -231,6 +232,7 @@ function App() {
                   <SettingsProvider>
                   <Router>
                     <AuthErrorBoundary>
+                    <OnboardingProvider>
                     <Box ref={onContentReady} sx={{ minHeight: '100vh', position: 'relative' }}>
                       {/* Skip to main content link for keyboard navigation */}
                       <Box
@@ -397,6 +399,7 @@ function App() {
                         <InstallPrompt />
                       </Suspense>
                     </Box>
+                    </OnboardingProvider>
                     </AuthErrorBoundary>
                   </Router>
                   </SettingsProvider>

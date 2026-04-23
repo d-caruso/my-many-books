@@ -62,7 +62,17 @@ describe('useGuidedTour', () => {
 
     result.current.startTour(steps);
 
-    expect(guidedTourService.start).toHaveBeenCalledWith(steps);
+    expect(guidedTourService.start).toHaveBeenCalledWith(steps, undefined);
+  });
+
+  it('passes an optional completion callback to service.start', () => {
+    const { result } = renderHook(() => useGuidedTour(), { wrapper });
+    const steps = [{ targetSelector: '[data-tour-id="x"]', titleKey: 'a', bodyKey: 'b' }];
+    const onComplete = vi.fn();
+
+    result.current.startTour(steps, onComplete);
+
+    expect(guidedTourService.start).toHaveBeenCalledWith(steps, onComplete);
   });
 
   it('stopTour delegates to service.stop', () => {

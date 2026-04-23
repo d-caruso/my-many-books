@@ -163,6 +163,32 @@ describe('GuidedTourService', () => {
     expect(mockDestroy).toHaveBeenCalledTimes(1);
   });
 
+  it('runs the completion callback when the tour is stopped normally', async () => {
+    const onComplete = vi.fn();
+
+    await service.start(sampleSteps, onComplete);
+
+    service.stop();
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not run the completion callback when the tour stops because a step fails', async () => {
+    vi.useRealTimers();
+    const failingSteps: TourStep[] = [
+      {
+        targetSelector: '[data-tour-id="missing-step"]',
+        titleKey: 'tutorial:onboarding.welcome.title',
+        bodyKey: 'tutorial:onboarding.welcome.body',
+      },
+    ];
+    const onComplete = vi.fn();
+
+    await expect(service.start(failingSteps, onComplete)).rejects.toThrow('Tour target not found');
+
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
   it('calls navigate when the next step targets a different route', async () => {
     vi.useRealTimers();
 

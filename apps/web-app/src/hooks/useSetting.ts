@@ -13,6 +13,7 @@ export interface UseSettingResult<T> {
   defaultValue: T | undefined;
   isLoading: boolean;
   error: Error | null;
+  updateSetting: (value: T) => Promise<AppSetting>;
 }
 
 /**
@@ -21,7 +22,7 @@ export interface UseSettingResult<T> {
  * @returns Setting data with typed value
  */
 export function useSetting<T = unknown>(key: string): UseSettingResult<T> {
-  const { getSetting, getSettingValue, isLoading, error } = useSettings();
+  const { getSetting, getSettingValue, isLoading, error, updateSetting: updateContextSetting } = useSettings();
 
   const setting = getSetting(key);
   const value = getSettingValue<T>(key);
@@ -41,5 +42,9 @@ export function useSetting<T = unknown>(key: string): UseSettingResult<T> {
     defaultValue: getDefaultValue(),
     isLoading,
     error,
+    updateSetting: useCallback(
+      async (nextValue: T) => updateContextSetting(key, nextValue),
+      [key, updateContextSetting]
+    ),
   };
 }

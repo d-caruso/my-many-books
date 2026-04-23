@@ -19,6 +19,7 @@ export class GuidedTourService {
   private steps: TourStep[] = [];
   private currentStepIndex = 0;
   private running = false;
+  private onComplete: (() => void) | null = null;
 
   inject(navigate: NavigateFn, t: TranslateFn, getPath: GetPathFn): void {
     this.navigate = navigate;
@@ -30,7 +31,7 @@ export class GuidedTourService {
     return this.running;
   }
 
-  async start(steps: TourStep[]): Promise<void> {
+  async start(steps: TourStep[], onComplete?: () => void): Promise<void> {
     if (this.running || steps.length === 0) {
       return;
     }
@@ -42,21 +43,24 @@ export class GuidedTourService {
     this.steps = steps;
     this.currentStepIndex = 0;
     this.running = true;
+    this.onComplete = onComplete ?? null;
     this.driverInstance = driver(this.buildConfig());
 
     try {
       await this.runStep(this.steps[0]);
     } catch (error) {
-      this.stop();
+      this.stop(false);
       throw error;
     }
   }
 
-  stop(): void {
+  stop(runCompletionCallback = true): void {
     const instance = this.driverInstance;
+    const onComplete = runCompletionCallback ? this.onComplete : null;
 
     this.resetState();
     instance?.destroy();
+    onComplete?.();
   }
 
   private resetState(): void {
@@ -64,6 +68,7 @@ export class GuidedTourService {
     this.steps = [];
     this.currentStepIndex = 0;
     this.running = false;
+    this.onComplete = null;
   }
 
   private buildConfig(): Config {
@@ -109,7 +114,7 @@ export class GuidedTourService {
     try {
       await this.runStep(this.steps[nextIndex]);
     } catch (error) {
-      this.stop();
+      this.stop(false);
       throw error;
     }
   }

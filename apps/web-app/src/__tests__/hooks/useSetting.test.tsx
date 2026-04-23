@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { useSetting } from '../../hooks/useSetting';
 import { SettingsProvider } from '../../contexts/SettingsContext';
 import { ApiProvider } from '../../contexts/ApiContext';
@@ -37,6 +37,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 describe('useSetting', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
   });
 
   it('should return setting and value for existing setting', async () => {
@@ -186,5 +187,36 @@ describe('useSetting', () => {
     });
 
     expect(result.current.defaultValue).toBeUndefined();
+  });
+
+  it('should expose updateSetting through the hook result', async () => {
+    mockSettingsApi.getSettings.mockResolvedValue([
+      {
+        key: 'onboarding.completed',
+        value: 'false',
+        type: 'boolean',
+        category: 'ui',
+        defaultValue: 'false',
+        description: 'Whether the user has completed or skipped the first-login onboarding tour',
+        active: true,
+        deleted: false,
+        creationDate: new Date().toISOString(),
+      },
+    ]);
+
+    const { result } = renderHook(() => useSetting<boolean>('onboarding.completed'), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.updateSetting(true);
+    });
+
+    expect(window.localStorage.getItem('web:setting:onboarding.completed:user:1')).toBe('true');
+    await waitFor(() => {
+      expect(result.current.value).toBe(true);
+    });
   });
 });

@@ -18,7 +18,10 @@ export function useGuidedTour() {
     guidedTourService.inject(navigate, t, () => locationRef.current);
   }, [navigate, t]);
 
-  const startTour = useCallback((steps: TourStep[]) => guidedTourService.start(steps), []);
+  const startTour = useCallback(
+    (steps: TourStep[], onComplete?: () => void) => guidedTourService.start(steps, onComplete),
+    []
+  );
 
   const stopTour = useCallback(() => {
     guidedTourService.stop();
