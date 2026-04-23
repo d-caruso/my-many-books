@@ -76,6 +76,7 @@ interface TutorialItemConfig {
   ctaNoteKey?: string;
   video?: TutorialVideoConfig;
   availability?: TutorialAvailability;
+  tourSteps?: TourStep[];
 }
 
 const buildTutorialVideo = ({
@@ -102,6 +103,7 @@ const buildTutorialItem = ({
   ctaNoteKey,
   video,
   availability,
+  tourSteps,
 }: TutorialItemConfig): TutorialItem => ({
   id,
   titleKey: `cards.${cardKey}.title`,
@@ -112,6 +114,7 @@ const buildTutorialItem = ({
   ...(ctaNoteKey ? { ctaNoteKey } : {}),
   ...(video ? { video: buildTutorialVideo(video) } : {}),
   ...(availability ? { availability } : {}),
+  ...(tourSteps ? { tourSteps } : {}),
 });
 
 interface LibraryTutorialItemConfig {
@@ -123,6 +126,7 @@ interface LibraryTutorialItemConfig {
   mediaBaseName?: string;
   durationLabel?: string;
   availability?: TutorialAvailability;
+  tourSteps?: TourStep[];
 }
 
 const buildLibraryTutorialItem = ({
@@ -134,6 +138,7 @@ const buildLibraryTutorialItem = ({
   mediaBaseName,
   durationLabel,
   availability,
+  tourSteps,
 }: LibraryTutorialItemConfig): TutorialItem =>
   buildTutorialItem({
     id,
@@ -145,7 +150,212 @@ const buildLibraryTutorialItem = ({
       ? { video: { mediaBaseName, captionKey: `videos.${cardKey}.caption`, durationLabel } }
       : {}),
     availability,
+    tourSteps,
   });
+
+const ADD_BOOK_TOUR: TourStep[] = [
+  {
+    targetSelector: '[data-tour-id="add-book-btn"]',
+    titleKey: 'tutorial:tour.add_book.step1.title',
+    bodyKey: 'tutorial:tour.add_book.step1.body',
+  },
+  {
+    targetSelector: '[data-tour-id="isbn-field"]',
+    titleKey: 'tutorial:tour.add_book.step2.title',
+    bodyKey: 'tutorial:tour.add_book.step2.body',
+    navigateTo: '/?mode=add',
+  },
+  {
+    targetSelector: '[data-tour-id="isbn-lookup-btn"]',
+    titleKey: 'tutorial:tour.add_book.step3.title',
+    bodyKey: 'tutorial:tour.add_book.step3.body',
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-title-field"]',
+    titleKey: 'tutorial:tour.add_book.step4.title',
+    bodyKey: 'tutorial:tour.add_book.step4.body',
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-save-btn"]',
+    titleKey: 'tutorial:tour.add_book.step5.title',
+    bodyKey: 'tutorial:tour.add_book.step5.body',
+  },
+];
+
+const MODIFY_BOOK_TOUR: TourStep[] = [
+  {
+    targetSelector: '[data-tour-id="book-card-first"]',
+    titleKey: 'tutorial:tour.modify_book.step1.title',
+    bodyKey: 'tutorial:tour.modify_book.step1.body',
+    navigateTo: '/',
+  },
+  {
+    targetSelector: '[data-tour-id="book-card-first"]',
+    titleKey: 'tutorial:tour.modify_book.step2.title',
+    bodyKey: 'tutorial:tour.modify_book.step2.body',
+  },
+  {
+    targetSelector: '[data-tour-id="book-detail-edit-btn"]',
+    titleKey: 'tutorial:tour.modify_book.step3.title',
+    bodyKey: 'tutorial:tour.modify_book.step3.body',
+    prerequisiteClicks: ['[data-tour-id="book-card-first"]'],
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-title-field"]',
+    titleKey: 'tutorial:tour.modify_book.step4.title',
+    bodyKey: 'tutorial:tour.modify_book.step4.body',
+    prerequisiteClicks: ['[data-tour-id="book-detail-edit-btn"]'],
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-save-btn"]',
+    titleKey: 'tutorial:tour.modify_book.step5.title',
+    bodyKey: 'tutorial:tour.modify_book.step5.body',
+  },
+];
+
+const DELETE_BOOK_TOUR: TourStep[] = [
+  {
+    targetSelector: '[data-tour-id="book-card-first"]',
+    titleKey: 'tutorial:tour.delete_book.step1.title',
+    bodyKey: 'tutorial:tour.delete_book.step1.body',
+    navigateTo: '/',
+  },
+  {
+    targetSelector: '[data-tour-id="book-card-first"]',
+    titleKey: 'tutorial:tour.delete_book.step2.title',
+    bodyKey: 'tutorial:tour.delete_book.step2.body',
+  },
+  {
+    targetSelector: '[data-tour-id="book-detail-delete-btn"]',
+    titleKey: 'tutorial:tour.delete_book.step3.title',
+    bodyKey: 'tutorial:tour.delete_book.step3.body',
+    prerequisiteClicks: ['[data-tour-id="book-card-first"]'],
+  },
+  {
+    targetSelector: '[data-tour-id="delete-confirm-btn"]',
+    titleKey: 'tutorial:tour.delete_book.step4.title',
+    bodyKey: 'tutorial:tour.delete_book.step4.body',
+    prerequisiteClicks: ['[data-tour-id="book-detail-delete-btn"]'],
+  },
+];
+
+const SCANNER_TOUR: TourStep[] = [
+  {
+    targetSelector: '[data-tour-id="scanner-manual-input"]',
+    titleKey: 'tutorial:tour.scanner.step1.title',
+    bodyKey: 'tutorial:tour.scanner.step1.body',
+    navigateTo: '/scanner',
+  },
+  {
+    targetSelector: '[data-tour-id="scanner-manual-input"]',
+    titleKey: 'tutorial:tour.scanner.step2.title',
+    bodyKey: 'tutorial:tour.scanner.step2.body',
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-title-field"]',
+    titleKey: 'tutorial:tour.scanner.step3.title',
+    bodyKey: 'tutorial:tour.scanner.step3.body',
+    navigateTo: '/?mode=add',
+  },
+];
+
+const ASSIGN_AUTHORS_CATEGORIES_TOUR: TourStep[] = [
+  {
+    targetSelector: '[data-tour-id="isbn-field"]',
+    titleKey: 'tutorial:tour.assign_authors_categories.step1.title',
+    bodyKey: 'tutorial:tour.assign_authors_categories.step1.body',
+    navigateTo: '/?mode=add',
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-author-select"]',
+    titleKey: 'tutorial:tour.assign_authors_categories.step2.title',
+    bodyKey: 'tutorial:tour.assign_authors_categories.step2.body',
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-category-select"]',
+    titleKey: 'tutorial:tour.assign_authors_categories.step3.title',
+    bodyKey: 'tutorial:tour.assign_authors_categories.step3.body',
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-save-btn"]',
+    titleKey: 'tutorial:tour.assign_authors_categories.step4.title',
+    bodyKey: 'tutorial:tour.assign_authors_categories.step4.body',
+  },
+];
+
+const ADD_AUTHORS_CATEGORIES_TOUR: TourStep[] = [
+  {
+    targetSelector: '[data-tour-id="isbn-field"]',
+    titleKey: 'tutorial:tour.add_authors_categories.step1.title',
+    bodyKey: 'tutorial:tour.add_authors_categories.step1.body',
+    navigateTo: '/?mode=add',
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-author-add-btn"]',
+    titleKey: 'tutorial:tour.add_authors_categories.step2.title',
+    bodyKey: 'tutorial:tour.add_authors_categories.step2.body',
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-author-add-btn"]',
+    titleKey: 'tutorial:tour.add_authors_categories.step3.title',
+    bodyKey: 'tutorial:tour.add_authors_categories.step3.body',
+    prerequisiteClicks: ['[data-tour-id="book-form-author-add-btn"]'],
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-save-btn"]',
+    titleKey: 'tutorial:tour.add_authors_categories.step4.title',
+    bodyKey: 'tutorial:tour.add_authors_categories.step4.body',
+  },
+];
+
+const MODIFY_DELETE_AUTHORS_CATEGORIES_TOUR: TourStep[] = [
+  {
+    targetSelector: '[data-tour-id="isbn-field"]',
+    titleKey: 'tutorial:tour.modify_delete_authors_categories.step1.title',
+    bodyKey: 'tutorial:tour.modify_delete_authors_categories.step1.body',
+    navigateTo: '/?mode=add',
+  },
+  {
+    targetSelector: '[data-tour-id="book-form-author-manage-btn"]',
+    titleKey: 'tutorial:tour.modify_delete_authors_categories.step2.title',
+    bodyKey: 'tutorial:tour.modify_delete_authors_categories.step2.body',
+  },
+  {
+    targetSelector: '[data-tour-id="entity-manage-dialog"]',
+    titleKey: 'tutorial:tour.modify_delete_authors_categories.step3.title',
+    bodyKey: 'tutorial:tour.modify_delete_authors_categories.step3.body',
+    prerequisiteClicks: ['[data-tour-id="book-form-author-manage-btn"]'],
+  },
+  {
+    targetSelector: '[data-tour-id="entity-manage-dialog"]',
+    titleKey: 'tutorial:tour.modify_delete_authors_categories.step4.title',
+    bodyKey: 'tutorial:tour.modify_delete_authors_categories.step4.body',
+  },
+];
+
+const CHANGE_PASSWORD_TOUR: TourStep[] = [
+  {
+    targetSelector: '[data-tour-id="account-password-section"]',
+    titleKey: 'tutorial:tour.change_password.step1.title',
+    bodyKey: 'tutorial:tour.change_password.step1.body',
+    navigateTo: '/account',
+  },
+  {
+    targetSelector: '[data-tour-id="account-password-section"]',
+    titleKey: 'tutorial:tour.change_password.step2.title',
+    bodyKey: 'tutorial:tour.change_password.step2.body',
+  },
+  {
+    targetSelector: '[data-tour-id="account-password-section"]',
+    titleKey: 'tutorial:tour.change_password.step3.title',
+    bodyKey: 'tutorial:tour.change_password.step3.body',
+  },
+  {
+    targetSelector: '[data-tour-id="account-password-save-btn"]',
+    titleKey: 'tutorial:tour.change_password.step4.title',
+    bodyKey: 'tutorial:tour.change_password.step4.body',
+  },
+];
 
 const LIBRARY_TUTORIAL_ITEM_CONFIGS: LibraryTutorialItemConfig[] = [
   {
@@ -154,18 +364,21 @@ const LIBRARY_TUTORIAL_ITEM_CONFIGS: LibraryTutorialItemConfig[] = [
     ctaPath: '/?mode=add',
     ctaLabelKey: 'cta.add_book',
     mediaBaseName: 'add-book',
+    tourSteps: ADD_BOOK_TOUR,
   },
   {
     id: 'modify-book',
     cardKey: 'modify_book',
     ctaPath: '/',
     ctaLabelKey: 'cta.go_to_library',
+    tourSteps: MODIFY_BOOK_TOUR,
   },
   {
     id: 'delete-book',
     cardKey: 'delete_book',
     ctaPath: '/',
     ctaLabelKey: 'cta.go_to_library',
+    tourSteps: DELETE_BOOK_TOUR,
   },
   {
     id: 'scanner',
@@ -173,24 +386,28 @@ const LIBRARY_TUTORIAL_ITEM_CONFIGS: LibraryTutorialItemConfig[] = [
     ctaPath: '/scanner',
     ctaLabelKey: 'cta.open_scanner',
     ctaNoteKey: 'cta_note.camera_required',
+    tourSteps: SCANNER_TOUR,
   },
   {
     id: 'assign-authors-categories',
     cardKey: 'assign_authors_categories',
     ctaPath: '/?mode=add',
     ctaLabelKey: 'cta.add_book',
+    tourSteps: ASSIGN_AUTHORS_CATEGORIES_TOUR,
   },
   {
     id: 'add-authors-categories',
     cardKey: 'add_authors_categories',
     ctaPath: '/?mode=add',
     ctaLabelKey: 'cta.add_book',
+    tourSteps: ADD_AUTHORS_CATEGORIES_TOUR,
   },
   {
     id: 'modify-delete-authors-categories',
     cardKey: 'modify_delete_authors_categories',
     ctaPath: '/?mode=add',
     ctaLabelKey: 'cta.add_book',
+    tourSteps: MODIFY_DELETE_AUTHORS_CATEGORIES_TOUR,
   },
   {
     id: 'change-password',
@@ -198,6 +415,7 @@ const LIBRARY_TUTORIAL_ITEM_CONFIGS: LibraryTutorialItemConfig[] = [
     ctaPath: '/account',
     ctaLabelKey: 'cta.go_to_account',
     availability: 'userPasswordFeature',
+    tourSteps: CHANGE_PASSWORD_TOUR,
   },
 ];
 
