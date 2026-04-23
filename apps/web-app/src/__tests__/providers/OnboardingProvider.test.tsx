@@ -37,6 +37,7 @@ describe('OnboardingProvider', () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
+    window.localStorage.clear();
     onboardingProviderMocks.startTourMock.mockReset();
     onboardingProviderMocks.updateSettingMock.mockReset();
     onboardingProviderMocks.useAuthMock.mockReturnValue({
@@ -92,6 +93,22 @@ describe('OnboardingProvider', () => {
       user: { id: 1 },
       isAuthenticated: true,
       loading: true,
+    });
+
+    renderProvider();
+    vi.advanceTimersByTime(500);
+
+    expect(onboardingProviderMocks.startTourMock).not.toHaveBeenCalled();
+  });
+
+  it('does not start onboarding when onboarding completion is already stored locally', () => {
+    window.localStorage.setItem('web:setting:onboarding.completed:user:1', 'true');
+
+    onboardingProviderMocks.useSettingMock.mockReturnValue({
+      value: undefined,
+      defaultValue: false,
+      isLoading: false,
+      updateSetting: onboardingProviderMocks.updateSettingMock,
     });
 
     renderProvider();

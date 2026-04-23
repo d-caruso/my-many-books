@@ -9,8 +9,14 @@ import {
 } from './auth';
 
 // Custom commands for the My Many Books application
+const ABOUT_POPUP_HIDDEN_KEY = 'about-popup-hidden';
+const getOnboardingCompletedStorageKey = (userId: number): string =>
+  `web:setting:onboarding.completed:user:${userId}`;
 
-const loginWithUser = (profile: E2EUserProfile) => {
+const loginWithUser = (
+  profile: E2EUserProfile,
+  onboardingCompleted?: boolean
+) => {
   return buildAuthTokens(profile).then((tokens) => {
     const response = buildLoginResponse(profile, tokens);
 
@@ -37,7 +43,7 @@ const loginWithUser = (profile: E2EUserProfile) => {
 
     // Use cy.session to persist authentication across page visits
     cy.session(
-      [profile.email, profile.role],
+      [profile.email, profile.role, onboardingCompleted === true ? 'onboarding-complete' : 'onboarding-pending'],
       () => {
         cy.visit('/', {
           onBeforeLoad(win) {
@@ -48,6 +54,13 @@ const loginWithUser = (profile: E2EUserProfile) => {
         cy.window().then((win) => {
           win.localStorage.setItem('auth_tokens', JSON.stringify(authTokens));
           win.localStorage.setItem('auth_user', JSON.stringify(authUser));
+          win.localStorage.setItem(ABOUT_POPUP_HIDDEN_KEY, 'true');
+
+          if (onboardingCompleted === true) {
+            win.localStorage.setItem(getOnboardingCompletedStorageKey(profile.id), 'true');
+          } else {
+            win.localStorage.removeItem(getOnboardingCompletedStorageKey(profile.id));
+          }
         });
         cy.reload();
         cy.url().should('not.include', '/auth');
@@ -79,6 +92,14 @@ Cypress.Commands.add('loginAsAdmin', () => {
 
 Cypress.Commands.add('loginAsUser', () => {
   return loginWithUser(getE2EUser('user'));
+});
+
+Cypress.Commands.add('loginAsNewUser', () => {
+  return loginWithUser(getE2EUser('user'), false);
+});
+
+Cypress.Commands.add('loginAsExistingUser', () => {
+  return loginWithUser(getE2EUser('user'), true);
 });
 
 Cypress.Commands.add('resetDatabase', () => {

@@ -42,7 +42,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps): JSX.E
       return;
     }
 
-    const isOnboardingComplete = onboardingCompleted ?? onboardingDefaultValue ?? false;
+    const storedOnboardingCompleted =
+      typeof window !== 'undefined' &&
+      window.localStorage.getItem(`web:setting:${SETTING_KEYS.ONBOARDING.COMPLETED}:user:${user.id}`) === 'true';
+    const isOnboardingComplete =
+      storedOnboardingCompleted || onboardingCompleted === true || onboardingDefaultValue === true;
+
     if (isOnboardingComplete) {
       return;
     }
