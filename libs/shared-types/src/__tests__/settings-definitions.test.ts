@@ -9,6 +9,9 @@ describe('shared-types settings definitions', () => {
     expect(SETTING_KEYS.USERS.LIST.ACTIVE.ONCHANGE).toBe(
       SETTING_DEFINITIONS.USERS.LIST.ACTIVE.ONCHANGE.key
     );
+    expect(SETTING_KEYS.ONBOARDING.COMPLETED).toBe(
+      SETTING_DEFINITIONS.ONBOARDING.COMPLETED.key
+    );
   });
 
   it('flattens definitions into a unique list', () => {
@@ -26,5 +29,25 @@ describe('shared-types settings definitions', () => {
         expect(def.allowedValues).toContain(def.defaultValue);
       }
     }
+  });
+
+  describe('SETTING_DEFINITIONS.ONBOARDING', () => {
+    it('defines onboarding.completed with correct shape', () => {
+      const def = SETTING_DEFINITIONS.ONBOARDING.COMPLETED;
+
+      expect(def.key).toBe('onboarding.completed');
+      expect(def.category).toBe('ui');
+      expect(def.type).toBe('boolean');
+      expect(def.defaultValue).toBe(false);
+      expect(def.description).toBe(
+        'Whether the user has completed or skipped the first-login onboarding tour'
+      );
+    });
+  });
+
+  describe('SETTING_KEYS.ONBOARDING', () => {
+    it('has the correct key string', () => {
+      expect(SETTING_KEYS.ONBOARDING.COMPLETED).toBe('onboarding.completed');
+    });
   });
 });

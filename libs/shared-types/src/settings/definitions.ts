@@ -101,6 +101,15 @@ export const SETTING_DEFINITIONS = {
         description: 'Default sort field for search results'
       } as SettingDefinition<string>
     }
+  },
+  ONBOARDING: {
+    COMPLETED: {
+      key: 'onboarding.completed',
+      category: 'ui',
+      type: 'boolean',
+      defaultValue: false,
+      description: 'Whether the user has completed or skipped the first-login onboarding tour'
+    } as SettingDefinition<boolean>
   }
 } as const;
 
@@ -136,6 +145,9 @@ export const SETTING_KEYS = {
       SORTABLE_FIELDS: SETTING_DEFINITIONS.SEARCH.FULLTEXT.SORTABLE_FIELDS.key,
       DEFAULT_SORT: SETTING_DEFINITIONS.SEARCH.FULLTEXT.DEFAULT_SORT.key
     }
+  },
+  ONBOARDING: {
+    COMPLETED: SETTING_DEFINITIONS.ONBOARDING.COMPLETED.key
   }
 } as const;
 
