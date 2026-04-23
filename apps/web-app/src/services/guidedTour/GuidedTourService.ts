@@ -1,4 +1,4 @@
-import { driver, type Config, type Driver, type Popover } from 'driver.js';
+import { driver, type Config, type Driver, type DriveStep, type Popover } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import type { TourStep } from '../../pages/HowTo/howToContent';
 import {
@@ -136,18 +136,29 @@ export class GuidedTourService {
       }
     }
 
-    await this.waitForSelector(step.targetSelector);
+    if (step.targetSelector) {
+      await this.waitForSelector(step.targetSelector);
+    }
 
     if (!this.running || !this.driverInstance) {
       return;
     }
 
-    this.driverInstance.highlight({
-      element: step.targetSelector,
-      popover: this.buildPopover(step),
-    });
+    this.driverInstance.highlight(this.buildHighlightStep(step));
 
     this.scheduleOverlayZIndex();
+  }
+
+  private buildHighlightStep(step: TourStep): DriveStep {
+    const highlightStep: DriveStep = {
+      popover: this.buildPopover(step),
+    };
+
+    if (step.targetSelector) {
+      highlightStep.element = step.targetSelector;
+    }
+
+    return highlightStep;
   }
 
   private scheduleOverlayZIndex(): void {

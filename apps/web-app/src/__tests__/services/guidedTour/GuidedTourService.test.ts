@@ -113,6 +113,32 @@ describe('GuidedTourService', () => {
     expect(popover.style.zIndex).toBe(String(TOUR_OVERLAY_Z_INDEX + 2));
   });
 
+  it('supports centered steps without a target element', async () => {
+    const centeredSteps: TourStep[] = [
+      {
+        targetSelector: '',
+        titleKey: 'tutorial:onboarding.welcome.title',
+        bodyKey: 'tutorial:onboarding.welcome.body',
+      },
+    ];
+
+    await service.start(centeredSteps);
+
+    expect(mockHighlight).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        element: expect.anything(),
+      })
+    );
+    expect(mockHighlight).toHaveBeenCalledWith(
+      expect.objectContaining({
+        popover: expect.objectContaining({
+          title: 'tutorial:onboarding.welcome.title',
+          description: 'tutorial:onboarding.welcome.body',
+        }),
+      })
+    );
+  });
+
   it('does not start when steps array is empty', async () => {
     await service.start([]);
 
