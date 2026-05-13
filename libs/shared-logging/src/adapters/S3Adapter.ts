@@ -66,7 +66,7 @@ export class S3Adapter extends BaseAdapter {
   private readonly client: S3Client;
   private readonly s3Config: S3AdapterConfig;
   private buffer: LogEntry[] = [];
-  private flushTimer?: NodeJS.Timeout;
+  private flushTimer?: ReturnType<typeof setInterval>;
 
   constructor(config: S3AdapterConfig) {
     super(config);
@@ -161,7 +161,7 @@ export class S3Adapter extends BaseAdapter {
     }, this.s3Config.flushInterval);
 
     // Don't keep process alive for this timer
-    this.flushTimer.unref();
+    (this.flushTimer as unknown as { unref(): void }).unref();
   }
 
   /**

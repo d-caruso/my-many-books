@@ -172,7 +172,7 @@ export class CloudWatchAdapter extends BaseAdapter {
     }, this.cloudWatchConfig.flushInterval);
 
     // Don't keep process alive for this timer
-    this.flushTimer.unref();
+    (this.flushTimer as unknown as { unref(): void }).unref();
   }
 
   /**
