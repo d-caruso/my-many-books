@@ -323,6 +323,7 @@ jest.mock('react-native', () => {
 // Mock our API services
 const mockBookAPI = {
   getBooks: jest.fn(() => Promise.resolve({ books: [] })),
+  getBook: jest.fn(() => Promise.resolve(null)),
   createBook: jest.fn(),
   updateBook: jest.fn(),
   deleteBook: jest.fn(),
@@ -336,6 +337,8 @@ const mockUserAPI = {
   login: jest.fn(),
   register: jest.fn(),
   getCurrentUser: jest.fn(),
+  updateProfile: jest.fn(),
+  deleteAccount: jest.fn(),
   setAuthToken: jest.fn(),
   clearAuthToken: jest.fn(),
   setBaseURL: jest.fn(),
@@ -379,7 +382,7 @@ const mockApiClient = {
     deleteAuthor: jest.fn(),
   },
   categories: {
-    getCategories: jest.fn(() => Promise.resolve({ categories: [] })),
+    getCategories: jest.fn(() => Promise.resolve([])),
     getCategory: jest.fn(),
     createCategory: jest.fn(),
     updateCategory: jest.fn(),

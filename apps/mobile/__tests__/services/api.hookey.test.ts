@@ -42,7 +42,7 @@ jest.mock('../../src/services/hooks/mobileHooks', () => {
   };
 });
 
-jest.mock('@my-many-books/shared-api/', () => {
+jest.mock('@my-many-books/shared-api', () => {
   const books = {
     getBooks: jest.fn(),
     getBook: jest.fn(),
@@ -90,7 +90,7 @@ jest.mock('@my-many-books/shared-api/', () => {
   };
 });
 
-const { __mockBooksApi: mockBooksApi } = jest.requireMock('@my-many-books/shared-api/') as {
+const { __mockBooksApi: mockBooksApi } = jest.requireMock('@my-many-books/shared-api') as {
   __mockBooksApi: {
     createBook: jest.Mock;
     updateBook: jest.Mock;
