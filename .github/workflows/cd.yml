@@ -635,9 +635,8 @@ jobs:
             echo "WARNING: Could not install Rollup native binary, continuing..."
           }
           echo "=== Building web-app ==="
-          npm run build
+          NODE_ENV="${{ needs.setup.outputs.environment == 'prod' && 'production' || 'development' }}" npm run build
         env:
-          NODE_ENV: ${{ needs.setup.outputs.environment == 'prod' && 'production' || 'development' }}
           VITE_COGNITO_USER_POOL_ID: ${{ steps.cognito-config.outputs.user-pool-id }}
           VITE_COGNITO_USER_POOL_CLIENT_ID: ${{ steps.cognito-config.outputs.client-id }}
           VITE_COGNITO_IDENTITY_POOL_ID: ${{ steps.cognito-config.outputs.identity-pool-id }}
