@@ -3,7 +3,6 @@
 // Business logic layer for book operations
 // ================================================================
 
-import { UniqueConstraintError } from 'sequelize';
 import { inject, injectable } from 'inversify';
 import { USER_ROLES } from '@my-many-books/shared-auth';
 import { TYPES } from '../../container/types';

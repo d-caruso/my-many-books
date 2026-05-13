@@ -6,10 +6,11 @@ import { Button, Text, TextInput } from 'react-native-paper';
 
 import { BarcodeScannerPanel } from '@/components/scanner/BarcodeScannerPanel';
 import { ScannerErrorBoundary } from '@/components/ScannerErrorBoundary';
-import { SCANNER_COPY_STATUS } from '@/constants/scanner';
-import { resolveScannedIsbnRoute } from '@/utils/isbnScannerRouting';
+import * as Clipboard from 'expo-clipboard';
+import { SCANNER_COPY_STATUS, type ScannerCopyStatus } from '@/constants/scanner';
 import { normalizeISBN, validateISBN } from '@my-many-books/shared-utils';
 import { useTranslation } from 'react-i18next';
+import { useBookSearch } from '@/hooks/useBookSearch';
 import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 import {
   HOOK_PAYLOAD_DESTINATIONS,
@@ -20,6 +21,7 @@ type ScannerMode = 'scan' | 'manual';
 
 export default function ScannerScreen() {
   const { t } = useTranslation('scanner');
+  const { searchByISBN } = useBookSearch();
   const [mode, setMode] = useState<ScannerMode>('scan');
   const [manualIsbn, setManualIsbn] = useState('');
   const [manualError, setManualError] = useState<string | null>(null);
@@ -103,7 +105,7 @@ export default function ScannerScreen() {
       pathname: '/book/add',
       params: { isbn, scannerCopy: copyStatus },
     });
-  }, [searchByISBN, t]);
+  }, [t]);
 
   const handleDetected = useCallback(async (isbn: string) => {
     await handleResolvedIsbn(isbn, 'scan');
