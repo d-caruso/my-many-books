@@ -1,15 +1,13 @@
+import { controlPlaneHookService } from '../../../../src/services/hooks/ControlPlaneHookService';
+import { emitHookEvent } from '../../../../src/services/hooks/hookSystem';
+
 jest.mock('../../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
-const { controlPlaneHookService } = require('../../../../src/services/hooks/ControlPlaneHookService.ts');
-const { emitHookEvent } = require('../../../../src/services/hooks/hookSystem');
+const emitHookEventMock = jest.mocked(emitHookEvent);
 
 describe('ControlPlaneHookService', () => {
-  const emitHookEventMock = emitHookEvent as jest.MockedFunction<
-    typeof import('../../../../src/services/hooks/hookSystem').emitHookEvent
-  >;
-
   beforeEach(() => {
     emitHookEventMock.mockClear();
   });

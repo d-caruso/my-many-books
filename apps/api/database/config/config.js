@@ -89,13 +89,6 @@ module.exports = {
     ...baseConfig,
     database: process.env.DB_NAME || 'my_many_books',
     logging: false,
-    dialectOptions: {
-      ...baseConfig.dialectOptions,
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    },
     pool: {
       max: 20,
       min: 5,
@@ -108,13 +101,6 @@ module.exports = {
     ...baseConfig,
     database: process.env.DB_NAME || 'my_many_books',
     logging: false,
-    dialectOptions: {
-      ...baseConfig.dialectOptions,
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    },
     pool: {
       max: 20,
       min: 5,

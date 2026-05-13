@@ -59,7 +59,7 @@ export class CloudWatchAdapter extends BaseAdapter {
   private readonly client: CloudWatchLogsClient;
   private readonly cloudWatchConfig: CloudWatchAdapterConfig;
   private buffer: LogEntry[] = [];
-  private flushTimer?: NodeJS.Timeout;
+  private flushTimer?: ReturnType<typeof setInterval>;
   private sequenceToken?: string;
 
   private static getErrorName(error: unknown): string | null {

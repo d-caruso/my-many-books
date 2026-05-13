@@ -1,16 +1,14 @@
+import { authLifecycleHookService } from '../../../../src/services/auth/AuthLifecycleHookService';
+import { EVENTS } from '../../../../src/services/hooks/events';
+import { emitHookEvent } from '../../../../src/services/hooks/hookSystem';
+
 jest.mock('../../../../src/services/hooks/hookSystem', () => ({
   emitHookEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
-const { authLifecycleHookService } = require('../../../../src/services/auth/AuthLifecycleHookService.ts');
-const { EVENTS } = require('../../../../src/services/hooks/events.ts');
-const { emitHookEvent } = require('../../../../src/services/hooks/hookSystem');
+const emitHookEventMock = jest.mocked(emitHookEvent);
 
 describe('AuthLifecycleHookService', () => {
-  const emitHookEventMock = emitHookEvent as jest.MockedFunction<
-    typeof import('../../../../src/services/hooks/hookSystem').emitHookEvent
-  >;
-
   beforeEach(() => {
     emitHookEventMock.mockClear();
   });
