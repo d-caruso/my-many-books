@@ -370,5 +370,37 @@
 	        "no_changes_to_save": "Nessuna modifica da salvare."
 	      }
 	    }
+	  },
+	  "privacy": {
+	    "title": "Informativa sulla Privacy",
+	    "last_updated": "Ultimo aggiornamento: maggio 2025",
+	    "intro": "My Many Books è un'applicazione personale per il tracciamento dei libri. Questa Informativa sulla Privacy spiega le informazioni che raccogliamo, come le utilizziamo e i tuoi diritti.",
+	    "section_collect_title": "Informazioni che Raccogliamo",
+	    "section_collect_body": "Raccogliamo il tuo indirizzo email al momento della registrazione, gestito in modo sicuro tramite AWS Cognito. Conserviamo inoltre i dati dei libri che inserisci (titoli, ISBN, autori, categorie, note), collegati al tuo account.",
+	    "section_use_title": "Come Utilizziamo le Tue Informazioni",
+	    "section_use_body": "I tuoi dati vengono utilizzati esclusivamente per fornire il servizio My Many Books. Non vendiamo, condividiamo o utilizziamo i tuoi dati per pubblicità o marketing di terze parti.",
+	    "section_storage_title": "Archiviazione e Sicurezza dei Dati",
+	    "section_storage_body": "I tuoi dati sono archiviati su infrastruttura AWS. I dati sono crittografati in transito (TLS) e a riposo. I token di autenticazione sono conservati in modo sicuro e non vengono mai esposti a terze parti.",
+	    "section_deletion_title": "Eliminazione dell'Account",
+	    "section_deletion_body": "Puoi eliminare il tuo account e tutti i dati associati in qualsiasi momento dalla sezione Account dell'applicazione. L'eliminazione è permanente e irreversibile.",
+	    "section_contact_title": "Contatti",
+	    "section_contact_body": "Per domande su questa Informativa sulla Privacy, contattaci all'indirizzo"
+	  },
+	  "terms": {
+	    "title": "Termini di Servizio",
+	    "last_updated": "Ultimo aggiornamento: maggio 2025",
+	    "intro": "Utilizzando My Many Books, accetti questi Termini di Servizio. Ti invitiamo a leggerli attentamente.",
+	    "section_service_title": "Il Servizio",
+	    "section_service_body": "My Many Books è un'applicazione personale per il tracciamento dei libri, destinata esclusivamente all'uso personale e non commerciale. Non è consentito ridistribuire, rivendere o reimpiegare il servizio o i suoi contenuti.",
+	    "section_account_title": "Il Tuo Account",
+	    "section_account_body": "Sei responsabile della sicurezza delle tue credenziali. Contattaci immediatamente se ritieni che il tuo account sia stato compromesso.",
+	    "section_prohibited_title": "Utilizzo Vietato",
+	    "section_prohibited_body": "Accetti di non: estrarre dati sistematicamente dal servizio; abusare o tentare di interrompere il servizio; impersonare altri utenti o persone; utilizzare il servizio per scopi illegali.",
+	    "section_termination_title": "Cessazione",
+	    "section_termination_body": "Ci riserviamo il diritto di sospendere o chiudere gli account che violano questi termini senza preavviso.",
+	    "section_liability_title": "Limitazione di Responsabilità",
+	    "section_liability_body": "Il servizio è fornito \"così com'è\" senza alcuna garanzia. Non siamo responsabili per perdite di dati o danni derivanti dall'utilizzo del servizio.",
+	    "section_contact_title": "Contatti",
+	    "section_contact_body": "Per domande su questi Termini di Servizio, contattaci all'indirizzo"
 	  }
 	}

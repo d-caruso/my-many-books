@@ -88,7 +88,9 @@ export type AppRouteName =
   | 'login'
   | 'register'
   | 'forgot-password'
-  | 'reset-password';
+  | 'reset-password'
+  | 'privacy'
+  | 'terms';
 
 // Route configuration for the app
 export interface AppRoute extends Omit<Route, 'id' | 'name'> {

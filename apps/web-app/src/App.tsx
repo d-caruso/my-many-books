@@ -31,6 +31,8 @@ import { Navbar } from './components/Navigation';
 // giving lazy bundles time to load before they're needed
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const MySpeedTest = lazy(() => import('./pages/MySpeedTest'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
 
 // Lazy load non-landing pages for route-based code splitting
 const BooksPage = lazy(() => import('./pages/BooksPage'));
@@ -269,6 +271,8 @@ function App() {
                           <Route path="/auth/verify" element={<VerifyEmailPage />} />
                           <Route path={APP_ROUTES['forgot-password'].path} element={<ForgotPasswordPage />} />
                           <Route path={APP_ROUTES['reset-password'].path} element={<ResetPasswordPage />} />
+                          <Route path={APP_ROUTES.privacy.path} element={<PrivacyPage />} />
+                          <Route path={APP_ROUTES.terms.path} element={<TermsPage />} />
 
                           {/* Admin routes - require admin role */}
                           <Route

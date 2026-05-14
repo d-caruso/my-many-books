@@ -370,5 +370,37 @@
 	        "no_changes_to_save": "No changes to save."
 	      }
 	    }
+	  },
+	  "privacy": {
+	    "title": "Privacy Policy",
+	    "last_updated": "Last updated: May 2025",
+	    "intro": "My Many Books is a personal book tracking application. This Privacy Policy explains what information we collect, how we use it, and your rights.",
+	    "section_collect_title": "Information We Collect",
+	    "section_collect_body": "We collect your email address when you register, managed securely through AWS Cognito. We also store the book data you add (titles, ISBNs, authors, categories, notes), linked to your account.",
+	    "section_use_title": "How We Use Your Information",
+	    "section_use_body": "Your data is used solely to provide the My Many Books service. We do not sell, share, or use your data for advertising or third-party marketing.",
+	    "section_storage_title": "Data Storage and Security",
+	    "section_storage_body": "Your data is stored on AWS infrastructure. Data is encrypted in transit (TLS) and at rest. Authentication tokens are stored securely and never exposed to third parties.",
+	    "section_deletion_title": "Account Deletion",
+	    "section_deletion_body": "You can delete your account and all associated data at any time from the Account section of the application. Deletion is permanent and irreversible.",
+	    "section_contact_title": "Contact",
+	    "section_contact_body": "For questions about this Privacy Policy, contact us at"
+	  },
+	  "terms": {
+	    "title": "Terms of Service",
+	    "last_updated": "Last updated: May 2025",
+	    "intro": "By using My Many Books, you agree to these Terms of Service. Please read them carefully.",
+	    "section_service_title": "The Service",
+	    "section_service_body": "My Many Books is a personal book tracking application for personal, non-commercial use only. You may not redistribute, resell, or repurpose the service or its content.",
+	    "section_account_title": "Your Account",
+	    "section_account_body": "You are responsible for maintaining the security of your account credentials. Notify us immediately if you believe your account has been compromised.",
+	    "section_prohibited_title": "Prohibited Use",
+	    "section_prohibited_body": "You agree not to: scrape or systematically extract data from the service; abuse or attempt to disrupt the service; impersonate another user or person; use the service for any unlawful purpose.",
+	    "section_termination_title": "Termination",
+	    "section_termination_body": "We reserve the right to suspend or terminate accounts that violate these terms without prior notice.",
+	    "section_liability_title": "Limitation of Liability",
+	    "section_liability_body": "The service is provided \"as is\" without any warranty. We are not liable for any loss of data or damages arising from use of the service.",
+	    "section_contact_title": "Contact",
+	    "section_contact_body": "For questions about these Terms of Service, contact us at"
 	  }
 	}

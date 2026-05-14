@@ -175,6 +175,24 @@ export const APP_ROUTES: Record<AppRouteName, AppRoute> = {
       breadcrumb: 'Reset Password'
     }
   },
+
+  privacy: {
+    name: 'privacy',
+    path: '/privacy',
+    metadata: {
+      title: 'Privacy Policy',
+      breadcrumb: 'Privacy Policy'
+    }
+  },
+
+  terms: {
+    name: 'terms',
+    path: '/terms',
+    metadata: {
+      title: 'Terms of Service',
+      breadcrumb: 'Terms of Service'
+    }
+  },
 };
 
 // Route creation utilities
