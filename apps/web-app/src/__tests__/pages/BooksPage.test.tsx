@@ -237,10 +237,16 @@ const testI18n = i18n.createInstance();
 const i18nReady = testI18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['pages', 'scanner'],
+  ns: ['pages', 'scanner', 'books'],
   defaultNS: 'pages',
   resources: {
     en: {
+      books: {
+        preview_banner_title: 'Sample library preview',
+        preview_banner_description: 'This is what your library could look like. Dismiss to start with your own books.',
+        preview_banner_dismiss: 'Dismiss',
+        preview_badge: 'Sample',
+      },
       pages: {
         books: {
           title: 'My Books',
@@ -296,6 +302,7 @@ describe('BooksPage', () => {
     mockSetSearchParams.mockClear();
     mockNavigate.mockClear();
     window.sessionStorage.clear();
+    localStorage.clear();
     mockUseAuth.mockReturnValue({
       user: { id: 1, name: 'Mario', surname: 'Rossi', email: 'mario@example.com', role: 'user' as const, isActive: true },
       loading: false,
@@ -620,7 +627,8 @@ describe('BooksPage', () => {
     expect(booksState.updateBookStatus).toHaveBeenCalledWith(10, 'read');
   });
 
-  test('shows empty message when no books present', () => {
+  test('shows empty message when no books present and preview dismissed', () => {
+    localStorage.setItem('SAMPLE_PREVIEW_DISMISSED', 'true');
     booksState.books = [];
     booksState.totalCount = 0;
     renderBooksPage();
