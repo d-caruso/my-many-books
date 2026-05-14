@@ -26,7 +26,8 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0369a1"
+        "backgroundColor": "#0369a1",
+        "monochromeImage": "./assets/adaptive-icon-monochrome.png"
       },
       "package": "com.mycompany.mymanybooks",
       "versionCode": 1,
