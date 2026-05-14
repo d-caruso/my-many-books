@@ -209,6 +209,12 @@ export default function ProfileScreen() {
         </Card>
 
         <View style={styles.logoutContainer}>
+          <List.Item
+            title={t('profile:delete_account_title')}
+            left={(p) => <List.Icon {...p} icon="delete-forever" />}
+            onPress={() => router.push('/account/delete')}
+            accessibilityRole="button"
+          />
           <Button
             mode="outlined"
             onPress={handleLogout}
