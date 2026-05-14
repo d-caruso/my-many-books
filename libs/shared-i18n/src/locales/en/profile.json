@@ -1,0 +1,7 @@
+{
+  "delete_account_title": "Delete account",
+  "delete_account_warning": "This permanently deletes your account and all your books. This cannot be undone.",
+  "delete_account_confirm": "Type DELETE to confirm",
+  "delete_account_cta": "Delete my account",
+  "delete_account_success": "Account deleted"
+}

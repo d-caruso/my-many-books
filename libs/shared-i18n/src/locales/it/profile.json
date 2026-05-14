@@ -1,0 +1,7 @@
+{
+  "delete_account_title": "Elimina account",
+  "delete_account_warning": "Questo elimina permanentemente il tuo account e tutti i tuoi libri. Non è possibile annullare questa operazione.",
+  "delete_account_confirm": "Digita ELIMINA per confermare",
+  "delete_account_cta": "Elimina il mio account",
+  "delete_account_success": "Account eliminato"
+}
