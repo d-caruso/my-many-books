@@ -10,3 +10,19 @@ describe('app.json — Android manifest fields', () => {
     expect(appJson.expo.android.compileSdkVersion).toBe(35);
   });
 });
+
+describe('app.json — Android permissions', () => {
+  it('declares only CAMERA and INTERNET', () => {
+    expect(appJson.expo.android.permissions.sort()).toEqual(['CAMERA', 'INTERNET']);
+  });
+
+  it('does not declare RECORD_AUDIO', () => {
+    expect(appJson.expo.android.permissions).not.toContain('android.permission.RECORD_AUDIO');
+    expect(appJson.expo.android.permissions).not.toContain('RECORD_AUDIO');
+  });
+
+  it('does not declare external storage permissions', () => {
+    expect(appJson.expo.android.permissions).not.toContain('READ_EXTERNAL_STORAGE');
+    expect(appJson.expo.android.permissions).not.toContain('WRITE_EXTERNAL_STORAGE');
+  });
+});
