@@ -20,8 +20,9 @@ import { AddBookOverlays } from '@/components/book/AddBookOverlays';
 import { useAddBookStyles } from '@/components/book/addBookStyles';
 import { ISBN_NOTICE, SCANNER_COPY_STATUS, type IsbnNotice, type ScannerCopyStatus } from '@/constants/scanner';
 import { deserializeExternalBookPrefill } from '@/utils/isbnScannerRouting';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
-export default function AddBookScreen() {
+function AddBookScreen() {
   const { t } = useTranslation();
   const styles = useAddBookStyles();
   const { isbn, bookData, scannerCopy, prefill, isbnNotice } = useLocalSearchParams<{
@@ -531,5 +532,13 @@ export default function AddBookScreen() {
         {feedbackState.message}
       </Snackbar>
     </SafeAreaView>
+  );
+}
+
+export default function AddBookRoute() {
+  return (
+    <PageErrorBoundary screenName="AddBook">
+      <AddBookScreen />
+    </PageErrorBoundary>
   );
 }

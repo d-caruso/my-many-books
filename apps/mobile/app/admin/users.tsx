@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Text, Card, ActivityIndicator, Searchbar, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { adminAPI } from '@/services/api';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
 interface User {
   id: number;
@@ -14,7 +15,7 @@ interface User {
   creationDate: string;
 }
 
-export default function UserManagement() {
+function UserManagement() {
   const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,3 +171,11 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 });
+
+export default function UserManagementRoute() {
+  return (
+    <PageErrorBoundary screenName="AdminUsers">
+      <UserManagement />
+    </PageErrorBoundary>
+  );
+}

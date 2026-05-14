@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { adminAPI } from '@/services/api';
 import { mobileHooks, MOBILE_EVENTS } from '@/services/hooks/mobileHooks';
 import { extractErrorDetails } from '@my-many-books/shared-utils';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
 interface DashboardStats {
   totalUsers: number;
@@ -14,7 +15,7 @@ interface DashboardStats {
   totalBooks: number;
 }
 
-export default function AdminDashboard() {
+function AdminDashboard() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -184,3 +185,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 });
+
+export default function AdminDashboardRoute() {
+  return (
+    <PageErrorBoundary screenName="AdminDashboard">
+      <AdminDashboard />
+    </PageErrorBoundary>
+  );
+}

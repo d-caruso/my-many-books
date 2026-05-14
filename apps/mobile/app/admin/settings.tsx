@@ -2,8 +2,9 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Card } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
-export default function AdminSettings() {
+function AdminSettings() {
   const { t } = useTranslation();
 
   return (
@@ -42,3 +43,11 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 });
+
+export default function AdminSettingsRoute() {
+  return (
+    <PageErrorBoundary screenName="AdminSettings">
+      <AdminSettings />
+    </PageErrorBoundary>
+  );
+}

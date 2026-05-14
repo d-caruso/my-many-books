@@ -16,10 +16,11 @@ import {
   HOOK_PAYLOAD_DESTINATIONS,
   HOOK_PAYLOAD_SOURCES,
 } from '@/services/hooks/hookPayloadConstants';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
 type ScannerMode = 'scan' | 'manual';
 
-export default function ScannerScreen() {
+function ScannerScreen() {
   const { t } = useTranslation('scanner');
   const { searchByISBN } = useBookSearch();
   const [mode, setMode] = useState<ScannerMode>('scan');
@@ -198,3 +199,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 });
+
+export default function ScannerRoute() {
+  return (
+    <PageErrorBoundary screenName="Scanner">
+      <ScannerScreen />
+    </PageErrorBoundary>
+  );
+}

@@ -4,6 +4,7 @@ import { Text, Card, ActivityIndicator, Searchbar, Chip } from 'react-native-pap
 import { useTranslation } from 'react-i18next';
 import { adminAPI } from '@/services/api';
 import { getStatusColor } from '@my-many-books/shared-design';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
 interface Book {
   id: number;
@@ -15,7 +16,7 @@ interface Book {
   creationDate: string;
 }
 
-export default function BookManagement() {
+function BookManagement() {
   const { t } = useTranslation();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,3 +168,11 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 });
+
+export default function BookManagementRoute() {
+  return (
+    <PageErrorBoundary screenName="AdminBooks">
+      <BookManagement />
+    </PageErrorBoundary>
+  );
+}

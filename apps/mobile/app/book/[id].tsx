@@ -21,8 +21,9 @@ import { formatBookCardData, getCategoryDisplayName } from '@my-many-books/share
 import { getStatusColor } from '@my-many-books/shared-design';
 import { useBooks } from '@/hooks/useBooks';
 import type { Book } from '@/types';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
-export default function BookDetailScreen() {
+function BookDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation(['books', 'common']);
   const theme = useTheme();
@@ -313,3 +314,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 });
+
+export default function BookDetailRoute() {
+  return (
+    <PageErrorBoundary screenName="BookDetail">
+      <BookDetailScreen />
+    </PageErrorBoundary>
+  );
+}

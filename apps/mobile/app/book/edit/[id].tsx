@@ -18,8 +18,9 @@ import { AuthorsSection } from '@/components/book/AuthorsSection';
 import { CategoriesSection } from '@/components/book/CategoriesSection';
 import { AddBookOverlays } from '@/components/book/AddBookOverlays';
 import { useAddBookStyles } from '@/components/book/addBookStyles';
+import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
-export default function EditBookScreen() {
+function EditBookScreen() {
   const { id, fromIsbnScan } = useLocalSearchParams<{ id: string; fromIsbnScan?: '1' }>();
   const { t } = useTranslation();
   const styles = useAddBookStyles();
@@ -396,5 +397,13 @@ export default function EditBookScreen() {
         {isbnFeedbackMessage}
       </Snackbar>
     </SafeAreaView>
+  );
+}
+
+export default function EditBookRoute() {
+  return (
+    <PageErrorBoundary screenName="EditBook">
+      <EditBookScreen />
+    </PageErrorBoundary>
   );
 }

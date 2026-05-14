@@ -6,6 +6,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 
 interface PageErrorBoundaryProps {
   children: ReactNode;
+  screenName?: string;
 }
 
 function PageErrorFallback({ retry }: { retry: () => void }) {
@@ -27,10 +28,15 @@ function PageErrorFallback({ retry }: { retry: () => void }) {
   );
 }
 
-export function PageErrorBoundary({ children }: PageErrorBoundaryProps) {
+export function PageErrorBoundary({ children, screenName }: PageErrorBoundaryProps) {
   return (
     <ErrorBoundary
-      fallback={(_error, _errorInfo, retry) => <PageErrorFallback retry={retry} />}
+      fallback={(error, _errorInfo, retry) => {
+        if (screenName) {
+          console.error(`[PageErrorBoundary] ${screenName}:`, error);
+        }
+        return <PageErrorFallback retry={retry} />;
+      }}
     >
       {children}
     </ErrorBoundary>
