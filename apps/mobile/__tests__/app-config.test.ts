@@ -11,6 +11,23 @@ describe('app.json — Android manifest fields', () => {
   });
 });
 
+describe('app.json — 16 KB page-size build config', () => {
+  const buildPropertiesPlugin = appJson.expo.plugins.find(
+    (p): p is [string, { android: { ndkVersion: string; packagingOptions: { jniLibs: { useLegacyPackaging: boolean } } } }] =>
+      Array.isArray(p) && p[0] === 'expo-build-properties',
+  );
+
+  it('uses NDK r27 or newer', () => {
+    expect(buildPropertiesPlugin).toBeDefined();
+    expect(buildPropertiesPlugin![1].android.ndkVersion).toMatch(/^27\./);
+  });
+
+  it('disables legacy jniLibs packaging', () => {
+    expect(buildPropertiesPlugin).toBeDefined();
+    expect(buildPropertiesPlugin![1].android.packagingOptions.jniLibs.useLegacyPackaging).toBe(false);
+  });
+});
+
 describe('app.json — Android permissions', () => {
   it('declares only CAMERA and INTERNET', () => {
     expect(appJson.expo.android.permissions.sort()).toEqual(['CAMERA', 'INTERNET']);
