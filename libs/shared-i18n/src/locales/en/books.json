@@ -138,6 +138,10 @@
   "book_not_found_for_isbn": "Book not found for this ISBN",
   "failed_to_lookup_book": "Failed to lookup book",
   "status_saved": "Status saved",
+  "preview_banner_title": "Sample library preview",
+  "preview_banner_description": "This is what your library could look like. Dismiss to start with your own books.",
+  "preview_banner_dismiss": "Dismiss",
+  "preview_badge": "Sample",
   "errors": {
     "SEARCH_UNEXPECTED_ERROR": "Something went wrong while searching. Please try again later."
   }

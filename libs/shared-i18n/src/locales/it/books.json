@@ -138,6 +138,10 @@
   "book_not_found_for_isbn": "Libro non trovato per questo ISBN",
   "failed_to_lookup_book": "Ricerca libro fallita",
   "status_saved": "Stato salvato",
+  "preview_banner_title": "Anteprima della libreria di esempio",
+  "preview_banner_description": "Ecco come potrebbe apparire la tua libreria. Chiudi per iniziare con i tuoi libri.",
+  "preview_banner_dismiss": "Chiudi",
+  "preview_badge": "Esempio",
   "errors": {
     "SEARCH_UNEXPECTED_ERROR": "Si è verificato un errore durante la ricerca. Riprova più tardi."
   }
