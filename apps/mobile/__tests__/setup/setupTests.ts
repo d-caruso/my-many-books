@@ -317,6 +317,12 @@ jest.mock('react-native', () => {
       OS: 'ios',
       select: jest.fn((obj) => obj.ios),
     },
+    Linking: {
+      openURL: jest.fn(() => Promise.resolve()),
+      canOpenURL: jest.fn(() => Promise.resolve(true)),
+      getInitialURL: jest.fn(() => Promise.resolve(null)),
+      addEventListener: jest.fn(),
+    },
   };
 });
 

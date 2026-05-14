@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Linking } from 'react-native';
 import { List, Text, Avatar, Button, Card, Switch, Snackbar, useTheme as usePaperTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { changeLanguage } from '@/i18n';
 import LanguageSelector from '@/components/LanguageSelector';
 import { AboutDialog } from '@/components/About/AboutDialog';
+import { LEGAL_URLS } from '@/constants/legalUrls';
 import { PageErrorBoundary } from '@/components/PageErrorBoundary';
 
 export default function ProfileScreen() {
@@ -183,7 +184,7 @@ export default function ProfileScreen() {
               description={t('read_our_privacy_policy')}
               left={() => <List.Icon icon="shield-account" />}
               right={() => <List.Icon icon="chevron-right" />}
-              onPress={() => {}}
+              onPress={() => Linking.openURL(LEGAL_URLS.privacyPolicy)}
               accessibilityRole="button"
               accessibilityLabel={`${t('privacy_policy')}, ${t('read_our_privacy_policy')}`}
             />
@@ -193,7 +194,7 @@ export default function ProfileScreen() {
               description={t('read_our_terms_of_service')}
               left={() => <List.Icon icon="file-document" />}
               right={() => <List.Icon icon="chevron-right" />}
-              onPress={() => {}}
+              onPress={() => Linking.openURL(LEGAL_URLS.termsOfService)}
               accessibilityRole="button"
               accessibilityLabel={`${t('terms_of_service')}, ${t('read_our_terms_of_service')}`}
             />
