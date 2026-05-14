@@ -12,7 +12,7 @@ const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 const HowToScreen = () => {
   const handlePreviewLibrary = async () => {
     await AsyncStorage.removeItem(SAMPLE_PREVIEW_DISMISSED);
-    router.push('/(tabs)/');
+    router.push('/(tabs)');
   };
 
   return React.createElement(
@@ -44,6 +44,6 @@ describe('HowToScreen — preview button', () => {
     });
 
     expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(SAMPLE_PREVIEW_DISMISSED);
-    expect(mockRouter.push).toHaveBeenCalledWith('/(tabs)/');
+    expect(mockRouter.push).toHaveBeenCalledWith('/(tabs)');
   });
 });

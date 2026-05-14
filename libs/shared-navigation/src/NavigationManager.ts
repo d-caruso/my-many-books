@@ -176,6 +176,8 @@ export class NavigationManager {
       register: '/auth/register',
       'forgot-password': '/auth/forgot-password',
       'reset-password': '/auth/reset-password',
+      privacy: '/privacy',
+      terms: '/terms',
     };
 
     let path = routePatterns[routeName];
