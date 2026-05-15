@@ -4,7 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PageErrorBoundary } from '@/components/PageErrorBoundary';
+import { SAMPLE_PREVIEW_DISMISSED } from '@/constants/sampleBooks';
 import MiniVideoPlayer from '@/components/Tutorial/MiniVideoPlayer';
 import {
   HOW_TO_SECTIONS,
@@ -18,6 +20,11 @@ export default function HowToScreen() {
   const theme = useTheme();
   const capabilities = getTutorialCapabilities();
   const visibleSections = getVisibleTutorialSections(HOW_TO_SECTIONS, capabilities);
+
+  const handlePreviewLibrary = async () => {
+    await AsyncStorage.removeItem(SAMPLE_PREVIEW_DISMISSED);
+    router.push('/(tabs)');
+  };
 
   return (
     <PageErrorBoundary>
@@ -123,6 +130,15 @@ export default function HowToScreen() {
               {t('no_guides_available')}
             </Text>
           )}
+
+          <Button
+            mode="outlined"
+            onPress={handlePreviewLibrary}
+            style={styles.previewButton}
+            testID="preview-library-button"
+          >
+            {t('preview_banner_title', { ns: 'books' })}
+          </Button>
         </ScrollView>
       </SafeAreaView>
     </PageErrorBoundary>
@@ -193,5 +209,8 @@ const styles = StyleSheet.create({
     opacity: 0.6,
     textAlign: 'center',
     marginTop: 32,
+  },
+  previewButton: {
+    marginTop: 24,
   },
 });

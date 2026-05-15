@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { View, FlatList, RefreshControl, useWindowDimensions } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { FAB, Searchbar, Chip, Text, Snackbar, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import { StyleSheet } from 'react-native';
@@ -20,6 +21,8 @@ import { Book } from '@/types';
 import type { UiBook } from '@/types/ui';
 import type { ListRenderItem } from 'react-native';
 import { PageErrorBoundary } from '@/components/PageErrorBoundary';
+import { SampleLibraryPreview } from '@/components/SampleLibraryPreview';
+import { SAMPLE_PREVIEW_DISMISSED } from '@/constants/sampleBooks';
 
 function getNumColumns(width: number): number {
   if (width >= 900) return 3;
@@ -37,6 +40,7 @@ export default function BooksScreen() {
   const [isSearching, setIsSearching] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
   const { isOnline } = useNetworkState();
   
   const {
@@ -97,6 +101,23 @@ export default function BooksScreen() {
       cancelled = true;
     };
   }, [user, t]);
+
+  useFocusEffect(useCallback(() => {
+    async function checkPreviewFlag() {
+      const dismissed = await AsyncStorage.getItem(SAMPLE_PREVIEW_DISMISSED);
+      if (dismissed !== 'true' && books.length === 0) {
+        setShowPreview(true);
+      } else {
+        setShowPreview(false);
+      }
+    }
+    void checkPreviewFlag();
+  }, [books.length]));
+
+  const handleDismissPreview = async () => {
+    await AsyncStorage.setItem(SAMPLE_PREVIEW_DISMISSED, 'true');
+    setShowPreview(false);
+  };
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -262,17 +283,19 @@ export default function BooksScreen() {
           />
         }
         ListEmptyComponent={
-          <EmptyState
-            icon="book"
-            title={isSearching ? t('books:no_books_found') : t('books:no_books_yet')}
-            description={
-              isSearching
-                ? t('books:try_different_search')
-                : t('books:add_your_first_book')
-            }
-            actionText={isSearching ? undefined : t('books:add_book')}
-            onAction={isSearching ? undefined : () => router.push('/book/add')}
-          />
+          !isSearching && showPreview
+            ? <SampleLibraryPreview onDismiss={handleDismissPreview} />
+            : <EmptyState
+                icon="book"
+                title={isSearching ? t('books:no_books_found') : t('books:no_books_yet')}
+                description={
+                  isSearching
+                    ? t('books:try_different_search')
+                    : t('books:add_your_first_book')
+                }
+                actionText={isSearching ? undefined : t('books:add_book')}
+                onAction={isSearching ? undefined : () => router.push('/book/add')}
+              />
         }
       />
 

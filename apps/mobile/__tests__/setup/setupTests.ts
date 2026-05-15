@@ -229,6 +229,7 @@ jest.mock('expo-router', () => ({
     back: jest.fn(),
     replace: jest.fn(),
   })),
+  useFocusEffect: jest.fn((cb) => cb()),
 }));
 
 // Mock React Native core with proper component definitions compatible with Testing Library

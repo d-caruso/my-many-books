@@ -16,6 +16,7 @@ import {
   getTutorialCapabilities,
   getVisibleTutorialSections,
 } from './howToContent';
+import { SAMPLE_PREVIEW_DISMISSED } from '../../constants/sampleBooks';
 
 const CARD_ICONS: Record<string, React.ElementType> = {
   'add-book': LibraryAddIcon,
@@ -33,6 +34,11 @@ const HowToPage: React.FC = () => {
   const navigate = useNavigate();
   const capabilities = getTutorialCapabilities();
   const visibleSections = getVisibleTutorialSections(HOW_TO_SECTIONS, capabilities);
+
+  const handlePreviewLibrary = () => {
+    localStorage.removeItem(SAMPLE_PREVIEW_DISMISSED);
+    navigate('/books');
+  };
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4 } }}>
@@ -161,6 +167,12 @@ const HowToPage: React.FC = () => {
           {t('no_guides_available', 'No guides available right now.')}
         </Typography>
       )}
+
+      <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
+        <Button variant="outlined" onClick={handlePreviewLibrary} data-testid="preview-library-button">
+          {t('preview_banner_title', { ns: 'books' })}
+        </Button>
+      </Box>
     </Container>
   );
 };

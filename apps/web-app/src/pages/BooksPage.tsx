@@ -16,6 +16,8 @@ import { useBookSearch } from '../hooks/useBookSearch';
 import { useBooks } from '../hooks/useBooks';
 import { useSetting } from '../hooks/useSetting';
 import { ADD_BOOK_SCANNER_DRAFT_STORAGE_KEY } from '../constants/scanner';
+import { SAMPLE_PREVIEW_DISMISSED } from '../constants/sampleBooks';
+import { SampleLibraryPreview } from '../components/SampleLibraryPreview';
 import { runFadeOut, useFadeInOnChange } from '../hooks/useLanguageChangeFade';
 import { useProtectedViewTransition } from '../contexts/ViewTransitionContext';
 import { useApi } from '../contexts/ApiContext';
@@ -59,6 +61,9 @@ const BooksPage: React.FC = () => {
     } catch {
       return null;
     }
+  });
+  const [showPreview, setShowPreview] = useState(() => {
+    return localStorage.getItem(SAMPLE_PREVIEW_DISMISSED) !== 'true';
   });
   const [scannerNoticeOpen, setScannerNoticeOpen] = useState(false);
   const [scannerNoticeMessage, setScannerNoticeMessage] = useState('');
@@ -438,6 +443,11 @@ const BooksPage: React.FC = () => {
     });
   };
 
+  const handleDismissPreview = () => {
+    localStorage.setItem(SAMPLE_PREVIEW_DISMISSED, 'true');
+    setShowPreview(false);
+  };
+
   const handleScannerPrefillNoticeDismiss = useCallback(() => {
     setScannerNoticeOpen(false);
     setScannerNoticeMessage('');
@@ -689,18 +699,22 @@ const BooksPage: React.FC = () => {
       </Box>
 
       {/* Books list */}
-      <BookList
-        books={displayedBooks}
-        loading={displayedLoading}
-        savingStatusBookId={savingStatusBookId}
-        error={combinedError}
-        viewMode={viewMode}
-        onEdit={handleEditBook}
-        onDelete={handleDeleteBook}
-        onStatusChange={handleStatusChange}
-        onBookClick={handleViewDetails}
-        emptyMessage={searchParams.get('q') ? t('pages:books.no_books_search') : t('pages:books.no_books_empty')}
-      />
+      {!searchActive && displayedBooks.length === 0 && showPreview ? (
+        <SampleLibraryPreview onDismiss={handleDismissPreview} />
+      ) : (
+        <BookList
+          books={displayedBooks}
+          loading={displayedLoading}
+          savingStatusBookId={savingStatusBookId}
+          error={combinedError}
+          viewMode={viewMode}
+          onEdit={handleEditBook}
+          onDelete={handleDeleteBook}
+          onStatusChange={handleStatusChange}
+          onBookClick={handleViewDetails}
+          emptyMessage={searchParams.get('q') ? t('pages:books.no_books_search') : t('pages:books.no_books_empty')}
+        />
+      )}
 
       {/* Load more */}
       {displayedHasMore && (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
@@ -17,10 +17,16 @@ const testI18n = i18n.createInstance();
 const i18nReady = testI18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['tutorial'],
+  ns: ['tutorial', 'books'],
   defaultNS: 'tutorial',
   resources: {
     en: {
+      books: {
+        preview_banner_title: 'Sample library preview',
+        preview_banner_description: 'This is what your library could look like. Dismiss to start with your own books.',
+        preview_banner_dismiss: 'Dismiss',
+        preview_badge: 'Sample',
+      },
       tutorial: {
         page_title: 'How-to guides',
         page_description: 'Quick guides',
@@ -146,5 +152,18 @@ describe('HowToPage', () => {
     expect(screen.getByTestId('how-to-cta-change-password')).toBeInTheDocument();
 
     featureSpy.mockRestore();
+  });
+
+  describe('preview library button', () => {
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    test('removes the dismissed flag on click', () => {
+      localStorage.setItem('SAMPLE_PREVIEW_DISMISSED', 'true');
+      renderHowToPage();
+      fireEvent.click(screen.getByTestId('preview-library-button'));
+      expect(localStorage.getItem('SAMPLE_PREVIEW_DISMISSED')).toBeNull();
+    });
   });
 });
